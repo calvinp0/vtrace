@@ -1707,6 +1707,93 @@ test("run_pipeline auto-captures a deduped tool-call observation on happy path a
   });
 });
 
+test("run_pipeline diagnostics include progressive observation nudges without persisting nudge rows", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+    const db = openIndexerDatabase(initialized.paths.dbPath);
+
+    try {
+      const noSession = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-run-pipeline-nudge-no-session",
+        toolId: McpToolId.RunPipeline,
+        input: { query: "Session" },
+      });
+      assert.equal(noSession.result.ok, true);
+      assert.equal(noSession.result.output.diagnostics.nudge.enabled, false);
+      assert.equal(noSession.result.output.diagnostics.nudge.reason, "no_session");
+
+      const first = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-run-pipeline-nudge-1",
+        toolId: McpToolId.RunPipeline,
+        input: { query: "createSession", sessionId: "nudge-session" },
+      });
+      assert.equal(first.result.ok, true);
+      assert.equal(first.result.output.diagnostics.nudge.enabled, false);
+      assert.equal(first.result.output.diagnostics.nudge.reason, "below_threshold");
+      assert.equal(first.result.output.diagnostics.nudge.toolCallCount, 1);
+
+      await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-run-pipeline-nudge-2",
+        toolId: McpToolId.RunPipeline,
+        input: { query: "loadSession", sessionId: "nudge-session" },
+      });
+      const third = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-run-pipeline-nudge-3",
+        toolId: McpToolId.RunPipeline,
+        input: { query: "readSession", sessionId: "nudge-session" },
+      });
+
+      assert.equal(third.result.ok, true);
+      assert.equal(third.result.output.diagnostics.nudge.enabled, true);
+      assert.equal(third.result.output.diagnostics.nudge.level, "full");
+      assert.equal(third.result.output.diagnostics.nudge.reason, "no_durable_observation_after_tool_activity");
+      assert.equal(third.result.output.diagnostics.nudge.toolCallCount, 3);
+      assert.equal(third.result.output.diagnostics.nudge.nextNudgeAfterToolCallCount, 8);
+
+      const afterThirdCount = countObservations(db);
+      assert.equal(
+        listObservations(db).filter((observation) => observation.sessionId === "nudge-session").length,
+        3,
+      );
+
+      const saved = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-run-pipeline-nudge-save",
+        toolId: McpToolId.SaveObservation,
+        input: {
+          sessionId: "nudge-session",
+          kind: "decision",
+          summary: "Keep the current session persistence model.",
+          body: "Explicit save_observation should self-disable future nudges.",
+        },
+      });
+      assert.equal(saved.result.ok, true);
+      assert.equal(countObservations(db), afterThirdCount + 1);
+
+      const afterDurable = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-run-pipeline-nudge-after-durable",
+        toolId: McpToolId.RunPipeline,
+        input: { query: "SessionManager", sessionId: "nudge-session" },
+      });
+      assert.equal(afterDurable.result.ok, true);
+      assert.equal(afterDurable.result.output.diagnostics.nudge.enabled, false);
+      assert.equal(afterDurable.result.output.diagnostics.nudge.reason, "durable_observation_exists");
+      assert.equal(afterDurable.result.output.diagnostics.nudge.durableObservationCount, 1);
+    } finally {
+      db.close();
+    }
+  });
+});
+
 test("index_status and workspace_setup expose honest setup state before and after init", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);

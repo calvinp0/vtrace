@@ -32,6 +32,8 @@ Optional passive file awareness is available through `vexb watch [repo]`. It is 
 
 VEXB also persists conservative anti-pattern observations when structural evidence is clear. The first detectors are `file_thrashing` from repeated source-file watcher events and `symbol_added_then_removed` from adjacent structural index diffs. These are durable `dead_end` observations with compact evidence, exact file/symbol links where available, deterministic dedupe, and normal memory/session visibility. They are not semantic intent inference, progressive nudges, learned classification, or project rules.
 
+`run_pipeline.diagnostics.nudge` may include a compact observation nudge when an active session has passive tool-call activity but no durable observation yet. The first nudge appears after 3 passive tool calls, then at most every 5 additional calls, and it self-disables after a durable `save_observation` note or other durable observation exists. Nudges are structural metadata only: they do not block calls, do not write observations, and are not project rules, semantic judgment, or memory consolidation.
+
 ## Direct Tool Choices
 
 - `get_context_capsule`: use when you only need the compact context capsule and do not need orchestration, impact, memory, or task-summary sections.
@@ -54,4 +56,5 @@ VEXB also persists conservative anti-pattern observations when structural eviden
 - Do not expect `expand_vexp_ref` to search or recompute; it only resolves exact 12-lowercase-hex hashes emitted in the current MCP server process.
 - Treat V-REFs as process-local and bounded. Expired, unknown, malformed, and unsupported hashes return structured failures.
 - Treat watcher staleness and anti-pattern observations as structural evidence only. They are not semantic rename detection, runtime tracing, intent inference, or project-rule generation.
+- Treat observation nudges as optional diagnostics only. They are reminders to save durable memory, not instructions or retrieved context.
 - Do not claim a special compressed format or token-savings percentage from VEXB output.

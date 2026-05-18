@@ -25,6 +25,7 @@ import {
   listIndexRuns,
 } from "../db/repositories/indexRunsRepository";
 import { persistObservation } from "../db/repositories/observationsRepository";
+import { getSessionById } from "../db/repositories/sessionsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
 import { parseSymbolKind } from "../domain/guards";
 import { type SymbolKind } from "../domain/types";
@@ -81,6 +82,7 @@ import {
   readInspectableSession,
 } from "../observations/sessionInspection";
 import { detectSymbolAddedThenRemovedAntiPatterns } from "../observations/antiPatterns";
+import { evaluateObservationNudge } from "../observations/observationNudges";
 import {
   captureExpandVexpRefObservationBestEffort,
   captureImpactGraphObservationBestEffort,
@@ -96,6 +98,7 @@ import { getObservationStaleness } from "../observations/staleness";
 import {
   ObservationKind,
   ObservationSource,
+  SessionStatus,
   type ObservationSearchResult,
 } from "../observations/types";
 import { searchSymbols } from "../retrieval/searchSymbols";
@@ -1180,6 +1183,42 @@ const FILE_WATCHER_STATUS_SCHEMA = objectProperty(
   ["supported", "enabled", "running", "debounceMs", "lastEventAtMs"],
 );
 
+const OBSERVATION_NUDGE_SCHEMA = objectProperty(
+  "Compact progressive observation nudge state.",
+  {
+    enabled: booleanProperty("Whether an observation nudge should be shown."),
+    kind: stringProperty("Nudge kind identifier."),
+    level: {
+      type: ["string", "null"],
+      description: "Nudge level when enabled.",
+    },
+    message: {
+      type: ["string", "null"],
+      description: "Compact agent-facing nudge message when enabled.",
+    },
+    reason: stringProperty("Deterministic reason for the nudge state."),
+    sessionId: {
+      type: ["string", "null"],
+      description: "Session id used for nudge evaluation, when available.",
+    },
+    toolCallCount: integerProperty("Passive tool-call count in the session."),
+    durableObservationCount: integerProperty("Durable observation count in the session."),
+    nextNudgeAfterToolCallCount: {
+      type: ["integer", "null"],
+      description: "Next passive tool-call count that can produce a nudge.",
+    },
+  },
+  [
+    "enabled",
+    "kind",
+    "reason",
+    "sessionId",
+    "toolCallCount",
+    "durableObservationCount",
+    "nextNudgeAfterToolCallCount",
+  ],
+);
+
 const RUN_PIPELINE_DIAGNOSTICS_SCHEMA = objectProperty(
   "Explicit run_pipeline reliability diagnostics.",
   {
@@ -1575,6 +1614,7 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
       ],
     ),
     freshness: INDEX_FRESHNESS_SCHEMA,
+    nudge: OBSERVATION_NUDGE_SCHEMA,
     deferredCount: integerProperty("Number of deferred expandable placeholders emitted."),
     omittedSectionCount: integerProperty("Number of top-level sections (context, impact, session, durable) omitted."),
   },
@@ -6416,6 +6456,9 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         context,
         McpToolId.RunPipeline,
         async (binding, db) => {
+          const preexistingSessionStatus = sessionId === undefined
+            ? undefined
+            : getSessionById(db, sessionId)?.status;
           const orchestration = runPipelineOrchestrator(db, binding.repoRoot, {
             query,
             maxResults,
@@ -6495,6 +6538,13 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             lastIndexSnapshot: binding.state.lastIndexSnapshot,
             observedFileChanges: binding.state.observedFileChanges,
           });
+          const nudge = evaluateObservationNudge(db, {
+            sessionId,
+            currentToolName: McpToolId.RunPipeline,
+            ...(preexistingSessionStatus === SessionStatus.Compressed
+              ? { preexistingSessionStatus }
+              : {}),
+          });
 
           return {
             ok: true,
@@ -6503,6 +6553,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               diagnostics: {
                 ...output.diagnostics,
                 freshness,
+                nudge,
               },
               savedObservation,
             },

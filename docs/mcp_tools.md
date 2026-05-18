@@ -77,6 +77,20 @@ Detection is deterministic and deduped by evidence signature. Anti-pattern obser
 
 This is not semantic understanding of developer intent, progressive nudging, learned classification, semantic consolidation, or project-rule generation. VEXB does not block normal MCP behavior when an anti-pattern observation exists.
 
+## Progressive Observation Nudges
+
+`run_pipeline.diagnostics.nudge` may include a compact structural nudge when an active session has meaningful passive tool-call activity but no durable observation yet. Nudges are metadata in the tool result, not forced chat messages, retrieved context, or persisted observations.
+
+The current schedule is deterministic:
+
+- first full nudge after 3 passive `tool_call` observations in the session
+- later brief nudges at most once every 5 additional passive tool calls
+- no nudge once a durable observation exists
+
+Durable observations include manual saves and durable kinds such as decisions, insights, warnings, and dead-end/anti-pattern observations. `index_status`, `workspace_setup`, and `save_observation` are excluded from nudging, and `save_observation` itself self-disables future nudges for that session by creating durable memory.
+
+Nudges never block tool execution and do not write their own observations. They are not project rules, semantic judgment, learned behavior, or memory consolidation.
+
 ## Default Orchestration
 
 ### `run_pipeline`
