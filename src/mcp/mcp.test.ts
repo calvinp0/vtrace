@@ -16,7 +16,7 @@ import {
 import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
 import { persistCapsuleManifest } from "../db/repositories/capsuleManifestsRepository";
 import { listIndexRuns } from "../db/repositories/indexRunsRepository";
-import { countObservations, listObservations } from "../db/repositories/observationsRepository";
+import { countObservations, listObservations, persistObservation } from "../db/repositories/observationsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
 import { indexProject } from "../indexer/indexProject";
 import { routeQuery } from "../intent/routeQuery";
@@ -24,6 +24,8 @@ import {
   DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS,
   compressInactiveSessions,
 } from "../observations/sessionLifecycle";
+import { consolidatePassiveObservationsForSession } from "../observations/consolidation";
+import { ObservationKind, ObservationSource } from "../observations/types";
 import { recordObservedFileChanges } from "../runtime/fileWatcher";
 import type { GraphSearchResult } from "../retrieval/types";
 import { initRepo } from "../setup/initRepo";
@@ -1408,6 +1410,65 @@ test("run_pipeline memory can surface relevant compressed session summaries", as
       assert.equal(
         response.result.output.memory.durable.topObservations.some((observation) => {
           return observation.observationId === compressed.compressedSummaries[0]?.summaryObservationId;
+        }),
+        true,
+      );
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("run_pipeline memory can surface relevant consolidated passive summaries", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+    const db = openIndexerDatabase(initialized.paths.dbPath);
+    const sourceRunId = listIndexRuns(db).at(-1)?.id;
+
+    try {
+      for (const [index, createdAtMs] of [100, 120, 140].entries()) {
+        persistObservation(db, {
+          repoRoot,
+          sessionId: "session-consolidated-memory",
+          kind: ObservationKind.ToolCall,
+          source: ObservationSource.McpAuto,
+          toolName: "run_pipeline",
+          summary: `Built repeated lifecycle context ${index}`,
+          body: `tool=run_pipeline\nquery=rename createSession lifecycle memory\npivot_count=1\nsupport_count=2\ncall=${index}`,
+          queryText: "rename createSession lifecycle memory",
+          intent: "refactor",
+          sourceRunId,
+          createdAtMs,
+          linkedFilePaths: ["src/session.ts"],
+        });
+      }
+
+      const consolidated = consolidatePassiveObservationsForSession(db, {
+        sessionId: "session-consolidated-memory",
+        nowMs: 500,
+      });
+
+      assert.equal(consolidated?.consolidatedObservationIds.length, 1);
+
+      const response = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-run-pipeline-consolidated-memory",
+        toolId: McpToolId.RunPipeline,
+        input: {
+          query: "rename createSession lifecycle memory",
+          includeMemory: true,
+        },
+      });
+
+      assert.equal(response.result.ok, true);
+      assert.equal(response.result.output.memory.durable.included, true);
+      assert.equal(
+        response.result.output.memory.durable.topObservations.some((observation) => {
+          return observation.observationId === consolidated?.consolidatedObservationIds[0];
         }),
         true,
       );

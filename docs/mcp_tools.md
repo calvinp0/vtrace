@@ -42,15 +42,25 @@ The following visible tools are intentionally excluded from passive capture:
 
 This is a passive-memory substrate, not full VEXP parity. It does not add embeddings, semantic similarity, learned ranking, semantic consolidation, project-rule generation, or claims that every agent decision is understood.
 
+## Conservative Passive Consolidation
+
+VEXB can consolidate repeated passive observations within a single session. The first implementation is intentionally narrow: it targets repeated `mcp_auto` `tool_call` observations with the same deterministic lexical/structural signature. The signature uses exact fields such as tool name, normalized query text, intent, selected compact result-shape fields, sorted linked files, and sorted linked symbol FQNs. It does not use embeddings, semantic similarity, LLM merging, learned ranking, or cross-session memory merging.
+
+Consolidated passive groups are stored as compact auto-generated `insight` observations from `consolidate_passive_observations`. Their body includes explicit metadata such as `consolidated=true`, `source_kind=tool_call`, source observation count, tool counts, first/last observed timestamps, source run ids, session id, deterministic signature, and preserved structural links. The consolidated observation keeps exact linked files, symbol ids, and symbol FQNs so it remains searchable and participates in existing stale-memory checks when those files or symbols later change.
+
+Consolidation is thresholded. By default, at least three eligible passive observations with the same signature are required. Below that threshold, passive observations are left alone by consolidation. When a group is consolidated, only the grouped passive source observations are physically pruned. Manual observations, decisions, insights, warnings, anti-pattern/dead-end observations, and anything authored through `save_observation` are never consolidated or removed by this mechanism.
+
+This is not semantic memory consolidation, project-rule generation, or rule injection into capsules.
+
 ## Session Lifecycle Compression
 
 VEXB can compress inactive sessions into compact structural summaries through an explicit lifecycle service. There is no background scheduler or passive file watcher requirement.
 
-The default compression threshold is two hours of inactivity. Compression records a deterministic summary with observation counts, tool-call counts by tool, unique linked files, unique linked symbol ids and FQNs, key lexical terms, first/last activity times, compression time, preserved durable count, and pruned ephemeral tool-call count.
+The default compression threshold is two hours of inactivity. Compression records a deterministic summary with observation counts, tool-call counts by tool, unique linked files, unique linked symbol ids and FQNs, key lexical terms, first/last activity times, compression time, preserved durable count, and repeated passive tool-call source rows pruned through consolidation.
 
-Compression physically prunes only ephemeral `mcp_auto` `tool_call` observations after their structural aggregate data has been summarized. Durable observations remain preserved, including manual notes and non-ephemeral insights, decisions, warnings, and dead-end observations. Manual observations are not removed by compression.
+Compression also triggers conservative passive consolidation for the inactive session. Repeated passive groups become narrower consolidated summaries, while the broad compression summary remains the session-level aggregate. Durable observations remain preserved, including manual notes and non-ephemeral insights, decisions, warnings, and dead-end observations. Manual observations are not removed by compression.
 
-Compressed sessions remain inspectable through session context: `get_session_context` reports the compression summary and returns preserved observations without flooding the response with pruned passive tool calls. The summary is also persisted as a compact searchable observation, so `search_memory`, `run_pipeline.memory`, and capsule memory surfacing can find it through deterministic lexical and structural signals such as key terms, tool names, file paths, and symbol FQNs.
+Compressed sessions remain inspectable through session context: `get_session_context` reports the compression summary and returns preserved observations, including durable observations and compact consolidated passive summaries where present, without flooding the response with pruned repeated tool calls. Compression summaries and consolidated summaries are searchable, so `search_memory`, `run_pipeline.memory`, and capsule memory surfacing can find them through deterministic lexical and structural signals such as key terms, tool names, file paths, and symbol FQNs.
 
 The default retention threshold is 90 days. This milestone reports deterministic cleanup candidates for old compressed sessions; physical deletion of compressed summaries and durable data is intentionally deferred.
 
@@ -60,7 +70,7 @@ File watching is opt-in. `vexb watch [repo]` runs a lightweight polling watcher 
 
 The watcher is mark-stale-only. It does not auto-reindex, does not run a background daemon by default, and does not block MCP tools. `index_status` reports watcher support, whether watcher mode has been used for the repo, pending changed file count, a bounded sorted changed-file list, and freshness metadata. `run_pipeline.diagnostics.freshness` also reports stale metadata when available.
 
-A successful explicit reindex through the normal indexing path clears pending watcher-observed stale state. Reindexing continues to use the existing structural file and symbol diff machinery. Linked observations, passive `tool_call` observations, and compressed session summary observations become stale through the existing conservative staleness service when their linked files or symbols are modified or removed.
+A successful explicit reindex through the normal indexing path clears pending watcher-observed stale state. Reindexing continues to use the existing structural file and symbol diff machinery. Linked observations, passive `tool_call` observations, consolidated passive summaries, and compressed session summary observations become stale through the existing conservative staleness service when their linked files or symbols are modified or removed.
 
 This is not semantic rename detection, runtime dataflow, project-rule generation, or full VEXP passive behavior.
 

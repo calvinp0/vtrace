@@ -28,6 +28,12 @@ import { routeQuery } from "../intent/routeQuery";
 import { FileChangeType, StaleStateStatus } from "../memory/types";
 import { CapsuleBudgetModel, type Capsule } from "../capsule/types";
 import { captureVisibleCapsuleObservationBestEffort } from "./autoCapture";
+import {
+  PASSIVE_CONSOLIDATION_TOOL_NAME,
+  buildPassiveConsolidationGroups,
+  computePassiveObservationSignature,
+  consolidatePassiveObservationsForSession,
+} from "./consolidation";
 import { getSessionContext } from "./getSessionContext";
 import {
   DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS,
@@ -569,6 +575,217 @@ test("readInspectableSession returns explicit session state, derived summary, an
   });
 });
 
+test("passive consolidation groups repeated auto tool calls and leaves below-threshold calls alone", async () => {
+  await withObservationFixture(async ({ repoRoot, db }) => {
+    await indexProject({ repoRoot, db });
+    const sourceRunId = getLatestIndexRun(db)?.id;
+    const readUser = listSymbolsForFile(db, "src/service.ts").find((symbol) => symbol.localName === "readUser");
+
+    assert.notEqual(readUser, undefined);
+
+    const repeated = [100, 120, 140].map((createdAtMs, index) => {
+      return persistObservation(db, {
+        repoRoot,
+        sessionId: "session-consolidate",
+        kind: ObservationKind.ToolCall,
+        source: ObservationSource.McpAuto,
+        toolName: "run_pipeline",
+        summary: `Built context capsule for reader workflow ${index}`,
+        body: [
+          "tool=run_pipeline",
+          "query=explain read user workflow",
+          "intent=explain",
+          "pivot_count=1",
+          "support_count=2",
+          `observation_ordinal=${index}`,
+        ].join("\n"),
+        queryText: "Explain   read user workflow",
+        intent: "explain",
+        sourceRunId,
+        createdAtMs,
+        linkedFilePaths: ["./src/service.ts"],
+        linkedSymbolIds: [readUser!.id],
+      });
+    });
+    const belowThreshold = persistObservation(db, {
+      repoRoot,
+      sessionId: "session-consolidate",
+      kind: ObservationKind.ToolCall,
+      source: ObservationSource.McpAuto,
+      toolName: "get_impact_graph",
+      summary: "Computed impact graph for reader workflow",
+      body: "tool=get_impact_graph\nsymbol_fqn=src/service.ts::readUser\ndepth=2",
+      queryText: "src/service.ts::readUser",
+      intent: "refactor",
+      sourceRunId,
+      createdAtMs: 160,
+      linkedFilePaths: ["src/service.ts"],
+      linkedSymbolIds: [readUser!.id],
+    });
+
+    assert.equal(computePassiveObservationSignature(repeated[0]!), computePassiveObservationSignature(repeated[1]!));
+    assert.deepEqual(
+      buildPassiveConsolidationGroups([...repeated, belowThreshold]).map((group) => group.sourceObservationCount),
+      [3],
+    );
+
+    const first = consolidatePassiveObservationsForSession(db, {
+      sessionId: "session-consolidate",
+      nowMs: 500,
+    });
+    const second = consolidatePassiveObservationsForSession(db, {
+      sessionId: "session-consolidate",
+      nowMs: 700,
+    });
+
+    assert.notEqual(first, undefined);
+    assert.notEqual(second, undefined);
+    assert.equal(first!.prunedSourceObservationCount, 3);
+    assert.equal(second!.prunedSourceObservationCount, 0);
+    assert.deepEqual(second!.consolidatedObservationIds, []);
+
+    const remaining = listObservations(db).filter((observation) => observation.sessionId === "session-consolidate");
+    const consolidated = remaining.find((observation) => observation.toolName === PASSIVE_CONSOLIDATION_TOOL_NAME);
+
+    assert.notEqual(consolidated, undefined);
+    assert.equal(consolidated!.kind, ObservationKind.Insight);
+    assert.equal(consolidated!.source, ObservationSource.McpAuto);
+    assert.equal(consolidated!.summary, "Consolidated 3 repeated run_pipeline tool calls around Explain   read user workflow.");
+    assert.match(consolidated!.body, /consolidated=true/);
+    assert.match(consolidated!.body, /source_kind=tool_call/);
+    assert.match(consolidated!.body, /source_observation_count=3/);
+    assert.match(consolidated!.body, /tools=\{"run_pipeline":3\}/);
+    assert.match(consolidated!.body, /first_observed_at=1970-01-01T00:00:00.100Z/);
+    assert.match(consolidated!.body, /last_observed_at=1970-01-01T00:00:00.140Z/);
+    assert.match(consolidated!.body, /signature=tool_call:run_pipeline:/);
+    assert.match(consolidated!.body, /session_id=session-consolidate/);
+    assert.match(consolidated!.body, /semantic_similarity=false/);
+    assert.deepEqual(consolidated!.linkedFilePaths, ["src/service.ts"]);
+    assert.deepEqual(consolidated!.linkedSymbols.map((link) => link.symbolId), [readUser!.id]);
+    assert.deepEqual(consolidated!.linkedFqNames, [readUser!.fqName]);
+    assert.equal(consolidated!.sourceRunId, sourceRunId);
+    assert.equal(remaining.some((observation) => repeated.some((source) => source.id === observation.id)), false);
+    assert.equal(remaining.some((observation) => observation.id === belowThreshold.id), true);
+
+    assert.equal(searchMemory(db, { query: "run_pipeline", maxResults: 5 })[0]?.observation.id, consolidated!.id);
+    assert.equal(searchMemory(db, { query: "read user workflow", maxResults: 5 })[0]?.observation.id, consolidated!.id);
+    assert.equal(searchMemory(db, { query: "src/service.ts", maxResults: 5 })[0]?.observation.id, consolidated!.id);
+    assert.equal(searchMemory(db, { query: readUser!.fqName, maxResults: 5 })[0]?.observation.id, consolidated!.id);
+  });
+});
+
+test("passive consolidation never prunes durable manual or anti-pattern observations", async () => {
+  await withObservationFixture(async ({ repoRoot, db }) => {
+    const durableInputs = [
+      {
+        kind: ObservationKind.Decision,
+        source: ObservationSource.Manual,
+        summary: "Manual decision stays separate",
+      },
+      {
+        kind: ObservationKind.Insight,
+        source: ObservationSource.Manual,
+        summary: "Manual insight stays separate",
+      },
+      {
+        kind: ObservationKind.DeadEnd,
+        source: ObservationSource.Manual,
+        summary: "Manual dead end stays separate",
+      },
+      {
+        kind: ObservationKind.DeadEnd,
+        source: ObservationSource.McpAuto,
+        summary: "Detected file_thrashing anti-pattern stays separate",
+      },
+    ] as const;
+
+    for (const [index, input] of durableInputs.entries()) {
+      persistObservation(db, {
+        repoRoot,
+        sessionId: "session-durable",
+        kind: input.kind,
+        source: input.source,
+        toolName: input.source === ObservationSource.Manual ? "save_observation" : "detect_anti_patterns",
+        summary: input.summary,
+        body: `durable observation ${index}`,
+        queryText: "durable passive consolidation",
+        createdAtMs: 100 + index,
+        linkedFilePaths: ["src/service.ts"],
+      });
+    }
+
+    const result = consolidatePassiveObservationsForSession(db, {
+      sessionId: "session-durable",
+      nowMs: 500,
+    });
+
+    assert.notEqual(result, undefined);
+    assert.deepEqual(result!.groups, []);
+    assert.equal(result!.prunedSourceObservationCount, 0);
+    assert.deepEqual(
+      listObservations(db)
+        .filter((observation) => observation.sessionId === "session-durable")
+        .map((observation) => observation.summary)
+        .sort(),
+      durableInputs.map((input) => input.summary).sort(),
+    );
+  });
+});
+
+test("consolidated observations remain session-visible, memory-visible, and stale-aware", async () => {
+  await withObservationFixture(async ({ repoRoot, db }) => {
+    await indexProject({ repoRoot, db });
+    const sourceRunId = getLatestIndexRun(db)?.id;
+    const readUser = listSymbolsForFile(db, "src/service.ts").find((symbol) => symbol.localName === "readUser");
+
+    assert.notEqual(readUser, undefined);
+
+    for (const [index, createdAtMs] of [100, 120, 140].entries()) {
+      persistObservation(db, {
+        repoRoot,
+        sessionId: "session-stale-consolidated",
+        kind: ObservationKind.ToolCall,
+        source: ObservationSource.McpAuto,
+        toolName: "get_impact_graph",
+        summary: `Computed repeated impact graph ${index}`,
+        body: `tool=get_impact_graph\nsymbol_fqn=${readUser!.fqName}\ndepth=2\ncall=${index}`,
+        queryText: readUser!.fqName,
+        intent: "refactor",
+        sourceRunId,
+        createdAtMs,
+        linkedFilePaths: ["src/service.ts"],
+        linkedSymbolIds: [readUser!.id],
+      });
+    }
+
+    const result = consolidatePassiveObservationsForSession(db, {
+      sessionId: "session-stale-consolidated",
+      nowMs: 500,
+    });
+    const consolidated = result?.consolidatedObservationIds[0] === undefined
+      ? undefined
+      : getObservationById(db, result.consolidatedObservationIds[0]);
+
+    assert.notEqual(consolidated, undefined);
+
+    const context = getSessionContext(db, {
+      sessionId: "session-stale-consolidated",
+      limit: 10,
+      query: "get_impact_graph",
+    });
+    assert.deepEqual(context.observations.map((observation) => observation.id), [consolidated!.id]);
+    assert.deepEqual(context.rankedObservations?.map((observation) => observation.id), [consolidated!.id]);
+
+    await rewriteServiceFile(repoRoot, "loadUser");
+    await indexProject({ repoRoot, db });
+
+    const staleness = getObservationStaleness(db, consolidated!);
+    assert.equal(staleness.status, StaleStateStatus.Stale);
+    assert.equal(staleness.reasons.some((reason) => reason.kind === ObservationStaleReasonKind.FileModified), true);
+    assert.equal(staleness.reasons.some((reason) => reason.kind === ObservationStaleReasonKind.SymbolRemoved), true);
+  });
+});
+
 test("inactive sessions compress into stable searchable summaries while preserving durable observations", async () => {
   await withObservationFixture(async ({ repoRoot, db }) => {
     await indexProject({ repoRoot, db });
@@ -583,12 +800,42 @@ test("inactive sessions compress into stable searchable summaries while preservi
       kind: ObservationKind.ToolCall,
       source: ObservationSource.McpAuto,
       toolName: "run_pipeline",
-      summary: "Built context capsule for memory pipeline",
-      body: "tool=run_pipeline\nquery=pipeline memory impact",
+      summary: "Built context capsule for memory pipeline 0",
+      body: "tool=run_pipeline\nquery=pipeline memory impact\npivot_count=1\nsupport_count=2\ncall=0",
       queryText: "pipeline memory impact",
       intent: "explain",
       sourceRunId,
       createdAtMs: 100,
+      linkedFilePaths: ["src/service.ts"],
+      linkedSymbolIds: [readUser!.id],
+    });
+    persistObservation(db, {
+      repoRoot,
+      sessionId: "session-compress",
+      kind: ObservationKind.ToolCall,
+      source: ObservationSource.McpAuto,
+      toolName: "run_pipeline",
+      summary: "Built context capsule for memory pipeline 1",
+      body: "tool=run_pipeline\nquery=pipeline memory impact\npivot_count=1\nsupport_count=2\ncall=1",
+      queryText: "pipeline memory impact",
+      intent: "explain",
+      sourceRunId,
+      createdAtMs: 120,
+      linkedFilePaths: ["src/service.ts"],
+      linkedSymbolIds: [readUser!.id],
+    });
+    persistObservation(db, {
+      repoRoot,
+      sessionId: "session-compress",
+      kind: ObservationKind.ToolCall,
+      source: ObservationSource.McpAuto,
+      toolName: "run_pipeline",
+      summary: "Built context capsule for memory pipeline 2",
+      body: "tool=run_pipeline\nquery=pipeline memory impact\npivot_count=1\nsupport_count=2\ncall=2",
+      queryText: "pipeline memory impact",
+      intent: "explain",
+      sourceRunId,
+      createdAtMs: 130,
       linkedFilePaths: ["src/service.ts"],
       linkedSymbolIds: [readUser!.id],
     });
@@ -699,18 +946,18 @@ test("inactive sessions compress into stable searchable summaries while preservi
     assert.deepEqual(summary.observationCounts, {
       decision: 1,
       insight: 1,
-      tool_call: 3,
+      tool_call: 5,
     });
     assert.deepEqual(summary.toolCallCounts, {
       get_impact_graph: 1,
-      run_pipeline: 1,
+      run_pipeline: 3,
     });
     assert.deepEqual(summary.filePaths, ["src/models.ts", "src/service.ts"]);
     assert.deepEqual(summary.symbolIds, [readUser!.id]);
     assert.deepEqual(summary.fqNames, ["src/service.ts::readUser"]);
     assert.equal(summary.keyTerms.includes("memory"), true);
     assert.equal(summary.preservedDurableObservationCount, 3);
-    assert.equal(summary.prunedToolCallObservationCount, 2);
+    assert.equal(summary.prunedToolCallObservationCount, 3);
 
     const compressedSession = getSessionById(db, "session-compress");
     assert.equal(compressedSession?.status, SessionStatus.Compressed);
@@ -720,8 +967,20 @@ test("inactive sessions compress into stable searchable summaries while preservi
 
     const remaining = listObservations(db).filter((observation) => observation.sessionId === "session-compress");
     assert.equal(
-      remaining.some((observation) => observation.source === ObservationSource.McpAuto && observation.kind === ObservationKind.ToolCall),
+      remaining.some((observation) =>
+        observation.source === ObservationSource.McpAuto
+        && observation.kind === ObservationKind.ToolCall
+        && observation.toolName === "run_pipeline"
+      ),
       false,
+    );
+    assert.equal(
+      remaining.some((observation) =>
+        observation.source === ObservationSource.McpAuto
+        && observation.kind === ObservationKind.ToolCall
+        && observation.toolName === "get_impact_graph"
+      ),
+      true,
     );
     assert.equal(
       remaining.some((observation) => observation.summary === "Keep service loader stable"),
@@ -744,7 +1003,11 @@ test("inactive sessions compress into stable searchable summaries while preservi
     assert.equal(context.session?.status, SessionStatus.Compressed);
     assert.deepEqual(context.compressedSummary, summary);
     assert.equal(
-      context.observations.some((observation) => observation.source === ObservationSource.McpAuto && observation.kind === ObservationKind.ToolCall),
+      context.observations.some((observation) =>
+        observation.source === ObservationSource.McpAuto
+        && observation.kind === ObservationKind.ToolCall
+        && observation.toolName === "run_pipeline"
+      ),
       false,
     );
     assert.equal(
@@ -752,15 +1015,38 @@ test("inactive sessions compress into stable searchable summaries while preservi
       true,
     );
 
-    assert.equal(searchMemory(db, { query: "get_impact_graph", maxResults: 3 })[0]?.observation.id, summary.summaryObservationId);
-    assert.equal(searchMemory(db, { query: "src/service.ts", maxResults: 3 })[0]?.observation.id, summary.summaryObservationId);
+    const consolidated = remaining.find((observation) => observation.toolName === PASSIVE_CONSOLIDATION_TOOL_NAME);
+    assert.notEqual(consolidated, undefined);
+    assert.match(consolidated!.body, /source_observation_count=3/);
+    assert.equal(searchMemory(db, { query: "run_pipeline", maxResults: 3 })[0]?.observation.id, consolidated!.id);
+    assert.equal(
+      searchMemory(db, { query: "get_impact_graph", maxResults: 3 }).some((result) => {
+        return result.observation.id === summary.summaryObservationId
+          || result.observation.toolName === "get_impact_graph";
+      }),
+      true,
+    );
+    assert.equal(
+      searchMemory(db, { query: "src/service.ts", maxResults: 3 }).some((result) => {
+        return result.observation.id === summary.summaryObservationId
+          || result.observation.id === consolidated!.id;
+      }),
+      true,
+    );
     assert.equal(
       searchMemory(db, { query: "memory", maxResults: 3 }).some((result) => {
         return result.observation.id === summary.summaryObservationId;
       }),
       true,
     );
-    assert.equal(searchMemory(db, { query: "src/service.ts::readUser", maxResults: 3 })[0]?.observation.id, summary.summaryObservationId);
+    assert.equal(
+      searchMemory(db, { query: "src/service.ts::readUser", maxResults: 3 }).some((result) => {
+        return result.observation.id === summary.summaryObservationId
+          || result.observation.id === consolidated!.id
+          || result.observation.toolName === "get_impact_graph";
+      }),
+      true,
+    );
 
     const summaryObservation = getObservationById(db, summary.summaryObservationId);
     assert.notEqual(summaryObservation, undefined);

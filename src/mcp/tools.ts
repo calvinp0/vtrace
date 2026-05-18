@@ -2135,7 +2135,7 @@ const SESSION_COMPRESSION_SUMMARY_SCHEMA = objectProperty(
     fqNames: arrayProperty("Unique linked symbol FQNs summarized from the session.", stringProperty("Fully qualified symbol name.")),
     keyTerms: arrayProperty("Deterministic lexical key terms from the session.", stringProperty("Key term.")),
     preservedDurableObservationCount: integerProperty("Non-ephemeral observations preserved after compression."),
-    prunedToolCallObservationCount: integerProperty("Ephemeral MCP auto tool-call observations pruned after compression."),
+    prunedToolCallObservationCount: integerProperty("Repeated ephemeral MCP auto tool-call observations pruned through passive consolidation during compression."),
     summaryObservationId: stringProperty("Searchable summary observation id."),
   },
   [

@@ -345,6 +345,34 @@ export function deleteEphemeralToolCallObservationsForSession(
   return row.count;
 }
 
+export function deleteObservationsByIds(
+  db: Database,
+  observationIds: readonly string[],
+): number {
+  const uniqueIds = [...new Set(observationIds)];
+
+  if (uniqueIds.length === 0) {
+    return 0;
+  }
+
+  const placeholders = uniqueIds.map(() => "?").join(", ");
+  const row = db.query(`
+    SELECT COUNT(*) AS count
+    FROM observations
+    WHERE id IN (${placeholders})
+  `).get(...uniqueIds) as { count: number };
+
+  db.run(
+    `
+      DELETE FROM observations
+      WHERE id IN (${placeholders})
+    `,
+    uniqueIds,
+  );
+
+  return row.count;
+}
+
 function hydrateObservation(
   db: Database,
   observation: ObservationRecord,

@@ -3,7 +3,6 @@ import type { Database } from "bun:sqlite";
 
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import {
-  deleteEphemeralToolCallObservationsForSession,
   listObservationsForSession,
   persistObservation,
 } from "../db/repositories/observationsRepository";
@@ -25,6 +24,10 @@ import {
   type SessionCompressionSummary,
   type SessionRecord,
 } from "./types";
+import {
+  consolidatePassiveObservationsForSession,
+  previewPassiveObservationConsolidationForSession,
+} from "./consolidation";
 
 export const DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS = 2 * 60 * 60 * 1000;
 export const DEFAULT_SESSION_RETENTION_AFTER_MS = 90 * 24 * 60 * 60 * 1000;
@@ -144,7 +147,15 @@ export function compressSession(
   }
 
   const observations = listObservationsForSession(db, session.sessionId);
-  const draft = buildSessionCompressionSummaryDraft(session, observations, input.nowMs);
+  const consolidationGroups = previewPassiveObservationConsolidationForSession(db, {
+    sessionId: session.sessionId,
+  });
+  const draft = buildSessionCompressionSummaryDraft(
+    session,
+    observations,
+    input.nowMs,
+    consolidationGroups.reduce((total, group) => total + group.sourceObservationCount, 0),
+  );
   const summaryObservation = persistObservation(db, {
     repoRoot: session.repoRoot,
     sessionId: session.sessionId,
@@ -153,7 +164,7 @@ export function compressSession(
     source: ObservationSource.McpAuto,
     toolName: SUMMARY_TOOL_NAME,
     queryText: draft.keyTerms.join(" "),
-    summary: `Compressed session ${session.sessionId}: ${draft.prunedToolCallObservationCount} tool calls summarized, ${draft.preservedDurableObservationCount} durable observations preserved.`,
+    summary: `Compressed session ${session.sessionId}: ${draft.prunedToolCallObservationCount} repeated tool calls consolidated, ${draft.preservedDurableObservationCount} durable observations preserved.`,
     body: formatSummaryBody(draft),
     sourceRunId: getLatestIndexRun(db)?.id,
     createdAtMs: input.nowMs,
@@ -168,7 +179,10 @@ export function compressSession(
   };
   const persisted = persistSessionCompressionSummary(db, { summary });
 
-  deleteEphemeralToolCallObservationsForSession(db, session.sessionId);
+  consolidatePassiveObservationsForSession(db, {
+    sessionId: session.sessionId,
+    nowMs: input.nowMs,
+  });
   markSessionCompressed(db, {
     sessionId: session.sessionId,
     compressedAtMs: input.nowMs,
@@ -183,6 +197,7 @@ function buildSessionCompressionSummaryDraft(
   session: SessionRecord,
   observations: readonly Observation[],
   compressedAtMs: number,
+  prunedToolCallObservationCount: number,
 ): Omit<SessionCompressionSummary, "summaryObservationId"> {
   const observationCounts = countBy(observations, (observation) => observation.kind);
   const toolCallObservations = observations.filter(isEphemeralToolCallObservation);
@@ -224,7 +239,7 @@ function buildSessionCompressionSummaryDraft(
     fqNames,
     keyTerms,
     preservedDurableObservationCount: durableObservations.length,
-    prunedToolCallObservationCount: toolCallObservations.length,
+    prunedToolCallObservationCount,
   };
 
   return {
@@ -307,6 +322,8 @@ function formatSummaryBody(summary: Omit<SessionCompressionSummary, "summaryObse
     `key_terms=${summary.keyTerms.join(", ")}`,
     `preserved_durable_observation_count=${summary.preservedDurableObservationCount}`,
     `pruned_tool_call_observation_count=${summary.prunedToolCallObservationCount}`,
+    "pruning_scope=repeated_passive_tool_calls_only",
+    "consolidation_strategy=deterministic_lexical_structural",
   ].join("\n");
 }
 
