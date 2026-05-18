@@ -81,6 +81,12 @@ import {
   readInspectableSession,
 } from "../observations/sessionInspection";
 import {
+  captureExpandVexpRefObservationBestEffort,
+  captureImpactGraphObservationBestEffort,
+  captureLogicFlowObservationBestEffort,
+  captureSearchMemoryObservationBestEffort,
+  captureSessionContextObservationBestEffort,
+  captureSkeletonObservationBestEffort,
   captureVisibleCapsuleObservationBestEffort,
   computeVisibleCapsuleObservationDedupeKey,
 } from "../observations/autoCapture";
@@ -4583,7 +4589,7 @@ function createExpandVexpRefToolDefinition(
       ),
       outputSchema: EXPAND_VEXP_REF_OUTPUT_SCHEMA,
     },
-    handler({ request }) {
+    async handler({ context, request }) {
       const input = parseObjectInput(McpToolId.ExpandVexpRef, request.input);
 
       if ("ok" in input && input.ok === false) {
@@ -4662,23 +4668,58 @@ function createExpandVexpRefToolDefinition(
       const shapedContent = content.kind === "text"
         ? { kind: content.kind, mimeType: content.mimeType, text: content.text }
         : { kind: content.kind, value: structuredClone(content.value) };
+      const output = {
+        requestedHash: rawHash,
+        resolved: true,
+        stableId: entry.stableId,
+        category: entry.category,
+        content: shapedContent,
+        metadata: structuredClone(entry.metadata) as Readonly<Record<string, unknown>>,
+        notes: [
+          "Stored deferred payload expanded deterministically; no recomputation.",
+        ],
+      } as const;
+
+      await captureExpandVexpRefObservationFromContext(context, output);
 
       return {
         ok: true,
-        output: {
-          requestedHash: rawHash,
-          resolved: true,
-          stableId: entry.stableId,
-          category: entry.category,
-          content: shapedContent,
-          metadata: structuredClone(entry.metadata) as Readonly<Record<string, unknown>>,
-          notes: [
-            "Stored deferred payload expanded deterministically; no recomputation.",
-          ],
-        },
+        output,
       };
     },
   });
+}
+
+async function captureExpandVexpRefObservationFromContext(
+  context: McpServerContext,
+  output: ExpandVexpRefSuccessOutput,
+): Promise<void> {
+  const resolved = await resolveReadyRepoBinding(context, McpToolId.ExpandVexpRef);
+
+  if (!resolved.ok) {
+    return;
+  }
+
+  const db = openIndexerDatabase(resolved.binding.dbPath);
+
+  try {
+    if (!hasIndexedFiles(db)) {
+      return;
+    }
+
+    captureExpandVexpRefObservationBestEffort({
+      db,
+      repoRoot: resolved.binding.repoRoot,
+      sourceRunId: getLatestIndexRun(db)?.id ?? null,
+      toolName: McpToolId.ExpandVexpRef,
+      requestedHash: output.requestedHash,
+      resolved: output.resolved,
+      stableId: output.stableId,
+      category: output.category,
+    });
+  } finally {
+    db.close();
+  }
 }
 
 function getRequiredToolDefinition(
@@ -5626,19 +5667,37 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.SearchMemory,
-        async (_binding, db) => ({
-          ok: true,
-          output: {
+        async (binding, db) => {
+          const results = searchMemory(db, {
             query,
-            results: searchMemory(db, {
+            maxResults,
+            sessionId,
+            linkedFilePaths,
+            linkedSymbolIds,
+          });
+
+          captureSearchMemoryObservationBestEffort({
+            db,
+            repoRoot: binding.repoRoot,
+            sourceRunId: getLatestIndexRun(db)?.id ?? null,
+            toolName: McpToolId.SearchMemory,
+            query,
+            maxResults,
+            sessionId,
+            resultCount: results.length,
+            topObservationIds: results.map((result) => result.observation.id),
+            linkedFilePaths,
+            linkedSymbolIds,
+          });
+
+          return {
+            ok: true,
+            output: {
               query,
-              maxResults,
-              sessionId,
-              linkedFilePaths,
-              linkedSymbolIds,
-            }).map(formatObservationSearchResult),
-          },
-        }),
+              results: results.map(formatObservationSearchResult),
+            },
+          };
+        },
       );
     },
   }),
@@ -5720,11 +5779,36 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.GetSessionContext,
-        async (_binding, db) => {
+        async (binding, db) => {
           const contextResult = getSessionContext(db, {
             sessionId,
             limit,
             query,
+          });
+          const linkedObservations = [
+            ...contextResult.observations,
+            ...(contextResult.rankedObservations ?? []),
+          ];
+
+          captureSessionContextObservationBestEffort({
+            db,
+            repoRoot: binding.repoRoot,
+            sourceRunId: getLatestIndexRun(db)?.id ?? null,
+            toolName: McpToolId.GetSessionContext,
+            sessionId,
+            query,
+            limit,
+            observationCount: contextResult.observations.length,
+            rankedObservationCount: contextResult.rankedObservations?.length,
+            observationIds: contextResult.observations.map((observation) => observation.id),
+            linkedFilePaths: linkedObservations.flatMap((observation) => observation.linkedFilePaths),
+            linkedSymbolIds: linkedObservations.flatMap((observation) => {
+              return observation.linkedSymbols.map((link) => link.symbolId);
+            }),
+            linkedFqNames: linkedObservations.flatMap((observation) => [
+              ...observation.linkedFqNames,
+              ...observation.linkedSymbols.map((link) => link.fqName),
+            ]),
           });
 
           return {
@@ -6122,6 +6206,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               capsuleProfileId: orchestration.context.preparedAssembly.selection.profile.id,
               capsule: orchestration.context.capsule,
               toolName: McpToolId.RunPipeline,
+              ...(sessionId === undefined ? {} : { sessionId, sessionAgentKind: "mcp" }),
             });
           }
 
@@ -6420,7 +6505,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.GetImpactGraph,
-        async (_binding, db) => {
+        async (binding, db) => {
           const result = getImpactGraph(db, {
             symbolFqn,
             depth: depth ?? 5,
@@ -6430,6 +6515,14 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           if (!result.ok) {
             return invalidRequest(McpToolId.GetImpactGraph, result.error.message, result.error.details);
           }
+
+          captureImpactGraphObservationBestEffort({
+            db,
+            repoRoot: binding.repoRoot,
+            sourceRunId: getLatestIndexRun(db)?.id ?? null,
+            output: result.output,
+            toolName: McpToolId.GetImpactGraph,
+          });
 
           return {
             ok: true,
@@ -6511,7 +6604,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.SearchLogicFlow,
-        async (_binding, db) => {
+        async (binding, db) => {
           const result = searchLogicFlow(db, {
             start,
             end,
@@ -6521,6 +6614,14 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           if (!result.ok) {
             return invalidRequest(McpToolId.SearchLogicFlow, result.error.message, result.error.details);
           }
+
+          captureLogicFlowObservationBestEffort({
+            db,
+            repoRoot: binding.repoRoot,
+            sourceRunId: getLatestIndexRun(db)?.id ?? null,
+            output: result.output,
+            toolName: McpToolId.SearchLogicFlow,
+          });
 
           return {
             ok: true,
@@ -6575,14 +6676,27 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.GetSkeleton,
-        async (binding, db) => ({
-          ok: true,
-          output: await getSkeleton(db, {
+        async (binding, db) => {
+          const output = await getSkeleton(db, {
             repoRoot: binding.repoRoot,
             files,
             detail: detail ?? "standard",
-          }),
-        }),
+          });
+
+          captureSkeletonObservationBestEffort({
+            db,
+            repoRoot: binding.repoRoot,
+            sourceRunId: getLatestIndexRun(db)?.id ?? null,
+            output,
+            toolName: McpToolId.GetSkeleton,
+            requestedFiles: files,
+          });
+
+          return {
+            ok: true,
+            output,
+          };
+        },
       );
     },
   }),

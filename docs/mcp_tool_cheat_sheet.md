@@ -20,6 +20,12 @@ Prefer product-facing input names for new callers:
 
 Legacy names (`query`, `intent`, `maxBudgetCharacters`) still work.
 
+## Passive Memory
+
+Meaningful visible MCP calls auto-capture compact `tool_call` observations. This currently includes orchestration/context, structural impact and skeleton tools, logic flow, memory/session lookups, and successful V-REF expansion.
+
+`index_status`, `workspace_setup`, and `save_observation` are excluded. Captures are deterministic, compact, and linked only to exact file/symbol evidence already present in the call or result. They are not embeddings, semantic consolidation, passive file watching, anti-pattern detection, or project-rule generation.
+
 ## Direct Tool Choices
 
 - `get_context_capsule`: use when you only need the compact context capsule and do not need orchestration, impact, memory, or task-summary sections.

@@ -16,7 +16,7 @@ import {
 import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
 import { persistCapsuleManifest } from "../db/repositories/capsuleManifestsRepository";
 import { listIndexRuns } from "../db/repositories/indexRunsRepository";
-import { countObservations } from "../db/repositories/observationsRepository";
+import { countObservations, listObservations } from "../db/repositories/observationsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
 import { indexProject } from "../indexer/indexProject";
 import { routeQuery } from "../intent/routeQuery";
@@ -1631,8 +1631,16 @@ test("run_pipeline auto-captures a deduped tool-call observation on happy path a
       assert.equal(saved.result.ok, true);
       assert.equal(saved.result.output.savedObservation?.observation.toolName, "run_pipeline");
       assert.equal(saved.result.output.savedObservation?.observation.sessionId, "pipeline-session");
-      // Auto-capture (no session) + explicit session-bound observation = 2 rows.
-      assert.equal(countObservations(db), 2);
+      // Auto-capture (no session) + session-bound auto-capture + explicit session-bound observation.
+      assert.equal(countObservations(db), 3);
+      assert.equal(
+        listObservations(db).some((observation) => {
+          return observation.toolName === "run_pipeline"
+            && observation.source === "mcp_auto"
+            && observation.sessionId === "pipeline-session";
+        }),
+        true,
+      );
     } finally {
       db.close();
     }
@@ -2122,6 +2130,175 @@ test("get_skeleton reports not-indexed and missing files explicitly", async () =
   });
 });
 
+test("visible structural MCP tools auto-capture compact deterministic tool-call observations", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+    const db = openIndexerDatabase(initialized.paths.dbPath);
+
+    try {
+      const impactRequest = {
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-auto-impact",
+        toolId: McpToolId.GetImpactGraph,
+        input: {
+          symbol_fqn: "src/session.ts::SessionManager.createSession",
+          depth: 2,
+          format: "tree",
+        },
+      } as const;
+      const skeletonRequest = {
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-auto-skeleton",
+        toolId: McpToolId.GetSkeleton,
+        input: {
+          files: ["src/controller.ts", "src/session.ts"],
+          detail: "standard",
+        },
+      } as const;
+      const logicFlowRequest = {
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-auto-logic-flow",
+        toolId: McpToolId.SearchLogicFlow,
+        input: {
+          start: "src/controller.ts::SessionController",
+          end: "src/session.ts::SessionManager.createSession",
+        },
+      } as const;
+
+      assert.equal((await server.handleRequest(impactRequest)).result.ok, true);
+      assert.equal((await server.handleRequest(impactRequest)).result.ok, true);
+      assert.equal(countObservations(db), 1);
+
+      assert.equal((await server.handleRequest(skeletonRequest)).result.ok, true);
+      assert.equal((await server.handleRequest(skeletonRequest)).result.ok, true);
+      assert.equal(countObservations(db), 2);
+
+      assert.equal((await server.handleRequest(logicFlowRequest)).result.ok, true);
+      assert.equal((await server.handleRequest(logicFlowRequest)).result.ok, true);
+      assert.equal(countObservations(db), 3);
+
+      const observations = listObservations(db);
+      const impact = observations.find((observation) => observation.toolName === "get_impact_graph");
+      const skeleton = observations.find((observation) => observation.toolName === "get_skeleton");
+      const logicFlow = observations.find((observation) => observation.toolName === "search_logic_flow");
+
+      assert.equal(impact?.kind, "tool_call");
+      assert.equal(impact?.source, "mcp_auto");
+      assert.equal(impact?.queryText, "src/session.ts::SessionManager.createSession");
+      assert.equal(impact?.summary.includes("with 2 dependents"), true);
+      assert.deepEqual(impact?.linkedFilePaths, ["src/session.ts", "src/controller.ts"]);
+      assert.equal(impact?.linkedFqNames.includes("src/session.ts::SessionManager.createSession"), true);
+      assert.equal(impact?.body.includes("view.lines"), false);
+
+      assert.equal(skeleton?.kind, "tool_call");
+      assert.equal(skeleton?.summary, "Generated skeletons for 2 indexed files.");
+      assert.deepEqual(skeleton?.linkedFilePaths, ["src/controller.ts", "src/session.ts"]);
+      assert.equal(skeleton?.body.includes("return accountId"), false);
+
+      assert.equal(logicFlow?.kind, "tool_call");
+      assert.equal(logicFlow?.summary.includes("with 1 path(s)"), true);
+      assert.equal(logicFlow?.linkedFqNames.includes("src/controller.ts::SessionController"), true);
+      assert.equal(logicFlow?.linkedFqNames.includes("src/session.ts::SessionManager.createSession"), true);
+
+      const searched = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-auto-structural-search-memory",
+        toolId: McpToolId.SearchMemory,
+        input: {
+          query: "get_impact_graph src/session.ts::SessionManager.createSession",
+          maxResults: 5,
+        },
+      });
+      assert.equal(searched.result.ok, true);
+      assert.equal(searched.result.output.results[0]?.observation.toolName, "get_impact_graph");
+      assert.equal(countObservations(db), 4);
+
+      const contextResult = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-auto-structural-session-context",
+        toolId: McpToolId.GetSessionContext,
+        input: {
+          limit: 5,
+          query: "get_skeleton",
+        },
+      });
+      const repeatedContextResult = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-auto-structural-session-context-repeat",
+        toolId: McpToolId.GetSessionContext,
+        input: {
+          limit: 5,
+          query: "get_skeleton",
+        },
+      });
+
+      assert.equal(contextResult.result.ok, true);
+      assert.equal(
+        contextResult.result.output.rankedObservations?.some((observation) => {
+          return observation.toolName === "get_skeleton";
+        }),
+        true,
+      );
+      assert.equal(repeatedContextResult.result.ok, true);
+      assert.equal(countObservations(db), 5);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("noisy or explicit MCP tools do not auto-capture observations", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+    const db = openIndexerDatabase(initialized.paths.dbPath);
+
+    try {
+      const indexStatus = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-no-auto-index-status",
+        toolId: McpToolId.IndexStatus,
+        input: {},
+      });
+      const workspaceSetup = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-no-auto-workspace-setup",
+        toolId: McpToolId.WorkspaceSetup,
+        input: {},
+      });
+
+      assert.equal(indexStatus.result.ok, true);
+      assert.equal(workspaceSetup.result.ok, true);
+      assert.equal(countObservations(db), 0);
+
+      const saved = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-no-recursive-save-observation",
+        toolId: McpToolId.SaveObservation,
+        input: {
+          kind: "insight",
+          summary: "Explicit save only",
+          body: "This row is created by save_observation itself.",
+          toolName: "save_observation",
+        },
+      });
+
+      assert.equal(saved.result.ok, true);
+      assert.equal(countObservations(db), 1);
+      assert.equal(listObservations(db)[0]?.summary, "Explicit save only");
+    } finally {
+      db.close();
+    }
+  });
+});
+
 test("save_observation, search_memory, and get_session_context delegate to the real observation services", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);
@@ -2156,6 +2333,12 @@ test("save_observation, search_memory, and get_session_context delegate to the r
           linkedSymbolIds: [sessionSymbol!.id],
         },
       });
+      assert.equal(saved.result.ok, true);
+      assert.equal(saved.result.output.observation.kind, "warning");
+      assert.equal(saved.result.output.observation.sessionId, "session-alpha");
+      assert.equal(saved.result.output.observation.linkedSymbols[0]?.symbolId, sessionSymbol!.id);
+      assert.equal(countObservations(db), 1, "save_observation should only create its explicit row");
+
       const searched = await server.handleRequest({
         schema: MCP_SERVER_SCHEMA,
         requestId: "req-search-memory",
@@ -2186,48 +2369,64 @@ test("save_observation, search_memory, and get_session_context delegate to the r
         },
       });
 
-      assert.equal(saved.result.ok, true);
-      assert.equal(saved.result.output.observation.kind, "warning");
-      assert.equal(saved.result.output.observation.sessionId, "session-alpha");
-      assert.equal(saved.result.output.observation.linkedSymbols[0]?.symbolId, sessionSymbol!.id);
       assert.equal(searched.result.ok, true);
       assert.equal(searched.result.output.results[0]?.observation.summary, "Session loader note");
       assert.equal(searched.result.output.results[0]?.staleness.status, "fresh");
       assert.equal(contextResult.result.ok, true);
-      assert.deepEqual(contextResult.result.output.session, {
-        sessionId: "session-alpha",
-        repoRoot,
-        agentKind: "mcp",
-        startedAtMs: saved.result.output.observation.createdAtMs,
-        lastActivityAtMs: saved.result.output.observation.createdAtMs,
-        status: "active",
-      });
+      assert.equal(contextResult.result.output.session.sessionId, "session-alpha");
+      assert.equal(contextResult.result.output.session.repoRoot, repoRoot);
+      assert.equal(contextResult.result.output.session.agentKind, "mcp");
+      assert.equal(contextResult.result.output.session.startedAtMs, saved.result.output.observation.createdAtMs);
+      assert.equal(
+        contextResult.result.output.session.lastActivityAtMs >= saved.result.output.observation.createdAtMs,
+        true,
+      );
+      assert.equal(contextResult.result.output.session.status, "active");
       assert.deepEqual(contextResult.result.output.summary, {
-        observationCount: 1,
-        lastObservationAtMs: saved.result.output.observation.createdAtMs,
-        freshObservationCount: 1,
+        observationCount: 2,
+        lastObservationAtMs: contextResult.result.output.session.lastActivityAtMs,
+        freshObservationCount: 2,
         staleObservationCount: 0,
         kindCounts: {
           decision: 0,
           insight: 0,
           warning: 1,
           deadEnd: 0,
-          toolCall: 0,
+          toolCall: 1,
         },
         recentFilePaths: ["src/service.ts"],
         recentSymbolIds: [sessionSymbol!.id],
         recentFqNames: ["src/service.ts::readUser"],
-        repeatedQueryTerms: [],
+        repeatedQueryTerms: [
+          { term: "loader", count: 2 },
+          { term: "session", count: 2 },
+        ],
       });
-      assert.deepEqual(
-        contextResult.result.output.observations.map((observation) => observation.summary),
-        ["Session loader note"],
+      assert.equal(
+        contextResult.result.output.observations.some((observation) => {
+          return observation.summary === "Session loader note";
+        }),
+        true,
+      );
+      assert.equal(
+        contextResult.result.output.observations.some((observation) => {
+          return observation.toolName === "search_memory" && observation.kind === "tool_call";
+        }),
+        true,
       );
       assert.equal(contextResult.result.output.rankedObservations, undefined);
       assert.equal(rankedContextResult.result.ok, true);
-      assert.deepEqual(
-        rankedContextResult.result.output.rankedObservations?.map((observation) => observation.summary),
-        ["Session loader note"],
+      assert.equal(
+        rankedContextResult.result.output.rankedObservations?.some((observation) => {
+          return observation.summary === "Session loader note";
+        }),
+        true,
+      );
+      assert.equal(
+        rankedContextResult.result.output.rankedObservations?.some((observation) => {
+          return observation.toolName === "search_memory";
+        }),
+        true,
       );
     } finally {
       db.close();

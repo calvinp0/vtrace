@@ -24,6 +24,24 @@ The current visible tool names are:
 
 Most of those are directly useful today. `expand_vexp_ref` is the advanced exception.
 
+## Passive Tool-Call Observations
+
+VEXB auto-captures compact `tool_call` observations for meaningful visible MCP tool calls. Current capture covers successful, useful calls to `run_pipeline`, `get_context_capsule`, `get_impact_graph`, `search_logic_flow`, `get_skeleton`, `search_memory`, `get_session_context`, and resolved `expand_vexp_ref` expansions.
+
+Captured observations are deterministic and compact. They store tool name, exact query/task/symbol/file inputs where available, a short summary, and bounded metadata such as counts or selected profiles. They do not store full raw tool outputs.
+
+When the tool input or output already exposes exact graph evidence, captured observations may link to repo-relative files, symbol ids, and symbol FQNs. VEXB does not fuzzy guess links or run extra retrieval just to enrich a passive observation. If a session id is present, the observation is associated with that session.
+
+The following visible tools are intentionally excluded from passive capture:
+
+- `index_status`
+- `workspace_setup`
+- `save_observation`
+
+`index_status` and `workspace_setup` are often status/setup plumbing. `save_observation` already writes exactly what the caller asked to save and is not recursively captured.
+
+This is a passive-memory substrate, not full VEXP parity. It does not add embeddings, semantic similarity, learned ranking, passive file watching, anti-pattern detection, semantic consolidation, project-rule generation, or claims that every agent decision is understood.
+
 ## Default Orchestration
 
 ### `run_pipeline`

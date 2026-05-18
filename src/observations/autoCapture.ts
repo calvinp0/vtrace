@@ -3,7 +3,10 @@ import type { Database } from "bun:sqlite";
 
 import type { Capsule } from "../capsule/types";
 import { persistObservation } from "../db/repositories/observationsRepository";
+import type { ImpactGraphOutput } from "../impact/getImpactGraph";
 import type { RoutedQueryResult } from "../intent/routeQuery";
+import type { LogicFlowOutput } from "../logicFlow/searchLogicFlow";
+import type { GetSkeletonOutput } from "../skeleton/getSkeleton";
 import { ObservationKind, ObservationSource, type Observation } from "./types";
 
 export interface CaptureVisibleCapsuleObservationInput {
@@ -28,10 +31,16 @@ export function captureVisibleCapsuleObservation(
   const topPivots = input.capsule.pivots
     .slice(0, 3)
     .map((item) => item.fqName);
+  const pivotCount = input.capsule.pivots.length;
+  const supportCount = input.capsule.supportingItems.length;
   const body = [
+    `tool=${input.toolName}`,
+    `query=${input.routedQuery.query}`,
     `intent=${input.routedQuery.intent}`,
     `routing_profile=${input.routedQuery.profile.id}`,
     `capsule_profile=${input.capsuleProfileId}`,
+    `pivot_count=${pivotCount}`,
+    `support_count=${supportCount}`,
     `top_pivots=${topPivots.join(", ")}`,
   ].join("\n");
 
@@ -44,11 +53,12 @@ export function captureVisibleCapsuleObservation(
     toolName: input.toolName,
     queryText: input.routedQuery.query,
     intent: input.routedQuery.intent,
-    summary: `${input.toolName}: ${input.routedQuery.query}`,
+    summary: `Built context capsule for query with ${pivotCount} pivots and ${supportCount} supports.`,
     body,
     sourceRunId: input.sourceRunId ?? undefined,
     dedupeKey: computeVisibleCapsuleObservationDedupeKey({
       sourceRunId: input.sourceRunId,
+      sessionId: input.sessionId,
       routedQuery: input.routedQuery,
       capsuleProfileId: input.capsuleProfileId,
       capsule: input.capsule,
@@ -56,6 +66,337 @@ export function captureVisibleCapsuleObservation(
     linkedFilePaths,
     linkedSymbolIds,
     linkedFqNames,
+  });
+}
+
+export interface CaptureToolCallObservationInput {
+  db: Database;
+  repoRoot: string;
+  sourceRunId: number | null;
+  toolName: string;
+  summary: string;
+  bodyLines: readonly string[];
+  dedupeParts: readonly unknown[];
+  sessionId?: string;
+  sessionAgentKind?: string;
+  queryText?: string;
+  intent?: string;
+  linkedFilePaths?: readonly string[];
+  linkedSymbolIds?: readonly string[];
+  linkedFqNames?: readonly string[];
+}
+
+export function captureToolCallObservation(
+  input: CaptureToolCallObservationInput,
+): Observation {
+  return persistObservation(input.db, {
+    repoRoot: input.repoRoot,
+    ...(input.sessionId === undefined ? {} : { sessionId: input.sessionId }),
+    sessionAgentKind: input.sessionAgentKind ?? "mcp",
+    kind: ObservationKind.ToolCall,
+    source: ObservationSource.McpAuto,
+    toolName: input.toolName,
+    queryText: input.queryText,
+    intent: input.intent,
+    summary: input.summary,
+    body: input.bodyLines.join("\n"),
+    sourceRunId: input.sourceRunId ?? undefined,
+    dedupeKey: computeToolCallObservationDedupeKey({
+      toolName: input.toolName,
+      sessionId: input.sessionId,
+      sourceRunId: input.sourceRunId,
+      parts: input.dedupeParts,
+    }),
+    linkedFilePaths: input.linkedFilePaths,
+    linkedSymbolIds: input.linkedSymbolIds,
+    linkedFqNames: input.linkedFqNames,
+  });
+}
+
+export function captureToolCallObservationBestEffort(
+  input: CaptureToolCallObservationInput,
+): Observation | undefined {
+  try {
+    return captureToolCallObservation(input);
+  } catch {
+    return undefined;
+  }
+}
+
+export function captureImpactGraphObservationBestEffort(input: {
+  db: Database;
+  repoRoot: string;
+  sourceRunId: number | null;
+  output: ImpactGraphOutput;
+  toolName: string;
+  sessionId?: string;
+}): Observation | undefined {
+  const dependentSymbolCount = input.output.summary.dependentSymbolCount;
+  const dependentFileCount = input.output.summary.dependentFileCount;
+  const linkedFilePaths = [
+    input.output.resolvedSymbol.filePath,
+    ...input.output.dependentFiles,
+  ];
+  const linkedSymbolIds = input.output.nodes.map((node) => node.symbolId);
+  const linkedFqNames = input.output.nodes.map((node) => node.fqName);
+
+  return captureToolCallObservationBestEffort({
+    db: input.db,
+    repoRoot: input.repoRoot,
+    sourceRunId: input.sourceRunId,
+    toolName: input.toolName,
+    sessionId: input.sessionId,
+    queryText: input.output.requested.symbolFqn,
+    summary:
+      `Computed impact graph for ${input.output.requested.symbolFqn} with ${dependentSymbolCount} dependents across ${dependentFileCount} files.`,
+    bodyLines: [
+      `tool=${input.toolName}`,
+      `symbol_fqn=${input.output.requested.symbolFqn}`,
+      `depth=${input.output.requested.depth}`,
+      `format=${input.output.requested.format}`,
+      `dependent_symbol_count=${dependentSymbolCount}`,
+      `dependent_file_count=${dependentFileCount}`,
+      `resolved_symbol_id=${input.output.resolvedSymbol.symbolId}`,
+    ],
+    dedupeParts: [
+      input.output.requested,
+      input.output.summary,
+      input.output.dependentFiles,
+    ],
+    linkedFilePaths,
+    linkedSymbolIds,
+    linkedFqNames,
+  });
+}
+
+export function captureLogicFlowObservationBestEffort(input: {
+  db: Database;
+  repoRoot: string;
+  sourceRunId: number | null;
+  output: LogicFlowOutput;
+  toolName: string;
+  sessionId?: string;
+}): Observation | undefined {
+  const pathSymbols = input.output.paths.flatMap((path) => path.nodes);
+  const linkedFilePaths = [
+    input.output.resolvedStart.filePath,
+    input.output.resolvedEnd.filePath,
+    ...pathSymbols.map((symbol) => symbol.filePath),
+  ];
+  const linkedSymbolIds = [
+    input.output.resolvedStart.symbolId,
+    input.output.resolvedEnd.symbolId,
+    ...pathSymbols.map((symbol) => symbol.symbolId),
+  ];
+  const linkedFqNames = [
+    input.output.resolvedStart.fqName,
+    input.output.resolvedEnd.fqName,
+    ...pathSymbols.map((symbol) => symbol.fqName),
+  ];
+
+  return captureToolCallObservationBestEffort({
+    db: input.db,
+    repoRoot: input.repoRoot,
+    sourceRunId: input.sourceRunId,
+    toolName: input.toolName,
+    sessionId: input.sessionId,
+    queryText: `${input.output.requested.start} -> ${input.output.requested.end}`,
+    summary:
+      `Computed logic flow from ${input.output.requested.start} to ${input.output.requested.end} with ${input.output.summary.pathCount} path(s).`,
+    bodyLines: [
+      `tool=${input.toolName}`,
+      `start=${input.output.requested.start}`,
+      `end=${input.output.requested.end}`,
+      `max_paths=${input.output.requested.maxPaths}`,
+      `reachable=${input.output.summary.reachable}`,
+      `path_count=${input.output.summary.pathCount}`,
+      `shortest_path_edge_count=${input.output.summary.shortestPathEdgeCount ?? "null"}`,
+    ],
+    dedupeParts: [
+      input.output.requested,
+      {
+        pathCount: input.output.summary.pathCount,
+        shortestPathEdgeCount: input.output.summary.shortestPathEdgeCount,
+        truncated: input.output.summary.truncated,
+      },
+    ],
+    linkedFilePaths,
+    linkedSymbolIds,
+    linkedFqNames,
+  });
+}
+
+export function captureSkeletonObservationBestEffort(input: {
+  db: Database;
+  repoRoot: string;
+  sourceRunId: number | null;
+  output: GetSkeletonOutput;
+  toolName: string;
+  requestedFiles: readonly string[];
+  sessionId?: string;
+}): Observation | undefined {
+  const indexedFiles = input.output.files.filter((file) => file.status === "ok");
+
+  if (indexedFiles.length === 0) {
+    return undefined;
+  }
+
+  return captureToolCallObservationBestEffort({
+    db: input.db,
+    repoRoot: input.repoRoot,
+    sourceRunId: input.sourceRunId,
+    toolName: input.toolName,
+    sessionId: input.sessionId,
+    queryText: input.requestedFiles.join(" "),
+    summary: `Generated skeletons for ${indexedFiles.length} indexed files.`,
+    bodyLines: [
+      `tool=${input.toolName}`,
+      `detail=${input.output.detail}`,
+      `requested_file_count=${input.requestedFiles.length}`,
+      `indexed_file_count=${indexedFiles.length}`,
+      `files=${input.output.files.map((file) => `${file.filePath}:${file.status}`).join(", ")}`,
+    ],
+    dedupeParts: [
+      input.output.detail,
+      input.output.files.map((file) => ({
+        filePath: file.filePath,
+        status: file.status,
+        declarationCount: file.declarations.length,
+        importCount: file.imports.length,
+        exportCount: file.exports.length,
+      })),
+    ],
+    linkedFilePaths: indexedFiles.map((file) => file.filePath),
+  });
+}
+
+export function captureSearchMemoryObservationBestEffort(input: {
+  db: Database;
+  repoRoot: string;
+  sourceRunId: number | null;
+  toolName: string;
+  query: string;
+  maxResults?: number;
+  sessionId?: string;
+  resultCount: number;
+  topObservationIds: readonly string[];
+  linkedFilePaths?: readonly string[];
+  linkedSymbolIds?: readonly string[];
+}): Observation | undefined {
+  if (input.resultCount === 0) {
+    return undefined;
+  }
+
+  return captureToolCallObservationBestEffort({
+    db: input.db,
+    repoRoot: input.repoRoot,
+    sourceRunId: input.sourceRunId,
+    toolName: input.toolName,
+    sessionId: input.sessionId,
+    queryText: input.query,
+    summary: `Searched memory for "${input.query}" and returned ${input.resultCount} observations.`,
+    bodyLines: [
+      `tool=${input.toolName}`,
+      `query=${input.query}`,
+      `max_results=${input.maxResults ?? "default"}`,
+      `result_count=${input.resultCount}`,
+      `top_observation_ids=${input.topObservationIds.slice(0, 5).join(", ")}`,
+    ],
+    dedupeParts: [
+      input.query,
+      input.maxResults ?? null,
+      input.sessionId ?? null,
+      input.linkedFilePaths ?? [],
+      input.linkedSymbolIds ?? [],
+    ],
+    linkedFilePaths: input.linkedFilePaths,
+    linkedSymbolIds: input.linkedSymbolIds,
+  });
+}
+
+export function captureSessionContextObservationBestEffort(input: {
+  db: Database;
+  repoRoot: string;
+  sourceRunId: number | null;
+  toolName: string;
+  sessionId?: string;
+  query?: string;
+  limit?: number;
+  observationCount: number;
+  rankedObservationCount?: number;
+  observationIds: readonly string[];
+  linkedFilePaths: readonly string[];
+  linkedSymbolIds: readonly string[];
+  linkedFqNames: readonly string[];
+}): Observation | undefined {
+  if (input.observationCount === 0) {
+    return undefined;
+  }
+
+  const scope = input.sessionId === undefined ? "recent repo context" : `session ${input.sessionId}`;
+
+  return captureToolCallObservationBestEffort({
+    db: input.db,
+    repoRoot: input.repoRoot,
+    sourceRunId: input.sourceRunId,
+    toolName: input.toolName,
+    sessionId: input.sessionId,
+    queryText: input.query,
+    summary: `Retrieved ${scope} with ${input.observationCount} observations.`,
+    bodyLines: [
+      `tool=${input.toolName}`,
+      `session_id=${input.sessionId ?? "null"}`,
+      `query=${input.query ?? ""}`,
+      `limit=${input.limit ?? "default"}`,
+      `observation_count=${input.observationCount}`,
+      `ranked_observation_count=${input.rankedObservationCount ?? 0}`,
+      `observation_ids=${input.observationIds.slice(0, 5).join(", ")}`,
+    ],
+    dedupeParts: [
+      input.sessionId ?? null,
+      input.query ?? null,
+      input.limit ?? null,
+    ],
+    linkedFilePaths: input.linkedFilePaths,
+    linkedSymbolIds: input.linkedSymbolIds,
+    linkedFqNames: input.linkedFqNames,
+  });
+}
+
+export function captureExpandVexpRefObservationBestEffort(input: {
+  db: Database;
+  repoRoot: string;
+  sourceRunId: number | null;
+  toolName: string;
+  requestedHash: string;
+  resolved: boolean;
+  stableId?: string;
+  category?: string;
+  reason?: string;
+}): Observation | undefined {
+  if (!input.resolved) {
+    return undefined;
+  }
+
+  return captureToolCallObservationBestEffort({
+    db: input.db,
+    repoRoot: input.repoRoot,
+    sourceRunId: input.sourceRunId,
+    toolName: input.toolName,
+    queryText: input.requestedHash,
+    summary: `Expanded V-REF ${input.requestedHash} for ${input.category ?? "unknown"} content.`,
+    bodyLines: [
+      `tool=${input.toolName}`,
+      `hash=${input.requestedHash}`,
+      `resolved=${input.resolved}`,
+      `stable_id=${input.stableId ?? ""}`,
+      `category=${input.category ?? ""}`,
+    ],
+    dedupeParts: [
+      input.requestedHash,
+      input.stableId ?? null,
+      input.category ?? null,
+    ],
   });
 }
 
@@ -74,12 +415,14 @@ export function captureVisibleCapsuleObservationBestEffort(
 
 export function computeVisibleCapsuleObservationDedupeKey(input: {
   sourceRunId: number | null;
+  sessionId?: string;
   routedQuery: RoutedQueryResult;
   capsuleProfileId: string;
   capsule: Pick<Capsule, "pivots">;
 }): string {
   return computeVisibleCapsuleDedupeKey({
     sourceRunId: input.sourceRunId,
+    sessionId: input.sessionId,
     query: input.routedQuery.query,
     intent: input.routedQuery.intent,
     routingProfileId: input.routedQuery.profile.id,
@@ -90,6 +433,7 @@ export function computeVisibleCapsuleObservationDedupeKey(input: {
 
 function computeVisibleCapsuleDedupeKey(input: {
   sourceRunId: number | null;
+  sessionId?: string;
   query: string;
   intent: string;
   routingProfileId: string;
@@ -108,6 +452,8 @@ function computeVisibleCapsuleDedupeKey(input: {
   hash.update("\0");
   hash.update((input.sourceRunId ?? -1).toString(10));
   hash.update("\0");
+  hash.update(input.sessionId ?? "");
+  hash.update("\0");
   hash.update(input.query);
   hash.update("\0");
   hash.update(input.intent);
@@ -122,4 +468,45 @@ function computeVisibleCapsuleDedupeKey(input: {
   }
 
   return hash.digest("hex");
+}
+
+function computeToolCallObservationDedupeKey(input: {
+  toolName: string;
+  sessionId?: string;
+  sourceRunId: number | null;
+  parts: readonly unknown[];
+}): string {
+  const hash = createHash("sha256");
+
+  hash.update("mcp_auto");
+  hash.update("\0");
+  hash.update("tool_call_observation");
+  hash.update("\0");
+  hash.update(input.toolName);
+  hash.update("\0");
+  hash.update(input.sessionId ?? "");
+  hash.update("\0");
+  hash.update((input.sourceRunId ?? -1).toString(10));
+
+  for (const part of input.parts) {
+    hash.update("\0");
+    hash.update(stableStringify(part));
+  }
+
+  return hash.digest("hex");
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`;
+  }
+
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record).sort().map((key) => {
+    return `${JSON.stringify(key)}:${stableStringify(record[key])}`;
+  }).join(",")}}`;
 }
