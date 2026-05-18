@@ -75,6 +75,11 @@ export interface ObservedFileChangeState {
   omittedChangedFileCount: number;
 }
 
+export interface ObservedFileChangeEvent {
+  filePath: string;
+  observedAtMs: number;
+}
+
 export interface RepoFileWatcherState {
   supported: true;
   enabled: boolean;
@@ -92,6 +97,7 @@ export interface RepoLocalState {
   readiness: RepoReadiness;
   lastIndexSnapshot?: LastIndexSnapshot;
   observedFileChanges?: ObservedFileChangeState;
+  observedFileChangeEvents?: ObservedFileChangeEvent[];
   fileWatcher?: RepoFileWatcherState;
   indexSummary: {
     totalFilesScanned: number;

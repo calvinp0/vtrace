@@ -80,6 +80,7 @@ import {
   listInspectableSessions,
   readInspectableSession,
 } from "../observations/sessionInspection";
+import { detectSymbolAddedThenRemovedAntiPatterns } from "../observations/antiPatterns";
 import {
   captureExpandVexpRefObservationBestEffort,
   captureImpactGraphObservationBestEffort,
@@ -5007,6 +5008,9 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         const indexResult = await indexProject({
           repoRoot: resolved.binding.repoRoot,
           db,
+        });
+        detectSymbolAddedThenRemovedAntiPatterns(db, {
+          repoRoot: resolved.binding.repoRoot,
         });
         const latestRun = getLatestIndexRun(db);
         const latestRunSummary = latestRun === undefined

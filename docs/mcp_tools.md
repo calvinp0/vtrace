@@ -40,7 +40,7 @@ The following visible tools are intentionally excluded from passive capture:
 
 `index_status` and `workspace_setup` are often status/setup plumbing. `save_observation` already writes exactly what the caller asked to save and is not recursively captured.
 
-This is a passive-memory substrate, not full VEXP parity. It does not add embeddings, semantic similarity, learned ranking, anti-pattern detection, semantic consolidation, project-rule generation, or claims that every agent decision is understood.
+This is a passive-memory substrate, not full VEXP parity. It does not add embeddings, semantic similarity, learned ranking, semantic consolidation, project-rule generation, or claims that every agent decision is understood.
 
 ## Session Lifecycle Compression
 
@@ -62,7 +62,20 @@ The watcher is mark-stale-only. It does not auto-reindex, does not run a backgro
 
 A successful explicit reindex through the normal indexing path clears pending watcher-observed stale state. Reindexing continues to use the existing structural file and symbol diff machinery. Linked observations, passive `tool_call` observations, and compressed session summary observations become stale through the existing conservative staleness service when their linked files or symbols are modified or removed.
 
-This is not semantic rename detection, runtime dataflow, anti-pattern detection, project-rule generation, or full VEXP passive behavior.
+This is not semantic rename detection, runtime dataflow, project-rule generation, or full VEXP passive behavior.
+
+## Conservative Anti-Pattern Observations
+
+VEXB can detect a small set of conservative anti-patterns from passive observations and watcher/index signals. These are stored as durable `dead_end` observations with explicit anti-pattern metadata so they can be inspected through `get_session_context`, found through `search_memory`, and preserved during session compression.
+
+The initial detectors are intentionally structural:
+
+- `file_thrashing`: source-file watcher events show one file changed repeatedly within a short time window.
+- `symbol_added_then_removed`: existing structural diffs show a symbol was added in one index run and removed in the next.
+
+Detection is deterministic and deduped by evidence signature. Anti-pattern observations include a short summary, severity, exact linked files or symbol FQNs where available, and compact evidence such as change counts or index run ids. Linked anti-pattern observations participate in the existing stale-memory behavior when their files or symbols later change.
+
+This is not semantic understanding of developer intent, progressive nudging, learned classification, semantic consolidation, or project-rule generation. VEXB does not block normal MCP behavior when an anti-pattern observation exists.
 
 ## Default Orchestration
 

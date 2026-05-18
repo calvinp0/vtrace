@@ -4,11 +4,17 @@ import path from "node:path";
 import { normalizeFilePath, type FileRecord } from "../domain/types";
 import { isIndexableRepoSourcePath, scanRepo } from "../fs/scanRepo";
 import {
+  detectFileThrashingAntiPatterns,
+  trimObservedFileChangeEvents,
+} from "../observations/antiPatterns";
+import {
   readRepoLocalState,
   resolveRepoLocalPaths,
   writeRepoLocalState,
 } from "../setup/repoState";
+import { openIndexerDatabase } from "../db/sqlite";
 import type {
+  ObservedFileChangeEvent,
   ObservedFileChangeState,
   RepoFileWatcherState,
   RepoLocalState,
@@ -83,6 +89,13 @@ export async function recordObservedFileChanges(
   }
 
   const previous = state.observedFileChanges;
+  const nextEvents = trimObservedFileChangeEvents([
+    ...(state.observedFileChangeEvents ?? []),
+    ...relevantFilePaths.map((filePath): ObservedFileChangeEvent => ({
+      filePath,
+      observedAtMs: input.nowMs,
+    })),
+  ]);
   const allKnownFiles = [...new Set([
     ...(previous?.changedFiles ?? []),
     ...relevantFilePaths,
@@ -103,6 +116,7 @@ export async function recordObservedFileChanges(
   const nextState: RepoLocalState = {
     ...state,
     observedFileChanges,
+    observedFileChangeEvents: nextEvents,
     fileWatcher: {
       supported: true,
       enabled: true,
@@ -113,11 +127,37 @@ export async function recordObservedFileChanges(
   };
 
   await writeRepoLocalState(statePath, nextState);
+  detectFileThrashingBestEffort({
+    repoRoot: input.repoRoot,
+    dbPath: nextState.dbPath,
+    events: nextEvents,
+  });
 
   return {
     state: nextState,
     observedFileChanges,
   };
+}
+
+function detectFileThrashingBestEffort(input: {
+  repoRoot: string;
+  dbPath: string;
+  events: readonly ObservedFileChangeEvent[];
+}): void {
+  try {
+    const db = openIndexerDatabase(input.dbPath);
+
+    try {
+      detectFileThrashingAntiPatterns(db, {
+        repoRoot: input.repoRoot,
+        events: input.events,
+      });
+    } finally {
+      db.close();
+    }
+  } catch {
+    // Watcher stale marking must never fail because anti-pattern capture failed.
+  }
 }
 
 export function diffSourceFileSnapshots(input: {
