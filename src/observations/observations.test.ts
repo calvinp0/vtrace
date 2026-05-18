@@ -762,6 +762,18 @@ test("inactive sessions compress into stable searchable summaries while preservi
     );
     assert.equal(searchMemory(db, { query: "src/service.ts::readUser", maxResults: 3 })[0]?.observation.id, summary.summaryObservationId);
 
+    const summaryObservation = getObservationById(db, summary.summaryObservationId);
+    assert.notEqual(summaryObservation, undefined);
+    await rewriteServiceFile(repoRoot, "loadUser");
+    await indexProject({ repoRoot, db });
+    const summaryStaleness = getObservationStaleness(db, summaryObservation!);
+
+    assert.equal(summaryStaleness.status, StaleStateStatus.Stale);
+    assert.equal(
+      summaryStaleness.reasons.some((reason) => reason.kind === ObservationStaleReasonKind.FileModified),
+      true,
+    );
+
     const beforeRetention = listSessionCleanupCandidates(db, {
       nowMs: compressedAtMs + DEFAULT_SESSION_RETENTION_AFTER_MS - 1,
       retentionAfterMs: DEFAULT_SESSION_RETENTION_AFTER_MS,

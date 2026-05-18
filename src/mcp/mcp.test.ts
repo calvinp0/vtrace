@@ -24,6 +24,7 @@ import {
   DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS,
   compressInactiveSessions,
 } from "../observations/sessionLifecycle";
+import { recordObservedFileChanges } from "../runtime/fileWatcher";
 import type { GraphSearchResult } from "../retrieval/types";
 import { initRepo } from "../setup/initRepo";
 import { REPO_LOCAL_STATE_DIRNAME } from "../setup/types";
@@ -1763,6 +1764,51 @@ test("index_status and workspace_setup expose honest setup state before and afte
     assert.equal(afterIndexStatus.result.output.initialized, true);
     assert.equal(afterIndexStatus.result.output.indexPresent, true);
     assert.equal(afterIndexStatus.result.output.readiness?.status, "ready");
+    assert.equal(afterIndexStatus.result.output.freshness.state, "fresh");
+    assert.equal(afterIndexStatus.result.output.freshness.isStale, false);
+    assert.equal(afterIndexStatus.result.output.watcher.supported, true);
+    assert.equal(afterIndexStatus.result.output.watcher.running, false);
+  });
+});
+
+test("index_status and run_pipeline diagnostics report watcher-observed stale file changes", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const bound = await createRepoBoundMcpServer({ repoPath: repoRoot });
+    const server = bound.server;
+
+    await recordObservedFileChanges({
+      repoRoot,
+      statePath: initialized.paths.statePath,
+      changedFilePaths: ["src/session.ts"],
+      nowMs: 5_000,
+    });
+
+    const status = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-index-status-stale-watcher",
+      toolId: McpToolId.IndexStatus,
+      input: {},
+    });
+    const pipeline = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-stale-watcher",
+      toolId: McpToolId.RunPipeline,
+      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+    });
+
+    assert.equal(status.result.ok, true);
+    assert.equal(status.result.output.freshness.state, "possibly_stale");
+    assert.equal(status.result.output.freshness.isStale, true);
+    assert.equal(status.result.output.freshness.observedFileChanges.changedFileCount, 1);
+    assert.deepEqual(status.result.output.freshness.observedFileChanges.changedFiles, ["src/session.ts"]);
+    assert.equal(status.result.output.watcher.enabled, true);
+    assert.equal(status.result.output.watcher.lastEventAtMs, 5_000);
+
+    assert.equal(pipeline.result.ok, true);
+    assert.equal(pipeline.result.output.diagnostics.freshness.state, "possibly_stale");
+    assert.equal(pipeline.result.output.diagnostics.freshness.observedFileChanges.changedFiles[0], "src/session.ts");
   });
 });
 

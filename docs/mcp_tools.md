@@ -40,7 +40,7 @@ The following visible tools are intentionally excluded from passive capture:
 
 `index_status` and `workspace_setup` are often status/setup plumbing. `save_observation` already writes exactly what the caller asked to save and is not recursively captured.
 
-This is a passive-memory substrate, not full VEXP parity. It does not add embeddings, semantic similarity, learned ranking, passive file watching, anti-pattern detection, semantic consolidation, project-rule generation, or claims that every agent decision is understood.
+This is a passive-memory substrate, not full VEXP parity. It does not add embeddings, semantic similarity, learned ranking, anti-pattern detection, semantic consolidation, project-rule generation, or claims that every agent decision is understood.
 
 ## Session Lifecycle Compression
 
@@ -53,6 +53,16 @@ Compression physically prunes only ephemeral `mcp_auto` `tool_call` observations
 Compressed sessions remain inspectable through session context: `get_session_context` reports the compression summary and returns preserved observations without flooding the response with pruned passive tool calls. The summary is also persisted as a compact searchable observation, so `search_memory`, `run_pipeline.memory`, and capsule memory surfacing can find it through deterministic lexical and structural signals such as key terms, tool names, file paths, and symbol FQNs.
 
 The default retention threshold is 90 days. This milestone reports deterministic cleanup candidates for old compressed sessions; physical deletion of compressed summaries and durable data is intentionally deferred.
+
+## Optional Passive File Awareness
+
+File watching is opt-in. `vexb watch [repo]` runs a lightweight polling watcher that uses the same indexed-source scan rules as the indexer. It observes created, modified, and deleted source files, debounces bursts, and records a compact pending stale state in `.vexb/state.json`.
+
+The watcher is mark-stale-only. It does not auto-reindex, does not run a background daemon by default, and does not block MCP tools. `index_status` reports watcher support, whether watcher mode has been used for the repo, pending changed file count, a bounded sorted changed-file list, and freshness metadata. `run_pipeline.diagnostics.freshness` also reports stale metadata when available.
+
+A successful explicit reindex through the normal indexing path clears pending watcher-observed stale state. Reindexing continues to use the existing structural file and symbol diff machinery. Linked observations, passive `tool_call` observations, and compressed session summary observations become stale through the existing conservative staleness service when their linked files or symbols are modified or removed.
+
+This is not semantic rename detection, runtime dataflow, anti-pattern detection, project-rule generation, or full VEXP passive behavior.
 
 ## Default Orchestration
 
@@ -159,6 +169,8 @@ Return recent/current session context so you can resume a workstream quickly.
 
 Compact repo MCP status. Use it to check whether the repo is initialized, indexed, and ready.
 
+It also reports optional watcher/freshness metadata, including pending watcher-observed file changes when `vexb watch` has marked the indexed state stale.
+
 ### `workspace_setup`
 
 MCP-facing setup shell.
@@ -206,4 +218,5 @@ Malformed, unknown, expired, and unsupported-category references return explicit
 - `vexb claude-config`
 - `vexb claude-config --agent codex`
 - `vexb daemon start|stop|status|logs`
+- `vexb watch`
 - `vexb mcp-serve --repo <repo>`

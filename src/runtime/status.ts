@@ -27,6 +27,7 @@ import {
   inspectIndexFreshness,
   type IndexFreshnessResult,
 } from "./indexFreshness";
+import { buildFileWatcherStatus } from "./fileWatcher";
 import {
   buildStableMcpLauncher,
   type LauncherCommand,
@@ -52,6 +53,7 @@ export interface ProductShellStatus {
   latestRunId: number | null;
   indexPresent: boolean;
   indexFreshness: IndexFreshnessResult;
+  watcher: ReturnType<typeof buildFileWatcherStatus>;
   launcher: LauncherCommand;
   agentConfig: AgentConfigStatus;
   runtime: RuntimeDaemonStatus;
@@ -84,10 +86,12 @@ export async function inspectProductShellStatus(options: {
   const indexFreshness = await inspectIndexFreshness({
     repoRoot,
     lastIndexSnapshot: state?.lastIndexSnapshot,
+    observedFileChanges: state?.observedFileChanges,
   });
   const launcher = buildStableMcpLauncher(repoRoot);
   const agentConfig = await agent.getStatus(repoRoot);
   const runtime = await getRuntimeDaemonStatus(repoRoot);
+  const watcher = buildFileWatcherStatus(state);
 
   return {
     requestedPath,
@@ -109,6 +113,7 @@ export async function inspectProductShellStatus(options: {
     latestRunId,
     indexPresent,
     indexFreshness,
+    watcher,
     launcher,
     agentConfig,
     runtime,

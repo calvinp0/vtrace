@@ -14,6 +14,7 @@ These are the commands most users should start with:
 ./bin/vexb doctor [repo] [--agent <name>] [--json]
 ./bin/vexb claude-config [repo] [--dry-run] [--agent <name>] [--json]
 ./bin/vexb daemon <start|stop|status|logs> [repo] [--json]
+./bin/vexb watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]
 ./bin/vexb workspace <init|add|list|status> ...
 ./bin/vexb mcp-serve --repo <repo>
 ```
@@ -25,6 +26,7 @@ What they are for:
 - `doctor`: more detailed inspection
 - `claude-config`: install or preview Claude Code / Codex config
 - `daemon`: optional background runtime control
+- `watch`: optional mark-stale-only source file watcher
 - `workspace`: create, update, list, and inspect `.vexb/workspace.json`
 - `mcp-serve`: repo-bound MCP server
 
@@ -65,6 +67,14 @@ Re-index the repo:
 ./bin/vexb index <repo>
 ```
 
+Optionally watch source files and mark the index stale when they change:
+
+```bash
+./bin/vexb watch <repo>
+```
+
+The watcher does not auto-reindex. It records pending source changes in `.vexb/state.json`; `status`, `doctor`, and MCP `index_status` report that stale state until the next successful explicit `index`.
+
 Show the structure of a file:
 
 ```bash
@@ -101,6 +111,7 @@ The product-shell commands support `--json`:
 - `doctor`
 - `claude-config`
 - `daemon`
+- `watch`
 
 That is useful for scripts, editors, or wrappers that want structured output.
 

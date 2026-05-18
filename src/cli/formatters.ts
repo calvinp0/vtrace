@@ -385,6 +385,8 @@ export function formatProductShellStatus(
         `Readiness checks: ${formatReadinessChecks(result.readiness)}`,
       ]
       : []),
+    `Watcher: ${result.watcher.enabled ? "enabled" : "available but not running"}`,
+    ...(result.watcher.lastEventAtMs === null ? [] : [`Latest watcher event: ${result.watcher.lastEventAtMs}`]),
   ];
   const nextSteps = buildProductShellStatusNextSteps(result, mode);
 
@@ -566,6 +568,8 @@ function formatIndexFreshnessReason(
       return "indexed source file count differs from the last indexed snapshot";
     case "indexed_source_fingerprint_differs":
       return "indexed source fingerprint differs from the last indexed snapshot";
+    case "file_changes_detected":
+      return `watcher observed ${reason.count ?? 0} indexed source file change(s) since the last index`;
   }
 }
 

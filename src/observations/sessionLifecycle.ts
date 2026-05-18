@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Database } from "bun:sqlite";
 
+import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import {
   deleteEphemeralToolCallObservationsForSession,
   listObservationsForSession,
@@ -154,6 +155,7 @@ export function compressSession(
     queryText: draft.keyTerms.join(" "),
     summary: `Compressed session ${session.sessionId}: ${draft.prunedToolCallObservationCount} tool calls summarized, ${draft.preservedDurableObservationCount} durable observations preserved.`,
     body: formatSummaryBody(draft),
+    sourceRunId: getLatestIndexRun(db)?.id,
     createdAtMs: input.nowMs,
     dedupeKey: `session_compression:${session.sessionId}`,
     linkedFilePaths: draft.filePaths,

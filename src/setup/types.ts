@@ -65,6 +65,24 @@ export interface LastIndexSnapshot {
   lastIndexedSourceFingerprint?: string;
 }
 
+export interface ObservedFileChangeState {
+  isStale: true;
+  reason: "file_changes_detected";
+  firstChangedAtMs: number;
+  lastChangedAtMs: number;
+  changedFileCount: number;
+  changedFiles: string[];
+  omittedChangedFileCount: number;
+}
+
+export interface RepoFileWatcherState {
+  supported: true;
+  enabled: boolean;
+  running: boolean;
+  debounceMs: number;
+  lastEventAtMs: number | null;
+}
+
 export interface RepoLocalState {
   schemaVersion: typeof INIT_STATE_SCHEMA_VERSION;
   repoRoot: string;
@@ -73,6 +91,8 @@ export interface RepoLocalState {
   latestRunId: number | null;
   readiness: RepoReadiness;
   lastIndexSnapshot?: LastIndexSnapshot;
+  observedFileChanges?: ObservedFileChangeState;
+  fileWatcher?: RepoFileWatcherState;
   indexSummary: {
     totalFilesScanned: number;
     totalFilesAttemptedForParse: number;

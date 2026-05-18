@@ -133,3 +133,11 @@ Run a fresh index when:
 ```bash
 ./bin/vexb index /path/to/your/repo
 ```
+
+If you want VEXB to notice source edits passively, start the optional watcher:
+
+```bash
+./bin/vexb watch /path/to/your/repo
+```
+
+The watcher is conservative and mark-stale-only. It detects indexed source file creates, modifications, and deletions using the same source-scan ignore rules as indexing, debounces bursts, and records pending stale state. It does not auto-reindex; run `vexb index` when you want a fresh structural snapshot.

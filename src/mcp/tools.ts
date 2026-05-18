@@ -118,6 +118,8 @@ import {
   writeRepoLocalState,
 } from "../setup/repoState";
 import type { RepoLocalConfig, RepoLocalState } from "../setup/types";
+import { buildFileWatcherStatus } from "../runtime/fileWatcher";
+import { inspectIndexFreshness } from "../runtime/indexFreshness";
 import {
   resolveWorkspaceConfigPath,
   safeReadWorkspaceConfig,
@@ -326,6 +328,8 @@ interface WorkspaceRepoStatus {
   readonly indexPresent: boolean;
   readonly latestRunId: number | null;
   readonly readiness: RepoLocalState["readiness"] | null;
+  readonly freshness: unknown;
+  readonly watcher: unknown;
   readonly binding?: ReadyRepoBinding;
 }
 
@@ -1124,6 +1128,57 @@ const MULTI_REPO_MERGE_SUMMARY_SCHEMA = objectProperty(
   ["strategy", "selectedRepos", "inputItemCount", "outputItemCount", "tieBreakers"],
 );
 
+const INDEX_FRESHNESS_SCHEMA = objectProperty(
+  "Repo index freshness and optional watcher-observed stale state.",
+  {
+    state: stringProperty("Freshness state."),
+    isStale: booleanProperty("Whether the index should be treated as stale."),
+    summary: stringProperty("Human-readable freshness summary."),
+    reasons: arrayProperty(
+      "Freshness reasons.",
+      objectProperty(
+        "Freshness reason.",
+        {
+          code: stringProperty("Reason code."),
+          count: integerProperty("Optional count associated with the reason."),
+        },
+        ["code"],
+      ),
+    ),
+    observedFileChanges: {
+      type: ["object", "null"],
+      description: "Pending watcher-observed file changes, when any.",
+      additionalProperties: true,
+    },
+    snapshot: {
+      type: "object",
+      description: "Last indexed snapshot metadata.",
+      additionalProperties: true,
+    },
+    comparison: {
+      type: "object",
+      description: "Current source snapshot comparison.",
+      additionalProperties: true,
+    },
+  },
+  ["state", "isStale", "summary", "reasons", "observedFileChanges", "snapshot", "comparison"],
+);
+
+const FILE_WATCHER_STATUS_SCHEMA = objectProperty(
+  "Optional passive file watcher status.",
+  {
+    supported: booleanProperty("Whether watcher support is available in this build."),
+    enabled: booleanProperty("Whether watcher mode has been explicitly used for this repo."),
+    running: booleanProperty("Whether a watcher is known to be running in this process."),
+    debounceMs: integerProperty("Configured debounce window in milliseconds."),
+    lastEventAtMs: {
+      type: ["integer", "null"],
+      description: "Last watcher-observed file event timestamp when known.",
+    },
+  },
+  ["supported", "enabled", "running", "debounceMs", "lastEventAtMs"],
+);
+
 const RUN_PIPELINE_DIAGNOSTICS_SCHEMA = objectProperty(
   "Explicit run_pipeline reliability diagnostics.",
   {
@@ -1518,6 +1573,7 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
         "contextCompressed",
       ],
     ),
+    freshness: INDEX_FRESHNESS_SCHEMA,
     deferredCount: integerProperty("Number of deferred expandable placeholders emitted."),
     omittedSectionCount: integerProperty("Number of top-level sections (context, impact, session, durable) omitted."),
   },
@@ -2243,6 +2299,8 @@ const WORKSPACE_REPO_STATUS_SCHEMA = objectProperty(
       required: READINESS_SCHEMA.required ?? [],
       additionalProperties: false,
     },
+    freshness: INDEX_FRESHNESS_SCHEMA,
+    watcher: FILE_WATCHER_STATUS_SCHEMA,
   },
   [
     "repoAlias",
@@ -2258,6 +2316,8 @@ const WORKSPACE_REPO_STATUS_SCHEMA = objectProperty(
     "indexPresent",
     "latestRunId",
     "readiness",
+    "freshness",
+    "watcher",
   ],
 );
 
@@ -2302,6 +2362,8 @@ const INDEX_STATUS_SCHEMA = objectProperty(
       required: READINESS_SCHEMA.required ?? [],
       additionalProperties: false,
     },
+    freshness: INDEX_FRESHNESS_SCHEMA,
+    watcher: FILE_WATCHER_STATUS_SCHEMA,
   },
   [
     "repoRoot",
@@ -2315,6 +2377,8 @@ const INDEX_STATUS_SCHEMA = objectProperty(
     "indexPresent",
     "latestRunId",
     "readiness",
+    "freshness",
+    "watcher",
   ],
 );
 
@@ -3075,6 +3139,11 @@ async function inspectWorkspaceRepoStatus(
   const latestRunId = state?.latestRunId ?? null;
   const indexPresent = latestRunId !== null && dbPresent;
   const ready = initialized && state?.readiness.status === "ready";
+  const freshness = await inspectIndexFreshness({
+    repoRoot: spec.rootPath,
+    lastIndexSnapshot: state?.lastIndexSnapshot,
+    observedFileChanges: state?.observedFileChanges,
+  });
 
   return {
     repoAlias: spec.alias,
@@ -3090,6 +3159,8 @@ async function inspectWorkspaceRepoStatus(
     indexPresent,
     latestRunId,
     readiness: state?.readiness ?? null,
+    freshness,
+    watcher: buildFileWatcherStatus(state),
     ...(ready && config !== undefined && state !== undefined
       ? {
         binding: {
@@ -3140,6 +3211,8 @@ function formatWorkspaceRepoStatus(status: WorkspaceRepoStatus) {
     indexPresent: status.indexPresent,
     latestRunId: status.latestRunId,
     readiness: status.readiness,
+    freshness: status.freshness,
+    watcher: status.watcher,
   };
 }
 
@@ -4542,6 +4615,8 @@ async function inspectIndexStatus(
   indexPresent: boolean;
   latestRunId: number | null;
   readiness: RepoLocalState["readiness"] | null;
+  freshness: unknown;
+  watcher: unknown;
 }> {
   if (context.repoRoot === null) {
     throw new Error("MCP tool requires a repo-bound server context.");
@@ -4559,6 +4634,11 @@ async function inspectIndexStatus(
   const initialized = config?.initialized === true && state?.initialized === true && dbPresent;
   const latestRunId = state?.latestRunId ?? null;
   const indexPresent = latestRunId !== null && dbPresent;
+  const freshness = await inspectIndexFreshness({
+    repoRoot: context.repoRoot,
+    lastIndexSnapshot: state?.lastIndexSnapshot,
+    observedFileChanges: state?.observedFileChanges,
+  });
 
   return {
     repoRoot: context.repoRoot,
@@ -4572,6 +4652,8 @@ async function inspectIndexStatus(
     indexPresent,
     latestRunId,
     readiness: state?.readiness ?? null,
+    freshness,
+    watcher: buildFileWatcherStatus(state),
   };
 }
 
@@ -6403,10 +6485,21 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             };
           }
 
+          const output = formatRunPipelineOrchestrationOutput(orchestration);
+          const freshness = await inspectIndexFreshness({
+            repoRoot: binding.repoRoot,
+            lastIndexSnapshot: binding.state.lastIndexSnapshot,
+            observedFileChanges: binding.state.observedFileChanges,
+          });
+
           return {
             ok: true,
             output: {
-              ...formatRunPipelineOrchestrationOutput(orchestration),
+              ...output,
+              diagnostics: {
+                ...output.diagnostics,
+                freshness,
+              },
               savedObservation,
             },
           };

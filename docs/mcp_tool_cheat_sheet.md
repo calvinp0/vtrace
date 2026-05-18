@@ -24,9 +24,11 @@ Legacy names (`query`, `intent`, `maxBudgetCharacters`) still work.
 
 Meaningful visible MCP calls auto-capture compact `tool_call` observations. This currently includes orchestration/context, structural impact and skeleton tools, logic flow, memory/session lookups, and successful V-REF expansion.
 
-`index_status`, `workspace_setup`, and `save_observation` are excluded. Captures are deterministic, compact, and linked only to exact file/symbol evidence already present in the call or result. They are not embeddings, semantic consolidation, passive file watching, anti-pattern detection, or project-rule generation.
+`index_status`, `workspace_setup`, and `save_observation` are excluded. Captures are deterministic, compact, and linked only to exact file/symbol evidence already present in the call or result. They are not embeddings, semantic consolidation, anti-pattern detection, or project-rule generation.
 
 Inactive sessions can be compressed explicitly after the default two-hour inactivity threshold. Compression summarizes tool-call counts, touched files/symbols, key terms, and durable counts, then prunes ephemeral auto-captured `tool_call` rows. Durable/manual observations remain visible, and compressed summaries stay searchable by lexical and structural signals. The default 90-day retention policy currently reports cleanup candidates; it does not silently delete durable data.
+
+Optional passive file awareness is available through `vexb watch [repo]`. It is mark-stale-only: the watcher detects indexed source file creates/modifies/deletes, debounces bursts, records pending stale state, and leaves reindexing explicit. `index_status` and `run_pipeline.diagnostics.freshness` report this stale state. After a successful reindex, existing file/symbol diffs drive conservative stale marking for linked observations and compressed session summaries.
 
 ## Direct Tool Choices
 
@@ -49,4 +51,5 @@ Inactive sessions can be compressed explicitly after the default two-hour inacti
 - Do not expect `search_logic_flow` to infer endpoints; provide exact FQNs.
 - Do not expect `expand_vexp_ref` to search or recompute; it only resolves exact 12-lowercase-hex hashes emitted in the current MCP server process.
 - Treat V-REFs as process-local and bounded. Expired, unknown, malformed, and unsupported hashes return structured failures.
+- Treat watcher staleness as structural evidence only. It is not semantic rename detection, runtime tracing, anti-pattern detection, or project-rule generation.
 - Do not claim a special compressed format or token-savings percentage from VEXB output.

@@ -78,6 +78,13 @@ interface ShellJsonIndexState {
   indexPresent: boolean;
   latestRunId: number | null;
   freshness: ShellJsonIndexFreshness;
+  watcher: {
+    supported: boolean;
+    enabled: boolean;
+    running: boolean;
+    debounceMs: number;
+    lastEventAtMs: number | null;
+  };
   readiness: {
     status: RepoReadiness["status"];
     summary: string;
@@ -91,12 +98,22 @@ interface ShellJsonIndexState {
 
 interface ShellJsonIndexFreshness {
   state: IndexFreshnessResult["state"];
+  isStale: boolean;
   summary: string;
   reasons: Array<{
     code: IndexFreshnessReason["code"];
     count: number | null;
     message: string;
   }>;
+  observedFileChanges: {
+    isStale: true;
+    reason: "file_changes_detected";
+    firstChangedAtMs: number;
+    lastChangedAtMs: number;
+    changedFileCount: number;
+    changedFiles: string[];
+    omittedChangedFileCount: number;
+  } | null;
   whyItMatters: string | null;
   recommendedAction: string | null;
   snapshot: {
@@ -314,6 +331,7 @@ function formatIndexState(
     indexPresent: result.indexPresent,
     latestRunId: result.latestRunId,
     freshness: formatIndexFreshness(result.indexFreshness),
+    watcher: result.watcher,
     readiness: formatReadiness(result.readiness),
   };
 }
@@ -323,12 +341,19 @@ function formatIndexFreshness(
 ): ShellJsonIndexFreshness {
   return {
     state: freshness.state,
+    isStale: freshness.isStale,
     summary: freshness.summary,
     reasons: freshness.reasons.map((reason) => ({
       code: reason.code,
       count: reason.count ?? null,
       message: formatIndexFreshnessReason(reason),
     })),
+    observedFileChanges: freshness.observedFileChanges === null
+      ? null
+      : {
+        ...freshness.observedFileChanges,
+        changedFiles: [...freshness.observedFileChanges.changedFiles],
+      },
     whyItMatters: freshness.whyItMatters ?? null,
     recommendedAction: freshness.recommendedAction ?? null,
     snapshot: {
@@ -476,5 +501,7 @@ function formatIndexFreshnessReason(
       return "indexed source file count differs from the last indexed snapshot";
     case "indexed_source_fingerprint_differs":
       return "indexed source fingerprint differs from the last indexed snapshot";
+    case "file_changes_detected":
+      return `watcher observed ${reason.count ?? 0} indexed source file change(s) since the last index`;
   }
 }

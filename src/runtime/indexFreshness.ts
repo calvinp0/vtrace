@@ -1,6 +1,6 @@
 import { readGitHead } from "../fs/git";
 import { captureRepoSourceSnapshot } from "../fs/scanRepo";
-import type { LastIndexSnapshot } from "../setup/types";
+import type { LastIndexSnapshot, ObservedFileChangeState } from "../setup/types";
 
 export type IndexFreshnessState = "fresh" | "possibly_stale" | "unknown";
 
@@ -8,19 +8,25 @@ export type IndexFreshnessReasonCode =
   | "last_index_metadata_missing_or_incomplete"
   | "current_source_snapshot_unavailable"
   | "indexed_source_file_count_differs"
-  | "indexed_source_fingerprint_differs";
+  | "indexed_source_fingerprint_differs"
+  | "file_changes_detected";
 
 export interface IndexFreshnessReason {
   code: IndexFreshnessReasonCode;
   count?: number;
+  firstChangedAtMs?: number;
+  lastChangedAtMs?: number;
+  changedFiles?: readonly string[];
 }
 
 export interface IndexFreshnessResult {
   state: IndexFreshnessState;
+  isStale: boolean;
   summary: string;
   reasons: IndexFreshnessReason[];
   whyItMatters?: string;
   recommendedAction?: string;
+  observedFileChanges: ObservedFileChangeState | null;
   snapshot: {
     lastIndexedAtMs: number | null;
     lastIndexedHead: string | null;
@@ -37,13 +43,19 @@ export interface IndexFreshnessResult {
 export async function inspectIndexFreshness(input: {
   repoRoot: string;
   lastIndexSnapshot?: LastIndexSnapshot;
+  observedFileChanges?: ObservedFileChangeState;
 }): Promise<IndexFreshnessResult> {
   const snapshot = input.lastIndexSnapshot;
+  const observedFileChanges = input.observedFileChanges;
 
   if (!hasCompleteSnapshot(snapshot)) {
     return buildUnknownFreshness({
       snapshot,
-      reasons: [{ code: "last_index_metadata_missing_or_incomplete" }],
+      observedFileChanges,
+      reasons: [
+        { code: "last_index_metadata_missing_or_incomplete" },
+        ...observedFreshnessReasons(observedFileChanges),
+      ],
     });
   }
 
@@ -56,12 +68,18 @@ export async function inspectIndexFreshness(input: {
     return buildUnknownFreshness({
       snapshot,
       currentHead,
-      reasons: [{ code: "current_source_snapshot_unavailable" }],
+      observedFileChanges,
+      reasons: [
+        { code: "current_source_snapshot_unavailable" },
+        ...observedFreshnessReasons(observedFileChanges),
+      ],
     });
   }
 
   const reasons: IndexFreshnessReason[] = [];
   const fingerprintMatches = currentSourceSnapshot.fingerprint === snapshot.lastIndexedSourceFingerprint;
+
+  reasons.push(...observedFreshnessReasons(observedFileChanges));
 
   if (currentSourceSnapshot.fileCount !== snapshot.lastIndexedSourceFileCount) {
     reasons.push({ code: "indexed_source_file_count_differs" });
@@ -74,8 +92,10 @@ export async function inspectIndexFreshness(input: {
   if (reasons.length === 0) {
     return {
       state: "fresh",
+      isStale: false,
       summary: "The current repo appears consistent with the last indexed snapshot.",
       reasons,
+      observedFileChanges: null,
       recommendedAction: "No re-index is recommended right now.",
       snapshot: buildSnapshotView(snapshot),
       currentHead: currentHead ?? null,
@@ -88,10 +108,14 @@ export async function inspectIndexFreshness(input: {
 
   return {
     state: "possibly_stale",
-    summary: "Vexb detected likely drift since the last indexed snapshot.",
+    isStale: true,
+    summary: observedFileChanges === undefined
+      ? "Vexb detected likely drift since the last indexed snapshot."
+      : "Vexb observed source file changes since the last indexed snapshot.",
     reasons,
     whyItMatters: "Retrieval, skeletons, impact graphs, and pipeline output may reflect older structure in changed areas.",
     recommendedAction: "Re-index this repo before relying on vexb for fresh structural guidance.",
+    observedFileChanges: observedFileChanges ?? null,
     snapshot: buildSnapshotView(snapshot),
     currentHead: currentHead ?? null,
     comparison: {
@@ -104,14 +128,17 @@ export async function inspectIndexFreshness(input: {
 function buildUnknownFreshness(input: {
   snapshot?: LastIndexSnapshot;
   currentHead?: string;
+  observedFileChanges?: ObservedFileChangeState;
   reasons: IndexFreshnessReason[];
 }): IndexFreshnessResult {
   return {
     state: "unknown",
+    isStale: input.observedFileChanges !== undefined,
     summary: "Vexb could not determine whether the current repo matches the last indexed snapshot.",
     reasons: input.reasons,
     whyItMatters: "Vexb may still work, but freshness could not be verified.",
     recommendedAction: "Re-index if you want a fresh, explicit trust point.",
+    observedFileChanges: input.observedFileChanges ?? null,
     snapshot: buildSnapshotView(input.snapshot),
     currentHead: input.currentHead ?? null,
     comparison: {
@@ -153,4 +180,20 @@ async function readCurrentSourceSnapshot(
   } catch {
     return undefined;
   }
+}
+
+function observedFreshnessReasons(
+  observedFileChanges: ObservedFileChangeState | undefined,
+): IndexFreshnessReason[] {
+  if (observedFileChanges === undefined) {
+    return [];
+  }
+
+  return [{
+    code: "file_changes_detected",
+    count: observedFileChanges.changedFileCount,
+    firstChangedAtMs: observedFileChanges.firstChangedAtMs,
+    lastChangedAtMs: observedFileChanges.lastChangedAtMs,
+    changedFiles: [...observedFileChanges.changedFiles],
+  }];
 }

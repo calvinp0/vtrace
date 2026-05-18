@@ -17,6 +17,7 @@ import { runExpandVexpRefCommand } from "./commands/expandVexpRefCommand";
 import { runSkeletonCommand } from "./commands/skeletonCommand";
 import { runSetupCommand } from "./commands/setupCommand";
 import { runStatusCommand } from "./commands/statusCommand";
+import { runWatchCommand } from "./commands/watchCommand";
 import { runWorkspaceCommand } from "./commands/workspaceCommand";
 
 const CLI_USAGE = [
@@ -26,6 +27,7 @@ const CLI_USAGE = [
   "  vexb doctor [repo] [--agent <name>] [--json]",
   "  vexb claude-config [repo] [--dry-run] [--agent <name>] [--json]",
   "  vexb daemon <start|stop|status|logs> [repo] [--json]",
+  "  vexb watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]",
   "  vexb workspace <init|add|list|status> ...",
   "  vexb mcp-serve --repo <repo>",
   "",
@@ -100,6 +102,8 @@ export async function runCli(
       return runSetupCommand(args, options);
     case "status":
       return runStatusCommand(args, options);
+    case "watch":
+      return runWatchCommand(args, options);
     case "workspace":
       return runWorkspaceCommand(args, options);
     default:
