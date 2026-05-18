@@ -1,0 +1,10 @@
+/layer*.md
+
+node_modules/
+dist/
+build/
+/.claude/
+/.mcp.json
+/.vexb/
+/.codex
+/capsule

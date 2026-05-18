@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SOURCE_PATH="${BASH_SOURCE[0]}"
+
+while [ -L "${SOURCE_PATH}" ]; do
+  LINK_DIR="$(cd -P "$(dirname "${SOURCE_PATH}")" && pwd)"
+  LINK_TARGET="$(readlink "${SOURCE_PATH}")"
+
+  if [[ "${LINK_TARGET}" == /* ]]; then
+    SOURCE_PATH="${LINK_TARGET}"
+  else
+    SOURCE_PATH="${LINK_DIR}/${LINK_TARGET}"
+  fi
+done
+
+SCRIPT_DIR="$(cd -P "$(dirname "${SOURCE_PATH}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+exec bun "${ROOT_DIR}/src/cli/index.ts" "$@"
