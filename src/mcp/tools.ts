@@ -4793,7 +4793,10 @@ function createExpandVexpRefToolDefinition(
         stableId: entry.stableId,
         category: entry.category,
         content: shapedContent,
-        metadata: structuredClone(entry.metadata) as Readonly<Record<string, unknown>>,
+        metadata: {
+          ...structuredClone(entry.metadata) as Readonly<Record<string, unknown>>,
+          createdAtMs: entry.createdAtMs,
+        },
         notes: [
           "Stored deferred payload expanded deterministically; no recomputation.",
         ],

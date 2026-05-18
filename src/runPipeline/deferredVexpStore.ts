@@ -57,7 +57,23 @@ export interface DeferredVexpStore {
 const DEFAULT_CAPACITY = 256;
 
 export function computeDeferredVexpHash(stableId: string): string {
-  return createHash("sha256").update(stableId).digest("hex").slice(0, 12);
+  return computeDeferredVexpHashFromParts(stableId);
+}
+
+export function computeDeferredVexpHashFromParts(
+  stableId: string,
+  payload?: unknown,
+): string {
+  const hash = createHash("sha256");
+
+  hash.update(stableId);
+
+  if (payload !== undefined) {
+    hash.update("\0");
+    hash.update(stableStringify(payload));
+  }
+
+  return hash.digest("hex").slice(0, 12);
 }
 
 export function isValidDeferredVexpHash(value: unknown): value is string {
@@ -93,7 +109,7 @@ export function createDeferredVexpStore(
 
   return {
     publish(input) {
-      const hash = computeDeferredVexpHash(input.stableId);
+      const hash = computeDeferredVexpHashFromParts(input.stableId, input.content);
       const entry: DeferredVexpEntry = {
         stableId: input.stableId,
         category: input.category,
@@ -140,6 +156,23 @@ export function getSharedDeferredVexpStore(): DeferredVexpStore {
 }
 
 /** Test-only helper — resets the process-shared store to a clean state. */
-export function resetSharedDeferredVexpStoreForTests(): void {
-  sharedStore = createDeferredVexpStore();
+export function resetSharedDeferredVexpStoreForTests(
+  options: { readonly capacity?: number; readonly now?: () => number } = {},
+): void {
+  sharedStore = createDeferredVexpStore(options);
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`;
+  }
+
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record).sort().map((key) => {
+    return `${JSON.stringify(key)}:${stableStringify(record[key])}`;
+  }).join(",")}}`;
 }

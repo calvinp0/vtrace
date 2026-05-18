@@ -86,6 +86,27 @@ test("deferredVexpStore publish/resolve round-trips stored truth", () => {
   assert.notEqual(resolved, null);
   assert.equal(resolved!.stableId, "vexp:capsule:test");
   assert.equal(resolved!.category, DeferredVexpCategory.ContextCapsule);
+  assert.notEqual(entry.hash, computeDeferredVexpHash("vexp:capsule:test"));
+});
+
+test("deferredVexpStore hash changes when payload changes under the same stable id", () => {
+  const store = createDeferredVexpStore();
+  const first = store.publish({
+    stableId: "vexp:capsule:same",
+    category: DeferredVexpCategory.ContextCapsule,
+    content: { kind: "json", value: { version: 1 } },
+    metadata: {},
+  });
+  const second = store.publish({
+    stableId: "vexp:capsule:same",
+    category: DeferredVexpCategory.ContextCapsule,
+    content: { kind: "json", value: { version: 2 } },
+    metadata: {},
+  });
+
+  assert.notEqual(first.hash, second.hash);
+  assert.deepEqual(store.resolve(first.hash)?.content, { kind: "json", value: { version: 1 } });
+  assert.deepEqual(store.resolve(second.hash)?.content, { kind: "json", value: { version: 2 } });
 });
 
 test("deferredVexpStore distinguishes unknown vs expired hashes", () => {
@@ -172,6 +193,32 @@ test("expand_vexp_ref returns unknown_hash for well-formed but unseen hash", asy
   });
 });
 
+test("expand_vexp_ref returns unsupported_category for stored unsupported categories", async () => {
+  await withRepoFixture(async (repoRoot) => {
+    resetSharedDeferredVexpStoreForTests();
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+    const entry = getSharedDeferredVexpStore().publish({
+      stableId: "vexp:future:unsupported",
+      category: "future_category" as DeferredVexpCategory,
+      content: { kind: "json", value: { future: true } },
+      metadata: { origin: "test" },
+    });
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-unsupported",
+      toolId: McpToolId.ExpandVexpRef,
+      input: { hash: entry.hash },
+    });
+
+    assert.equal(response.result.ok, true);
+    if (!response.result.ok) throw new Error("unreachable");
+    assert.equal(response.result.output.resolved, false);
+    assert.equal(response.result.output.reason, "unsupported_category");
+  });
+});
+
 test("expand_vexp_ref expands a V-REF emitted by run_pipeline and is deterministic on repeat", async () => {
   await withRepoFixture(async (repoRoot) => {
     resetSharedDeferredVexpStoreForTests();
@@ -229,10 +276,63 @@ test("expand_vexp_ref expands a V-REF emitted by run_pipeline and is determinist
       (first.result.output.metadata as Record<string, unknown>)["origin"],
       "run_pipeline",
     );
+    assert.equal(typeof (first.result.output.metadata as Record<string, unknown>)["createdAtMs"], "number");
     // Full content is present — not a compact summary.
     const content = first.result.output.content as Record<string, unknown>;
     assert.equal(content.kind, "json");
     assert.equal(typeof content.value, "object");
+  });
+});
+
+test("expand_vexp_ref returns stored truth after source files change", async () => {
+  await withRepoFixture(async (repoRoot) => {
+    resetSharedDeferredVexpStoreForTests();
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+
+    const pipeline = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-pipeline-stored-truth",
+      toolId: McpToolId.RunPipeline,
+      input: { query: "rename createSession", maxBudgetCharacters: 4_000 },
+    });
+    assert.equal(pipeline.result.ok, true);
+    if (!pipeline.result.ok) throw new Error("pipeline failed");
+    const capsulePlaceholder = pipeline.result.output.deferred.items.find((p) => p.kind === "context_capsule");
+    assert.notEqual(capsulePlaceholder, undefined);
+    const hash = capsulePlaceholder!.hash;
+
+    const before = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-expand-before-mutation",
+      toolId: McpToolId.ExpandVexpRef,
+      input: { hash },
+    });
+    await writeFile(
+      path.join(repoRoot, "src", "session.ts"),
+      [
+        "export type Session = string;",
+        "",
+        "export class SessionManager {",
+        "  createSession(accountId: string): Session {",
+        "    return `changed-${accountId}`;",
+        "  }",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    const after = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-expand-after-mutation",
+      toolId: McpToolId.ExpandVexpRef,
+      input: { hash },
+    });
+
+    assert.equal(before.result.ok, true);
+    assert.equal(after.result.ok, true);
+    if (!before.result.ok || !after.result.ok) throw new Error("unreachable");
+    assert.deepEqual(after.result.output, before.result.output);
+    assert.equal(JSON.stringify(after.result.output).includes("changed-"), false);
   });
 });
 
@@ -263,6 +363,38 @@ test("expand_vexp_ref returns expired when a previously published V-REF has been
       toolId: McpToolId.ExpandVexpRef,
       input: { hash },
     });
+    assert.equal(response.result.ok, true);
+    if (!response.result.ok) throw new Error("unreachable");
+    assert.equal(response.result.output.resolved, false);
+    assert.equal(response.result.output.reason, "expired");
+  });
+});
+
+test("expand_vexp_ref returns expired after deterministic capacity eviction", async () => {
+  await withRepoFixture(async (repoRoot) => {
+    resetSharedDeferredVexpStoreForTests({ capacity: 1 });
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+    const first = getSharedDeferredVexpStore().publish({
+      stableId: "vexp:capsule:first",
+      category: DeferredVexpCategory.ContextCapsule,
+      content: { kind: "json", value: { item: "first" } },
+      metadata: {},
+    });
+    getSharedDeferredVexpStore().publish({
+      stableId: "vexp:capsule:second",
+      category: DeferredVexpCategory.ContextCapsule,
+      content: { kind: "json", value: { item: "second" } },
+      metadata: {},
+    });
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-expand-capacity-expired",
+      toolId: McpToolId.ExpandVexpRef,
+      input: { hash: first.hash },
+    });
+
     assert.equal(response.result.ok, true);
     if (!response.result.ok) throw new Error("unreachable");
     assert.equal(response.result.output.resolved, false);

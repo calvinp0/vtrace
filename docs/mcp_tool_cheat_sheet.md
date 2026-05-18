@@ -47,5 +47,6 @@ Inactive sessions can be compressed explicitly after the default two-hour inacti
 - If the input is exact, prefer the exact leaf tool.
 - Do not use impact or logic-flow tools as runtime proof; they report indexed structure.
 - Do not expect `search_logic_flow` to infer endpoints; provide exact FQNs.
-- Do not expect `expand_vexp_ref` to search or recompute; it only resolves known emitted hashes in the current MCP server process.
+- Do not expect `expand_vexp_ref` to search or recompute; it only resolves exact 12-lowercase-hex hashes emitted in the current MCP server process.
+- Treat V-REFs as process-local and bounded. Expired, unknown, malformed, and unsupported hashes return structured failures.
 - Do not claim a special compressed format or token-savings percentage from VEXB output.

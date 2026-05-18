@@ -177,7 +177,19 @@ When `.vexb/workspace.json` exists, inspect output also includes the configured 
 
 Advanced compressed-reference expansion.
 
-`run_pipeline` reports deferred items with explicit `expandable` metadata. Only items marked `expandable: true` should be sent to `expand_vexp_ref`. VEXB does not claim a special compressed format or token-savings percentage.
+`run_pipeline` may report deferred items with explicit `expandable` metadata. Only items marked `expandable: true` should be sent to `expand_vexp_ref`.
+
+`expand_vexp_ref` accepts one exact public V-REF hash:
+
+- exactly 12 characters
+- lowercase hexadecimal
+- no fuzzy lookup
+- no prefix lookup
+- no uppercase normalization
+
+Expansion returns the stored deferred payload captured when `run_pipeline` emitted the V-REF. It does not recompute from disk or reconstruct content semantically. In this build, V-REF storage is process-local and bounded, so references are valid only in the current MCP server process and may expire after server restart or eviction.
+
+Malformed, unknown, expired, and unsupported-category references return explicit structured failures. VEXB does not claim unlimited persistence, a special compressed format, or token-savings percentages.
 
 ## Notes
 
