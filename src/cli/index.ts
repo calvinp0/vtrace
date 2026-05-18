@@ -12,6 +12,7 @@ import { runImpactGraphCommand } from "./commands/impactGraphCommand";
 import { runInspectSymbolCommand } from "./commands/inspectSymbolCommand";
 import { runMcpServeCommand } from "./commands/mcpServeCommand";
 import { runRunsCommand } from "./commands/runsCommand";
+import { runRulesCommand } from "./commands/rulesCommand";
 import { runRunPipelineCommand } from "./commands/runPipelineCommand";
 import { runExpandVexpRefCommand } from "./commands/expandVexpRefCommand";
 import { runSkeletonCommand } from "./commands/skeletonCommand";
@@ -42,6 +43,7 @@ const CLI_USAGE = [
   "  vexb impact-graph <repo> <symbol-fqn> [--depth <n>] [--format <list|tree|mermaid>]",
   "  vexb handoff <repo> <query>",
   "  vexb runs <repo>",
+  "  vexb rules <list|generate|promote|dismiss|disable> <repo> [rule-id]",
   "  vexb check-capsule <repo> <manifest-id> <comparison-run-id>",
   "",
   "Repeated setup is safe. Supported shell agents: claude-code (default), codex. See README.md and docs/getting_started.md for setup, CLI usage, MCP reference, and the tool cheat sheet.",
@@ -92,6 +94,8 @@ export async function runCli(
       return runMcpServeCommand(args, options);
     case "runs":
       return runRunsCommand(args, options);
+    case "rules":
+      return runRulesCommand(args, options);
     case "run-pipeline":
       return runRunPipelineCommand(args, options);
     case "expand-vexp-ref":

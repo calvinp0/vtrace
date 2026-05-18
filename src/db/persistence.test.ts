@@ -39,6 +39,7 @@ test("schema initializes correctly", () => {
     assert.equal(tableNames.has("files"), true);
     assert.equal(tableNames.has("file_run_states"), true);
     assert.equal(tableNames.has("index_runs"), true);
+    assert.equal(tableNames.has("project_rules"), true);
     assert.equal(tableNames.has("sessions"), true);
     assert.equal(tableNames.has("symbol_run_states"), true);
     assert.equal(tableNames.has("symbols"), true);

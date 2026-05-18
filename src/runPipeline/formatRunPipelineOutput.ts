@@ -4,6 +4,7 @@ import {
   RUN_PIPELINE_DEFAULTS,
   type RunPipelineOrchestration,
 } from "./runPipelineOrchestrator";
+import { formatProjectRuleForOutput } from "../projectRules/projectRules";
 
 /**
  * Stable JSON shape returned by both the MCP `run_pipeline` tool and the
@@ -18,6 +19,7 @@ export function formatRunPipelineOrchestrationOutput(
   const context = orchestration.context;
   const impact = orchestration.impact;
   const memory = orchestration.memory;
+  const rules = orchestration.rules;
   const itemCount = context.capsule.pivots.length + context.capsule.supportingItems.length;
   const contextSection = {
     included: context.included,
@@ -97,6 +99,29 @@ export function formatRunPipelineOrchestrationOutput(
       memories: capsuleSurfacedMemories.map((memory) => structuredClone(memory)),
     },
   };
+  const rulesSection = {
+    included: rules.included,
+    active: rules.active.map((selection) => ({
+      ...formatProjectRuleForOutput(selection.rule),
+      reason: selection.reason,
+      score: selection.score,
+    })),
+    candidates: rules.candidates.map((selection) => ({
+      id: selection.rule.id,
+      status: selection.rule.status,
+      summary: selection.rule.summary,
+      evidenceCount: selection.rule.evidenceCount,
+      confidence: selection.rule.confidence,
+      reason: selection.reason,
+      score: selection.score,
+    })),
+    activeCount: rules.activeCount,
+    candidateCount: rules.candidateCount,
+    notes: [
+      "Active rules are injected only when structurally or lexically relevant.",
+      "Candidate rules are previews only and are not active instructions.",
+    ],
+  };
 
   const omittedSectionCount = [
     !contextSection.included,
@@ -104,6 +129,7 @@ export function formatRunPipelineOrchestrationOutput(
     !memorySection.session.included,
     !memorySection.durable.included,
     !memorySection.capsuleSurfaced.included,
+    !rulesSection.included,
   ].filter(Boolean).length;
   const deferredItems = orchestration.deferred.map((placeholder) => ({
     id: placeholder.id,
@@ -145,6 +171,7 @@ export function formatRunPipelineOrchestrationOutput(
     context: contextSection,
     impact: impactSection,
     memory: memorySection,
+    rules: rulesSection,
     diagnostics: {
       intent: {
         requested: orchestration.intentDecision.requested,
@@ -175,6 +202,14 @@ export function formatRunPipelineOrchestrationOutput(
         durableSkipReason: memory.durable.skipReason,
         capsuleSurfacedIncluded: memorySection.capsuleSurfaced.included,
         capsuleSurfacedSkipReason: memorySection.capsuleSurfaced.skipReason,
+      },
+      rules: {
+        included: rulesSection.included,
+        activeIncluded: rulesSection.active.length > 0,
+        activeMatchedCount: rulesSection.active.length,
+        activeTotalCount: rulesSection.activeCount,
+        candidatePreviewCount: rulesSection.candidates.length,
+        candidateTotalCount: rulesSection.candidateCount,
       },
       budget: {
         ...structuredClone(context.capsule.budget),

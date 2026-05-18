@@ -3,6 +3,7 @@ import { openIndexerDatabase } from "../../db/sqlite";
 import { readGitHead } from "../../fs/git";
 import { indexProject } from "../../indexer/indexProject";
 import { detectSymbolAddedThenRemovedAntiPatterns } from "../../observations/antiPatterns";
+import { markProjectRulesStaleForRun } from "../../projectRules/projectRules";
 import {
   buildLastIndexSnapshot,
   buildRepoLocalState,
@@ -52,6 +53,10 @@ export async function runIndexCommand(
       });
       const result = await indexProject({ repoRoot, db, onProgress: progress });
       detectSymbolAddedThenRemovedAntiPatterns(db, { repoRoot });
+      const latestRun = getLatestIndexRun(db);
+      if (latestRun !== undefined) {
+        markProjectRulesStaleForRun(db, { repoRoot, runId: latestRun.id });
+      }
       await refreshRepoLocalStateAfterIndex({
         repoRoot,
         dbPath,

@@ -40,7 +40,7 @@ The following visible tools are intentionally excluded from passive capture:
 
 `index_status` and `workspace_setup` are often status/setup plumbing. `save_observation` already writes exactly what the caller asked to save and is not recursively captured.
 
-This is a passive-memory substrate, not full VEXP parity. It does not add embeddings, semantic similarity, learned ranking, semantic consolidation, project-rule generation, or claims that every agent decision is understood.
+This is a passive-memory substrate, not full VEXP parity. It does not add embeddings, semantic similarity, learned ranking, semantic consolidation, automatic rule promotion, or claims that every agent decision is understood.
 
 ## Conservative Passive Consolidation
 
@@ -50,7 +50,7 @@ Consolidated passive groups are stored as compact auto-generated `insight` obser
 
 Consolidation is thresholded. By default, at least three eligible passive observations with the same signature are required. Below that threshold, passive observations are left alone by consolidation. When a group is consolidated, only the grouped passive source observations are physically pruned. Manual observations, decisions, insights, warnings, anti-pattern/dead-end observations, and anything authored through `save_observation` are never consolidated or removed by this mechanism.
 
-This is not semantic memory consolidation, project-rule generation, or rule injection into capsules.
+This is not semantic memory consolidation or automatic rule promotion.
 
 ## Session Lifecycle Compression
 
@@ -70,9 +70,9 @@ File watching is opt-in. `vexb watch [repo]` runs a lightweight polling watcher 
 
 The watcher is mark-stale-only. It does not auto-reindex, does not run a background daemon by default, and does not block MCP tools. `index_status` reports watcher support, whether watcher mode has been used for the repo, pending changed file count, a bounded sorted changed-file list, and freshness metadata. `run_pipeline.diagnostics.freshness` also reports stale metadata when available.
 
-A successful explicit reindex through the normal indexing path clears pending watcher-observed stale state. Reindexing continues to use the existing structural file and symbol diff machinery. Linked observations, passive `tool_call` observations, consolidated passive summaries, and compressed session summary observations become stale through the existing conservative staleness service when their linked files or symbols are modified or removed.
+A successful explicit reindex through the normal indexing path clears pending watcher-observed stale state. Reindexing continues to use the existing structural file and symbol diff machinery. Linked observations, passive `tool_call` observations, consolidated passive summaries, compressed session summary observations, and linked project rules become stale through conservative structural checks when their linked files or symbols are modified or removed.
 
-This is not semantic rename detection, runtime dataflow, project-rule generation, or full VEXP passive behavior.
+This is not semantic rename detection, runtime dataflow, or full VEXP passive behavior.
 
 ## Conservative Anti-Pattern Observations
 
@@ -85,7 +85,7 @@ The initial detectors are intentionally structural:
 
 Detection is deterministic and deduped by evidence signature. Anti-pattern observations include a short summary, severity, exact linked files or symbol FQNs where available, and compact evidence such as change counts or index run ids. Linked anti-pattern observations participate in the existing stale-memory behavior when their files or symbols later change.
 
-This is not semantic understanding of developer intent, progressive nudging, learned classification, semantic consolidation, or project-rule generation. VEXB does not block normal MCP behavior when an anti-pattern observation exists.
+This is not semantic understanding of developer intent, progressive nudging, learned classification, semantic consolidation, or policy enforcement. VEXB does not block normal MCP behavior when an anti-pattern observation exists.
 
 ## Progressive Observation Nudges
 
@@ -100,6 +100,36 @@ The current schedule is deterministic:
 Durable observations include manual saves and durable kinds such as decisions, insights, warnings, and dead-end/anti-pattern observations. `index_status`, `workspace_setup`, and `save_observation` are excluded from nudging, and `save_observation` itself self-disables future nudges for that session by creating durable memory.
 
 Nudges never block tool execution and do not write their own observations. They are not project rules, semantic judgment, learned behavior, or memory consolidation.
+
+## Project Rule Candidates
+
+VEXB can generate deterministic project-rule candidates from repeated evidence in one repo. Candidate generation is explicit through `vexb rules generate <repo>` and uses exact structural or lexical overlap only. The first threshold is three matching evidence observations in the same deterministic scope.
+
+Eligible evidence is intentionally narrow:
+
+- manual durable `decision` and `insight` observations
+- consolidated passive summaries created by `consolidate_passive_observations`
+- repeated anti-pattern observations such as `file_thrashing` or `symbol_added_then_removed`
+
+Raw one-off passive `tool_call` observations do not generate rule candidates. Candidate generation never mutates or consumes the source observations.
+
+Rule summaries are template-based and evidence-limited. They use cautious wording such as “Repeated durable evidence is linked to…” and “Consider…”. VEXB does not use embeddings, LLM synthesis, semantic project understanding, hidden-intent inference, or cross-repo rule learning for this feature.
+
+Candidates are not active by default. A rule must be explicitly promoted before it can be injected into future context:
+
+```bash
+vexb rules list <repo>
+vexb rules generate <repo>
+vexb rules promote <repo> <rule-id>
+vexb rules dismiss <repo> <rule-id>
+vexb rules disable <repo> <rule-id>
+```
+
+The command also accepts `vexb rules <repo> list` style ordering.
+
+Active rules are injected into `run_pipeline.rules` only when they match the current task by deterministic signals such as linked file overlap, linked symbol FQN overlap, query-term overlap, or selected intent. Injection is capped at three active rules. Candidate previews may appear in `run_pipeline.rules.candidates`, but they are explicitly labeled as candidates and are not active instructions.
+
+Rules are linked to files, symbol FQNs, lexical terms, tool names, intents, and anti-pattern types where that evidence exists. When explicit reindexing detects linked file or symbol changes, candidate and active rules become `stale`. Stale active rules are not injected as authoritative context. This is not automatic policy enforcement and does not block tool execution.
 
 ## Default Orchestration
 

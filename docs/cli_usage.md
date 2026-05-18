@@ -43,6 +43,7 @@ These are useful when you want manual control instead of the full MCP shell flow
 ./bin/vexb impact-graph <repo> <symbol-fqn> [--depth <n>] [--format <list|tree|mermaid>]
 ./bin/vexb handoff <repo> <query>
 ./bin/vexb runs <repo>
+./bin/vexb rules <list|generate|promote|dismiss|disable> <repo> [rule-id]
 ./bin/vexb check-capsule <repo> <manifest-id> <comparison-run-id>
 ```
 
@@ -66,6 +67,18 @@ Re-index the repo:
 ```bash
 ./bin/vexb index <repo>
 ```
+
+Generate and manage conservative project-rule candidates:
+
+```bash
+./bin/vexb rules generate <repo>
+./bin/vexb rules list <repo>
+./bin/vexb rules promote <repo> <rule-id>
+./bin/vexb rules dismiss <repo> <rule-id>
+./bin/vexb rules disable <repo> <rule-id>
+```
+
+Candidates are generated from repeated durable or consolidated evidence and are not active by default. Active rules are surfaced by `run_pipeline` only when structurally or lexically relevant.
 
 Optionally watch source files and mark the index stale when they change:
 
@@ -128,5 +141,6 @@ That is useful for scripts, editors, or wrappers that want structured output.
 
 - repeated `setup` is safe
 - the daemon is optional
+- project-rule candidates require explicit promotion before context injection
 - most users should start from `setup`, `status`, and the MCP workflow
 - the MCP-side practical guide is in [MCP Tool Cheat Sheet](./mcp_tool_cheat_sheet.md)

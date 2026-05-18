@@ -82,6 +82,7 @@ import {
   readInspectableSession,
 } from "../observations/sessionInspection";
 import { detectSymbolAddedThenRemovedAntiPatterns } from "../observations/antiPatterns";
+import { markProjectRulesStaleForRun } from "../projectRules/projectRules";
 import { evaluateObservationNudge } from "../observations/observationNudges";
 import {
   captureExpandVexpRefObservationBestEffort,
@@ -1535,6 +1536,96 @@ const RUN_PIPELINE_MEMORY_SECTION_SCHEMA = objectProperty(
   ["session", "durable", "capsuleSurfaced"],
 );
 
+const RUN_PIPELINE_RULE_SCOPE_SCHEMA = objectProperty(
+  "Structural scope linked to a project rule.",
+  {
+    files: arrayProperty("Linked repo-relative files.", stringProperty("File path.")),
+    symbolFqns: arrayProperty("Linked fully qualified symbols.", stringProperty("Fully qualified name.")),
+    terms: arrayProperty("Deterministic lexical terms.", stringProperty("Term.")),
+    toolNames: arrayProperty("Linked tool names.", stringProperty("Tool name.")),
+    intents: arrayProperty("Linked intents or presets.", stringProperty("Intent.")),
+    antiPatternTypes: arrayProperty("Linked anti-pattern types.", stringProperty("Anti-pattern type.")),
+  },
+  ["files", "symbolFqns", "terms", "toolNames", "intents", "antiPatternTypes"],
+);
+
+const RUN_PIPELINE_RULE_SECTION_SCHEMA = objectProperty(
+  "Relevant active project rules and candidate previews.",
+  {
+    included: booleanProperty("Whether any relevant rule or candidate preview was surfaced."),
+    active: arrayProperty(
+      "Relevant active rules. These are promoted rules only.",
+      objectProperty(
+        "Active project rule injection.",
+        {
+          id: stringProperty("Project rule id."),
+          status: stringProperty("Rule status."),
+          summary: stringProperty("Rule summary."),
+          scope: RUN_PIPELINE_RULE_SCOPE_SCHEMA,
+          evidenceCount: integerProperty("Number of linked evidence observations."),
+          evidenceObservationIds: arrayProperty("Evidence observation ids.", stringProperty("Observation id.")),
+          evidenceKinds: arrayProperty("Evidence kinds.", stringProperty("Evidence kind.")),
+          confidence: stringProperty("Rule confidence."),
+          createdAtMs: integerProperty("Creation timestamp."),
+          updatedAtMs: integerProperty("Update timestamp."),
+          promotedAtMs: {
+            type: ["integer", "null"],
+            description: "Promotion timestamp.",
+          },
+          sourceRunId: {
+            type: ["integer", "null"],
+            description: "Latest source index run linked to evidence.",
+          },
+          staleMetadata: {
+            type: ["object", "null"],
+            description: "Stale metadata when present.",
+            additionalProperties: true,
+          },
+          reason: stringProperty("Deterministic relevance reason."),
+          score: integerProperty("Deterministic relevance score."),
+        },
+        [
+          "id",
+          "status",
+          "summary",
+          "scope",
+          "evidenceCount",
+          "evidenceObservationIds",
+          "evidenceKinds",
+          "confidence",
+          "createdAtMs",
+          "updatedAtMs",
+          "promotedAtMs",
+          "sourceRunId",
+          "staleMetadata",
+          "reason",
+          "score",
+        ],
+      ),
+    ),
+    candidates: arrayProperty(
+      "Relevant candidate previews. Candidates are not active instructions.",
+      objectProperty(
+        "Candidate project rule preview.",
+        {
+          id: stringProperty("Project rule id."),
+          status: stringProperty("Rule status."),
+          summary: stringProperty("Rule summary."),
+          evidenceCount: integerProperty("Number of linked evidence observations."),
+          confidence: stringProperty("Rule confidence."),
+          reason: stringProperty("Deterministic relevance reason."),
+          score: integerProperty("Deterministic relevance score."),
+        },
+        ["id", "status", "summary", "evidenceCount", "confidence", "reason", "score"],
+      ),
+    ),
+    activeCount: integerProperty("Total active rules in this repo before relevance limiting."),
+    candidateCount: integerProperty("Total candidate rules in this repo before relevance limiting."),
+    notes: arrayProperty("Rule behavior notes.", stringProperty("Note.")),
+  },
+  ["included", "active", "candidates", "activeCount", "candidateCount", "notes"],
+);
+
 const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
   "Explicit orchestration diagnostics combining intent, retrieval, impact, and memory decisions.",
   {
@@ -1594,6 +1685,25 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
         "capsuleSurfacedSkipReason",
       ],
     ),
+    rules: objectProperty(
+      "Project-rule relevance diagnostics.",
+      {
+        included: booleanProperty("Whether any relevant rule or candidate preview was surfaced."),
+        activeIncluded: booleanProperty("Whether active rules were injected."),
+        activeMatchedCount: integerProperty("Number of active rules injected after relevance limiting."),
+        activeTotalCount: integerProperty("Total active rules in the repo."),
+        candidatePreviewCount: integerProperty("Number of candidate previews surfaced."),
+        candidateTotalCount: integerProperty("Total candidate rules in the repo."),
+      },
+      [
+        "included",
+        "activeIncluded",
+        "activeMatchedCount",
+        "activeTotalCount",
+        "candidatePreviewCount",
+        "candidateTotalCount",
+      ],
+    ),
     budget: objectProperty(
       "Budget and truncation diagnostics.",
       {
@@ -1618,7 +1728,7 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
     deferredCount: integerProperty("Number of deferred expandable placeholders emitted."),
     omittedSectionCount: integerProperty("Number of top-level sections (context, impact, session, durable) omitted."),
   },
-  ["intent", "retrieval", "impact", "memory", "budget", "deferredCount", "omittedSectionCount"],
+  ["intent", "retrieval", "impact", "memory", "rules", "budget", "deferredCount", "omittedSectionCount"],
 );
 
 const RUN_PIPELINE_DEFERRED_ITEM_SCHEMA = objectProperty(
@@ -5053,6 +5163,12 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           repoRoot: resolved.binding.repoRoot,
         });
         const latestRun = getLatestIndexRun(db);
+        if (latestRun !== undefined) {
+          markProjectRulesStaleForRun(db, {
+            repoRoot: resolved.binding.repoRoot,
+            runId: latestRun.id,
+          });
+        }
         const latestRunSummary = latestRun === undefined
           ? undefined
           : getIndexRunSummary(db, latestRun.id);
@@ -6328,6 +6444,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           context: RUN_PIPELINE_CONTEXT_SECTION_SCHEMA,
           impact: RUN_PIPELINE_IMPACT_SECTION_SCHEMA,
           memory: RUN_PIPELINE_MEMORY_SECTION_SCHEMA,
+          rules: RUN_PIPELINE_RULE_SECTION_SCHEMA,
           diagnostics: RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA,
           deferred: RUN_PIPELINE_DEFERRED_SECTION_SCHEMA,
           savedObservation: {
@@ -6349,6 +6466,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           "context",
           "impact",
           "memory",
+          "rules",
           "diagnostics",
           "deferred",
           "savedObservation",

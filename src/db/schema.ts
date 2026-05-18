@@ -216,6 +216,32 @@ export function initializeSchema(db: Database): void {
     CREATE INDEX IF NOT EXISTS idx_observation_fq_name_links_fq_name
       ON observation_fq_name_links(fq_name, observation_id, link_ordinal);
 
+    CREATE TABLE IF NOT EXISTS project_rules (
+      id TEXT PRIMARY KEY,
+      repo_root TEXT NOT NULL,
+      status TEXT NOT NULL CHECK (status IN ('candidate', 'active', 'dismissed', 'stale', 'disabled')),
+      signature TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      scope_json TEXT NOT NULL,
+      evidence_observation_ids_json TEXT NOT NULL,
+      evidence_count INTEGER NOT NULL CHECK (evidence_count >= 0),
+      evidence_kinds_json TEXT NOT NULL,
+      confidence TEXT NOT NULL CHECK (confidence IN ('low', 'medium', 'high')),
+      source_run_id INTEGER,
+      created_at_ms INTEGER NOT NULL CHECK (created_at_ms >= 0),
+      updated_at_ms INTEGER NOT NULL CHECK (updated_at_ms >= 0),
+      promoted_at_ms INTEGER CHECK (promoted_at_ms IS NULL OR promoted_at_ms >= 0),
+      stale_metadata_json TEXT,
+      UNIQUE (repo_root, signature),
+      FOREIGN KEY (source_run_id)
+        REFERENCES index_runs(id)
+        ON DELETE SET NULL
+        DEFERRABLE INITIALLY DEFERRED
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_project_rules_repo_status
+      ON project_rules(repo_root, status, updated_at_ms DESC, id ASC);
+
     CREATE TABLE IF NOT EXISTS symbols (
       id TEXT PRIMARY KEY,
       file_id TEXT NOT NULL,

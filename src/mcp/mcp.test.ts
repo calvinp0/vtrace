@@ -1044,6 +1044,7 @@ test("run_pipeline vNext returns a compact orchestration result that differs mat
         "intent",
         "memory",
         "request",
+        "rules",
         "savedObservation",
         "schemaVersion",
         "taskSummary",

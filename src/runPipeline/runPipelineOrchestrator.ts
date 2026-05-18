@@ -33,6 +33,10 @@ import { createSourceBackedCapsuleBuilder } from "../capsule/buildCapsule";
 import { computeVisibleCapsuleObservationDedupeKey } from "../observations/autoCapture";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import {
+  selectRelevantProjectRules,
+} from "../projectRules/projectRules";
+import type { SelectedProjectRule } from "../projectRules/types";
+import {
   isRunPipelinePresetIntent,
   mapPresetToQueryIntent,
   selectRunPipelineIntent,
@@ -134,6 +138,14 @@ export interface OrchestrationMemorySection {
   readonly durable: OrchestrationDurableMemorySection;
 }
 
+export interface OrchestrationRulesSection {
+  readonly included: boolean;
+  readonly active: readonly SelectedProjectRule[];
+  readonly candidates: readonly SelectedProjectRule[];
+  readonly activeCount: number;
+  readonly candidateCount: number;
+}
+
 export interface RunPipelineOrchestration {
   readonly schemaVersion: typeof RUN_PIPELINE_SCHEMA_VERSION;
   readonly request: {
@@ -149,6 +161,7 @@ export interface RunPipelineOrchestration {
   readonly context: OrchestrationContextSection;
   readonly impact: OrchestrationImpactSection;
   readonly memory: OrchestrationMemorySection;
+  readonly rules: OrchestrationRulesSection;
   readonly deferred: readonly RunPipelineDeferredPlaceholder[];
 }
 
@@ -202,6 +215,11 @@ export function runPipelineOrchestrator(
     intentDecision,
     includeMemory: rawInput.includeMemory,
   });
+  const rules = runRulesSection(db, repoRoot, {
+    query,
+    intent: intentDecision.selected,
+    context,
+  });
 
   const deferred = buildDeferredPlaceholders({
     context,
@@ -231,6 +249,7 @@ export function runPipelineOrchestrator(
     context,
     impact,
     memory,
+    rules,
     deferred,
   };
 }
@@ -665,6 +684,36 @@ function runMemorySection(
   const session = runSessionMemorySection(db, input);
   const durable = runDurableMemorySection(db, input);
   return { session, durable };
+}
+
+function runRulesSection(
+  db: Database,
+  repoRoot: string,
+  input: {
+    query: string;
+    intent: string;
+    context: OrchestrationContextSection;
+  },
+): OrchestrationRulesSection {
+  const contextItems = [
+    ...input.context.capsule.pivots,
+    ...input.context.capsule.supportingItems,
+  ];
+  const selected = selectRelevantProjectRules(db, {
+    repoRoot,
+    query: input.query,
+    intent: input.intent,
+    linkedFilePaths: collectSortedUnique(contextItems.map((item) => item.filePath)),
+    linkedFqNames: collectSortedUnique(contextItems.map((item) => item.fqName)),
+  });
+
+  return {
+    included: selected.active.length > 0 || selected.candidates.length > 0,
+    active: selected.active,
+    candidates: selected.candidates,
+    activeCount: selected.activeTotal,
+    candidateCount: selected.candidateTotal,
+  };
 }
 
 function runSessionMemorySection(
