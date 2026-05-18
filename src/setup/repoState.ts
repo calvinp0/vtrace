@@ -1,4 +1,5 @@
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
 import type { IndexProjectResult } from "../indexer/types";
@@ -47,8 +48,13 @@ export async function detectRepoRoot(repoPath: string): Promise<RepoRootDetectio
   }
 
   let currentPath = requestedPath;
+  const systemTempRoot = path.resolve(os.tmpdir());
 
   while (true) {
+    if (currentPath !== requestedPath && currentPath === systemTempRoot) {
+      break;
+    }
+
     const marker = await detectRepoRootMarker(currentPath);
 
     if (marker !== undefined) {

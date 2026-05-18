@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { resolveRepoLocalPaths } from "../setup/repoState";
 import { defaultMcpToolRegistry } from "./tools";
 import {

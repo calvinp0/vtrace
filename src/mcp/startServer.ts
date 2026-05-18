@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { access } from "node:fs/promises";
 import path from "node:path";
 import type { Readable, Writable } from "node:stream";

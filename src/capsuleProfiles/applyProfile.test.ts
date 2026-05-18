@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "bun:test";
 
 import { buildCapsule, deterministicCapsuleBuilder, type BuildCapsuleInput } from "../capsule/buildCapsule";
 import { createCharacterBudget } from "../capsule/budget";

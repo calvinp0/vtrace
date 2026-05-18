@@ -183,7 +183,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "node ./scripts/copy-bin.mjs",
-    "package": "npm run vscode:prepublish && vsce package --no-dependencies --out vexb-vscode.vsix"
+    "copy-bin": "node ./scripts/copy-bin.mjs",
+    "package": "bun run copy-bin && ../node_modules/.bin/vsce package --no-dependencies --allow-missing-repository --skip-license --out vexb-vscode.vsix"
   }
 }

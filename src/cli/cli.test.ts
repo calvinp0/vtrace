@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { symlink } from "node:fs/promises";
-import test from "node:test";
+import { test } from "bun:test";
 
 import { buildCapsule, createSourceBackedCapsuleBuilder } from "../capsule/buildCapsule";
 import { createCharacterBudget } from "../capsule/budget";

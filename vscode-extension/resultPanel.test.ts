@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "bun:test";
 
 import { EXECUTABLE_SOURCES } from "./cli.js";
 import { buildRepoSnapshot } from "./shell.js";

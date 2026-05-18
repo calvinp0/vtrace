@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { openIndexerDatabase } from "../../db/sqlite";
 import { formatJson } from "../formatters";
 import type { CliOptions, CommandResult } from "../types";

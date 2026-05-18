@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { PassThrough } from "node:stream";
-import test from "node:test";
+import { test } from "bun:test";
 
 import { buildCapsule, createSourceBackedCapsuleBuilder } from "../capsule/buildCapsule";
 import { createCharacterBudget } from "../capsule/budget";
@@ -2770,11 +2770,18 @@ async function withFixture(
 ): Promise<void> {
   const root = await mkdtemp(path.join(os.tmpdir(), "vexb-mcp-"));
   const repoRoot = path.join(root, "repo");
+  const previousClaudeConfigPath = process.env.VEXB_CLAUDE_CODE_CONFIG_PATH;
 
   try {
+    process.env.VEXB_CLAUDE_CODE_CONFIG_PATH = path.join(root, "claude.json");
     await mkdir(repoRoot, { recursive: true });
     await run(repoRoot);
   } finally {
+    if (previousClaudeConfigPath === undefined) {
+      delete process.env.VEXB_CLAUDE_CODE_CONFIG_PATH;
+    } else {
+      process.env.VEXB_CLAUDE_CODE_CONFIG_PATH = previousClaudeConfigPath;
+    }
     await rm(root, { recursive: true, force: true });
   }
 }

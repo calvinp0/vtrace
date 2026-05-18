@@ -114,6 +114,18 @@ For the practical tool-by-tool guide, see [MCP Tool Cheat Sheet](./docs/mcp_tool
 
 Repeated `setup` is safe. If the repo is already ready, `vexb` reuses the current state conservatively.
 
+## Release and Distribution
+
+`vexb` is currently distributed as a local-source install. The supported install path today is cloning this repository, running `bun install`, and using the repo-local `./bin/vexb` launcher.
+
+The VS Code extension is private/local packaging only. It can be packaged locally with:
+
+```bash
+bun run package:vscode
+```
+
+npm and VS Marketplace publication are planned release options, but they are not part of the current RC1 release path.
+
 ## Agent Setup
 
 `setup` installs MCP config for the selected shell agent.

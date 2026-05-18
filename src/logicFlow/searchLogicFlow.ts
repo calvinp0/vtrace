@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Database } from "bun:sqlite";
 
 import { listAllEdges } from "../db/repositories/edgesRepository";

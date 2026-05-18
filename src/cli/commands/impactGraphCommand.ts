@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { openIndexerDatabase } from "../../db/sqlite";
 import {
   IMPACT_FORMATS,

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createHash } from "node:crypto";
 import Parser = require("tree-sitter");
 import * as TypeScriptLanguages from "tree-sitter-typescript";

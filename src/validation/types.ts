@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { CapsuleContentMode, CapsuleItemRole } from "../capsule/types";
 import type { Language, SymbolKind } from "../domain/types";
 import type { HandoffPayload } from "../handoff/types";

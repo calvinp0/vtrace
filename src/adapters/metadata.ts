@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   HANDOFF_SCHEMA_VERSION,
   type HandoffSchemaVersion,

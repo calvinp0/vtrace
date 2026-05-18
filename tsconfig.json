@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "allowSyntheticDefaultImports": true,
+    "lib": ["ES2022"],
+    "module": "ES2022",
+    "moduleDetection": "force",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "target": "ES2022",
+    "types": ["bun", "node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    ".vexb",
+    ".mytool",
+    ".vexb-test-tmp",
+    "vscode-extension/bin",
+    "vscode-extension/*.vsix"
+  ]
+}

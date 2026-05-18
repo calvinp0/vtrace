@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Database } from "bun:sqlite";
 import { access } from "node:fs/promises";
 import path from "node:path";

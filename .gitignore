@@ -3,8 +3,12 @@
 node_modules/
 dist/
 build/
+vscode-extension/bin/
+vscode-extension/*.vsix
 /.claude/
 /.mcp.json
 /.vexb/
+/.mytool/
+/.vexb-test-tmp/
 /.codex
 /capsule
