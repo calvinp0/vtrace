@@ -1,0 +1,23 @@
+{
+  "name": "vexb-slides",
+  "private": true,
+  "scripts": {
+    "dev": "slidev",
+    "build": "slidev build",
+    "export": "slidev export",
+    "export-pptx": "slidev export --format pptx"
+  },
+  "dependencies": {
+    "@slidev/cli": "^52.0.0",
+    "@slidev/theme-default": "latest"
+  },
+  "devDependencies": {
+    "playwright-chromium": "^1.49.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "playwright-chromium"
+    ]
+  }
+}
