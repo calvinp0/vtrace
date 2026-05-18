@@ -1,0 +1,189 @@
+{
+  "name": "vexb-vscode",
+  "displayName": "vexb",
+  "publisher": "vexb",
+  "description": "Thin VS Code shell for the vexb CLI and repo-local runtime state.",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./extension.cjs",
+  "engines": {
+    "vscode": "^1.89.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:vexb.setupAgent",
+    "onCommand:vexb.showIndexStatus",
+    "onCommand:vexb.generateContextCapsule",
+    "onCommand:vexb.showFileSkeleton",
+    "onCommand:vexb.showImpactGraphAtCursor",
+    "onCommand:vexb.doctor",
+    "onCommand:vexb.refreshStatus",
+    "onCommand:vexb.openOutput",
+    "onCommand:vexb.openSettings",
+    "onCommand:vexb.revealRepoRoot",
+    "onCommand:vexb.openAgentConfigFile",
+    "onCommand:vexb.showFreshnessReport",
+    "onCommand:vexb.showRuntimeReport",
+    "onCommand:vexb.showSetupConfigReport",
+    "onCommand:vexb.showExecutableResolutionReport",
+    "onCommand:vexb.showNoWorkspaceGuidance",
+    "onCommand:vexb.runPipelineForCurrentTask",
+    "onCommand:vexb.setupOrReindex",
+    "onView:vexb.repoStatus",
+    "workspaceContains:.git",
+    "workspaceContains:.vexb/config.json"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "vexb.setupAgent",
+        "title": "vexb: Setup Agent",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.showIndexStatus",
+        "title": "vexb: Show Index Status",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.generateContextCapsule",
+        "title": "vexb: Generate Context Capsule",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.showFileSkeleton",
+        "title": "vexb: Show File Skeleton",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.showImpactGraphAtCursor",
+        "title": "vexb: Show Impact Graph for Symbol at Cursor",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.doctor",
+        "title": "vexb: Doctor",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.refreshStatus",
+        "title": "vexb: Refresh Status",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.openOutput",
+        "title": "vexb: Open Output",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.openSettings",
+        "title": "vexb: Open Settings",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.revealRepoRoot",
+        "title": "vexb: Reveal Repo Root",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.openAgentConfigFile",
+        "title": "vexb: Open Agent Config File",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.showFreshnessReport",
+        "title": "vexb: Show Freshness Report",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.showRuntimeReport",
+        "title": "vexb: Show Runtime Report",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.showSetupConfigReport",
+        "title": "vexb: Show Setup / Config Report",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.showExecutableResolutionReport",
+        "title": "vexb: Show Executable Resolution Report",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.showNoWorkspaceGuidance",
+        "title": "vexb: Show No Workspace Guidance",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.runPipelineForCurrentTask",
+        "title": "vexb: Run Pipeline for Current Task",
+        "category": "vexb"
+      },
+      {
+        "command": "vexb.setupOrReindex",
+        "title": "vexb: Setup / Re-index",
+        "category": "vexb"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vexb",
+          "title": "VEXB",
+          "icon": "$(symbol-namespace)"
+        }
+      ]
+    },
+    "views": {
+      "vexb": [
+        {
+          "id": "vexb.repoStatus",
+          "name": "Repo Status"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "vexb.repoStatus",
+        "contents": "No workspace folder is open.\n[Open Folder](command:vscode.openFolder)\nOnce a folder is open, vexb will detect the repo automatically.",
+        "when": "workbenchState == empty"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "vexb.refreshStatus",
+          "when": "view == vexb.repoStatus",
+          "group": "navigation@1"
+        },
+        {
+          "command": "vexb.openOutput",
+          "when": "view == vexb.repoStatus",
+          "group": "navigation@2"
+        },
+        {
+          "command": "vexb.doctor",
+          "when": "view == vexb.repoStatus",
+          "group": "navigation@3"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "vexb",
+      "properties": {
+        "vexb.cliPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional absolute path to a vexb executable. When empty, the extension uses the bundled bin/vexb launcher or falls back to PATH."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "node ./scripts/copy-bin.mjs",
+    "package": "npm run vscode:prepublish && vsce package --no-dependencies --out vexb-vscode.vsix"
+  }
+}
