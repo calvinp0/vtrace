@@ -20,6 +20,10 @@ import { countObservations, listObservations } from "../db/repositories/observat
 import { openIndexerDatabase } from "../db/sqlite";
 import { indexProject } from "../indexer/indexProject";
 import { routeQuery } from "../intent/routeQuery";
+import {
+  DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS,
+  compressInactiveSessions,
+} from "../observations/sessionLifecycle";
 import type { GraphSearchResult } from "../retrieval/types";
 import { initRepo } from "../setup/initRepo";
 import { REPO_LOCAL_STATE_DIRNAME } from "../setup/types";
@@ -1357,6 +1361,61 @@ test("run_pipeline memory section includes durable observations when they match 
   });
 });
 
+test("run_pipeline memory can surface relevant compressed session summaries", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+    const db = openIndexerDatabase(initialized.paths.dbPath);
+
+    try {
+      await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-run-pipeline-compressed-seed",
+        toolId: McpToolId.RunPipeline,
+        input: {
+          query: "rename createSession memory lifecycle",
+          sessionId: "session-compress",
+        },
+      });
+      const session = db.query(`
+        SELECT last_activity_at_ms AS lastActivityAtMs
+        FROM sessions
+        WHERE session_id = 'session-compress'
+      `).get() as { lastActivityAtMs: number };
+      const compressed = compressInactiveSessions(db, {
+        repoRoot,
+        nowMs: session.lastActivityAtMs + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS,
+      });
+
+      assert.equal(compressed.compressedSummaries.length, 1);
+
+      const response = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: "req-run-pipeline-compressed-memory",
+        toolId: McpToolId.RunPipeline,
+        input: {
+          query: "rename createSession memory lifecycle",
+          includeMemory: true,
+        },
+      });
+
+      assert.equal(response.result.ok, true);
+      assert.equal(response.result.output.memory.durable.included, true);
+      assert.equal(
+        response.result.output.memory.durable.topObservations.some((observation) => {
+          return observation.observationId === compressed.compressedSummaries[0]?.summaryObservationId;
+        }),
+        true,
+      );
+    } finally {
+      db.close();
+    }
+  });
+});
+
 test("run_pipeline explore preset de-emphasizes durable memory unless includeMemory=true", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);
@@ -2519,7 +2578,7 @@ test("list_sessions and read_session stay compact, explicit, and fail cleanly fo
     );
     assert.deepEqual(
       Object.keys(listed.result.output.sessions[0] ?? {}).sort(),
-      ["agentKind", "lastActivityAtMs", "observationCount", "sessionId", "startedAtMs", "status"],
+      ["agentKind", "compressedAtMs", "lastActivityAtMs", "observationCount", "sessionId", "startedAtMs", "status", "summaryId"],
     );
     assert.equal(listed.result.output.sessions[0]?.agentKind, "mcp");
     assert.equal(listed.result.output.sessions[0]?.observationCount, 3);
@@ -2528,8 +2587,9 @@ test("list_sessions and read_session stay compact, explicit, and fail cleanly fo
     assert.equal(read.result.ok, true);
     assert.deepEqual(
       Object.keys(read.result.output).sort(),
-      ["recentObservations", "session", "summary"],
+      ["compressedSummary", "recentObservations", "session", "summary"],
     );
+    assert.equal(read.result.output.compressedSummary, null);
     assert.equal(read.result.output.session.sessionId, "session-alpha");
     assert.equal(read.result.output.summary.observationCount, 3);
     assert.equal(read.result.output.recentObservations.length, 3);

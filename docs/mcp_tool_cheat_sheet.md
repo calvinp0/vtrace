@@ -26,6 +26,8 @@ Meaningful visible MCP calls auto-capture compact `tool_call` observations. This
 
 `index_status`, `workspace_setup`, and `save_observation` are excluded. Captures are deterministic, compact, and linked only to exact file/symbol evidence already present in the call or result. They are not embeddings, semantic consolidation, passive file watching, anti-pattern detection, or project-rule generation.
 
+Inactive sessions can be compressed explicitly after the default two-hour inactivity threshold. Compression summarizes tool-call counts, touched files/symbols, key terms, and durable counts, then prunes ephemeral auto-captured `tool_call` rows. Durable/manual observations remain visible, and compressed summaries stay searchable by lexical and structural signals. The default 90-day retention policy currently reports cleanup candidates; it does not silently delete durable data.
+
 ## Direct Tool Choices
 
 - `get_context_capsule`: use when you only need the compact context capsule and do not need orchestration, impact, memory, or task-summary sections.

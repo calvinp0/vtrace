@@ -320,6 +320,31 @@ export function countObservations(db: Database): number {
   return row.count;
 }
 
+export function deleteEphemeralToolCallObservationsForSession(
+  db: Database,
+  sessionId: string,
+): number {
+  const row = db.query(`
+    SELECT COUNT(*) AS count
+    FROM observations
+    WHERE session_id = ?
+      AND kind = 'tool_call'
+      AND source = 'mcp_auto'
+  `).get(sessionId) as { count: number };
+
+  db.run(
+    `
+      DELETE FROM observations
+      WHERE session_id = ?
+        AND kind = 'tool_call'
+        AND source = 'mcp_auto'
+    `,
+    [sessionId],
+  );
+
+  return row.count;
+}
+
 function hydrateObservation(
   db: Database,
   observation: ObservationRecord,

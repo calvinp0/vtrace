@@ -108,11 +108,39 @@ export function initializeSchema(db: Database): void {
       agent_kind TEXT,
       started_at_ms INTEGER NOT NULL CHECK (started_at_ms >= 0),
       last_activity_at_ms INTEGER NOT NULL CHECK (last_activity_at_ms >= 0),
-      status TEXT NOT NULL CHECK (status IN ('active', 'inactive'))
+      status TEXT NOT NULL CHECK (status IN ('active', 'inactive', 'compressed')),
+      compressed_at_ms INTEGER CHECK (compressed_at_ms IS NULL OR compressed_at_ms >= 0),
+      summary_id TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_sessions_last_activity
       ON sessions(last_activity_at_ms DESC, session_id ASC);
+
+    CREATE TABLE IF NOT EXISTS session_compression_summaries (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL UNIQUE,
+      repo_root TEXT NOT NULL,
+      created_at_ms INTEGER NOT NULL CHECK (created_at_ms >= 0),
+      first_activity_at_ms INTEGER NOT NULL CHECK (first_activity_at_ms >= 0),
+      last_activity_at_ms INTEGER NOT NULL CHECK (last_activity_at_ms >= 0),
+      compressed_at_ms INTEGER NOT NULL CHECK (compressed_at_ms >= 0),
+      observation_counts_json TEXT NOT NULL,
+      tool_call_counts_json TEXT NOT NULL,
+      file_paths_json TEXT NOT NULL,
+      symbol_ids_json TEXT NOT NULL,
+      fq_names_json TEXT NOT NULL,
+      key_terms_json TEXT NOT NULL,
+      preserved_durable_observation_count INTEGER NOT NULL CHECK (preserved_durable_observation_count >= 0),
+      pruned_tool_call_observation_count INTEGER NOT NULL CHECK (pruned_tool_call_observation_count >= 0),
+      summary_observation_id TEXT NOT NULL,
+      FOREIGN KEY (summary_observation_id)
+        REFERENCES observations(id)
+        ON DELETE CASCADE
+        DEFERRABLE INITIALLY DEFERRED
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_session_compression_summaries_compressed_at
+      ON session_compression_summaries(compressed_at_ms DESC, session_id ASC);
 
     CREATE TABLE IF NOT EXISTS observations (
       id TEXT PRIMARY KEY,
@@ -252,6 +280,73 @@ export function initializeSchema(db: Database): void {
 
   ensureColumnExists(db, "symbols", "decorators", "TEXT");
   ensureEdgeCheckSupportsCallsReferences(db);
+  ensureSessionLifecycleSchema(db);
+}
+
+function ensureSessionLifecycleSchema(db: Database): void {
+  const row = db.query(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'sessions'`).get() as
+    | { sql: string }
+    | undefined;
+
+  if (row === undefined || row.sql === null) {
+    return;
+  }
+
+  if (
+    row.sql.includes("'compressed'")
+    && tableHasColumn(db, "sessions", "compressed_at_ms")
+    && tableHasColumn(db, "sessions", "summary_id")
+  ) {
+    return;
+  }
+
+  db.exec(`
+    PRAGMA foreign_keys = OFF;
+
+    ALTER TABLE sessions RENAME TO sessions__old_lifecycle;
+
+    CREATE TABLE sessions (
+      session_id TEXT PRIMARY KEY,
+      repo_root TEXT NOT NULL,
+      agent_kind TEXT,
+      started_at_ms INTEGER NOT NULL CHECK (started_at_ms >= 0),
+      last_activity_at_ms INTEGER NOT NULL CHECK (last_activity_at_ms >= 0),
+      status TEXT NOT NULL CHECK (status IN ('active', 'inactive', 'compressed')),
+      compressed_at_ms INTEGER CHECK (compressed_at_ms IS NULL OR compressed_at_ms >= 0),
+      summary_id TEXT
+    );
+
+    INSERT INTO sessions (
+      session_id,
+      repo_root,
+      agent_kind,
+      started_at_ms,
+      last_activity_at_ms,
+      status,
+      compressed_at_ms,
+      summary_id
+    )
+    SELECT
+      session_id,
+      repo_root,
+      agent_kind,
+      started_at_ms,
+      last_activity_at_ms,
+      CASE
+        WHEN status IN ('active', 'inactive') THEN status
+        ELSE 'active'
+      END,
+      NULL,
+      NULL
+    FROM sessions__old_lifecycle;
+
+    DROP TABLE sessions__old_lifecycle;
+
+    CREATE INDEX IF NOT EXISTS idx_sessions_last_activity
+      ON sessions(last_activity_at_ms DESC, session_id ASC);
+
+    PRAGMA foreign_keys = ON;
+  `);
 }
 
 function ensureEdgeCheckSupportsCallsReferences(db: Database): void {
@@ -309,11 +404,18 @@ function ensureColumnExists(
   columnName: string,
   columnDefinition: string,
 ): void {
-  const columns = db.query(`PRAGMA table_info(${tableName})`).all() as Array<{ name: string }>;
-
-  if (columns.some((column) => column.name === columnName)) {
+  if (tableHasColumn(db, tableName, columnName)) {
     return;
   }
 
   db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
+}
+
+function tableHasColumn(
+  db: Database,
+  tableName: string,
+  columnName: string,
+): boolean {
+  const columns = db.query(`PRAGMA table_info(${tableName})`).all() as Array<{ name: string }>;
+  return columns.some((column) => column.name === columnName);
 }

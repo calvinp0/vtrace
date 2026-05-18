@@ -13,6 +13,7 @@ import {
 import {
   countSessions,
   getSessionById,
+  listSessionCleanupCandidates,
   upsertSession,
 } from "../db/repositories/sessionsRepository";
 import {
@@ -28,6 +29,12 @@ import { FileChangeType, StaleStateStatus } from "../memory/types";
 import { CapsuleBudgetModel, type Capsule } from "../capsule/types";
 import { captureVisibleCapsuleObservationBestEffort } from "./autoCapture";
 import { getSessionContext } from "./getSessionContext";
+import {
+  DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS,
+  DEFAULT_SESSION_RETENTION_AFTER_MS,
+  compressInactiveSessions,
+  getSessionCompressionEligibility,
+} from "./sessionLifecycle";
 import {
   listInspectableSessions,
   readInspectableSession,
@@ -559,6 +566,213 @@ test("readInspectableSession returns explicit session state, derived summary, an
     ]);
     assert.equal(read!.recentObservations.length, 3);
     assert.equal(readInspectableSession(db, "missing-session"), undefined);
+  });
+});
+
+test("inactive sessions compress into stable searchable summaries while preserving durable observations", async () => {
+  await withObservationFixture(async ({ repoRoot, db }) => {
+    await indexProject({ repoRoot, db });
+    const sourceRunId = getLatestIndexRun(db)?.id;
+    const readUser = listSymbolsForFile(db, "src/service.ts").find((symbol) => symbol.localName === "readUser");
+
+    assert.notEqual(readUser, undefined);
+
+    persistObservation(db, {
+      repoRoot,
+      sessionId: "session-compress",
+      kind: ObservationKind.ToolCall,
+      source: ObservationSource.McpAuto,
+      toolName: "run_pipeline",
+      summary: "Built context capsule for memory pipeline",
+      body: "tool=run_pipeline\nquery=pipeline memory impact",
+      queryText: "pipeline memory impact",
+      intent: "explain",
+      sourceRunId,
+      createdAtMs: 100,
+      linkedFilePaths: ["src/service.ts"],
+      linkedSymbolIds: [readUser!.id],
+    });
+    persistObservation(db, {
+      repoRoot,
+      sessionId: "session-compress",
+      kind: ObservationKind.ToolCall,
+      source: ObservationSource.McpAuto,
+      toolName: "get_impact_graph",
+      summary: "Computed impact graph for src/service.ts::readUser",
+      body: "tool=get_impact_graph\nsymbol_fqn=src/service.ts::readUser",
+      queryText: "src/service.ts::readUser",
+      intent: "refactor",
+      sourceRunId,
+      createdAtMs: 150,
+      linkedFilePaths: ["src/service.ts"],
+      linkedSymbolIds: [readUser!.id],
+    });
+    persistObservation(db, {
+      repoRoot,
+      sessionId: "session-compress",
+      kind: ObservationKind.Decision,
+      source: ObservationSource.Manual,
+      toolName: "save_observation",
+      summary: "Keep service loader stable",
+      body: "Manual decision: readUser remains the service loader boundary.",
+      queryText: "service loader decision",
+      createdAtMs: 200,
+      linkedFilePaths: ["src/service.ts"],
+      linkedSymbolIds: [readUser!.id],
+    });
+    persistObservation(db, {
+      repoRoot,
+      sessionId: "session-compress",
+      kind: ObservationKind.Insight,
+      source: ObservationSource.Manual,
+      toolName: "save_observation",
+      summary: "Memory compression keeps durable notes",
+      body: "Manual insight: durable observations survive lifecycle compression.",
+      queryText: "memory compression durable",
+      createdAtMs: 300,
+      linkedFilePaths: ["src/models.ts"],
+    });
+    persistObservation(db, {
+      repoRoot,
+      sessionId: "session-compress",
+      kind: ObservationKind.ToolCall,
+      source: ObservationSource.Manual,
+      toolName: "save_observation",
+      summary: "Manual tool-call shaped note",
+      body: "Manual observations are durable even if their kind is tool_call.",
+      queryText: "manual durable tool call",
+      createdAtMs: 350,
+      linkedFilePaths: ["src/service.ts"],
+      linkedFqNames: ["src/service.ts::readUser"],
+    });
+    persistObservation(db, {
+      repoRoot,
+      sessionId: "session-recent",
+      kind: ObservationKind.ToolCall,
+      source: ObservationSource.McpAuto,
+      toolName: "get_skeleton",
+      summary: "Recent skeleton call",
+      body: "tool=get_skeleton",
+      queryText: "src/service.ts",
+      createdAtMs: 1_000,
+      linkedFilePaths: ["src/service.ts"],
+    });
+
+    const beforeThreshold = getSessionCompressionEligibility(db, {
+      nowMs: 350 + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS - 1,
+    });
+    assert.equal(
+      beforeThreshold.find((entry) => entry.session.sessionId === "session-compress")?.eligible,
+      false,
+    );
+
+    const atThreshold = getSessionCompressionEligibility(db, {
+      nowMs: 350 + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS,
+    });
+    assert.equal(
+      atThreshold.find((entry) => entry.session.sessionId === "session-compress")?.eligible,
+      true,
+    );
+    assert.equal(
+      atThreshold.find((entry) => entry.session.sessionId === "session-recent")?.eligible,
+      false,
+    );
+
+    const compressedAtMs = 350 + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS;
+    const firstCompression = compressInactiveSessions(db, {
+      repoRoot,
+      nowMs: compressedAtMs,
+    });
+    const secondCompression = compressInactiveSessions(db, {
+      repoRoot,
+      nowMs: compressedAtMs,
+    });
+
+    assert.equal(firstCompression.compressedSummaries.length, 1);
+    assert.deepEqual(secondCompression.compressedSummaries, []);
+
+    const summary = firstCompression.compressedSummaries[0]!;
+    assert.equal(summary.sessionId, "session-compress");
+    assert.equal(summary.firstActivityAtMs, 100);
+    assert.equal(summary.lastActivityAtMs, 350);
+    assert.equal(summary.compressedAtMs, compressedAtMs);
+    assert.deepEqual(summary.observationCounts, {
+      decision: 1,
+      insight: 1,
+      tool_call: 3,
+    });
+    assert.deepEqual(summary.toolCallCounts, {
+      get_impact_graph: 1,
+      run_pipeline: 1,
+    });
+    assert.deepEqual(summary.filePaths, ["src/models.ts", "src/service.ts"]);
+    assert.deepEqual(summary.symbolIds, [readUser!.id]);
+    assert.deepEqual(summary.fqNames, ["src/service.ts::readUser"]);
+    assert.equal(summary.keyTerms.includes("memory"), true);
+    assert.equal(summary.preservedDurableObservationCount, 3);
+    assert.equal(summary.prunedToolCallObservationCount, 2);
+
+    const compressedSession = getSessionById(db, "session-compress");
+    assert.equal(compressedSession?.status, SessionStatus.Compressed);
+    assert.equal(compressedSession?.compressedAtMs, compressedAtMs);
+    assert.equal(compressedSession?.summaryId, summary.id);
+    assert.equal(compressedSession?.lastActivityAtMs, 350);
+
+    const remaining = listObservations(db).filter((observation) => observation.sessionId === "session-compress");
+    assert.equal(
+      remaining.some((observation) => observation.source === ObservationSource.McpAuto && observation.kind === ObservationKind.ToolCall),
+      false,
+    );
+    assert.equal(
+      remaining.some((observation) => observation.summary === "Keep service loader stable"),
+      true,
+    );
+    assert.equal(
+      remaining.some((observation) => observation.summary === "Manual tool-call shaped note"),
+      true,
+    );
+    assert.equal(
+      remaining.some((observation) => observation.id === summary.summaryObservationId),
+      true,
+    );
+
+    const context = getSessionContext(db, {
+      sessionId: "session-compress",
+      query: "impact memory",
+      limit: 10,
+    });
+    assert.equal(context.session?.status, SessionStatus.Compressed);
+    assert.deepEqual(context.compressedSummary, summary);
+    assert.equal(
+      context.observations.some((observation) => observation.source === ObservationSource.McpAuto && observation.kind === ObservationKind.ToolCall),
+      false,
+    );
+    assert.equal(
+      context.observations.some((observation) => observation.summary === "Memory compression keeps durable notes"),
+      true,
+    );
+
+    assert.equal(searchMemory(db, { query: "get_impact_graph", maxResults: 3 })[0]?.observation.id, summary.summaryObservationId);
+    assert.equal(searchMemory(db, { query: "src/service.ts", maxResults: 3 })[0]?.observation.id, summary.summaryObservationId);
+    assert.equal(
+      searchMemory(db, { query: "memory", maxResults: 3 }).some((result) => {
+        return result.observation.id === summary.summaryObservationId;
+      }),
+      true,
+    );
+    assert.equal(searchMemory(db, { query: "src/service.ts::readUser", maxResults: 3 })[0]?.observation.id, summary.summaryObservationId);
+
+    const beforeRetention = listSessionCleanupCandidates(db, {
+      nowMs: compressedAtMs + DEFAULT_SESSION_RETENTION_AFTER_MS - 1,
+      retentionAfterMs: DEFAULT_SESSION_RETENTION_AFTER_MS,
+    });
+    const afterRetention = listSessionCleanupCandidates(db, {
+      nowMs: compressedAtMs + DEFAULT_SESSION_RETENTION_AFTER_MS,
+      retentionAfterMs: DEFAULT_SESSION_RETENTION_AFTER_MS,
+    });
+    assert.equal(beforeRetention[0]?.eligibleForDeletion, false);
+    assert.equal(afterRetention[0]?.eligibleForDeletion, true);
+    assert.deepEqual(afterRetention[0]?.compressedSummary, summary);
   });
 });
 

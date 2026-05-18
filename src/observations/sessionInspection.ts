@@ -2,6 +2,7 @@ import type { Database } from "bun:sqlite";
 
 import {
   getSessionById,
+  getSessionCompressionSummary,
   listSessionsWithObservationCounts,
 } from "../db/repositories/sessionsRepository";
 import { listObservationsForSession } from "../db/repositories/observationsRepository";
@@ -35,6 +36,7 @@ export function readInspectableSession(
   return {
     session,
     summary: buildSessionSummary(db, observations),
+    compressedSummary: getSessionCompressionSummary(db, sessionId) ?? null,
     recentObservations: observations
       .slice(0, READ_SESSION_PREVIEW_MAX_COUNT)
       .map(toObservationPreview),

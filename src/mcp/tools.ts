@@ -1926,8 +1926,16 @@ const SESSION_SCHEMA = objectProperty(
     startedAtMs: integerProperty("Session creation timestamp in milliseconds."),
     lastActivityAtMs: integerProperty("Last observed session activity timestamp in milliseconds."),
     status: stringProperty("Explicit session status."),
+    compressedAtMs: {
+      type: ["integer", "null"],
+      description: "Compression timestamp when the session has been compressed.",
+    },
+    summaryId: {
+      type: ["string", "null"],
+      description: "Compression summary id when the session has been compressed.",
+    },
   },
-  ["sessionId", "repoRoot", "agentKind", "startedAtMs", "lastActivityAtMs", "status"],
+  ["sessionId", "repoRoot", "agentKind", "startedAtMs", "lastActivityAtMs", "status", "compressedAtMs", "summaryId"],
 );
 
 const SESSION_KIND_COUNTS_SCHEMA = objectProperty(
@@ -1991,9 +1999,66 @@ const SESSION_LIST_ITEM_SCHEMA = objectProperty(
     status: stringProperty("Explicit session status."),
     startedAtMs: integerProperty("Session creation timestamp in milliseconds."),
     lastActivityAtMs: integerProperty("Last observed session activity timestamp in milliseconds."),
+    compressedAtMs: {
+      type: ["integer", "null"],
+      description: "Compression timestamp when the session has been compressed.",
+    },
+    summaryId: {
+      type: ["string", "null"],
+      description: "Compression summary id when the session has been compressed.",
+    },
     observationCount: integerProperty("Number of observations linked to the session."),
   },
-  ["sessionId", "agentKind", "status", "startedAtMs", "lastActivityAtMs", "observationCount"],
+  ["sessionId", "agentKind", "status", "startedAtMs", "lastActivityAtMs", "compressedAtMs", "summaryId", "observationCount"],
+);
+
+const SESSION_TOOL_CALL_COUNT_SCHEMA = objectProperty(
+  "A per-tool tool-call count in a compressed session summary.",
+  {
+    tool: stringProperty("MCP tool name."),
+    count: integerProperty("Number of captured tool-call observations for that tool."),
+  },
+  ["tool", "count"],
+);
+
+const SESSION_COMPRESSION_SUMMARY_SCHEMA = objectProperty(
+  "A deterministic structural summary for a compressed session.",
+  {
+    id: stringProperty("Deterministic compression summary id."),
+    sessionId: stringProperty("Compressed session id."),
+    repoRoot: stringProperty("Bound repo root."),
+    createdAtMs: integerProperty("Summary creation timestamp in milliseconds."),
+    firstActivityAtMs: integerProperty("First session activity timestamp in milliseconds."),
+    lastActivityAtMs: integerProperty("Last session activity timestamp in milliseconds."),
+    compressedAtMs: integerProperty("Compression timestamp in milliseconds."),
+    observationCounts: SESSION_KIND_COUNTS_SCHEMA,
+    toolCallCounts: arrayProperty("Tool-call counts by tool.", SESSION_TOOL_CALL_COUNT_SCHEMA),
+    filePaths: arrayProperty("Unique linked file paths summarized from the session.", stringProperty("Repo-relative file path.")),
+    symbolIds: arrayProperty("Unique linked symbol ids summarized from the session.", stringProperty("Persisted symbol id.")),
+    fqNames: arrayProperty("Unique linked symbol FQNs summarized from the session.", stringProperty("Fully qualified symbol name.")),
+    keyTerms: arrayProperty("Deterministic lexical key terms from the session.", stringProperty("Key term.")),
+    preservedDurableObservationCount: integerProperty("Non-ephemeral observations preserved after compression."),
+    prunedToolCallObservationCount: integerProperty("Ephemeral MCP auto tool-call observations pruned after compression."),
+    summaryObservationId: stringProperty("Searchable summary observation id."),
+  },
+  [
+    "id",
+    "sessionId",
+    "repoRoot",
+    "createdAtMs",
+    "firstActivityAtMs",
+    "lastActivityAtMs",
+    "compressedAtMs",
+    "observationCounts",
+    "toolCallCounts",
+    "filePaths",
+    "symbolIds",
+    "fqNames",
+    "keyTerms",
+    "preservedDurableObservationCount",
+    "prunedToolCallObservationCount",
+    "summaryObservationId",
+  ],
 );
 
 const SESSION_OBSERVATION_PREVIEW_SCHEMA = objectProperty(
@@ -3356,6 +3421,8 @@ function formatSession(session: {
   startedAtMs: number;
   lastActivityAtMs: number;
   status: string;
+  compressedAtMs?: number;
+  summaryId?: string;
 }) {
   return {
     sessionId: session.sessionId,
@@ -3364,6 +3431,8 @@ function formatSession(session: {
     startedAtMs: session.startedAtMs,
     lastActivityAtMs: session.lastActivityAtMs,
     status: session.status,
+    compressedAtMs: session.compressedAtMs ?? null,
+    summaryId: session.summaryId ?? null,
   };
 }
 
@@ -3409,6 +3478,8 @@ function formatSessionListItem(session: {
   status: string;
   startedAtMs: number;
   lastActivityAtMs: number;
+  compressedAtMs?: number;
+  summaryId?: string;
   observationCount: number;
 }) {
   return {
@@ -3417,7 +3488,55 @@ function formatSessionListItem(session: {
     status: session.status,
     startedAtMs: session.startedAtMs,
     lastActivityAtMs: session.lastActivityAtMs,
+    compressedAtMs: session.compressedAtMs ?? null,
+    summaryId: session.summaryId ?? null,
     observationCount: session.observationCount,
+  };
+}
+
+function formatSessionCompressionSummary(summary: {
+  id: string;
+  sessionId: string;
+  repoRoot: string;
+  createdAtMs: number;
+  firstActivityAtMs: number;
+  lastActivityAtMs: number;
+  compressedAtMs: number;
+  observationCounts: Record<string, number>;
+  toolCallCounts: Record<string, number>;
+  filePaths: readonly string[];
+  symbolIds: readonly string[];
+  fqNames: readonly string[];
+  keyTerms: readonly string[];
+  preservedDurableObservationCount: number;
+  prunedToolCallObservationCount: number;
+  summaryObservationId: string;
+}) {
+  return {
+    id: summary.id,
+    sessionId: summary.sessionId,
+    repoRoot: summary.repoRoot,
+    createdAtMs: summary.createdAtMs,
+    firstActivityAtMs: summary.firstActivityAtMs,
+    lastActivityAtMs: summary.lastActivityAtMs,
+    compressedAtMs: summary.compressedAtMs,
+    observationCounts: {
+      decision: summary.observationCounts.decision ?? 0,
+      insight: summary.observationCounts.insight ?? 0,
+      warning: summary.observationCounts.warning ?? 0,
+      deadEnd: summary.observationCounts.dead_end ?? summary.observationCounts.deadEnd ?? 0,
+      toolCall: summary.observationCounts.tool_call ?? summary.observationCounts.toolCall ?? 0,
+    },
+    toolCallCounts: Object.entries(summary.toolCallCounts)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([tool, count]) => ({ tool, count })),
+    filePaths: structuredClone([...summary.filePaths]),
+    symbolIds: structuredClone([...summary.symbolIds]),
+    fqNames: structuredClone([...summary.fqNames]),
+    keyTerms: structuredClone([...summary.keyTerms]),
+    preservedDurableObservationCount: summary.preservedDurableObservationCount,
+    prunedToolCallObservationCount: summary.prunedToolCallObservationCount,
+    summaryObservationId: summary.summaryObservationId,
   };
 }
 
@@ -5705,6 +5824,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
     sessionId: string | null;
     session: ReturnType<typeof formatSession> | null;
     summary: ReturnType<typeof formatSessionSummary> | null;
+    compressedSummary: ReturnType<typeof formatSessionCompressionSummary> | null;
     observations: ReturnType<typeof formatObservation>[];
     rankedObservations?: ReturnType<typeof formatObservation>[];
   }>({
@@ -5746,13 +5866,22 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             required: SESSION_SUMMARY_SCHEMA.required ?? [],
             additionalProperties: false,
           },
+          compressedSummary: {
+            type: ["object", "null"],
+            description: "Deterministic compression summary when the requested session has been compressed.",
+            properties: {
+              ...(SESSION_COMPRESSION_SUMMARY_SCHEMA.properties ?? {}),
+            },
+            required: SESSION_COMPRESSION_SUMMARY_SCHEMA.required ?? [],
+            additionalProperties: false,
+          },
           observations: arrayProperty("Ordered recent observations.", OBSERVATION_SCHEMA),
           rankedObservations: arrayProperty(
             "Optional query-ranked observations for the requested session or repo scope.",
             OBSERVATION_SCHEMA,
           ),
         },
-        ["sessionId", "session", "summary", "observations"],
+        ["sessionId", "session", "summary", "compressedSummary", "observations"],
       ),
     },
     async handler({ context, request }) {
@@ -5821,6 +5950,9 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               summary: contextResult.summary === null
                 ? null
                 : formatSessionSummary(contextResult.summary),
+              compressedSummary: contextResult.compressedSummary === null
+                ? null
+                : formatSessionCompressionSummary(contextResult.compressedSummary),
               observations: contextResult.observations.map(formatObservation),
               ...(contextResult.rankedObservations === undefined
                 ? {}
@@ -5875,6 +6007,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
   createEngineDelegateToolDefinition<ReadSessionInput, {
     session: ReturnType<typeof formatSession>;
     summary: ReturnType<typeof formatSessionSummary>;
+    compressedSummary: ReturnType<typeof formatSessionCompressionSummary> | null;
     recentObservations: ReturnType<typeof formatSessionObservationPreview>[];
   }>({
     metadata: {
@@ -5909,12 +6042,21 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             required: SESSION_SUMMARY_SCHEMA.required ?? [],
             additionalProperties: false,
           },
+          compressedSummary: {
+            type: ["object", "null"],
+            description: "Deterministic compression summary when the session has been compressed.",
+            properties: {
+              ...(SESSION_COMPRESSION_SUMMARY_SCHEMA.properties ?? {}),
+            },
+            required: SESSION_COMPRESSION_SUMMARY_SCHEMA.required ?? [],
+            additionalProperties: false,
+          },
           recentObservations: arrayProperty(
             "Tiny bounded preview of recent observations for the session.",
             SESSION_OBSERVATION_PREVIEW_SCHEMA,
           ),
         },
-        ["session", "summary", "recentObservations"],
+        ["session", "summary", "compressedSummary", "recentObservations"],
       ),
     },
     async handler({ context, request }) {
@@ -5956,6 +6098,9 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             output: {
               session: formatSession(sessionResult.session),
               summary: formatSessionSummary(sessionResult.summary),
+              compressedSummary: sessionResult.compressedSummary === null
+                ? null
+                : formatSessionCompressionSummary(sessionResult.compressedSummary),
               recentObservations: sessionResult.recentObservations.map(formatSessionObservationPreview),
             },
           };

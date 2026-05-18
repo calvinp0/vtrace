@@ -23,6 +23,7 @@ export type ObservationSource =
 export const SessionStatus = Object.freeze({
   Active: "active",
   Inactive: "inactive",
+  Compressed: "compressed",
 });
 
 export type SessionStatus =
@@ -35,6 +36,8 @@ export interface SessionRecord {
   startedAtMs: number;
   lastActivityAtMs: number;
   status: SessionStatus;
+  compressedAtMs?: number;
+  summaryId?: string;
 }
 
 export const ObservationStaleReasonKind = Object.freeze({
@@ -193,6 +196,8 @@ export interface SessionListItem {
   status: SessionStatus;
   startedAtMs: number;
   lastActivityAtMs: number;
+  compressedAtMs?: number;
+  summaryId?: string;
   observationCount: number;
 }
 
@@ -206,6 +211,7 @@ export interface SessionObservationPreview {
 export interface ReadSessionResult {
   session: SessionRecord;
   summary: SessionSummary;
+  compressedSummary: SessionCompressionSummary | null;
   recentObservations: SessionObservationPreview[];
 }
 
@@ -213,6 +219,41 @@ export interface SessionContextResult {
   sessionId: string | null;
   session: SessionRecord | null;
   summary: SessionSummary | null;
+  compressedSummary: SessionCompressionSummary | null;
   observations: Observation[];
   rankedObservations?: Observation[];
+}
+
+export interface SessionCompressionSummary {
+  id: string;
+  sessionId: string;
+  repoRoot: string;
+  createdAtMs: number;
+  firstActivityAtMs: number;
+  lastActivityAtMs: number;
+  compressedAtMs: number;
+  observationCounts: Record<string, number>;
+  toolCallCounts: Record<string, number>;
+  filePaths: string[];
+  symbolIds: string[];
+  fqNames: string[];
+  keyTerms: string[];
+  preservedDurableObservationCount: number;
+  prunedToolCallObservationCount: number;
+  summaryObservationId: string;
+}
+
+export interface SessionCompressionEligibility {
+  session: SessionRecord;
+  eligible: boolean;
+  inactiveForMs: number;
+  thresholdMs: number;
+}
+
+export interface SessionCleanupCandidate {
+  session: SessionRecord;
+  compressedSummary: SessionCompressionSummary | null;
+  eligibleForDeletion: boolean;
+  compressedForMs: number;
+  retentionMs: number;
 }

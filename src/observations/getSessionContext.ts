@@ -1,6 +1,9 @@
 import type { Database } from "bun:sqlite";
 
-import { getSessionById } from "../db/repositories/sessionsRepository";
+import {
+  getSessionById,
+  getSessionCompressionSummary,
+} from "../db/repositories/sessionsRepository";
 import {
   listObservations,
   listObservationsForSession,
@@ -37,6 +40,9 @@ export function getSessionContext(
   return {
     sessionId: input.sessionId ?? null,
     session,
+    compressedSummary: session === null
+      ? null
+      : getSessionCompressionSummary(db, session.sessionId) ?? null,
     summary: session === null
       ? null
       : buildSessionSummary(db, listObservationsForSession(db, session.sessionId)),

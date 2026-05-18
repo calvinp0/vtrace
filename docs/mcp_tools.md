@@ -42,6 +42,18 @@ The following visible tools are intentionally excluded from passive capture:
 
 This is a passive-memory substrate, not full VEXP parity. It does not add embeddings, semantic similarity, learned ranking, passive file watching, anti-pattern detection, semantic consolidation, project-rule generation, or claims that every agent decision is understood.
 
+## Session Lifecycle Compression
+
+VEXB can compress inactive sessions into compact structural summaries through an explicit lifecycle service. There is no background scheduler or passive file watcher requirement.
+
+The default compression threshold is two hours of inactivity. Compression records a deterministic summary with observation counts, tool-call counts by tool, unique linked files, unique linked symbol ids and FQNs, key lexical terms, first/last activity times, compression time, preserved durable count, and pruned ephemeral tool-call count.
+
+Compression physically prunes only ephemeral `mcp_auto` `tool_call` observations after their structural aggregate data has been summarized. Durable observations remain preserved, including manual notes and non-ephemeral insights, decisions, warnings, and dead-end observations. Manual observations are not removed by compression.
+
+Compressed sessions remain inspectable through session context: `get_session_context` reports the compression summary and returns preserved observations without flooding the response with pruned passive tool calls. The summary is also persisted as a compact searchable observation, so `search_memory`, `run_pipeline.memory`, and capsule memory surfacing can find it through deterministic lexical and structural signals such as key terms, tool names, file paths, and symbol FQNs.
+
+The default retention threshold is 90 days. This milestone reports deterministic cleanup candidates for old compressed sessions; physical deletion of compressed summaries and durable data is intentionally deferred.
+
 ## Default Orchestration
 
 ### `run_pipeline`
