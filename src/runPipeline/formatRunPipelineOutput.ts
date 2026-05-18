@@ -32,6 +32,7 @@ export function formatRunPipelineOrchestrationOutput(
     routingProfileId: context.routedQuery.profile.id,
     capsuleRef: `vexp:capsule:${compactOrchestrationHash(orchestration.request.query)}`,
   };
+  const capsuleSurfacedMemories = context.capsule.memories ?? [];
 
   const impactSection = {
     included: impact.included,
@@ -59,6 +60,8 @@ export function formatRunPipelineOrchestrationOutput(
     impactRef: impact.focalSymbol === null
       ? null
       : `vexp:impact:${impact.focalSymbol.fqName}`,
+    candidatesConsidered: impact.candidatesConsidered,
+    matchedCandidates: impact.matchedCandidates,
   };
 
   const memorySection = {
@@ -87,6 +90,12 @@ export function formatRunPipelineOrchestrationOutput(
         sessionId: result.observation.sessionId ?? null,
       })),
     },
+    capsuleSurfaced: {
+      included: capsuleSurfacedMemories.length > 0,
+      skipReason: capsuleSurfacedMemories.length > 0 ? null : "no_relevant_memory",
+      matchedCount: capsuleSurfacedMemories.length,
+      memories: capsuleSurfacedMemories.map((memory) => structuredClone(memory)),
+    },
   };
 
   const omittedSectionCount = [
@@ -94,12 +103,32 @@ export function formatRunPipelineOrchestrationOutput(
     !impactSection.included,
     !memorySection.session.included,
     !memorySection.durable.included,
+    !memorySection.capsuleSurfaced.included,
   ].filter(Boolean).length;
+  const deferredItems = orchestration.deferred.map((placeholder) => ({
+    id: placeholder.id,
+    hash: placeholder.hash,
+    kind: placeholder.kind,
+    summary: placeholder.summary,
+    expandable: true,
+    expansionTool: "expand_vexp_ref",
+    suggestedTool: placeholder.suggestedTool,
+    suggestedInput: structuredClone(placeholder.suggestedInput),
+  }));
 
   return {
     schemaVersion: orchestration.schemaVersion,
-    request: { ...orchestration.request },
+    request: {
+      ...orchestration.request,
+      task: orchestration.request.query,
+      presetRequested: orchestration.request.intentRequested,
+    },
     intent: {
+      requestedPreset: orchestration.intentDecision.requested,
+      selectedPreset: orchestration.intentDecision.selected,
+      selectedIntent: orchestration.intentDecision.mappedQueryIntent,
+      reason: orchestration.intentDecision.rationale,
+      confidence: resolveIntentConfidence(orchestration.intentDecision.source),
       requested: orchestration.intentDecision.requested,
       selected: orchestration.intentDecision.selected,
       source: orchestration.intentDecision.source,
@@ -136,24 +165,38 @@ export function formatRunPipelineOrchestrationOutput(
         included: impact.included,
         skipReason: impact.skipReason,
         triggerReason: impact.triggerReason,
+        candidatesConsidered: impact.candidatesConsidered,
+        matchedCandidates: impact.matchedCandidates,
       },
       memory: {
         sessionIncluded: memory.session.included,
         sessionSkipReason: memory.session.skipReason,
         durableIncluded: memory.durable.included,
         durableSkipReason: memory.durable.skipReason,
+        capsuleSurfacedIncluded: memorySection.capsuleSurfaced.included,
+        capsuleSurfacedSkipReason: memorySection.capsuleSurfaced.skipReason,
       },
-      deferredCount: orchestration.deferred.length,
+      budget: {
+        ...structuredClone(context.capsule.budget),
+        contextTruncated: context.capsule.truncated,
+        contextCompressed: context.capsule.compressed,
+      },
+      deferredCount: deferredItems.length,
       omittedSectionCount,
     },
-    deferred: orchestration.deferred.map((placeholder) => ({
-      id: placeholder.id,
-      hash: placeholder.hash,
-      kind: placeholder.kind,
-      summary: placeholder.summary,
-      suggestedTool: placeholder.suggestedTool,
-      suggestedInput: structuredClone(placeholder.suggestedInput),
-    })),
+    deferred: {
+      items: deferredItems,
+      expandable: deferredItems.length > 0,
+      expansionTool: deferredItems.length > 0 ? "expand_vexp_ref" : null,
+      notes: deferredItems.length > 0
+        ? [
+          "Deferred items are expandable only through expand_vexp_ref in this MCP server process.",
+          "No V-REF token-savings or special compressed format is claimed.",
+        ]
+        : [
+          "No deferred items were emitted for this run.",
+        ],
+    },
   };
 }
 
@@ -167,7 +210,13 @@ export function formatRunPipelineCompactContextItem(item: CapsuleItem) {
     kind: item.kind,
     role: item.role,
     contentMode: item.content.mode,
+    inclusionReasons: item.inclusionReasons.map((reason) => structuredClone(reason)),
+    budgetCost: item.budgetCost,
     compressed: item.compressed,
+    sourceBacked: item.sourceBacked ?? false,
+    ...(item.lexicalScore === undefined ? {} : { lexicalScore: item.lexicalScore }),
+    ...(item.graphScore === undefined ? {} : { graphScore: item.graphScore }),
+    ...(item.finalScore === undefined ? {} : { finalScore: item.finalScore }),
   };
 }
 
@@ -177,4 +226,17 @@ export function compactOrchestrationHash(value: string): string {
     hash = (hash * 31 + value.charCodeAt(index)) | 0;
   }
   return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function resolveIntentConfidence(source: RunPipelineOrchestration["intentDecision"]["source"]): "low" | "medium" | "high" {
+  switch (source) {
+    case "explicit":
+    case "auto_phrase_trigger":
+      return "high";
+    case "auto_classifier":
+      return "medium";
+    case "auto_default":
+    default:
+      return "low";
+  }
 }

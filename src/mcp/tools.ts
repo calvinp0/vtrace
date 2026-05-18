@@ -175,6 +175,12 @@ interface SearchLogicFlowInput {
 }
 
 interface RunPipelineInput extends BuildCapsuleInput {
+  readonly task?: string;
+  readonly preset?: string;
+  readonly max_tokens?: number;
+  readonly include_tests?: boolean;
+  readonly include_file_content?: boolean;
+  readonly observation?: string;
   readonly intent?: string;
   readonly sessionId?: string;
   readonly saveObservation?: boolean;
@@ -1155,7 +1161,7 @@ const RUN_PIPELINE_DIAGNOSTICS_SCHEMA = objectProperty(
 );
 
 const RUN_PIPELINE_COMPACT_CONTEXT_ITEM_SCHEMA = objectProperty(
-  "Compact context item: identity, role, representation mode. Full content is deferred.",
+  "Compact context item: identity, role, representation mode, and inclusion evidence.",
   {
     repoAlias: stringProperty("Workspace repo alias when returned from a multi-repo workspace."),
     symbolId: stringProperty("Stable persisted symbol id."),
@@ -1165,9 +1171,27 @@ const RUN_PIPELINE_COMPACT_CONTEXT_ITEM_SCHEMA = objectProperty(
     kind: stringProperty("Symbol kind."),
     role: stringProperty("Capsule item role: pivot or support."),
     contentMode: stringProperty("Representation mode used for this item."),
+    inclusionReasons: arrayProperty("Capsule inclusion reasons.", CAPSULE_INCLUSION_REASON_SCHEMA),
+    budgetCost: integerProperty("Capsule budget cost for this item."),
     compressed: booleanProperty("Whether the item was compressed to a reduced mode."),
+    sourceBacked: booleanProperty("Whether this item came from source-backed content loading."),
+    lexicalScore: numberProperty("Lexical score when available."),
+    graphScore: numberProperty("Graph score when available."),
+    finalScore: numberProperty("Final score when available."),
   },
-  ["symbolId", "filePath", "fqName", "localName", "kind", "role", "contentMode", "compressed"],
+  [
+    "symbolId",
+    "filePath",
+    "fqName",
+    "localName",
+    "kind",
+    "role",
+    "contentMode",
+    "inclusionReasons",
+    "budgetCost",
+    "compressed",
+    "sourceBacked",
+  ],
 );
 
 const RUN_PIPELINE_INTENT_DECISION_SCHEMA = objectProperty(
@@ -1175,6 +1199,11 @@ const RUN_PIPELINE_INTENT_DECISION_SCHEMA = objectProperty(
   {
     requested: stringProperty("Preset requested by caller (auto, explore, debug, modify, refactor)."),
     selected: stringProperty("Concrete preset resolved by the orchestrator."),
+    requestedPreset: stringProperty("Product-facing preset requested by caller."),
+    selectedPreset: stringProperty("Product-facing concrete preset selected by the orchestrator."),
+    selectedIntent: stringProperty("Internal intent selected for retrieval/profile mapping."),
+    reason: stringProperty("Compact reason for the selected preset."),
+    confidence: stringProperty("Coarse deterministic confidence: low, medium, or high."),
     source: stringProperty("How the preset was resolved (explicit, auto_phrase_trigger, auto_classifier, auto_default)."),
     rationale: stringProperty("Short human-readable rationale for the resolved preset."),
     mappedQueryIntent: stringProperty("Internal QueryIntent the preset maps to for retrieval and capsule profile selection."),
@@ -1184,6 +1213,11 @@ const RUN_PIPELINE_INTENT_DECISION_SCHEMA = objectProperty(
   [
     "requested",
     "selected",
+    "requestedPreset",
+    "selectedPreset",
+    "selectedIntent",
+    "reason",
+    "confidence",
     "source",
     "rationale",
     "mappedQueryIntent",
@@ -1305,6 +1339,8 @@ const RUN_PIPELINE_IMPACT_SECTION_SCHEMA = objectProperty(
       type: ["string", "null"],
       description: "Stable deferred reference id for the full impact graph, when included.",
     },
+    candidatesConsidered: integerProperty("Number of conservative focal-symbol candidates considered."),
+    matchedCandidates: integerProperty("Number of candidates explicitly mentioned by the task."),
   },
   [
     "included",
@@ -1315,6 +1351,8 @@ const RUN_PIPELINE_IMPACT_SECTION_SCHEMA = objectProperty(
     "summary",
     "topDependents",
     "impactRef",
+    "candidatesConsidered",
+    "matchedCandidates",
   ],
 );
 
@@ -1379,8 +1417,21 @@ const RUN_PIPELINE_MEMORY_SECTION_SCHEMA = objectProperty(
       },
       ["included", "skipReason", "matchedCount", "topObservations"],
     ),
+    capsuleSurfaced: objectProperty(
+      "Memories already surfaced by capsule assembly.",
+      {
+        included: booleanProperty("Whether the capsule surfaced relevant memory."),
+        skipReason: {
+          type: ["string", "null"],
+          description: "Why capsule-surfaced memory was omitted, when applicable.",
+        },
+        matchedCount: integerProperty("Number of capsule-surfaced memory items."),
+        memories: arrayProperty("Compact capsule-surfaced memory items.", CAPSULE_MEMORY_ITEM_SCHEMA),
+      },
+      ["included", "skipReason", "matchedCount", "memories"],
+    ),
   },
-  ["session", "durable"],
+  ["session", "durable", "capsuleSurfaced"],
 );
 
 const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
@@ -1409,8 +1460,10 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
           type: ["string", "null"],
           description: "Trigger reason recognized by the orchestrator, when evaluated.",
         },
+        candidatesConsidered: integerProperty("Number of conservative focal-symbol candidates considered."),
+        matchedCandidates: integerProperty("Number of task-mentioned focal-symbol candidates."),
       },
-      ["included", "skipReason", "triggerReason"],
+      ["included", "skipReason", "triggerReason", "candidatesConsidered", "matchedCandidates"],
     ),
     memory: objectProperty(
       "Memory decision diagnostics.",
@@ -1425,22 +1478,55 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
           type: ["string", "null"],
           description: "Why durable memory evidence was omitted, when applicable.",
         },
+        capsuleSurfacedIncluded: booleanProperty("Whether capsule assembly surfaced memory."),
+        capsuleSurfacedSkipReason: {
+          type: ["string", "null"],
+          description: "Why capsule-surfaced memory was omitted, when applicable.",
+        },
       },
-      ["sessionIncluded", "sessionSkipReason", "durableIncluded", "durableSkipReason"],
+      [
+        "sessionIncluded",
+        "sessionSkipReason",
+        "durableIncluded",
+        "durableSkipReason",
+        "capsuleSurfacedIncluded",
+        "capsuleSurfacedSkipReason",
+      ],
+    ),
+    budget: objectProperty(
+      "Budget and truncation diagnostics.",
+      {
+        model: stringProperty("Budget model."),
+        maxCharacters: integerProperty("Maximum allowed characters."),
+        usedCharacters: integerProperty("Used characters."),
+        remainingCharacters: integerProperty("Remaining characters."),
+        contextTruncated: booleanProperty("Whether context was truncated."),
+        contextCompressed: booleanProperty("Whether context was compressed."),
+      },
+      [
+        "model",
+        "maxCharacters",
+        "usedCharacters",
+        "remainingCharacters",
+        "contextTruncated",
+        "contextCompressed",
+      ],
     ),
     deferredCount: integerProperty("Number of deferred expandable placeholders emitted."),
     omittedSectionCount: integerProperty("Number of top-level sections (context, impact, session, durable) omitted."),
   },
-  ["intent", "retrieval", "impact", "memory", "deferredCount", "omittedSectionCount"],
+  ["intent", "retrieval", "impact", "memory", "budget", "deferredCount", "omittedSectionCount"],
 );
 
 const RUN_PIPELINE_DEFERRED_ITEM_SCHEMA = objectProperty(
-  "A stable deferred expandable placeholder.",
+  "A stable deferred placeholder.",
   {
     id: stringProperty("Stable internal reference id."),
-    hash: stringProperty("Public 12-hex V-REF hash accepted by expand_vexp_ref."),
+    hash: stringProperty("Public 12-hex V-REF hash accepted by expand_vexp_ref when expandable=true."),
     kind: stringProperty("Kind of deferred content (context_capsule, impact_graph, session_context, durable_memory)."),
     summary: stringProperty("Human-readable description of what would be expanded."),
+    expandable: booleanProperty("Whether this item has a real expansion path."),
+    expansionTool: stringProperty("Expansion tool when expandable."),
     suggestedTool: stringProperty("MCP tool that currently exposes this expansion."),
     suggestedInput: objectProperty(
       "Suggested input to pass to the expansion tool.",
@@ -1454,7 +1540,21 @@ const RUN_PIPELINE_DEFERRED_ITEM_SCHEMA = objectProperty(
       [],
     ),
   },
-  ["id", "hash", "kind", "summary", "suggestedTool", "suggestedInput"],
+  ["id", "hash", "kind", "summary", "expandable", "expansionTool", "suggestedTool", "suggestedInput"],
+);
+
+const RUN_PIPELINE_DEFERRED_SECTION_SCHEMA = objectProperty(
+  "Deferred expansion metadata.",
+  {
+    items: arrayProperty("Deferred items emitted by this pipeline run.", RUN_PIPELINE_DEFERRED_ITEM_SCHEMA),
+    expandable: booleanProperty("Whether at least one deferred item is expandable."),
+    expansionTool: {
+      type: ["string", "null"],
+      description: "Expansion tool to use when expandable.",
+    },
+    notes: arrayProperty("Honest notes about deferred expansion support.", stringProperty("Deferred note.")),
+  },
+  ["items", "expandable", "expansionTool", "notes"],
 );
 
 const RAW_CAPSULE_ITEM_SCHEMA = objectProperty(
@@ -2371,6 +2471,37 @@ function parseRequiredQuery(
   input: Record<string, unknown>,
 ): string | McpToolExecutionResult<never> {
   return parseRequiredStringField(toolId, input, "query");
+}
+
+function parseRequiredRunPipelineTask(
+  input: Record<string, unknown>,
+): string | McpToolExecutionResult<never> {
+  const task = parseOptionalStringField(McpToolId.RunPipeline, input, "task");
+
+  if (task !== undefined && typeof task !== "string") {
+    return task;
+  }
+
+  if (typeof task === "string") {
+    return task;
+  }
+
+  return parseRequiredStringField(McpToolId.RunPipeline, input, "query");
+}
+
+function parseOptionalIntegerAlias(
+  toolId: McpToolId,
+  input: Record<string, unknown>,
+  preferredField: string,
+  legacyField: string,
+): number | undefined | McpToolExecutionResult<never> {
+  const preferred = parseOptionalInteger(toolId, input, preferredField);
+
+  if (preferred !== undefined) {
+    return preferred;
+  }
+
+  return parseOptionalInteger(toolId, input, legacyField);
 }
 
 function parseRequiredStringField(
@@ -3819,6 +3950,8 @@ async function runMultiRepoPipelineOrchestration(
     intent?: string;
     sessionId?: string;
     includeMemory?: boolean;
+    includeTests?: boolean;
+    includeFileContent?: boolean;
   },
 ): Promise<
   | {
@@ -3856,6 +3989,8 @@ async function runMultiRepoPipelineOrchestration(
         intent: input.intent,
         sessionId: input.sessionId,
         includeMemory: input.includeMemory,
+        includeTests: input.includeTests,
+        includeFileContent: input.includeFileContent,
       });
       const taggedOrchestration: RunPipelineOrchestration = {
         ...orchestration,
@@ -4017,10 +4152,19 @@ function formatMultiRepoRunPipelineOutput(input: {
         included: impact.included,
         skipReason: impact.skipReason,
         triggerReason: impact.triggerReason,
+        candidatesConsidered: impact.candidatesConsidered,
+        matchedCandidates: impact.matchedCandidates,
       },
       deferredCount: 0,
     },
-    deferred: [],
+    deferred: {
+      items: [],
+      expandable: false,
+      expansionTool: null,
+      notes: [
+        "Multi-repo run_pipeline does not emit deferred expansion items in this build.",
+      ],
+    },
     savedObservation: null,
   };
 }
@@ -4041,12 +4185,14 @@ function resolveMultiRepoImpactOutput(
     return {
       ...baseImpact,
       included: false,
-      skipReason: "intent_does_not_trigger",
+      skipReason: "not_refactor_like",
       selectionSource: null,
       focalSymbol: null,
       summary: null,
       topDependents: null,
       impactRef: null,
+      candidatesConsidered: baseImpact.candidatesConsidered,
+      matchedCandidates: baseImpact.matchedCandidates,
     };
   }
 
@@ -4059,6 +4205,14 @@ function resolveMultiRepoImpactOutput(
     summary: null,
     topDependents: null,
     impactRef: null,
+    candidatesConsidered: entries.reduce(
+      (sum, entry) => sum + entry.orchestration.impact.candidatesConsidered,
+      0,
+    ),
+    matchedCandidates: entries.reduce(
+      (sum, entry) => sum + entry.orchestration.impact.matchedCandidates,
+      0,
+    ),
   };
 }
 
@@ -5742,18 +5896,26 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       inputSchema: objectSchema(
         "Pipeline orchestration request.",
         {
-          query: stringProperty("Task query text."),
+          task: stringProperty("Product-facing task description. Preferred over legacy query when both are provided."),
+          query: stringProperty("Legacy task query text; preserved for backward compatibility."),
+          preset: stringProperty(
+            `Product-facing preset. One of: ${[RunPipelinePresetIntent.Auto, ...RUN_PIPELINE_CONCRETE_PRESETS].join(", ")}. Defaults to auto.`,
+          ),
           intent: stringProperty(
-            `Optional intent preset. One of: ${[RunPipelinePresetIntent.Auto, ...RUN_PIPELINE_CONCRETE_PRESETS].join(", ")}. Defaults to auto.`,
+            "Legacy alias for preset.",
           ),
           maxResults: integerProperty("Optional reranked candidate count."),
-          maxBudgetCharacters: integerProperty("Optional capsule character budget."),
+          max_tokens: integerProperty("Product-facing total output budget. Currently mapped to VEXB's character-budgeted capsule engine."),
+          maxBudgetCharacters: integerProperty("Legacy capsule character budget."),
+          include_tests: booleanProperty("Product-facing test-inclusion preference. Defaults true for debug preset, false otherwise."),
+          include_file_content: booleanProperty("Product-facing file-content preference. The compact run_pipeline result still returns representation metadata, not full files."),
           sessionId: stringProperty("Optional session id used for session-context memory recall and observation save."),
           includeMemory: booleanProperty("When true, force durable memory inclusion even for presets that de-emphasize it."),
           saveObservation: booleanProperty("When true, persist a compact tool-call observation for this pipeline run."),
+          observation: stringProperty("Optional durable observation text to save after the pipeline completes."),
           repos: arrayProperty("Optional workspace repo aliases to query. Defaults to all enabled repos when a workspace config is present.", stringProperty("Repo alias.")),
         },
-        ["query"],
+        [],
       ),
       outputSchema: objectSchema(
         "Explicit run_pipeline orchestration output.",
@@ -5777,9 +5939,13 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           request: objectProperty(
             "Resolved request parameters.",
             {
+              task: stringProperty("Product-facing task text."),
               query: stringProperty("Original query text."),
               maxResults: integerProperty("Resolved reranked candidate count."),
               maxBudgetCharacters: integerProperty("Resolved capsule character budget."),
+              includeTests: booleanProperty("Resolved test-inclusion preference."),
+              includeFileContent: booleanProperty("Resolved file-content preference."),
+              presetRequested: stringProperty("Product-facing preset requested by caller."),
               intentRequested: stringProperty("Intent preset requested by caller (default auto)."),
               sessionId: {
                 type: ["string", "null"],
@@ -5787,7 +5953,17 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               },
               selectedRepos: arrayProperty("Selected repo aliases for a multi-repo run.", stringProperty("Repo alias.")),
             },
-            ["query", "maxResults", "maxBudgetCharacters", "intentRequested", "sessionId"],
+            [
+              "task",
+              "query",
+              "maxResults",
+              "maxBudgetCharacters",
+              "includeTests",
+              "includeFileContent",
+              "presetRequested",
+              "intentRequested",
+              "sessionId",
+            ],
           ),
           intent: RUN_PIPELINE_INTENT_DECISION_SCHEMA,
           taskSummary: RUN_PIPELINE_TASK_SUMMARY_SCHEMA,
@@ -5795,10 +5971,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           impact: RUN_PIPELINE_IMPACT_SECTION_SCHEMA,
           memory: RUN_PIPELINE_MEMORY_SECTION_SCHEMA,
           diagnostics: RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA,
-          deferred: arrayProperty(
-            "Stable deferred expandable placeholders. Each entry is future-expandable via expand_vexp_ref.",
-            RUN_PIPELINE_DEFERRED_ITEM_SCHEMA,
-          ),
+          deferred: RUN_PIPELINE_DEFERRED_SECTION_SCHEMA,
           savedObservation: {
             type: ["object", "null"],
             description: "Persisted observation when saveObservation=true.",
@@ -5831,17 +6004,23 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         return input;
       }
 
-      const query = parseRequiredQuery(McpToolId.RunPipeline, input);
+      const query = parseRequiredRunPipelineTask(input);
       const maxResults = parseOptionalInteger(McpToolId.RunPipeline, input, "maxResults");
-      const maxBudgetCharacters = parseOptionalInteger(
+      const maxBudgetCharacters = parseOptionalIntegerAlias(
         McpToolId.RunPipeline,
         input,
+        "max_tokens",
         "maxBudgetCharacters",
       );
       const sessionId = parseOptionalStringField(McpToolId.RunPipeline, input, "sessionId");
       const saveObservation = parseOptionalBoolean(McpToolId.RunPipeline, input, "saveObservation");
       const includeMemory = parseOptionalBoolean(McpToolId.RunPipeline, input, "includeMemory");
-      const intentRequested = parseOptionalStringField(McpToolId.RunPipeline, input, "intent");
+      const includeTests = parseOptionalBoolean(McpToolId.RunPipeline, input, "include_tests");
+      const includeFileContent = parseOptionalBoolean(McpToolId.RunPipeline, input, "include_file_content");
+      const observationText = parseOptionalStringField(McpToolId.RunPipeline, input, "observation");
+      const presetRequested = parseOptionalStringField(McpToolId.RunPipeline, input, "preset");
+      const legacyIntentRequested = parseOptionalStringField(McpToolId.RunPipeline, input, "intent");
+      const intentRequested = presetRequested ?? legacyIntentRequested;
       const repos = parseOptionalStringArrayField(McpToolId.RunPipeline, input, "repos");
 
       if (typeof query !== "string") {
@@ -5861,6 +6040,21 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       }
       if (includeMemory !== undefined && typeof includeMemory !== "boolean") {
         return includeMemory;
+      }
+      if (includeTests !== undefined && typeof includeTests !== "boolean") {
+        return includeTests;
+      }
+      if (includeFileContent !== undefined && typeof includeFileContent !== "boolean") {
+        return includeFileContent;
+      }
+      if (observationText !== undefined && typeof observationText !== "string") {
+        return observationText;
+      }
+      if (presetRequested !== undefined && typeof presetRequested !== "string") {
+        return presetRequested;
+      }
+      if (legacyIntentRequested !== undefined && typeof legacyIntentRequested !== "string") {
+        return legacyIntentRequested;
       }
       if (intentRequested !== undefined && typeof intentRequested !== "string") {
         return intentRequested;
@@ -5891,6 +6085,8 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           intent: intentRequested,
           sessionId,
           includeMemory,
+          includeTests,
+          includeFileContent,
         });
 
         return multi.ok
@@ -5909,6 +6105,8 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             intent: intentRequested,
             sessionId,
             includeMemory,
+            includeTests,
+            includeFileContent,
           });
 
           // Auto-capture is a best-effort post-success side effect shared with
@@ -5932,19 +6130,19 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             staleness: ReturnType<typeof formatObservationSearchResult>["staleness"];
           } | null = null;
 
-          if (saveObservation === true) {
+          if (saveObservation === true || observationText !== undefined) {
             const capsule = orchestration.context.capsule;
             const linkedItems = [...capsule.pivots, ...capsule.supportingItems].slice(0, 6);
             const observation = persistObservation(db, {
               repoRoot: binding.repoRoot,
               sessionId,
               sessionAgentKind: "mcp",
-              kind: ObservationKind.ToolCall,
-              source: ObservationSource.McpAuto,
+              kind: observationText === undefined ? ObservationKind.ToolCall : ObservationKind.Insight,
+              source: observationText === undefined ? ObservationSource.McpAuto : ObservationSource.Manual,
               toolName: McpToolId.RunPipeline,
               queryText: orchestration.request.query,
               intent: orchestration.intentDecision.selected,
-              summary: `run_pipeline: ${orchestration.request.query}`,
+              summary: observationText ?? `run_pipeline: ${orchestration.request.query}`,
               body: [
                 `preset=${orchestration.intentDecision.selected}`,
                 `intent_source=${orchestration.intentDecision.source}`,

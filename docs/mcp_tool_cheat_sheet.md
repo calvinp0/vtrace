@@ -4,9 +4,21 @@ Use this as the quick selection guide for the visible `vexb` MCP tools.
 
 ## Default Entry Point
 
-Start with `run_pipeline` when the work is broad, unclear, or needs a compact task-oriented context package. It is the best first choice for new coding tasks, debugging orientation, likely edit-surface discovery, and handoff-style summaries.
+Start with `run_pipeline` when the work is broad, unclear, or needs a compact task-oriented orchestration result. It is the best first choice for new coding tasks, debugging orientation, likely edit-surface discovery, impact/memory decisions, and handoff-style summaries.
 
 `run_pipeline` is not mandatory. If you already know the exact workflow you need, call the narrower tool directly.
+
+Prefer product-facing input names for new callers:
+
+- `task`
+- `preset`
+- `max_tokens`
+- `include_tests`
+- `include_file_content`
+- `observation`
+- `repos`
+
+Legacy names (`query`, `intent`, `maxBudgetCharacters`) still work.
 
 ## Direct Tool Choices
 
@@ -19,7 +31,7 @@ Start with `run_pipeline` when the work is broad, unclear, or needs a compact ta
 - `search_memory`: use when you need saved observations relevant to the current work.
 - `get_session_context`: use when resuming recent or session-linked work.
 - `save_observation`: use when a durable fact should be available to future sessions.
-- `expand_vexp_ref`: use only to expand a hash that was already emitted by `run_pipeline`.
+- `expand_vexp_ref`: use only for a `run_pipeline` deferred item that says `expandable: true`.
 
 ## Practical Rules
 
@@ -27,4 +39,5 @@ Start with `run_pipeline` when the work is broad, unclear, or needs a compact ta
 - If the input is exact, prefer the exact leaf tool.
 - Do not use impact or logic-flow tools as runtime proof; they report indexed structure.
 - Do not expect `search_logic_flow` to infer endpoints; provide exact FQNs.
-- Do not expect `expand_vexp_ref` to search or recompute; it only resolves known emitted hashes.
+- Do not expect `expand_vexp_ref` to search or recompute; it only resolves known emitted hashes in the current MCP server process.
+- Do not claim a special compressed format or token-savings percentage from VEXB output.

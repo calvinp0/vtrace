@@ -1119,8 +1119,17 @@ test("run_pipeline presets materially change capsule profile, include-tests defa
       assert.equal(response.result.ok, true);
       assert.equal(response.result.output.intent.requested, preset);
       assert.equal(response.result.output.intent.selected, preset);
+      assert.equal(response.result.output.intent.requestedPreset, preset);
+      assert.equal(response.result.output.intent.selectedPreset, preset);
+      assert.equal(typeof response.result.output.intent.reason, "string");
+      assert.equal(response.result.output.intent.reason.length > 0, true);
       assert.equal(response.result.output.intent.source, "explicit");
     }
+
+    assert.equal(byPreset.get("debug")!.result.output.request.includeTests, true);
+    assert.equal(byPreset.get("explore")!.result.output.request.includeTests, false);
+    assert.equal(byPreset.get("modify")!.result.output.request.includeTests, false);
+    assert.equal(byPreset.get("refactor")!.result.output.request.includeTests, false);
 
     // Capsule profile must differ across presets because the preset maps to a QueryIntent.
     const profilesByPreset = Object.fromEntries(
@@ -1138,16 +1147,59 @@ test("run_pipeline presets materially change capsule profile, include-tests defa
 
     const explore = byPreset.get("explore")!.result.output.impact;
     assert.equal(explore.included, false);
-    assert.equal(explore.skipReason, "intent_does_not_trigger");
+    assert.equal(explore.skipReason, "not_refactor_like");
     assert.equal(explore.focalSymbol, null);
 
     const modify = byPreset.get("modify")!.result.output.impact;
     assert.equal(modify.included, false);
-    assert.equal(modify.skipReason, "intent_does_not_trigger");
+    assert.equal(modify.skipReason, "not_refactor_like");
 
     const debug = byPreset.get("debug")!.result.output.impact;
     assert.equal(debug.included, false);
-    assert.equal(debug.skipReason, "intent_does_not_trigger");
+    assert.equal(debug.skipReason, "not_refactor_like");
+  });
+});
+
+test("run_pipeline accepts product-facing input names while preserving legacy aliases", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    const productFacing = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-product-facing-input",
+      toolId: McpToolId.RunPipeline,
+      input: {
+        task: "debug why createSession fails",
+        preset: "debug",
+        max_tokens: 4_000,
+        include_tests: false,
+        include_file_content: false,
+      },
+    });
+    const legacy = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-legacy-input",
+      toolId: McpToolId.RunPipeline,
+      input: {
+        query: "debug why createSession fails",
+        intent: "debug",
+        maxBudgetCharacters: 4_000,
+      },
+    });
+
+    assert.equal(productFacing.result.ok, true);
+    assert.equal(legacy.result.ok, true);
+    assert.equal(productFacing.result.output.request.query, "debug why createSession fails");
+    assert.equal(productFacing.result.output.request.task, "debug why createSession fails");
+    assert.equal(productFacing.result.output.request.maxBudgetCharacters, 4_000);
+    assert.equal(productFacing.result.output.request.includeTests, false);
+    assert.equal(productFacing.result.output.request.includeFileContent, false);
+    assert.equal(productFacing.result.output.intent.selectedPreset, "debug");
+    assert.equal(legacy.result.output.intent.selectedPreset, "debug");
   });
 });
 
@@ -1214,6 +1266,32 @@ test("run_pipeline skips impact with explicit reason when no focal symbol can be
     assert.equal(impact.skipReason, "no_focal_symbol");
     assert.equal(impact.focalSymbol, null);
     assert.equal(response.result.output.diagnostics.impact.skipReason, "no_focal_symbol");
+  });
+});
+
+test("run_pipeline reports multiple_focal_symbols when impact trigger mentions more than one candidate", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-impact-multiple",
+      toolId: McpToolId.RunPipeline,
+      input: {
+        task: "what breaks if I change createSession and readSession",
+        preset: "refactor",
+      },
+    });
+
+    assert.equal(response.result.ok, true);
+    assert.equal(response.result.output.impact.included, false);
+    assert.equal(response.result.output.impact.skipReason, "multiple_focal_symbols");
+    assert.equal(response.result.output.impact.matchedCandidates >= 2, true);
+    assert.equal(response.result.output.diagnostics.impact.skipReason, "multiple_focal_symbols");
   });
 });
 
@@ -1432,7 +1510,7 @@ test("run_pipeline deferred placeholders cover context, impact, session, and dur
     });
 
     assert.equal(response.result.ok, true);
-    const deferred = response.result.output.deferred;
+    const deferred = response.result.output.deferred.items;
     const kinds = new Set(deferred.map((item) => item.kind));
     assert.equal(kinds.has("context_capsule"), true);
     assert.equal(kinds.has("impact_graph"), true);
@@ -1444,8 +1522,11 @@ test("run_pipeline deferred placeholders cover context, impact, session, and dur
       assert.equal(item.id.length > 0, true);
       assert.equal(typeof item.suggestedTool, "string");
       assert.equal(item.suggestedTool.length > 0, true);
+      assert.equal(item.expandable, true);
+      assert.equal(item.expansionTool, "expand_vexp_ref");
     }
     assert.equal(response.result.output.diagnostics.deferredCount, deferred.length);
+    assert.equal(response.result.output.deferred.expandable, true);
   });
 });
 

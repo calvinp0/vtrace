@@ -63,6 +63,8 @@ export interface RunPipelineOrchestratorInput {
   readonly intent?: string;
   readonly sessionId?: string;
   readonly includeMemory?: boolean;
+  readonly includeTests?: boolean;
+  readonly includeFileContent?: boolean;
 }
 
 export const RUN_PIPELINE_DEFAULTS = Object.freeze({
@@ -108,6 +110,8 @@ export interface OrchestrationImpactSection {
   readonly selectionSource: string | null;
   readonly focalSymbol: OrchestrationImpactFocalSymbol | null;
   readonly graph: ImpactGraphOutput | null;
+  readonly candidatesConsidered: number;
+  readonly matchedCandidates: number;
 }
 
 export interface OrchestrationSessionSection {
@@ -138,6 +142,8 @@ export interface RunPipelineOrchestration {
     readonly maxBudgetCharacters: number;
     readonly intentRequested: string;
     readonly sessionId: string | null;
+    readonly includeTests: boolean;
+    readonly includeFileContent: boolean;
   };
   readonly intentDecision: RunPipelineIntentDecision;
   readonly context: OrchestrationContextSection;
@@ -218,6 +224,8 @@ export function runPipelineOrchestrator(
       maxBudgetCharacters,
       intentRequested,
       sessionId: rawInput.sessionId ?? null,
+      includeTests: rawInput.includeTests ?? intentDecision.selected === RunPipelinePresetIntent.Debug,
+      includeFileContent: rawInput.includeFileContent ?? true,
     },
     intentDecision,
     context,
@@ -438,27 +446,34 @@ function runImpactSection(
   if (triggerReason === null) {
     return {
       included: false,
-      skipReason: RunPipelineImpactSkipReason.IntentDoesNotTrigger,
+      skipReason: RunPipelineImpactSkipReason.NotRefactorLike,
       triggerReason: null,
       selectionSource: null,
       focalSymbol: null,
       graph: null,
+      candidatesConsidered: 0,
+      matchedCandidates: 0,
     };
   }
 
-  const focal = selectImpactFocalSymbol(context);
+  const focalSelection = selectImpactFocalSymbol(context);
 
-  if (focal === null) {
+  if (focalSelection.focal === null) {
     return {
       included: false,
-      skipReason: RunPipelineImpactSkipReason.NoFocalSymbol,
+      skipReason: focalSelection.matchedCandidates > 1
+        ? RunPipelineImpactSkipReason.MultipleFocalSymbols
+        : RunPipelineImpactSkipReason.NoFocalSymbol,
       triggerReason,
       selectionSource: null,
       focalSymbol: null,
       graph: null,
+      candidatesConsidered: focalSelection.candidatesConsidered,
+      matchedCandidates: focalSelection.matchedCandidates,
     };
   }
 
+  const focal = focalSelection.focal;
   const graph = getImpactGraph(db, {
     symbolFqn: focal.fqName,
     depth: RUN_PIPELINE_DEFAULTS.impactDepth,
@@ -468,7 +483,7 @@ function runImpactSection(
   if (!graph.ok) {
     return {
       included: false,
-      skipReason: RunPipelineImpactSkipReason.ImpactGraphFailed,
+      skipReason: RunPipelineImpactSkipReason.ImpactError,
       triggerReason,
       selectionSource: focal.isTopPivot ? "top_pivot_task_mention" : "routed_task_mention",
       focalSymbol: {
@@ -479,6 +494,27 @@ function runImpactSection(
         kind: focal.kind,
       },
       graph: null,
+      candidatesConsidered: focalSelection.candidatesConsidered,
+      matchedCandidates: focalSelection.matchedCandidates,
+    };
+  }
+
+  if (graph.output.summary.dependentSymbolCount === 0) {
+    return {
+      included: false,
+      skipReason: RunPipelineImpactSkipReason.NoDependents,
+      triggerReason,
+      selectionSource: focal.isTopPivot ? "top_pivot_task_mention" : "routed_task_mention",
+      focalSymbol: {
+        symbolId: focal.symbolId,
+        filePath: focal.filePath,
+        fqName: focal.fqName,
+        localName: focal.localName,
+        kind: focal.kind,
+      },
+      graph: graph.output,
+      candidatesConsidered: focalSelection.candidatesConsidered,
+      matchedCandidates: focalSelection.matchedCandidates,
     };
   }
 
@@ -495,6 +531,8 @@ function runImpactSection(
       kind: focal.kind,
     },
     graph: graph.output,
+    candidatesConsidered: focalSelection.candidatesConsidered,
+    matchedCandidates: focalSelection.matchedCandidates,
   };
 }
 
@@ -541,13 +579,21 @@ function resolveImpactTriggerReason(
 
 function selectImpactFocalSymbol(
   context: OrchestrationContextSection,
-): ImpactCandidate | null {
+): {
+  readonly focal: ImpactCandidate | null;
+  readonly candidatesConsidered: number;
+  readonly matchedCandidates: number;
+} {
   const candidates = collectImpactCandidates(context);
   const mentioned = candidates.filter((candidate) => isCandidateMentioned(
     context.routedQuery.query,
     candidate,
   ));
-  return mentioned.length === 1 ? mentioned[0]! : null;
+  return {
+    focal: mentioned.length === 1 ? mentioned[0]! : null,
+    candidatesConsidered: candidates.length,
+    matchedCandidates: mentioned.length,
+  };
 }
 
 function collectImpactCandidates(context: OrchestrationContextSection): ImpactCandidate[] {

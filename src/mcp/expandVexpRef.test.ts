@@ -187,12 +187,14 @@ test("expand_vexp_ref expands a V-REF emitted by run_pipeline and is determinist
     assert.equal(pipeline.result.ok, true);
     if (!pipeline.result.ok) throw new Error("pipeline failed");
 
-    const placeholders = pipeline.result.output.deferred;
+    const placeholders = pipeline.result.output.deferred.items;
     assert.equal(placeholders.length > 0, true, "run_pipeline must emit at least one deferred V-REF");
 
     // Every emitted placeholder exposes a 12-hex public hash.
     for (const placeholder of placeholders) {
       assert.match(placeholder.hash, DEFERRED_VEXP_HASH_PATTERN);
+      assert.equal(placeholder.expandable, true);
+      assert.equal(placeholder.expansionTool, "expand_vexp_ref");
     }
 
     // Pick the capsule placeholder (always emitted for a query with results).
@@ -248,7 +250,7 @@ test("expand_vexp_ref returns expired when a previously published V-REF has been
     });
     assert.equal(pipeline.result.ok, true);
     if (!pipeline.result.ok) throw new Error("pipeline failed");
-    const placeholder = pipeline.result.output.deferred[0];
+    const placeholder = pipeline.result.output.deferred.items[0];
     assert.notEqual(placeholder, undefined);
     const hash = placeholder!.hash;
 

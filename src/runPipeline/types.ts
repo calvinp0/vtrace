@@ -63,9 +63,11 @@ export type RunPipelineContextSkipReason =
   (typeof RunPipelineContextSkipReason)[keyof typeof RunPipelineContextSkipReason];
 
 export const RunPipelineImpactSkipReason = Object.freeze({
-  IntentDoesNotTrigger: "intent_does_not_trigger",
+  NotRefactorLike: "not_refactor_like",
   NoFocalSymbol: "no_focal_symbol",
-  ImpactGraphFailed: "impact_graph_failed",
+  MultipleFocalSymbols: "multiple_focal_symbols",
+  NoDependents: "no_dependents",
+  ImpactError: "impact_error",
   CrossRepoImpactUnsupported: "cross_repo_impact_unsupported",
 });
 
