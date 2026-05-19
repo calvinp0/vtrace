@@ -1139,6 +1139,8 @@ const INDEX_FRESHNESS_SCHEMA = objectProperty(
     state: stringProperty("Freshness state."),
     isStale: booleanProperty("Whether the index should be treated as stale."),
     summary: stringProperty("Human-readable freshness summary."),
+    whyItMatters: stringProperty("Why stale or unknown freshness matters, when applicable."),
+    recommendedAction: stringProperty("Recommended follow-up action for the current freshness state."),
     reasons: arrayProperty(
       "Freshness reasons.",
       objectProperty(
@@ -1146,6 +1148,12 @@ const INDEX_FRESHNESS_SCHEMA = objectProperty(
         {
           code: stringProperty("Reason code."),
           count: integerProperty("Optional count associated with the reason."),
+          firstChangedAtMs: integerProperty("First observed changed-file timestamp, when applicable."),
+          lastChangedAtMs: integerProperty("Last observed changed-file timestamp, when applicable."),
+          changedFiles: arrayProperty(
+            "Bounded sorted watcher-observed changed files, when applicable.",
+            stringProperty("Repo-relative changed file path."),
+          ),
         },
         ["code"],
       ),
@@ -1165,8 +1173,12 @@ const INDEX_FRESHNESS_SCHEMA = objectProperty(
       description: "Current source snapshot comparison.",
       additionalProperties: true,
     },
+    currentHead: {
+      type: ["string", "null"],
+      description: "Current git HEAD when available.",
+    },
   },
-  ["state", "isStale", "summary", "reasons", "observedFileChanges", "snapshot", "comparison"],
+  ["state", "isStale", "summary", "reasons", "observedFileChanges", "snapshot", "currentHead", "comparison"],
 );
 
 const FILE_WATCHER_STATUS_SCHEMA = objectProperty(
@@ -1735,6 +1747,9 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
         activeTotalCount: integerProperty("Total active rules in the repo."),
         candidatePreviewCount: integerProperty("Number of candidate previews surfaced."),
         candidateTotalCount: integerProperty("Total candidate rules in the repo."),
+        staleTotalCount: integerProperty("Total stale rules in the repo."),
+        disabledTotalCount: integerProperty("Total disabled rules in the repo."),
+        dismissedTotalCount: integerProperty("Total dismissed rules in the repo."),
       },
       [
         "included",
@@ -1743,6 +1758,9 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
         "activeTotalCount",
         "candidatePreviewCount",
         "candidateTotalCount",
+        "staleTotalCount",
+        "disabledTotalCount",
+        "dismissedTotalCount",
       ],
     ),
     budget: objectProperty(

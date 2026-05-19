@@ -26,6 +26,10 @@ import {
 } from "../observations/sessionLifecycle";
 import { consolidatePassiveObservationsForSession } from "../observations/consolidation";
 import { ObservationKind, ObservationSource } from "../observations/types";
+import {
+  createActiveProjectRule,
+  generateProjectRuleCandidates,
+} from "../projectRules/projectRules";
 import { recordObservedFileChanges } from "../runtime/fileWatcher";
 import type { GraphSearchResult } from "../retrieval/types";
 import { initRepo } from "../setup/initRepo";
@@ -46,6 +50,8 @@ import {
   McpToolAvailability,
   McpToolHandlerKind,
   McpToolId,
+  type McpObjectSchema,
+  type McpSchemaProperty,
   type McpToolDefinition,
 } from "./types";
 
@@ -1649,6 +1655,134 @@ test("run_pipeline deferred placeholders cover context, impact, session, and dur
     }
     assert.equal(response.result.output.diagnostics.deferredCount, deferred.length);
     assert.equal(response.result.output.deferred.expandable, true);
+  });
+});
+
+test("run_pipeline and adjacent visible MCP outputs conform to their declared schemas", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+    const db = openIndexerDatabase(initialized.paths.dbPath);
+
+    try {
+      createActiveProjectRule(db, {
+        repoRoot: initialized.repoRoot,
+        summary: "When changing session creation, inspect the controller caller.",
+        files: ["src/session.ts"],
+        terms: ["rename", "createSession"],
+        nowMs: 100,
+      });
+      for (const createdAtMs of [200, 300, 400]) {
+        persistObservation(db, {
+          repoRoot: initialized.repoRoot,
+          kind: ObservationKind.Decision,
+          source: ObservationSource.Manual,
+          summary: `Session creation convention ${createdAtMs}`,
+          body: "When changing createSession behavior, keep controller integration tests in view.",
+          queryText: "rename createSession controller tests",
+          linkedFilePaths: ["src/session.ts"],
+          createdAtMs,
+        });
+      }
+      const generatedCandidates = generateProjectRuleCandidates(db, {
+        repoRoot: initialized.repoRoot,
+        nowMs: 500,
+      });
+      assert.equal(generatedCandidates.created.length, 1);
+    } finally {
+      db.close();
+    }
+
+    const pipeline = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-schema-parity",
+      toolId: McpToolId.RunPipeline,
+      input: {
+        query: "rename createSession",
+        maxBudgetCharacters: 5_000,
+      },
+    });
+    assert.equal(pipeline.result.ok, true);
+    assertOutputConformsToToolSchema(McpToolId.RunPipeline, pipeline.result.output);
+    assert.deepEqual(
+      Object.keys(pipeline.result.output.diagnostics.rules).sort(),
+      [
+        "activeIncluded",
+        "activeMatchedCount",
+        "activeTotalCount",
+        "candidatePreviewCount",
+        "candidateTotalCount",
+        "disabledTotalCount",
+        "dismissedTotalCount",
+        "included",
+        "staleTotalCount",
+      ],
+    );
+    assert.equal(pipeline.result.output.diagnostics.rules.activeMatchedCount > 0, true);
+    assert.equal(pipeline.result.output.diagnostics.rules.candidatePreviewCount > 0, true);
+    assert.equal(pipeline.result.output.deferred.items.length > 0, true);
+
+    const deferredHash = pipeline.result.output.deferred.items[0]?.hash;
+    assert.equal(typeof deferredHash, "string");
+    const expanded = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-expand-vexp-schema-parity",
+      toolId: McpToolId.ExpandVexpRef,
+      input: { hash: deferredHash },
+    });
+    assert.equal(expanded.result.ok, true);
+    assert.equal(typeof expanded.result.output.resolved, "boolean");
+    assertOutputConformsToToolSchema(McpToolId.ExpandVexpRef, expanded.result.output);
+
+    const capsule = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-context-capsule-schema-parity",
+      toolId: McpToolId.GetContextCapsule,
+      input: {
+        query: "Session",
+        maxBudgetCharacters: 5_000,
+      },
+    });
+    assert.equal(capsule.result.ok, true);
+    assertOutputConformsToToolSchema(McpToolId.GetContextCapsule, capsule.result.output);
+
+    await recordObservedFileChanges({
+      repoRoot: initialized.repoRoot,
+      statePath: initialized.paths.statePath,
+      changedFilePaths: ["src/session.ts"],
+      nowMs: 10_000,
+    });
+
+    const stalePipeline = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-stale-schema-parity",
+      toolId: McpToolId.RunPipeline,
+      input: {
+        query: "rename createSession",
+        maxBudgetCharacters: 5_000,
+      },
+    });
+    assert.equal(stalePipeline.result.ok, true);
+    assert.equal(stalePipeline.result.output.diagnostics.freshness.state, "possibly_stale");
+    assert.equal(
+      stalePipeline.result.output.diagnostics.freshness.reasons.some((reason) => {
+        return Array.isArray(reason.changedFiles) && reason.changedFiles.includes("src/session.ts");
+      }),
+      true,
+    );
+    assertOutputConformsToToolSchema(McpToolId.RunPipeline, stalePipeline.result.output);
+
+    const indexStatus = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-index-status-schema-parity",
+      toolId: McpToolId.IndexStatus,
+      input: {},
+    });
+    assert.equal(indexStatus.result.ok, true);
+    assertOutputConformsToToolSchema(McpToolId.IndexStatus, indexStatus.result.output);
   });
 });
 
@@ -3298,6 +3432,112 @@ function makeCustomTool(): McpToolDefinition<{ query: string }, { query: string;
       };
     },
   };
+}
+
+function assertOutputConformsToToolSchema(toolId: McpToolId, output: unknown): void {
+  const definition = RESERVED_MCP_TOOL_DEFINITIONS.find((tool) => tool.metadata.toolId === toolId);
+
+  assert.notEqual(definition, undefined, `Missing MCP tool definition for ${toolId}`);
+  assertConformsToSchema(output, definition!.metadata.outputSchema, toolId);
+}
+
+function assertConformsToSchema(
+  value: unknown,
+  schema: McpObjectSchema | McpSchemaProperty,
+  pathLabel: string,
+): void {
+  if (value === null) {
+    assert.equal(
+      schemaAllowsType(schema, "null"),
+      true,
+      `${pathLabel}: schema does not allow null`,
+    );
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    assert.equal(
+      schemaAllowsType(schema, "array"),
+      true,
+      `${pathLabel}: schema does not allow array`,
+    );
+    if (schema.items !== undefined) {
+      value.forEach((item, index) => {
+        assertConformsToSchema(item, schema.items!, `${pathLabel}[${index}]`);
+      });
+    }
+    return;
+  }
+
+  if (typeof value === "object") {
+    assert.equal(
+      schemaAllowsType(schema, "object"),
+      true,
+      `${pathLabel}: schema does not allow object`,
+    );
+    const record = value as Record<string, unknown>;
+    const properties = schema.properties ?? {};
+    const required = schema.required ?? [];
+
+    for (const requiredKey of required) {
+      assert.equal(
+        Object.prototype.hasOwnProperty.call(record, requiredKey),
+        true,
+        `${pathLabel}: missing required property ${requiredKey}`,
+      );
+    }
+
+    if (schema.additionalProperties === false) {
+      const extraKeys = Object.keys(record).filter((key) => properties[key] === undefined);
+      assert.deepEqual(extraKeys, [], `${pathLabel}: schema is missing emitted properties`);
+    }
+
+    for (const [key, propertySchema] of Object.entries(properties)) {
+      if (!Object.prototype.hasOwnProperty.call(record, key)) {
+        continue;
+      }
+      assertConformsToSchema(record[key], propertySchema, `${pathLabel}.${key}`);
+    }
+    return;
+  }
+
+  if (typeof value === "string") {
+    assert.equal(
+      schemaAllowsType(schema, "string"),
+      true,
+      `${pathLabel}: schema does not allow string`,
+    );
+    return;
+  }
+
+  if (typeof value === "number") {
+    assert.equal(
+      schemaAllowsType(schema, "number") || (Number.isInteger(value) && schemaAllowsType(schema, "integer")),
+      true,
+      `${pathLabel}: schema does not allow number`,
+    );
+    return;
+  }
+
+  if (typeof value === "boolean") {
+    assert.equal(
+      schemaAllowsType(schema, "boolean"),
+      true,
+      `${pathLabel}: schema does not allow boolean`,
+    );
+    return;
+  }
+
+  assert.fail(`${pathLabel}: unsupported value type ${typeof value}`);
+}
+
+function schemaAllowsType(
+  schema: McpObjectSchema | McpSchemaProperty,
+  type: "string" | "integer" | "number" | "boolean" | "object" | "array" | "null",
+): boolean {
+  return Array.isArray(schema.type)
+    ? schema.type.includes(type)
+    : schema.type === type;
 }
 
 async function withFixture(
