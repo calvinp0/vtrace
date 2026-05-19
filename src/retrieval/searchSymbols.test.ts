@@ -54,6 +54,27 @@ test("exact local_name matches rank above weaker substring matches", () => {
   }
 });
 
+test("exact search finds module-level Python symbols by name", () => {
+  const db = openIndexerDatabase();
+
+  try {
+    seedSearchFixture(db);
+
+    const results = searchSymbols(db, {
+      query: "DEFAULT_BACKEND",
+      maxResults: 5,
+    });
+
+    assert.equal(results[0]?.localName, "DEFAULT_BACKEND");
+    assert.equal(results[0]?.kind, SymbolKind.ModuleConstant);
+    assert.equal(results[0]?.fqName, "src/config/settings.py::DEFAULT_BACKEND");
+    assert.equal(results[0]?.matches[0]?.field, SymbolSearchMatchField.LocalName);
+    assert.equal(results[0]?.matches[0]?.matchType, SymbolSearchMatchType.Exact);
+  } finally {
+    db.close();
+  }
+});
+
 test("fq_name matches are returned", () => {
   const db = openIndexerDatabase();
 

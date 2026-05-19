@@ -86,7 +86,7 @@ The following are possible post-RC, general-purpose milestones. They are not req
 
 - persistent V-REF store (implemented for single-repo stored-truth expansion with bounded repo-local retention)
 - optional auto-reindex mode
-- module-level symbol indexing
+- module-level symbol indexing (implemented for conservative Python top-level assignments)
 - Python references extraction
 - Python member/attribute resolution
 - inherited-member and `super()` resolution

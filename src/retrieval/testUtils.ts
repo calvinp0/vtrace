@@ -208,6 +208,19 @@ const SEARCH_FIXTURE: readonly SeedFileSpec[] = [
       },
     ],
   },
+  {
+    path: "src/config/settings.py",
+    symbols: [
+      {
+        localName: "DEFAULT_BACKEND",
+        kind: SymbolKind.ModuleConstant,
+        startByte: 0,
+        endByte: 24,
+        signature: "DEFAULT_BACKEND = ...",
+        exported: true,
+      },
+    ],
+  },
 ];
 
 const WORKFLOW_SEARCH_FIXTURE: readonly SeedFileSpec[] = [

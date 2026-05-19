@@ -10,25 +10,25 @@ VTrace is RC-ready as deterministic lexical/structural repo-local tooling with C
 
 VTrace is not full VEXP parity. The current product truth remains explicit: V-REFs are exact and repo-local with bounded stored-truth persistence, the watcher is mark-stale-only by default with optional visible auto-reindex, memory and rules are deterministic rather than semantic, and graph behavior is bounded structural analysis rather than runtime or dataflow truth.
 
-The next phase should improve general-purpose graph intelligence, continuity, and product feel. Persistent stored-truth V-REFs and optional auto-reindexing are implemented as continuity milestones; the remaining highest-leverage work is richer static symbol/reference extraction, broader generic retrieval benchmarks, and panel polish.
+The next phase should improve general-purpose graph intelligence, continuity, and product feel. Persistent stored-truth V-REFs and optional auto-reindexing are implemented as continuity milestones, and conservative Python module-level assigned symbols are now indexed. The remaining highest-leverage work is richer static reference extraction, broader generic retrieval benchmarks, and panel polish.
 
 ARC may be used as one real-repo benchmark, but it must not define product behavior. ARC is a stress test, not the destination.
 
 ## Current VEXP-Alignment Status
 
-| Area                      | Current VTrace behavior                                                                        | VEXP-like target                                                      | Alignment status      | Main gap                                                         | Recommended post-RC action                                      |
-| ------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------- |
-| `run_pipeline`            | Deterministic orchestration with intent, capsule, impact, memory, freshness, rules, and V-REFs | Broad task entrypoint that feels continuous and context-aware         | Aligned enough for RC | Continuity is bounded by V-REF retention and retrieval limits    | Improve graph intelligence and benchmarks                       |
-| V-REF expansion           | Exact 12-hex stored payload expansion with process hot cache and repo-local persistence        | Stable deferred expansion across sessions and product surfaces        | Improved              | Bounded retention; no multi-repo deferred expansion parity       | Monitor usage before expanding retention or multi-repo support  |
-| Watcher/freshness         | Optional polling watcher marks stale by default; `--auto-reindex` opts into visible reindexing | Optional live freshness loop with visible state and safe recovery     | Improved              | No always-on daemon; bounded polling behavior                    | Monitor before adding config/daemon-driven policies             |
-| Session lifecycle         | Explicit compression/consolidation services and searchable summaries                           | Durable continuity across work sessions                               | Partially aligned     | No scheduler; session binding is input-dependent                 | Keep explicit; revisit scheduling only after persistence work   |
-| Memory search             | Deterministic lexical/structural observation search                                            | Useful durable memory retrieval across related work                   | Aligned enough for RC | No semantic recall or learned ranking                            | Validate with memory/rule query benchmarks before tuning        |
-| Anti-pattern detection    | Conservative structural detectors for file thrashing and adjacent symbol add/remove            | Useful recognition of repeated dead ends and workflow loops           | Partially aligned     | Narrow detector set; no semantic stuck detection                 | Extend only with deterministic evidence-backed detectors        |
-| Project rules             | Explicit candidate generation, manual promotion, active guidance capped and deterministic      | Project conventions become visible guidance without unsafe automation | Aligned enough for RC | No auto-promotion, no cross-repo rules                           | Keep manual promotion; improve visibility before automation     |
-| Impact graph              | Exact-FQN bounded structural reverse dependencies                                              | Useful static impact view across modules and class/member boundaries  | Partially aligned     | Python references, members, inheritance, and modules are limited | Add module, reference, member, and inheritance graph extraction |
-| Broad retrieval/reranking | Lexical/FTS plus graph reranking and capsule shaping                                           | General-purpose high-quality retrieval across repo types              | Partially aligned     | Benchmark coverage is narrower than future tuning needs          | Build broader generic benchmarks before retrieval tuning        |
-| VS Code panel             | Existing shell/panel flow around setup, status, pipeline, and V-REFs                           | Clear product-feel surface for freshness, refs, rules, and setup      | Partially aligned     | UX clarity and visibility gaps                                   | Polish existing panel without panel-only hidden behavior        |
-| Setup / agent config      | `setup`, `status`, `workspace_setup`, Codex/Claude Code config compatibility                   | Clear onboarding for supported local coding agents                    | Aligned enough for RC | `claudeCode` compatibility field remains in schema               | Rename only in future schema version, not as roadmap blocker    |
+| Area                      | Current VTrace behavior                                                                                                                 | VEXP-like target                                                      | Alignment status      | Main gap                                                                 | Recommended post-RC action                                     |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| `run_pipeline`            | Deterministic orchestration with intent, capsule, impact, memory, freshness, rules, and V-REFs                                          | Broad task entrypoint that feels continuous and context-aware         | Aligned enough for RC | Continuity is bounded by V-REF retention and retrieval limits            | Improve graph intelligence and benchmarks                      |
+| V-REF expansion           | Exact 12-hex stored payload expansion with process hot cache and repo-local persistence                                                 | Stable deferred expansion across sessions and product surfaces        | Improved              | Bounded retention; no multi-repo deferred expansion parity               | Monitor usage before expanding retention or multi-repo support |
+| Watcher/freshness         | Optional polling watcher marks stale by default; `--auto-reindex` opts into visible reindexing                                          | Optional live freshness loop with visible state and safe recovery     | Improved              | No always-on daemon; bounded polling behavior                            | Monitor before adding config/daemon-driven policies            |
+| Session lifecycle         | Explicit compression/consolidation services and searchable summaries                                                                    | Durable continuity across work sessions                               | Partially aligned     | No scheduler; session binding is input-dependent                         | Keep explicit; revisit scheduling only after persistence work  |
+| Memory search             | Deterministic lexical/structural observation search                                                                                     | Useful durable memory retrieval across related work                   | Aligned enough for RC | No semantic recall or learned ranking                                    | Validate with memory/rule query benchmarks before tuning       |
+| Anti-pattern detection    | Conservative structural detectors for file thrashing and adjacent symbol add/remove                                                     | Useful recognition of repeated dead ends and workflow loops           | Partially aligned     | Narrow detector set; no semantic stuck detection                         | Extend only with deterministic evidence-backed detectors       |
+| Project rules             | Explicit candidate generation, manual promotion, active guidance capped and deterministic                                               | Project conventions become visible guidance without unsafe automation | Aligned enough for RC | No auto-promotion, no cross-repo rules                                   | Keep manual promotion; improve visibility before automation    |
+| Impact graph              | Exact-FQN bounded structural reverse dependencies, including conservative Python module-level assigned symbols where static edges exist | Useful static impact view across modules and class/member boundaries  | Partially aligned     | Broader Python references, members, inheritance, and modules are limited | Add reference, member, and inheritance graph extraction        |
+| Broad retrieval/reranking | Lexical/FTS plus graph reranking and capsule shaping                                                                                    | General-purpose high-quality retrieval across repo types              | Partially aligned     | Benchmark coverage is narrower than future tuning needs                  | Build broader generic benchmarks before retrieval tuning       |
+| VS Code panel             | Existing shell/panel flow around setup, status, pipeline, and V-REFs                                                                    | Clear product-feel surface for freshness, refs, rules, and setup      | Partially aligned     | UX clarity and visibility gaps                                           | Polish existing panel without panel-only hidden behavior       |
+| Setup / agent config      | `setup`, `status`, `workspace_setup`, Codex/Claude Code config compatibility                                                            | Clear onboarding for supported local coding agents                    | Aligned enough for RC | `claudeCode` compatibility field remains in schema                       | Rename only in future schema version, not as roadmap blocker   |
 
 ## Anti-Overfit Policy
 
@@ -48,7 +48,7 @@ The anti-overfit rules from [`docs/validation_strategy.md`](./validation_strateg
 
 1. Persistent V-REF Store — implemented for single-repo stored-truth expansion with bounded repo-local retention.
 2. Optional Auto-Reindex Mode — implemented as explicit `watch --auto-reindex`.
-3. Module-Level Constants, Variables, and Aliases
+3. Module-Level Constants, Variables, and Aliases — implemented for conservative Python top-level assignments.
 4. Python References Extraction
 5. Python Member/Attribute Resolution
 6. Inherited-Member and `super()` Resolution
@@ -214,6 +214,8 @@ Optional Auto-Reindex Mode with Visible Freshness State
 
 Index conservative top-level assigned symbols, including module-level constants, variables/shared objects, aliases, and annotated assignments.
 
+Implementation status: completed for conservative Python module-level assignments. VTrace indexes top-level constants, variables, aliases, and annotated assignments as explicit module-level symbol kinds, while leaving local variables and dynamic assignment targets out of scope.
+
 ### Why This Improves VEXP Alignment
 
 Many codebase questions depend on module-level values rather than only functions or classes. Indexing top-level assigned symbols makes constants, shared objects, aliases, and exported values available to references, imports, impact graph, retrieval, and capsule pivots without relying on runtime inference.
@@ -280,6 +282,8 @@ Likely files/modules to inspect:
 - Module-level value queries find useful symbol/file pivots.
 - Imports/references and impact graph can include module-level assigned symbols when static evidence exists.
 - Existing function/class symbol behavior does not regress.
+
+Implemented behavior: Python module-level assigned names use deterministic `path/to/module.py::NAME` FQNs, compact signatures, exact import/reference edges where statically resolvable, and existing impact graph/retrieval surfaces. The implementation remains conservative: no local-variable indexing, no runtime value-flow inference, and no broad assignment target analysis.
 
 ### Suggested Implementation Prompt Title
 
@@ -647,12 +651,12 @@ Avoid these until there is a clear product reason, validation plan, and explicit
 Recommended next implementation prompt:
 
 ```text
-Module-Level Constants, Variables, and Aliases
+Python References Extraction
 ```
 
 Persistent V-REF Store was the first post-RC continuity milestone and is now implemented for exact stored-payload expansion with bounded repo-local retention. It improves continuity for MCP, CLI, and editor flows while preserving the central truth requirement: V-REF expansion returns stored payloads exactly, not fuzzy lookup or semantic reconstruction.
 
-Optional Auto-Reindex Mode is now implemented. The next recommended milestone is Module-Level Constants, Variables, and Aliases because it improves static structural coverage without changing retrieval/ranking behavior or adding semantic claims.
+Optional Auto-Reindex Mode and Module-Level Constants, Variables, and Aliases are now implemented. The next recommended milestone is Python References Extraction because it builds on indexed module-level symbols and improves static graph coverage without changing retrieval/ranking behavior or adding runtime/dataflow claims.
 
 ## Deliverable Summary
 
@@ -660,23 +664,23 @@ Recommended milestone order:
 
 1. Persistent V-REF Store — implemented
 2. Optional Auto-Reindex Mode — implemented
-3. Module-Level Constants, Variables, and Aliases
+3. Module-Level Constants, Variables, and Aliases — implemented for conservative Python top-level assignments
 4. Python References Extraction
 5. Python Member/Attribute Resolution
 6. Inherited-Member and `super()` Resolution
 7. Broader Generic Retrieval/Reranking Benchmarks
 8. VS Code Panel Polish
 
-Completed continuity implementation prompt titles:
+Completed implementation prompt titles:
 
 ```text
 Persistent V-REF Store with Stored-Truth Expansion
 Optional Auto-Reindex Mode with Visible Freshness State
+Conservative Module-Level Constants, Variables, and Aliases
 ```
 
 Validation fixtures needed before or during remaining implementation work:
 
-- auto-reindex stale/failure/concurrency fixture
 - TypeScript module-level assignment fixture
 - Python package reference fixture
 - mixed Python/Cython boundary fixture
