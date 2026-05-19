@@ -4,6 +4,20 @@ Date: 2026-05-19
 
 Scope: current VTrace / VEXB repository implementation, docs, CLI, MCP tool schemas, VS Code shell, package metadata, and tests.
 
+## Post-Audit Closure Status
+
+Date: 2026-05-19
+
+Status: closed for the three RC blockers identified by this audit.
+
+| Blocker                                                                                                                    | Closing commit                                           | Current status                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `run_pipeline` MCP output schema drift, including nested diagnostics rule counts and freshness metadata.                   | `24a0d5d fix(mcp): align run_pipeline output schema`     | Closed; schema parity coverage now validates representative actual MCP outputs.                                           |
+| CLI docs omitted `run-pipeline`, `expand-vexp-ref`, canonical setup/status/index/watch flow, and CLI V-REF process caveat. | `62fa384 docs: document CLI pipeline and V-REF commands` | Closed; `docs/cli_usage.md` documents both commands, the canonical flow, and `--query` republish for CLI V-REF expansion. |
+| Minor naming/compatibility drift around `run_pipeline` `preset`/`intent` wording and `workspace_setup.status.claudeCode`.  | `75c07c2 chore(rc): clarify naming compatibility`        | Closed; invalid preset errors say `preset/intent`, and `claudeCode` is documented as a retained compatibility field.      |
+
+Remaining acceptable RC limitations: V-REFs remain exact, bounded, and process-local; CLI V-REF expansion remains a debugging path that needs `--query` republish across invocations; multi-repo `run_pipeline` still does not emit deferred expansion items; `workspace_setup.status.claudeCode` remains the compatibility field name for this schema version; `vtrace` remains deterministic lexical/structural tooling, not full VEXP parity.
+
 ## Executive Summary
 
 The current product is best described publicly as `vtrace`: a repo-local, deterministic structural index plus CLI, MCP server, memory/session layer, optional stale-marker watcher, and conservative project-rule system. The current implementation is substantially beyond a pure indexing tool, but it is still not VEXP parity. The memory and workflow-awareness features are deterministic, lexical/structural, and mostly explicit or process-local.
