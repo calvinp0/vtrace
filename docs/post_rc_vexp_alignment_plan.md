@@ -366,6 +366,8 @@ Conservative Python Reference Edge Extraction
 
 Resolve conservative Python member and attribute references when the receiver can be statically tied to a known class or module.
 
+Implementation status: completed for conservative static Python member and attribute access. VTrace resolves `self.x`, `cls.x`, and exact same-file or imported `ClassName.x` forms to indexed class members when the receiver and target are unambiguous.
+
 ### Why This Improves VEXP Alignment
 
 Many Python workflows depend on methods and attributes rather than only top-level functions. Conservative member resolution improves impact graph and capsule relevance for object-oriented Python.
@@ -419,6 +421,8 @@ Likely files/modules to inspect:
 - Unresolved dynamic attributes are not fabricated.
 - Impact graph and retrieval improve on generic class-based Python fixtures.
 - Existing parser behavior remains stable.
+
+Implemented behavior: member calls emit `calls` edges only when the target is an indexed method, while member value uses emit `references` edges to indexed methods or class-level attributes. Arbitrary `obj.x`, local shadows of class names, dynamic dispatch, runtime instance-type inference, and non-indexed members remain skipped.
 
 ### Suggested Implementation Prompt Title
 
@@ -660,7 +664,7 @@ Python Member/Attribute Resolution
 
 Persistent V-REF Store was the first post-RC continuity milestone and is now implemented for exact stored-payload expansion with bounded repo-local retention. It improves continuity for MCP, CLI, and editor flows while preserving the central truth requirement: V-REF expansion returns stored payloads exactly, not fuzzy lookup or semantic reconstruction.
 
-Optional Auto-Reindex Mode, Module-Level Constants, Variables, and Aliases, and Python References Extraction are now implemented. The next recommended milestone is Python Member/Attribute Resolution because it builds on reference edges and improves static graph coverage without changing retrieval/ranking behavior or adding runtime/dataflow claims.
+Optional Auto-Reindex Mode, Module-Level Constants, Variables, and Aliases, Python References Extraction, and Python Member/Attribute Resolution are now implemented. The next recommended milestone is Inherited-Member and `super()` Resolution because it builds on member edges and improves static graph coverage without changing retrieval/ranking behavior or adding runtime/dataflow claims.
 
 ## Deliverable Summary
 
@@ -670,7 +674,7 @@ Recommended milestone order:
 2. Optional Auto-Reindex Mode — implemented
 3. Module-Level Constants, Variables, and Aliases — implemented for conservative Python top-level assignments
 4. Python References Extraction — implemented for conservative non-call symbol uses
-5. Python Member/Attribute Resolution
+5. Python Member/Attribute Resolution — implemented for conservative static receiver forms
 6. Inherited-Member and `super()` Resolution
 7. Broader Generic Retrieval/Reranking Benchmarks
 8. VS Code Panel Polish
@@ -682,6 +686,7 @@ Persistent V-REF Store with Stored-Truth Expansion
 Optional Auto-Reindex Mode with Visible Freshness State
 Conservative Module-Level Constants, Variables, and Aliases
 Conservative Python Reference Edge Extraction
+Conservative Python Member and Attribute Resolution
 ```
 
 Validation fixtures needed before or during remaining implementation work:

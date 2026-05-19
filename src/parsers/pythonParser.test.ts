@@ -1558,6 +1558,34 @@ test("ClassName.method() resolves to a calls edge via an imported class", async 
   assert.notEqual(edge, undefined);
 });
 
+test("local shadowing prevents guessed ClassName.method calls", async () => {
+  const files = [
+    {
+      path: "src/pkg/shadow_class_call.py",
+      content: [
+        "class Job:",
+        "    @staticmethod",
+        "    def build():",
+        "        return 'built'",
+        "",
+        "def make(Job):",
+        "    return Job.build()",
+        "",
+      ].join("\n"),
+    },
+  ];
+
+  const parser = createPythonParser({ knownFiles: files });
+  const result = await parser.parse({
+    path: "src/pkg/shadow_class_call.py",
+    language: Language.Python,
+    content: files[0]!.content,
+  });
+
+  assert.equal(callsEdges(result).length, 0);
+  assert.equal(referencesEdges(result).length, 0);
+});
+
 test("ambiguous attribute receivers are skipped conservatively", async () => {
   const files = [
     {

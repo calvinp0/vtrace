@@ -1064,7 +1064,17 @@ function extractCallEdges(input: ExtractCallEdgesInput): EdgeRecord[] {
         continue;
       }
 
-      emitCallEdges(source, null, undefined, item.calls ?? [], resolution, input.context, exportIndexByPath, edgesById);
+      emitCallEdges(
+        source,
+        null,
+        undefined,
+        item.calls ?? [],
+        item.localBindings,
+        resolution,
+        input.context,
+        exportIndexByPath,
+        edgesById,
+      );
       continue;
     }
 
@@ -1102,6 +1112,7 @@ function extractCallEdges(input: ExtractCallEdgesInput): EdgeRecord[] {
         item.name,
         member.firstArg,
         member.calls ?? [],
+        member.localBindings,
         resolution,
         input.context,
         exportIndexByPath,
@@ -1118,12 +1129,19 @@ function emitCallEdges(
   enclosingClassName: string | null,
   enclosingFirstArg: string | undefined,
   calls: readonly PythonAstCall[],
+  localBindings: readonly string[],
   resolution: CallResolutionContext,
   context: PythonParserContext,
   exportIndexByPath: Map<string, PythonExportIndex>,
   edgesById: Map<string, EdgeRecord>,
 ): void {
+  const localBindingSet = new Set(localBindings);
+
   for (const call of calls) {
+    if (isShadowedLocalTarget(call.target, localBindingSet)) {
+      continue;
+    }
+
     const target = resolveCallTarget(
       call.target,
       enclosingClassName,
@@ -1140,6 +1158,24 @@ function emitCallEdges(
     const edge = makeCallsEdge(source.id, target.id);
     edgesById.set(edge.id, edge);
   }
+}
+
+function isShadowedLocalTarget(
+  target: string,
+  localBindings: ReadonlySet<string>,
+): boolean {
+  const firstSegment = target.split(".")[0];
+
+  if (
+    firstSegment === undefined
+    || firstSegment === "self"
+    || firstSegment === "cls"
+    || firstSegment === "super()"
+  ) {
+    return false;
+  }
+
+  return localBindings.has(firstSegment);
 }
 
 function resolveCallTarget(

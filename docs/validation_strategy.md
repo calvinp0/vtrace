@@ -88,7 +88,7 @@ The following are possible post-RC, general-purpose milestones. They are not req
 - optional auto-reindex mode
 - module-level symbol indexing (implemented for conservative Python top-level assignments)
 - Python references extraction (implemented for conservative non-call symbol uses)
-- Python member/attribute resolution
+- Python member/attribute resolution (implemented for conservative static receiver forms)
 - inherited-member and `super()` resolution
 - broader generic retrieval/reranking benchmarks
 - VS Code panel polish
