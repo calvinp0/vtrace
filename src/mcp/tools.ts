@@ -1549,6 +1549,36 @@ const RUN_PIPELINE_RULE_SCOPE_SCHEMA = objectProperty(
   ["files", "symbolFqns", "terms", "toolNames", "intents", "antiPatternTypes"],
 );
 
+const CAPSULE_RULE_SECTION_SCHEMA = objectProperty(
+  "Active project rules surfaced separately from memory observations.",
+  {
+    active: arrayProperty(
+      "Relevant active rules.",
+      objectProperty(
+        "Capsule active rule.",
+        {
+          repoAlias: stringProperty("Workspace repo alias, when present."),
+          id: stringProperty("Project rule id."),
+          status: stringProperty("Rule status."),
+          summary: stringProperty("Rule summary."),
+          scope: objectProperty(
+            "Compact rule scope.",
+            {
+              files: arrayProperty("Linked repo-relative files.", stringProperty("File path.")),
+              symbolFqns: arrayProperty("Linked fully qualified symbols.", stringProperty("Fully qualified symbol.")),
+              terms: arrayProperty("Lexical terms.", stringProperty("Term.")),
+            },
+            ["files", "symbolFqns", "terms"],
+          ),
+          reason: stringProperty("Deterministic relevance reason."),
+        },
+        ["id", "status", "summary", "scope", "reason"],
+      ),
+    ),
+  },
+  ["active"],
+);
+
 const RUN_PIPELINE_RULE_SECTION_SCHEMA = objectProperty(
   "Relevant active project rules and candidate previews.",
   {
@@ -1621,9 +1651,20 @@ const RUN_PIPELINE_RULE_SECTION_SCHEMA = objectProperty(
     ),
     activeCount: integerProperty("Total active rules in this repo before relevance limiting."),
     candidateCount: integerProperty("Total candidate rules in this repo before relevance limiting."),
+    omitted: objectProperty(
+      "Rules omitted from active injection.",
+      {
+        irrelevantActiveRuleCount: integerProperty("Active rules that did not fit this task or exceeded the cap."),
+        candidateRuleCount: integerProperty("Candidate rules not injected as active guidance."),
+        staleRuleCount: integerProperty("Stale rules not injected as active guidance."),
+        disabledRuleCount: integerProperty("Disabled rules not injected."),
+        dismissedRuleCount: integerProperty("Dismissed rules not injected."),
+      },
+      ["irrelevantActiveRuleCount", "candidateRuleCount", "staleRuleCount", "disabledRuleCount", "dismissedRuleCount"],
+    ),
     notes: arrayProperty("Rule behavior notes.", stringProperty("Note.")),
   },
-  ["included", "active", "candidates", "activeCount", "candidateCount", "notes"],
+  ["included", "active", "candidates", "activeCount", "candidateCount", "omitted", "notes"],
 );
 
 const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
@@ -3525,6 +3566,7 @@ function formatCapsuleOutput(capsule: Capsule) {
     pivots: capsule.pivots.map(formatCapsuleItem),
     supportingItems: capsule.supportingItems.map(formatCapsuleItem),
     ...(capsule.memories === undefined ? {} : { memories: structuredClone(capsule.memories) }),
+    ...(capsule.rules === undefined ? {} : { rules: structuredClone(capsule.rules) }),
     budget: structuredClone(capsule.budget),
     truncated: capsule.truncated,
     compressed: capsule.compressed,
@@ -4573,6 +4615,9 @@ function tagCapsuleWithRepoAlias(capsule: Capsule, repoAlias: string): Capsule {
     ...(capsule.memories === undefined
       ? {}
       : { memories: capsule.memories.map((item) => ({ ...item, repoAlias })) }),
+    ...(capsule.rules === undefined
+      ? {}
+      : { rules: { active: capsule.rules.active.map((item) => ({ ...item, repoAlias })) } }),
   };
 }
 
@@ -4599,6 +4644,7 @@ function mergeTaggedCapsules(input: {
     supportLimit,
   );
   const memories = mergeCapsuleMemories(input.entries, input.selectedAliases);
+  const rules = mergeCapsuleRules(input.entries, input.selectedAliases);
   const usedCharacters = input.query.length
     + pivots.reduce((sum, item) => sum + item.budgetCost, 0)
     + supportingItems.reduce((sum, item) => sum + item.budgetCost, 0);
@@ -4611,6 +4657,7 @@ function mergeTaggedCapsules(input: {
     pivots,
     supportingItems,
     ...(memories.length === 0 ? {} : { memories }),
+    ...(rules.length === 0 ? {} : { rules: { active: rules } }),
     budget: {
       model: CapsuleBudgetModel.CharacterCount,
       maxCharacters: input.maxBudgetCharacters,
@@ -4677,6 +4724,27 @@ function mergeCapsuleMemories(
       return values.findIndex((candidate) => {
         return candidate.observationId === memory.observationId
           && candidate.repoAlias === memory.repoAlias;
+      }) === index;
+    })
+    .slice(0, Math.max(3, selectedAliases.length));
+}
+
+function mergeCapsuleRules(
+  entries: readonly Capsule[],
+  selectedAliases: readonly string[],
+) {
+  const aliasRank = new Map(selectedAliases.map((alias, index) => [alias, index]));
+  return entries
+    .flatMap((capsule) => capsule.rules?.active ?? [])
+    .sort((left, right) => {
+      return (aliasRank.get(left.repoAlias ?? "") ?? Number.MAX_SAFE_INTEGER)
+        - (aliasRank.get(right.repoAlias ?? "") ?? Number.MAX_SAFE_INTEGER)
+        || compareString(left.summary, right.summary)
+        || compareString(left.id, right.id);
+    })
+    .filter((rule, index, values) => {
+      return values.findIndex((candidate) => {
+        return candidate.id === rule.id && candidate.repoAlias === rule.repoAlias;
       }) === index;
     })
     .slice(0, Math.max(3, selectedAliases.length));
@@ -5332,6 +5400,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               pivots: arrayProperty("Pivot capsule items.", CAPSULE_ITEM_SCHEMA),
               supportingItems: arrayProperty("Supporting capsule items.", CAPSULE_ITEM_SCHEMA),
               memories: arrayProperty("Optional surfaced memories.", CAPSULE_MEMORY_ITEM_SCHEMA),
+              rules: CAPSULE_RULE_SECTION_SCHEMA,
               budget: CAPSULE_BUDGET_SCHEMA,
               truncated: booleanProperty("Whether the capsule was truncated."),
               compressed: booleanProperty("Whether any capsule item was compressed."),
@@ -6734,6 +6803,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               pivots: arrayProperty("Pivot capsule items.", CAPSULE_ITEM_SCHEMA),
               supportingItems: arrayProperty("Supporting capsule items.", CAPSULE_ITEM_SCHEMA),
               memories: arrayProperty("Optional surfaced memories.", CAPSULE_MEMORY_ITEM_SCHEMA),
+              rules: CAPSULE_RULE_SECTION_SCHEMA,
               budget: CAPSULE_BUDGET_SCHEMA,
               truncated: booleanProperty("Whether the capsule was truncated."),
               compressed: booleanProperty("Whether any capsule item was compressed."),

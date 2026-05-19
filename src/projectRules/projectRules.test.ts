@@ -19,6 +19,7 @@ import {
 } from "../observations/types";
 import { PASSIVE_CONSOLIDATION_TOOL_NAME } from "../observations/consolidation";
 import {
+  createActiveProjectRule,
   disableProjectRule,
   dismissProjectRule,
   generateProjectRuleCandidates,
@@ -253,6 +254,44 @@ test("manual promotion, dismiss, disable, and relevance selection keep candidate
   });
 });
 
+test("direct active rules are selectable, status-filtered, and never semantically paraphrase-match", async () => {
+  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+    await indexProject({ repoRoot, db });
+    const active = createActiveProjectRule(db, {
+      repoRoot,
+      summary: "When changing billing adapters, update invoice tests.",
+      files: ["src/service.ts"],
+      terms: ["billing", "adapter", "invoice", "tests"],
+      nowMs: 1_000,
+    });
+    const candidate = createActiveProjectRule(db, {
+      repoRoot,
+      summary: "Temporary candidate-shaped service guidance.",
+      files: ["src/service.ts"],
+      terms: ["service"],
+      nowMs: 1_100,
+    });
+    const disabled = disableProjectRule(db, candidate.id, 1_200);
+
+    const selected = selectRelevantProjectRules(db, {
+      repoRoot,
+      query: "billing adapter invoice tests",
+      linkedFilePaths: ["src/service.ts"],
+    });
+    const paraphraseOnly = selectRelevantProjectRules(db, {
+      repoRoot,
+      query: "payment connector receipt specs",
+      linkedFilePaths: [],
+    });
+
+    assert.equal(active.status, ProjectRuleStatus.Active);
+    assert.equal(disabled.status, ProjectRuleStatus.Disabled);
+    assert.deepEqual(selected.active.map((selection) => selection.rule.id), [active.id]);
+    assert.equal(selected.disabledTotal, 1);
+    assert.equal(paraphraseOnly.active.length, 0);
+  });
+});
+
 test("active rules are injected into formatted run_pipeline output with deterministic caps", async () => {
   await withProjectRuleFixture(async ({ repoRoot, db }) => {
     await indexProject({ repoRoot, db });
@@ -315,7 +354,7 @@ test("rules linked to changed code become stale and stale active rules are not i
   });
 });
 
-test("rules command lists, generates, and promotes inspectable rules", async () => {
+test("rules command lists, adds active rules, generates, and promotes inspectable rules", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-project-rules-cli-"));
   const repoRoot = path.join(root, "repo");
   const dbPath = path.join(root, "rules.sqlite");
@@ -334,13 +373,26 @@ test("rules command lists, generates, and promotes inspectable rules", async () 
     const generated = await runCli(["rules", "generate", repoRoot], { dbPath });
     const generatedOutput = JSON.parse(generated.stdout);
     const ruleId = generatedOutput.created[0].id;
+    const added = await runCli([
+      "rules",
+      "add-active",
+      repoRoot,
+      "--summary",
+      "When changing run_pipeline output, update MCP docs and tests.",
+      "--file",
+      "src/service.ts",
+      "--term",
+      "run_pipeline",
+    ], { dbPath });
     const listed = await runCli(["rules", "list", repoRoot], { dbPath });
     const promoted = await runCli(["rules", "promote", repoRoot, ruleId], { dbPath });
     const promotedOutput = JSON.parse(promoted.stdout);
 
     assert.equal(generated.exitCode, 0);
+    assert.equal(added.exitCode, 0);
     assert.equal(listed.exitCode, 0);
-    assert.equal(JSON.parse(listed.stdout).rules[0].status, ProjectRuleStatus.Candidate);
+    assert.equal(JSON.parse(added.stdout).rule.status, ProjectRuleStatus.Active);
+    assert.equal(JSON.parse(listed.stdout).rules.length, 2);
     assert.equal(promoted.exitCode, 0);
     assert.equal(promotedOutput.rule.id, ruleId);
     assert.equal(promotedOutput.rule.status, ProjectRuleStatus.Active);

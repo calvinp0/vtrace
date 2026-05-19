@@ -117,6 +117,13 @@ export function formatRunPipelineOrchestrationOutput(
     })),
     activeCount: rules.activeCount,
     candidateCount: rules.candidateCount,
+    omitted: {
+      irrelevantActiveRuleCount: Math.max(0, rules.activeCount - rules.active.length),
+      candidateRuleCount: rules.candidateCount,
+      staleRuleCount: rules.staleCount,
+      disabledRuleCount: rules.disabledCount,
+      dismissedRuleCount: rules.dismissedCount,
+    },
     notes: [
       "Active rules are injected only when structurally or lexically relevant.",
       "Candidate rules are previews only and are not active instructions.",
@@ -210,6 +217,9 @@ export function formatRunPipelineOrchestrationOutput(
         activeTotalCount: rulesSection.activeCount,
         candidatePreviewCount: rulesSection.candidates.length,
         candidateTotalCount: rulesSection.candidateCount,
+        staleTotalCount: rulesSection.omitted.staleRuleCount,
+        disabledTotalCount: rulesSection.omitted.disabledRuleCount,
+        dismissedTotalCount: rulesSection.omitted.dismissedRuleCount,
       },
       budget: {
         ...structuredClone(context.capsule.budget),

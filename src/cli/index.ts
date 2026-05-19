@@ -43,7 +43,7 @@ const CLI_USAGE = [
   "  vtrace impact-graph <repo> <symbol-fqn> [--depth <n>] [--format <list|tree|mermaid>]",
   "  vtrace handoff <repo> <query>",
   "  vtrace runs <repo>",
-  "  vtrace rules <list|generate|promote|dismiss|disable> <repo> [rule-id]",
+  "  vtrace rules <list|generate|add-active|promote|dismiss|disable> <repo> [rule-id|options]",
   "  vtrace check-capsule <repo> <manifest-id> <comparison-run-id>",
   "",
   "Repeated setup is safe. Supported shell agents: claude-code (default), codex. See README.md and docs/getting_started.md for setup, CLI usage, MCP reference, and the tool cheat sheet.",

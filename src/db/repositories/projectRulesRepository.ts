@@ -34,6 +34,69 @@ export interface UpsertProjectRuleCandidateInput extends ProjectRuleCandidateGro
   readonly nowMs?: number;
 }
 
+export interface CreateActiveProjectRuleInput {
+  readonly repoRoot: string;
+  readonly summary: string;
+  readonly scope: ProjectRuleScope;
+  readonly nowMs?: number;
+}
+
+export function createActiveProjectRule(
+  db: Database,
+  input: CreateActiveProjectRuleInput,
+): ProjectRuleRecord {
+  const nowMs = input.nowMs ?? Date.now();
+  const signature = computeManualActiveProjectRuleSignature(input);
+  const ruleId = computeProjectRuleId(input.repoRoot, signature);
+  const existing = getProjectRuleBySignature(db, input.repoRoot, signature);
+
+  if (existing !== undefined) {
+    return existing;
+  }
+
+  db.run(
+    `
+      INSERT INTO project_rules (
+        id,
+        repo_root,
+        status,
+        signature,
+        summary,
+        scope_json,
+        evidence_observation_ids_json,
+        evidence_count,
+        evidence_kinds_json,
+        confidence,
+        source_run_id,
+        created_at_ms,
+        updated_at_ms,
+        promoted_at_ms,
+        stale_metadata_json
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      ruleId,
+      input.repoRoot,
+      ProjectRuleStatus.Active,
+      signature,
+      input.summary,
+      stableStringify(normalizeProjectRuleScope(input.scope)),
+      stableStringify([]),
+      0,
+      stableStringify([]),
+      ProjectRuleConfidence.High,
+      null,
+      nowMs,
+      nowMs,
+      nowMs,
+      null,
+    ],
+  );
+
+  return getProjectRuleById(db, ruleId)!;
+}
+
 export function upsertProjectRuleCandidate(
   db: Database,
   input: UpsertProjectRuleCandidateInput,
@@ -248,6 +311,13 @@ export function computeProjectRuleId(repoRoot: string, signature: string): strin
     .slice(0, 16)}`;
 }
 
+function computeManualActiveProjectRuleSignature(input: CreateActiveProjectRuleInput): string {
+  return `manual_active:${stableStringify({
+    summary: input.summary.trim(),
+    scope: normalizeProjectRuleScope(input.scope),
+  })}`;
+}
+
 function projectRuleRowToRecord(row: ProjectRuleRow): ProjectRuleRecord {
   return {
     id: row.id,
@@ -278,6 +348,17 @@ function mergeRuleScopes(left: ProjectRuleScope, right: ProjectRuleScope): Proje
     toolNames: sortedUnique([...left.toolNames, ...right.toolNames]),
     intents: sortedUnique([...left.intents, ...right.intents]),
     antiPatternTypes: sortedUnique([...left.antiPatternTypes, ...right.antiPatternTypes]),
+  };
+}
+
+function normalizeProjectRuleScope(scope: ProjectRuleScope): ProjectRuleScope {
+  return {
+    files: sortedUnique(scope.files),
+    symbolFqns: sortedUnique(scope.symbolFqns),
+    terms: sortedUnique(scope.terms.map((term) => term.toLowerCase())),
+    toolNames: sortedUnique(scope.toolNames),
+    intents: sortedUnique(scope.intents),
+    antiPatternTypes: sortedUnique(scope.antiPatternTypes),
   };
 }
 

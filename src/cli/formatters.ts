@@ -39,6 +39,7 @@ export interface CapsuleOutput {
   pivots: ReturnType<typeof formatCapsuleItem>[];
   supportingItems: ReturnType<typeof formatCapsuleItem>[];
   memories?: Capsule["memories"];
+  rules?: Capsule["rules"];
   budget: Capsule["budget"];
   truncated: boolean;
   compressed: boolean;
@@ -197,6 +198,7 @@ function formatCapsulePayload(capsule: Capsule): CapsuleOutput {
     pivots: capsule.pivots.map(formatCapsuleItem),
     supportingItems: capsule.supportingItems.map(formatCapsuleItem),
     ...(capsule.memories === undefined ? {} : { memories: structuredClone(capsule.memories) }),
+    ...(capsule.rules === undefined ? {} : { rules: structuredClone(capsule.rules) }),
     budget: capsule.budget,
     truncated: capsule.truncated,
     compressed: capsule.compressed,

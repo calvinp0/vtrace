@@ -144,6 +144,9 @@ export interface OrchestrationRulesSection {
   readonly candidates: readonly SelectedProjectRule[];
   readonly activeCount: number;
   readonly candidateCount: number;
+  readonly staleCount: number;
+  readonly disabledCount: number;
+  readonly dismissedCount: number;
 }
 
 export interface RunPipelineOrchestration {
@@ -713,6 +716,9 @@ function runRulesSection(
     candidates: selected.candidates,
     activeCount: selected.activeTotal,
     candidateCount: selected.candidateTotal,
+    staleCount: selected.staleTotal,
+    disabledCount: selected.disabledTotal,
+    dismissedCount: selected.dismissedTotal,
   };
 }
 

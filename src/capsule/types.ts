@@ -161,6 +161,23 @@ export interface CapsuleMemoryItem {
   inclusionReasons: CapsuleMemoryInclusionReason[];
 }
 
+export interface CapsuleRuleItem {
+  repoAlias?: string;
+  id: string;
+  status: "active";
+  summary: string;
+  scope: {
+    files: string[];
+    symbolFqns: string[];
+    terms: string[];
+  };
+  reason: string;
+}
+
+export interface CapsuleRulesSection {
+  active: CapsuleRuleItem[];
+}
+
 export interface CapsuleItemBase extends CapsuleScoreMetadata {
   repoAlias?: string;
   symbolId: SymbolId;
@@ -200,6 +217,7 @@ export interface Capsule {
   pivots: PivotCapsuleItem[];
   supportingItems: SupportCapsuleItem[];
   memories?: CapsuleMemoryItem[];
+  rules?: CapsuleRulesSection;
   budget: CapsuleBudgetUsage;
   truncated: boolean;
   compressed: boolean;

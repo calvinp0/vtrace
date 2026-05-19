@@ -10,6 +10,7 @@ import type { Observation } from "../observations/types";
 import type { GraphSearchResult } from "../retrieval/types";
 import { getIndexedSkeletonFileResult } from "../skeleton/getSkeleton";
 import { canAddCapsuleItem, computeCapsuleBudgetUsage, computeCapsuleItemCost } from "./budget";
+import { selectRelevantProjectRules } from "../projectRules/projectRules";
 import type { BuildCapsuleInput, CapsuleBuilder } from "./buildCapsule";
 import {
   extractPivotSymbolContent,
@@ -31,6 +32,7 @@ import {
   type CapsuleItemContent,
   type CapsuleMemoryItem,
   type CapsuleProfileBudgetUsage,
+  type CapsuleRuleItem,
   type CapsuleSupportingCandidate,
   type PivotCapsuleItem,
   type SupportCapsuleItem,
@@ -97,6 +99,15 @@ interface CapsuleMemorySelector {
   }): readonly CapsuleMemoryItem[];
 }
 
+interface CapsuleRuleSelector {
+  build(input: {
+    readonly query: string;
+    readonly profileSelection?: CapsuleProfileSelectionResult;
+    readonly pivots: readonly PivotCapsuleItem[];
+    readonly supportingItems: readonly SupportCapsuleItem[];
+  }): readonly CapsuleRuleItem[];
+}
+
 export interface SourceBackedCapsuleBuilderOptions {
   db: Database;
   repoRoot: string;
@@ -124,6 +135,12 @@ const EMPTY_MEMORY_SELECTOR: CapsuleMemorySelector = {
   },
 };
 
+const EMPTY_RULE_SELECTOR: CapsuleRuleSelector = {
+  build() {
+    return [];
+  },
+};
+
 const DEFAULT_MAX_ITEM_COUNT = Number.MAX_SAFE_INTEGER;
 const DEFAULT_PIVOT_MODE_ORDER = Object.freeze([
   CapsuleContentMode.Full,
@@ -143,10 +160,11 @@ export const deterministicCapsuleBuilder = createDeterministicCapsuleBuilder();
 export function createDeterministicCapsuleBuilder(
   contentProvider: CapsuleContentProvider = EMPTY_CONTENT_PROVIDER,
   memorySelector: CapsuleMemorySelector = EMPTY_MEMORY_SELECTOR,
+  ruleSelector: CapsuleRuleSelector = EMPTY_RULE_SELECTOR,
 ): CapsuleBuilder {
   return {
     build(input) {
-      return buildDeterministicCapsule(input, contentProvider, memorySelector);
+      return buildDeterministicCapsule(input, contentProvider, memorySelector, ruleSelector);
     },
   };
 }
@@ -180,6 +198,31 @@ export function createSourceBackedCapsuleBuilder(
         });
       },
     },
+    {
+      build(input) {
+        const contextItems = [...input.pivots, ...input.supportingItems];
+        const selected = selectRelevantProjectRules(options.db, {
+          repoRoot: options.repoRoot,
+          query: input.query,
+          intent: input.profileSelection?.profile.targetIntent,
+          linkedFilePaths: collectSortedUnique(contextItems.map((item) => item.filePath)),
+          linkedFqNames: collectSortedUnique(contextItems.map((item) => item.fqName)),
+          maxCandidates: 0,
+        });
+
+        return selected.active.map((selection) => ({
+          id: selection.rule.id,
+          status: "active",
+          summary: selection.rule.summary,
+          scope: {
+            files: [...selection.rule.scope.files],
+            symbolFqns: [...selection.rule.scope.symbolFqns],
+            terms: [...selection.rule.scope.terms],
+          },
+          reason: selection.reason,
+        }));
+      },
+    },
   );
 }
 
@@ -187,6 +230,7 @@ export function buildDeterministicCapsule(
   input: BuildCapsuleInput,
   contentProvider: CapsuleContentProvider = EMPTY_CONTENT_PROVIDER,
   memorySelector: CapsuleMemorySelector = EMPTY_MEMORY_SELECTOR,
+  ruleSelector: CapsuleRuleSelector = EMPTY_RULE_SELECTOR,
 ): Capsule {
   const assemblyConfig = resolveCapsuleAssemblyConfig(input);
   const pivots: PivotCapsuleItem[] = [];
@@ -283,14 +327,21 @@ export function buildDeterministicCapsule(
     pivots,
     supportingItems,
   });
+  const rules = ruleSelector.build({
+    query: input.query,
+    profileSelection: assemblyConfig.profileSelection,
+    pivots,
+    supportingItems,
+  });
 
   return {
     query: input.query,
     pivots,
     supportingItems,
     ...(memories.length === 0 ? {} : { memories: [...memories] }),
+    ...(rules.length === 0 ? {} : { rules: { active: [...rules] } }),
     budget: computeCapsuleBudgetUsage(
-      { query: input.query, pivots, supportingItems, memories },
+      { query: input.query, pivots, supportingItems, memories, rules: { active: rules } },
       input.maxBudget,
     ),
     truncated,

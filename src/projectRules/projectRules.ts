@@ -7,6 +7,7 @@ import {
 } from "../db/repositories/indexRunsRepository";
 import { listObservations } from "../db/repositories/observationsRepository";
 import {
+  createActiveProjectRule as createActiveProjectRuleRecord,
   listProjectRules,
   updateProjectRuleStatus,
   upsertProjectRuleCandidate,
@@ -45,6 +46,46 @@ interface EvidenceItem {
   readonly scopeKey: string;
   readonly scopeLabel: string;
   readonly scope: ProjectRuleScope;
+}
+
+export function createActiveProjectRule(
+  db: Database,
+  input: {
+    readonly repoRoot: string;
+    readonly summary: string;
+    readonly files?: readonly string[];
+    readonly symbolFqns?: readonly string[];
+    readonly terms?: readonly string[];
+    readonly toolNames?: readonly string[];
+    readonly intents?: readonly string[];
+    readonly antiPatternTypes?: readonly string[];
+    readonly nowMs?: number;
+  },
+): ProjectRuleRecord {
+  const summary = input.summary.trim();
+
+  if (summary.length === 0) {
+    throw new Error("summary is required");
+  }
+
+  const scope: ProjectRuleScope = {
+    files: sortedUnique((input.files ?? []).map(normalizeFilePath)),
+    symbolFqns: sortedUnique(input.symbolFqns ?? []),
+    terms: sortedUnique([
+      ...collectRuleTerms([summary]),
+      ...(input.terms ?? []).flatMap((term) => collectRuleTerms([term])),
+    ]),
+    toolNames: sortedUnique(input.toolNames ?? []),
+    intents: sortedUnique(input.intents ?? []),
+    antiPatternTypes: sortedUnique(input.antiPatternTypes ?? []),
+  };
+
+  return createActiveProjectRuleRecord(db, {
+    repoRoot: input.repoRoot,
+    summary,
+    scope,
+    nowMs: input.nowMs,
+  });
 }
 
 export function generateProjectRuleCandidates(
@@ -188,6 +229,9 @@ export function selectRelevantProjectRules(
   readonly candidates: SelectedProjectRule[];
   readonly activeTotal: number;
   readonly candidateTotal: number;
+  readonly staleTotal: number;
+  readonly disabledTotal: number;
+  readonly dismissedTotal: number;
 } {
   const activeRules = listProjectRules(db, {
     repoRoot: input.repoRoot,
@@ -197,7 +241,20 @@ export function selectRelevantProjectRules(
     repoRoot: input.repoRoot,
     statuses: [ProjectRuleStatus.Candidate],
   });
+  const staleRules = listProjectRules(db, {
+    repoRoot: input.repoRoot,
+    statuses: [ProjectRuleStatus.Stale],
+  });
+  const disabledRules = listProjectRules(db, {
+    repoRoot: input.repoRoot,
+    statuses: [ProjectRuleStatus.Disabled],
+  });
+  const dismissedRules = listProjectRules(db, {
+    repoRoot: input.repoRoot,
+    statuses: [ProjectRuleStatus.Dismissed],
+  });
   const active = activeRules
+    .filter((rule) => rule.staleMetadata === undefined)
     .map((rule) => scoreProjectRule(rule, input))
     .filter((selection): selection is SelectedProjectRule => selection !== undefined)
     .sort(compareSelectedRules);
@@ -211,6 +268,9 @@ export function selectRelevantProjectRules(
     candidates: candidates.slice(0, input.maxCandidates ?? DEFAULT_CANDIDATE_PROJECT_RULE_PREVIEW_LIMIT),
     activeTotal: activeRules.length,
     candidateTotal: candidateRules.length,
+    staleTotal: staleRules.length,
+    disabledTotal: disabledRules.length,
+    dismissedTotal: dismissedRules.length,
   };
 }
 
@@ -448,6 +508,7 @@ function scoreProjectRule(
   const queryTerms = collectRuleTerms([input.query]);
   const linkedFilePaths = new Set((input.linkedFilePaths ?? []).map(normalizeFilePath));
   const linkedFqNames = new Set(input.linkedFqNames ?? []);
+  const summaryTerms = collectRuleTerms([rule.summary]);
   const matchedReasons: string[] = [];
   let score = 0;
 
@@ -457,6 +518,16 @@ function scoreProjectRule(
     matchedReasons.push("matched linked file");
   }
 
+  const prefixMatches = rule.scope.files.filter((ruleFilePath) => {
+    return [...linkedFilePaths].some((linkedFilePath) => {
+      return linkedFilePath.startsWith(`${ruleFilePath}/`) || ruleFilePath.startsWith(`${linkedFilePath}/`);
+    });
+  });
+  if (prefixMatches.length > 0) {
+    score += 12 + prefixMatches.length * 2;
+    matchedReasons.push("matched path prefix");
+  }
+
   const fqnMatches = rule.scope.symbolFqns.filter((fqName) => linkedFqNames.has(fqName));
   if (fqnMatches.length > 0) {
     score += 40 + fqnMatches.length * 5;
@@ -464,8 +535,10 @@ function scoreProjectRule(
   }
 
   const termMatches = rule.scope.terms.filter((term) => queryTerms.includes(term));
-  if (termMatches.length > 0) {
-    score += Math.min(termMatches.length * 5, 20);
+  const summaryTermMatches = summaryTerms.filter((term) => queryTerms.includes(term));
+  const allTermMatches = sortedUnique([...termMatches, ...summaryTermMatches]);
+  if (allTermMatches.length > 0) {
+    score += Math.min(allTermMatches.length * 5, 20);
     matchedReasons.push("matched query term");
   }
 

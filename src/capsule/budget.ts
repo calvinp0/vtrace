@@ -9,6 +9,7 @@ import {
   type CapsuleInclusionReason,
   type CapsuleMemoryInclusionReason,
   type CapsuleMemoryItem,
+  type CapsuleRuleItem,
 } from "./types";
 
 export function createCharacterBudget(maxCharacters: number): CapsuleBudget {
@@ -50,9 +51,22 @@ export function computeCapsuleMemoryItemCost(item: CapsuleMemoryItem): number {
   );
 }
 
+export function computeCapsuleRuleItemCost(item: CapsuleRuleItem): number {
+  return (
+    item.id.length
+    + item.status.length
+    + item.summary.length
+    + item.reason.length
+    + item.scope.files.reduce((sum, filePath) => sum + filePath.length, 0)
+    + item.scope.symbolFqns.reduce((sum, fqName) => sum + fqName.length, 0)
+    + item.scope.terms.reduce((sum, term) => sum + term.length, 0)
+  );
+}
+
 export function computeTotalCapsuleCost(
   capsule: Pick<Capsule, "query" | "pivots" | "supportingItems"> & {
     readonly memories?: readonly CapsuleMemoryItem[];
+    readonly rules?: { readonly active: readonly CapsuleRuleItem[] };
   },
 ): number {
   return capsule.query.length + listCapsuleItems(capsule).reduce(
@@ -61,12 +75,16 @@ export function computeTotalCapsuleCost(
   ) + (capsule.memories ?? []).reduce(
     (sum, memory) => sum + computeCapsuleMemoryItemCost(memory),
     0,
+  ) + (capsule.rules?.active ?? []).reduce(
+    (sum, rule) => sum + computeCapsuleRuleItemCost(rule),
+    0,
   );
 }
 
 export function computeCapsuleBudgetUsage(
   capsule: Pick<Capsule, "query" | "pivots" | "supportingItems"> & {
     readonly memories?: readonly CapsuleMemoryItem[];
+    readonly rules?: { readonly active: readonly CapsuleRuleItem[] };
   },
   budget: CapsuleBudget,
 ): CapsuleBudgetUsage {

@@ -120,6 +120,7 @@ Candidates are not active by default. A rule must be explicitly promoted before 
 ```bash
 vtrace rules list <repo>
 vtrace rules generate <repo>
+vtrace rules add-active <repo> --summary "When changing run_pipeline output, update MCP docs and tests." --file src/mcp/tools.ts --term run_pipeline
 vtrace rules promote <repo> <rule-id>
 vtrace rules dismiss <repo> <rule-id>
 vtrace rules disable <repo> <rule-id>
@@ -127,9 +128,9 @@ vtrace rules disable <repo> <rule-id>
 
 The command also accepts `vtrace rules <repo> list` style ordering.
 
-Active rules are injected into `run_pipeline.rules` only when they match the current task by deterministic signals such as linked file overlap, linked symbol FQN overlap, query-term overlap, or selected intent. Injection is capped at three active rules. Candidate previews may appear in `run_pipeline.rules.candidates`, but they are explicitly labeled as candidates and are not active instructions.
+Active rules are injected into `run_pipeline.rules` and `get_context_capsule.capsule.rules.active` only when they match the current task by deterministic signals such as linked file overlap, linked symbol FQN overlap, path-prefix overlap, query-term overlap, or selected intent. Injection is capped at three active rules. Candidate previews may appear in `run_pipeline.rules.candidates`, but they are explicitly labeled as candidates and are not active instructions. Capsules do not include candidate previews; active rules are kept separate from memory observations.
 
-Rules are linked to files, symbol FQNs, lexical terms, tool names, intents, and anti-pattern types where that evidence exists. When explicit reindexing detects linked file or symbol changes, candidate and active rules become `stale`. Stale active rules are not injected as authoritative context. This is not automatic policy enforcement and does not block tool execution.
+Rules are linked to files, symbol FQNs, lexical terms, tool names, intents, and anti-pattern types where that evidence exists. When explicit reindexing detects linked file or symbol changes, candidate and active rules become `stale`. Candidate, stale, disabled, and dismissed rules are not injected as active guidance. This milestone does not implement automatic promotion, semantic rule generation, embeddings, semantic similarity, cross-repo rules, policy enforcement, or tool blocking.
 
 ## Default Orchestration
 

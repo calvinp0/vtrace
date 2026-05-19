@@ -13,6 +13,10 @@ import { indexProject } from "../indexer/indexProject";
 import { routeQuery } from "../intent/routeQuery";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import {
+  createActiveProjectRule,
+  disableProjectRule,
+} from "../projectRules/projectRules";
+import {
   ObservationKind,
   ObservationSource,
   ObservationStaleReasonKind,
@@ -274,6 +278,42 @@ test("source-backed builder surfaces memories without a parallel builder input p
     );
 
     assert.equal(capsule.memories?.length, 1);
+  });
+});
+
+test("source-backed capsules surface relevant active rules separately from memories", async () => {
+  await withMemoryFixture(async ({ repoRoot, db, readUser, normalizeUser }) => {
+    const relevant = createActiveProjectRule(db, {
+      repoRoot,
+      summary: "When changing the reader service, update normalization tests.",
+      files: ["src/service.ts"],
+      terms: ["reader", "service", "normalization"],
+      nowMs: 100,
+    });
+    createActiveProjectRule(db, {
+      repoRoot,
+      summary: "Kernel rules belong elsewhere.",
+      files: ["src/kernel.ts"],
+      terms: ["kernel"],
+      nowMs: 200,
+    });
+    const disabled = createActiveProjectRule(db, {
+      repoRoot,
+      summary: "Disabled reader service guidance.",
+      files: ["src/service.ts"],
+      terms: ["reader", "service"],
+      nowMs: 300,
+    });
+    disableProjectRule(db, disabled.id, 400);
+
+    const capsule = buildExplainCapsule(db, repoRoot, "explain reader service", readUser, normalizeUser);
+
+    assert.deepEqual(capsule.memories, undefined);
+    assert.deepEqual(capsule.rules?.active.map((rule) => rule.id), [relevant.id]);
+    assert.equal(capsule.rules?.active[0]?.status, "active");
+    assert.equal(capsule.rules?.active[0]?.scope.files.includes("src/service.ts"), true);
+    assert.match(capsule.rules?.active[0]?.reason ?? "", /matched/);
+    assert.equal(capsule.budget.usedCharacters, computeTotalCapsuleCost(capsule));
   });
 });
 
