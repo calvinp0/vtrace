@@ -1,0 +1,297 @@
+# Product Truth Audit and RC Hardening Plan
+
+Date: 2026-05-19
+
+Scope: current VTrace / VEXB repository implementation, docs, CLI, MCP tool schemas, VS Code shell, package metadata, and tests.
+
+## Executive Summary
+
+The current product is best described publicly as `vtrace`: a repo-local, deterministic structural index plus CLI, MCP server, memory/session layer, optional stale-marker watcher, and conservative project-rule system. The current implementation is substantially beyond a pure indexing tool, but it is still not VEXP parity. The memory and workflow-awareness features are deterministic, lexical/structural, and mostly explicit or process-local.
+
+The main docs are generally truthful about the important limits: no embeddings, no semantic reconstruction, no hidden V-REF recomputation in MCP, no auto-reindex, no automatic rule promotion, and no daemon requirement for normal MCP use.
+
+The largest RC blocker is schema truth, not feature truth. `run_pipeline` returns several fields that are absent from nested `additionalProperties: false` output schemas, especially `diagnostics.rules.staleTotalCount`, `diagnostics.rules.disabledTotalCount`, and `diagnostics.rules.dismissedTotalCount`. That means the advertised MCP output schema can reject the actual output. The second RC blocker is CLI/documentation drift around `run-pipeline` and `expand-vexp-ref`: CLI help exposes both, VS Code uses both, but `docs/cli_usage.md` omits them from the direct command list and does not explain the CLI `expand-vexp-ref` republish requirement.
+
+Naming is mostly standardized on `vtrace` / `.vtrace`. Historical `VEXB` remains only in prompt/context and is not present in package metadata or main docs. Recommended RC stance: public product and CLI stay `vtrace`; use `VEXB` only as a historical/internal codename if needed, and do not start a global rename.
+
+## Current Product Capability Table
+
+| Area                   | Current behavior                                                                                                                                                               | Truth status     | Evidence                                                                                                                              | Gap                                                                                                                     | Recommended action                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `run_pipeline`         | Default MCP orchestration returns intent, task summary, compact context, impact decision, memory, rules, diagnostics, deferred V-REF metadata, and optional saved observation. | Mostly ready     | `src/mcp/tools.ts`, `src/runPipeline/runPipelineOrchestrator.ts`, `src/runPipeline/formatRunPipelineOutput.ts`, `src/mcp/mcp.test.ts` | Actual output/schema mismatch in nested diagnostics; multi-repo path disables deferred expansion.                       | Fix schema drift before RC; document multi-repo deferred limitation.                                |
+| context capsule        | Builds deterministic compact capsule with pivots, support items, surfaced memories, and active rules.                                                                          | Ready            | `src/capsule/*`, `src/mcp/tools.ts`, `src/capsule/*.test.ts`                                                                          | Candidate rules are intentionally excluded from capsule guidance.                                                       | Keep documented as active-rule-only guidance.                                                       |
+| impact graph           | Exact FQN, bounded reverse structural impact over indexed edges; rejects `cross_repo=true`.                                                                                    | Ready            | `src/impact/getImpactGraph.ts`, `src/mcp/tools.ts`, `src/impact/getImpactGraph.test.ts`                                               | Not runtime proof or semantic blast radius.                                                                             | Keep wording structural and exact.                                                                  |
+| search logic flow      | Exact start/end FQNs, bounded deterministic structural paths; rejects `cross_repo=true`.                                                                                       | Ready            | `src/logicFlow/searchLogicFlow.ts`, `src/mcp/tools.ts`, `src/logicFlow/searchLogicFlow.test.ts`                                       | No endpoint inference; no runtime/dataflow semantics.                                                                   | Keep as specialist exact-FQN tool.                                                                  |
+| skeleton               | File skeletons for indexed source files with detail levels.                                                                                                                    | Ready            | `src/skeleton/getSkeleton.ts`, `src/mcp/tools.ts`, `src/cli/commands/skeletonCommand.ts`                                              | Only indexed/supported source files.                                                                                    | No RC action.                                                                                       |
+| V-REF expansion        | MCP expands exact 12 lowercase hex hashes from process-local store into stored payloads; no recomputation.                                                                     | Mostly ready     | `src/runPipeline/deferredVexpStore.ts`, `src/mcp/expandVexpRef.test.ts`                                                               | CLI variant can only work cross-process by re-running `run-pipeline` with original query to republish.                  | Document CLI-specific limitation; keep MCP claim process-local.                                     |
+| passive auto-capture   | Successful useful visible MCP calls write compact `mcp_auto` `tool_call` observations, best effort and deduped.                                                                | Mostly ready     | `src/observations/autoCapture.ts`, `src/mcp/mcp.test.ts`                                                                              | `get_context_capsule` capture does not pass session id; only `run_pipeline` session captures currently bind to session. | Document session binding as input-dependent; consider session support for more visible tools later. |
+| session compression    | Explicit service compresses inactive sessions after default 2h; stores summary and consolidates repeated passive groups.                                                       | Ready as service | `src/observations/sessionLifecycle.ts`, `src/observations/observations.test.ts`                                                       | No scheduler/daemon automatic sweep.                                                                                    | Keep docs explicit: service exists, automatic scheduling is not RC scope.                           |
+| memory consolidation   | Deterministic same-signature passive `tool_call` groups thresholded at 3 are summarized, then grouped source rows are pruned.                                                  | Ready            | `src/observations/consolidation.ts`, `src/observations/observations.test.ts`                                                          | Not semantic/cross-session consolidation.                                                                               | No RC action.                                                                                       |
+| watcher/freshness      | `vtrace watch` is polling, opt-in, mark-stale-only; status and pipeline diagnostics report stale state; reindex clears pending state.                                          | Ready            | `src/runtime/fileWatcher.ts`, `src/runtime/indexFreshness.ts`, `src/runtime/*.test.ts`                                                | No auto-reindex or always-on daemon.                                                                                    | Keep current docs.                                                                                  |
+| anti-pattern detection | Detects `file_thrashing` from watcher events and `symbol_added_then_removed` from adjacent index diffs; stores durable `dead_end` observations.                                | Ready            | `src/observations/antiPatterns.ts`, `src/observations/antiPatterns.test.ts`                                                           | No repeated-query detector, semantic stuck detection, or correction.                                                    | Add explicit “no repeated-query detector yet” wording if docs need more precision.                  |
+| progressive nudges     | `run_pipeline.diagnostics.nudge` appears after 3 passive session tool calls, repeats every 5, self-disables after durable observation.                                         | Ready            | `src/observations/observationNudges.ts`, `src/observations/observationNudges.test.ts`, `src/mcp/mcp.test.ts`                          | Only `run_pipeline` diagnostics, not chat-wide reminders.                                                               | No RC action.                                                                                       |
+| active rules           | Active project rules are stored in `project_rules`, selected deterministically, capped at 3, and injected into `run_pipeline.rules.active` / `capsule.rules.active`.           | Ready            | `src/projectRules/projectRules.ts`, `src/projectRules/projectRules.test.ts`                                                           | Stale active rules are not injected, as intended.                                                                       | No RC action.                                                                                       |
+| rule candidates        | Generated explicitly from repeated durable/consolidated/anti-pattern evidence; candidates preview only in `run_pipeline`, never active capsule guidance.                       | Ready            | `src/projectRules/projectRules.ts`, `src/cli/commands/rulesCommand.ts`, tests                                                         | No auto-promotion, no LLM writing.                                                                                      | No RC action.                                                                                       |
+
+## VEXP-Like Feature Parity Table
+
+| VEXP-like claim                  | Current truth                                                                               | Classification  | Evidence                                        | RC wording                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------- | --------------- | ----------------------------------------------- | ------------------------------------------------------------------------- |
+| Local context engine             | Repo-local structural context engine with CLI/MCP surfaces.                                 | True            | README, `package.json`, `src/mcp/tools.ts`      | “Local-first structural context engine.”                                  |
+| Passive MCP observation capture  | Captures compact metadata for meaningful successful MCP calls, excluding setup/status/save. | Mostly true     | `autoCapture.ts`, `mcp.test.ts`                 | “Passive compact tool-call memory, best effort.”                          |
+| Memory search                    | Deterministic lexical/structural observation search.                                        | True            | `src/observations/searchMemory.ts`              | “Search saved observations by lexical and exact structural links.”        |
+| Semantic memory                  | No embeddings or semantic ranking.                                                          | Not implemented | Docs explicitly deny; no embedding deps.        | “Not semantic memory.”                                                    |
+| Session compression              | Explicit service compresses inactive sessions and preserves durable memory.                 | Mostly true     | `sessionLifecycle.ts`                           | “Available through explicit lifecycle service; no scheduler requirement.” |
+| Deferred expansion               | Real MCP process-local exact hash expansion.                                                | Partial         | `deferredVexpStore.ts`, `expandVexpRef.test.ts` | “Process-local stored payload expansion.”                                 |
+| Persistent V-REFs                | V-REF store is in-memory and process-local.                                                 | Not implemented | `deferredVexpStore.ts`                          | “V-REFs do not survive MCP restart.”                                      |
+| Passive file awareness           | Opt-in polling watcher marks stale.                                                         | Mostly true     | `fileWatcher.ts`                                | “Opt-in mark-stale watcher.”                                              |
+| Automatic reindex                | Watcher never reindexes.                                                                    | Not implemented | `watchCommand.ts`, docs                         | “Run `vtrace index` explicitly.”                                          |
+| Anti-pattern detection           | Two conservative detectors only.                                                            | Partial         | `antiPatterns.ts`                               | “Conservative structural anti-pattern observations.”                      |
+| Project convention learning      | Candidate generation from repeated evidence only; no auto-promotion.                        | Partial         | `projectRules.ts`                               | “Deterministic candidate generation; explicit promotion required.”        |
+| Rule enforcement                 | Rules are context guidance only.                                                            | Not implemented | `projectRules.ts`, docs                         | “No enforcement or blocking.”                                             |
+| Cross-repo semantic memory/rules | Workspace retrieval exists, but rules are repo-root scoped and structural.                  | Partial         | `workspace/*`, `projectRules.ts`                | “Repo-scoped deterministic rules.”                                        |
+
+## MCP Tool Truth Table
+
+| Tool                                                                                                                                                                    | Classification               | Actual behavior                                                                                   | Schema/docs alignment                                                                     | RC action                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `run_pipeline`                                                                                                                                                          | Mostly ready, schema blocker | Broad orchestration with aliases, memory, freshness, nudge, rules, deferred items, optional save. | Input docs align. Output schema drifts from formatter in nested diagnostics rules fields. | Fix schema before RC.                                                      |
+| `get_context_capsule`                                                                                                                                                   | Ready                        | Thin visible wrapper over capsule pipeline, including active rules and memory surface.            | Mostly aligned.                                                                           | No action.                                                                 |
+| `get_impact_graph`                                                                                                                                                      | Ready                        | Exact FQN bounded structural reverse impact. `cross_repo=true` fails honestly.                    | Aligned.                                                                                  | No action.                                                                 |
+| `search_logic_flow`                                                                                                                                                     | Ready                        | Exact FQN endpoint path search. `cross_repo=true` fails honestly.                                 | Aligned.                                                                                  | No action.                                                                 |
+| `get_skeleton`                                                                                                                                                          | Ready                        | Structural skeletons for requested indexed files.                                                 | Aligned.                                                                                  | No action.                                                                 |
+| `index_status`                                                                                                                                                          | Ready                        | Readiness and freshness inspection, including watcher state and workspace repo status.            | Aligned.                                                                                  | No action.                                                                 |
+| `workspace_setup`                                                                                                                                                       | Mostly ready                 | MCP setup/status shell; `apply` can run setup, `startRuntime` only with apply.                    | Output field still named `claudeCode` even though it can represent Codex agent config.    | Rename only in future schema version or document compatibility field name. |
+| `get_session_context`                                                                                                                                                   | Ready                        | Recent/session-specific observations and compressed summaries.                                    | Visible and documented.                                                                   | No action.                                                                 |
+| `search_memory`                                                                                                                                                         | Ready                        | Lexical/structural observation search with staleness metadata.                                    | Visible and documented.                                                                   | No action.                                                                 |
+| `save_observation`                                                                                                                                                      | Ready                        | Manual durable observation persistence.                                                           | Visible and documented.                                                                   | No action.                                                                 |
+| `expand_vexp_ref`                                                                                                                                                       | Mostly ready                 | Exact 12-hex process-local expansion, structured non-error failures.                              | MCP docs align. CLI docs under-document related CLI command.                              | Document CLI limitation separately.                                        |
+| Hidden legacy: `index_repo`, `search_symbols`, `route_query`, `build_capsule`, `build_handoff`, `list_runs`, `check_capsule_staleness`, `list_sessions`, `read_session` | Acceptable hidden legacy     | Registered as hidden or legacy, callable by id but not visible in `tools/list`.                   | Visible docs correctly omit most.                                                         | Keep hidden; avoid promoting in RC docs.                                   |
+
+Visible MCP tool list matches docs: `run_pipeline`, `get_context_capsule`, `get_impact_graph`, `search_logic_flow`, `get_skeleton`, `index_status`, `workspace_setup`, `get_session_context`, `search_memory`, `save_observation`, `expand_vexp_ref`.
+
+## `run_pipeline` Truth Audit
+
+| Claim                                                                                                 | Status                   | Evidence                                             | Notes                                                                                                                               |
+| ----------------------------------------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Accepts `task` and legacy `query`                                                                     | True                     | `parseRequiredRunPipelineTask`, `mcp.test.ts`        | `task` wins when both are present.                                                                                                  |
+| Accepts `preset` and legacy `intent`                                                                  | True                     | `tools.ts`, `selectIntent.test.ts`                   | Error message currently says “intent must be one of” even if invalid field was `preset`; minor wording issue.                       |
+| Accepts `max_tokens` and `maxBudgetCharacters`                                                        | True                     | `parseOptionalIntegerAlias`, `mcp.test.ts`           | Maps to character budget, not token budget. Docs say this.                                                                          |
+| Accepts `include_tests`                                                                               | True                     | `tools.ts`, tests                                    | Stored in request; actual capsule search does not appear test-specialized beyond preset defaults. Treat as preference.              |
+| Accepts `include_file_content`                                                                        | Partial                  | `tools.ts`, formatter                                | Stored as resolved preference; compact output still returns representation metadata, not full files. Docs say this.                 |
+| Accepts `observation` and `saveObservation`                                                           | True                     | `tools.ts`, `mcp.test.ts`                            | `observation` creates manual insight; `saveObservation=true` creates compact tool-call observation.                                 |
+| Output has `intent`, `taskSummary`, `context`, `impact`, `memory`, `diagnostics`, `deferred`, `rules` | True                     | `formatRunPipelineOutput.ts`, tests                  | Actual output includes all required top-level sections.                                                                             |
+| Impact skip reasons are honest                                                                        | True                     | `runPipelineOrchestrator.ts`, `mcp.test.ts`          | Reasons include not refactor-like, no focal symbol, multiple focal symbols, no dependents, impact error.                            |
+| Memory distinguishes surfaced capsule memory, session, durable memory                                 | Mostly true              | formatter memory section                             | Consolidated/summary/anti-pattern rows are represented by observation kind/summary, not separate subtypes in `run_pipeline.memory`. |
+| Diagnostics expose freshness and nudge state                                                          | True in output           | `tools.ts`, tests                                    | Output schema does not mark these required, but output contains them.                                                               |
+| Deferred section only claims expandable refs when real expansion works                                | True for single-repo MCP | `buildDeferredPlaceholders`, `expandVexpRef.test.ts` | Multi-repo path explicitly says no deferred expansion. CLI expansion has different constraints.                                     |
+| Active rules and candidates are separated                                                             | True                     | `formatRunPipelineOutput.ts`, project rule tests     | Candidates are explicitly labeled previews.                                                                                         |
+| Stale/disabled/dismissed rules are not active guidance                                                | True                     | `selectRelevantProjectRules`, tests                  | Counts are reported in diagnostics/omitted.                                                                                         |
+
+## V-REF / `expand_vexp_ref` Truth Audit
+
+MCP behavior is strict and truthful:
+
+- Hashes are exact 12 lowercase hex strings: `DEFERRED_VEXP_HASH_PATTERN = /^[0-9a-f]{12}$/`.
+- Expansion is exact hash lookup in `DeferredVexpStore`.
+- Expansion returns stored process-local content, not recomputation.
+- Store capacity defaults to 256; evicted hashes return `expired`.
+- Unknown well-formed hashes return `unknown_hash`.
+- Malformed hashes return `malformed_hash`.
+- Unsupported stored categories return `unsupported_category`.
+- No fuzzy lookup, semantic reconstruction, disk recomputation, token-savings percentage, or “ultra-compressed v2” behavior is implemented.
+
+RC caveat: `vtrace expand-vexp-ref` is a CLI helper, not the same trust model as MCP. Because CLI processes do not share the MCP process-local store, it can only expand across invocations by receiving `--query` and deterministically re-running the orchestrator to republish matching deferred items. `docs/cli_usage.md` should document this or avoid presenting the CLI command as equivalent to MCP process-local expansion.
+
+## Memory / Session Truth Audit
+
+| Behavior                                                       | Status                   | Evidence                                                            | Notes                                                         |
+| -------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Passive MCP `tool_call` capture                                | True                     | `autoCapture.ts`, `mcp.test.ts`                                     | Best effort, post-success only, compact metadata only.        |
+| Excludes `index_status`, `workspace_setup`, `save_observation` | True                     | Docs and `observationNudges.ts`; no capture calls in those handlers | Captures are not recursive.                                   |
+| Exact file/FQN/symbol linking only                             | True                     | `autoCapture.ts`                                                    | Uses data already present in result; no enrichment retrieval. |
+| Session compression after inactivity                           | True as explicit service | `sessionLifecycle.ts`                                               | No scheduler or always-on session daemon.                     |
+| Physical pruning of eligible repeated passive rows             | True                     | `consolidation.ts`                                                  | Only grouped eligible `mcp_auto tool_call` rows are deleted.  |
+| Durable observation preservation                               | True                     | `sessionLifecycle.ts`, tests                                        | Manual/durable observations are not removed by consolidation. |
+| Compressed/consolidated summary persistence/searchability      | True                     | `observations.test.ts`                                              | Summary observations are persisted and searchable.            |
+| Passive consolidation                                          | True                     | `consolidation.ts`                                                  | Deterministic lexical/structural signature, threshold 3.      |
+| Anti-pattern observations                                      | True                     | `antiPatterns.ts`                                                   | Durable `dead_end` observations.                              |
+| Progressive nudges                                             | True                     | `observationNudges.ts`                                              | Diagnostics only; no persisted nudge rows.                    |
+| Stale marking                                                  | True                     | `staleness.ts`, tests                                               | File/symbol diff based after reindex.                         |
+
+Overclaims to avoid: semantic memory, embeddings, learned ranking, background/session daemon, automatic understanding of every agent decision, guaranteed capture of every decision, cross-session semantic consolidation.
+
+## Watcher / Freshness Truth Audit
+
+The watcher is opt-in and polling (`DEFAULT_FILE_WATCH_POLL_INTERVAL_MS = 1000`). It observes indexable source paths, debounces, writes pending stale state to `.vtrace/state.json`, and reports freshness through CLI status/doctor, MCP `index_status`, and `run_pipeline.diagnostics.freshness`. It does not auto-reindex and does not require the optional daemon. Successful explicit indexing clears pending watcher-observed stale state, and existing structural diffs drive stale marking after reindex.
+
+Overclaims to avoid: passive watcher always running, real-time daemon behavior, semantic rename detection, automatic reindexing, or fine-grained signature/body/visibility diff semantics beyond current structural file/symbol diffing.
+
+## Anti-Pattern / Nudge Truth Audit
+
+Implemented anti-patterns:
+
+- `file_thrashing`: threshold 5 source-file change events within 10 minutes.
+- `symbol_added_then_removed`: symbol added in one index run and removed in the adjacent next run.
+
+Implemented nudges:
+
+- First full nudge after 3 passive session tool calls.
+- Brief nudge every 5 additional passive calls.
+- Disabled once a durable observation exists.
+- Appears only in `run_pipeline.diagnostics.nudge`.
+- Does not persist rows and does not block tools.
+
+Not implemented: repeated-query detector, semantic “stuck” detection, automatic correction, chat-level reminders outside pipeline diagnostics.
+
+## Project Rules Truth Audit
+
+Project rules are deterministic and conservative:
+
+- Active/candidate/stale/disabled/dismissed rules live in `project_rules`.
+- Candidate generation threshold defaults to 3.
+- Eligible evidence: manual durable `decision`/`insight`, consolidated passive summaries, repeated anti-pattern observations.
+- Raw one-off passive `tool_call` observations are excluded.
+- Dismissed candidates are preserved and not recreated automatically by signature.
+- Matching active rules prevent duplicate candidates.
+- Candidates are not active instructions and are not injected into capsules.
+- Active rules are capped at 3 and ordered deterministically by score/update/id.
+- Stale, disabled, dismissed, and candidate rules are not injected as active guidance.
+- No auto-promotion, LLM rule writing, embeddings, semantic similarity, cross-repo rule learning, enforcement, or tool blocking.
+
+## CLI / Docs Consistency Findings
+
+| Finding                                                                                                                                                     | Classification                                             | Evidence                                   | Recommended action                                                                       |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `docs/cli_usage.md` omits `run-pipeline` and `expand-vexp-ref` from direct command list while CLI help exposes both.                                        | Docs-only fix; RC blocker because user flow is incomplete. | `src/cli/index.ts`, `docs/cli_usage.md`    | Add both commands and examples.                                                          |
+| `expand-vexp-ref` CLI behavior differs from MCP process-local expansion and requires `--query` for practical cross-process republish.                       | Docs-only fix; RC blocker for V-REF truth.                 | `src/cli/commands/expandVexpRefCommand.ts` | Add explicit CLI caveat.                                                                 |
+| Docs canonical flow starts with `setup`, while prompt suggested `init/index/watch/status`.                                                                  | Acceptable limitation                                      | README/getting started                     | Use `setup` as canonical user flow; mention `init` + `index` as manual lower-level path. |
+| CLI command remains `claude-config` for Codex config too.                                                                                                   | Acceptable compatibility naming                            | README, CLI docs, `claudeConfigCommand`    | Keep and document compatibility name.                                                    |
+| JSON output stability is strongest for product-shell commands; direct inspection commands often emit raw JSON but docs only promise product-shell `--json`. | Acceptable limitation                                      | CLI docs and commands                      | Keep promise narrow.                                                                     |
+
+Canonical RC flow should be:
+
+```bash
+./bin/vtrace setup <repo> --agent codex
+./bin/vtrace status <repo>
+./bin/vtrace index <repo>
+./bin/vtrace watch <repo>
+```
+
+Manual lower-level flow remains valid:
+
+```bash
+./bin/vtrace init <repo>
+./bin/vtrace index <repo>
+./bin/vtrace status <repo>
+```
+
+MCP flow:
+
+```text
+run_pipeline(task="...")
+expand_vexp_ref(hash="...")
+save_observation(...)
+```
+
+Rule flow:
+
+```bash
+./bin/vtrace rules generate-candidates <repo>
+./bin/vtrace rules promote <repo> <rule-id>
+```
+
+## Naming Consistency Findings
+
+| Surface                 | Current naming                                                           | Status                   | Recommendation                                                          |
+| ----------------------- | ------------------------------------------------------------------------ | ------------------------ | ----------------------------------------------------------------------- |
+| `package.json`          | package and binary are `vtrace`                                          | Consistent               | Keep.                                                                   |
+| CLI                     | `vtrace`, `./bin/vtrace`                                                 | Consistent               | Keep.                                                                   |
+| Repo-local state        | `.vtrace`                                                                | Consistent               | Keep.                                                                   |
+| MCP server schema/id    | `vtrace.mcp_server`, `vtrace_rc1_mcp`                                    | Consistent               | Keep.                                                                   |
+| Docs                    | mostly `vtrace`; some `VTRACE` all-caps for product emphasis             | Acceptable               | Prefer lowercase `vtrace` in prose, `VTRACE` only in UI/brand headings. |
+| VS Code extension       | command ids `vtrace.*`, package `vtrace-vscode`, activity title `VTRACE` | Mostly consistent        | Accept brand uppercase in UI; no rename.                                |
+| `claude-config` command | name references Claude while supporting Codex                            | Compatibility mismatch   | Keep for RC; consider future alias such as `agent-config`.              |
+| VEXB                    | Not present in public docs/package surfaces                              | Historical/internal only | Do not reintroduce publicly during RC.                                  |
+
+Recommendation: standardize public product language on `vtrace`. Treat `VEXB` as a historical/internal codename. Do not globally rename code in this milestone.
+
+## Release Blocker List
+
+| Blocker                                                                                                                                                           | Severity | Evidence                                                                                                                                          | Minimal fix                                                                         | Owner/suggested milestone |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------- |
+| `run_pipeline` MCP output schema omits actual nested diagnostics rule fields while nested schema uses `additionalProperties: false`.                              | Blocker  | `formatRunPipelineOutput.ts` emits stale/disabled/dismissed counts; `RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA.rules` omits those properties. | Add the three fields to schema properties and required list, or stop emitting them. | RC schema hardening.      |
+| CLI docs omit `run-pipeline` and `expand-vexp-ref` commands exposed in help and used by VS Code.                                                                  | Blocker  | `src/cli/index.ts`, `vscode-extension/cli.js`, `docs/cli_usage.md`                                                                                | Add CLI usage rows and examples.                                                    | RC docs hardening.        |
+| CLI `expand-vexp-ref` truth is not documented: it republish-runs the pipeline when `--query` is supplied because process-local stores do not cross CLI processes. | Blocker  | `src/cli/commands/expandVexpRefCommand.ts`                                                                                                        | Add docs note and example with `--query`; distinguish MCP from CLI.                 | RC docs hardening.        |
+
+## Wording Correction Table
+
+| File                                            | Current wording                                                                         | Why it is risky                                                                       | Suggested wording                                                                                                                                                            |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/cli_usage.md`                             | Direct command list omits `run-pipeline` / `expand-vexp-ref`.                           | New users cannot follow the real CLI + VS Code flow; V-REF CLI behavior is invisible. | Add `./bin/vtrace run-pipeline <repo> <query> ...` and `./bin/vtrace expand-vexp-ref <repo> <hash> [--query <query>] ...`.                                                   |
+| `docs/cli_usage.md`                             | No CLI V-REF caveat.                                                                    | Could imply standalone CLI hashes survive process boundaries.                         | “MCP `expand_vexp_ref` resolves the current server process store. CLI `expand-vexp-ref` starts a new process, so pass `--query` to republish the same run before expansion.” |
+| `docs/mcp_tools.md`                             | “Most of those are directly useful today. `expand_vexp_ref` is the advanced exception.” | Slightly vague; users may not know it is only for current-process hashes.             | “Use `expand_vexp_ref` only for a deferred item emitted by the current MCP server process.”                                                                                  |
+| `src/mcp/tools.ts` error text                   | Invalid `preset` reports “run_pipeline intent must be one of...”                        | Confusing because product-facing field is `preset`.                                   | “run_pipeline preset/intent must be one of...”                                                                                                                               |
+| `src/mcp/tools.ts` workspace setup output field | Output uses `claudeCode` for generic agent config.                                      | Codex users may think setup only reports Claude config.                               | In future schema: `agentConfig`; for RC docs, note `claudeCode` is a compatibility field.                                                                                    |
+
+## Acceptable Limitation Table
+
+| Limitation                                                     | Why acceptable for RC                                                 | Where documented                    | Future milestone                                          |
+| -------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------- |
+| V-REFs are process-local and bounded.                          | Honest and deterministic; avoids fabricated expansions.               | MCP docs/cheat sheet; code comments | Persistent V-REF store, if needed.                        |
+| CLI V-REF expansion requires `--query` republish.              | CLI process isolation is expected; MCP is the primary expansion path. | Needs CLI docs update               | Shared local expansion cache or remove CLI command.       |
+| Watcher is polling and mark-stale-only.                        | Clear, safe, no daemon complexity.                                    | README, getting started, MCP docs   | Optional auto-reindex mode only if explicitly requested.  |
+| Memory is lexical/structural, not semantic.                    | Matches local deterministic design.                                   | MCP docs/cheat sheet                | Embeddings/semantic ranking if product direction changes. |
+| Rule candidates require explicit promotion.                    | Prevents accidental policy injection.                                 | MCP docs/CLI docs                   | Review UI for candidates.                                 |
+| `claude-config` name is retained for Codex config.             | Compatibility matters more than naming purity for RC.                 | README/getting started              | Add `agent-config` alias later.                           |
+| VS Code panel lacks rule management and watcher start actions. | Panel is a thin shell and not the RC source of truth.                 | Extension package/commands          | Panel rule/watch enhancements.                            |
+| Cross-repo impact/logic flow unsupported.                      | Current indexes are repo-bound; tools fail honestly.                  | Tool schemas/errors                 | Workspace graph model.                                    |
+
+## VS Code / Panel Audit
+
+The extension is a thin local shell over the CLI. It supports setup, setup/reindex, status, doctor, freshness/runtime/setup reports, run-pipeline, context capsule, file skeleton, impact graph at cursor, and V-REF expansion through CLI. It does not expose project-rule management or a watch start/stop control. That is acceptable for RC if docs call CLI/MCP the canonical interfaces for rules and watcher.
+
+Minor naming inconsistency: some panel titles use `VTRACE • ...` while others use `vtrace — ...`. This is cosmetic, not a release blocker.
+
+## CI / Test / Package Audit
+
+| Area              | Status                                          | Evidence                   | Classification                   |
+| ----------------- | ----------------------------------------------- | -------------------------- | -------------------------------- |
+| Package name/bin  | `vtrace`, binary `./bin/vtrace`                 | `package.json`             | Ready                            |
+| Test command      | `bun test`                                      | `package.json`, CI         | Ready                            |
+| Typecheck         | `bun run typecheck`                             | `package.json`, CI         | Ready                            |
+| Format check      | Prettier over docs/package/config/license files | `package.json`             | Ready                            |
+| Lint              | Alias to typecheck                              | `package.json`             | Acceptable limitation            |
+| VS Code packaging | `bun run package:vscode`                        | `package.json`, CI         | Ready if `vsce` install succeeds |
+| CI                | typecheck, lint, format, test, package VS Code  | `.github/workflows/ci.yml` | Ready                            |
+| Lockfile          | `bun.lock` present                              | repo root                  | Ready                            |
+
+## Recommended Hardening Plan
+
+1. Fix MCP schema drift.
+   - Add actual `run_pipeline.diagnostics.rules` omitted counts to the schema.
+   - Add focused schema/formatter parity test for `run_pipeline`.
+   - Review other nested `additionalProperties: false` schemas for conditional/extra fields.
+
+2. Patch CLI docs for real command flow.
+   - Add `run-pipeline` and `expand-vexp-ref` to `docs/cli_usage.md`.
+   - Add CLI V-REF caveat and example with `--query`.
+   - Add canonical flow using `setup`, `status`, explicit `index`, optional `watch`.
+
+3. Do a tiny MCP wording cleanup.
+   - Change invalid preset error wording from “intent” to “preset/intent”.
+   - Document `workspace_setup.status.claudeCode` as compatibility naming, or schedule schema rename for next major schema.
+
+## Suggested Next 3 Implementation Prompts
+
+### 1. RC Schema Parity Patch
+
+Audit `src/mcp/tools.ts` output schemas against actual outputs for `run_pipeline`, `get_context_capsule`, and `index_status`. Fix only schema/docs drift, add focused tests that validate actual output keys against schema expectations, and do not change product behavior.
+
+### 2. CLI Truth Docs Patch
+
+Update `docs/cli_usage.md`, `docs/getting_started.md`, and `docs/mcp_tool_cheat_sheet.md` so the canonical setup/index/watch/status, `run-pipeline`, and CLI/MCP V-REF flows are explicit. Keep the wording deterministic and process-local. Do not add features.
+
+### 3. RC Naming Compatibility Pass
+
+Audit user-facing names for `claude-config`, `workspace_setup.status.claudeCode`, `VTRACE` vs `vtrace`, and hidden legacy MCP tools. Add compatibility notes or aliases only where tiny and low-risk. Do not rename `.vtrace`, the package, or MCP schema ids.
