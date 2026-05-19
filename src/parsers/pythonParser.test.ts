@@ -1969,6 +1969,47 @@ test("ClassName.CONST falls back to an inherited class constant on a direct base
   assert.notEqual(edge, undefined, "Sub.DEFAULT must fall back to Base.DEFAULT via inheritance");
 });
 
+test("ClassName.method() falls back to an inherited method on a direct base", async () => {
+  const files = [
+    {
+      path: "src/pkg/inh_qual_call.py",
+      content: [
+        "class Base:",
+        "    @staticmethod",
+        "    def build():",
+        "        return 'built'",
+        "",
+        "class Sub(Base):",
+        "    pass",
+        "",
+        "def make():",
+        "    return Sub.build()",
+        "",
+      ].join("\n"),
+    },
+  ];
+
+  const parser = createPythonParser({ knownFiles: files });
+  const result = await parser.parse({
+    path: "src/pkg/inh_qual_call.py",
+    language: Language.Python,
+    content: files[0]!.content,
+  });
+
+  const baseClass = findTopLevelSymbol(result.symbols, "Base", SymbolKind.Class);
+  const build = result.symbols.find((symbol) =>
+    symbol.parentSymbolId === baseClass.id && symbol.localName === "build"
+  );
+  const make = findTopLevelSymbol(result.symbols, "make", SymbolKind.Function);
+
+  const calls = callsEdges(result);
+  const edge = calls.find((candidate) =>
+    candidate.srcSymbolId === make.id && candidate.dstSymbolId === build?.id
+  );
+
+  assert.notEqual(edge, undefined, "Sub.build() must fall back to Base.build via inheritance");
+});
+
 test("ambiguous multi-base inherited members are skipped conservatively", async () => {
   const files = [
     {
@@ -2097,6 +2138,45 @@ test("inherited lookup skips when the direct base is not exactly resolvable", as
   // `ExternalThing` still surfaces as an inheritance-kind reference from the class,
   // but only if it resolved to an indexed symbol — it does not, so no edges exist.
   assert.equal(referencesEdges(result).length, 0);
+});
+
+test("dynamic base expressions are skipped for inheritance relationships", async () => {
+  const files = [
+    {
+      path: "src/pkg/inh_dynamic.py",
+      content: [
+        "class Base:",
+        "    def shared(self):",
+        "        return 'shared'",
+        "",
+        "def factory():",
+        "    return Base",
+        "",
+        "class Sub(factory()):",
+        "    def use(self):",
+        "        return self.shared()",
+        "",
+      ].join("\n"),
+    },
+  ];
+
+  const parser = createPythonParser({ knownFiles: files });
+  const result = await parser.parse({
+    path: "src/pkg/inh_dynamic.py",
+    language: Language.Python,
+    content: files[0]!.content,
+  });
+
+  const baseClass = findTopLevelSymbol(result.symbols, "Base", SymbolKind.Class);
+  const subClass = findTopLevelSymbol(result.symbols, "Sub", SymbolKind.Class);
+  const refs = referencesEdges(result);
+
+  assert.equal(
+    refs.some((edge) => edge.srcSymbolId === subClass.id && edge.dstSymbolId === baseClass.id),
+    false,
+    "factory() must not create a guessed inheritance reference to Base",
+  );
+  assert.equal(callsEdges(result).length, 0);
 });
 
 test("reference to self.method is not duplicated when a calls edge already exists", async () => {

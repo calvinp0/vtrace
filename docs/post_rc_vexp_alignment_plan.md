@@ -434,6 +434,8 @@ Conservative Python Member and Attribute Resolution
 
 Resolve conservative inheritance relationships, inherited member references, and simple `super()` calls in Python where class hierarchy is statically known.
 
+Implementation status: completed for conservative exact base-class relationships, inherited member fallback, and simple zero-argument `super().x` forms. VTrace reuses `references` edges for exact base-class relationships and non-call inherited member uses, and `calls` edges for exact inherited or `super()` method calls.
+
 ### Why This Improves VEXP Alignment
 
 Impact analysis is more useful when method overrides and parent method calls are visible. This moves VTrace closer to VEXP-like structural intelligence while staying deterministic.
@@ -486,6 +488,8 @@ Likely files/modules to inspect:
 - Impact graph can show conservative inheritance relationships.
 - Dynamic or unresolved inheritance remains unclaimed.
 - Existing direct reference behavior does not regress.
+
+Implemented behavior: `self.x`, `cls.x`, and exact `ClassName.x` can fall back to inherited members when exactly one resolved base exposes the target. `super().method()` resolves to exact base methods, and `super().attr` / `super().CONST` resolve to indexed base members. Dynamic bases, unresolved bases, ambiguous multi-base hits, runtime MRO, dynamic dispatch, and arbitrary `obj.x` remain skipped.
 
 ### Suggested Implementation Prompt Title
 
@@ -664,7 +668,7 @@ Python Member/Attribute Resolution
 
 Persistent V-REF Store was the first post-RC continuity milestone and is now implemented for exact stored-payload expansion with bounded repo-local retention. It improves continuity for MCP, CLI, and editor flows while preserving the central truth requirement: V-REF expansion returns stored payloads exactly, not fuzzy lookup or semantic reconstruction.
 
-Optional Auto-Reindex Mode, Module-Level Constants, Variables, and Aliases, Python References Extraction, and Python Member/Attribute Resolution are now implemented. The next recommended milestone is Inherited-Member and `super()` Resolution because it builds on member edges and improves static graph coverage without changing retrieval/ranking behavior or adding runtime/dataflow claims.
+Optional Auto-Reindex Mode, Module-Level Constants, Variables, and Aliases, Python References Extraction, Python Member/Attribute Resolution, and Inherited-Member and `super()` Resolution are now implemented. The next recommended milestone is Broader Generic Retrieval/Reranking Benchmarks because the static graph now has enough general Python coverage to validate retrieval behavior before any future ranking changes.
 
 ## Deliverable Summary
 
@@ -675,7 +679,7 @@ Recommended milestone order:
 3. Module-Level Constants, Variables, and Aliases — implemented for conservative Python top-level assignments
 4. Python References Extraction — implemented for conservative non-call symbol uses
 5. Python Member/Attribute Resolution — implemented for conservative static receiver forms
-6. Inherited-Member and `super()` Resolution
+6. Inherited-Member and `super()` Resolution — implemented for exact static base/member cases
 7. Broader Generic Retrieval/Reranking Benchmarks
 8. VS Code Panel Polish
 
@@ -687,6 +691,7 @@ Optional Auto-Reindex Mode with Visible Freshness State
 Conservative Module-Level Constants, Variables, and Aliases
 Conservative Python Reference Edge Extraction
 Conservative Python Member and Attribute Resolution
+Conservative Python Inheritance and `super()` Graph Edges
 ```
 
 Validation fixtures needed before or during remaining implementation work:
@@ -695,7 +700,6 @@ Validation fixtures needed before or during remaining implementation work:
 - Python package reference fixture
 - mixed Python/Cython boundary fixture
 - Python class/member fixture
-- Python inheritance and `super()` fixture
 - generic retrieval/reranking query set covering exact, broad, ambiguous, graph, memory, and rule queries
 
 Known risks:
