@@ -1840,6 +1840,7 @@ test("run_pipeline rejects unknown intent presets with invalid_request", async (
     });
     assert.equal(response.result.ok, false);
     assert.equal(response.result.error.code, "invalid_request");
+    assert.match(response.result.error.message, /run_pipeline preset\/intent must be one of/);
   });
 });
 

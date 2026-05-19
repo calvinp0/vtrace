@@ -2612,10 +2612,10 @@ const WORKSPACE_SETUP_STATUS_SCHEMA = objectProperty(
       additionalProperties: false,
     },
     claudeCode: objectProperty(
-      "Claude Code MCP config status.",
+      "Compatibility field for generated local-agent config status.",
       {
-        configPath: stringProperty("Claude Code MCP config path."),
-        installed: booleanProperty("Whether Claude Code config contains the vtrace server entry."),
+        configPath: stringProperty("Generated agent config path."),
+        installed: booleanProperty("Whether the agent config contains the vtrace server entry."),
         matchesExpected: booleanProperty("Whether the configured launcher matches the expected stable launcher."),
         launcher: LAUNCHER_COMMAND_SCHEMA,
         error: {
@@ -2677,7 +2677,7 @@ const WORKSPACE_SETUP_OUTPUT_SCHEMA = objectProperty(
     },
     claudeCodeAction: {
       type: ["string", "null"],
-      description: "Claude config write action when apply=true.",
+      description: "Compatibility field for generated local-agent config write action when apply=true.",
     },
     runtimeAction: {
       type: ["string", "null"],
@@ -6629,7 +6629,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       if (intentRequested !== undefined && !isRunPipelinePresetIntent(intentRequested)) {
         return invalidRequest(
           McpToolId.RunPipeline,
-          `MCP tool run_pipeline intent must be one of: ${[RunPipelinePresetIntent.Auto, ...RUN_PIPELINE_CONCRETE_PRESETS].join(", ")}.`,
+          `MCP tool run_pipeline preset/intent must be one of: ${[RunPipelinePresetIntent.Auto, ...RUN_PIPELINE_CONCRETE_PRESETS].join(", ")}.`,
           { field: "intent", value: intentRequested },
         );
       }
