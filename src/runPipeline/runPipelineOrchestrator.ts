@@ -32,6 +32,7 @@ import { createCharacterBudget } from "../capsule/budget";
 import { createSourceBackedCapsuleBuilder } from "../capsule/buildCapsule";
 import { computeVisibleCapsuleObservationDedupeKey } from "../observations/autoCapture";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
+import { persistDeferredVexpRef } from "../db/repositories/deferredVexpRefsRepository";
 import {
   selectRelevantProjectRules,
 } from "../projectRules/projectRules";
@@ -225,11 +226,13 @@ export function runPipelineOrchestrator(
   });
 
   const deferred = buildDeferredPlaceholders({
+    db,
     context,
     impact,
     memory,
     repoRoot,
     store: deferredStore,
+    sourceRunId: getLatestIndexRun(db)?.id ?? null,
     request: {
       query,
       maxBudgetCharacters,
@@ -817,11 +820,13 @@ function runDurableMemorySection(
 }
 
 function buildDeferredPlaceholders(input: {
+  db: Database;
   context: OrchestrationContextSection;
   impact: OrchestrationImpactSection;
   memory: OrchestrationMemorySection;
   repoRoot: string;
   store: DeferredVexpStore;
+  sourceRunId: number | null;
   request: {
     query: string;
     maxBudgetCharacters: number;
@@ -846,6 +851,15 @@ function buildDeferredPlaceholders(input: {
         routingProfileId: input.context.routedQuery.profile.id,
         origin: "run_pipeline",
       },
+    });
+    persistDeferredVexpRef(input.db, {
+      entry,
+      repoRoot: input.repoRoot,
+      sourceRunId: input.sourceRunId,
+      sessionId: input.request.sessionId,
+      notes: [
+        "Stored by run_pipeline; expansion returns this payload without disk recomputation.",
+      ],
     });
     deferred.push({
       id: stableId,
@@ -876,6 +890,15 @@ function buildDeferredPlaceholders(input: {
         depth: RUN_PIPELINE_DEFAULTS.impactDepth,
         origin: "run_pipeline",
       },
+    });
+    persistDeferredVexpRef(input.db, {
+      entry,
+      repoRoot: input.repoRoot,
+      sourceRunId: input.sourceRunId,
+      sessionId: input.request.sessionId,
+      notes: [
+        "Stored by run_pipeline; expansion returns this payload without disk recomputation.",
+      ],
     });
     deferred.push({
       id: stableId,
@@ -909,6 +932,15 @@ function buildDeferredPlaceholders(input: {
         origin: "run_pipeline",
       },
     });
+    persistDeferredVexpRef(input.db, {
+      entry,
+      repoRoot: input.repoRoot,
+      sourceRunId: input.sourceRunId,
+      sessionId: input.memory.session.sessionId,
+      notes: [
+        "Stored by run_pipeline; expansion returns this payload without disk recomputation.",
+      ],
+    });
     deferred.push({
       id: stableId,
       hash: entry.hash,
@@ -939,6 +971,15 @@ function buildDeferredPlaceholders(input: {
         query: input.request.query,
         origin: "run_pipeline",
       },
+    });
+    persistDeferredVexpRef(input.db, {
+      entry,
+      repoRoot: input.repoRoot,
+      sourceRunId: input.sourceRunId,
+      sessionId: input.request.sessionId,
+      notes: [
+        "Stored by run_pipeline; expansion returns this payload without disk recomputation.",
+      ],
     });
     deferred.push({
       id: stableId,

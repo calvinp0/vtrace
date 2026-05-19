@@ -63,8 +63,9 @@ Rules use template summaries, exact file/FQN/term/tool/intent links, determinist
 - If the input is exact, prefer the exact leaf tool.
 - Do not use impact or logic-flow tools as runtime proof; they report indexed structure.
 - Do not expect `search_logic_flow` to infer endpoints; provide exact FQNs.
-- Do not expect `expand_vexp_ref` to search or recompute; it only resolves exact 12-lowercase-hex hashes emitted in the current MCP server process.
-- Treat V-REFs as process-local and bounded. Expired, unknown, malformed, and unsupported hashes return structured failures.
+- Do not expect `expand_vexp_ref` to search or recompute; it only resolves exact 12-lowercase-hex hashes emitted by `run_pipeline`.
+- Treat V-REFs as repo-local and bounded. The process store is a hot cache, retained payloads persist in `.vtrace` SQLite state, and expired, unknown, malformed, and unsupported hashes return structured failures.
+- Stored expansion returns the emitted payload, not semantic reconstruction; source edits after emission do not change retained expansion content.
 - Treat watcher staleness and anti-pattern observations as structural evidence only. They are not semantic rename detection, runtime tracing, intent inference, or project-rule generation.
 - Treat observation nudges as optional diagnostics only. They are reminders to save durable memory, not instructions or retrieved context.
 - Treat project-rule candidates as reviewable suggestions only. They become context only after explicit promotion and only when relevant.

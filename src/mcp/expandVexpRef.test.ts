@@ -4,6 +4,15 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "bun:test";
 
+import { openIndexerDatabase } from "../db/sqlite";
+import {
+  cleanupDeferredVexpRefs,
+  expirePersistentDeferredVexpRef,
+  persistDeferredVexpRef,
+  resolvePersistentDeferredVexpRef,
+} from "../db/repositories/deferredVexpRefsRepository";
+import { runExpandVexpRefCommand } from "../cli/commands/expandVexpRefCommand";
+import { runRunPipelineCommand } from "../cli/commands/runPipelineCommand";
 import { initRepo } from "../setup/initRepo";
 import {
   computeDeferredVexpHash,
@@ -107,6 +116,71 @@ test("deferredVexpStore hash changes when payload changes under the same stable 
   assert.notEqual(first.hash, second.hash);
   assert.deepEqual(store.resolve(first.hash)?.content, { kind: "json", value: { version: 1 } });
   assert.deepEqual(store.resolve(second.hash)?.content, { kind: "json", value: { version: 2 } });
+});
+
+test("persistent deferred V-REF repository survives new store instances", () => {
+  const db = openIndexerDatabase();
+  const firstStore = createDeferredVexpStore();
+  const entry = firstStore.publish({
+    stableId: "vexp:capsule:persistent",
+    category: DeferredVexpCategory.ContextCapsule,
+    content: { kind: "json", value: { payload: "stored" } },
+    metadata: { origin: "test" },
+  });
+
+  persistDeferredVexpRef(db, {
+    entry,
+    repoRoot: "/repo/example",
+    sourceRunId: null,
+    sessionId: "session-1",
+    notes: ["test note"],
+  });
+
+  const secondStore = createDeferredVexpStore();
+  assert.equal(secondStore.resolve(entry.hash), null);
+  const persisted = resolvePersistentDeferredVexpRef(db, entry.hash);
+  assert.notEqual(persisted, null);
+  assert.deepEqual(persisted!.content, entry.content);
+  assert.equal(persisted!.sessionId, "session-1");
+  db.close();
+});
+
+test("persistent deferred V-REF cleanup evicts oldest records with tombstones", () => {
+  const db = openIndexerDatabase();
+  const store = createDeferredVexpStore({ now: () => 1_000 });
+  const first = store.publish({
+    stableId: "vexp:capsule:first-persistent",
+    category: DeferredVexpCategory.ContextCapsule,
+    content: { kind: "json", value: "first" },
+    metadata: {},
+  });
+  const second = store.publish({
+    stableId: "vexp:capsule:second-persistent",
+    category: DeferredVexpCategory.ContextCapsule,
+    content: { kind: "json", value: "second" },
+    metadata: {},
+  });
+  const third = store.publish({
+    stableId: "vexp:capsule:third-persistent",
+    category: DeferredVexpCategory.ContextCapsule,
+    content: { kind: "json", value: "third" },
+    metadata: {},
+  });
+
+  persistDeferredVexpRef(db, { entry: first, repoRoot: "/repo/example", now: () => 1_000 }, { maxRecords: 3 });
+  persistDeferredVexpRef(db, { entry: second, repoRoot: "/repo/example", now: () => 1_001 }, { maxRecords: 3 });
+  persistDeferredVexpRef(db, { entry: third, repoRoot: "/repo/example", now: () => 1_002 }, { maxRecords: 3 });
+
+  cleanupDeferredVexpRefs(db, { maxRecords: 2, now: () => 1_003 });
+
+  assert.equal(resolvePersistentDeferredVexpRef(db, first.hash), null);
+  assert.notEqual(resolvePersistentDeferredVexpRef(db, second.hash), null);
+  assert.notEqual(resolvePersistentDeferredVexpRef(db, third.hash), null);
+  const tombstone = db.query(`SELECT reason FROM deferred_vexp_ref_tombstones WHERE hash = ?`).get(first.hash) as
+    | { reason: string }
+    | null;
+  assert.equal(tombstone?.reason, "capacity_evicted");
+  db.close();
 });
 
 test("deferredVexpStore distinguishes unknown vs expired hashes", () => {
@@ -284,6 +358,40 @@ test("expand_vexp_ref expands a V-REF emitted by run_pipeline and is determinist
   });
 });
 
+test("expand_vexp_ref resolves a persisted V-REF after process store reset", async () => {
+  await withRepoFixture(async (repoRoot) => {
+    resetSharedDeferredVexpStoreForTests();
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const firstServer = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+
+    const pipeline = await firstServer.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-pipeline-persisted",
+      toolId: McpToolId.RunPipeline,
+      input: { query: "rename createSession", maxBudgetCharacters: 4_000 },
+    });
+    assert.equal(pipeline.result.ok, true);
+    if (!pipeline.result.ok) throw new Error("pipeline failed");
+    const capsulePlaceholder = pipeline.result.output.deferred.items.find((p) => p.kind === "context_capsule");
+    assert.notEqual(capsulePlaceholder, undefined);
+
+    resetSharedDeferredVexpStoreForTests();
+    const restartedServer = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+    const expanded = await restartedServer.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-expand-persisted",
+      toolId: McpToolId.ExpandVexpRef,
+      input: { hash: capsulePlaceholder!.hash },
+    });
+
+    assert.equal(expanded.result.ok, true);
+    if (!expanded.result.ok) throw new Error("unreachable");
+    assert.equal(expanded.result.output.resolved, true);
+    assert.equal(expanded.result.output.stableId, capsulePlaceholder!.id);
+    assert.equal(expanded.result.output.notes.includes("Resolved from repo-local persistent V-REF storage."), true);
+  });
+});
+
 test("expand_vexp_ref returns stored truth after source files change", async () => {
   await withRepoFixture(async (repoRoot) => {
     resetSharedDeferredVexpStoreForTests();
@@ -336,6 +444,133 @@ test("expand_vexp_ref returns stored truth after source files change", async () 
   });
 });
 
+test("persisted expand_vexp_ref returns stored truth after source files change and restart", async () => {
+  await withRepoFixture(async (repoRoot) => {
+    resetSharedDeferredVexpStoreForTests();
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+
+    const pipeline = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-pipeline-persisted-stored-truth",
+      toolId: McpToolId.RunPipeline,
+      input: { query: "rename createSession", maxBudgetCharacters: 4_000 },
+    });
+    assert.equal(pipeline.result.ok, true);
+    if (!pipeline.result.ok) throw new Error("pipeline failed");
+    const capsulePlaceholder = pipeline.result.output.deferred.items.find((p) => p.kind === "context_capsule");
+    assert.notEqual(capsulePlaceholder, undefined);
+
+    const before = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-expand-persisted-before-mutation",
+      toolId: McpToolId.ExpandVexpRef,
+      input: { hash: capsulePlaceholder!.hash },
+    });
+    assert.equal(before.result.ok, true);
+    if (!before.result.ok) throw new Error("unreachable");
+
+    await writeFile(
+      path.join(repoRoot, "src", "session.ts"),
+      [
+        "export type Session = string;",
+        "",
+        "export class SessionManager {",
+        "  createSession(accountId: string): Session {",
+        "    return `persisted-changed-${accountId}`;",
+        "  }",
+        "}",
+        "",
+      ].join("\n"),
+    );
+
+    resetSharedDeferredVexpStoreForTests();
+    const restartedServer = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+    const after = await restartedServer.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-expand-persisted-after-mutation",
+      toolId: McpToolId.ExpandVexpRef,
+      input: { hash: capsulePlaceholder!.hash },
+    });
+
+    assert.equal(after.result.ok, true);
+    if (!after.result.ok) throw new Error("unreachable");
+    assert.deepEqual(after.result.output.content, before.result.output.content);
+    assert.equal(JSON.stringify(after.result.output).includes("persisted-changed-"), false);
+  });
+});
+
+test("CLI expand-vexp-ref resolves retained persisted refs without --query", async () => {
+  await withRepoFixture(async (repoRoot) => {
+    resetSharedDeferredVexpStoreForTests();
+    await initRepo({ repoPath: repoRoot });
+
+    const pipeline = await runRunPipelineCommand([
+      repoRoot,
+      "rename createSession",
+      "--max-budget-characters",
+      "4000",
+    ]);
+    assert.equal(pipeline.exitCode, 0, pipeline.stderr);
+    const formatted = JSON.parse(pipeline.stdout) as {
+      deferred: { items: Array<{ kind: string; hash: string }> };
+    };
+    const hash = formatted.deferred.items.find((item) => item.kind === "context_capsule")?.hash;
+    assert.notEqual(hash, undefined);
+
+    resetSharedDeferredVexpStoreForTests();
+    const expanded = await runExpandVexpRefCommand([repoRoot, hash!]);
+    assert.equal(expanded.exitCode, 0, expanded.stderr);
+    const output = JSON.parse(expanded.stdout) as Record<string, unknown>;
+    assert.equal(output.resolved, true);
+    assert.equal(output.requestedHash, hash);
+    assert.equal(output.source, "persistent");
+  });
+});
+
+test("CLI expand-vexp-ref --query fallback republishes when persistent lookup misses", async () => {
+  await withRepoFixture(async (repoRoot) => {
+    resetSharedDeferredVexpStoreForTests();
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const pipeline = await runRunPipelineCommand([
+      repoRoot,
+      "rename createSession",
+      "--max-budget-characters",
+      "4000",
+    ]);
+    assert.equal(pipeline.exitCode, 0, pipeline.stderr);
+    const formatted = JSON.parse(pipeline.stdout) as {
+      deferred: { items: Array<{ kind: string; hash: string }> };
+    };
+    const hash = formatted.deferred.items.find((item) => item.kind === "context_capsule")?.hash;
+    assert.notEqual(hash, undefined);
+
+    const db = openIndexerDatabase(initialized.paths.dbPath);
+    try {
+      expirePersistentDeferredVexpRef(db, hash!, {
+        reason: "test_removed",
+        repoRoot: initialized.repoRoot,
+      });
+    } finally {
+      db.close();
+    }
+    resetSharedDeferredVexpStoreForTests();
+
+    const expanded = await runExpandVexpRefCommand([
+      repoRoot,
+      hash!,
+      "--query",
+      "rename createSession",
+      "--max-budget-characters",
+      "4000",
+    ]);
+    assert.equal(expanded.exitCode, 0, expanded.stderr);
+    const output = JSON.parse(expanded.stdout) as Record<string, unknown>;
+    assert.equal(output.resolved, true);
+    assert.equal(output.requestedHash, hash);
+  });
+});
+
 test("expand_vexp_ref returns expired when a previously published V-REF has been evicted", async () => {
   await withRepoFixture(async (repoRoot) => {
     resetSharedDeferredVexpStoreForTests();
@@ -356,6 +591,15 @@ test("expand_vexp_ref returns expired when a previously published V-REF has been
 
     // Explicitly expire the emitted V-REF in the process-shared store.
     getSharedDeferredVexpStore().expire(hash);
+    const db = openIndexerDatabase(initialized.paths.dbPath);
+    try {
+      expirePersistentDeferredVexpRef(db, hash, {
+        reason: "test_expired",
+        repoRoot: initialized.repoRoot,
+      });
+    } finally {
+      db.close();
+    }
 
     const response = await server.handleRequest({
       schema: MCP_SERVER_SCHEMA,

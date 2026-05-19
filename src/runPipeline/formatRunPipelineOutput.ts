@@ -235,7 +235,8 @@ export function formatRunPipelineOrchestrationOutput(
       expansionTool: deferredItems.length > 0 ? "expand_vexp_ref" : null,
       notes: deferredItems.length > 0
         ? [
-          "Deferred items are expandable only through expand_vexp_ref in this MCP server process.",
+          "Deferred items are expandable through exact expand_vexp_ref hash lookup while retained.",
+          "Expansion returns the stored payload emitted by run_pipeline, not disk recomputation.",
           "No V-REF token-savings or special compressed format is claimed.",
         ]
         : [

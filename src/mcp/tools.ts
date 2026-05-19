@@ -72,6 +72,7 @@ import {
   isValidDeferredVexpHash,
   type DeferredVexpStore,
 } from "../runPipeline/deferredVexpStore";
+import { resolveDeferredVexpRef } from "../runPipeline/expandDeferredVexpRef";
 import {
   searchLogicFlow,
   type LogicFlowOutput,
@@ -5053,10 +5054,24 @@ function createExpandVexpRefToolDefinition(
       }
 
       const store = options.store ?? getSharedDeferredVexpStore();
-      const entry = store.resolve(rawHash);
+      const resolvedBinding = await resolveReadyRepoBinding(context, McpToolId.ExpandVexpRef);
+      const persistentDb = resolvedBinding.ok
+        ? openIndexerDatabase(resolvedBinding.binding.dbPath)
+        : undefined;
+      const resolution = (() => {
+        try {
+          return resolveDeferredVexpRef({
+            hash: rawHash,
+            store,
+            ...(persistentDb === undefined ? {} : { db: persistentDb }),
+          });
+        } finally {
+          persistentDb?.close();
+        }
+      })();
 
-      if (entry === null) {
-        if (store.isExpired(rawHash)) {
+      if (!resolution.resolved) {
+        if (resolution.reason === "expired") {
           return {
             ok: true,
             output: {
@@ -5081,11 +5096,15 @@ function createExpandVexpRefToolDefinition(
               "No deferred V-REF is registered under this hash. Use run_pipeline first; expand_vexp_ref only resolves hashes it has seen emitted.",
             notes: [
               "Exact hash lookup only; vtrace does not guess or approximate.",
+              resolvedBinding.ok
+                ? "Persistent repo-local storage was checked before returning this miss."
+                : "Persistent repo-local storage was unavailable in this server context; no global lookup was attempted.",
             ],
           },
         };
       }
 
+      const { entry } = resolution;
       if (!isSupportedDeferredVexpCategory(entry.category)) {
         return {
           ok: true,
@@ -5118,6 +5137,9 @@ function createExpandVexpRefToolDefinition(
         },
         notes: [
           "Stored deferred payload expanded deterministically; no recomputation.",
+          resolution.source === "persistent"
+            ? "Resolved from repo-local persistent V-REF storage."
+            : "Resolved from the process-local V-REF hot cache.",
         ],
       } as const;
 

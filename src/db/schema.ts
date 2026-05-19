@@ -242,6 +242,42 @@ export function initializeSchema(db: Database): void {
     CREATE INDEX IF NOT EXISTS idx_project_rules_repo_status
       ON project_rules(repo_root, status, updated_at_ms DESC, id ASC);
 
+    CREATE TABLE IF NOT EXISTS deferred_vexp_refs (
+      hash TEXT PRIMARY KEY CHECK (length(hash) = 12),
+      stable_id TEXT NOT NULL,
+      category TEXT NOT NULL,
+      content_json TEXT NOT NULL,
+      metadata_json TEXT NOT NULL,
+      notes_json TEXT NOT NULL,
+      repo_root TEXT NOT NULL,
+      source_run_id INTEGER,
+      session_id TEXT,
+      created_at_ms INTEGER NOT NULL CHECK (created_at_ms >= 0),
+      last_accessed_at_ms INTEGER NOT NULL CHECK (last_accessed_at_ms >= 0),
+      expires_at_ms INTEGER CHECK (expires_at_ms IS NULL OR expires_at_ms >= 0),
+      payload_hash TEXT NOT NULL,
+      FOREIGN KEY (source_run_id)
+        REFERENCES index_runs(id)
+        ON DELETE SET NULL
+        DEFERRABLE INITIALLY DEFERRED
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_deferred_vexp_refs_retention
+      ON deferred_vexp_refs(created_at_ms ASC, hash ASC);
+
+    CREATE INDEX IF NOT EXISTS idx_deferred_vexp_refs_session
+      ON deferred_vexp_refs(session_id, created_at_ms DESC, hash ASC);
+
+    CREATE TABLE IF NOT EXISTS deferred_vexp_ref_tombstones (
+      hash TEXT PRIMARY KEY CHECK (length(hash) = 12),
+      repo_root TEXT NOT NULL,
+      expired_at_ms INTEGER NOT NULL CHECK (expired_at_ms >= 0),
+      reason TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_deferred_vexp_ref_tombstones_expired
+      ON deferred_vexp_ref_tombstones(expired_at_ms ASC, hash ASC);
+
     CREATE TABLE IF NOT EXISTS symbols (
       id TEXT PRIMARY KEY,
       file_id TEXT NOT NULL,

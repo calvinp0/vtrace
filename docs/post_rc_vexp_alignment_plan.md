@@ -8,9 +8,9 @@ This is a planning document only. It does not change product behavior, CLI behav
 
 VTrace is RC-ready as deterministic lexical/structural repo-local tooling with CLI, MCP, memory/session, watcher freshness, V-REF, and project-rule surfaces.
 
-VTrace is not full VEXP parity. The current product truth remains explicit: V-REFs are exact and process-local, the watcher is mark-stale-only, memory and rules are deterministic rather than semantic, and graph behavior is bounded structural analysis rather than runtime or dataflow truth.
+VTrace is not full VEXP parity. The current product truth remains explicit: V-REFs are exact and repo-local with bounded stored-truth persistence, the watcher is mark-stale-only, memory and rules are deterministic rather than semantic, and graph behavior is bounded structural analysis rather than runtime or dataflow truth.
 
-The next phase should improve general-purpose graph intelligence, continuity, and product feel. The highest-leverage work is persistent stored-truth V-REFs, optional auto-reindexing, richer static symbol/reference extraction, broader generic retrieval benchmarks, and panel polish.
+The next phase should improve general-purpose graph intelligence, continuity, and product feel. Persistent stored-truth V-REFs are implemented as the first continuity milestone; the remaining highest-leverage work is optional auto-reindexing, richer static symbol/reference extraction, broader generic retrieval benchmarks, and panel polish.
 
 ARC may be used as one real-repo benchmark, but it must not define product behavior. ARC is a stress test, not the destination.
 
@@ -18,8 +18,8 @@ ARC may be used as one real-repo benchmark, but it must not define product behav
 
 | Area                      | Current VTrace behavior                                                                        | VEXP-like target                                                      | Alignment status      | Main gap                                                         | Recommended post-RC action                                      |
 | ------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------- |
-| `run_pipeline`            | Deterministic orchestration with intent, capsule, impact, memory, freshness, rules, and V-REFs | Broad task entrypoint that feels continuous and context-aware         | Aligned enough for RC | Continuity depends on process-local refs and bounded retrieval   | Improve V-REF persistence, graph intelligence, and benchmarks   |
-| V-REF expansion           | Exact 12-hex process-local stored payload expansion; CLI needs `--query` republish             | Stable deferred expansion across sessions and product surfaces        | Partially aligned     | No durable expansion store                                       | Add persistent stored-truth V-REF store                         |
+| `run_pipeline`            | Deterministic orchestration with intent, capsule, impact, memory, freshness, rules, and V-REFs | Broad task entrypoint that feels continuous and context-aware         | Aligned enough for RC | Continuity is bounded by V-REF retention and retrieval limits    | Improve graph intelligence and benchmarks                       |
+| V-REF expansion           | Exact 12-hex stored payload expansion with process hot cache and repo-local persistence        | Stable deferred expansion across sessions and product surfaces        | Improved              | Bounded retention; no multi-repo deferred expansion parity       | Monitor usage before expanding retention or multi-repo support  |
 | Watcher/freshness         | Optional polling watcher marks stale; explicit `index` clears stale state                      | Optional live freshness loop with visible state and safe recovery     | Partially aligned     | No opt-in auto-reindex mode                                      | Add optional auto-reindex while preserving mark-stale default   |
 | Session lifecycle         | Explicit compression/consolidation services and searchable summaries                           | Durable continuity across work sessions                               | Partially aligned     | No scheduler; session binding is input-dependent                 | Keep explicit; revisit scheduling only after persistence work   |
 | Memory search             | Deterministic lexical/structural observation search                                            | Useful durable memory retrieval across related work                   | Aligned enough for RC | No semantic recall or learned ranking                            | Validate with memory/rule query benchmarks before tuning        |
@@ -63,9 +63,11 @@ This order first closes visible product-feel gaps without changing retrieval ran
 
 Persist deferred V-REF payloads as stored truth across MCP server restarts and CLI invocations, while preserving exact lookup semantics.
 
+Implementation status: completed for single-repo deferred V-REFs. Payloads are stored in repo-local SQLite tables under `.vtrace`, with a process-local hot cache retained for same-server expansion.
+
 ### Why This Improves VEXP Alignment
 
-Current V-REFs are exact, bounded, and process-local. That is acceptable for RC because it is honest and avoids fabricated expansion. A persistent V-REF store would make deferred expansion feel continuous across agent sessions, editor actions, and CLI debugging without requiring `--query` republish.
+Current V-REFs are exact, bounded, and repo-local. Persistent storage makes deferred expansion feel continuous across agent sessions, editor actions, and CLI debugging without requiring `--query` republish while a ref is retained.
 
 ### General-Purpose Value
 
@@ -75,11 +77,9 @@ This closes a product continuity gap without changing retrieval/ranking behavior
 
 - Preserve current exact 12-hex hash behavior.
 - Store the actual emitted payload, category, stable id, repo identity, created time, last accessed time, and expiration metadata.
-- Consider storage options:
-  - repo-local SQLite tables, likely near existing `.vtrace/index.sqlite` schema and repositories
-  - repo-local state/cache directory for payload files plus SQLite metadata
-  - session-linked persistence that associates V-REFs with run/session ids when available
-- Define expiration and cleanup policy by age and/or capacity.
+- Store payloads in repo-local SQLite tables near the existing `.vtrace/index.sqlite` schema and repositories.
+- Associate V-REFs with run/session ids when available.
+- Define expiration and cleanup policy by capacity.
 - Keep stored-truth expansion: resolve the stored payload as emitted, even if source files later changed.
 - Keep structured failure modes for malformed, unknown, expired, and unsupported refs.
 
@@ -127,6 +127,8 @@ Likely files/modules to inspect:
 - Persisted refs survive restart within documented retention limits.
 - Expired refs fail honestly.
 - Docs clearly distinguish persisted stored truth from semantic reconstruction.
+
+Implemented retention policy: keep up to 1000 persisted V-REF records per repo-local database, plus bounded tombstones so cleaned retained refs can fail as `expired` while tombstones remain. This is not permanent storage. Multi-repo deferred expansion remains intentionally limited.
 
 ### Suggested Implementation Prompt Title
 

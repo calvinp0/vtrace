@@ -131,7 +131,9 @@ Expand a V-REF from the CLI:
 ./bin/vtrace expand-vexp-ref <repo> a1b2c3d4e5f6
 ```
 
-For practical CLI expansion across separate invocations, pass the original query so the command can republish the same deferred refs before resolving the hash:
+The CLI first checks the process-local hot cache and retained repo-local `.vtrace` SQLite store, so a V-REF emitted by a previous `run-pipeline` invocation can resolve without `--query` while it is still retained.
+
+If a retained record is missing, pass the original query as a fallback/debug path so the command can republish the same deferred refs before resolving the hash:
 
 ```bash
 ./bin/vtrace run-pipeline . "how does run_pipeline build deferred refs?"
@@ -140,15 +142,15 @@ For practical CLI expansion across separate invocations, pass the original query
   --query "how does run_pipeline build deferred refs?"
 ```
 
-If the original run used relevant options such as `--intent`, `--session-id`, `--max-budget-characters`, or `--include-memory`, pass the same options to `expand-vexp-ref` with `--query`.
+If the original run used relevant options such as `--intent`, `--session-id`, `--max-budget-characters`, or `--include-memory`, pass the same options to `expand-vexp-ref` with `--query` when using the fallback republish path.
 
 ## V-REF Expansion: MCP vs CLI
 
-MCP `expand_vexp_ref` is the primary expansion path for agents because it shares the current MCP server process-local deferred store. It resolves exact 12-character lowercase hex V-REF hashes emitted by `run_pipeline` in that same server process.
+MCP `expand_vexp_ref` remains the primary expansion path for agents because it shares the current MCP server process-local deferred store and can also resolve retained repo-local persistent records after restart. It resolves exact 12-character lowercase hex V-REF hashes emitted by `run_pipeline`.
 
-CLI `expand-vexp-ref` is mainly for debugging. Each CLI invocation starts a separate process, so a V-REF emitted by a previous CLI `run-pipeline` invocation is not automatically available to a later CLI process. Use `--query` to re-run the pipeline and republish the same deferred items before expansion.
+CLI `expand-vexp-ref` can resolve retained persistent refs without `--query`. Each CLI invocation still starts a separate process, so `--query` remains useful as a fallback/debug path when a ref was not retained or was removed by cleanup.
 
-Do not treat V-REFs as persistent. Expansion is exact hash lookup only; it is not fuzzy, does not semantically reconstruct missing content, and does not provide a durable disk-backed reference store.
+V-REF persistence is repo-local and bounded, not permanent. The current policy keeps up to 1000 persisted V-REF records per repo-local database and bounded tombstones for cleanup. Expansion is exact hash lookup only; it is not fuzzy, does not semantically reconstruct missing content, and does not reread changed source files as stored truth. Multi-repo deferred expansion remains limited.
 
 Show the structure of a file:
 

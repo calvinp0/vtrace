@@ -269,7 +269,11 @@ Advanced compressed-reference expansion.
 - no prefix lookup
 - no uppercase normalization
 
-Expansion returns the stored deferred payload captured when `run_pipeline` emitted the V-REF. It does not recompute from disk or reconstruct content semantically. In this build, V-REF storage is process-local and bounded, so references are valid only in the current MCP server process and may expire after server restart or eviction.
+Expansion returns the stored deferred payload captured when `run_pipeline` emitted the V-REF. It does not recompute from disk or reconstruct content semantically. Source file changes after emission do not alter the stored expansion payload.
+
+V-REF payloads are stored in the repo-local `.vtrace` SQLite state while retained. The process-local store remains a hot cache for same-server expansion, and repo-local persistence lets a repo-bound MCP server resolve retained hashes after restart. Persistence is bounded by retention policy, not permanent unlimited storage.
+
+Current retention keeps up to 1000 persisted V-REF records per repo-local database and keeps bounded tombstones for deterministic cleanup. Capacity-evicted or expired records return `expired` while their tombstone is retained; never-seen well-formed hashes return `unknown_hash`.
 
 Malformed, unknown, expired, and unsupported-category references return explicit structured failures. `vtrace` does not claim unlimited persistence, a special compressed format, or token-savings percentages.
 

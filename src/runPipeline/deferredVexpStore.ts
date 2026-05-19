@@ -162,17 +162,21 @@ export function resetSharedDeferredVexpStoreForTests(
   sharedStore = createDeferredVexpStore(options);
 }
 
-function stableStringify(value: unknown): string {
+export function stableStringifyDeferredVexpPayload(value: unknown): string {
   if (value === null || typeof value !== "object") {
     return JSON.stringify(value);
   }
 
   if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(",")}]`;
+    return `[${value.map(stableStringifyDeferredVexpPayload).join(",")}]`;
   }
 
   const record = value as Record<string, unknown>;
   return `{${Object.keys(record).sort().map((key) => {
-    return `${JSON.stringify(key)}:${stableStringify(record[key])}`;
+    return `${JSON.stringify(key)}:${stableStringifyDeferredVexpPayload(record[key])}`;
   }).join(",")}}`;
+}
+
+function stableStringify(value: unknown): string {
+  return stableStringifyDeferredVexpPayload(value);
 }

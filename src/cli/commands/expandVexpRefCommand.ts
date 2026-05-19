@@ -1,5 +1,6 @@
 import { hasIndexedFiles } from "../../db/repositories/filesRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
+import { resolveDeferredVexpRef } from "../../runPipeline/expandDeferredVexpRef";
 import {
   DEFERRED_VEXP_HASH_PATTERN,
   DEFERRED_VEXP_SUPPORTED_CATEGORIES,
@@ -30,10 +31,9 @@ interface ParsedArgs {
  * `vtrace expand-vexp-ref <repo> <hash> [--query <query>]` — expand a deferred
  * V-REF emitted by `run-pipeline`.
  *
- * Because the deferred V-REF store is process-local, the CLI re-invokes the
- * orchestrator with the original query (when supplied) to deterministically
- * republish the same hash, then resolves the requested hash. Without a query,
- * the command can only honor an unknown_hash response.
+ * The CLI first checks the process-local hot cache and repo-local persistent
+ * store. When a retained record is not found, --query remains a fallback that
+ * re-invokes run_pipeline to deterministically republish deferred refs.
  */
 export async function runExpandVexpRefCommand(
   args: readonly string[],
@@ -75,13 +75,20 @@ export async function runExpandVexpRefCommand(
 
   const store = getSharedDeferredVexpStore();
 
-  if (parsed.query !== undefined && parsed.query.length > 0) {
+  try {
+    const db = openIndexerDatabase(resolvedRepo.dbPath);
     try {
-      const db = openIndexerDatabase(resolvedRepo.dbPath);
-      try {
-        if (!hasIndexedFiles(db)) {
-          return failure(`Repo not indexed: ${resolvedRepo.repoRoot}`);
-        }
+      if (!hasIndexedFiles(db)) {
+        return failure(`Repo not indexed: ${resolvedRepo.repoRoot}`);
+      }
+
+      let resolution = resolveDeferredVexpRef({
+        hash: requestedHash,
+        store,
+        db,
+      });
+
+      if (!resolution.resolved && parsed.query !== undefined && parsed.query.length > 0) {
         runPipelineOrchestrator(db, resolvedRepo.repoRoot, {
           query: parsed.query,
           ...(parsed.intent === undefined ? {} : { intent: parsed.intent }),
@@ -89,60 +96,66 @@ export async function runExpandVexpRefCommand(
           ...(parsed.sessionId === undefined ? {} : { sessionId: parsed.sessionId }),
           ...(parsed.includeMemory === undefined ? {} : { includeMemory: parsed.includeMemory }),
         });
-      } finally {
-        db.close();
+        resolution = resolveDeferredVexpRef({
+          hash: requestedHash,
+          store,
+          db,
+        });
       }
-    } catch (error) {
-      return failure(`expand-vexp-ref failed during republish: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
 
-  const entry = store.resolve(requestedHash);
-  if (entry === null) {
-    if (store.isExpired(requestedHash)) {
+      if (resolution.resolved === false) {
+        if (resolution.reason === "expired") {
+          return success(
+            `${JSON.stringify({
+              requestedHash,
+              resolved: false,
+              reason: "expired",
+              message:
+                "The deferred V-REF was previously known but is no longer available. Re-run run-pipeline to produce a fresh expandable V-REF.",
+            })}\n`,
+          );
+        }
+        return success(
+          `${JSON.stringify({
+            requestedHash,
+            resolved: false,
+            reason: "unknown_hash",
+            message:
+              "No retained deferred V-REF is registered under this hash. Use run-pipeline first, or pass --query as a fallback republish path.",
+          })}\n`,
+        );
+      }
+
+      const { entry } = resolution;
+      if (!isSupportedDeferredVexpCategory(entry.category)) {
+        return success(
+          `${JSON.stringify({
+            requestedHash,
+            resolved: false,
+            reason: "unsupported_category",
+            message: `Deferred category '${entry.category}' is not supported. Supported: ${DEFERRED_VEXP_SUPPORTED_CATEGORIES.join(", ")}.`,
+          })}\n`,
+        );
+      }
+
       return success(
         `${JSON.stringify({
           requestedHash,
-          resolved: false,
-          reason: "expired",
-          message:
-            "The deferred V-REF was previously known but is no longer available. Re-run run-pipeline to produce a fresh expandable V-REF.",
+          resolved: true,
+          stableId: entry.stableId,
+          category: entry.category,
+          content: entry.content,
+          metadata: entry.metadata,
+          createdAtMs: entry.createdAtMs,
+          source: resolution.source,
         })}\n`,
       );
+    } finally {
+      db.close();
     }
-    return success(
-      `${JSON.stringify({
-        requestedHash,
-        resolved: false,
-        reason: "unknown_hash",
-        message:
-          "No deferred V-REF is registered under this hash. Use run-pipeline first; expand-vexp-ref only resolves hashes it has seen emitted.",
-      })}\n`,
-    );
+  } catch (error) {
+    return failure(`expand-vexp-ref failed: ${error instanceof Error ? error.message : String(error)}`);
   }
-
-  if (!isSupportedDeferredVexpCategory(entry.category)) {
-    return success(
-      `${JSON.stringify({
-        requestedHash,
-        resolved: false,
-        reason: "unsupported_category",
-        message: `Deferred category '${entry.category}' is not supported. Supported: ${DEFERRED_VEXP_SUPPORTED_CATEGORIES.join(", ")}.`,
-      })}\n`,
-    );
-  }
-
-  return success(
-    `${JSON.stringify({
-      requestedHash,
-      resolved: true,
-      stableId: entry.stableId,
-      category: entry.category,
-      content: entry.content,
-      metadata: entry.metadata,
-      createdAtMs: entry.createdAtMs,
-    })}\n`,
-  );
 }
 
 const USAGE = "Usage: expand-vexp-ref <repo> <hash> [--query <query>] [--session-id ID] [--intent <auto|...>] [--max-budget-characters N] [--include-memory]";

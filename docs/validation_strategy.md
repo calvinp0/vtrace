@@ -10,7 +10,7 @@ ARC is a real-repo stress test, not the product target.
 
 Validate against ARC because it is complex, realistic, and capable of exposing indexing, retrieval, capsule-shaping, and workflow gaps. Do not turn ARC into the destination. Production code must not contain ARC-specific heuristics, constants, ranking shortcuts, or special cases.
 
-`vtrace` is validated as deterministic lexical/structural local tooling. RC validation should preserve that product truth and should not imply full VEXP parity, semantic memory, persistent V-REFs, automatic reindexing, or learned ranking.
+`vtrace` is validated as deterministic lexical/structural local tooling. RC validation should preserve that product truth and should not imply full VEXP parity, semantic memory, automatic reindexing, or learned ranking. Persistent V-REFs are repo-local stored-truth records with bounded retention, not semantic reconstruction or permanent global references.
 
 ## Anti-Overfit Rules
 
@@ -84,7 +84,7 @@ Acceptable ARC outcomes include documented misses caused by known RC limitations
 
 The following are possible post-RC, general-purpose milestones. They are not required before RC:
 
-- persistent V-REF store
+- persistent V-REF store (implemented for single-repo stored-truth expansion with bounded repo-local retention)
 - optional auto-reindex mode
 - module-level symbol indexing
 - Python references extraction
