@@ -15,6 +15,7 @@ import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import {
   createActiveProjectRule,
   disableProjectRule,
+  generateProjectRuleCandidates,
 } from "../projectRules/projectRules";
 import {
   ObservationKind,
@@ -314,6 +315,33 @@ test("source-backed capsules surface relevant active rules separately from memor
     assert.equal(capsule.rules?.active[0]?.scope.files.includes("src/service.ts"), true);
     assert.match(capsule.rules?.active[0]?.reason ?? "", /matched/);
     assert.equal(capsule.budget.usedCharacters, computeTotalCapsuleCost(capsule));
+  });
+});
+
+test("source-backed capsules do not inject candidate rules as active guidance", async () => {
+  await withMemoryFixture(async ({ repoRoot, db, readUser, normalizeUser }) => {
+    const sourceRunId = getLatestIndexRun(db)?.id;
+
+    for (const createdAtMs of [100, 200, 300]) {
+      persistObservation(db, {
+        repoRoot,
+        kind: ObservationKind.Decision,
+        source: ObservationSource.Manual,
+        summary: `Reader service convention ${createdAtMs}`,
+        body: "When changing reader service behavior, keep normalization checks in view.",
+        queryText: "reader service normalization",
+        sourceRunId,
+        createdAtMs,
+        linkedFilePaths: ["src/service.ts"],
+      });
+    }
+
+    const generated = generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
+    const capsule = buildExplainCapsule(db, repoRoot, "explain reader service normalization", readUser, normalizeUser);
+
+    assert.equal(generated.created.length, 1);
+    assert.equal(generated.created[0]?.status, "candidate");
+    assert.equal(capsule.rules, undefined);
   });
 });
 

@@ -38,11 +38,11 @@ VTRACE also persists conservative anti-pattern observations when structural evid
 
 ## Project Rules
 
-`vtrace rules generate <repo>` can create project-rule candidates from repeated durable decisions/insights, consolidated passive summaries, and repeated anti-pattern observations. Candidates require at least three matching evidence observations in the same deterministic scope. Raw one-off passive `tool_call` rows are excluded.
+`vtrace rules generate-candidates <repo>` can create project-rule candidates from repeated durable decisions/insights, consolidated passive summaries, and repeated anti-pattern observations. `generate` remains an alias. Candidates require at least three matching evidence observations in the same deterministic scope. Raw one-off passive `tool_call` rows are excluded.
 
-Candidates are inspectable with `vtrace rules list <repo>` but are not active by default. Use `vtrace rules promote <repo> <rule-id>` to activate one, `dismiss` to hide a candidate, and `disable` to turn off an active rule. Active rules can appear in `run_pipeline.rules.active` only when structurally or lexically relevant; candidate previews may appear separately and are not instructions.
+Candidates are inspectable with `vtrace rules list <repo>` but are not active by default. Use `vtrace rules promote <repo> <rule-id>` to activate one, `dismiss` to hide a candidate, and `disable` to turn off an active rule. Active rules can appear in `run_pipeline.rules.active` and `capsule.rules.active` only when structurally or lexically relevant; candidate previews may appear in `run_pipeline.rules.candidates` and are not instructions. Capsules do not inject candidates as active guidance.
 
-Rules use template summaries, exact file/FQN/term/tool/intent links, deterministic IDs, and structural stale marking after explicit reindex. They do not use embeddings, LLM synthesis, hidden-intent inference, cross-repo learning, automatic promotion, or tool-blocking policy enforcement.
+Rules use template summaries, exact file/FQN/term/tool/intent links, deterministic IDs, confidence labels, and structural stale marking after explicit reindex. Dismissed candidates are not recreated automatically. They do not use embeddings, LLM synthesis, hidden-intent inference, cross-repo learning, automatic promotion, or tool-blocking policy enforcement.
 
 ## Direct Tool Choices
 

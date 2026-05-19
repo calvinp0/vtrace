@@ -103,7 +103,7 @@ Nudges never block tool execution and do not write their own observations. They 
 
 ## Project Rule Candidates
 
-VTRACE can generate deterministic project-rule candidates from repeated evidence in one repo. Candidate generation is explicit through `vtrace rules generate <repo>` and uses exact structural or lexical overlap only. The first threshold is three matching evidence observations in the same deterministic scope.
+VTRACE can generate deterministic project-rule candidates from repeated evidence in one repo. Candidate generation is explicit through `vtrace rules generate-candidates <repo>` (`generate` remains an alias) and uses exact structural or lexical overlap only. The first threshold is three matching evidence observations in the same deterministic scope.
 
 Eligible evidence is intentionally narrow:
 
@@ -119,7 +119,7 @@ Candidates are not active by default. A rule must be explicitly promoted before 
 
 ```bash
 vtrace rules list <repo>
-vtrace rules generate <repo>
+vtrace rules generate-candidates <repo>
 vtrace rules add-active <repo> --summary "When changing run_pipeline output, update MCP docs and tests." --file src/mcp/tools.ts --term run_pipeline
 vtrace rules promote <repo> <rule-id>
 vtrace rules dismiss <repo> <rule-id>
@@ -130,7 +130,7 @@ The command also accepts `vtrace rules <repo> list` style ordering.
 
 Active rules are injected into `run_pipeline.rules` and `get_context_capsule.capsule.rules.active` only when they match the current task by deterministic signals such as linked file overlap, linked symbol FQN overlap, path-prefix overlap, query-term overlap, or selected intent. Injection is capped at three active rules. Candidate previews may appear in `run_pipeline.rules.candidates`, but they are explicitly labeled as candidates and are not active instructions. Capsules do not include candidate previews; active rules are kept separate from memory observations.
 
-Rules are linked to files, symbol FQNs, lexical terms, tool names, intents, and anti-pattern types where that evidence exists. When explicit reindexing detects linked file or symbol changes, candidate and active rules become `stale`. Candidate, stale, disabled, and dismissed rules are not injected as active guidance. This milestone does not implement automatic promotion, semantic rule generation, embeddings, semantic similarity, cross-repo rules, policy enforcement, or tool blocking.
+Rules are linked to files, symbol FQNs, lexical terms, tool names, intents, and anti-pattern types where that evidence exists. Candidate generation deduplicates by deterministic signature, updates matching candidates with new evidence, preserves dismissed candidates instead of recreating them, and may update evidence metadata on a matching active rule rather than creating a duplicate candidate. When explicit reindexing detects linked file or symbol changes, candidate and active rules become `stale`. Candidate, stale, disabled, and dismissed rules are not injected as active guidance. This milestone does not implement automatic promotion, semantic rule generation, embeddings, semantic similarity, cross-repo rules, policy enforcement, or tool blocking.
 
 ## Default Orchestration
 

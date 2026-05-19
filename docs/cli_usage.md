@@ -43,7 +43,7 @@ These are useful when you want manual control instead of the full MCP shell flow
 ./bin/vtrace impact-graph <repo> <symbol-fqn> [--depth <n>] [--format <list|tree|mermaid>]
 ./bin/vtrace handoff <repo> <query>
 ./bin/vtrace runs <repo>
-./bin/vtrace rules <list|generate|add-active|promote|dismiss|disable> <repo> [rule-id|options]
+./bin/vtrace rules <list|generate-candidates|generate|add-active|promote|dismiss|disable> <repo> [rule-id|options]
 ./bin/vtrace check-capsule <repo> <manifest-id> <comparison-run-id>
 ```
 
@@ -71,7 +71,7 @@ Re-index the repo:
 Generate and manage conservative project-rule candidates:
 
 ```bash
-./bin/vtrace rules generate <repo>
+./bin/vtrace rules generate-candidates <repo>
 ./bin/vtrace rules list <repo>
 ./bin/vtrace rules add-active <repo> --summary "When changing run_pipeline output, update MCP docs and tests." --file src/mcp/tools.ts --term run_pipeline
 ./bin/vtrace rules promote <repo> <rule-id>
@@ -79,7 +79,7 @@ Generate and manage conservative project-rule candidates:
 ./bin/vtrace rules disable <repo> <rule-id>
 ```
 
-Candidates are generated from repeated durable or consolidated evidence and are not active by default. `add-active` is a minimal manual fixture/management path for creating an already-active rule with explicit lexical or structural scope. Active, non-stale rules are surfaced by `run_pipeline` and context capsules only when structurally or lexically relevant; candidate, stale, disabled, and dismissed rules are not injected as active guidance.
+Candidates are generated from repeated durable decisions/insights, consolidated passive summaries, or anti-pattern observations and are not active by default. `generate` remains an alias for `generate-candidates`. Candidate summaries are template-based and evidence-grounded; no embeddings, LLM synthesis, semantic similarity, or auto-promotion are used. Dismissed candidates are not recreated automatically. `add-active` is a minimal manual path for creating an already-active rule with explicit lexical or structural scope. Candidate previews can appear in `run_pipeline.rules.candidates`; capsules keep only active-rule guidance under `capsule.rules.active`.
 
 Optionally watch source files and mark the index stale when they change:
 

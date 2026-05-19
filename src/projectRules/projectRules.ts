@@ -470,12 +470,13 @@ function buildCandidateGroup(items: readonly EvidenceItem[]): ProjectRuleCandida
       groupKind,
       scopeLabel,
       antiPatternType: antiPatternTypes[0],
+      terms: scope.terms,
     }),
     scope,
     evidenceObservationIds: sortedItems.map((item) => item.observation.id).sort(),
     evidenceKinds,
     evidenceCount: sortedItems.length,
-    confidence: sortedItems.length >= 5 ? ProjectRuleConfidence.High : ProjectRuleConfidence.Medium,
+    confidence: determineCandidateConfidence(sortedItems, scope),
     ...(sourceRunIds.at(-1) === undefined ? {} : { sourceRunId: sourceRunIds.at(-1)! }),
   };
 }
@@ -484,6 +485,7 @@ function formatCandidateSummary(input: {
   groupKind: EvidenceItem["groupKind"];
   scopeLabel: string;
   antiPatternType?: string;
+  terms: readonly string[];
 }): string {
   if (input.groupKind === "anti_pattern") {
     return `Repeated ${input.antiPatternType ?? AntiPatternType.FileThrashing} observations occurred around ${input.scopeLabel}. Consider checking design assumptions before repeated edits in this area.`;
@@ -493,7 +495,29 @@ function formatCandidateSummary(input: {
     return `Repeated context-building activity focused on ${input.scopeLabel}. Consider consulting prior memory before changing this area.`;
   }
 
+  if (input.terms.includes("docs") && input.terms.includes("tests")) {
+    return `Repeated evidence links ${input.scopeLabel} with docs/tests updates. Consider checking related docs and tests when changing this area.`;
+  }
+
   return `Repeated durable evidence is linked to ${input.scopeLabel}. When working in this area, check the supporting observations for recurring project conventions.`;
+}
+
+function determineCandidateConfidence(
+  items: readonly EvidenceItem[],
+  scope: ProjectRuleScope,
+): ProjectRuleConfidence {
+  const hasStructuralScope = scope.files.length > 0 || scope.symbolFqns.length > 0;
+  const durableCount = items.filter((item) => item.evidenceKind === ProjectRuleEvidenceKind.DurableObservation).length;
+
+  if (items.length >= 5 && hasStructuralScope && durableCount >= 3) {
+    return ProjectRuleConfidence.High;
+  }
+
+  if (hasStructuralScope) {
+    return ProjectRuleConfidence.Medium;
+  }
+
+  return ProjectRuleConfidence.Low;
 }
 
 function scoreProjectRule(

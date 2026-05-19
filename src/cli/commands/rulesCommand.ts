@@ -18,7 +18,7 @@ import {
   success,
 } from "./helpers";
 
-const RULE_ACTIONS = new Set(["list", "generate", "add-active", "promote", "dismiss", "disable"]);
+const RULE_ACTIONS = new Set(["list", "generate", "generate-candidates", "add-active", "promote", "dismiss", "disable"]);
 
 export async function runRulesCommand(
   args: readonly string[],
@@ -30,7 +30,7 @@ export async function runRulesCommand(
     const parsed = parseRulesArgs(args);
 
     if (parsed === undefined) {
-      return failure("Usage: rules <list|generate|add-active|promote|dismiss|disable> <repo> [rule-id|options]");
+      return failure("Usage: rules <list|generate|generate-candidates|add-active|promote|dismiss|disable> <repo> [rule-id|options]");
     }
 
     const resolvedRepo = await resolveRepoCommandPaths(resolvedOptions, parsed.repoPath);
@@ -46,6 +46,17 @@ export async function runRulesCommand(
               .map(formatProjectRuleForOutput),
           }));
         case "generate": {
+          const result = generateProjectRuleCandidates(db, {
+            repoRoot: resolvedRepo.repoRoot,
+          });
+          return success(formatJson({
+            repoRoot: resolvedRepo.repoRoot,
+            created: result.created.map(formatProjectRuleForOutput),
+            updated: result.updated.map(formatProjectRuleForOutput),
+            skippedBelowThreshold: result.skippedBelowThreshold,
+          }));
+        }
+        case "generate-candidates": {
           const result = generateProjectRuleCandidates(db, {
             repoRoot: resolvedRepo.repoRoot,
           });
@@ -94,7 +105,7 @@ export async function runRulesCommand(
 }
 
 function parseRulesArgs(args: readonly string[]): {
-  action: "list" | "generate" | "add-active" | "promote" | "dismiss" | "disable";
+  action: "list" | "generate" | "generate-candidates" | "add-active" | "promote" | "dismiss" | "disable";
   repoPath: string;
   ruleId?: string;
   options: Record<string, string[]>;
@@ -107,7 +118,7 @@ function parseRulesArgs(args: readonly string[]): {
 
   if (first !== undefined && RULE_ACTIONS.has(first)) {
     return {
-      action: first as "list" | "generate" | "add-active" | "promote" | "dismiss" | "disable",
+      action: first as "list" | "generate" | "generate-candidates" | "add-active" | "promote" | "dismiss" | "disable",
       repoPath: second!,
       ...(third === undefined || third.startsWith("--") ? {} : { ruleId: third }),
       options: parseOptionArgs(args.slice(2)),
@@ -116,7 +127,7 @@ function parseRulesArgs(args: readonly string[]): {
 
   if (second !== undefined && RULE_ACTIONS.has(second)) {
     return {
-      action: second as "list" | "generate" | "add-active" | "promote" | "dismiss" | "disable",
+      action: second as "list" | "generate" | "generate-candidates" | "add-active" | "promote" | "dismiss" | "disable",
       repoPath: first!,
       ...(third === undefined || third.startsWith("--") ? {} : { ruleId: third }),
       options: parseOptionArgs(args.slice(2)),
