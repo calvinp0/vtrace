@@ -146,7 +146,7 @@ If the original run used relevant options such as `--intent`, `--session-id`, `-
 
 ## V-REF Expansion: MCP vs CLI
 
-MCP `expand_vexp_ref` remains the primary expansion path for agents because it shares the current MCP server process-local deferred store and can also resolve retained repo-local persistent records after restart. It resolves exact 12-character lowercase hex V-REF hashes emitted by `run_pipeline`.
+MCP `expand_vexp_ref` remains the primary expansion path for agents because it can use the current MCP server process-local hot cache and can also resolve retained repo-local persistent records after restart. It resolves exact 12-character lowercase hex V-REF hashes emitted by `run_pipeline`.
 
 CLI `expand-vexp-ref` can resolve retained persistent refs without `--query`. Each CLI invocation still starts a separate process, so `--query` remains useful as a fallback/debug path when a ref was not retained or was removed by cleanup.
 

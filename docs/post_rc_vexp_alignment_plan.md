@@ -46,8 +46,8 @@ The anti-overfit rules from [`docs/validation_strategy.md`](./validation_strateg
 
 ## Recommended Milestone Sequence
 
-1. Persistent V-REF Store
-2. Optional Auto-Reindex Mode
+1. Persistent V-REF Store — implemented for single-repo stored-truth expansion with bounded repo-local retention.
+2. Optional Auto-Reindex Mode — recommended next implementation milestone.
 3. Module-Level Constants, Variables, and Aliases
 4. Python References Extraction
 5. Python Member/Attribute Resolution
@@ -638,24 +638,24 @@ Avoid these until there is a clear product reason, validation plan, and explicit
 - hidden recomputation of expired or unknown V-REFs
 - schema renames that break compatibility without versioning
 
-## Recommended First Post-RC Prompt
+## Recommended Next Post-RC Prompt
 
-Recommended first implementation prompt:
+Recommended next implementation prompt:
 
 ```text
-Persistent V-REF Store
+Optional Auto-Reindex Mode
 ```
 
-This is the best first post-RC milestone because it closes a visible product-feel gap without changing retrieval/ranking behavior, parser behavior, or graph scoring. It improves continuity for MCP, CLI, and editor flows while preserving the central truth requirement: V-REF expansion must return stored payloads exactly, not fuzzy lookup or semantic reconstruction.
+Persistent V-REF Store was the first post-RC continuity milestone and is now implemented for exact stored-payload expansion with bounded repo-local retention. It improves continuity for MCP, CLI, and editor flows while preserving the central truth requirement: V-REF expansion returns stored payloads exactly, not fuzzy lookup or semantic reconstruction.
 
-Persistent V-REFs also create a useful foundation for later panel polish and session continuity work. They are lower overfit risk than retrieval tuning because success can be validated with synthetic stored-truth fixtures rather than ARC outcomes.
+The next recommended milestone is Optional Auto-Reindex Mode because it addresses freshness continuity without changing retrieval/ranking behavior. It should preserve visible status and failure reporting and keep mark-stale-only watcher behavior as the safe default.
 
 ## Deliverable Summary
 
 Recommended milestone order:
 
-1. Persistent V-REF Store
-2. Optional Auto-Reindex Mode
+1. Persistent V-REF Store — implemented
+2. Optional Auto-Reindex Mode — next recommended
 3. Module-Level Constants, Variables, and Aliases
 4. Python References Extraction
 5. Python Member/Attribute Resolution
@@ -663,15 +663,14 @@ Recommended milestone order:
 7. Broader Generic Retrieval/Reranking Benchmarks
 8. VS Code Panel Polish
 
-First implementation prompt title:
+Completed first implementation prompt title:
 
 ```text
 Persistent V-REF Store with Stored-Truth Expansion
 ```
 
-Validation fixtures needed before implementation:
+Validation fixtures needed before or during remaining implementation work:
 
-- persistent V-REF stored-truth fixture
 - auto-reindex stale/failure/concurrency fixture
 - TypeScript module-level assignment fixture
 - Python package reference fixture
@@ -682,7 +681,7 @@ Validation fixtures needed before implementation:
 
 Known risks:
 
-- Persistent V-REFs could accidentally become recomputation if stored-truth rules are weakened.
+- Persistent V-REFs could accidentally become recomputation if stored-truth rules are weakened in future work.
 - Auto-reindex could hide freshness failures if status does not expose in-progress and failed states.
 - Python graph intelligence could overclaim dynamic behavior if conservative boundaries are not enforced.
 - Retrieval tuning before broader benchmarks could overfit to ARC or another single repo.
@@ -690,8 +689,6 @@ Known risks:
 
 Decision points for the user:
 
-- Choose V-REF storage backend: SQLite table, cache directory plus metadata, or session-linked hybrid.
-- Choose V-REF retention policy: age-based, capacity-based, or both.
 - Decide whether auto-reindex belongs in watcher CLI flags, repo config, daemon mode, or a combination.
 - Decide when a future schema version should rename compatibility fields such as `claudeCode`.
 - Decide whether embeddings/semantic memory remain out of scope or become a separate explicit product direction later.

@@ -18,13 +18,13 @@ The RC product truth audit is closed.
 
 Remaining acceptable RC limitations:
 
-- V-REFs are exact, bounded, and process-local.
-- CLI V-REF expansion needs `--query` republish across invocations.
+- V-REFs are exact, bounded, repo-local persisted stored payloads with process-local hot-cache support.
+- CLI `expand-vexp-ref` can resolve retained persistent refs without `--query`; `--query` remains a fallback/debug republish path when a ref is unavailable or expired.
 - Multi-repo `run_pipeline` does not emit deferred expansion items.
 - `workspace_setup.status.claudeCode` remains a compatibility field for this schema version.
 - `vtrace` remains deterministic lexical/structural local tooling, not full VEXP parity.
 
-RC-ready means ready as deterministic lexical/structural repo-local tooling with CLI, MCP, memory/session, watcher freshness, and project-rule surfaces. It does not mean full VEXP parity, semantic memory, persistent V-REFs, automatic reindexing, or codebase-specific retrieval intelligence.
+RC-ready means ready as deterministic lexical/structural repo-local tooling with CLI, MCP, memory/session, watcher freshness, bounded persistent V-REFs, and project-rule surfaces. It does not mean full VEXP parity, semantic memory, permanent/global V-REFs, automatic reindexing, or codebase-specific retrieval intelligence.
 
 ## Required Validation Commands
 
@@ -89,12 +89,12 @@ Minimal MCP smoke test:
    - `expand_vexp_ref`
 3. Call `index_status`.
 4. Call `run_pipeline`.
-5. If the same MCP server process emits a V-REF, call `expand_vexp_ref` for that exact hash in the same process.
+5. If `run_pipeline` emits a V-REF, call `expand_vexp_ref` for that exact hash in the same MCP server process.
 6. Call `save_observation`.
 7. Call `get_session_context`.
 8. Call `search_memory`.
 
-The basic smoke test does not need to demonstrate every visible MCP tool. `expand_vexp_ref` should only be treated as passing when it expands a deferred item emitted by the same MCP server process.
+The basic smoke test does not need to demonstrate every visible MCP tool. `expand_vexp_ref` should be treated as passing when it expands a deferred item emitted by `run_pipeline`; same-process hot-cache expansion remains the simplest smoke path, and repo-local persistence can be validated separately by restart if needed.
 
 ## CLI Smoke Test
 
@@ -110,10 +110,17 @@ Minimal CLI smoke test:
 Optional CLI V-REF debugging:
 
 ```bash
-./bin/vtrace expand-vexp-ref <repo> <hash> --query "original run-pipeline query"
+./bin/vtrace run-pipeline <repo> "original run-pipeline query"
+./bin/vtrace expand-vexp-ref <repo> <hash>
 ```
 
-CLI V-REF expansion starts a separate process. Across invocations, pass the original `--query` and relevant run options so the command can republish matching deferred items before expansion. MCP `expand_vexp_ref` remains the primary process-local expansion path.
+CLI `expand-vexp-ref` starts a separate process, but it can resolve retained repo-local persistent refs without `--query`. If the ref is unavailable or expired, use `--query` and relevant run options as a fallback/debug path so the command can republish matching deferred items before expansion.
+
+Fallback/debug republish example:
+
+```bash
+./bin/vtrace expand-vexp-ref <repo> <hash> --query "original run-pipeline query"
+```
 
 ## VS Code Panel Smoke Test
 
@@ -123,7 +130,7 @@ If validating the VS Code extension, check only the existing panel behavior:
 - setup/status displays
 - reindex/setup action works
 - run-pipeline action works
-- V-REF expansion action is honest about needing republish/query when using the CLI path
+- V-REF expansion action is honest about retained persistent lookup and fallback/debug `--query` republish when using the CLI path
 - no stale `vexb` naming appears in public UI unless intentionally historical
 
 Do not redesign the panel as part of RC validation.
@@ -142,7 +149,7 @@ Do not redesign the panel as part of RC validation.
 | MCP setup flow for Claude Code  | `workspace_setup` or generated Claude Code config smoke     | Compatibility setup path remains available                   | TODO   |       |
 | Watcher freshness               | `watch`, edit indexed source, `status`, `index`, `status`   | Stale state appears after edit and clears after index        | TODO   |       |
 | `run_pipeline` schema parity    | MCP smoke or schema parity test                             | Actual output matches declared output schema                 | TODO   |       |
-| V-REF process-local caveat      | MCP V-REF expansion and CLI docs review                     | Same-process MCP expansion works; CLI caveat is documented   | TODO   |       |
+| V-REF persistence truth         | MCP V-REF expansion and CLI retained-ref smoke              | Same-process MCP expansion works; CLI retained refs resolve  | TODO   |       |
 | Rules candidate/active behavior | `rules generate-candidates`, `rules list`, optional promote | Candidates are previews; only active rules inject guidance   | TODO   |       |
 | No known uncommitted changes    | `git status --short`                                        | Working tree is clean before release                         | TODO   |       |
 
@@ -150,8 +157,8 @@ Do not redesign the panel as part of RC validation.
 
 These are acceptable for RC and must remain visible in release validation:
 
-- V-REFs are process-local, exact 12-character lowercase hex hashes backed by the current process store.
-- CLI V-REF expansion requires `--query` republish across separate invocations.
+- V-REFs are exact 12-character lowercase hex hashes backed by process-local hot cache plus bounded repo-local persisted stored payloads.
+- CLI `expand-vexp-ref` can resolve retained persistent refs without `--query`. `--query` remains a fallback/debug republish path when a ref is unavailable or expired.
 - There is no auto-reindex. `watch` is opt-in and mark-stale-only.
 - There are no embeddings or semantic memory.
 - Project rules are deterministic guidance only; there is no auto-promotion of rules.
