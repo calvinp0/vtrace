@@ -38,13 +38,17 @@ export async function runWatchCommand(
       statePath: paths.statePath,
       debounceMs: parsed.debounceMs,
       pollIntervalMs: parsed.pollIntervalMs,
+      autoReindex: parsed.autoReindex,
       onFlush(result) {
         const payload = {
-          event: "file_changes_marked_stale",
+          event: parsed.autoReindex ? "file_changes_queued_for_auto_reindex" : "file_changes_marked_stale",
           repoRoot,
           observedFileChanges: result.observedFileChanges,
         };
         process.stdout.write(parsed.json ? formatJson(payload) : `${payload.event}: ${result.observedFileChanges?.changedFileCount ?? 0} file(s)\n`);
+      },
+      onAutoReindex(event) {
+        process.stdout.write(parsed.json ? formatJson(event) : `${event.event}\n`);
       },
     });
 
@@ -53,10 +57,16 @@ export async function runWatchCommand(
       repoRoot,
       debounceMs: parsed.debounceMs,
       pollIntervalMs: parsed.pollIntervalMs,
-      behavior: "mark_stale_only",
+      behavior: parsed.autoReindex ? "auto_reindex" : "mark_stale_only",
     };
 
-    process.stdout.write(parsed.json ? formatJson(started) : `Watching ${repoRoot}; changes mark the index stale until the next explicit reindex.\n`);
+    process.stdout.write(
+      parsed.json
+        ? formatJson(started)
+        : parsed.autoReindex
+          ? `Watching ${repoRoot}; changes mark stale state and trigger debounced auto-reindex.\n`
+          : `Watching ${repoRoot}; changes mark the index stale until the next explicit reindex.\n`,
+    );
 
     return await waitForShutdown(parsed.json, repoRoot, () => watcher.stop());
   } catch (error) {
@@ -70,6 +80,7 @@ function parseWatchArgs(args: readonly string[]): {
   json: boolean;
   debounceMs: number;
   pollIntervalMs: number;
+  autoReindex: boolean;
 } | {
   error: string;
   json: boolean;
@@ -78,6 +89,7 @@ function parseWatchArgs(args: readonly string[]): {
   let json = false;
   let debounceMs = DEFAULT_FILE_WATCH_DEBOUNCE_MS;
   let pollIntervalMs = DEFAULT_FILE_WATCH_POLL_INTERVAL_MS;
+  let autoReindex = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
@@ -87,11 +99,16 @@ function parseWatchArgs(args: readonly string[]): {
       continue;
     }
 
+    if (argument === "--auto-reindex") {
+      autoReindex = true;
+      continue;
+    }
+
     if (argument === "--debounce-ms") {
       const parsed = parsePositiveInteger(args[index + 1]);
 
       if (parsed === null) {
-        return { error: "Usage: watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]", json };
+        return { error: USAGE, json };
       }
 
       debounceMs = parsed;
@@ -103,7 +120,7 @@ function parseWatchArgs(args: readonly string[]): {
       const parsed = parsePositiveInteger(args[index + 1]);
 
       if (parsed === null) {
-        return { error: "Usage: watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]", json };
+        return { error: USAGE, json };
       }
 
       pollIntervalMs = parsed;
@@ -112,11 +129,11 @@ function parseWatchArgs(args: readonly string[]): {
     }
 
     if (argument.startsWith("--")) {
-      return { error: "Usage: watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]", json };
+      return { error: USAGE, json };
     }
 
     if (repoPath !== ".") {
-      return { error: "Usage: watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]", json };
+      return { error: USAGE, json };
     }
 
     repoPath = argument;
@@ -127,8 +144,11 @@ function parseWatchArgs(args: readonly string[]): {
     json,
     debounceMs,
     pollIntervalMs,
+    autoReindex,
   };
 }
+
+const USAGE = "Usage: watch [repo] [--auto-reindex] [--debounce-ms <n>] [--poll-ms <n>] [--json]";
 
 function parsePositiveInteger(value: string | undefined): number | null {
   if (value === undefined || value.startsWith("--")) {

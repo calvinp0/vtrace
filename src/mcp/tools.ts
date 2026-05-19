@@ -37,7 +37,6 @@ import {
   type ImpactGraphOutput,
   type ImpactFormat,
 } from "../impact/getImpactGraph";
-import { indexProject } from "../indexer/indexProject";
 import { routeQuery } from "../intent/routeQuery";
 import { normalizeIntentQuery } from "../intent/rules";
 import { QueryIntent } from "../intent/types";
@@ -82,8 +81,6 @@ import {
   listInspectableSessions,
   readInspectableSession,
 } from "../observations/sessionInspection";
-import { detectSymbolAddedThenRemovedAntiPatterns } from "../observations/antiPatterns";
-import { markProjectRulesStaleForRun } from "../projectRules/projectRules";
 import { evaluateObservationNudge } from "../observations/observationNudges";
 import {
   captureExpandVexpRefObservationBestEffort,
@@ -116,16 +113,14 @@ import {
   type SkeletonDetailLevel,
 } from "../skeleton/getSkeleton";
 import {
-  buildRepoLocalState,
-  evaluateRepoReadiness,
   readRepoLocalConfig,
   readRepoLocalState,
   resolveRepoLocalPaths,
-  writeRepoLocalState,
 } from "../setup/repoState";
 import type { RepoLocalConfig, RepoLocalState } from "../setup/types";
 import { buildFileWatcherStatus } from "../runtime/fileWatcher";
 import { inspectIndexFreshness } from "../runtime/indexFreshness";
+import { reindexRepoAndRefreshState } from "../runtime/reindexRepo";
 import {
   resolveWorkspaceConfigPath,
   safeReadWorkspaceConfig,
@@ -1164,6 +1159,11 @@ const INDEX_FRESHNESS_SCHEMA = objectProperty(
       description: "Pending watcher-observed file changes, when any.",
       additionalProperties: true,
     },
+    autoReindex: {
+      type: "object",
+      description: "Auto-reindex state surfaced from watcher metadata.",
+      additionalProperties: true,
+    },
     snapshot: {
       type: "object",
       description: "Last indexed snapshot metadata.",
@@ -1179,7 +1179,7 @@ const INDEX_FRESHNESS_SCHEMA = objectProperty(
       description: "Current git HEAD when available.",
     },
   },
-  ["state", "isStale", "summary", "reasons", "observedFileChanges", "snapshot", "currentHead", "comparison"],
+  ["state", "isStale", "summary", "reasons", "observedFileChanges", "autoReindex", "snapshot", "currentHead", "comparison"],
 );
 
 const FILE_WATCHER_STATUS_SCHEMA = objectProperty(
@@ -1193,8 +1193,42 @@ const FILE_WATCHER_STATUS_SCHEMA = objectProperty(
       type: ["integer", "null"],
       description: "Last watcher-observed file event timestamp when known.",
     },
+    autoReindexEnabled: booleanProperty("Whether the watcher should trigger debounced automatic re-indexing."),
+    reindexState: stringProperty("Current auto-reindex state: idle, pending_changes, reindexing, reindex_failed, or stale_after_failed_reindex."),
+    lastAutoReindexStartedAtMs: {
+      type: ["integer", "null"],
+      description: "Last auto-reindex start timestamp when known.",
+    },
+    lastAutoReindexFinishedAtMs: {
+      type: ["integer", "null"],
+      description: "Last successful auto-reindex completion timestamp when known.",
+    },
+    lastAutoReindexFailedAtMs: {
+      type: ["integer", "null"],
+      description: "Last failed auto-reindex timestamp when known.",
+    },
+    lastAutoReindexError: {
+      type: ["string", "null"],
+      description: "Compact last auto-reindex error when known.",
+    },
+    pendingChangedFileCount: integerProperty("Pending watcher-observed changed file count."),
+    changedFiles: arrayProperty("Bounded sorted changed files associated with the watcher state.", stringProperty("Repo-relative changed file path.")),
   },
-  ["supported", "enabled", "running", "debounceMs", "lastEventAtMs"],
+  [
+    "supported",
+    "enabled",
+    "running",
+    "debounceMs",
+    "lastEventAtMs",
+    "autoReindexEnabled",
+    "reindexState",
+    "lastAutoReindexStartedAtMs",
+    "lastAutoReindexFinishedAtMs",
+    "lastAutoReindexFailedAtMs",
+    "lastAutoReindexError",
+    "pendingChangedFileCount",
+    "changedFiles",
+  ],
 );
 
 const OBSERVATION_NUDGE_SCHEMA = objectProperty(
@@ -3354,6 +3388,7 @@ async function inspectWorkspaceRepoStatus(
     repoRoot: spec.rootPath,
     lastIndexSnapshot: state?.lastIndexSnapshot,
     observedFileChanges: state?.observedFileChanges,
+    fileWatcher: state?.fileWatcher,
   });
 
   return {
@@ -4876,6 +4911,7 @@ async function inspectIndexStatus(
     repoRoot: context.repoRoot,
     lastIndexSnapshot: state?.lastIndexSnapshot,
     observedFileChanges: state?.observedFileChanges,
+    fileWatcher: state?.fileWatcher,
   });
 
   return {
@@ -5260,55 +5296,26 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         return resolved.result;
       }
 
-      const db = openIndexerDatabase(resolved.binding.dbPath);
+      const result = await reindexRepoAndRefreshState({
+        repoRoot: resolved.binding.repoRoot,
+        dbPath: resolved.binding.dbPath,
+        statePath: resolved.binding.statePath,
+        configPresent: true,
+        statePresent: true,
+        usesDbPathOverride: false,
+      });
+      const state = result.state;
 
-      try {
-        const indexResult = await indexProject({
+      return {
+        ok: true,
+        output: {
           repoRoot: resolved.binding.repoRoot,
-          db,
-        });
-        detectSymbolAddedThenRemovedAntiPatterns(db, {
-          repoRoot: resolved.binding.repoRoot,
-        });
-        const latestRun = getLatestIndexRun(db);
-        if (latestRun !== undefined) {
-          markProjectRulesStaleForRun(db, {
-            repoRoot: resolved.binding.repoRoot,
-            runId: latestRun.id,
-          });
-        }
-        const latestRunSummary = latestRun === undefined
-          ? undefined
-          : getIndexRunSummary(db, latestRun.id);
-        const readiness = await evaluateRepoReadiness({
-          repoRoot: resolved.binding.repoRoot,
-          paths: resolveRepoLocalPaths(resolved.binding.repoRoot),
-          indexResult,
-          latestRunSummary,
-        });
-        const state = buildRepoLocalState({
-          repoRoot: resolved.binding.repoRoot,
-          dbPath: resolved.binding.dbPath,
-          readiness,
-          indexResult,
-          latestRunSummary,
-        });
-
-        await writeRepoLocalState(resolved.binding.statePath, state);
-
-        return {
-          ok: true,
-          output: {
-            repoRoot: resolved.binding.repoRoot,
-            latestRunId: state.latestRunId,
-            readiness: state.readiness,
-            indexSummary: state.indexSummary,
-            latestRun: state.latestRun ?? null,
-          },
-        };
-      } finally {
-        db.close();
-      }
+          latestRunId: state.latestRunId,
+          readiness: state.readiness,
+          indexSummary: state.indexSummary,
+          latestRun: state.latestRun ?? null,
+        },
+      };
     },
   }),
   createEngineDelegateToolDefinition<SearchSymbolsInput, {
@@ -6764,6 +6771,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             repoRoot: binding.repoRoot,
             lastIndexSnapshot: binding.state.lastIndexSnapshot,
             observedFileChanges: binding.state.observedFileChanges,
+            fileWatcher: binding.state.fileWatcher,
           });
           const nudge = evaluateObservationNudge(db, {
             sessionId,

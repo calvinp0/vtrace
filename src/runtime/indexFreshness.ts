@@ -1,6 +1,10 @@
 import { readGitHead } from "../fs/git";
 import { captureRepoSourceSnapshot } from "../fs/scanRepo";
-import type { LastIndexSnapshot, ObservedFileChangeState } from "../setup/types";
+import type {
+  LastIndexSnapshot,
+  ObservedFileChangeState,
+  RepoFileWatcherState,
+} from "../setup/types";
 
 export type IndexFreshnessState = "fresh" | "possibly_stale" | "unknown";
 
@@ -27,6 +31,16 @@ export interface IndexFreshnessResult {
   whyItMatters?: string;
   recommendedAction?: string;
   observedFileChanges: ObservedFileChangeState | null;
+  autoReindex: {
+    enabled: boolean;
+    state: NonNullable<RepoFileWatcherState["reindexState"]>;
+    lastStartedAtMs: number | null;
+    lastFinishedAtMs: number | null;
+    lastFailedAtMs: number | null;
+    lastError: string | null;
+    pendingChangedFileCount: number;
+    changedFiles: readonly string[];
+  };
   snapshot: {
     lastIndexedAtMs: number | null;
     lastIndexedHead: string | null;
@@ -44,14 +58,17 @@ export async function inspectIndexFreshness(input: {
   repoRoot: string;
   lastIndexSnapshot?: LastIndexSnapshot;
   observedFileChanges?: ObservedFileChangeState;
+  fileWatcher?: RepoFileWatcherState;
 }): Promise<IndexFreshnessResult> {
   const snapshot = input.lastIndexSnapshot;
   const observedFileChanges = input.observedFileChanges;
+  const autoReindex = buildAutoReindexFreshness(input.fileWatcher, observedFileChanges);
 
   if (!hasCompleteSnapshot(snapshot)) {
     return buildUnknownFreshness({
       snapshot,
       observedFileChanges,
+      autoReindex,
       reasons: [
         { code: "last_index_metadata_missing_or_incomplete" },
         ...observedFreshnessReasons(observedFileChanges),
@@ -69,6 +86,7 @@ export async function inspectIndexFreshness(input: {
       snapshot,
       currentHead,
       observedFileChanges,
+      autoReindex,
       reasons: [
         { code: "current_source_snapshot_unavailable" },
         ...observedFreshnessReasons(observedFileChanges),
@@ -96,6 +114,7 @@ export async function inspectIndexFreshness(input: {
       summary: "The current repo appears consistent with the last indexed snapshot.",
       reasons,
       observedFileChanges: null,
+      autoReindex,
       recommendedAction: "No re-index is recommended right now.",
       snapshot: buildSnapshotView(snapshot),
       currentHead: currentHead ?? null,
@@ -116,6 +135,7 @@ export async function inspectIndexFreshness(input: {
     whyItMatters: "Retrieval, skeletons, impact graphs, and pipeline output may reflect older structure in changed areas.",
     recommendedAction: "Re-index this repo before relying on vtrace for fresh structural guidance.",
     observedFileChanges: observedFileChanges ?? null,
+    autoReindex,
     snapshot: buildSnapshotView(snapshot),
     currentHead: currentHead ?? null,
     comparison: {
@@ -129,6 +149,7 @@ function buildUnknownFreshness(input: {
   snapshot?: LastIndexSnapshot;
   currentHead?: string;
   observedFileChanges?: ObservedFileChangeState;
+  autoReindex: IndexFreshnessResult["autoReindex"];
   reasons: IndexFreshnessReason[];
 }): IndexFreshnessResult {
   return {
@@ -139,12 +160,29 @@ function buildUnknownFreshness(input: {
     whyItMatters: "Vtrace may still work, but freshness could not be verified.",
     recommendedAction: "Re-index if you want a fresh, explicit trust point.",
     observedFileChanges: input.observedFileChanges ?? null,
+    autoReindex: input.autoReindex,
     snapshot: buildSnapshotView(input.snapshot),
     currentHead: input.currentHead ?? null,
     comparison: {
       currentSourceFileCount: null,
       fingerprintMatches: null,
     },
+  };
+}
+
+function buildAutoReindexFreshness(
+  watcher: RepoFileWatcherState | undefined,
+  observedFileChanges: ObservedFileChangeState | undefined,
+): IndexFreshnessResult["autoReindex"] {
+  return {
+    enabled: watcher?.autoReindexEnabled ?? false,
+    state: watcher?.reindexState ?? (observedFileChanges === undefined ? "idle" : "pending_changes"),
+    lastStartedAtMs: watcher?.lastAutoReindexStartedAtMs ?? null,
+    lastFinishedAtMs: watcher?.lastAutoReindexFinishedAtMs ?? null,
+    lastFailedAtMs: watcher?.lastAutoReindexFailedAtMs ?? null,
+    lastError: watcher?.lastAutoReindexError ?? null,
+    pendingChangedFileCount: observedFileChanges?.changedFileCount ?? watcher?.pendingChangedFileCount ?? 0,
+    changedFiles: observedFileChanges?.changedFiles ?? watcher?.changedFiles ?? [],
   };
 }
 

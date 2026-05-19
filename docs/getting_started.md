@@ -141,3 +141,11 @@ If you want `vtrace` to notice source edits passively, start the optional watche
 ```
 
 The watcher is conservative and mark-stale-only. It detects indexed source file creates, modifications, and deletions using the same source-scan ignore rules as indexing, debounces bursts, and records pending stale state. It does not auto-reindex; run `vtrace index` when you want a fresh structural snapshot.
+
+If you want the watcher to re-index after debounced source changes, opt in explicitly:
+
+```bash
+./bin/vtrace watch /path/to/your/repo --auto-reindex
+```
+
+Auto-reindex is not enabled by setup and is not required for normal use. It prevents overlapping watcher-triggered index runs and keeps failure/stale metadata visible in `status`, `doctor`, MCP `index_status`, and `run_pipeline.diagnostics.freshness`. A manual `vtrace index /path/to/your/repo` remains the authoritative refresh path.

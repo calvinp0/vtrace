@@ -28,7 +28,7 @@ const CLI_USAGE = [
   "  vtrace doctor [repo] [--agent <name>] [--json]",
   "  vtrace claude-config [repo] [--dry-run] [--agent <name>] [--json]",
   "  vtrace daemon <start|stop|status|logs> [repo] [--json]",
-  "  vtrace watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]",
+  "  vtrace watch [repo] [--auto-reindex] [--debounce-ms <n>] [--poll-ms <n>] [--json]",
   "  vtrace workspace <init|add|list|status> ...",
   "  vtrace mcp-serve --repo <repo>",
   "",

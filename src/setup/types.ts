@@ -86,6 +86,14 @@ export interface RepoFileWatcherState {
   running: boolean;
   debounceMs: number;
   lastEventAtMs: number | null;
+  autoReindexEnabled?: boolean;
+  reindexState?: "idle" | "pending_changes" | "reindexing" | "reindex_failed" | "stale_after_failed_reindex";
+  lastAutoReindexStartedAtMs?: number | null;
+  lastAutoReindexFinishedAtMs?: number | null;
+  lastAutoReindexFailedAtMs?: number | null;
+  lastAutoReindexError?: string | null;
+  pendingChangedFileCount?: number;
+  changedFiles?: string[];
 }
 
 export interface RepoLocalState {

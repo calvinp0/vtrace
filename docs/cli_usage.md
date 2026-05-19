@@ -14,7 +14,7 @@ These are the commands most users should start with:
 ./bin/vtrace doctor [repo] [--agent <name>] [--json]
 ./bin/vtrace claude-config [repo] [--dry-run] [--agent <name>] [--json]
 ./bin/vtrace daemon <start|stop|status|logs> [repo] [--json]
-./bin/vtrace watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]
+./bin/vtrace watch [repo] [--auto-reindex] [--debounce-ms <n>] [--poll-ms <n>] [--json]
 ./bin/vtrace workspace <init|add|list|status> ...
 ./bin/vtrace mcp-serve --repo <repo>
 ```
@@ -26,7 +26,7 @@ What they are for:
 - `doctor`: more detailed inspection
 - `claude-config`: install or preview Claude Code / Codex config
 - `daemon`: optional background runtime control
-- `watch`: optional mark-stale-only source file watcher
+- `watch`: optional source file watcher; mark-stale-only by default, auto-reindex only with `--auto-reindex`
 - `workspace`: create, update, list, and inspect `.vtrace/workspace.json`
 - `mcp-serve`: repo-bound MCP server
 
@@ -43,7 +43,7 @@ Recommended onboarding path:
 
 `setup` is the recommended onboarding command. It initializes repo-local state, builds the initial index when needed, evaluates readiness, and installs agent config. Use an explicit `index` when you want to refresh the structural snapshot after setup or after source changes.
 
-`watch` is optional and mark-stale-only. It records pending source changes in `.vtrace/state.json`; it does not auto-reindex. A successful explicit `index` clears pending watcher stale state and records the new structural snapshot.
+`watch` is optional and mark-stale-only by default. It records pending source changes in `.vtrace/state.json`; it does not auto-reindex unless you pass `--auto-reindex`. A successful explicit `index` clears pending watcher stale state and records the new structural snapshot.
 
 Lower-level manual path:
 
@@ -115,6 +115,14 @@ Optionally watch source files and mark the index stale when they change:
 ```
 
 The watcher does not auto-reindex. It records pending source changes in `.vtrace/state.json`; `status`, `doctor`, and MCP `index_status` report that stale state until the next successful explicit `index`.
+
+Opt into debounced automatic reindexing:
+
+```bash
+./bin/vtrace watch <repo> --auto-reindex
+```
+
+Auto-reindex is never enabled by setup or by default. It still records visible watcher/freshness state, prevents overlapping index runs for the same watcher process, and leaves stale/failure metadata visible if indexing fails. Explicit `vtrace index <repo>` remains available and authoritative.
 
 Run the compact orchestration pipeline from the CLI:
 

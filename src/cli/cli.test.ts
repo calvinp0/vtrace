@@ -21,6 +21,7 @@ import {
 } from "../retrieval/types";
 import { resolveCodexConfigPath } from "../runtime/codexConfig";
 import { resolveClaudeCodeConfigPath } from "../runtime/claudeCodeConfig";
+import { recordObservedFileChanges } from "../runtime/fileWatcher";
 import { resolveStableLauncherPath } from "../runtime/launcher";
 import { resolveRepoLocalPaths } from "../setup/repoState";
 import { REPO_LOCAL_STATE_DIRNAME } from "../setup/types";
@@ -600,6 +601,9 @@ test("status --json and doctor --json return stable explicit shell state", async
     assert.equal(beforeOutput.result.repoState.initialized, false);
     assert.equal(beforeOutput.result.indexState.indexPresent, false);
     assert.equal(beforeOutput.result.indexState.freshness.state, "unknown");
+    assert.equal(beforeOutput.result.indexState.freshness.autoReindex.enabled, false);
+    assert.equal(beforeOutput.result.indexState.watcher.autoReindexEnabled, false);
+    assert.equal(beforeOutput.result.indexState.watcher.reindexState, "idle");
     assert.equal(beforeOutput.result.agentConfig.installed, false);
     assert.equal(beforeOutput.result.runtime.running, false);
     assert.equal(beforeOutput.error, null);
@@ -610,6 +614,7 @@ test("status --json and doctor --json return stable explicit shell state", async
     assert.equal(afterOutput.result.repoState.initialized, true);
     assert.equal(afterOutput.result.indexState.readiness.status, "ready");
     assert.equal(afterOutput.result.indexState.freshness.state, "fresh");
+    assert.equal(afterOutput.result.indexState.freshness.autoReindex.state, "idle");
     assert.equal(typeof afterOutput.result.indexState.freshness.snapshot.lastIndexedSourceFingerprint, "string");
     assert.equal(afterOutput.result.agentConfig.matchesExpected, true);
     assert.equal(typeof afterOutput.result.runtime.statePath, "string");
@@ -734,6 +739,34 @@ test("status and doctor surface possibly stale freshness warnings without mutati
     } finally {
       db.close();
     }
+  });
+});
+
+test("status --json surfaces watcher auto-reindex state deterministically", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeFixtureRepo(repoRoot);
+    await runCli(["setup", repoRoot]);
+    const paths = resolveRepoLocalPaths(repoRoot);
+
+    await recordObservedFileChanges({
+      repoRoot,
+      statePath: paths.statePath,
+      changedFilePaths: ["src/service.ts", "src/models.ts"],
+      nowMs: 7_000,
+      autoReindexEnabled: true,
+    });
+
+    const status = await runCli(["status", repoRoot, "--json"]);
+    const output = JSON.parse(status.stdout);
+
+    assert.equal(status.exitCode, 0);
+    assert.equal(output.result.indexState.watcher.autoReindexEnabled, true);
+    assert.equal(output.result.indexState.watcher.reindexState, "pending_changes");
+    assert.equal(output.result.indexState.watcher.pendingChangedFileCount, 2);
+    assert.deepEqual(output.result.indexState.watcher.changedFiles, ["src/models.ts", "src/service.ts"]);
+    assert.equal(output.result.indexState.freshness.autoReindex.enabled, true);
+    assert.equal(output.result.indexState.freshness.autoReindex.state, "pending_changes");
+    assert.deepEqual(output.result.indexState.freshness.autoReindex.changedFiles, ["src/models.ts", "src/service.ts"]);
   });
 });
 

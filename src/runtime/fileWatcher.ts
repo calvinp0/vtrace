@@ -19,6 +19,7 @@ import type {
   RepoFileWatcherState,
   RepoLocalState,
 } from "../setup/types";
+import { reindexRepoAndRefreshState } from "./reindexRepo";
 
 export const DEFAULT_FILE_WATCH_DEBOUNCE_MS = 500;
 export const DEFAULT_FILE_WATCH_POLL_INTERVAL_MS = 1_000;
@@ -44,6 +45,7 @@ export interface RecordObservedFileChangesInput {
   changedFilePaths: readonly string[];
   nowMs: number;
   debounceMs?: number;
+  autoReindexEnabled?: boolean;
 }
 
 export interface RecordObservedFileChangesResult {
@@ -54,6 +56,10 @@ export interface RecordObservedFileChangesResult {
 export interface RepoFileWatcher {
   repoRoot: string;
   stop(): void;
+}
+
+export interface AutoReindexCoordinator {
+  handleObservedChanges(result: RecordObservedFileChangesResult): void;
 }
 
 type TimerHandle = ReturnType<typeof setTimeout>;
@@ -71,6 +77,14 @@ export function buildFileWatcherStatus(
     running: input.running ?? false,
     debounceMs: input.debounceMs ?? state?.fileWatcher?.debounceMs ?? DEFAULT_FILE_WATCH_DEBOUNCE_MS,
     lastEventAtMs: state?.fileWatcher?.lastEventAtMs ?? null,
+    autoReindexEnabled: state?.fileWatcher?.autoReindexEnabled ?? false,
+    reindexState: state?.fileWatcher?.reindexState ?? (state?.observedFileChanges === undefined ? "idle" : "pending_changes"),
+    lastAutoReindexStartedAtMs: state?.fileWatcher?.lastAutoReindexStartedAtMs ?? null,
+    lastAutoReindexFinishedAtMs: state?.fileWatcher?.lastAutoReindexFinishedAtMs ?? null,
+    lastAutoReindexFailedAtMs: state?.fileWatcher?.lastAutoReindexFailedAtMs ?? null,
+    lastAutoReindexError: state?.fileWatcher?.lastAutoReindexError ?? null,
+    pendingChangedFileCount: state?.observedFileChanges?.changedFileCount ?? state?.fileWatcher?.pendingChangedFileCount ?? 0,
+    changedFiles: state?.observedFileChanges?.changedFiles ?? state?.fileWatcher?.changedFiles ?? [],
   };
 }
 
@@ -89,6 +103,7 @@ export async function recordObservedFileChanges(
   }
 
   const previous = state.observedFileChanges;
+  const autoReindexEnabled = input.autoReindexEnabled ?? state.fileWatcher?.autoReindexEnabled ?? false;
   const nextEvents = trimObservedFileChangeEvents([
     ...(state.observedFileChangeEvents ?? []),
     ...relevantFilePaths.map((filePath): ObservedFileChangeEvent => ({
@@ -123,6 +138,18 @@ export async function recordObservedFileChanges(
       running: false,
       debounceMs: input.debounceMs ?? state.fileWatcher?.debounceMs ?? DEFAULT_FILE_WATCH_DEBOUNCE_MS,
       lastEventAtMs: input.nowMs,
+      autoReindexEnabled,
+      reindexState: state.fileWatcher?.reindexState === "reindexing"
+        ? "reindexing"
+        : state.fileWatcher?.reindexState === "reindex_failed"
+          ? "stale_after_failed_reindex"
+          : "pending_changes",
+      lastAutoReindexStartedAtMs: state.fileWatcher?.lastAutoReindexStartedAtMs ?? null,
+      lastAutoReindexFinishedAtMs: state.fileWatcher?.lastAutoReindexFinishedAtMs ?? null,
+      lastAutoReindexFailedAtMs: state.fileWatcher?.lastAutoReindexFailedAtMs ?? null,
+      lastAutoReindexError: state.fileWatcher?.lastAutoReindexError ?? null,
+      pendingChangedFileCount: observedFileChanges.changedFileCount,
+      changedFiles: [...observedFileChanges.changedFiles],
     },
   };
 
@@ -294,16 +321,31 @@ export function createDebouncedFileChangeRecorder(input: {
 export async function startRepoFileWatcher(input: {
   repoRoot: string;
   statePath?: string;
+  dbPath?: string;
   pollIntervalMs?: number;
   debounceMs?: number;
+  autoReindex?: boolean;
   nowMs?: () => number;
   onFlush?: (result: RecordObservedFileChangesResult) => void | Promise<void>;
+  onAutoReindex?: (event: AutoReindexEvent) => void | Promise<void>;
+  reindex?: () => Promise<void>;
 }): Promise<RepoFileWatcher> {
   const repoRoot = path.resolve(input.repoRoot);
   const statePath = input.statePath ?? resolveRepoLocalPaths(repoRoot).statePath;
   const pollIntervalMs = input.pollIntervalMs ?? DEFAULT_FILE_WATCH_POLL_INTERVAL_MS;
   const debounceMs = input.debounceMs ?? DEFAULT_FILE_WATCH_DEBOUNCE_MS;
   const nowMs = input.nowMs ?? (() => Date.now());
+  const autoReindexEnabled = input.autoReindex ?? false;
+  const coordinator = createAutoReindexCoordinator({
+    repoRoot,
+    statePath,
+    dbPath: input.dbPath ?? resolveRepoLocalPaths(repoRoot).dbPath,
+    debounceMs,
+    nowMs,
+    enabled: autoReindexEnabled,
+    ...(input.reindex === undefined ? {} : { reindex: input.reindex }),
+    ...(input.onAutoReindex === undefined ? {} : { onEvent: input.onAutoReindex }),
+  });
   let previousFiles = await scanRepo(repoRoot);
   const recorder = createDebouncedFileChangeRecorder({
     debounceMs,
@@ -315,8 +357,10 @@ export async function startRepoFileWatcher(input: {
         changedFilePaths,
         nowMs: observedAtMs,
         debounceMs,
+        autoReindexEnabled,
       });
       await input.onFlush?.(result);
+      coordinator.handleObservedChanges(result);
     },
   });
   const interval = setInterval(() => {
@@ -341,6 +385,230 @@ export async function startRepoFileWatcher(input: {
       recorder.stop();
     },
   };
+}
+
+export type AutoReindexEvent =
+  | {
+    readonly event: "auto_reindex_started";
+    readonly repoRoot: string;
+    readonly startedAtMs: number;
+    readonly changedFileCount: number;
+  }
+  | {
+    readonly event: "auto_reindex_succeeded";
+    readonly repoRoot: string;
+    readonly startedAtMs: number;
+    readonly finishedAtMs: number;
+  }
+  | {
+    readonly event: "auto_reindex_failed";
+    readonly repoRoot: string;
+    readonly startedAtMs: number;
+    readonly failedAtMs: number;
+    readonly error: string;
+  };
+
+export function createAutoReindexCoordinator(input: {
+  repoRoot: string;
+  statePath?: string;
+  dbPath?: string;
+  debounceMs?: number;
+  nowMs?: () => number;
+  enabled?: boolean;
+  reindex?: () => Promise<void>;
+  onEvent?: (event: AutoReindexEvent) => void | Promise<void>;
+}): AutoReindexCoordinator {
+  const repoRoot = path.resolve(input.repoRoot);
+  const paths = resolveRepoLocalPaths(repoRoot);
+  const statePath = input.statePath ?? paths.statePath;
+  const dbPath = input.dbPath ?? paths.dbPath;
+  const debounceMs = input.debounceMs ?? DEFAULT_FILE_WATCH_DEBOUNCE_MS;
+  const nowMs = input.nowMs ?? (() => Date.now());
+  const enabled = input.enabled ?? false;
+  let running = false;
+  let rerunRequested = false;
+  let lastResult: RecordObservedFileChangesResult | null = null;
+
+  async function runLoop(result: RecordObservedFileChangesResult): Promise<void> {
+    if (!enabled || result.observedFileChanges === null) {
+      return;
+    }
+
+    lastResult = result;
+
+    if (running) {
+      rerunRequested = true;
+      return;
+    }
+
+    running = true;
+
+    try {
+      do {
+        rerunRequested = false;
+        const effectiveResult = lastResult ?? result;
+        const startedAtMs = nowMs();
+        await markAutoReindexStarted({
+          repoRoot,
+          statePath,
+          debounceMs,
+          startedAtMs,
+          observedFileChanges: effectiveResult.observedFileChanges,
+        });
+        await input.onEvent?.({
+          event: "auto_reindex_started",
+          repoRoot,
+          startedAtMs,
+          changedFileCount: effectiveResult.observedFileChanges?.changedFileCount ?? 0,
+        });
+
+        try {
+          if (input.reindex === undefined) {
+            await reindexRepoAndRefreshState({
+              repoRoot,
+              dbPath,
+              statePath,
+              configPresent: true,
+              statePresent: true,
+              usesDbPathOverride: false,
+            });
+          } else {
+            await input.reindex();
+          }
+
+          const finishedAtMs = nowMs();
+          await markAutoReindexSucceeded({
+            repoRoot,
+            statePath,
+            debounceMs,
+            startedAtMs,
+            finishedAtMs,
+          });
+          await input.onEvent?.({
+            event: "auto_reindex_succeeded",
+            repoRoot,
+            startedAtMs,
+            finishedAtMs,
+          });
+        } catch (error) {
+          const failedAtMs = nowMs();
+          const message = formatCompactError(error);
+          await markAutoReindexFailed({
+            repoRoot,
+            statePath,
+            debounceMs,
+            startedAtMs,
+            failedAtMs,
+            error: message,
+          });
+          await input.onEvent?.({
+            event: "auto_reindex_failed",
+            repoRoot,
+            startedAtMs,
+            failedAtMs,
+            error: message,
+          });
+          rerunRequested = false;
+        }
+      } while (rerunRequested);
+    } finally {
+      running = false;
+    }
+  }
+
+  return {
+    handleObservedChanges(result) {
+      void runLoop(result);
+    },
+  };
+}
+
+async function markAutoReindexStarted(input: {
+  repoRoot: string;
+  statePath: string;
+  debounceMs: number;
+  startedAtMs: number;
+  observedFileChanges: ObservedFileChangeState | null;
+}): Promise<void> {
+  await updateWatcherState(input.statePath, (state) => ({
+    ...state,
+    fileWatcher: {
+      ...buildFileWatcherStatus(state, { debounceMs: input.debounceMs }),
+      enabled: true,
+      autoReindexEnabled: true,
+      reindexState: "reindexing",
+      lastAutoReindexStartedAtMs: input.startedAtMs,
+      lastAutoReindexFinishedAtMs: state.fileWatcher?.lastAutoReindexFinishedAtMs ?? null,
+      lastAutoReindexFailedAtMs: state.fileWatcher?.lastAutoReindexFailedAtMs ?? null,
+      lastAutoReindexError: null,
+      pendingChangedFileCount: input.observedFileChanges?.changedFileCount ?? 0,
+      changedFiles: input.observedFileChanges?.changedFiles ?? [],
+    },
+  }));
+}
+
+async function markAutoReindexSucceeded(input: {
+  repoRoot: string;
+  statePath: string;
+  debounceMs: number;
+  startedAtMs: number;
+  finishedAtMs: number;
+}): Promise<void> {
+  await updateWatcherState(input.statePath, (state) => ({
+    ...state,
+    observedFileChanges: undefined,
+    observedFileChangeEvents: undefined,
+    fileWatcher: {
+      ...buildFileWatcherStatus(state, { debounceMs: input.debounceMs }),
+      enabled: true,
+      autoReindexEnabled: true,
+      reindexState: "idle",
+      lastAutoReindexStartedAtMs: input.startedAtMs,
+      lastAutoReindexFinishedAtMs: input.finishedAtMs,
+      lastAutoReindexFailedAtMs: state.fileWatcher?.lastAutoReindexFailedAtMs ?? null,
+      lastAutoReindexError: null,
+      pendingChangedFileCount: 0,
+      changedFiles: [],
+    },
+  }));
+}
+
+async function markAutoReindexFailed(input: {
+  repoRoot: string;
+  statePath: string;
+  debounceMs: number;
+  startedAtMs: number;
+  failedAtMs: number;
+  error: string;
+}): Promise<void> {
+  await updateWatcherState(input.statePath, (state) => ({
+    ...state,
+    fileWatcher: {
+      ...buildFileWatcherStatus(state, { debounceMs: input.debounceMs }),
+      enabled: true,
+      autoReindexEnabled: true,
+      reindexState: "stale_after_failed_reindex",
+      lastAutoReindexStartedAtMs: input.startedAtMs,
+      lastAutoReindexFinishedAtMs: state.fileWatcher?.lastAutoReindexFinishedAtMs ?? null,
+      lastAutoReindexFailedAtMs: input.failedAtMs,
+      lastAutoReindexError: input.error,
+      pendingChangedFileCount: state.observedFileChanges?.changedFileCount ?? 0,
+      changedFiles: state.observedFileChanges?.changedFiles ?? [],
+    },
+  }));
+}
+
+async function updateWatcherState(
+  statePath: string,
+  update: (state: RepoLocalState) => RepoLocalState,
+): Promise<void> {
+  const state = await readRepoLocalState(statePath);
+  await writeRepoLocalState(statePath, update(state));
+}
+
+function formatCompactError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  return raw.replace(/\s+/gu, " ").trim().slice(0, 240) || "unknown error";
 }
 
 function normalizeRelevantFilePaths(filePaths: readonly string[]): string[] {

@@ -87,6 +87,7 @@ export async function inspectProductShellStatus(options: {
     repoRoot,
     lastIndexSnapshot: state?.lastIndexSnapshot,
     observedFileChanges: state?.observedFileChanges,
+    fileWatcher: state?.fileWatcher,
   });
   const launcher = buildStableMcpLauncher(repoRoot);
   const agentConfig = await agent.getStatus(repoRoot);

@@ -8,9 +8,9 @@ This is a planning document only. It does not change product behavior, CLI behav
 
 VTrace is RC-ready as deterministic lexical/structural repo-local tooling with CLI, MCP, memory/session, watcher freshness, V-REF, and project-rule surfaces.
 
-VTrace is not full VEXP parity. The current product truth remains explicit: V-REFs are exact and repo-local with bounded stored-truth persistence, the watcher is mark-stale-only, memory and rules are deterministic rather than semantic, and graph behavior is bounded structural analysis rather than runtime or dataflow truth.
+VTrace is not full VEXP parity. The current product truth remains explicit: V-REFs are exact and repo-local with bounded stored-truth persistence, the watcher is mark-stale-only by default with optional visible auto-reindex, memory and rules are deterministic rather than semantic, and graph behavior is bounded structural analysis rather than runtime or dataflow truth.
 
-The next phase should improve general-purpose graph intelligence, continuity, and product feel. Persistent stored-truth V-REFs are implemented as the first continuity milestone; the remaining highest-leverage work is optional auto-reindexing, richer static symbol/reference extraction, broader generic retrieval benchmarks, and panel polish.
+The next phase should improve general-purpose graph intelligence, continuity, and product feel. Persistent stored-truth V-REFs and optional auto-reindexing are implemented as continuity milestones; the remaining highest-leverage work is richer static symbol/reference extraction, broader generic retrieval benchmarks, and panel polish.
 
 ARC may be used as one real-repo benchmark, but it must not define product behavior. ARC is a stress test, not the destination.
 
@@ -20,7 +20,7 @@ ARC may be used as one real-repo benchmark, but it must not define product behav
 | ------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------- |
 | `run_pipeline`            | Deterministic orchestration with intent, capsule, impact, memory, freshness, rules, and V-REFs | Broad task entrypoint that feels continuous and context-aware         | Aligned enough for RC | Continuity is bounded by V-REF retention and retrieval limits    | Improve graph intelligence and benchmarks                       |
 | V-REF expansion           | Exact 12-hex stored payload expansion with process hot cache and repo-local persistence        | Stable deferred expansion across sessions and product surfaces        | Improved              | Bounded retention; no multi-repo deferred expansion parity       | Monitor usage before expanding retention or multi-repo support  |
-| Watcher/freshness         | Optional polling watcher marks stale; explicit `index` clears stale state                      | Optional live freshness loop with visible state and safe recovery     | Partially aligned     | No opt-in auto-reindex mode                                      | Add optional auto-reindex while preserving mark-stale default   |
+| Watcher/freshness         | Optional polling watcher marks stale by default; `--auto-reindex` opts into visible reindexing | Optional live freshness loop with visible state and safe recovery     | Improved              | No always-on daemon; bounded polling behavior                    | Monitor before adding config/daemon-driven policies             |
 | Session lifecycle         | Explicit compression/consolidation services and searchable summaries                           | Durable continuity across work sessions                               | Partially aligned     | No scheduler; session binding is input-dependent                 | Keep explicit; revisit scheduling only after persistence work   |
 | Memory search             | Deterministic lexical/structural observation search                                            | Useful durable memory retrieval across related work                   | Aligned enough for RC | No semantic recall or learned ranking                            | Validate with memory/rule query benchmarks before tuning        |
 | Anti-pattern detection    | Conservative structural detectors for file thrashing and adjacent symbol add/remove            | Useful recognition of repeated dead ends and workflow loops           | Partially aligned     | Narrow detector set; no semantic stuck detection                 | Extend only with deterministic evidence-backed detectors        |
@@ -47,7 +47,7 @@ The anti-overfit rules from [`docs/validation_strategy.md`](./validation_strateg
 ## Recommended Milestone Sequence
 
 1. Persistent V-REF Store — implemented for single-repo stored-truth expansion with bounded repo-local retention.
-2. Optional Auto-Reindex Mode — recommended next implementation milestone.
+2. Optional Auto-Reindex Mode — implemented as explicit `watch --auto-reindex`.
 3. Module-Level Constants, Variables, and Aliases
 4. Python References Extraction
 5. Python Member/Attribute Resolution
@@ -140,9 +140,11 @@ Persistent V-REF Store with Stored-Truth Expansion
 
 Add an opt-in mode where the watcher can trigger safe automatic reindexing after source changes.
 
+Implementation status: completed as explicit `vtrace watch [repo] --auto-reindex`. Default watcher behavior remains mark-stale-only.
+
 ### Why This Improves VEXP Alignment
 
-VEXP-like product feel includes continuity as files change. RC intentionally keeps `watch` mark-stale-only. Optional auto-reindex would reduce manual refresh work while preserving the safe default and visible stale state.
+VEXP-like product feel includes continuity as files change. `watch` remains mark-stale-only by default. Optional auto-reindex reduces manual refresh work when explicitly enabled while preserving the safe default and visible stale/failure state.
 
 ### General-Purpose Value
 
@@ -151,7 +153,7 @@ Every repo benefits from fresher structural context when the user opts in. This 
 ### Scope
 
 - Keep watcher mark-stale-only by default.
-- Add explicit opt-in auto-reindex mode, likely through a flag/config value.
+- Add explicit opt-in auto-reindex mode through `--auto-reindex`.
 - Prevent overlapping index runs.
 - Keep failed reindex visible as stale or failed freshness state.
 - Surface indexing/reindex state in status and MCP freshness diagnostics.
@@ -199,6 +201,8 @@ Likely files/modules to inspect:
 - Reindex status is inspectable.
 - Failed reindex does not hide stale state.
 - Manual `index` remains authoritative.
+
+Implemented behavior: auto-reindex is a watcher CLI flag only, prevents overlapping watcher-triggered index runs, leaves compact failure metadata visible, and lets explicit `index` remain authoritative.
 
 ### Suggested Implementation Prompt Title
 
@@ -643,19 +647,19 @@ Avoid these until there is a clear product reason, validation plan, and explicit
 Recommended next implementation prompt:
 
 ```text
-Optional Auto-Reindex Mode
+Module-Level Constants, Variables, and Aliases
 ```
 
 Persistent V-REF Store was the first post-RC continuity milestone and is now implemented for exact stored-payload expansion with bounded repo-local retention. It improves continuity for MCP, CLI, and editor flows while preserving the central truth requirement: V-REF expansion returns stored payloads exactly, not fuzzy lookup or semantic reconstruction.
 
-The next recommended milestone is Optional Auto-Reindex Mode because it addresses freshness continuity without changing retrieval/ranking behavior. It should preserve visible status and failure reporting and keep mark-stale-only watcher behavior as the safe default.
+Optional Auto-Reindex Mode is now implemented. The next recommended milestone is Module-Level Constants, Variables, and Aliases because it improves static structural coverage without changing retrieval/ranking behavior or adding semantic claims.
 
 ## Deliverable Summary
 
 Recommended milestone order:
 
 1. Persistent V-REF Store — implemented
-2. Optional Auto-Reindex Mode — next recommended
+2. Optional Auto-Reindex Mode — implemented
 3. Module-Level Constants, Variables, and Aliases
 4. Python References Extraction
 5. Python Member/Attribute Resolution
@@ -663,10 +667,11 @@ Recommended milestone order:
 7. Broader Generic Retrieval/Reranking Benchmarks
 8. VS Code Panel Polish
 
-Completed first implementation prompt title:
+Completed continuity implementation prompt titles:
 
 ```text
 Persistent V-REF Store with Stored-Truth Expansion
+Optional Auto-Reindex Mode with Visible Freshness State
 ```
 
 Validation fixtures needed before or during remaining implementation work:
@@ -682,13 +687,13 @@ Validation fixtures needed before or during remaining implementation work:
 Known risks:
 
 - Persistent V-REFs could accidentally become recomputation if stored-truth rules are weakened in future work.
-- Auto-reindex could hide freshness failures if status does not expose in-progress and failed states.
+- Future auto-reindex changes could hide freshness failures if status does not continue to expose in-progress and failed states.
 - Python graph intelligence could overclaim dynamic behavior if conservative boundaries are not enforced.
 - Retrieval tuning before broader benchmarks could overfit to ARC or another single repo.
 - Panel polish could create hidden product behavior if it bypasses CLI/MCP surfaces.
 
 Decision points for the user:
 
-- Decide whether auto-reindex belongs in watcher CLI flags, repo config, daemon mode, or a combination.
+- Decide whether future auto-reindex policy should remain CLI-only or gain repo config / daemon integration.
 - Decide when a future schema version should rename compatibility fields such as `claudeCode`.
 - Decide whether embeddings/semantic memory remain out of scope or become a separate explicit product direction later.

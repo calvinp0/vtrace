@@ -24,7 +24,7 @@ Remaining acceptable RC limitations:
 - `workspace_setup.status.claudeCode` remains a compatibility field for this schema version.
 - `vtrace` remains deterministic lexical/structural local tooling, not full VEXP parity.
 
-RC-ready means ready as deterministic lexical/structural repo-local tooling with CLI, MCP, memory/session, watcher freshness, bounded persistent V-REFs, and project-rule surfaces. It does not mean full VEXP parity, semantic memory, permanent/global V-REFs, automatic reindexing, or codebase-specific retrieval intelligence.
+RC-ready means ready as deterministic lexical/structural repo-local tooling with CLI, MCP, memory/session, watcher freshness, bounded persistent V-REFs, and project-rule surfaces. It does not mean full VEXP parity, semantic memory, permanent/global V-REFs, automatic reindexing by default, or codebase-specific retrieval intelligence.
 
 ## Required Validation Commands
 
@@ -56,7 +56,7 @@ Canonical RC onboarding flow:
 
 `setup` is the recommended onboarding command. It initializes repo-local state, builds the initial index when needed, evaluates readiness, and installs supported local-agent config for the selected agent.
 
-`watch` is optional. It is mark-stale-only: it records pending source changes in `.vtrace/state.json` and reports freshness through status surfaces, but it does not auto-reindex. A successful explicit `index` clears watcher-observed stale state after the new structural snapshot is written.
+`watch` is optional. By default it is mark-stale-only: it records pending source changes in `.vtrace/state.json` and reports freshness through status surfaces, but it does not auto-reindex. `watch --auto-reindex` is an explicit opt-in mode that triggers debounced reindexing, prevents overlapping watcher-triggered runs, and keeps failure/stale state visible. A successful explicit `index` clears watcher-observed stale state after the new structural snapshot is written.
 
 ## Manual Lower-Level Flow
 
@@ -144,10 +144,11 @@ Do not redesign the panel as part of RC validation.
 | Full tests                      | `bun test`                                                  | Full Bun test suite passes                                   | TODO   |       |
 | CI parity                       | `bun run package:vscode`                                    | VS Code extension package command completes locally          | TODO   |       |
 | Docs truth                      | Review `docs/product_truth_audit_rc.md` and RC docs         | Known limitations are explicit and no full VEXP parity claim | TODO   |       |
-| CLI setup flow                  | `setup`, `status`, `index`, optional `watch`                | Repo reaches ready state; watch only marks stale             | TODO   |       |
+| CLI setup flow                  | `setup`, `status`, `index`, optional `watch`                | Repo reaches ready state; default watch only marks stale     | TODO   |       |
 | MCP setup flow for Codex        | `workspace_setup` or generated Codex config smoke           | Codex setup path is available and accurately reported        | TODO   |       |
 | MCP setup flow for Claude Code  | `workspace_setup` or generated Claude Code config smoke     | Compatibility setup path remains available                   | TODO   |       |
 | Watcher freshness               | `watch`, edit indexed source, `status`, `index`, `status`   | Stale state appears after edit and clears after index        | TODO   |       |
+| Optional auto-reindex           | `watch --auto-reindex`, edit source, `status`               | Auto-reindex state is visible; failures remain visible       | TODO   |       |
 | `run_pipeline` schema parity    | MCP smoke or schema parity test                             | Actual output matches declared output schema                 | TODO   |       |
 | V-REF persistence truth         | MCP V-REF expansion and CLI retained-ref smoke              | Same-process MCP expansion works; CLI retained refs resolve  | TODO   |       |
 | Rules candidate/active behavior | `rules generate-candidates`, `rules list`, optional promote | Candidates are previews; only active rules inject guidance   | TODO   |       |
@@ -159,7 +160,7 @@ These are acceptable for RC and must remain visible in release validation:
 
 - V-REFs are exact 12-character lowercase hex hashes backed by process-local hot cache plus bounded repo-local persisted stored payloads.
 - CLI `expand-vexp-ref` can resolve retained persistent refs without `--query`. `--query` remains a fallback/debug republish path when a ref is unavailable or expired.
-- There is no auto-reindex. `watch` is opt-in and mark-stale-only.
+- Auto-reindex is opt-in only. Default `watch` remains mark-stale-only.
 - There are no embeddings or semantic memory.
 - Project rules are deterministic guidance only; there is no auto-promotion of rules.
 - There are no cross-repo rules.

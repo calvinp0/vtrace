@@ -388,7 +388,17 @@ export function formatProductShellStatus(
       ]
       : []),
     `Watcher: ${result.watcher.enabled ? "enabled" : "available but not running"}`,
+    `Auto re-index: ${result.watcher.autoReindexEnabled === true ? result.watcher.reindexState ?? "idle" : "disabled"}`,
     ...(result.watcher.lastEventAtMs === null ? [] : [`Latest watcher event: ${result.watcher.lastEventAtMs}`]),
+    ...(result.watcher.lastAutoReindexFinishedAtMs === null || result.watcher.lastAutoReindexFinishedAtMs === undefined
+      ? []
+      : [`Latest auto re-index success: ${result.watcher.lastAutoReindexFinishedAtMs}`]),
+    ...(result.watcher.lastAutoReindexFailedAtMs === null || result.watcher.lastAutoReindexFailedAtMs === undefined
+      ? []
+      : [`Latest auto re-index failure: ${result.watcher.lastAutoReindexFailedAtMs}`]),
+    ...(result.watcher.lastAutoReindexError === null || result.watcher.lastAutoReindexError === undefined
+      ? []
+      : [`Auto re-index error: ${result.watcher.lastAutoReindexError}`]),
   ];
   const nextSteps = buildProductShellStatusNextSteps(result, mode);
 

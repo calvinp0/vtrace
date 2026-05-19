@@ -2050,8 +2050,12 @@ test("index_status and workspace_setup expose honest setup state before and afte
     assert.equal(afterIndexStatus.result.output.readiness?.status, "ready");
     assert.equal(afterIndexStatus.result.output.freshness.state, "fresh");
     assert.equal(afterIndexStatus.result.output.freshness.isStale, false);
+    assert.equal(afterIndexStatus.result.output.freshness.autoReindex.enabled, false);
+    assert.equal(afterIndexStatus.result.output.freshness.autoReindex.state, "idle");
     assert.equal(afterIndexStatus.result.output.watcher.supported, true);
     assert.equal(afterIndexStatus.result.output.watcher.running, false);
+    assert.equal(afterIndexStatus.result.output.watcher.autoReindexEnabled, false);
+    assert.equal(afterIndexStatus.result.output.watcher.reindexState, "idle");
   });
 });
 
@@ -2089,10 +2093,14 @@ test("index_status and run_pipeline diagnostics report watcher-observed stale fi
     assert.deepEqual(status.result.output.freshness.observedFileChanges.changedFiles, ["src/session.ts"]);
     assert.equal(status.result.output.watcher.enabled, true);
     assert.equal(status.result.output.watcher.lastEventAtMs, 5_000);
+    assert.equal(status.result.output.watcher.autoReindexEnabled, false);
+    assert.equal(status.result.output.watcher.reindexState, "pending_changes");
+    assert.equal(status.result.output.freshness.autoReindex.state, "pending_changes");
 
     assert.equal(pipeline.result.ok, true);
     assert.equal(pipeline.result.output.diagnostics.freshness.state, "possibly_stale");
     assert.equal(pipeline.result.output.diagnostics.freshness.observedFileChanges.changedFiles[0], "src/session.ts");
+    assert.equal(pipeline.result.output.diagnostics.freshness.autoReindex.state, "pending_changes");
   });
 });
 

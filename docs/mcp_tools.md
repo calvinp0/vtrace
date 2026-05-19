@@ -68,9 +68,11 @@ The default retention threshold is 90 days. This milestone reports deterministic
 
 File watching is opt-in. `vtrace watch [repo]` runs a lightweight polling watcher that uses the same indexed-source scan rules as the indexer. It observes created, modified, and deleted source files, debounces bursts, and records a compact pending stale state in `.vtrace/state.json`.
 
-The watcher is mark-stale-only. It does not auto-reindex, does not run a background daemon by default, and does not block MCP tools. `index_status` reports watcher support, whether watcher mode has been used for the repo, pending changed file count, a bounded sorted changed-file list, and freshness metadata. `run_pipeline.diagnostics.freshness` also reports stale metadata when available.
+The watcher is mark-stale-only by default. `vtrace watch [repo] --auto-reindex` explicitly opts into debounced automatic reindexing; setup never enables it implicitly. Auto-reindex prevents overlapping watcher-triggered index runs in the watcher process. If auto-reindex fails, stale state and compact failure metadata stay visible, and normal MCP tools remain usable.
 
-A successful explicit reindex through the normal indexing path clears pending watcher-observed stale state. Reindexing continues to use the existing structural file and symbol diff machinery. Linked observations, passive `tool_call` observations, consolidated passive summaries, compressed session summary observations, and linked project rules become stale through conservative structural checks when their linked files or symbols are modified or removed.
+`index_status` reports watcher support, whether watcher mode has been used for the repo, auto-reindex state, pending changed file count, a bounded sorted changed-file list, and freshness metadata. `run_pipeline.diagnostics.freshness` also reports stale and auto-reindex metadata when available.
+
+A successful explicit reindex through the normal indexing path clears pending watcher-observed stale state and auto-reindex failure state. Reindexing continues to use the existing structural file and symbol diff machinery. Linked observations, passive `tool_call` observations, consolidated passive summaries, compressed session summary observations, and linked project rules become stale through conservative structural checks when their linked files or symbols are modified or removed.
 
 This is not semantic rename detection, runtime dataflow, or full VEXP passive behavior.
 
@@ -237,7 +239,7 @@ Return recent/current session context so you can resume a workstream quickly.
 
 Compact repo MCP status. Use it to check whether the repo is initialized, indexed, and ready.
 
-It also reports optional watcher/freshness metadata, including pending watcher-observed file changes when `vtrace watch` has marked the indexed state stale.
+It also reports optional watcher/freshness metadata, including pending watcher-observed file changes and auto-reindex state when `vtrace watch` has been used.
 
 ### `workspace_setup`
 

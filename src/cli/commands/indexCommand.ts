@@ -1,17 +1,4 @@
-import { getLatestIndexRun, getIndexRunSummary } from "../../db/repositories/indexRunsRepository";
-import { openIndexerDatabase } from "../../db/sqlite";
-import { readGitHead } from "../../fs/git";
-import { indexProject } from "../../indexer/indexProject";
-import { detectSymbolAddedThenRemovedAntiPatterns } from "../../observations/antiPatterns";
-import { markProjectRulesStaleForRun } from "../../projectRules/projectRules";
-import {
-  buildLastIndexSnapshot,
-  buildRepoLocalState,
-  evaluateRepoReadiness,
-  readLastIndexedSourceFingerprint,
-  resolveRepoLocalPaths,
-  writeRepoLocalState,
-} from "../../setup/repoState";
+import { reindexRepoAndRefreshState } from "../../runtime/reindexRepo";
 import { formatIndexResult } from "../formatters";
 import { selectProgressReporter } from "../progress";
 import type { CliOptions, CommandResult } from "../types";
@@ -44,33 +31,20 @@ export async function runIndexCommand(
     const statePresent = await isExistingFile(resolvedRepo.statePath);
 
     await ensureDatabaseDirectory(dbPath);
-    const db = openIndexerDatabase(dbPath);
-
-    try {
-      const progress = selectProgressReporter({
-        stream: process.stderr,
-        env: process.env,
-      });
-      const result = await indexProject({ repoRoot, db, onProgress: progress });
-      detectSymbolAddedThenRemovedAntiPatterns(db, { repoRoot });
-      const latestRun = getLatestIndexRun(db);
-      if (latestRun !== undefined) {
-        markProjectRulesStaleForRun(db, { repoRoot, runId: latestRun.id });
-      }
-      await refreshRepoLocalStateAfterIndex({
-        repoRoot,
-        dbPath,
-        statePath: resolvedRepo.statePath,
-        configPresent: resolvedRepo.configPresent,
-        statePresent,
-        usesDbPathOverride: resolvedRepo.usesDbPathOverride,
-        indexResult: result,
-        db,
-      });
-      return success(formatIndexResult(result));
-    } finally {
-      db.close();
-    }
+    const progress = selectProgressReporter({
+      stream: process.stderr,
+      env: process.env,
+    });
+    const result = await reindexRepoAndRefreshState({
+      repoRoot,
+      dbPath,
+      statePath: resolvedRepo.statePath,
+      configPresent: resolvedRepo.configPresent,
+      statePresent,
+      usesDbPathOverride: resolvedRepo.usesDbPathOverride,
+      progress,
+    });
+    return success(formatIndexResult(result.indexResult));
   } catch (error) {
     return failure(formatCommandError("index failed", error));
   }
@@ -78,53 +52,4 @@ export async function runIndexCommand(
 
 function formatCommandError(prefix: string, error: unknown): string {
   return `${prefix}: ${error instanceof Error ? error.message : String(error)}`;
-}
-
-async function refreshRepoLocalStateAfterIndex(input: {
-  repoRoot: string;
-  dbPath: string;
-  statePath: string;
-  configPresent: boolean;
-  statePresent: boolean;
-  usesDbPathOverride: boolean;
-  indexResult: Awaited<ReturnType<typeof indexProject>>;
-  db: ReturnType<typeof openIndexerDatabase>;
-}): Promise<void> {
-  if (
-    input.usesDbPathOverride
-    || (!input.configPresent && !input.statePresent)
-  ) {
-    return;
-  }
-
-  const latestRun = getLatestIndexRun(input.db);
-  const latestRunSummary = latestRun === undefined
-    ? undefined
-    : getIndexRunSummary(input.db, latestRun.id);
-  const repoLocalPaths = resolveRepoLocalPaths(input.repoRoot);
-  const readiness = await evaluateRepoReadiness({
-    repoRoot: input.repoRoot,
-    paths: {
-      ...repoLocalPaths,
-      dbPath: input.dbPath,
-      statePath: input.statePath,
-    },
-    indexResult: input.indexResult,
-    latestRunSummary,
-  });
-  const state = buildRepoLocalState({
-    repoRoot: input.repoRoot,
-    dbPath: input.dbPath,
-    readiness,
-    indexResult: input.indexResult,
-    latestRunSummary,
-    lastIndexSnapshot: buildLastIndexSnapshot({
-      indexResult: input.indexResult,
-      latestRunSummary,
-      lastIndexedHead: await readGitHead(input.repoRoot),
-      lastIndexedSourceFingerprint: await readLastIndexedSourceFingerprint(input.repoRoot),
-    }),
-  });
-
-  await writeRepoLocalState(input.statePath, state);
 }

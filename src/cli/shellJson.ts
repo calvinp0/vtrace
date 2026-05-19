@@ -84,6 +84,14 @@ interface ShellJsonIndexState {
     running: boolean;
     debounceMs: number;
     lastEventAtMs: number | null;
+    autoReindexEnabled?: boolean;
+    reindexState?: string;
+    lastAutoReindexStartedAtMs?: number | null;
+    lastAutoReindexFinishedAtMs?: number | null;
+    lastAutoReindexFailedAtMs?: number | null;
+    lastAutoReindexError?: string | null;
+    pendingChangedFileCount?: number;
+    changedFiles?: string[];
   };
   readiness: {
     status: RepoReadiness["status"];
@@ -114,6 +122,16 @@ interface ShellJsonIndexFreshness {
     changedFiles: string[];
     omittedChangedFileCount: number;
   } | null;
+  autoReindex: {
+    enabled: boolean;
+    state: string;
+    lastStartedAtMs: number | null;
+    lastFinishedAtMs: number | null;
+    lastFailedAtMs: number | null;
+    lastError: string | null;
+    pendingChangedFileCount: number;
+    changedFiles: string[];
+  };
   whyItMatters: string | null;
   recommendedAction: string | null;
   snapshot: {
@@ -354,6 +372,16 @@ function formatIndexFreshness(
         ...freshness.observedFileChanges,
         changedFiles: [...freshness.observedFileChanges.changedFiles],
       },
+    autoReindex: {
+      enabled: freshness.autoReindex.enabled,
+      state: freshness.autoReindex.state,
+      lastStartedAtMs: freshness.autoReindex.lastStartedAtMs,
+      lastFinishedAtMs: freshness.autoReindex.lastFinishedAtMs,
+      lastFailedAtMs: freshness.autoReindex.lastFailedAtMs,
+      lastError: freshness.autoReindex.lastError,
+      pendingChangedFileCount: freshness.autoReindex.pendingChangedFileCount,
+      changedFiles: [...freshness.autoReindex.changedFiles],
+    },
     whyItMatters: freshness.whyItMatters ?? null,
     recommendedAction: freshness.recommendedAction ?? null,
     snapshot: {
