@@ -892,6 +892,61 @@ test("ambiguous reference targets are skipped conservatively", async () => {
   assert.equal(targets.size, 2);
 });
 
+test("function-local shadowing prevents guessed references to top-level names", async () => {
+  const files = [
+    {
+      path: "src/pkg/shadowed.py",
+      content: [
+        "VALUE = 1",
+        "OTHER = 2",
+        "",
+        "def parameter_shadow(VALUE):",
+        "    return VALUE",
+        "",
+        "def assignment_shadow():",
+        "    OTHER = 3",
+        "    return OTHER",
+        "",
+      ].join("\n"),
+    },
+  ];
+
+  const parser = createPythonParser({ knownFiles: files });
+  const result = await parser.parse({
+    path: "src/pkg/shadowed.py",
+    language: Language.Python,
+    content: files[0]!.content,
+  });
+  const valueSymbol = result.symbols.find((symbol) => symbol.localName === "VALUE");
+  const otherSymbol = result.symbols.find((symbol) => symbol.localName === "OTHER");
+  const parameterShadow = findTopLevelSymbol(
+    result.symbols,
+    "parameter_shadow",
+    SymbolKind.Function,
+  );
+  const assignmentShadow = findTopLevelSymbol(
+    result.symbols,
+    "assignment_shadow",
+    SymbolKind.Function,
+  );
+  const refs = referencesEdges(result);
+
+  assert.equal(
+    refs.some((edge) =>
+      edge.srcSymbolId === parameterShadow.id && edge.dstSymbolId === valueSymbol?.id
+    ),
+    false,
+    "parameter-local VALUE must not reference the module-level VALUE",
+  );
+  assert.equal(
+    refs.some((edge) =>
+      edge.srcSymbolId === assignmentShadow.id && edge.dstSymbolId === otherSymbol?.id
+    ),
+    false,
+    "assigned local OTHER must not reference the module-level OTHER",
+  );
+});
+
 test("references do not duplicate an already-emitted calls edge", async () => {
   const files = [
     { path: "src/pkg/__init__.py", content: "" },

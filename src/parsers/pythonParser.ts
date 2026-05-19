@@ -85,6 +85,7 @@ interface PythonAstFunction extends PythonAstSpan, PythonAstMetadata {
   name: string;
   calls: PythonAstCall[];
   references: PythonAstReference[];
+  localBindings: string[];
 }
 
 interface PythonAstMethod extends PythonAstSpan, PythonAstMetadata {
@@ -92,6 +93,7 @@ interface PythonAstMethod extends PythonAstSpan, PythonAstMetadata {
   name: string;
   calls: PythonAstCall[];
   references: PythonAstReference[];
+  localBindings: string[];
   firstArg?: string;
 }
 
@@ -341,12 +343,66 @@ def first_arg_name(node):
         return None
     return positional[0].arg
 
+def collect_local_bindings(node):
+    # Function-local names make plain name-use references ambiguous for our
+    # static graph. Capture arguments and simple assignment targets so the
+    # TypeScript resolver can skip those references conservatively.
+    bindings = set()
+    args = getattr(node, "args", None)
+
+    if args is not None:
+        arg_groups = list(getattr(args, "posonlyargs", []) or [])
+        arg_groups += list(getattr(args, "args", []) or [])
+        arg_groups += list(getattr(args, "kwonlyargs", []) or [])
+        for arg in arg_groups:
+            bindings.add(arg.arg)
+        for opt in (getattr(args, "vararg", None), getattr(args, "kwarg", None)):
+            if opt is not None:
+                bindings.add(opt.arg)
+
+    def add_target(target):
+        if isinstance(target, ast.Name):
+            bindings.add(target.id)
+            return
+        if isinstance(target, (ast.Tuple, ast.List)):
+            for elt in target.elts:
+                add_target(elt)
+
+    def descend_binding_nodes(child):
+        stack = [child]
+        while stack:
+            current = stack.pop()
+            yield current
+            if current is not child and isinstance(current, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+                continue
+            for grandchild in ast.iter_child_nodes(current):
+                stack.append(grandchild)
+
+    for child in getattr(node, "body", []) or []:
+        for descendant in descend_binding_nodes(child):
+            if isinstance(descendant, ast.Assign):
+                for target in descendant.targets:
+                    add_target(target)
+            elif isinstance(descendant, ast.AnnAssign):
+                add_target(descendant.target)
+            elif isinstance(descendant, (ast.For, ast.AsyncFor)):
+                add_target(descendant.target)
+            elif isinstance(descendant, (ast.With, ast.AsyncWith)):
+                for item in descendant.items:
+                    if item.optional_vars is not None:
+                        add_target(item.optional_vars)
+            elif isinstance(descendant, ast.ExceptHandler) and descendant.name is not None:
+                bindings.add(descendant.name)
+
+    return sorted(bindings)
+
 def function_item(node, kind):
     item = span_for(node)
     item["kind"] = kind
     item["name"] = node.name
     item["calls"] = collect_calls(node)
     item["references"] = collect_references(node, False)
+    item["localBindings"] = collect_local_bindings(node)
     item.update(metadata_for(node))
     if kind in ("method", "async_method"):
         arg = first_arg_name(node)
@@ -1453,6 +1509,7 @@ function extractReferenceEdges(input: ExtractReferenceEdgesInput): EdgeRecord[] 
         null,
         undefined,
         item.references ?? [],
+        item.localBindings,
         resolution,
         input.context,
         exportIndexByPath,
@@ -1474,6 +1531,7 @@ function extractReferenceEdges(input: ExtractReferenceEdgesInput): EdgeRecord[] 
         null,
         undefined,
         item.references ?? [],
+        [],
         resolution,
         input.context,
         exportIndexByPath,
@@ -1498,6 +1556,7 @@ function extractReferenceEdges(input: ExtractReferenceEdgesInput): EdgeRecord[] 
       null,
       undefined,
       item.references ?? [],
+      [],
       resolution,
       input.context,
       exportIndexByPath,
@@ -1524,6 +1583,7 @@ function extractReferenceEdges(input: ExtractReferenceEdgesInput): EdgeRecord[] 
           item.name,
           undefined,
           member.references ?? [],
+          [],
           resolution,
           input.context,
           exportIndexByPath,
@@ -1538,6 +1598,7 @@ function extractReferenceEdges(input: ExtractReferenceEdgesInput): EdgeRecord[] 
         item.name,
         member.firstArg,
         member.references ?? [],
+        member.localBindings,
         resolution,
         input.context,
         exportIndexByPath,
@@ -1555,13 +1616,20 @@ function emitReferenceEdges(
   enclosingClassName: string | null,
   enclosingFirstArg: string | undefined,
   references: readonly PythonAstReference[],
+  localBindings: readonly string[],
   resolution: CallResolutionContext,
   context: PythonParserContext,
   exportIndexByPath: Map<string, PythonExportIndex>,
   callPairs: ReadonlySet<string>,
   edgesById: Map<string, EdgeRecord>,
 ): void {
+  const localBindingSet = new Set(localBindings);
+
   for (const reference of references) {
+    if (isShadowedLocalReference(reference, localBindingSet)) {
+      continue;
+    }
+
     const target = resolveReferenceTarget(
       reference.target,
       enclosingClassName,
@@ -1582,6 +1650,28 @@ function emitReferenceEdges(
     const edge = makeReferencesEdge(source.id, target.id);
     edgesById.set(edge.id, edge);
   }
+}
+
+function isShadowedLocalReference(
+  reference: PythonAstReference,
+  localBindings: ReadonlySet<string>,
+): boolean {
+  if (reference.kind !== "name_use" && reference.kind !== "alias") {
+    return false;
+  }
+
+  const firstSegment = reference.target.split(".")[0];
+
+  if (
+    firstSegment === undefined
+    || firstSegment === "self"
+    || firstSegment === "cls"
+    || firstSegment === "super()"
+  ) {
+    return false;
+  }
+
+  return localBindings.has(firstSegment);
 }
 
 function resolveReferenceTarget(
