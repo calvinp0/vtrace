@@ -30,6 +30,31 @@ What they are for:
 - `workspace`: create, update, list, and inspect `.vtrace/workspace.json`
 - `mcp-serve`: repo-bound MCP server
 
+## Canonical RC Flow
+
+Recommended onboarding path:
+
+```bash
+./bin/vtrace setup <repo> --agent codex
+./bin/vtrace status <repo>
+./bin/vtrace index <repo>
+./bin/vtrace watch <repo>
+```
+
+`setup` is the recommended onboarding command. It initializes repo-local state, builds the initial index when needed, evaluates readiness, and installs agent config. Use an explicit `index` when you want to refresh the structural snapshot after setup or after source changes.
+
+`watch` is optional and mark-stale-only. It records pending source changes in `.vtrace/state.json`; it does not auto-reindex. A successful explicit `index` clears pending watcher stale state and records the new structural snapshot.
+
+Lower-level manual path:
+
+```bash
+./bin/vtrace init <repo>
+./bin/vtrace index <repo>
+./bin/vtrace status <repo>
+```
+
+Use this when you want repo-local initialization and indexing without the full setup/config flow.
+
 ## Direct Inspection Commands
 
 These are useful when you want manual control instead of the full MCP shell flow:
@@ -39,6 +64,8 @@ These are useful when you want manual control instead of the full MCP shell flow
 ./bin/vtrace index <repo>
 ./bin/vtrace intent <repo> <query>
 ./bin/vtrace capsule <repo> <query>
+./bin/vtrace run-pipeline <repo> <query> [--intent <auto|explore|debug|modify|refactor>] [--session-id ID] [--max-budget-characters N] [--include-memory]
+./bin/vtrace expand-vexp-ref <repo> <hash> [--query <query>] [--session-id ID] [--intent <auto|explore|debug|modify|refactor>] [--max-budget-characters N] [--include-memory]
 ./bin/vtrace skeleton <repo> <file> [--detail <minimal|standard|detailed>]
 ./bin/vtrace impact-graph <repo> <symbol-fqn> [--depth <n>] [--format <list|tree|mermaid>]
 ./bin/vtrace handoff <repo> <query>
@@ -89,6 +116,40 @@ Optionally watch source files and mark the index stale when they change:
 
 The watcher does not auto-reindex. It records pending source changes in `.vtrace/state.json`; `status`, `doctor`, and MCP `index_status` report that stale state until the next successful explicit `index`.
 
+Run the compact orchestration pipeline from the CLI:
+
+```bash
+./bin/vtrace run-pipeline <repo> "how does indexing work?"
+./bin/vtrace run-pipeline <repo> "rename createSession safely" --intent refactor --max-budget-characters 8000
+```
+
+`run-pipeline` emits the same compact orchestration shape used by the VS Code shell: intent, task summary, context, impact, memory, diagnostics, deferred references, and rules when relevant. The direct command emits JSON; it does not currently need or accept `--json`.
+
+Expand a V-REF from the CLI:
+
+```bash
+./bin/vtrace expand-vexp-ref <repo> a1b2c3d4e5f6
+```
+
+For practical CLI expansion across separate invocations, pass the original query so the command can republish the same deferred refs before resolving the hash:
+
+```bash
+./bin/vtrace run-pipeline . "how does run_pipeline build deferred refs?"
+
+./bin/vtrace expand-vexp-ref . a1b2c3d4e5f6 \
+  --query "how does run_pipeline build deferred refs?"
+```
+
+If the original run used relevant options such as `--intent`, `--session-id`, `--max-budget-characters`, or `--include-memory`, pass the same options to `expand-vexp-ref` with `--query`.
+
+## V-REF Expansion: MCP vs CLI
+
+MCP `expand_vexp_ref` is the primary expansion path for agents because it shares the current MCP server process-local deferred store. It resolves exact 12-character lowercase hex V-REF hashes emitted by `run_pipeline` in that same server process.
+
+CLI `expand-vexp-ref` is mainly for debugging. Each CLI invocation starts a separate process, so a V-REF emitted by a previous CLI `run-pipeline` invocation is not automatically available to a later CLI process. Use `--query` to re-run the pipeline and republish the same deferred items before expansion.
+
+Do not treat V-REFs as persistent. Expansion is exact hash lookup only; it is not fuzzy, does not semantically reconstruct missing content, and does not provide a durable disk-backed reference store.
+
 Show the structure of a file:
 
 ```bash
@@ -128,6 +189,8 @@ The product-shell commands support `--json`:
 - `watch`
 
 That is useful for scripts, editors, or wrappers that want structured output.
+
+Several direct inspection commands, including `run-pipeline` and `expand-vexp-ref`, already emit JSON directly and do not currently accept a separate `--json` flag.
 
 ## Repo-Local State
 

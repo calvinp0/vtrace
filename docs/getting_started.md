@@ -134,7 +134,7 @@ Run a fresh index when:
 ./bin/vtrace index /path/to/your/repo
 ```
 
-If you want VTRACE to notice source edits passively, start the optional watcher:
+If you want `vtrace` to notice source edits passively, start the optional watcher:
 
 ```bash
 ./bin/vtrace watch /path/to/your/repo
