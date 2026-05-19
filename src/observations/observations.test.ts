@@ -1111,7 +1111,7 @@ test("best-effort visible-capsule auto-capture never fails the primary path", ()
 async function withObservationFixture(
   run: (input: { repoRoot: string; db: ReturnType<typeof openIndexerDatabase> }) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-observations-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-observations-"));
   const repoRoot = path.join(root, "repo");
   const db = openIndexerDatabase();
 

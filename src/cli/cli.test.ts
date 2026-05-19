@@ -300,7 +300,7 @@ test("workspace list and status report configured repos deterministically", asyn
           enabled: true,
           configExists: false,
           indexExists: false,
-          reason: `Repo-local config is missing. Run \`vexb init ${siblingRoot}\` or \`vexb setup ${siblingRoot}\`.`,
+          reason: `Repo-local config is missing. Run \`vtrace init ${siblingRoot}\` or \`vtrace setup ${siblingRoot}\`.`,
         },
       ],
     );
@@ -365,10 +365,10 @@ test("claude-config dry-run preserves existing config and update writes the stab
           [repoRoot]: {
             allowedTools: ["Bash(echo hi)"],
             mcpServers: {
-              vexb: {
+              vtrace: {
                 type: "stdio",
                 command: "bash",
-                args: ["/tmp/old-vexb", "mcp-serve", "--repo", repoRoot],
+                args: ["/tmp/old-vtrace", "mcp-serve", "--repo", repoRoot],
                 env: {},
               },
             },
@@ -385,7 +385,7 @@ test("claude-config dry-run preserves existing config and update writes the stab
     assert.equal(dryRun.exitCode, 0);
     assert.match(dryRun.stdout, /^Claude Code config preview/m);
     assert.match(dryRun.stdout, /Action: updated MCP config \(dry run\)/);
-    assert.equal(beforeUpdate.includes("/tmp/old-vexb"), true);
+    assert.equal(beforeUpdate.includes("/tmp/old-vtrace"), true);
     assert.equal(updated.exitCode, 0);
     assert.match(updated.stdout, /^Claude Code config updated/m);
     assert.match(updated.stdout, /Action: updated MCP config/);
@@ -406,9 +406,9 @@ test("claude-config supports codex and writes the project-scoped .codex/config.t
       [
         'model = "gpt-5"',
         "",
-        "[mcp_servers.vexb]",
+        "[mcp_servers.vtrace]",
         'command = "bash"',
-        `args = ["/tmp/old-vexb", "mcp-serve", "--repo", ${JSON.stringify(repoRoot)}]`,
+        `args = ["/tmp/old-vtrace", "mcp-serve", "--repo", ${JSON.stringify(repoRoot)}]`,
         `cwd = ${JSON.stringify(repoRoot)}`,
         "",
       ].join("\n"),
@@ -424,7 +424,7 @@ test("claude-config supports codex and writes the project-scoped .codex/config.t
     assert.equal(dryRun.exitCode, 0);
     assert.match(dryRun.stdout, /^Codex config preview/m);
     assert.match(dryRun.stdout, /Action: updated MCP config \(dry run\)/);
-    assert.equal(beforeUpdate.includes("/tmp/old-vexb"), true);
+    assert.equal(beforeUpdate.includes("/tmp/old-vtrace"), true);
     assert.equal(updated.exitCode, 0);
     assert.match(updated.stdout, /^Codex config updated/m);
     assert.match(updated.stdout, /Config file: \.codex\/config\.toml/);
@@ -455,7 +455,7 @@ test("claude-config surfaces a clear Codex config conflict when .codex is a file
     assert.equal(result.stdout, "");
     assert.match(result.stderr, /^Agent config was not updated\./m);
     assert.match(result.stderr, /Codex project config directory is blocked by a file:/);
-    assert.match(result.stderr, /Remove or rename it so vexb can write \.codex\/config\.toml\./);
+    assert.match(result.stderr, /Remove or rename it so vtrace can write \.codex\/config\.toml\./);
     assert.equal(/ENOTDIR/.test(result.stderr), false);
   });
 });
@@ -471,7 +471,7 @@ test("setup surfaces a clear Codex config conflict when .codex is a file", async
     assert.equal(result.stdout, "");
     assert.match(result.stderr, /^Setup could not finish\./m);
     assert.match(result.stderr, /Codex project config directory is blocked by a file:/);
-    assert.match(result.stderr, /Remove or rename it so vexb can write \.codex\/config\.toml\./);
+    assert.match(result.stderr, /Remove or rename it so vtrace can write \.codex\/config\.toml\./);
     assert.equal(/ENOTDIR/.test(result.stderr), false);
   });
 });
@@ -525,7 +525,7 @@ test("status and doctor surface common readiness and config failure states clear
     assert.match(beforeSetup.stdout, /Claude Code config state/m);
     assert.match(beforeSetup.stdout, /State: not installed/);
     assert.match(beforeSetup.stdout, /Next steps/m);
-    assert.match(beforeSetup.stdout, /vexb setup/);
+    assert.match(beforeSetup.stdout, /vtrace setup/);
 
     assert.match(afterSetup.stdout, /^Doctor/m);
     assert.match(afterSetup.stdout, /Setup: initialized/);
@@ -628,7 +628,7 @@ test("status and doctor surface fresh index freshness for a matching git-backed 
 
     assert.equal(status.exitCode, 0);
     assert.match(status.stdout, /Freshness: fresh/);
-    assert.match(status.stdout, /Open Claude Code in this repo; vexb can use the current indexed snapshot as-is\./);
+    assert.match(status.stdout, /Open Claude Code in this repo; vtrace can use the current indexed snapshot as-is\./);
 
     assert.equal(doctor.exitCode, 0);
     assert.match(doctor.stdout, /Index freshness/);
@@ -713,15 +713,15 @@ test("status and doctor surface possibly stale freshness warnings without mutati
       assert.equal(status.exitCode, 0);
       assert.match(status.stdout, /Freshness: possibly stale/);
       assert.match(status.stdout, /Indexed source files appear to have changed since the last indexed snapshot\./);
-      assert.match(status.stdout, /Re-index before relying on vexb for fresh structural guidance\./);
+      assert.match(status.stdout, /Re-index before relying on vtrace for fresh structural guidance\./);
 
       assert.equal(doctor.exitCode, 0);
       assert.match(doctor.stdout, /State: possibly stale/);
-      assert.match(doctor.stdout, /Vexb detected likely drift since the last indexed snapshot\./);
+      assert.match(doctor.stdout, /Vtrace detected likely drift since the last indexed snapshot\./);
       assert.match(doctor.stdout, /indexed source file count differs from the last indexed snapshot/);
       assert.match(doctor.stdout, /indexed source fingerprint differs from the last indexed snapshot/);
       assert.match(doctor.stdout, /Retrieval, skeletons, impact graphs, and pipeline output may reflect older structure in changed areas\./);
-      assert.match(doctor.stdout, /Re-index this repo before relying on vexb for fresh structural guidance\./);
+      assert.match(doctor.stdout, /Re-index this repo before relying on vtrace for fresh structural guidance\./);
 
       assert.equal(doctorJson.result.indexState.freshness.state, "possibly_stale");
       assert.deepEqual(doctorJson.result.indexState.freshness.comparison, {
@@ -848,7 +848,7 @@ test("setup and status support codex as a second real backend", async () => {
     assert.match(status.stdout, /Codex config state/);
     assert.match(status.stdout, /Config file: \.codex\/config\.toml/);
     assert.match(status.stdout, /Freshness: fresh/);
-    assert.match(status.stdout, /vexb can use the current indexed snapshot as-is\./);
+    assert.match(status.stdout, /vtrace can use the current indexed snapshot as-is\./);
 
     assert.equal(doctor.exitCode, 0);
     assert.equal(doctorOutput.ok, true);
@@ -883,10 +883,10 @@ test("claude-config --json returns a stable explicit envelope and supports dry-r
         projects: {
           [repoRoot]: {
             mcpServers: {
-              vexb: {
+              vtrace: {
                 type: "stdio",
                 command: "bash",
-                args: ["/tmp/old-vexb", "mcp-serve", "--repo", repoRoot],
+                args: ["/tmp/old-vtrace", "mcp-serve", "--repo", repoRoot],
                 env: {},
               },
             },
@@ -922,7 +922,7 @@ test("claude-config --json returns a stable explicit envelope and supports dry-r
     assert.equal(dryRunOutput.result.agentConfig.dryRun, true);
     assert.equal(dryRunOutput.result.agentConfig.installed, true);
     assert.equal(dryRunOutput.error, null);
-    assert.equal(beforeUpdate.includes("/tmp/old-vexb"), true);
+    assert.equal(beforeUpdate.includes("/tmp/old-vtrace"), true);
 
     assert.equal(updated.exitCode, 0);
     assert.equal(updated.stderr, "");
@@ -992,7 +992,7 @@ test("init followed by handoff succeeds on the same repo", async () => {
 
     const output = JSON.parse(result.stdout);
     assert.deepEqual(output.schema, {
-      name: "vexb.external_handoff",
+      name: "vtrace.external_handoff",
       version: "1.0.0",
     });
     assert.equal(output.selectedIntent, "explain");
@@ -1222,7 +1222,7 @@ test("handoff command prints deterministic payload output", async () => {
 
     const output = JSON.parse(first.stdout);
     assert.deepEqual(output.schema, {
-      name: "vexb.external_handoff",
+      name: "vtrace.external_handoff",
       version: "1.0.0",
     });
     assert.equal(output.query, "Session");
@@ -1563,8 +1563,8 @@ test("invalid commands fail cleanly", async () => {
   assert.equal(result.exitCode, 1);
   assert.equal(result.stdout, "");
   assert.match(result.stderr, /^Usage:/m);
-  assert.match(result.stderr, /vexb setup \[repo\] \[--start-runtime\]/);
-  assert.match(result.stderr, /vexb mcp-serve --repo <repo>/);
+  assert.match(result.stderr, /vtrace setup \[repo\] \[--start-runtime\]/);
+  assert.match(result.stderr, /vtrace mcp-serve --repo <repo>/);
   assert.match(result.stderr, /docs\/getting_started\.md/);
 });
 
@@ -1572,8 +1572,8 @@ test("--help succeeds and the symlinked launcher resolves the real package root"
   await withFixture(async ({ repoRoot }) => {
     await writeFixtureRepo(repoRoot);
     const fakePrefixBin = path.join(path.dirname(repoRoot), "global-bin");
-    const symlinkPath = path.join(fakePrefixBin, "vexb");
-    const realLauncherPath = path.resolve(process.cwd(), "bin", "vexb");
+    const symlinkPath = path.join(fakePrefixBin, "vtrace");
+    const realLauncherPath = path.resolve(process.cwd(), "bin", "vtrace");
 
     await mkdir(fakePrefixBin, { recursive: true });
     await symlink(realLauncherPath, symlinkPath);
@@ -1584,7 +1584,7 @@ test("--help succeeds and the symlinked launcher resolves the real package root"
     assert.equal(helpResult.exitCode, 0);
     assert.equal(helpResult.stderr, "");
     assert.match(helpResult.stdout, /^Usage:/m);
-    assert.match(helpResult.stdout, /vexb setup \[repo\] \[--start-runtime\]/);
+    assert.match(helpResult.stdout, /vtrace setup \[repo\] \[--start-runtime\]/);
 
     assert.equal(setupResult.exitCode, 0);
     assert.equal(setupResult.stderr, "");
@@ -1710,21 +1710,21 @@ interface FixtureContext {
 }
 
 async function withFixture(run: (context: FixtureContext) => Promise<void>): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-cli-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-cli-"));
   const repoRoot = path.join(root, "repo");
   const dbPath = path.join(root, "index.sqlite");
-  const previousClaudeConfigPath = process.env.VEXB_CLAUDE_CODE_CONFIG_PATH;
+  const previousClaudeConfigPath = process.env.VTRACE_CLAUDE_CODE_CONFIG_PATH;
 
   try {
-    process.env.VEXB_CLAUDE_CODE_CONFIG_PATH = path.join(root, "claude.json");
+    process.env.VTRACE_CLAUDE_CODE_CONFIG_PATH = path.join(root, "claude.json");
     await mkdir(repoRoot, { recursive: true });
     await mkdir(path.join(repoRoot, ".git"), { recursive: true });
     await run({ repoRoot, dbPath });
   } finally {
     if (previousClaudeConfigPath === undefined) {
-      delete process.env.VEXB_CLAUDE_CODE_CONFIG_PATH;
+      delete process.env.VTRACE_CLAUDE_CODE_CONFIG_PATH;
     } else {
-      process.env.VEXB_CLAUDE_CODE_CONFIG_PATH = previousClaudeConfigPath;
+      process.env.VTRACE_CLAUDE_CODE_CONFIG_PATH = previousClaudeConfigPath;
     }
     await rm(root, { recursive: true, force: true });
   }
@@ -1760,8 +1760,8 @@ async function runExternalCommand(
 
 async function initializeGitRepo(repoRoot: string): Promise<string> {
   await execGit(repoRoot, ["init"]);
-  await execGit(repoRoot, ["config", "user.name", "vexb-tests"]);
-  await execGit(repoRoot, ["config", "user.email", "vexb@example.com"]);
+  await execGit(repoRoot, ["config", "user.name", "vtrace-tests"]);
+  await execGit(repoRoot, ["config", "user.email", "vtrace@example.com"]);
   await execGit(repoRoot, ["add", "."]);
   await execGit(repoRoot, ["commit", "-m", "initial"]);
   return (await execGit(repoRoot, ["rev-parse", "HEAD"])).trim();
@@ -2023,7 +2023,7 @@ function buildExpectedCodexConfigToml(
   const lines = [
     ...prefixLines,
     ...(prefixLines.length === 0 ? [] : [""]),
-    "[mcp_servers.vexb]",
+    "[mcp_servers.vtrace]",
     'command = "bash"',
     `args = [${JSON.stringify(resolveStableLauncherPath())}, "mcp-serve", "--repo", ${JSON.stringify(repoRoot)}]`,
     `cwd = ${JSON.stringify(repoRoot)}`,
@@ -2038,11 +2038,11 @@ async function readClaudeCodeConfig(repoRoot: string): Promise<any> {
 }
 
 function assertExpectedClaudeCodeServer(config: any, repoRoot: string): void {
-  const server = config.projects[repoRoot].mcpServers.vexb;
+  const server = config.projects[repoRoot].mcpServers.vtrace;
 
   assert.equal(server.type, "stdio");
   assert.equal(server.command, "bash");
-  assert.equal(server.args[0].endsWith("/bin/vexb"), true);
+  assert.equal(server.args[0].endsWith("/bin/vtrace"), true);
   assert.deepEqual(server.args.slice(1), ["mcp-serve", "--repo", repoRoot]);
   assert.deepEqual(server.env, {});
 }

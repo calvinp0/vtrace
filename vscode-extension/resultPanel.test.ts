@@ -26,7 +26,7 @@ test("buildResultView picks title and body per result type", () => {
   const view = buildResultView({ type: RESULT_TYPES.IndexStatus, repoRoot: "/repo", snapshot });
 
   assert.equal(view.type, RESULT_TYPES.IndexStatus);
-  assert.equal(view.title, "vexb — Index Status");
+  assert.equal(view.title, "vtrace — Index Status");
   assert.equal(view.repoRoot, "/repo");
   assert.match(view.body, /Summary/);
 });
@@ -39,7 +39,7 @@ test("buildResultView embeds file path in File Skeleton title and symbol in Impa
     skeleton,
     filePath: "src/app.ts",
   });
-  assert.equal(skeletonView.title, "VEXB • File Skeleton: src/app.ts");
+  assert.equal(skeletonView.title, "VTRACE • File Skeleton: src/app.ts");
 
   const impactView = buildResultView({
     type: RESULT_TYPES.ImpactGraph,
@@ -47,7 +47,7 @@ test("buildResultView embeds file path in File Skeleton title and symbol in Impa
     impact: makeImpactOutput(),
     symbolFqn: "src/app.ts::App",
   });
-  assert.equal(impactView.title, "VEXB • Impact Graph: src/app.ts::App");
+  assert.equal(impactView.title, "VTRACE • Impact Graph: src/app.ts::App");
 });
 
 test("buildHtml embeds the title, repo line, body, and raw JSON toggle when rawData is provided", () => {
@@ -60,7 +60,7 @@ test("buildHtml embeds the title, repo line, body, and raw JSON toggle when rawD
   const html = buildHtml(view);
 
   assert.match(html, /data-result-type="index_status"/);
-  assert.match(html, /data-testid="result-title">vexb — Index Status/);
+  assert.match(html, /data-testid="result-title">vtrace — Index Status/);
   assert.match(html, /data-testid="repo-root">Repo: \/repo/);
   // Show raw JSON toggle + Copy JSON button are present but raw pre stays hidden by default
   assert.match(html, /id="toggle-raw"[^>]*aria-expanded="false"/);
@@ -144,27 +144,27 @@ test("renderFreshnessBody includes reasons, why-it-matters, and recommendation s
   envelope.result.indexState.freshness.reasons = [
     { code: "source_file_count_changed", count: 3, message: "3 new source files" },
   ];
-  envelope.result.indexState.freshness.whyItMatters = "Vexb answers may be outdated.";
+  envelope.result.indexState.freshness.whyItMatters = "Vtrace answers may be outdated.";
   const snapshot = buildRepoSnapshot(envelope);
   const body = renderFreshnessBody(snapshot);
 
   assert.match(body, /possibly stale/);
   assert.match(body, /3 new source files/);
-  assert.match(body, /Vexb answers may be outdated/);
+  assert.match(body, /Vtrace answers may be outdated/);
   assert.match(body, /Re-index the repo\./);
 });
 
 test("renderRuntimeBody renders state, state file, log file, and stale-state warning", () => {
   const envelope = makeShellEnvelope();
-  envelope.result.runtime.statePath = "/repo/.vexb/runtime.state";
-  envelope.result.runtime.logPath = "/repo/.vexb/runtime.log";
+  envelope.result.runtime.statePath = "/repo/.vtrace/runtime.state";
+  envelope.result.runtime.logPath = "/repo/.vtrace/runtime.log";
   envelope.result.runtime.staleStatePresent = true;
   const snapshot = buildRepoSnapshot(envelope);
   const body = renderRuntimeBody(snapshot);
 
   assert.match(body, /not running/);
-  assert.match(body, /\/repo\/\.vexb\/runtime\.state/);
-  assert.match(body, /\/repo\/\.vexb\/runtime\.log/);
+  assert.match(body, /\/repo\/\.vtrace\/runtime\.state/);
+  assert.match(body, /\/repo\/\.vtrace\/runtime\.log/);
   assert.match(body, /present \(cleanup recommended\)/);
 });
 
@@ -184,25 +184,25 @@ test("renderSetupConfigBody lists each agent as a card with config state", () =>
 
 test("renderExecutableResolutionBody lists resolved path, source, and attempted paths", () => {
   const body = renderExecutableResolutionBody({
-    command: "/ext/bin/vexb",
+    command: "/ext/bin/vtrace",
     source: "bundled",
     attempted: [
-      { source: "bundled", path: "/ext/bin/vexb" },
-      { source: "path", path: "vexb" },
+      { source: "bundled", path: "/ext/bin/vtrace" },
+      { source: "path", path: "vtrace" },
     ],
   });
 
   assert.match(body, /Resolved path/);
-  assert.match(body, /\/ext\/bin\/vexb/);
+  assert.match(body, /\/ext\/bin\/vtrace/);
   assert.match(body, /Bundled launcher/);
-  assert.match(body, /Resolved from PATH: vexb/);
+  assert.match(body, /Resolved from PATH: vtrace/);
 });
 
 test("renderExecutableResolutionBody degrades gracefully with no executable info", () => {
-  const body = renderExecutableResolutionBody(null, "vexb CLI was not found.");
+  const body = renderExecutableResolutionBody(null, "vtrace CLI was not found.");
 
-  assert.match(body, /No vexb executable resolution has been recorded yet\./);
-  assert.match(body, /vexb CLI was not found\./);
+  assert.match(body, /No vtrace executable resolution has been recorded yet\./);
+  assert.match(body, /vtrace CLI was not found\./);
 });
 
 test("renderDoctorBody shows summary rows and bullets for warnings + next steps", () => {
@@ -512,7 +512,7 @@ test("ResultPanelController creates a webview on first show and reuses it on lat
 
   assert.equal(harness.created.length, 1, "panel should be reused across results");
   const panel = harness.created[0];
-  assert.equal(panel?.title, "vexb — Freshness");
+  assert.equal(panel?.title, "vtrace — Freshness");
   assert.match(panel?.webview.html ?? "", /data-result-type="freshness"/);
   assert.equal(panel?.revealCount ?? 0, 2);
 });
@@ -523,14 +523,14 @@ test("ResultPanelController updates the title on each show", () => {
   const snapshot = buildRepoSnapshot(makeShellEnvelope());
 
   controller.showResult({ type: RESULT_TYPES.IndexStatus, repoRoot: "/repo", snapshot });
-  assert.equal(harness.created[0]?.title, "vexb — Index Status");
+  assert.equal(harness.created[0]?.title, "vtrace — Index Status");
   controller.showResult({
     type: RESULT_TYPES.FileSkeleton,
     repoRoot: "/repo",
     skeleton: { detail: "standard", files: [makeSkeletonFile()] },
     filePath: "src/app.ts",
   });
-  assert.equal(harness.created[0]?.title, "VEXB • File Skeleton: src/app.ts");
+  assert.equal(harness.created[0]?.title, "VTRACE • File Skeleton: src/app.ts");
 });
 
 test("ResultPanelController recreates the panel after disposal", () => {
@@ -736,7 +736,7 @@ function makeShellEnvelope(overrides: {
     repoRoot: "/repo",
     timestampMs: 1,
     warnings: [],
-    nextSteps: ["Run `vexb setup /repo` to initialize and index the repo."],
+    nextSteps: ["Run `vtrace setup /repo` to initialize and index the repo."],
     error: null,
     result: {
       selectedAgent: overrides.selectedAgent ?? "claude-code",
@@ -869,7 +869,7 @@ test("buildResultView picks the run_pipeline title with the query suffix", () =>
     pipeline: makeRunPipelineOutput(),
   });
   assert.equal(view.type, RESULT_TYPES.RunPipeline);
-  assert.match(view.title, /^VEXB • Pipeline Result: trace auth flow/);
+  assert.match(view.title, /^VTRACE • Pipeline Result: trace auth flow/);
 });
 
 test("buildHtml exposes the raw JSON for run_pipeline but keeps the human-readable sections above the toggle", () => {

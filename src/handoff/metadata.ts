@@ -1,6 +1,6 @@
 import type { CapsuleStalenessResult } from "../memory/types";
 
-export const HANDOFF_SCHEMA_NAME = "vexb.external_handoff" as const;
+export const HANDOFF_SCHEMA_NAME = "vtrace.external_handoff" as const;
 export const HANDOFF_SCHEMA_VERSION = "1.0.0" as const;
 
 export type HandoffSchemaName = typeof HANDOFF_SCHEMA_NAME;

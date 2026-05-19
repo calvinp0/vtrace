@@ -37,7 +37,7 @@ import {
 } from "./shell.js";
 import { RESULT_TYPES, ResultPanelController } from "./resultPanel.js";
 
-export const RESULT_DOC_SCHEME = "vexb";
+export const RESULT_DOC_SCHEME = "vtrace";
 
 export async function activate(context) {
   const vscode = await import("vscode");
@@ -45,12 +45,12 @@ export async function activate(context) {
 }
 
 export async function activateWithVscode(vscode, context, overrides = {}) {
-  const output = overrides.outputChannel ?? vscode.window.createOutputChannel("vexb");
+  const output = overrides.outputChannel ?? vscode.window.createOutputChannel("vtrace");
   const statusBarItem = overrides.statusBarItem
     ?? vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
   const cli = overrides.cliBridge ?? createCliBridge({
     extensionPath: context.extensionPath,
-    getConfiguredCliPath: () => vscode.workspace.getConfiguration("vexb").get("cliPath", ""),
+    getConfiguredCliPath: () => vscode.workspace.getConfiguration("vtrace").get("cliPath", ""),
     execFile: overrides.execFile,
     fileExists: overrides.fileExists,
   });
@@ -86,7 +86,7 @@ export async function activateWithVscode(vscode, context, overrides = {}) {
   }
 
   if (overrides.createTreeView !== false) {
-    const treeView = (overrides.createTreeView ?? vscode.window.createTreeView)("vexb.repoStatus", {
+    const treeView = (overrides.createTreeView ?? vscode.window.createTreeView)("vtrace.repoStatus", {
       treeDataProvider: repoStatusProvider,
       showCollapseAll: false,
     });
@@ -371,7 +371,7 @@ function createCommandHandlers(app) {
     },
 
     openSettings: async () => {
-      await app.vscode.commands.executeCommand("workbench.action.openSettings", "vexb.cliPath");
+      await app.vscode.commands.executeCommand("workbench.action.openSettings", "vtrace.cliPath");
     },
 
     revealRepoRoot: async () => {
@@ -462,9 +462,9 @@ async function refreshStatus(app) {
 
     const repoRoot = workspace.repoRoot;
     if (!isRunningBusy(app.busyState)) {
-      app.statusBarItem.text = "$(sync~spin) vexb: refreshing";
+      app.statusBarItem.text = "$(sync~spin) vtrace: refreshing";
       app.statusBarItem.command = COMMAND_IDS.ShowIndexStatus;
-      app.statusBarItem.tooltip = "Refreshing vexb status…";
+      app.statusBarItem.tooltip = "Refreshing vtrace status…";
       app.statusBarItem.show();
     }
 
@@ -506,7 +506,7 @@ async function safeGetExecutableInfo(cli) {
 }
 
 function snapshotFromError(error, repoRoot, executable) {
-  if (error?.code === "VEXB_CLI_NOT_FOUND") {
+  if (error?.code === "VTRACE_CLI_NOT_FOUND") {
     return createCliUnavailableSnapshot(
       error.message ?? EMPTY_STATE_MESSAGES.CliNotFound,
       repoRoot,
@@ -514,7 +514,7 @@ function snapshotFromError(error, repoRoot, executable) {
     );
   }
 
-  if (error?.code === "VEXB_BUN_NOT_FOUND") {
+  if (error?.code === "VTRACE_BUN_NOT_FOUND") {
     return createCliUnavailableSnapshot(
       error.message ?? EMPTY_STATE_MESSAGES.BunMissing,
       repoRoot,
@@ -539,7 +539,7 @@ async function ensureRepoReady(app, repoRoot) {
       "Open output",
     );
     if (choice === "Open settings") {
-      await app.vscode.commands.executeCommand("workbench.action.openSettings", "vexb.cliPath");
+      await app.vscode.commands.executeCommand("workbench.action.openSettings", "vtrace.cliPath");
     } else if (choice === "Open output") {
       app.output.show(true);
     }
@@ -547,7 +547,7 @@ async function ensureRepoReady(app, repoRoot) {
   }
 
   if (app.snapshot.kind !== "repo") {
-    app.vscode.window.showErrorMessage(app.snapshot.message ?? "vexb is unavailable.");
+    app.vscode.window.showErrorMessage(app.snapshot.message ?? "vtrace is unavailable.");
     return null;
   }
 
@@ -686,10 +686,10 @@ function showCommandFailure(app, title, error) {
 
   const headline = message.split("\n")[0];
 
-  if (error?.code === "VEXB_CLI_NOT_FOUND" || error?.code === "VEXB_BUN_NOT_FOUND") {
+  if (error?.code === "VTRACE_CLI_NOT_FOUND" || error?.code === "VTRACE_BUN_NOT_FOUND") {
     void app.vscode.window.showErrorMessage(headline, "Open settings", "Open output").then((choice) => {
       if (choice === "Open settings") {
-        void app.vscode.commands.executeCommand("workbench.action.openSettings", "vexb.cliPath");
+        void app.vscode.commands.executeCommand("workbench.action.openSettings", "vtrace.cliPath");
       } else if (choice === "Open output") {
         app.output.show(true);
       }
@@ -792,7 +792,7 @@ async function ensureEditorRepoReady(app, repoRoot, messages) {
       "Open output",
     );
     if (choice === "Open settings") {
-      await app.vscode.commands.executeCommand("workbench.action.openSettings", "vexb.cliPath");
+      await app.vscode.commands.executeCommand("workbench.action.openSettings", "vtrace.cliPath");
     } else if (choice === "Open output") {
       app.output.show(true);
     }
@@ -800,7 +800,7 @@ async function ensureEditorRepoReady(app, repoRoot, messages) {
   }
 
   if (app.snapshot.kind !== "repo") {
-    app.vscode.window.showErrorMessage(app.snapshot.message ?? "vexb is unavailable.");
+    app.vscode.window.showErrorMessage(app.snapshot.message ?? "vtrace is unavailable.");
     return null;
   }
 
@@ -864,7 +864,7 @@ async function pickAgent(vscode) {
       agentId: AGENT_IDS.Codex,
     },
   ], {
-    placeHolder: "Choose the vexb agent config to set up.",
+    placeHolder: "Choose the vtrace agent config to set up.",
     ignoreFocusOut: true,
   });
 
@@ -893,7 +893,7 @@ async function setupOrReindex(app) {
       "Open output",
     );
     if (choice === "Open settings") {
-      await app.vscode.commands.executeCommand("workbench.action.openSettings", "vexb.cliPath");
+      await app.vscode.commands.executeCommand("workbench.action.openSettings", "vtrace.cliPath");
     } else if (choice === "Open output") {
       app.output.show(true);
     }
@@ -901,7 +901,7 @@ async function setupOrReindex(app) {
   }
 
   if (app.snapshot.kind !== "repo") {
-    app.vscode.window.showErrorMessage(app.snapshot.message ?? "vexb is unavailable.");
+    app.vscode.window.showErrorMessage(app.snapshot.message ?? "vtrace is unavailable.");
     return;
   }
 
@@ -955,7 +955,7 @@ async function runSetupFlow(app, repoRoot) {
   }
   await runSetupReindexJob(app, {
     busyState: BUSY_STATES.RunningSetup,
-    progressTitle: "Setting up and indexing vexb for this repo…",
+    progressTitle: "Setting up and indexing vtrace for this repo…",
     args: buildSetupArgs(repoRoot, agentId),
     repoRoot,
   });
@@ -964,7 +964,7 @@ async function runSetupFlow(app, repoRoot) {
 async function runReindexFlow(app, repoRoot) {
   await runSetupReindexJob(app, {
     busyState: BUSY_STATES.RunningReindex,
-    progressTitle: "Re-indexing vexb for this repo…",
+    progressTitle: "Re-indexing vtrace for this repo…",
     args: buildIndexArgs(repoRoot),
     repoRoot,
   });
@@ -975,7 +975,7 @@ async function runSetupReindexJob(app, job) {
 
   applyBusyState(app, job.busyState);
 
-  // Auto-open the vexb output channel before the CLI starts so live parser progress
+  // Auto-open the vtrace output channel before the CLI starts so live parser progress
   // streams into the right-hand panel as it happens, not after the run ends.
   app.output.show(true);
   app.output.appendLine("");
@@ -986,10 +986,10 @@ async function runSetupReindexJob(app, job) {
   try {
     await withProgressNotification(app, job.progressTitle, async () => {
       const result = await app.cli.runTextStreaming(job.args, job.repoRoot, {
-        // VEXB_PROGRESS_STREAM=1 asks the CLI to emit per-phase/per-file progress to
+        // VTRACE_PROGRESS_STREAM=1 asks the CLI to emit per-phase/per-file progress to
         // stderr even though our spawned process has no TTY. Terminal users never see
         // this var so their behaviour is unchanged.
-        env: { VEXB_PROGRESS_STREAM: "1" },
+        env: { VTRACE_PROGRESS_STREAM: "1" },
         onStderrLine: (line) => app.output.appendLine(line),
       });
       const executable = app.cli.getLastExecutableInfo();
@@ -1043,7 +1043,7 @@ async function runPipelineForCurrentTask(app) {
       "Open output",
     );
     if (choice === "Open settings") {
-      await app.vscode.commands.executeCommand("workbench.action.openSettings", "vexb.cliPath");
+      await app.vscode.commands.executeCommand("workbench.action.openSettings", "vtrace.cliPath");
     } else if (choice === "Open output") {
       app.output.show(true);
     }
@@ -1051,7 +1051,7 @@ async function runPipelineForCurrentTask(app) {
   }
 
   if (app.snapshot.kind !== "repo") {
-    app.vscode.window.showErrorMessage(app.snapshot.message ?? "vexb is unavailable.");
+    app.vscode.window.showErrorMessage(app.snapshot.message ?? "vtrace is unavailable.");
     return;
   }
 
@@ -1118,7 +1118,7 @@ async function runPipelineForQuery(app, title) {
   }
 
   const query = await app.vscode.window.showInputBox({
-    prompt: "Describe the current task for vexb run_pipeline.",
+    prompt: "Describe the current task for vtrace run_pipeline.",
     value: defaultCapsulePrompt(app.vscode),
     ignoreFocusOut: true,
   });
@@ -1239,7 +1239,7 @@ class RepoStatusProvider {
       return buildRepoTreeSections(this.snapshot, { busyState: this.busyState }).map((section) => this._buildSectionItem(section));
     }
 
-    const rows = element.__vexbChildren;
+    const rows = element.__vtraceChildren;
     if (Array.isArray(rows)) {
       return rows.map((row) => this._buildRowItem(row));
     }
@@ -1249,9 +1249,9 @@ class RepoStatusProvider {
 
   _buildSectionItem(section) {
     const item = new this.vscode.TreeItem(section.label, this.vscode.TreeItemCollapsibleState.Expanded);
-    item.contextValue = `vexbSection:${section.id}`;
-    item.id = `vexb.section.${section.id}`;
-    item.__vexbChildren = section.children;
+    item.contextValue = `vtraceSection:${section.id}`;
+    item.id = `vtrace.section.${section.id}`;
+    item.__vtraceChildren = section.children;
     if (section.icon !== undefined) {
       item.iconPath = new this.vscode.ThemeIcon(section.icon);
     }

@@ -23,28 +23,28 @@ import { runWorkspaceCommand } from "./commands/workspaceCommand";
 
 const CLI_USAGE = [
   "Usage:",
-  "  vexb setup [repo] [--start-runtime] [--agent <name>] [--json]",
-  "  vexb status [repo] [--agent <name>] [--json]",
-  "  vexb doctor [repo] [--agent <name>] [--json]",
-  "  vexb claude-config [repo] [--dry-run] [--agent <name>] [--json]",
-  "  vexb daemon <start|stop|status|logs> [repo] [--json]",
-  "  vexb watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]",
-  "  vexb workspace <init|add|list|status> ...",
-  "  vexb mcp-serve --repo <repo>",
+  "  vtrace setup [repo] [--start-runtime] [--agent <name>] [--json]",
+  "  vtrace status [repo] [--agent <name>] [--json]",
+  "  vtrace doctor [repo] [--agent <name>] [--json]",
+  "  vtrace claude-config [repo] [--dry-run] [--agent <name>] [--json]",
+  "  vtrace daemon <start|stop|status|logs> [repo] [--json]",
+  "  vtrace watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]",
+  "  vtrace workspace <init|add|list|status> ...",
+  "  vtrace mcp-serve --repo <repo>",
   "",
   "Core inspection commands:",
-  "  vexb init <repo>",
-  "  vexb index <repo>",
-  "  vexb intent <repo> <query>",
-  "  vexb capsule <repo> <query>",
-  "  vexb run-pipeline <repo> <query> [--intent <auto|explore|debug|modify|refactor>] [--session-id ID]",
-  "  vexb expand-vexp-ref <repo> <hash> [--query <query>] [--session-id ID]",
-  "  vexb skeleton <repo> <file> [--detail <minimal|standard|detailed>]",
-  "  vexb impact-graph <repo> <symbol-fqn> [--depth <n>] [--format <list|tree|mermaid>]",
-  "  vexb handoff <repo> <query>",
-  "  vexb runs <repo>",
-  "  vexb rules <list|generate|promote|dismiss|disable> <repo> [rule-id]",
-  "  vexb check-capsule <repo> <manifest-id> <comparison-run-id>",
+  "  vtrace init <repo>",
+  "  vtrace index <repo>",
+  "  vtrace intent <repo> <query>",
+  "  vtrace capsule <repo> <query>",
+  "  vtrace run-pipeline <repo> <query> [--intent <auto|explore|debug|modify|refactor>] [--session-id ID]",
+  "  vtrace expand-vexp-ref <repo> <hash> [--query <query>] [--session-id ID]",
+  "  vtrace skeleton <repo> <file> [--detail <minimal|standard|detailed>]",
+  "  vtrace impact-graph <repo> <symbol-fqn> [--depth <n>] [--format <list|tree|mermaid>]",
+  "  vtrace handoff <repo> <query>",
+  "  vtrace runs <repo>",
+  "  vtrace rules <list|generate|promote|dismiss|disable> <repo> [rule-id]",
+  "  vtrace check-capsule <repo> <manifest-id> <comparison-run-id>",
   "",
   "Repeated setup is safe. Supported shell agents: claude-code (default), codex. See README.md and docs/getting_started.md for setup, CLI usage, MCP reference, and the tool cheat sheet.",
 ].join("\n");
@@ -123,7 +123,7 @@ if (import.meta.main) {
   installShutdownHandlers();
 
   const result = await runCli(process.argv.slice(2), {
-    dbPath: process.env.VEXB_DB_PATH,
+    dbPath: process.env.VTRACE_DB_PATH,
   });
 
   if (result.stdout.length > 0) {

@@ -1,11 +1,11 @@
 {
-  "name": "vexb",
+  "name": "vtrace",
   "description": "Repo-bound, local-first code indexing and MCP tool.",
   "version": "0.0.1",
   "type": "module",
   "private": true,
   "bin": {
-    "vexb": "./bin/vexb"
+    "vtrace": "./bin/vtrace"
   },
   "scripts": {
     "test": "bun test",
@@ -14,7 +14,7 @@
     "format:check": "prettier --ignore-unknown --check README.md docs/**/*.md package.json tsconfig.json .github/workflows/*.yml LICENSE CHANGELOG.md CONTRIBUTING.md SECURITY.md",
     "format": "prettier --ignore-unknown --write README.md docs/**/*.md package.json tsconfig.json .github/workflows/*.yml LICENSE CHANGELOG.md CONTRIBUTING.md SECURITY.md",
     "vscode:copy-bin": "node vscode-extension/scripts/copy-bin.mjs",
-    "package:vscode": "bun run vscode:copy-bin && cd vscode-extension && ../node_modules/.bin/vsce package --no-dependencies --allow-missing-repository --skip-license --out vexb-vscode.vsix"
+    "package:vscode": "bun run vscode:copy-bin && cd vscode-extension && ../node_modules/.bin/vsce package --no-dependencies --allow-missing-repository --skip-license --out vtrace-vscode.vsix"
   },
   "dependencies": {
     "tree-sitter": "^0.21.1",

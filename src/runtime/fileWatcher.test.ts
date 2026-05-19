@@ -53,7 +53,7 @@ test("watcher stale recording ignores repo-local state, dependencies, and non-so
       repoRoot,
       statePath: initialized.paths.statePath,
       changedFilePaths: [
-        ".vexb/state.ts",
+        ".vtrace/state.ts",
         "node_modules/pkg/index.ts",
         "README.md",
       ],
@@ -162,7 +162,7 @@ test("successful explicit reindex clears pending watcher stale state", async () 
 async function withFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-watch-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-watch-"));
   const repoRoot = path.join(root, "repo");
 
   try {

@@ -74,10 +74,10 @@ test("adapter vocabulary and default policy are explicit and stable", () => {
 });
 
 test("adapter metadata schema fields are explicit and inspectable", () => {
-  assert.equal(PROTOCOL_ADAPTER_SCHEMA_NAME, "vexb.protocol_adapter");
+  assert.equal(PROTOCOL_ADAPTER_SCHEMA_NAME, "vtrace.protocol_adapter");
   assert.equal(PROTOCOL_ADAPTER_SCHEMA_VERSION, "1.0.0");
   assert.deepEqual(PROTOCOL_ADAPTER_SCHEMA, {
-    name: "vexb.protocol_adapter",
+    name: "vtrace.protocol_adapter",
     version: "1.0.0",
   });
   assert.deepEqual(DEFAULT_PROTOCOL_ADAPTER_METADATA, {

@@ -28,7 +28,7 @@ export async function runStatusCommand(
       ? failureJson(formatShellJsonFailure({
         command: mode,
         message: parsed.error,
-        nextSteps: [`Run \`vexb ${mode} [repo] [--agent <name>] [--json]\`.`],
+        nextSteps: [`Run \`vtrace ${mode} [repo] [--agent <name>] [--json]\`.`],
       }))
       : failure(parsed.error);
   }
@@ -51,12 +51,12 @@ export async function runStatusCommand(
       ? failureJson(formatShellJsonFailure({
         command: mode,
         message,
-        nextSteps: [`Run \`vexb ${mode} [repo]\` from inside the repo, or pass the repo path explicitly.`],
+        nextSteps: [`Run \`vtrace ${mode} [repo]\` from inside the repo, or pass the repo path explicitly.`],
       }))
       : failure(formatUserFacingFailure(
         mode === "doctor" ? "Doctor could not inspect this repo." : "Status is unavailable.",
         message,
-        `Run \`vexb ${mode} [repo]\` from inside the repo, or pass the repo path explicitly.`,
+        `Run \`vtrace ${mode} [repo]\` from inside the repo, or pass the repo path explicitly.`,
       ));
   }
 }

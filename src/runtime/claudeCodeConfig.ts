@@ -8,8 +8,8 @@ import {
 } from "./launcher";
 
 const CLAUDE_CODE_CONFIG_FILENAME = ".claude.json" as const;
-const CLAUDE_CODE_SERVER_NAME = "vexb" as const;
-const CLAUDE_CODE_CONFIG_PATH_ENV = "VEXB_CLAUDE_CODE_CONFIG_PATH" as const;
+const CLAUDE_CODE_SERVER_NAME = "vtrace" as const;
+const CLAUDE_CODE_CONFIG_PATH_ENV = "VTRACE_CLAUDE_CODE_CONFIG_PATH" as const;
 
 interface ClaudeCodeMcpServerConfig {
   type: "stdio";
@@ -219,7 +219,7 @@ function extractInstalledServerConfig(
     return undefined;
   }
 
-  const env = readOptionalStringRecord(installed.env, "Claude Code vexb env");
+  const env = readOptionalStringRecord(installed.env, "Claude Code vtrace env");
 
   return {
     command: installed.command,

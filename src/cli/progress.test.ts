@@ -17,17 +17,17 @@ test("selectProgressReporter returns nullProgressReporter for JSON output", () =
   assert.equal(reporter, nullProgressReporter);
 });
 
-test("selectProgressReporter returns nullProgressReporter when VEXB_NO_PROGRESS=1 even on a TTY", () => {
+test("selectProgressReporter returns nullProgressReporter when VTRACE_NO_PROGRESS=1 even on a TTY", () => {
   const stream = makeFakeStream({ isTTY: true });
   const reporter = selectProgressReporter({
     stream,
-    env: { VEXB_NO_PROGRESS: "1" },
+    env: { VTRACE_NO_PROGRESS: "1" },
   });
 
   assert.equal(reporter, nullProgressReporter);
 });
 
-test("selectProgressReporter returns nullProgressReporter when stderr is not a TTY and VEXB_PROGRESS_STREAM is unset", () => {
+test("selectProgressReporter returns nullProgressReporter when stderr is not a TTY and VTRACE_PROGRESS_STREAM is unset", () => {
   const stream = makeFakeStream({ isTTY: false });
   const reporter = selectProgressReporter({
     stream,
@@ -50,11 +50,11 @@ test("selectProgressReporter returns an active reporter when stderr is a TTY", (
   assert.match(stream.written, /Parsing/);
 });
 
-test("VEXB_PROGRESS_STREAM=1 forces progress on even when stderr is not a TTY, using newline-delimited output", () => {
+test("VTRACE_PROGRESS_STREAM=1 forces progress on even when stderr is not a TTY, using newline-delimited output", () => {
   const stream = makeFakeStream({ isTTY: false });
   const reporter = selectProgressReporter({
     stream,
-    env: { VEXB_PROGRESS_STREAM: "1" },
+    env: { VTRACE_PROGRESS_STREAM: "1" },
   });
 
   assert.notEqual(reporter, nullProgressReporter);
@@ -71,18 +71,18 @@ test("VEXB_PROGRESS_STREAM=1 forces progress on even when stderr is not a TTY, u
   assert.match(stream.written, /done: parse/);
 });
 
-test("VEXB_PROGRESS_STREAM=1 does NOT override VEXB_NO_PROGRESS=1 or --json (stronger opt-outs win)", () => {
+test("VTRACE_PROGRESS_STREAM=1 does NOT override VTRACE_NO_PROGRESS=1 or --json (stronger opt-outs win)", () => {
   const streamOne = makeFakeStream({ isTTY: false });
   const reporterNoProgress = selectProgressReporter({
     stream: streamOne,
-    env: { VEXB_PROGRESS_STREAM: "1", VEXB_NO_PROGRESS: "1" },
+    env: { VTRACE_PROGRESS_STREAM: "1", VTRACE_NO_PROGRESS: "1" },
   });
   assert.equal(reporterNoProgress, nullProgressReporter);
 
   const streamTwo = makeFakeStream({ isTTY: false });
   const reporterJson = selectProgressReporter({
     stream: streamTwo,
-    env: { VEXB_PROGRESS_STREAM: "1" },
+    env: { VTRACE_PROGRESS_STREAM: "1" },
     isJsonOutput: true,
   });
   assert.equal(reporterJson, nullProgressReporter);

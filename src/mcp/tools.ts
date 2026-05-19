@@ -2556,7 +2556,7 @@ const WORKSPACE_SETUP_STATUS_SCHEMA = objectProperty(
       "Claude Code MCP config status.",
       {
         configPath: stringProperty("Claude Code MCP config path."),
-        installed: booleanProperty("Whether Claude Code config contains the vexb server entry."),
+        installed: booleanProperty("Whether Claude Code config contains the vtrace server entry."),
         matchesExpected: booleanProperty("Whether the configured launcher matches the expected stable launcher."),
         launcher: LAUNCHER_COMMAND_SCHEMA,
         error: {
@@ -2580,7 +2580,7 @@ const WORKSPACE_SETUP_STATUS_SCHEMA = objectProperty(
     ),
     workspace: {
       type: "object",
-      description: "Workspace config inspection when .vexb/workspace.json exists.",
+      description: "Workspace config inspection when .vtrace/workspace.json exists.",
       properties: {
         configPath: stringProperty("Workspace config path."),
         name: {
@@ -4980,7 +4980,7 @@ function createExpandVexpRefToolDefinition(
               message:
                 "The deferred V-REF was previously known but is no longer available. Re-run run_pipeline to produce a fresh expandable V-REF.",
               notes: [
-                "No hidden recomputation: vexb intentionally refuses to fabricate expansions for evicted records.",
+                "No hidden recomputation: vtrace intentionally refuses to fabricate expansions for evicted records.",
               ],
             },
           };
@@ -4994,7 +4994,7 @@ function createExpandVexpRefToolDefinition(
             message:
               "No deferred V-REF is registered under this hash. Use run_pipeline first; expand_vexp_ref only resolves hashes it has seen emitted.",
             notes: [
-              "Exact hash lookup only; vexb does not guess or approximate.",
+              "Exact hash lookup only; vtrace does not guess or approximate.",
             ],
           },
         };
@@ -6379,7 +6379,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             "Legacy alias for preset.",
           ),
           maxResults: integerProperty("Optional reranked candidate count."),
-          max_tokens: integerProperty("Product-facing total output budget. Currently mapped to VEXB's character-budgeted capsule engine."),
+          max_tokens: integerProperty("Product-facing total output budget. Currently mapped to VTRACE's character-budgeted capsule engine."),
           maxBudgetCharacters: integerProperty("Legacy capsule character budget."),
           include_tests: booleanProperty("Product-facing test-inclusion preference. Defaults true for debug preset, false otherwise."),
           include_file_content: booleanProperty("Product-facing file-content preference. The compact run_pipeline result still returns representation metadata, not full files."),

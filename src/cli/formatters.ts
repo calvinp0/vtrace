@@ -340,9 +340,9 @@ export function formatClaudeCodeConfigResult(
         : `${configLabel} is already current`;
   const nextSteps = result.dryRun
     ? result.action === "unchanged"
-      ? [`Open ${result.displayName} in this repo when you are ready to use vexb.`]
-      : [`Run \`vexb claude-config ${result.repoRoot}${agentFlag}\` to apply this change.`]
-    : [`Open ${result.displayName} in this repo. The installed MCP config will launch vexb on demand.`];
+      ? [`Open ${result.displayName} in this repo when you are ready to use vtrace.`]
+      : [`Run \`vtrace claude-config ${result.repoRoot}${agentFlag}\` to apply this change.`]
+    : [`Open ${result.displayName} in this repo. The installed MCP config will launch vtrace on demand.`];
 
   return [
     `${title}\n\n`,
@@ -418,10 +418,10 @@ export function formatRuntimeDaemonActionResult(
         : "Runtime is already stopped";
   const nextSteps = result.status.running
     ? [
-      `Run \`vexb daemon status ${result.status.repoRoot}\` to check the runtime again.`,
-      `Run \`vexb daemon logs ${result.status.repoRoot}\` to inspect runtime output.`,
+      `Run \`vtrace daemon status ${result.status.repoRoot}\` to check the runtime again.`,
+      `Run \`vtrace daemon logs ${result.status.repoRoot}\` to inspect runtime output.`,
     ]
-    : [`Run \`vexb daemon start ${result.status.repoRoot}\` if you want the optional background runtime.`];
+    : [`Run \`vtrace daemon start ${result.status.repoRoot}\` if you want the optional background runtime.`];
 
   return [
     `${title}\n\n`,
@@ -434,8 +434,8 @@ export function formatRuntimeDaemonStatus(
   status: RuntimeDaemonStatus,
 ): string {
   const nextSteps = status.running
-    ? [`Run \`vexb daemon logs ${status.repoRoot}\` to inspect runtime output.`]
-    : [`Run \`vexb daemon start ${status.repoRoot}\` if you want the optional background runtime.`];
+    ? [`Run \`vtrace daemon logs ${status.repoRoot}\` to inspect runtime output.`]
+    : [`Run \`vtrace daemon start ${status.repoRoot}\` if you want the optional background runtime.`];
 
   return [
     "Runtime status\n\n",
@@ -461,7 +461,7 @@ export function formatRuntimeDaemonLogs(input: {
     trimmedContent.length > 0
       ? `Log output\n${trimmedContent}\n\n`
       : "Log output\n(no log entries yet)\n\n",
-    formatNextSteps([`Run \`vexb daemon status ${input.repoRoot}\` to check whether the runtime is running.`]),
+    formatNextSteps([`Run \`vtrace daemon status ${input.repoRoot}\` to check whether the runtime is running.`]),
   ].join("");
 }
 
@@ -592,23 +592,23 @@ function buildProductShellStatusNextSteps(
       }
 
       return [
-        `Open ${result.agentConfig.displayName} in this repo; vexb can use the current indexed snapshot as-is.`,
+        `Open ${result.agentConfig.displayName} in this repo; vtrace can use the current indexed snapshot as-is.`,
         ...(!result.runtime.running
           ? ["Start the runtime daemon only if you want an inspectable background process."]
           : []),
       ];
     case "possibly_stale":
       return mode === "doctor"
-        ? ["Re-index this repo before relying on vexb for fresh structural guidance."]
+        ? ["Re-index this repo before relying on vtrace for fresh structural guidance."]
         : [
           "Indexed source files appear to have changed since the last indexed snapshot.",
-          "Re-index before relying on vexb for fresh structural guidance.",
+          "Re-index before relying on vtrace for fresh structural guidance.",
         ];
     case "unknown":
       return mode === "doctor"
         ? ["Re-index if you want a fresh, explicit trust point."]
         : [
-          "Vexb could not compare the current repo state to the last indexed snapshot.",
+          "Vtrace could not compare the current repo state to the last indexed snapshot.",
           "Run doctor for more detail.",
         ];
   }

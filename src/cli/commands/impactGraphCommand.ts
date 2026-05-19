@@ -28,7 +28,7 @@ export async function runImpactGraphCommand(
 
   if (!paths.dbExists) {
     return failure(
-      `Index database not found for repo: ${paths.repoRoot}. Run \`vexb setup ${paths.repoRoot}\` or \`vexb index ${paths.repoRoot}\`.`,
+      `Index database not found for repo: ${paths.repoRoot}. Run \`vtrace setup ${paths.repoRoot}\` or \`vtrace index ${paths.repoRoot}\`.`,
     );
   }
 

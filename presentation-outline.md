@@ -1,4 +1,4 @@
-# vexb — Local Deterministic Code Indexer
+# vtrace — Local Deterministic Code Indexer
 ## Presentation Outline
 
 ---
@@ -12,7 +12,7 @@
 
 ---
 
-### 2. What is vexb?
+### 2. What is vtrace?
 
 - A local, deterministic code indexer that builds **structural intelligence**
 - Parses source code with Tree-sitter into symbols and edges (contains, imports)

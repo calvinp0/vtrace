@@ -28,7 +28,7 @@ export async function runSetupCommand(
       ? failureJson(formatShellJsonFailure({
         command: "setup",
         message: parsed.error,
-        nextSteps: ["Run `vexb setup [repo] [--start-runtime] [--agent <name>] [--json]`."],
+        nextSteps: ["Run `vtrace setup [repo] [--start-runtime] [--agent <name>] [--json]`."],
       }))
       : failure(parsed.error);
   }
@@ -58,12 +58,12 @@ export async function runSetupCommand(
       ? failureJson(formatShellJsonFailure({
         command: "setup",
         message,
-        nextSteps: ["Run `vexb setup [repo]` from inside the repo, or pass the repo path explicitly."],
+        nextSteps: ["Run `vtrace setup [repo]` from inside the repo, or pass the repo path explicitly."],
       }))
       : failure(formatUserFacingFailure(
         "Setup could not finish.",
         message,
-        "Run `vexb setup [repo]` from inside the repo, or pass the repo path explicitly.",
+        "Run `vtrace setup [repo]` from inside the repo, or pass the repo path explicitly.",
       ));
   }
 }

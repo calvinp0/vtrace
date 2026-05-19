@@ -179,10 +179,10 @@ export function formatRuntimeDaemonActionJson(
     : [];
   const nextSteps = result.status.running
     ? [
-      `Run \`vexb daemon status ${result.status.repoRoot}\` to check the runtime again.`,
-      `Run \`vexb daemon logs ${result.status.repoRoot}\` to inspect runtime output.`,
+      `Run \`vtrace daemon status ${result.status.repoRoot}\` to check the runtime again.`,
+      `Run \`vtrace daemon logs ${result.status.repoRoot}\` to inspect runtime output.`,
     ]
-    : [`Run \`vexb daemon start ${result.status.repoRoot}\` if you want the optional background runtime.`];
+    : [`Run \`vtrace daemon start ${result.status.repoRoot}\` if you want the optional background runtime.`];
 
   return formatJson(buildShellJsonSuccess(command, result.status.repoRoot, {
     action: result.action,
@@ -198,8 +198,8 @@ export function formatRuntimeDaemonStatusJson(
   }, result.staleStatePresent
     ? ["Runtime state file exists but the daemon is not running."]
     : [], result.running
-    ? [`Run \`vexb daemon logs ${result.repoRoot}\` to inspect runtime output.`]
-    : [`Run \`vexb daemon start ${result.repoRoot}\` if you want the optional background runtime.`]));
+    ? [`Run \`vtrace daemon logs ${result.repoRoot}\` to inspect runtime output.`]
+    : [`Run \`vtrace daemon start ${result.repoRoot}\` if you want the optional background runtime.`]));
 }
 
 export function formatRuntimeDaemonLogsJson(input: {
@@ -211,7 +211,7 @@ export function formatRuntimeDaemonLogsJson(input: {
     logPath: input.logPath,
     hasContent: input.content.length > 0,
     content: input.content,
-  }, [], [`Run \`vexb daemon status ${input.repoRoot}\` to check whether the runtime is running.`]));
+  }, [], [`Run \`vtrace daemon status ${input.repoRoot}\` to check whether the runtime is running.`]));
 }
 
 export function formatShellJsonFailure(input: {
@@ -413,10 +413,10 @@ function collectProductShellWarnings(
   if (result.indexPresent && result.readiness?.status === "ready") {
     switch (result.indexFreshness.state) {
       case "possibly_stale":
-        warnings.push("Vexb detected likely drift since the last indexed snapshot.");
+        warnings.push("Vtrace detected likely drift since the last indexed snapshot.");
         break;
       case "unknown":
-        warnings.push("Vexb could not determine whether the current repo matches the last indexed snapshot.");
+        warnings.push("Vtrace could not determine whether the current repo matches the last indexed snapshot.");
         break;
       case "fresh":
         break;
@@ -441,11 +441,11 @@ function buildAgentConfigNextSteps(
 
   if (result.dryRun) {
     return result.action === "unchanged"
-      ? [`Open ${result.displayName} in this repo when you are ready to use vexb.`]
-      : [`Run \`vexb claude-config ${result.repoRoot}${agentFlag}\` to apply this change.`];
+      ? [`Open ${result.displayName} in this repo when you are ready to use vtrace.`]
+      : [`Run \`vtrace claude-config ${result.repoRoot}${agentFlag}\` to apply this change.`];
   }
 
-  return [`Open ${result.displayName} in this repo. The installed MCP config will launch vexb on demand.`];
+  return [`Open ${result.displayName} in this repo. The installed MCP config will launch vtrace on demand.`];
 }
 
 function buildProductShellStatusNextSteps(
@@ -467,23 +467,23 @@ function buildProductShellStatusNextSteps(
       }
 
       return [
-        `Open ${result.agentConfig.displayName} in this repo; vexb can use the current indexed snapshot as-is.`,
+        `Open ${result.agentConfig.displayName} in this repo; vtrace can use the current indexed snapshot as-is.`,
         ...(!result.runtime.running
           ? ["Start the runtime daemon only if you want an inspectable background process."]
           : []),
       ];
     case "possibly_stale":
       return command === "doctor"
-        ? ["Re-index this repo before relying on vexb for fresh structural guidance."]
+        ? ["Re-index this repo before relying on vtrace for fresh structural guidance."]
         : [
           "Indexed source files appear to have changed since the last indexed snapshot.",
-          "Re-index before relying on vexb for fresh structural guidance.",
+          "Re-index before relying on vtrace for fresh structural guidance.",
         ];
     case "unknown":
       return command === "doctor"
         ? ["Re-index if you want a fresh, explicit trust point."]
         : [
-          "Vexb could not compare the current repo state to the last indexed snapshot.",
+          "Vtrace could not compare the current repo state to the last indexed snapshot.",
           "Run doctor for more detail.",
         ];
   }

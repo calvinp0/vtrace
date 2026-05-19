@@ -329,10 +329,10 @@ test("local MCP server process starts for an initialized repo and exposes wired 
           },
         },
         serverInfo: {
-          name: "vexb_rc1_mcp",
+          name: "vtrace_rc1_mcp",
           version: "1.0.0",
         },
-        instructions: `Repo-bound vexb MCP server for ${repoRoot}. Use tools/list to inspect available tools.`,
+        instructions: `Repo-bound vtrace MCP server for ${repoRoot}. Use tools/list to inspect available tools.`,
       },
     });
     assert.deepEqual(
@@ -463,7 +463,7 @@ test("chunked buffered MCP input drains without stack overflow and preserves res
     );
     assert.equal(
       (initializeResponse.result as { serverInfo: { name: string } }).serverInfo.name,
-      "vexb_rc1_mcp",
+      "vtrace_rc1_mcp",
     );
     assert.deepEqual(
       listResult.tools.map((tool) => tool.name),
@@ -548,7 +548,7 @@ test("chunked line-delimited MCP input is processed deterministically without fr
     );
     assert.equal(
       (initializeResponse.result as { serverInfo: { name: string } }).serverInfo.name,
-      "vexb_rc1_mcp",
+      "vtrace_rc1_mcp",
     );
     assert.deepEqual(
       listResult.tools.map((tool) => tool.name),
@@ -731,7 +731,7 @@ test("build_handoff delegates to the real handoff builder and returns determinis
     assert.deepEqual(second, first);
     assert.equal(first.result.ok, true);
     assert.deepEqual(first.result.output.schema, {
-      name: "vexb.external_handoff",
+      name: "vtrace.external_handoff",
       version: "1.0.0",
     });
     assert.equal(first.result.output.query, "Session");
@@ -1899,7 +1899,7 @@ test("index_status and workspace_setup expose honest setup state before and afte
     assert.equal(inspected.result.output.status.initialized, false);
     assert.equal("workspace" in inspected.result.output.status, false);
     assert.equal(
-      inspected.result.output.status.nextSteps.some((step) => step.includes("vexb setup")),
+      inspected.result.output.status.nextSteps.some((step) => step.includes("vtrace setup")),
       true,
     );
 
@@ -3303,19 +3303,19 @@ function makeCustomTool(): McpToolDefinition<{ query: string }, { query: string;
 async function withFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-mcp-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-mcp-"));
   const repoRoot = path.join(root, "repo");
-  const previousClaudeConfigPath = process.env.VEXB_CLAUDE_CODE_CONFIG_PATH;
+  const previousClaudeConfigPath = process.env.VTRACE_CLAUDE_CODE_CONFIG_PATH;
 
   try {
-    process.env.VEXB_CLAUDE_CODE_CONFIG_PATH = path.join(root, "claude.json");
+    process.env.VTRACE_CLAUDE_CODE_CONFIG_PATH = path.join(root, "claude.json");
     await mkdir(repoRoot, { recursive: true });
     await run(repoRoot);
   } finally {
     if (previousClaudeConfigPath === undefined) {
-      delete process.env.VEXB_CLAUDE_CODE_CONFIG_PATH;
+      delete process.env.VTRACE_CLAUDE_CODE_CONFIG_PATH;
     } else {
-      process.env.VEXB_CLAUDE_CODE_CONFIG_PATH = previousClaudeConfigPath;
+      process.env.VTRACE_CLAUDE_CODE_CONFIG_PATH = previousClaudeConfigPath;
     }
     await rm(root, { recursive: true, force: true });
   }
@@ -3328,7 +3328,7 @@ async function withTwoRepoWorkspace(
     betaRoot: string;
   }) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-multi-mcp-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-multi-mcp-"));
   const alphaRoot = path.join(root, "alpha");
   const betaRoot = path.join(root, "beta");
 

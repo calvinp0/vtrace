@@ -8,7 +8,7 @@ import {
 
 const CODEX_CONFIG_DIRNAME = ".codex" as const;
 const CODEX_CONFIG_FILENAME = "config.toml" as const;
-const CODEX_SERVER_NAME = "vexb" as const;
+const CODEX_SERVER_NAME = "vtrace" as const;
 const CODEX_SERVER_TABLE = `[mcp_servers.${CODEX_SERVER_NAME}]` as const;
 
 interface CodexMcpServerConfig {
@@ -150,7 +150,7 @@ async function assertCodexConfigLocationAvailable(
 
   if (configDirStats !== undefined && !configDirStats.isDirectory()) {
     throw new Error(
-      `Codex project config directory is blocked by a file: ${configDirPath}. Remove or rename it so vexb can write .codex/config.toml.`,
+      `Codex project config directory is blocked by a file: ${configDirPath}. Remove or rename it so vtrace can write .codex/config.toml.`,
     );
   }
 
@@ -158,7 +158,7 @@ async function assertCodexConfigLocationAvailable(
 
   if (configPathStats !== undefined && configPathStats.isDirectory()) {
     throw new Error(
-      `Codex project config path is a directory, not a file: ${configPath}. Remove or rename it so vexb can write .codex/config.toml.`,
+      `Codex project config path is a directory, not a file: ${configPath}. Remove or rename it so vtrace can write .codex/config.toml.`,
     );
   }
 }

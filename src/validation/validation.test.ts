@@ -272,7 +272,7 @@ test("validation report includes a structured RC1 readiness recommendation", asy
 
 test("markdown query files preserve validation categories deterministically", async () => {
   await withMixedPyCythonRepo(async (repoRoot) => {
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "vexb-validation-queries-"));
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "vtrace-validation-queries-"));
     const queryFilePath = path.join(tempDir, "queries.md");
 
     try {
@@ -435,7 +435,7 @@ test("validation report records deterministic narrow-query benchmark improvement
 async function withTestAwareValidationRepo(
   fn: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const tempDir = await mkdtemp(path.join(os.tmpdir(), "vexb-validation-test-aware-"));
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "vtrace-validation-test-aware-"));
 
   try {
     const repoRoot = path.join(tempDir, "repo");
@@ -472,7 +472,7 @@ async function withTestAwareValidationRepo(
 async function withNarrowValidationRepo(
   fn: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const tempDir = await mkdtemp(path.join(os.tmpdir(), "vexb-validation-narrow-"));
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "vtrace-validation-narrow-"));
 
   try {
     const repoRoot = path.join(tempDir, "repo");

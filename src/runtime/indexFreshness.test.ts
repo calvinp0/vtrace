@@ -95,7 +95,7 @@ test("index freshness is possibly_stale when indexed source files change again a
     });
 
     assert.equal(freshness.state, "possibly_stale");
-    assert.equal(freshness.summary, "Vexb detected likely drift since the last indexed snapshot.");
+    assert.equal(freshness.summary, "Vtrace detected likely drift since the last indexed snapshot.");
     assert.deepEqual(
       freshness.reasons.map((reason) => reason.code),
       ["indexed_source_file_count_differs", "indexed_source_fingerprint_differs"],
@@ -145,7 +145,7 @@ test("index freshness is unknown when the stored snapshot is incomplete", async 
     });
 
     assert.equal(freshness.state, "unknown");
-    assert.equal(freshness.summary, "Vexb could not determine whether the current repo matches the last indexed snapshot.");
+    assert.equal(freshness.summary, "Vtrace could not determine whether the current repo matches the last indexed snapshot.");
     assert.deepEqual(
       freshness.reasons.map((reason) => reason.code),
       ["last_index_metadata_missing_or_incomplete"],
@@ -160,7 +160,7 @@ test("index freshness is unknown when the stored snapshot is incomplete", async 
 async function withFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-freshness-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-freshness-"));
   const repoRoot = path.join(root, "repo");
 
   try {
@@ -192,8 +192,8 @@ async function writeFixtureRepo(repoRoot: string): Promise<void> {
 
 async function initializeGitRepo(repoRoot: string): Promise<string> {
   await execGit(repoRoot, ["init"]);
-  await execGit(repoRoot, ["config", "user.name", "vexb-tests"]);
-  await execGit(repoRoot, ["config", "user.email", "vexb@example.com"]);
+  await execGit(repoRoot, ["config", "user.name", "vtrace-tests"]);
+  await execGit(repoRoot, ["config", "user.email", "vtrace@example.com"]);
   await execGit(repoRoot, ["add", "."]);
   await execGit(repoRoot, ["commit", "-m", "initial index state"]);
   return (await execGit(repoRoot, ["rev-parse", "HEAD"])).trim();

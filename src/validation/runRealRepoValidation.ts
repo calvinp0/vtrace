@@ -73,7 +73,7 @@ const DEFAULT_QUERY_FILE_PATH = fileURLToPath(
 );
 const DEFAULT_MAX_RESULTS = 6;
 const DEFAULT_MAX_BUDGET_CHARACTERS = 2_000;
-const DEFAULT_CONTROLLED_CHANGE_PREFIX = "# vexb rc1 validation controlled change\n";
+const DEFAULT_CONTROLLED_CHANGE_PREFIX = "# vtrace rc1 validation controlled change\n";
 const DEFAULT_SCHEMA_VERSION = "1.0.0" as const;
 
 interface ResolvedQuerySet {
@@ -589,7 +589,7 @@ async function runControlledChangeValidation(input: {
 
   const originalFilePath = path.join(input.repoRoot, target.filePath);
   const originalContents = await readFile(originalFilePath, "utf8");
-  const repoCopyRoot = await mkdtemp(path.join(os.tmpdir(), "vexb-real-repo-validation-"));
+  const repoCopyRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-real-repo-validation-"));
   const sourceFilePaths = input.db.query(`
     SELECT path
     FROM files

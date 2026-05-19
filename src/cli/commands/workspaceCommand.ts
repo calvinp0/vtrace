@@ -20,10 +20,10 @@ import { failure, resolveOptions, success } from "./helpers";
 
 const WORKSPACE_USAGE = [
   "Usage:",
-  "  vexb workspace init [repo] [--alias <alias>]",
-  "  vexb workspace add <alias> <path> [--repo <workspace-repo>]",
-  "  vexb workspace list [repo]",
-  "  vexb workspace status [repo]",
+  "  vtrace workspace init [repo] [--alias <alias>]",
+  "  vtrace workspace add <alias> <path> [--repo <workspace-repo>]",
+  "  vtrace workspace list [repo]",
+  "  vtrace workspace status [repo]",
 ].join("\n");
 
 export async function runWorkspaceCommand(
@@ -204,7 +204,7 @@ async function readWorkspaceConfigForCommand(
   const configPath = resolveWorkspaceConfigPath(detection.repoRoot);
 
   if (!await isExistingFile(configPath)) {
-    throw new Error(`Workspace config not found: ${configPath}. Run \`vexb workspace init ${detection.repoRoot}\` first.`);
+    throw new Error(`Workspace config not found: ${configPath}. Run \`vtrace workspace init ${detection.repoRoot}\` first.`);
   }
 
   return await readWorkspaceConfig(configPath);

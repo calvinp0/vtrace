@@ -1,6 +1,6 @@
 # CLI Usage
 
-Examples below use `./bin/vexb`. If you install `vexb` elsewhere, replace that wrapper with your preferred launcher.
+Examples below use `./bin/vtrace`. If you install `vtrace` elsewhere, replace that wrapper with your preferred launcher.
 
 Replace `<repo>` with the repository you want to inspect.
 
@@ -9,14 +9,14 @@ Replace `<repo>` with the repository you want to inspect.
 These are the commands most users should start with:
 
 ```bash
-./bin/vexb setup [repo] [--start-runtime] [--agent <name>] [--json]
-./bin/vexb status [repo] [--agent <name>] [--json]
-./bin/vexb doctor [repo] [--agent <name>] [--json]
-./bin/vexb claude-config [repo] [--dry-run] [--agent <name>] [--json]
-./bin/vexb daemon <start|stop|status|logs> [repo] [--json]
-./bin/vexb watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]
-./bin/vexb workspace <init|add|list|status> ...
-./bin/vexb mcp-serve --repo <repo>
+./bin/vtrace setup [repo] [--start-runtime] [--agent <name>] [--json]
+./bin/vtrace status [repo] [--agent <name>] [--json]
+./bin/vtrace doctor [repo] [--agent <name>] [--json]
+./bin/vtrace claude-config [repo] [--dry-run] [--agent <name>] [--json]
+./bin/vtrace daemon <start|stop|status|logs> [repo] [--json]
+./bin/vtrace watch [repo] [--debounce-ms <n>] [--poll-ms <n>] [--json]
+./bin/vtrace workspace <init|add|list|status> ...
+./bin/vtrace mcp-serve --repo <repo>
 ```
 
 What they are for:
@@ -27,7 +27,7 @@ What they are for:
 - `claude-config`: install or preview Claude Code / Codex config
 - `daemon`: optional background runtime control
 - `watch`: optional mark-stale-only source file watcher
-- `workspace`: create, update, list, and inspect `.vexb/workspace.json`
+- `workspace`: create, update, list, and inspect `.vtrace/workspace.json`
 - `mcp-serve`: repo-bound MCP server
 
 ## Direct Inspection Commands
@@ -35,16 +35,16 @@ What they are for:
 These are useful when you want manual control instead of the full MCP shell flow:
 
 ```bash
-./bin/vexb init <repo>
-./bin/vexb index <repo>
-./bin/vexb intent <repo> <query>
-./bin/vexb capsule <repo> <query>
-./bin/vexb skeleton <repo> <file> [--detail <minimal|standard|detailed>]
-./bin/vexb impact-graph <repo> <symbol-fqn> [--depth <n>] [--format <list|tree|mermaid>]
-./bin/vexb handoff <repo> <query>
-./bin/vexb runs <repo>
-./bin/vexb rules <list|generate|promote|dismiss|disable> <repo> [rule-id]
-./bin/vexb check-capsule <repo> <manifest-id> <comparison-run-id>
+./bin/vtrace init <repo>
+./bin/vtrace index <repo>
+./bin/vtrace intent <repo> <query>
+./bin/vtrace capsule <repo> <query>
+./bin/vtrace skeleton <repo> <file> [--detail <minimal|standard|detailed>]
+./bin/vtrace impact-graph <repo> <symbol-fqn> [--depth <n>] [--format <list|tree|mermaid>]
+./bin/vtrace handoff <repo> <query>
+./bin/vtrace runs <repo>
+./bin/vtrace rules <list|generate|promote|dismiss|disable> <repo> [rule-id]
+./bin/vtrace check-capsule <repo> <manifest-id> <comparison-run-id>
 ```
 
 ## Common Examples
@@ -52,30 +52,30 @@ These are useful when you want manual control instead of the full MCP shell flow
 Set up a repo:
 
 ```bash
-./bin/vexb setup <repo>
+./bin/vtrace setup <repo>
 ```
 
 Check whether the index is ready or stale:
 
 ```bash
-./bin/vexb status <repo>
-./bin/vexb doctor <repo>
+./bin/vtrace status <repo>
+./bin/vtrace doctor <repo>
 ```
 
 Re-index the repo:
 
 ```bash
-./bin/vexb index <repo>
+./bin/vtrace index <repo>
 ```
 
 Generate and manage conservative project-rule candidates:
 
 ```bash
-./bin/vexb rules generate <repo>
-./bin/vexb rules list <repo>
-./bin/vexb rules promote <repo> <rule-id>
-./bin/vexb rules dismiss <repo> <rule-id>
-./bin/vexb rules disable <repo> <rule-id>
+./bin/vtrace rules generate <repo>
+./bin/vtrace rules list <repo>
+./bin/vtrace rules promote <repo> <rule-id>
+./bin/vtrace rules dismiss <repo> <rule-id>
+./bin/vtrace rules disable <repo> <rule-id>
 ```
 
 Candidates are generated from repeated durable or consolidated evidence and are not active by default. Active rules are surfaced by `run_pipeline` only when structurally or lexically relevant.
@@ -83,36 +83,36 @@ Candidates are generated from repeated durable or consolidated evidence and are 
 Optionally watch source files and mark the index stale when they change:
 
 ```bash
-./bin/vexb watch <repo>
+./bin/vtrace watch <repo>
 ```
 
-The watcher does not auto-reindex. It records pending source changes in `.vexb/state.json`; `status`, `doctor`, and MCP `index_status` report that stale state until the next successful explicit `index`.
+The watcher does not auto-reindex. It records pending source changes in `.vtrace/state.json`; `status`, `doctor`, and MCP `index_status` report that stale state until the next successful explicit `index`.
 
 Show the structure of a file:
 
 ```bash
-./bin/vexb skeleton <repo> src/session.ts --detail standard
+./bin/vtrace skeleton <repo> src/session.ts --detail standard
 ```
 
 See what depends on an exact symbol:
 
 ```bash
-./bin/vexb impact-graph <repo> "src/session.ts::SessionManager.createSession"
+./bin/vtrace impact-graph <repo> "src/session.ts::SessionManager.createSession"
 ```
 
 Preview Codex config without writing it:
 
 ```bash
-./bin/vexb claude-config <repo> --agent codex --dry-run
+./bin/vtrace claude-config <repo> --agent codex --dry-run
 ```
 
 Create a multi-repo workspace config:
 
 ```bash
-./bin/vexb workspace init --alias backend
-./bin/vexb workspace add frontend ../frontend
-./bin/vexb workspace list
-./bin/vexb workspace status
+./bin/vtrace workspace init --alias backend
+./bin/vtrace workspace add frontend ../frontend
+./bin/vtrace workspace list
+./bin/vtrace workspace status
 ```
 
 ## JSON Output
@@ -130,12 +130,12 @@ That is useful for scripts, editors, or wrappers that want structured output.
 
 ## Repo-Local State
 
-`vexb` keeps repo-local files under `.vexb/`:
+`vtrace` keeps repo-local files under `.vtrace/`:
 
-- `.vexb/config.json`
-- `.vexb/state.json`
-- `.vexb/index.sqlite`
-- `.vexb/workspace.json` when a multi-repo workspace is configured
+- `.vtrace/config.json`
+- `.vtrace/state.json`
+- `.vtrace/index.sqlite`
+- `.vtrace/workspace.json` when a multi-repo workspace is configured
 
 ## Notes
 

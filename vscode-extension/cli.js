@@ -119,8 +119,8 @@ export async function resolveCliCommandWithSource(options) {
   }
 
   const bundledCandidates = [
-    { source: EXECUTABLE_SOURCES.Bundled, path: path.join(options.extensionPath, "bin", "vexb") },
-    { source: EXECUTABLE_SOURCES.BundledDev, path: path.join(options.extensionPath, "..", "bin", "vexb") },
+    { source: EXECUTABLE_SOURCES.Bundled, path: path.join(options.extensionPath, "bin", "vtrace") },
+    { source: EXECUTABLE_SOURCES.BundledDev, path: path.join(options.extensionPath, "..", "bin", "vtrace") },
   ];
 
   for (const candidate of bundledCandidates) {
@@ -134,9 +134,9 @@ export async function resolveCliCommandWithSource(options) {
     }
   }
 
-  attempted.push({ source: EXECUTABLE_SOURCES.Path, path: "vexb" });
+  attempted.push({ source: EXECUTABLE_SOURCES.Path, path: "vtrace" });
   return {
-    command: "vexb",
+    command: "vtrace",
     source: EXECUTABLE_SOURCES.Path,
     attempted,
   };
@@ -145,7 +145,7 @@ export async function resolveCliCommandWithSource(options) {
 export function describeExecutableSource(source) {
   switch (source) {
     case EXECUTABLE_SOURCES.Configured:
-      return "From vexb.cliPath setting";
+      return "From vtrace.cliPath setting";
     case EXECUTABLE_SOURCES.Bundled:
       return "Bundled launcher";
     case EXECUTABLE_SOURCES.BundledDev:
@@ -211,7 +211,7 @@ export function createCliBridge(options) {
           exitCode: result.exitCode,
         };
       } catch {
-        throw buildCommandError(args, result, `vexb returned invalid JSON for \`${args.join(" ")}\`.`);
+        throw buildCommandError(args, result, `vtrace returned invalid JSON for \`${args.join(" ")}\`.`);
       }
     },
 
@@ -286,16 +286,16 @@ async function runCommand(options) {
   } catch (error) {
     if (isCliMissingError(error)) {
       const missingError = new Error(formatMissingCliMessage(resolution));
-      missingError.code = "VEXB_CLI_NOT_FOUND";
+      missingError.code = "VTRACE_CLI_NOT_FOUND";
       missingError.resolution = resolution;
       throw missingError;
     }
 
     if (isBundledCliRuntimeMissingError(error)) {
       const bunMissingError = new Error(
-        "The bundled vexb launcher could not start because Bun is missing. Install Bun (https://bun.sh) or set `vexb.cliPath` to a working vexb executable.",
+        "The bundled vtrace launcher could not start because Bun is missing. Install Bun (https://bun.sh) or set `vtrace.cliPath` to a working vtrace executable.",
       );
-      bunMissingError.code = "VEXB_BUN_NOT_FOUND";
+      bunMissingError.code = "VTRACE_BUN_NOT_FOUND";
       bunMissingError.resolution = resolution;
       throw bunMissingError;
     }
@@ -392,9 +392,9 @@ async function runCommandStreaming(options) {
 
       if (exitCode !== 0 && isBundledCliRuntimeMissingError({ stderr, message: "" })) {
         const bunMissingError = new Error(
-          "The bundled vexb launcher could not start because Bun is missing. Install Bun (https://bun.sh) or set `vexb.cliPath` to a working vexb executable.",
+          "The bundled vtrace launcher could not start because Bun is missing. Install Bun (https://bun.sh) or set `vtrace.cliPath` to a working vtrace executable.",
         );
-        bunMissingError.code = "VEXB_BUN_NOT_FOUND";
+        bunMissingError.code = "VTRACE_BUN_NOT_FOUND";
         bunMissingError.resolution = resolution;
         settleReject(bunMissingError);
         return;
@@ -414,16 +414,16 @@ async function runCommandStreaming(options) {
 function wrapSpawnError(error, resolution, stderrSoFar) {
   if (isCliMissingError(error)) {
     const missingError = new Error(formatMissingCliMessage(resolution));
-    missingError.code = "VEXB_CLI_NOT_FOUND";
+    missingError.code = "VTRACE_CLI_NOT_FOUND";
     missingError.resolution = resolution;
     return missingError;
   }
 
   if (isBundledCliRuntimeMissingError({ stderr: stderrSoFar, message: error?.message ?? "" })) {
     const bunMissingError = new Error(
-      "The bundled vexb launcher could not start because Bun is missing. Install Bun (https://bun.sh) or set `vexb.cliPath` to a working vexb executable.",
+      "The bundled vtrace launcher could not start because Bun is missing. Install Bun (https://bun.sh) or set `vtrace.cliPath` to a working vtrace executable.",
     );
-    bunMissingError.code = "VEXB_BUN_NOT_FOUND";
+    bunMissingError.code = "VTRACE_BUN_NOT_FOUND";
     bunMissingError.resolution = resolution;
     return bunMissingError;
   }
@@ -481,9 +481,9 @@ function buildCommandError(args, result, prefix = null) {
       ? result.stdout.trim()
       : `Command exited with code ${result.exitCode}.`;
 
-  const headline = prefix ?? `vexb command failed: \`${args.join(" ")}\``;
+  const headline = prefix ?? `vtrace command failed: \`${args.join(" ")}\``;
   const error = new Error([headline, detail].join("\n"));
-  error.code = "VEXB_COMMAND_FAILED";
+  error.code = "VTRACE_COMMAND_FAILED";
   error.stdout = result.stdout;
   error.stderr = result.stderr;
   error.exitCode = result.exitCode;
@@ -496,10 +496,10 @@ function formatMissingCliMessage(resolution) {
     .join("\n");
 
   return [
-    "vexb CLI was not found.",
+    "vtrace CLI was not found.",
     "Attempted:",
     attempted,
-    "Set `vexb.cliPath` in Settings to an absolute path, or make `vexb` available on PATH.",
+    "Set `vtrace.cliPath` in Settings to an absolute path, or make `vtrace` available on PATH.",
   ].join("\n");
 }
 

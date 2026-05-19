@@ -1,8 +1,8 @@
 {
-  "name": "vexb-vscode",
-  "displayName": "vexb",
-  "publisher": "vexb",
-  "description": "Thin VS Code shell for the vexb CLI and repo-local runtime state.",
+  "name": "vtrace-vscode",
+  "displayName": "vtrace",
+  "publisher": "vtrace",
+  "description": "Thin VS Code shell for the vtrace CLI and repo-local runtime state.",
   "version": "0.1.0",
   "private": true,
   "main": "./extension.cjs",
@@ -13,177 +13,177 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:vexb.setupAgent",
-    "onCommand:vexb.showIndexStatus",
-    "onCommand:vexb.generateContextCapsule",
-    "onCommand:vexb.showFileSkeleton",
-    "onCommand:vexb.showImpactGraphAtCursor",
-    "onCommand:vexb.doctor",
-    "onCommand:vexb.refreshStatus",
-    "onCommand:vexb.openOutput",
-    "onCommand:vexb.openSettings",
-    "onCommand:vexb.revealRepoRoot",
-    "onCommand:vexb.openAgentConfigFile",
-    "onCommand:vexb.showFreshnessReport",
-    "onCommand:vexb.showRuntimeReport",
-    "onCommand:vexb.showSetupConfigReport",
-    "onCommand:vexb.showExecutableResolutionReport",
-    "onCommand:vexb.showNoWorkspaceGuidance",
-    "onCommand:vexb.runPipelineForCurrentTask",
-    "onCommand:vexb.setupOrReindex",
-    "onView:vexb.repoStatus",
+    "onCommand:vtrace.setupAgent",
+    "onCommand:vtrace.showIndexStatus",
+    "onCommand:vtrace.generateContextCapsule",
+    "onCommand:vtrace.showFileSkeleton",
+    "onCommand:vtrace.showImpactGraphAtCursor",
+    "onCommand:vtrace.doctor",
+    "onCommand:vtrace.refreshStatus",
+    "onCommand:vtrace.openOutput",
+    "onCommand:vtrace.openSettings",
+    "onCommand:vtrace.revealRepoRoot",
+    "onCommand:vtrace.openAgentConfigFile",
+    "onCommand:vtrace.showFreshnessReport",
+    "onCommand:vtrace.showRuntimeReport",
+    "onCommand:vtrace.showSetupConfigReport",
+    "onCommand:vtrace.showExecutableResolutionReport",
+    "onCommand:vtrace.showNoWorkspaceGuidance",
+    "onCommand:vtrace.runPipelineForCurrentTask",
+    "onCommand:vtrace.setupOrReindex",
+    "onView:vtrace.repoStatus",
     "workspaceContains:.git",
-    "workspaceContains:.vexb/config.json"
+    "workspaceContains:.vtrace/config.json"
   ],
   "contributes": {
     "commands": [
       {
-        "command": "vexb.setupAgent",
-        "title": "vexb: Setup Agent",
-        "category": "vexb"
+        "command": "vtrace.setupAgent",
+        "title": "vtrace: Setup Agent",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.showIndexStatus",
-        "title": "vexb: Show Index Status",
-        "category": "vexb"
+        "command": "vtrace.showIndexStatus",
+        "title": "vtrace: Show Index Status",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.generateContextCapsule",
-        "title": "vexb: Generate Context Capsule",
-        "category": "vexb"
+        "command": "vtrace.generateContextCapsule",
+        "title": "vtrace: Generate Context Capsule",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.showFileSkeleton",
-        "title": "vexb: Show File Skeleton",
-        "category": "vexb"
+        "command": "vtrace.showFileSkeleton",
+        "title": "vtrace: Show File Skeleton",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.showImpactGraphAtCursor",
-        "title": "vexb: Show Impact Graph for Symbol at Cursor",
-        "category": "vexb"
+        "command": "vtrace.showImpactGraphAtCursor",
+        "title": "vtrace: Show Impact Graph for Symbol at Cursor",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.doctor",
-        "title": "vexb: Doctor",
-        "category": "vexb"
+        "command": "vtrace.doctor",
+        "title": "vtrace: Doctor",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.refreshStatus",
-        "title": "vexb: Refresh Status",
-        "category": "vexb"
+        "command": "vtrace.refreshStatus",
+        "title": "vtrace: Refresh Status",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.openOutput",
-        "title": "vexb: Open Output",
-        "category": "vexb"
+        "command": "vtrace.openOutput",
+        "title": "vtrace: Open Output",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.openSettings",
-        "title": "vexb: Open Settings",
-        "category": "vexb"
+        "command": "vtrace.openSettings",
+        "title": "vtrace: Open Settings",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.revealRepoRoot",
-        "title": "vexb: Reveal Repo Root",
-        "category": "vexb"
+        "command": "vtrace.revealRepoRoot",
+        "title": "vtrace: Reveal Repo Root",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.openAgentConfigFile",
-        "title": "vexb: Open Agent Config File",
-        "category": "vexb"
+        "command": "vtrace.openAgentConfigFile",
+        "title": "vtrace: Open Agent Config File",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.showFreshnessReport",
-        "title": "vexb: Show Freshness Report",
-        "category": "vexb"
+        "command": "vtrace.showFreshnessReport",
+        "title": "vtrace: Show Freshness Report",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.showRuntimeReport",
-        "title": "vexb: Show Runtime Report",
-        "category": "vexb"
+        "command": "vtrace.showRuntimeReport",
+        "title": "vtrace: Show Runtime Report",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.showSetupConfigReport",
-        "title": "vexb: Show Setup / Config Report",
-        "category": "vexb"
+        "command": "vtrace.showSetupConfigReport",
+        "title": "vtrace: Show Setup / Config Report",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.showExecutableResolutionReport",
-        "title": "vexb: Show Executable Resolution Report",
-        "category": "vexb"
+        "command": "vtrace.showExecutableResolutionReport",
+        "title": "vtrace: Show Executable Resolution Report",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.showNoWorkspaceGuidance",
-        "title": "vexb: Show No Workspace Guidance",
-        "category": "vexb"
+        "command": "vtrace.showNoWorkspaceGuidance",
+        "title": "vtrace: Show No Workspace Guidance",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.runPipelineForCurrentTask",
-        "title": "vexb: Run Pipeline for Current Task",
-        "category": "vexb"
+        "command": "vtrace.runPipelineForCurrentTask",
+        "title": "vtrace: Run Pipeline for Current Task",
+        "category": "vtrace"
       },
       {
-        "command": "vexb.setupOrReindex",
-        "title": "vexb: Setup / Re-index",
-        "category": "vexb"
+        "command": "vtrace.setupOrReindex",
+        "title": "vtrace: Setup / Re-index",
+        "category": "vtrace"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "vexb",
-          "title": "VEXB",
+          "id": "vtrace",
+          "title": "VTRACE",
           "icon": "$(symbol-namespace)"
         }
       ]
     },
     "views": {
-      "vexb": [
+      "vtrace": [
         {
-          "id": "vexb.repoStatus",
+          "id": "vtrace.repoStatus",
           "name": "Repo Status"
         }
       ]
     },
     "viewsWelcome": [
       {
-        "view": "vexb.repoStatus",
-        "contents": "No workspace folder is open.\n[Open Folder](command:vscode.openFolder)\nOnce a folder is open, vexb will detect the repo automatically.",
+        "view": "vtrace.repoStatus",
+        "contents": "No workspace folder is open.\n[Open Folder](command:vscode.openFolder)\nOnce a folder is open, vtrace will detect the repo automatically.",
         "when": "workbenchState == empty"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "vexb.refreshStatus",
-          "when": "view == vexb.repoStatus",
+          "command": "vtrace.refreshStatus",
+          "when": "view == vtrace.repoStatus",
           "group": "navigation@1"
         },
         {
-          "command": "vexb.openOutput",
-          "when": "view == vexb.repoStatus",
+          "command": "vtrace.openOutput",
+          "when": "view == vtrace.repoStatus",
           "group": "navigation@2"
         },
         {
-          "command": "vexb.doctor",
-          "when": "view == vexb.repoStatus",
+          "command": "vtrace.doctor",
+          "when": "view == vtrace.repoStatus",
           "group": "navigation@3"
         }
       ]
     },
     "configuration": {
-      "title": "vexb",
+      "title": "vtrace",
       "properties": {
-        "vexb.cliPath": {
+        "vtrace.cliPath": {
           "type": "string",
           "default": "",
-          "description": "Optional absolute path to a vexb executable. When empty, the extension uses the bundled bin/vexb launcher or falls back to PATH."
+          "description": "Optional absolute path to a vtrace executable. When empty, the extension uses the bundled bin/vtrace launcher or falls back to PATH."
         }
       }
     }
   },
   "scripts": {
     "copy-bin": "node ./scripts/copy-bin.mjs",
-    "package": "bun run copy-bin && ../node_modules/.bin/vsce package --no-dependencies --allow-missing-repository --skip-license --out vexb-vscode.vsix"
+    "package": "bun run copy-bin && ../node_modules/.bin/vsce package --no-dependencies --allow-missing-repository --skip-license --out vtrace-vscode.vsix"
   }
 }

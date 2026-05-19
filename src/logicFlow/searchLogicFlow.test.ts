@@ -190,7 +190,7 @@ test("shortest-path ordering is deterministic across repeated calls", async () =
 async function withLogicFlowFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-logic-flow-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-logic-flow-"));
   const repoRoot = path.join(root, "repo");
 
   try {

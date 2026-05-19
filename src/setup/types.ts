@@ -3,7 +3,7 @@ import type { IndexProjectResult } from "../indexer/types";
 import type { IndexRunSummary } from "../memory/types";
 
 export const INIT_STATE_SCHEMA_VERSION = "1.0.0" as const;
-export const REPO_LOCAL_STATE_DIRNAME = ".vexb" as const;
+export const REPO_LOCAL_STATE_DIRNAME = ".vtrace" as const;
 export const REPO_LOCAL_CONFIG_FILENAME = "config.json" as const;
 export const REPO_LOCAL_STATE_FILENAME = "state.json" as const;
 export const REPO_LOCAL_DB_FILENAME = "index.sqlite" as const;

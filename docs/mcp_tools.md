@@ -1,6 +1,6 @@
 # MCP Tools
 
-The visible `vexb` MCP surface is intentionally small and stable.
+The visible `vtrace` MCP surface is intentionally small and stable.
 
 If you are unsure where to start, use `run_pipeline`.
 
@@ -26,11 +26,11 @@ Most of those are directly useful today. `expand_vexp_ref` is the advanced excep
 
 ## Passive Tool-Call Observations
 
-VEXB auto-captures compact `tool_call` observations for meaningful visible MCP tool calls. Current capture covers successful, useful calls to `run_pipeline`, `get_context_capsule`, `get_impact_graph`, `search_logic_flow`, `get_skeleton`, `search_memory`, `get_session_context`, and resolved `expand_vexp_ref` expansions.
+VTRACE auto-captures compact `tool_call` observations for meaningful visible MCP tool calls. Current capture covers successful, useful calls to `run_pipeline`, `get_context_capsule`, `get_impact_graph`, `search_logic_flow`, `get_skeleton`, `search_memory`, `get_session_context`, and resolved `expand_vexp_ref` expansions.
 
 Captured observations are deterministic and compact. They store tool name, exact query/task/symbol/file inputs where available, a short summary, and bounded metadata such as counts or selected profiles. They do not store full raw tool outputs.
 
-When the tool input or output already exposes exact graph evidence, captured observations may link to repo-relative files, symbol ids, and symbol FQNs. VEXB does not fuzzy guess links or run extra retrieval just to enrich a passive observation. If a session id is present, the observation is associated with that session.
+When the tool input or output already exposes exact graph evidence, captured observations may link to repo-relative files, symbol ids, and symbol FQNs. VTRACE does not fuzzy guess links or run extra retrieval just to enrich a passive observation. If a session id is present, the observation is associated with that session.
 
 The following visible tools are intentionally excluded from passive capture:
 
@@ -44,7 +44,7 @@ This is a passive-memory substrate, not full VEXP parity. It does not add embedd
 
 ## Conservative Passive Consolidation
 
-VEXB can consolidate repeated passive observations within a single session. The first implementation is intentionally narrow: it targets repeated `mcp_auto` `tool_call` observations with the same deterministic lexical/structural signature. The signature uses exact fields such as tool name, normalized query text, intent, selected compact result-shape fields, sorted linked files, and sorted linked symbol FQNs. It does not use embeddings, semantic similarity, LLM merging, learned ranking, or cross-session memory merging.
+VTRACE can consolidate repeated passive observations within a single session. The first implementation is intentionally narrow: it targets repeated `mcp_auto` `tool_call` observations with the same deterministic lexical/structural signature. The signature uses exact fields such as tool name, normalized query text, intent, selected compact result-shape fields, sorted linked files, and sorted linked symbol FQNs. It does not use embeddings, semantic similarity, LLM merging, learned ranking, or cross-session memory merging.
 
 Consolidated passive groups are stored as compact auto-generated `insight` observations from `consolidate_passive_observations`. Their body includes explicit metadata such as `consolidated=true`, `source_kind=tool_call`, source observation count, tool counts, first/last observed timestamps, source run ids, session id, deterministic signature, and preserved structural links. The consolidated observation keeps exact linked files, symbol ids, and symbol FQNs so it remains searchable and participates in existing stale-memory checks when those files or symbols later change.
 
@@ -54,7 +54,7 @@ This is not semantic memory consolidation or automatic rule promotion.
 
 ## Session Lifecycle Compression
 
-VEXB can compress inactive sessions into compact structural summaries through an explicit lifecycle service. There is no background scheduler or passive file watcher requirement.
+VTRACE can compress inactive sessions into compact structural summaries through an explicit lifecycle service. There is no background scheduler or passive file watcher requirement.
 
 The default compression threshold is two hours of inactivity. Compression records a deterministic summary with observation counts, tool-call counts by tool, unique linked files, unique linked symbol ids and FQNs, key lexical terms, first/last activity times, compression time, preserved durable count, and repeated passive tool-call source rows pruned through consolidation.
 
@@ -66,7 +66,7 @@ The default retention threshold is 90 days. This milestone reports deterministic
 
 ## Optional Passive File Awareness
 
-File watching is opt-in. `vexb watch [repo]` runs a lightweight polling watcher that uses the same indexed-source scan rules as the indexer. It observes created, modified, and deleted source files, debounces bursts, and records a compact pending stale state in `.vexb/state.json`.
+File watching is opt-in. `vtrace watch [repo]` runs a lightweight polling watcher that uses the same indexed-source scan rules as the indexer. It observes created, modified, and deleted source files, debounces bursts, and records a compact pending stale state in `.vtrace/state.json`.
 
 The watcher is mark-stale-only. It does not auto-reindex, does not run a background daemon by default, and does not block MCP tools. `index_status` reports watcher support, whether watcher mode has been used for the repo, pending changed file count, a bounded sorted changed-file list, and freshness metadata. `run_pipeline.diagnostics.freshness` also reports stale metadata when available.
 
@@ -76,7 +76,7 @@ This is not semantic rename detection, runtime dataflow, or full VEXP passive be
 
 ## Conservative Anti-Pattern Observations
 
-VEXB can detect a small set of conservative anti-patterns from passive observations and watcher/index signals. These are stored as durable `dead_end` observations with explicit anti-pattern metadata so they can be inspected through `get_session_context`, found through `search_memory`, and preserved during session compression.
+VTRACE can detect a small set of conservative anti-patterns from passive observations and watcher/index signals. These are stored as durable `dead_end` observations with explicit anti-pattern metadata so they can be inspected through `get_session_context`, found through `search_memory`, and preserved during session compression.
 
 The initial detectors are intentionally structural:
 
@@ -85,7 +85,7 @@ The initial detectors are intentionally structural:
 
 Detection is deterministic and deduped by evidence signature. Anti-pattern observations include a short summary, severity, exact linked files or symbol FQNs where available, and compact evidence such as change counts or index run ids. Linked anti-pattern observations participate in the existing stale-memory behavior when their files or symbols later change.
 
-This is not semantic understanding of developer intent, progressive nudging, learned classification, semantic consolidation, or policy enforcement. VEXB does not block normal MCP behavior when an anti-pattern observation exists.
+This is not semantic understanding of developer intent, progressive nudging, learned classification, semantic consolidation, or policy enforcement. VTRACE does not block normal MCP behavior when an anti-pattern observation exists.
 
 ## Progressive Observation Nudges
 
@@ -103,7 +103,7 @@ Nudges never block tool execution and do not write their own observations. They 
 
 ## Project Rule Candidates
 
-VEXB can generate deterministic project-rule candidates from repeated evidence in one repo. Candidate generation is explicit through `vexb rules generate <repo>` and uses exact structural or lexical overlap only. The first threshold is three matching evidence observations in the same deterministic scope.
+VTRACE can generate deterministic project-rule candidates from repeated evidence in one repo. Candidate generation is explicit through `vtrace rules generate <repo>` and uses exact structural or lexical overlap only. The first threshold is three matching evidence observations in the same deterministic scope.
 
 Eligible evidence is intentionally narrow:
 
@@ -113,19 +113,19 @@ Eligible evidence is intentionally narrow:
 
 Raw one-off passive `tool_call` observations do not generate rule candidates. Candidate generation never mutates or consumes the source observations.
 
-Rule summaries are template-based and evidence-limited. They use cautious wording such as “Repeated durable evidence is linked to…” and “Consider…”. VEXB does not use embeddings, LLM synthesis, semantic project understanding, hidden-intent inference, or cross-repo rule learning for this feature.
+Rule summaries are template-based and evidence-limited. They use cautious wording such as “Repeated durable evidence is linked to…” and “Consider…”. VTRACE does not use embeddings, LLM synthesis, semantic project understanding, hidden-intent inference, or cross-repo rule learning for this feature.
 
 Candidates are not active by default. A rule must be explicitly promoted before it can be injected into future context:
 
 ```bash
-vexb rules list <repo>
-vexb rules generate <repo>
-vexb rules promote <repo> <rule-id>
-vexb rules dismiss <repo> <rule-id>
-vexb rules disable <repo> <rule-id>
+vtrace rules list <repo>
+vtrace rules generate <repo>
+vtrace rules promote <repo> <rule-id>
+vtrace rules dismiss <repo> <rule-id>
+vtrace rules disable <repo> <rule-id>
 ```
 
-The command also accepts `vexb rules <repo> list` style ordering.
+The command also accepts `vtrace rules <repo> list` style ordering.
 
 Active rules are injected into `run_pipeline.rules` only when they match the current task by deterministic signals such as linked file overlap, linked symbol FQN overlap, query-term overlap, or selected intent. Injection is capped at three active rules. Candidate previews may appear in `run_pipeline.rules.candidates`, but they are explicitly labeled as candidates and are not active instructions.
 
@@ -236,7 +236,7 @@ Return recent/current session context so you can resume a workstream quickly.
 
 Compact repo MCP status. Use it to check whether the repo is initialized, indexed, and ready.
 
-It also reports optional watcher/freshness metadata, including pending watcher-observed file changes when `vexb watch` has marked the indexed state stale.
+It also reports optional watcher/freshness metadata, including pending watcher-observed file changes when `vtrace watch` has marked the indexed state stale.
 
 ### `workspace_setup`
 
@@ -248,7 +248,7 @@ It supports:
 - apply mode
 
 Use it when you want setup/readiness behavior through MCP instead of the CLI.
-When `.vexb/workspace.json` exists, inspect output also includes the configured workspace repos and their readiness.
+When `.vtrace/workspace.json` exists, inspect output also includes the configured workspace repos and their readiness.
 
 ## Advanced Tool
 
@@ -268,7 +268,7 @@ Advanced compressed-reference expansion.
 
 Expansion returns the stored deferred payload captured when `run_pipeline` emitted the V-REF. It does not recompute from disk or reconstruct content semantically. In this build, V-REF storage is process-local and bounded, so references are valid only in the current MCP server process and may expire after server restart or eviction.
 
-Malformed, unknown, expired, and unsupported-category references return explicit structured failures. VEXB does not claim unlimited persistence, a special compressed format, or token-savings percentages.
+Malformed, unknown, expired, and unsupported-category references return explicit structured failures. VTRACE does not claim unlimited persistence, a special compressed format, or token-savings percentages.
 
 ## Notes
 
@@ -279,11 +279,11 @@ Malformed, unknown, expired, and unsupported-category references return explicit
 
 ## Related Shell Commands
 
-- `vexb setup`
-- `vexb status`
-- `vexb doctor`
-- `vexb claude-config`
-- `vexb claude-config --agent codex`
-- `vexb daemon start|stop|status|logs`
-- `vexb watch`
-- `vexb mcp-serve --repo <repo>`
+- `vtrace setup`
+- `vtrace status`
+- `vtrace doctor`
+- `vtrace claude-config`
+- `vtrace claude-config --agent codex`
+- `vtrace daemon start|stop|status|logs`
+- `vtrace watch`
+- `vtrace mcp-serve --repo <repo>`

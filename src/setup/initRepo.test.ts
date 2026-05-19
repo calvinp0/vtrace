@@ -154,7 +154,7 @@ test("init detects the repo root from a nested path when a git marker exists", a
 async function withFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-init-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-init-"));
   const repoRoot = path.join(root, "repo");
 
   try {
@@ -186,8 +186,8 @@ async function writeFixtureRepo(repoRoot: string): Promise<void> {
 
 async function initializeGitRepo(repoRoot: string): Promise<string> {
   await execGit(repoRoot, ["init"]);
-  await execGit(repoRoot, ["config", "user.name", "vexb-tests"]);
-  await execGit(repoRoot, ["config", "user.email", "vexb@example.com"]);
+  await execGit(repoRoot, ["config", "user.name", "vtrace-tests"]);
+  await execGit(repoRoot, ["config", "user.email", "vtrace@example.com"]);
   await execGit(repoRoot, ["add", "."]);
   await execGit(repoRoot, ["commit", "-m", "initial"]);
   return (await execGit(repoRoot, ["rev-parse", "HEAD"])).trim();

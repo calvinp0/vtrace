@@ -27,7 +27,7 @@ interface ParsedArgs {
 }
 
 /**
- * `vexb expand-vexp-ref <repo> <hash> [--query <query>]` — expand a deferred
+ * `vtrace expand-vexp-ref <repo> <hash> [--query <query>]` — expand a deferred
  * V-REF emitted by `run-pipeline`.
  *
  * Because the deferred V-REF store is process-local, the CLI re-invokes the

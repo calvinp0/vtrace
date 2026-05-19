@@ -17,10 +17,10 @@ export const nullProgressReporter: ProgressReporter = {
  *
  * Defaults preserve CLI-terminal behavior exactly:
  *   - JSON mode: suppress (stdout must stay machine-parseable without stderr interleaving).
- *   - VEXB_NO_PROGRESS=1: suppress (existing explicit opt-out).
+ *   - VTRACE_NO_PROGRESS=1: suppress (existing explicit opt-out).
  *   - No TTY on stderr: suppress (don't spam pipes, CI, or other non-interactive consumers).
  *
- * The VEXB_PROGRESS_STREAM=1 escape hatch forces progress on when stderr is not a TTY,
+ * The VTRACE_PROGRESS_STREAM=1 escape hatch forces progress on when stderr is not a TTY,
  * so that a parent process (e.g. the VS Code extension spawning via pipes) can stream
  * per-phase/per-file progress by opting in explicitly. Terminal users never set this
  * var, so their experience is byte-identical to today.
@@ -32,9 +32,9 @@ export function selectProgressReporter(input: {
   now?: () => number;
 }): ProgressReporter {
   const isTTY = input.stream.isTTY === true;
-  const forceStream = input.env.VEXB_PROGRESS_STREAM === "1";
+  const forceStream = input.env.VTRACE_PROGRESS_STREAM === "1";
   const disabled = (input.isJsonOutput === true)
-    || input.env.VEXB_NO_PROGRESS === "1"
+    || input.env.VTRACE_NO_PROGRESS === "1"
     || (!isTTY && !forceStream);
 
   if (disabled) {

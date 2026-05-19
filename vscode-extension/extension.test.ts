@@ -13,28 +13,28 @@ import {
 } from "./extension-main.js";
 import { EDITOR_EMPTY_STATE_MESSAGES, RUN_PIPELINE_MESSAGES, SETUP_REINDEX_MESSAGES } from "./shell.js";
 
-test("command definitions include every registered vexb shell action", () => {
+test("command definitions include every registered vtrace shell action", () => {
   assert.deepEqual(
     getCommandDefinitions().map((definition) => definition.id),
     [
-      "vexb.setupAgent",
-      "vexb.showIndexStatus",
-      "vexb.generateContextCapsule",
-      "vexb.showFileSkeleton",
-      "vexb.showImpactGraphAtCursor",
-      "vexb.doctor",
-      "vexb.refreshStatus",
-      "vexb.openOutput",
-      "vexb.openSettings",
-      "vexb.revealRepoRoot",
-      "vexb.openAgentConfigFile",
-      "vexb.showFreshnessReport",
-      "vexb.showRuntimeReport",
-      "vexb.showSetupConfigReport",
-      "vexb.showExecutableResolutionReport",
-      "vexb.showNoWorkspaceGuidance",
-      "vexb.runPipelineForCurrentTask",
-      "vexb.setupOrReindex",
+      "vtrace.setupAgent",
+      "vtrace.showIndexStatus",
+      "vtrace.generateContextCapsule",
+      "vtrace.showFileSkeleton",
+      "vtrace.showImpactGraphAtCursor",
+      "vtrace.doctor",
+      "vtrace.refreshStatus",
+      "vtrace.openOutput",
+      "vtrace.openSettings",
+      "vtrace.revealRepoRoot",
+      "vtrace.openAgentConfigFile",
+      "vtrace.showFreshnessReport",
+      "vtrace.showRuntimeReport",
+      "vtrace.showSetupConfigReport",
+      "vtrace.showExecutableResolutionReport",
+      "vtrace.showNoWorkspaceGuidance",
+      "vtrace.runPipelineForCurrentTask",
+      "vtrace.setupOrReindex",
     ],
   );
 });
@@ -85,14 +85,14 @@ test("ResultDocumentStore stores readonly document bodies keyed by URI", () => {
 
   assert.equal(store.provideTextDocumentContent(uri), "hello world");
   assert.equal(store.nextCounter(), counter + 1);
-  assert.equal(store.provideTextDocumentContent({ toString: () => "vexb:/missing" }), "");
+  assert.equal(store.provideTextDocumentContent({ toString: () => "vtrace:/missing" }), "");
 });
 
 test("activateWithVscode renders four top-level sections and populates Overview rows", async () => {
   const harness = createVscodeHarness();
   const app = await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
 
-  assert.match(harness.statusBar.text, /vexb: ready/);
+  assert.match(harness.statusBar.text, /vtrace: ready/);
   assert.equal(harness.statusBar.shown, true);
   assert.deepEqual(harness.registeredCommandIds, getCommandDefinitions().map((definition) => definition.id));
 
@@ -130,18 +130,18 @@ test("activateWithVscode renders No workspace primary status when no folder is o
   assert.equal(overview[0]?.label, "No workspace");
 });
 
-test("activateWithVscode renders VEXB not found primary status when CLI resolution fails", async () => {
+test("activateWithVscode renders VTRACE not found primary status when CLI resolution fails", async () => {
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "vexb", source: EXECUTABLE_SOURCES.Path, attempted: [] };
+        return { command: "vtrace", source: EXECUTABLE_SOURCES.Path, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "vexb", source: EXECUTABLE_SOURCES.Path, attempted: [] };
+        return { command: "vtrace", source: EXECUTABLE_SOURCES.Path, attempted: [] };
       },
       async runJson() {
-        const error = new Error("vexb CLI was not found.");
-        (error as Error & { code?: string }).code = "VEXB_CLI_NOT_FOUND";
+        const error = new Error("vtrace CLI was not found.");
+        (error as Error & { code?: string }).code = "VTRACE_CLI_NOT_FOUND";
         throw error;
       },
       async runText() {
@@ -155,12 +155,12 @@ test("activateWithVscode renders VEXB not found primary status when CLI resoluti
   assert.match(harness.statusBar.text, /CLI missing/);
   const sections = app.repoStatusProvider.getChildren() as Array<TreeNodeStub>;
   const overview = app.repoStatusProvider.getChildren(sections[0]) as Array<TreeNodeStub>;
-  assert.equal(overview[0]?.label, "VEXB not found");
+  assert.equal(overview[0]?.label, "VTRACE not found");
 
   const diagnostics = app.repoStatusProvider.getChildren(sections[3]) as Array<TreeNodeStub>;
   const executableRow = diagnostics.find((row) => row.label === "Executable Resolution");
   assert.ok(executableRow, "Output & Diagnostics must surface the Executable Resolution row");
-  assert.equal(executableRow?.description, "using vexb on PATH");
+  assert.equal(executableRow?.description, "using vtrace on PATH");
 });
 
 test("activateWithVscode wires click commands on Overview rows per spec", async () => {
@@ -172,30 +172,30 @@ test("activateWithVscode wires click commands on Overview rows per spec", async 
   const quick = app.repoStatusProvider.getChildren(sections[1]) as Array<TreeNodeStub>;
 
   const byLabel = Object.fromEntries(overview.map((row) => [row.label, row]));
-  assert.equal(byLabel["Ready"]?.command?.command, "vexb.showIndexStatus");
-  assert.equal(byLabel["Repo root"]?.command?.command, "vexb.revealRepoRoot");
+  assert.equal(byLabel["Ready"]?.command?.command, "vtrace.showIndexStatus");
+  assert.equal(byLabel["Repo root"]?.command?.command, "vtrace.revealRepoRoot");
   assert.equal(byLabel["Setup"]?.command, undefined);
   assert.equal(byLabel["Index"]?.command, undefined);
   assert.equal(byLabel["Latest run"]?.command, undefined);
-  assert.equal(byLabel["Freshness"]?.command?.command, "vexb.showFreshnessReport");
-  assert.equal(byLabel["Runtime"]?.command?.command, "vexb.showRuntimeReport");
+  assert.equal(byLabel["Freshness"]?.command?.command, "vtrace.showFreshnessReport");
+  assert.equal(byLabel["Runtime"]?.command?.command, "vtrace.showRuntimeReport");
 
   assert.deepEqual(
     quick.map((row) => row.command?.command),
     [
-      "vexb.refreshStatus",
-      "vexb.runPipelineForCurrentTask",
-      "vexb.setupOrReindex",
-      "vexb.showFileSkeleton",
-      "vexb.showImpactGraphAtCursor",
+      "vtrace.refreshStatus",
+      "vtrace.runPipelineForCurrentTask",
+      "vtrace.setupOrReindex",
+      "vtrace.showFileSkeleton",
+      "vtrace.showImpactGraphAtCursor",
     ],
   );
 
   const diagnostics = app.repoStatusProvider.getChildren(sections[3]) as Array<TreeNodeStub>;
   assert.deepEqual(diagnostics.map((row) => row.command?.command), [
-    "vexb.doctor",
-    "vexb.openOutput",
-    "vexb.showExecutableResolutionReport",
+    "vtrace.doctor",
+    "vtrace.openOutput",
+    "vtrace.showExecutableResolutionReport",
   ]);
 });
 
@@ -262,16 +262,16 @@ test("showFileSkeleton surfaces not-initialized and index-not-ready messages fro
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson() {
-        return { data: makeNotInitializedStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeNotInitializedStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -287,7 +287,7 @@ test("showFileSkeleton surfaces not-initialized and index-not-ready messages fro
 
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   errorMessages.length = 0;
-  const handler = harness.registeredCommands.get("vexb.showFileSkeleton");
+  const handler = harness.registeredCommands.get("vtrace.showFileSkeleton");
   await handler?.();
 
   assert.deepEqual(errorMessages, [EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.NotInitialized]);
@@ -298,22 +298,22 @@ test("showFileSkeleton surfaces unsupported-file message when the CLI rejects th
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         if (args[0] === "skeleton") {
-          const error: Error & { code?: string; stderr?: string } = new Error("vexb skeleton failed");
-          error.code = "VEXB_COMMAND_FAILED";
+          const error: Error & { code?: string; stderr?: string } = new Error("vtrace skeleton failed");
+          error.code = "VTRACE_COMMAND_FAILED";
           error.stderr = "error: file is not a supported indexed source file";
           throw error;
         }
-        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -329,7 +329,7 @@ test("showFileSkeleton surfaces unsupported-file message when the CLI rejects th
 
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   errorMessages.length = 0;
-  const handler = harness.registeredCommands.get("vexb.showFileSkeleton");
+  const handler = harness.registeredCommands.get("vtrace.showFileSkeleton");
   await handler?.();
 
   assert.deepEqual(errorMessages, [EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.UnsupportedFile]);
@@ -340,19 +340,19 @@ test("showImpactGraphAtCursor surfaces no-symbol and symbol-not-resolved message
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         if (args[0] === "inspect-file") {
-          return { data: { symbols: [] }, command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+          return { data: { symbols: [] }, command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
         }
-        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -368,7 +368,7 @@ test("showImpactGraphAtCursor surfaces no-symbol and symbol-not-resolved message
 
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   errorMessages.length = 0;
-  const handler = harness.registeredCommands.get("vexb.showImpactGraphAtCursor");
+  const handler = harness.registeredCommands.get("vtrace.showImpactGraphAtCursor");
   await handler?.();
 
   assert.deepEqual(errorMessages, [EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.NoSymbolAtCursor]);
@@ -378,11 +378,11 @@ test("showIndexStatus renders into the result panel instead of opening a markdow
   const harness = createVscodeHarness();
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
 
-  const handler = harness.registeredCommands.get("vexb.showIndexStatus");
+  const handler = harness.registeredCommands.get("vtrace.showIndexStatus");
   await handler?.();
 
   assert.equal(harness.createdWebviewPanels.length, 1);
-  assert.equal(harness.createdWebviewPanels[0]?.title, "vexb — Index Status");
+  assert.equal(harness.createdWebviewPanels[0]?.title, "vtrace — Index Status");
   assert.match(harness.createdWebviewPanels[0]?.webview.html ?? "", /data-result-type="index_status"/);
 });
 
@@ -390,21 +390,21 @@ test("successive report commands reuse a single webview panel", async () => {
   const harness = createVscodeHarness();
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
 
-  await harness.registeredCommands.get("vexb.showIndexStatus")?.();
-  await harness.registeredCommands.get("vexb.showFreshnessReport")?.();
-  await harness.registeredCommands.get("vexb.showRuntimeReport")?.();
+  await harness.registeredCommands.get("vtrace.showIndexStatus")?.();
+  await harness.registeredCommands.get("vtrace.showFreshnessReport")?.();
+  await harness.registeredCommands.get("vtrace.showRuntimeReport")?.();
 
   assert.equal(harness.createdWebviewPanels.length, 1);
-  assert.equal(harness.createdWebviewPanels[0]?.title, "vexb — Runtime");
+  assert.equal(harness.createdWebviewPanels[0]?.title, "vtrace — Runtime");
 });
 
 test("doctor command renders into the result panel with snapshot-derived sections", async () => {
   const harness = createVscodeHarness();
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
 
-  await harness.registeredCommands.get("vexb.doctor")?.();
+  await harness.registeredCommands.get("vtrace.doctor")?.();
 
-  assert.equal(harness.createdWebviewPanels[0]?.title, "vexb — Doctor");
+  assert.equal(harness.createdWebviewPanels[0]?.title, "vtrace — Doctor");
   assert.match(harness.createdWebviewPanels[0]?.webview.html ?? "", /data-result-type="doctor"/);
 });
 
@@ -420,22 +420,22 @@ test("activateWithVscode refreshes on workspace-folder change", async () => {
   let latestStatus = makeReadyStatusEnvelope();
   harness.overrides.cliBridge = {
     async getExecutableInfo() {
-      return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+      return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
     },
     getLastExecutableInfo() {
-      return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+      return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
     },
     async runJson() {
       refreshCount += 1;
       return {
         data: latestStatus,
-        command: "/ext/bin/vexb",
+        command: "/ext/bin/vtrace",
         exitCode: 0,
         stdout: "",
       };
     },
     async runText() {
-      return { command: "/ext/bin/vexb", stdout: "" };
+      return { command: "/ext/bin/vtrace", stdout: "" };
     },
   };
 
@@ -458,10 +458,10 @@ test("refreshStatus deduplicates overlapping refresh calls", async () => {
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson() {
         activeCalls += 1;
@@ -471,13 +471,13 @@ test("refreshStatus deduplicates overlapping refresh calls", async () => {
         activeCalls -= 1;
         return {
           data: makeReadyStatusEnvelope(),
-          command: "/ext/bin/vexb",
+          command: "/ext/bin/vtrace",
           exitCode: 0,
           stdout: "",
         };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -503,8 +503,8 @@ test("refreshStatus deduplicates overlapping refresh calls", async () => {
 
 test("runPipelineForCurrentTask command is registered under the spec-defined id", () => {
   assert.ok(
-    getCommandDefinitions().some((definition) => definition.id === "vexb.runPipelineForCurrentTask"),
-    "vexb.runPipelineForCurrentTask must be a registered command id",
+    getCommandDefinitions().some((definition) => definition.id === "vtrace.runPipelineForCurrentTask"),
+    "vtrace.runPipelineForCurrentTask must be a registered command id",
   );
 });
 
@@ -523,8 +523,8 @@ test("Quick Actions places Run Pipeline directly after Refresh and above Setup /
   assert.ok(refreshIdx >= 0 && pipelineIdx >= 0 && setupIdx >= 0, "expected Refresh, Run Pipeline, and Setup / Re-index rows");
   assert.equal(pipelineIdx, refreshIdx + 1, "Run Pipeline must sit directly after Refresh");
   assert.equal(setupIdx, pipelineIdx + 1, "Setup / Re-index must sit directly after Run Pipeline");
-  assert.equal(quick[pipelineIdx]?.command?.command, "vexb.runPipelineForCurrentTask");
-  assert.equal(quick[setupIdx]?.command?.command, "vexb.setupOrReindex");
+  assert.equal(quick[pipelineIdx]?.command?.command, "vtrace.runPipelineForCurrentTask");
+  assert.equal(quick[setupIdx]?.command?.command, "vtrace.setupOrReindex");
 });
 
 test("Quick Actions no longer surfaces Setup Agent (demoted from sidebar)", async () => {
@@ -535,7 +535,7 @@ test("Quick Actions no longer surfaces Setup Agent (demoted from sidebar)", asyn
   const quick = app.repoStatusProvider.getChildren(sections[1]) as Array<TreeNodeStub>;
   const commands = quick.map((row) => row.command?.command);
 
-  assert.equal(commands.includes("vexb.setupAgent"), false);
+  assert.equal(commands.includes("vtrace.setupAgent"), false);
 });
 
 test("runPipelineForCurrentTask prompts with spec title and placeholder, runs CLI, routes to RunPipeline panel", async () => {
@@ -544,25 +544,25 @@ test("runPipelineForCurrentTask prompts with spec title and placeholder, runs CL
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
         if (args[0] === "run-pipeline") {
           return {
             data: { intent: { type: "explain" }, diagnostics: {}, taskSummary: {} },
-            command: "/ext/bin/vexb",
+            command: "/ext/bin/vtrace",
             exitCode: 0,
             stdout: "",
           };
         }
-        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -573,7 +573,7 @@ test("runPipelineForCurrentTask prompts with spec title and placeholder, runs CL
 
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   cliArgsLog.length = 0;
-  const handler = harness.registeredCommands.get("vexb.runPipelineForCurrentTask");
+  const handler = harness.registeredCommands.get("vtrace.runPipelineForCurrentTask");
   await handler?.();
 
   assert.equal(capturedOptions?.title, RUN_PIPELINE_MESSAGES.InputTitle);
@@ -584,7 +584,7 @@ test("runPipelineForCurrentTask prompts with spec title and placeholder, runs CL
   assert.equal(pipelineInvocation?.[1], "/repo");
   assert.equal(pipelineInvocation?.[2], "Refactor the login flow");
 
-  const pipelinePanel = harness.createdWebviewPanels.find((panel) => panel.title === "VEXB • Pipeline Result");
+  const pipelinePanel = harness.createdWebviewPanels.find((panel) => panel.title === "VTRACE • Pipeline Result");
   assert.ok(pipelinePanel, "result must land in the RunPipeline webview panel");
   assert.match(pipelinePanel?.webview.html ?? "", /data-result-type="run_pipeline"/);
 });
@@ -595,17 +595,17 @@ test("runPipelineForCurrentTask shows EmptyInput message and does not call run-p
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
-        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -618,7 +618,7 @@ test("runPipelineForCurrentTask shows EmptyInput message and does not call run-p
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   errorMessages.length = 0;
   cliArgsLog.length = 0;
-  const handler = harness.registeredCommands.get("vexb.runPipelineForCurrentTask");
+  const handler = harness.registeredCommands.get("vtrace.runPipelineForCurrentTask");
   await handler?.();
 
   assert.deepEqual(errorMessages, [RUN_PIPELINE_MESSAGES.EmptyInput]);
@@ -632,17 +632,17 @@ test("runPipelineForCurrentTask shows NoWorkspace message when no folder is open
     noWorkspace: true,
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
-        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -657,7 +657,7 @@ test("runPipelineForCurrentTask shows NoWorkspace message when no folder is open
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   errorMessages.length = 0;
   cliArgsLog.length = 0;
-  const handler = harness.registeredCommands.get("vexb.runPipelineForCurrentTask");
+  const handler = harness.registeredCommands.get("vtrace.runPipelineForCurrentTask");
   await handler?.();
 
   assert.deepEqual(errorMessages, [RUN_PIPELINE_MESSAGES.NoWorkspace]);
@@ -670,17 +670,17 @@ test("runPipelineForCurrentTask shows NotInitialized message when the repo is no
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
-        return { data: makeNotInitializedStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeNotInitializedStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -695,7 +695,7 @@ test("runPipelineForCurrentTask shows NotInitialized message when the repo is no
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   errorMessages.length = 0;
   cliArgsLog.length = 0;
-  const handler = harness.registeredCommands.get("vexb.runPipelineForCurrentTask");
+  const handler = harness.registeredCommands.get("vtrace.runPipelineForCurrentTask");
   await handler?.();
 
   assert.deepEqual(errorMessages, [RUN_PIPELINE_MESSAGES.NotInitialized]);
@@ -708,17 +708,17 @@ test("runPipelineForCurrentTask shows IndexNotReady message when setup completed
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
-        return { data: makeInitializedButNotReadyEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeInitializedButNotReadyEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -733,7 +733,7 @@ test("runPipelineForCurrentTask shows IndexNotReady message when setup completed
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   errorMessages.length = 0;
   cliArgsLog.length = 0;
-  const handler = harness.registeredCommands.get("vexb.runPipelineForCurrentTask");
+  const handler = harness.registeredCommands.get("vtrace.runPipelineForCurrentTask");
   await handler?.();
 
   assert.deepEqual(errorMessages, [RUN_PIPELINE_MESSAGES.IndexNotReady]);
@@ -747,18 +747,18 @@ test("setupOrReindex shows NoWorkspace message and runs nothing when no folder i
     noWorkspace: true,
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
-        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText(args: string[]) {
         cliArgsLog.push(args);
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -770,7 +770,7 @@ test("setupOrReindex shows NoWorkspace message and runs nothing when no folder i
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   errorMessages.length = 0;
   cliArgsLog.length = 0;
-  await harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  await harness.registeredCommands.get("vtrace.setupOrReindex")?.();
 
   assert.deepEqual(errorMessages, [SETUP_REINDEX_MESSAGES.NoWorkspace]);
   assert.equal(
@@ -785,18 +785,18 @@ test("setupOrReindex runs setup (not index) when the repo is not initialized", a
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
-        return { data: makeNotInitializedStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeNotInitializedStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText(args: string[]) {
         cliArgsLog.push(args);
-        return { command: "/ext/bin/vexb", stdout: "setup ok" };
+        return { command: "/ext/bin/vtrace", stdout: "setup ok" };
       },
     },
   });
@@ -807,7 +807,7 @@ test("setupOrReindex runs setup (not index) when the repo is not initialized", a
 
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   cliArgsLog.length = 0;
-  await harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  await harness.registeredCommands.get("vtrace.setupOrReindex")?.();
 
   const setupCalls = cliArgsLog.filter((args) => args[0] === "setup");
   const indexCalls = cliArgsLog.filter((args) => args[0] === "index");
@@ -821,18 +821,18 @@ test("setupOrReindex runs index (not setup) when initialized but index is not re
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
-        return { data: makeInitializedButNotReadyEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeInitializedButNotReadyEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText(args: string[]) {
         cliArgsLog.push(args);
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -842,7 +842,7 @@ test("setupOrReindex runs index (not setup) when initialized but index is not re
 
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   cliArgsLog.length = 0;
-  await harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  await harness.registeredCommands.get("vtrace.setupOrReindex")?.();
 
   const setupCalls = cliArgsLog.filter((args) => args[0] === "setup");
   const indexCalls = cliArgsLog.filter((args) => args[0] === "index");
@@ -856,18 +856,18 @@ test("setupOrReindex runs index when the repo is initialized and freshness is po
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
-        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText(args: string[]) {
         cliArgsLog.push(args);
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -877,7 +877,7 @@ test("setupOrReindex runs index when the repo is initialized and freshness is po
 
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   cliArgsLog.length = 0;
-  await harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  await harness.registeredCommands.get("vtrace.setupOrReindex")?.();
 
   const indexCalls = cliArgsLog.filter((args) => args[0] === "index");
   assert.equal(indexCalls.length, 1, "index CLI call must run exactly once when stale");
@@ -892,18 +892,18 @@ test("setupOrReindex shows the ready quick pick and honors Cancel without touchi
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
-        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText(args: string[]) {
         cliArgsLog.push(args);
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -916,7 +916,7 @@ test("setupOrReindex shows the ready quick pick and honors Cancel without touchi
 
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   cliArgsLog.length = 0;
-  await harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  await harness.registeredCommands.get("vtrace.setupOrReindex")?.();
 
   assert.equal(capturedOptions?.title, SETUP_REINDEX_MESSAGES.ReadyQuickPickTitle);
   assert.equal(capturedOptions?.placeHolder, SETUP_REINDEX_MESSAGES.ReadyQuickPickPlaceholder);
@@ -934,18 +934,18 @@ test("setupOrReindex ready quick pick runs index when Re-index anyway is chosen"
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
-        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText(args: string[]) {
         cliArgsLog.push(args);
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -956,7 +956,7 @@ test("setupOrReindex ready quick pick runs index when Re-index anyway is chosen"
 
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   cliArgsLog.length = 0;
-  await harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  await harness.registeredCommands.get("vtrace.setupOrReindex")?.();
 
   const indexCalls = cliArgsLog.filter((args) => args[0] === "index");
   assert.equal(indexCalls.length, 1, "ready + Re-index anyway should run index once");
@@ -969,18 +969,18 @@ test("setupOrReindex ready quick pick delegates to existing commands without dup
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson(args: string[]) {
         cliArgsLog.push(args);
-        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeReadyStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText(args: string[]) {
         cliArgsLog.push(args);
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
@@ -996,11 +996,11 @@ test("setupOrReindex ready quick pick delegates to existing commands without dup
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   cliArgsLog.length = 0;
   executedCommands.length = 0;
-  await harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  await harness.registeredCommands.get("vtrace.setupOrReindex")?.();
 
   assert.ok(
-    executedCommands.includes("vexb.doctor"),
-    "Doctor branch must delegate to the existing vexb.doctor command, not duplicate its logic",
+    executedCommands.includes("vtrace.doctor"),
+    "Doctor branch must delegate to the existing vtrace.doctor command, not duplicate its logic",
   );
   assert.equal(
     cliArgsLog.some((args) => args[0] === "setup" || args[0] === "index"),
@@ -1016,17 +1016,17 @@ test("setupOrReindex updates sidebar + status bar to Indexing… before the CLI 
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson() {
-        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
         await cliFinished;
-        return { command: "/ext/bin/vexb", stdout: "reindex ok" };
+        return { command: "/ext/bin/vtrace", stdout: "reindex ok" };
       },
     },
   });
@@ -1034,7 +1034,7 @@ test("setupOrReindex updates sidebar + status bar to Indexing… before the CLI 
   const app = await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   const beforeText = harness.statusBar.text;
 
-  const pending = harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  const pending = harness.registeredCommands.get("vtrace.setupOrReindex")?.();
   // Let refreshStatus + any quick-pick resolution run, but keep runText blocked on cliFinished.
   await new Promise((resolve) => setTimeout(resolve, 20));
 
@@ -1042,7 +1042,7 @@ test("setupOrReindex updates sidebar + status bar to Indexing… before the CLI 
   const overviewDuring = app.repoStatusProvider.getChildren(sectionsDuring[0]) as Array<TreeNodeStub>;
   assert.equal(overviewDuring[0]?.label, "Indexing…");
   assert.equal(overviewDuring[0]?.description, "Re-indexing this repo…");
-  assert.match(harness.statusBar.text, /vexb: indexing/);
+  assert.match(harness.statusBar.text, /vtrace: indexing/);
   assert.notEqual(harness.statusBar.text, beforeText);
 
   releaseCli?.();
@@ -1061,17 +1061,17 @@ test("setupOrReindex labels running_setup when the repo is not initialized", asy
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson() {
-        return { data: makeNotInitializedStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeNotInitializedStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
         await cliFinished;
-        return { command: "/ext/bin/vexb", stdout: "setup ok" };
+        return { command: "/ext/bin/vtrace", stdout: "setup ok" };
       },
     },
   });
@@ -1081,7 +1081,7 @@ test("setupOrReindex labels running_setup when the repo is not initialized", asy
   }) as never;
 
   const app = await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
-  const pending = harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  const pending = harness.registeredCommands.get("vtrace.setupOrReindex")?.();
   // Wait for refreshStatus + pickAgent to settle while runText stays blocked on cliFinished.
   await new Promise((resolve) => setTimeout(resolve, 20));
 
@@ -1098,22 +1098,22 @@ test("setupOrReindex status bar surfaces different tooltips for setup vs reindex
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson() {
-        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
     },
   });
 
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
-  await harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  await harness.registeredCommands.get("vtrace.setupOrReindex")?.();
 
   assert.doesNotMatch(harness.statusBar.text, /indexing/);
 });
@@ -1122,22 +1122,22 @@ test("setupOrReindex clears busy back to idle on successful completion", async (
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson() {
-        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "reindex ok" };
+        return { command: "/ext/bin/vtrace", stdout: "reindex ok" };
       },
     },
   });
 
   const app = await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
-  await harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  await harness.registeredCommands.get("vtrace.setupOrReindex")?.();
 
   assert.equal(app.busyState, "idle");
   assert.equal(app.repoStatusProvider.busyState, "idle");
@@ -1159,23 +1159,23 @@ test("setupOrReindex streams CLI stderr lines into the output channel as they ar
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson() {
-        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
-        return { command: "/ext/bin/vexb", stdout: "" };
+        return { command: "/ext/bin/vtrace", stdout: "" };
       },
       async runTextStreaming(_args, _cwd, handlers) {
         capturedOnStderrLine.push(handlers?.onStderrLine);
         handlers?.onStderrLine?.("parsing src/a.ts");
         handlers?.onStderrLine?.("parsing src/b.ts");
         await streamingFinished;
-        return { command: "/ext/bin/vexb", stdout: "Index updated: 2 files." };
+        return { command: "/ext/bin/vtrace", stdout: "Index updated: 2 files." };
       },
     },
   });
@@ -1192,7 +1192,7 @@ test("setupOrReindex streams CLI stderr lines into the output channel as they ar
 
   await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
 
-  const pending = harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  const pending = harness.registeredCommands.get("vtrace.setupOrReindex")?.();
 
   // Let the streaming handler push its two mid-run lines into the output channel.
   await new Promise((resolve) => setTimeout(resolve, 10));
@@ -1231,17 +1231,17 @@ test("setupOrReindex clears busy back to idle and surfaces error on CLI failure"
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       getLastExecutableInfo() {
-        return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+        return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
       },
       async runJson() {
-        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vexb", exitCode: 0, stdout: "" };
+        return { data: makeStaleStatusEnvelope(), command: "/ext/bin/vtrace", exitCode: 0, stdout: "" };
       },
       async runText() {
         const error: Error & { stderr?: string; code?: string } = new Error("index failed: disk full");
-        error.code = "VEXB_COMMAND_FAILED";
+        error.code = "VTRACE_COMMAND_FAILED";
         error.stderr = "disk full";
         throw error;
       },
@@ -1254,7 +1254,7 @@ test("setupOrReindex clears busy back to idle and surfaces error on CLI failure"
 
   const app = await activateWithVscode(harness.vscode as never, harness.context, harness.overrides);
   errorMessages.length = 0;
-  await harness.registeredCommands.get("vexb.setupOrReindex")?.();
+  await harness.registeredCommands.get("vtrace.setupOrReindex")?.();
 
   assert.equal(app.busyState, "idle", "busy state must clear even on failure");
   assert.equal(app.repoStatusProvider.busyState, "idle");
@@ -1267,7 +1267,7 @@ test("setupOrReindex clears busy back to idle and surfaces error on CLI failure"
 });
 
 async function invokeRefresh(harness: ReturnType<typeof createVscodeHarness>) {
-  const entry = harness.registeredCommands.get("vexb.refreshStatus");
+  const entry = harness.registeredCommands.get("vtrace.refreshStatus");
   if (entry === undefined) throw new Error("refreshStatus command missing");
   await entry();
 }
@@ -1277,7 +1277,7 @@ type TreeNodeStub = {
   description?: string;
   tooltip?: string;
   command?: { command: string; title: string };
-  __vexbChildren?: unknown;
+  __vtraceChildren?: unknown;
 };
 
 function createVscodeHarness(options: {
@@ -1324,21 +1324,21 @@ function createVscodeHarness(options: {
 
   const defaultCliBridge: FakeCliBridge = {
     async getExecutableInfo() {
-      return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+      return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
     },
     getLastExecutableInfo() {
-      return { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
+      return { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] };
     },
     async runJson() {
       return {
         data: makeReadyStatusEnvelope(),
-        command: "/ext/bin/vexb",
+        command: "/ext/bin/vtrace",
         exitCode: 0,
         stdout: "",
       };
     },
     async runText() {
-      return { command: "/ext/bin/vexb", stdout: "" };
+      return { command: "/ext/bin/vtrace", stdout: "" };
     },
   };
 
@@ -1554,7 +1554,7 @@ function makeNotInitializedStatusEnvelope() {
     repoRoot: "/repo",
     timestampMs: 1,
     warnings: [],
-    nextSteps: ["Run `vexb setup /repo` to initialize and index the repo."],
+    nextSteps: ["Run `vtrace setup /repo` to initialize and index the repo."],
     error: null,
     result: {
       selectedAgent: "claude-code",

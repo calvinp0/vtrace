@@ -1,8 +1,8 @@
 import type { RepoLocalConfig, RepoLocalState } from "../setup/types";
 
-export const MCP_SERVER_SCHEMA_NAME = "vexb.mcp_server" as const;
+export const MCP_SERVER_SCHEMA_NAME = "vtrace.mcp_server" as const;
 export const MCP_SERVER_SCHEMA_VERSION = "1.0.0" as const;
-export const MCP_SERVER_ID = "vexb_rc1_mcp" as const;
+export const MCP_SERVER_ID = "vtrace_rc1_mcp" as const;
 
 export type McpServerSchemaName = typeof MCP_SERVER_SCHEMA_NAME;
 export type McpServerSchemaVersion = typeof MCP_SERVER_SCHEMA_VERSION;

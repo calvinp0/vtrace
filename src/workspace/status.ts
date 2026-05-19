@@ -94,23 +94,23 @@ function buildNotReadyReason(input: {
   }
 
   if (!input.configPresent) {
-    return `Repo-local config is missing. Run \`vexb init ${input.repoRoot}\` or \`vexb setup ${input.repoRoot}\`.`;
+    return `Repo-local config is missing. Run \`vtrace init ${input.repoRoot}\` or \`vtrace setup ${input.repoRoot}\`.`;
   }
 
   if (!input.statePresent) {
-    return `Repo-local state is missing. Run \`vexb init ${input.repoRoot}\` or \`vexb setup ${input.repoRoot}\`.`;
+    return `Repo-local state is missing. Run \`vtrace init ${input.repoRoot}\` or \`vtrace setup ${input.repoRoot}\`.`;
   }
 
   if (!input.dbPresent) {
-    return `Repo-local index database is missing. Run \`vexb init ${input.repoRoot}\` or \`vexb setup ${input.repoRoot}\`.`;
+    return `Repo-local index database is missing. Run \`vtrace init ${input.repoRoot}\` or \`vtrace setup ${input.repoRoot}\`.`;
   }
 
   if (!input.initialized) {
-    return `Repo-local init state is incomplete. Run \`vexb init ${input.repoRoot}\` or \`vexb setup ${input.repoRoot}\`.`;
+    return `Repo-local init state is incomplete. Run \`vtrace init ${input.repoRoot}\` or \`vtrace setup ${input.repoRoot}\`.`;
   }
 
   if (!input.indexPresent) {
-    return `No indexed run is present. Run \`vexb init ${input.repoRoot}\` or \`vexb index ${input.repoRoot}\`.`;
+    return `No indexed run is present. Run \`vtrace init ${input.repoRoot}\` or \`vtrace index ${input.repoRoot}\`.`;
   }
 
   if (input.readiness?.status !== "ready") {

@@ -316,7 +316,7 @@ test("rules linked to changed code become stale and stale active rules are not i
 });
 
 test("rules command lists, generates, and promotes inspectable rules", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-project-rules-cli-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-project-rules-cli-"));
   const repoRoot = path.join(root, "repo");
   const dbPath = path.join(root, "rules.sqlite");
   const db = openIndexerDatabase(dbPath);
@@ -380,7 +380,7 @@ function seedDurableRuleEvidence(
 async function withProjectRuleFixture(
   run: (input: { repoRoot: string; db: ReturnType<typeof openIndexerDatabase> }) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-project-rules-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-project-rules-"));
   const repoRoot = path.join(root, "repo");
   const db = openIndexerDatabase();
 

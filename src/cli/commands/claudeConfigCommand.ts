@@ -28,7 +28,7 @@ export async function runClaudeConfigCommand(
       ? failureJson(formatShellJsonFailure({
         command: "claude-config",
         message: parsed.error,
-        nextSteps: ["Run `vexb claude-config [repo] [--dry-run] [--agent <name>] [--json]`."],
+        nextSteps: ["Run `vtrace claude-config [repo] [--dry-run] [--agent <name>] [--json]`."],
       }))
       : failure(parsed.error);
   }
@@ -50,12 +50,12 @@ export async function runClaudeConfigCommand(
       ? failureJson(formatShellJsonFailure({
         command: "claude-config",
         message,
-        nextSteps: ["Run `vexb claude-config [repo] [--dry-run] [--agent <name>] [--json]` from inside the repo, or pass the repo path explicitly."],
+        nextSteps: ["Run `vtrace claude-config [repo] [--dry-run] [--agent <name>] [--json]` from inside the repo, or pass the repo path explicitly."],
       }))
       : failure(formatUserFacingFailure(
         "Agent config was not updated.",
         message,
-        "Run `vexb claude-config [repo] [--agent <name>]` from inside the repo, or pass the repo path explicitly.",
+        "Run `vtrace claude-config [repo] [--agent <name>]` from inside the repo, or pass the repo path explicitly.",
       ));
   }
 }

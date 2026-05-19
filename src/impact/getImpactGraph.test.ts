@@ -361,7 +361,7 @@ test("module-level constants surface dependents through get_impact_graph", async
 async function withPythonModuleConstantFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-impact-pyconst-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-impact-pyconst-"));
   const repoRoot = path.join(root, "repo");
 
   try {
@@ -584,7 +584,7 @@ test("inherited class constant surfaces subclass dependents via ClassName.CONST 
 async function withPythonInheritedMethodFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-impact-pyinh-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-impact-pyinh-"));
   const repoRoot = path.join(root, "repo");
 
   try {
@@ -619,7 +619,7 @@ async function withPythonInheritedMethodFixture(
 async function withPythonInheritedConstFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-impact-pyinhconst-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-impact-pyinhconst-"));
   const repoRoot = path.join(root, "repo");
 
   try {
@@ -686,7 +686,7 @@ test("coverage notes always describe supported member/attribute receiver forms",
 async function withPythonSelfCallFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-impact-pyself-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-impact-pyself-"));
   const repoRoot = path.join(root, "repo");
 
   try {
@@ -713,7 +713,7 @@ async function withPythonSelfCallFixture(
 async function withPythonClassAttrFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-impact-pyclassattr-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-impact-pyclassattr-"));
   const repoRoot = path.join(root, "repo");
 
   try {
@@ -746,7 +746,7 @@ async function withPythonClassAttrFixture(
 async function withPythonReferenceFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-impact-pyref-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-impact-pyref-"));
   const repoRoot = path.join(root, "repo");
 
   try {
@@ -775,7 +775,7 @@ async function withPythonReferenceFixture(
 async function withPythonCallerFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-impact-py-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-impact-py-"));
   const repoRoot = path.join(root, "repo");
 
   try {
@@ -804,7 +804,7 @@ async function withPythonCallerFixture(
 async function withImpactFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-impact-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-impact-"));
   const repoRoot = path.join(root, "repo");
 
   try {

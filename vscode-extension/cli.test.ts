@@ -20,33 +20,33 @@ import {
 test("resolveCliCommand prefers configured path, then bundled, then dev-layout bundled, then PATH", async () => {
   assert.equal(await resolveCliCommand({
     extensionPath: "/ext",
-    getConfiguredCliPath: () => "/custom/vexb",
+    getConfiguredCliPath: () => "/custom/vtrace",
     fileExists: async () => false,
-  }), "/custom/vexb");
+  }), "/custom/vtrace");
 
   assert.equal(await resolveCliCommand({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "",
-    fileExists: async (targetPath: string) => targetPath === "/ext/bin/vexb",
-  }), "/ext/bin/vexb");
+    fileExists: async (targetPath: string) => targetPath === "/ext/bin/vtrace",
+  }), "/ext/bin/vtrace");
 
   assert.equal(await resolveCliCommand({
     extensionPath: "/repo/vscode-extension",
     getConfiguredCliPath: () => "",
-    fileExists: async (targetPath: string) => targetPath === "/repo/bin/vexb",
-  }), "/repo/bin/vexb");
+    fileExists: async (targetPath: string) => targetPath === "/repo/bin/vtrace",
+  }), "/repo/bin/vtrace");
 
   assert.equal(await resolveCliCommand({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "",
     fileExists: async () => false,
-  }), "vexb");
+  }), "vtrace");
 });
 
 test("resolveCliCommandWithSource reports which path was used and records attempted paths", async () => {
   const configured = await resolveCliCommandWithSource({
     extensionPath: "/ext",
-    getConfiguredCliPath: () => "/custom/vexb",
+    getConfiguredCliPath: () => "/custom/vtrace",
     fileExists: async () => false,
   });
   assert.equal(configured.source, EXECUTABLE_SOURCES.Configured);
@@ -55,7 +55,7 @@ test("resolveCliCommandWithSource reports which path was used and records attemp
   const bundledDev = await resolveCliCommandWithSource({
     extensionPath: "/repo/vscode-extension",
     getConfiguredCliPath: () => "",
-    fileExists: async (targetPath: string) => targetPath === "/repo/bin/vexb",
+    fileExists: async (targetPath: string) => targetPath === "/repo/bin/vtrace",
   });
   assert.equal(bundledDev.source, EXECUTABLE_SOURCES.BundledDev);
   assert.deepEqual(bundledDev.attempted.map((entry) => entry.source), [
@@ -87,7 +87,7 @@ test("createCliBridge parses JSON responses and caches the executable resolution
   const invocations: Array<{ command: string; args: string[]; cwd: string }> = [];
   const cli = createCliBridge({
     extensionPath: "/ext",
-    getConfiguredCliPath: () => "/custom/vexb",
+    getConfiguredCliPath: () => "/custom/vtrace",
     fileExists: async () => false,
     execFile: async (command: string, args: string[], options: { cwd: string }) => {
       invocations.push({ command, args, cwd: options.cwd });
@@ -102,20 +102,20 @@ test("createCliBridge parses JSON responses and caches the executable resolution
 
   assert.equal(result.data.ok, true);
   assert.deepEqual(invocations, [{
-    command: "/custom/vexb",
+    command: "/custom/vtrace",
     args: ["status", "/repo", "--agent", "codex", "--json"],
     cwd: "/repo",
   }]);
 
   const cached = cli.getLastExecutableInfo();
-  assert.equal(cached?.command, "/custom/vexb");
+  assert.equal(cached?.command, "/custom/vtrace");
   assert.equal(cached?.source, EXECUTABLE_SOURCES.Configured);
 });
 
 test("createCliBridge accepts JSON failure payloads emitted on non-zero exit codes", async () => {
   const cli = createCliBridge({
     extensionPath: "/ext",
-    getConfiguredCliPath: () => "/custom/vexb",
+    getConfiguredCliPath: () => "/custom/vtrace",
     fileExists: async () => false,
     execFile: async () => {
       throw {
@@ -141,7 +141,7 @@ test("createCliBridge accepts JSON failure payloads emitted on non-zero exit cod
   assert.equal(result.data.error.message, "repo not found");
 });
 
-test("createCliBridge raises VEXB_CLI_NOT_FOUND with attempted paths when ENOENT", async () => {
+test("createCliBridge raises VTRACE_CLI_NOT_FOUND with attempted paths when ENOENT", async () => {
   const cli = createCliBridge({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "",
@@ -161,8 +161,8 @@ test("createCliBridge raises VEXB_CLI_NOT_FOUND with attempted paths when ENOENT
   );
 
   assert.ok(error, "expected an error to be thrown");
-  assert.equal(error?.code, "VEXB_CLI_NOT_FOUND");
-  assert.match(error?.message ?? "", /vexb CLI was not found/);
+  assert.equal(error?.code, "VTRACE_CLI_NOT_FOUND");
+  assert.match(error?.message ?? "", /vtrace CLI was not found/);
   assert.match(error?.message ?? "", /cliPath/);
   assert.match(error?.message ?? "", /PATH/);
   assert.deepEqual(
@@ -171,7 +171,7 @@ test("createCliBridge raises VEXB_CLI_NOT_FOUND with attempted paths when ENOENT
   );
 });
 
-test("createCliBridge detects missing Bun runtime and marks error as VEXB_BUN_NOT_FOUND", async () => {
+test("createCliBridge detects missing Bun runtime and marks error as VTRACE_BUN_NOT_FOUND", async () => {
   const cli = createCliBridge({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "",
@@ -191,7 +191,7 @@ test("createCliBridge detects missing Bun runtime and marks error as VEXB_BUN_NO
     (err) => err as Error & { code?: string },
   );
 
-  assert.equal(error?.code, "VEXB_BUN_NOT_FOUND");
+  assert.equal(error?.code, "VTRACE_BUN_NOT_FOUND");
   assert.match(error?.message ?? "", /Bun/);
 });
 
@@ -199,12 +199,12 @@ test("getExecutableInfo exposes resolution details without running the CLI", asy
   const cli = createCliBridge({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "",
-    fileExists: async (targetPath: string) => targetPath === "/ext/bin/vexb",
+    fileExists: async (targetPath: string) => targetPath === "/ext/bin/vtrace",
     execFile: async () => ({ stdout: "", stderr: "" }),
   });
 
   const info = await cli.getExecutableInfo();
-  assert.equal(info.command, "/ext/bin/vexb");
+  assert.equal(info.command, "/ext/bin/vtrace");
   assert.equal(info.source, EXECUTABLE_SOURCES.Bundled);
 });
 
@@ -213,7 +213,7 @@ test("runTextStreaming line-buffers stderr and invokes onStderrLine for each com
   const gate = makeSpawnGate();
   const cli = createCliBridge({
     extensionPath: "/ext",
-    getConfiguredCliPath: () => "/custom/vexb",
+    getConfiguredCliPath: () => "/custom/vtrace",
     fileExists: async () => false,
     spawn: gate.spawn,
   });
@@ -243,11 +243,11 @@ test("runTextStreaming line-buffers stderr and invokes onStderrLine for each com
   assert.equal(result.stdout, "ok\n");
 });
 
-test("runTextStreaming surfaces non-zero exits as VEXB_COMMAND_FAILED with the streamed stderr attached", async () => {
+test("runTextStreaming surfaces non-zero exits as VTRACE_COMMAND_FAILED with the streamed stderr attached", async () => {
   const gate = makeSpawnGate();
   const cli = createCliBridge({
     extensionPath: "/ext",
-    getConfiguredCliPath: () => "/custom/vexb",
+    getConfiguredCliPath: () => "/custom/vtrace",
     fileExists: async () => false,
     spawn: gate.spawn,
   });
@@ -262,7 +262,7 @@ test("runTextStreaming surfaces non-zero exits as VEXB_COMMAND_FAILED with the s
     (err) => err as Error & { code?: string; stderr?: string; exitCode?: number },
   );
 
-  assert.equal(error?.code, "VEXB_COMMAND_FAILED");
+  assert.equal(error?.code, "VTRACE_COMMAND_FAILED");
   assert.equal(error?.exitCode, 2);
   assert.match(error?.stderr ?? "", /something broke/);
 });
@@ -272,7 +272,7 @@ test("runTextStreaming forwards env option to spawn so the CLI can opt into non-
   const gate = makeSpawnGate();
   const cli = createCliBridge({
     extensionPath: "/ext",
-    getConfiguredCliPath: () => "/custom/vexb",
+    getConfiguredCliPath: () => "/custom/vtrace",
     fileExists: async () => false,
     spawn: (command, args, spawnOptions) => {
       capturedSpawnOptions = spawnOptions;
@@ -281,16 +281,16 @@ test("runTextStreaming forwards env option to spawn so the CLI can opt into non-
   });
 
   const pending = cli.runTextStreaming(["index", "/repo"], "/repo", {
-    env: { VEXB_PROGRESS_STREAM: "1" },
+    env: { VTRACE_PROGRESS_STREAM: "1" },
   });
   const fakeChild = await gate.awaitSpawn();
   fakeChild.emit("close", 0);
   await pending;
 
-  assert.equal(capturedSpawnOptions?.env?.VEXB_PROGRESS_STREAM, "1");
+  assert.equal(capturedSpawnOptions?.env?.VTRACE_PROGRESS_STREAM, "1");
 });
 
-test("runTextStreaming raises VEXB_CLI_NOT_FOUND when spawn reports ENOENT via error event", async () => {
+test("runTextStreaming raises VTRACE_CLI_NOT_FOUND when spawn reports ENOENT via error event", async () => {
   const gate = makeSpawnGate();
   const cli = createCliBridge({
     extensionPath: "/ext",
@@ -301,7 +301,7 @@ test("runTextStreaming raises VEXB_CLI_NOT_FOUND when spawn reports ENOENT via e
 
   const pending = cli.runTextStreaming(["status", "/repo"], "/repo", {});
   const fakeChild = await gate.awaitSpawn();
-  const enoent = Object.assign(new Error("spawn vexb ENOENT"), { code: "ENOENT" });
+  const enoent = Object.assign(new Error("spawn vtrace ENOENT"), { code: "ENOENT" });
   fakeChild.emit("error", enoent);
 
   const error = await pending.then(
@@ -309,11 +309,11 @@ test("runTextStreaming raises VEXB_CLI_NOT_FOUND when spawn reports ENOENT via e
     (err) => err as Error & { code?: string },
   );
 
-  assert.equal(error?.code, "VEXB_CLI_NOT_FOUND");
-  assert.match(error?.message ?? "", /vexb CLI was not found/);
+  assert.equal(error?.code, "VTRACE_CLI_NOT_FOUND");
+  assert.match(error?.message ?? "", /vtrace CLI was not found/);
 });
 
-test("command builders stay thin and map directly to vexb CLI subcommands", () => {
+test("command builders stay thin and map directly to vtrace CLI subcommands", () => {
   assert.deepEqual(buildSetupArgs("/repo", AGENT_IDS.ClaudeCode), ["setup", "/repo"]);
   assert.deepEqual(buildStatusArgs("/repo", AGENT_IDS.Codex), ["status", "/repo", "--agent", "codex", "--json"]);
   assert.deepEqual(buildCapsuleArgs("/repo", "trace auth flow"), ["capsule", "/repo", "trace auth flow"]);

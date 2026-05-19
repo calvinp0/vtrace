@@ -130,7 +130,7 @@ test("extractFullSymbolSource reports invalid_span instead of crashing on mismat
 });
 
 async function withTempRepo(run: (repoRoot: string) => Promise<void>): Promise<void> {
-  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vexb-capsule-source-"));
+  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-capsule-source-"));
 
   try {
     await run(repoRoot);

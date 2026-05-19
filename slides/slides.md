@@ -1,9 +1,9 @@
 ---
 theme: default
-title: "vexb — Local Deterministic Code Indexer"
+title: "vtrace — Local Deterministic Code Indexer"
 author: Calvin Pieters
 transition: slide-left
-exportFilename: vexb-presentation
+exportFilename: vtrace-presentation
 colorSchema: light
 fonts:
   sans: Inter
@@ -12,7 +12,7 @@ defaults:
   transition: slide-left
 ---
 
-# vexb
+# vtrace
 
 ## Local Deterministic Code Indexer
 
@@ -59,13 +59,13 @@ Set up the problem space. Each point builds on the last — from raw capability 
 layout: section
 ---
 
-# What is vexb?
+# What is vtrace?
 
 ---
 layout: two-cols
 ---
 
-# vexb at a Glance
+# vtrace at a Glance
 
 <v-clicks>
 
@@ -293,7 +293,7 @@ Symbols connected to matched candidates get **boosted** via in-degree, out-degre
 </div>
 
 <!--
-The two-stage approach: first find candidates via text matching, then rerank using structural graph relationships. This is what makes vexb structure-aware.
+The two-stage approach: first find candidates via text matching, then rerank using structural graph relationships. This is what makes vtrace structure-aware.
 -->
 
 ---
@@ -396,7 +396,7 @@ Each intent selects a **routing profile** controlling search backend, pool size,
 </div>
 
 <!--
-This is one of vexb's most distinctive design choices — intent shapes everything downstream. No ML means this runs in microseconds.
+This is one of vtrace's most distinctive design choices — intent shapes everything downstream. No ML means this runs in microseconds.
 -->
 
 ---
@@ -486,7 +486,7 @@ interface CapsuleItem {
 </div>
 
 <!--
-The capsule is vexb's core output artifact. Graceful degradation means you always get useful context even under tight budgets.
+The capsule is vtrace's core output artifact. Graceful degradation means you always get useful context even under tight budgets.
 -->
 
 ---
@@ -544,7 +544,7 @@ Observations are **linked** to specific code entities and **surfaced** inside ca
 </div>
 
 <!--
-This is what gives vexb session continuity — it remembers what happened and surfaces relevant history when you come back to the same code.
+This is what gives vtrace session continuity — it remembers what happened and surfaces relevant history when you come back to the same code.
 -->
 
 ---
@@ -588,7 +588,7 @@ interface HandoffPayload {
 </div>
 
 <!--
-The handoff payload is what makes vexb composable — any downstream tool or agent gets structured, trustworthy context with full provenance.
+The handoff payload is what makes vtrace composable — any downstream tool or agent gets structured, trustworthy context with full provenance.
 -->
 
 ---
@@ -597,7 +597,7 @@ layout: section
 
 # MCP Server Interface
 
-## How tools interact with vexb
+## How tools interact with vtrace
 
 ---
 
@@ -646,7 +646,7 @@ Any MCP-compatible client (Claude, VS Code, custom agents) can use these tools d
 </div>
 
 <!--
-The MCP server is vexb's integration surface — it exposes every capability as a tool that AI assistants can call.
+The MCP server is vtrace's integration surface — it exposes every capability as a tool that AI assistants can call.
 -->
 
 ---
@@ -688,7 +688,7 @@ The MCP server is vexb's integration surface — it exposes every capability as 
 </div>
 
 <!--
-The minimal dependency footprint is intentional — vexb is designed to be trustworthy and self-contained.
+The minimal dependency footprint is intentional — vtrace is designed to be trustworthy and self-contained.
 -->
 
 ---
@@ -697,7 +697,7 @@ layout: section
 
 # Design Decisions
 
-## What makes vexb different
+## What makes vtrace different
 
 ---
 
@@ -800,7 +800,7 @@ class: text-center
 
 # Thank You
 
-**vexb** — Local Deterministic Code Indexer
+**vtrace** — Local Deterministic Code Indexer
 
 Structural intelligence for AI-assisted code understanding
 

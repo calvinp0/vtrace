@@ -27,7 +27,7 @@ def estimate_background(signal_mean: float, dark_current: float, smoothing_passe
 export async function withMixedPyCythonRepo(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const tempRoot = await mkdtemp(path.join(os.tmpdir(), "vexb-mixed-py-cython-"));
+  const tempRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-mixed-py-cython-"));
   const repoRoot = path.join(tempRoot, "repo");
 
   try {

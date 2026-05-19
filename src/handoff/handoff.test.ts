@@ -60,10 +60,10 @@ import {
 } from "../testing/mixedPyCythonFixture";
 
 test("handoff schema metadata is explicit and centralized", () => {
-  assert.equal(HANDOFF_SCHEMA_NAME, "vexb.external_handoff");
+  assert.equal(HANDOFF_SCHEMA_NAME, "vtrace.external_handoff");
   assert.equal(HANDOFF_SCHEMA_VERSION, "1.0.0");
   assert.deepEqual(HANDOFF_SCHEMA, {
-    name: "vexb.external_handoff",
+    name: "vtrace.external_handoff",
     version: "1.0.0",
   });
   assert.deepEqual(DEFAULT_HANDOFF_GENERATION_CONTEXT, {

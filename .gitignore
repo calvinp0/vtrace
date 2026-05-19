@@ -7,8 +7,8 @@ vscode-extension/bin/
 vscode-extension/*.vsix
 /.claude/
 /.mcp.json
-/.vexb/
+/.vtrace/
 /.mytool/
-/.vexb-test-tmp/
+/.vtrace-test-tmp/
 /.codex
 /capsule

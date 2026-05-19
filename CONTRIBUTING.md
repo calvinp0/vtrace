@@ -1,6 +1,6 @@
 # Contributing
 
-`vexb` is currently maintained as a local-source project.
+`vtrace` is currently maintained as a local-source project.
 
 Before opening a change, run:
 

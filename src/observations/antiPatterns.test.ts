@@ -108,7 +108,7 @@ test("file thrashing detection ignores below-threshold, outside-window, and igno
       await recordObservedFileChanges({
         repoRoot,
         statePath: initialized.paths.statePath,
-        changedFilePaths: [".vexb/state.ts", "node_modules/pkg/index.ts", "README.md"],
+        changedFilePaths: [".vtrace/state.ts", "node_modules/pkg/index.ts", "README.md"],
         nowMs: 2_000_000 + index,
       });
     }
@@ -244,7 +244,7 @@ test("session-bound anti-pattern observations survive compression and remain sea
 async function withRepoFixture(
   run: (repoRoot: string) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-anti-patterns-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-anti-patterns-"));
   const repoRoot = path.join(root, "repo");
 
   try {

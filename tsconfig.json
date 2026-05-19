@@ -20,9 +20,9 @@
     "dist",
     "build",
     "coverage",
-    ".vexb",
+    ".vtrace",
     ".mytool",
-    ".vexb-test-tmp",
+    ".vtrace-test-tmp",
     "vscode-extension/bin",
     "vscode-extension/*.vsix"
   ]

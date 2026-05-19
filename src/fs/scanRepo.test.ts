@@ -97,7 +97,7 @@ test("language detection maps supported extensions to domain languages", () => {
 });
 
 async function withFixture(run: (repoRoot: string) => Promise<void>): Promise<void> {
-  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vexb-scan-"));
+  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-scan-"));
 
   try {
     await run(repoRoot);

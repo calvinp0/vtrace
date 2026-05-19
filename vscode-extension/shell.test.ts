@@ -58,7 +58,7 @@ test("Overview rows render in exact spec order with exact labels", () => {
   const snapshot = buildRepoSnapshot(
     makeShellEnvelope(),
     [],
-    { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
+    { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
   );
   const overview = sectionByIdOrThrow(buildRepoTreeSections(snapshot), SECTION_IDS.Overview);
 
@@ -110,28 +110,28 @@ test("Current Agent exposes Selected / Config / Config file rows with config pat
   assert.equal(currentAgent.children[2]?.command, COMMAND_IDS.OpenAgentConfigFile);
 });
 
-test("Output & Diagnostics exposes Doctor, Open vexb Output, and Executable Resolution rows in order", () => {
+test("Output & Diagnostics exposes Doctor, Open vtrace Output, and Executable Resolution rows in order", () => {
   const snapshot = buildRepoSnapshot(
     makeShellEnvelope(),
     [],
-    { command: "/usr/bin/vexb", source: EXECUTABLE_SOURCES.Path, attempted: [] },
+    { command: "/usr/bin/vtrace", source: EXECUTABLE_SOURCES.Path, attempted: [] },
   );
   const output = sectionByIdOrThrow(buildRepoTreeSections(snapshot), SECTION_IDS.OutputDiagnostics);
 
-  assert.deepEqual(output.children.map((row) => row.label), ["Doctor", "Open vexb Output", "Executable Resolution"]);
+  assert.deepEqual(output.children.map((row) => row.label), ["Doctor", "Open vtrace Output", "Executable Resolution"]);
   assert.deepEqual(output.children.map((row) => row.command), [
     COMMAND_IDS.Doctor,
     COMMAND_IDS.OpenOutput,
     COMMAND_IDS.ShowExecutableResolutionReport,
   ]);
-  assert.equal(output.children[2]?.description, "using vexb on PATH");
+  assert.equal(output.children[2]?.description, "using vtrace on PATH");
 });
 
 test("Ready snapshot surfaces Ready primary status and click commands per spec", () => {
   const snapshot = buildRepoSnapshot(
     makeShellEnvelope(),
     [makeShellEnvelope({ selectedAgent: "codex", agentInstalled: false, agentMatchesExpected: false })],
-    { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
+    { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
   );
   const overview = sectionByIdOrThrow(buildRepoTreeSections(snapshot), SECTION_IDS.Overview);
   const byLabel = indexByLabel(overview.children);
@@ -157,7 +157,7 @@ test("Ready snapshot surfaces Ready primary status and click commands per spec",
 test("Possibly stale snapshot surfaces stale freshness and spec-matching primary label", () => {
   const snapshot = buildRepoSnapshot(makeShellEnvelope({
     freshnessState: "possibly_stale",
-    freshnessSummary: "Vexb detected likely drift.",
+    freshnessSummary: "Vtrace detected likely drift.",
     freshnessRecommendedAction: "Re-index this repo.",
   }));
   const overview = sectionByIdOrThrow(buildRepoTreeSections(snapshot), SECTION_IDS.Overview);
@@ -208,16 +208,16 @@ test("No workspace snapshot shows No workspace primary status and folder-picker 
   assert.ok(quick.children.some((row) => row.label === "Setup / Re-index"));
 });
 
-test("VEXB not found snapshot exposes missing CLI across Overview and Output sections", () => {
+test("VTRACE not found snapshot exposes missing CLI across Overview and Output sections", () => {
   const snapshot = createCliUnavailableSnapshot(
-    "vexb CLI was not found.\nSet `vexb.cliPath`.",
+    "vtrace CLI was not found.\nSet `vtrace.cliPath`.",
     "/repo",
     {
-      command: "vexb",
+      command: "vtrace",
       source: EXECUTABLE_SOURCES.Missing,
       attempted: [
-        { source: EXECUTABLE_SOURCES.Bundled, path: "/ext/bin/vexb" },
-        { source: EXECUTABLE_SOURCES.Path, path: "vexb" },
+        { source: EXECUTABLE_SOURCES.Bundled, path: "/ext/bin/vtrace" },
+        { source: EXECUTABLE_SOURCES.Path, path: "vtrace" },
       ],
     },
   );
@@ -226,7 +226,7 @@ test("VEXB not found snapshot exposes missing CLI across Overview and Output sec
   const output = sectionByIdOrThrow(buildRepoTreeSections(snapshot), SECTION_IDS.OutputDiagnostics);
   const outByLabel = indexByLabel(output.children);
 
-  assert.equal(overview.children[0]?.label, "VEXB not found");
+  assert.equal(overview.children[0]?.label, "VTRACE not found");
   assert.equal(overview.children[0]?.description, EMPTY_STATE_MESSAGES.CliNotFoundHelper);
   assert.equal(byLabel["Repo root"]?.description, "/repo");
   assert.equal(byLabel["CLI"], undefined);
@@ -239,7 +239,7 @@ test("Status bar reflects stale, ready, not-initialized, no-workspace states", (
   assert.match(buildStatusBarState(createCliUnavailableSnapshot("missing", "/repo", null)).text, /CLI missing/);
 
   const ready = buildRepoSnapshot(makeShellEnvelope(), [], {
-    command: "/ext/bin/vexb",
+    command: "/ext/bin/vtrace",
     source: EXECUTABLE_SOURCES.Bundled,
     attempted: [],
   });
@@ -285,9 +285,9 @@ test("selectPrimaryAgent prefers the default selected, installed and current age
 test("buildResultDocumentBody prefixes metadata header before command stdout", () => {
   const body = buildResultDocumentBody("Context Capsule", "payload body", {
     repoRoot: "/repo",
-    command: "/ext/bin/vexb capsule /repo 'trace auth'",
+    command: "/ext/bin/vtrace capsule /repo 'trace auth'",
     executable: {
-      command: "/ext/bin/vexb",
+      command: "/ext/bin/vtrace",
       source: EXECUTABLE_SOURCES.Bundled,
       attempted: [],
     },
@@ -296,8 +296,8 @@ test("buildResultDocumentBody prefixes metadata header before command stdout", (
 
   assert.match(body, /# Context Capsule/);
   assert.match(body, /Repo: \/repo/);
-  assert.match(body, /Command: \/ext\/bin\/vexb capsule/);
-  assert.match(body, /Executable: \/ext\/bin\/vexb \(Bundled launcher\)/);
+  assert.match(body, /Command: \/ext\/bin\/vtrace capsule/);
+  assert.match(body, /Executable: \/ext\/bin\/vtrace \(Bundled launcher\)/);
   assert.match(body, /Generated: 2026-04-21T00:00:00\.000Z/);
   assert.match(body, /\npayload body\n$/);
 });
@@ -305,11 +305,11 @@ test("buildResultDocumentBody prefixes metadata header before command stdout", (
 test("buildResultDocumentUri sanitizes titles and zero-pads the counter", () => {
   assert.equal(
     buildResultDocumentUri("File Skeleton: src/app.ts", 3),
-    "vexb:/results/0003-File-Skeleton-src-app.ts.md",
+    "vtrace:/results/0003-File-Skeleton-src-app.ts.md",
   );
   assert.equal(
     buildResultDocumentUri("Impact Graph: App::render", 42),
-    "vexb:/results/0042-Impact-Graph-App-render.md",
+    "vtrace:/results/0042-Impact-Graph-App-render.md",
   );
 });
 
@@ -343,7 +343,7 @@ test("Overview is primarily informational — Setup / Index / Latest run carry n
   const snapshot = buildRepoSnapshot(
     makeShellEnvelope(),
     [],
-    { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
+    { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
   );
   const overview = sectionByIdOrThrow(buildRepoTreeSections(snapshot), SECTION_IDS.Overview);
   const byLabel = indexByLabel(overview.children);
@@ -375,7 +375,7 @@ test("Quick Actions is trimmed to the five spec rows — no Doctor / Show Index 
   const snapshot = buildRepoSnapshot(
     makeShellEnvelope(),
     [],
-    { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
+    { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
   );
   const quick = sectionByIdOrThrow(buildRepoTreeSections(snapshot), SECTION_IDS.QuickActions);
   const commands = quick.children.map((row) => row.command);
@@ -391,7 +391,7 @@ test("No two visible primary rows open the same output across Quick Actions and 
   const snapshot = buildRepoSnapshot(
     makeShellEnvelope(),
     [],
-    { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
+    { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
   );
   const quick = sectionByIdOrThrow(buildRepoTreeSections(snapshot), SECTION_IDS.QuickActions);
   const diagnostics = sectionByIdOrThrow(buildRepoTreeSections(snapshot), SECTION_IDS.OutputDiagnostics);
@@ -411,7 +411,7 @@ test("Doctor lives only in Output & Diagnostics — not promoted into Overview o
   const snapshot = buildRepoSnapshot(
     makeShellEnvelope(),
     [],
-    { command: "/ext/bin/vexb", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
+    { command: "/ext/bin/vtrace", source: EXECUTABLE_SOURCES.Bundled, attempted: [] },
   );
   const sections = buildRepoTreeSections(snapshot);
   const overview = sectionByIdOrThrow(sections, SECTION_IDS.Overview);
@@ -471,29 +471,29 @@ test("buildFreshnessReport surfaces state, reasons, whyItMatters, and recommende
   raw.result.indexState.freshness.reasons = [
     { code: "source_file_count_changed", count: 3, message: "3 new source files" },
   ];
-  raw.result.indexState.freshness.whyItMatters = "Vexb answers may be outdated.";
+  raw.result.indexState.freshness.whyItMatters = "Vtrace answers may be outdated.";
   const snapshot = buildRepoSnapshot(raw);
   const body = buildFreshnessReport(snapshot);
 
   assert.match(body, /State: possibly_stale/);
   assert.match(body, /Summary: Drift detected\./);
   assert.match(body, /3 new source files \(3\)/);
-  assert.match(body, /Why this matters: Vexb answers may be outdated\./);
+  assert.match(body, /Why this matters: Vtrace answers may be outdated\./);
   assert.match(body, /Recommended action: Re-index the repo\./);
   assert.doesNotMatch(body, /Runtime|executable|agent config/i);
 });
 
 test("buildRuntimeReport surfaces runtime state, paths, and stale-state warning; no Doctor dump", () => {
   const raw = makeShellEnvelope();
-  raw.result.runtime.statePath = "/repo/.vexb/runtime.state";
-  raw.result.runtime.logPath = "/repo/.vexb/runtime.log";
+  raw.result.runtime.statePath = "/repo/.vtrace/runtime.state";
+  raw.result.runtime.logPath = "/repo/.vtrace/runtime.log";
   raw.result.runtime.staleStatePresent = true;
   const snapshot = buildRepoSnapshot(raw);
   const body = buildRuntimeReport(snapshot);
 
   assert.match(body, /State: not running/);
-  assert.match(body, /State file: \/repo\/\.vexb\/runtime\.state/);
-  assert.match(body, /Log file: \/repo\/\.vexb\/runtime\.log/);
+  assert.match(body, /State file: \/repo\/\.vtrace\/runtime\.state/);
+  assert.match(body, /Log file: \/repo\/\.vtrace\/runtime\.log/);
   assert.match(body, /Stale state file detected/);
   assert.match(body, /Recommended action:/);
   assert.doesNotMatch(body, /Freshness|Index readiness|agent config/i);
@@ -518,45 +518,45 @@ test("buildSetupConfigReport lists initialized state, agent entries, and setup r
 
 test("buildExecutableResolutionReport surfaces path, source, attempted order, and next step", () => {
   const body = buildExecutableResolutionReport({
-    command: "/ext/bin/vexb",
+    command: "/ext/bin/vtrace",
     source: EXECUTABLE_SOURCES.Bundled,
     attempted: [
-      { source: EXECUTABLE_SOURCES.Bundled, path: "/ext/bin/vexb" },
-      { source: EXECUTABLE_SOURCES.Path, path: "vexb" },
+      { source: EXECUTABLE_SOURCES.Bundled, path: "/ext/bin/vtrace" },
+      { source: EXECUTABLE_SOURCES.Path, path: "vtrace" },
     ],
   });
 
   assert.match(body, /^# Executable Resolution/m);
-  assert.match(body, /Resolved path: \/ext\/bin\/vexb/);
+  assert.match(body, /Resolved path: \/ext\/bin\/vtrace/);
   assert.match(body, /Source: Bundled launcher \(bundled\)/);
   assert.match(body, /Resolution order tried:/);
-  assert.match(body, /Bundled launcher: \/ext\/bin\/vexb/);
-  assert.match(body, /Resolved from PATH: vexb/);
-  assert.match(body, /set `vexb\.cliPath`/);
+  assert.match(body, /Bundled launcher: \/ext\/bin\/vtrace/);
+  assert.match(body, /Resolved from PATH: vtrace/);
+  assert.match(body, /set `vtrace\.cliPath`/);
 });
 
 test("buildExecutableResolutionReport falls back cleanly when no executable info is present", () => {
-  const body = buildExecutableResolutionReport(null, "vexb CLI was not found.");
+  const body = buildExecutableResolutionReport(null, "vtrace CLI was not found.");
 
-  assert.match(body, /No vexb executable resolution has been recorded yet\./);
-  assert.match(body, /vexb CLI was not found\./);
-  assert.match(body, /Next step: set `vexb\.cliPath`/);
+  assert.match(body, /No vtrace executable resolution has been recorded yet\./);
+  assert.match(body, /vtrace CLI was not found\./);
+  assert.match(body, /Next step: set `vtrace\.cliPath`/);
 });
 
 test("EDITOR_EMPTY_STATE_MESSAGES match the spec verbatim for file skeleton and impact graph", () => {
-  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.NoWorkspace, "Open a folder or workspace to use vexb file commands.");
+  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.NoWorkspace, "Open a folder or workspace to use vtrace file commands.");
   assert.equal(EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.NoActiveEditor, "Open a file in the workspace to show its skeleton.");
-  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.OutsideWorkspace, "The active file is not inside the current workspace. Open a workspace file to use vexb file skeletons.");
-  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.UnsupportedFile, "The active file is not a supported indexed source file for vexb skeleton output.");
-  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.NotInitialized, "This repo is not initialized for vexb yet. Run Setup Agent first.");
-  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.IndexNotReady, "The vexb index is not ready yet. Finish setup or indexing, then try again.");
+  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.OutsideWorkspace, "The active file is not inside the current workspace. Open a workspace file to use vtrace file skeletons.");
+  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.UnsupportedFile, "The active file is not a supported indexed source file for vtrace skeleton output.");
+  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.NotInitialized, "This repo is not initialized for vtrace yet. Run Setup Agent first.");
+  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.FileSkeleton.IndexNotReady, "The vtrace index is not ready yet. Finish setup or indexing, then try again.");
 
-  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.NoWorkspace, "Open a folder or workspace to use vexb symbol commands.");
+  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.NoWorkspace, "Open a folder or workspace to use vtrace symbol commands.");
   assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.NoActiveEditor, "Open a workspace file and place the cursor on a symbol to show its impact graph.");
   assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.NoSymbolAtCursor, "Place the cursor on a symbol to show its impact graph.");
-  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.SymbolNotResolved, "Vexb could not resolve the symbol at the cursor to an exact indexed symbol.");
-  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.NotInitialized, "This repo is not initialized for vexb yet. Run Setup Agent first.");
-  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.IndexNotReady, "The vexb index is not ready yet. Finish setup or indexing, then try again.");
+  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.SymbolNotResolved, "Vtrace could not resolve the symbol at the cursor to an exact indexed symbol.");
+  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.NotInitialized, "This repo is not initialized for vtrace yet. Run Setup Agent first.");
+  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.IndexNotReady, "The vtrace index is not ready yet. Finish setup or indexing, then try again.");
 });
 
 test("findSymbolAtLine chooses the narrowest indexed symbol covering the cursor", () => {
@@ -614,7 +614,7 @@ function makeShellEnvelope(overrides: {
     repoRoot: "/repo",
     timestampMs: 1,
     warnings: [],
-    nextSteps: ["Run `vexb setup /repo` to initialize and index the repo."],
+    nextSteps: ["Run `vtrace setup /repo` to initialize and index the repo."],
     error: null,
     result: {
       selectedAgent: overrides.selectedAgent ?? "claude-code",

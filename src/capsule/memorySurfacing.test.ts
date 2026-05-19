@@ -285,7 +285,7 @@ async function withMemoryFixture(
     normalizeUser: SymbolRecord;
   }) => Promise<void>,
 ): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-layer9-memory-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-layer9-memory-"));
   const repoRoot = path.join(root, "repo");
   const db = openIndexerDatabase();
 

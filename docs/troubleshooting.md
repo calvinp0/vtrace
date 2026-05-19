@@ -5,8 +5,8 @@
 If something looks off, check repo readiness first:
 
 ```bash
-./bin/vexb status <repo>
-./bin/vexb doctor <repo>
+./bin/vtrace status <repo>
+./bin/vtrace doctor <repo>
 ```
 
 Use `status` for the short answer and `doctor` for the detailed one.
@@ -16,13 +16,13 @@ Use `status` for the short answer and `doctor` for the detailed one.
 If `status` or `doctor` says setup is missing or readiness is not `ready`:
 
 ```bash
-./bin/vexb setup <repo>
+./bin/vtrace setup <repo>
 ```
 
 If you are outside the repo:
 
 ```bash
-./bin/vexb setup /path/to/your/repo
+./bin/vtrace setup /path/to/your/repo
 ```
 
 Repeated setup is safe.
@@ -32,8 +32,8 @@ Repeated setup is safe.
 If the repo changed and you want fresh structural output:
 
 ```bash
-./bin/vexb index <repo>
-./bin/vexb status <repo>
+./bin/vtrace index <repo>
+./bin/vtrace status <repo>
 ```
 
 Freshness warnings should be taken seriously before you rely on structural results.
@@ -43,15 +43,15 @@ Freshness warnings should be taken seriously before you rely on structural resul
 Refresh the MCP config:
 
 ```bash
-./bin/vexb claude-config <repo>
-./bin/vexb claude-config <repo> --agent codex
+./bin/vtrace claude-config <repo>
+./bin/vtrace claude-config <repo> --agent codex
 ```
 
 Preview without writing:
 
 ```bash
-./bin/vexb claude-config <repo> --dry-run
-./bin/vexb claude-config <repo> --agent codex --dry-run
+./bin/vtrace claude-config <repo> --dry-run
+./bin/vtrace claude-config <repo> --agent codex --dry-run
 ```
 
 Config paths:
@@ -61,15 +61,15 @@ Config paths:
 
 ## Runtime Is Not Running
 
-The daemon is optional. Claude Code and Codex can still launch `vexb` on demand through MCP config.
+The daemon is optional. Claude Code and Codex can still launch `vtrace` on demand through MCP config.
 
 If you want the background runtime:
 
 ```bash
-./bin/vexb daemon start <repo>
-./bin/vexb daemon status <repo>
-./bin/vexb daemon logs <repo>
-./bin/vexb daemon stop <repo>
+./bin/vtrace daemon start <repo>
+./bin/vtrace daemon status <repo>
+./bin/vtrace daemon logs <repo>
+./bin/vtrace daemon stop <repo>
 ```
 
 If the log is empty, the daemon may not have started yet or may not have handled traffic yet.
@@ -90,7 +90,7 @@ When the question is broad rather than exact, start with `run_pipeline`.
 The stable repo-bound launcher is:
 
 ```bash
-./bin/vexb mcp-serve --repo <repo>
+./bin/vtrace mcp-serve --repo <repo>
 ```
 
 You usually do not need to run it manually after setup.
@@ -110,9 +110,9 @@ For normal use, start with:
 
 ## Useful Next Commands
 
-- `./bin/vexb setup <repo>`
-- `./bin/vexb status <repo>`
-- `./bin/vexb doctor <repo>`
-- `./bin/vexb index <repo>`
-- `./bin/vexb claude-config <repo> --agent codex --dry-run`
-- `./bin/vexb daemon status <repo>`
+- `./bin/vtrace setup <repo>`
+- `./bin/vtrace status <repo>`
+- `./bin/vtrace doctor <repo>`
+- `./bin/vtrace index <repo>`
+- `./bin/vtrace claude-config <repo> --agent codex --dry-run`
+- `./bin/vtrace daemon status <repo>`

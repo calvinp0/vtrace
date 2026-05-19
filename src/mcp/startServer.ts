@@ -27,7 +27,7 @@ import {
 const JSON_RPC_VERSION = "2.0" as const;
 const MCP_PROTOCOL_VERSION = "2024-11-05" as const;
 const MCP_SERVER_USAGE = [
-  "Usage: vexb mcp-serve --repo <repo>",
+  "Usage: vtrace mcp-serve --repo <repo>",
   "",
   "Starts a local stdio MCP server bound to a repo root.",
   "Engine-backed tools require repo-local state and a ready index.",
@@ -397,7 +397,7 @@ async function handleJsonRpcMessage(
               name: MCP_SERVER_ID,
               version: MCP_SERVER_SCHEMA.version,
             },
-            instructions: `Repo-bound vexb MCP server for ${bound.startup.repoRoot}. Use tools/list to inspect available tools.`,
+            instructions: `Repo-bound vtrace MCP server for ${bound.startup.repoRoot}. Use tools/list to inspect available tools.`,
           },
         };
     case "notifications/initialized":

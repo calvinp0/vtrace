@@ -1,4 +1,4 @@
 [project]
 name = "spectra-lab"
 version = "0.1.0"
-description = "Mixed Python/Cython validation fixture for vexb RC1"
+description = "Mixed Python/Cython validation fixture for vtrace RC1"

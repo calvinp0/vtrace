@@ -12,16 +12,16 @@ export const RESULT_TYPES = Object.freeze({
 });
 
 const RESULT_TITLES = Object.freeze({
-  [RESULT_TYPES.IndexStatus]: "vexb — Index Status",
-  [RESULT_TYPES.Freshness]: "vexb — Freshness",
-  [RESULT_TYPES.Runtime]: "vexb — Runtime",
-  [RESULT_TYPES.SetupConfig]: "vexb — Setup / Config",
-  [RESULT_TYPES.ExecutableResolution]: "vexb — Executable Resolution",
-  [RESULT_TYPES.Doctor]: "vexb — Doctor",
-  [RESULT_TYPES.FileSkeleton]: "VEXB • File Skeleton",
-  [RESULT_TYPES.ImpactGraph]: "VEXB • Impact Graph",
-  [RESULT_TYPES.ContextCapsule]: "vexb — Context Capsule",
-  [RESULT_TYPES.RunPipeline]: "VEXB • Pipeline Result",
+  [RESULT_TYPES.IndexStatus]: "vtrace — Index Status",
+  [RESULT_TYPES.Freshness]: "vtrace — Freshness",
+  [RESULT_TYPES.Runtime]: "vtrace — Runtime",
+  [RESULT_TYPES.SetupConfig]: "vtrace — Setup / Config",
+  [RESULT_TYPES.ExecutableResolution]: "vtrace — Executable Resolution",
+  [RESULT_TYPES.Doctor]: "vtrace — Doctor",
+  [RESULT_TYPES.FileSkeleton]: "VTRACE • File Skeleton",
+  [RESULT_TYPES.ImpactGraph]: "VTRACE • Impact Graph",
+  [RESULT_TYPES.ContextCapsule]: "vtrace — Context Capsule",
+  [RESULT_TYPES.RunPipeline]: "VTRACE • Pipeline Result",
 });
 
 export function buildResultView(result) {
@@ -254,7 +254,7 @@ export function renderSetupConfigBody(snapshot) {
   </dl>`);
 
   const agentsHtml = agents.length === 0
-    ? section("Agents", `<p class="muted">No vexb agent status was found for this workspace.</p>`)
+    ? section("Agents", `<p class="muted">No vtrace agent status was found for this workspace.</p>`)
     : section("Agents", agents.map((agent) => {
       const configStatus = !agent.installed
         ? "not installed"
@@ -278,9 +278,9 @@ export function renderSetupConfigBody(snapshot) {
 
 export function renderExecutableResolutionBody(executable, fallbackMessage = null) {
   if (executable === null || executable === undefined) {
-    return `${section("Summary", `<p class="muted">No vexb executable resolution has been recorded yet.</p>`)}${
+    return `${section("Summary", `<p class="muted">No vtrace executable resolution has been recorded yet.</p>`)}${
       fallbackMessage ? section("Failure", `<p>${escapeHtml(fallbackMessage)}</p>`) : ""
-    }${section("Next step", `<p>Set <code>vexb.cliPath</code> in VS Code Settings or install vexb on PATH.</p>`)}`;
+    }${section("Next step", `<p>Set <code>vtrace.cliPath</code> in VS Code Settings or install vtrace on PATH.</p>`)}`;
   }
 
   const summary = section("Summary", `<dl class="kv">
@@ -297,8 +297,8 @@ export function renderExecutableResolutionBody(executable, fallbackMessage = nul
     : "";
 
   const nextHtml = section("Next step", executable.source === "missing"
-    ? `<p>Set <code>vexb.cliPath</code> in VS Code Settings or install vexb on PATH.</p>`
-    : `<p>To override, set <code>vexb.cliPath</code> in VS Code Settings.</p>`);
+    ? `<p>Set <code>vtrace.cliPath</code> in VS Code Settings or install vtrace on PATH.</p>`
+    : `<p>To override, set <code>vtrace.cliPath</code> in VS Code Settings.</p>`);
 
   return `${summary}${attemptedHtml}${failureHtml}${nextHtml}`;
 }
@@ -1055,7 +1055,7 @@ function renderBody(result) {
 }
 
 function computeTitle(result) {
-  const base = RESULT_TITLES[result.type] ?? "vexb — Result";
+  const base = RESULT_TITLES[result.type] ?? "vtrace — Result";
   if (result.type === RESULT_TYPES.FileSkeleton && result.filePath) {
     return `${base}: ${result.filePath}`;
   }
@@ -1107,7 +1107,7 @@ function describeFreshness(snapshot) {
 
 function primaryLabel(snapshot) {
   if (snapshot.kind === "no_workspace") return "No workspace";
-  if (snapshot.kind === "cli_unavailable") return "VEXB not found";
+  if (snapshot.kind === "cli_unavailable") return "VTRACE not found";
   if (snapshot.kind === "unavailable") return "Unknown";
   if (snapshot.state === "ready") return "Ready";
   if (snapshot.state === "stale") return "Possibly stale";
@@ -1119,22 +1119,22 @@ function pickNextAction(snapshot) {
   if (Array.isArray(snapshot.nextSteps) && snapshot.nextSteps.length > 0) {
     return snapshot.nextSteps[0];
   }
-  if (snapshot.kind === "no_workspace") return "Open a folder to use vexb in VS Code.";
-  if (snapshot.kind === "cli_unavailable") return "Set vexb.cliPath or install vexb on PATH.";
-  if (snapshot.kind === "repo" && !snapshot.initialized) return "Run Setup Agent to initialize vexb.";
+  if (snapshot.kind === "no_workspace") return "Open a folder to use vtrace in VS Code.";
+  if (snapshot.kind === "cli_unavailable") return "Set vtrace.cliPath or install vtrace on PATH.";
+  if (snapshot.kind === "repo" && !snapshot.initialized) return "Run Setup Agent to initialize vtrace.";
   return null;
 }
 
 function pickRuntimeAction(snapshot, runtime) {
   if (snapshot.kind !== "repo") return "Open a workspace and run Setup Agent if you need the optional runtime daemon.";
-  if (runtime?.staleStatePresent === true) return "Run vexb doctor to clean up the stale runtime state file.";
+  if (runtime?.staleStatePresent === true) return "Run vtrace doctor to clean up the stale runtime state file.";
   if (snapshot.runtimeRunning) return null;
-  return "The runtime daemon is optional. Start it only if a vexb command needs it.";
+  return "The runtime daemon is optional. Start it only if a vtrace command needs it.";
 }
 
 function pickSetupAction(snapshot) {
-  if (snapshot.kind !== "repo") return "Open a workspace to manage vexb setup.";
-  if (!snapshot.initialized) return "Run Setup Agent to initialize vexb for this repo.";
+  if (snapshot.kind !== "repo") return "Open a workspace to manage vtrace setup.";
+  if (!snapshot.initialized) return "Run Setup Agent to initialize vtrace for this repo.";
   const agents = snapshot.agents ?? [];
   const drifted = agents.find((agent) => !agent.installed || !agent.matchesExpected);
   if (drifted !== undefined) {
@@ -1156,7 +1156,7 @@ function pickSkeletonFile(skeleton, filePath) {
 
 function describeExecutableSourceLocal(source) {
   switch (source) {
-    case "configured": return "From vexb.cliPath setting";
+    case "configured": return "From vtrace.cliPath setting";
     case "bundled": return "Bundled launcher";
     case "bundled_dev": return "Bundled launcher (dev repo layout)";
     case "path": return "Resolved from PATH";
@@ -1181,7 +1181,7 @@ function escapeHtml(value) {
 export class ResultPanelController {
   constructor(vscode, options = {}) {
     this.vscode = vscode;
-    this.viewType = options.viewType ?? "vexb.result";
+    this.viewType = options.viewType ?? "vtrace.result";
     this.panel = null;
     this.lastResult = null;
     this.expandVexpRef = options.expandVexpRef ?? null;

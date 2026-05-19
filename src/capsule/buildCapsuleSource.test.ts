@@ -342,7 +342,7 @@ test("mixed Python/Cython capsule assembly stays deterministic and source-backs 
 });
 
 async function withTempRepo(run: (repoRoot: string) => Promise<void>): Promise<void> {
-  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vexb-capsule-builder-"));
+  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-capsule-builder-"));
 
   try {
     await run(repoRoot);

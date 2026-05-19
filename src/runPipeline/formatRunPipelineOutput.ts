@@ -8,7 +8,7 @@ import { formatProjectRuleForOutput } from "../projectRules/projectRules";
 
 /**
  * Stable JSON shape returned by both the MCP `run_pipeline` tool and the
- * `vexb run-pipeline` CLI command. The VS Code result panel renders this
+ * `vtrace run-pipeline` CLI command. The VS Code result panel renders this
  * shape directly; do not change field names without updating the panel.
  */
 export type FormattedRunPipelineOutput = ReturnType<typeof formatRunPipelineOrchestrationOutput>;

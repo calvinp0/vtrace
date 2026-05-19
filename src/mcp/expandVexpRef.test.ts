@@ -20,7 +20,7 @@ import {
 } from "./types";
 
 async function withRepoFixture(run: (repoRoot: string) => Promise<void>): Promise<void> {
-  const root = await mkdtemp(path.join(os.tmpdir(), "vexb-expand-vexp-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-expand-vexp-"));
   const repoRoot = path.join(root, "repo");
   try {
     await mkdir(repoRoot, { recursive: true });

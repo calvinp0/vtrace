@@ -6,13 +6,13 @@ export interface LauncherCommand {
   args: string[];
 }
 
-export function resolveVexbRoot(): string {
+export function resolveVtraceRoot(): string {
   const modulePath = fileURLToPath(import.meta.url);
   return path.resolve(path.dirname(modulePath), "..", "..");
 }
 
 export function resolveStableLauncherPath(): string {
-  return path.join(resolveVexbRoot(), "bin", "vexb");
+  return path.join(resolveVtraceRoot(), "bin", "vtrace");
 }
 
 export function buildStableMcpLauncher(repoRoot: string): LauncherCommand {

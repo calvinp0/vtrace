@@ -1,6 +1,6 @@
 # MCP Tool Cheat Sheet
 
-Use this as the quick selection guide for the visible `vexb` MCP tools.
+Use this as the quick selection guide for the visible `vtrace` MCP tools.
 
 ## Default Entry Point
 
@@ -30,17 +30,17 @@ Repeated passive observations can be consolidated within one session using deter
 
 Inactive sessions can be compressed explicitly after the default two-hour inactivity threshold. Compression summarizes tool-call counts, touched files/symbols, key terms, and durable counts, and triggers conservative consolidation for repeated passive tool calls. Durable/manual observations remain visible, one-off passive observations are not consolidated below threshold, and compressed plus consolidated summaries stay searchable and stale-aware through lexical and structural signals. The default 90-day retention policy currently reports cleanup candidates; it does not silently delete durable data.
 
-Optional passive file awareness is available through `vexb watch [repo]`. It is mark-stale-only: the watcher detects indexed source file creates/modifies/deletes, debounces bursts, records pending stale state, and leaves reindexing explicit. `index_status` and `run_pipeline.diagnostics.freshness` report this stale state. After a successful reindex, existing file/symbol diffs drive conservative stale marking for linked observations and compressed session summaries.
+Optional passive file awareness is available through `vtrace watch [repo]`. It is mark-stale-only: the watcher detects indexed source file creates/modifies/deletes, debounces bursts, records pending stale state, and leaves reindexing explicit. `index_status` and `run_pipeline.diagnostics.freshness` report this stale state. After a successful reindex, existing file/symbol diffs drive conservative stale marking for linked observations and compressed session summaries.
 
-VEXB also persists conservative anti-pattern observations when structural evidence is clear. The first detectors are `file_thrashing` from repeated source-file watcher events and `symbol_added_then_removed` from adjacent structural index diffs. These are durable `dead_end` observations with compact evidence, exact file/symbol links where available, deterministic dedupe, and normal memory/session visibility. They are not semantic intent inference, progressive nudges, learned classification, or policy enforcement.
+VTRACE also persists conservative anti-pattern observations when structural evidence is clear. The first detectors are `file_thrashing` from repeated source-file watcher events and `symbol_added_then_removed` from adjacent structural index diffs. These are durable `dead_end` observations with compact evidence, exact file/symbol links where available, deterministic dedupe, and normal memory/session visibility. They are not semantic intent inference, progressive nudges, learned classification, or policy enforcement.
 
 `run_pipeline.diagnostics.nudge` may include a compact observation nudge when an active session has passive tool-call activity but no durable observation yet. The first nudge appears after 3 passive tool calls, then at most every 5 additional calls, and it self-disables after a durable `save_observation` note or other durable observation exists. Nudges are structural metadata only: they do not block calls, do not write observations, and are not project rules, semantic judgment, or memory consolidation.
 
 ## Project Rules
 
-`vexb rules generate <repo>` can create project-rule candidates from repeated durable decisions/insights, consolidated passive summaries, and repeated anti-pattern observations. Candidates require at least three matching evidence observations in the same deterministic scope. Raw one-off passive `tool_call` rows are excluded.
+`vtrace rules generate <repo>` can create project-rule candidates from repeated durable decisions/insights, consolidated passive summaries, and repeated anti-pattern observations. Candidates require at least three matching evidence observations in the same deterministic scope. Raw one-off passive `tool_call` rows are excluded.
 
-Candidates are inspectable with `vexb rules list <repo>` but are not active by default. Use `vexb rules promote <repo> <rule-id>` to activate one, `dismiss` to hide a candidate, and `disable` to turn off an active rule. Active rules can appear in `run_pipeline.rules.active` only when structurally or lexically relevant; candidate previews may appear separately and are not instructions.
+Candidates are inspectable with `vtrace rules list <repo>` but are not active by default. Use `vtrace rules promote <repo> <rule-id>` to activate one, `dismiss` to hide a candidate, and `disable` to turn off an active rule. Active rules can appear in `run_pipeline.rules.active` only when structurally or lexically relevant; candidate previews may appear separately and are not instructions.
 
 Rules use template summaries, exact file/FQN/term/tool/intent links, deterministic IDs, and structural stale marking after explicit reindex. They do not use embeddings, LLM synthesis, hidden-intent inference, cross-repo learning, automatic promotion, or tool-blocking policy enforcement.
 
@@ -68,4 +68,4 @@ Rules use template summaries, exact file/FQN/term/tool/intent links, determinist
 - Treat watcher staleness and anti-pattern observations as structural evidence only. They are not semantic rename detection, runtime tracing, intent inference, or project-rule generation.
 - Treat observation nudges as optional diagnostics only. They are reminders to save durable memory, not instructions or retrieved context.
 - Treat project-rule candidates as reviewable suggestions only. They become context only after explicit promotion and only when relevant.
-- Do not claim a special compressed format or token-savings percentage from VEXB output.
+- Do not claim a special compressed format or token-savings percentage from VTRACE output.

@@ -41,7 +41,7 @@ export async function runDaemonCommand(
       ? failureJson(formatShellJsonFailure({
         command: "daemon",
         message: parsed.error,
-        nextSteps: ["Run `vexb daemon <start|stop|status|logs> [repo] [--json]`."],
+        nextSteps: ["Run `vtrace daemon <start|stop|status|logs> [repo] [--json]`."],
       }))
       : failure(parsed.error);
   }
@@ -88,12 +88,12 @@ export async function runDaemonCommand(
       ? failureJson(formatShellJsonFailure({
         command: `daemon.${parsed.subcommand}`,
         message,
-        nextSteps: [`Run \`vexb status ${repoPath}\` to check repo readiness, then try \`vexb daemon ${parsed.subcommand} ${repoPath}\` again.`],
+        nextSteps: [`Run \`vtrace status ${repoPath}\` to check repo readiness, then try \`vtrace daemon ${parsed.subcommand} ${repoPath}\` again.`],
       }))
       : failure(formatUserFacingFailure(
         `Runtime ${parsed.subcommand} failed.`,
         message,
-        `Run \`vexb status ${repoPath}\` to check repo readiness, then try \`vexb daemon ${parsed.subcommand} ${repoPath}\` again.`,
+        `Run \`vtrace status ${repoPath}\` to check repo readiness, then try \`vtrace daemon ${parsed.subcommand} ${repoPath}\` again.`,
       ));
   }
 }

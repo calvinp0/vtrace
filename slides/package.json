@@ -1,5 +1,5 @@
 {
-  "name": "vexb-slides",
+  "name": "vtrace-slides",
   "private": true,
   "scripts": {
     "dev": "slidev",

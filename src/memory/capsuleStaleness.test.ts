@@ -370,7 +370,7 @@ test("mixed Python/Cython capsule trust stays deterministic after a controlled f
 });
 
 async function withTempRepo(run: (repoRoot: string) => Promise<void>): Promise<void> {
-  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vexb-capsule-stale-"));
+  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-capsule-stale-"));
 
   try {
     await run(repoRoot);

@@ -828,7 +828,7 @@ const unsupportedLanguageRegistry: ParserRegistry = {
 };
 
 async function withFixture(run: (repoRoot: string) => Promise<void>): Promise<void> {
-  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vexb-index-"));
+  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-index-"));
 
   try {
     await run(repoRoot);

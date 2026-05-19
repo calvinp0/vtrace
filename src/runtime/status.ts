@@ -139,15 +139,15 @@ function buildNextSteps(input: {
   const steps: string[] = [];
 
   if (!input.initialized || input.readiness?.status !== "ready") {
-    steps.push(`Run \`vexb setup ${input.repoRoot}${formatAgentFlag(input.selectedAgent)}\` to initialize and index the repo.`);
+    steps.push(`Run \`vtrace setup ${input.repoRoot}${formatAgentFlag(input.selectedAgent)}\` to initialize and index the repo.`);
   }
 
   if (!input.agentConfig.matchesExpected) {
-    steps.push(`Run \`vexb claude-config ${input.repoRoot}${formatAgentFlag(input.selectedAgent)}\` to install or refresh ${input.agentConfig.displayName} MCP config.`);
+    steps.push(`Run \`vtrace claude-config ${input.repoRoot}${formatAgentFlag(input.selectedAgent)}\` to install or refresh ${input.agentConfig.displayName} MCP config.`);
   }
 
   if (!input.runtime.running) {
-    steps.push(`Runtime daemon is optional; run \`vexb daemon start ${input.repoRoot}\` if you want an inspectable background process.`);
+    steps.push(`Runtime daemon is optional; run \`vtrace daemon start ${input.repoRoot}\` if you want an inspectable background process.`);
   }
 
   if (
@@ -155,7 +155,7 @@ function buildNextSteps(input: {
     && input.readiness?.status === "ready"
     && input.agentConfig.matchesExpected
   ) {
-    steps.push(`Open ${input.agentConfig.displayName} in this repo; the installed MCP config will launch vexb on demand.`);
+    steps.push(`Open ${input.agentConfig.displayName} in this repo; the installed MCP config will launch vtrace on demand.`);
   }
 
   return [...new Set(steps)];

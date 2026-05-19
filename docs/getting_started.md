@@ -1,8 +1,8 @@
 # Getting Started
 
-This guide assumes you are running `vexb` from a local clone of this repo.
+This guide assumes you are running `vtrace` from a local clone of this repo.
 
-Examples use `./bin/vexb`. If `vexb` is already on your `PATH`, you can use that instead.
+Examples use `./bin/vtrace`. If `vtrace` is already on your `PATH`, you can use that instead.
 
 Replace `/path/to/your/repo` with the repository you want to inspect.
 
@@ -10,21 +10,21 @@ Replace `/path/to/your/repo` with the repository you want to inspect.
 
 ```bash
 bun install
-./bin/vexb --help
+./bin/vtrace --help
 ```
 
-`vexb` requires Bun because the CLI and MCP server run on Bun.
+`vtrace` requires Bun because the CLI and MCP server run on Bun.
 
 ## 2. Set Up a Repo
 
 ```bash
-./bin/vexb setup /path/to/your/repo
+./bin/vtrace setup /path/to/your/repo
 ```
 
 `setup` will:
 
 - detect the repo root
-- create or refresh repo-local state under `.vexb/`
+- create or refresh repo-local state under `.vtrace/`
 - build the initial index when needed
 - evaluate readiness
 - install MCP config for the selected shell agent
@@ -37,13 +37,13 @@ Repeated setup is safe.
 Use `status` for the short version:
 
 ```bash
-./bin/vexb status /path/to/your/repo
+./bin/vtrace status /path/to/your/repo
 ```
 
 Use `doctor` when you want more detail:
 
 ```bash
-./bin/vexb doctor /path/to/your/repo
+./bin/vtrace doctor /path/to/your/repo
 ```
 
 ## 4. Choose an Agent
@@ -56,13 +56,13 @@ Supported shell agents:
 Choose Codex explicitly:
 
 ```bash
-./bin/vexb setup /path/to/your/repo --agent codex
+./bin/vtrace setup /path/to/your/repo --agent codex
 ```
 
 The compatibility command name stays `claude-config`, even when you target Codex:
 
 ```bash
-./bin/vexb claude-config /path/to/your/repo --agent codex --dry-run
+./bin/vtrace claude-config /path/to/your/repo --agent codex --dry-run
 ```
 
 Config paths:
@@ -72,11 +72,11 @@ Config paths:
 
 ## 5. Understand Repo-Local Files
 
-`vexb` stores repo-local state in `.vexb/`:
+`vtrace` stores repo-local state in `.vtrace/`:
 
-- `.vexb/config.json`
-- `.vexb/state.json`
-- `.vexb/index.sqlite`
+- `.vtrace/config.json`
+- `.vtrace/state.json`
+- `.vtrace/index.sqlite`
 
 That SQLite file is the local structural index used by the CLI and MCP server.
 
@@ -85,10 +85,10 @@ That SQLite file is the local structural index used by the CLI and MCP server.
 Direct shell examples:
 
 ```bash
-./bin/vexb skeleton /path/to/your/repo src/controller.ts
-./bin/vexb impact-graph /path/to/your/repo "src/session.ts::SessionManager.createSession"
-./bin/vexb intent /path/to/your/repo "trace how sessions are created"
-./bin/vexb capsule /path/to/your/repo "smallest safe edit surface for session creation"
+./bin/vtrace skeleton /path/to/your/repo src/controller.ts
+./bin/vtrace impact-graph /path/to/your/repo "src/session.ts::SessionManager.createSession"
+./bin/vtrace intent /path/to/your/repo "trace how sessions are created"
+./bin/vtrace capsule /path/to/your/repo "smallest safe edit surface for session creation"
 ```
 
 For MCP-first workflows, start with `run_pipeline`. The practical guide is in [MCP Tool Cheat Sheet](./mcp_tool_cheat_sheet.md).
@@ -100,10 +100,10 @@ The daemon is optional. Most users can rely on on-demand launch through Claude C
 If you want an explicit background runtime:
 
 ```bash
-./bin/vexb daemon start /path/to/your/repo
-./bin/vexb daemon status /path/to/your/repo
-./bin/vexb daemon logs /path/to/your/repo
-./bin/vexb daemon stop /path/to/your/repo
+./bin/vtrace daemon start /path/to/your/repo
+./bin/vtrace daemon status /path/to/your/repo
+./bin/vtrace daemon logs /path/to/your/repo
+./bin/vtrace daemon stop /path/to/your/repo
 ```
 
 ## 8. Manual MCP Server
@@ -111,7 +111,7 @@ If you want an explicit background runtime:
 The stable repo-bound MCP entrypoint is:
 
 ```bash
-./bin/vexb mcp-serve --repo /path/to/your/repo
+./bin/vtrace mcp-serve --repo /path/to/your/repo
 ```
 
 You usually do not need to run this manually after setup.
@@ -131,13 +131,13 @@ Run a fresh index when:
 - you want fresh structural outputs immediately
 
 ```bash
-./bin/vexb index /path/to/your/repo
+./bin/vtrace index /path/to/your/repo
 ```
 
-If you want VEXB to notice source edits passively, start the optional watcher:
+If you want VTRACE to notice source edits passively, start the optional watcher:
 
 ```bash
-./bin/vexb watch /path/to/your/repo
+./bin/vtrace watch /path/to/your/repo
 ```
 
-The watcher is conservative and mark-stale-only. It detects indexed source file creates, modifications, and deletions using the same source-scan ignore rules as indexing, debounces bursts, and records pending stale state. It does not auto-reindex; run `vexb index` when you want a fresh structural snapshot.
+The watcher is conservative and mark-stale-only. It detects indexed source file creates, modifications, and deletions using the same source-scan ignore rules as indexing, debounces bursts, and records pending stale state. It does not auto-reindex; run `vtrace index` when you want a fresh structural snapshot.

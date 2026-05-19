@@ -16,7 +16,7 @@ export async function runInitCommand(
 
   const resolvedOptions = resolveOptions(options);
   const repoPath = path.resolve(resolvedOptions.cwd, args[0] as string);
-  const progress = process.env.VEXB_NO_PROGRESS === "1" || !process.stderr.isTTY
+  const progress = process.env.VTRACE_NO_PROGRESS === "1" || !process.stderr.isTTY
     ? nullProgressReporter
     : createCliProgressReporter({
       stream: process.stderr,

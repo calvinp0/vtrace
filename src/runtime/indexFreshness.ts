@@ -110,11 +110,11 @@ export async function inspectIndexFreshness(input: {
     state: "possibly_stale",
     isStale: true,
     summary: observedFileChanges === undefined
-      ? "Vexb detected likely drift since the last indexed snapshot."
-      : "Vexb observed source file changes since the last indexed snapshot.",
+      ? "Vtrace detected likely drift since the last indexed snapshot."
+      : "Vtrace observed source file changes since the last indexed snapshot.",
     reasons,
     whyItMatters: "Retrieval, skeletons, impact graphs, and pipeline output may reflect older structure in changed areas.",
-    recommendedAction: "Re-index this repo before relying on vexb for fresh structural guidance.",
+    recommendedAction: "Re-index this repo before relying on vtrace for fresh structural guidance.",
     observedFileChanges: observedFileChanges ?? null,
     snapshot: buildSnapshotView(snapshot),
     currentHead: currentHead ?? null,
@@ -134,9 +134,9 @@ function buildUnknownFreshness(input: {
   return {
     state: "unknown",
     isStale: input.observedFileChanges !== undefined,
-    summary: "Vexb could not determine whether the current repo matches the last indexed snapshot.",
+    summary: "Vtrace could not determine whether the current repo matches the last indexed snapshot.",
     reasons: input.reasons,
-    whyItMatters: "Vexb may still work, but freshness could not be verified.",
+    whyItMatters: "Vtrace may still work, but freshness could not be verified.",
     recommendedAction: "Re-index if you want a fresh, explicit trust point.",
     observedFileChanges: input.observedFileChanges ?? null,
     snapshot: buildSnapshotView(input.snapshot),

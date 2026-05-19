@@ -4,7 +4,7 @@ import {
   type HandoffSchemaVersion,
 } from "../handoff/metadata";
 
-export const PROTOCOL_ADAPTER_SCHEMA_NAME = "vexb.protocol_adapter" as const;
+export const PROTOCOL_ADAPTER_SCHEMA_NAME = "vtrace.protocol_adapter" as const;
 export const PROTOCOL_ADAPTER_SCHEMA_VERSION = "1.0.0" as const;
 
 export type ProtocolAdapterSchemaName = typeof PROTOCOL_ADAPTER_SCHEMA_NAME;

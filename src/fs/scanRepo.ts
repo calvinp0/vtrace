@@ -13,7 +13,7 @@ import { detectLanguage } from "./languageDetection";
 
 const IGNORED_DIRECTORIES = new Set([
   ".git",
-  ".vexb",
+  ".vtrace",
   "node_modules",
   "dist",
   "build",
