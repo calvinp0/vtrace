@@ -6,7 +6,7 @@
   <strong>Repo-bound, local-first code indexing and MCP context for structural code exploration.</strong>
 </p>
 
-`vtrace` builds a deterministic index for a local repository, exposes a small stable MCP surface, and gives you practical shell commands for setup, status, context packaging, skeleton views, impact graphs, and other bounded structural analysis.
+`vtrace` builds a deterministic index for a local repository, exposes CLI, MCP, and private/local VS Code surfaces, and gives you practical commands for setup, status, context packaging, skeleton views, impact graphs, and other bounded structural analysis.
 
 It is designed for coding agents and human operators that need compact, inspectable repository context without sending the project through a remote indexing service.
 

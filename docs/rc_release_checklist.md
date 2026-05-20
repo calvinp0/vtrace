@@ -36,15 +36,16 @@ These commands must pass before cutting the RC:
 
 ```bash
 bun run typecheck
-bun run format:check
 bun test
+bun run format:check
 git diff --check
+bun run package:vscode
 ```
 
-CI also packages the VS Code extension. Run the local packaging command when validating CI parity:
+The VS Code package command should produce:
 
 ```bash
-bun run package:vscode
+vscode-extension/vtrace-vscode.vsix
 ```
 
 ## Clean Setup Flow
@@ -145,8 +146,9 @@ Do not redesign backend behavior through the panel as part of RC validation.
 | Check                           | Command/manual step                                         | Expected result                                              | Status | Notes |
 | ------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------ | ------ | ----- |
 | Typecheck                       | `bun run typecheck`                                         | TypeScript completes without errors                          | TODO   |       |
-| Format check                    | `bun run format:check`                                      | Prettier reports all checked files formatted                 | TODO   |       |
 | Full tests                      | `bun test`                                                  | Full Bun test suite passes                                   | TODO   |       |
+| Format check                    | `bun run format:check`                                      | Prettier reports all checked files formatted                 | TODO   |       |
+| Diff whitespace                 | `git diff --check`                                          | Git reports no whitespace errors                             | TODO   |       |
 | CI parity                       | `bun run package:vscode`                                    | VS Code extension package command completes locally          | TODO   |       |
 | Docs truth                      | Review `docs/product_truth_audit_rc.md` and RC docs         | Known limitations are explicit and no full VEXP parity claim | TODO   |       |
 | CLI setup flow                  | `setup`, `status`, `index`, optional `watch`                | Repo reaches ready state; default watch only marks stale     | TODO   |       |
@@ -173,3 +175,13 @@ These are acceptable for RC and must remain visible in release validation:
 - There are no cross-repo rules.
 - Retrieval, memory, rules, and freshness behavior are deterministic lexical/structural behavior.
 - ARC is ready with known limitations, not perfect.
+
+## Release Artifact
+
+Expected local artifact after packaging:
+
+```text
+vscode-extension/vtrace-vscode.vsix
+```
+
+The `.vsix` is a generated ignored file (`vscode-extension/*.vsix`) and should not be committed unless the repository policy changes. Do not push, tag, upload artifacts, or create a GitHub release during RC readiness validation.
