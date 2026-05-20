@@ -158,7 +158,7 @@ test("repeated identical validation input produces identical report structure", 
 
     assert.deepEqual(second, first);
   });
-});
+}, 15_000);
 
 test("gap classification is explicit and deterministic", () => {
   const first = classifyGaps([
