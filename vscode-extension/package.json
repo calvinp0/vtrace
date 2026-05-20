@@ -177,7 +177,7 @@
         "vtrace.cliPath": {
           "type": "string",
           "default": "",
-          "description": "Optional absolute path to a vtrace executable. When empty, the extension uses the bundled bin/vtrace launcher or falls back to PATH."
+          "description": "Optional absolute path to a vtrace executable, such as a source-checkout bin/vtrace. Set this in the environment where the extension runs, including Remote SSH, WSL, and containers. The extension prepends common Bun/user binary locations when spawning; when empty, it uses a runnable source-checkout launcher if available, then falls back to vtrace on PATH."
         }
       }
     }

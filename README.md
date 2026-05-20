@@ -159,6 +159,8 @@ The VS Code extension is private/local packaging only. It can be packaged locall
 bun run package:vscode
 ```
 
+For source-checkout use, set the VS Code `vtrace.cliPath` setting to an absolute executable path such as `/path/to/vtrace/bin/vtrace` in the environment where the extension host runs. This matters for Remote SSH, WSL, and containers. The source-checkout launcher requires Bun; the extension prepends common user binary locations such as `~/.bun/bin` and `~/.local/bin` when spawning CLI commands.
+
 npm and VS Marketplace publication are planned release options, but they are not part of the current RC1 release path.
 
 ## Brand Assets

@@ -1,5 +1,7 @@
 import { execFile as execFileCallback, spawn as spawnCallback } from "node:child_process";
+import { constants as fsConstants } from "node:fs";
 import { access } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
 export const AGENT_IDS = Object.freeze({
@@ -108,9 +110,29 @@ export async function resolveCliCommand(options) {
 export async function resolveCliCommandWithSource(options) {
   const attempted = [];
   const configuredPath = options.getConfiguredCliPath?.()?.trim();
+  const fileExists = options.fileExists ?? fileExistsOnDisk;
+  const fileExecutable = options.fileExecutable ?? fileExecutableOnDisk;
 
   if (configuredPath) {
     attempted.push({ source: EXECUTABLE_SOURCES.Configured, path: configuredPath });
+    if (!(await fileExists(configuredPath))) {
+      throw buildResolutionError(
+        `Configured vtrace.cliPath does not exist: ${configuredPath}`,
+        "VTRACE_CONFIGURED_CLI_MISSING",
+        configuredPath,
+        EXECUTABLE_SOURCES.Configured,
+        attempted,
+      );
+    }
+    if (!(await fileExecutable(configuredPath))) {
+      throw buildResolutionError(
+        `Configured vtrace.cliPath is not executable: ${configuredPath}`,
+        "VTRACE_CONFIGURED_CLI_NOT_EXECUTABLE",
+        configuredPath,
+        EXECUTABLE_SOURCES.Configured,
+        attempted,
+      );
+    }
     return {
       command: configuredPath,
       source: EXECUTABLE_SOURCES.Configured,
@@ -119,13 +141,21 @@ export async function resolveCliCommandWithSource(options) {
   }
 
   const bundledCandidates = [
-    { source: EXECUTABLE_SOURCES.Bundled, path: path.join(options.extensionPath, "bin", "vtrace") },
-    { source: EXECUTABLE_SOURCES.BundledDev, path: path.join(options.extensionPath, "..", "bin", "vtrace") },
+    {
+      source: EXECUTABLE_SOURCES.Bundled,
+      path: path.join(options.extensionPath, "bin", "vtrace"),
+      root: options.extensionPath,
+    },
+    {
+      source: EXECUTABLE_SOURCES.BundledDev,
+      path: path.join(options.extensionPath, "..", "bin", "vtrace"),
+      root: path.join(options.extensionPath, ".."),
+    },
   ];
 
   for (const candidate of bundledCandidates) {
-    attempted.push(candidate);
-    if (await options.fileExists(candidate.path)) {
+    attempted.push({ source: candidate.source, path: candidate.path });
+    if (await isRunnableSourceCheckoutLauncher(candidate, fileExists, fileExecutable)) {
       return {
         command: candidate.path,
         source: candidate.source,
@@ -163,7 +193,8 @@ export function createCliBridge(options) {
   const deps = {
     execFile: options.execFile ?? execFilePromise,
     spawn: options.spawn ?? spawnChildProcess,
-    fileExists: options.fileExists ?? fileExists,
+    fileExists: options.fileExists ?? fileExistsOnDisk,
+    fileExecutable: options.fileExecutable ?? fileExecutableOnDisk,
   };
 
   let cachedResolution = null;
@@ -173,6 +204,7 @@ export function createCliBridge(options) {
       extensionPath: options.extensionPath,
       getConfiguredCliPath: options.getConfiguredCliPath,
       fileExists: deps.fileExists,
+      fileExecutable: deps.fileExecutable,
     });
     return cachedResolution;
   }
@@ -266,6 +298,7 @@ async function runCommand(options) {
     extensionPath: options.extensionPath,
     getConfiguredCliPath: options.getConfiguredCliPath,
     fileExists: options.fileExists,
+    fileExecutable: options.fileExecutable,
   });
 
   options.onResolved?.(resolution);
@@ -274,6 +307,7 @@ async function runCommand(options) {
     const output = await options.execFile(resolution.command, options.args, {
       cwd: options.cwd,
       maxBuffer: DEFAULT_MAX_BUFFER,
+      env: buildCliEnvironment(options.env),
     });
 
     return {
@@ -285,19 +319,16 @@ async function runCommand(options) {
     };
   } catch (error) {
     if (isCliMissingError(error)) {
+      if (resolution.source === EXECUTABLE_SOURCES.Configured) {
+        const configuredSpawnError = new Error(`Could not execute configured vtrace.cliPath: ${resolution.command}`);
+        configuredSpawnError.code = "VTRACE_CONFIGURED_CLI_SPAWN_FAILED";
+        configuredSpawnError.resolution = resolution;
+        throw configuredSpawnError;
+      }
       const missingError = new Error(formatMissingCliMessage(resolution));
       missingError.code = "VTRACE_CLI_NOT_FOUND";
       missingError.resolution = resolution;
       throw missingError;
-    }
-
-    if (isBundledCliRuntimeMissingError(error)) {
-      const bunMissingError = new Error(
-        "The bundled vtrace launcher could not start because Bun is missing. Install Bun (https://bun.sh) or set `vtrace.cliPath` to a working vtrace executable.",
-      );
-      bunMissingError.code = "VTRACE_BUN_NOT_FOUND";
-      bunMissingError.resolution = resolution;
-      throw bunMissingError;
     }
 
     if (typeof error?.code === "number") {
@@ -319,14 +350,15 @@ async function runCommandStreaming(options) {
     extensionPath: options.extensionPath,
     getConfiguredCliPath: options.getConfiguredCliPath,
     fileExists: options.fileExists,
+    fileExecutable: options.fileExecutable,
   });
 
   options.onResolved?.(resolution);
 
-  const spawnOptions = { cwd: options.cwd };
-  if (options.env !== undefined && options.env !== null) {
-    spawnOptions.env = options.env;
-  }
+  const spawnOptions = {
+    cwd: options.cwd,
+    env: buildCliEnvironment(options.env),
+  };
 
   return await new Promise((resolve, reject) => {
     let child;
@@ -390,16 +422,6 @@ async function runCommandStreaming(options) {
       const stderr = stderrChunks.join("");
       const exitCode = typeof code === "number" ? code : 0;
 
-      if (exitCode !== 0 && isBundledCliRuntimeMissingError({ stderr, message: "" })) {
-        const bunMissingError = new Error(
-          "The bundled vtrace launcher could not start because Bun is missing. Install Bun (https://bun.sh) or set `vtrace.cliPath` to a working vtrace executable.",
-        );
-        bunMissingError.code = "VTRACE_BUN_NOT_FOUND";
-        bunMissingError.resolution = resolution;
-        settleReject(bunMissingError);
-        return;
-      }
-
       settleResolve({
         command: resolution.command,
         source: resolution.source,
@@ -413,31 +435,52 @@ async function runCommandStreaming(options) {
 
 function wrapSpawnError(error, resolution, stderrSoFar) {
   if (isCliMissingError(error)) {
+    if (resolution.source === EXECUTABLE_SOURCES.Configured) {
+      const configuredSpawnError = new Error(`Could not execute configured vtrace.cliPath: ${resolution.command}`);
+      configuredSpawnError.code = "VTRACE_CONFIGURED_CLI_SPAWN_FAILED";
+      configuredSpawnError.resolution = resolution;
+      return configuredSpawnError;
+    }
     const missingError = new Error(formatMissingCliMessage(resolution));
     missingError.code = "VTRACE_CLI_NOT_FOUND";
     missingError.resolution = resolution;
     return missingError;
   }
 
-  if (isBundledCliRuntimeMissingError({ stderr: stderrSoFar, message: error?.message ?? "" })) {
-    const bunMissingError = new Error(
-      "The bundled vtrace launcher could not start because Bun is missing. Install Bun (https://bun.sh) or set `vtrace.cliPath` to a working vtrace executable.",
-    );
-    bunMissingError.code = "VTRACE_BUN_NOT_FOUND";
-    bunMissingError.resolution = resolution;
-    return bunMissingError;
-  }
-
   return error instanceof Error ? error : new Error(String(error));
 }
 
 function spawnChildProcess(command, args, options) {
-  const mergedEnv = options?.env === undefined ? process.env : { ...process.env, ...options.env };
   return spawnCallback(command, args, {
     ...options,
-    env: mergedEnv,
     stdio: ["ignore", "pipe", "pipe"],
   });
+}
+
+export function buildCliEnvironment(extraEnv = undefined, baseEnv = process.env) {
+  const merged = {
+    ...baseEnv,
+    ...(extraEnv ?? {}),
+  };
+  const pathKey = findPathEnvKey(merged);
+  const home = merged.HOME ?? merged.USERPROFILE ?? os.homedir();
+  const existingPath = merged[pathKey] ?? "";
+  const additions = home
+    ? [
+      path.join(home, ".bun", "bin"),
+      path.join(home, ".local", "bin"),
+    ]
+    : [];
+
+  merged[pathKey] = [...additions, existingPath].filter((part) => part !== "").join(path.delimiter);
+  return merged;
+}
+
+function findPathEnvKey(env) {
+  if (process.platform === "win32") {
+    return Object.keys(env).find((key) => key.toLowerCase() === "path") ?? "Path";
+  }
+  return "PATH";
 }
 
 function stripTrailingCarriageReturn(line) {
@@ -465,13 +508,43 @@ async function execFilePromise(command, args, options) {
   });
 }
 
-async function fileExists(targetPath) {
+async function fileExistsOnDisk(targetPath) {
   try {
     await access(targetPath);
     return true;
   } catch {
     return false;
   }
+}
+
+async function fileExecutableOnDisk(targetPath) {
+  if (process.platform === "win32") {
+    return await fileExistsOnDisk(targetPath);
+  }
+
+  try {
+    await access(targetPath, fsConstants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function isRunnableSourceCheckoutLauncher(candidate, fileExists, fileExecutable) {
+  return (await fileExists(candidate.path))
+    && (await fileExecutable(candidate.path))
+    && (await fileExists(path.join(candidate.root, "src", "cli", "index.ts")));
+}
+
+function buildResolutionError(message, code, command, source, attempted) {
+  const error = new Error(message);
+  error.code = code;
+  error.resolution = {
+    command,
+    source,
+    attempted: [...attempted],
+  };
+  return error;
 }
 
 function buildCommandError(args, result, prefix = null) {
@@ -481,7 +554,7 @@ function buildCommandError(args, result, prefix = null) {
       ? result.stdout.trim()
       : `Command exited with code ${result.exitCode}.`;
 
-  const headline = prefix ?? `vtrace command failed: \`${args.join(" ")}\``;
+  const headline = prefix ?? `vtrace CLI failed: \`${args.join(" ")}\``;
   const error = new Error([headline, detail].join("\n"));
   error.code = "VTRACE_COMMAND_FAILED";
   error.stdout = result.stdout;
@@ -496,18 +569,12 @@ function formatMissingCliMessage(resolution) {
     .join("\n");
 
   return [
-    "vtrace CLI was not found.",
+    "vtrace executable not found. Set `vtrace.cliPath` or install vtrace on PATH.",
     "Attempted:",
     attempted,
-    "Set `vtrace.cliPath` in Settings to an absolute path, or make `vtrace` available on PATH.",
   ].join("\n");
 }
 
 function isCliMissingError(error) {
   return error?.code === "ENOENT";
-}
-
-function isBundledCliRuntimeMissingError(error) {
-  const detail = `${error?.stderr ?? ""}\n${error?.message ?? ""}`;
-  return /\bbun\b.*(not found|No such file or directory)/i.test(detail);
 }

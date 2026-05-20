@@ -514,9 +514,9 @@ function snapshotFromError(error, repoRoot, executable) {
     );
   }
 
-  if (error?.code === "VTRACE_BUN_NOT_FOUND") {
+  if (isCliResolutionError(error)) {
     return createCliUnavailableSnapshot(
-      error.message ?? EMPTY_STATE_MESSAGES.BunMissing,
+      error.message ?? EMPTY_STATE_MESSAGES.CliNotFound,
       repoRoot,
       executable,
     );
@@ -686,7 +686,7 @@ function showCommandFailure(app, title, error) {
 
   const headline = message.split("\n")[0];
 
-  if (error?.code === "VTRACE_CLI_NOT_FOUND" || error?.code === "VTRACE_BUN_NOT_FOUND") {
+  if (error?.code === "VTRACE_CLI_NOT_FOUND" || isCliResolutionError(error)) {
     void app.vscode.window.showErrorMessage(headline, "Open settings", "Open output").then((choice) => {
       if (choice === "Open settings") {
         void app.vscode.commands.executeCommand("workbench.action.openSettings", "vtrace.cliPath");
@@ -698,6 +698,12 @@ function showCommandFailure(app, title, error) {
   }
 
   app.vscode.window.showErrorMessage(headline);
+}
+
+function isCliResolutionError(error) {
+  return error?.code === "VTRACE_CONFIGURED_CLI_MISSING"
+    || error?.code === "VTRACE_CONFIGURED_CLI_NOT_EXECUTABLE"
+    || error?.code === "VTRACE_CONFIGURED_CLI_SPAWN_FAILED";
 }
 
 function applyStatusBarState(statusBarItem, state) {

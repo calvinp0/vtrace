@@ -15,6 +15,18 @@ bun install
 
 `vtrace` requires Bun because the CLI and MCP server run on Bun.
 
+## VS Code Extension CLI Path
+
+For source-checkout usage, configure VS Code with an absolute executable path:
+
+```json
+{
+  "vtrace.cliPath": "/path/to/vtrace/bin/vtrace"
+}
+```
+
+Set this in the environment where the extension host runs. For Remote SSH, WSL, and containers, that means the remote or container settings context, not only your local desktop settings. The `bin/vtrace` launcher requires Bun; the extension prepends common user binary locations such as `~/.bun/bin` and `~/.local/bin` when it spawns CLI commands.
+
 ## 2. Set Up a Repo
 
 ```bash

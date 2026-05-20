@@ -131,6 +131,9 @@ Fallback/debug republish example:
 
 If validating the VS Code extension, check the panel behavior without adding panel-only backend behavior:
 
+- source-checkout installs set `vtrace.cliPath` to an absolute executable path, for example `/path/to/vtrace/bin/vtrace`
+- Remote SSH, WSL, and container tests set `vtrace.cliPath` where the extension host runs
+- the source-checkout launcher can find Bun via the extension spawn environment, including common user paths such as `~/.bun/bin` and `~/.local/bin`
 - panel opens
 - setup/status displays repo root, index state, freshness, watcher, auto-reindex, changed file count, and compact failure state when present
 - reindex/setup action works and shows immediate running feedback before the CLI result returns

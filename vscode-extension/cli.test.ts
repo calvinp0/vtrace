@@ -6,6 +6,7 @@ import {
   AGENT_IDS,
   EXECUTABLE_SOURCES,
   buildCapsuleArgs,
+  buildCliEnvironment,
   buildImpactGraphArgs,
   buildInspectFileArgs,
   buildSetupArgs,
@@ -17,24 +18,36 @@ import {
   resolveCliCommandWithSource,
 } from "./cli.js";
 
-test("resolveCliCommand prefers configured path, then bundled, then dev-layout bundled, then PATH", async () => {
+test("resolveCliCommand prefers configured path, then runnable bundled/dev launchers, then PATH", async () => {
   assert.equal(await resolveCliCommand({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "/custom/vtrace",
-    fileExists: async () => false,
+    fileExists: async (targetPath: string) => targetPath === "/custom/vtrace",
+    fileExecutable: async (targetPath: string) => targetPath === "/custom/vtrace",
   }), "/custom/vtrace");
 
   assert.equal(await resolveCliCommand({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "",
-    fileExists: async (targetPath: string) => targetPath === "/ext/bin/vtrace",
+    fileExists: async (targetPath: string) =>
+      targetPath === "/ext/bin/vtrace" || targetPath === "/ext/src/cli/index.ts",
+    fileExecutable: async (targetPath: string) => targetPath === "/ext/bin/vtrace",
   }), "/ext/bin/vtrace");
 
   assert.equal(await resolveCliCommand({
     extensionPath: "/repo/vscode-extension",
     getConfiguredCliPath: () => "",
-    fileExists: async (targetPath: string) => targetPath === "/repo/bin/vtrace",
+    fileExists: async (targetPath: string) =>
+      targetPath === "/repo/bin/vtrace" || targetPath === "/repo/src/cli/index.ts",
+    fileExecutable: async (targetPath: string) => targetPath === "/repo/bin/vtrace",
   }), "/repo/bin/vtrace");
+
+  assert.equal(await resolveCliCommand({
+    extensionPath: "/packaged-ext",
+    getConfiguredCliPath: () => "",
+    fileExists: async (targetPath: string) => targetPath === "/packaged-ext/bin/vtrace",
+    fileExecutable: async (targetPath: string) => targetPath === "/packaged-ext/bin/vtrace",
+  }), "vtrace");
 
   assert.equal(await resolveCliCommand({
     extensionPath: "/ext",
@@ -47,7 +60,8 @@ test("resolveCliCommandWithSource reports which path was used and records attemp
   const configured = await resolveCliCommandWithSource({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "/custom/vtrace",
-    fileExists: async () => false,
+    fileExists: async (targetPath: string) => targetPath === "/custom/vtrace",
+    fileExecutable: async (targetPath: string) => targetPath === "/custom/vtrace",
   });
   assert.equal(configured.source, EXECUTABLE_SOURCES.Configured);
   assert.deepEqual(configured.attempted.map((entry) => entry.source), [EXECUTABLE_SOURCES.Configured]);
@@ -55,7 +69,9 @@ test("resolveCliCommandWithSource reports which path was used and records attemp
   const bundledDev = await resolveCliCommandWithSource({
     extensionPath: "/repo/vscode-extension",
     getConfiguredCliPath: () => "",
-    fileExists: async (targetPath: string) => targetPath === "/repo/bin/vtrace",
+    fileExists: async (targetPath: string) =>
+      targetPath === "/repo/bin/vtrace" || targetPath === "/repo/src/cli/index.ts",
+    fileExecutable: async (targetPath: string) => targetPath === "/repo/bin/vtrace",
   });
   assert.equal(bundledDev.source, EXECUTABLE_SOURCES.BundledDev);
   assert.deepEqual(bundledDev.attempted.map((entry) => entry.source), [
@@ -76,6 +92,34 @@ test("resolveCliCommandWithSource reports which path was used and records attemp
   ]);
 });
 
+test("resolveCliCommand reports configured path validation failures explicitly", async () => {
+  const missing = await resolveCliCommandWithSource({
+    extensionPath: "/ext",
+    getConfiguredCliPath: () => "/missing/vtrace",
+    fileExists: async () => false,
+    fileExecutable: async () => false,
+  }).then(
+    () => null,
+    (err) => err as Error & { code?: string },
+  );
+
+  assert.equal(missing?.code, "VTRACE_CONFIGURED_CLI_MISSING");
+  assert.match(missing?.message ?? "", /Configured vtrace\.cliPath does not exist: \/missing\/vtrace/);
+
+  const notExecutable = await resolveCliCommandWithSource({
+    extensionPath: "/ext",
+    getConfiguredCliPath: () => "/custom/vtrace",
+    fileExists: async () => true,
+    fileExecutable: async () => false,
+  }).then(
+    () => null,
+    (err) => err as Error & { code?: string },
+  );
+
+  assert.equal(notExecutable?.code, "VTRACE_CONFIGURED_CLI_NOT_EXECUTABLE");
+  assert.match(notExecutable?.message ?? "", /Configured vtrace\.cliPath is not executable: \/custom\/vtrace/);
+});
+
 test("describeExecutableSource returns human-readable labels for every source", () => {
   assert.match(describeExecutableSource(EXECUTABLE_SOURCES.Configured), /cliPath/);
   assert.match(describeExecutableSource(EXECUTABLE_SOURCES.Bundled), /Bundled/);
@@ -88,7 +132,8 @@ test("createCliBridge parses JSON responses and caches the executable resolution
   const cli = createCliBridge({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "/custom/vtrace",
-    fileExists: async () => false,
+    fileExists: async (targetPath: string) => targetPath === "/custom/vtrace",
+    fileExecutable: async (targetPath: string) => targetPath === "/custom/vtrace",
     execFile: async (command: string, args: string[], options: { cwd: string }) => {
       invocations.push({ command, args, cwd: options.cwd });
       return {
@@ -116,7 +161,8 @@ test("createCliBridge accepts JSON failure payloads emitted on non-zero exit cod
   const cli = createCliBridge({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "/custom/vtrace",
-    fileExists: async () => false,
+    fileExists: async (targetPath: string) => targetPath === "/custom/vtrace",
+    fileExecutable: async (targetPath: string) => targetPath === "/custom/vtrace",
     execFile: async () => {
       throw {
         code: 1,
@@ -162,7 +208,7 @@ test("createCliBridge raises VTRACE_CLI_NOT_FOUND with attempted paths when ENOE
 
   assert.ok(error, "expected an error to be thrown");
   assert.equal(error?.code, "VTRACE_CLI_NOT_FOUND");
-  assert.match(error?.message ?? "", /vtrace CLI was not found/);
+  assert.match(error?.message ?? "", /vtrace executable not found/);
   assert.match(error?.message ?? "", /cliPath/);
   assert.match(error?.message ?? "", /PATH/);
   assert.deepEqual(
@@ -171,16 +217,17 @@ test("createCliBridge raises VTRACE_CLI_NOT_FOUND with attempted paths when ENOE
   );
 });
 
-test("createCliBridge detects missing Bun runtime and marks error as VTRACE_BUN_NOT_FOUND", async () => {
+test("createCliBridge surfaces child dependency failures as CLI execution failures", async () => {
   const cli = createCliBridge({
     extensionPath: "/ext",
-    getConfiguredCliPath: () => "",
-    fileExists: async () => true,
+    getConfiguredCliPath: () => "/custom/vtrace",
+    fileExists: async (targetPath: string) => targetPath === "/custom/vtrace",
+    fileExecutable: async (targetPath: string) => targetPath === "/custom/vtrace",
     execFile: async () => {
       throw {
         code: 127,
         stdout: "",
-        stderr: "bun: not found",
+        stderr: "bun: command not found",
         message: "exec failed",
       };
     },
@@ -191,15 +238,18 @@ test("createCliBridge detects missing Bun runtime and marks error as VTRACE_BUN_
     (err) => err as Error & { code?: string },
   );
 
-  assert.equal(error?.code, "VTRACE_BUN_NOT_FOUND");
-  assert.match(error?.message ?? "", /Bun/);
+  assert.equal(error?.code, "VTRACE_COMMAND_FAILED");
+  assert.match(error?.message ?? "", /vtrace CLI failed/);
+  assert.match(error?.message ?? "", /bun: command not found/);
 });
 
 test("getExecutableInfo exposes resolution details without running the CLI", async () => {
   const cli = createCliBridge({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "",
-    fileExists: async (targetPath: string) => targetPath === "/ext/bin/vtrace",
+    fileExists: async (targetPath: string) =>
+      targetPath === "/ext/bin/vtrace" || targetPath === "/ext/src/cli/index.ts",
+    fileExecutable: async (targetPath: string) => targetPath === "/ext/bin/vtrace",
     execFile: async () => ({ stdout: "", stderr: "" }),
   });
 
@@ -214,7 +264,8 @@ test("runTextStreaming line-buffers stderr and invokes onStderrLine for each com
   const cli = createCliBridge({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "/custom/vtrace",
-    fileExists: async () => false,
+    fileExists: async (targetPath: string) => targetPath === "/custom/vtrace",
+    fileExecutable: async (targetPath: string) => targetPath === "/custom/vtrace",
     spawn: gate.spawn,
   });
 
@@ -248,7 +299,8 @@ test("runTextStreaming surfaces non-zero exits as VTRACE_COMMAND_FAILED with the
   const cli = createCliBridge({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "/custom/vtrace",
-    fileExists: async () => false,
+    fileExists: async (targetPath: string) => targetPath === "/custom/vtrace",
+    fileExecutable: async (targetPath: string) => targetPath === "/custom/vtrace",
     spawn: gate.spawn,
   });
 
@@ -273,7 +325,8 @@ test("runTextStreaming forwards env option to spawn so the CLI can opt into non-
   const cli = createCliBridge({
     extensionPath: "/ext",
     getConfiguredCliPath: () => "/custom/vtrace",
-    fileExists: async () => false,
+    fileExists: async (targetPath: string) => targetPath === "/custom/vtrace",
+    fileExecutable: async (targetPath: string) => targetPath === "/custom/vtrace",
     spawn: (command, args, spawnOptions) => {
       capturedSpawnOptions = spawnOptions;
       return gate.spawn(command, args, spawnOptions);
@@ -288,6 +341,21 @@ test("runTextStreaming forwards env option to spawn so the CLI can opt into non-
   await pending;
 
   assert.equal(capturedSpawnOptions?.env?.VTRACE_PROGRESS_STREAM, "1");
+  assert.match(capturedSpawnOptions?.env?.PATH ?? "", /\/\.bun\/bin/);
+  assert.match(capturedSpawnOptions?.env?.PATH ?? "", /\/\.local\/bin/);
+});
+
+test("buildCliEnvironment prepends common Bun and user-bin locations ahead of PATH", () => {
+  const env = buildCliEnvironment(
+    { VTRACE_PROGRESS_STREAM: "1" },
+    { HOME: "/home/user", PATH: "/usr/bin" },
+  );
+
+  assert.equal(env.VTRACE_PROGRESS_STREAM, "1");
+  assert.equal(
+    env.PATH,
+    ["/home/user/.bun/bin", "/home/user/.local/bin", "/usr/bin"].join(pathDelimiter()),
+  );
 });
 
 test("runTextStreaming raises VTRACE_CLI_NOT_FOUND when spawn reports ENOENT via error event", async () => {
@@ -310,7 +378,31 @@ test("runTextStreaming raises VTRACE_CLI_NOT_FOUND when spawn reports ENOENT via
   );
 
   assert.equal(error?.code, "VTRACE_CLI_NOT_FOUND");
-  assert.match(error?.message ?? "", /vtrace CLI was not found/);
+  assert.match(error?.message ?? "", /vtrace executable not found/);
+});
+
+test("runTextStreaming reports configured path spawn ENOENT separately", async () => {
+  const gate = makeSpawnGate();
+  const cli = createCliBridge({
+    extensionPath: "/ext",
+    getConfiguredCliPath: () => "/custom/vtrace",
+    fileExists: async (targetPath: string) => targetPath === "/custom/vtrace",
+    fileExecutable: async (targetPath: string) => targetPath === "/custom/vtrace",
+    spawn: gate.spawn,
+  });
+
+  const pending = cli.runTextStreaming(["status", "/repo"], "/repo", {});
+  const fakeChild = await gate.awaitSpawn();
+  const enoent = Object.assign(new Error("spawn /custom/vtrace ENOENT"), { code: "ENOENT" });
+  fakeChild.emit("error", enoent);
+
+  const error = await pending.then(
+    () => null,
+    (err) => err as Error & { code?: string },
+  );
+
+  assert.equal(error?.code, "VTRACE_CONFIGURED_CLI_SPAWN_FAILED");
+  assert.match(error?.message ?? "", /Could not execute configured vtrace\.cliPath: \/custom\/vtrace/);
 });
 
 test("command builders stay thin and map directly to vtrace CLI subcommands", () => {
@@ -344,6 +436,10 @@ function makeFakeChildProcess(): FakeChildProcess {
   child.stdout = stdout;
   child.stderr = stderr;
   return child;
+}
+
+function pathDelimiter() {
+  return process.platform === "win32" ? ";" : ":";
 }
 
 // The bridge does `await resolveCliCommandWithSource(...)` before calling spawn,
