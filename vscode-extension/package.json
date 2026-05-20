@@ -138,7 +138,7 @@
         {
           "id": "vtrace",
           "title": "vtrace",
-          "icon": "$(symbol-namespace)"
+          "icon": "assets/vtrace-activity.svg"
         }
       ]
     },

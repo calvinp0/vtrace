@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { test } from "bun:test";
 
 import { EXECUTABLE_SOURCES } from "./cli.js";
@@ -12,6 +14,26 @@ import {
   resolveImpactGraphContext,
 } from "./extension-main.js";
 import { EDITOR_EMPTY_STATE_MESSAGES, RUN_PIPELINE_MESSAGES, SETUP_REINDEX_MESSAGES } from "./shell.js";
+
+test("package manifest points extension and activity icons at bundled assets", () => {
+  const extensionRoot = path.dirname(new URL(import.meta.url).pathname);
+  const packageJsonPath = path.join(extensionRoot, "package.json");
+  const manifest = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+
+  assert.equal(manifest.icon, "assets/icon.png");
+  assert.equal(path.extname(manifest.icon), ".png");
+  assert.equal(existsSync(path.join(extensionRoot, manifest.icon)), true);
+
+  const activitybarContainers = manifest.contributes?.viewsContainers?.activitybar;
+  assert.ok(Array.isArray(activitybarContainers), "manifest must contribute an activity bar container");
+  const vtraceContainer = activitybarContainers.find((container: { id?: string }) => container.id === "vtrace");
+
+  assert.ok(vtraceContainer, "manifest must keep the vtrace activity bar container");
+  assert.equal(vtraceContainer.icon, "assets/vtrace-activity.svg");
+  assert.equal(path.extname(vtraceContainer.icon), ".svg");
+  assert.equal(existsSync(path.join(extensionRoot, vtraceContainer.icon)), true);
+  assert.doesNotMatch(vtraceContainer.icon, /^\$\(.+\)$/);
+});
 
 test("command definitions include every registered vtrace shell action", () => {
   assert.deepEqual(
