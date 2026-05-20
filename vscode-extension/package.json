@@ -5,6 +5,11 @@
   "description": "Thin VS Code shell for the vtrace CLI and repo-local runtime state.",
   "version": "0.1.0",
   "private": true,
+  "icon": "assets/icon.png",
+  "galleryBanner": {
+    "color": "#0F172A",
+    "theme": "dark"
+  },
   "main": "./extension.cjs",
   "engines": {
     "vscode": "^1.89.0"
