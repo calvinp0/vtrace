@@ -5129,7 +5129,7 @@ function createExpandVexpRefToolDefinition(
             resolved: false,
             reason: "unknown_hash",
             message:
-              "No deferred V-REF is registered under this hash. Use run_pipeline first; expand_vexp_ref only resolves hashes it has seen emitted.",
+              "No retained deferred V-REF is registered under this hash. Use run_pipeline to emit and persist expandable refs; expand_vexp_ref only resolves exact hashes it has seen emitted and retained.",
             notes: [
               "Exact hash lookup only; vtrace does not guess or approximate.",
               resolvedBinding.ok
@@ -6495,7 +6495,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             "Legacy alias for preset.",
           ),
           maxResults: integerProperty("Optional reranked candidate count."),
-          max_tokens: integerProperty("Product-facing total output budget. Currently mapped to VTRACE's character-budgeted capsule engine."),
+          max_tokens: integerProperty("Product-facing total output budget. Currently mapped to vtrace's character-budgeted capsule engine."),
           maxBudgetCharacters: integerProperty("Legacy capsule character budget."),
           include_tests: booleanProperty("Product-facing test-inclusion preference. Defaults true for debug preset, false otherwise."),
           include_file_content: booleanProperty("Product-facing file-content preference. The compact run_pipeline result still returns representation metadata, not full files."),

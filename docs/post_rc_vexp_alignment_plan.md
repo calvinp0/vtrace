@@ -2,7 +2,7 @@
 
 Date: 2026-05-19
 
-This is a planning document only. It does not change product behavior, CLI behavior, MCP schemas, ranking, indexing, or VS Code panel behavior.
+This began as a planning document. It now records the completed post-RC sequence and still does not change product behavior, CLI behavior, MCP schemas, ranking, indexing, or VS Code panel behavior.
 
 ## Executive Summary
 
@@ -10,7 +10,7 @@ VTrace is RC-ready as deterministic lexical/structural repo-local tooling with C
 
 VTrace is not full VEXP parity. The current product truth remains explicit: V-REFs are exact and repo-local with bounded stored-truth persistence, the watcher is mark-stale-only by default with optional visible auto-reindex, memory and rules are deterministic rather than semantic, and graph behavior is bounded structural analysis rather than runtime or dataflow truth.
 
-The next phase should improve general-purpose product feel and editor clarity after the core continuity and Python graph milestones. Persistent stored-truth V-REFs, optional auto-reindexing, conservative Python graph extraction, and broader generic retrieval benchmarks are now implemented. The remaining highest-leverage work is panel polish and future retrieval tuning only after benchmark results are classified.
+The post-RC roadmap sequence is complete or verified with regression coverage. Persistent stored-truth V-REFs, optional auto-reindexing, conservative Python graph extraction, broader generic retrieval benchmarks, and VS Code panel polish are now implemented or verified. Future retrieval tuning should happen only after generic benchmark misses are classified.
 
 ARC may be used as one real-repo benchmark, but it must not define product behavior. ARC is a stress test, not the destination.
 
@@ -27,7 +27,7 @@ ARC may be used as one real-repo benchmark, but it must not define product behav
 | Project rules             | Explicit candidate generation, manual promotion, active guidance capped and deterministic                                                                                           | Project conventions become visible guidance without unsafe automation | Aligned enough for RC | No auto-promotion, no cross-repo rules                                          | Keep manual promotion; improve visibility before automation    |
 | Impact graph              | Exact-FQN bounded structural reverse dependencies, including conservative Python module-level, reference, member, inherited-member, and `super()` evidence where static edges exist | Useful static impact view across modules and class/member boundaries  | Improved              | Static only; no runtime/dataflow or full MRO truth                              | Monitor graph benchmark results before expanding scope         |
 | Broad retrieval/reranking | Lexical/FTS plus graph reranking and capsule shaping, with generic pre-tuning benchmark coverage                                                                                    | General-purpose high-quality retrieval across repo types              | Improved              | No semantic retrieval; benchmark misses still need classification before tuning | Use generic benchmarks before any retrieval tuning             |
-| VS Code panel             | Existing shell/panel flow around setup, status, pipeline, and V-REFs                                                                                                                | Clear product-feel surface for freshness, refs, rules, and setup      | Partially aligned     | UX clarity and visibility gaps                                                  | Polish existing panel without panel-only hidden behavior       |
+| VS Code panel             | Existing shell/panel flow now surfaces freshness, watcher/auto-reindex state, setup/reindex progress, rules, and exact V-REF expansion copy                                         | Clear product-feel surface for freshness, refs, rules, and setup      | Improved              | No panel-only hidden behavior or rule/watch management                          | Keep panel a thin CLI/MCP-backed surface                       |
 | Setup / agent config      | `setup`, `status`, `workspace_setup`, Codex/Claude Code config compatibility                                                                                                        | Clear onboarding for supported local coding agents                    | Aligned enough for RC | `claudeCode` compatibility field remains in schema                              | Rename only in future schema version, not as roadmap blocker   |
 
 ## Anti-Overfit Policy
@@ -53,9 +53,9 @@ The anti-overfit rules from [`docs/validation_strategy.md`](./validation_strateg
 5. Python Member/Attribute Resolution — implemented for conservative static receiver forms.
 6. Inherited-Member and `super()` Resolution — implemented for exact static base/member cases.
 7. Broader Generic Retrieval/Reranking Benchmarks — implemented as deterministic pre-tuning coverage.
-8. VS Code Panel Polish
+8. VS Code Panel Polish — implemented for existing panel surfaces.
 
-This order first closes visible product-feel gaps without changing retrieval ranking, then improves static graph intelligence, then creates broader benchmark coverage before additional retrieval tuning, and finally polishes the user-facing panel once the underlying behavior is clearer.
+This order closed visible product-feel gaps without changing retrieval ranking, improved static graph intelligence, created broader benchmark coverage before additional retrieval tuning, and polished the user-facing panel once the underlying behavior was clearer.
 
 ## Milestone 1 — Persistent V-REF Store
 

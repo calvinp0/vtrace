@@ -20,6 +20,10 @@ Remaining acceptable RC limitations:
 
 - V-REFs are exact, bounded, repo-local persisted stored payloads with process-local hot-cache support.
 - CLI `expand-vexp-ref` can resolve retained persistent refs without `--query`; `--query` remains a fallback/debug republish path when a ref is unavailable or expired.
+- Watcher auto-reindex exists only as explicit `watch --auto-reindex`; default `watch` remains mark-stale-only and failures remain visible.
+- Python graph intelligence includes conservative module-level symbols, references, member/attribute resolution, inherited-member lookup, and `super()` edges where static evidence is exact.
+- Generic retrieval/reranking benchmark coverage exists and should guard future retrieval tuning.
+- The VS Code panel now surfaces freshness, watcher/auto-reindex state, setup/reindex progress, active/candidate rules, and exact V-REF expansion copy.
 - Multi-repo `run_pipeline` does not emit deferred expansion items.
 - `workspace_setup.status.claudeCode` remains a compatibility field for this schema version.
 - `vtrace` remains deterministic lexical/structural local tooling, not full VEXP parity.
@@ -162,6 +166,8 @@ These are acceptable for RC and must remain visible in release validation:
 - V-REFs are exact 12-character lowercase hex hashes backed by process-local hot cache plus bounded repo-local persisted stored payloads.
 - CLI `expand-vexp-ref` can resolve retained persistent refs without `--query`. `--query` remains a fallback/debug republish path when a ref is unavailable or expired.
 - Auto-reindex is opt-in only. Default `watch` remains mark-stale-only.
+- Python graph edges are conservative static evidence only; there is no runtime tracing, dynamic dispatch proof, arbitrary `obj.x` type inference, or full Python MRO/dataflow truth.
+- Generic retrieval benchmarks are guardrails before tuning, not a claim of semantic retrieval.
 - There are no embeddings or semantic memory.
 - Project rules are deterministic guidance only; there is no auto-promotion of rules.
 - There are no cross-repo rules.

@@ -140,7 +140,7 @@ If you want `vtrace` to notice source edits passively, start the optional watche
 ./bin/vtrace watch /path/to/your/repo
 ```
 
-The watcher is conservative and mark-stale-only. It detects indexed source file creates, modifications, and deletions using the same source-scan ignore rules as indexing, debounces bursts, and records pending stale state. It does not auto-reindex; run `vtrace index` when you want a fresh structural snapshot.
+The default watcher is conservative and mark-stale-only. It detects indexed source file creates, modifications, and deletions using the same source-scan ignore rules as indexing, debounces bursts, and records pending stale state. Run `vtrace index` when you want a fresh structural snapshot without enabling auto-reindex.
 
 If you want the watcher to re-index after debounced source changes, opt in explicitly:
 

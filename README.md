@@ -100,6 +100,8 @@ There are also direct inspection commands for manual flows:
 - `runs`
 - `rules`
 - `check-capsule`
+- `run-pipeline`
+- `expand-vexp-ref`
 
 ## MCP Workflow
 
@@ -114,7 +116,7 @@ Use the specialized tools when the question becomes narrower:
 - `search_memory` / `get_session_context`: continuity
 - `index_status` / `workspace_setup`: health and setup
 - `save_observation`: durable memory
-- `expand_vexp_ref`: resolve deferred references emitted by the current MCP process
+- `expand_vexp_ref`: resolve exact deferred V-REF hashes from the current process hot cache or retained repo-local stored payloads
 
 For the practical tool-by-tool guide, see [MCP Tool Cheat Sheet](./docs/mcp_tool_cheat_sheet.md).
 
@@ -142,7 +144,7 @@ The command name stays `claude-config` for compatibility even when you target Co
 
 - `.vtrace/config.json`: repo-local config and resolved paths
 - `.vtrace/state.json`: readiness, latest run, and freshness metadata
-- `.vtrace/index.sqlite`: the repo-local SQLite index
+- `.vtrace/index.sqlite`: the repo-local SQLite index, including bounded persisted V-REF payloads
 - `.vtrace/workspace.json`: optional multi-repo workspace config
 
 Repeated `setup` is safe. If the repo is already ready, `vtrace` reuses the current state conservatively.
@@ -185,5 +187,6 @@ The README uses the project artwork from [docs/assets/brand](./docs/assets/brand
 - structural outputs are based on indexed repository data
 - `search_logic_flow` requires exact start and end FQNs
 - impact and flow tools are not runtime execution proofs
-- watcher freshness is mark-stale-only and reindexing stays explicit
+- watcher freshness is mark-stale-only by default; `watch --auto-reindex` is explicit opt-in and keeps failures visible
+- V-REF expansion is exact stored-payload lookup with bounded repo-local retention, not fuzzy reconstruction
 - the optional daemon is inspectable, but not required

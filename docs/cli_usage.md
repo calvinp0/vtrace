@@ -114,7 +114,7 @@ Optionally watch source files and mark the index stale when they change:
 ./bin/vtrace watch <repo>
 ```
 
-The watcher does not auto-reindex. It records pending source changes in `.vtrace/state.json`; `status`, `doctor`, and MCP `index_status` report that stale state until the next successful explicit `index`.
+By default, the watcher does not auto-reindex. It records pending source changes in `.vtrace/state.json`; `status`, `doctor`, and MCP `index_status` report that stale state until the next successful explicit `index`.
 
 Opt into debounced automatic reindexing:
 
