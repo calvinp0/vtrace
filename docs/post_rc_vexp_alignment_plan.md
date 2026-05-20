@@ -10,25 +10,25 @@ VTrace is RC-ready as deterministic lexical/structural repo-local tooling with C
 
 VTrace is not full VEXP parity. The current product truth remains explicit: V-REFs are exact and repo-local with bounded stored-truth persistence, the watcher is mark-stale-only by default with optional visible auto-reindex, memory and rules are deterministic rather than semantic, and graph behavior is bounded structural analysis rather than runtime or dataflow truth.
 
-The next phase should improve general-purpose graph intelligence, continuity, and product feel. Persistent stored-truth V-REFs and optional auto-reindexing are implemented as continuity milestones, and conservative Python module-level assigned symbols are now indexed. The remaining highest-leverage work is richer static reference extraction, broader generic retrieval benchmarks, and panel polish.
+The next phase should improve general-purpose product feel and editor clarity after the core continuity and Python graph milestones. Persistent stored-truth V-REFs, optional auto-reindexing, conservative Python graph extraction, and broader generic retrieval benchmarks are now implemented. The remaining highest-leverage work is panel polish and future retrieval tuning only after benchmark results are classified.
 
 ARC may be used as one real-repo benchmark, but it must not define product behavior. ARC is a stress test, not the destination.
 
 ## Current VEXP-Alignment Status
 
-| Area                      | Current VTrace behavior                                                                                                                                | VEXP-like target                                                      | Alignment status      | Main gap                                                      | Recommended post-RC action                                     |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------- | -------------------------------------------------------------- |
-| `run_pipeline`            | Deterministic orchestration with intent, capsule, impact, memory, freshness, rules, and V-REFs                                                         | Broad task entrypoint that feels continuous and context-aware         | Aligned enough for RC | Continuity is bounded by V-REF retention and retrieval limits | Improve graph intelligence and benchmarks                      |
-| V-REF expansion           | Exact 12-hex stored payload expansion with process hot cache and repo-local persistence                                                                | Stable deferred expansion across sessions and product surfaces        | Improved              | Bounded retention; no multi-repo deferred expansion parity    | Monitor usage before expanding retention or multi-repo support |
-| Watcher/freshness         | Optional polling watcher marks stale by default; `--auto-reindex` opts into visible reindexing                                                         | Optional live freshness loop with visible state and safe recovery     | Improved              | No always-on daemon; bounded polling behavior                 | Monitor before adding config/daemon-driven policies            |
-| Session lifecycle         | Explicit compression/consolidation services and searchable summaries                                                                                   | Durable continuity across work sessions                               | Partially aligned     | No scheduler; session binding is input-dependent              | Keep explicit; revisit scheduling only after persistence work  |
-| Memory search             | Deterministic lexical/structural observation search                                                                                                    | Useful durable memory retrieval across related work                   | Aligned enough for RC | No semantic recall or learned ranking                         | Validate with memory/rule query benchmarks before tuning       |
-| Anti-pattern detection    | Conservative structural detectors for file thrashing and adjacent symbol add/remove                                                                    | Useful recognition of repeated dead ends and workflow loops           | Partially aligned     | Narrow detector set; no semantic stuck detection              | Extend only with deterministic evidence-backed detectors       |
-| Project rules             | Explicit candidate generation, manual promotion, active guidance capped and deterministic                                                              | Project conventions become visible guidance without unsafe automation | Aligned enough for RC | No auto-promotion, no cross-repo rules                        | Keep manual promotion; improve visibility before automation    |
-| Impact graph              | Exact-FQN bounded structural reverse dependencies, including conservative Python module-level symbols and non-call references where static edges exist | Useful static impact view across modules and class/member boundaries  | Partially aligned     | Broader Python members, inheritance, and modules are limited  | Add member and inheritance graph extraction                    |
-| Broad retrieval/reranking | Lexical/FTS plus graph reranking and capsule shaping                                                                                                   | General-purpose high-quality retrieval across repo types              | Partially aligned     | Benchmark coverage is narrower than future tuning needs       | Build broader generic benchmarks before retrieval tuning       |
-| VS Code panel             | Existing shell/panel flow around setup, status, pipeline, and V-REFs                                                                                   | Clear product-feel surface for freshness, refs, rules, and setup      | Partially aligned     | UX clarity and visibility gaps                                | Polish existing panel without panel-only hidden behavior       |
-| Setup / agent config      | `setup`, `status`, `workspace_setup`, Codex/Claude Code config compatibility                                                                           | Clear onboarding for supported local coding agents                    | Aligned enough for RC | `claudeCode` compatibility field remains in schema            | Rename only in future schema version, not as roadmap blocker   |
+| Area                      | Current VTrace behavior                                                                                                                                                             | VEXP-like target                                                      | Alignment status      | Main gap                                                                        | Recommended post-RC action                                     |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `run_pipeline`            | Deterministic orchestration with intent, capsule, impact, memory, freshness, rules, and V-REFs                                                                                      | Broad task entrypoint that feels continuous and context-aware         | Aligned enough for RC | Continuity is bounded by V-REF retention and retrieval limits                   | Improve graph intelligence and benchmarks                      |
+| V-REF expansion           | Exact 12-hex stored payload expansion with process hot cache and repo-local persistence                                                                                             | Stable deferred expansion across sessions and product surfaces        | Improved              | Bounded retention; no multi-repo deferred expansion parity                      | Monitor usage before expanding retention or multi-repo support |
+| Watcher/freshness         | Optional polling watcher marks stale by default; `--auto-reindex` opts into visible reindexing                                                                                      | Optional live freshness loop with visible state and safe recovery     | Improved              | No always-on daemon; bounded polling behavior                                   | Monitor before adding config/daemon-driven policies            |
+| Session lifecycle         | Explicit compression/consolidation services and searchable summaries                                                                                                                | Durable continuity across work sessions                               | Partially aligned     | No scheduler; session binding is input-dependent                                | Keep explicit; revisit scheduling only after persistence work  |
+| Memory search             | Deterministic lexical/structural observation search                                                                                                                                 | Useful durable memory retrieval across related work                   | Aligned enough for RC | No semantic recall or learned ranking                                           | Validate with memory/rule query benchmarks before tuning       |
+| Anti-pattern detection    | Conservative structural detectors for file thrashing and adjacent symbol add/remove                                                                                                 | Useful recognition of repeated dead ends and workflow loops           | Partially aligned     | Narrow detector set; no semantic stuck detection                                | Extend only with deterministic evidence-backed detectors       |
+| Project rules             | Explicit candidate generation, manual promotion, active guidance capped and deterministic                                                                                           | Project conventions become visible guidance without unsafe automation | Aligned enough for RC | No auto-promotion, no cross-repo rules                                          | Keep manual promotion; improve visibility before automation    |
+| Impact graph              | Exact-FQN bounded structural reverse dependencies, including conservative Python module-level, reference, member, inherited-member, and `super()` evidence where static edges exist | Useful static impact view across modules and class/member boundaries  | Improved              | Static only; no runtime/dataflow or full MRO truth                              | Monitor graph benchmark results before expanding scope         |
+| Broad retrieval/reranking | Lexical/FTS plus graph reranking and capsule shaping, with generic pre-tuning benchmark coverage                                                                                    | General-purpose high-quality retrieval across repo types              | Improved              | No semantic retrieval; benchmark misses still need classification before tuning | Use generic benchmarks before any retrieval tuning             |
+| VS Code panel             | Existing shell/panel flow around setup, status, pipeline, and V-REFs                                                                                                                | Clear product-feel surface for freshness, refs, rules, and setup      | Partially aligned     | UX clarity and visibility gaps                                                  | Polish existing panel without panel-only hidden behavior       |
+| Setup / agent config      | `setup`, `status`, `workspace_setup`, Codex/Claude Code config compatibility                                                                                                        | Clear onboarding for supported local coding agents                    | Aligned enough for RC | `claudeCode` compatibility field remains in schema                              | Rename only in future schema version, not as roadmap blocker   |
 
 ## Anti-Overfit Policy
 
@@ -50,9 +50,9 @@ The anti-overfit rules from [`docs/validation_strategy.md`](./validation_strateg
 2. Optional Auto-Reindex Mode — implemented as explicit `watch --auto-reindex`.
 3. Module-Level Constants, Variables, and Aliases — implemented for conservative Python top-level assignments.
 4. Python References Extraction — implemented for conservative non-call symbol uses.
-5. Python Member/Attribute Resolution
-6. Inherited-Member and `super()` Resolution
-7. Broader Generic Retrieval/Reranking Benchmarks
+5. Python Member/Attribute Resolution — implemented for conservative static receiver forms.
+6. Inherited-Member and `super()` Resolution — implemented for exact static base/member cases.
+7. Broader Generic Retrieval/Reranking Benchmarks — implemented as deterministic pre-tuning coverage.
 8. VS Code Panel Polish
 
 This order first closes visible product-feel gaps without changing retrieval ranking, then improves static graph intelligence, then creates broader benchmark coverage before additional retrieval tuning, and finally polishes the user-facing panel once the underlying behavior is clearer.
@@ -501,6 +501,8 @@ Conservative Python Inheritance and `super()` Graph Edges
 
 Build broader generic retrieval and reranking benchmarks before further tuning retrieval behavior.
 
+Implementation status: completed as `src/retrieval/genericRetrievalBenchmarks.test.ts`. The suite is validation coverage only; it does not tune retrieval or ranking.
+
 ### Why This Improves VEXP Alignment
 
 VEXP-like product feel depends on consistently useful retrieval for exact, broad, ambiguous, graph, memory, and workflow questions. Benchmarks should define broad expectations before scoring changes.
@@ -529,6 +531,8 @@ Use:
 - at least one Python repo/fixture
 - mixed Python/Cython fixture
 - ARC as optional real-repo stress test
+
+Implemented coverage uses synthetic TypeScript/Python symbol fixtures, the checked-in mixed Python/Cython fixture, a small Python impact graph fixture, and synthetic durable memory/project-rule records. Ambiguous cases are checked for deterministic output and carry accepted limitation metadata instead of pretending there is always one correct top result.
 
 Likely files/modules to inspect:
 
@@ -569,6 +573,8 @@ Likely files/modules to inspect:
 - Reports classify misses rather than implying every miss needs a code change.
 - Retrieval tuning has a generic evidence base.
 - ARC is represented only as a stress test.
+
+Implemented classifications use the pre-tuning categories `parser_frontend_gap`, `retrieval_reranking_gap`, `capsule_shaping_gap`, `memory_rule_gap`, `accepted_static_limitation`, and `fixture_gap`.
 
 ### Suggested Implementation Prompt Title
 
@@ -663,12 +669,12 @@ Avoid these until there is a clear product reason, validation plan, and explicit
 Recommended next implementation prompt:
 
 ```text
-Python Member/Attribute Resolution
+VS Code Panel Polish for Freshness, Rules, and V-REF UX
 ```
 
 Persistent V-REF Store was the first post-RC continuity milestone and is now implemented for exact stored-payload expansion with bounded repo-local retention. It improves continuity for MCP, CLI, and editor flows while preserving the central truth requirement: V-REF expansion returns stored payloads exactly, not fuzzy lookup or semantic reconstruction.
 
-Optional Auto-Reindex Mode, Module-Level Constants, Variables, and Aliases, Python References Extraction, Python Member/Attribute Resolution, and Inherited-Member and `super()` Resolution are now implemented. The next recommended milestone is Broader Generic Retrieval/Reranking Benchmarks because the static graph now has enough general Python coverage to validate retrieval behavior before any future ranking changes.
+Optional Auto-Reindex Mode, Module-Level Constants, Variables, and Aliases, Python References Extraction, Python Member/Attribute Resolution, Inherited-Member and `super()` Resolution, and Broader Generic Retrieval/Reranking Benchmarks are now implemented. The next recommended milestone is VS Code Panel Polish because retrieval tuning now has a generic benchmark guardrail and the remaining product-feel gap is making freshness, V-REFs, rules, and setup states clearer in the editor.
 
 ## Deliverable Summary
 
@@ -680,7 +686,7 @@ Recommended milestone order:
 4. Python References Extraction — implemented for conservative non-call symbol uses
 5. Python Member/Attribute Resolution — implemented for conservative static receiver forms
 6. Inherited-Member and `super()` Resolution — implemented for exact static base/member cases
-7. Broader Generic Retrieval/Reranking Benchmarks
+7. Broader Generic Retrieval/Reranking Benchmarks — implemented
 8. VS Code Panel Polish
 
 Completed implementation prompt titles:
@@ -692,22 +698,19 @@ Conservative Module-Level Constants, Variables, and Aliases
 Conservative Python Reference Edge Extraction
 Conservative Python Member and Attribute Resolution
 Conservative Python Inheritance and `super()` Graph Edges
+Generic Retrieval/Reranking Benchmark Suite Before Tuning
 ```
 
 Validation fixtures needed before or during remaining implementation work:
 
-- TypeScript module-level assignment fixture
-- Python package reference fixture
-- mixed Python/Cython boundary fixture
-- Python class/member fixture
-- generic retrieval/reranking query set covering exact, broad, ambiguous, graph, memory, and rule queries
+- panel fixture/smoke coverage for existing status, setup, run-pipeline, V-REF, and rule surfaces
 
 Known risks:
 
 - Persistent V-REFs could accidentally become recomputation if stored-truth rules are weakened in future work.
 - Future auto-reindex changes could hide freshness failures if status does not continue to expose in-progress and failed states.
 - Python graph intelligence could overclaim dynamic behavior if conservative boundaries are not enforced.
-- Retrieval tuning before broader benchmarks could overfit to ARC or another single repo.
+- Retrieval tuning that ignores the generic benchmark suite could overfit to ARC or another single repo.
 - Panel polish could create hidden product behavior if it bypasses CLI/MCP surfaces.
 
 Decision points for the user:

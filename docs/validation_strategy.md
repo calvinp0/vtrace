@@ -61,7 +61,7 @@ General success criteria:
 - Results are deterministic across repeated runs with the same repo state and query.
 - Relevant candidates appear near the top for exact and structurally supported queries.
 - Source-backed capsule pivots are useful when the index can provide relevant evidence.
-- Failures are classified as parser/frontend, retrieval/reranking, capsule shaping, or accepted limitation.
+- Failures are classified as parser/frontend, retrieval/reranking, capsule shaping, memory/rule behavior, or accepted limitation.
 - Improvements do not regress non-target fixtures.
 - Production code contains no codebase-specific heuristics.
 - Validation reports distinguish evidence-backed behavior from aspirational future behavior.
@@ -90,7 +90,15 @@ The following are possible post-RC, general-purpose milestones. They are not req
 - Python references extraction (implemented for conservative non-call symbol uses)
 - Python member/attribute resolution (implemented for conservative static receiver forms)
 - inherited-member and `super()` resolution (implemented for exact static base/member cases)
-- broader generic retrieval/reranking benchmarks
+- broader generic retrieval/reranking benchmarks (implemented as deterministic synthetic coverage before tuning)
 - VS Code panel polish
 
 Each future milestone should ship with generic fixtures and at least one non-ARC validation target. ARC may remain a stress test for the milestone, but it should not define product behavior by itself.
+
+## Generic Retrieval/Reranking Benchmark Suite
+
+`src/retrieval/genericRetrievalBenchmarks.test.ts` provides pre-tuning benchmark coverage for exact symbol lookup, broad workflow tracing, concept lookup, file/module discovery, mixed Python/Cython boundary lookup, ambiguous query determinism, impact graph dependents, and memory/rule retrieval.
+
+The suite uses synthetic TypeScript/Python symbols, the checked-in mixed Python/Cython fixture, a small Python impact fixture, and synthetic memory/rule records. Benchmark cases record expected files or symbols plus accepted limitation classifications such as `accepted_static_limitation`, `retrieval_reranking_gap`, `capsule_shaping_gap`, `memory_rule_gap`, `parser_frontend_gap`, and `fixture_gap`.
+
+Future retrieval or reranking changes should run this suite before tuning. A miss should be classified first instead of automatically becoming a product-code change. ARC remains optional real-repo stress validation and is not a required pass/fail benchmark for this suite.
