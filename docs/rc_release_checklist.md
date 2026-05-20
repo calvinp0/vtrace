@@ -124,16 +124,17 @@ Fallback/debug republish example:
 
 ## VS Code Panel Smoke Test
 
-If validating the VS Code extension, check only the existing panel behavior:
+If validating the VS Code extension, check the panel behavior without adding panel-only backend behavior:
 
 - panel opens
-- setup/status displays
-- reindex/setup action works
+- setup/status displays repo root, index state, freshness, watcher, auto-reindex, changed file count, and compact failure state when present
+- reindex/setup action works and shows immediate running feedback before the CLI result returns
 - run-pipeline action works
-- V-REF expansion action is honest about retained persistent lookup and fallback/debug `--query` republish when using the CLI path
+- active rules and candidate rule previews are visually distinct; candidates are not shown as active guidance
+- V-REF expansion action shells through existing expansion behavior and is honest about exact retained stored-payload lookup, explicit expired/unknown/malformed failures, and no fuzzy or semantic reconstruction
 - no stale `vexb` naming appears in public UI unless intentionally historical
 
-Do not redesign the panel as part of RC validation.
+Do not redesign backend behavior through the panel as part of RC validation.
 
 ## Release Blocker Checklist
 

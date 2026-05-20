@@ -59,7 +59,7 @@ export const EMPTY_STATE_MESSAGES = Object.freeze({
 
 export const SETUP_REINDEX_MESSAGES = Object.freeze({
   NoWorkspace: "Open a folder or workspace to set up or re-index vtrace.",
-  ReadyQuickPickTitle: "VTRACE is already ready",
+  ReadyQuickPickTitle: "vtrace is already ready",
   ReadyQuickPickPlaceholder: "Choose what to do next",
   ReadyQuickPickReindex: "Re-index anyway",
   ReadyQuickPickShowIndexStatus: "Show Index Status",
@@ -90,7 +90,7 @@ export const EDITOR_EMPTY_STATE_MESSAGES = Object.freeze({
     NoWorkspace: "Open a folder or workspace to use vtrace symbol commands.",
     NoActiveEditor: "Open a workspace file and place the cursor on a symbol to show its impact graph.",
     NoSymbolAtCursor: "Place the cursor on a symbol to show its impact graph.",
-    SymbolNotResolved: "Vtrace could not resolve the symbol at the cursor to an exact indexed symbol.",
+    SymbolNotResolved: "vtrace could not resolve the symbol at the cursor to an exact indexed symbol.",
     NotInitialized: "This repo is not initialized for vtrace yet. Run Setup Agent first.",
     IndexNotReady: "The vtrace index is not ready yet. Finish setup or indexing, then try again.",
   }),
@@ -269,7 +269,7 @@ export function buildPrimaryStatus(snapshot, busyState = BUSY_STATES.Idle) {
 
   if (snapshot.kind === "cli_unavailable") {
     return {
-      label: "VTRACE not found",
+      label: "vtrace not found",
       description: EMPTY_STATE_MESSAGES.CliNotFoundHelper,
       tooltip: snapshot.message,
       icon: "error",

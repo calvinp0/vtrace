@@ -974,6 +974,13 @@ async function runSetupReindexJob(app, job) {
   const title = "Setup / Re-index";
 
   applyBusyState(app, job.busyState);
+  app.resultPanel.showResult({
+    type: RESULT_TYPES.IndexStatus,
+    repoRoot: app.snapshot.repoRoot ?? job.repoRoot,
+    snapshot: app.snapshot,
+    busyState: job.busyState,
+    rawData: app.snapshot.rawStatus ?? null,
+  });
 
   // Auto-open the vtrace output channel before the CLI starts so live parser progress
   // streams into the right-hand panel as it happens, not after the run ends.

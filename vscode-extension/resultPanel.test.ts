@@ -39,7 +39,7 @@ test("buildResultView embeds file path in File Skeleton title and symbol in Impa
     skeleton,
     filePath: "src/app.ts",
   });
-  assert.equal(skeletonView.title, "VTRACE • File Skeleton: src/app.ts");
+  assert.equal(skeletonView.title, "vtrace — File Skeleton: src/app.ts");
 
   const impactView = buildResultView({
     type: RESULT_TYPES.ImpactGraph,
@@ -47,7 +47,7 @@ test("buildResultView embeds file path in File Skeleton title and symbol in Impa
     impact: makeImpactOutput(),
     symbolFqn: "src/app.ts::App",
   });
-  assert.equal(impactView.title, "VTRACE • Impact Graph: src/app.ts::App");
+  assert.equal(impactView.title, "vtrace — Impact Graph: src/app.ts::App");
 });
 
 test("buildHtml embeds the title, repo line, body, and raw JSON toggle when rawData is provided", () => {
@@ -124,15 +124,47 @@ test("buildHtml omits the raw-JSON toggle when no raw data is attached", () => {
   assert.doesNotMatch(html, /id="raw-json"/);
 });
 
-test("renderIndexStatusBody shows setup/index/run/freshness/runtime key-value pairs", () => {
-  const snapshot = buildRepoSnapshot(makeShellEnvelope());
+test("renderIndexStatusBody shows setup/index/run/freshness/watcher key-value pairs", () => {
+  const snapshot = buildRepoSnapshot(makeShellEnvelope({
+    watcher: {
+      supported: true,
+      enabled: true,
+      running: true,
+      lastEventAtMs: 10,
+      autoReindexEnabled: true,
+      reindexState: "reindex_failed",
+      lastAutoReindexStartedAtMs: 11,
+      lastAutoReindexFinishedAtMs: 12,
+      lastAutoReindexFailedAtMs: 13,
+      lastAutoReindexError: "index failed: disk full",
+      pendingChangedFileCount: 2,
+      changedFiles: ["src/a.ts", "src/b.ts"],
+    },
+  }));
   const body = renderIndexStatusBody(snapshot);
 
+  assert.match(body, /<dt>Repo root<\/dt><dd>\/repo<\/dd>/);
   assert.match(body, /<dt>Setup<\/dt><dd>initialized<\/dd>/);
   assert.match(body, /<dt>Index<\/dt><dd>ready<\/dd>/);
   assert.match(body, /<dt>Latest run<\/dt><dd>#7<\/dd>/);
   assert.match(body, /<dt>Freshness<\/dt><dd>fresh<\/dd>/);
+  assert.match(body, /<dt>Changed files<\/dt><dd>2<\/dd>/);
   assert.match(body, /<dt>Runtime<\/dt><dd>not running<\/dd>/);
+  assert.match(body, /<h2>Watcher<\/h2>/);
+  assert.match(body, /<dt>Status<\/dt><dd>running<\/dd>/);
+  assert.match(body, /<dt>Auto re-index<\/dt><dd>enabled<\/dd>/);
+  assert.match(body, /<dt>Re-index state<\/dt><dd>reindex_failed<\/dd>/);
+  assert.match(body, /Auto re-index error/);
+  assert.match(body, /Recommended action: run <code>vtrace index<\/code> explicitly/);
+  assert.match(body, /src\/a\.ts/);
+  assert.match(body, /src\/b\.ts/);
+});
+
+test("renderIndexStatusBody shows immediate setup/reindex running state", () => {
+  const snapshot = buildRepoSnapshot(makeShellEnvelope());
+  const body = renderIndexStatusBody(snapshot, "running_reindex");
+
+  assert.match(body, /<dt>Current action<\/dt><dd>Re-indexing…<\/dd>/);
 });
 
 test("renderFreshnessBody includes reasons, why-it-matters, and recommendation sections", () => {
@@ -144,13 +176,34 @@ test("renderFreshnessBody includes reasons, why-it-matters, and recommendation s
   envelope.result.indexState.freshness.reasons = [
     { code: "source_file_count_changed", count: 3, message: "3 new source files" },
   ];
-  envelope.result.indexState.freshness.whyItMatters = "Vtrace answers may be outdated.";
+  envelope.result.indexState.freshness.observedFileChanges = {
+    count: 2,
+    changedFiles: ["src/changed.ts", "src/other.ts"],
+  };
+  envelope.result.indexState.freshness.whyItMatters = "vtrace answers may be outdated.";
+  envelope.result.watcher = {
+    supported: true,
+    enabled: true,
+    running: false,
+    lastEventAtMs: 20,
+    autoReindexEnabled: false,
+    reindexState: "pending_changes",
+    lastAutoReindexStartedAtMs: null,
+    lastAutoReindexFinishedAtMs: null,
+    lastAutoReindexFailedAtMs: null,
+    lastAutoReindexError: null,
+    pendingChangedFileCount: 2,
+    changedFiles: ["src/changed.ts", "src/other.ts"],
+  };
   const snapshot = buildRepoSnapshot(envelope);
   const body = renderFreshnessBody(snapshot);
 
   assert.match(body, /possibly stale/);
+  assert.match(body, /<dt>Changed files<\/dt><dd>2<\/dd>/);
+  assert.match(body, /src\/changed\.ts/);
+  assert.match(body, /<dt>Auto re-index<\/dt><dd>disabled<\/dd>/);
   assert.match(body, /3 new source files/);
-  assert.match(body, /Vtrace answers may be outdated/);
+  assert.match(body, /vtrace answers may be outdated/);
   assert.match(body, /Re-index the repo\./);
 });
 
@@ -530,7 +583,7 @@ test("ResultPanelController updates the title on each show", () => {
     skeleton: { detail: "standard", files: [makeSkeletonFile()] },
     filePath: "src/app.ts",
   });
-  assert.equal(harness.created[0]?.title, "VTRACE • File Skeleton: src/app.ts");
+  assert.equal(harness.created[0]?.title, "vtrace — File Skeleton: src/app.ts");
 });
 
 test("ResultPanelController recreates the panel after disposal", () => {
@@ -729,6 +782,7 @@ function makeShellEnvelope(overrides: {
   agentMatchesExpected?: boolean;
   agentConfigPath?: string;
   agentDisplayName?: string;
+  watcher?: Record<string, unknown>;
 } = {}) {
   return {
     ok: true,
@@ -764,16 +818,30 @@ function makeShellEnvelope(overrides: {
         running: overrides.runtimeRunning ?? false,
         status: overrides.runtimeStatus ?? "not_running",
       },
+      watcher: overrides.watcher ?? {
+        supported: true,
+        enabled: false,
+        running: false,
+        lastEventAtMs: null,
+        autoReindexEnabled: false,
+        reindexState: "idle",
+        lastAutoReindexStartedAtMs: null,
+        lastAutoReindexFinishedAtMs: null,
+        lastAutoReindexFailedAtMs: null,
+        lastAutoReindexError: null,
+        pendingChangedFileCount: 0,
+        changedFiles: [],
+      },
     },
   };
 }
 
 // --- run_pipeline panel tests ---
 
-test("renderRunPipelineBody renders the seven sections in spec order with no JSON blob", () => {
+test("renderRunPipelineBody renders the product sections in spec order with no JSON blob", () => {
   const body = renderRunPipelineBody(makeRunPipelineOutput(), "/repo");
 
-  const sectionTitles = ["Intent", "Task Summary", "Context", "Impact", "Memory", "Diagnostics", "Deferred"];
+  const sectionTitles = ["Intent", "Task Summary", "Context", "Impact", "Memory", "Rules", "Diagnostics", "Deferred"];
   const indices = sectionTitles.map((title) => body.indexOf(`<h2>${title}</h2>`));
   for (let i = 0; i < indices.length; i++) {
     assert.notEqual(indices[i], -1, `Section "${sectionTitles[i]}" missing`);
@@ -790,6 +858,7 @@ test("renderRunPipelineBody renders the seven sections in spec order with no JSO
   assert.match(body, /Pivots:<\/span>1/);
   assert.match(body, /Supports:<\/span>1/);
   assert.match(body, /Impact:<\/span>included/);
+  assert.match(body, /Rules:<\/span>active 1; candidates 1/);
   assert.match(body, /Deferred:<\/span>2/);
 
   // Pivots first, then supports — pivots subsection must precede supports.
@@ -815,6 +884,16 @@ test("renderRunPipelineBody renders the seven sections in spec order with no JSO
   assert.match(body, /reviewed authentication code/);
   assert.match(body, /memory: prior auth refactor/);
 
+  // Rules: active injected rules and candidate previews are visually distinct.
+  assert.match(body, /<h2>Rules<\/h2>/);
+  assert.match(body, /Active injected rules/);
+  assert.match(body, /Keep auth edits with session tests/);
+  assert.match(body, /active injected rule/);
+  assert.match(body, /Candidate previews/);
+  assert.match(body, /Consider documenting auth migrations/);
+  assert.match(body, /candidate preview/);
+  assert.match(body, /Candidate rules are previews only and are not active instructions/);
+
   // Diagnostics: fallback applied, deferred count, omitted sections, include_tests state.
   assert.match(body, /<dt>Fallback applied<\/dt><dd>no<\/dd>/);
   assert.match(body, /<dt>Deferred items<\/dt><dd>2<\/dd>/);
@@ -828,6 +907,8 @@ test("renderRunPipelineBody renders the seven sections in spec order with no JSO
   assert.match(body, /data-vexp-hash="abcdef012345"/);
   assert.match(body, /data-vexp-hash="0123456789ab"/);
   assert.match(body, /<button[^>]*data-vexp-action="expand"[^>]*>Expand V-REF<\/button>/);
+  assert.match(body, /V-REF expansion is exact stored-payload lookup/);
+  assert.match(body, /No fuzzy or semantic reconstruction/);
   assert.match(body, /context_capsule/);
   assert.match(body, /impact_graph/);
   // Inline expansion slot is present per item but hidden by default.
@@ -859,7 +940,7 @@ test("renderRunPipelineBody handles deferred-empty case without crashing the sec
   const pipeline = makeRunPipelineOutput({ deferred: [] });
   const body = renderRunPipelineBody(pipeline, "/repo");
   assert.match(body, /<h2>Deferred<\/h2>/);
-  assert.match(body, /No deferred items/);
+  assert.match(body, /No deferred V-REFs emitted/);
 });
 
 test("buildResultView picks the run_pipeline title with the query suffix", () => {
@@ -869,7 +950,7 @@ test("buildResultView picks the run_pipeline title with the query suffix", () =>
     pipeline: makeRunPipelineOutput(),
   });
   assert.equal(view.type, RESULT_TYPES.RunPipeline);
-  assert.match(view.title, /^VTRACE • Pipeline Result: trace auth flow/);
+  assert.match(view.title, /^vtrace — Pipeline Result: trace auth flow/);
 });
 
 test("buildHtml exposes the raw JSON for run_pipeline but keeps the human-readable sections above the toggle", () => {
@@ -995,6 +1076,7 @@ test("renderExpandedVexpRefContent renders both success and failure shapes", () 
   });
   assert.match(successHtml, /vexp:impact:src\/app\.ts::App/);
   assert.match(successHtml, /impact_graph/);
+  assert.match(successHtml, /not recomputed from disk/);
   assert.match(successHtml, /&quot;fqName&quot;: &quot;App&quot;/);
 
   const failureHtml = renderExpandedVexpRefContent({
@@ -1138,6 +1220,44 @@ function makeRunPipelineOutput(overrides: PipelineFixtureOverrides = {}) {
           topObservations: [],
         },
     },
+    rules: {
+      included: true,
+      active: [
+        {
+          id: "rule-active-1",
+          status: "active",
+          summary: "Keep auth edits with session tests",
+          evidenceCount: 4,
+          confidence: "medium",
+          reason: "matched linked file",
+          score: 34,
+        },
+      ],
+      candidates: [
+        {
+          id: "rule-candidate-1",
+          status: "candidate",
+          summary: "Consider documenting auth migrations",
+          evidenceCount: 3,
+          confidence: "low",
+          reason: "matched query term",
+          score: 10,
+        },
+      ],
+      activeCount: 2,
+      candidateCount: 3,
+      omitted: {
+        irrelevantActiveRuleCount: 1,
+        candidateRuleCount: 3,
+        staleRuleCount: 1,
+        disabledRuleCount: 1,
+        dismissedRuleCount: 1,
+      },
+      notes: [
+        "Active rules are injected only when structurally or lexically relevant.",
+        "Candidate rules are previews only and are not active instructions.",
+      ],
+    },
     diagnostics: {
       intent: { requested: "auto", selected: "refactor", source: "auto_phrase_trigger", fallbackApplied: false },
       retrieval: {
@@ -1159,6 +1279,17 @@ function makeRunPipelineOutput(overrides: PipelineFixtureOverrides = {}) {
         sessionSkipReason: sessionIncluded ? null : (overrides.sessionSkipReason ?? "no_session_requested"),
         durableIncluded,
         durableSkipReason: durableIncluded ? null : (overrides.durableSkipReason ?? "intent_deemphasized"),
+      },
+      rules: {
+        included: true,
+        activeIncluded: true,
+        activeMatchedCount: 1,
+        activeTotalCount: 2,
+        candidatePreviewCount: 1,
+        candidateTotalCount: 3,
+        staleTotalCount: 1,
+        disabledTotalCount: 1,
+        dismissedTotalCount: 1,
       },
       deferredCount: deferred.length,
       omittedSectionCount: [!impactIncluded, !sessionIncluded, !durableIncluded].filter(Boolean).length,

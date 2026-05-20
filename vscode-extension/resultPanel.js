@@ -18,10 +18,10 @@ const RESULT_TITLES = Object.freeze({
   [RESULT_TYPES.SetupConfig]: "vtrace — Setup / Config",
   [RESULT_TYPES.ExecutableResolution]: "vtrace — Executable Resolution",
   [RESULT_TYPES.Doctor]: "vtrace — Doctor",
-  [RESULT_TYPES.FileSkeleton]: "VTRACE • File Skeleton",
-  [RESULT_TYPES.ImpactGraph]: "VTRACE • Impact Graph",
+  [RESULT_TYPES.FileSkeleton]: "vtrace — File Skeleton",
+  [RESULT_TYPES.ImpactGraph]: "vtrace — Impact Graph",
   [RESULT_TYPES.ContextCapsule]: "vtrace — Context Capsule",
-  [RESULT_TYPES.RunPipeline]: "VTRACE • Pipeline Result",
+  [RESULT_TYPES.RunPipeline]: "vtrace — Pipeline Result",
 });
 
 export function buildResultView(result) {
@@ -182,26 +182,35 @@ ${rawSection}
 </html>`;
 }
 
-export function renderIndexStatusBody(snapshot) {
+export function renderIndexStatusBody(snapshot, busyState = null) {
+  const freshness = snapshot.rawStatus?.indexState?.freshness ?? null;
+  const watcher = snapshot.rawStatus?.watcher ?? null;
   const rows = [
+    kv("Repo root", snapshot.repoRoot ?? "unknown"),
+    ...(busyState === null ? [] : [kv("Current action", formatBusyState(busyState))]),
     kv("Setup", snapshot.kind === "repo" ? (snapshot.initialized ? "initialized" : "not initialized") : "unknown"),
     kv("Index", describeIndex(snapshot)),
     kv("Latest run", snapshot.latestRunId === null || snapshot.latestRunId === undefined ? "none" : `#${snapshot.latestRunId}`),
     kv("Freshness", describeFreshness(snapshot)),
+    kv("Changed files", String(countChangedFiles(freshness, watcher))),
     kv("Runtime", snapshot.kind === "repo" ? (snapshot.runtimeRunning ? "running" : "not running") : "unknown"),
   ];
+  const watcherHtml = renderWatcherSummary(watcher);
+  const changedFilesHtml = renderChangedFilesList(freshness, watcher);
   const nextAction = pickNextAction(snapshot);
   return `${section("Summary", `<dl class="kv">${rows.join("")}</dl>`)}${
     nextAction ? section("Next action", `<p>${escapeHtml(nextAction)}</p>`) : ""
-  }`;
+  }${watcherHtml}${changedFilesHtml}`;
 }
 
 export function renderFreshnessBody(snapshot) {
   const freshness = snapshot.rawStatus?.indexState?.freshness ?? null;
+  const watcher = snapshot.rawStatus?.watcher ?? null;
   const reasons = Array.isArray(freshness?.reasons) ? freshness.reasons : [];
   const summary = section("Summary", `<dl class="kv">
     ${kv("State", describeFreshness(snapshot))}
     ${freshness?.summary ? kv("Detail", freshness.summary) : ""}
+    ${kv("Changed files", String(countChangedFiles(freshness, watcher)))}
   </dl>`);
 
   const reasonsHtml = reasons.length === 0
@@ -220,7 +229,87 @@ export function renderFreshnessBody(snapshot) {
     ? section("Recommended action", `<p>${escapeHtml(recommendation)}</p>`)
     : "";
 
-  return `${summary}${reasonsHtml}${whyMatters}${actionHtml}`;
+  return `${summary}${renderChangedFilesList(freshness, watcher)}${renderWatcherSummary(watcher)}${reasonsHtml}${whyMatters}${actionHtml}`;
+}
+
+function renderWatcherSummary(watcher) {
+  if (watcher === null || watcher === undefined) {
+    return section("Watcher", `<dl class="kv">
+      ${kv("Status", "unknown")}
+      ${kv("Auto re-index", "unknown")}
+    </dl>`);
+  }
+
+  const rows = [
+    kv("Status", watcher.running ? "running" : watcher.enabled ? "enabled" : "not running"),
+    kv("Auto re-index", watcher.autoReindexEnabled ? "enabled" : "disabled"),
+    kv("Re-index state", watcher.reindexState ?? "idle"),
+    kv("Pending changed files", String(watcher.pendingChangedFileCount ?? 0)),
+  ];
+  if (watcher.lastEventAtMs !== null && watcher.lastEventAtMs !== undefined) {
+    rows.push(kv("Last watcher event", String(watcher.lastEventAtMs)));
+  }
+  if (watcher.lastAutoReindexStartedAtMs !== null && watcher.lastAutoReindexStartedAtMs !== undefined) {
+    rows.push(kv("Last auto re-index start", String(watcher.lastAutoReindexStartedAtMs)));
+  }
+  if (watcher.lastAutoReindexFinishedAtMs !== null && watcher.lastAutoReindexFinishedAtMs !== undefined) {
+    rows.push(kv("Last auto re-index success", String(watcher.lastAutoReindexFinishedAtMs)));
+  }
+  if (watcher.lastAutoReindexFailedAtMs !== null && watcher.lastAutoReindexFailedAtMs !== undefined) {
+    rows.push(kv("Last auto re-index failure", String(watcher.lastAutoReindexFailedAtMs)));
+  }
+  if (watcher.lastAutoReindexError !== null && watcher.lastAutoReindexError !== undefined) {
+    rows.push(kv("Auto re-index error", truncate(String(watcher.lastAutoReindexError), 180)));
+  }
+
+  const action = watcher.lastAutoReindexError
+    ? `<p class="muted">Recommended action: run <code>vtrace index</code> explicitly.</p>`
+    : "";
+
+  return section("Watcher", `<dl class="kv">${rows.join("")}</dl>${action}`);
+}
+
+function renderChangedFilesList(freshness, watcher) {
+  const files = collectChangedFiles(freshness, watcher);
+  if (files.length === 0) {
+    return "";
+  }
+  return section("Changed files", `<ul class="bare mono">${files.map((filePath) => `<li>${escapeHtml(filePath)}</li>`).join("")}</ul>`);
+}
+
+function countChangedFiles(freshness, watcher) {
+  if (typeof watcher?.pendingChangedFileCount === "number") {
+    return watcher.pendingChangedFileCount;
+  }
+  const observed = freshness?.observedFileChanges;
+  if (typeof observed?.count === "number") {
+    return observed.count;
+  }
+  if (Array.isArray(observed?.changedFiles)) {
+    return observed.changedFiles.length;
+  }
+  if (Array.isArray(watcher?.changedFiles)) {
+    return watcher.changedFiles.length;
+  }
+  return 0;
+}
+
+function collectChangedFiles(freshness, watcher) {
+  const candidates = [
+    ...(Array.isArray(watcher?.changedFiles) ? watcher.changedFiles : []),
+    ...(Array.isArray(freshness?.observedFileChanges?.changedFiles) ? freshness.observedFileChanges.changedFiles : []),
+  ];
+  return [...new Set(candidates.map((filePath) => String(filePath)))].sort().slice(0, 10);
+}
+
+function formatBusyState(busyState) {
+  switch (busyState) {
+    case "running_setup": return "Setting up and indexing…";
+    case "running_reindex": return "Re-indexing…";
+    case "failed": return "Failed";
+    case "complete": return "Complete";
+    default: return String(busyState);
+  }
 }
 
 export function renderRuntimeBody(snapshot) {
@@ -672,6 +761,7 @@ export function renderRunPipelineBody(pipeline, repoRoot) {
   const impact = pipeline.impact ?? {};
   const memory = pipeline.memory ?? { session: {}, durable: {} };
   const diagnostics = pipeline.diagnostics ?? {};
+  const rules = pipeline.rules ?? {};
   const deferred = Array.isArray(pipeline.deferred) ? pipeline.deferred : [];
 
   const headerRows = [
@@ -688,6 +778,7 @@ export function renderRunPipelineBody(pipeline, repoRoot) {
     { label: "Supports", value: String(arrayLength(context.supports)) },
     { label: "Impact", value: impact.included ? "included" : "omitted" },
     { label: "Memory", value: memoryStripState(memory) },
+    { label: "Rules", value: rulesStripState(rules) },
     { label: "Deferred", value: String(deferred.length) },
   ]);
 
@@ -696,6 +787,7 @@ export function renderRunPipelineBody(pipeline, repoRoot) {
   const contextBody = renderRunPipelineContext(context);
   const impactBody = renderRunPipelineImpact(impact);
   const memoryBody = renderRunPipelineMemory(memory);
+  const rulesBody = renderRunPipelineRules(rules);
   const diagnosticsBody = renderRunPipelineDiagnostics(diagnostics, intent);
   const deferredBody = renderRunPipelineDeferred(deferred);
 
@@ -707,6 +799,7 @@ export function renderRunPipelineBody(pipeline, repoRoot) {
     section("Context", contextBody),
     section("Impact", impactBody),
     section("Memory", memoryBody),
+    section("Rules", rulesBody),
     section("Diagnostics", diagnosticsBody),
     sectionWithAttrs("Deferred", deferredBody, { "data-testid": "deferred-section" }),
   ].join("");
@@ -721,6 +814,15 @@ function memoryStripState(memory) {
   const durable = memory?.durable?.included ? "durable" : null;
   const parts = [session, durable].filter(Boolean);
   return parts.length === 0 ? "omitted" : parts.join("+");
+}
+
+function rulesStripState(rules) {
+  const active = Array.isArray(rules?.active) ? rules.active.length : 0;
+  const candidates = Array.isArray(rules?.candidates) ? rules.candidates.length : 0;
+  if (active === 0 && candidates === 0) {
+    return "none";
+  }
+  return `active ${active}; candidates ${candidates}`;
 }
 
 function renderRunPipelineIntent(intent) {
@@ -859,6 +961,58 @@ function renderRunPipelineMemory(memory) {
   return `<div class="subsection-label">Session</div>${sessionHtml}<div class="subsection-label">Durable memory</div>${durableHtml}`;
 }
 
+function renderRunPipelineRules(rules) {
+  if (!rules || rules.included !== true) {
+    const omitted = rules?.omitted ?? {};
+    const counts = renderRuleCounts(rules, omitted);
+    return `${counts}<p class="muted">No active rules or candidate previews matched this task.</p>`;
+  }
+
+  const active = Array.isArray(rules.active) ? rules.active : [];
+  const candidates = Array.isArray(rules.candidates) ? rules.candidates : [];
+  const omitted = rules.omitted ?? {};
+  const notes = Array.isArray(rules.notes) ? rules.notes : [];
+
+  const activeHtml = active.length === 0
+    ? `<p class="muted">No active injected rules matched this task.</p>`
+    : active.map((rule) => renderRuleCard(rule, "active injected rule")).join("");
+  const candidateHtml = candidates.length === 0
+    ? `<p class="muted">No candidate rule previews matched this task.</p>`
+    : candidates.map((rule) => renderRuleCard(rule, "candidate preview")).join("");
+  const notesHtml = notes.length === 0
+    ? ""
+    : `<ul>${notes.map((note) => `<li class="muted">${escapeHtml(note)}</li>`).join("")}</ul>`;
+
+  return `${renderRuleCounts(rules, omitted)}
+    <div class="subsection-label">Active injected rules</div>${activeHtml}
+    <div class="subsection-label">Candidate previews</div>${candidateHtml}
+    ${notesHtml}`;
+}
+
+function renderRuleCounts(rules, omitted) {
+  return `<dl class="kv">
+    ${kv("Active matched", String(Array.isArray(rules?.active) ? rules.active.length : 0))}
+    ${kv("Active total", String(rules?.activeCount ?? 0))}
+    ${kv("Candidate previews", String(Array.isArray(rules?.candidates) ? rules.candidates.length : 0))}
+    ${kv("Candidate total", String(rules?.candidateCount ?? omitted?.candidateRuleCount ?? 0))}
+    ${kv("Stale", String(omitted?.staleRuleCount ?? 0))}
+    ${kv("Disabled", String(omitted?.disabledRuleCount ?? 0))}
+    ${kv("Dismissed", String(omitted?.dismissedRuleCount ?? 0))}
+  </dl>`;
+}
+
+function renderRuleCard(rule, label) {
+  const confidence = rule.confidence ? `<span class="tag">${escapeHtml(rule.confidence)}</span>` : "";
+  const status = rule.status ? `<span class="tag">${escapeHtml(rule.status)}</span>` : "";
+  const reason = rule.reason ? `<div class="muted">${escapeHtml(rule.reason)}</div>` : "";
+  const evidence = rule.evidenceCount === undefined ? "" : `<div class="muted">Evidence: ${escapeHtml(String(rule.evidenceCount))}</div>`;
+  return `<div class="card">
+    <div><strong>${escapeHtml(rule.summary ?? "(no summary)")}</strong> <span class="muted">· ${escapeHtml(label)}</span> ${status}${confidence}</div>
+    ${reason}
+    ${evidence}
+  </div>`;
+}
+
 function renderRunPipelineObservationList(observations) {
   if (!Array.isArray(observations) || observations.length === 0) {
     return "";
@@ -892,15 +1046,26 @@ function renderRunPipelineDiagnostics(diagnostics, intent) {
     rows.push(kv("include_tests default", intent.includeTestsDefault ? "yes" : "no"));
   }
   rows.push(kv("Deferred items", String(diagnostics.deferredCount ?? 0)));
+  if (diagnostics?.freshness !== undefined) {
+    rows.push(kv("Freshness", diagnostics.freshness?.state ?? "unknown"));
+  }
+  if (diagnostics?.rules !== undefined) {
+    const rules = diagnostics.rules;
+    rows.push(kv(
+      "Rules",
+      `active ${rules.activeMatchedCount ?? 0}/${rules.activeTotalCount ?? 0}; candidates ${rules.candidatePreviewCount ?? 0}/${rules.candidateTotalCount ?? 0}`,
+    ));
+  }
   rows.push(kv("Omitted sections", String(diagnostics.omittedSectionCount ?? 0)));
   return `<dl class="kv">${rows.join("")}</dl>`;
 }
 
 function renderRunPipelineDeferred(deferred) {
   if (deferred.length === 0) {
-    return `<p class="muted">No deferred items.</p>`;
+    return `<p class="muted">No deferred V-REFs emitted.</p>`;
   }
-  return deferred.map(renderRunPipelineDeferredCard).join("");
+  const note = `<p class="muted">V-REF expansion is exact stored-payload lookup. Retained refs can be expanded later from repo-local storage; expired, unknown, or malformed refs fail explicitly. vtrace does not use fuzzy lookup or semantic reconstruction for V-REF expansion.</p>`;
+  return `${note}${deferred.map(renderRunPipelineDeferredCard).join("")}`;
 }
 
 function renderRunPipelineDeferredCard(item) {
@@ -916,6 +1081,7 @@ function renderRunPipelineDeferredCard(item) {
         <strong>${escapeHtml(kind)}</strong> ${tool}
         <div class="muted">${escapeHtml(summary)}</div>
         <div class="muted mono">V-REF ${escapeHtml(hash)}</div>
+        <div class="muted">Exact stored payload. No fuzzy or semantic reconstruction.</div>
       </div>
       <div class="deferred-actions">
         <button type="button" class="vexp-expand-btn" data-vexp-action="expand" data-vexp-hash="${escapeHtml(hash)}" data-vexp-kind="${escapeHtml(kind)}" data-vexp-id="${escapeHtml(id)}" aria-expanded="false">Expand V-REF</button>
@@ -948,11 +1114,12 @@ export function renderExpandedVexpRefContent(expansion) {
   const meta = expansion.metadata ?? null;
 
   const header = `<div class="muted">${escapeHtml(stableId)} <span class="tag">${escapeHtml(category)}</span></div>`;
+  const truthNote = `<p class="muted">Expanded from stored V-REF payload. This is not recomputed from disk.</p>`;
   const contentHtml = renderExpandedContentBlock(content);
   const metaHtml = meta && Object.keys(meta).length > 0
     ? `<details class="vexp-meta"><summary>metadata</summary><pre>${escapeHtml(safeJson(meta))}</pre></details>`
     : "";
-  return `${header}${contentHtml}${metaHtml}`;
+  return `${header}${truthNote}${contentHtml}${metaHtml}`;
 }
 
 function renderExpandedContentBlock(content) {
@@ -1030,7 +1197,7 @@ function renderCapsuleItemCard(item) {
 function renderBody(result) {
   switch (result.type) {
     case RESULT_TYPES.IndexStatus:
-      return renderIndexStatusBody(result.snapshot);
+      return renderIndexStatusBody(result.snapshot, result.busyState ?? null);
     case RESULT_TYPES.Freshness:
       return renderFreshnessBody(result.snapshot);
     case RESULT_TYPES.Runtime:
@@ -1107,7 +1274,7 @@ function describeFreshness(snapshot) {
 
 function primaryLabel(snapshot) {
   if (snapshot.kind === "no_workspace") return "No workspace";
-  if (snapshot.kind === "cli_unavailable") return "VTRACE not found";
+  if (snapshot.kind === "cli_unavailable") return "vtrace not found";
   if (snapshot.kind === "unavailable") return "Unknown";
   if (snapshot.state === "ready") return "Ready";
   if (snapshot.state === "stale") return "Possibly stale";

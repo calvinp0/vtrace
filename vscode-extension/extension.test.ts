@@ -130,7 +130,7 @@ test("activateWithVscode renders No workspace primary status when no folder is o
   assert.equal(overview[0]?.label, "No workspace");
 });
 
-test("activateWithVscode renders VTRACE not found primary status when CLI resolution fails", async () => {
+test("activateWithVscode renders vtrace not found primary status when CLI resolution fails", async () => {
   const harness = createVscodeHarness({
     cliBridge: {
       async getExecutableInfo() {
@@ -155,7 +155,7 @@ test("activateWithVscode renders VTRACE not found primary status when CLI resolu
   assert.match(harness.statusBar.text, /CLI missing/);
   const sections = app.repoStatusProvider.getChildren() as Array<TreeNodeStub>;
   const overview = app.repoStatusProvider.getChildren(sections[0]) as Array<TreeNodeStub>;
-  assert.equal(overview[0]?.label, "VTRACE not found");
+  assert.equal(overview[0]?.label, "vtrace not found");
 
   const diagnostics = app.repoStatusProvider.getChildren(sections[3]) as Array<TreeNodeStub>;
   const executableRow = diagnostics.find((row) => row.label === "Executable Resolution");
@@ -584,7 +584,7 @@ test("runPipelineForCurrentTask prompts with spec title and placeholder, runs CL
   assert.equal(pipelineInvocation?.[1], "/repo");
   assert.equal(pipelineInvocation?.[2], "Refactor the login flow");
 
-  const pipelinePanel = harness.createdWebviewPanels.find((panel) => panel.title === "VTRACE • Pipeline Result");
+  const pipelinePanel = harness.createdWebviewPanels.find((panel) => panel.title === "vtrace — Pipeline Result");
   assert.ok(pipelinePanel, "result must land in the RunPipeline webview panel");
   assert.match(pipelinePanel?.webview.html ?? "", /data-result-type="run_pipeline"/);
 });
@@ -1044,6 +1044,8 @@ test("setupOrReindex updates sidebar + status bar to Indexing… before the CLI 
   assert.equal(overviewDuring[0]?.description, "Re-indexing this repo…");
   assert.match(harness.statusBar.text, /vtrace: indexing/);
   assert.notEqual(harness.statusBar.text, beforeText);
+  assert.equal(harness.createdWebviewPanels.at(-1)?.title, "vtrace — Index Status");
+  assert.match(harness.createdWebviewPanels.at(-1)?.webview.html ?? "", /Current action<\/dt><dd>Re-indexing…/);
 
   releaseCli?.();
   await pending;
@@ -1497,6 +1499,7 @@ function makeReadyStatusEnvelope() {
       },
       agentConfig: { installed: true, matchesExpected: true },
       runtime: { running: false, status: "not_running" },
+      watcher: makeWatcherStatus(),
     },
   };
 }
@@ -1520,6 +1523,14 @@ function makeStaleStatusEnvelope() {
       },
       agentConfig: { installed: true, matchesExpected: true },
       runtime: { running: false, status: "not_running" },
+      watcher: makeWatcherStatus({
+        enabled: true,
+        running: false,
+        autoReindexEnabled: true,
+        reindexState: "pending_changes",
+        pendingChangedFileCount: 1,
+        changedFiles: ["src/app.ts"],
+      }),
     },
   };
 }
@@ -1543,6 +1554,7 @@ function makeInitializedButNotReadyEnvelope() {
       },
       agentConfig: { installed: true, matchesExpected: true },
       runtime: { running: false, status: "not_running" },
+      watcher: makeWatcherStatus(),
     },
   };
 }
@@ -1566,6 +1578,25 @@ function makeNotInitializedStatusEnvelope() {
       },
       agentConfig: { installed: false, matchesExpected: false },
       runtime: { running: false, status: "not_running" },
+      watcher: makeWatcherStatus(),
     },
+  };
+}
+
+function makeWatcherStatus(overrides: Record<string, unknown> = {}) {
+  return {
+    supported: true,
+    enabled: false,
+    running: false,
+    lastEventAtMs: null,
+    autoReindexEnabled: false,
+    reindexState: "idle",
+    lastAutoReindexStartedAtMs: null,
+    lastAutoReindexFinishedAtMs: null,
+    lastAutoReindexFailedAtMs: null,
+    lastAutoReindexError: null,
+    pendingChangedFileCount: 0,
+    changedFiles: [],
+    ...overrides,
   };
 }

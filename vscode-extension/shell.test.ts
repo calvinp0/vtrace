@@ -157,7 +157,7 @@ test("Ready snapshot surfaces Ready primary status and click commands per spec",
 test("Possibly stale snapshot surfaces stale freshness and spec-matching primary label", () => {
   const snapshot = buildRepoSnapshot(makeShellEnvelope({
     freshnessState: "possibly_stale",
-    freshnessSummary: "Vtrace detected likely drift.",
+    freshnessSummary: "vtrace detected likely drift.",
     freshnessRecommendedAction: "Re-index this repo.",
   }));
   const overview = sectionByIdOrThrow(buildRepoTreeSections(snapshot), SECTION_IDS.Overview);
@@ -208,7 +208,7 @@ test("No workspace snapshot shows No workspace primary status and folder-picker 
   assert.ok(quick.children.some((row) => row.label === "Setup / Re-index"));
 });
 
-test("VTRACE not found snapshot exposes missing CLI across Overview and Output sections", () => {
+test("vtrace not found snapshot exposes missing CLI across Overview and Output sections", () => {
   const snapshot = createCliUnavailableSnapshot(
     "vtrace CLI was not found.\nSet `vtrace.cliPath`.",
     "/repo",
@@ -226,7 +226,7 @@ test("VTRACE not found snapshot exposes missing CLI across Overview and Output s
   const output = sectionByIdOrThrow(buildRepoTreeSections(snapshot), SECTION_IDS.OutputDiagnostics);
   const outByLabel = indexByLabel(output.children);
 
-  assert.equal(overview.children[0]?.label, "VTRACE not found");
+  assert.equal(overview.children[0]?.label, "vtrace not found");
   assert.equal(overview.children[0]?.description, EMPTY_STATE_MESSAGES.CliNotFoundHelper);
   assert.equal(byLabel["Repo root"]?.description, "/repo");
   assert.equal(byLabel["CLI"], undefined);
@@ -471,14 +471,14 @@ test("buildFreshnessReport surfaces state, reasons, whyItMatters, and recommende
   raw.result.indexState.freshness.reasons = [
     { code: "source_file_count_changed", count: 3, message: "3 new source files" },
   ];
-  raw.result.indexState.freshness.whyItMatters = "Vtrace answers may be outdated.";
+  raw.result.indexState.freshness.whyItMatters = "vtrace answers may be outdated.";
   const snapshot = buildRepoSnapshot(raw);
   const body = buildFreshnessReport(snapshot);
 
   assert.match(body, /State: possibly_stale/);
   assert.match(body, /Summary: Drift detected\./);
   assert.match(body, /3 new source files \(3\)/);
-  assert.match(body, /Why this matters: Vtrace answers may be outdated\./);
+  assert.match(body, /Why this matters: vtrace answers may be outdated\./);
   assert.match(body, /Recommended action: Re-index the repo\./);
   assert.doesNotMatch(body, /Runtime|executable|agent config/i);
 });
@@ -554,7 +554,7 @@ test("EDITOR_EMPTY_STATE_MESSAGES match the spec verbatim for file skeleton and 
   assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.NoWorkspace, "Open a folder or workspace to use vtrace symbol commands.");
   assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.NoActiveEditor, "Open a workspace file and place the cursor on a symbol to show its impact graph.");
   assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.NoSymbolAtCursor, "Place the cursor on a symbol to show its impact graph.");
-  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.SymbolNotResolved, "Vtrace could not resolve the symbol at the cursor to an exact indexed symbol.");
+  assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.SymbolNotResolved, "vtrace could not resolve the symbol at the cursor to an exact indexed symbol.");
   assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.NotInitialized, "This repo is not initialized for vtrace yet. Run Setup Agent first.");
   assert.equal(EDITOR_EMPTY_STATE_MESSAGES.ImpactGraph.IndexNotReady, "The vtrace index is not ready yet. Finish setup or indexing, then try again.");
 });
@@ -607,6 +607,7 @@ function makeShellEnvelope(overrides: {
   agentMatchesExpected?: boolean;
   agentConfigPath?: string;
   agentDisplayName?: string;
+  watcher?: Record<string, unknown>;
 } = {}) {
   return {
     ok: true,
@@ -641,6 +642,20 @@ function makeShellEnvelope(overrides: {
       runtime: {
         running: overrides.runtimeRunning ?? false,
         status: overrides.runtimeStatus ?? "not_running",
+      },
+      watcher: overrides.watcher ?? {
+        supported: true,
+        enabled: false,
+        running: false,
+        lastEventAtMs: null,
+        autoReindexEnabled: false,
+        reindexState: "idle",
+        lastAutoReindexStartedAtMs: null,
+        lastAutoReindexFinishedAtMs: null,
+        lastAutoReindexFailedAtMs: null,
+        lastAutoReindexError: null,
+        pendingChangedFileCount: 0,
+        changedFiles: [],
       },
     },
   };

@@ -586,6 +586,8 @@ Generic Retrieval/Reranking Benchmark Suite Before Tuning
 
 Improve product feel and clarity in the existing VS Code panel without introducing panel-only behavior.
 
+Implementation status: completed for the existing panel surfaces. Status/freshness rendering now exposes watcher and auto-reindex state, setup/reindex shows an immediate running state, run-pipeline output separates rules and V-REF sections more clearly, V-REF expansion copy describes exact stored-payload lookup, and public panel naming uses `vtrace`.
+
 ### Why This Improves VEXP Alignment
 
 A VEXP-like product should make setup, freshness, V-REF expansion, rules, and pipeline output legible from the editor. Panel polish can reduce user confusion without changing core schemas or hidden behavior.
@@ -669,12 +671,12 @@ Avoid these until there is a clear product reason, validation plan, and explicit
 Recommended next implementation prompt:
 
 ```text
-VS Code Panel Polish for Freshness, Rules, and V-REF UX
+Classify Generic Retrieval Benchmark Misses Before Tuning
 ```
 
 Persistent V-REF Store was the first post-RC continuity milestone and is now implemented for exact stored-payload expansion with bounded repo-local retention. It improves continuity for MCP, CLI, and editor flows while preserving the central truth requirement: V-REF expansion returns stored payloads exactly, not fuzzy lookup or semantic reconstruction.
 
-Optional Auto-Reindex Mode, Module-Level Constants, Variables, and Aliases, Python References Extraction, Python Member/Attribute Resolution, Inherited-Member and `super()` Resolution, and Broader Generic Retrieval/Reranking Benchmarks are now implemented. The next recommended milestone is VS Code Panel Polish because retrieval tuning now has a generic benchmark guardrail and the remaining product-feel gap is making freshness, V-REFs, rules, and setup states clearer in the editor.
+Optional Auto-Reindex Mode, Module-Level Constants, Variables, and Aliases, Python References Extraction, Python Member/Attribute Resolution, Inherited-Member and `super()` Resolution, Broader Generic Retrieval/Reranking Benchmarks, and VS Code Panel Polish are now implemented. The next useful step is to classify any generic benchmark misses before deciding whether retrieval tuning is warranted.
 
 ## Deliverable Summary
 
@@ -687,7 +689,7 @@ Recommended milestone order:
 5. Python Member/Attribute Resolution — implemented for conservative static receiver forms
 6. Inherited-Member and `super()` Resolution — implemented for exact static base/member cases
 7. Broader Generic Retrieval/Reranking Benchmarks — implemented
-8. VS Code Panel Polish
+8. VS Code Panel Polish — implemented
 
 Completed implementation prompt titles:
 
@@ -699,11 +701,12 @@ Conservative Python Reference Edge Extraction
 Conservative Python Member and Attribute Resolution
 Conservative Python Inheritance and `super()` Graph Edges
 Generic Retrieval/Reranking Benchmark Suite Before Tuning
+VS Code Panel Polish for Freshness, Rules, and V-REF UX
 ```
 
 Validation fixtures needed before or during remaining implementation work:
 
-- panel fixture/smoke coverage for existing status, setup, run-pipeline, V-REF, and rule surfaces
+- benchmark miss classification and any future retrieval-tuning fixture deltas
 
 Known risks:
 

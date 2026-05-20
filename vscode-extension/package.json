@@ -132,7 +132,7 @@
       "activitybar": [
         {
           "id": "vtrace",
-          "title": "VTRACE",
+          "title": "vtrace",
           "icon": "$(symbol-namespace)"
         }
       ]
