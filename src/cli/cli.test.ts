@@ -429,6 +429,9 @@ test("claude-config supports codex and writes the project-scoped .codex/config.t
     assert.equal(updated.exitCode, 0);
     assert.match(updated.stdout, /^Codex config updated/m);
     assert.match(updated.stdout, /Config file: \.codex\/config\.toml/);
+    assert.match(updated.stdout, /Vtrace MCP configured for Codex\./);
+    assert.match(updated.stdout, /In Codex, \/mcp should show get_code_context\./);
+    assert.match(updated.stdout, /Codex should use get_code_context before manual file exploration\./);
     assert.match(updated.stdout, /Open Codex in this repo/);
     assert.equal(jsonStatus.exitCode, 0);
     assert.equal(jsonOutput.ok, true);
@@ -858,6 +861,7 @@ test("setup and status support codex as a second real backend", async () => {
     await writeFixtureRepo(repoRoot);
 
     const setup = await runCli(["setup", repoRoot, "--agent", "codex", "--json"]);
+    const setupText = await runCli(["setup", repoRoot, "--agent", "codex"]);
     const status = await runCli(["status", repoRoot, "--agent", "codex"]);
     const doctor = await runCli(["doctor", repoRoot, "--agent", "codex", "--json"]);
     const setupOutput = JSON.parse(setup.stdout);
@@ -872,6 +876,10 @@ test("setup and status support codex as a second real backend", async () => {
     assert.equal(setupOutput.result.agentConfig.configPath, configPath);
     assert.equal(setupOutput.result.agentConfig.matchesExpected, true);
     assert.equal(config, buildExpectedCodexConfigToml(repoRoot));
+    assert.equal(setupText.exitCode, 0);
+    assert.match(setupText.stdout, /Vtrace MCP configured for Codex\./);
+    assert.match(setupText.stdout, /In Codex, \/mcp should show get_code_context\./);
+    assert.match(setupText.stdout, /For broad repo tasks, Codex should use get_code_context before manual file exploration\./);
     await assert.rejects(
       readFile(path.join(repoRoot, ".mcp.json"), "utf8"),
       { code: "ENOENT" },

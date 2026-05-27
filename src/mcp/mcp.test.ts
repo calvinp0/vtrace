@@ -56,6 +56,7 @@ import {
 } from "./types";
 
 const EXPECTED_VISIBLE_TOOL_IDS = [
+  "get_code_context",
   "run_pipeline",
   "get_context_capsule",
   "get_impact_graph",
@@ -71,6 +72,7 @@ const EXPECTED_VISIBLE_TOOL_IDS = [
 
 test("MCP tool vocabulary and metadata are explicit and stable", () => {
   assert.deepEqual(McpToolId, {
+    GetCodeContext: "get_code_context",
     RunPipeline: "run_pipeline",
     GetContextCapsule: "get_context_capsule",
     GetImpactGraph: "get_impact_graph",
@@ -101,6 +103,12 @@ test("MCP tool vocabulary and metadata are explicit and stable", () => {
     RESERVED_MCP_TOOL_METADATA.map((tool) => [tool.toolId, tool.registration]),
   );
 
+  assert.deepEqual(registrationsByToolId.get(McpToolId.GetCodeContext), {
+    registered: true,
+    reserved: true,
+    availability: McpToolAvailability.Wired,
+    handlerKind: McpToolHandlerKind.EngineDelegate,
+  });
   assert.deepEqual(registrationsByToolId.get(McpToolId.RunPipeline), {
     registered: true,
     reserved: true,
@@ -167,6 +175,13 @@ test("MCP tool vocabulary and metadata are explicit and stable", () => {
     availability: McpToolAvailability.Wired,
     handlerKind: McpToolHandlerKind.EngineDelegate,
   });
+
+  const getCodeContext = RESERVED_MCP_TOOL_METADATA.find((tool) => tool.toolId === McpToolId.GetCodeContext);
+  assert.notEqual(getCodeContext, undefined);
+  const description = getCodeContext!.description.toLowerCase();
+  for (const word of ["code", "context", "default", "broad", "debugging", "refactor"]) {
+    assert.match(description, new RegExp(`\\b${word}\\b`));
+  }
 });
 
 test("MCP registry registration and lookup are deterministic", () => {
@@ -182,7 +197,7 @@ test("MCP registry registration and lookup are deterministic", () => {
 
   assert.equal(
     registry.getByToolId(McpToolId.GetContextCapsule),
-    RESERVED_MCP_TOOL_DEFINITIONS[1],
+    RESERVED_MCP_TOOL_DEFINITIONS.find((tool) => tool.metadata.toolId === McpToolId.GetContextCapsule),
   );
   assert.notEqual(registry.getByToolId(McpToolId.SearchSymbols), undefined);
   assert.equal(registry.getByToolId("custom_tool"), customTool);
@@ -193,6 +208,18 @@ test("MCP registry registration and lookup are deterministic", () => {
   assert.deepEqual(
     registry.listMetadata().map((tool) => tool.toolId),
     [...EXPECTED_VISIBLE_TOOL_IDS, "custom_tool"],
+  );
+  assert.equal(
+    registry.getByToolId(McpToolId.GetCodeContext)?.handler,
+    registry.getByToolId(McpToolId.RunPipeline)?.handler,
+  );
+  assert.equal(
+    registry.getByToolId(McpToolId.GetCodeContext)?.metadata.inputSchema,
+    registry.getByToolId(McpToolId.RunPipeline)?.metadata.inputSchema,
+  );
+  assert.equal(
+    registry.getByToolId(McpToolId.GetCodeContext)?.metadata.outputSchema,
+    registry.getByToolId(McpToolId.RunPipeline)?.metadata.outputSchema,
   );
 });
 
@@ -1063,6 +1090,37 @@ test("run_pipeline vNext returns a compact orchestration result that differs mat
     assert.equal("capsule" in capsule.result.output, true);
     assert.equal("impact" in capsule.result.output, false);
     assert.equal("memory" in capsule.result.output, false);
+  });
+});
+
+test("get_code_context delegates to the same implementation and output as run_pipeline", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    const input = {
+      task: "where is createSession",
+      maxBudgetCharacters: 5_000,
+    };
+    const getCodeContext = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-get-code-context-alias",
+      toolId: McpToolId.GetCodeContext,
+      input,
+    });
+    const runPipeline = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-alias-target",
+      toolId: McpToolId.RunPipeline,
+      input,
+    });
+
+    assert.equal(getCodeContext.result.ok, true);
+    assert.equal(runPipeline.result.ok, true);
+    assert.deepEqual(getCodeContext.result, runPipeline.result);
   });
 });
 

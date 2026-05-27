@@ -2,7 +2,8 @@
 
 The visible `vtrace` MCP surface is intentionally small and stable.
 
-If you are unsure where to start, use `run_pipeline`.
+For broad coding, debugging, refactor, and repo-understanding tasks, start with `get_code_context`.
+`run_pipeline` remains available as the stable/internal equivalent.
 
 For the more tactical version of this guide, see [MCP Tool Cheat Sheet](./mcp_tool_cheat_sheet.md).
 
@@ -10,6 +11,7 @@ For the more tactical version of this guide, see [MCP Tool Cheat Sheet](./mcp_to
 
 The current visible tool names are:
 
+- `get_code_context`
 - `run_pipeline`
 - `get_context_capsule`
 - `get_impact_graph`
@@ -26,7 +28,7 @@ Most of those are directly useful today. `expand_vexp_ref` is the advanced excep
 
 ## Passive Tool-Call Observations
 
-`vtrace` auto-captures compact `tool_call` observations for meaningful visible MCP tool calls. Current capture covers successful, useful calls to `run_pipeline`, `get_context_capsule`, `get_impact_graph`, `search_logic_flow`, `get_skeleton`, `search_memory`, `get_session_context`, and resolved `expand_vexp_ref` expansions.
+`vtrace` auto-captures compact `tool_call` observations for meaningful visible MCP tool calls. Current capture covers successful, useful calls to `get_code_context`/`run_pipeline`, `get_context_capsule`, `get_impact_graph`, `search_logic_flow`, `get_skeleton`, `search_memory`, `get_session_context`, and resolved `expand_vexp_ref` expansions.
 
 Captured observations are deterministic and compact. They store tool name, exact query/task/symbol/file inputs where available, a short summary, and bounded metadata such as counts or selected profiles. They do not store full raw tool outputs.
 
@@ -136,14 +138,15 @@ Rules are linked to files, symbol FQNs, lexical terms, tool names, intents, and 
 
 ## Default Orchestration
 
-### `run_pipeline`
+### `get_code_context`
 
-Default task entrypoint.
+Vtrace default first-pass repo-context tool. This is the agent-friendly alias for `run_pipeline` and returns the same output for equivalent inputs.
 
 Use it for:
 
 - new coding tasks
 - debugging orientation
+- broad refactor orientation
 - finding likely edit surfaces
 - getting one structured orchestration result with intent, compact context, impact decision, memory/session evidence, diagnostics, and deferred metadata
 
@@ -163,7 +166,11 @@ Backward-compatible aliases are still accepted:
 - `intent` for `preset`
 - `maxBudgetCharacters` for `max_tokens`
 
-`run_pipeline` does not make itself mandatory before code edits. It is the broad-task entrypoint; exact tools remain better when the caller already has exact inputs.
+`get_code_context` does not make itself mandatory before code edits. It is the broad-task entrypoint; exact tools remain better when the caller already has exact inputs.
+
+### `run_pipeline`
+
+Internal/stable name for the same default Vtrace repo-context pipeline exposed as `get_code_context`.
 
 ### `get_context_capsule`
 
@@ -199,6 +206,12 @@ Use it before:
 - interface changes that could affect callers or dependents
 
 Prefer this specialist tool over `run_pipeline` when you already know the exact symbol FQN.
+
+Use `get_impact_graph` when the user asks what breaks, blast radius, dependents, callers, references, or impact of changing a known symbol.
+
+Use `get_skeleton` when the relevant file path is already known and you need structural overview.
+
+Use `search_symbols` for exact symbol lookup or when the context result is weak.
 
 ### `search_logic_flow`
 

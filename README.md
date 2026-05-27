@@ -105,13 +105,15 @@ There are also direct inspection commands for manual flows:
 
 ## MCP Workflow
 
-The default MCP tool is `run_pipeline`.
+For broad coding, debugging, refactor, and repo-understanding tasks, start with `get_code_context`.
+`run_pipeline` remains available as the stable/internal equivalent.
 
 Use the specialized tools when the question becomes narrower:
 
 - `get_context_capsule`: compact task context only
-- `get_skeleton`: cheap file shape
-- `get_impact_graph`: structural blast radius
+- `get_impact_graph`: use when the user asks what breaks, blast radius, dependents, callers, references, or impact of changing a known symbol
+- `get_skeleton`: use when the relevant file path is already known and you need structural overview
+- `search_symbols`: use for exact symbol lookup or when the context result is weak
 - `search_logic_flow`: bounded path between two exact symbol FQNs
 - `search_memory` / `get_session_context`: continuity
 - `index_status` / `workspace_setup`: health and setup

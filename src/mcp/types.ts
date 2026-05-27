@@ -9,6 +9,7 @@ export type McpServerSchemaVersion = typeof MCP_SERVER_SCHEMA_VERSION;
 export type McpServerId = typeof MCP_SERVER_ID;
 
 export const McpToolId = Object.freeze({
+  GetCodeContext: "get_code_context",
   RunPipeline: "run_pipeline",
   GetContextCapsule: "get_context_capsule",
   GetImpactGraph: "get_impact_graph",

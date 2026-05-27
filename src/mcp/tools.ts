@@ -6471,19 +6471,20 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
   }),
 ] satisfies McpToolDefinition[];
 
-const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
-  createEngineDelegateToolDefinition<RunPipelineInput, ReturnType<typeof formatRunPipelineOrchestrationOutput> & {
-    savedObservation: {
-      observation: ReturnType<typeof formatObservation>;
-      staleness: ReturnType<typeof formatObservationSearchResult>["staleness"];
-    } | null;
-  }>({
-    metadata: {
-      toolId: McpToolId.RunPipeline,
-      displayName: "Run Pipeline",
-      description:
-        "Default orchestration surface: intent selection, context search, impact integration, memory/session recall, and deferred expansion placeholders in one compact result.",
-      inputSchema: objectSchema(
+type RunPipelineMcpOutput = ReturnType<typeof formatRunPipelineOrchestrationOutput> & {
+  savedObservation: {
+    observation: ReturnType<typeof formatObservation>;
+    staleness: ReturnType<typeof formatObservationSearchResult>["staleness"];
+  } | null;
+};
+
+const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipelineInput, RunPipelineMcpOutput>({
+  metadata: {
+    toolId: McpToolId.RunPipeline,
+    displayName: "Run Pipeline",
+    description:
+      "Default Vtrace repo-context pipeline. get_code_context is the agent-friendly alias for this tool.",
+    inputSchema: objectSchema(
         "Pipeline orchestration request.",
         {
           task: stringProperty("Product-facing task description. Preferred over legacy query when both are provided."),
@@ -6796,7 +6797,22 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         },
       );
     },
+  });
+
+const GET_CODE_CONTEXT_TOOL_DEFINITION = Object.freeze({
+  metadata: Object.freeze({
+    ...RUN_PIPELINE_TOOL_DEFINITION.metadata,
+    toolId: McpToolId.GetCodeContext,
+    displayName: "Get Code Context",
+    description:
+      "Vtrace default first-pass repo-context tool. Use this before manual repo exploration for broad coding, debugging, refactor, and code-understanding tasks. It analyzes the task, routes retrieval, builds compact code context, surfaces relevant memory when available, and returns diagnostics. For exact known-symbol impact questions, use get_impact_graph directly or after this tool.",
   }),
+  handler: RUN_PIPELINE_TOOL_DEFINITION.handler,
+}) satisfies McpToolDefinition<RunPipelineInput, RunPipelineMcpOutput>;
+
+const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
+  GET_CODE_CONTEXT_TOOL_DEFINITION,
+  RUN_PIPELINE_TOOL_DEFINITION,
   createEngineDelegateToolDefinition<BuildCapsuleInput, ReturnType<typeof formatContextCapsulePipelineOutput>>({
     metadata: {
       toolId: McpToolId.GetContextCapsule,

@@ -83,7 +83,7 @@ Check these cases:
 - `search_logic_flow` is structural, not semantic or runtime
 - if the index is stale, rebuild it before trusting the result
 
-When the question is broad rather than exact, start with `run_pipeline`.
+When the question is broad rather than exact, start with `get_code_context`. `run_pipeline` remains available as the stable/internal equivalent.
 
 ## You Want to Run the MCP Server Manually
 

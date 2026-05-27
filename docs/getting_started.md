@@ -82,6 +82,8 @@ Config paths:
 - Claude Code: `~/.claude.json` local MCP scope
 - Codex: `.codex/config.toml`
 
+After setup, `/mcp` in the selected agent should show `get_code_context`. For broad coding, debugging, refactor, and repo-understanding tasks, start with `get_code_context`; `run_pipeline` remains available as the stable/internal equivalent.
+
 ## 5. Understand Repo-Local Files
 
 `vtrace` stores repo-local state in `.vtrace/`:
@@ -103,7 +105,7 @@ Direct shell examples:
 ./bin/vtrace capsule /path/to/your/repo "smallest safe edit surface for session creation"
 ```
 
-For MCP-first workflows, start with `run_pipeline`. The practical guide is in [MCP Tool Cheat Sheet](./mcp_tool_cheat_sheet.md).
+For MCP-first workflows, start with `get_code_context`. The practical guide is in [MCP Tool Cheat Sheet](./mcp_tool_cheat_sheet.md).
 
 ## 7. Optional Daemon
 

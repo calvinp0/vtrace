@@ -322,7 +322,10 @@ export function formatSetupFlowResult(result: SetupFlowResult): string {
       `State: ${runtimeState}`,
       `Log file: ${formatRepoRelativePath(result.repoRoot, result.runtime.logPath)}`,
     ]),
-    formatNextSteps(result.nextSteps),
+    formatNextSteps([
+      ...buildAgentMcpConfiguredSteps(result.agentConfig.displayName),
+      ...result.nextSteps,
+    ]),
   ].join("");
 }
 
@@ -344,7 +347,10 @@ export function formatClaudeCodeConfigResult(
     ? result.action === "unchanged"
       ? [`Open ${result.displayName} in this repo when you are ready to use vtrace.`]
       : [`Run \`vtrace claude-config ${result.repoRoot}${agentFlag}\` to apply this change.`]
-    : [`Open ${result.displayName} in this repo. The installed MCP config will launch vtrace on demand.`];
+    : [
+      ...buildAgentMcpConfiguredSteps(result.displayName),
+      `Open ${result.displayName} in this repo. The installed MCP config will launch vtrace on demand.`,
+    ];
 
   return [
     `${title}\n\n`,
@@ -356,6 +362,16 @@ export function formatClaudeCodeConfigResult(
     ]),
     formatNextSteps(nextSteps),
   ].join("");
+}
+
+function buildAgentMcpConfiguredSteps(
+  displayName: string,
+): string[] {
+  return [
+    `Vtrace MCP configured for ${displayName}.`,
+    `In ${displayName}, /mcp should show get_code_context.`,
+    `For broad repo tasks, ${displayName} should use get_code_context before manual file exploration.`,
+  ];
 }
 
 export function formatProductShellStatus(
