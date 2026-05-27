@@ -209,9 +209,9 @@ test("MCP registry registration and lookup are deterministic", () => {
     registry.listMetadata().map((tool) => tool.toolId),
     [...EXPECTED_VISIBLE_TOOL_IDS, "custom_tool"],
   );
-  assert.equal(
+  assert.notEqual(
     registry.getByToolId(McpToolId.GetCodeContext)?.handler,
-    registry.getByToolId(McpToolId.RunPipeline)?.handler,
+    undefined,
   );
   assert.equal(
     registry.getByToolId(McpToolId.GetCodeContext)?.metadata.inputSchema,
@@ -1121,6 +1121,8 @@ test("get_code_context delegates to the same implementation and output as run_pi
     assert.equal(getCodeContext.result.ok, true);
     assert.equal(runPipeline.result.ok, true);
     assert.deepEqual(getCodeContext.result, runPipeline.result);
+    assert.equal(getCodeContext.result.output.diagnostics.indexFreshness.status, "fresh");
+    assert.equal(getCodeContext.result.output.diagnostics.indexFreshness.action, "none");
   });
 });
 
@@ -2157,8 +2159,52 @@ test("index_status and run_pipeline diagnostics report watcher-observed stale fi
 
     assert.equal(pipeline.result.ok, true);
     assert.equal(pipeline.result.output.diagnostics.freshness.state, "possibly_stale");
+    assert.equal(pipeline.result.output.diagnostics.indexFreshness.status, "stale");
+    assert.equal(pipeline.result.output.diagnostics.indexFreshness.action, "none");
     assert.equal(pipeline.result.output.diagnostics.freshness.observedFileChanges.changedFiles[0], "src/session.ts");
     assert.equal(pipeline.result.output.diagnostics.freshness.autoReindex.state, "pending_changes");
+  });
+});
+
+test("get_code_context auto-refreshes a stale index before running context retrieval", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const bound = await createRepoBoundMcpServer({ repoPath: repoRoot });
+    const server = bound.server;
+
+    await recordObservedFileChanges({
+      repoRoot,
+      statePath: initialized.paths.statePath,
+      changedFilePaths: ["src/session.ts"],
+      nowMs: 6_000,
+    });
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-get-code-context-auto-refresh-stale",
+      toolId: McpToolId.GetCodeContext,
+      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+    });
+    const status = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-index-status-after-get-code-context-refresh",
+      toolId: McpToolId.IndexStatus,
+      input: {},
+    });
+
+    assert.equal(response.result.ok, true);
+    assert.equal(response.result.output.diagnostics.indexFreshness.status, "refreshed");
+    assert.equal(response.result.output.diagnostics.indexFreshness.reason, "stale_index");
+    assert.equal(response.result.output.diagnostics.indexFreshness.action, "auto_index_repo");
+    assert.equal(response.result.output.diagnostics.indexFreshness.beforeState, "possibly_stale");
+    assert.equal(response.result.output.diagnostics.indexFreshness.afterState, "fresh");
+    assert.equal(response.result.output.diagnostics.freshness.state, "fresh");
+
+    assert.equal(status.result.ok, true);
+    assert.equal(status.result.output.freshness.state, "fresh");
+    assert.equal(status.result.output.freshness.isStale, false);
+    assert.equal(status.result.output.freshness.observedFileChanges, null);
   });
 });
 

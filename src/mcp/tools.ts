@@ -138,6 +138,7 @@ import {
   type McpServerContext,
   type McpToolDefinition,
   type McpToolExecutionResult,
+  type McpToolHandlerInput,
   type McpToolMetadata,
 } from "./types";
 
@@ -1267,6 +1268,31 @@ const OBSERVATION_NUDGE_SCHEMA = objectProperty(
   ],
 );
 
+const GET_CODE_CONTEXT_INDEX_FRESHNESS_DIAGNOSTIC_SCHEMA = objectProperty(
+  "Front-door index freshness action taken before building code context.",
+  {
+    status: stringProperty("fresh, stale, unknown, refreshed, or unavailable."),
+    reason: {
+      type: ["string", "null"],
+      description: "Reason for the status or refresh decision.",
+    },
+    action: stringProperty("none, auto_index_repo, or call_index_repo."),
+    beforeState: {
+      type: ["string", "null"],
+      description: "Freshness state observed before an automatic refresh, when checked.",
+    },
+    afterState: {
+      type: ["string", "null"],
+      description: "Freshness state observed after an automatic refresh, when checked.",
+    },
+    latestRunId: {
+      type: ["integer", "null"],
+      description: "Latest index run id after refresh, when available.",
+    },
+  },
+  ["status", "reason", "action", "beforeState", "afterState", "latestRunId"],
+);
+
 const RUN_PIPELINE_DIAGNOSTICS_SCHEMA = objectProperty(
   "Explicit run_pipeline reliability diagnostics.",
   {
@@ -1818,6 +1844,7 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
       ],
     ),
     freshness: INDEX_FRESHNESS_SCHEMA,
+    indexFreshness: GET_CODE_CONTEXT_INDEX_FRESHNESS_DIAGNOSTIC_SCHEMA,
     nudge: OBSERVATION_NUDGE_SCHEMA,
     deferredCount: integerProperty("Number of deferred expandable placeholders emitted."),
     omittedSectionCount: integerProperty("Number of top-level sections (context, impact, session, durable) omitted."),
@@ -3972,6 +3999,43 @@ function formatRunPipelineDiagnostics(diagnostics: RunPipelineDiagnostics) {
     finalReason: diagnostics.finalReason,
     initialContextItemCount: diagnostics.initialContextItemCount,
     finalContextItemCount: diagnostics.finalContextItemCount,
+  };
+}
+
+function formatIndexFreshnessDiagnostic(input: {
+  freshness?: {
+    state?: string;
+    isStale?: boolean;
+    reasons?: readonly { code?: string }[];
+  };
+  action?: "none" | "auto_index_repo" | "call_index_repo";
+  status?: string;
+  reason?: string | null;
+  beforeState?: string | null;
+  afterState?: string | null;
+  latestRunId?: number | null;
+}) {
+  const state = input.freshness?.state;
+  const status = input.status
+    ?? (state === "fresh"
+      ? "fresh"
+      : state === "possibly_stale"
+        ? "stale"
+        : state === "unknown"
+          ? "unknown"
+          : "unavailable");
+  const reason = input.reason
+    ?? (input.freshness?.isStale === true
+      ? "stale_index"
+      : input.freshness?.reasons?.[0]?.code ?? null);
+
+  return {
+    status,
+    reason,
+    action: input.action ?? "none",
+    beforeState: input.beforeState ?? null,
+    afterState: input.afterState ?? state ?? null,
+    latestRunId: input.latestRunId ?? null,
   };
 }
 
@@ -6789,6 +6853,10 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
               diagnostics: {
                 ...output.diagnostics,
                 freshness,
+                indexFreshness: formatIndexFreshnessDiagnostic({
+                  freshness,
+                  latestRunId: getLatestIndexRun(db)?.id ?? null,
+                }),
                 nudge,
               },
               savedObservation,
@@ -6799,6 +6867,112 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
     },
   });
 
+async function handleGetCodeContextRequest({
+  context,
+  request,
+}: McpToolHandlerInput<RunPipelineInput>): Promise<McpToolExecutionResult<RunPipelineMcpOutput>> {
+  const refresh = await refreshIndexForGetCodeContextIfNeeded(context);
+
+  if (!refresh.ok) {
+    return refresh.result;
+  }
+
+  const result = await RUN_PIPELINE_TOOL_DEFINITION.handler({
+    context,
+    request: {
+      ...request,
+      toolId: McpToolId.RunPipeline,
+    },
+  });
+
+  if (!result.ok) {
+    return result;
+  }
+
+  return {
+    ok: true,
+    output: {
+      ...result.output,
+      diagnostics: {
+        ...result.output.diagnostics,
+        indexFreshness: refresh.indexFreshness,
+      },
+    },
+  };
+}
+
+async function refreshIndexForGetCodeContextIfNeeded(
+  context: McpServerContext,
+): Promise<
+  | { ok: true; indexFreshness: ReturnType<typeof formatIndexFreshnessDiagnostic> }
+  | { ok: false; result: McpToolExecutionResult<never> }
+> {
+  const resolved = await resolveReadyRepoBinding(context, McpToolId.GetCodeContext);
+
+  if (!resolved.ok) {
+    return {
+      ok: false,
+      result: failure(McpErrorCode.RepoNotReady, "Vtrace index is unavailable. Call index_repo, then retry get_code_context.", {
+        reason: "index_unavailable",
+        nextTool: {
+          name: McpToolId.IndexRepo,
+          input: {},
+        },
+        originalError: resolved.result.error,
+      }),
+    };
+  }
+
+  const beforeFreshness = await inspectIndexFreshness({
+    repoRoot: resolved.binding.repoRoot,
+    lastIndexSnapshot: resolved.binding.state.lastIndexSnapshot,
+    observedFileChanges: resolved.binding.state.observedFileChanges,
+    fileWatcher: resolved.binding.state.fileWatcher,
+  });
+  const db = openIndexerDatabase(resolved.binding.dbPath);
+  const indexMissing = !hasIndexedFiles(db);
+  db.close();
+
+  if (!indexMissing && beforeFreshness.state === "fresh") {
+    return {
+      ok: true,
+      indexFreshness: formatIndexFreshnessDiagnostic({
+        freshness: beforeFreshness,
+        latestRunId: resolved.binding.state.latestRunId ?? null,
+      }),
+    };
+  }
+
+  const refreshReason = indexMissing ? "missing_index" : "stale_index";
+  const indexed = await reindexRepoAndRefreshState({
+    repoRoot: resolved.binding.repoRoot,
+    dbPath: resolved.binding.dbPath,
+    statePath: resolved.binding.statePath,
+    configPresent: true,
+    statePresent: true,
+    usesDbPathOverride: false,
+  });
+  const nextState = indexed.state ?? resolved.binding.state;
+  const afterFreshness = await inspectIndexFreshness({
+    repoRoot: resolved.binding.repoRoot,
+    lastIndexSnapshot: nextState.lastIndexSnapshot,
+    observedFileChanges: nextState.observedFileChanges,
+    fileWatcher: nextState.fileWatcher,
+  });
+
+  return {
+    ok: true,
+    indexFreshness: formatIndexFreshnessDiagnostic({
+      status: "refreshed",
+      reason: refreshReason,
+      action: "auto_index_repo",
+      beforeState: beforeFreshness.state,
+      afterState: afterFreshness.state,
+      latestRunId: nextState.latestRunId ?? null,
+    }),
+  };
+}
+
 const GET_CODE_CONTEXT_TOOL_DEFINITION = Object.freeze({
   metadata: Object.freeze({
     ...RUN_PIPELINE_TOOL_DEFINITION.metadata,
@@ -6807,7 +6981,7 @@ const GET_CODE_CONTEXT_TOOL_DEFINITION = Object.freeze({
     description:
       "Vtrace default first-pass repo-context tool. Use this before manual repo exploration for broad coding, debugging, refactor, and code-understanding tasks. It analyzes the task, routes retrieval, builds compact code context, surfaces relevant memory when available, and returns diagnostics. For exact known-symbol impact questions, use get_impact_graph directly or after this tool.",
   }),
-  handler: RUN_PIPELINE_TOOL_DEFINITION.handler,
+  handler: handleGetCodeContextRequest,
 }) satisfies McpToolDefinition<RunPipelineInput, RunPipelineMcpOutput>;
 
 const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [

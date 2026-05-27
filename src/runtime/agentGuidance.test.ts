@@ -20,6 +20,8 @@ test("writeVtraceAgentGuidanceBlock creates AGENTS.md when missing", async () =>
     assert.match(agents, /get_code_context/);
     assert.match(agents, /broad repo-understanding, debugging, refactor, and code-context tasks/);
     assert.match(agents, /before manual grep or opening many files/);
+    assert.match(agents, /may refresh a stale index automatically/);
+    assert.match(agents, /call `index_repo` and retry/);
     assert.match(agents, /get_impact_graph/);
     assert.match(agents, /GitNexus impact checks before editing symbols/);
   });

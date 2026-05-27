@@ -10,6 +10,7 @@ export const VTRACE_AGENT_GUIDANCE_BLOCK = [
   "",
   "- Use `get_code_context` for broad repo-understanding, debugging, refactor, and code-context tasks.",
   "- Use `get_code_context` before manual grep or opening many files.",
+  "- `get_code_context` may refresh a stale index automatically. If it reports that automatic refresh was unavailable, call `index_repo` and retry.",
   "- Use `get_impact_graph` for known-symbol impact or blast-radius questions.",
   "- Still follow existing repo rules such as GitNexus impact checks before editing symbols.",
   VTRACE_GUIDANCE_END,
