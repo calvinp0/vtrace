@@ -868,6 +868,7 @@ test("setup and status support codex as a second real backend", async () => {
     const doctorOutput = JSON.parse(doctor.stdout);
     const configPath = resolveCodexConfigPath(repoRoot);
     const config = await readFile(configPath, "utf8");
+    const agents = await readFile(path.join(repoRoot, "AGENTS.md"), "utf8");
 
     assert.equal(setup.exitCode, 0);
     assert.equal(setupOutput.ok, true);
@@ -875,8 +876,16 @@ test("setup and status support codex as a second real backend", async () => {
     assert.equal(setupOutput.result.agentConfig.displayName, "Codex");
     assert.equal(setupOutput.result.agentConfig.configPath, configPath);
     assert.equal(setupOutput.result.agentConfig.matchesExpected, true);
+    assert.equal(setupOutput.result.agentGuidance.path, path.join(repoRoot, "AGENTS.md"));
+    assert.equal(setupOutput.result.agentGuidance.action, "created");
     assert.equal(config, buildExpectedCodexConfigToml(repoRoot));
+    assert.match(agents, /<!-- vtrace:start -->/);
+    assert.match(agents, /get_code_context/);
+    assert.match(agents, /GitNexus impact checks before editing symbols/);
     assert.equal(setupText.exitCode, 0);
+    assert.match(setupText.stdout, /Agent guidance/);
+    assert.match(setupText.stdout, /Action: Vtrace guidance block already current/);
+    assert.match(setupText.stdout, /Guidance block: AGENTS\.md/);
     assert.match(setupText.stdout, /Vtrace MCP configured for Codex\./);
     assert.match(setupText.stdout, /In Codex, \/mcp should show get_code_context\./);
     assert.match(setupText.stdout, /For broad repo tasks, Codex should use get_code_context before manual file exploration\./);

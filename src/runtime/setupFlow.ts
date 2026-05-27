@@ -5,10 +5,14 @@ import { nullProgressReporter } from "../cli/progress";
 import { initRepo } from "../setup/initRepo";
 import { detectRepoRoot } from "../setup/repoState";
 import {
+  ProductShellAgentId,
   resolveProductShellAgent,
   type AgentConfigInstallResult,
-  type ProductShellAgentId,
 } from "./agents";
+import {
+  writeVtraceAgentGuidanceBlock,
+  type AgentGuidanceInstallResult,
+} from "./agentGuidance";
 import {
   startRuntimeDaemon,
   type RuntimeDaemonActionResult,
@@ -28,6 +32,7 @@ export interface SetupFlowResult {
   readiness: NonNullable<ProductShellStatus["readiness"]>;
   latestRunId: number | null;
   agentConfig: AgentConfigInstallResult;
+  agentGuidance: AgentGuidanceInstallResult | null;
   runtime: RuntimeDaemonActionResult["status"] & {
     action: RuntimeDaemonActionResult["action"] | "not_requested";
   };
@@ -73,6 +78,10 @@ export async function runSetupFlow(options: {
   const agentConfig = await agent.writeConfig(detection.repoRoot);
   progress.report({ kind: "phase_end", phase: "agent_config" });
 
+  const agentGuidance = agent.id === ProductShellAgentId.Codex
+    ? await writeVtraceAgentGuidanceBlock(detection.repoRoot)
+    : null;
+
   let runtimeAction: RuntimeDaemonActionResult | undefined;
   if (options.startRuntime === true) {
     progress.report({ kind: "phase_begin", phase: "runtime_daemon", label: "Starting runtime daemon" });
@@ -106,6 +115,7 @@ export async function runSetupFlow(options: {
     readiness: finalStatus.readiness,
     latestRunId: finalStatus.latestRunId,
     agentConfig,
+    agentGuidance,
     runtime: {
       ...(runtimeAction === undefined
         ? {

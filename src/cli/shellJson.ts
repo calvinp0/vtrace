@@ -158,6 +158,7 @@ export function formatSetupJson(result: SetupFlowResult): string {
     latestRunId: result.latestRunId,
     launcher: formatLauncher(result.launcher),
     agentConfig: formatAgentConfigInstallResult(result.agentConfig),
+    agentGuidance: result.agentGuidance,
     runtime: {
       action: result.runtime.action,
       status: formatRuntimeStatus(result.runtime),

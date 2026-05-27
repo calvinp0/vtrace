@@ -317,6 +317,14 @@ export function formatSetupFlowResult(result: SetupFlowResult): string {
       `Config file: ${formatRepoRelativePath(result.repoRoot, result.agentConfig.configPath)}`,
       `Launcher: ${formatLauncher(result.agentConfig.launcher)}`,
     ]),
+    ...(result.agentGuidance === null
+      ? []
+      : [
+        formatSection("Agent guidance", [
+          `Action: ${formatAgentGuidanceActionLabel(result.agentGuidance.action)}`,
+          `Guidance block: ${formatRepoRelativePath(result.repoRoot, result.agentGuidance.path)}`,
+        ]),
+      ]),
     formatSection("Runtime state", [
       `Action: ${formatRuntimeActionLabel(result.runtime.action)}`,
       `State: ${runtimeState}`,
@@ -372,6 +380,19 @@ function buildAgentMcpConfiguredSteps(
     `In ${displayName}, /mcp should show get_code_context.`,
     `For broad repo tasks, ${displayName} should use get_code_context before manual file exploration.`,
   ];
+}
+
+function formatAgentGuidanceActionLabel(
+  action: NonNullable<SetupFlowResult["agentGuidance"]>["action"],
+): string {
+  switch (action) {
+    case "created":
+      return "created Vtrace guidance block";
+    case "updated":
+      return "updated Vtrace guidance block";
+    case "unchanged":
+      return "Vtrace guidance block already current";
+  }
 }
 
 export function formatProductShellStatus(
