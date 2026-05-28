@@ -8,7 +8,9 @@ import {
   mergeSearchCandidates,
   normalizeMaxResults,
   normalizeSearchQuery,
+  queryPathSignalCandidates,
   resolveBroadQueryContext,
+  resolvePathSignalQueryContext,
   resolveTechnicalQueryContext,
   resolveTestAwareQueryContext,
   queryBoundaryCandidates,
@@ -56,6 +58,11 @@ export function searchSymbolsFts(
     broadContext,
     options.enableTechnicalQueryBoosts !== false,
   );
+  const pathSignalContext = resolvePathSignalQueryContext(
+    options.query,
+    broadContext,
+    options.enablePathSignalBoosts !== false,
+  );
 
   if (normalizedQuery.length === 0 || maxResults === 0) {
     return [];
@@ -75,10 +82,14 @@ export function searchSymbolsFts(
       options.kind,
     )
     : [];
+  const pathSignalCandidates = queryPathSignalCandidates(db, pathSignalContext, options.kind);
 
   return rankSearchCandidates(
     mergeSearchCandidates(
-      mergeSearchCandidates(primaryCandidates, recoveryCandidates),
+      mergeSearchCandidates(
+        mergeSearchCandidates(primaryCandidates, recoveryCandidates),
+        pathSignalCandidates,
+      ),
       queryBoundaryCandidates(db, boundaryContext, options.kind),
     ),
     normalizedQuery,
@@ -88,6 +99,7 @@ export function searchSymbolsFts(
       broadContext,
       testContext,
       technicalContext,
+      pathSignalContext,
     },
   );
 }

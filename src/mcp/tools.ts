@@ -222,6 +222,10 @@ interface RunPipelineDiagnostics {
   readonly finalReason: RunPipelineDiagnosticReason | null;
   readonly initialContextItemCount: number;
   readonly finalContextItemCount: number;
+  readonly pathSignalsConsidered: readonly string[];
+  readonly pathSignalsMatched: readonly string[];
+  readonly candidateFilesConsidered: number;
+  readonly weakPathCoverage: boolean;
 }
 
 const RUN_PIPELINE_IMPACT_TRIGGER_REASON = Object.freeze({
@@ -1323,6 +1327,20 @@ const RUN_PIPELINE_DIAGNOSTICS_SCHEMA = objectProperty(
     },
     initialContextItemCount: integerProperty("Count of pivot plus support items in the first assembled result."),
     finalContextItemCount: integerProperty("Count of pivot plus support items in the final returned result."),
+    pathSignalsConsidered: arrayProperty(
+      "Path-like query terms considered when looking for route/module sibling matches.",
+      stringProperty("Path-like term derived from the query."),
+    ),
+    pathSignalsMatched: arrayProperty(
+      "Subset of pathSignalsConsidered that appeared as a path segment in at least one candidate file path.",
+      stringProperty("Path-like term that was matched against candidate file paths."),
+    ),
+    candidateFilesConsidered: integerProperty(
+      "Distinct candidate file paths considered when computing path-signal coverage.",
+    ),
+    weakPathCoverage: booleanProperty(
+      "True when at least two path-like terms were considered but fewer than half were matched in any candidate file path.",
+    ),
   },
   [
     "initialReason",
@@ -1332,6 +1350,10 @@ const RUN_PIPELINE_DIAGNOSTICS_SCHEMA = objectProperty(
     "finalReason",
     "initialContextItemCount",
     "finalContextItemCount",
+    "pathSignalsConsidered",
+    "pathSignalsMatched",
+    "candidateFilesConsidered",
+    "weakPathCoverage",
   ],
 );
 
@@ -3999,6 +4021,10 @@ function formatRunPipelineDiagnostics(diagnostics: RunPipelineDiagnostics) {
     finalReason: diagnostics.finalReason,
     initialContextItemCount: diagnostics.initialContextItemCount,
     finalContextItemCount: diagnostics.finalContextItemCount,
+    pathSignalsConsidered: [...diagnostics.pathSignalsConsidered],
+    pathSignalsMatched: [...diagnostics.pathSignalsMatched],
+    candidateFilesConsidered: diagnostics.candidateFilesConsidered,
+    weakPathCoverage: diagnostics.weakPathCoverage,
   };
 }
 
@@ -4233,6 +4259,10 @@ function runReliablePipeline(
         finalReason: null,
         initialContextItemCount,
         finalContextItemCount: initialContextItemCount,
+        pathSignalsConsidered: primaryPipeline.routedQuery.pathSignalDiagnostics.pathSignalsConsidered,
+        pathSignalsMatched: primaryPipeline.routedQuery.pathSignalDiagnostics.pathSignalsMatched,
+        candidateFilesConsidered: primaryPipeline.routedQuery.pathSignalDiagnostics.candidateFilesConsidered,
+        weakPathCoverage: primaryPipeline.routedQuery.pathSignalDiagnostics.weakPathCoverage,
       },
     };
   }
@@ -4270,6 +4300,10 @@ function runReliablePipeline(
       finalReason: finalContextItemCount > 0 ? null : resolveRunPipelineEmptyReason(input.query!, finalPipeline),
       initialContextItemCount,
       finalContextItemCount,
+      pathSignalsConsidered: finalPipeline.routedQuery.pathSignalDiagnostics.pathSignalsConsidered,
+      pathSignalsMatched: finalPipeline.routedQuery.pathSignalDiagnostics.pathSignalsMatched,
+      candidateFilesConsidered: finalPipeline.routedQuery.pathSignalDiagnostics.candidateFilesConsidered,
+      weakPathCoverage: finalPipeline.routedQuery.pathSignalDiagnostics.weakPathCoverage,
     },
   };
 }
@@ -4624,6 +4658,10 @@ function formatMultiRepoRunPipelineOutput(input: {
       0,
     ),
     finalContextItemCount: merged.capsule.pivots.length + merged.capsule.supportingItems.length,
+    pathSignalsConsidered: [...base.diagnostics.retrieval.pathSignalsConsidered],
+    pathSignalsMatched: [...base.diagnostics.retrieval.pathSignalsMatched],
+    candidateFilesConsidered: base.diagnostics.retrieval.candidateFilesConsidered,
+    weakPathCoverage: base.diagnostics.retrieval.weakPathCoverage,
   };
   const impact = resolveMultiRepoImpactOutput(input.entries, base.impact);
 

@@ -12,7 +12,9 @@ import {
   makeLikePattern,
   normalizeMaxResults,
   normalizeSearchQuery,
+  queryPathSignalCandidates,
   resolveBroadQueryContext,
+  resolvePathSignalQueryContext,
   resolveTechnicalQueryContext,
   resolveTestAwareQueryContext,
   queryBoundaryCandidates,
@@ -78,6 +80,11 @@ export function searchSymbolsPlainSql(
     broadContext,
     options.enableTechnicalQueryBoosts !== false,
   );
+  const pathSignalContext = resolvePathSignalQueryContext(
+    options.query,
+    broadContext,
+    options.enablePathSignalBoosts !== false,
+  );
 
   if (query.length === 0 || maxResults === 0) {
     return [];
@@ -85,7 +92,10 @@ export function searchSymbolsPlainSql(
 
   return rankSearchCandidates(
     mergeSearchCandidates(
-      queryCandidates(db, query, options.kind, broadContext),
+      mergeSearchCandidates(
+        queryCandidates(db, query, options.kind, broadContext),
+        queryPathSignalCandidates(db, pathSignalContext, options.kind),
+      ),
       queryBoundaryCandidates(db, boundaryContext, options.kind),
     ),
     query,
@@ -95,6 +105,7 @@ export function searchSymbolsPlainSql(
       broadContext,
       testContext,
       technicalContext,
+      pathSignalContext,
     },
   );
 }

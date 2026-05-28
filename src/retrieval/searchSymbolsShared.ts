@@ -49,6 +49,11 @@ export interface TestAwareQueryContext {
   readonly matchedTestTerms: readonly string[];
 }
 
+export interface PathSignalQueryContext {
+  readonly pathTerms: readonly string[];
+  readonly variantsByTerm: ReadonlyMap<string, readonly string[]>;
+}
+
 type TechnicalQueryDimension =
   | "entrypoint"
   | "io"
@@ -71,6 +76,7 @@ export interface SearchRankingContexts {
   readonly broadContext?: BroadQueryContext;
   readonly testContext?: TestAwareQueryContext;
   readonly technicalContext?: TechnicalQueryContext;
+  readonly pathSignalContext?: PathSignalQueryContext;
 }
 
 export const SYMBOL_SEARCH_SCORE_WEIGHTS = Object.freeze({
@@ -109,7 +115,13 @@ export const SYMBOL_SEARCH_SCORE_WEIGHTS = Object.freeze({
   technicalLowLevelCythonBonus: 8,
   technicalSerializationBonus: 6,
   technicalEntrypointBonus: 6,
+  pathSegmentSignalBase: 14,
+  pathSegmentSignalPerExtraTerm: 6,
+  pathSegmentSignalMax: 30,
+  pathSegmentSiblingBonus: 4,
 });
+
+const PATH_SIGNAL_CANDIDATE_LIMIT = 96;
 
 const ALL_CYTHON_EXTENSIONS = Object.freeze([".pxd", ".pxi", ".pyx"]);
 const BROAD_QUERY_STOPWORDS = new Set([
@@ -608,6 +620,94 @@ export function resolveTechnicalQueryContext(
   };
 }
 
+export function resolvePathSignalQueryContext(
+  query: string,
+  broadContext: BroadQueryContext | undefined,
+  enablePathSignalBoosts = true,
+): PathSignalQueryContext | undefined {
+  if (!enablePathSignalBoosts || broadContext === undefined) {
+    return undefined;
+  }
+
+  const variantsByTerm = new Map<string, readonly string[]>();
+  const pathTerms: string[] = [];
+
+  for (const group of broadContext.termGroups) {
+    if (!isPathLikeTerm(group.label)) {
+      continue;
+    }
+
+    pathTerms.push(group.label);
+    variantsByTerm.set(group.label, group.variants);
+  }
+
+  if (pathTerms.length < 2) {
+    return undefined;
+  }
+
+  return {
+    pathTerms,
+    variantsByTerm,
+  };
+}
+
+export function extractPathSegments(filePath: string): string[] {
+  return filePath
+    .toLowerCase()
+    .replace(/\\/g, "/")
+    .split(/[/.\-_]/)
+    .filter((segment) => segment.length > 0);
+}
+
+export function queryPathSignalCandidates(
+  db: Database,
+  pathSignalContext: PathSignalQueryContext | undefined,
+  kind?: SymbolKind,
+): SearchCandidateRow[] {
+  if (pathSignalContext === undefined) {
+    return [];
+  }
+
+  const variants = collectUniqueInOrder(
+    [...pathSignalContext.variantsByTerm.values()].flat(),
+  );
+
+  if (variants.length === 0) {
+    return [];
+  }
+
+  const conditions = variants.map(() => "lower(files.path) LIKE ? ESCAPE '\\'").join(" OR ");
+  const sql = `
+    SELECT
+      symbols.id AS symbol_id,
+      files.path AS file_path,
+      symbols.fq_name,
+      symbols.local_name,
+      symbols.kind,
+      symbols.signature,
+      symbols.docstring
+    FROM symbols
+    INNER JOIN files ON files.id = symbols.file_id
+    WHERE (${conditions})
+      ${kind === undefined ? "" : "AND symbols.kind = ?"}
+    ORDER BY files.path ASC, symbols.fq_name ASC, symbols.id ASC
+    LIMIT ?
+  `;
+  const params: unknown[] = variants.map((variant) => makeLikePattern(variant));
+
+  if (kind !== undefined) {
+    params.push(kind);
+  }
+
+  params.push(PATH_SIGNAL_CANDIDATE_LIMIT);
+
+  return db.query(sql).all(...params) as SearchCandidateRow[];
+}
+
+function isPathLikeTerm(term: string): boolean {
+  return /^[a-z][a-z0-9]{2,}$/.test(term) && !BROAD_QUERY_STOPWORDS.has(term);
+}
+
 export function classifyLikelyTestCandidate(input: {
   filePath: string;
   localName: string;
@@ -711,6 +811,7 @@ function scoreCandidate(
   addBoundaryHintMatch(matches, candidate, contexts.boundaryContext);
   addLikelyTestPenaltyMatch(matches, candidate, contexts.testContext);
   addTechnicalHintMatch(matches, candidate, contexts.technicalContext, contexts.testContext);
+  addPathSignalMatch(matches, candidate, contexts.pathSignalContext);
 
   if (matches.length === 0) {
     return undefined;
@@ -852,6 +953,51 @@ function addLikelyTestPenaltyMatch(
     SymbolSearchMatchField.LikelyTestPenalty,
     SymbolSearchMatchType.Exact,
     -penalty,
+  ));
+}
+
+function addPathSignalMatch(
+  matches: SymbolSearchMatch[],
+  candidate: SearchCandidateRow,
+  pathSignalContext?: PathSignalQueryContext,
+): void {
+  if (pathSignalContext === undefined) {
+    return;
+  }
+
+  const segments = new Set(extractPathSegments(candidate.file_path));
+
+  if (segments.size === 0) {
+    return;
+  }
+
+  let matchedTermCount = 0;
+
+  for (const [, variants] of pathSignalContext.variantsByTerm) {
+    if (variants.some((variant) => segments.has(variant))) {
+      matchedTermCount += 1;
+    }
+  }
+
+  if (matchedTermCount === 0) {
+    return;
+  }
+
+  const extraTerms = matchedTermCount - 1;
+  const siblingBonus = pathSignalContext.pathTerms.length >= 3
+    ? SYMBOL_SEARCH_SCORE_WEIGHTS.pathSegmentSiblingBonus
+    : 0;
+  const score = Math.min(
+    SYMBOL_SEARCH_SCORE_WEIGHTS.pathSegmentSignalBase
+      + extraTerms * SYMBOL_SEARCH_SCORE_WEIGHTS.pathSegmentSignalPerExtraTerm
+      + siblingBonus,
+    SYMBOL_SEARCH_SCORE_WEIGHTS.pathSegmentSignalMax,
+  );
+
+  matches.push(makeMatch(
+    SymbolSearchMatchField.PathSegmentSignal,
+    SymbolSearchMatchType.Exact,
+    score,
   ));
 }
 

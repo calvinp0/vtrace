@@ -291,6 +291,68 @@ test("memory and rule benchmark keeps active guidance distinct from candidates",
   }
 });
 
+test("route-oriented broad query surfaces sibling scientific route files", () => {
+  const db = openIndexerDatabase();
+
+  try {
+    for (const file of SCIENTIFIC_ROUTES_FIXTURE) {
+      persistParseResult(db, makeSearchParseResult(file));
+    }
+
+    const query = "Refactor TCKDB scientific read responses to add shared helper for"
+      + " omitting trust unless include-trust across calculation kinetics thermo statmech transport"
+      + " detail routes. Need find duplicated include-trust model_dump exclude trust response"
+      + " boundary logic.";
+    const routed = routeQuery(db, query, { maxResults: 10 });
+    const filePaths = new Set(routed.rerankedResults.map((result) => result.filePath));
+    const expectedSiblings = [
+      "backend/app/api/routes/scientific/kinetics.py",
+      "backend/app/api/routes/scientific/thermo.py",
+      "backend/app/api/routes/scientific/calculations.py",
+      "backend/app/api/routes/scientific/statmech.py",
+      "backend/app/api/routes/scientific/transport.py",
+    ];
+    const siblingHits = expectedSiblings.filter((path) => filePaths.has(path));
+
+    assert.ok(
+      siblingHits.length >= 3,
+      `expected at least 3 scientific route siblings, got ${JSON.stringify([...filePaths].sort())}`,
+    );
+
+    const baseline = routeQuery(db, query, {
+      maxResults: 10,
+      enablePathSignalBoosts: false,
+    });
+    const baselineFilePaths = new Set(baseline.rerankedResults.map((result) => result.filePath));
+    const baselineSiblingHits = expectedSiblings.filter((path) => baselineFilePaths.has(path));
+
+    assert.ok(
+      siblingHits.length >= baselineSiblingHits.length,
+      "path-signal boosts should not regress sibling coverage versus the no-boost baseline",
+    );
+
+    assert.deepEqual(
+      routed.pathSignalDiagnostics.pathSignalsConsidered.includes("kinetics"),
+      true,
+    );
+    assert.deepEqual(
+      routed.pathSignalDiagnostics.pathSignalsConsidered.includes("scientific"),
+      true,
+    );
+    assert.ok(routed.pathSignalDiagnostics.pathSignalsMatched.length >= 3);
+    assert.ok(
+      ["kinetics", "thermo", "statmech", "transport", "scientific"].every((term) => {
+        return routed.pathSignalDiagnostics.pathSignalsMatched.includes(term);
+      }),
+      `expected scientific route signals to be matched, got ${JSON.stringify(routed.pathSignalDiagnostics.pathSignalsMatched)}`,
+    );
+    assert.equal(typeof routed.pathSignalDiagnostics.weakPathCoverage, "boolean");
+    assert.ok(routed.pathSignalDiagnostics.candidateFilesConsidered > 0);
+  } finally {
+    db.close();
+  }
+});
+
 test("graph reranking benchmark output is stable for connected generic symbols", () => {
   const db = openIndexerDatabase();
 
@@ -446,6 +508,107 @@ const GENERIC_RETRIEVAL_FIXTURE: readonly SeedFileSpec[] = [
         endByte: 48,
         signature: "function readIndexStatus(): IndexStatus",
         docstring: "Read index status for CLI and MCP surfaces.",
+      },
+    ],
+  },
+];
+
+const SCIENTIFIC_ROUTES_FIXTURE: readonly SeedFileSpec[] = [
+  {
+    path: "backend/app/api/routes/scientific/kinetics.py",
+    symbols: [
+      {
+        localName: "read_kinetics",
+        kind: SymbolKind.Function,
+        startByte: 0,
+        endByte: 64,
+        signature: "def read_kinetics(kinetics_id: int, include_trust: bool = False)",
+        docstring: "Detail route returning kinetics response. Uses model_dump and excludes trust unless include-trust.",
+        exported: true,
+      },
+    ],
+  },
+  {
+    path: "backend/app/api/routes/scientific/thermo.py",
+    symbols: [
+      {
+        localName: "read_thermo",
+        kind: SymbolKind.Function,
+        startByte: 0,
+        endByte: 64,
+        signature: "def read_thermo(thermo_id: int, include_trust: bool = False)",
+        docstring: "Detail route returning thermo response. Uses model_dump and excludes trust unless include-trust.",
+        exported: true,
+      },
+    ],
+  },
+  {
+    path: "backend/app/api/routes/scientific/calculations.py",
+    symbols: [
+      {
+        localName: "read_calculation",
+        kind: SymbolKind.Function,
+        startByte: 0,
+        endByte: 64,
+        signature: "def read_calculation(calculation_id: int, include_trust: bool = False)",
+        docstring: "Detail route returning calculation response. Uses model_dump and excludes trust unless include-trust.",
+        exported: true,
+      },
+    ],
+  },
+  {
+    path: "backend/app/api/routes/scientific/statmech.py",
+    symbols: [
+      {
+        localName: "read_statmech",
+        kind: SymbolKind.Function,
+        startByte: 0,
+        endByte: 64,
+        signature: "def read_statmech(statmech_id: int, include_trust: bool = False)",
+        docstring: "Detail route returning statmech response. Uses model_dump and excludes trust unless include-trust.",
+        exported: true,
+      },
+    ],
+  },
+  {
+    path: "backend/app/api/routes/scientific/transport.py",
+    symbols: [
+      {
+        localName: "read_transport",
+        kind: SymbolKind.Function,
+        startByte: 0,
+        endByte: 64,
+        signature: "def read_transport(transport_id: int, include_trust: bool = False)",
+        docstring: "Detail route returning transport response. Uses model_dump and excludes trust unless include-trust.",
+        exported: true,
+      },
+    ],
+  },
+  {
+    path: "backend/app/api/routes/admin/users.py",
+    symbols: [
+      {
+        localName: "read_user",
+        kind: SymbolKind.Function,
+        startByte: 0,
+        endByte: 56,
+        signature: "def read_user(user_id: int)",
+        docstring: "Admin detail route returning user response.",
+        exported: true,
+      },
+    ],
+  },
+  {
+    path: "backend/app/api/routes/admin/audit.py",
+    symbols: [
+      {
+        localName: "read_audit_entry",
+        kind: SymbolKind.Function,
+        startByte: 0,
+        endByte: 56,
+        signature: "def read_audit_entry(audit_id: int)",
+        docstring: "Admin detail route returning audit entry response.",
+        exported: true,
       },
     ],
   },

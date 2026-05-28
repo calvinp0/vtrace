@@ -14,6 +14,7 @@ export interface SearchSymbolsOptions {
   enableBroadQueryBoosts?: boolean;
   enableTestAwareDownweighting?: boolean;
   enableTechnicalQueryBoosts?: boolean;
+  enablePathSignalBoosts?: boolean;
 }
 
 export enum SymbolSearchMatchField {
@@ -26,6 +27,14 @@ export enum SymbolSearchMatchField {
   BoundaryHint = "boundary_hint",
   LikelyTestPenalty = "likely_test_penalty",
   TechnicalHint = "technical_hint",
+  PathSegmentSignal = "path_segment_signal",
+}
+
+export interface RetrievalPathSignalDiagnostics {
+  readonly pathSignalsConsidered: readonly string[];
+  readonly pathSignalsMatched: readonly string[];
+  readonly candidateFilesConsidered: number;
+  readonly weakPathCoverage: boolean;
 }
 
 export enum SymbolSearchMatchType {

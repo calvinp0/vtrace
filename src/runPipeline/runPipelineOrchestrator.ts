@@ -89,6 +89,10 @@ export interface OrchestrationRetrievalDiagnostics {
   readonly finalReason: RunPipelineContextSkipReason | null;
   readonly initialContextItemCount: number;
   readonly finalContextItemCount: number;
+  readonly pathSignalsConsidered: readonly string[];
+  readonly pathSignalsMatched: readonly string[];
+  readonly candidateFilesConsidered: number;
+  readonly weakPathCoverage: boolean;
 }
 
 export interface OrchestrationContextSection {
@@ -327,6 +331,10 @@ function runReliableContextRetrieval(
         finalReason: null,
         initialContextItemCount,
         finalContextItemCount: initialContextItemCount,
+        pathSignalsConsidered: overridden.pathSignalDiagnostics.pathSignalsConsidered,
+        pathSignalsMatched: overridden.pathSignalDiagnostics.pathSignalsMatched,
+        candidateFilesConsidered: overridden.pathSignalDiagnostics.candidateFilesConsidered,
+        weakPathCoverage: overridden.pathSignalDiagnostics.weakPathCoverage,
       },
     };
   }
@@ -357,6 +365,10 @@ function runReliableContextRetrieval(
         finalReason,
         initialContextItemCount,
         finalContextItemCount,
+        pathSignalsConsidered: overridden.pathSignalDiagnostics.pathSignalsConsidered,
+        pathSignalsMatched: overridden.pathSignalDiagnostics.pathSignalsMatched,
+        candidateFilesConsidered: overridden.pathSignalDiagnostics.candidateFilesConsidered,
+        weakPathCoverage: overridden.pathSignalDiagnostics.weakPathCoverage,
       },
     };
   }
@@ -375,6 +387,10 @@ function runReliableContextRetrieval(
       finalReason: initialReason,
       initialContextItemCount,
       finalContextItemCount: initialContextItemCount,
+      pathSignalsConsidered: overridden.pathSignalDiagnostics.pathSignalsConsidered,
+      pathSignalsMatched: overridden.pathSignalDiagnostics.pathSignalsMatched,
+      candidateFilesConsidered: overridden.pathSignalDiagnostics.candidateFilesConsidered,
+      weakPathCoverage: overridden.pathSignalDiagnostics.weakPathCoverage,
     },
   };
 }

@@ -194,6 +194,10 @@ export function formatRunPipelineOrchestrationOutput(
         finalReason: context.retrievalDiagnostics.finalReason,
         initialContextItemCount: context.retrievalDiagnostics.initialContextItemCount,
         finalContextItemCount: context.retrievalDiagnostics.finalContextItemCount,
+        pathSignalsConsidered: [...context.retrievalDiagnostics.pathSignalsConsidered],
+        pathSignalsMatched: [...context.retrievalDiagnostics.pathSignalsMatched],
+        candidateFilesConsidered: context.retrievalDiagnostics.candidateFilesConsidered,
+        weakPathCoverage: context.retrievalDiagnostics.weakPathCoverage,
       },
       impact: {
         included: impact.included,
