@@ -5309,7 +5309,8 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
     metadata: {
       toolId: McpToolId.IndexRepo,
       displayName: "Index Repo",
-      description: "Run indexing for the initialized repository using the existing engine.",
+      description:
+        "Refresh the Vtrace repo index. Use this when get_code_context or another Vtrace tool reports stale_index, missing_index, or repo_not_ready.",
       inputSchema: objectSchema(
         "Optional controls for re-indexing the currently initialized repository.",
         {
@@ -6867,14 +6868,38 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
     },
   });
 
+type GetCodeContextStaleReason = "stale_index" | "missing_index" | "repo_not_ready";
+
+interface GetCodeContextStaleEnvelope {
+  readonly resolved: false;
+  readonly reason: GetCodeContextStaleReason;
+  readonly message: string;
+  readonly nextTool: {
+    readonly name: string;
+    readonly input: Record<string, unknown>;
+  };
+  readonly diagnostics: {
+    readonly indexFreshness: ReturnType<typeof formatIndexFreshnessDiagnostic>;
+  };
+}
+
+type GetCodeContextOutput = GetCodeContextStaleEnvelope | RunPipelineMcpOutput;
+
+const STALE_INDEX_MESSAGE =
+  "Vtrace index is stale or missing. Call index_repo, then retry get_code_context.";
+const MISSING_INDEX_MESSAGE =
+  "Vtrace index is missing. Call index_repo, then retry get_code_context.";
+const REPO_NOT_READY_MESSAGE =
+  "Vtrace repository is not ready. Call index_repo, then retry get_code_context.";
+
 async function handleGetCodeContextRequest({
   context,
   request,
-}: McpToolHandlerInput<RunPipelineInput>): Promise<McpToolExecutionResult<RunPipelineMcpOutput>> {
-  const refresh = await refreshIndexForGetCodeContextIfNeeded(context);
+}: McpToolHandlerInput<RunPipelineInput>): Promise<McpToolExecutionResult<GetCodeContextOutput>> {
+  const check = await checkIndexForGetCodeContext(context);
 
-  if (!refresh.ok) {
-    return refresh.result;
+  if (check.kind === "stale_response") {
+    return { ok: true, output: check.output };
   }
 
   const result = await RUN_PIPELINE_TOOL_DEFINITION.handler({
@@ -6895,30 +6920,34 @@ async function handleGetCodeContextRequest({
       ...result.output,
       diagnostics: {
         ...result.output.diagnostics,
-        indexFreshness: refresh.indexFreshness,
+        indexFreshness: check.indexFreshness,
       },
     },
   };
 }
 
-async function refreshIndexForGetCodeContextIfNeeded(
+async function checkIndexForGetCodeContext(
   context: McpServerContext,
 ): Promise<
-  | { ok: true; indexFreshness: ReturnType<typeof formatIndexFreshnessDiagnostic> }
-  | { ok: false; result: McpToolExecutionResult<never> }
+  | { kind: "fresh"; indexFreshness: ReturnType<typeof formatIndexFreshnessDiagnostic> }
+  | { kind: "stale_response"; output: GetCodeContextStaleEnvelope }
 > {
   const resolved = await resolveReadyRepoBinding(context, McpToolId.GetCodeContext);
 
   if (!resolved.ok) {
     return {
-      ok: false,
-      result: failure(McpErrorCode.RepoNotReady, "Vtrace index is unavailable. Call index_repo, then retry get_code_context.", {
-        reason: "index_unavailable",
-        nextTool: {
-          name: McpToolId.IndexRepo,
-          input: {},
-        },
-        originalError: resolved.result.error,
+      kind: "stale_response",
+      output: buildStaleEnvelope({
+        reason: "repo_not_ready",
+        message: REPO_NOT_READY_MESSAGE,
+        indexFreshness: formatIndexFreshnessDiagnostic({
+          status: "unavailable",
+          reason: "repo_not_ready",
+          action: "call_index_repo",
+          beforeState: null,
+          afterState: null,
+          latestRunId: null,
+        }),
       }),
     };
   }
@@ -6932,46 +6961,107 @@ async function refreshIndexForGetCodeContextIfNeeded(
   const db = openIndexerDatabase(resolved.binding.dbPath);
   const indexMissing = !hasIndexedFiles(db);
   db.close();
+  const latestRunId = resolved.binding.state.latestRunId ?? null;
 
   if (!indexMissing && beforeFreshness.state === "fresh") {
     return {
-      ok: true,
+      kind: "fresh",
       indexFreshness: formatIndexFreshnessDiagnostic({
         freshness: beforeFreshness,
-        latestRunId: resolved.binding.state.latestRunId ?? null,
+        latestRunId,
       }),
     };
   }
 
-  const refreshReason = indexMissing ? "missing_index" : "stale_index";
-  const indexed = await reindexRepoAndRefreshState({
-    repoRoot: resolved.binding.repoRoot,
-    dbPath: resolved.binding.dbPath,
-    statePath: resolved.binding.statePath,
-    configPresent: true,
-    statePresent: true,
-    usesDbPathOverride: false,
-  });
-  const nextState = indexed.state ?? resolved.binding.state;
-  const afterFreshness = await inspectIndexFreshness({
-    repoRoot: resolved.binding.repoRoot,
-    lastIndexSnapshot: nextState.lastIndexSnapshot,
-    observedFileChanges: nextState.observedFileChanges,
-    fileWatcher: nextState.fileWatcher,
-  });
+  const reason: GetCodeContextStaleReason = indexMissing ? "missing_index" : "stale_index";
+  const message = indexMissing ? MISSING_INDEX_MESSAGE : STALE_INDEX_MESSAGE;
 
   return {
-    ok: true,
-    indexFreshness: formatIndexFreshnessDiagnostic({
-      status: "refreshed",
-      reason: refreshReason,
-      action: "auto_index_repo",
-      beforeState: beforeFreshness.state,
-      afterState: afterFreshness.state,
-      latestRunId: nextState.latestRunId ?? null,
+    kind: "stale_response",
+    output: buildStaleEnvelope({
+      reason,
+      message,
+      indexFreshness: formatIndexFreshnessDiagnostic({
+        status: indexMissing ? "unavailable" : "stale",
+        reason,
+        action: "call_index_repo",
+        beforeState: beforeFreshness.state,
+        afterState: beforeFreshness.state,
+        latestRunId,
+      }),
     }),
   };
 }
+
+function buildStaleEnvelope(input: {
+  reason: GetCodeContextStaleReason;
+  message: string;
+  indexFreshness: ReturnType<typeof formatIndexFreshnessDiagnostic>;
+}): GetCodeContextStaleEnvelope {
+  return {
+    resolved: false,
+    reason: input.reason,
+    message: input.message,
+    nextTool: {
+      name: McpToolId.IndexRepo,
+      input: {},
+    },
+    diagnostics: {
+      indexFreshness: input.indexFreshness,
+    },
+  };
+}
+
+const GET_CODE_CONTEXT_STALE_ENVELOPE_SCHEMA_PROPERTIES = Object.freeze({
+  resolved: {
+    type: "boolean",
+    description: "False when the index was stale, missing, or the repo was not ready. Absent or true when the pipeline ran.",
+  },
+  reason: {
+    type: ["string", "null"],
+    description: "stale_index, missing_index, or repo_not_ready when resolved=false; otherwise absent or null.",
+  },
+  message: {
+    type: ["string", "null"],
+    description: "Human-readable explanation when resolved=false.",
+  },
+  nextTool: {
+    type: ["object", "null"],
+    description: "Suggested next tool to call when resolved=false. Always points at index_repo.",
+    properties: {
+      name: stringProperty("Next tool id (always index_repo)."),
+      input: {
+        type: "object",
+        description: "Suggested input object for the next tool.",
+        properties: {},
+        required: [],
+        additionalProperties: true,
+      },
+    },
+    required: ["name", "input"],
+    additionalProperties: false,
+  },
+}) satisfies Record<string, McpSchemaProperty>;
+
+const GET_CODE_CONTEXT_OUTPUT_SCHEMA: McpObjectSchema = {
+  type: "object",
+  description:
+    "get_code_context output. Either the full run_pipeline orchestration result, or a fast stale-index envelope that tells the caller to call index_repo and retry.",
+  properties: {
+    ...RUN_PIPELINE_TOOL_DEFINITION.metadata.outputSchema.properties,
+    ...GET_CODE_CONTEXT_STALE_ENVELOPE_SCHEMA_PROPERTIES,
+    diagnostics: {
+      type: ["object", "null"],
+      description:
+        "Pipeline diagnostics when resolved; on stale, a minimal diagnostics object carrying indexFreshness.",
+      properties: {},
+      required: [],
+      additionalProperties: true,
+    },
+  },
+  required: [],
+  additionalProperties: false,
+};
 
 const GET_CODE_CONTEXT_TOOL_DEFINITION = Object.freeze({
   metadata: Object.freeze({
@@ -6979,10 +7069,11 @@ const GET_CODE_CONTEXT_TOOL_DEFINITION = Object.freeze({
     toolId: McpToolId.GetCodeContext,
     displayName: "Get Code Context",
     description:
-      "Vtrace default first-pass repo-context tool. Use this before manual repo exploration for broad coding, debugging, refactor, and code-understanding tasks. It analyzes the task, routes retrieval, builds compact code context, surfaces relevant memory when available, and returns diagnostics. For exact known-symbol impact questions, use get_impact_graph directly or after this tool.",
+      "Vtrace default first-pass repo-context tool. Use this before manual repo exploration for broad coding, debugging, refactor, and code-understanding tasks. It analyzes the task, routes retrieval, builds compact code context, surfaces relevant memory when available, and returns diagnostics. If the index is stale, missing, or the repo is not ready, get_code_context returns a fast envelope with resolved=false and reason in {stale_index, missing_index, repo_not_ready} and nextTool=index_repo. Call index_repo, then retry get_code_context. For exact known-symbol impact questions, use get_impact_graph directly or after this tool.",
+    outputSchema: GET_CODE_CONTEXT_OUTPUT_SCHEMA,
   }),
   handler: handleGetCodeContextRequest,
-}) satisfies McpToolDefinition<RunPipelineInput, RunPipelineMcpOutput>;
+}) satisfies McpToolDefinition<RunPipelineInput, GetCodeContextOutput>;
 
 const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
   GET_CODE_CONTEXT_TOOL_DEFINITION,

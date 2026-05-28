@@ -217,10 +217,23 @@ test("MCP registry registration and lookup are deterministic", () => {
     registry.getByToolId(McpToolId.GetCodeContext)?.metadata.inputSchema,
     registry.getByToolId(McpToolId.RunPipeline)?.metadata.inputSchema,
   );
-  assert.equal(
-    registry.getByToolId(McpToolId.GetCodeContext)?.metadata.outputSchema,
-    registry.getByToolId(McpToolId.RunPipeline)?.metadata.outputSchema,
-  );
+  const getCodeContextOutputSchema =
+    registry.getByToolId(McpToolId.GetCodeContext)?.metadata.outputSchema;
+  const runPipelineOutputSchema =
+    registry.getByToolId(McpToolId.RunPipeline)?.metadata.outputSchema;
+  assert.notEqual(getCodeContextOutputSchema, undefined);
+  assert.notEqual(runPipelineOutputSchema, undefined);
+  for (const key of ["resolved", "reason", "message", "nextTool"]) {
+    assert.ok(
+      getCodeContextOutputSchema!.properties[key] !== undefined,
+      `get_code_context outputSchema should document ${key}`,
+    );
+    assert.equal(
+      runPipelineOutputSchema!.properties[key],
+      undefined,
+      `run_pipeline outputSchema must not document ${key}`,
+    );
+  }
 });
 
 test("unknown-tool responses are structured and deterministic", async () => {
@@ -2166,7 +2179,137 @@ test("index_status and run_pipeline diagnostics report watcher-observed stale fi
   });
 });
 
-test("get_code_context auto-refreshes a stale index before running context retrieval", async () => {
+test("get_code_context returns fast stale envelope and does not auto-reindex when stale", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const bound = await createRepoBoundMcpServer({ repoPath: repoRoot });
+    const server = bound.server;
+
+    const statusBefore = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-index-status-before-get-code-context-stale",
+      toolId: McpToolId.IndexStatus,
+      input: {},
+    });
+
+    await recordObservedFileChanges({
+      repoRoot,
+      statePath: initialized.paths.statePath,
+      changedFilePaths: ["src/session.ts"],
+      nowMs: 6_000,
+    });
+
+    const startMs = Date.now();
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-get-code-context-stale-fast-fail",
+      toolId: McpToolId.GetCodeContext,
+      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+    });
+    const elapsedMs = Date.now() - startMs;
+
+    const statusAfter = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-index-status-after-get-code-context-stale-fast-fail",
+      toolId: McpToolId.IndexStatus,
+      input: {},
+    });
+
+    assert.equal(response.result.ok, true);
+    assert.equal(response.result.output.resolved, false);
+    assert.equal(response.result.output.reason, "stale_index");
+    assert.equal(typeof response.result.output.message, "string");
+    assert.ok(
+      response.result.output.message.length > 0,
+      "stale envelope message should be non-empty",
+    );
+    assert.match(response.result.output.message, /index_repo/);
+    assert.match(response.result.output.message, /get_code_context/);
+    assert.deepEqual(response.result.output.nextTool, {
+      name: "index_repo",
+      input: {},
+    });
+    assert.equal(response.result.output.diagnostics.indexFreshness.status, "stale");
+    assert.equal(response.result.output.diagnostics.indexFreshness.reason, "stale_index");
+    assert.equal(response.result.output.diagnostics.indexFreshness.action, "call_index_repo");
+    assert.equal("context" in response.result.output, false);
+    assert.equal("capsule" in response.result.output, false);
+
+    // Front door must not block on indexing work — be conservative but generous
+    // enough for slow CI machines.
+    assert.ok(
+      elapsedMs < 30_000,
+      `expected fast stale response, took ${elapsedMs}ms`,
+    );
+
+    // Index state must not be advanced by get_code_context's stale-fail path.
+    assert.equal(statusBefore.result.ok, true);
+    assert.equal(statusAfter.result.ok, true);
+    assert.equal(
+      statusAfter.result.output.latestRunId,
+      statusBefore.result.output.latestRunId,
+      "get_code_context must not run a new index run on the stale path",
+    );
+    assert.equal(statusAfter.result.output.freshness.isStale, true);
+    assert.equal(statusAfter.result.output.freshness.observedFileChanges?.changedFileCount, 1);
+  });
+});
+
+test("get_code_context returns nextTool=index_repo when the index is missing", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const bound = await createRepoBoundMcpServer({ repoPath: repoRoot });
+    const server = bound.server;
+
+    const db = openIndexerDatabase(initialized.paths.dbPath);
+    try {
+      db.exec("DELETE FROM files");
+    } finally {
+      db.close();
+    }
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-get-code-context-missing-index",
+      toolId: McpToolId.GetCodeContext,
+      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+    });
+
+    assert.equal(response.result.ok, true);
+    assert.equal(response.result.output.resolved, false);
+    assert.equal(response.result.output.reason, "missing_index");
+    assert.equal(response.result.output.nextTool.name, "index_repo");
+    assert.deepEqual(response.result.output.nextTool.input, {});
+    assert.equal(response.result.output.diagnostics.indexFreshness.action, "call_index_repo");
+  });
+});
+
+test("get_code_context returns nextTool=index_repo when the repo is not ready", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    // Note: no initRepo here — the repo binding is not ready.
+    const server = createMcpServer({
+      context: { repoRoot },
+    });
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-get-code-context-repo-not-ready",
+      toolId: McpToolId.GetCodeContext,
+      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+    });
+
+    assert.equal(response.result.ok, true);
+    assert.equal(response.result.output.resolved, false);
+    assert.equal(response.result.output.reason, "repo_not_ready");
+    assert.equal(response.result.output.nextTool.name, "index_repo");
+    assert.deepEqual(response.result.output.nextTool.input, {});
+  });
+});
+
+test("index_repo remains callable and recovers from stale_index reported by get_code_context", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);
     const initialized = await initRepo({ repoPath: repoRoot });
@@ -2177,34 +2320,68 @@ test("get_code_context auto-refreshes a stale index before running context retri
       repoRoot,
       statePath: initialized.paths.statePath,
       changedFilePaths: ["src/session.ts"],
-      nowMs: 6_000,
+      nowMs: 7_000,
     });
 
-    const response = await server.handleRequest({
+    const staleResponse = await server.handleRequest({
       schema: MCP_SERVER_SCHEMA,
-      requestId: "req-get-code-context-auto-refresh-stale",
+      requestId: "req-get-code-context-recovery-stale",
       toolId: McpToolId.GetCodeContext,
       input: { query: "session manager", maxBudgetCharacters: 4_000 },
     });
-    const status = await server.handleRequest({
+    assert.equal(staleResponse.result.ok, true);
+    assert.equal(staleResponse.result.output.resolved, false);
+    assert.equal(staleResponse.result.output.nextTool.name, "index_repo");
+
+    const indexResponse = await server.handleRequest({
       schema: MCP_SERVER_SCHEMA,
-      requestId: "req-index-status-after-get-code-context-refresh",
-      toolId: McpToolId.IndexStatus,
+      requestId: "req-index-repo-recovery",
+      toolId: McpToolId.IndexRepo,
       input: {},
     });
+    assert.equal(indexResponse.result.ok, true);
+    assert.equal(indexResponse.result.output.readiness?.status, "ready");
 
-    assert.equal(response.result.ok, true);
-    assert.equal(response.result.output.diagnostics.indexFreshness.status, "refreshed");
-    assert.equal(response.result.output.diagnostics.indexFreshness.reason, "stale_index");
-    assert.equal(response.result.output.diagnostics.indexFreshness.action, "auto_index_repo");
-    assert.equal(response.result.output.diagnostics.indexFreshness.beforeState, "possibly_stale");
-    assert.equal(response.result.output.diagnostics.indexFreshness.afterState, "fresh");
-    assert.equal(response.result.output.diagnostics.freshness.state, "fresh");
+    const retry = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-get-code-context-recovery-retry",
+      toolId: McpToolId.GetCodeContext,
+      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+    });
 
-    assert.equal(status.result.ok, true);
-    assert.equal(status.result.output.freshness.state, "fresh");
-    assert.equal(status.result.output.freshness.isStale, false);
-    assert.equal(status.result.output.freshness.observedFileChanges, null);
+    assert.equal(retry.result.ok, true);
+    assert.equal("resolved" in retry.result.output, false);
+    assert.equal(retry.result.output.diagnostics.indexFreshness.status, "fresh");
+    assert.equal(retry.result.output.diagnostics.indexFreshness.action, "none");
+    assert.equal(retry.result.output.diagnostics.freshness.state, "fresh");
+  });
+});
+
+test("run_pipeline still surfaces stale diagnostics without short-circuiting on stale index", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const bound = await createRepoBoundMcpServer({ repoPath: repoRoot });
+    const server = bound.server;
+
+    await recordObservedFileChanges({
+      repoRoot,
+      statePath: initialized.paths.statePath,
+      changedFilePaths: ["src/session.ts"],
+      nowMs: 8_000,
+    });
+
+    const pipeline = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-no-regression-on-stale",
+      toolId: McpToolId.RunPipeline,
+      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+    });
+
+    assert.equal(pipeline.result.ok, true);
+    assert.equal("resolved" in pipeline.result.output, false);
+    assert.equal(pipeline.result.output.diagnostics.freshness.state, "possibly_stale");
+    assert.equal(pipeline.result.output.diagnostics.indexFreshness.status, "stale");
   });
 });
 
