@@ -53,5 +53,7 @@ export interface IndexProjectResult {
   totalSkippedUnsupportedLanguage: number;
   totalReadFailures: number;
   totalPersistenceFailures: number;
+  totalSymbols: number;
+  totalRelationships: number;
   files: IndexedFileSummary[];
 }

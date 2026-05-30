@@ -171,6 +171,14 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   const parsedSummaries = [...summariesByPath.values()];
   const allFiles = [...files, ...parsedSummaries]
     .sort((left, right) => left.path.localeCompare(right.path));
+  const totalSymbols = persistedResults.reduce(
+    (sum, result) => sum + result.symbols.length,
+    0,
+  );
+  const totalRelationships = persistedResults.reduce(
+    (sum, result) => sum + result.edges.length,
+    0,
+  );
 
   return {
     totalFilesScanned: scannedFiles.length,
@@ -187,6 +195,8 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     totalPersistenceFailures: allFiles.filter((file) => {
       return file.status === "persistence_failed";
     }).length,
+    totalSymbols,
+    totalRelationships,
     files: allFiles,
   };
 }

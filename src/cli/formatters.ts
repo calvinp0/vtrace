@@ -127,6 +127,8 @@ export function formatIndexResult(result: IndexProjectResult): string {
     totalSkippedUnsupportedLanguage: result.totalSkippedUnsupportedLanguage,
     totalReadFailures: result.totalReadFailures,
     totalPersistenceFailures: result.totalPersistenceFailures,
+    totalSymbols: result.totalSymbols,
+    totalRelationships: result.totalRelationships,
     files: result.files.map((file) => ({
       path: file.path,
       language: file.language,
@@ -135,6 +137,65 @@ export function formatIndexResult(result: IndexProjectResult): string {
       ...(file.error === undefined ? {} : { error: file.error }),
     })),
   });
+}
+
+export interface IndexHumanSummaryInput {
+  repoRoot: string;
+  dbPath: string;
+  indexResult: IndexProjectResult;
+  readinessStatus?: string;
+}
+
+export function formatIndexResultHuman(input: IndexHumanSummaryInput): string {
+  const { indexResult, repoRoot, dbPath } = input;
+  const repoName = path.basename(repoRoot);
+  const filesParsed = indexResult.totalFilesSuccessfullyIndexed;
+  const filesSkipped =
+    indexResult.totalSkippedUnregisteredLanguage
+    + indexResult.totalSkippedUnsupportedLanguage;
+  const filesFailed =
+    indexResult.totalParseFailures
+    + indexResult.totalReadFailures
+    + indexResult.totalPersistenceFailures;
+  const dbDisplayPath = formatRepoRelativePath(repoRoot, dbPath);
+
+  const summaryStatus = filesFailed > 0
+    ? `indexed with ${filesFailed} failure${filesFailed === 1 ? "" : "s"}`
+    : input.readinessStatus === undefined
+      ? "indexed"
+      : input.readinessStatus;
+
+  return [
+    phaseHeader("Detecting repo root", [`done: ${repoRoot}`]),
+    phaseHeader("Scanning repository", [
+      `done: ${formatCount(indexResult.totalFilesScanned)} file${indexResult.totalFilesScanned === 1 ? "" : "s"} discovered`,
+    ]),
+    phaseHeader("Parsing source files", [
+      `done: ${formatCount(filesParsed)} parsed, ${formatCount(filesSkipped)} skipped, ${formatCount(filesFailed)} failed`,
+    ]),
+    phaseHeader("Extracting symbols and relationships", [
+      `done: ${formatCount(indexResult.totalSymbols)} symbols, ${formatCount(indexResult.totalRelationships)} relationships`,
+    ]),
+    phaseHeader("Writing local index", [
+      `done: ${dbDisplayPath}`,
+    ]),
+    phaseHeader("Index complete", [
+      `repo: ${repoName}`,
+      `files: ${formatCount(indexResult.totalFilesScanned)}`,
+      `symbols: ${formatCount(indexResult.totalSymbols)}`,
+      `relationships: ${formatCount(indexResult.totalRelationships)}`,
+      `status: ${summaryStatus}`,
+    ]),
+  ].join("");
+}
+
+function phaseHeader(label: string, lines: readonly string[]): string {
+  const body = lines.map((line) => `    ${line}`).join("\n");
+  return `==> ${label}\n${body}\n\n`;
+}
+
+function formatCount(value: number): string {
+  return value.toLocaleString("en-US");
 }
 
 export function formatInspectFile(output: InspectFileOutput): string {

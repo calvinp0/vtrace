@@ -1,10 +1,11 @@
 import { reindexRepoAndRefreshState } from "../../runtime/reindexRepo";
-import { formatIndexResult } from "../formatters";
+import { formatIndexResult, formatIndexResultHuman } from "../formatters";
 import { selectProgressReporter } from "../progress";
 import type { CliOptions, CommandResult } from "../types";
 import {
   ensureDatabaseDirectory,
   failure,
+  formatUserFacingFailure,
   isExistingFile,
   resolveRepoCommandPaths,
   resolveOptions,
@@ -15,26 +16,31 @@ export async function runIndexCommand(
   args: readonly string[],
   options: CliOptions = {},
 ): Promise<CommandResult> {
-  if (args.length !== 1) {
-    return failure("Usage: index <repo>");
+  const parsed = parseIndexArgs(args);
+
+  if ("error" in parsed) {
+    return failure(parsed.error);
   }
 
   const resolvedOptions = resolveOptions(options);
 
   try {
-    const resolvedRepo = await resolveRepoCommandPaths(
-      resolvedOptions,
-      args[0] as string,
-    );
-    const repoRoot = resolvedRepo.repoRoot;
-    const dbPath = resolvedRepo.dbPath;
-    const statePresent = await isExistingFile(resolvedRepo.statePath);
-
-    await ensureDatabaseDirectory(dbPath);
     const progress = selectProgressReporter({
       stream: process.stderr,
       env: process.env,
+      isJsonOutput: parsed.json,
     });
+    progress.report({ kind: "phase_begin", phase: "detect_repo", label: "Detecting repo root" });
+    const resolvedRepo = await resolveRepoCommandPaths(
+      resolvedOptions,
+      parsed.repoPath,
+    );
+    const repoRoot = resolvedRepo.repoRoot;
+    const dbPath = resolvedRepo.dbPath;
+    progress.report({ kind: "phase_end", phase: "detect_repo", note: repoRoot });
+    const statePresent = await isExistingFile(resolvedRepo.statePath);
+
+    await ensureDatabaseDirectory(dbPath);
     const result = await reindexRepoAndRefreshState({
       repoRoot,
       dbPath,
@@ -44,12 +50,55 @@ export async function runIndexCommand(
       usesDbPathOverride: resolvedRepo.usesDbPathOverride,
       progress,
     });
-    return success(formatIndexResult(result.indexResult));
+
+    progress.report({ kind: "done", summary: "index complete" });
+
+    if (parsed.json) {
+      return success(formatIndexResult(result.indexResult));
+    }
+
+    return success(formatIndexResultHuman({
+      repoRoot,
+      dbPath,
+      indexResult: result.indexResult,
+      readinessStatus: result.state?.readiness.status,
+    }));
   } catch (error) {
-    return failure(formatCommandError("index failed", error));
+    const message = error instanceof Error ? error.message : String(error);
+    return failure(formatUserFacingFailure(
+      "Indexing could not finish.",
+      message,
+      "Run `vtrace index <repo>` from inside the repo, or pass the repo path explicitly.",
+    ));
   }
 }
 
-function formatCommandError(prefix: string, error: unknown): string {
-  return `${prefix}: ${error instanceof Error ? error.message : String(error)}`;
+function parseIndexArgs(
+  args: readonly string[],
+): { repoPath: string; json: boolean } | { error: string } {
+  let repoPath: string | undefined;
+  let json = false;
+
+  for (const argument of args) {
+    if (argument === "--json") {
+      json = true;
+      continue;
+    }
+
+    if (argument.startsWith("--")) {
+      return { error: "Usage: index <repo> [--json]" };
+    }
+
+    if (repoPath !== undefined) {
+      return { error: "Usage: index <repo> [--json]" };
+    }
+
+    repoPath = argument;
+  }
+
+  if (repoPath === undefined) {
+    return { error: "Usage: index <repo> [--json]" };
+  }
+
+  return { repoPath, json };
 }

@@ -28,17 +28,18 @@ import { REPO_LOCAL_STATE_DIRNAME } from "../setup/types";
 import { resolveWorkspaceConfigPath } from "../workspace/config";
 import { runCli } from "./index";
 
-test("index command runs the pipeline and prints a stable summary", async () => {
+test("index --json prints a stable machine-readable summary with no progress pollution", async () => {
   await withFixture(async ({ repoRoot, dbPath }) => {
     await writeFixtureRepo(repoRoot);
 
-    const first = await runCli(["index", repoRoot], { dbPath });
-    const second = await runCli(["index", repoRoot], { dbPath });
+    const first = await runCli(["index", repoRoot, "--json"], { dbPath });
+    const second = await runCli(["index", repoRoot, "--json"], { dbPath });
 
     assert.equal(first.exitCode, 0);
     assert.equal(first.stderr, "");
     assert.equal(second.exitCode, 0);
     assert.equal(second.stdout, first.stdout);
+    assert.doesNotMatch(first.stdout, /==>/, "JSON output must not contain progress phase headers");
 
     const summary = JSON.parse(first.stdout);
     assert.deepEqual(summary, {
@@ -50,6 +51,8 @@ test("index command runs the pipeline and prints a stable summary", async () => 
       totalSkippedUnsupportedLanguage: 0,
       totalReadFailures: 0,
       totalPersistenceFailures: 0,
+      totalSymbols: summary.totalSymbols,
+      totalRelationships: summary.totalRelationships,
       files: [
         {
           path: "src/models.ts",
@@ -71,6 +74,57 @@ test("index command runs the pipeline and prints a stable summary", async () => 
         },
       ],
     });
+    assert.equal(typeof summary.totalSymbols, "number");
+    assert.equal(typeof summary.totalRelationships, "number");
+    assert.equal(summary.totalSymbols > 0, true);
+  });
+});
+
+test("index command prints phase headers and a human-readable final summary by default", async () => {
+  await withFixture(async ({ repoRoot, dbPath }) => {
+    await writeFixtureRepo(repoRoot);
+
+    const result = await runCli(["index", repoRoot], { dbPath });
+
+    assert.equal(result.exitCode, 0);
+    assert.equal(result.stderr, "");
+    assert.match(result.stdout, /^==> Detecting repo root/m);
+    assert.match(result.stdout, /^==> Scanning repository/m);
+    assert.match(result.stdout, /^==> Parsing source files/m);
+    assert.match(result.stdout, /^==> Extracting symbols and relationships/m);
+    assert.match(result.stdout, /^==> Writing local index/m);
+    assert.match(result.stdout, /^==> Index complete/m);
+    assert.match(result.stdout, /files: 3/);
+    assert.match(result.stdout, /symbols: \d+/);
+    assert.match(result.stdout, /relationships: \d+/);
+    assert.match(result.stdout, /status: \w+/);
+    assert.match(result.stdout, /done: \d+ files? discovered/);
+    assert.match(result.stdout, /done: 3 parsed, 0 skipped, 0 failed/);
+  });
+});
+
+test("index failure surfaces a `Reason:` / `Next:` block on stderr", async () => {
+  await withFixture(async ({ repoRoot, dbPath }) => {
+    await writeFixtureRepo(repoRoot);
+
+    const missingRepo = path.join(repoRoot, "no-such-subdir");
+    const result = await runCli(["index", missingRepo], { dbPath });
+
+    assert.equal(result.exitCode, 1);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /^Indexing could not finish\./m);
+    assert.match(result.stderr, /^Reason: /m);
+    assert.match(result.stderr, /^Next: /m);
+  });
+});
+
+test("index rejects unknown flags with a usage hint", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeFixtureRepo(repoRoot);
+
+    const result = await runCli(["index", repoRoot, "--bogus"]);
+    assert.equal(result.exitCode, 1);
+    assert.match(result.stderr, /Usage: index <repo> \[--json\]/);
   });
 });
 
