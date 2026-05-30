@@ -4,6 +4,14 @@ import path from "node:path";
 const VTRACE_GUIDANCE_START = "<!-- vtrace:start -->";
 const VTRACE_GUIDANCE_END = "<!-- vtrace:end -->";
 
+export const VtraceGuidanceTarget = Object.freeze({
+  AgentsMd: "AGENTS.md",
+  ClaudeMd: "CLAUDE.md",
+});
+
+export type VtraceGuidanceTarget =
+  (typeof VtraceGuidanceTarget)[keyof typeof VtraceGuidanceTarget];
+
 export const VTRACE_AGENT_GUIDANCE_BLOCK = [
   VTRACE_GUIDANCE_START,
   "## Vtrace Agent Guidance",
@@ -11,8 +19,11 @@ export const VTRACE_AGENT_GUIDANCE_BLOCK = [
   "- Use `get_code_context` for broad repo-understanding, debugging, refactor, and code-context tasks.",
   "- Use `get_code_context` before manual grep or opening many files.",
   "- If `get_code_context` reports `stale_index`, `missing_index`, or `repo_not_ready`, call `index_repo` and then retry `get_code_context`.",
-  "- Use `get_impact_graph` for known-symbol impact or blast-radius questions.",
-  "- Still follow existing repo rules such as GitNexus impact checks before editing symbols.",
+  "- Use `search_symbols` for exact symbol lookup.",
+  "- Use `get_skeleton` when a file path is already known and a structural overview is needed.",
+  "- Use `get_impact_graph` for known-symbol blast radius, dependents, callers, or references.",
+  "- Use `get_context_capsule` only when lower-level capsule output is specifically needed.",
+  "- `run_pipeline` remains available as the stable equivalent of `get_code_context`.",
   VTRACE_GUIDANCE_END,
   "",
 ].join("\n");
@@ -20,15 +31,17 @@ export const VTRACE_AGENT_GUIDANCE_BLOCK = [
 export interface AgentGuidanceInstallResult {
   repoRoot: string;
   path: string;
+  target: VtraceGuidanceTarget;
   action: "created" | "updated" | "unchanged";
 }
 
 export async function writeVtraceAgentGuidanceBlock(
   repoRoot: string,
+  target: VtraceGuidanceTarget = VtraceGuidanceTarget.AgentsMd,
 ): Promise<AgentGuidanceInstallResult> {
   const resolvedRepoRoot = path.resolve(repoRoot);
-  const agentsPath = path.join(resolvedRepoRoot, "AGENTS.md");
-  const existing = await readTextFileIfPresent(agentsPath);
+  const guidancePath = path.join(resolvedRepoRoot, target);
+  const existing = await readTextFileIfPresent(guidancePath);
   const next = upsertVtraceAgentGuidanceBlock(existing ?? "");
 
   const action = existing === undefined
@@ -38,12 +51,13 @@ export async function writeVtraceAgentGuidanceBlock(
       : "updated";
 
   if (action !== "unchanged") {
-    await writeFile(agentsPath, next);
+    await writeFile(guidancePath, next);
   }
 
   return {
     repoRoot: resolvedRepoRoot,
-    path: agentsPath,
+    path: guidancePath,
+    target,
     action,
   };
 }

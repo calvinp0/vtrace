@@ -6,6 +6,7 @@ import { test } from "bun:test";
 
 import {
   VTRACE_AGENT_GUIDANCE_BLOCK,
+  VtraceGuidanceTarget,
   writeVtraceAgentGuidanceBlock,
 } from "./agentGuidance";
 
@@ -15,18 +16,51 @@ test("writeVtraceAgentGuidanceBlock creates AGENTS.md when missing", async () =>
     const agents = await readFile(path.join(repoRoot, "AGENTS.md"), "utf8");
 
     assert.equal(result.action, "created");
+    assert.equal(result.target, VtraceGuidanceTarget.AgentsMd);
     assert.equal(result.path, path.join(repoRoot, "AGENTS.md"));
     assert.equal(agents, VTRACE_AGENT_GUIDANCE_BLOCK);
     assert.match(agents, /get_code_context/);
     assert.match(agents, /broad repo-understanding, debugging, refactor, and code-context tasks/);
     assert.match(agents, /before manual grep or opening many files/);
     assert.match(agents, /If `get_code_context` reports `stale_index`, `missing_index`, or `repo_not_ready`, call `index_repo` and then retry `get_code_context`\./);
+    assert.match(agents, /search_symbols/);
+    assert.match(agents, /get_skeleton/);
     assert.match(agents, /get_impact_graph/);
-    assert.match(agents, /GitNexus impact checks before editing symbols/);
+    assert.match(agents, /get_context_capsule/);
+    assert.match(agents, /run_pipeline/);
   });
 });
 
-test("writeVtraceAgentGuidanceBlock updates an existing Vtrace block idempotently", async () => {
+test("writeVtraceAgentGuidanceBlock creates CLAUDE.md when targeted", async () => {
+  await withTempRepo(async (repoRoot) => {
+    const result = await writeVtraceAgentGuidanceBlock(
+      repoRoot,
+      VtraceGuidanceTarget.ClaudeMd,
+    );
+    const claude = await readFile(path.join(repoRoot, "CLAUDE.md"), "utf8");
+
+    assert.equal(result.action, "created");
+    assert.equal(result.target, VtraceGuidanceTarget.ClaudeMd);
+    assert.equal(result.path, path.join(repoRoot, "CLAUDE.md"));
+    assert.equal(claude, VTRACE_AGENT_GUIDANCE_BLOCK);
+    assert.match(claude, /get_code_context/);
+    await assert.rejects(
+      readFile(path.join(repoRoot, "AGENTS.md"), "utf8"),
+      { code: "ENOENT" },
+    );
+  });
+});
+
+test("writeVtraceAgentGuidanceBlock does not mention GitNexus", async () => {
+  await withTempRepo(async (repoRoot) => {
+    await writeVtraceAgentGuidanceBlock(repoRoot);
+    const agents = await readFile(path.join(repoRoot, "AGENTS.md"), "utf8");
+
+    assert.equal(/gitnexus/i.test(agents), false);
+  });
+});
+
+test("writeVtraceAgentGuidanceBlock updates an existing Vtrace block idempotently in AGENTS.md", async () => {
   await withTempRepo(async (repoRoot) => {
     const agentsPath = path.join(repoRoot, "AGENTS.md");
     await writeFile(
@@ -59,31 +93,73 @@ test("writeVtraceAgentGuidanceBlock updates an existing Vtrace block idempotentl
   });
 });
 
-test("writeVtraceAgentGuidanceBlock preserves existing GitNexus block unchanged", async () => {
+test("writeVtraceAgentGuidanceBlock updates an existing Vtrace block idempotently in CLAUDE.md", async () => {
   await withTempRepo(async (repoRoot) => {
-    const agentsPath = path.join(repoRoot, "AGENTS.md");
-    const gitNexusBlock = [
-      "<!-- gitnexus:start -->",
-      "Use GitNexus impact checks before editing exported symbols.",
-      "<!-- gitnexus:end -->",
-    ].join("\n");
+    const claudePath = path.join(repoRoot, "CLAUDE.md");
     await writeFile(
-      agentsPath,
+      claudePath,
       [
-        "# Repo Agents",
+        "# Repo Instructions for Claude",
         "",
-        gitNexusBlock,
+        "Project-specific rules go here.",
+        "",
+        "<!-- vtrace:start -->",
+        "stale vtrace content",
+        "<!-- vtrace:end -->",
         "",
       ].join("\n"),
     );
 
-    const result = await writeVtraceAgentGuidanceBlock(repoRoot);
-    const agents = await readFile(agentsPath, "utf8");
+    const updated = await writeVtraceAgentGuidanceBlock(
+      repoRoot,
+      VtraceGuidanceTarget.ClaudeMd,
+    );
+    const afterUpdate = await readFile(claudePath, "utf8");
+    const unchanged = await writeVtraceAgentGuidanceBlock(
+      repoRoot,
+      VtraceGuidanceTarget.ClaudeMd,
+    );
+    const afterUnchanged = await readFile(claudePath, "utf8");
+
+    assert.equal(updated.action, "updated");
+    assert.equal(unchanged.action, "unchanged");
+    assert.equal(afterUnchanged, afterUpdate);
+    assert.equal(countOccurrences(afterUpdate, "<!-- vtrace:start -->"), 1);
+    assert.equal(countOccurrences(afterUpdate, "<!-- vtrace:end -->"), 1);
+    assert.equal(afterUpdate.includes("stale vtrace content"), false);
+    assert.equal(afterUpdate.includes(VTRACE_AGENT_GUIDANCE_BLOCK), true);
+    assert.match(afterUpdate, /Project-specific rules go here\./);
+  });
+});
+
+test("writeVtraceAgentGuidanceBlock preserves an unrelated existing block unchanged", async () => {
+  await withTempRepo(async (repoRoot) => {
+    const claudePath = path.join(repoRoot, "CLAUDE.md");
+    const unrelatedBlock = [
+      "<!-- other-tool:start -->",
+      "Some other tool's guidance lives here.",
+      "<!-- other-tool:end -->",
+    ].join("\n");
+    await writeFile(
+      claudePath,
+      [
+        "# Repo Instructions for Claude",
+        "",
+        unrelatedBlock,
+        "",
+      ].join("\n"),
+    );
+
+    const result = await writeVtraceAgentGuidanceBlock(
+      repoRoot,
+      VtraceGuidanceTarget.ClaudeMd,
+    );
+    const claude = await readFile(claudePath, "utf8");
 
     assert.equal(result.action, "updated");
-    assert.equal(agents.includes(gitNexusBlock), true);
-    assert.match(agents, /<!-- vtrace:start -->/);
-    assert.match(agents, /<!-- vtrace:end -->/);
+    assert.equal(claude.includes(unrelatedBlock), true);
+    assert.match(claude, /<!-- vtrace:start -->/);
+    assert.match(claude, /<!-- vtrace:end -->/);
   });
 });
 

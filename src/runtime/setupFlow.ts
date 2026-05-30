@@ -10,6 +10,7 @@ import {
   type AgentConfigInstallResult,
 } from "./agents";
 import {
+  VtraceGuidanceTarget,
   writeVtraceAgentGuidanceBlock,
   type AgentGuidanceInstallResult,
 } from "./agentGuidance";
@@ -32,7 +33,7 @@ export interface SetupFlowResult {
   readiness: NonNullable<ProductShellStatus["readiness"]>;
   latestRunId: number | null;
   agentConfig: AgentConfigInstallResult;
-  agentGuidance: AgentGuidanceInstallResult | null;
+  agentGuidance: AgentGuidanceInstallResult;
   runtime: RuntimeDaemonActionResult["status"] & {
     action: RuntimeDaemonActionResult["action"] | "not_requested";
   };
@@ -78,9 +79,13 @@ export async function runSetupFlow(options: {
   const agentConfig = await agent.writeConfig(detection.repoRoot);
   progress.report({ kind: "phase_end", phase: "agent_config" });
 
-  const agentGuidance = agent.id === ProductShellAgentId.Codex
-    ? await writeVtraceAgentGuidanceBlock(detection.repoRoot)
-    : null;
+  const guidanceTarget = agent.id === ProductShellAgentId.ClaudeCode
+    ? VtraceGuidanceTarget.ClaudeMd
+    : VtraceGuidanceTarget.AgentsMd;
+  const agentGuidance = await writeVtraceAgentGuidanceBlock(
+    detection.repoRoot,
+    guidanceTarget,
+  );
 
   let runtimeAction: RuntimeDaemonActionResult | undefined;
   if (options.startRuntime === true) {

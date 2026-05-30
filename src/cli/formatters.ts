@@ -378,14 +378,10 @@ export function formatSetupFlowResult(result: SetupFlowResult): string {
       `Config file: ${formatRepoRelativePath(result.repoRoot, result.agentConfig.configPath)}`,
       `Launcher: ${formatLauncher(result.agentConfig.launcher)}`,
     ]),
-    ...(result.agentGuidance === null
-      ? []
-      : [
-        formatSection("Agent guidance", [
-          `Action: ${formatAgentGuidanceActionLabel(result.agentGuidance.action)}`,
-          `Guidance block: ${formatRepoRelativePath(result.repoRoot, result.agentGuidance.path)}`,
-        ]),
-      ]),
+    formatSection(`${result.agentConfig.displayName} guidance`, [
+      `Action: ${formatAgentGuidanceActionLabel(result.agentGuidance.action)}`,
+      `Guidance block: ${formatRepoRelativePath(result.repoRoot, result.agentGuidance.path)}`,
+    ]),
     formatSection("Runtime state", [
       `Action: ${formatRuntimeActionLabel(result.runtime.action)}`,
       `State: ${runtimeState}`,
@@ -444,7 +440,7 @@ function buildAgentMcpConfiguredSteps(
 }
 
 function formatAgentGuidanceActionLabel(
-  action: NonNullable<SetupFlowResult["agentGuidance"]>["action"],
+  action: SetupFlowResult["agentGuidance"]["action"],
 ): string {
   switch (action) {
     case "created":

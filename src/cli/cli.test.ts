@@ -891,13 +891,28 @@ test("agent selection remains narrow: claude-code works and unsupported agents f
     await writeFixtureRepo(repoRoot);
 
     const supported = await runCli(["setup", repoRoot, "--agent", "claude-code", "--json"]);
+    const setupText = await runCli(["setup", repoRoot, "--agent", "claude-code"]);
     const unsupported = await runCli(["status", repoRoot, "--agent", "other-agent", "--json"]);
     const supportedOutput = JSON.parse(supported.stdout);
     const unsupportedOutput = JSON.parse(unsupported.stdout);
+    const claudeMd = await readFile(path.join(repoRoot, "CLAUDE.md"), "utf8");
 
     assert.equal(supported.exitCode, 0);
     assert.equal(supportedOutput.ok, true);
     assert.equal(supportedOutput.result.selectedAgent, "claude-code");
+    assert.equal(supportedOutput.result.agentGuidance.path, path.join(repoRoot, "CLAUDE.md"));
+    assert.equal(supportedOutput.result.agentGuidance.target, "CLAUDE.md");
+    assert.equal(supportedOutput.result.agentGuidance.action, "created");
+    assert.match(claudeMd, /<!-- vtrace:start -->/);
+    assert.match(claudeMd, /get_code_context/);
+    assert.equal(/gitnexus/i.test(claudeMd), false);
+    await assert.rejects(
+      readFile(path.join(repoRoot, "AGENTS.md"), "utf8"),
+      { code: "ENOENT" },
+    );
+    assert.match(setupText.stdout, /Claude Code guidance/);
+    assert.match(setupText.stdout, /Action: Vtrace guidance block already current/);
+    assert.match(setupText.stdout, /Guidance block: CLAUDE\.md/);
 
     assert.equal(unsupported.exitCode, 1);
     assert.equal(unsupported.stderr, "");
@@ -907,6 +922,27 @@ test("agent selection remains narrow: claude-code works and unsupported agents f
     assert.match(unsupportedOutput.error.message, /Unsupported agent: other-agent/);
     assert.match(unsupportedOutput.error.message, /claude-code/);
     assert.match(unsupportedOutput.error.message, /codex/);
+  });
+});
+
+test("setup accepts --agent claude as an alias for claude-code and writes CLAUDE.md", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeFixtureRepo(repoRoot);
+
+    const setup = await runCli(["setup", repoRoot, "--agent", "claude", "--json"]);
+    const setupOutput = JSON.parse(setup.stdout);
+    const claudeMd = await readFile(path.join(repoRoot, "CLAUDE.md"), "utf8");
+
+    assert.equal(setup.exitCode, 0);
+    assert.equal(setupOutput.ok, true);
+    assert.equal(setupOutput.result.selectedAgent, "claude-code");
+    assert.equal(setupOutput.result.agentGuidance.target, "CLAUDE.md");
+    assert.match(claudeMd, /<!-- vtrace:start -->/);
+    assert.match(claudeMd, /get_code_context/);
+    await assert.rejects(
+      readFile(path.join(repoRoot, "AGENTS.md"), "utf8"),
+      { code: "ENOENT" },
+    );
   });
 });
 
@@ -931,13 +967,14 @@ test("setup and status support codex as a second real backend", async () => {
     assert.equal(setupOutput.result.agentConfig.configPath, configPath);
     assert.equal(setupOutput.result.agentConfig.matchesExpected, true);
     assert.equal(setupOutput.result.agentGuidance.path, path.join(repoRoot, "AGENTS.md"));
+    assert.equal(setupOutput.result.agentGuidance.target, "AGENTS.md");
     assert.equal(setupOutput.result.agentGuidance.action, "created");
     assert.equal(config, buildExpectedCodexConfigToml(repoRoot));
     assert.match(agents, /<!-- vtrace:start -->/);
     assert.match(agents, /get_code_context/);
-    assert.match(agents, /GitNexus impact checks before editing symbols/);
+    assert.equal(/gitnexus/i.test(agents), false);
     assert.equal(setupText.exitCode, 0);
-    assert.match(setupText.stdout, /Agent guidance/);
+    assert.match(setupText.stdout, /Codex guidance/);
     assert.match(setupText.stdout, /Action: Vtrace guidance block already current/);
     assert.match(setupText.stdout, /Guidance block: AGENTS\.md/);
     assert.match(setupText.stdout, /Vtrace MCP configured for Codex\./);

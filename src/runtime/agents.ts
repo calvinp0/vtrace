@@ -117,7 +117,11 @@ const CODEX_AGENT: ProductShellAgent = {
 export function resolveProductShellAgent(
   agentId: string | undefined,
 ): ProductShellAgent {
-  if (agentId === undefined || agentId === ProductShellAgentId.ClaudeCode) {
+  if (
+    agentId === undefined
+    || agentId === ProductShellAgentId.ClaudeCode
+    || agentId === "claude"
+  ) {
     return CLAUDE_CODE_AGENT;
   }
 
