@@ -28,7 +28,7 @@ export async function runSetupCommand(
       ? failureJson(formatShellJsonFailure({
         command: "setup",
         message: parsed.error,
-        nextSteps: ["Run `vtrace setup [repo] [--start-runtime] [--agent <name>] [--json]`."],
+        nextSteps: ["Run `vtrace setup [repo] [--start-runtime] [--agent <name>] [--json] [--quiet|--no-progress]`."],
       }))
       : failure(parsed.error);
   }
@@ -39,6 +39,7 @@ export async function runSetupCommand(
     stream: process.stderr,
     env: process.env,
     isJsonOutput: parsed.json,
+    quiet: parsed.quiet,
   });
 
   try {
@@ -74,14 +75,18 @@ function parseSetupArgs(
   repoPath: string;
   startRuntime: boolean;
   json: boolean;
+  quiet: boolean;
   agent?: string;
 } | {
   error: string;
   json: boolean;
 } {
+  const usage =
+    "Usage: setup [repo] [--start-runtime] [--agent <name>] [--json] [--quiet|--no-progress]";
   let repoPath = ".";
   let startRuntime = false;
   let json = false;
+  let quiet = false;
   let agent: string | undefined;
 
   for (let index = 0; index < args.length; index += 1) {
@@ -97,11 +102,16 @@ function parseSetupArgs(
       continue;
     }
 
+    if (argument === "--quiet" || argument === "--no-progress") {
+      quiet = true;
+      continue;
+    }
+
     if (argument === "--agent") {
       agent = args[index + 1];
 
       if (typeof agent !== "string" || agent.startsWith("--")) {
-        return { error: "Usage: setup [repo] [--start-runtime] [--agent <name>] [--json]", json };
+        return { error: usage, json };
       }
 
       index += 1;
@@ -109,11 +119,11 @@ function parseSetupArgs(
     }
 
     if (argument.startsWith("--")) {
-      return { error: "Usage: setup [repo] [--start-runtime] [--agent <name>] [--json]", json };
+      return { error: usage, json };
     }
 
     if (repoPath !== ".") {
-      return { error: "Usage: setup [repo] [--start-runtime] [--agent <name>] [--json]", json };
+      return { error: usage, json };
     }
 
     repoPath = argument;
@@ -123,6 +133,7 @@ function parseSetupArgs(
     repoPath,
     startRuntime,
     json,
+    quiet,
     ...(agent === undefined ? {} : { agent }),
   };
 }

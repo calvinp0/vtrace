@@ -103,6 +103,30 @@ test("index command prints phase headers and a human-readable final summary by d
   });
 });
 
+test("index --quiet runs cleanly and still emits the final human summary on stdout", async () => {
+  await withFixture(async ({ repoRoot, dbPath }) => {
+    await writeFixtureRepo(repoRoot);
+
+    const result = await runCli(["index", repoRoot, "--quiet"], { dbPath });
+
+    assert.equal(result.exitCode, 0);
+    assert.equal(result.stderr, "");
+    assert.match(result.stdout, /Index complete/);
+    assert.match(result.stdout, /files: 3/);
+  });
+});
+
+test("index --no-progress is accepted as an alias for --quiet", async () => {
+  await withFixture(async ({ repoRoot, dbPath }) => {
+    await writeFixtureRepo(repoRoot);
+
+    const result = await runCli(["index", repoRoot, "--no-progress"], { dbPath });
+
+    assert.equal(result.exitCode, 0);
+    assert.match(result.stdout, /Index complete/);
+  });
+});
+
 test("index failure surfaces a `Reason:` / `Next:` block on stderr", async () => {
   await withFixture(async ({ repoRoot, dbPath }) => {
     await writeFixtureRepo(repoRoot);

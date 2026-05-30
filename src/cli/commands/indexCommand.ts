@@ -29,6 +29,7 @@ export async function runIndexCommand(
       stream: process.stderr,
       env: process.env,
       isJsonOutput: parsed.json,
+      quiet: parsed.quiet,
     });
     progress.report({ kind: "phase_begin", phase: "detect_repo", label: "Detecting repo root" });
     const resolvedRepo = await resolveRepoCommandPaths(
@@ -75,9 +76,11 @@ export async function runIndexCommand(
 
 function parseIndexArgs(
   args: readonly string[],
-): { repoPath: string; json: boolean } | { error: string } {
+): { repoPath: string; json: boolean; quiet: boolean } | { error: string } {
+  const usage = "Usage: index <repo> [--json] [--quiet|--no-progress]";
   let repoPath: string | undefined;
   let json = false;
+  let quiet = false;
 
   for (const argument of args) {
     if (argument === "--json") {
@@ -85,20 +88,25 @@ function parseIndexArgs(
       continue;
     }
 
+    if (argument === "--quiet" || argument === "--no-progress") {
+      quiet = true;
+      continue;
+    }
+
     if (argument.startsWith("--")) {
-      return { error: "Usage: index <repo> [--json]" };
+      return { error: usage };
     }
 
     if (repoPath !== undefined) {
-      return { error: "Usage: index <repo> [--json]" };
+      return { error: usage };
     }
 
     repoPath = argument;
   }
 
   if (repoPath === undefined) {
-    return { error: "Usage: index <repo> [--json]" };
+    return { error: usage };
   }
 
-  return { repoPath, json };
+  return { repoPath, json, quiet };
 }

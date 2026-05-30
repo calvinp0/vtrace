@@ -82,10 +82,20 @@ export async function runSetupFlow(options: {
   const guidanceTarget = agent.id === ProductShellAgentId.ClaudeCode
     ? VtraceGuidanceTarget.ClaudeMd
     : VtraceGuidanceTarget.AgentsMd;
+  progress.report({
+    kind: "phase_begin",
+    phase: "agent_guidance",
+    label: `Updating ${guidanceTarget}`,
+  });
   const agentGuidance = await writeVtraceAgentGuidanceBlock(
     detection.repoRoot,
     guidanceTarget,
   );
+  progress.report({
+    kind: "phase_end",
+    phase: "agent_guidance",
+    note: agentGuidance.action,
+  });
 
   let runtimeAction: RuntimeDaemonActionResult | undefined;
   if (options.startRuntime === true) {

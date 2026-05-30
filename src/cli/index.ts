@@ -23,7 +23,7 @@ import { runWorkspaceCommand } from "./commands/workspaceCommand";
 
 const CLI_USAGE = [
   "Usage:",
-  "  vtrace setup [repo] [--start-runtime] [--agent <name>] [--json]",
+  "  vtrace setup [repo] [--start-runtime] [--agent <name>] [--json] [--quiet|--no-progress]",
   "  vtrace status [repo] [--agent <name>] [--json]",
   "  vtrace doctor [repo] [--agent <name>] [--json]",
   "  vtrace claude-config [repo] [--dry-run] [--agent <name>] [--json]",
@@ -34,7 +34,7 @@ const CLI_USAGE = [
   "",
   "Core inspection commands:",
   "  vtrace init <repo>",
-  "  vtrace index <repo>",
+  "  vtrace index <repo> [--json] [--quiet|--no-progress]",
   "  vtrace intent <repo> <query>",
   "  vtrace capsule <repo> <query>",
   "  vtrace run-pipeline <repo> <query> [--intent <auto|explore|debug|modify|refactor>] [--session-id ID]",
