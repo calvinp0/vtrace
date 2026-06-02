@@ -7,6 +7,7 @@ export interface ArcStage1Query {
 }
 
 export interface BaselineResult {
+  readonly mode: BaselineMode;
   readonly files: readonly string[];
   readonly chars: number;
   readonly estTokens: number;
@@ -18,6 +19,8 @@ export interface BaselineSnippet {
   readonly file: string;
   readonly chars: number;
   readonly preview: string;
+  readonly startLine?: number;
+  readonly endLine?: number;
 }
 
 export interface VtraceMeasurement {
@@ -41,18 +44,29 @@ export interface VtraceMeasurement {
 export interface BenchmarkRow {
   readonly query: string;
   readonly category: string;
+  readonly baselineMode: BaselineMode | "all";
   readonly baseline: BaselineResult;
+  readonly baselines: BaselineResultsByMode;
   readonly vtrace: VtraceMeasurement;
   readonly reductionPct: number | null;
+  readonly reductions: ReductionResultsByMode;
   readonly expectedAreaHits: readonly string[];
   readonly notes: readonly string[];
 }
+
+export type BaselineMode = "full-file" | "snippet" | "capped-full-file";
+export type BaselineResultsByMode = Partial<Record<BaselineMode, BaselineResult>>;
+export type ReductionResultsByMode = Partial<Record<BaselineMode, number | null>>;
 
 interface CliConfig {
   repo: string;
   queries: string;
   out: string;
   baselineMaxFiles: number;
+  baselineMode: BaselineMode | "all";
+  snippetContextLines: number;
+  maxSnippetsPerFile: number;
+  baselineMaxCharsPerFile: number;
   toolCommand: "capsule" | "handoff";
   maxBudgetCharacters: number | null;
   dryRun: boolean;
@@ -64,6 +78,10 @@ const DEFAULT_CONFIG: CliConfig = {
   queries: "benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json",
   out: "benchmarks/arc_stage1_context_reduction/results",
   baselineMaxFiles: 5,
+  baselineMode: "full-file",
+  snippetContextLines: 40,
+  maxSnippetsPerFile: 3,
+  baselineMaxCharsPerFile: 40_000,
   toolCommand: "handoff",
   maxBudgetCharacters: null,
   dryRun: false,
@@ -105,6 +123,12 @@ const VTRACE_CONTAMINATED_PATH_MARKERS = [
   "node_modules/",
   "dist/",
   "build/",
+];
+
+const BASELINE_MODES: readonly BaselineMode[] = [
+  "full-file",
+  "snippet",
+  "capped-full-file",
 ];
 
 const EXPECTED_AREA_TERMS: ReadonlyArray<readonly [string, readonly string[]]> = [
@@ -299,6 +323,10 @@ async function runBenchmark(config: CliConfig): Promise<void> {
     queryFile: config.queries,
     outputDirectory: config.out,
     baselineMaxFiles: config.baselineMaxFiles,
+    baselineMode: config.baselineMode,
+    snippetContextLines: config.snippetContextLines,
+    maxSnippetsPerFile: config.maxSnippetsPerFile,
+    baselineMaxCharsPerFile: config.baselineMaxCharsPerFile,
     toolCommand: config.toolCommand,
     maxBudgetCharacters: config.maxBudgetCharacters,
     tokenEstimate: "Math.ceil(chars / 4)",
@@ -313,6 +341,7 @@ async function runBenchmark(config: CliConfig): Promise<void> {
       `Repo: ${config.repo}`,
       `Queries: ${queries.length}`,
       `Tool command: ${config.toolCommand}`,
+      `Baseline mode: ${config.baselineMode}`,
       `Output directory: ${config.out}`,
     ];
     process.stdout.write(`${lines.join("\n")}\n`);
@@ -326,10 +355,11 @@ async function runBenchmark(config: CliConfig): Promise<void> {
       process.stderr.write(`Running ${query.category}: ${query.query}\n`);
     }
 
-    const baseline = await collectBaselineContext(config.repo, query.query, config.baselineMaxFiles);
+    const baselines = await collectBaselines(config.repo, query.query, config);
+    const baseline = selectPrimaryBaseline(baselines, config.baselineMode);
     const vtrace = await collectVtraceMeasurement(config.repo, query.query, config.toolCommand);
     const rowNotes = [
-      ...baseline.notes,
+      ...collectBaselineNotes(baselines),
       ...vtrace.diagnostics,
       ...(config.maxBudgetCharacters === null
         ? []
@@ -339,9 +369,12 @@ async function runBenchmark(config: CliConfig): Promise<void> {
     rows.push({
       query: query.query,
       category: query.category,
+      baselineMode: config.baselineMode,
       baseline,
+      baselines,
       vtrace,
       reductionPct: calculateReductionPct(baseline.estTokens, vtrace.estTokens),
+      reductions: calculateReductions(baselines, vtrace.estTokens),
       expectedAreaHits: detectExpectedAreaHits(query.query, baseline.files, vtrace),
       notes: rowNotes,
     });
@@ -369,18 +402,57 @@ async function runBenchmark(config: CliConfig): Promise<void> {
   );
 }
 
-async function collectBaselineContext(
+async function collectBaselines(
   repoRoot: string,
   query: string,
-  maxFiles: number,
-): Promise<BaselineResult> {
+  config: Pick<CliConfig, "baselineMode" | "baselineMaxFiles" | "snippetContextLines" | "maxSnippetsPerFile" | "baselineMaxCharsPerFile">,
+): Promise<BaselineResultsByMode> {
+  const matches = await collectBaselineMatches(repoRoot, query);
+  const files = stableDeduplicateFiles(matches.map((match) => match.file), config.baselineMaxFiles);
+  const notes = files.length === 0 ? ["baseline rg returned no files"] : [];
+  const modes = config.baselineMode === "all" ? BASELINE_MODES : [config.baselineMode];
+  const baselines: BaselineResultsByMode = {};
+
+  for (const mode of modes) {
+    switch (mode) {
+      case "full-file":
+        baselines[mode] = await collectFullFileBaseline(repoRoot, files, notes);
+        break;
+      case "snippet":
+        baselines[mode] = await collectSnippetBaseline(repoRoot, files, matches, {
+          contextLines: config.snippetContextLines,
+          maxSnippetsPerFile: config.maxSnippetsPerFile,
+          notes,
+        });
+        break;
+      case "capped-full-file":
+        baselines[mode] = await collectCappedFullFileBaseline(repoRoot, files, {
+          maxCharsPerFile: config.baselineMaxCharsPerFile,
+          notes,
+        });
+        break;
+    }
+  }
+
+  return baselines;
+}
+
+interface BaselineMatch {
+  readonly file: string;
+  readonly lineNumber: number;
+}
+
+async function collectBaselineMatches(
+  repoRoot: string,
+  query: string,
+): Promise<BaselineMatch[]> {
   const terms = buildSearchTerms(query);
-  const candidateFiles: string[] = [];
-  const notes: string[] = [];
+  const matches: BaselineMatch[] = [];
 
   for (const term of terms) {
     const result = await runProcess("rg", [
-      "--files-with-matches",
+      "--json",
+      "--line-number",
       "--ignore-case",
       "--fixed-strings",
       ...RG_EXCLUDE_ARGS,
@@ -389,14 +461,76 @@ async function collectBaselineContext(
     ]);
 
     if (result.exitCode !== 0 && result.exitCode !== 1) {
-      notes.push(`rg failed for term ${term}: ${result.stderr.trim() || `exit ${result.exitCode}`}`);
       continue;
     }
 
-    candidateFiles.push(...result.stdout.split(/\r?\n/).filter((line) => line.length > 0).sort());
+    matches.push(...parseRipgrepJsonMatches(result.stdout));
   }
 
-  const files = stableDeduplicateFiles(candidateFiles, maxFiles);
+  return deduplicateMatches(matches);
+}
+
+function parseRipgrepJsonMatches(output: string): BaselineMatch[] {
+  const matches: BaselineMatch[] = [];
+
+  for (const line of output.split(/\r?\n/)) {
+    if (line.length === 0) {
+      continue;
+    }
+
+    const parsed = JSON.parse(line) as unknown;
+
+    if (!isRecord(parsed) || parsed.type !== "match" || !isRecord(parsed.data)) {
+      continue;
+    }
+
+    const data = parsed.data;
+    const pathValue = isRecord(data.path) && typeof data.path.text === "string"
+      ? data.path.text
+      : null;
+    const lineNumber = typeof data.line_number === "number" ? data.line_number : null;
+
+    if (pathValue !== null && lineNumber !== null) {
+      matches.push({
+        file: pathValue,
+        lineNumber,
+      });
+    }
+  }
+
+  return matches.sort(compareMatches);
+}
+
+function deduplicateMatches(matches: readonly BaselineMatch[]): BaselineMatch[] {
+  const deduped: BaselineMatch[] = [];
+  const seen = new Set<string>();
+
+  for (const match of matches) {
+    const key = `${match.file.replaceAll("\\", "/")}:${match.lineNumber}`;
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    deduped.push({
+      file: match.file.replaceAll("\\", "/"),
+      lineNumber: match.lineNumber,
+    });
+  }
+
+  return deduped;
+}
+
+function compareMatches(left: BaselineMatch, right: BaselineMatch): number {
+  return left.file.localeCompare(right.file) || left.lineNumber - right.lineNumber;
+}
+
+async function collectFullFileBaseline(
+  repoRoot: string,
+  files: readonly string[],
+  notes: readonly string[],
+): Promise<BaselineResult> {
   const snippets: BaselineSnippet[] = [];
   let chars = 0;
 
@@ -410,17 +544,133 @@ async function collectBaselineContext(
     });
   }
 
-  if (files.length === 0) {
-    notes.push("baseline rg returned no files");
-  }
-
   return {
+    mode: "full-file",
     files: files.map((file) => path.relative(repoRoot, file).replaceAll("\\", "/")),
     chars,
     estTokens: estimateTokens(chars),
     snippets,
     notes,
   };
+}
+
+async function collectCappedFullFileBaseline(
+  repoRoot: string,
+  files: readonly string[],
+  options: { readonly maxCharsPerFile: number; readonly notes: readonly string[] },
+): Promise<BaselineResult> {
+  const snippets: BaselineSnippet[] = [];
+  let chars = 0;
+
+  for (const file of files) {
+    const content = await readFile(file, "utf8");
+    const counted = capContentByChars(content, options.maxCharsPerFile);
+    chars += counted.length;
+    snippets.push({
+      file: path.relative(repoRoot, file).replaceAll("\\", "/"),
+      chars: counted.length,
+      preview: counted.slice(0, 500),
+    });
+  }
+
+  return {
+    mode: "capped-full-file",
+    files: files.map((file) => path.relative(repoRoot, file).replaceAll("\\", "/")),
+    chars,
+    estTokens: estimateTokens(chars),
+    snippets,
+    notes: options.notes,
+  };
+}
+
+export function capContentByChars(content: string, maxChars: number): string {
+  return content.slice(0, Math.max(0, maxChars));
+}
+
+async function collectSnippetBaseline(
+  repoRoot: string,
+  files: readonly string[],
+  matches: readonly BaselineMatch[],
+  options: {
+    readonly contextLines: number;
+    readonly maxSnippetsPerFile: number;
+    readonly notes: readonly string[];
+  },
+): Promise<BaselineResult> {
+  const snippets: BaselineSnippet[] = [];
+  let chars = 0;
+
+  for (const file of files) {
+    const content = await readFile(file, "utf8");
+    const fileLines = content.split(/\r?\n/);
+    const fileMatches = matches
+      .filter((match) => match.file === file)
+      .map((match) => match.lineNumber);
+    const ranges = extractSnippetRanges(
+      fileMatches,
+      fileLines.length,
+      options.contextLines,
+      options.maxSnippetsPerFile,
+    );
+
+    for (const range of ranges) {
+      const text = fileLines.slice(range.startLine - 1, range.endLine).join("\n");
+      chars += text.length;
+      snippets.push({
+        file: path.relative(repoRoot, file).replaceAll("\\", "/"),
+        chars: text.length,
+        preview: text.slice(0, 500),
+        startLine: range.startLine,
+        endLine: range.endLine,
+      });
+    }
+  }
+
+  return {
+    mode: "snippet",
+    files: files.map((file) => path.relative(repoRoot, file).replaceAll("\\", "/")),
+    chars,
+    estTokens: estimateTokens(chars),
+    snippets,
+    notes: options.notes,
+  };
+}
+
+export interface SnippetRange {
+  readonly startLine: number;
+  readonly endLine: number;
+}
+
+export function extractSnippetRanges(
+  matchLineNumbers: readonly number[],
+  totalLines: number,
+  contextLines: number,
+  maxSnippetsPerFile: number,
+): SnippetRange[] {
+  const ranges = [...new Set(matchLineNumbers)]
+    .sort((a, b) => a - b)
+    .map((lineNumber) => ({
+      startLine: Math.max(1, lineNumber - contextLines),
+      endLine: Math.min(totalLines, lineNumber + contextLines),
+    }));
+
+  const merged: SnippetRange[] = [];
+
+  for (const range of ranges) {
+    const previous = merged.at(-1);
+
+    if (previous === undefined || range.startLine > previous.endLine + 1) {
+      merged.push(range);
+      continue;
+    }
+
+    merged[merged.length - 1] = {
+      startLine: previous.startLine,
+      endLine: Math.max(previous.endLine, range.endLine),
+    };
+  }
+
+  return merged.slice(0, maxSnippetsPerFile);
 }
 
 async function collectVtraceMeasurement(
@@ -498,7 +748,33 @@ async function runProcess(
 }
 
 function renderCsv(rows: readonly BenchmarkRow[]): string {
-  const columns = [
+  const allBaselines = rows.some((row) => row.baselineMode === "all");
+  const columns = allBaselines ? [
+    "query",
+    "category",
+    "baseline_full_file_est_tokens",
+    "baseline_snippet_est_tokens",
+    "baseline_capped_full_file_est_tokens",
+    "vtrace_item_count",
+    "vtrace_pivot_count",
+    "vtrace_support_count",
+    "vtrace_source_backed_pivot_count",
+    "vtrace_chars",
+    "vtrace_est_tokens",
+    "reduction_full_file_pct",
+    "reduction_snippet_pct",
+    "reduction_capped_full_file_pct",
+    "selected_intent",
+    "routing_profile",
+    "capsule_profile",
+    "top_vtrace_result",
+    "top_vtrace_file",
+    "vtrace_contaminated_paths",
+    "vtrace_contamination_detected",
+    "baseline_files",
+    "expected_area_hits",
+    "notes",
+  ] : [
     "query",
     "category",
     "baseline_file_count",
@@ -525,33 +801,66 @@ function renderCsv(rows: readonly BenchmarkRow[]): string {
 
   const lines = [
     columns.join(","),
-    ...rows.map((row) => [
-      row.query,
-      row.category,
-      row.baseline.files.length,
-      row.baseline.chars,
-      row.baseline.estTokens,
-      row.vtrace.itemCount,
-      row.vtrace.pivotCount,
-      row.vtrace.supportCount,
-      row.vtrace.sourceBackedPivotCount,
-      row.vtrace.chars,
-      row.vtrace.estTokens,
-      formatNumber(row.reductionPct),
-      row.vtrace.selectedIntent,
-      row.vtrace.routingProfile,
-      row.vtrace.capsuleProfile,
-      row.vtrace.topResult,
-      row.vtrace.topFile,
-      row.vtrace.contaminatedPaths.join(";"),
-      row.vtrace.contaminationDetected,
-      row.baseline.files.join(";"),
-      row.expectedAreaHits.join(";"),
-      row.notes.join("; "),
-    ].map(csvEscape).join(",")),
+    ...rows.map((row) => (allBaselines ? renderAllBaselineCsvRow(row) : renderSingleBaselineCsvRow(row))),
   ];
 
   return `${lines.join("\n")}\n`;
+}
+
+function renderSingleBaselineCsvRow(row: BenchmarkRow): string {
+  return [
+    row.query,
+    row.category,
+    row.baseline.files.length,
+    row.baseline.chars,
+    row.baseline.estTokens,
+    row.vtrace.itemCount,
+    row.vtrace.pivotCount,
+    row.vtrace.supportCount,
+    row.vtrace.sourceBackedPivotCount,
+    row.vtrace.chars,
+    row.vtrace.estTokens,
+    formatNumber(row.reductionPct),
+    row.vtrace.selectedIntent,
+    row.vtrace.routingProfile,
+    row.vtrace.capsuleProfile,
+    row.vtrace.topResult,
+    row.vtrace.topFile,
+    row.vtrace.contaminatedPaths.join(";"),
+    row.vtrace.contaminationDetected,
+    row.baseline.files.join(";"),
+    row.expectedAreaHits.join(";"),
+    row.notes.join("; "),
+  ].map(csvEscape).join(",");
+}
+
+function renderAllBaselineCsvRow(row: BenchmarkRow): string {
+  return [
+    row.query,
+    row.category,
+    row.baselines["full-file"]?.estTokens,
+    row.baselines.snippet?.estTokens,
+    row.baselines["capped-full-file"]?.estTokens,
+    row.vtrace.itemCount,
+    row.vtrace.pivotCount,
+    row.vtrace.supportCount,
+    row.vtrace.sourceBackedPivotCount,
+    row.vtrace.chars,
+    row.vtrace.estTokens,
+    formatNumber(row.reductions["full-file"] ?? null),
+    formatNumber(row.reductions.snippet ?? null),
+    formatNumber(row.reductions["capped-full-file"] ?? null),
+    row.vtrace.selectedIntent,
+    row.vtrace.routingProfile,
+    row.vtrace.capsuleProfile,
+    row.vtrace.topResult,
+    row.vtrace.topFile,
+    row.vtrace.contaminatedPaths.join(";"),
+    row.vtrace.contaminationDetected,
+    row.baseline.files.join(";"),
+    row.expectedAreaHits.join(";"),
+    row.notes.join("; "),
+  ].map(csvEscape).join(",");
 }
 
 export function summarizeRows(rows: readonly BenchmarkRow[]) {
@@ -559,6 +868,7 @@ export function summarizeRows(rows: readonly BenchmarkRow[]) {
     .map((row) => row.reductionPct)
     .filter((value): value is number => value !== null);
   const categories = [...new Set(rows.map((row) => row.category))].sort();
+  const baselineSummaries = summarizeBaselineModes(rows);
   const rowsWithContaminatedVtracePaths = rows.filter((row) => row.vtrace.contaminationDetected).length;
   const contaminatedVtracePathCount = rows.reduce(
     (sum, row) => sum + row.vtrace.contaminatedPaths.length,
@@ -571,6 +881,7 @@ export function summarizeRows(rows: readonly BenchmarkRow[]) {
     averageVtraceTokens: mean(rows.map((row) => row.vtrace.estTokens)),
     medianReductionPercent: median(reductions),
     meanReductionPercent: mean(reductions),
+    baselineSummaries,
     vtraceTokensLessThanBaselineCount: rows.filter((row) => row.vtrace.estTokens < row.baseline.estTokens).length,
     vtraceReturnedContextCount: rows.filter((row) => row.vtrace.itemCount > 0 || row.vtrace.pivotCount > 0).length,
     baselineReturnedNoFilesCount: rows.filter((row) => row.baseline.files.length === 0).length,
@@ -595,6 +906,26 @@ export function summarizeRows(rows: readonly BenchmarkRow[]) {
   };
 }
 
+function summarizeBaselineModes(rows: readonly BenchmarkRow[]) {
+  return BASELINE_MODES
+    .filter((mode) => rows.some((row) => row.baselines[mode] !== undefined))
+    .map((mode) => {
+      const rowsWithMode = rows.filter((row) => row.baselines[mode] !== undefined);
+      const reductions = rowsWithMode
+        .map((row) => row.reductions[mode])
+        .filter((value): value is number => value !== null && value !== undefined);
+
+      return {
+        mode,
+        queryCount: rowsWithMode.length,
+        averageBaselineTokens: mean(rowsWithMode.map((row) => row.baselines[mode]!.estTokens)),
+        averageVtraceTokens: mean(rowsWithMode.map((row) => row.vtrace.estTokens)),
+        meanReductionPercent: mean(reductions),
+        medianReductionPercent: median(reductions),
+      };
+    });
+}
+
 function rowToJson(row: BenchmarkRow) {
   return {
     query: row.query,
@@ -607,6 +938,9 @@ function rowToJson(row: BenchmarkRow) {
       snippets: row.baseline.snippets,
       notes: row.baseline.notes,
     },
+    baselineMode: row.baselineMode,
+    baselines: row.baselines,
+    reductions: row.reductions,
     vtrace: row.vtrace,
     vtrace_contaminated_paths: row.vtrace.contaminatedPaths,
     vtrace_contamination_detected: row.vtrace.contaminationDetected,
@@ -626,8 +960,11 @@ function renderMarkdown(
   const best = [...validRows].sort((a, b) => (b.reductionPct ?? 0) - (a.reductionPct ?? 0)).slice(0, 5);
   const noUseful = rows.filter((row) => row.vtrace.itemCount === 0 && row.vtrace.pivotCount === 0);
   const noBaseline = rows.filter((row) => row.baseline.files.length === 0);
+  const hasAllBaselines = summary.baselineSummaries.length > 1;
   const headline = summary.benchmarkAcceptableForReductionClaim
-    ? `Ran ${summary.totalQueries} fixed queries against ${metadata.arcRepoPath}. Mean measured reduction was ${formatNumber(summary.meanReductionPercent)}%, median was ${formatNumber(summary.medianReductionPercent)}%. vtrace used fewer estimated tokens than the naive full-file baseline for ${summary.vtraceTokensLessThanBaselineCount}/${summary.totalQueries} queries.`
+    ? hasAllBaselines
+      ? `Ran ${summary.totalQueries} fixed queries against ${metadata.arcRepoPath} with ${summary.baselineSummaries.length} baseline modes. Baseline-specific reductions are shown in the comparison table.`
+      : `Ran ${summary.totalQueries} fixed queries against ${metadata.arcRepoPath}. Mean measured reduction was ${formatNumber(summary.meanReductionPercent)}%, median was ${formatNumber(summary.medianReductionPercent)}%. vtrace used fewer estimated tokens than the selected baseline for ${summary.vtraceTokensLessThanBaselineCount}/${summary.totalQueries} queries.`
     : "The benchmark executed, but the reduction result is not claimable because contaminated indexed paths were detected.";
   const warning = summary.benchmarkAcceptableForReductionClaim
     ? []
@@ -650,19 +987,24 @@ function renderMarkdown(
     "",
     "## Overall reduction",
     "",
+    ...(hasAllBaselines ? renderBaselineComparisonTable(summary.baselineSummaries) : renderSingleBaselineMetricTable(summary)),
+    "",
+    "## Run status",
+    "",
     "| Metric | Value |",
     "| --- | ---: |",
     `| Total queries | ${summary.totalQueries} |`,
-    `| Average baseline estimated tokens | ${formatNumber(summary.averageBaselineTokens)} |`,
-    `| Average vtrace estimated tokens | ${formatNumber(summary.averageVtraceTokens)} |`,
-    `| Mean reduction percent | ${formatNumber(summary.meanReductionPercent)} |`,
-    `| Median reduction percent | ${formatNumber(summary.medianReductionPercent)} |`,
-    `| vtrace tokens < baseline tokens | ${summary.vtraceTokensLessThanBaselineCount} |`,
     `| vtrace returned at least one pivot/item | ${summary.vtraceReturnedContextCount} |`,
     `| baseline returned no files | ${summary.baselineReturnedNoFilesCount} |`,
     `| rows with contaminated vtrace paths | ${summary.rowsWithContaminatedVtracePaths} |`,
     `| contaminated vtrace path count | ${summary.contaminatedVtracePathCount} |`,
     `| acceptable for reduction claim | ${summary.benchmarkAcceptableForReductionClaim ? "yes" : "no"} |`,
+    "",
+    "## Interpretation",
+    "",
+    "The full-file baseline represents naive grep followed by opening whole files.",
+    "The snippet baseline represents grep-like context inspection.",
+    "The capped-full-file baseline limits very large files from dominating the measurement.",
     "",
     "## Category-level averages",
     "",
@@ -701,6 +1043,30 @@ function renderMarkdown(
     "Run the same fixed query set twice on the same indexed ARC repo state, diff the CSV/JSON excluding timestamp metadata, and classify misses before changing retrieval or capsule behavior.",
     "",
   ].join("\n");
+}
+
+function renderSingleBaselineMetricTable(summary: ReturnType<typeof summarizeRows>): string[] {
+  return [
+    "| Metric | Value |",
+    "| --- | ---: |",
+    `| Average baseline estimated tokens | ${formatNumber(summary.averageBaselineTokens)} |`,
+    `| Average vtrace estimated tokens | ${formatNumber(summary.averageVtraceTokens)} |`,
+    `| Mean reduction percent | ${formatNumber(summary.meanReductionPercent)} |`,
+    `| Median reduction percent | ${formatNumber(summary.medianReductionPercent)} |`,
+    `| vtrace tokens < baseline tokens | ${summary.vtraceTokensLessThanBaselineCount} |`,
+  ];
+}
+
+function renderBaselineComparisonTable(
+  baselineSummaries: ReturnType<typeof summarizeRows>["baselineSummaries"],
+): string[] {
+  return [
+    "| Baseline mode | Avg baseline tokens | Avg vtrace tokens | Mean reduction | Median reduction |",
+    "| --- | ---: | ---: | ---: | ---: |",
+    ...baselineSummaries.map((summary) => (
+      `| ${formatBaselineMode(summary.mode)} | ${formatNumber(summary.averageBaselineTokens)} | ${formatNumber(summary.averageVtraceTokens)} | ${formatNumber(summary.meanReductionPercent)} | ${formatNumber(summary.medianReductionPercent)} |`
+    )),
+  ];
 }
 
 export function renderRowsTable(rows: readonly BenchmarkRow[]): string {
@@ -855,6 +1221,66 @@ function formatNumber(value: number | null): string {
   return value.toFixed(2);
 }
 
+function formatBaselineMode(mode: BaselineMode): string {
+  switch (mode) {
+    case "full-file":
+      return "full-file";
+    case "snippet":
+      return "snippet";
+    case "capped-full-file":
+      return "capped-full-file";
+  }
+}
+
+function selectPrimaryBaseline(
+  baselines: BaselineResultsByMode,
+  baselineMode: BaselineMode | "all",
+): BaselineResult {
+  const selectedMode = baselineMode === "all" ? "full-file" : baselineMode;
+  const baseline = baselines[selectedMode];
+
+  if (baseline === undefined) {
+    throw new Error(`Missing baseline result for ${selectedMode}.`);
+  }
+
+  return baseline;
+}
+
+function calculateReductions(
+  baselines: BaselineResultsByMode,
+  vtraceEstTokens: number,
+): ReductionResultsByMode {
+  const reductions: ReductionResultsByMode = {};
+
+  for (const mode of BASELINE_MODES) {
+    const baseline = baselines[mode];
+
+    if (baseline !== undefined) {
+      reductions[mode] = calculateReductionPct(baseline.estTokens, vtraceEstTokens);
+    }
+  }
+
+  return reductions;
+}
+
+function collectBaselineNotes(baselines: BaselineResultsByMode): string[] {
+  const notes: string[] = [];
+  const seen = new Set<string>();
+
+  for (const mode of BASELINE_MODES) {
+    for (const note of baselines[mode]?.notes ?? []) {
+      if (seen.has(note)) {
+        continue;
+      }
+
+      seen.add(note);
+      notes.push(note);
+    }
+  }
+
+  return notes;
+}
+
 function escapeMarkdown(value: string): string {
   return value.replaceAll("|", "\\|").replaceAll("\n", " ");
 }
@@ -885,6 +1311,23 @@ function parseArgs(argv: readonly string[]): CliConfig {
         break;
       case "--baseline-max-files":
         config.baselineMaxFiles = parsePositiveInt(requireValue(argv, ++index, arg), arg);
+        break;
+      case "--baseline-mode": {
+        const value = requireValue(argv, ++index, arg);
+        if (!isBaselineModeOrAll(value)) {
+          throw new Error("--baseline-mode must be full-file, snippet, capped-full-file, or all.");
+        }
+        config.baselineMode = value;
+        break;
+      }
+      case "--snippet-context-lines":
+        config.snippetContextLines = parseNonNegativeInt(requireValue(argv, ++index, arg), arg);
+        break;
+      case "--max-snippets-per-file":
+        config.maxSnippetsPerFile = parsePositiveInt(requireValue(argv, ++index, arg), arg);
+        break;
+      case "--baseline-max-chars-per-file":
+        config.baselineMaxCharsPerFile = parsePositiveInt(requireValue(argv, ++index, arg), arg);
         break;
       case "--tool-command": {
         const value = requireValue(argv, ++index, arg);
@@ -920,6 +1363,10 @@ function parseArgs(argv: readonly string[]): CliConfig {
   };
 }
 
+function isBaselineModeOrAll(value: string): value is BaselineMode | "all" {
+  return value === "all" || BASELINE_MODES.includes(value as BaselineMode);
+}
+
 function requireValue(argv: readonly string[], index: number, flag: string): string {
   const value = argv[index];
 
@@ -940,10 +1387,20 @@ function parsePositiveInt(value: string, flag: string): number {
   return parsed;
 }
 
+function parseNonNegativeInt(value: string, flag: string): number {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`${flag} must be a non-negative integer.`);
+  }
+
+  return parsed;
+}
+
 function printUsageAndExit(exitCode: number): never {
   process.stdout.write([
     "Usage:",
-    "  bun benchmarks/arc_stage1_context_reduction/run_arc_stage1_context_reduction.ts --repo /home/calvin/code/ARC --queries benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json --out benchmarks/arc_stage1_context_reduction/results --baseline-max-files 5",
+    "  bun benchmarks/arc_stage1_context_reduction/run_arc_stage1_context_reduction.ts --repo /home/calvin/code/ARC --queries benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json --out benchmarks/arc_stage1_context_reduction/results --baseline-max-files 5 [--baseline-mode full-file|snippet|capped-full-file|all]",
     "",
   ].join("\n"));
   process.exit(exitCode);

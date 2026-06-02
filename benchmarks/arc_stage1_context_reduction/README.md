@@ -11,7 +11,8 @@ bun benchmarks/arc_stage1_context_reduction/run_arc_stage1_context_reduction.ts 
   --repo /home/calvin/code/ARC \
   --queries benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json \
   --out benchmarks/arc_stage1_context_reduction/results \
-  --baseline-max-files 5
+  --baseline-max-files 5 \
+  --baseline-mode all
 ```
 
 Optional flags:
@@ -19,6 +20,10 @@ Optional flags:
 ```text
 --tool-command capsule|handoff
 --max-budget-characters <n>
+--baseline-mode full-file|snippet|capped-full-file|all
+--snippet-context-lines <n>
+--max-snippets-per-file <n>
+--baseline-max-chars-per-file <n>
 --dry-run
 --verbose
 ```
@@ -36,7 +41,14 @@ benchmarks/arc_stage1_context_reduction/results/
   arc_stage1_context_reduction.md
 ```
 
-The naive baseline uses `rg` against the ARC repo, excludes common irrelevant directories and build artifacts, takes up to `--baseline-max-files` unique files per query, and reads full file contents. Token estimates are `Math.ceil(chars / 4)`.
+The baseline uses `rg` against the ARC repo, excludes common irrelevant directories and build artifacts, and takes up to `--baseline-max-files` unique files per query. Token estimates are `Math.ceil(chars / 4)`.
+
+Baseline modes:
+
+- `full-file`: current naive behavior, reading whole matching files.
+- `snippet`: counts deterministic, de-duplicated context snippets around matching lines. Defaults: `--snippet-context-lines 40`, `--max-snippets-per-file 3`.
+- `capped-full-file`: reads top matching files but caps counted content per file. Default: `--baseline-max-chars-per-file 40000`.
+- `all`: computes all three baselines for each query and reports separate reductions.
 
 The vtrace measurement invokes the local `bin/vtrace` CLI for each query and parses the JSON output. It records capsule/handoff item counts, pivot/support counts, source-backed pivot count, selected intent/profile metadata, top result, and budget-reported context characters where available.
 

@@ -6,9 +6,11 @@ import { test } from "bun:test";
 
 import {
   calculateReductionPct,
+  capContentByChars,
   csvEscape,
   detectContaminatedVtracePaths,
   estimateTokens,
+  extractSnippetRanges,
   loadQueries,
   parseVtraceOutput,
   renderRowsTable,
@@ -66,6 +68,27 @@ test("baseline file deduplication preserves first-seen order and max count", () 
     "/repo/a.py",
     "/repo/b.py",
   ]);
+});
+
+test("snippet extraction around line matches is deterministic", () => {
+  assert.deepEqual(extractSnippetRanges([10, 30], 100, 2, 3), [
+    { startLine: 8, endLine: 12 },
+    { startLine: 28, endLine: 32 },
+  ]);
+});
+
+test("overlapping snippets are merged deterministically", () => {
+  assert.deepEqual(extractSnippetRanges([10, 12, 40], 100, 5, 3), [
+    { startLine: 5, endLine: 17 },
+    { startLine: 35, endLine: 45 },
+  ]);
+});
+
+test("capped-full-file counting caps content per file", () => {
+  const capped = capContentByChars("abcdefghij", 4);
+
+  assert.equal(capped, "abcd");
+  assert.equal(estimateTokens(capped.length), 1);
 });
 
 test("representative handoff JSON fixture parses counts and metadata", () => {
@@ -212,6 +235,41 @@ test("summary marks benchmark acceptable when no contamination exists", () => {
   assert.equal(summary.benchmarkAcceptableForReductionClaim, true);
 });
 
+test("--baseline-mode all summary fields include every baseline mode", () => {
+  const summary = summarizeRows([
+    makeBenchmarkRow([], {
+      baselineMode: "all",
+      baselines: {
+        "full-file": makeBaseline("full-file", 400),
+        snippet: makeBaseline("snippet", 120),
+        "capped-full-file": makeBaseline("capped-full-file", 200),
+      },
+      reductions: {
+        "full-file": 80,
+        snippet: 33.333333,
+        "capped-full-file": 60,
+      },
+    }),
+  ]);
+
+  assert.deepEqual(summary.baselineSummaries.map((baseline) => baseline.mode), [
+    "full-file",
+    "snippet",
+    "capped-full-file",
+  ]);
+  assert.equal(summary.baselineSummaries[0]?.averageBaselineTokens, 100);
+  assert.equal(summary.baselineSummaries[1]?.averageBaselineTokens, 30);
+  assert.equal(summary.baselineSummaries[2]?.averageBaselineTokens, 50);
+});
+
+test("backward-compatible full-file mode keeps selected baseline summary", () => {
+  const summary = summarizeRows([makeBenchmarkRow([])]);
+
+  assert.deepEqual(summary.baselineSummaries.map((baseline) => baseline.mode), ["full-file"]);
+  assert.equal(summary.averageBaselineTokens, 100);
+  assert.equal(summary.meanReductionPercent, 80);
+});
+
 test("source-backed pivot rendering does not produce blank cells", () => {
   const rendered = renderRowsTable([makeBenchmarkRow([])]);
 
@@ -219,17 +277,25 @@ test("source-backed pivot rendering does not produce blank cells", () => {
   assert.doesNotMatch(rendered, /\|\s+\| no \|/);
 });
 
-function makeBenchmarkRow(contaminatedPaths: readonly string[]) {
+function makeBenchmarkRow(
+  contaminatedPaths: readonly string[],
+  overrides: {
+    readonly baselineMode?: "full-file" | "snippet" | "capped-full-file" | "all";
+    readonly baselines?: ReturnType<typeof makeBaselineMap>;
+    readonly reductions?: Record<string, number | null>;
+  } = {},
+) {
+  const baselineMode = overrides.baselineMode ?? "full-file";
+  const baseline = overrides.baselines?.["full-file"] ?? makeBaseline("full-file", 400);
+  const baselines = overrides.baselines ?? makeBaselineMap(baseline);
+  const reductions = overrides.reductions ?? { "full-file": 80 };
+
   return {
     query: "ARCSpecies",
     category: "exact",
-    baseline: {
-      files: ["arc/species/species.py"],
-      chars: 400,
-      estTokens: 100,
-      snippets: [],
-      notes: [],
-    },
+    baselineMode,
+    baseline,
+    baselines,
     vtrace: {
       selectedIntent: "explain",
       routingProfile: "explain",
@@ -248,7 +314,25 @@ function makeBenchmarkRow(contaminatedPaths: readonly string[]) {
       rawSnippet: {},
     },
     reductionPct: 80,
+    reductions,
     expectedAreaHits: [],
+    notes: [],
+  };
+}
+
+function makeBaselineMap(baseline: ReturnType<typeof makeBaseline>) {
+  return {
+    [baseline.mode]: baseline,
+  };
+}
+
+function makeBaseline(mode: "full-file" | "snippet" | "capped-full-file", chars: number) {
+  return {
+    mode,
+    files: ["arc/species/species.py"],
+    chars,
+    estTokens: estimateTokens(chars),
+    snippets: [],
     notes: [],
   };
 }

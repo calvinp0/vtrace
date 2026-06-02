@@ -1,60 +1,63 @@
 # ARC Stage 1 Context Reduction Report
 
-## Warning
-
-WARNING: This run is contaminated and should not be used for context-reduction claims until the target repo is reindexed cleanly.
-
-Detected 17 contaminated vtrace path(s) across 14 row(s).
-
 ## Headline summary
 
-The benchmark executed, but the reduction result is not claimable because contaminated indexed paths were detected.
+Ran 20 fixed queries against /home/calvin/code/ARC with 3 baseline modes. Baseline-specific reductions are shown in the comparison table.
 
 ## Overall reduction
+
+| Baseline mode | Avg baseline tokens | Avg vtrace tokens | Mean reduction | Median reduction |
+| --- | ---: | ---: | ---: | ---: |
+| full-file | 90179.45 | 243.50 | 99.52 | 99.57 |
+| snippet | 18104.10 | 243.50 | 97.53 | 97.97 |
+| capped-full-file | 35645.80 | 243.50 | 99.28 | 99.32 |
+
+## Run status
 
 | Metric | Value |
 | --- | ---: |
 | Total queries | 20 |
-| Average baseline estimated tokens | 81535.65 |
-| Average vtrace estimated tokens | 230.50 |
-| Mean reduction percent | 99.29 |
-| Median reduction percent | 99.44 |
-| vtrace tokens < baseline tokens | 20 |
 | vtrace returned at least one pivot/item | 20 |
 | baseline returned no files | 0 |
-| rows with contaminated vtrace paths | 14 |
-| contaminated vtrace path count | 17 |
-| acceptable for reduction claim | no |
+| rows with contaminated vtrace paths | 0 |
+| contaminated vtrace path count | 0 |
+| acceptable for reduction claim | yes |
+
+## Interpretation
+
+The full-file baseline represents naive grep followed by opening whole files.
+The snippet baseline represents grep-like context inspection.
+The capped-full-file baseline limits very large files from dominating the measurement.
 
 ## Category-level averages
 
 | Category | Queries | Avg baseline tokens | Avg vtrace tokens | Mean reduction % | Median reduction % |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| boundary | 3 | 253370.67 | 173.33 | 98.31 | 99.50 |
-| concept | 5 | 57881.00 | 241.00 | 99.46 | 99.41 |
-| exact | 5 | 46464.80 | 250.80 | 99.39 | 99.46 |
-| stress | 2 | 48596.00 | 199.50 | 99.56 | 99.56 |
-| workflow | 5 | 50336.00 | 246.40 | 99.49 | 99.43 |
+| boundary | 3 | 280732.67 | 157.00 | 99.85 | 99.82 |
+| concept | 5 | 66753.60 | 269.60 | 99.48 | 99.42 |
+| exact | 5 | 53293.40 | 262.40 | 99.43 | 99.57 |
+| stress | 2 | 51726.50 | 243.00 | 99.49 | 99.49 |
+| workflow | 5 | 51540.60 | 250.60 | 99.45 | 99.41 |
 
 ## Worst reductions
 
 | Query | Category | Baseline tokens | vtrace tokens | Reduction % | Items | Source-backed pivots | Contaminated | Top vtrace file | Notes |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |
-| python wrapper around cython | boundary | 3904 | 177 | 95.47 | 2 | unknown | yes | .claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd |  |
-| run_arc | exact | 27706 | 255 | 99.08 | 2 | unknown | no | arc/main.py |  |
-| Scheduler | exact | 23100 | 172 | 99.26 | 2 | unknown | yes | arc/scheduler.py |  |
-| reaction family matching | concept | 25788 | 181 | 99.30 | 1 | unknown | no | arc/reaction/reaction.py |  |
-| kinetics calculation | concept | 43615 | 294 | 99.33 | 2 | unknown | no | arc/checks/ts.py |  |
+| Scheduler | exact | 23100 | 235 | 98.98 | 2 | unknown | no | arc/scheduler.py |  |
+| where are conformers filtered | workflow | 33267 | 295 | 99.11 | 1 | unknown | no | arc/species/conformers.py |  |
+| conformer filtering | concept | 36329 | 293 | 99.19 | 1 | unknown | no | arc/species/conformers.py |  |
+| parser | stress | 38958 | 254 | 99.35 | 2 | 1 | no | arc/exceptions.py |  |
+| ARCReaction | exact | 48220 | 301 | 99.38 | 2 | unknown | no | arc/reaction/reaction.py |  |
 
 ## Best reductions
 
 | Query | Category | Baseline tokens | vtrace tokens | Reduction % | Items | Source-backed pivots | Contaminated | Top vtrace file | Notes |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |
-| performance critical routine | boundary | 723319 | 179 | 99.98 | 2 | unknown | yes | .claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/graph.pyx |  |
-| rotor scans | concept | 137776 | 253 | 99.82 | 2 | unknown | yes | .claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py |  |
-| transition state | stress | 64495 | 220 | 99.66 | 2 | unknown | yes | .claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py |  |
-| where are kinetics jobs scheduled | workflow | 59861 | 228 | 99.62 | 2 | unknown | yes | arc/scheduler.py |  |
-| how does ARC generate TS guesses | workflow | 62830 | 247 | 99.61 | 2 | unknown | yes | arc/species/species.py |  |
+| performance critical routine | boundary | 723319 | 224 | 99.97 | 2 | 1 | no | arc/molecule/graph.pyx |  |
+| rotor scans | concept | 137776 | 203 | 99.85 | 2 | unknown | no | arc/main.py |  |
+| cython | boundary | 64899 | 117 | 99.82 | 2 | 2 | no | arc/molecule/atomtype.pxd |  |
+| python wrapper around cython | boundary | 53980 | 130 | 99.76 | 2 | 2 | no | arc/molecule/atomtype.pxd |  |
+| where are kinetics jobs scheduled | workflow | 77067 | 201 | 99.74 | 2 | unknown | no | arc/scheduler.py |  |
 
 ## Queries where vtrace returned no useful context
 
