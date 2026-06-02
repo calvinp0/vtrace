@@ -1,0 +1,3375 @@
+{
+  "metadata": {
+    "benchmark": "arc_stage1_context_reduction",
+    "timestamp": "2026-06-02T17:16:03.332Z",
+    "arcRepoPath": "/home/calvin/code/ARC",
+    "queryFile": "/home/calvin/code/vtrace/benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json",
+    "outputDirectory": "/home/calvin/code/vtrace/benchmarks/arc_stage1_context_reduction/results",
+    "baselineMaxFiles": 5,
+    "toolCommand": "handoff",
+    "maxBudgetCharacters": null,
+    "tokenEstimate": "Math.ceil(chars / 4)",
+    "notes": []
+  },
+  "rows": [
+    {
+      "query": "ARCSpecies",
+      "category": "exact",
+      "baseline": {
+        "files": [
+          "arc/checks/nmd_test.py",
+          "arc/checks/ts.py",
+          "arc/checks/ts_test.py",
+          "arc/common_test.py",
+          "arc/family/arc_families_test.py"
+        ],
+        "fileCount": 5,
+        "chars": 251311,
+        "estTokens": 62828,
+        "snippets": [
+          {
+            "file": "arc/checks/nmd_test.py",
+            "chars": 67185,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.nmd module\n\"\"\"\n\nimport unittest\nimport os\nimport shutil\n\nimport numpy as np\n\nimport arc.checks.nmd as nmd\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_coords\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.molecule import Molecule\nfrom arc.parser.parser import parse_normal_mode_displacement\nfrom arc.reaction import ARCReaction\nfrom arc.species.species i"
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "chars": 33558,
+            "preview": "\"\"\"\nA module for checking the quality of TS-related calculations, contains helper functions for Scheduler.\n\"\"\"\n\nfrom itertools import product\nimport os\n\nimport numpy as np\nfrom typing import TYPE_CHECKING\n\nfrom arc.parser import parser\nfrom arc.checks.nmd import analyze_ts_normal_mode_displacement\nfrom arc.common import (ARC_PATH,\n                        convert_list_index_0_to_1,\n                        extremum_list,\n                        get_logger,\n                        get_bonds_from_dm"
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "chars": 58602,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.ts module\n\"\"\"\n\nimport unittest\nimport os\nimport shutil\n\nimport numpy as np\n\nimport arc.checks.ts as ts\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_lists\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.parser.parser import parse_normal_mode_displacement, parse_geometry\nfrom arc.reaction import ARCReaction\nfrom arc.species.converter import xyz_from_data\n"
+          },
+          {
+            "file": "arc/common_test.py",
+            "chars": 86012,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for ARC's common module\n\"\"\"\n\nimport copy\nimport datetime\nimport os\nimport time\nimport unittest\n\nimport numpy as np\nimport pandas as pd\nfrom random import shuffle\n\nimport arc.common as common\nimport arc.species.converter as converter\nfrom arc.exceptions import InputError, SettingsError\nfrom arc.imports import settings\nfrom arc.molecule import Molecule\nfrom arc.species.species import ARCSpecies\n\n\nservers = settings['serv"
+          },
+          {
+            "file": "arc/family/arc_families_test.py",
+            "chars": 5954,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the kinetic families defined under arc.data.families.\n\"\"\"\n\nimport unittest\nimport os\n\nfrom arc.family.family import ReactionFamily, get_reaction_family_products, get_recipe_actions\nfrom arc.imports import settings\nfrom arc.reaction.reaction import ARCReaction\nfrom arc.species.species import ARCSpecies\n\nARC_FAMILIES_PATH = settings['ARC_FAMILIES_PATH']\n\n\nclass TestCarbonylBasedHydrolysisReactionFamily(unittest.TestC"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 1150,
+        "estTokens": 288,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py::ARCSpecies",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "ARCSpecies",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 1150,
+            "remainingCharacters": 850
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py::ARCSpecies",
+              "localName": "ARCSpecies",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/species/species.py::ARCSpecies",
+              "localName": "ARCSpecies",
+              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/species/species.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.54160565353027,
+      "expectedAreaHits": [
+        "species",
+        "family",
+        "ts"
+      ],
+      "notes": []
+    },
+    {
+      "query": "ARCReaction",
+      "category": "exact",
+      "baseline": {
+        "files": [
+          "arc/checks/nmd.py",
+          "arc/checks/nmd_test.py",
+          "arc/checks/ts.py",
+          "arc/checks/ts_test.py",
+          "arc/family/arc_families_test.py"
+        ],
+        "fileCount": 5,
+        "chars": 192879,
+        "estTokens": 48220,
+        "snippets": [
+          {
+            "file": "arc/checks/nmd.py",
+            "chars": 27580,
+            "preview": "\"\"\"\nA module for checking the normal mode displacement of a TS.\n\"\"\"\n\nimport numpy as np\nfrom collections import Counter\nfrom itertools import product\nfrom typing import TYPE_CHECKING\n\nfrom arc.parser import parser\nfrom arc.common import get_element_mass, get_logger\nfrom arc.species.converter import get_most_common_isotope_for_element, xyz_from_data, xyz_to_np_array\nfrom arc.species.vectors import calculate_distance, VectorsError\n\nif TYPE_CHECKING:\n    from arc.job.adapter import JobAdapter\n    f"
+          },
+          {
+            "file": "arc/checks/nmd_test.py",
+            "chars": 67185,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.nmd module\n\"\"\"\n\nimport unittest\nimport os\nimport shutil\n\nimport numpy as np\n\nimport arc.checks.nmd as nmd\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_coords\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.molecule import Molecule\nfrom arc.parser.parser import parse_normal_mode_displacement\nfrom arc.reaction import ARCReaction\nfrom arc.species.species i"
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "chars": 33558,
+            "preview": "\"\"\"\nA module for checking the quality of TS-related calculations, contains helper functions for Scheduler.\n\"\"\"\n\nfrom itertools import product\nimport os\n\nimport numpy as np\nfrom typing import TYPE_CHECKING\n\nfrom arc.parser import parser\nfrom arc.checks.nmd import analyze_ts_normal_mode_displacement\nfrom arc.common import (ARC_PATH,\n                        convert_list_index_0_to_1,\n                        extremum_list,\n                        get_logger,\n                        get_bonds_from_dm"
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "chars": 58602,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.ts module\n\"\"\"\n\nimport unittest\nimport os\nimport shutil\n\nimport numpy as np\n\nimport arc.checks.ts as ts\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_lists\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.parser.parser import parse_normal_mode_displacement, parse_geometry\nfrom arc.reaction import ARCReaction\nfrom arc.species.converter import xyz_from_data\n"
+          },
+          {
+            "file": "arc/family/arc_families_test.py",
+            "chars": 5954,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the kinetic families defined under arc.data.families.\n\"\"\"\n\nimport unittest\nimport os\n\nfrom arc.family.family import ReactionFamily, get_reaction_family_products, get_recipe_actions\nfrom arc.imports import settings\nfrom arc.reaction.reaction import ARCReaction\nfrom arc.species.species import ARCSpecies\n\nARC_FAMILIES_PATH = settings['ARC_FAMILIES_PATH']\n\n\nclass TestCarbonylBasedHydrolysisReactionFamily(unittest.TestC"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 1037,
+        "estTokens": 260,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "ARCReaction",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 1037,
+            "remainingCharacters": 963
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction",
+              "localName": "ARCReaction",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/reaction/reaction.py::ARCReaction",
+              "localName": "ARCReaction",
+              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/reaction/reaction.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.46080464537536,
+      "expectedAreaHits": [
+        "reaction",
+        "family",
+        "ts"
+      ],
+      "notes": []
+    },
+    {
+      "query": "Scheduler",
+      "category": "exact",
+      "baseline": {
+        "files": [
+          "arc/__init__.py",
+          "arc/checks/common.py",
+          "arc/checks/ts.py",
+          "arc/exceptions.py",
+          "arc/job/adapter.py"
+        ],
+        "fileCount": 5,
+        "chars": 92399,
+        "estTokens": 23100,
+        "snippets": [
+          {
+            "file": "arc/__init__.py",
+            "chars": 383,
+            "preview": "import arc.exceptions\nimport arc.main\nfrom arc.main import ARC\nimport arc.checks\nimport arc.common\nimport arc.imports\nimport arc.level\nimport arc.plotter\nimport arc.processor\nimport arc.scheduler\nimport arc.utils\n\nimport arc.job\nimport arc.family\nimport arc.mapping\nimport arc.molecule\nimport arc.parser\nimport arc.reaction\nimport arc.settings\nimport arc.species\nimport arc.statmech\n"
+          },
+          {
+            "file": "arc/checks/common.py",
+            "chars": 1550,
+            "preview": "\"\"\"\nA module with common functionalities used for checking the quality of calculations,\ncontains helper functions for Scheduler.\n\"\"\"\n\nimport datetime\n\nCONFORMER_JOB_TYPES = ('conf_opt', 'conf_sp')\n\n\ndef is_conformer_job(job_name: str) -> bool:\n    \"\"\"\n    Check whether a job name represents a conformer job.\n\n    Args:\n        job_name (str): The job name, e.g., 'conf_opt_3' or 'conf_sp_0'.\n\n    Returns:\n        bool: ``True`` if the job name starts with a conformer job type prefix.\n    \"\"\"\n    r"
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "chars": 33558,
+            "preview": "\"\"\"\nA module for checking the quality of TS-related calculations, contains helper functions for Scheduler.\n\"\"\"\n\nfrom itertools import product\nimport os\n\nimport numpy as np\nfrom typing import TYPE_CHECKING\n\nfrom arc.parser import parser\nfrom arc.checks.nmd import analyze_ts_normal_mode_displacement\nfrom arc.common import (ARC_PATH,\n                        convert_list_index_0_to_1,\n                        extremum_list,\n                        get_logger,\n                        get_bonds_from_dm"
+          },
+          {
+            "file": "arc/exceptions.py",
+            "chars": 3889,
+            "preview": "\"\"\"\nThis module contains classes which extend Exception for usage in ARC.\n\"\"\"\n\n\nclass ActionError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass AtomTypeError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConformerError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConverterError(Exception):\n    \"\"\"\n    An exception raised when converting molecul"
+          },
+          {
+            "file": "arc/job/adapter.py",
+            "chars": 53019,
+            "preview": "\"\"\"\nA module for the abstract JobAdapter class\n\nA job execution type could be either \"incore\" (run on the calling machine) or \"queue\" (submitted to a cluster)\nA job could (independently) consist a single process (e.g., optimizing a single well)\nor have multiple processes (an array) executed by several \"workers\" on a server.\nA single process job could run \"incore\" or be submitted to the queue.\nA multiprocess job could be executed \"incore\" (taking no advantage of potential server parallelization)\n"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 763,
+        "estTokens": 191,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py::Scheduler",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "Scheduler",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 763,
+            "remainingCharacters": 1237
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py::Scheduler",
+              "localName": "Scheduler",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py::Scheduler",
+              "localName": "Scheduler",
+              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.17316017316017,
+      "expectedAreaHits": [
+        "scheduler",
+        "ts"
+      ],
+      "notes": []
+    },
+    {
+      "query": "determine_family",
+      "category": "exact",
+      "baseline": {
+        "files": [
+          "arc/family/family_test.py",
+          "arc/reaction/reaction.py",
+          "ipython/Tools/TS Guesses.ipynb",
+          "arc/checks/ts.py",
+          "arc/checks/ts_test.py"
+        ],
+        "fileCount": 5,
+        "chars": 281879,
+        "estTokens": 70470,
+        "snippets": [
+          {
+            "file": "arc/family/family_test.py",
+            "chars": 96750,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests of the arc.reaction.family module\n\"\"\"\n\nimport os\nimport unittest\n\nfrom arc.common import is_equal_family_product_dicts\nfrom arc.family.family import (ReactionFamily,\n                               ARC_FAMILIES_PATH,\n                               RMG_DB_PATH,\n                               get_rmg_db_subpath,\n                               add_labels_to_molecule,\n                               check_product_isomorphism"
+          },
+          {
+            "file": "arc/reaction/reaction.py",
+            "chars": 57409,
+            "preview": "\"\"\"\nA module for representing a reaction.\n\"\"\"\n\nfrom arc.common import get_element_mass, get_logger\nfrom arc.exceptions import ReactionError, InputError\nfrom arc.family.family import ReactionFamily, get_reaction_family_products, check_family_name\nfrom arc.molecule.resonance import generate_resonance_structures_safely\nfrom arc.species.converter import (check_xyz_dict,\n                                   sort_xyz_using_indices,\n                                   translate_to_center_of_mass,\n        "
+          },
+          {
+            "file": "ipython/Tools/TS Guesses.ipynb",
+            "chars": 35560,
+            "preview": "{\n \"cells\": [\n  {\n   \"cell_type\": \"markdown\",\n   \"id\": \"9bfc8aa6\",\n   \"metadata\": {},\n   \"source\": [\n    \"# ARC Tools\\n\",\n    \"## TS Guesses\\n\",\n    \"Enter smiles of reactants and products. Write ``None`` if needed.\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": 3,\n   \"id\": \"5bae17f3\",\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"from arc.imports import settings\\n\",\n    \"from arc.job.adapters.common import all_families_ts_adapters, ts_adapters_by_rmg_family\\n\",\n    \"fro"
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "chars": 33558,
+            "preview": "\"\"\"\nA module for checking the quality of TS-related calculations, contains helper functions for Scheduler.\n\"\"\"\n\nfrom itertools import product\nimport os\n\nimport numpy as np\nfrom typing import TYPE_CHECKING\n\nfrom arc.parser import parser\nfrom arc.checks.nmd import analyze_ts_normal_mode_displacement\nfrom arc.common import (ARC_PATH,\n                        convert_list_index_0_to_1,\n                        extremum_list,\n                        get_logger,\n                        get_bonds_from_dm"
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "chars": 58602,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.ts module\n\"\"\"\n\nimport unittest\nimport os\nimport shutil\n\nimport numpy as np\n\nimport arc.checks.ts as ts\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_lists\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.parser.parser import parse_normal_mode_displacement, parse_geometry\nfrom arc.reaction import ARCReaction\nfrom arc.species.converter import xyz_from_data\n"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 1105,
+        "estTokens": 277,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction.determine_family",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "determine_family",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 1105,
+            "remainingCharacters": 895
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction.determine_family",
+              "localName": "determine_family",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py",
+              "kind": "method",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/reaction/reaction.py::ARCReaction.determine_family",
+              "localName": "determine_family",
+              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/reaction/reaction.py",
+              "kind": "method",
+              "sourceBacked": null,
+              "contentMode": "stub"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.60692493259543,
+      "expectedAreaHits": [
+        "reaction",
+        "family",
+        "ts"
+      ],
+      "notes": []
+    },
+    {
+      "query": "run_arc",
+      "category": "exact",
+      "baseline": {
+        "files": [
+          "Dockerfile",
+          "Makefile",
+          "arc/checks/common_test.py",
+          "arc/checks/nmd_test.py",
+          "arc/checks/ts.py"
+        ],
+        "fileCount": 5,
+        "chars": 110821,
+        "estTokens": 27706,
+        "snippets": [
+          {
+            "file": "Dockerfile",
+            "chars": 4545,
+            "preview": "# Stage 1: RMG setup & ARC setup\n# The parent image is the base image that the Dockerfile builds upon.\n# The RMG installation instructions suggest Anaconda for installation by source, however, we use micromamba for the Docker image due to its smaller size and less overhead.\n# Installation of ARC will also be done in this stage.\nFROM --platform=linux/amd64 mambaorg/micromamba:2.2-ubuntu24.04 AS builder\n\n# Set ARGS\nARG RMG_PY_BRANCH=main\nARG RMG_DATABASE_BRANCH=main\nARG ARC_BRANCH=main\n\n# Set Glob"
+          },
+          {
+            "file": "Makefile",
+            "chars": 3495,
+            "preview": "################################################################################\n#\n#   Makefile for ARC\n#\n################################################################################\n\nDEVTOOLS_DIR := devtools\n\n.PHONY: all help clean test test-unittests test-functional test-all \\\n        install-all install-ci install-rmg install-rmgdb install-autotst install-gcn \\\n        install-gcn-cpu install-kinbot install-sella install-xtb install-torchani install-ob \\\n        lite check-env compile\n\n\n#"
+          },
+          {
+            "file": "arc/checks/common_test.py",
+            "chars": 2038,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.common module\n\"\"\"\n\nimport datetime\nimport unittest\n\nimport arc.checks.common as common\n\n\nclass TestChecks(unittest.TestCase):\n    \"\"\"\n    Contains unit tests for the check module.\n    \"\"\"\n    def test_sum_time_delta(self):\n        \"\"\"Test the sum_time_delta() function\"\"\"\n        dt1 = datetime.timedelta(days=0, minutes=0, seconds=0)\n        dt2 = datetime.timedelta(days=0, minutes=0, seconds=0)\n     "
+          },
+          {
+            "file": "arc/checks/nmd_test.py",
+            "chars": 67185,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.nmd module\n\"\"\"\n\nimport unittest\nimport os\nimport shutil\n\nimport numpy as np\n\nimport arc.checks.nmd as nmd\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_coords\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.molecule import Molecule\nfrom arc.parser.parser import parse_normal_mode_displacement\nfrom arc.reaction import ARCReaction\nfrom arc.species.species i"
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "chars": 33558,
+            "preview": "\"\"\"\nA module for checking the quality of TS-related calculations, contains helper functions for Scheduler.\n\"\"\"\n\nfrom itertools import product\nimport os\n\nimport numpy as np\nfrom typing import TYPE_CHECKING\n\nfrom arc.parser import parser\nfrom arc.checks.nmd import analyze_ts_normal_mode_displacement\nfrom arc.common import (ARC_PATH,\n                        convert_list_index_0_to_1,\n                        extremum_list,\n                        get_logger,\n                        get_bonds_from_dm"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 1148,
+        "estTokens": 287,
+        "topResult": "arc/main.py::ARC.execute",
+        "topFile": "arc/main.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "run_arc",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 1148,
+            "remainingCharacters": 852
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": "arc/main.py::ARC.execute",
+              "localName": "execute",
+              "filePath": "arc/main.py",
+              "kind": "method",
+              "sourceBacked": null,
+              "contentMode": "summary"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/main.py::ARC.execute",
+              "localName": "execute",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/main.py",
+              "kind": "method",
+              "sourceBacked": null,
+              "contentMode": "summary"
+            }
+          ]
+        }
+      },
+      "reductionPct": 98.96412329459324,
+      "expectedAreaHits": [
+        "run_arc",
+        "ts"
+      ],
+      "notes": []
+    },
+    {
+      "query": "how does ARC generate TS guesses",
+      "category": "workflow",
+      "baseline": {
+        "files": [
+          "arc/common_test.py",
+          "arc/family/arc_families_test.py",
+          "arc/family/family.py",
+          "arc/family/family_test.py",
+          "arc/job/adapters/cfour.py"
+        ],
+        "fileCount": 5,
+        "chars": 251320,
+        "estTokens": 62830,
+        "snippets": [
+          {
+            "file": "arc/common_test.py",
+            "chars": 86012,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for ARC's common module\n\"\"\"\n\nimport copy\nimport datetime\nimport os\nimport time\nimport unittest\n\nimport numpy as np\nimport pandas as pd\nfrom random import shuffle\n\nimport arc.common as common\nimport arc.species.converter as converter\nfrom arc.exceptions import InputError, SettingsError\nfrom arc.imports import settings\nfrom arc.molecule import Molecule\nfrom arc.species.species import ARCSpecies\n\n\nservers = settings['serv"
+          },
+          {
+            "file": "arc/family/arc_families_test.py",
+            "chars": 5954,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the kinetic families defined under arc.data.families.\n\"\"\"\n\nimport unittest\nimport os\n\nfrom arc.family.family import ReactionFamily, get_reaction_family_products, get_recipe_actions\nfrom arc.imports import settings\nfrom arc.reaction.reaction import ARCReaction\nfrom arc.species.species import ARCSpecies\n\nARC_FAMILIES_PATH = settings['ARC_FAMILIES_PATH']\n\n\nclass TestCarbonylBasedHydrolysisReactionFamily(unittest.TestC"
+          },
+          {
+            "file": "arc/family/family.py",
+            "chars": 47076,
+            "preview": "\"\"\"\nA module for working with RMG reaction families.\n\"\"\"\n\nfrom typing import TYPE_CHECKING\nimport ast\nimport os\nimport re\n\nfrom arc.common import clean_text, get_logger\nfrom arc.exceptions import InvalidAdjacencyListError\nfrom arc.imports import settings\nfrom arc.molecule import Bond, Group, Molecule\nfrom arc.molecule.resonance import generate_resonance_structures_safely\n\nif TYPE_CHECKING:\n    from arc.species import ARCSpecies\n    from arc.reaction.reaction import ARCReaction\n\nRMG_DB_PATH = set"
+          },
+          {
+            "file": "arc/family/family_test.py",
+            "chars": 96750,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests of the arc.reaction.family module\n\"\"\"\n\nimport os\nimport unittest\n\nfrom arc.common import is_equal_family_product_dicts\nfrom arc.family.family import (ReactionFamily,\n                               ARC_FAMILIES_PATH,\n                               RMG_DB_PATH,\n                               get_rmg_db_subpath,\n                               add_labels_to_molecule,\n                               check_product_isomorphism"
+          },
+          {
+            "file": "arc/job/adapters/cfour.py",
+            "chars": 15528,
+            "preview": "\"\"\"\nAn adapter for executing CFour (Coupled-Cluster techniques for Computational Chemistry) jobs\n\nhttp://slater.chemie.uni-mainz.de/cfour/index.php\n\nKeyword list:\nhttp://slater.chemie.uni-mainz.de/cfour/index.php?n=Main.ListOfKeywordsInAlphabeticalOrder\n\"\"\"\n\nimport datetime\nimport math\nimport os\nfrom typing import TYPE_CHECKING\n\nfrom mako.template import Template\n\nfrom arc.common import get_logger\nfrom arc.imports import incore_commands, settings\nfrom arc.job.adapter import JobAdapter\nfrom arc.j"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 988,
+        "estTokens": 247,
+        "topResult": "arc/species/species.py::TSGuess",
+        "topFile": "arc/species/species.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "how does ARC generate TS guesses",
+            "intent": "explain",
+            "strength": 2,
+            "candidates": [
+              {
+                "intent": "explain",
+                "strength": 2,
+                "matchedRuleIds": [
+                  "explain-question-phrases"
+                ]
+              }
+            ],
+            "explanation": {
+              "reasonKind": "rule_match",
+              "fallbackApplied": false,
+              "summary": "Selected intent explain from matched rule evidence.",
+              "matchedRules": [
+                {
+                  "ruleId": "explain-question-phrases",
+                  "targetIntent": "explain",
+                  "priority": 60,
+                  "strength": 2,
+                  "explanation": "Understanding-oriented question phrases suggest explain intent.",
+                  "matchedTerms": [
+                    "how does"
+                  ]
+                }
+              ]
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 988,
+            "remainingCharacters": 1012
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": "arc/species/species.py::TSGuess",
+              "localName": "TSGuess",
+              "filePath": "arc/species/species.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py::TSGuess",
+              "localName": "TSGuess",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.60687569632341,
+      "expectedAreaHits": [
+        "species",
+        "family",
+        "ts"
+      ],
+      "notes": []
+    },
+    {
+      "query": "where are conformers filtered",
+      "category": "workflow",
+      "baseline": {
+        "files": [
+          "arc/common.py",
+          "arc/exceptions.py",
+          "arc/job/adapters/cfour.py",
+          "arc/job/adapters/gaussian.py",
+          "arc/job/adapters/mockter.py"
+        ],
+        "fileCount": 5,
+        "chars": 133080,
+        "estTokens": 33270,
+        "snippets": [
+          {
+            "file": "arc/common.py",
+            "chars": 71340,
+            "preview": "\"\"\"\nThis module contains functions which are shared across multiple ARC modules.\nAs such, it should not import any other ARC module (specifically ones that use the logger defined here)\nto avoid circular imports.\n\nVERSION is the full ARC version, using `semantic versioning <https://semver.org/>`_.\n\"\"\"\n\nimport ast\nimport datetime\nimport logging\nimport math\nimport os\nimport pprint\nimport re\nimport shutil\nimport subprocess\nimport sys\nimport time\nimport warnings\nimport yaml\nfrom collections import de"
+          },
+          {
+            "file": "arc/exceptions.py",
+            "chars": 3889,
+            "preview": "\"\"\"\nThis module contains classes which extend Exception for usage in ARC.\n\"\"\"\n\n\nclass ActionError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass AtomTypeError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConformerError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConverterError(Exception):\n    \"\"\"\n    An exception raised when converting molecul"
+          },
+          {
+            "file": "arc/job/adapters/cfour.py",
+            "chars": 15528,
+            "preview": "\"\"\"\nAn adapter for executing CFour (Coupled-Cluster techniques for Computational Chemistry) jobs\n\nhttp://slater.chemie.uni-mainz.de/cfour/index.php\n\nKeyword list:\nhttp://slater.chemie.uni-mainz.de/cfour/index.php?n=Main.ListOfKeywordsInAlphabeticalOrder\n\"\"\"\n\nimport datetime\nimport math\nimport os\nfrom typing import TYPE_CHECKING\n\nfrom mako.template import Template\n\nfrom arc.common import get_logger\nfrom arc.imports import incore_commands, settings\nfrom arc.job.adapter import JobAdapter\nfrom arc.j"
+          },
+          {
+            "file": "arc/job/adapters/gaussian.py",
+            "chars": 28065,
+            "preview": "\"\"\"\nAn adapter for executing Gaussian jobs\n\nhttps://gaussian.com/\n\"\"\"\n\nimport datetime\nimport math\nimport os\nimport re\nfrom typing import TYPE_CHECKING\n\nfrom mako.template import Template\n\nfrom arc.common import get_logger, torsions_to_scans\nfrom arc.imports import incore_commands, settings\nfrom arc.job.adapter import JobAdapter, constraint_type_dict\nfrom arc.job.adapters.common import (_initialize_adapter,\n                                     is_restricted,\n                                     "
+          },
+          {
+            "file": "arc/job/adapters/mockter.py",
+            "chars": 14258,
+            "preview": "\"\"\"\nAn adapter for dummy jobs, meant for testing and debugging only.\n\"\"\"\n\nimport datetime\nimport os\nfrom typing import TYPE_CHECKING\n\nfrom arc.common import get_logger, read_yaml_file, save_yaml_file\nfrom arc.imports import settings\nfrom arc.job.adapter import JobAdapter\nfrom arc.job.adapters.common import _initialize_adapter, update_input_dict_with_args\nfrom arc.job.factory import register_job_adapter\nfrom arc.level import Level\nfrom arc.species.converter import xyz_to_str, str_to_xyz\n\nif TYPE_"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 1,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 835,
+        "estTokens": 209,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "where are conformers filtered",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 835,
+            "remainingCharacters": 1165
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
+              "localName": "conformers_combinations_by_lowest_conformer",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "stub"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.37180643222122,
+      "expectedAreaHits": [
+        "species",
+        "ts",
+        "conformer"
+      ],
+      "notes": []
+    },
+    {
+      "query": "where are kinetics jobs scheduled",
+      "category": "workflow",
+      "baseline": {
+        "files": [
+          "README.md",
+          "arc/checks/ts.py",
+          "arc/checks/ts_test.py",
+          "arc/family/family.py",
+          "arc/family/family_test.py"
+        ],
+        "fileCount": 5,
+        "chars": 239443,
+        "estTokens": 59861,
+        "snippets": [
+          {
+            "file": "README.md",
+            "chars": 3457,
+            "preview": "# Automated Rate Calculator | ARC\n\n![Build Status](https://github.com/ReactionMechanismGenerator/ARC/actions/workflows/cont_int.yml/badge.svg)\n[![codecov](https://codecov.io/gh/ReactionMechanismGenerator/ARC/branch/main/graph/badge.svg)](https://codecov.io/gh/ReactionMechanismGenerator/ARC)\n[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)\n![Release](https://img.shields.io/badge/version-1.1.0-blue.svg)\n![Python](https://img.shields.io/b"
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "chars": 33558,
+            "preview": "\"\"\"\nA module for checking the quality of TS-related calculations, contains helper functions for Scheduler.\n\"\"\"\n\nfrom itertools import product\nimport os\n\nimport numpy as np\nfrom typing import TYPE_CHECKING\n\nfrom arc.parser import parser\nfrom arc.checks.nmd import analyze_ts_normal_mode_displacement\nfrom arc.common import (ARC_PATH,\n                        convert_list_index_0_to_1,\n                        extremum_list,\n                        get_logger,\n                        get_bonds_from_dm"
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "chars": 58602,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.ts module\n\"\"\"\n\nimport unittest\nimport os\nimport shutil\n\nimport numpy as np\n\nimport arc.checks.ts as ts\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_lists\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.parser.parser import parse_normal_mode_displacement, parse_geometry\nfrom arc.reaction import ARCReaction\nfrom arc.species.converter import xyz_from_data\n"
+          },
+          {
+            "file": "arc/family/family.py",
+            "chars": 47076,
+            "preview": "\"\"\"\nA module for working with RMG reaction families.\n\"\"\"\n\nfrom typing import TYPE_CHECKING\nimport ast\nimport os\nimport re\n\nfrom arc.common import clean_text, get_logger\nfrom arc.exceptions import InvalidAdjacencyListError\nfrom arc.imports import settings\nfrom arc.molecule import Bond, Group, Molecule\nfrom arc.molecule.resonance import generate_resonance_structures_safely\n\nif TYPE_CHECKING:\n    from arc.species import ARCSpecies\n    from arc.reaction.reaction import ARCReaction\n\nRMG_DB_PATH = set"
+          },
+          {
+            "file": "arc/family/family_test.py",
+            "chars": 96750,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests of the arc.reaction.family module\n\"\"\"\n\nimport os\nimport unittest\n\nfrom arc.common import is_equal_family_product_dicts\nfrom arc.family.family import (ReactionFamily,\n                               ARC_FAMILIES_PATH,\n                               RMG_DB_PATH,\n                               get_rmg_db_subpath,\n                               add_labels_to_molecule,\n                               check_product_isomorphism"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 989,
+        "estTokens": 248,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py::Scheduler",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "where are kinetics jobs scheduled",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 989,
+            "remainingCharacters": 1011
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py::Scheduler",
+              "localName": "Scheduler",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py::Scheduler",
+              "localName": "Scheduler",
+              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.58570688762299,
+      "expectedAreaHits": [
+        "scheduler",
+        "family",
+        "ts",
+        "kinetics"
+      ],
+      "notes": []
+    },
+    {
+      "query": "where is Arkane input written",
+      "category": "workflow",
+      "baseline": {
+        "files": [
+          "arc/checks/ts_test.py",
+          "arc/job/adapters/gaussian.py",
+          "arc/job/adapters/psi_4.py",
+          "arc/level.py",
+          "arc/main.py"
+        ],
+        "fileCount": 5,
+        "chars": 199300,
+        "estTokens": 49825,
+        "snippets": [
+          {
+            "file": "arc/checks/ts_test.py",
+            "chars": 58602,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.ts module\n\"\"\"\n\nimport unittest\nimport os\nimport shutil\n\nimport numpy as np\n\nimport arc.checks.ts as ts\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_lists\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.parser.parser import parse_normal_mode_displacement, parse_geometry\nfrom arc.reaction import ARCReaction\nfrom arc.species.converter import xyz_from_data\n"
+          },
+          {
+            "file": "arc/job/adapters/gaussian.py",
+            "chars": 28065,
+            "preview": "\"\"\"\nAn adapter for executing Gaussian jobs\n\nhttps://gaussian.com/\n\"\"\"\n\nimport datetime\nimport math\nimport os\nimport re\nfrom typing import TYPE_CHECKING\n\nfrom mako.template import Template\n\nfrom arc.common import get_logger, torsions_to_scans\nfrom arc.imports import incore_commands, settings\nfrom arc.job.adapter import JobAdapter, constraint_type_dict\nfrom arc.job.adapters.common import (_initialize_adapter,\n                                     is_restricted,\n                                     "
+          },
+          {
+            "file": "arc/job/adapters/psi_4.py",
+            "chars": 18427,
+            "preview": "\"\"\"\nAn adapter for executing Psi4 jobs\n\nhttps://www.psicode.org/\n\"\"\"\n\nimport datetime\nimport math\nimport os\nfrom typing import TYPE_CHECKING\n\nfrom arc.common import get_logger\nfrom arc.imports import incore_commands, settings\nfrom arc.job.adapter import JobAdapter\nfrom arc.job.adapters.common import (check_argument_consistency,\n                                     set_job_args,\n                                     which)\nfrom arc.job.factory import register_job_adapter\nfrom arc.job.local import "
+          },
+          {
+            "file": "arc/level.py",
+            "chars": 21926,
+            "preview": "\"\"\"\nA module for working with levels of theory.\n\"\"\"\n\nimport os\nfrom collections.abc import Iterable\n\nfrom arc.common import ARC_PATH, get_logger, get_ordered_intersection_of_two_lists, read_yaml_file\nfrom arc.imports import settings\n\n\nlogger = get_logger()\n\nlevels_ess, supported_ess = settings['levels_ess'], settings['supported_ess']\n\n\nclass Level(object):\n    \"\"\"\n    Uniquely defines the settings used for a quantum calculation level of theory.\n    Either ``repr`` or ``method`` must be specified"
+          },
+          {
+            "file": "arc/main.py",
+            "chars": 72280,
+            "preview": "\"\"\"\nARC's main module.\nTo run ARC through its API, first make an instance of the ARC class, then call the .execute() method. For example::\n\n  arc = ARC(project='ArcDemo', species=[spc0, spc1, spc2])\n  arc.execute()\n\nWhere ``spc0``, ``spc1``, and ``spc2`` in the above example are :ref:`ARCSpecies <species>` objects.\n\"\"\"\n\nimport datetime\nimport logging\nimport os\nimport shutil\nimport time\nfrom distutils.spawn import find_executable\nfrom IPython.display import display\n\nfrom arc.common import (VERSIO"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 1,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 953,
+        "estTokens": 239,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/statmech/arkane.py::ArkaneAdapter.render_arkane_input_template",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/statmech/arkane.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "where is Arkane input written",
+            "intent": "explain",
+            "strength": 2,
+            "candidates": [
+              {
+                "intent": "explain",
+                "strength": 2,
+                "matchedRuleIds": [
+                  "explain-question-phrases"
+                ]
+              }
+            ],
+            "explanation": {
+              "reasonKind": "rule_match",
+              "fallbackApplied": false,
+              "summary": "Selected intent explain from matched rule evidence.",
+              "matchedRules": [
+                {
+                  "ruleId": "explain-question-phrases",
+                  "targetIntent": "explain",
+                  "priority": 60,
+                  "strength": 2,
+                  "explanation": "Understanding-oriented question phrases suggest explain intent.",
+                  "matchedTerms": [
+                    "where is"
+                  ]
+                }
+              ]
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 953,
+            "remainingCharacters": 1047
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/statmech/arkane.py::ArkaneAdapter.render_arkane_input_template",
+              "localName": "render_arkane_input_template",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/statmech/arkane.py",
+              "kind": "method",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.52032112393377,
+      "expectedAreaHits": [
+        "ts",
+        "kinetics",
+        "arkane"
+      ],
+      "notes": []
+    },
+    {
+      "query": "how are transition state jobs validated",
+      "category": "workflow",
+      "baseline": {
+        "files": [
+          "arc/exceptions.py",
+          "arc/job/adapter.py",
+          "arc/job/adapters/ts/gcn_ts.py",
+          "arc/job/adapters/ts/heuristics.py",
+          "arc/job/adapters/xtb_adapter.py"
+        ],
+        "fileCount": 5,
+        "chars": 183587,
+        "estTokens": 45897,
+        "snippets": [
+          {
+            "file": "arc/exceptions.py",
+            "chars": 3889,
+            "preview": "\"\"\"\nThis module contains classes which extend Exception for usage in ARC.\n\"\"\"\n\n\nclass ActionError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass AtomTypeError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConformerError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConverterError(Exception):\n    \"\"\"\n    An exception raised when converting molecul"
+          },
+          {
+            "file": "arc/job/adapter.py",
+            "chars": 53019,
+            "preview": "\"\"\"\nA module for the abstract JobAdapter class\n\nA job execution type could be either \"incore\" (run on the calling machine) or \"queue\" (submitted to a cluster)\nA job could (independently) consist a single process (e.g., optimizing a single well)\nor have multiple processes (an array) executed by several \"workers\" on a server.\nA single process job could run \"incore\" or be submitted to the queue.\nA multiprocess job could be executed \"incore\" (taking no advantage of potential server parallelization)\n"
+          },
+          {
+            "file": "arc/job/adapters/ts/gcn_ts.py",
+            "chars": 20315,
+            "preview": "\"\"\"\nAn adapter for executing GCN (graph convolutional network) jobs\n\nCode source:\nhttps://github.com/ReactionMechanismGenerator/TS-GCN\nLiterature source:\nhttps://chemrxiv.org/articles/Genereting_Transition_States_of_Isomerization_Reactions_with_Deep_Learning/12302084\n\"\"\"\n\nimport datetime\nimport os\nfrom typing import TYPE_CHECKING\n\nfrom rdkit import Chem\n\nfrom arc.common import ARC_PATH, almost_equal_coords, get_logger, save_yaml_file\nfrom arc.imports import settings\nfrom arc.job.adapter import J"
+          },
+          {
+            "file": "arc/job/adapters/ts/heuristics.py",
+            "chars": 83909,
+            "preview": "\"\"\"\nAn adapter for executing TS guess jobs based on heuristics\n\nTodo:\n    - eventually this module needs to be applied for all H's connected to the same heavy atom,\n      summing up the rates appropriately\n    - test H2O2 as the RH abstractor, see that both TS chiralities are attained\n    - Add tests\n    - add database and train from database, see\n      https://github.com/ReactionMechanismGenerator/ARC/commit/081df5bf8e53987e9ff48eef481c17997f9cff2a,\n      https://github.com/ReactionMechanismGen"
+          },
+          {
+            "file": "arc/job/adapters/xtb_adapter.py",
+            "chars": 22455,
+            "preview": "\"\"\"\nAn adapter for executing xTB (Semiempirical Extended Tight-Binding Program Package) jobs\n\nhttps://github.com/grimme-lab/xtb\nhttps://xtb-docs.readthedocs.io/en/latest/contents.html\nrun types: https://xtb-docs.readthedocs.io/en/latest/commandline.html?highlight=--grad#runtypes\n\"\"\"\n\nimport datetime\nimport os\nfrom typing import TYPE_CHECKING\n\nfrom mako.template import Template\n\nfrom arc.common import get_logger, read_yaml_file, save_yaml_file, torsions_to_scans\nfrom arc.imports import incore_com"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 1,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 1105,
+        "estTokens": 277,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py::check_valid_transition",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "how are transition state jobs validated",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 1105,
+            "remainingCharacters": 895
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py::check_valid_transition",
+              "localName": "check_valid_transition",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "summary"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.39647471512299,
+      "expectedAreaHits": [
+        "ts"
+      ],
+      "notes": []
+    },
+    {
+      "query": "transition state generation",
+      "category": "concept",
+      "baseline": {
+        "files": [
+          "arc/exceptions.py",
+          "arc/job/adapter.py",
+          "arc/job/adapters/ts/gcn_ts.py",
+          "arc/job/adapters/ts/heuristics.py",
+          "arc/job/adapters/xtb_adapter.py"
+        ],
+        "fileCount": 5,
+        "chars": 183587,
+        "estTokens": 45897,
+        "snippets": [
+          {
+            "file": "arc/exceptions.py",
+            "chars": 3889,
+            "preview": "\"\"\"\nThis module contains classes which extend Exception for usage in ARC.\n\"\"\"\n\n\nclass ActionError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass AtomTypeError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConformerError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConverterError(Exception):\n    \"\"\"\n    An exception raised when converting molecul"
+          },
+          {
+            "file": "arc/job/adapter.py",
+            "chars": 53019,
+            "preview": "\"\"\"\nA module for the abstract JobAdapter class\n\nA job execution type could be either \"incore\" (run on the calling machine) or \"queue\" (submitted to a cluster)\nA job could (independently) consist a single process (e.g., optimizing a single well)\nor have multiple processes (an array) executed by several \"workers\" on a server.\nA single process job could run \"incore\" or be submitted to the queue.\nA multiprocess job could be executed \"incore\" (taking no advantage of potential server parallelization)\n"
+          },
+          {
+            "file": "arc/job/adapters/ts/gcn_ts.py",
+            "chars": 20315,
+            "preview": "\"\"\"\nAn adapter for executing GCN (graph convolutional network) jobs\n\nCode source:\nhttps://github.com/ReactionMechanismGenerator/TS-GCN\nLiterature source:\nhttps://chemrxiv.org/articles/Genereting_Transition_States_of_Isomerization_Reactions_with_Deep_Learning/12302084\n\"\"\"\n\nimport datetime\nimport os\nfrom typing import TYPE_CHECKING\n\nfrom rdkit import Chem\n\nfrom arc.common import ARC_PATH, almost_equal_coords, get_logger, save_yaml_file\nfrom arc.imports import settings\nfrom arc.job.adapter import J"
+          },
+          {
+            "file": "arc/job/adapters/ts/heuristics.py",
+            "chars": 83909,
+            "preview": "\"\"\"\nAn adapter for executing TS guess jobs based on heuristics\n\nTodo:\n    - eventually this module needs to be applied for all H's connected to the same heavy atom,\n      summing up the rates appropriately\n    - test H2O2 as the RH abstractor, see that both TS chiralities are attained\n    - Add tests\n    - add database and train from database, see\n      https://github.com/ReactionMechanismGenerator/ARC/commit/081df5bf8e53987e9ff48eef481c17997f9cff2a,\n      https://github.com/ReactionMechanismGen"
+          },
+          {
+            "file": "arc/job/adapters/xtb_adapter.py",
+            "chars": 22455,
+            "preview": "\"\"\"\nAn adapter for executing xTB (Semiempirical Extended Tight-Binding Program Package) jobs\n\nhttps://github.com/grimme-lab/xtb\nhttps://xtb-docs.readthedocs.io/en/latest/contents.html\nrun types: https://xtb-docs.readthedocs.io/en/latest/commandline.html?highlight=--grad#runtypes\n\"\"\"\n\nimport datetime\nimport os\nfrom typing import TYPE_CHECKING\n\nfrom mako.template import Template\n\nfrom arc.common import get_logger, read_yaml_file, save_yaml_file, torsions_to_scans\nfrom arc.imports import incore_com"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 1,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 1083,
+        "estTokens": 271,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py::check_valid_transition",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "transition state generation",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 1083,
+            "remainingCharacters": 917
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py::check_valid_transition",
+              "localName": "check_valid_transition",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "summary"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.40954746497593,
+      "expectedAreaHits": [
+        "ts"
+      ],
+      "notes": []
+    },
+    {
+      "query": "conformer filtering",
+      "category": "concept",
+      "baseline": {
+        "files": [
+          "arc/checks/common.py",
+          "arc/common.py",
+          "arc/exceptions.py",
+          "arc/job/adapter.py",
+          "arc/job/adapters/cfour.py"
+        ],
+        "fileCount": 5,
+        "chars": 145326,
+        "estTokens": 36332,
+        "snippets": [
+          {
+            "file": "arc/checks/common.py",
+            "chars": 1550,
+            "preview": "\"\"\"\nA module with common functionalities used for checking the quality of calculations,\ncontains helper functions for Scheduler.\n\"\"\"\n\nimport datetime\n\nCONFORMER_JOB_TYPES = ('conf_opt', 'conf_sp')\n\n\ndef is_conformer_job(job_name: str) -> bool:\n    \"\"\"\n    Check whether a job name represents a conformer job.\n\n    Args:\n        job_name (str): The job name, e.g., 'conf_opt_3' or 'conf_sp_0'.\n\n    Returns:\n        bool: ``True`` if the job name starts with a conformer job type prefix.\n    \"\"\"\n    r"
+          },
+          {
+            "file": "arc/common.py",
+            "chars": 71340,
+            "preview": "\"\"\"\nThis module contains functions which are shared across multiple ARC modules.\nAs such, it should not import any other ARC module (specifically ones that use the logger defined here)\nto avoid circular imports.\n\nVERSION is the full ARC version, using `semantic versioning <https://semver.org/>`_.\n\"\"\"\n\nimport ast\nimport datetime\nimport logging\nimport math\nimport os\nimport pprint\nimport re\nimport shutil\nimport subprocess\nimport sys\nimport time\nimport warnings\nimport yaml\nfrom collections import de"
+          },
+          {
+            "file": "arc/exceptions.py",
+            "chars": 3889,
+            "preview": "\"\"\"\nThis module contains classes which extend Exception for usage in ARC.\n\"\"\"\n\n\nclass ActionError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass AtomTypeError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConformerError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConverterError(Exception):\n    \"\"\"\n    An exception raised when converting molecul"
+          },
+          {
+            "file": "arc/job/adapter.py",
+            "chars": 53019,
+            "preview": "\"\"\"\nA module for the abstract JobAdapter class\n\nA job execution type could be either \"incore\" (run on the calling machine) or \"queue\" (submitted to a cluster)\nA job could (independently) consist a single process (e.g., optimizing a single well)\nor have multiple processes (an array) executed by several \"workers\" on a server.\nA single process job could run \"incore\" or be submitted to the queue.\nA multiprocess job could be executed \"incore\" (taking no advantage of potential server parallelization)\n"
+          },
+          {
+            "file": "arc/job/adapters/cfour.py",
+            "chars": 15528,
+            "preview": "\"\"\"\nAn adapter for executing CFour (Coupled-Cluster techniques for Computational Chemistry) jobs\n\nhttp://slater.chemie.uni-mainz.de/cfour/index.php\n\nKeyword list:\nhttp://slater.chemie.uni-mainz.de/cfour/index.php?n=Main.ListOfKeywordsInAlphabeticalOrder\n\"\"\"\n\nimport datetime\nimport math\nimport os\nfrom typing import TYPE_CHECKING\n\nfrom mako.template import Template\n\nfrom arc.common import get_logger\nfrom arc.imports import incore_commands, settings\nfrom arc.job.adapter import JobAdapter\nfrom arc.j"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 1,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 825,
+        "estTokens": 207,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "conformer filtering",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 825,
+            "remainingCharacters": 1175
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
+              "localName": "conformers_combinations_by_lowest_conformer",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "stub"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.4302543212595,
+      "expectedAreaHits": [
+        "species",
+        "ts",
+        "conformer"
+      ],
+      "notes": []
+    },
+    {
+      "query": "kinetics calculation",
+      "category": "concept",
+      "baseline": {
+        "files": [
+          "arc/statmech/arkane_test.py",
+          "README.md",
+          "arc/checks/ts.py",
+          "arc/checks/ts_test.py",
+          "arc/family/family.py"
+        ],
+        "fileCount": 5,
+        "chars": 174460,
+        "estTokens": 43615,
+        "snippets": [
+          {
+            "file": "arc/statmech/arkane_test.py",
+            "chars": 31767,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for ARC's statmech.arkane module\n\"\"\"\n\nimport os\nimport shutil\nimport tempfile\nimport unittest\n\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH\nfrom arc.exceptions import InputError\nfrom arc.level import Level\nfrom arc.reaction import ARCReaction\nfrom arc.species import ARCSpecies\nfrom arc.statmech.adapter import StatmechEnum\nfrom arc.statmech.arkane import ArkaneAdapter\nfrom arc.statmech.arkane import (\n    _all_avai"
+          },
+          {
+            "file": "README.md",
+            "chars": 3457,
+            "preview": "# Automated Rate Calculator | ARC\n\n![Build Status](https://github.com/ReactionMechanismGenerator/ARC/actions/workflows/cont_int.yml/badge.svg)\n[![codecov](https://codecov.io/gh/ReactionMechanismGenerator/ARC/branch/main/graph/badge.svg)](https://codecov.io/gh/ReactionMechanismGenerator/ARC)\n[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)\n![Release](https://img.shields.io/badge/version-1.1.0-blue.svg)\n![Python](https://img.shields.io/b"
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "chars": 33558,
+            "preview": "\"\"\"\nA module for checking the quality of TS-related calculations, contains helper functions for Scheduler.\n\"\"\"\n\nfrom itertools import product\nimport os\n\nimport numpy as np\nfrom typing import TYPE_CHECKING\n\nfrom arc.parser import parser\nfrom arc.checks.nmd import analyze_ts_normal_mode_displacement\nfrom arc.common import (ARC_PATH,\n                        convert_list_index_0_to_1,\n                        extremum_list,\n                        get_logger,\n                        get_bonds_from_dm"
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "chars": 58602,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.ts module\n\"\"\"\n\nimport unittest\nimport os\nimport shutil\n\nimport numpy as np\n\nimport arc.checks.ts as ts\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_lists\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.parser.parser import parse_normal_mode_displacement, parse_geometry\nfrom arc.reaction import ARCReaction\nfrom arc.species.converter import xyz_from_data\n"
+          },
+          {
+            "file": "arc/family/family.py",
+            "chars": 47076,
+            "preview": "\"\"\"\nA module for working with RMG reaction families.\n\"\"\"\n\nfrom typing import TYPE_CHECKING\nimport ast\nimport os\nimport re\n\nfrom arc.common import clean_text, get_logger\nfrom arc.exceptions import InvalidAdjacencyListError\nfrom arc.imports import settings\nfrom arc.molecule import Bond, Group, Molecule\nfrom arc.molecule.resonance import generate_resonance_structures_safely\n\nif TYPE_CHECKING:\n    from arc.species import ARCSpecies\n    from arc.reaction.reaction import ARCReaction\n\nRMG_DB_PATH = set"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 1,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 1034,
+        "estTokens": 259,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/checks/ts.py::check_ts",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/checks/ts.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "kinetics calculation",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 1034,
+            "remainingCharacters": 966
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/checks/ts.py::check_ts",
+              "localName": "check_ts",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/checks/ts.py",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.40616760288891,
+      "expectedAreaHits": [
+        "family",
+        "ts",
+        "kinetics",
+        "arkane"
+      ],
+      "notes": []
+    },
+    {
+      "query": "reaction family matching",
+      "category": "concept",
+      "baseline": {
+        "files": [
+          "Dockerfile",
+          "README.md",
+          "arc/__init__.py",
+          "arc/checks/nmd.py",
+          "arc/checks/nmd_test.py"
+        ],
+        "fileCount": 5,
+        "chars": 103150,
+        "estTokens": 25788,
+        "snippets": [
+          {
+            "file": "Dockerfile",
+            "chars": 4545,
+            "preview": "# Stage 1: RMG setup & ARC setup\n# The parent image is the base image that the Dockerfile builds upon.\n# The RMG installation instructions suggest Anaconda for installation by source, however, we use micromamba for the Docker image due to its smaller size and less overhead.\n# Installation of ARC will also be done in this stage.\nFROM --platform=linux/amd64 mambaorg/micromamba:2.2-ubuntu24.04 AS builder\n\n# Set ARGS\nARG RMG_PY_BRANCH=main\nARG RMG_DATABASE_BRANCH=main\nARG ARC_BRANCH=main\n\n# Set Glob"
+          },
+          {
+            "file": "README.md",
+            "chars": 3457,
+            "preview": "# Automated Rate Calculator | ARC\n\n![Build Status](https://github.com/ReactionMechanismGenerator/ARC/actions/workflows/cont_int.yml/badge.svg)\n[![codecov](https://codecov.io/gh/ReactionMechanismGenerator/ARC/branch/main/graph/badge.svg)](https://codecov.io/gh/ReactionMechanismGenerator/ARC)\n[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)\n![Release](https://img.shields.io/badge/version-1.1.0-blue.svg)\n![Python](https://img.shields.io/b"
+          },
+          {
+            "file": "arc/__init__.py",
+            "chars": 383,
+            "preview": "import arc.exceptions\nimport arc.main\nfrom arc.main import ARC\nimport arc.checks\nimport arc.common\nimport arc.imports\nimport arc.level\nimport arc.plotter\nimport arc.processor\nimport arc.scheduler\nimport arc.utils\n\nimport arc.job\nimport arc.family\nimport arc.mapping\nimport arc.molecule\nimport arc.parser\nimport arc.reaction\nimport arc.settings\nimport arc.species\nimport arc.statmech\n"
+          },
+          {
+            "file": "arc/checks/nmd.py",
+            "chars": 27580,
+            "preview": "\"\"\"\nA module for checking the normal mode displacement of a TS.\n\"\"\"\n\nimport numpy as np\nfrom collections import Counter\nfrom itertools import product\nfrom typing import TYPE_CHECKING\n\nfrom arc.parser import parser\nfrom arc.common import get_element_mass, get_logger\nfrom arc.species.converter import get_most_common_isotope_for_element, xyz_from_data, xyz_to_np_array\nfrom arc.species.vectors import calculate_distance, VectorsError\n\nif TYPE_CHECKING:\n    from arc.job.adapter import JobAdapter\n    f"
+          },
+          {
+            "file": "arc/checks/nmd_test.py",
+            "chars": 67185,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.nmd module\n\"\"\"\n\nimport unittest\nimport os\nimport shutil\n\nimport numpy as np\n\nimport arc.checks.nmd as nmd\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_coords\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.molecule import Molecule\nfrom arc.parser.parser import parse_normal_mode_displacement\nfrom arc.reaction import ARCReaction\nfrom arc.species.species i"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 1,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 873,
+        "estTokens": 219,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "reaction family matching",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 873,
+            "remainingCharacters": 1127
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction",
+              "localName": "ARCReaction",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.15076779897626,
+      "expectedAreaHits": [
+        "reaction",
+        "family",
+        "ts"
+      ],
+      "notes": []
+    },
+    {
+      "query": "rotor scans",
+      "category": "concept",
+      "baseline": {
+        "files": [
+          "arc/job/pipe/pipe_planner.py",
+          "arc/job/trsh.py",
+          "arc/main.py",
+          "arc/scheduler.py",
+          "arc/scheduler_test.py"
+        ],
+        "fileCount": 5,
+        "chars": 551150,
+        "estTokens": 137788,
+        "snippets": [
+          {
+            "file": "arc/job/pipe/pipe_planner.py",
+            "chars": 12734,
+            "preview": "\"\"\"\nPipe task planner — family-specific routing from ARC objects to pipe task batches.\n\nTranslates scheduler-level decisions (\"should we pipe these conformers?\") into\nhomogeneous ``TaskSpec`` batches and submits them through a ``PipeCoordinator``.\n\nEach ``try_pipe_*`` method returns the **exact subset of items it handled**\n(e.g., rotor indices, species labels, conformer indices).  The scheduler\nuses this to skip only the work that was actually piped, and immediately\nfalls back for the remainder."
+          },
+          {
+            "file": "arc/job/trsh.py",
+            "chars": 113010,
+            "preview": "\"\"\"\nThe ARC troubleshooting (\"trsh\") module\n\"\"\"\n\nimport math\nimport os\n\nimport numpy as np\nimport pandas as pd\nimport re\n\nfrom arc.common import (check_torsion_change,\n                        convert_to_hours,\n                        estimate_orca_mem_cpu_requirement,\n                        get_logger,\n                        get_number_with_ordinal_indicator,\n                        is_same_pivot,\n                        is_same_sequence_sublist,\n                        is_str_float\n          "
+          },
+          {
+            "file": "arc/main.py",
+            "chars": 72280,
+            "preview": "\"\"\"\nARC's main module.\nTo run ARC through its API, first make an instance of the ARC class, then call the .execute() method. For example::\n\n  arc = ARC(project='ArcDemo', species=[spc0, spc1, spc2])\n  arc.execute()\n\nWhere ``spc0``, ``spc1``, and ``spc2`` in the above example are :ref:`ARCSpecies <species>` objects.\n\"\"\"\n\nimport datetime\nimport logging\nimport os\nimport shutil\nimport time\nfrom distutils.spawn import find_executable\nfrom IPython.display import display\n\nfrom arc.common import (VERSIO"
+          },
+          {
+            "file": "arc/scheduler.py",
+            "chars": 247844,
+            "preview": "\"\"\"\nA module for scheduling ARC jobs\nIncludes spawning, terminating, checking, and troubleshooting various jobs\n\"\"\"\n\nfrom __future__ import annotations\n\nimport datetime\nimport itertools\nimport os\nimport pprint\nimport shutil\nimport time\n\nimport numpy as np\nfrom typing import TYPE_CHECKING\n\nimport arc.parser.parser as parser\nfrom arc import plotter\nfrom arc.checks.common import get_i_from_job_name, is_conformer_job, sum_time_delta\nfrom arc.checks.ts import check_imaginary_frequencies, check_ts, ch"
+          },
+          {
+            "file": "arc/scheduler_test.py",
+            "chars": 105282,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.scheduler module\n\"\"\"\n\nimport unittest\nfrom unittest.mock import MagicMock, patch\nimport os\nimport shutil\n\nimport arc.parser.parser as parser\nfrom arc.checks.ts import check_ts\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_coords_lists, initialize_job_types, read_yaml_file\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.plotter import save_conformers_file\nfrom a"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 1009,
+        "estTokens": 253,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py::Scheduler.run_job",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "rotor scans",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 1009,
+            "remainingCharacters": 991
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py::Scheduler.run_job",
+              "localName": "run_job",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py",
+              "kind": "method",
+              "sourceBacked": null,
+              "contentMode": "stub"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py::Scheduler.run_job",
+              "localName": "run_job",
+              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py",
+              "kind": "method",
+              "sourceBacked": null,
+              "contentMode": "stub"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.81638459082068,
+      "expectedAreaHits": [
+        "scheduler",
+        "ts",
+        "rotor"
+      ],
+      "notes": []
+    },
+    {
+      "query": "cython",
+      "category": "boundary",
+      "baseline": {
+        "files": [
+          "Makefile",
+          "arc/constants.py",
+          "arc/molecule/atomtype.py",
+          "arc/molecule/converter.py",
+          "arc/molecule/element.py"
+        ],
+        "fileCount": 5,
+        "chars": 131556,
+        "estTokens": 32889,
+        "snippets": [
+          {
+            "file": "Makefile",
+            "chars": 3495,
+            "preview": "################################################################################\n#\n#   Makefile for ARC\n#\n################################################################################\n\nDEVTOOLS_DIR := devtools\n\n.PHONY: all help clean test test-unittests test-functional test-all \\\n        install-all install-ci install-rmg install-rmgdb install-autotst install-gcn \\\n        install-gcn-cpu install-kinbot install-sella install-xtb install-torchani install-ob \\\n        lite check-env compile\n\n\n#"
+          },
+          {
+            "file": "arc/constants.py",
+            "chars": 3167,
+            "preview": "\"\"\"\nPhysical constants for chemistry and molecular modeling.\n\nThis module provides fundamental physical constants frequently used in chemistry and related scientific computations.\nAll constants are defined in SI units unless otherwise noted.\n\nAttributes:\nE_h (float): Hartree energy, 4.35974434e-18 J.\nE_h_kJmol (float): Hartree energy in kJ/mol, 2625.5 kJ/mol.\nF (float): Faraday constant, 96485.3365 C/mol.\nG (float): Newtonian gravitational constant, 6.67384e-11 m^3/(kg^1·s^2).\nNa (float): Avogad"
+          },
+          {
+            "file": "arc/molecule/atomtype.py",
+            "chars": 94230,
+            "preview": "\"\"\"\nThis module defines the atom types that are available for representing\nmolecular functional groups and substructure patterns. Each available atom type\nis defined as an instance of the :class:`AtomType` class. The atom types\nthemselves are available in the ``ATOMTYPES`` module-level variable, or as\nthe return value from the :meth:`get_atomtype()` method.\n\nIf you want to change which atom types are available in RMG and/or what they\nrepresent, this should be the only module you need to change t"
+          },
+          {
+            "file": "arc/molecule/converter.py",
+            "chars": 10919,
+            "preview": "\"\"\"\nThis module provides methods for converting molecules between RMG, RDKit, and OpenBabel.\n\"\"\"\n\nimport sys\n\nimport cython\nfrom rdkit import Chem\n# Test if openbabel is installed\ntry:\n    from openbabel import openbabel\nexcept ImportError:\n    openbabel = None\n\nimport arc.molecule.element as elements\nimport arc.molecule.molecule as mm\nfrom arc.common import get_logger\nfrom arc.exceptions import DependencyError\n\n\nlogger = get_logger()\n\n\ndef to_rdkit_mol(mol, remove_h=True, return_mapping=False, "
+          },
+          {
+            "file": "arc/molecule/element.py",
+            "chars": 19745,
+            "preview": "\"\"\"\nThis module defined the chemical elements available in RMG. Information for\neach element is stored as attributes of an object of the :class:`Element`\nclass.\n\nElement objects for each chemical element (1-112) have also been declared as\nmodule-level variables, using each element's symbol as its variable name. The\n:meth:`get_element` method can also be used to retrieve the :class:`Element`\nobject associated with an atomic number or symbol. Generally applications will\nwant to use these objects, "
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 656,
+        "estTokens": 164,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd::get_atomtype",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "cython",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 656,
+            "remainingCharacters": 1344
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd::get_atomtype",
+              "localName": "get_atomtype",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd::get_features",
+              "localName": "get_features",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.50135303596947,
+      "expectedAreaHits": [
+        "ts",
+        "cython"
+      ],
+      "notes": []
+    },
+    {
+      "query": "python wrapper around cython",
+      "category": "boundary",
+      "baseline": {
+        "files": [
+          "ARC.py",
+          "Dockerfile",
+          "Makefile",
+          "README.md",
+          "arc/checks/common_test.py"
+        ],
+        "fileCount": 5,
+        "chars": 15616,
+        "estTokens": 3904,
+        "snippets": [
+          {
+            "file": "ARC.py",
+            "chars": 2081,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nARC - Automatic Rate Calculator\n\"\"\"\n\nimport argparse\nimport logging\nimport os\n\nfrom arc.common import read_yaml_file\nfrom arc.main import ARC\n\n\ndef parse_command_line_arguments(command_line_args=None):\n    \"\"\"\n    Parse command-line arguments.\n\n    Args:\n        command_line_args: The command line arguments.\n\n    Returns:\n        The parsed command-line arguments by keywords.\n    \"\"\"\n    parser = argparse.ArgumentParser(description='Automatic Rate Ca"
+          },
+          {
+            "file": "Dockerfile",
+            "chars": 4545,
+            "preview": "# Stage 1: RMG setup & ARC setup\n# The parent image is the base image that the Dockerfile builds upon.\n# The RMG installation instructions suggest Anaconda for installation by source, however, we use micromamba for the Docker image due to its smaller size and less overhead.\n# Installation of ARC will also be done in this stage.\nFROM --platform=linux/amd64 mambaorg/micromamba:2.2-ubuntu24.04 AS builder\n\n# Set ARGS\nARG RMG_PY_BRANCH=main\nARG RMG_DATABASE_BRANCH=main\nARG ARC_BRANCH=main\n\n# Set Glob"
+          },
+          {
+            "file": "Makefile",
+            "chars": 3495,
+            "preview": "################################################################################\n#\n#   Makefile for ARC\n#\n################################################################################\n\nDEVTOOLS_DIR := devtools\n\n.PHONY: all help clean test test-unittests test-functional test-all \\\n        install-all install-ci install-rmg install-rmgdb install-autotst install-gcn \\\n        install-gcn-cpu install-kinbot install-sella install-xtb install-torchani install-ob \\\n        lite check-env compile\n\n\n#"
+          },
+          {
+            "file": "README.md",
+            "chars": 3457,
+            "preview": "# Automated Rate Calculator | ARC\n\n![Build Status](https://github.com/ReactionMechanismGenerator/ARC/actions/workflows/cont_int.yml/badge.svg)\n[![codecov](https://codecov.io/gh/ReactionMechanismGenerator/ARC/branch/main/graph/badge.svg)](https://codecov.io/gh/ReactionMechanismGenerator/ARC)\n[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)\n![Release](https://img.shields.io/badge/version-1.1.0-blue.svg)\n![Python](https://img.shields.io/b"
+          },
+          {
+            "file": "arc/checks/common_test.py",
+            "chars": 2038,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.common module\n\"\"\"\n\nimport datetime\nimport unittest\n\nimport arc.checks.common as common\n\n\nclass TestChecks(unittest.TestCase):\n    \"\"\"\n    Contains unit tests for the check module.\n    \"\"\"\n    def test_sum_time_delta(self):\n        \"\"\"Test the sum_time_delta() function\"\"\"\n        dt1 = datetime.timedelta(days=0, minutes=0, seconds=0)\n        dt2 = datetime.timedelta(days=0, minutes=0, seconds=0)\n     "
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 706,
+        "estTokens": 177,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd::get_atomtype",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "python wrapper around cython",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 706,
+            "remainingCharacters": 1294
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd::get_atomtype",
+              "localName": "get_atomtype",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd::get_features",
+              "localName": "get_features",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            }
+          ]
+        }
+      },
+      "reductionPct": 95.46618852459017,
+      "expectedAreaHits": [
+        "ts",
+        "cython"
+      ],
+      "notes": []
+    },
+    {
+      "query": "performance critical routine",
+      "category": "boundary",
+      "baseline": {
+        "files": [
+          "arc/testing/composite/TS0_composite_2043.out",
+          "ipython/Tools/Visualize 1D Torsion scan.ipynb",
+          "ipython/Tools/Visualize 2D Torsion scan.ipynb",
+          "leng_gauss.md",
+          "arc/common.py"
+        ],
+        "fileCount": 5,
+        "chars": 2893289,
+        "estTokens": 723323,
+        "snippets": [
+          {
+            "file": "arc/testing/composite/TS0_composite_2043.out",
+            "chars": 2422334,
+            "preview": " Entering Gaussian System, Link 0=/Local/ce_dana/g09/g09\n Initial command:\n /Local/ce_dana/g09/l1.exe \"/storage/ce_dana/alongd/scratch/g09/Gau-25364.inp\" -scrdir=\"/storage/ce_dana/alongd/scratch/g09/\"\n Entering Link 1 = /Local/ce_dana/g09/l1.exe PID=     25365.\n  \n Copyright (c) 1988,1990,1992,1993,1995,1998,2003,2009,2013,\n            Gaussian, Inc.  All Rights Reserved.\n  \n This is part of the Gaussian(R) 09 program.  It is based on\n the Gaussian(R) 03 system (copyright 2003, Gaussian, Inc.),\n"
+          },
+          {
+            "file": "ipython/Tools/Visualize 1D Torsion scan.ipynb",
+            "chars": 69455,
+            "preview": "{\n \"cells\": [\n  {\n   \"cell_type\": \"markdown\",\n   \"metadata\": {},\n   \"source\": [\n    \"# ARC Tools\\n\",\n    \"### Visualize a 1D torsion scan\"\n   ]\n  },\n  {\n   \"cell_type\": \"markdown\",\n   \"metadata\": {},\n   \"source\": [\n    \"#### input parameeters:\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": 1,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"path = '/path/to/ESS/rotor/scan/output/file/output.out'  # the scan path\\n\",\n    \"\\n\",\n    \"folder_path_for_saving = '/path/for/saving/"
+          },
+          {
+            "file": "ipython/Tools/Visualize 2D Torsion scan.ipynb",
+            "chars": 194482,
+            "preview": "{\n \"cells\": [\n  {\n   \"cell_type\": \"markdown\",\n   \"metadata\": {},\n   \"source\": [\n    \"# ARC Tools\\n\",\n    \"### Visuallize 2D torsion scan\"\n   ]\n  },\n  {\n   \"cell_type\": \"markdown\",\n   \"metadata\": {},\n   \"source\": [\n    \"#### input parameters:\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"path = 'path/to/directed/scan/file.yml'\\n\",\n    \"\\n\",\n    \"label = 'ethanol'\\n\",\n    \"cmap = 'Blues'\\n\",\n    \"cmap = 'RdBu_r'\\n\",\n    "
+          },
+          {
+            "file": "leng_gauss.md",
+            "chars": 135678,
+            "preview": "Solutions for Gaussian Error Messages (translation in progress ⏳)\n\nThis is an article containing reliable explanations and solutions for almost all error messages in the Gaussian quantum chemistry programs. This is a per-request English translation for a long blog in Chinese I wrote a few years back.\n\nI wrote this as there is almost no reliable list of how to solve the errors. Similar online resources online are neither comprehensive nor accurate.\n\nThis blog is for people with basic knowledge of"
+          },
+          {
+            "file": "arc/common.py",
+            "chars": 71340,
+            "preview": "\"\"\"\nThis module contains functions which are shared across multiple ARC modules.\nAs such, it should not import any other ARC module (specifically ones that use the logger defined here)\nto avoid circular imports.\n\nVERSION is the full ARC version, using `semantic versioning <https://semver.org/>`_.\n\"\"\"\n\nimport ast\nimport datetime\nimport logging\nimport math\nimport os\nimport pprint\nimport re\nimport shutil\nimport subprocess\nimport sys\nimport time\nimport warnings\nimport yaml\nfrom collections import de"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 716,
+        "estTokens": 179,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/graph.pyx::Edge",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/graph.pyx",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "performance critical routine",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 716,
+            "remainingCharacters": 1284
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/graph.pyx::Edge",
+              "localName": "Edge",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/graph.pyx",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/graph.pyx::get_vertex_connectivity_value",
+              "localName": "get_vertex_connectivity_value",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/graph.pyx",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.9752531026941,
+      "expectedAreaHits": [
+        "ts",
+        "cython"
+      ],
+      "notes": []
+    },
+    {
+      "query": "parser",
+      "category": "stress",
+      "baseline": {
+        "files": [
+          "ARC.py",
+          "arc/__init__.py",
+          "arc/checks/nmd.py",
+          "arc/checks/nmd_test.py",
+          "arc/checks/ts.py"
+        ],
+        "fileCount": 5,
+        "chars": 130787,
+        "estTokens": 32697,
+        "snippets": [
+          {
+            "file": "ARC.py",
+            "chars": 2081,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nARC - Automatic Rate Calculator\n\"\"\"\n\nimport argparse\nimport logging\nimport os\n\nfrom arc.common import read_yaml_file\nfrom arc.main import ARC\n\n\ndef parse_command_line_arguments(command_line_args=None):\n    \"\"\"\n    Parse command-line arguments.\n\n    Args:\n        command_line_args: The command line arguments.\n\n    Returns:\n        The parsed command-line arguments by keywords.\n    \"\"\"\n    parser = argparse.ArgumentParser(description='Automatic Rate Ca"
+          },
+          {
+            "file": "arc/__init__.py",
+            "chars": 383,
+            "preview": "import arc.exceptions\nimport arc.main\nfrom arc.main import ARC\nimport arc.checks\nimport arc.common\nimport arc.imports\nimport arc.level\nimport arc.plotter\nimport arc.processor\nimport arc.scheduler\nimport arc.utils\n\nimport arc.job\nimport arc.family\nimport arc.mapping\nimport arc.molecule\nimport arc.parser\nimport arc.reaction\nimport arc.settings\nimport arc.species\nimport arc.statmech\n"
+          },
+          {
+            "file": "arc/checks/nmd.py",
+            "chars": 27580,
+            "preview": "\"\"\"\nA module for checking the normal mode displacement of a TS.\n\"\"\"\n\nimport numpy as np\nfrom collections import Counter\nfrom itertools import product\nfrom typing import TYPE_CHECKING\n\nfrom arc.parser import parser\nfrom arc.common import get_element_mass, get_logger\nfrom arc.species.converter import get_most_common_isotope_for_element, xyz_from_data, xyz_to_np_array\nfrom arc.species.vectors import calculate_distance, VectorsError\n\nif TYPE_CHECKING:\n    from arc.job.adapter import JobAdapter\n    f"
+          },
+          {
+            "file": "arc/checks/nmd_test.py",
+            "chars": 67185,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the arc.checks.nmd module\n\"\"\"\n\nimport unittest\nimport os\nimport shutil\n\nimport numpy as np\n\nimport arc.checks.nmd as nmd\nfrom arc.common import ARC_PATH, ARC_TESTING_PATH, almost_equal_coords\nfrom arc.job.factory import job_factory\nfrom arc.level import Level\nfrom arc.molecule import Molecule\nfrom arc.parser.parser import parse_normal_mode_displacement\nfrom arc.reaction import ARCReaction\nfrom arc.species.species i"
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "chars": 33558,
+            "preview": "\"\"\"\nA module for checking the quality of TS-related calculations, contains helper functions for Scheduler.\n\"\"\"\n\nfrom itertools import product\nimport os\n\nimport numpy as np\nfrom typing import TYPE_CHECKING\n\nfrom arc.parser import parser\nfrom arc.checks.nmd import analyze_ts_normal_mode_displacement\nfrom arc.common import (ARC_PATH,\n                        convert_list_index_0_to_1,\n                        extremum_list,\n                        get_logger,\n                        get_bonds_from_dm"
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 758,
+        "estTokens": 190,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/exceptions.py::ParserError",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/exceptions.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "parser",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 758,
+            "remainingCharacters": 1242
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/exceptions.py::ParserError",
+              "localName": "ParserError",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/exceptions.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "summary"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/exceptions.py::ParserError",
+              "localName": "ParserError",
+              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/exceptions.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "summary"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.4189069333578,
+      "expectedAreaHits": [
+        "ts",
+        "parser"
+      ],
+      "notes": []
+    },
+    {
+      "query": "transition state",
+      "category": "stress",
+      "baseline": {
+        "files": [
+          "arc/exceptions.py",
+          "arc/job/adapters/ts/heuristics.py",
+          "arc/job/adapters/xtb_adapter.py",
+          "arc/main.py",
+          "arc/parser/parser_test.py"
+        ],
+        "fileCount": 5,
+        "chars": 257978,
+        "estTokens": 64495,
+        "snippets": [
+          {
+            "file": "arc/exceptions.py",
+            "chars": 3889,
+            "preview": "\"\"\"\nThis module contains classes which extend Exception for usage in ARC.\n\"\"\"\n\n\nclass ActionError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass AtomTypeError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConformerError(Exception):\n    \"\"\"\n    An exception raised when generating conformers.\n    \"\"\"\n    pass\n\n\nclass ConverterError(Exception):\n    \"\"\"\n    An exception raised when converting molecul"
+          },
+          {
+            "file": "arc/job/adapters/ts/heuristics.py",
+            "chars": 83909,
+            "preview": "\"\"\"\nAn adapter for executing TS guess jobs based on heuristics\n\nTodo:\n    - eventually this module needs to be applied for all H's connected to the same heavy atom,\n      summing up the rates appropriately\n    - test H2O2 as the RH abstractor, see that both TS chiralities are attained\n    - Add tests\n    - add database and train from database, see\n      https://github.com/ReactionMechanismGenerator/ARC/commit/081df5bf8e53987e9ff48eef481c17997f9cff2a,\n      https://github.com/ReactionMechanismGen"
+          },
+          {
+            "file": "arc/job/adapters/xtb_adapter.py",
+            "chars": 22455,
+            "preview": "\"\"\"\nAn adapter for executing xTB (Semiempirical Extended Tight-Binding Program Package) jobs\n\nhttps://github.com/grimme-lab/xtb\nhttps://xtb-docs.readthedocs.io/en/latest/contents.html\nrun types: https://xtb-docs.readthedocs.io/en/latest/commandline.html?highlight=--grad#runtypes\n\"\"\"\n\nimport datetime\nimport os\nfrom typing import TYPE_CHECKING\n\nfrom mako.template import Template\n\nfrom arc.common import get_logger, read_yaml_file, save_yaml_file, torsions_to_scans\nfrom arc.imports import incore_com"
+          },
+          {
+            "file": "arc/main.py",
+            "chars": 72280,
+            "preview": "\"\"\"\nARC's main module.\nTo run ARC through its API, first make an instance of the ARC class, then call the .execute() method. For example::\n\n  arc = ARC(project='ArcDemo', species=[spc0, spc1, spc2])\n  arc.execute()\n\nWhere ``spc0``, ``spc1``, and ``spc2`` in the above example are :ref:`ARCSpecies <species>` objects.\n\"\"\"\n\nimport datetime\nimport logging\nimport os\nimport shutil\nimport time\nfrom distutils.spawn import find_executable\nfrom IPython.display import display\n\nfrom arc.common import (VERSIO"
+          },
+          {
+            "file": "arc/parser/parser_test.py",
+            "chars": 75445,
+            "preview": "#!/usr/bin/env python3\n# encoding: utf-8\n\n\"\"\"\nThis module contains unit tests for the parser functions\n\"\"\"\n\nimport numpy as np\nimport os\nimport unittest\n\nimport arc.parser.parser as parser\nfrom arc.common import ARC_TESTING_PATH, almost_equal_coords\nfrom arc.parser.adapters.gaussian import parse_ic_info, parse_ic_values\nfrom arc.species import ARCSpecies\nfrom arc.species.converter import str_to_xyz, xyz_to_str\n\n\nclass TestParser(unittest.TestCase):\n    \"\"\"\n    Contains unit tests for the parser "
+          }
+        ],
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": null,
+        "chars": 879,
+        "estTokens": 220,
+        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py::ARCSpecies",
+        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py",
+        "diagnostics": [],
+        "rawSnippet": {
+          "selectedIntent": "explain",
+          "classification": {
+            "query": "transition state",
+            "intent": "explain",
+            "strength": 0,
+            "candidates": [],
+            "explanation": {
+              "reasonKind": "no_rule_match_fallback",
+              "fallbackApplied": true,
+              "summary": "No intent rule matched the normalized query; defaulting to explain.",
+              "matchedRules": []
+            }
+          },
+          "routingProfile": {
+            "id": "explain",
+            "backend": "fts",
+            "candidatePoolSize": 10,
+            "graphWeights": {
+              "inDegreePerEdge": 2,
+              "inDegreeMax": 6,
+              "outDegreePerEdge": 1,
+              "outDegreeMax": 4,
+              "containsNeighbor": 8,
+              "containsNeighborMax": 16,
+              "importsNeighbor": 6,
+              "importsNeighborMax": 12,
+              "connectedMatchedCandidate": 3,
+              "connectedMatchedCandidateMax": 6
+            },
+            "summary": "Balanced FTS retrieval with conservative graph reranking for understanding queries."
+          },
+          "capsuleProfile": {
+            "id": "explain_stable",
+            "targetIntent": "explain",
+            "description": "Low-noise explanation capsule optimized for stable understanding context.",
+            "settingsSummary": {
+              "maxPivotCount": 2,
+              "maxSupportCount": 3,
+              "pivotSupportBalancePolicy": "balanced",
+              "supportSelectionPolicy": "low_noise_stable",
+              "preferredPivotContentModes": [
+                "full",
+                "summary"
+              ],
+              "preferredSupportContentModes": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "pivotFallbackLadder": [
+                "full",
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "supportFallbackLadder": [
+                "summary",
+                "signature_only",
+                "stub"
+              ],
+              "budgetAllocationPolicy": "balanced_split",
+              "budgetSplit": {
+                "pivotFraction": 0.6,
+                "supportFraction": 0.4
+              }
+            },
+            "explanation": {
+              "reasonKind": "intent_profile_match",
+              "fallbackApplied": false,
+              "summary": "Selected capsule profile explain_stable for intent explain."
+            }
+          },
+          "budget": {
+            "model": "character_count",
+            "maxCharacters": 2000,
+            "usedCharacters": 879,
+            "remainingCharacters": 1121
+          },
+          "truncated": true,
+          "compressed": true,
+          "topItems": [
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py::ARCSpecies",
+              "localName": "ARCSpecies",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
+            {
+              "role": "pivot",
+              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/adapters/ts/heuristics.py::generate_hydrolysis_ts_guess",
+              "localName": "generate_hydrolysis_ts_guess",
+              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/adapters/ts/heuristics.py",
+              "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "stub"
+            }
+          ]
+        }
+      },
+      "reductionPct": 99.65888828591363,
+      "expectedAreaHits": [
+        "species",
+        "ts",
+        "parser"
+      ],
+      "notes": []
+    }
+  ],
+  "summary": {
+    "totalQueries": 20,
+    "averageBaselineTokens": 81536.75,
+    "averageVtraceTokens": 233.1,
+    "medianReductionPercent": 99.44552948331743,
+    "meanReductionPercent": 99.27307576079627,
+    "vtraceTokensLessThanBaselineCount": 20,
+    "vtraceReturnedContextCount": 20,
+    "baselineReturnedNoFilesCount": 0,
+    "categoryAverages": [
+      {
+        "category": "boundary",
+        "queryCount": 3,
+        "averageBaselineTokens": 253372,
+        "averageVtraceTokens": 173.33333333333334,
+        "meanReductionPercent": 98.31426488775124,
+        "medianReductionPercent": 99.50135303596947
+      },
+      {
+        "category": "concept",
+        "queryCount": 5,
+        "averageBaselineTokens": 57884,
+        "averageVtraceTokens": 241.8,
+        "meanReductionPercent": 99.44262435578426,
+        "medianReductionPercent": 99.40954746497593
+      },
+      {
+        "category": "exact",
+        "queryCount": 5,
+        "averageBaselineTokens": 46464.8,
+        "averageVtraceTokens": 260.6,
+        "meanReductionPercent": 99.34932373985092,
+        "medianReductionPercent": 99.46080464537536
+      },
+      {
+        "category": "stress",
+        "queryCount": 2,
+        "averageBaselineTokens": 48596,
+        "averageVtraceTokens": 205,
+        "meanReductionPercent": 99.53889760963571,
+        "medianReductionPercent": 99.53889760963571
+      },
+      {
+        "category": "workflow",
+        "queryCount": 5,
+        "averageBaselineTokens": 50336.6,
+        "averageVtraceTokens": 244,
+        "meanReductionPercent": 99.49623697104487,
+        "medianReductionPercent": 99.52032112393377
+      }
+    ]
+  }
+}

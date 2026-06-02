@@ -1,0 +1,22 @@
+[
+  { "category": "exact", "query": "ARCSpecies" },
+  { "category": "exact", "query": "ARCReaction" },
+  { "category": "exact", "query": "Scheduler" },
+  { "category": "exact", "query": "determine_family" },
+  { "category": "exact", "query": "run_arc" },
+  { "category": "workflow", "query": "how does ARC generate TS guesses" },
+  { "category": "workflow", "query": "where are conformers filtered" },
+  { "category": "workflow", "query": "where are kinetics jobs scheduled" },
+  { "category": "workflow", "query": "where is Arkane input written" },
+  { "category": "workflow", "query": "how are transition state jobs validated" },
+  { "category": "concept", "query": "transition state generation" },
+  { "category": "concept", "query": "conformer filtering" },
+  { "category": "concept", "query": "kinetics calculation" },
+  { "category": "concept", "query": "reaction family matching" },
+  { "category": "concept", "query": "rotor scans" },
+  { "category": "boundary", "query": "cython" },
+  { "category": "boundary", "query": "python wrapper around cython" },
+  { "category": "boundary", "query": "performance critical routine" },
+  { "category": "stress", "query": "parser" },
+  { "category": "stress", "query": "transition state" }
+]
