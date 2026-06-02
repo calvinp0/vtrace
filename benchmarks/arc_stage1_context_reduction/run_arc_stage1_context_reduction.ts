@@ -32,6 +32,8 @@ export interface VtraceMeasurement {
   readonly estTokens: number;
   readonly topResult: string | null;
   readonly topFile: string | null;
+  readonly contaminatedPaths: readonly string[];
+  readonly contaminationDetected: boolean;
   readonly diagnostics: readonly string[];
   readonly rawSnippet: unknown;
 }
@@ -93,6 +95,16 @@ const RG_EXCLUDE_ARGS = [
   "--glob", "!dist/**",
   "--glob", "!*.egg-info/**",
   "--glob", "!node_modules/**",
+];
+
+const VTRACE_CONTAMINATED_PATH_MARKERS = [
+  ".claude/worktrees/",
+  ".git/",
+  "__pycache__/",
+  ".pytest_cache/",
+  "node_modules/",
+  "dist/",
+  "build/",
 ];
 
 const EXPECTED_AREA_TERMS: ReadonlyArray<readonly [string, readonly string[]]> = [
@@ -208,6 +220,27 @@ export function csvEscape(value: unknown): string {
   return `"${text.replaceAll("\"", "\"\"")}"`;
 }
 
+export function detectContaminatedVtracePaths(paths: readonly string[]): string[] {
+  const contaminated: string[] = [];
+  const seen = new Set<string>();
+
+  for (const pathValue of paths) {
+    const normalized = pathValue.replaceAll("\\", "/");
+
+    if (
+      seen.has(normalized)
+      || !VTRACE_CONTAMINATED_PATH_MARKERS.some((marker) => normalized.includes(marker))
+    ) {
+      continue;
+    }
+
+    seen.add(normalized);
+    contaminated.push(normalized);
+  }
+
+  return contaminated;
+}
+
 export function parseVtraceOutput(
   output: unknown,
   toolCommand: "capsule" | "handoff",
@@ -230,6 +263,7 @@ export function parseVtraceOutput(
     : sumItemContentChars(items);
   const top = items[0] ?? null;
   const sourceBackedDetectable = pivotItems.some((item) => typeof item.sourceBacked === "boolean");
+  const contaminatedPaths = detectContaminatedVtracePaths(collectVtracePaths(items));
 
   return {
     selectedIntent: stringOrNull(root.selectedIntent ?? root.intent),
@@ -249,6 +283,8 @@ export function parseVtraceOutput(
     estTokens: estimateTokens(budgetChars),
     topResult: stringOrNull(top?.fqName ?? top?.localName ?? top?.symbolId),
     topFile: stringOrNull(top?.filePath),
+    contaminatedPaths,
+    contaminationDetected: contaminatedPaths.length > 0,
     diagnostics: collectDiagnostics(root, toolCommand),
     rawSnippet: makeRawSnippet(root, capsule, items),
   };
@@ -408,6 +444,8 @@ async function collectVtraceMeasurement(
       estTokens: 0,
       topResult: null,
       topFile: null,
+      contaminatedPaths: [],
+      contaminationDetected: false,
       diagnostics: [`${toolCommand} failed: ${result.stderr.trim() || `exit ${result.exitCode}`}`],
       rawSnippet: {
         stdoutPreview: result.stdout.slice(0, 1000),
@@ -431,6 +469,8 @@ async function collectVtraceMeasurement(
       estTokens: 0,
       topResult: null,
       topFile: null,
+      contaminatedPaths: [],
+      contaminationDetected: false,
       diagnostics: [`${toolCommand} JSON parse failed: ${error instanceof Error ? error.message : String(error)}`],
       rawSnippet: {
         stdoutPreview: result.stdout.slice(0, 1000),
@@ -476,6 +516,8 @@ function renderCsv(rows: readonly BenchmarkRow[]): string {
     "capsule_profile",
     "top_vtrace_result",
     "top_vtrace_file",
+    "vtrace_contaminated_paths",
+    "vtrace_contamination_detected",
     "baseline_files",
     "expected_area_hits",
     "notes",
@@ -501,6 +543,8 @@ function renderCsv(rows: readonly BenchmarkRow[]): string {
       row.vtrace.capsuleProfile,
       row.vtrace.topResult,
       row.vtrace.topFile,
+      row.vtrace.contaminatedPaths.join(";"),
+      row.vtrace.contaminationDetected,
       row.baseline.files.join(";"),
       row.expectedAreaHits.join(";"),
       row.notes.join("; "),
@@ -510,11 +554,16 @@ function renderCsv(rows: readonly BenchmarkRow[]): string {
   return `${lines.join("\n")}\n`;
 }
 
-function summarizeRows(rows: readonly BenchmarkRow[]) {
+export function summarizeRows(rows: readonly BenchmarkRow[]) {
   const reductions = rows
     .map((row) => row.reductionPct)
     .filter((value): value is number => value !== null);
   const categories = [...new Set(rows.map((row) => row.category))].sort();
+  const rowsWithContaminatedVtracePaths = rows.filter((row) => row.vtrace.contaminationDetected).length;
+  const contaminatedVtracePathCount = rows.reduce(
+    (sum, row) => sum + row.vtrace.contaminatedPaths.length,
+    0,
+  );
 
   return {
     totalQueries: rows.length,
@@ -525,6 +574,9 @@ function summarizeRows(rows: readonly BenchmarkRow[]) {
     vtraceTokensLessThanBaselineCount: rows.filter((row) => row.vtrace.estTokens < row.baseline.estTokens).length,
     vtraceReturnedContextCount: rows.filter((row) => row.vtrace.itemCount > 0 || row.vtrace.pivotCount > 0).length,
     baselineReturnedNoFilesCount: rows.filter((row) => row.baseline.files.length === 0).length,
+    rowsWithContaminatedVtracePaths,
+    contaminatedVtracePathCount,
+    benchmarkAcceptableForReductionClaim: contaminatedVtracePathCount === 0,
     categoryAverages: categories.map((category) => {
       const categoryRows = rows.filter((row) => row.category === category);
       const categoryReductions = categoryRows
@@ -556,6 +608,8 @@ function rowToJson(row: BenchmarkRow) {
       notes: row.baseline.notes,
     },
     vtrace: row.vtrace,
+    vtrace_contaminated_paths: row.vtrace.contaminatedPaths,
+    vtrace_contamination_detected: row.vtrace.contaminationDetected,
     reductionPct: row.reductionPct,
     expectedAreaHits: row.expectedAreaHits,
     notes: row.notes,
@@ -572,10 +626,21 @@ function renderMarkdown(
   const best = [...validRows].sort((a, b) => (b.reductionPct ?? 0) - (a.reductionPct ?? 0)).slice(0, 5);
   const noUseful = rows.filter((row) => row.vtrace.itemCount === 0 && row.vtrace.pivotCount === 0);
   const noBaseline = rows.filter((row) => row.baseline.files.length === 0);
+  const warning = summary.benchmarkAcceptableForReductionClaim
+    ? []
+    : [
+      "## Warning",
+      "",
+      "This run should not be used for context-reduction claims until the target repo is reindexed cleanly.",
+      "",
+      `Detected ${summary.contaminatedVtracePathCount} contaminated vtrace path(s) across ${summary.rowsWithContaminatedVtracePaths} row(s).`,
+      "",
+    ];
 
   return [
     "# ARC Stage 1 Context Reduction Report",
     "",
+    ...warning,
     "## Headline summary",
     "",
     `Ran ${summary.totalQueries} fixed queries against ${metadata.arcRepoPath}. Mean measured reduction was ${formatNumber(summary.meanReductionPercent)}%, median was ${formatNumber(summary.medianReductionPercent)}%. vtrace used fewer estimated tokens than the naive full-file baseline for ${summary.vtraceTokensLessThanBaselineCount}/${summary.totalQueries} queries.`,
@@ -592,6 +657,9 @@ function renderMarkdown(
     `| vtrace tokens < baseline tokens | ${summary.vtraceTokensLessThanBaselineCount} |`,
     `| vtrace returned at least one pivot/item | ${summary.vtraceReturnedContextCount} |`,
     `| baseline returned no files | ${summary.baselineReturnedNoFilesCount} |`,
+    `| rows with contaminated vtrace paths | ${summary.rowsWithContaminatedVtracePaths} |`,
+    `| contaminated vtrace path count | ${summary.contaminatedVtracePathCount} |`,
+    `| acceptable for reduction claim | ${summary.benchmarkAcceptableForReductionClaim ? "yes" : "no"} |`,
     "",
     "## Category-level averages",
     "",
@@ -638,10 +706,10 @@ function renderRowsTable(rows: readonly BenchmarkRow[]): string {
   }
 
   return [
-    "| Query | Category | Baseline tokens | vtrace tokens | Reduction % | Items | Source-backed pivots | Top vtrace file | Notes |",
-    "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |",
+    "| Query | Category | Baseline tokens | vtrace tokens | Reduction % | Items | Source-backed pivots | Contaminated | Top vtrace file | Notes |",
+    "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |",
     ...rows.map((row) => (
-      `| ${escapeMarkdown(row.query)} | ${escapeMarkdown(row.category)} | ${row.baseline.estTokens} | ${row.vtrace.estTokens} | ${formatNumber(row.reductionPct)} | ${row.vtrace.itemCount} | ${row.vtrace.sourceBackedPivotCount ?? ""} | ${escapeMarkdown(row.vtrace.topFile ?? "")} | ${escapeMarkdown(row.notes.join("; "))} |`
+      `| ${escapeMarkdown(row.query)} | ${escapeMarkdown(row.category)} | ${row.baseline.estTokens} | ${row.vtrace.estTokens} | ${formatNumber(row.reductionPct)} | ${row.vtrace.itemCount} | ${row.vtrace.sourceBackedPivotCount ?? ""} | ${row.vtrace.contaminationDetected ? "yes" : "no"} | ${escapeMarkdown(row.vtrace.topFile ?? "")} | ${escapeMarkdown(row.notes.join("; "))} |`
     )),
   ].join("\n");
 }
@@ -701,6 +769,27 @@ function makeRawSnippet(
       contentMode: isRecord(item.content) ? item.content.mode ?? null : null,
     })),
   };
+}
+
+function collectVtracePaths(items: readonly Record<string, unknown>[]): string[] {
+  const paths: string[] = [];
+
+  for (const item of items) {
+    if (typeof item.filePath === "string") {
+      paths.push(item.filePath);
+      continue;
+    }
+
+    if (typeof item.fqName === "string" && looksPathLike(item.fqName)) {
+      paths.push(item.fqName.split("::", 1)[0]!);
+    }
+  }
+
+  return paths;
+}
+
+function looksPathLike(value: string): boolean {
+  return value.includes("/") || value.includes("\\");
 }
 
 function sumItemContentChars(items: readonly Record<string, unknown>[]): number {

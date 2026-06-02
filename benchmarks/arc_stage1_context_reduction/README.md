@@ -40,6 +40,8 @@ The naive baseline uses `rg` against the ARC repo, excludes common irrelevant di
 
 The vtrace measurement invokes the local `bin/vtrace` CLI for each query and parses the JSON output. It records capsule/handoff item counts, pivot/support counts, source-backed pivot count, selected intent/profile metadata, top result, and budget-reported context characters where available.
 
+The runner also detects vtrace result paths from excluded or stale worktree locations such as `.claude/worktrees/`, `.git/`, `__pycache__/`, `.pytest_cache/`, `node_modules/`, `dist/`, and `build/`. If any are present, the summary sets `benchmarkAcceptableForReductionClaim` to `false` and the Markdown report prints a warning that the run should not be used for context-reduction claims until the target repo is reindexed cleanly.
+
 ## Determinism
 
 Query order is preserved from `queries.arc.stage1.json`. Baseline search terms and file order are deterministic, CSV rows match query order, and JSON keys are emitted in a stable construction order. Repeated runs on the same indexed ARC repo should be comparable, except for timestamp metadata.

@@ -7,10 +7,12 @@ import { test } from "bun:test";
 import {
   calculateReductionPct,
   csvEscape,
+  detectContaminatedVtracePaths,
   estimateTokens,
   loadQueries,
   parseVtraceOutput,
   stableDeduplicateFiles,
+  summarizeRows,
 } from "./run_arc_stage1_context_reduction";
 
 test("estimated token calculation uses ceil chars divided by four", () => {
@@ -170,3 +172,75 @@ test("source-backed pivot count is null when the flag is not exposed", () => {
 
   assert.equal(parsed.sourceBackedPivotCount, null);
 });
+
+test("detects .claude worktree contamination in vtrace paths", () => {
+  assert.deepEqual(detectContaminatedVtracePaths([
+    ".claude/worktrees/agent-a/arc/species/species.py",
+    "arc/species/species.py",
+  ]), [
+    ".claude/worktrees/agent-a/arc/species/species.py",
+  ]);
+});
+
+test("clean vtrace paths are not flagged as contaminated", () => {
+  assert.deepEqual(detectContaminatedVtracePaths([
+    "arc/species/species.py",
+    "arc/reaction/reaction.py",
+  ]), []);
+});
+
+test("summary marks benchmark unacceptable when contamination exists", () => {
+  const summary = summarizeRows([
+    makeBenchmarkRow([".claude/worktrees/agent-a/arc/species/species.py"]),
+    makeBenchmarkRow([]),
+  ]);
+
+  assert.equal(summary.rowsWithContaminatedVtracePaths, 1);
+  assert.equal(summary.contaminatedVtracePathCount, 1);
+  assert.equal(summary.benchmarkAcceptableForReductionClaim, false);
+});
+
+test("summary marks benchmark acceptable when no contamination exists", () => {
+  const summary = summarizeRows([
+    makeBenchmarkRow([]),
+    makeBenchmarkRow([]),
+  ]);
+
+  assert.equal(summary.rowsWithContaminatedVtracePaths, 0);
+  assert.equal(summary.contaminatedVtracePathCount, 0);
+  assert.equal(summary.benchmarkAcceptableForReductionClaim, true);
+});
+
+function makeBenchmarkRow(contaminatedPaths: readonly string[]) {
+  return {
+    query: "ARCSpecies",
+    category: "exact",
+    baseline: {
+      files: ["arc/species/species.py"],
+      chars: 400,
+      estTokens: 100,
+      snippets: [],
+      notes: [],
+    },
+    vtrace: {
+      selectedIntent: "explain",
+      routingProfile: "explain",
+      capsuleProfile: "explain_stable",
+      itemCount: 1,
+      pivotCount: 1,
+      supportCount: 0,
+      sourceBackedPivotCount: null,
+      chars: 80,
+      estTokens: 20,
+      topResult: "arc.species.ARCSpecies",
+      topFile: contaminatedPaths[0] ?? "arc/species/species.py",
+      contaminatedPaths,
+      contaminationDetected: contaminatedPaths.length > 0,
+      diagnostics: [],
+      rawSnippet: {},
+    },
+    reductionPct: 80,
+    expectedAreaHits: [],
+    notes: [],
+  };
+}

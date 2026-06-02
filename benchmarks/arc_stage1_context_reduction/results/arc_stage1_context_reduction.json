@@ -1,7 +1,7 @@
 {
   "metadata": {
     "benchmark": "arc_stage1_context_reduction",
-    "timestamp": "2026-06-02T17:16:03.332Z",
+    "timestamp": "2026-06-02T17:25:03.082Z",
     "arcRepoPath": "/home/calvin/code/ARC",
     "queryFile": "/home/calvin/code/vtrace/benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json",
     "outputDirectory": "/home/calvin/code/vtrace/benchmarks/arc_stage1_context_reduction/results",
@@ -67,6 +67,11 @@
         "estTokens": 288,
         "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py::ARCSpecies",
         "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py",
+          ".claude/worktrees/agent-ab866f2b90d746c73/arc/species/species.py"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -171,6 +176,11 @@
           ]
         }
       },
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py",
+        ".claude/worktrees/agent-ab866f2b90d746c73/arc/species/species.py"
+      ],
+      "vtrace_contamination_detected": true,
       "reductionPct": 99.54160565353027,
       "expectedAreaHits": [
         "species",
@@ -230,10 +240,14 @@
         "pivotCount": 2,
         "supportCount": 0,
         "sourceBackedPivotCount": null,
-        "chars": 1037,
-        "estTokens": 260,
-        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction",
-        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py",
+        "chars": 1034,
+        "estTokens": 259,
+        "topResult": "arc/reaction/reaction.py::ARCReaction",
+        "topFile": "arc/reaction/reaction.py",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -311,12 +325,21 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 1037,
-            "remainingCharacters": 963
+            "usedCharacters": 1034,
+            "remainingCharacters": 966
           },
           "truncated": true,
           "compressed": true,
           "topItems": [
+            {
+              "role": "pivot",
+              "fqName": "arc/reaction/reaction.py::ARCReaction",
+              "localName": "ARCReaction",
+              "filePath": "arc/reaction/reaction.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
             {
               "role": "pivot",
               "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction",
@@ -325,20 +348,15 @@
               "kind": "class",
               "sourceBacked": null,
               "contentMode": "signature_only"
-            },
-            {
-              "role": "pivot",
-              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/reaction/reaction.py::ARCReaction",
-              "localName": "ARCReaction",
-              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/reaction/reaction.py",
-              "kind": "class",
-              "sourceBacked": null,
-              "contentMode": "signature_only"
             }
           ]
         }
       },
-      "reductionPct": 99.46080464537536,
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py"
+      ],
+      "vtrace_contamination_detected": true,
+      "reductionPct": 99.46287847366239,
       "expectedAreaHits": [
         "reaction",
         "family",
@@ -397,10 +415,14 @@
         "pivotCount": 2,
         "supportCount": 0,
         "sourceBackedPivotCount": null,
-        "chars": 763,
-        "estTokens": 191,
-        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py::Scheduler",
-        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py",
+        "chars": 686,
+        "estTokens": 172,
+        "topResult": "arc/scheduler.py::Scheduler",
+        "topFile": "arc/scheduler.py",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -478,12 +500,21 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 763,
-            "remainingCharacters": 1237
+            "usedCharacters": 686,
+            "remainingCharacters": 1314
           },
           "truncated": true,
           "compressed": true,
           "topItems": [
+            {
+              "role": "pivot",
+              "fqName": "arc/scheduler.py::Scheduler",
+              "localName": "Scheduler",
+              "filePath": "arc/scheduler.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
             {
               "role": "pivot",
               "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py::Scheduler",
@@ -492,20 +523,15 @@
               "kind": "class",
               "sourceBacked": null,
               "contentMode": "signature_only"
-            },
-            {
-              "role": "pivot",
-              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py::Scheduler",
-              "localName": "Scheduler",
-              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py",
-              "kind": "class",
-              "sourceBacked": null,
-              "contentMode": "signature_only"
             }
           ]
         }
       },
-      "reductionPct": 99.17316017316017,
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py"
+      ],
+      "vtrace_contamination_detected": true,
+      "reductionPct": 99.25541125541126,
       "expectedAreaHits": [
         "scheduler",
         "ts"
@@ -563,10 +589,14 @@
         "pivotCount": 2,
         "supportCount": 0,
         "sourceBackedPivotCount": null,
-        "chars": 1105,
-        "estTokens": 277,
-        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction.determine_family",
-        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py",
+        "chars": 1120,
+        "estTokens": 280,
+        "topResult": "arc/reaction/reaction.py::ARCReaction.determine_family",
+        "topFile": "arc/reaction/reaction.py",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -644,12 +674,21 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 1105,
-            "remainingCharacters": 895
+            "usedCharacters": 1120,
+            "remainingCharacters": 880
           },
           "truncated": true,
           "compressed": true,
           "topItems": [
+            {
+              "role": "pivot",
+              "fqName": "arc/reaction/reaction.py::ARCReaction.determine_family",
+              "localName": "determine_family",
+              "filePath": "arc/reaction/reaction.py",
+              "kind": "method",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
             {
               "role": "pivot",
               "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction.determine_family",
@@ -657,21 +696,16 @@
               "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py",
               "kind": "method",
               "sourceBacked": null,
-              "contentMode": "signature_only"
-            },
-            {
-              "role": "pivot",
-              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/reaction/reaction.py::ARCReaction.determine_family",
-              "localName": "determine_family",
-              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/reaction/reaction.py",
-              "kind": "method",
-              "sourceBacked": null,
               "contentMode": "stub"
             }
           ]
         }
       },
-      "reductionPct": 99.60692493259543,
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py"
+      ],
+      "vtrace_contamination_detected": true,
+      "reductionPct": 99.60266780190152,
       "expectedAreaHits": [
         "reaction",
         "family",
@@ -730,10 +764,12 @@
         "pivotCount": 2,
         "supportCount": 0,
         "sourceBackedPivotCount": null,
-        "chars": 1148,
-        "estTokens": 287,
-        "topResult": "arc/main.py::ARC.execute",
+        "chars": 1018,
+        "estTokens": 255,
+        "topResult": "arc/main.py::ARC",
         "topFile": "arc/main.py",
+        "contaminatedPaths": [],
+        "contaminationDetected": false,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -811,12 +847,21 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 1148,
-            "remainingCharacters": 852
+            "usedCharacters": 1018,
+            "remainingCharacters": 982
           },
           "truncated": true,
           "compressed": true,
           "topItems": [
+            {
+              "role": "pivot",
+              "fqName": "arc/main.py::ARC",
+              "localName": "ARC",
+              "filePath": "arc/main.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
             {
               "role": "pivot",
               "fqName": "arc/main.py::ARC.execute",
@@ -825,20 +870,13 @@
               "kind": "method",
               "sourceBacked": null,
               "contentMode": "summary"
-            },
-            {
-              "role": "pivot",
-              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/main.py::ARC.execute",
-              "localName": "execute",
-              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/main.py",
-              "kind": "method",
-              "sourceBacked": null,
-              "contentMode": "summary"
             }
           ]
         }
       },
-      "reductionPct": 98.96412329459324,
+      "vtrace_contaminated_paths": [],
+      "vtrace_contamination_detected": false,
+      "reductionPct": 99.07962174258283,
       "expectedAreaHits": [
         "run_arc",
         "ts"
@@ -896,10 +934,14 @@
         "pivotCount": 2,
         "supportCount": 0,
         "sourceBackedPivotCount": null,
-        "chars": 988,
+        "chars": 985,
         "estTokens": 247,
         "topResult": "arc/species/species.py::TSGuess",
         "topFile": "arc/species/species.py",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -996,8 +1038,8 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 988,
-            "remainingCharacters": 1012
+            "usedCharacters": 985,
+            "remainingCharacters": 1015
           },
           "truncated": true,
           "compressed": true,
@@ -1023,6 +1065,10 @@
           ]
         }
       },
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py"
+      ],
+      "vtrace_contamination_detected": true,
       "reductionPct": 99.60687569632341,
       "expectedAreaHits": [
         "species",
@@ -1043,12 +1089,12 @@
           "arc/job/adapters/mockter.py"
         ],
         "fileCount": 5,
-        "chars": 133080,
-        "estTokens": 33270,
+        "chars": 133067,
+        "estTokens": 33267,
         "snippets": [
           {
             "file": "arc/common.py",
-            "chars": 71340,
+            "chars": 71327,
             "preview": "\"\"\"\nThis module contains functions which are shared across multiple ARC modules.\nAs such, it should not import any other ARC module (specifically ones that use the logger defined here)\nto avoid circular imports.\n\nVERSION is the full ARC version, using `semantic versioning <https://semver.org/>`_.\n\"\"\"\n\nimport ast\nimport datetime\nimport logging\nimport math\nimport os\nimport pprint\nimport re\nimport shutil\nimport subprocess\nimport sys\nimport time\nimport warnings\nimport yaml\nfrom collections import de"
           },
           {
@@ -1086,6 +1132,10 @@
         "estTokens": 209,
         "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
         "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -1181,7 +1231,11 @@
           ]
         }
       },
-      "reductionPct": 99.37180643222122,
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py"
+      ],
+      "vtrace_contamination_detected": true,
+      "reductionPct": 99.37174978206632,
       "expectedAreaHits": [
         "species",
         "ts",
@@ -1240,10 +1294,14 @@
         "pivotCount": 2,
         "supportCount": 0,
         "sourceBackedPivotCount": null,
-        "chars": 989,
-        "estTokens": 248,
-        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py::Scheduler",
-        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py",
+        "chars": 911,
+        "estTokens": 228,
+        "topResult": "arc/scheduler.py::Scheduler",
+        "topFile": "arc/scheduler.py",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -1321,12 +1379,21 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 989,
-            "remainingCharacters": 1011
+            "usedCharacters": 911,
+            "remainingCharacters": 1089
           },
           "truncated": true,
           "compressed": true,
           "topItems": [
+            {
+              "role": "pivot",
+              "fqName": "arc/scheduler.py::Scheduler",
+              "localName": "Scheduler",
+              "filePath": "arc/scheduler.py",
+              "kind": "class",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
             {
               "role": "pivot",
               "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py::Scheduler",
@@ -1335,20 +1402,15 @@
               "kind": "class",
               "sourceBacked": null,
               "contentMode": "signature_only"
-            },
-            {
-              "role": "pivot",
-              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py::Scheduler",
-              "localName": "Scheduler",
-              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py",
-              "kind": "class",
-              "sourceBacked": null,
-              "contentMode": "signature_only"
             }
           ]
         }
       },
-      "reductionPct": 99.58570688762299,
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py"
+      ],
+      "vtrace_contamination_detected": true,
+      "reductionPct": 99.61911762249211,
       "expectedAreaHits": [
         "scheduler",
         "family",
@@ -1408,10 +1470,12 @@
         "pivotCount": 1,
         "supportCount": 0,
         "sourceBackedPivotCount": null,
-        "chars": 953,
-        "estTokens": 239,
-        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/statmech/arkane.py::ArkaneAdapter.render_arkane_input_template",
-        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/statmech/arkane.py",
+        "chars": 1150,
+        "estTokens": 288,
+        "topResult": "arc/statmech/arkane.py::ArkaneAdapter.render_arkane_input_template",
+        "topFile": "arc/statmech/arkane.py",
+        "contaminatedPaths": [],
+        "contaminationDetected": false,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -1508,25 +1572,27 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 953,
-            "remainingCharacters": 1047
+            "usedCharacters": 1150,
+            "remainingCharacters": 850
           },
           "truncated": true,
           "compressed": true,
           "topItems": [
             {
               "role": "pivot",
-              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/statmech/arkane.py::ArkaneAdapter.render_arkane_input_template",
+              "fqName": "arc/statmech/arkane.py::ArkaneAdapter.render_arkane_input_template",
               "localName": "render_arkane_input_template",
-              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/statmech/arkane.py",
+              "filePath": "arc/statmech/arkane.py",
               "kind": "method",
               "sourceBacked": null,
-              "contentMode": "signature_only"
+              "contentMode": "summary"
             }
           ]
         }
       },
-      "reductionPct": 99.52032112393377,
+      "vtrace_contaminated_paths": [],
+      "vtrace_contamination_detected": false,
+      "reductionPct": 99.42197691921726,
       "expectedAreaHits": [
         "ts",
         "kinetics",
@@ -1585,10 +1651,12 @@
         "pivotCount": 1,
         "supportCount": 0,
         "sourceBackedPivotCount": null,
-        "chars": 1105,
-        "estTokens": 277,
-        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py::check_valid_transition",
-        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py",
+        "chars": 1038,
+        "estTokens": 260,
+        "topResult": "arc/job/pipe/pipe_state.py::check_valid_transition",
+        "topFile": "arc/job/pipe/pipe_state.py",
+        "contaminatedPaths": [],
+        "contaminationDetected": false,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -1666,17 +1734,17 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 1105,
-            "remainingCharacters": 895
+            "usedCharacters": 1038,
+            "remainingCharacters": 962
           },
           "truncated": true,
           "compressed": true,
           "topItems": [
             {
               "role": "pivot",
-              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py::check_valid_transition",
+              "fqName": "arc/job/pipe/pipe_state.py::check_valid_transition",
               "localName": "check_valid_transition",
-              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py",
+              "filePath": "arc/job/pipe/pipe_state.py",
               "kind": "function",
               "sourceBacked": null,
               "contentMode": "summary"
@@ -1684,7 +1752,9 @@
           ]
         }
       },
-      "reductionPct": 99.39647471512299,
+      "vtrace_contaminated_paths": [],
+      "vtrace_contamination_detected": false,
+      "reductionPct": 99.43351417303963,
       "expectedAreaHits": [
         "ts"
       ],
@@ -1741,10 +1811,12 @@
         "pivotCount": 1,
         "supportCount": 0,
         "sourceBackedPivotCount": null,
-        "chars": 1083,
-        "estTokens": 271,
-        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py::check_valid_transition",
-        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py",
+        "chars": 1080,
+        "estTokens": 270,
+        "topResult": "arc/job/pipe/pipe_state.py::check_valid_transition",
+        "topFile": "arc/job/pipe/pipe_state.py",
+        "contaminatedPaths": [],
+        "contaminationDetected": false,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -1822,17 +1894,17 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 1083,
-            "remainingCharacters": 917
+            "usedCharacters": 1080,
+            "remainingCharacters": 920
           },
           "truncated": true,
           "compressed": true,
           "topItems": [
             {
               "role": "pivot",
-              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py::check_valid_transition",
+              "fqName": "arc/job/pipe/pipe_state.py::check_valid_transition",
               "localName": "check_valid_transition",
-              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/pipe/pipe_state.py",
+              "filePath": "arc/job/pipe/pipe_state.py",
               "kind": "function",
               "sourceBacked": null,
               "contentMode": "summary"
@@ -1840,7 +1912,9 @@
           ]
         }
       },
-      "reductionPct": 99.40954746497593,
+      "vtrace_contaminated_paths": [],
+      "vtrace_contamination_detected": false,
+      "reductionPct": 99.41172625661808,
       "expectedAreaHits": [
         "ts"
       ],
@@ -1858,8 +1932,8 @@
           "arc/job/adapters/cfour.py"
         ],
         "fileCount": 5,
-        "chars": 145326,
-        "estTokens": 36332,
+        "chars": 145313,
+        "estTokens": 36329,
         "snippets": [
           {
             "file": "arc/checks/common.py",
@@ -1868,7 +1942,7 @@
           },
           {
             "file": "arc/common.py",
-            "chars": 71340,
+            "chars": 71327,
             "preview": "\"\"\"\nThis module contains functions which are shared across multiple ARC modules.\nAs such, it should not import any other ARC module (specifically ones that use the logger defined here)\nto avoid circular imports.\n\nVERSION is the full ARC version, using `semantic versioning <https://semver.org/>`_.\n\"\"\"\n\nimport ast\nimport datetime\nimport logging\nimport math\nimport os\nimport pprint\nimport re\nimport shutil\nimport subprocess\nimport sys\nimport time\nimport warnings\nimport yaml\nfrom collections import de"
           },
           {
@@ -1901,6 +1975,10 @@
         "estTokens": 207,
         "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
         "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -1996,7 +2074,11 @@
           ]
         }
       },
-      "reductionPct": 99.4302543212595,
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/conformers.py"
+      ],
+      "vtrace_contamination_detected": true,
+      "reductionPct": 99.43020727242698,
       "expectedAreaHits": [
         "species",
         "ts",
@@ -2051,14 +2133,16 @@
         "selectedIntent": "explain",
         "routingProfile": "explain",
         "capsuleProfile": "explain_stable",
-        "itemCount": 1,
-        "pivotCount": 1,
+        "itemCount": 2,
+        "pivotCount": 2,
         "supportCount": 0,
         "sourceBackedPivotCount": null,
-        "chars": 1034,
-        "estTokens": 259,
-        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/checks/ts.py::check_ts",
-        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/checks/ts.py",
+        "chars": 1176,
+        "estTokens": 294,
+        "topResult": "arc/checks/ts.py::check_ts",
+        "topFile": "arc/checks/ts.py",
+        "contaminatedPaths": [],
+        "contaminationDetected": false,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -2136,25 +2220,36 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 1034,
-            "remainingCharacters": 966
+            "usedCharacters": 1176,
+            "remainingCharacters": 824
           },
           "truncated": true,
           "compressed": true,
           "topItems": [
             {
               "role": "pivot",
-              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/checks/ts.py::check_ts",
+              "fqName": "arc/checks/ts.py::check_ts",
               "localName": "check_ts",
-              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/checks/ts.py",
+              "filePath": "arc/checks/ts.py",
               "kind": "function",
+              "sourceBacked": null,
+              "contentMode": "signature_only"
+            },
+            {
+              "role": "pivot",
+              "fqName": "arc/main.py::ARC",
+              "localName": "ARC",
+              "filePath": "arc/main.py",
+              "kind": "class",
               "sourceBacked": null,
               "contentMode": "signature_only"
             }
           ]
         }
       },
-      "reductionPct": 99.40616760288891,
+      "vtrace_contaminated_paths": [],
+      "vtrace_contamination_detected": false,
+      "reductionPct": 99.32591998165769,
       "expectedAreaHits": [
         "family",
         "ts",
@@ -2214,10 +2309,12 @@
         "pivotCount": 1,
         "supportCount": 0,
         "sourceBackedPivotCount": null,
-        "chars": 873,
-        "estTokens": 219,
-        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction",
-        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py",
+        "chars": 722,
+        "estTokens": 181,
+        "topResult": "arc/reaction/reaction.py::ARCReaction",
+        "topFile": "arc/reaction/reaction.py",
+        "contaminatedPaths": [],
+        "contaminationDetected": false,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -2295,17 +2392,17 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 873,
-            "remainingCharacters": 1127
+            "usedCharacters": 722,
+            "remainingCharacters": 1278
           },
           "truncated": true,
           "compressed": true,
           "topItems": [
             {
               "role": "pivot",
-              "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py::ARCReaction",
+              "fqName": "arc/reaction/reaction.py::ARCReaction",
               "localName": "ARCReaction",
-              "filePath": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/reaction/reaction.py",
+              "filePath": "arc/reaction/reaction.py",
               "kind": "class",
               "sourceBacked": null,
               "contentMode": "signature_only"
@@ -2313,7 +2410,9 @@
           ]
         }
       },
-      "reductionPct": 99.15076779897626,
+      "vtrace_contaminated_paths": [],
+      "vtrace_contamination_detected": false,
+      "reductionPct": 99.298123158058,
       "expectedAreaHits": [
         "reaction",
         "family",
@@ -2333,8 +2432,8 @@
           "arc/scheduler_test.py"
         ],
         "fileCount": 5,
-        "chars": 551150,
-        "estTokens": 137788,
+        "chars": 551102,
+        "estTokens": 137776,
         "snippets": [
           {
             "file": "arc/job/pipe/pipe_planner.py",
@@ -2343,7 +2442,7 @@
           },
           {
             "file": "arc/job/trsh.py",
-            "chars": 113010,
+            "chars": 112998,
             "preview": "\"\"\"\nThe ARC troubleshooting (\"trsh\") module\n\"\"\"\n\nimport math\nimport os\n\nimport numpy as np\nimport pandas as pd\nimport re\n\nfrom arc.common import (check_torsion_change,\n                        convert_to_hours,\n                        estimate_orca_mem_cpu_requirement,\n                        get_logger,\n                        get_number_with_ordinal_indicator,\n                        is_same_pivot,\n                        is_same_sequence_sublist,\n                        is_str_float\n          "
           },
           {
@@ -2353,8 +2452,8 @@
           },
           {
             "file": "arc/scheduler.py",
-            "chars": 247844,
-            "preview": "\"\"\"\nA module for scheduling ARC jobs\nIncludes spawning, terminating, checking, and troubleshooting various jobs\n\"\"\"\n\nfrom __future__ import annotations\n\nimport datetime\nimport itertools\nimport os\nimport pprint\nimport shutil\nimport time\n\nimport numpy as np\nfrom typing import TYPE_CHECKING\n\nimport arc.parser.parser as parser\nfrom arc import plotter\nfrom arc.checks.common import get_i_from_job_name, is_conformer_job, sum_time_delta\nfrom arc.checks.ts import check_imaginary_frequencies, check_ts, ch"
+            "chars": 247808,
+            "preview": "\"\"\"\nA module for scheduling ARC jobs\nIncludes spawning, terminating, checking, and troubleshooting various jobs\n\"\"\"\n\nimport datetime\nimport itertools\nimport os\nimport pprint\nimport shutil\nimport time\n\nimport numpy as np\nfrom typing import TYPE_CHECKING\n\nimport arc.parser.parser as parser\nfrom arc import plotter\nfrom arc.checks.common import get_i_from_job_name, is_conformer_job, sum_time_delta\nfrom arc.checks.ts import check_imaginary_frequencies, check_ts, check_irc_species_and_rxn\nfrom arc.com"
           },
           {
             "file": "arc/scheduler_test.py",
@@ -2376,6 +2475,11 @@
         "estTokens": 253,
         "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py::Scheduler.run_job",
         "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py",
+          ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -2480,7 +2584,12 @@
           ]
         }
       },
-      "reductionPct": 99.81638459082068,
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/scheduler.py",
+        ".claude/worktrees/agent-ab866f2b90d746c73/arc/scheduler.py"
+      ],
+      "vtrace_contamination_detected": true,
+      "reductionPct": 99.81636859830449,
       "expectedAreaHits": [
         "scheduler",
         "ts",
@@ -2543,6 +2652,10 @@
         "estTokens": 164,
         "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd::get_atomtype",
         "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -2647,6 +2760,10 @@
           ]
         }
       },
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd"
+      ],
+      "vtrace_contamination_detected": true,
       "reductionPct": 99.50135303596947,
       "expectedAreaHits": [
         "ts",
@@ -2709,6 +2826,10 @@
         "estTokens": 177,
         "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd::get_atomtype",
         "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -2813,6 +2934,10 @@
           ]
         }
       },
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/atomtype.pxd"
+      ],
+      "vtrace_contamination_detected": true,
       "reductionPct": 95.46618852459017,
       "expectedAreaHits": [
         "ts",
@@ -2832,8 +2957,8 @@
           "arc/common.py"
         ],
         "fileCount": 5,
-        "chars": 2893289,
-        "estTokens": 723323,
+        "chars": 2893276,
+        "estTokens": 723319,
         "snippets": [
           {
             "file": "arc/testing/composite/TS0_composite_2043.out",
@@ -2857,7 +2982,7 @@
           },
           {
             "file": "arc/common.py",
-            "chars": 71340,
+            "chars": 71327,
             "preview": "\"\"\"\nThis module contains functions which are shared across multiple ARC modules.\nAs such, it should not import any other ARC module (specifically ones that use the logger defined here)\nto avoid circular imports.\n\nVERSION is the full ARC version, using `semantic versioning <https://semver.org/>`_.\n\"\"\"\n\nimport ast\nimport datetime\nimport logging\nimport math\nimport os\nimport pprint\nimport re\nimport shutil\nimport subprocess\nimport sys\nimport time\nimport warnings\nimport yaml\nfrom collections import de"
           }
         ],
@@ -2875,6 +3000,10 @@
         "estTokens": 179,
         "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/graph.pyx::Edge",
         "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/graph.pyx",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/graph.pyx"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -2979,7 +3108,11 @@
           ]
         }
       },
-      "reductionPct": 99.9752531026941,
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/molecule/graph.pyx"
+      ],
+      "vtrace_contamination_detected": true,
+      "reductionPct": 99.97525296584217,
       "expectedAreaHits": [
         "ts",
         "cython"
@@ -3036,11 +3169,15 @@
         "itemCount": 2,
         "pivotCount": 2,
         "supportCount": 0,
-        "sourceBackedPivotCount": null,
-        "chars": 758,
-        "estTokens": 190,
-        "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/exceptions.py::ParserError",
-        "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/exceptions.py",
+        "sourceBackedPivotCount": 1,
+        "chars": 716,
+        "estTokens": 179,
+        "topResult": "arc/exceptions.py::ParserError",
+        "topFile": "arc/exceptions.py",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/exceptions.py"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -3118,12 +3255,21 @@
           "budget": {
             "model": "character_count",
             "maxCharacters": 2000,
-            "usedCharacters": 758,
-            "remainingCharacters": 1242
+            "usedCharacters": 716,
+            "remainingCharacters": 1284
           },
           "truncated": true,
           "compressed": true,
           "topItems": [
+            {
+              "role": "pivot",
+              "fqName": "arc/exceptions.py::ParserError",
+              "localName": "ParserError",
+              "filePath": "arc/exceptions.py",
+              "kind": "class",
+              "sourceBacked": true,
+              "contentMode": "full"
+            },
             {
               "role": "pivot",
               "fqName": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/exceptions.py::ParserError",
@@ -3132,20 +3278,15 @@
               "kind": "class",
               "sourceBacked": null,
               "contentMode": "summary"
-            },
-            {
-              "role": "pivot",
-              "fqName": ".claude/worktrees/agent-ab866f2b90d746c73/arc/exceptions.py::ParserError",
-              "localName": "ParserError",
-              "filePath": ".claude/worktrees/agent-ab866f2b90d746c73/arc/exceptions.py",
-              "kind": "class",
-              "sourceBacked": null,
-              "contentMode": "summary"
             }
           ]
         }
       },
-      "reductionPct": 99.4189069333578,
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/exceptions.py"
+      ],
+      "vtrace_contamination_detected": true,
+      "reductionPct": 99.45254916353183,
       "expectedAreaHits": [
         "ts",
         "parser"
@@ -3207,6 +3348,11 @@
         "estTokens": 220,
         "topResult": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py::ARCSpecies",
         "topFile": ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py",
+        "contaminatedPaths": [
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py",
+          ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/adapters/ts/heuristics.py"
+        ],
+        "contaminationDetected": true,
         "diagnostics": [],
         "rawSnippet": {
           "selectedIntent": "explain",
@@ -3311,6 +3457,11 @@
           ]
         }
       },
+      "vtrace_contaminated_paths": [
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/species/species.py",
+        ".claude/worktrees/agent-a766b90cf0bed7d88/arc/job/adapters/ts/heuristics.py"
+      ],
+      "vtrace_contamination_detected": true,
       "reductionPct": 99.65888828591363,
       "expectedAreaHits": [
         "species",
@@ -3322,53 +3473,56 @@
   ],
   "summary": {
     "totalQueries": 20,
-    "averageBaselineTokens": 81536.75,
-    "averageVtraceTokens": 233.1,
-    "medianReductionPercent": 99.44552948331743,
-    "meanReductionPercent": 99.27307576079627,
+    "averageBaselineTokens": 81535.65,
+    "averageVtraceTokens": 230.5,
+    "medianReductionPercent": 99.44303166828573,
+    "meanReductionPercent": 99.28659981815699,
     "vtraceTokensLessThanBaselineCount": 20,
     "vtraceReturnedContextCount": 20,
     "baselineReturnedNoFilesCount": 0,
+    "rowsWithContaminatedVtracePaths": 14,
+    "contaminatedVtracePathCount": 17,
+    "benchmarkAcceptableForReductionClaim": false,
     "categoryAverages": [
       {
         "category": "boundary",
         "queryCount": 3,
-        "averageBaselineTokens": 253372,
+        "averageBaselineTokens": 253370.66666666666,
         "averageVtraceTokens": 173.33333333333334,
-        "meanReductionPercent": 98.31426488775124,
+        "meanReductionPercent": 98.31426484213394,
         "medianReductionPercent": 99.50135303596947
       },
       {
         "category": "concept",
         "queryCount": 5,
-        "averageBaselineTokens": 57884,
-        "averageVtraceTokens": 241.8,
-        "meanReductionPercent": 99.44262435578426,
-        "medianReductionPercent": 99.40954746497593
+        "averageBaselineTokens": 57881,
+        "averageVtraceTokens": 241,
+        "meanReductionPercent": 99.45646905341304,
+        "medianReductionPercent": 99.41172625661808
       },
       {
         "category": "exact",
         "queryCount": 5,
         "averageBaselineTokens": 46464.8,
-        "averageVtraceTokens": 260.6,
-        "meanReductionPercent": 99.34932373985092,
-        "medianReductionPercent": 99.46080464537536
+        "averageVtraceTokens": 250.8,
+        "meanReductionPercent": 99.38843698541766,
+        "medianReductionPercent": 99.46287847366239
       },
       {
         "category": "stress",
         "queryCount": 2,
         "averageBaselineTokens": 48596,
-        "averageVtraceTokens": 205,
-        "meanReductionPercent": 99.53889760963571,
-        "medianReductionPercent": 99.53889760963571
+        "averageVtraceTokens": 199.5,
+        "meanReductionPercent": 99.55571872472274,
+        "medianReductionPercent": 99.55571872472274
       },
       {
         "category": "workflow",
         "queryCount": 5,
-        "averageBaselineTokens": 50336.6,
-        "averageVtraceTokens": 244,
-        "meanReductionPercent": 99.49623697104487,
-        "medianReductionPercent": 99.52032112393377
+        "averageBaselineTokens": 50336,
+        "averageVtraceTokens": 246.4,
+        "meanReductionPercent": 99.49064683862775,
+        "medianReductionPercent": 99.43351417303963
       }
     ]
   }
