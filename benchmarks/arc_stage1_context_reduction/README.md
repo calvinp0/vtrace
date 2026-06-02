@@ -10,6 +10,7 @@ It is not a task-solving benchmark. It measures context size reduction, file/ite
 bun benchmarks/arc_stage1_context_reduction/run_arc_stage1_context_reduction.ts \
   --repo /home/calvin/code/ARC \
   --queries benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json \
+  --expected benchmarks/arc_stage1_context_reduction/expected.arc.stage1.json \
   --out benchmarks/arc_stage1_context_reduction/results \
   --baseline-max-files 5 \
   --baseline-mode all
@@ -24,6 +25,7 @@ Optional flags:
 --snippet-context-lines <n>
 --max-snippets-per-file <n>
 --baseline-max-chars-per-file <n>
+--expected <path>
 --dry-run
 --verbose
 ```
@@ -53,6 +55,8 @@ Baseline modes:
 The vtrace measurement invokes the local `bin/vtrace` CLI for each query and parses the JSON output. It records capsule/handoff item counts, pivot/support counts, source-backed pivot count, selected intent/profile metadata, top result, and budget-reported context characters where available.
 
 The runner also detects vtrace result paths from excluded or stale worktree locations such as `.claude/worktrees/`, `.git/`, `__pycache__/`, `.pytest_cache/`, `node_modules/`, `dist/`, and `build/`. If any are present, the summary sets `benchmarkAcceptableForReductionClaim` to `false` and the Markdown report prints a warning that the run should not be used for context-reduction claims until the target repo is reindexed cleanly.
+
+Quality labels are driven by `expected.arc.stage1.json`. Each query can define `expected_paths`, `expected_symbols`, and `notes`. Rows are labeled `strong` when the top vtrace result matches an expected path or symbol, `acceptable` when a non-top item matches, `weak` when context is returned without an expected match, `missing` when no vtrace context is returned, and `unchecked` when no expectation exists.
 
 ## Determinism
 

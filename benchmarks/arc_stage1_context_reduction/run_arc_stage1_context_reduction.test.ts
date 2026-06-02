@@ -10,6 +10,7 @@ import {
   csvEscape,
   detectContaminatedVtracePaths,
   estimateTokens,
+  evaluateQuality,
   extractSnippetRanges,
   loadQueries,
   parseVtraceOutput,
@@ -197,6 +198,71 @@ test("source-backed pivot count is null when the flag is not exposed", () => {
   assert.equal(parsed.sourceBackedPivotCount, null);
 });
 
+test("strong quality label comes from top path match", () => {
+  const quality = evaluateQuality(makeVtraceForQuality({
+    topFile: "arc/species/species.py",
+    items: [{ filePath: "arc/species/species.py", name: "Other" }],
+  }), {
+    expected_paths: ["arc/species/species.py"],
+    expected_symbols: ["ARCSpecies"],
+  });
+
+  assert.equal(quality.qualityLabel, "strong");
+  assert.equal(quality.matchedExpectedPath, "arc/species/species.py");
+});
+
+test("acceptable quality label comes from non-top item match", () => {
+  const quality = evaluateQuality(makeVtraceForQuality({
+    topFile: "arc/common.py",
+    topResult: "arc.common.helper",
+    items: [
+      { filePath: "arc/common.py", name: "helper" },
+      { filePath: "arc/reaction/reaction.py", name: "arc.reaction.ARCReaction" },
+    ],
+  }), {
+    expected_paths: ["arc/reaction/reaction.py"],
+    expected_symbols: ["ARCReaction"],
+  });
+
+  assert.equal(quality.qualityLabel, "acceptable");
+  assert.equal(quality.matchedExpectedPath, "arc/reaction/reaction.py");
+});
+
+test("weak quality label is used when context exists without expected match", () => {
+  const quality = evaluateQuality(makeVtraceForQuality({
+    topFile: "arc/common.py",
+    items: [{ filePath: "arc/common.py", name: "helper" }],
+  }), {
+    expected_paths: ["arc/species/species.py"],
+    expected_symbols: ["ARCSpecies"],
+  });
+
+  assert.equal(quality.qualityLabel, "weak");
+});
+
+test("missing quality label is used when vtrace returns no context", () => {
+  const quality = evaluateQuality(makeVtraceForQuality({
+    itemCount: 0,
+    topFile: null,
+    topResult: null,
+    items: [],
+  }), {
+    expected_paths: ["arc/species/species.py"],
+    expected_symbols: ["ARCSpecies"],
+  });
+
+  assert.equal(quality.qualityLabel, "missing");
+});
+
+test("unchecked quality label is used when no expectation exists", () => {
+  const quality = evaluateQuality(makeVtraceForQuality({
+    topFile: "arc/species/species.py",
+    items: [{ filePath: "arc/species/species.py", name: "ARCSpecies" }],
+  }), undefined);
+
+  assert.equal(quality.qualityLabel, "unchecked");
+});
+
 test("detects .claude worktree contamination in vtrace paths", () => {
   assert.deepEqual(detectContaminatedVtracePaths([
     ".claude/worktrees/agent-a/arc/species/species.py",
@@ -262,6 +328,28 @@ test("--baseline-mode all summary fields include every baseline mode", () => {
   assert.equal(summary.baselineSummaries[2]?.averageBaselineTokens, 50);
 });
 
+test("category summary is baseline-aware in all mode", () => {
+  const summary = summarizeRows([
+    makeBenchmarkRow([], {
+      baselineMode: "all",
+      baselines: {
+        "full-file": makeBaseline("full-file", 400),
+        snippet: makeBaseline("snippet", 100),
+        "capped-full-file": makeBaseline("capped-full-file", 200),
+      },
+      reductions: {
+        "full-file": 80,
+        snippet: 20,
+        "capped-full-file": 60,
+      },
+    }),
+  ]);
+
+  assert.equal(summary.categoryAverages[0]?.mean_full_file_reduction_pct, 80);
+  assert.equal(summary.categoryAverages[0]?.mean_snippet_reduction_pct, 20);
+  assert.equal(summary.categoryAverages[0]?.mean_capped_full_file_reduction_pct, 60);
+});
+
 test("backward-compatible full-file mode keeps selected baseline summary", () => {
   const summary = summarizeRows([makeBenchmarkRow([])]);
 
@@ -283,6 +371,8 @@ function makeBenchmarkRow(
     readonly baselineMode?: "full-file" | "snippet" | "capped-full-file" | "all";
     readonly baselines?: ReturnType<typeof makeBaselineMap>;
     readonly reductions?: Record<string, number | null>;
+    readonly itemCount?: number;
+    readonly items?: Array<{ readonly filePath: string | null; readonly name: string | null }>;
   } = {},
 ) {
   const baselineMode = overrides.baselineMode ?? "full-file";
@@ -300,7 +390,7 @@ function makeBenchmarkRow(
       selectedIntent: "explain",
       routingProfile: "explain",
       capsuleProfile: "explain_stable",
-      itemCount: 1,
+      itemCount: overrides.itemCount ?? 1,
       pivotCount: 1,
       supportCount: 0,
       sourceBackedPivotCount: null,
@@ -308,6 +398,7 @@ function makeBenchmarkRow(
       estTokens: 20,
       topResult: "arc.species.ARCSpecies",
       topFile: contaminatedPaths[0] ?? "arc/species/species.py",
+      items: overrides.items ?? [{ filePath: contaminatedPaths[0] ?? "arc/species/species.py", name: "arc.species.ARCSpecies" }],
       contaminatedPaths,
       contaminationDetected: contaminatedPaths.length > 0,
       diagnostics: [],
@@ -315,8 +406,31 @@ function makeBenchmarkRow(
     },
     reductionPct: 80,
     reductions,
+    quality: {
+      qualityLabel: "strong",
+      expectedPaths: ["arc/species/species.py"],
+      expectedSymbols: ["ARCSpecies"],
+      matchedExpectedPath: "arc/species/species.py",
+      matchedExpectedSymbol: null,
+    },
     expectedAreaHits: [],
     notes: [],
+  };
+}
+
+function makeVtraceForQuality(overrides: {
+  readonly itemCount?: number;
+  readonly topFile?: string | null;
+  readonly topResult?: string | null;
+  readonly items?: Array<{ readonly filePath: string | null; readonly name: string | null }>;
+}) {
+  const items = overrides.items ?? [{ filePath: "arc/species/species.py", name: "ARCSpecies" }];
+
+  return {
+    itemCount: overrides.itemCount ?? items.length,
+    topFile: overrides.topFile === undefined ? items[0]?.filePath ?? null : overrides.topFile,
+    topResult: overrides.topResult === undefined ? items[0]?.name ?? null : overrides.topResult,
+    items,
   };
 }
 

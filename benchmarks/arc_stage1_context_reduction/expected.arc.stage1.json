@@ -1,0 +1,102 @@
+{
+  "ARCSpecies": {
+    "expected_paths": ["arc/species/species.py"],
+    "expected_symbols": ["ARCSpecies"],
+    "notes": "Exact class lookup"
+  },
+  "ARCReaction": {
+    "expected_paths": ["arc/reaction/reaction.py"],
+    "expected_symbols": ["ARCReaction"],
+    "notes": "Exact class lookup"
+  },
+  "Scheduler": {
+    "expected_paths": ["arc/scheduler.py"],
+    "expected_symbols": ["Scheduler"],
+    "notes": "Exact class lookup"
+  },
+  "determine_family": {
+    "expected_paths": ["arc/reaction/reaction.py"],
+    "expected_symbols": ["determine_family"],
+    "notes": "Reaction family method lookup"
+  },
+  "run_arc": {
+    "expected_paths": ["arc/main.py", "ARC.py"],
+    "expected_symbols": ["execute", "main"],
+    "notes": "ARC entrypoint and execution path"
+  },
+  "how does ARC generate TS guesses": {
+    "expected_paths": ["arc/species/species.py", "arc/job/adapters/ts"],
+    "expected_symbols": ["TSGuess"],
+    "notes": "Transition-state guess generation"
+  },
+  "where are conformers filtered": {
+    "expected_paths": ["arc/species/conformers.py"],
+    "expected_symbols": ["determine_lowest_conformer", "conformers_combinations_by_lowest_conformer"],
+    "notes": "Conformer filtering workflow"
+  },
+  "where are kinetics jobs scheduled": {
+    "expected_paths": ["arc/scheduler.py"],
+    "expected_symbols": ["Scheduler"],
+    "notes": "Kinetics job scheduling"
+  },
+  "where is Arkane input written": {
+    "expected_paths": ["arc/statmech/arkane.py"],
+    "expected_symbols": ["ArkaneAdapter", "render_arkane_input_template"],
+    "notes": "Arkane input generation"
+  },
+  "how are transition state jobs validated": {
+    "expected_paths": ["arc/checks/ts.py", "arc/job/pipe/pipe_state.py"],
+    "expected_symbols": ["check_ts", "check_valid_transition"],
+    "notes": "TS validation"
+  },
+  "transition state generation": {
+    "expected_paths": ["arc/species/species.py", "arc/job/pipe/pipe_state.py"],
+    "expected_symbols": ["TSGuess", "check_valid_transition"],
+    "notes": "Transition-state generation concept"
+  },
+  "conformer filtering": {
+    "expected_paths": ["arc/species/conformers.py"],
+    "expected_symbols": ["determine_lowest_conformer", "conformers_combinations_by_lowest_conformer"],
+    "notes": "Conformer filtering concept"
+  },
+  "kinetics calculation": {
+    "expected_paths": ["arc/scheduler.py", "arc/statmech/arkane.py", "arc/checks/ts.py"],
+    "expected_symbols": ["Scheduler", "ArkaneAdapter"],
+    "notes": "Kinetics calculation workflow"
+  },
+  "reaction family matching": {
+    "expected_paths": ["arc/reaction/reaction.py", "arc/family/family.py"],
+    "expected_symbols": ["determine_family", "ARCReaction"],
+    "notes": "Reaction family matching"
+  },
+  "rotor scans": {
+    "expected_paths": ["arc/scheduler.py", "arc/species/rotors.py"],
+    "expected_symbols": ["Rotor", "rotor"],
+    "notes": "Rotor scan workflow"
+  },
+  "cython": {
+    "expected_paths": ["arc/molecule/atomtype.pxd", "arc/molecule/graph.pyx"],
+    "expected_symbols": ["get_atomtype", "Graph"],
+    "notes": "Cython boundary files"
+  },
+  "python wrapper around cython": {
+    "expected_paths": ["arc/molecule/atomtype.pxd", "arc/molecule/graph.pyx"],
+    "expected_symbols": ["get_atomtype", "Graph"],
+    "notes": "Python/Cython boundary"
+  },
+  "performance critical routine": {
+    "expected_paths": ["arc/molecule/graph.pyx", "arc/molecule/atomtype.pxd"],
+    "expected_symbols": ["Graph", "get_atomtype"],
+    "notes": "Performance-oriented Cython routines"
+  },
+  "parser": {
+    "expected_paths": ["arc/parser.py"],
+    "expected_symbols": ["parse"],
+    "notes": "Parser lookup"
+  },
+  "transition state": {
+    "expected_paths": ["arc/species/species.py", "arc/checks/ts.py", "arc/job/pipe/pipe_state.py"],
+    "expected_symbols": ["TSGuess", "check_ts", "check_valid_transition"],
+    "notes": "Broad TS query"
+  }
+}

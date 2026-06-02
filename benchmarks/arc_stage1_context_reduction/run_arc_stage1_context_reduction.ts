@@ -35,10 +35,16 @@ export interface VtraceMeasurement {
   readonly estTokens: number;
   readonly topResult: string | null;
   readonly topFile: string | null;
+  readonly items: readonly VtraceItemRef[];
   readonly contaminatedPaths: readonly string[];
   readonly contaminationDetected: boolean;
   readonly diagnostics: readonly string[];
   readonly rawSnippet: unknown;
+}
+
+export interface VtraceItemRef {
+  readonly name: string | null;
+  readonly filePath: string | null;
 }
 
 export interface BenchmarkRow {
@@ -50,6 +56,7 @@ export interface BenchmarkRow {
   readonly vtrace: VtraceMeasurement;
   readonly reductionPct: number | null;
   readonly reductions: ReductionResultsByMode;
+  readonly quality: QualityEvaluation;
   readonly expectedAreaHits: readonly string[];
   readonly notes: readonly string[];
 }
@@ -57,10 +64,28 @@ export interface BenchmarkRow {
 export type BaselineMode = "full-file" | "snippet" | "capped-full-file";
 export type BaselineResultsByMode = Partial<Record<BaselineMode, BaselineResult>>;
 export type ReductionResultsByMode = Partial<Record<BaselineMode, number | null>>;
+export type QualityLabel = "strong" | "acceptable" | "weak" | "missing" | "unchecked";
+
+export interface QualityExpectation {
+  readonly expected_paths: readonly string[];
+  readonly expected_symbols: readonly string[];
+  readonly notes?: string;
+}
+
+export type QualityExpectationsByQuery = Record<string, QualityExpectation>;
+
+export interface QualityEvaluation {
+  readonly qualityLabel: QualityLabel;
+  readonly expectedPaths: readonly string[];
+  readonly expectedSymbols: readonly string[];
+  readonly matchedExpectedPath: string | null;
+  readonly matchedExpectedSymbol: string | null;
+}
 
 interface CliConfig {
   repo: string;
   queries: string;
+  expected: string;
   out: string;
   baselineMaxFiles: number;
   baselineMode: BaselineMode | "all";
@@ -76,6 +101,7 @@ interface CliConfig {
 const DEFAULT_CONFIG: CliConfig = {
   repo: "/home/calvin/code/ARC",
   queries: "benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json",
+  expected: "benchmarks/arc_stage1_context_reduction/expected.arc.stage1.json",
   out: "benchmarks/arc_stage1_context_reduction/results",
   baselineMaxFiles: 5,
   baselineMode: "full-file",
@@ -178,6 +204,44 @@ export async function loadQueries(queriesPath: string): Promise<ArcStage1Query[]
       query: entry.query,
     };
   });
+}
+
+export async function loadQualityExpectations(
+  expectedPath: string,
+): Promise<QualityExpectationsByQuery> {
+  let content: string;
+
+  try {
+    content = await readFile(expectedPath, "utf8");
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") {
+      return {};
+    }
+
+    throw error;
+  }
+
+  const parsed = JSON.parse(content) as unknown;
+
+  if (!isRecord(parsed)) {
+    throw new Error("Expected quality file must contain an object keyed by query.");
+  }
+
+  const expectations: QualityExpectationsByQuery = {};
+
+  for (const [query, value] of Object.entries(parsed)) {
+    if (!isRecord(value)) {
+      throw new Error(`Invalid expected quality entry for query: ${query}`);
+    }
+
+    expectations[query] = {
+      expected_paths: parseStringArray(value.expected_paths),
+      expected_symbols: parseStringArray(value.expected_symbols),
+      ...(typeof value.notes === "string" ? { notes: value.notes } : {}),
+    };
+  }
+
+  return expectations;
 }
 
 export function buildSearchTerms(query: string): string[] {
@@ -286,6 +350,7 @@ export function parseVtraceOutput(
     ? budget.usedCharacters
     : sumItemContentChars(items);
   const top = items[0] ?? null;
+  const itemRefs = makeVtraceItemRefs(items);
   const sourceBackedDetectable = pivotItems.some((item) => typeof item.sourceBacked === "boolean");
   const contaminatedPaths = detectContaminatedVtracePaths(collectVtracePaths(items));
 
@@ -307,6 +372,7 @@ export function parseVtraceOutput(
     estTokens: estimateTokens(budgetChars),
     topResult: stringOrNull(top?.fqName ?? top?.localName ?? top?.symbolId),
     topFile: stringOrNull(top?.filePath),
+    items: itemRefs,
     contaminatedPaths,
     contaminationDetected: contaminatedPaths.length > 0,
     diagnostics: collectDiagnostics(root, toolCommand),
@@ -316,11 +382,13 @@ export function parseVtraceOutput(
 
 async function runBenchmark(config: CliConfig): Promise<void> {
   const queries = await loadQueries(config.queries);
+  const qualityExpectations = await loadQualityExpectations(config.expected);
   const metadata = {
     benchmark: "arc_stage1_context_reduction",
     timestamp: new Date().toISOString(),
     arcRepoPath: config.repo,
     queryFile: config.queries,
+    expectedFile: config.expected,
     outputDirectory: config.out,
     baselineMaxFiles: config.baselineMaxFiles,
     baselineMode: config.baselineMode,
@@ -340,6 +408,7 @@ async function runBenchmark(config: CliConfig): Promise<void> {
       "ARC Stage 1 context reduction benchmark dry run",
       `Repo: ${config.repo}`,
       `Queries: ${queries.length}`,
+      `Expected quality file: ${config.expected}`,
       `Tool command: ${config.toolCommand}`,
       `Baseline mode: ${config.baselineMode}`,
       `Output directory: ${config.out}`,
@@ -358,6 +427,7 @@ async function runBenchmark(config: CliConfig): Promise<void> {
     const baselines = await collectBaselines(config.repo, query.query, config);
     const baseline = selectPrimaryBaseline(baselines, config.baselineMode);
     const vtrace = await collectVtraceMeasurement(config.repo, query.query, config.toolCommand);
+    const quality = evaluateQuality(vtrace, qualityExpectations[query.query]);
     const rowNotes = [
       ...collectBaselineNotes(baselines),
       ...vtrace.diagnostics,
@@ -375,6 +445,7 @@ async function runBenchmark(config: CliConfig): Promise<void> {
       vtrace,
       reductionPct: calculateReductionPct(baseline.estTokens, vtrace.estTokens),
       reductions: calculateReductions(baselines, vtrace.estTokens),
+      quality,
       expectedAreaHits: detectExpectedAreaHits(query.query, baseline.files, vtrace),
       notes: rowNotes,
     });
@@ -673,6 +744,87 @@ export function extractSnippetRanges(
   return merged.slice(0, maxSnippetsPerFile);
 }
 
+export function evaluateQuality(
+  vtrace: Pick<VtraceMeasurement, "itemCount" | "topFile" | "topResult" | "items">,
+  expectation: QualityExpectation | undefined,
+): QualityEvaluation {
+  if (expectation === undefined) {
+    return makeQualityEvaluation("unchecked", [], [], null, null);
+  }
+
+  const expectedPaths = expectation.expected_paths.map(normalizePath);
+  const expectedSymbols = [...expectation.expected_symbols];
+  const topPathMatch = matchExpectedPath(vtrace.topFile, expectedPaths);
+  const topSymbolMatch = matchExpectedSymbol(vtrace.topResult, expectedSymbols);
+
+  if (topPathMatch !== null || topSymbolMatch !== null) {
+    return makeQualityEvaluation("strong", expectedPaths, expectedSymbols, topPathMatch, topSymbolMatch);
+  }
+
+  const itemPathMatch = firstNonNull(vtrace.items.map((item) => matchExpectedPath(item.filePath, expectedPaths)));
+  const itemSymbolMatch = firstNonNull(vtrace.items.map((item) => matchExpectedSymbol(item.name, expectedSymbols)));
+
+  if (itemPathMatch !== null || itemSymbolMatch !== null) {
+    return makeQualityEvaluation("acceptable", expectedPaths, expectedSymbols, itemPathMatch, itemSymbolMatch);
+  }
+
+  if (vtrace.itemCount === 0) {
+    return makeQualityEvaluation("missing", expectedPaths, expectedSymbols, null, null);
+  }
+
+  return makeQualityEvaluation("weak", expectedPaths, expectedSymbols, null, null);
+}
+
+function makeQualityEvaluation(
+  qualityLabel: QualityLabel,
+  expectedPaths: readonly string[],
+  expectedSymbols: readonly string[],
+  matchedExpectedPath: string | null,
+  matchedExpectedSymbol: string | null,
+): QualityEvaluation {
+  return {
+    qualityLabel,
+    expectedPaths,
+    expectedSymbols,
+    matchedExpectedPath,
+    matchedExpectedSymbol,
+  };
+}
+
+function matchExpectedPath(
+  actualPath: string | null,
+  expectedPaths: readonly string[],
+): string | null {
+  if (actualPath === null) {
+    return null;
+  }
+
+  const normalizedActual = normalizePath(actualPath);
+
+  return expectedPaths.find((expectedPath) => normalizedActual === expectedPath || normalizedActual.endsWith(`/${expectedPath}`)) ?? null;
+}
+
+function matchExpectedSymbol(
+  actualName: string | null,
+  expectedSymbols: readonly string[],
+): string | null {
+  if (actualName === null) {
+    return null;
+  }
+
+  return expectedSymbols.find((expectedSymbol) => {
+    return actualName === expectedSymbol
+      || actualName.endsWith(`.${expectedSymbol}`)
+      || actualName.endsWith(`::${expectedSymbol}`)
+      || actualName.includes(`.${expectedSymbol}.`)
+      || actualName.includes(`::${expectedSymbol}.`);
+  }) ?? null;
+}
+
+function firstNonNull<T>(values: readonly (T | null)[]): T | null {
+  return values.find((value): value is T => value !== null) ?? null;
+}
+
 async function collectVtraceMeasurement(
   repoRoot: string,
   query: string,
@@ -694,6 +846,7 @@ async function collectVtraceMeasurement(
       estTokens: 0,
       topResult: null,
       topFile: null,
+      items: [],
       contaminatedPaths: [],
       contaminationDetected: false,
       diagnostics: [`${toolCommand} failed: ${result.stderr.trim() || `exit ${result.exitCode}`}`],
@@ -719,6 +872,7 @@ async function collectVtraceMeasurement(
       estTokens: 0,
       topResult: null,
       topFile: null,
+      items: [],
       contaminatedPaths: [],
       contaminationDetected: false,
       diagnostics: [`${toolCommand} JSON parse failed: ${error instanceof Error ? error.message : String(error)}`],
@@ -769,6 +923,11 @@ function renderCsv(rows: readonly BenchmarkRow[]): string {
     "capsule_profile",
     "top_vtrace_result",
     "top_vtrace_file",
+    "quality_label",
+    "expected_paths",
+    "expected_symbols",
+    "matched_expected_path",
+    "matched_expected_symbol",
     "vtrace_contaminated_paths",
     "vtrace_contamination_detected",
     "baseline_files",
@@ -792,6 +951,11 @@ function renderCsv(rows: readonly BenchmarkRow[]): string {
     "capsule_profile",
     "top_vtrace_result",
     "top_vtrace_file",
+    "quality_label",
+    "expected_paths",
+    "expected_symbols",
+    "matched_expected_path",
+    "matched_expected_symbol",
     "vtrace_contaminated_paths",
     "vtrace_contamination_detected",
     "baseline_files",
@@ -826,6 +990,11 @@ function renderSingleBaselineCsvRow(row: BenchmarkRow): string {
     row.vtrace.capsuleProfile,
     row.vtrace.topResult,
     row.vtrace.topFile,
+    row.quality.qualityLabel,
+    row.quality.expectedPaths.join(";"),
+    row.quality.expectedSymbols.join(";"),
+    row.quality.matchedExpectedPath,
+    row.quality.matchedExpectedSymbol,
     row.vtrace.contaminatedPaths.join(";"),
     row.vtrace.contaminationDetected,
     row.baseline.files.join(";"),
@@ -855,6 +1024,11 @@ function renderAllBaselineCsvRow(row: BenchmarkRow): string {
     row.vtrace.capsuleProfile,
     row.vtrace.topResult,
     row.vtrace.topFile,
+    row.quality.qualityLabel,
+    row.quality.expectedPaths.join(";"),
+    row.quality.expectedSymbols.join(";"),
+    row.quality.matchedExpectedPath,
+    row.quality.matchedExpectedSymbol,
     row.vtrace.contaminatedPaths.join(";"),
     row.vtrace.contaminationDetected,
     row.baseline.files.join(";"),
@@ -869,6 +1043,7 @@ export function summarizeRows(rows: readonly BenchmarkRow[]) {
     .filter((value): value is number => value !== null);
   const categories = [...new Set(rows.map((row) => row.category))].sort();
   const baselineSummaries = summarizeBaselineModes(rows);
+  const qualityCounts = summarizeQualityLabels(rows);
   const rowsWithContaminatedVtracePaths = rows.filter((row) => row.vtrace.contaminationDetected).length;
   const contaminatedVtracePathCount = rows.reduce(
     (sum, row) => sum + row.vtrace.contaminatedPaths.length,
@@ -882,6 +1057,7 @@ export function summarizeRows(rows: readonly BenchmarkRow[]) {
     medianReductionPercent: median(reductions),
     meanReductionPercent: mean(reductions),
     baselineSummaries,
+    qualityCounts,
     vtraceTokensLessThanBaselineCount: rows.filter((row) => row.vtrace.estTokens < row.baseline.estTokens).length,
     vtraceReturnedContextCount: rows.filter((row) => row.vtrace.itemCount > 0 || row.vtrace.pivotCount > 0).length,
     baselineReturnedNoFilesCount: rows.filter((row) => row.baseline.files.length === 0).length,
@@ -901,9 +1077,33 @@ export function summarizeRows(rows: readonly BenchmarkRow[]) {
         averageVtraceTokens: mean(categoryRows.map((row) => row.vtrace.estTokens)),
         meanReductionPercent: mean(categoryReductions),
         medianReductionPercent: median(categoryReductions),
+        mean_full_file_reduction_pct: meanReductionForMode(categoryRows, "full-file"),
+        mean_snippet_reduction_pct: meanReductionForMode(categoryRows, "snippet"),
+        mean_capped_full_file_reduction_pct: meanReductionForMode(categoryRows, "capped-full-file"),
       };
     }),
   };
+}
+
+function summarizeQualityLabels(rows: readonly BenchmarkRow[]): Record<QualityLabel, number> {
+  return {
+    strong: rows.filter((row) => row.quality.qualityLabel === "strong").length,
+    acceptable: rows.filter((row) => row.quality.qualityLabel === "acceptable").length,
+    weak: rows.filter((row) => row.quality.qualityLabel === "weak").length,
+    missing: rows.filter((row) => row.quality.qualityLabel === "missing").length,
+    unchecked: rows.filter((row) => row.quality.qualityLabel === "unchecked").length,
+  };
+}
+
+function meanReductionForMode(
+  rows: readonly BenchmarkRow[],
+  mode: BaselineMode,
+): number | null {
+  const reductions = rows
+    .map((row) => row.reductions[mode])
+    .filter((value): value is number => value !== null && value !== undefined);
+
+  return mean(reductions);
 }
 
 function summarizeBaselineModes(rows: readonly BenchmarkRow[]) {
@@ -942,6 +1142,12 @@ function rowToJson(row: BenchmarkRow) {
     baselines: row.baselines,
     reductions: row.reductions,
     vtrace: row.vtrace,
+    quality: row.quality,
+    quality_label: row.quality.qualityLabel,
+    expected_paths: row.quality.expectedPaths,
+    expected_symbols: row.quality.expectedSymbols,
+    matched_expected_path: row.quality.matchedExpectedPath,
+    matched_expected_symbol: row.quality.matchedExpectedSymbol,
     vtrace_contaminated_paths: row.vtrace.contaminatedPaths,
     vtrace_contamination_detected: row.vtrace.contaminationDetected,
     reductionPct: row.reductionPct,
@@ -961,9 +1167,10 @@ function renderMarkdown(
   const noUseful = rows.filter((row) => row.vtrace.itemCount === 0 && row.vtrace.pivotCount === 0);
   const noBaseline = rows.filter((row) => row.baseline.files.length === 0);
   const hasAllBaselines = summary.baselineSummaries.length > 1;
+  const snippetSummary = summary.baselineSummaries.find((baseline) => baseline.mode === "snippet");
   const headline = summary.benchmarkAcceptableForReductionClaim
     ? hasAllBaselines
-      ? `Ran ${summary.totalQueries} fixed queries against ${metadata.arcRepoPath} with ${summary.baselineSummaries.length} baseline modes. Baseline-specific reductions are shown in the comparison table.`
+      ? `Against the grep-snippet baseline, mean measured context reduction was ${formatNumber(snippetSummary?.meanReductionPercent ?? null)}%, median was ${formatNumber(snippetSummary?.medianReductionPercent ?? null)}%. Full-file and capped-full-file reductions are shown as secondary baselines.`
       : `Ran ${summary.totalQueries} fixed queries against ${metadata.arcRepoPath}. Mean measured reduction was ${formatNumber(summary.meanReductionPercent)}%, median was ${formatNumber(summary.medianReductionPercent)}%. vtrace used fewer estimated tokens than the selected baseline for ${summary.vtraceTokensLessThanBaselineCount}/${summary.totalQueries} queries.`
     : "The benchmark executed, but the reduction result is not claimable because contaminated indexed paths were detected.";
   const warning = summary.benchmarkAcceptableForReductionClaim
@@ -1000,6 +1207,16 @@ function renderMarkdown(
     `| contaminated vtrace path count | ${summary.contaminatedVtracePathCount} |`,
     `| acceptable for reduction claim | ${summary.benchmarkAcceptableForReductionClaim ? "yes" : "no"} |`,
     "",
+    "## Quality labels",
+    "",
+    "| Label | Count |",
+    "| --- | ---: |",
+    `| strong | ${summary.qualityCounts.strong} |`,
+    `| acceptable | ${summary.qualityCounts.acceptable} |`,
+    `| weak | ${summary.qualityCounts.weak} |`,
+    `| missing | ${summary.qualityCounts.missing} |`,
+    `| unchecked | ${summary.qualityCounts.unchecked} |`,
+    "",
     "## Interpretation",
     "",
     "The full-file baseline represents naive grep followed by opening whole files.",
@@ -1008,11 +1225,7 @@ function renderMarkdown(
     "",
     "## Category-level averages",
     "",
-    "| Category | Queries | Avg baseline tokens | Avg vtrace tokens | Mean reduction % | Median reduction % |",
-    "| --- | ---: | ---: | ---: | ---: | ---: |",
-    ...summary.categoryAverages.map((category) => (
-      `| ${category.category} | ${category.queryCount} | ${formatNumber(category.averageBaselineTokens)} | ${formatNumber(category.averageVtraceTokens)} | ${formatNumber(category.meanReductionPercent)} | ${formatNumber(category.medianReductionPercent)} |`
-    )),
+    ...(hasAllBaselines ? renderAllBaselineCategoryTable(summary.categoryAverages) : renderSingleBaselineCategoryTable(summary.categoryAverages)),
     "",
     "## Worst reductions",
     "",
@@ -1036,6 +1249,7 @@ function renderMarkdown(
     "- The baseline intentionally reads full matching files and is not a tuned retrieval baseline.",
     "- Expected ARC area hits are lightweight path/name heuristics for inspection.",
     "- vtrace measurements use the existing ARC vtrace index; stale or over-broad indexes can surface stale paths.",
+    "- Source-backed pivot count `unknown` means the current parsed output did not expose source-backed status for those items; it is not equivalent to zero source-backed pivots.",
     "- The benchmark records measured context sizes only and does not claim task-solving performance.",
     "",
     "## Suggested next measurement step",
@@ -1069,16 +1283,40 @@ function renderBaselineComparisonTable(
   ];
 }
 
+function renderSingleBaselineCategoryTable(
+  categoryAverages: ReturnType<typeof summarizeRows>["categoryAverages"],
+): string[] {
+  return [
+    "| Category | Queries | Avg baseline tokens | Avg vtrace tokens | Mean reduction % | Median reduction % |",
+    "| --- | ---: | ---: | ---: | ---: | ---: |",
+    ...categoryAverages.map((category) => (
+      `| ${category.category} | ${category.queryCount} | ${formatNumber(category.averageBaselineTokens)} | ${formatNumber(category.averageVtraceTokens)} | ${formatNumber(category.meanReductionPercent)} | ${formatNumber(category.medianReductionPercent)} |`
+    )),
+  ];
+}
+
+function renderAllBaselineCategoryTable(
+  categoryAverages: ReturnType<typeof summarizeRows>["categoryAverages"],
+): string[] {
+  return [
+    "| Category | Queries | Avg vtrace tokens | mean_full_file_reduction_pct | mean_snippet_reduction_pct | mean_capped_full_file_reduction_pct |",
+    "| --- | ---: | ---: | ---: | ---: | ---: |",
+    ...categoryAverages.map((category) => (
+      `| ${category.category} | ${category.queryCount} | ${formatNumber(category.averageVtraceTokens)} | ${formatNumber(category.mean_full_file_reduction_pct)} | ${formatNumber(category.mean_snippet_reduction_pct)} | ${formatNumber(category.mean_capped_full_file_reduction_pct)} |`
+    )),
+  ];
+}
+
 export function renderRowsTable(rows: readonly BenchmarkRow[]): string {
   if (rows.length === 0) {
     return "None.";
   }
 
   return [
-    "| Query | Category | Baseline tokens | vtrace tokens | Reduction % | Items | Source-backed pivots | Contaminated | Top vtrace file | Notes |",
-    "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |",
+    "| Query | Category | Quality | Baseline tokens | vtrace tokens | Reduction % | Items | Source-backed pivots | Contaminated | Top vtrace file | Notes |",
+    "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |",
     ...rows.map((row) => (
-      `| ${escapeMarkdown(row.query)} | ${escapeMarkdown(row.category)} | ${row.baseline.estTokens} | ${row.vtrace.estTokens} | ${formatNumber(row.reductionPct)} | ${row.vtrace.itemCount} | ${formatSourceBackedPivotCount(row.vtrace.sourceBackedPivotCount)} | ${row.vtrace.contaminationDetected ? "yes" : "no"} | ${escapeMarkdown(row.vtrace.topFile ?? "")} | ${escapeMarkdown(row.notes.join("; "))} |`
+      `| ${escapeMarkdown(row.query)} | ${escapeMarkdown(row.category)} | ${row.quality.qualityLabel} | ${row.baseline.estTokens} | ${row.vtrace.estTokens} | ${formatNumber(row.reductionPct)} | ${row.vtrace.itemCount} | ${formatSourceBackedPivotCount(row.vtrace.sourceBackedPivotCount)} | ${row.vtrace.contaminationDetected ? "yes" : "no"} | ${escapeMarkdown(row.vtrace.topFile ?? "")} | ${escapeMarkdown(row.notes.join("; "))} |`
     )),
   ].join("\n");
 }
@@ -1144,6 +1382,13 @@ function makeRawSnippet(
   };
 }
 
+function makeVtraceItemRefs(items: readonly Record<string, unknown>[]): VtraceItemRef[] {
+  return items.map((item) => ({
+    name: stringOrNull(item.fqName ?? item.localName ?? item.symbolId),
+    filePath: stringOrNull(item.filePath),
+  }));
+}
+
 function collectVtracePaths(items: readonly Record<string, unknown>[]): string[] {
   const paths: string[] = [];
 
@@ -1163,6 +1408,10 @@ function collectVtracePaths(items: readonly Record<string, unknown>[]): string[]
 
 function looksPathLike(value: string): boolean {
   return value.includes("/") || value.includes("\\");
+}
+
+function normalizePath(value: string): string {
+  return value.replaceAll("\\", "/").replace(/^\.\//, "");
 }
 
 function sumItemContentChars(items: readonly Record<string, unknown>[]): number {
@@ -1293,6 +1542,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function parseStringArray(value: unknown): string[] {
+  if (value === undefined) {
+    return [];
+  }
+
+  if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
+    throw new Error("Expected a string array.");
+  }
+
+  return value.map(normalizePath);
+}
+
+function isNodeError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error;
+}
+
 function parseArgs(argv: readonly string[]): CliConfig {
   const config = { ...DEFAULT_CONFIG };
 
@@ -1305,6 +1570,9 @@ function parseArgs(argv: readonly string[]): CliConfig {
         break;
       case "--queries":
         config.queries = requireValue(argv, ++index, arg);
+        break;
+      case "--expected":
+        config.expected = requireValue(argv, ++index, arg);
         break;
       case "--out":
         config.out = requireValue(argv, ++index, arg);
@@ -1359,6 +1627,7 @@ function parseArgs(argv: readonly string[]): CliConfig {
     ...config,
     repo: path.resolve(config.repo),
     queries: path.resolve(config.queries),
+    expected: path.resolve(config.expected),
     out: path.resolve(config.out),
   };
 }
@@ -1400,7 +1669,7 @@ function parseNonNegativeInt(value: string, flag: string): number {
 function printUsageAndExit(exitCode: number): never {
   process.stdout.write([
     "Usage:",
-    "  bun benchmarks/arc_stage1_context_reduction/run_arc_stage1_context_reduction.ts --repo /home/calvin/code/ARC --queries benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json --out benchmarks/arc_stage1_context_reduction/results --baseline-max-files 5 [--baseline-mode full-file|snippet|capped-full-file|all]",
+    "  bun benchmarks/arc_stage1_context_reduction/run_arc_stage1_context_reduction.ts --repo /home/calvin/code/ARC --queries benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json --expected benchmarks/arc_stage1_context_reduction/expected.arc.stage1.json --out benchmarks/arc_stage1_context_reduction/results --baseline-max-files 5 [--baseline-mode full-file|snippet|capped-full-file|all]",
     "",
   ].join("\n"));
   process.exit(exitCode);

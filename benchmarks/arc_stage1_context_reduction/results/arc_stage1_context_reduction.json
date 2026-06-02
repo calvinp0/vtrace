@@ -1,9 +1,10 @@
 {
   "metadata": {
     "benchmark": "arc_stage1_context_reduction",
-    "timestamp": "2026-06-02T20:54:51.955Z",
+    "timestamp": "2026-06-02T21:53:50.188Z",
     "arcRepoPath": "/home/calvin/code/ARC",
     "queryFile": "/home/calvin/code/vtrace/benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json",
+    "expectedFile": "/home/calvin/code/vtrace/benchmarks/arc_stage1_context_reduction/expected.arc.stage1.json",
     "outputDirectory": "/home/calvin/code/vtrace/benchmarks/arc_stage1_context_reduction/results",
     "baselineMaxFiles": 5,
     "baselineMode": "all",
@@ -244,6 +245,12 @@
         "estTokens": 220,
         "topResult": "arc/species/species.py::ARCSpecies",
         "topFile": "arc/species/species.py",
+        "items": [
+          {
+            "name": "arc/species/species.py::ARCSpecies",
+            "filePath": "arc/species/species.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -341,6 +348,26 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/species/species.py"
+        ],
+        "expectedSymbols": [
+          "ARCSpecies"
+        ],
+        "matchedExpectedPath": "arc/species/species.py",
+        "matchedExpectedSymbol": "ARCSpecies"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/species/species.py"
+      ],
+      "expected_symbols": [
+        "ARCSpecies"
+      ],
+      "matched_expected_path": "arc/species/species.py",
+      "matched_expected_symbol": "ARCSpecies",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.64983765200229,
@@ -579,6 +606,16 @@
         "estTokens": 301,
         "topResult": "arc/reaction/reaction.py::ARCReaction",
         "topFile": "arc/reaction/reaction.py",
+        "items": [
+          {
+            "name": "arc/reaction/reaction.py::ARCReaction",
+            "filePath": "arc/reaction/reaction.py"
+          },
+          {
+            "name": "arc/reaction/reaction.py::ARCReaction.copy",
+            "filePath": "arc/reaction/reaction.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -685,6 +722,26 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/reaction/reaction.py"
+        ],
+        "expectedSymbols": [
+          "ARCReaction"
+        ],
+        "matchedExpectedPath": "arc/reaction/reaction.py",
+        "matchedExpectedSymbol": "ARCReaction"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/reaction/reaction.py"
+      ],
+      "expected_symbols": [
+        "ARCReaction"
+      ],
+      "matched_expected_path": "arc/reaction/reaction.py",
+      "matched_expected_symbol": "ARCReaction",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.37577768560763,
@@ -902,6 +959,16 @@
         "estTokens": 235,
         "topResult": "arc/scheduler.py::Scheduler",
         "topFile": "arc/scheduler.py",
+        "items": [
+          {
+            "name": "arc/scheduler.py::Scheduler",
+            "filePath": "arc/scheduler.py"
+          },
+          {
+            "name": "arc/scheduler_test.py::TestScheduler",
+            "filePath": "arc/scheduler_test.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -1008,6 +1075,26 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/scheduler.py"
+        ],
+        "expectedSymbols": [
+          "Scheduler"
+        ],
+        "matchedExpectedPath": "arc/scheduler.py",
+        "matchedExpectedSymbol": "Scheduler"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/scheduler.py"
+      ],
+      "expected_symbols": [
+        "Scheduler"
+      ],
+      "matched_expected_path": "arc/scheduler.py",
+      "matched_expected_symbol": "Scheduler",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 98.98268398268398,
@@ -1252,6 +1339,16 @@
         "estTokens": 301,
         "topResult": "arc/reaction/reaction.py::ARCReaction.determine_family",
         "topFile": "arc/reaction/reaction.py",
+        "items": [
+          {
+            "name": "arc/reaction/reaction.py::ARCReaction.determine_family",
+            "filePath": "arc/reaction/reaction.py"
+          },
+          {
+            "name": "arc/family/family_test.py::TestReactionFamily.test_determine_family_for_various_reactions",
+            "filePath": "arc/family/family_test.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -1358,6 +1455,26 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/reaction/reaction.py"
+        ],
+        "expectedSymbols": [
+          "determine_family"
+        ],
+        "matchedExpectedPath": "arc/reaction/reaction.py",
+        "matchedExpectedSymbol": "determine_family"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/reaction/reaction.py"
+      ],
+      "expected_symbols": [
+        "determine_family"
+      ],
+      "matched_expected_path": "arc/reaction/reaction.py",
+      "matched_expected_symbol": "determine_family",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.57286788704413,
@@ -1610,6 +1727,16 @@
         "estTokens": 255,
         "topResult": "arc/main.py::ARC",
         "topFile": "arc/main.py",
+        "items": [
+          {
+            "name": "arc/main.py::ARC",
+            "filePath": "arc/main.py"
+          },
+          {
+            "name": "arc/main.py::ARC.execute",
+            "filePath": "arc/main.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -1716,6 +1843,30 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/main.py",
+          "ARC.py"
+        ],
+        "expectedSymbols": [
+          "execute",
+          "main"
+        ],
+        "matchedExpectedPath": "arc/main.py",
+        "matchedExpectedSymbol": null
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/main.py",
+        "ARC.py"
+      ],
+      "expected_symbols": [
+        "execute",
+        "main"
+      ],
+      "matched_expected_path": "arc/main.py",
+      "matched_expected_symbol": null,
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.58770554091416,
@@ -1946,6 +2097,16 @@
         "estTokens": 247,
         "topResult": "arc/species/species.py::TSGuess",
         "topFile": "arc/species/species.py",
+        "items": [
+          {
+            "name": "arc/species/species.py::TSGuess",
+            "filePath": "arc/species/species.py"
+          },
+          {
+            "name": "arc/job/adapters/ts/heuristics.py::generate_hydrolysis_ts_guess",
+            "filePath": "arc/job/adapters/ts/heuristics.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -2071,6 +2232,28 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/species/species.py",
+          "arc/job/adapters/ts"
+        ],
+        "expectedSymbols": [
+          "TSGuess"
+        ],
+        "matchedExpectedPath": "arc/species/species.py",
+        "matchedExpectedSymbol": "TSGuess"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/species/species.py",
+        "arc/job/adapters/ts"
+      ],
+      "expected_symbols": [
+        "TSGuess"
+      ],
+      "matched_expected_path": "arc/species/species.py",
+      "matched_expected_symbol": "TSGuess",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.60687569632341,
@@ -2274,6 +2457,12 @@
         "estTokens": 295,
         "topResult": "arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
         "topFile": "arc/species/conformers.py",
+        "items": [
+          {
+            "name": "arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
+            "filePath": "arc/species/conformers.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -2371,6 +2560,28 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/species/conformers.py"
+        ],
+        "expectedSymbols": [
+          "determine_lowest_conformer",
+          "conformers_combinations_by_lowest_conformer"
+        ],
+        "matchedExpectedPath": "arc/species/conformers.py",
+        "matchedExpectedSymbol": "conformers_combinations_by_lowest_conformer"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/species/conformers.py"
+      ],
+      "expected_symbols": [
+        "determine_lowest_conformer",
+        "conformers_combinations_by_lowest_conformer"
+      ],
+      "matched_expected_path": "arc/species/conformers.py",
+      "matched_expected_symbol": "conformers_combinations_by_lowest_conformer",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.11323533832326,
@@ -2616,6 +2827,16 @@
         "estTokens": 201,
         "topResult": "arc/scheduler.py::Scheduler",
         "topFile": "arc/scheduler.py",
+        "items": [
+          {
+            "name": "arc/scheduler.py::Scheduler",
+            "filePath": "arc/scheduler.py"
+          },
+          {
+            "name": "arc/scheduler.py::Scheduler.__init__",
+            "filePath": "arc/scheduler.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -2722,6 +2943,26 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/scheduler.py"
+        ],
+        "expectedSymbols": [
+          "Scheduler"
+        ],
+        "matchedExpectedPath": "arc/scheduler.py",
+        "matchedExpectedSymbol": "Scheduler"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/scheduler.py"
+      ],
+      "expected_symbols": [
+        "Scheduler"
+      ],
+      "matched_expected_path": "arc/scheduler.py",
+      "matched_expected_symbol": "Scheduler",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.73918797929075,
@@ -2940,6 +3181,12 @@
         "estTokens": 238,
         "topResult": "arc/statmech/arkane.py::ArkaneAdapter.render_arkane_input_template",
         "topFile": "arc/statmech/arkane.py",
+        "items": [
+          {
+            "name": "arc/statmech/arkane.py::ArkaneAdapter.render_arkane_input_template",
+            "filePath": "arc/statmech/arkane.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -3056,6 +3303,28 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/statmech/arkane.py"
+        ],
+        "expectedSymbols": [
+          "ArkaneAdapter",
+          "render_arkane_input_template"
+        ],
+        "matchedExpectedPath": "arc/statmech/arkane.py",
+        "matchedExpectedSymbol": "ArkaneAdapter"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/statmech/arkane.py"
+      ],
+      "expected_symbols": [
+        "ArkaneAdapter",
+        "render_arkane_input_template"
+      ],
+      "matched_expected_path": "arc/statmech/arkane.py",
+      "matched_expected_symbol": "ArkaneAdapter",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.38408985042182,
@@ -3308,6 +3577,12 @@
         "estTokens": 272,
         "topResult": "arc/job/pipe/pipe_state.py::check_valid_transition",
         "topFile": "arc/job/pipe/pipe_state.py",
+        "items": [
+          {
+            "name": "arc/job/pipe/pipe_state.py::check_valid_transition",
+            "filePath": "arc/job/pipe/pipe_state.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -3405,6 +3680,30 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/checks/ts.py",
+          "arc/job/pipe/pipe_state.py"
+        ],
+        "expectedSymbols": [
+          "check_ts",
+          "check_valid_transition"
+        ],
+        "matchedExpectedPath": "arc/job/pipe/pipe_state.py",
+        "matchedExpectedSymbol": "check_valid_transition"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/checks/ts.py",
+        "arc/job/pipe/pipe_state.py"
+      ],
+      "expected_symbols": [
+        "check_ts",
+        "check_valid_transition"
+      ],
+      "matched_expected_path": "arc/job/pipe/pipe_state.py",
+      "matched_expected_symbol": "check_valid_transition",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.40736867333376,
@@ -3620,6 +3919,12 @@
         "estTokens": 267,
         "topResult": "arc/job/pipe/pipe_state.py::check_valid_transition",
         "topFile": "arc/job/pipe/pipe_state.py",
+        "items": [
+          {
+            "name": "arc/job/pipe/pipe_state.py::check_valid_transition",
+            "filePath": "arc/job/pipe/pipe_state.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -3717,6 +4022,30 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/species/species.py",
+          "arc/job/pipe/pipe_state.py"
+        ],
+        "expectedSymbols": [
+          "TSGuess",
+          "check_valid_transition"
+        ],
+        "matchedExpectedPath": "arc/job/pipe/pipe_state.py",
+        "matchedExpectedSymbol": "check_valid_transition"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/species/species.py",
+        "arc/job/pipe/pipe_state.py"
+      ],
+      "expected_symbols": [
+        "TSGuess",
+        "check_valid_transition"
+      ],
+      "matched_expected_path": "arc/job/pipe/pipe_state.py",
+      "matched_expected_symbol": "check_valid_transition",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.41826263154455,
@@ -3939,6 +4268,12 @@
         "estTokens": 293,
         "topResult": "arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
         "topFile": "arc/species/conformers.py",
+        "items": [
+          {
+            "name": "arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
+            "filePath": "arc/species/conformers.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -4036,6 +4371,28 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/species/conformers.py"
+        ],
+        "expectedSymbols": [
+          "determine_lowest_conformer",
+          "conformers_combinations_by_lowest_conformer"
+        ],
+        "matchedExpectedPath": "arc/species/conformers.py",
+        "matchedExpectedSymbol": "conformers_combinations_by_lowest_conformer"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/species/conformers.py"
+      ],
+      "expected_symbols": [
+        "determine_lowest_conformer",
+        "conformers_combinations_by_lowest_conformer"
+      ],
+      "matched_expected_path": "arc/species/conformers.py",
+      "matched_expected_symbol": "conformers_combinations_by_lowest_conformer",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.19348179140631,
@@ -4274,6 +4631,16 @@
         "estTokens": 294,
         "topResult": "arc/checks/ts.py::check_ts",
         "topFile": "arc/checks/ts.py",
+        "items": [
+          {
+            "name": "arc/checks/ts.py::check_ts",
+            "filePath": "arc/checks/ts.py"
+          },
+          {
+            "name": "arc/main.py::ARC",
+            "filePath": "arc/main.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -4380,6 +4747,32 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/scheduler.py",
+          "arc/statmech/arkane.py",
+          "arc/checks/ts.py"
+        ],
+        "expectedSymbols": [
+          "Scheduler",
+          "ArkaneAdapter"
+        ],
+        "matchedExpectedPath": "arc/checks/ts.py",
+        "matchedExpectedSymbol": null
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/scheduler.py",
+        "arc/statmech/arkane.py",
+        "arc/checks/ts.py"
+      ],
+      "expected_symbols": [
+        "Scheduler",
+        "ArkaneAdapter"
+      ],
+      "matched_expected_path": "arc/checks/ts.py",
+      "matched_expected_symbol": null,
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.56079415587325,
@@ -4619,6 +5012,12 @@
         "estTokens": 291,
         "topResult": "arc/family/family.py::ReactionFamily",
         "topFile": "arc/family/family.py",
+        "items": [
+          {
+            "name": "arc/family/family.py::ReactionFamily",
+            "filePath": "arc/family/family.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -4716,6 +5115,30 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/reaction/reaction.py",
+          "arc/family/family.py"
+        ],
+        "expectedSymbols": [
+          "determine_family",
+          "ARCReaction"
+        ],
+        "matchedExpectedPath": "arc/family/family.py",
+        "matchedExpectedSymbol": null
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/reaction/reaction.py",
+        "arc/family/family.py"
+      ],
+      "expected_symbols": [
+        "determine_family",
+        "ARCReaction"
+      ],
+      "matched_expected_path": "arc/family/family.py",
+      "matched_expected_symbol": null,
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.37856364917675,
@@ -4982,6 +5405,16 @@
         "estTokens": 203,
         "topResult": "arc/main.py::ARC",
         "topFile": "arc/main.py",
+        "items": [
+          {
+            "name": "arc/main.py::ARC",
+            "filePath": "arc/main.py"
+          },
+          {
+            "name": "arc/job/trsh.py::scan_quality_check",
+            "filePath": "arc/job/trsh.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -5088,6 +5521,30 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "weak",
+        "expectedPaths": [
+          "arc/scheduler.py",
+          "arc/species/rotors.py"
+        ],
+        "expectedSymbols": [
+          "Rotor",
+          "rotor"
+        ],
+        "matchedExpectedPath": null,
+        "matchedExpectedSymbol": null
+      },
+      "quality_label": "weak",
+      "expected_paths": [
+        "arc/scheduler.py",
+        "arc/species/rotors.py"
+      ],
+      "expected_symbols": [
+        "Rotor",
+        "rotor"
+      ],
+      "matched_expected_path": null,
+      "matched_expected_symbol": null,
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.8526593891534,
@@ -5333,6 +5790,16 @@
         "estTokens": 117,
         "topResult": "arc/molecule/atomtype.pxd::get_atomtype",
         "topFile": "arc/molecule/atomtype.pxd",
+        "items": [
+          {
+            "name": "arc/molecule/atomtype.pxd::get_atomtype",
+            "filePath": "arc/molecule/atomtype.pxd"
+          },
+          {
+            "name": "arc/molecule/atomtype.pxd::get_features",
+            "filePath": "arc/molecule/atomtype.pxd"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -5439,6 +5906,30 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/molecule/atomtype.pxd",
+          "arc/molecule/graph.pyx"
+        ],
+        "expectedSymbols": [
+          "get_atomtype",
+          "Graph"
+        ],
+        "matchedExpectedPath": "arc/molecule/atomtype.pxd",
+        "matchedExpectedSymbol": "get_atomtype"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/molecule/atomtype.pxd",
+        "arc/molecule/graph.pyx"
+      ],
+      "expected_symbols": [
+        "get_atomtype",
+        "Graph"
+      ],
+      "matched_expected_path": "arc/molecule/atomtype.pxd",
+      "matched_expected_symbol": "get_atomtype",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.81971987241714,
@@ -5655,6 +6146,16 @@
         "estTokens": 130,
         "topResult": "arc/molecule/atomtype.pxd::get_atomtype",
         "topFile": "arc/molecule/atomtype.pxd",
+        "items": [
+          {
+            "name": "arc/molecule/atomtype.pxd::get_atomtype",
+            "filePath": "arc/molecule/atomtype.pxd"
+          },
+          {
+            "name": "arc/molecule/atomtype.pxd::get_features",
+            "filePath": "arc/molecule/atomtype.pxd"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -5761,6 +6262,30 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/molecule/atomtype.pxd",
+          "arc/molecule/graph.pyx"
+        ],
+        "expectedSymbols": [
+          "get_atomtype",
+          "Graph"
+        ],
+        "matchedExpectedPath": "arc/molecule/atomtype.pxd",
+        "matchedExpectedSymbol": "get_atomtype"
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/molecule/atomtype.pxd",
+        "arc/molecule/graph.pyx"
+      ],
+      "expected_symbols": [
+        "get_atomtype",
+        "Graph"
+      ],
+      "matched_expected_path": "arc/molecule/atomtype.pxd",
+      "matched_expected_symbol": "get_atomtype",
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.75917006298629,
@@ -6005,6 +6530,16 @@
         "estTokens": 224,
         "topResult": "arc/molecule/graph.pyx::Edge",
         "topFile": "arc/molecule/graph.pyx",
+        "items": [
+          {
+            "name": "arc/molecule/graph.pyx::Edge",
+            "filePath": "arc/molecule/graph.pyx"
+          },
+          {
+            "name": "arc/molecule/graph.pyx::get_vertex_connectivity_value",
+            "filePath": "arc/molecule/graph.pyx"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -6111,6 +6646,30 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/molecule/graph.pyx",
+          "arc/molecule/atomtype.pxd"
+        ],
+        "expectedSymbols": [
+          "Graph",
+          "get_atomtype"
+        ],
+        "matchedExpectedPath": "arc/molecule/graph.pyx",
+        "matchedExpectedSymbol": null
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/molecule/graph.pyx",
+        "arc/molecule/atomtype.pxd"
+      ],
+      "expected_symbols": [
+        "Graph",
+        "get_atomtype"
+      ],
+      "matched_expected_path": "arc/molecule/graph.pyx",
+      "matched_expected_symbol": null,
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.96903164440586,
@@ -6313,6 +6872,16 @@
         "estTokens": 254,
         "topResult": "arc/exceptions.py::ParserError",
         "topFile": "arc/exceptions.py",
+        "items": [
+          {
+            "name": "arc/exceptions.py::ParserError",
+            "filePath": "arc/exceptions.py"
+          },
+          {
+            "name": "arc/parser/parser.py::make_parser",
+            "filePath": "arc/parser/parser.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -6419,6 +6988,26 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "weak",
+        "expectedPaths": [
+          "arc/parser.py"
+        ],
+        "expectedSymbols": [
+          "parse"
+        ],
+        "matchedExpectedPath": null,
+        "matchedExpectedSymbol": null
+      },
+      "quality_label": "weak",
+      "expected_paths": [
+        "arc/parser.py"
+      ],
+      "expected_symbols": [
+        "parse"
+      ],
+      "matched_expected_path": null,
+      "matched_expected_symbol": null,
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.3480158119,
@@ -6635,6 +7224,16 @@
         "estTokens": 232,
         "topResult": "arc/species/species.py::ARCSpecies",
         "topFile": "arc/species/species.py",
+        "items": [
+          {
+            "name": "arc/species/species.py::ARCSpecies",
+            "filePath": "arc/species/species.py"
+          },
+          {
+            "name": "arc/job/adapters/ts/heuristics.py::generate_hydrolysis_ts_guess",
+            "filePath": "arc/job/adapters/ts/heuristics.py"
+          }
+        ],
         "contaminatedPaths": [],
         "contaminationDetected": false,
         "diagnostics": [],
@@ -6741,6 +7340,34 @@
           ]
         }
       },
+      "quality": {
+        "qualityLabel": "strong",
+        "expectedPaths": [
+          "arc/species/species.py",
+          "arc/checks/ts.py",
+          "arc/job/pipe/pipe_state.py"
+        ],
+        "expectedSymbols": [
+          "TSGuess",
+          "check_ts",
+          "check_valid_transition"
+        ],
+        "matchedExpectedPath": "arc/species/species.py",
+        "matchedExpectedSymbol": null
+      },
+      "quality_label": "strong",
+      "expected_paths": [
+        "arc/species/species.py",
+        "arc/checks/ts.py",
+        "arc/job/pipe/pipe_state.py"
+      ],
+      "expected_symbols": [
+        "TSGuess",
+        "check_ts",
+        "check_valid_transition"
+      ],
+      "matched_expected_path": "arc/species/species.py",
+      "matched_expected_symbol": null,
       "vtrace_contaminated_paths": [],
       "vtrace_contamination_detected": false,
       "reductionPct": 99.64028219241801,
@@ -6784,6 +7411,13 @@
         "medianReductionPercent": 99.32307198952168
       }
     ],
+    "qualityCounts": {
+      "strong": 18,
+      "acceptable": 0,
+      "weak": 2,
+      "missing": 0,
+      "unchecked": 0
+    },
     "vtraceTokensLessThanBaselineCount": 20,
     "vtraceReturnedContextCount": 20,
     "baselineReturnedNoFilesCount": 0,
@@ -6797,7 +7431,10 @@
         "averageBaselineTokens": 280732.6666666667,
         "averageVtraceTokens": 157,
         "meanReductionPercent": 99.84930719326975,
-        "medianReductionPercent": 99.81971987241714
+        "medianReductionPercent": 99.81971987241714,
+        "mean_full_file_reduction_pct": 99.84930719326975,
+        "mean_snippet_reduction_pct": 97.98263931906824,
+        "mean_capped_full_file_reduction_pct": 99.57397280046128
       },
       {
         "category": "concept",
@@ -6805,7 +7442,10 @@
         "averageBaselineTokens": 66753.6,
         "averageVtraceTokens": 269.6,
         "meanReductionPercent": 99.48075232343086,
-        "medianReductionPercent": 99.41826263154455
+        "medianReductionPercent": 99.41826263154455,
+        "mean_full_file_reduction_pct": 99.48075232343086,
+        "mean_snippet_reduction_pct": 97.8301920521647,
+        "mean_capped_full_file_reduction_pct": 99.21378528674967
       },
       {
         "category": "exact",
@@ -6813,7 +7453,10 @@
         "averageBaselineTokens": 53293.4,
         "averageVtraceTokens": 262.4,
         "meanReductionPercent": 99.43377454965044,
-        "medianReductionPercent": 99.57286788704413
+        "medianReductionPercent": 99.57286788704413,
+        "mean_full_file_reduction_pct": 99.43377454965044,
+        "mean_snippet_reduction_pct": 98.31641751756543,
+        "mean_capped_full_file_reduction_pct": 99.23068559697144
       },
       {
         "category": "stress",
@@ -6821,7 +7464,10 @@
         "averageBaselineTokens": 51726.5,
         "averageVtraceTokens": 243,
         "meanReductionPercent": 99.494149002159,
-        "medianReductionPercent": 99.494149002159
+        "medianReductionPercent": 99.494149002159,
+        "mean_full_file_reduction_pct": 99.494149002159,
+        "mean_snippet_reduction_pct": 94.13596432199013,
+        "mean_capped_full_file_reduction_pct": 99.22130530065348
       },
       {
         "category": "workflow",
@@ -6829,7 +7475,10 @@
         "averageBaselineTokens": 51540.6,
         "averageVtraceTokens": 250.6,
         "meanReductionPercent": 99.45015150753859,
-        "medianReductionPercent": 99.40736867333376
+        "medianReductionPercent": 99.40736867333376,
+        "mean_full_file_reduction_pct": 99.45015150753859,
+        "mean_snippet_reduction_pct": 97.5119970264975,
+        "mean_capped_full_file_reduction_pct": 99.2334631354564
       }
     ]
   }
