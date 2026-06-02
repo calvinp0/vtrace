@@ -626,12 +626,15 @@ function renderMarkdown(
   const best = [...validRows].sort((a, b) => (b.reductionPct ?? 0) - (a.reductionPct ?? 0)).slice(0, 5);
   const noUseful = rows.filter((row) => row.vtrace.itemCount === 0 && row.vtrace.pivotCount === 0);
   const noBaseline = rows.filter((row) => row.baseline.files.length === 0);
+  const headline = summary.benchmarkAcceptableForReductionClaim
+    ? `Ran ${summary.totalQueries} fixed queries against ${metadata.arcRepoPath}. Mean measured reduction was ${formatNumber(summary.meanReductionPercent)}%, median was ${formatNumber(summary.medianReductionPercent)}%. vtrace used fewer estimated tokens than the naive full-file baseline for ${summary.vtraceTokensLessThanBaselineCount}/${summary.totalQueries} queries.`
+    : "The benchmark executed, but the reduction result is not claimable because contaminated indexed paths were detected.";
   const warning = summary.benchmarkAcceptableForReductionClaim
     ? []
     : [
       "## Warning",
       "",
-      "This run should not be used for context-reduction claims until the target repo is reindexed cleanly.",
+      "WARNING: This run is contaminated and should not be used for context-reduction claims until the target repo is reindexed cleanly.",
       "",
       `Detected ${summary.contaminatedVtracePathCount} contaminated vtrace path(s) across ${summary.rowsWithContaminatedVtracePaths} row(s).`,
       "",
@@ -643,7 +646,7 @@ function renderMarkdown(
     ...warning,
     "## Headline summary",
     "",
-    `Ran ${summary.totalQueries} fixed queries against ${metadata.arcRepoPath}. Mean measured reduction was ${formatNumber(summary.meanReductionPercent)}%, median was ${formatNumber(summary.medianReductionPercent)}%. vtrace used fewer estimated tokens than the naive full-file baseline for ${summary.vtraceTokensLessThanBaselineCount}/${summary.totalQueries} queries.`,
+    headline,
     "",
     "## Overall reduction",
     "",
@@ -700,7 +703,7 @@ function renderMarkdown(
   ].join("\n");
 }
 
-function renderRowsTable(rows: readonly BenchmarkRow[]): string {
+export function renderRowsTable(rows: readonly BenchmarkRow[]): string {
   if (rows.length === 0) {
     return "None.";
   }
@@ -709,9 +712,13 @@ function renderRowsTable(rows: readonly BenchmarkRow[]): string {
     "| Query | Category | Baseline tokens | vtrace tokens | Reduction % | Items | Source-backed pivots | Contaminated | Top vtrace file | Notes |",
     "| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- | --- |",
     ...rows.map((row) => (
-      `| ${escapeMarkdown(row.query)} | ${escapeMarkdown(row.category)} | ${row.baseline.estTokens} | ${row.vtrace.estTokens} | ${formatNumber(row.reductionPct)} | ${row.vtrace.itemCount} | ${row.vtrace.sourceBackedPivotCount ?? ""} | ${row.vtrace.contaminationDetected ? "yes" : "no"} | ${escapeMarkdown(row.vtrace.topFile ?? "")} | ${escapeMarkdown(row.notes.join("; "))} |`
+      `| ${escapeMarkdown(row.query)} | ${escapeMarkdown(row.category)} | ${row.baseline.estTokens} | ${row.vtrace.estTokens} | ${formatNumber(row.reductionPct)} | ${row.vtrace.itemCount} | ${formatSourceBackedPivotCount(row.vtrace.sourceBackedPivotCount)} | ${row.vtrace.contaminationDetected ? "yes" : "no"} | ${escapeMarkdown(row.vtrace.topFile ?? "")} | ${escapeMarkdown(row.notes.join("; "))} |`
     )),
   ].join("\n");
+}
+
+function formatSourceBackedPivotCount(value: number | null): string {
+  return value === null ? "unknown" : String(value);
 }
 
 function detectExpectedAreaHits(

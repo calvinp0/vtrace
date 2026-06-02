@@ -11,6 +11,7 @@ import {
   estimateTokens,
   loadQueries,
   parseVtraceOutput,
+  renderRowsTable,
   stableDeduplicateFiles,
   summarizeRows,
 } from "./run_arc_stage1_context_reduction";
@@ -209,6 +210,13 @@ test("summary marks benchmark acceptable when no contamination exists", () => {
   assert.equal(summary.rowsWithContaminatedVtracePaths, 0);
   assert.equal(summary.contaminatedVtracePathCount, 0);
   assert.equal(summary.benchmarkAcceptableForReductionClaim, true);
+});
+
+test("source-backed pivot rendering does not produce blank cells", () => {
+  const rendered = renderRowsTable([makeBenchmarkRow([])]);
+
+  assert.match(rendered, /\| unknown \|/);
+  assert.doesNotMatch(rendered, /\|\s+\| no \|/);
 });
 
 function makeBenchmarkRow(contaminatedPaths: readonly string[]) {

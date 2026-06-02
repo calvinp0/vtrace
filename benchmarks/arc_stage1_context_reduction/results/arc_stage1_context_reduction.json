@@ -1,7 +1,7 @@
 {
   "metadata": {
     "benchmark": "arc_stage1_context_reduction",
-    "timestamp": "2026-06-02T17:25:03.082Z",
+    "timestamp": "2026-06-02T17:28:42.280Z",
     "arcRepoPath": "/home/calvin/code/ARC",
     "queryFile": "/home/calvin/code/vtrace/benchmarks/arc_stage1_context_reduction/queries.arc.stage1.json",
     "outputDirectory": "/home/calvin/code/vtrace/benchmarks/arc_stage1_context_reduction/results",
