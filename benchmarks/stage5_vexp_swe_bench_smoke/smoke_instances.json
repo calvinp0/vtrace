@@ -1,0 +1,7 @@
+{
+  "instances": [],
+  "notes": [
+    "Populate with 3-5 instance IDs from `node dist/cli.js list` in vexp-swe-bench.",
+    "Prefer small/fast instances for the first smoke run."
+  ]
+}
