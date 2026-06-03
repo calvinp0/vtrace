@@ -51,6 +51,10 @@ benchmarks/arc_stage2_orientation/results/
 
 The JSON output omits snippet bodies by default. Use `--include-context` when an inspection run needs context previews.
 
+## Stage 2 result
+
+The final Stage 2 closeout is recorded in [STAGE2_RESULTS.md](./STAGE2_RESULTS.md).
+
 ## Quality Labels
 
 - `strong`: top result/file/symbol matches an expected path or symbol.
