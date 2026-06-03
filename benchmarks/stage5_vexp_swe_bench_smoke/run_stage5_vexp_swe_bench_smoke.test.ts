@@ -5,11 +5,15 @@ import path from "node:path";
 import { test } from "bun:test";
 
 import {
+  applyVtracePatch,
   buildBaselineCommand,
+  buildVtracePatchBlock,
   buildVtraceCommand,
   classifyOutcome,
   comparePairs,
   extractRow,
+  installVtracePatch,
+  isVtracePatched,
   loadSmokeInstances,
   parseArgs,
   parseResultRecords,
@@ -17,9 +21,37 @@ import {
   renderMarkdown,
   runIngest,
   runPrepare,
+  runVtrace,
+  STAGE5_VTRACE_PATCH_MARKER,
+  verifyVtracePatch,
   type CliConfig,
   type Stage5Row,
 } from "./run_stage5_vexp_swe_bench_smoke";
+
+// Minimal stand-in for the external vexp-swe-bench Claude Code adapter: it has
+// the anchor line and the `claude -p <prompt>` args array, so the patcher can
+// target it without needing the real checkout.
+const FAKE_CLAUDE_ADAPTER = [
+  'export class ClaudeCodeAdapter {',
+  '    name = "claude-code";',
+  '    async run(opts) {',
+  "        const startMs = Date.now();",
+  "        const args = [",
+  '            "-p", opts.prompt,',
+  '            "--output-format", "stream-json",',
+  "        ];",
+  "        return { args, startMs };",
+  "    }",
+  "}",
+  "",
+].join("\n");
+
+async function fakeVexpDir(): Promise<string> {
+  const dir = await tmpDir("vexp-patch");
+  await mkdir(path.join(dir, "dist", "agents"), { recursive: true });
+  await writeFile(path.join(dir, "dist", "agents", "claude-code.js"), FAKE_CLAUDE_ADAPTER);
+  return dir;
+}
 
 function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
   return {
@@ -289,6 +321,148 @@ test("ingest reads raw outputs and writes csv/json/md reports", async () => {
   const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
   assert.match(md, /not a public SWE-bench claim/);
   assert.doesNotMatch(md, /No vtrace condition/);
+});
+
+test("applyVtracePatch inserts the injection block with marker and reads the env file", () => {
+  const { content, changed } = applyVtracePatch(FAKE_CLAUDE_ADAPTER);
+  assert.equal(changed, true);
+  assert.ok(content.includes(STAGE5_VTRACE_PATCH_MARKER));
+  assert.ok(content.includes("VTRACE_AGENT_INSTRUCTIONS_FILE"));
+  assert.ok(content.includes("## Additional vtrace context/instructions"));
+  assert.ok(content.includes("Stage5 vtrace instructions injected from"));
+  // The block is inserted after the anchor and before the args array is built.
+  const anchorIdx = content.indexOf("const startMs = Date.now();");
+  const markerIdx = content.indexOf(STAGE5_VTRACE_PATCH_MARKER);
+  const argsIdx = content.indexOf("const args = [");
+  assert.ok(anchorIdx < markerIdx && markerIdx < argsIdx);
+});
+
+test("applyVtracePatch is idempotent", () => {
+  const once = applyVtracePatch(FAKE_CLAUDE_ADAPTER);
+  const twice = applyVtracePatch(once.content);
+  assert.equal(twice.changed, false);
+  assert.equal(twice.content, once.content);
+  // Exactly one marker pair, not two.
+  const occurrences = once.content.split(STAGE5_VTRACE_PATCH_MARKER).length - 1;
+  const occurrencesTwice = twice.content.split(STAGE5_VTRACE_PATCH_MARKER).length - 1;
+  assert.equal(occurrences, occurrencesTwice);
+});
+
+test("applyVtracePatch throws when the anchor is missing", () => {
+  assert.throws(() => applyVtracePatch("export const x = 1;\n"), /Could not find anchor/);
+});
+
+test("buildVtracePatchBlock injects under the documented marker heading", () => {
+  const block = buildVtracePatchBlock();
+  assert.ok(block.includes(`${STAGE5_VTRACE_PATCH_MARKER} begin`));
+  assert.ok(block.includes(`${STAGE5_VTRACE_PATCH_MARKER} end`));
+  // Logs to stderr (console.error), never stdout, to avoid corrupting stream-json.
+  assert.ok(block.includes("console.error"));
+  assert.ok(!block.includes("console.log"));
+});
+
+test("install-vtrace-patch patches the fixture, backs it up, and writes a manifest", async () => {
+  const vexpDir = await fakeVexpDir();
+  const out = path.join(await tmpDir("patch-out"), "results");
+  const target = path.join(vexpDir, "dist", "agents", "claude-code.js");
+
+  const manifest = await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  assert.equal(manifest.installed, true);
+  assert.equal(manifest.patchMarker, STAGE5_VTRACE_PATCH_MARKER);
+  assert.deepEqual(manifest.patchedFiles, [target]);
+
+  // Target file now carries the marker.
+  const patched = await readFile(target, "utf8");
+  assert.ok(isVtracePatched(patched));
+
+  // Backup created and equals the pristine original.
+  const backup = await readFile(`${target}.stage5-vtrace-backup`, "utf8");
+  assert.equal(backup, FAKE_CLAUDE_ADAPTER);
+  assert.deepEqual(manifest.backupFiles, [`${target}.stage5-vtrace-backup`]);
+
+  // Manifest persisted to the results dir.
+  const onDisk = JSON.parse(await readFile(path.join(out, "vtrace_patch_manifest.json"), "utf8"));
+  assert.equal(onDisk.installed, true);
+  assert.equal(onDisk.vexpSweBenchDir, vexpDir);
+});
+
+test("install-vtrace-patch is idempotent and never overwrites an existing backup", async () => {
+  const vexpDir = await fakeVexpDir();
+  const out = path.join(await tmpDir("patch-out2"), "results");
+  const target = path.join(vexpDir, "dist", "agents", "claude-code.js");
+
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  // Tamper the backup to prove a second install does not clobber it.
+  await writeFile(`${target}.stage5-vtrace-backup`, "SENTINEL ORIGINAL\n");
+  const manifest = await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+
+  assert.ok(manifest.notes.some((note) => /already present/i.test(note)));
+  const backup = await readFile(`${target}.stage5-vtrace-backup`, "utf8");
+  assert.equal(backup, "SENTINEL ORIGINAL\n");
+  // Still exactly one marker pair after re-install.
+  const patched = await readFile(target, "utf8");
+  assert.equal(patched.split(STAGE5_VTRACE_PATCH_MARKER).length - 1, patched.split(STAGE5_VTRACE_PATCH_MARKER).length - 1);
+});
+
+test("verify-vtrace-patch detects the marker before and after install", async () => {
+  const vexpDir = await fakeVexpDir();
+  const out = path.join(await tmpDir("verify-out"), "results");
+
+  const before = await verifyVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  assert.equal(before.installed, false);
+  assert.equal(before.backupPresent, false);
+
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const after = await verifyVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  assert.equal(after.installed, true);
+  assert.equal(after.backupPresent, true);
+  assert.equal(after.manifestPresent, true);
+});
+
+test("run-vtrace --vtrace-method local-patch fails fast when the patch is missing", async () => {
+  const vexpDir = await fakeVexpDir();
+  // Provide a fake CLI entry so the missing-patch guard (not a missing-CLI error) is what fires.
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("run-vtrace"), "results");
+
+  let spawned = false;
+  const runProcess = async () => {
+    spawned = true;
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({ vexpSweBenchDir: vexpDir, out, vtraceMethod: "local-patch", instances: ["a__1"] });
+  await assert.rejects(() => runVtrace(config, { runProcess }), /local vtrace patch to be installed first/);
+  // Guard must fire before any agent process is spawned (no tokens spent).
+  assert.equal(spawned, false);
+});
+
+test("run-vtrace --vtrace-method local-patch proceeds once the patch is installed", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("run-vtrace2"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+
+  let spawned = false;
+  const runProcess = async () => {
+    spawned = true;
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({ vexpSweBenchDir: vexpDir, out, vtraceMethod: "local-patch", instances: ["a__1"] });
+  await runVtrace(config, { runProcess });
+  assert.equal(spawned, true);
+});
+
+test("install/verify-vtrace-patch modes are accepted by the CLI parser", () => {
+  assert.equal(parseArgs(["--mode", "install-vtrace-patch"]).mode, "install-vtrace-patch");
+  assert.equal(parseArgs(["--mode", "verify-vtrace-patch"]).mode, "verify-vtrace-patch");
+});
+
+test("README documents the instructions-file no-op risk and recommends local-patch", async () => {
+  const readme = await readFile(path.join(import.meta.dir, "README.md"), "utf8");
+  assert.match(readme, /no-op/i);
+  assert.match(readme, /local-patch/);
+  assert.match(readme, /install-vtrace-patch/);
+  assert.match(readme, /verify-vtrace-patch/);
 });
 
 function makeRow(instanceId: string, condition: "baseline" | "vtrace", overrides: Partial<Stage5Row>): Stage5Row {

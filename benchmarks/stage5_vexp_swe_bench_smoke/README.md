@@ -79,6 +79,8 @@ bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
 | `run-vtrace` | Runs the same command (still `--no-vexp`) for the vtrace condition; writes the vtrace instructions artifact and captures output into `results/raw/vtrace/`. |
 | `ingest` | Tolerantly parses everything under `results/raw/baseline` and `results/raw/vtrace`, normalizes rows, computes pairs, and writes the CSV/JSON/Markdown reports. |
 | `report` | Re-renders the CSV/JSON/Markdown from the normalized intermediate (`stage5_normalized.json`); falls back to re-ingesting raw if no intermediate exists. |
+| `install-vtrace-patch` | Patches the external checkout's Claude Code adapter so it injects `VTRACE_AGENT_INSTRUCTIONS_FILE` into the prompt (local-patch method). Backs up the file once, is idempotent, and writes `results/vtrace_patch_manifest.json`. |
+| `verify-vtrace-patch` | Reports whether the local vtrace patch marker is present in the external checkout. Exits non-zero if not installed. |
 
 ### Baseline command
 
@@ -102,7 +104,46 @@ Valid first smoke options:
 
 The chosen method must be recorded in the report.
 
-This harness defaults to **Approach A (instructions-file)**: `run-vtrace` writes `results/raw/vtrace/_vtrace_instructions.md` and exports `VTRACE_AGENT_INSTRUCTIONS_FILE` (plus `VTRACE_SMOKE=1`, `VTRACE_METHOD`) into the benchmark process environment, while running the **identical** `--no-vexp` command as baseline (same model/agent/budget). If the `vexp-swe-bench` agent wrapper does not read an instructions file, this injection is a documented no-op for the smoke run — that fact must be recorded in the report, and Approach B (a small local enhancer patch inside the external checkout) is the better next step.
+This harness defaults to **Approach A (instructions-file)**: `run-vtrace` writes `results/raw/vtrace/_vtrace_instructions.md` and exports `VTRACE_AGENT_INSTRUCTIONS_FILE` (plus `VTRACE_SMOKE=1`, `VTRACE_METHOD`) into the benchmark process environment, while running the **identical** `--no-vexp` command as baseline (same model/agent/budget).
+
+> ⚠️ **`instructions-file` may be a no-op.** The external `vexp-swe-bench` Claude Code adapter (`dist/agents/claude-code.js`) builds its prompt from the task `problem_statement` only and does **not** read `VTRACE_AGENT_INSTRUCTIONS_FILE`. With the bare `instructions-file` method the env var is exported but never consumed, so the vtrace condition runs the same prompt as baseline. Treat any `instructions-file` result as suspect unless you confirm the wrapper reads the file.
+
+### Recommended: `local-patch`
+
+For a **real** vtrace smoke run, use `--vtrace-method local-patch`. This applies a tiny, idempotent, backed-up patch to the external checkout's Claude Code adapter so that, when `VTRACE_AGENT_INSTRUCTIONS_FILE` is set, the adapter appends that file's contents to the prompt under a `## Additional vtrace context/instructions` heading. vexp stays disabled — this only enriches the prompt/context, so it remains baseline-agent vs. same-agent-plus-vtrace.
+
+The patch:
+
+- inserts a block guarded by the marker `STAGE5_VTRACE_INSTRUCTIONS_PATCH` (idempotent — re-running install is a no-op);
+- backs the file up once to `<file>.stage5-vtrace-backup` (never overwritten);
+- logs `Stage5 vtrace instructions injected from <path>` to **stderr** (stdout is parsed as stream-json for metrics);
+- targets the built `dist/` output directly, so it is a **local smoke patch** that is lost on `npm run build` and must be re-installed after a rebuild.
+
+`run-vtrace --vtrace-method local-patch` refuses to run until the marker is present, failing **before** any agent is spawned so no tokens are wasted on a silent no-op.
+
+```bash
+# 1. Install the local vtrace prompt patch into the external checkout
+bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
+  --mode install-vtrace-patch \
+  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \
+  --out benchmarks/stage5_vexp_swe_bench_smoke/results
+
+# 2. Verify the patch is installed (exits non-zero if not)
+bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
+  --mode verify-vtrace-patch \
+  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \
+  --out benchmarks/stage5_vexp_swe_bench_smoke/results
+
+# 3. Run the real vtrace condition (still --no-vexp; fails fast if patch missing)
+bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
+  --mode run-vtrace \
+  --vtrace-method local-patch \
+  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \
+  --instances <id1,id2,id3> \
+  --out benchmarks/stage5_vexp_swe_bench_smoke/results
+```
+
+The installer writes `results/vtrace_patch_manifest.json` recording the patched file, backup path, and marker. To revert, restore each `<file>.stage5-vtrace-backup` over its original (or rebuild the external checkout).
 
 Select the method with `--vtrace-method instructions-file|mcp|local-patch`; the chosen value is recorded in `run_plan.json`, the run meta, and the Markdown report. vtrace is **not** redesigned for this milestone.
 
@@ -163,6 +204,7 @@ benchmarks/stage5_vexp_swe_bench_smoke/results/
   stage5_vexp_swe_bench_smoke.csv
   stage5_vexp_swe_bench_smoke.json
   stage5_vexp_swe_bench_smoke.md
+  vtrace_patch_manifest.json   # written by install-vtrace-patch (local-patch method)
 ```
 
 ## Limitations

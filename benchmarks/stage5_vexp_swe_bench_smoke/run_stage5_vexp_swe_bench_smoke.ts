@@ -7,7 +7,14 @@ import path from "node:path";
 // subset. It does not vendor vexp-swe-bench, does not run the full benchmark,
 // and makes no public SWE-bench claim. See README.md for scope.
 
-export type Stage5Mode = "prepare" | "run-baseline" | "run-vtrace" | "ingest" | "report";
+export type Stage5Mode =
+  | "prepare"
+  | "run-baseline"
+  | "run-vtrace"
+  | "ingest"
+  | "report"
+  | "install-vtrace-patch"
+  | "verify-vtrace-patch";
 export type Stage5Condition = "baseline" | "vtrace";
 export type VtraceMethod = "instructions-file" | "mcp" | "local-patch";
 export type Outcome =
@@ -154,6 +161,44 @@ const CSV_COLUMNS = [
 ];
 
 const NORMALIZED_FILENAME = "stage5_normalized.json";
+
+// Idempotency / discoverability marker embedded in the patched external file and
+// recorded in the manifest. Its presence means "already patched, do not touch".
+export const STAGE5_VTRACE_PATCH_MARKER = "STAGE5_VTRACE_INSTRUCTIONS_PATCH";
+
+const VTRACE_PATCH_MANIFEST_FILENAME = "vtrace_patch_manifest.json";
+const VTRACE_PATCH_BACKUP_SUFFIX = ".stage5-vtrace-backup";
+
+// Candidate locations (relative to --vexp-swe-bench-dir) for the Claude Code
+// adapter that builds the `claude -p <prompt>` invocation. dist/ is preferred
+// because `node dist/cli.js run ...` executes the built output directly.
+const CLAUDE_ADAPTER_CANDIDATES: readonly string[] = [
+  "dist/agents/claude-code.js",
+  "dist/agents/claude-code.mjs",
+  "src/agents/claude-code.ts",
+];
+
+// Anchor line in the adapter's run() method; the injection block is inserted
+// immediately after it, before the `claude -p` args array is assembled.
+const VTRACE_PATCH_ANCHOR = "const startMs = Date.now();";
+
+export interface VtracePatchManifest {
+  readonly installed: boolean;
+  readonly vexpSweBenchDir: string;
+  readonly patchedFiles: readonly string[];
+  readonly backupFiles: readonly string[];
+  readonly patchMarker: string;
+  readonly notes: readonly string[];
+}
+
+export interface VtracePatchVerification {
+  readonly installed: boolean;
+  readonly vexpSweBenchDir: string;
+  readonly patchedFile: string | null;
+  readonly backupPresent: boolean;
+  readonly manifestPresent: boolean;
+  readonly notes: readonly string[];
+}
 
 // vexp-swe-bench output files we write ourselves are prefixed with "_" so the
 // tolerant parser skips them and never mistakes run metadata for results.
@@ -646,6 +691,9 @@ export async function runBaseline(config: CliConfig, deps: RunDeps = {}): Promis
 }
 
 export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<void> {
+  // local-patch promises a real (non-no-op) vtrace condition; refuse to run it
+  // until the external prompt builder is actually patched, before spending tokens.
+  if (config.vtraceMethod === "local-patch") await assertVtracePatchInstalled(config);
   const dir = rawConditionDir(config.out, "vtrace");
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, "_vtrace_instructions.md"), `${vtraceInstructionsText()}\n`);
@@ -714,6 +762,171 @@ export async function runReport(config: CliConfig, deps: RunDeps = {}): Promise<
   }
   // No normalized intermediate yet: derive it from raw outputs.
   return runIngest(config, deps);
+}
+
+// ----- vtrace local-patch mode ------------------------------------------------
+
+// The code inserted into the external Claude Code adapter. When
+// VTRACE_AGENT_INSTRUCTIONS_FILE is set it appends that file's contents to the
+// prompt under a clear marker. It logs to STDERR on purpose: the adapter's
+// stdout is parsed as stream-json for token/cost metrics, so a stdout line would
+// corrupt parsing. vexp stays disabled — this only enriches the prompt/context.
+export function buildVtracePatchBlock(): string {
+  return [
+    `        // ${STAGE5_VTRACE_PATCH_MARKER} begin — local Stage 5 smoke patch (injects`,
+    "        // VTRACE_AGENT_INSTRUCTIONS_FILE into the Claude Code prompt; vexp stays disabled).",
+    "        if (process.env.VTRACE_AGENT_INSTRUCTIONS_FILE) {",
+    "            const __stage5VtraceFile = process.env.VTRACE_AGENT_INSTRUCTIONS_FILE;",
+    "            try {",
+    '                const { readFile: __stage5ReadFile } = await import("node:fs/promises");',
+    '                const __stage5VtraceText = await __stage5ReadFile(__stage5VtraceFile, "utf8");',
+    "                opts.prompt = `${opts.prompt}\\n\\n## Additional vtrace context/instructions\\n\\n${__stage5VtraceText}`;",
+    "                console.error(`Stage5 vtrace instructions injected from ${__stage5VtraceFile}`);",
+    "            } catch (__stage5Err) {",
+    "                console.error(`Stage5 vtrace injection skipped: ${__stage5Err instanceof Error ? __stage5Err.message : String(__stage5Err)}`);",
+    "            }",
+    "        }",
+    `        // ${STAGE5_VTRACE_PATCH_MARKER} end`,
+    "",
+  ].join("\n");
+}
+
+export function isVtracePatched(content: string): boolean {
+  return content.includes(STAGE5_VTRACE_PATCH_MARKER);
+}
+
+// Pure transform: insert the injection block after the anchor line. Idempotent —
+// returns changed:false if the marker is already present. Throws if the anchor
+// is missing so the caller can tell the user to patch manually.
+export function applyVtracePatch(content: string): { content: string; changed: boolean } {
+  if (isVtracePatched(content)) return { content, changed: false };
+  const anchorIndex = content.indexOf(VTRACE_PATCH_ANCHOR);
+  if (anchorIndex === -1) {
+    throw new Error(
+      `Could not find anchor "${VTRACE_PATCH_ANCHOR}" in the Claude Code adapter. ` +
+        "The external vexp-swe-bench layout may have changed; patch the prompt builder manually.",
+    );
+  }
+  const lineEnd = content.indexOf("\n", anchorIndex);
+  const insertAt = lineEnd === -1 ? content.length : lineEnd + 1;
+  const patched = `${content.slice(0, insertAt)}${buildVtracePatchBlock()}${content.slice(insertAt)}`;
+  return { content: patched, changed: true };
+}
+
+// Find the adapter file that builds the `claude -p <prompt>` invocation. Tries
+// the known candidate paths first, then falls back to a recursive scan of dist/
+// and src/ for a file that names the claude-code agent and references the anchor.
+export async function locateClaudePromptFile(vexpSweBenchDir: string): Promise<string | null> {
+  for (const candidate of CLAUDE_ADAPTER_CANDIDATES) {
+    const absolute = path.join(vexpSweBenchDir, candidate);
+    if (await pathExists(absolute)) return absolute;
+  }
+  for (const subdir of ["dist", "src"]) {
+    const root = path.join(vexpSweBenchDir, subdir);
+    const files = await listFilesRecursive(root).catch(() => [] as string[]);
+    for (const file of files) {
+      if (!/\.(js|mjs|ts)$/.test(file)) continue;
+      const content = await readFile(file, "utf8").catch(() => "");
+      if (content.includes('"claude-code"') && content.includes(VTRACE_PATCH_ANCHOR)) return file;
+    }
+  }
+  return null;
+}
+
+export async function installVtracePatch(config: CliConfig): Promise<VtracePatchManifest> {
+  await ensureOutputTree(config.out);
+  if (config.vexpSweBenchDir === null) throw new Error("--mode install-vtrace-patch requires --vexp-swe-bench-dir.");
+  const target = await locateClaudePromptFile(config.vexpSweBenchDir);
+  if (target === null) {
+    throw new Error(
+      `Could not locate the Claude Code prompt builder under ${config.vexpSweBenchDir} ` +
+        `(looked for ${CLAUDE_ADAPTER_CANDIDATES.join(", ")} and scanned dist/ and src/).`,
+    );
+  }
+
+  const original = await readFile(target, "utf8");
+  const notes: string[] = [];
+  const backupPath = `${target}${VTRACE_PATCH_BACKUP_SUFFIX}`;
+
+  const { content: patched, changed } = applyVtracePatch(original);
+  if (!changed) {
+    notes.push("Patch marker already present; left the file untouched (idempotent).");
+  } else {
+    // Back up the pristine file exactly once, before the first edit.
+    if (await pathExists(backupPath)) {
+      notes.push("Backup already existed; preserved it and did not overwrite.");
+    } else {
+      await writeFile(backupPath, original);
+    }
+    await writeFile(target, patched);
+  }
+  if (target.includes(`${path.sep}dist${path.sep}`)) {
+    notes.push("Patched the built dist/ output directly; this is a local smoke patch and is lost on rebuild.");
+  }
+
+  const manifest: VtracePatchManifest = {
+    installed: true,
+    vexpSweBenchDir: config.vexpSweBenchDir,
+    patchedFiles: [target],
+    backupFiles: [backupPath],
+    patchMarker: STAGE5_VTRACE_PATCH_MARKER,
+    notes,
+  };
+  await writeVtracePatchManifest(config.out, manifest);
+  return manifest;
+}
+
+export async function verifyVtracePatch(config: CliConfig): Promise<VtracePatchVerification> {
+  await ensureOutputTree(config.out);
+  if (config.vexpSweBenchDir === null) throw new Error("--mode verify-vtrace-patch requires --vexp-swe-bench-dir.");
+  const target = await locateClaudePromptFile(config.vexpSweBenchDir);
+  const notes: string[] = [];
+  if (target === null) {
+    notes.push("Could not locate the Claude Code prompt builder; nothing to verify.");
+    return {
+      installed: false,
+      vexpSweBenchDir: config.vexpSweBenchDir,
+      patchedFile: null,
+      backupPresent: false,
+      manifestPresent: await pathExists(path.join(config.out, VTRACE_PATCH_MANIFEST_FILENAME)),
+      notes,
+    };
+  }
+  const content = await readFile(target, "utf8").catch(() => "");
+  const installed = isVtracePatched(content);
+  const backupPresent = await pathExists(`${target}${VTRACE_PATCH_BACKUP_SUFFIX}`);
+  notes.push(installed ? `Patch marker present in ${target}.` : `Patch marker NOT found in ${target}.`);
+  return {
+    installed,
+    vexpSweBenchDir: config.vexpSweBenchDir,
+    patchedFile: target,
+    backupPresent,
+    manifestPresent: await pathExists(path.join(config.out, VTRACE_PATCH_MANIFEST_FILENAME)),
+    notes,
+  };
+}
+
+async function writeVtracePatchManifest(outDir: string, manifest: VtracePatchManifest): Promise<void> {
+  await writeFile(
+    path.join(outDir, VTRACE_PATCH_MANIFEST_FILENAME),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
+}
+
+// Guard for run-vtrace --vtrace-method local-patch: the external prompt builder
+// MUST already carry the marker, or the run would silently behave like baseline.
+// We fail here, before any agent process is spawned, so no tokens are spent.
+async function assertVtracePatchInstalled(config: CliConfig): Promise<void> {
+  if (config.vexpSweBenchDir === null) throw new Error("--mode run-vtrace requires --vexp-swe-bench-dir.");
+  const target = await locateClaudePromptFile(config.vexpSweBenchDir);
+  const content = target === null ? "" : await readFile(target, "utf8").catch(() => "");
+  if (target === null || !isVtracePatched(content)) {
+    throw new Error(
+      "--vtrace-method local-patch requires the local vtrace patch to be installed first, but its marker " +
+        `(${STAGE5_VTRACE_PATCH_MARKER}) was not found in the external checkout. Run --mode install-vtrace-patch ` +
+        "before run-vtrace so the vtrace condition is real and no tokens are wasted on a no-op run.",
+    );
+  }
 }
 
 async function parseConditionDir(dir: string, condition: Stage5Condition): Promise<Stage5Row[]> {
@@ -1080,7 +1293,18 @@ export function parseArgs(argv: readonly string[]): CliConfig {
     switch (arg) {
       case "--mode": {
         const value = requireValue(argv, ++index, arg);
-        if (!["prepare", "run-baseline", "run-vtrace", "ingest", "report"].includes(value)) throw new Error("Invalid --mode.");
+        if (
+          ![
+            "prepare",
+            "run-baseline",
+            "run-vtrace",
+            "ingest",
+            "report",
+            "install-vtrace-patch",
+            "verify-vtrace-patch",
+          ].includes(value)
+        )
+          throw new Error("Invalid --mode.");
         config.mode = value as Stage5Mode;
         break;
       }
@@ -1121,7 +1345,7 @@ function requireValue(argv: readonly string[], index: number, flag: string): str
 
 function printUsageAndExit(exitCode: number): never {
   process.stdout.write(
-    "Usage: bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts --mode prepare|run-baseline|run-vtrace|ingest|report --vexp-swe-bench-dir /path/to/vexp-swe-bench --instances id1,id2,id3 --out benchmarks/stage5_vexp_swe_bench_smoke/results\n",
+    "Usage: bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts --mode prepare|run-baseline|run-vtrace|ingest|report|install-vtrace-patch|verify-vtrace-patch --vexp-swe-bench-dir /path/to/vexp-swe-bench --instances id1,id2,id3 --out benchmarks/stage5_vexp_swe_bench_smoke/results\n",
   );
   process.exit(exitCode);
 }
@@ -1133,6 +1357,17 @@ async function main(config: CliConfig): Promise<void> {
     case "run-vtrace": await runVtrace(config); break;
     case "ingest": await runIngest(config); break;
     case "report": await runReport(config); break;
+    case "install-vtrace-patch": {
+      const manifest = await installVtracePatch(config);
+      process.stdout.write(`${JSON.stringify(manifest, null, 2)}\n`);
+      break;
+    }
+    case "verify-vtrace-patch": {
+      const verification = await verifyVtracePatch(config);
+      process.stdout.write(`${JSON.stringify(verification, null, 2)}\n`);
+      if (!verification.installed) process.exitCode = 1;
+      break;
+    }
   }
 }
 
