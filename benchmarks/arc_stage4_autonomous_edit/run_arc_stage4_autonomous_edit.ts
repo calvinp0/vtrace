@@ -169,7 +169,7 @@ const DEFAULT_CONFIG: CliConfig = {
   allowAggregateAmbiguous: false,
   claudeCommand: "claude",
   claudeModel: null,
-  claudeMaxTurns: 8,
+  claudeMaxTurns: 16,
   claudeOutputFormat: "json",
   claudeExtraArgs: [],
   claudeSystemPromptFile: null,
@@ -664,9 +664,15 @@ async function runClaude(config: CliConfig, task: Stage4Task, condition: Benchma
     response = { parse_error: error instanceof Error ? error.message : String(error) };
   }
   await writeRunArtifact(config.out, "responses", `${task.id}.${condition}.response.json`, JSON.stringify(response, null, 2));
-  if (result.exitCode !== 0) {
+  if (result.exitCode !== 0 && !isAgentResultEnvelope(response)) {
+    // No parseable result envelope means a genuine infrastructure failure
+    // (CLI crash, bad flags, missing binary). Abort so the operator notices.
     throw new Error(`Claude run failed for ${task.id}.${condition}: ${result.stderr.trim() || `exit ${result.exitCode}`}`);
   }
+  // A non-zero exit with a valid result envelope (e.g. error_max_turns) is an
+  // agent failure, not an infrastructure failure: the agent ran but did not
+  // complete the task. We let the run continue through snapshot/patch/validate
+  // so it is ingested as a failed run instead of aborting the whole sweep.
 }
 
 async function takeSnapshot(config: CliConfig, taskId: string, condition: BenchmarkCondition, label: "before" | "after", deps: RunDeps): Promise<void> {
@@ -745,6 +751,8 @@ async function ingestRun(config: CliConfig, task: Stage4Task, condition: Benchma
   const meta = await readJsonIfExists(path.join(config.out, "agent_runs", `${task.id}.${condition}.meta.json`));
   const response = await readJsonIfExists(path.join(config.out, "responses", `${task.id}.${condition}.response.json`));
   const notes = [...delta.notes];
+  const terminalReason = agentTerminalReason(response);
+  if (terminalReason !== null) notes.push(`agent did not complete: ${terminalReason}`);
   const parseError = isRecord(response) && typeof response.parse_error === "string" ? response.parse_error : null;
   const durationMs = isRecord(meta) && typeof meta.durationMs === "number" ? meta.durationMs : null;
   const protectedAllowedFiles = isRecord(meta) && meta.protectAllowedFiles === true;
@@ -991,6 +999,21 @@ function ignoredChangedPathPrefixes(task: Stage4Task): string[] {
 function isIgnoredChangedPath(file: string, prefixes: readonly string[]): boolean {
   const normalized = normalizePath(file);
   return prefixes.some((prefix) => normalized === prefix.slice(0, -1) || normalized.startsWith(prefix));
+}
+
+// The Claude CLI (`--output-format json`) always emits a `{"type":"result", ...}`
+// envelope when the agent loop ran to a terminal state, including agent failures
+// like error_max_turns. Its presence distinguishes "the agent ran but failed" from
+// "the CLI never ran" (crash, bad flags), which has no envelope.
+function isAgentResultEnvelope(response: unknown): boolean {
+  return isRecord(response) && response.type === "result";
+}
+
+function agentTerminalReason(response: unknown): string | null {
+  if (!isRecord(response) || response.type !== "result" || response.is_error !== true) return null;
+  const reason = isString(response.terminal_reason) ? response.terminal_reason : null;
+  const subtype = isString(response.subtype) ? response.subtype : null;
+  return reason ?? subtype ?? "error";
 }
 
 function extractResponseJson(stdout: string): unknown {

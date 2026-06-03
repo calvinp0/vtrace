@@ -335,6 +335,55 @@ test("run-one records protected allowed-file status in meta and reports", async 
   assert.match(markdown, /Protected allowed-file runs: 1/);
 });
 
+test("agent max-turns exit does not abort the run and is ingested as a failed run", async () => {
+  const config = { ...(await makeConfig()), ingestAfterRun: true };
+
+  // Claude exits non-zero with a valid result envelope (error_max_turns) and
+  // never writes STAGE4_NOTES.md, mirroring a real max-turns timeout.
+  const mock: ProcessRunnerWithCwd = async (command, args, options) => {
+    if (command === "claude") {
+      return {
+        exitCode: 1,
+        stdout: JSON.stringify({
+          type: "result",
+          subtype: "error_max_turns",
+          is_error: true,
+          terminal_reason: "max_turns",
+          errors: ["Reached maximum number of turns (8)"],
+        }),
+        stderr: "",
+      };
+    }
+    return mockRunner()(command, args, options);
+  };
+
+  // Must resolve, not throw: an agent failure should not abort the sweep.
+  await runOne(config, { runProcess: mock });
+
+  const validation = JSON.parse(await readFile(path.join(config.out, "validation", `${TASK.id}.baseline.validation.json`), "utf8"));
+  assert.equal(validation.passed, false);
+
+  const json = JSON.parse(await readFile(path.join(config.out, "arc_stage4_autonomous_edit.json"), "utf8"));
+  assert.equal(json.rows[0].passed, false);
+  assert.ok(json.rows[0].notes.some((note: string) => note.includes("agent did not complete: max_turns")));
+});
+
+test("genuine infrastructure failure with no result envelope still aborts the run", async () => {
+  const config = await makeConfig();
+
+  const mock: ProcessRunnerWithCwd = async (command, args, options) => {
+    if (command === "claude") {
+      return { exitCode: 1, stdout: "", stderr: "claude: command crashed" };
+    }
+    return mockRunner()(command, args, options);
+  };
+
+  await assert.rejects(
+    () => runOne(config, { runProcess: mock }),
+    /Claude run failed for .*: claude: command crashed/,
+  );
+});
+
 test("copied dirty source file does not count as changed if unchanged after initial snapshot", async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), "stage4-snap-clean-"));
   await writeFile(path.join(dir, "STAGE4_NOTES.md"), "# Stage 4 Notes\n\n");
