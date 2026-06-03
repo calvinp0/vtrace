@@ -58,6 +58,26 @@ __pycache__/
 
 Ignored state paths are reported separately from disallowed changed files. They do not make a run fail, but they remain visible in validation JSON and the Markdown report.
 
+## Change detection
+
+Validation compares the isolated run directory against an **initial snapshot** taken right after the worktree is created and task setup files are applied, but before Claude runs. The snapshot stores `path -> {exists, hash, size}` for every non-ignored file (only `.git/` internals are skipped) and is written to:
+
+```text
+results/validation/<task_id>.<condition>.initial_snapshot.json
+```
+
+After the run, the final directory is re-scanned and `changedFiles` is the set of files whose hash differs from the snapshot, plus any created or deleted files. This replaces the earlier approach of running `git status`/`git diff` against `HEAD`, which incorrectly blamed pre-existing dirty files copied from the source ARC repo.
+
+Because the source ARC checkout can be dirty, the runner records `git -C <repo> status --short` before copying. Those `sourceRepoDirtyFiles` are reported as diagnostic info in the validation JSON and the Markdown report, but — since they are present in the initial snapshot — they are not counted as agent edits unless Claude modifies them after the snapshot. Validation JSON records `changeDetectionMethod: "initial_snapshot"`.
+
+To refuse to run when the source repo is dirty, pass:
+
+```text
+--require-clean-source
+```
+
+This fails before spending Claude tokens if `git status --short` on the source repo reports any changes.
+
 ## Running
 
 Run one pair:

@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -59,6 +60,7 @@ export interface CliConfig {
   readonly claudePermissionMode: string | null;
   readonly claudeAllowedTools: readonly string[];
   readonly toolCommand: "capsule" | "handoff";
+  readonly requireCleanSource: boolean;
 }
 
 export interface RunDeps {
@@ -71,14 +73,33 @@ export type ProcessRunnerWithCwd = (
   options?: { readonly stdin?: string; readonly cwd?: string },
 ) => Promise<ProcessResult>;
 
+export type ChangeDetectionMethod = "initial_snapshot" | "git_status";
+
 export interface ValidationResult {
   readonly passed: boolean;
   readonly allowedFilesOnly: boolean;
   readonly changedFiles: readonly string[];
+  readonly allowedChangedFiles: readonly string[];
   readonly ignoredChangedFiles: readonly string[];
   readonly disallowedChangedFiles: readonly string[];
+  readonly sourceRepoDirtyFiles: readonly string[];
+  readonly changeDetectionMethod: ChangeDetectionMethod;
   readonly failedChecks: readonly string[];
   readonly notes: readonly string[];
+}
+
+export interface FileSnapshotEntry {
+  readonly exists: true;
+  readonly hash: string;
+  readonly size: number;
+}
+
+export interface RunSnapshot {
+  readonly files: Record<string, FileSnapshotEntry>;
+}
+
+export interface InitialSnapshotArtifact extends RunSnapshot {
+  readonly sourceRepoDirtyFiles: readonly string[];
 }
 
 export interface ClaudeToolPolicy {
@@ -104,8 +125,11 @@ export interface Stage4RunRow {
   readonly actualCostUsd: number | null;
   readonly durationMs: number | null;
   readonly changedFiles: readonly string[];
+  readonly allowedChangedFiles: readonly string[];
   readonly ignoredChangedFiles: readonly string[];
   readonly disallowedChangedFiles: readonly string[];
+  readonly sourceRepoDirtyFiles: readonly string[];
+  readonly changeDetectionMethod: ChangeDetectionMethod;
   readonly protectedAllowedFiles: boolean;
   readonly allowedFilesOnly: boolean;
   readonly validationFailedChecks: readonly string[];
@@ -156,7 +180,14 @@ const DEFAULT_CONFIG: CliConfig = {
   claudePermissionMode: "acceptEdits",
   claudeAllowedTools: ["Read", "Grep", "Glob", "LS", "Edit", "Write"],
   toolCommand: "handoff",
+  requireCleanSource: false,
 };
+
+// Paths excluded from the run-directory snapshot scan. Git internals churn on
+// every command and are never agent edits, so we never hash them; everything
+// else (including tool-state dirs like .vtrace/) is hashed so the snapshot diff
+// can detect it and validation can classify it as ignored vs disallowed.
+const SNAPSHOT_IGNORED_PREFIXES = [".git/"];
 
 const DEFAULT_IGNORED_CHANGED_PATH_PREFIXES = [
   ".vtrace/",
@@ -184,8 +215,11 @@ const CSV_COLUMNS = [
   "actual_cost_usd",
   "duration_ms",
   "changed_files",
+  "allowed_changed_files",
   "ignored_changed_files",
   "disallowed_changed_files",
+  "source_repo_dirty_files",
+  "change_detection_method",
   "protected_allowed_files",
   "allowed_files_only",
   "validation_failed_checks",
@@ -212,6 +246,55 @@ export async function applyTaskSetup(worktree: string, task: Stage4Task): Promis
     await mkdir(path.dirname(target), { recursive: true });
     await writeFile(target, content);
   }
+}
+
+export async function snapshotRunDirectory(
+  rootDir: string,
+  ignoredPrefixes: readonly string[] = SNAPSHOT_IGNORED_PREFIXES,
+): Promise<RunSnapshot> {
+  const prefixes = ignoredPrefixes
+    .map(normalizePath)
+    .filter((prefix) => prefix.length > 0)
+    .map((prefix) => (prefix.endsWith("/") ? prefix : `${prefix}/`));
+  const files: Record<string, FileSnapshotEntry> = {};
+  await walkSnapshot(rootDir, rootDir, prefixes, files);
+  return { files };
+}
+
+async function walkSnapshot(
+  rootDir: string,
+  dir: string,
+  prefixes: readonly string[],
+  files: Record<string, FileSnapshotEntry>,
+): Promise<void> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const absolute = path.join(dir, entry.name);
+    const relative = normalizePath(path.relative(rootDir, absolute));
+    if (relative.length === 0 || isIgnoredChangedPath(relative, prefixes)) continue;
+    if (entry.isDirectory()) {
+      await walkSnapshot(rootDir, absolute, prefixes, files);
+    } else if (entry.isFile()) {
+      const content = await readFile(absolute);
+      files[relative] = {
+        exists: true,
+        hash: createHash("sha256").update(content).digest("hex"),
+        size: content.byteLength,
+      };
+    }
+  }
+}
+
+export function diffSnapshots(initial: RunSnapshot, final: RunSnapshot): string[] {
+  const changed = new Set<string>();
+  for (const [file, entry] of Object.entries(final.files)) {
+    const before = initial.files[file];
+    if (before === undefined || before.hash !== entry.hash) changed.add(file);
+  }
+  for (const file of Object.keys(initial.files)) {
+    if (final.files[file] === undefined) changed.add(file);
+  }
+  return [...changed].sort();
 }
 
 export function buildPrompt(task: Stage4Task, condition: BenchmarkCondition, vtraceContext: string, protectAllowedFiles = false): string {
@@ -313,7 +396,15 @@ export function buildClaudeToolPolicy(task: Pick<Stage4Task, "allowed_files">): 
   };
 }
 
-export async function validateTaskRun(worktree: string, task: Stage4Task, changedFiles: readonly string[]): Promise<ValidationResult> {
+export async function validateTaskRun(
+  worktree: string,
+  task: Stage4Task,
+  changedFiles: readonly string[],
+  options: {
+    readonly sourceRepoDirtyFiles?: readonly string[];
+    readonly changeDetectionMethod?: ChangeDetectionMethod;
+  } = {},
+): Promise<ValidationResult> {
   const failedChecks: string[] = [];
   const notes: string[] = [];
   const allowed = new Set(task.allowed_files.map(normalizePath));
@@ -321,11 +412,13 @@ export async function validateTaskRun(worktree: string, task: Stage4Task, change
   const ignoredPrefixes = ignoredChangedPathPrefixes(task);
   const ignoredChangedFiles = normalizedChanged.filter((file) => isIgnoredChangedPath(file, ignoredPrefixes));
   const relevantChangedFiles = normalizedChanged.filter((file) => !isIgnoredChangedPath(file, ignoredPrefixes));
+  const allowedChangedFiles = relevantChangedFiles.filter((file) => allowed.has(file));
   const disallowedChangedFiles = relevantChangedFiles.filter((file) => !allowed.has(file));
   const allowedFilesOnly = disallowedChangedFiles.length === 0;
   if (!allowedFilesOnly) {
     failedChecks.push("allowed_files_only");
   }
+  const sourceRepoDirtyFiles = [...(options.sourceRepoDirtyFiles ?? [])].map(normalizePath).filter((file) => file.length > 0);
 
   for (const [relativePath, requiredStrings] of Object.entries(task.success?.required_file_contains ?? {})) {
     const text = await readFile(path.join(worktree, relativePath), "utf8").catch(() => "");
@@ -352,8 +445,11 @@ export async function validateTaskRun(worktree: string, task: Stage4Task, change
     passed: failedChecks.length === 0,
     allowedFilesOnly,
     changedFiles: normalizedChanged,
+    allowedChangedFiles,
     ignoredChangedFiles,
     disallowedChangedFiles,
+    sourceRepoDirtyFiles,
+    changeDetectionMethod: options.changeDetectionMethod ?? "initial_snapshot",
     failedChecks,
     notes,
   };
@@ -422,7 +518,14 @@ export async function runOne(config: CliConfig, deps: RunDeps = {}): Promise<voi
   await ensureOutputTree(config.out);
   const task = findTask(await loadStage4Tasks(config.tasks), config.taskId);
   const wt = worktreePath(config.out, task.id, config.condition);
+  const sourceRepoDirtyFiles = await captureSourceDirtyStatus(config, deps);
+  if (config.requireCleanSource && sourceRepoDirtyFiles.length > 0) {
+    throw new Error(
+      `Source repo ${config.repo} is dirty (${sourceRepoDirtyFiles.length} file(s)); --require-clean-source aborts before running Claude. Dirty files: ${sourceRepoDirtyFiles.join(", ")}`,
+    );
+  }
   await prepareWorktree(config, task, wt, deps);
+  await recordInitialSnapshot(config, task.id, config.condition, wt, sourceRepoDirtyFiles);
   const promptPath = await writePromptForCondition(config, task, config.condition, deps);
   await takeSnapshot(config, task.id, config.condition, "before", deps);
   await runClaude(config, task, config.condition, wt, promptPath, deps);
@@ -583,15 +686,47 @@ async function capturePatch(config: CliConfig, taskId: string, condition: Benchm
   await writeRunArtifact(config.out, "patches", `${taskId}.${condition}.status.txt`, status.stdout);
 }
 
+async function captureSourceDirtyStatus(config: CliConfig, deps: RunDeps): Promise<string[]> {
+  const result = await (deps.runProcess ?? runProcess)("git", ["-C", config.repo, "status", "--short"]);
+  if (result.exitCode !== 0) return [];
+  return parseGitStatusChangedFiles(result.stdout);
+}
+
+async function recordInitialSnapshot(
+  config: CliConfig,
+  taskId: string,
+  condition: BenchmarkCondition,
+  wt: string,
+  sourceRepoDirtyFiles: readonly string[],
+): Promise<void> {
+  const snapshot = await snapshotRunDirectory(wt);
+  const artifact: InitialSnapshotArtifact = { files: snapshot.files, sourceRepoDirtyFiles };
+  await writeRunArtifact(config.out, "validation", `${taskId}.${condition}.initial_snapshot.json`, JSON.stringify(artifact, null, 2));
+}
+
 async function validateOne(config: CliConfig, task: Stage4Task, condition: BenchmarkCondition, deps: RunDeps): Promise<ValidationResult> {
   const wt = worktreePath(config.out, task.id, condition);
-  const statusPath = path.join(config.out, "patches", `${task.id}.${condition}.status.txt`);
-  const status = await readFile(statusPath, "utf8").catch(async () => {
-    const result = await (deps.runProcess ?? runProcess)("git", ["-C", wt, "status", "--short"]);
-    return result.stdout;
-  });
-  const changedFiles = parseGitStatusChangedFiles(status);
-  const validation = await validateTaskRun(wt, task, changedFiles);
+  const initialPath = path.join(config.out, "validation", `${task.id}.${condition}.initial_snapshot.json`);
+  const initialRaw = await readJsonIfExists(initialPath);
+  let changedFiles: string[];
+  let changeDetectionMethod: ChangeDetectionMethod;
+  let sourceRepoDirtyFiles: string[] = [];
+  if (isRecord(initialRaw) && isRecord(initialRaw.files)) {
+    const initial: RunSnapshot = { files: initialRaw.files as Record<string, FileSnapshotEntry> };
+    const final = await snapshotRunDirectory(wt);
+    changedFiles = diffSnapshots(initial, final);
+    changeDetectionMethod = "initial_snapshot";
+    sourceRepoDirtyFiles = Array.isArray(initialRaw.sourceRepoDirtyFiles) ? initialRaw.sourceRepoDirtyFiles.filter(isString) : [];
+  } else {
+    const statusPath = path.join(config.out, "patches", `${task.id}.${condition}.status.txt`);
+    const status = await readFile(statusPath, "utf8").catch(async () => {
+      const result = await (deps.runProcess ?? runProcess)("git", ["-C", wt, "status", "--short"]);
+      return result.stdout;
+    });
+    changedFiles = parseGitStatusChangedFiles(status);
+    changeDetectionMethod = "git_status";
+  }
+  const validation = await validateTaskRun(wt, task, changedFiles, { sourceRepoDirtyFiles, changeDetectionMethod });
   await writeRunArtifact(config.out, "validation", `${task.id}.${condition}.validation.json`, JSON.stringify(validation, null, 2));
   return validation;
 }
@@ -630,8 +765,11 @@ async function ingestRun(config: CliConfig, task: Stage4Task, condition: Benchma
     actualCostUsd: delta.method === "unavailable" ? null : delta.costUsd,
     durationMs,
     changedFiles: Array.isArray(validation.changedFiles) ? validation.changedFiles.filter(isString) : [],
+    allowedChangedFiles: Array.isArray(validation.allowedChangedFiles) ? validation.allowedChangedFiles.filter(isString) : [],
     ignoredChangedFiles: Array.isArray(validation.ignoredChangedFiles) ? validation.ignoredChangedFiles.filter(isString) : [],
     disallowedChangedFiles: Array.isArray(validation.disallowedChangedFiles) ? validation.disallowedChangedFiles.filter(isString) : [],
+    sourceRepoDirtyFiles: Array.isArray(validation.sourceRepoDirtyFiles) ? validation.sourceRepoDirtyFiles.filter(isString) : [],
+    changeDetectionMethod: validation.changeDetectionMethod === "git_status" ? "git_status" : "initial_snapshot",
     protectedAllowedFiles,
     allowedFilesOnly: validation.allowedFilesOnly === true,
     validationFailedChecks: Array.isArray(validation.failedChecks) ? validation.failedChecks.filter(isString) : [],
@@ -655,6 +793,8 @@ function summarize(rows: readonly Stage4RunRow[], pairs: readonly PairComparison
     meanCostReduction: mean(pairs.map((pair) => pair.actualCostReductionPct).filter(isNumber)),
     changedFilesSafetyFailures: rows.filter((row) => !row.allowedFilesOnly).length,
     protectedAllowedFileRuns: rows.filter((row) => row.protectedAllowedFiles).length,
+    runsWithDirtySource: rows.filter((row) => row.sourceRepoDirtyFiles.length > 0).length,
+    initialSnapshotRuns: rows.filter((row) => row.changeDetectionMethod === "initial_snapshot").length,
     ambiguousCcusageDeltas: rows.filter((row) => row.notes.some((note) => note.includes("multiple new sessions"))).length,
     invalidResponses: rows.filter((row) => row.responseParseError !== null).length,
   };
@@ -680,6 +820,8 @@ function renderMarkdown(rows: readonly Stage4RunRow[], pairs: readonly PairCompa
     `- Mean cost reduction: ${formatPct(summary.meanCostReduction) || "n/a"}`,
     `- Changed-files safety failures: ${summary.changedFilesSafetyFailures}`,
     `- Protected allowed-file runs: ${summary.protectedAllowedFileRuns}`,
+    `- Runs with dirty source repo: ${summary.runsWithDirtySource}`,
+    `- Runs using initial-vs-final snapshot detection: ${summary.initialSnapshotRuns}`,
     `- Ambiguous ccusage deltas: ${summary.ambiguousCcusageDeltas}`,
     `- Invalid responses: ${summary.invalidResponses}`,
     "",
@@ -702,6 +844,10 @@ function renderMarkdown(rows: readonly Stage4RunRow[], pairs: readonly PairCompa
     "## Changed-file safety summary",
     "",
     renderSafetySummary(rows),
+    "",
+    "## Source repository state",
+    "",
+    renderSourceStateSummary(rows),
     "",
     "## Interpretation",
     "",
@@ -740,8 +886,11 @@ function renderCsv(rows: readonly Stage4RunRow[]): string {
       row.actualCostUsd,
       row.durationMs,
       row.changedFiles.join("; "),
+      row.allowedChangedFiles.join("; "),
       row.ignoredChangedFiles.join("; "),
       row.disallowedChangedFiles.join("; "),
+      row.sourceRepoDirtyFiles.join("; "),
+      row.changeDetectionMethod,
       row.protectedAllowedFiles,
       row.allowedFilesOnly,
       row.validationFailedChecks.join("; "),
@@ -803,6 +952,21 @@ function renderSafetySummary(rows: readonly Stage4RunRow[]): string {
     lines.push("Ignored changed files:");
     lines.push(...ignoredRows.map((row) => `- ${row.taskId}.${row.condition}: ${row.ignoredChangedFiles.join(", ")}`));
   }
+  return lines.join("\n");
+}
+
+function renderSourceStateSummary(rows: readonly Stage4RunRow[]): string {
+  if (rows.length === 0) return "No completed runs.";
+  const dirtyRows = rows.filter((row) => row.sourceRepoDirtyFiles.length > 0);
+  if (dirtyRows.length === 0) {
+    return "The ARC source repo was clean before the benchmark; no pre-existing changes were copied into run directories.";
+  }
+  const dirtyFiles = [...new Set(dirtyRows.flatMap((row) => row.sourceRepoDirtyFiles))].sort();
+  const lines: string[] = [];
+  lines.push("The ARC source repo was dirty before the benchmark. Stage 4 validation used initial-vs-final snapshots, so pre-existing copied changes were not counted as agent edits.");
+  lines.push("");
+  lines.push("Source repo dirty files copied into the run directory:");
+  lines.push(...dirtyFiles.map((file) => `- ${file}`));
   return lines.join("\n");
 }
 
@@ -1024,6 +1188,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         config.toolCommand = value;
         break;
       }
+      case "--require-clean-source": config.requireCleanSource = true; break;
       case "--help":
       case "-h":
         printUsageAndExit(0);
@@ -1055,7 +1220,7 @@ function parsePositiveInt(value: string, flag: string): number {
 }
 
 function printUsageAndExit(exitCode: number): never {
-  process.stdout.write("Usage: bun benchmarks/arc_stage4_autonomous_edit/run_arc_stage4_autonomous_edit.ts --repo /home/calvin/code/ARC --tasks benchmarks/arc_stage4_autonomous_edit/tasks.arc.stage4.json --out benchmarks/arc_stage4_autonomous_edit/results --agent-source claude --mode run-pair --task-id doc_find_arkane_input --claude-protect-allowed-files --yes\n");
+  process.stdout.write("Usage: bun benchmarks/arc_stage4_autonomous_edit/run_arc_stage4_autonomous_edit.ts --repo /home/calvin/code/ARC --tasks benchmarks/arc_stage4_autonomous_edit/tasks.arc.stage4.json --out benchmarks/arc_stage4_autonomous_edit/results --agent-source claude --mode run-pair --task-id doc_find_arkane_input --claude-protect-allowed-files [--require-clean-source] --yes\n");
   process.exit(exitCode);
 }
 

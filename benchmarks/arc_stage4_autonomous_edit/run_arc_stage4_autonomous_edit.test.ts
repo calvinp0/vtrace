@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "bun:test";
@@ -11,10 +11,12 @@ import {
   buildClaudeToolPolicy,
   classifyOutcome,
   comparePairs,
+  diffSnapshots,
   loadStage4Tasks,
   parseArgs,
   runMatrix,
   runOne,
+  snapshotRunDirectory,
   validateTaskRun,
   worktreePath,
   type CliConfig,
@@ -333,6 +335,155 @@ test("run-one records protected allowed-file status in meta and reports", async 
   assert.match(markdown, /Protected allowed-file runs: 1/);
 });
 
+test("copied dirty source file does not count as changed if unchanged after initial snapshot", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage4-snap-clean-"));
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "# Stage 4 Notes\n\n");
+  await mkdir(path.join(dir, "docs"), { recursive: true });
+  await writeFile(path.join(dir, "docs", "gaussian.md"), "pre-existing dirty source content\n");
+
+  const initial = await snapshotRunDirectory(dir);
+  // Agent only edits the allowed file; the dirty copied source file is left alone.
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "arc/statmech/arkane.py render_arkane_input_template\n");
+  const changed = diffSnapshots(initial, await snapshotRunDirectory(dir));
+
+  assert.deepEqual(changed, ["STAGE4_NOTES.md"]);
+
+  const result = await validateTaskRun(dir, TASK, changed, {
+    sourceRepoDirtyFiles: ["docs/gaussian.md"],
+    changeDetectionMethod: "initial_snapshot",
+  });
+  assert.equal(result.passed, true);
+  assert.equal(result.allowedFilesOnly, true);
+  assert.deepEqual(result.disallowedChangedFiles, []);
+  assert.deepEqual(result.sourceRepoDirtyFiles, ["docs/gaussian.md"]);
+});
+
+test("allowed file modified after snapshot counts as allowed", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage4-snap-allowed-"));
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "# Stage 4 Notes\n\n");
+
+  const initial = await snapshotRunDirectory(dir);
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "arc/statmech/arkane.py render_arkane_input_template\n");
+  const changed = diffSnapshots(initial, await snapshotRunDirectory(dir));
+
+  const result = await validateTaskRun(dir, TASK, changed);
+  assert.deepEqual(changed, ["STAGE4_NOTES.md"]);
+  assert.deepEqual(result.allowedChangedFiles, ["STAGE4_NOTES.md"]);
+  assert.equal(result.allowedFilesOnly, true);
+});
+
+test("disallowed file modified after snapshot counts as disallowed", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage4-snap-disallowed-"));
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "# Stage 4 Notes\n\n");
+  await mkdir(path.join(dir, "docs"), { recursive: true });
+  await writeFile(path.join(dir, "docs", "gaussian.md"), "original\n");
+
+  const initial = await snapshotRunDirectory(dir);
+  await writeFile(path.join(dir, "docs", "gaussian.md"), "edited by the agent\n");
+  const changed = diffSnapshots(initial, await snapshotRunDirectory(dir));
+
+  const result = await validateTaskRun(dir, TASK, changed);
+  assert.deepEqual(changed, ["docs/gaussian.md"]);
+  assert.equal(result.allowedFilesOnly, false);
+  assert.deepEqual(result.disallowedChangedFiles, ["docs/gaussian.md"]);
+  assert.ok(result.failedChecks.includes("allowed_files_only"));
+});
+
+test("ignored path modified after snapshot counts as ignored", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage4-snap-ignored-"));
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "# Stage 4 Notes\n\n");
+  await mkdir(path.join(dir, ".vtrace"), { recursive: true });
+  await writeFile(path.join(dir, ".vtrace", "state.json"), "{}\n");
+
+  const initial = await snapshotRunDirectory(dir);
+  await writeFile(path.join(dir, ".vtrace", "state.json"), "{\"updated\":true}\n");
+  const changed = diffSnapshots(initial, await snapshotRunDirectory(dir));
+
+  const result = await validateTaskRun(dir, TASK, changed);
+  assert.deepEqual(changed, [".vtrace/state.json"]);
+  assert.deepEqual(result.ignoredChangedFiles, [".vtrace/state.json"]);
+  assert.deepEqual(result.disallowedChangedFiles, []);
+  assert.equal(result.allowedFilesOnly, true);
+});
+
+test("deleted file after snapshot is detected", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage4-snap-deleted-"));
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "# Stage 4 Notes\n\n");
+  await mkdir(path.join(dir, "docs"), { recursive: true });
+  await writeFile(path.join(dir, "docs", "gaussian.md"), "original\n");
+
+  const initial = await snapshotRunDirectory(dir);
+  await rm(path.join(dir, "docs", "gaussian.md"));
+  const changed = diffSnapshots(initial, await snapshotRunDirectory(dir));
+
+  assert.deepEqual(changed, ["docs/gaussian.md"]);
+});
+
+test("created file after snapshot is detected", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage4-snap-created-"));
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "# Stage 4 Notes\n\n");
+
+  const initial = await snapshotRunDirectory(dir);
+  await mkdir(path.join(dir, "arc"), { recursive: true });
+  await writeFile(path.join(dir, "arc", "new_module.py"), "x = 1\n");
+  const changed = diffSnapshots(initial, await snapshotRunDirectory(dir));
+
+  assert.deepEqual(changed, ["arc/new_module.py"]);
+});
+
+test("snapshot scan excludes git internals", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage4-snap-git-"));
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "# Stage 4 Notes\n\n");
+  await mkdir(path.join(dir, ".git"), { recursive: true });
+  await writeFile(path.join(dir, ".git", "HEAD"), "ref: refs/heads/main\n");
+
+  const snapshot = await snapshotRunDirectory(dir);
+
+  assert.ok("STAGE4_NOTES.md" in snapshot.files);
+  assert.ok(!Object.keys(snapshot.files).some((file) => file.startsWith(".git/")));
+});
+
+test("--require-clean-source fails before running Claude when source is dirty", async () => {
+  const config = { ...(await makeConfig()), requireCleanSource: true };
+
+  await assert.rejects(
+    () => runOne(config, { runProcess: mockRunner() }),
+    /require-clean-source/,
+  );
+});
+
+test("--require-clean-source is parsed", () => {
+  const config = parseArgs([
+    "--repo", "/tmp/arc",
+    "--tasks", "/tmp/tasks.json",
+    "--out", "/tmp/out",
+    "--mode", "run-one",
+    "--task-id", TASK.id,
+    "--condition", "baseline",
+    "--require-clean-source",
+    "--yes",
+  ]);
+
+  assert.equal(config.requireCleanSource, true);
+});
+
+test("validation JSON records changeDetectionMethod initial_snapshot", async () => {
+  const config = await makeConfig();
+
+  await runOne(config, { runProcess: mockRunner() });
+
+  const validation = JSON.parse(await readFile(path.join(config.out, "validation", `${TASK.id}.baseline.validation.json`), "utf8"));
+  assert.equal(validation.changeDetectionMethod, "initial_snapshot");
+  assert.equal(validation.passed, true);
+  assert.deepEqual(validation.changedFiles, ["STAGE4_NOTES.md"]);
+  assert.deepEqual(validation.allowedChangedFiles, ["STAGE4_NOTES.md"]);
+
+  const snapshot = JSON.parse(await readFile(path.join(config.out, "validation", `${TASK.id}.baseline.initial_snapshot.json`), "utf8"));
+  assert.ok("STAGE4_NOTES.md" in snapshot.files);
+  assert.equal(snapshot.files["STAGE4_NOTES.md"].exists, true);
+  assert.equal(typeof snapshot.files["STAGE4_NOTES.md"].hash, "string");
+});
+
 function makeRow(condition: "baseline" | "vtrace", passed: boolean, totalTokens: number, costUsd: number): Stage4RunRow {
   return {
     taskId: TASK.id,
@@ -351,8 +502,11 @@ function makeRow(condition: "baseline" | "vtrace", passed: boolean, totalTokens:
     actualCostUsd: costUsd,
     durationMs: 1000,
     changedFiles: ["STAGE4_NOTES.md"],
+    allowedChangedFiles: ["STAGE4_NOTES.md"],
     ignoredChangedFiles: [],
     disallowedChangedFiles: [],
+    sourceRepoDirtyFiles: [],
+    changeDetectionMethod: "initial_snapshot",
     protectedAllowedFiles: false,
     allowedFilesOnly: true,
     validationFailedChecks: [],
@@ -396,6 +550,7 @@ async function makeConfig(): Promise<CliConfig> {
     claudePermissionMode: "acceptEdits",
     claudeAllowedTools: ["Read", "Grep", "Glob", "LS", "Edit", "Write"],
     toolCommand: "handoff",
+    requireCleanSource: false,
   };
 }
 
