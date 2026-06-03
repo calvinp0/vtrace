@@ -8,16 +8,25 @@ import {
   applyVtracePatch,
   assertVtraceInstructionsFileValid,
   buildBaselineCommand,
+  buildCheckoutCommand,
+  buildCloneCommand,
+  buildInstanceQuery,
+  buildVtraceContextMarkdown,
+  buildVtraceIndexCommand,
   buildVtracePatchBlock,
+  buildVtraceQueryCommand,
   buildVtraceCommand,
   classifyOutcome,
   comparePairs,
   extractRow,
+  findSweBenchRecord,
   installVtracePatch,
   isVtracePatched,
   loadSmokeInstances,
+  loadSweBenchData,
   parseArgs,
   parseResultRecords,
+  prepareIndexedContext,
   reductionPct,
   renderMarkdown,
   runIngest,
@@ -26,9 +35,14 @@ import {
   STAGE5_VTRACE_INJECTION_LOG,
   STAGE5_VTRACE_INJECTION_SKIPPED,
   STAGE5_VTRACE_PATCH_MARKER,
+  toSweBenchInstance,
+  truncateContext,
   verifyVtracePatch,
   vtraceInstructionsFilePath,
+  workspacePathFor,
   type CliConfig,
+  type ProcessResult,
+  type SweBenchInstance,
   type Stage5Row,
 } from "./run_stage5_vexp_swe_bench_smoke";
 
@@ -68,6 +82,14 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     cliEntry: "dist/cli.js",
     vtraceMethod: "instructions-file",
     yes: false,
+    vtraceCommand: "bun src/cli/index.ts",
+    vtraceIndexArgs: "--quiet",
+    vtraceQueryArgs: "",
+    skipVtraceIndexIfPresent: false,
+    vtraceContextMaxChars: 12000,
+    vtraceContextMaxItems: 8,
+    sweBenchDataFile: null,
+    runLabel: null,
     ...overrides,
   };
 }
@@ -474,7 +496,15 @@ test("README documents the instructions-file no-op risk and recommends local-pat
 async function seedCondition(
   out: string,
   condition: "baseline" | "vtrace",
-  opts: { resolved?: boolean | null; vtraceMethod?: string | null; instructionsFile?: string; stderr?: string } = {},
+  opts: {
+    resolved?: boolean | null;
+    vtraceMethod?: string | null;
+    instructionsFile?: string;
+    stderr?: string;
+    indexedContext?: boolean;
+    contextFileContent?: string;
+    metaExtra?: Record<string, unknown>;
+  } = {},
 ): Promise<void> {
   const dir = path.join(out, "raw", condition);
   await mkdir(dir, { recursive: true });
@@ -492,10 +522,18 @@ async function seedCondition(
     condition,
     vtraceMethod: opts.vtraceMethod ?? null,
     exitCode: 0,
+    ...(opts.indexedContext === undefined ? {} : { vtraceIndexedContext: opts.indexedContext }),
+    ...(opts.metaExtra ?? {}),
   };
   if (opts.instructionsFile) meta.env = { VTRACE_AGENT_INSTRUCTIONS_FILE: opts.instructionsFile };
   await writeFile(path.join(dir, "_run.meta.json"), JSON.stringify(meta, null, 2));
   if (opts.stderr !== undefined) await writeFile(path.join(dir, "_run.stderr.txt"), opts.stderr);
+  // When provided, write the context file at the results root (where the
+  // instructions/context file actually lives), so ingest sees it exists.
+  if (opts.contextFileContent !== undefined) {
+    await mkdir(out, { recursive: true });
+    await writeFile(path.join(out, "_vtrace_instructions.md"), opts.contextFileContent);
+  }
 }
 
 test("report uses the recorded vtrace run metadata method, not the config default", async () => {
@@ -668,6 +706,281 @@ test("an invalid local-patch treatment produces a markdown warning and suppresse
   assert.match(md, /\| invalid \|/);
 });
 
+// ----- Stage 5B: indexed-context -----
+
+const SAMPLE_RECORD = {
+  repo: "django/django",
+  instance_id: "django__django-11728",
+  base_commit: "abc123def456",
+  problem_statement: "replace_named_groups does not handle trailing groups",
+  hints_text: "look at admindocs utils",
+  FAIL_TO_PASS: '["tests.admin_docs.test_utils.TestUtils.test_replace_named_groups"]',
+};
+
+function sampleInstance(): SweBenchInstance {
+  return toSweBenchInstance(SAMPLE_RECORD);
+}
+
+async function writeSweBenchData(dir: string, records: object[]): Promise<string> {
+  const file = path.join(dir, "swe-bench-100.jsonl");
+  await writeFile(file, records.map((r) => JSON.stringify(r)).join("\n") + "\n");
+  return file;
+}
+
+test("loads instance data from JSONL and finds a selected record", async () => {
+  const dir = await tmpDir("swe-data");
+  const file = await writeSweBenchData(dir, [
+    { ...SAMPLE_RECORD, instance_id: "django__django-0001" },
+    SAMPLE_RECORD,
+  ]);
+  const records = await loadSweBenchData(file);
+  assert.equal(records.length, 2);
+  const found = findSweBenchRecord(records, "django__django-11728");
+  assert.ok(found);
+  assert.equal((found as { repo: string }).repo, "django/django");
+  assert.equal(findSweBenchRecord(records, "missing__instance"), null);
+});
+
+test("toSweBenchInstance maps fields and fails clearly when required fields are missing", () => {
+  const instance = sampleInstance();
+  assert.equal(instance.instanceId, "django__django-11728");
+  assert.equal(instance.repo, "django/django");
+  assert.equal(instance.baseCommit, "abc123def456");
+  assert.deepEqual(instance.failToPass, [
+    "tests.admin_docs.test_utils.TestUtils.test_replace_named_groups",
+  ]);
+  assert.throws(
+    () => toSweBenchInstance({ instance_id: "x__1", repo: "a/b" }),
+    /missing required field\(s\): base_commit, problem_statement/,
+  );
+});
+
+test("workspace path is derived from the instance id (and optional run label)", () => {
+  assert.equal(
+    workspacePathFor("/out", "django__django-11728"),
+    path.join("/out", "workspaces", "django__django-11728"),
+  );
+  assert.equal(
+    workspacePathFor("/out", "django__django-11728", "runA"),
+    path.join("/out", "workspaces", "runA", "django__django-11728"),
+  );
+});
+
+test("clone/checkout commands are built from instance data", () => {
+  const clone = buildCloneCommand("django/django", "/ws");
+  assert.equal(clone.command, "git");
+  assert.deepEqual(clone.args, ["clone", "https://github.com/django/django.git", "/ws"]);
+  const checkout = buildCheckoutCommand("/ws", "abc123");
+  assert.deepEqual(checkout.args, ["-C", "/ws", "checkout", "abc123", "--force"]);
+});
+
+test("vtrace index/query commands embed the workspace and query", () => {
+  const config = baseConfig({ vtraceCommand: "bun src/cli/index.ts", vtraceIndexArgs: "--quiet", vtraceQueryArgs: "--json" });
+  const index = buildVtraceIndexCommand(config, "/ws");
+  assert.equal(index.command, "bun");
+  assert.deepEqual(index.args, ["src/cli/index.ts", "index", "/ws", "--quiet"]);
+  const query = buildVtraceQueryCommand(config, "/ws", "fix the bug");
+  assert.deepEqual(query.args, ["src/cli/index.ts", "capsule", "/ws", "fix the bug", "--json"]);
+});
+
+test("buildInstanceQuery uses the problem statement plus repo/instance/test signals", () => {
+  const query = buildInstanceQuery(sampleInstance());
+  assert.match(query, /replace_named_groups does not handle trailing groups/);
+  assert.match(query, /repo: django\/django/);
+  assert.match(query, /instance: django__django-11728/);
+  assert.match(query, /failing tests:/);
+});
+
+test("buildVtraceContextMarkdown emits one section per instance with the required headings", () => {
+  const result = buildVtraceContextMarkdown(
+    [{ instance: sampleInstance(), rawContext: "symbol: replace_named_groups\nfile: utils.py", error: null }],
+    { maxChars: 12000, maxItems: 8 },
+  );
+  assert.match(result.markdown, /^# vtrace indexed context/);
+  assert.match(result.markdown, /vexp is disabled/);
+  assert.match(result.markdown, /## Instance/);
+  assert.match(result.markdown, /- instance_id: django__django-11728/);
+  assert.match(result.markdown, /## Problem statement/);
+  assert.match(result.markdown, /## vtrace context/);
+  assert.match(result.markdown, /symbol: replace_named_groups/);
+  assert.match(result.markdown, /## Instruction/);
+  assert.ok(result.items > 0);
+  assert.equal(result.truncated, false);
+});
+
+test("truncateContext truncates by max chars with a clear marker", () => {
+  const raw = "x".repeat(500);
+  const result = truncateContext(raw, 100, 50);
+  assert.equal(result.truncated, true);
+  assert.match(result.text, /\[truncated to 100 chars\]/);
+  assert.ok(result.text.startsWith("x".repeat(100)));
+});
+
+test("truncateContext truncates by max items (non-empty lines)", () => {
+  const raw = ["a", "b", "c", "d", "e"].join("\n");
+  const result = truncateContext(raw, 12000, 2);
+  assert.equal(result.truncated, true);
+  assert.equal(result.items, 2);
+  assert.match(result.text, /^a\nb$/);
+});
+
+// A ProcessRunner that returns scripted results keyed by the first matching
+// substring of the joined command, so each external step can be simulated.
+function scriptedRunner(script: Array<{ match: string; result: Partial<ProcessResult> }>): {
+  run: (command: string, args: readonly string[]) => Promise<ProcessResult>;
+  calls: string[];
+} {
+  const calls: string[] = [];
+  const run = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    calls.push(line);
+    const entry = script.find((s) => line.includes(s.match));
+    return { exitCode: 0, stdout: "", stderr: "", ...(entry?.result ?? {}) };
+  };
+  return { run, calls };
+}
+
+test("prepareIndexedContext clones, indexes, queries, and writes a real context file", async () => {
+  const out = path.join(await tmpDir("idx-ok"), "results");
+  const dataDir = await tmpDir("idx-data");
+  const dataFile = await writeSweBenchData(dataDir, [SAMPLE_RECORD]);
+  const { run, calls } = scriptedRunner([
+    { match: "capsule", result: { stdout: "symbol: replace_named_groups\nfile: admindocs/utils.py\n" } },
+  ]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-11728"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  assert.equal(result.indexedContext, true);
+  assert.ok(result.contextChars > 0);
+  assert.ok(result.contextItems > 0);
+  assert.match(result.indexCommand ?? "", /index/);
+  assert.match(result.queryCommand ?? "", /capsule/);
+  // The clone, index, and query were all invoked.
+  assert.ok(calls.some((c) => c.includes("clone")));
+  assert.ok(calls.some((c) => c.includes("index")));
+  assert.ok(calls.some((c) => c.includes("capsule")));
+  // The context file holds the real retrieval output, not generic instructions.
+  const context = await readFile(vtraceInstructionsFilePath(out), "utf8");
+  assert.match(context, /# vtrace indexed context/);
+  assert.match(context, /symbol: replace_named_groups/);
+});
+
+test("prepareIndexedContext reports failure when the vtrace query fails", async () => {
+  const out = path.join(await tmpDir("idx-fail"), "results");
+  const dataDir = await tmpDir("idx-fail-data");
+  const dataFile = await writeSweBenchData(dataDir, [SAMPLE_RECORD]);
+  const { run } = scriptedRunner([{ match: "capsule", result: { exitCode: 1, stderr: "boom" } }]);
+  const config = baseConfig({ out, instances: ["django__django-11728"], sweBenchDataFile: dataFile, vtraceMethod: "indexed-context" });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  assert.equal(result.indexedContext, false);
+  assert.match(result.contextError ?? "", /vtrace query failed/);
+});
+
+test("run-vtrace indexed-context aborts before spawn when context generation fails", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("idx-abort"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("idx-abort-data");
+  const dataFile = await writeSweBenchData(dataDir, [SAMPLE_RECORD]);
+
+  let vexpSpawned = false;
+  const run = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    if ([command, ...args].join(" ").includes("dist/cli.js")) vexpSpawned = true;
+    // Make the vtrace capsule query fail so no context is generated.
+    if ([command, ...args].join(" ").includes("capsule")) return { exitCode: 1, stdout: "", stderr: "no index" };
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["django__django-11728"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+  });
+  await assert.rejects(() => runVtrace(config, { runProcess: run }), /produced no vtrace context/);
+  assert.equal(vexpSpawned, false);
+});
+
+test("indexed-context keeps --no-vexp in the spawned benchmark command", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("idx-novexp"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("idx-novexp-data");
+  const dataFile = await writeSweBenchData(dataDir, [SAMPLE_RECORD]);
+
+  let vexpArgs: readonly string[] = [];
+  const run = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes("dist/cli.js")) vexpArgs = args;
+    if (line.includes("capsule")) return { exitCode: 0, stdout: "real context\n", stderr: "" };
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["django__django-11728"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+  });
+  await runVtrace(config, { runProcess: run });
+  assert.ok(vexpArgs.includes("--no-vexp"));
+  assert.ok(!vexpArgs.some((a) => a === "--vexp" || a === "--enable-vexp"));
+});
+
+test("indexed-context treatment is valid only with context + observed injection; report shows evidence", async () => {
+  const out = path.join(await tmpDir("idx-valid"), "results");
+  const contextFile = vtraceInstructionsFilePath(out);
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", {
+    resolved: null,
+    vtraceMethod: "indexed-context",
+    instructionsFile: contextFile,
+    indexedContext: true,
+    contextFileContent: "# vtrace indexed context\n\nreal stuff\n",
+    stderr: `${STAGE5_VTRACE_INJECTION_LOG} ${contextFile}\n`,
+    metaExtra: { vtraceContextFile: contextFile, vtraceContextChars: 20, vtraceContextItems: 2, vtraceContextTruncated: false },
+  });
+  const artifact = await runIngest(baseConfig({ out }));
+  assert.equal(artifact.evidence.vtraceMethod, "indexed-context");
+  assert.equal(artifact.evidence.vtraceIndexedContext, true);
+  assert.equal(artifact.evidence.vtraceTreatmentValid, true);
+
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /## Vtrace indexed context evidence/);
+  assert.match(md, /\| vtrace_indexed_context \| true \|/);
+});
+
+test("indexed-context is invalid when context was not generated, and the report warns", async () => {
+  const out = path.join(await tmpDir("idx-invalid"), "results");
+  const contextFile = vtraceInstructionsFilePath(out);
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", {
+    resolved: null,
+    vtraceMethod: "indexed-context",
+    instructionsFile: contextFile,
+    indexedContext: false,
+    contextFileContent: "# vtrace indexed context\n\n(unavailable)\n",
+    stderr: `${STAGE5_VTRACE_INJECTION_LOG} ${contextFile}\n`,
+  });
+  const artifact = await runIngest(baseConfig({ out }));
+  assert.equal(artifact.evidence.vtraceTreatmentValid, false);
+
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /Vtrace indexed context was not generated; this run is not a valid indexed-context treatment\./);
+});
+
+test("--vtrace-method indexed-context is accepted by the parser", () => {
+  assert.equal(parseArgs(["--vtrace-method", "indexed-context"]).vtraceMethod, "indexed-context");
+});
+
 function makeRow(instanceId: string, condition: "baseline" | "vtrace", overrides: Partial<Stage5Row>): Stage5Row {
   return {
     instanceId,
@@ -696,6 +1009,15 @@ function makeRow(instanceId: string, condition: "baseline" | "vtrace", overrides
     vtraceInjectionObserved: null,
     vtraceInjectionError: null,
     vtraceTreatmentValid: null,
+    vtraceIndexedContext: null,
+    vtraceIndexCommand: null,
+    vtraceQueryCommand: null,
+    vtraceWorkspacePath: null,
+    vtraceContextFile: null,
+    vtraceContextChars: null,
+    vtraceContextItems: null,
+    vtraceContextTruncated: null,
+    vtraceContextError: null,
     error: null,
     rawResultPath: `raw/${condition}/r.json`,
     parserKind: "json",

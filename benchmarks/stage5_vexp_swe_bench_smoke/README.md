@@ -149,7 +149,38 @@ bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
 
 The installer writes `results/vtrace_patch_manifest.json` recording the patched file, backup path, and marker. To revert, restore each `<file>.stage5-vtrace-backup` over its original (or rebuild the external checkout).
 
-Select the method with `--vtrace-method instructions-file|mcp|local-patch`; the chosen value is recorded in `run_plan.json`, the run meta, and the Markdown report. vtrace is **not** redesigned for this milestone.
+Select the method with `--vtrace-method instructions-file|mcp|local-patch|indexed-context`; the chosen value is recorded in `run_plan.json`, the run meta, and the Markdown report. vtrace is **not** redesigned for this milestone.
+
+## Stage 5B: `indexed-context` (real vtrace retrieval)
+
+Plain `local-patch` injects a *generic* instruction file — it tells the agent to use vtrace but provides no task-specific retrieval. **Stage 5B** (`--vtrace-method indexed-context`) makes the injected file contain **real vtrace context** for each instance. It still compares `baseline --no-vexp` vs `vtrace-indexed --no-vexp` — never vexp vs vtrace.
+
+For each selected instance, `run-vtrace --vtrace-method indexed-context`:
+
+1. loads the instance record (`repo`, `instance_id`, `base_commit`, `problem_statement`, optional `hints_text`/`FAIL_TO_PASS`) from `<vexp-swe-bench-dir>/data/swe-bench-100.jsonl` (override with `--swe-bench-data`); a missing record or field is a hard error;
+2. reproduces the checkout (Approach B) under `results/workspaces/<instance_id>/` via `git clone https://github.com/<repo>.git` + `git checkout <base_commit>` (clone is skipped if the workspace already exists; clone/checkout failures are recorded);
+3. indexes it: `vtrace index <workspace>` (skippable with `--skip-vtrace-index-if-present` when a `.vtrace/` index already exists);
+4. queries vtrace with the problem statement: `vtrace capsule <workspace> <query>`;
+5. writes a compact per-instance context block to `results/_vtrace_instructions.md` (one `## Instance` / `## Problem statement` / `## vtrace context` / `## Instruction` section per instance);
+6. runs vexp-swe-bench with `--no-vexp` and the installed local-patch injection.
+
+The vtrace CLI invocation is configurable: `--vtrace-command "bun src/cli/index.ts"` (default; run Stage 5B from the vtrace repo root), plus `--vtrace-index-args` and `--vtrace-query-args`. Context size is bounded by `--vtrace-context-max-chars 12000` and `--vtrace-context-max-items 8`; over-budget context is truncated with a `[truncated to N chars]` marker.
+
+```bash
+# (install + verify the local patch first, as above)
+bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
+  --mode run-vtrace \
+  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \
+  --instances django__django-11728 \
+  --out benchmarks/stage5_vexp_swe_bench_smoke/results \
+  --vtrace-method indexed-context
+```
+
+If indexing/query fails for every instance, the run **aborts before spawning vexp** (no tokens spent) — it never silently falls back to generic instructions. After the run, `ingest`/`report` recompute `vtrace_treatment_valid`, which is `true` only when: the local patch is installed, the context file exists and is non-empty, real vtrace context was generated (`vtrace_indexed_context = true`), and runtime injection was observed. Otherwise the report prints **"Vtrace indexed context was not generated; this run is not a valid indexed-context treatment."** (or the injection-skipped variant) and the per-instance efficiency deltas are marked `invalid`.
+
+The report gains a `## Vtrace indexed context evidence` table (`vtrace_method`, `vtrace_indexed_context`, `vtrace_index_command`, `vtrace_query_command`, `vtrace_workspace_path`, `vtrace_context_file`, `vtrace_context_chars`, `vtrace_context_items`, `vtrace_context_truncated`, `vtrace_treatment_valid`).
+
+> **Per-run overwrite.** The `raw/baseline` and `raw/vtrace` output dirs and `results/_vtrace_instructions.md` are overwritten on each run. That is fine for single-instance smoke. Use `--run-label <label>` to isolate the reproduced workspaces (`results/workspaces/<label>/<instance_id>/`) across multiple instance runs.
 
 ## Instances
 

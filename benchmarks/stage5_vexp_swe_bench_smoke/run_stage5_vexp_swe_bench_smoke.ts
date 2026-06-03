@@ -16,7 +16,7 @@ export type Stage5Mode =
   | "install-vtrace-patch"
   | "verify-vtrace-patch";
 export type Stage5Condition = "baseline" | "vtrace";
-export type VtraceMethod = "instructions-file" | "mcp" | "local-patch";
+export type VtraceMethod = "instructions-file" | "mcp" | "local-patch" | "indexed-context";
 export type Outcome =
   | "both_resolved"
   | "vtrace_only_resolved"
@@ -55,6 +55,15 @@ export interface CliConfig {
   readonly cliEntry: string;
   readonly vtraceMethod: VtraceMethod;
   readonly yes: boolean;
+  // Stage 5B (indexed-context) configuration.
+  readonly vtraceCommand: string;
+  readonly vtraceIndexArgs: string;
+  readonly vtraceQueryArgs: string;
+  readonly skipVtraceIndexIfPresent: boolean;
+  readonly vtraceContextMaxChars: number;
+  readonly vtraceContextMaxItems: number;
+  readonly sweBenchDataFile: string | null;
+  readonly runLabel: string | null;
 }
 
 export interface SmokeInstancesFile {
@@ -62,7 +71,22 @@ export interface SmokeInstancesFile {
   readonly notes: readonly string[];
 }
 
-export interface Stage5Row {
+// Stage 5B (indexed-context) fields. null on baseline rows / when not run; on
+// vtrace rows they describe the actual vtrace indexing + query that produced the
+// injected context. Shared between normalized rows and run-level evidence.
+export interface IndexedContextFields {
+  readonly vtraceIndexedContext: boolean | "unknown" | null;
+  readonly vtraceIndexCommand: string | null;
+  readonly vtraceQueryCommand: string | null;
+  readonly vtraceWorkspacePath: string | null;
+  readonly vtraceContextFile: string | null;
+  readonly vtraceContextChars: number | null;
+  readonly vtraceContextItems: number | null;
+  readonly vtraceContextTruncated: boolean | null;
+  readonly vtraceContextError: string | null;
+}
+
+export interface Stage5Row extends IndexedContextFields {
   readonly instanceId: string;
   readonly condition: Stage5Condition;
   readonly resolved: Unknownable<boolean>;
@@ -136,7 +160,7 @@ export interface Stage5Summary {
 // Run-level evidence reconstructed from the captured raw artifacts (run meta +
 // stderr + patch manifest), NOT from the CLI config. The report trusts what the
 // run actually recorded over what was requested.
-export interface Stage5RunEvidence {
+export interface Stage5RunEvidence extends IndexedContextFields {
   // The vtrace method as recorded in the vtrace run meta. "unknown" if no vtrace
   // run was recorded; "mixed" if recorded vtrace runs disagree.
   readonly vtraceMethod: VtraceMethod | "unknown" | "mixed";
@@ -172,6 +196,16 @@ const DEFAULT_CONFIG: CliConfig = {
   cliEntry: "dist/cli.js",
   vtraceMethod: "instructions-file",
   yes: false,
+  // Stage 5B: the vtrace CLI invocation; index/query subcommands are appended.
+  // Run Stage 5B from the vtrace repo root so `src/cli/index.ts` resolves.
+  vtraceCommand: "bun src/cli/index.ts",
+  vtraceIndexArgs: "--quiet",
+  vtraceQueryArgs: "",
+  skipVtraceIndexIfPresent: false,
+  vtraceContextMaxChars: 12000,
+  vtraceContextMaxItems: 8,
+  sweBenchDataFile: null,
+  runLabel: null,
 };
 
 const CSV_COLUMNS = [
@@ -191,6 +225,7 @@ const CSV_COLUMNS = [
   "patch_available",
   "vtrace_method",
   "vtrace_injection_observed",
+  "vtrace_indexed_context",
   "vtrace_treatment_valid",
   "error",
   "raw_result_path",
@@ -544,6 +579,7 @@ export function extractRow(
     vtraceInjectionObserved: null,
     vtraceInjectionError: null,
     vtraceTreatmentValid: null,
+    ...nullIndexedContextFields(),
     error: isString(errorValue) ? errorValue : null,
     rawResultPath,
     parserKind,
@@ -761,18 +797,36 @@ export async function runBaseline(config: CliConfig, deps: RunDeps = {}): Promis
 
 export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<void> {
   await ensureOutputTree(config.out);
-  // Write the instructions file at the results root (survives vexp's --output
-  // wipe) BEFORE any validation or spawn, so the patched adapter can read it.
+  // The instructions/context file lives at the results root (survives vexp's
+  // --output wipe) so the patched adapter can read it at runtime.
   const instructionsPath = vtraceInstructionsFilePath(config.out);
-  await writeFile(instructionsPath, `${vtraceInstructionsText()}\n`);
+  let extraVtraceMeta: Record<string, unknown> = {};
 
-  // Fail fast for local-patch BEFORE spawning the external CLI / spending tokens:
-  // the instructions file must exist and be non-empty, and the patch installed.
-  if (config.vtraceMethod === "local-patch") {
-    await assertVtraceInstructionsFileValid(instructionsPath);
+  if (config.vtraceMethod === "indexed-context") {
+    // Stage 5B: real vtrace indexing + query produces the injected context. The
+    // local prompt patch is the injection mechanism, so require it first. Then
+    // build the context; if it cannot be generated, abort BEFORE spawning vexp —
+    // never silently fall back to generic instructions or spend tokens on a
+    // non-treatment run.
     await assertVtracePatchInstalled(config);
+    const indexed = await prepareIndexedContext(config, deps);
+    extraVtraceMeta = indexedContextMetaFields(indexed);
+    if (!indexed.indexedContext) {
+      throw new Error(
+        `indexed-context preparation produced no vtrace context (${indexed.contextError ?? "unknown error"}); ` +
+          "aborting before spawn so no tokens are spent on a non-treatment run.",
+      );
+    }
+    await assertVtraceInstructionsFileValid(instructionsPath);
+  } else {
+    // Generic instructions-file / local-patch: write the generic instructions.
+    await writeFile(instructionsPath, `${vtraceInstructionsText()}\n`);
+    if (config.vtraceMethod === "local-patch") {
+      await assertVtraceInstructionsFileValid(instructionsPath);
+      await assertVtracePatchInstalled(config);
+    }
   }
-  await runCondition(config, "vtrace", deps);
+  await runCondition(config, "vtrace", deps, extraVtraceMeta);
 }
 
 // Throws unless the vtrace instructions file exists and is non-empty. Called
@@ -787,7 +841,363 @@ export async function assertVtraceInstructionsFileValid(instructionsPath: string
   }
 }
 
-async function runCondition(config: CliConfig, condition: Stage5Condition, deps: RunDeps): Promise<void> {
+// ----- Stage 5B: indexed-context mode ----------------------------------------
+
+const DEFAULT_SWE_BENCH_DATA_RELPATH = path.join("data", "swe-bench-100.jsonl");
+// Hard cap on the query string passed to the vtrace CLI as an argv element.
+const MAX_VTRACE_QUERY_CHARS = 8000;
+
+export interface SweBenchInstance {
+  readonly repo: string;
+  readonly instanceId: string;
+  readonly baseCommit: string;
+  readonly problemStatement: string;
+  readonly hintsText: string | null;
+  readonly failToPass: readonly string[];
+}
+
+export interface IndexedContextResult {
+  readonly indexedContext: boolean;
+  readonly indexCommand: string | null;
+  readonly queryCommand: string | null;
+  readonly workspacePath: string | null;
+  readonly contextFile: string;
+  readonly contextChars: number;
+  readonly contextItems: number;
+  readonly contextTruncated: boolean;
+  readonly contextError: string | null;
+}
+
+// Resolve the bundled vexp-swe-bench dataset path (overridable via --swe-bench-data).
+export function sweBenchDataPath(config: CliConfig): string {
+  if (config.sweBenchDataFile !== null) return config.sweBenchDataFile;
+  if (config.vexpSweBenchDir === null) {
+    throw new Error("indexed-context requires --vexp-swe-bench-dir (or --swe-bench-data) to locate instance data.");
+  }
+  return path.join(config.vexpSweBenchDir, DEFAULT_SWE_BENCH_DATA_RELPATH);
+}
+
+// Parse the SWE-bench JSONL dataset into raw records (one JSON object per line).
+export async function loadSweBenchData(dataPath: string): Promise<Record<string, unknown>[]> {
+  const content = await readFile(dataPath, "utf8").catch(() => null);
+  if (content === null) throw new Error(`SWE-bench data file not found at ${dataPath}.`);
+  return parseJsonlRecords(content);
+}
+
+export function findSweBenchRecord(
+  records: readonly Record<string, unknown>[],
+  instanceId: string,
+): Record<string, unknown> | null {
+  return records.find((record) => record.instance_id === instanceId || record.instanceId === instanceId) ?? null;
+}
+
+// Validate and normalize a raw record into a SweBenchInstance. Throws a clear
+// error naming any missing required field — never fabricates data.
+export function toSweBenchInstance(record: Record<string, unknown>): SweBenchInstance {
+  const repo = pick(record, ["repo"]);
+  const instanceId = pick(record, FIELD_ALIASES.instanceId!);
+  const baseCommit = pick(record, ["base_commit", "baseCommit"]);
+  const problemStatement = pick(record, ["problem_statement", "problemStatement"]);
+  const missing = [
+    !isString(repo) ? "repo" : "",
+    !isString(instanceId) ? "instance_id" : "",
+    !isString(baseCommit) ? "base_commit" : "",
+    !isString(problemStatement) ? "problem_statement" : "",
+  ].filter(Boolean);
+  if (missing.length > 0) {
+    throw new Error(`SWE-bench record is missing required field(s): ${missing.join(", ")}.`);
+  }
+  const hints = pick(record, ["hints_text", "hintsText"]);
+  const failRaw = pick(record, ["FAIL_TO_PASS", "fail_to_pass", "failToPass"]);
+  return {
+    repo: repo as string,
+    instanceId: instanceId as string,
+    baseCommit: baseCommit as string,
+    problemStatement: problemStatement as string,
+    hintsText: isString(hints) ? hints : null,
+    failToPass: normalizeTestList(failRaw),
+  };
+}
+
+// FAIL_TO_PASS is sometimes a JSON array and sometimes a JSON-encoded string.
+function normalizeTestList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter(isString);
+  if (isString(value)) {
+    const parsed = parseJson(value);
+    if (Array.isArray(parsed)) return parsed.filter(isString);
+  }
+  return [];
+}
+
+// Our own isolated checkout for an instance (Approach B), kept out of the per
+// condition raw/<condition> dirs and out of vexp's .bench-repos.
+export function workspacePathFor(outDir: string, instanceId: string, runLabel: string | null = null): string {
+  const base = path.join(outDir, "workspaces");
+  return runLabel === null ? path.join(base, instanceId) : path.join(base, runLabel, instanceId);
+}
+
+export function buildCloneCommand(repo: string, workspace: string): { command: string; args: string[] } {
+  return { command: "git", args: ["clone", `https://github.com/${repo}.git`, workspace] };
+}
+
+export function buildCheckoutCommand(workspace: string, baseCommit: string): { command: string; args: string[] } {
+  return { command: "git", args: ["-C", workspace, "checkout", baseCommit, "--force"] };
+}
+
+function splitArgs(value: string): string[] {
+  return value.split(/\s+/).filter((part) => part.length > 0);
+}
+
+export function buildVtraceIndexCommand(config: CliConfig, workspace: string): { command: string; args: string[] } {
+  const [command, ...base] = splitArgs(config.vtraceCommand);
+  if (command === undefined) throw new Error("--vtrace-command is empty; cannot build the vtrace index command.");
+  return { command, args: [...base, "index", workspace, ...splitArgs(config.vtraceIndexArgs)] };
+}
+
+export function buildVtraceQueryCommand(
+  config: CliConfig,
+  workspace: string,
+  query: string,
+): { command: string; args: string[] } {
+  const [command, ...base] = splitArgs(config.vtraceCommand);
+  if (command === undefined) throw new Error("--vtrace-command is empty; cannot build the vtrace query command.");
+  return { command, args: [...base, "capsule", workspace, query, ...splitArgs(config.vtraceQueryArgs)] };
+}
+
+// Build the vtrace query string from an instance: the problem statement is the
+// core, optionally augmented with repo/instance/hints/failing-test signals.
+export function buildInstanceQuery(instance: SweBenchInstance): string {
+  const parts = [
+    `repo: ${instance.repo}`,
+    `instance: ${instance.instanceId}`,
+    "",
+    instance.problemStatement,
+  ];
+  if (instance.failToPass.length > 0) {
+    parts.push("", `failing tests: ${instance.failToPass.join(", ")}`);
+  }
+  if (instance.hintsText) parts.push("", `hints: ${instance.hintsText}`);
+  const query = parts.join("\n").trim();
+  return query.length > MAX_VTRACE_QUERY_CHARS ? query.slice(0, MAX_VTRACE_QUERY_CHARS) : query;
+}
+
+// Truncate one instance's raw vtrace context by item count (non-empty lines) then
+// by character budget, appending a clear marker when the char budget bites.
+export function truncateContext(
+  raw: string,
+  maxChars: number,
+  maxItems: number,
+): { text: string; chars: number; items: number; truncated: boolean } {
+  const lines = raw.split(/\r?\n/);
+  const nonEmpty = lines.filter((line) => line.trim().length > 0);
+  let truncated = false;
+  let kept = lines;
+  let items = nonEmpty.length;
+  if (nonEmpty.length > maxItems) {
+    // Keep lines up to and including the maxItems-th non-empty line.
+    let seen = 0;
+    const limited: string[] = [];
+    for (const line of lines) {
+      if (line.trim().length > 0) {
+        if (seen >= maxItems) break;
+        seen += 1;
+      }
+      limited.push(line);
+    }
+    kept = limited;
+    items = maxItems;
+    truncated = true;
+  }
+  let text = kept.join("\n").trimEnd();
+  if (text.length > maxChars) {
+    text = `${text.slice(0, maxChars)}\n[truncated to ${maxChars} chars]`;
+    truncated = true;
+  }
+  return { text, chars: text.length, items, truncated };
+}
+
+export interface VtraceContextSection {
+  readonly instance: SweBenchInstance;
+  readonly rawContext: string;
+  readonly error: string | null;
+}
+
+// Assemble the full _vtrace_instructions.md content (one section per instance)
+// and report aggregate size/item/truncation metadata.
+export function buildVtraceContextMarkdown(
+  sections: readonly VtraceContextSection[],
+  limits: { maxChars: number; maxItems: number },
+): { markdown: string; chars: number; items: number; truncated: boolean } {
+  const lines: string[] = [
+    "# vtrace indexed context",
+    "",
+    "This benchmark condition uses vtrace-indexed context. vexp is disabled.",
+    "",
+  ];
+  let totalChars = 0;
+  let totalItems = 0;
+  let anyTruncated = false;
+  for (const section of sections) {
+    const { instance } = section;
+    lines.push(
+      "## Instance",
+      "",
+      `- instance_id: ${instance.instanceId}`,
+      `- repo: ${instance.repo}`,
+      `- base_commit: ${instance.baseCommit}`,
+      "",
+      "## Problem statement",
+      "",
+      instance.problemStatement.trim(),
+      "",
+      "## vtrace context",
+      "",
+    );
+    if (section.error !== null || section.rawContext.trim().length === 0) {
+      lines.push(`(vtrace context unavailable: ${section.error ?? "empty output"})`, "");
+    } else {
+      const truncatedContext = truncateContext(section.rawContext, limits.maxChars, limits.maxItems);
+      lines.push(truncatedContext.text, "");
+      totalChars += truncatedContext.chars;
+      totalItems += truncatedContext.items;
+      anyTruncated = anyTruncated || truncatedContext.truncated;
+    }
+    lines.push(
+      "## Instruction",
+      "",
+      "Use the vtrace context above to orient before broad search. It may be incomplete; verify with local files/tests before editing.",
+      "",
+    );
+  }
+  return { markdown: `${lines.join("\n")}\n`, chars: totalChars, items: totalItems, truncated: anyTruncated };
+}
+
+// Map the orchestration result onto the flat IndexedContextFields meta keys.
+function indexedContextMetaFields(result: IndexedContextResult): IndexedContextFields {
+  return {
+    vtraceIndexedContext: result.indexedContext,
+    vtraceIndexCommand: result.indexCommand,
+    vtraceQueryCommand: result.queryCommand,
+    vtraceWorkspacePath: result.workspacePath,
+    vtraceContextFile: result.contextFile,
+    vtraceContextChars: result.contextChars,
+    vtraceContextItems: result.contextItems,
+    vtraceContextTruncated: result.contextTruncated,
+    vtraceContextError: result.contextError,
+  };
+}
+
+// Stage 5B orchestration: for each selected instance, reproduce the checkout
+// (Approach B), index it with vtrace, query vtrace with the problem statement,
+// and assemble a compact context block written to the instructions/context file.
+// Returns aggregate metadata. Missing instance data is a hard error (thrown);
+// clone/index/query failures are recorded per-instance and degrade the result
+// (never silently fall back to generic instructions).
+export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {}): Promise<IndexedContextResult> {
+  const runProc = deps.runProcess ?? runProcess;
+  const contextFile = vtraceInstructionsFilePath(config.out);
+  const records = await loadSweBenchData(sweBenchDataPath(config));
+  const instanceIds = await resolveInstances(config);
+  if (instanceIds.length === 0) {
+    throw new Error("indexed-context requires instances (via --instances or smoke_instances.json).");
+  }
+
+  const sections: VtraceContextSection[] = [];
+  const errors: string[] = [];
+  let indexCommand: string | null = null;
+  let queryCommand: string | null = null;
+  let workspacePath: string | null = null;
+
+  for (const instanceId of instanceIds) {
+    const record = findSweBenchRecord(records, instanceId);
+    if (record === null) {
+      throw new Error(`Instance ${instanceId} not found in SWE-bench data ${sweBenchDataPath(config)}.`);
+    }
+    const instance = toSweBenchInstance(record); // throws on missing fields
+    const workspace = workspacePathFor(config.out, instance.instanceId, config.runLabel);
+    if (workspacePath === null) workspacePath = workspace;
+
+    let rawContext = "";
+    let sectionError: string | null = null;
+    try {
+      await ensureWorkspaceCheckout(instance, workspace, runProc);
+      const indexSpec = buildVtraceIndexCommand(config, workspace);
+      indexCommand = renderCommand(indexSpec);
+      if (!(config.skipVtraceIndexIfPresent && (await pathExists(path.join(workspace, ".vtrace"))))) {
+        const indexResult = await runProc(indexSpec.command, indexSpec.args);
+        if (indexResult.exitCode !== 0) {
+          throw new Error(`vtrace index failed (exit ${indexResult.exitCode}): ${indexResult.stderr.trim() || "(no stderr)"}`);
+        }
+      }
+      const querySpec = buildVtraceQueryCommand(config, workspace, buildInstanceQuery(instance));
+      queryCommand = renderCommand(querySpec);
+      const queryResult = await runProc(querySpec.command, querySpec.args);
+      if (queryResult.exitCode !== 0) {
+        throw new Error(`vtrace query failed (exit ${queryResult.exitCode}): ${queryResult.stderr.trim() || "(no stderr)"}`);
+      }
+      rawContext = queryResult.stdout.trim();
+      if (rawContext.length === 0) throw new Error("vtrace query returned empty context.");
+    } catch (error) {
+      sectionError = error instanceof Error ? error.message : String(error);
+      errors.push(`${instance.instanceId}: ${sectionError}`);
+    }
+    sections.push({ instance, rawContext, error: sectionError });
+  }
+
+  const assembled = buildVtraceContextMarkdown(sections, {
+    maxChars: config.vtraceContextMaxChars,
+    maxItems: config.vtraceContextMaxItems,
+  });
+  await writeFile(contextFile, assembled.markdown);
+
+  const indexedContext = sections.some((section) => section.error === null && section.rawContext.trim().length > 0);
+  return {
+    indexedContext,
+    indexCommand,
+    queryCommand,
+    workspacePath,
+    contextFile,
+    contextChars: assembled.chars,
+    contextItems: assembled.items,
+    contextTruncated: assembled.truncated,
+    contextError: errors.length > 0 ? errors.join("; ") : null,
+  };
+}
+
+// Reproduce the instance checkout (Approach B): clone if absent, then checkout
+// the base commit. Mirrors vexp-swe-bench's shallow-clone + fetch fallback.
+async function ensureWorkspaceCheckout(
+  instance: SweBenchInstance,
+  workspace: string,
+  runProc: ProcessRunner,
+): Promise<void> {
+  const alreadyCloned = await pathExists(path.join(workspace, ".git"));
+  if (!alreadyCloned) {
+    await mkdir(path.dirname(workspace), { recursive: true });
+    const clone = buildCloneCommand(instance.repo, workspace);
+    const cloneResult = await runProc(clone.command, clone.args);
+    if (cloneResult.exitCode !== 0) {
+      throw new Error(`git clone of ${instance.repo} failed (exit ${cloneResult.exitCode}): ${cloneResult.stderr.trim() || "(no stderr)"}`);
+    }
+  }
+  const checkout = buildCheckoutCommand(workspace, instance.baseCommit);
+  const checkoutResult = await runProc(checkout.command, checkout.args);
+  if (checkoutResult.exitCode !== 0) {
+    // The base commit may be missing from a shallow clone; fetch it and retry.
+    await runProc("git", ["-C", workspace, "fetch", "--depth", "1", "origin", instance.baseCommit]);
+    const retry = await runProc(checkout.command, checkout.args);
+    if (retry.exitCode !== 0) {
+      throw new Error(`git checkout ${instance.baseCommit} failed (exit ${retry.exitCode}): ${retry.stderr.trim() || "(no stderr)"}`);
+    }
+  }
+}
+
+async function runCondition(
+  config: CliConfig,
+  condition: Stage5Condition,
+  deps: RunDeps,
+  extraVtraceMeta: Record<string, unknown> = {},
+): Promise<void> {
   if (config.vexpSweBenchDir === null) throw new Error(`--mode run-${condition} requires --vexp-swe-bench-dir.`);
   const cliPath = path.join(config.vexpSweBenchDir, config.cliEntry);
   if (!(await pathExists(cliPath))) {
@@ -808,8 +1218,12 @@ async function runCondition(config: CliConfig, condition: Stage5Condition, deps:
   // For the vtrace condition, record the instruction-file state and the runtime
   // injection status parsed from this run's stderr, so the raw meta is itself
   // sufficient evidence of whether the treatment actually applied.
+  const indexedFlag =
+    typeof extraVtraceMeta.vtraceIndexedContext === "boolean" ? extraVtraceMeta.vtraceIndexedContext : null;
   const vtraceMeta =
-    condition === "vtrace" ? await vtraceRunMetaFields(config, result.stderr) : {};
+    condition === "vtrace"
+      ? { ...(await vtraceRunMetaFields(config, result.stderr, indexedFlag)), ...extraVtraceMeta }
+      : {};
   const meta = {
     condition,
     command: spec.command,
@@ -860,6 +1274,16 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtraceInjectionObserved: evidence.vtraceInjectionObserved,
           vtraceInjectionError: evidence.vtraceInjectionError,
           vtraceTreatmentValid: evidence.vtraceTreatmentValid,
+          // Stage 5B indexed-context fields.
+          vtraceIndexedContext: evidence.vtraceIndexedContext,
+          vtraceIndexCommand: evidence.vtraceIndexCommand,
+          vtraceQueryCommand: evidence.vtraceQueryCommand,
+          vtraceWorkspacePath: evidence.vtraceWorkspacePath,
+          vtraceContextFile: evidence.vtraceContextFile,
+          vtraceContextChars: evidence.vtraceContextChars,
+          vtraceContextItems: evidence.vtraceContextItems,
+          vtraceContextTruncated: evidence.vtraceContextTruncated,
+          vtraceContextError: evidence.vtraceContextError,
         },
   );
 }
@@ -1113,6 +1537,22 @@ function buildArtifact(rows: readonly Stage5Row[], evidence: Stage5RunEvidence):
   return { rows: [...rows], pairs, summary: summarize(rows, pairs), evidence };
 }
 
+// The IndexedContextFields, all null — used to default baseline/result rows and
+// any run that did not produce indexed context.
+function nullIndexedContextFields(): IndexedContextFields {
+  return {
+    vtraceIndexedContext: null,
+    vtraceIndexCommand: null,
+    vtraceQueryCommand: null,
+    vtraceWorkspacePath: null,
+    vtraceContextFile: null,
+    vtraceContextChars: null,
+    vtraceContextItems: null,
+    vtraceContextTruncated: null,
+    vtraceContextError: null,
+  };
+}
+
 function emptyEvidence(): Stage5RunEvidence {
   return {
     vtraceMethod: "unknown",
@@ -1123,6 +1563,7 @@ function emptyEvidence(): Stage5RunEvidence {
     vtraceInjectionObserved: "unknown",
     vtraceInjectionError: null,
     vtraceTreatmentValid: "unknown",
+    ...nullIndexedContextFields(),
     notes: [],
   };
 }
@@ -1136,16 +1577,29 @@ function parseVtraceInjection(stderr: string | null): { observed: boolean | "unk
   return { observed: false, error: skipped ? skipped.trim() : null };
 }
 
-// A vtrace run is only a valid treatment when it used local-patch AND the runtime
-// injection was actually observed. Any other method, or an unobserved injection,
-// is not assertable as a real treatment.
-function computeTreatmentValid(
-  method: VtraceMethod | "unknown" | "mixed",
-  injectionObserved: boolean | "unknown",
-): boolean | "unknown" {
-  if (method !== "local-patch") return "unknown";
-  if (injectionObserved === "unknown") return "unknown";
-  return injectionObserved === true;
+// Treatment validity rules per method:
+//  - local-patch: valid iff runtime injection was observed.
+//  - indexed-context: valid iff injection observed AND real vtrace context was
+//    generated AND the context file exists & is non-empty.
+//  - any other method / unobserved injection: not assertable ("unknown").
+function computeTreatmentValid(opts: {
+  method: VtraceMethod | "unknown" | "mixed";
+  injectionObserved: boolean | "unknown";
+  instructionsFileExists?: boolean;
+  instructionsFileSize?: number | null;
+  indexedContext?: boolean | "unknown" | null;
+}): boolean | "unknown" {
+  if (opts.injectionObserved === "unknown") return "unknown";
+  if (opts.method === "local-patch") return opts.injectionObserved === true;
+  if (opts.method === "indexed-context") {
+    return (
+      opts.injectionObserved === true &&
+      opts.indexedContext === true &&
+      opts.instructionsFileExists === true &&
+      (opts.instructionsFileSize ?? 0) > 0
+    );
+  }
+  return "unknown";
 }
 
 // Run-level vtrace metadata stamped into the vtrace _run.meta.json at run time and
@@ -1153,6 +1607,7 @@ function computeTreatmentValid(
 async function vtraceRunMetaFields(
   config: CliConfig,
   stderr: string | null,
+  indexedContext: boolean | null = null,
 ): Promise<{
   vtraceInstructionsFile: string;
   vtraceInstructionsFileExists: boolean;
@@ -1164,14 +1619,21 @@ async function vtraceRunMetaFields(
   const file = vtraceInstructionsFilePath(config.out);
   const stats = await stat(file).catch(() => null);
   const exists = stats !== null && stats.isFile();
+  const size = exists ? stats!.size : null;
   const injection = parseVtraceInjection(stderr);
   return {
     vtraceInstructionsFile: file,
     vtraceInstructionsFileExists: exists,
-    vtraceInstructionsFileSize: exists ? stats!.size : null,
+    vtraceInstructionsFileSize: size,
     vtraceInjectionObserved: injection.observed,
     vtraceInjectionError: injection.error,
-    vtraceTreatmentValid: computeTreatmentValid(config.vtraceMethod, injection.observed),
+    vtraceTreatmentValid: computeTreatmentValid({
+      method: config.vtraceMethod,
+      injectionObserved: injection.observed,
+      instructionsFileExists: exists,
+      instructionsFileSize: size,
+      indexedContext,
+    }),
   };
 }
 
@@ -1187,6 +1649,7 @@ async function collectRunEvidence(outDir: string): Promise<Stage5RunEvidence> {
   const methods = new Set<VtraceMethod>();
   let instructionsFile: string | null = null;
   let vtraceRunRecorded = false;
+  let indexed: IndexedContextFields = nullIndexedContextFields();
   for (const condition of ["baseline", "vtrace"] as const) {
     const meta = await readJsonIfExists(path.join(rawConditionDir(outDir, condition), "_run.meta.json"));
     if (!isRecord(meta)) continue;
@@ -1198,6 +1661,7 @@ async function collectRunEvidence(outDir: string): Promise<Stage5RunEvidence> {
       else if (isRecord(meta.env) && isString(meta.env.VTRACE_AGENT_INSTRUCTIONS_FILE)) {
         instructionsFile = meta.env.VTRACE_AGENT_INSTRUCTIONS_FILE;
       }
+      indexed = readIndexedContextFromMeta(meta);
     }
   }
   const vtraceMethod: VtraceMethod | "unknown" | "mixed" =
@@ -1228,9 +1692,22 @@ async function collectRunEvidence(outDir: string): Promise<Stage5RunEvidence> {
   }
   if (vtraceInjectionError !== null) notes.push(vtraceInjectionError);
 
-  const vtraceTreatmentValid = computeTreatmentValid(vtraceMethod, vtraceInjectionObserved);
+  const vtraceTreatmentValid = computeTreatmentValid({
+    method: vtraceMethod,
+    injectionObserved: vtraceInjectionObserved,
+    instructionsFileExists: vtraceInstructionsFileExists,
+    instructionsFileSize: vtraceInstructionsFileSize,
+    indexedContext: typeof indexed.vtraceIndexedContext === "boolean" ? indexed.vtraceIndexedContext : null,
+  });
   if (vtraceMethod === "local-patch" && vtraceTreatmentValid === false) {
     notes.push("Vtrace injection was skipped; this run is not a valid vtrace treatment.");
+  }
+  if (vtraceMethod === "indexed-context" && vtraceTreatmentValid === false) {
+    notes.push(
+      indexed.vtraceIndexedContext === true
+        ? "Vtrace injection was skipped; this run is not a valid indexed-context treatment."
+        : "Vtrace indexed context was not generated; this run is not a valid indexed-context treatment.",
+    );
   }
 
   return {
@@ -1242,7 +1719,28 @@ async function collectRunEvidence(outDir: string): Promise<Stage5RunEvidence> {
     vtraceInjectionObserved,
     vtraceInjectionError,
     vtraceTreatmentValid,
+    ...indexed,
+    // The context file path defaults to the instructions file when recorded.
+    vtraceContextFile: indexed.vtraceContextFile ?? instructionsFile,
     notes,
+  };
+}
+
+// Read the Stage 5B indexed-context fields out of a recorded vtrace _run.meta.json.
+function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedContextFields {
+  const bool = (value: unknown): boolean | null => (typeof value === "boolean" ? value : null);
+  const str = (value: unknown): string | null => (isString(value) ? value : null);
+  const num = (value: unknown): number | null => (isNumber(value) ? value : null);
+  return {
+    vtraceIndexedContext: bool(meta.vtraceIndexedContext),
+    vtraceIndexCommand: str(meta.vtraceIndexCommand),
+    vtraceQueryCommand: str(meta.vtraceQueryCommand),
+    vtraceWorkspacePath: str(meta.vtraceWorkspacePath),
+    vtraceContextFile: str(meta.vtraceContextFile),
+    vtraceContextChars: num(meta.vtraceContextChars),
+    vtraceContextItems: num(meta.vtraceContextItems),
+    vtraceContextTruncated: bool(meta.vtraceContextTruncated),
+    vtraceContextError: str(meta.vtraceContextError),
   };
 }
 
@@ -1298,6 +1796,7 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         cell(row.patchAvailable),
         row.vtraceMethod ?? "",
         row.vtraceInjectionObserved === null ? "" : String(row.vtraceInjectionObserved),
+        row.vtraceIndexedContext === null ? "" : String(row.vtraceIndexedContext),
         row.vtraceTreatmentValid === null ? "" : String(row.vtraceTreatmentValid),
         row.error ?? "",
         row.rawResultPath,
@@ -1368,6 +1867,7 @@ export function renderMarkdown(artifact: NormalizedArtifact, config: CliConfig):
     "",
     ...renderVtraceEvidence(evidence),
     "",
+    ...renderIndexedContextEvidence(evidence),
     "## Result mode",
     "",
     describeResultMode(pairs, rows),
@@ -1423,6 +1923,46 @@ function renderVtraceEvidence(evidence: Stage5RunEvidence): string[] {
     );
     if (evidence.vtraceInjectionError !== null) {
       lines.push("", `> Injection error: \`${evidence.vtraceInjectionError}\``);
+    }
+  }
+  return lines;
+}
+
+// Stage 5B evidence table. Only rendered when the run used (or recorded any)
+// indexed-context, so plain local-patch / instructions-file runs are unaffected.
+function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
+  if (evidence.vtraceMethod !== "indexed-context" && evidence.vtraceIndexedContext === null) return [];
+  const lines = [
+    "## Vtrace indexed context evidence",
+    "",
+    "| Field | Value |",
+    "| --- | --- |",
+    `| vtrace_method | ${evidence.vtraceMethod} |`,
+    `| vtrace_indexed_context | ${String(evidence.vtraceIndexedContext)} |`,
+    `| vtrace_index_command | ${evidence.vtraceIndexCommand ?? "(none)"} |`,
+    `| vtrace_query_command | ${evidence.vtraceQueryCommand ?? "(none)"} |`,
+    `| vtrace_workspace_path | ${evidence.vtraceWorkspacePath ?? "(none)"} |`,
+    `| vtrace_context_file | ${evidence.vtraceContextFile ?? "(none)"} |`,
+    `| vtrace_context_chars | ${evidence.vtraceContextChars ?? "(n/a)"} |`,
+    `| vtrace_context_items | ${evidence.vtraceContextItems ?? "(n/a)"} |`,
+    `| vtrace_context_truncated | ${String(evidence.vtraceContextTruncated)} |`,
+    `| vtrace_context_error | ${evidence.vtraceContextError ?? "(none)"} |`,
+    `| vtrace_treatment_valid | ${String(evidence.vtraceTreatmentValid)} |`,
+    "",
+  ];
+  if (evidence.vtraceMethod === "indexed-context" && evidence.vtraceTreatmentValid !== true) {
+    lines.push(
+      evidence.vtraceIndexedContext === true
+        ? "> ⚠️ Warning: Vtrace injection was skipped; this run is not a valid indexed-context treatment. The " +
+            "indexed context was generated but was not observed being injected at runtime, so its deltas must NOT " +
+            "be advertised as vtrace performance."
+        : "> ⚠️ Warning: Vtrace indexed context was not generated; this run is not a valid indexed-context " +
+            "treatment. The vtrace condition ran without real retrieval context, so its token/cost/duration " +
+            "deltas must NOT be advertised as vtrace performance.",
+      "",
+    );
+    if (evidence.vtraceContextError !== null) {
+      lines.push(`> Context error: \`${evidence.vtraceContextError}\``, "");
     }
   }
   return lines;
@@ -1602,7 +2142,7 @@ function isNumber(value: unknown): value is number {
 }
 
 function isVtraceMethod(value: string): value is VtraceMethod {
-  return value === "instructions-file" || value === "mcp" || value === "local-patch";
+  return value === "instructions-file" || value === "mcp" || value === "local-patch" || value === "indexed-context";
 }
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
@@ -1639,10 +2179,18 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--cli-entry": config.cliEntry = requireValue(argv, ++index, arg); break;
       case "--vtrace-method": {
         const value = requireValue(argv, ++index, arg);
-        if (!["instructions-file", "mcp", "local-patch"].includes(value)) throw new Error("Invalid --vtrace-method.");
+        if (!["instructions-file", "mcp", "local-patch", "indexed-context"].includes(value)) throw new Error("Invalid --vtrace-method.");
         config.vtraceMethod = value as VtraceMethod;
         break;
       }
+      case "--vtrace-command": config.vtraceCommand = requireValue(argv, ++index, arg); break;
+      case "--vtrace-index-args": config.vtraceIndexArgs = requireValue(argv, ++index, arg); break;
+      case "--vtrace-query-args": config.vtraceQueryArgs = requireValue(argv, ++index, arg); break;
+      case "--skip-vtrace-index-if-present": config.skipVtraceIndexIfPresent = true; break;
+      case "--vtrace-context-max-chars": config.vtraceContextMaxChars = requirePositiveInt(argv, ++index, arg); break;
+      case "--vtrace-context-max-items": config.vtraceContextMaxItems = requirePositiveInt(argv, ++index, arg); break;
+      case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
+      case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
       case "--yes": config.yes = true; break;
       case "--help":
       case "-h":
@@ -1657,12 +2205,19 @@ export function parseArgs(argv: readonly string[]): CliConfig {
     vexpSweBenchDir: config.vexpSweBenchDir === null ? null : path.resolve(config.vexpSweBenchDir),
     instancesFile: path.resolve(config.instancesFile),
     out: path.resolve(config.out),
+    sweBenchDataFile: config.sweBenchDataFile === null ? null : path.resolve(config.sweBenchDataFile),
   };
 }
 
 function requireValue(argv: readonly string[], index: number, flag: string): string {
   const value = argv[index];
   if (value === undefined || value.startsWith("--")) throw new Error(`${flag} requires a value.`);
+  return value;
+}
+
+function requirePositiveInt(argv: readonly string[], index: number, flag: string): number {
+  const value = Number.parseInt(requireValue(argv, index, flag), 10);
+  if (!Number.isInteger(value) || value <= 0) throw new Error(`${flag} requires a positive integer.`);
   return value;
 }
 
