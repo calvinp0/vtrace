@@ -123,6 +123,85 @@ test("output parser handles JSONL result logs", () => {
   assert.equal(rows[1]!.costUsd, 0.25);
 });
 
+const REAL_VEXP_ROW = {
+  instanceId: "django__django-11133",
+  repo: "django/django",
+  timestamp: "2026-06-03T14:19:22.819Z",
+  commitHash: "879cc3da6249e920b8d54518a0ae06de835d7373",
+  model: "claude-opus-4-5-20251101",
+  agent: "claude-code",
+  inputTokens: 111,
+  outputTokens: 33,
+  cacheReadTokens: 431051,
+  cacheCreationTokens: 48496,
+  costUsd: 0.24059975000000003,
+  numTurns: 15,
+  durationMs: 44730,
+  toolCalls: { Grep: 1, Read: 1, Edit: 1, Bash: 2 },
+  modelPatch:
+    "diff --git a/django/http/response.py b/django/http/response.py\n" +
+    "@@ -229,7 +229,7 @@ class HttpResponseBase:\n" +
+    "-        if isinstance(value, bytes):\n" +
+    "+        if isinstance(value, (bytes, memoryview)):\n",
+  resolved: null,
+  vexpMetrics: null,
+};
+
+test("parses the real vexp-swe-bench camelCase JSONL schema", () => {
+  const content = JSON.stringify(REAL_VEXP_ROW);
+  const rows = parseResultRecords(
+    content,
+    "swebench-2026-06-03.jsonl",
+    "baseline",
+    "raw/baseline/swebench-2026-06-03.jsonl",
+  );
+  assert.equal(rows.length, 1);
+  const row = rows[0]!;
+  assert.equal(row.instanceId, "django__django-11133");
+  assert.equal(row.inputTokens, 111);
+  assert.equal(row.outputTokens, 33);
+  assert.equal(row.cacheReadTokens, 431051);
+  assert.equal(row.cacheCreationTokens, 48496);
+  assert.equal(row.totalTokens, 479691);
+  assert.equal(row.tokenAccountingMethod, "input+output+cache_read+cache_creation");
+  assert.equal(row.costUsd, 0.24059975000000003);
+  assert.equal(row.numTurns, 15);
+  assert.equal(row.durationMs, 44730);
+  assert.equal(row.toolCallsTotal, 5);
+  assert.equal(row.patchAvailable, true);
+  // resolved: null must stay "unknown" — a patch was generated but not evaluated.
+  assert.equal(row.resolved, "unknown");
+  assert.equal(row.parserKind, "vexp_swebench_jsonl");
+  assert.equal(row.model, "claude-opus-4-5-20251101");
+  assert.equal(row.agent, "claude-code");
+});
+
+test("canonical swebench-*.jsonl wins over _run.meta.json and other files", async () => {
+  const out = path.join(await tmpDir("canonical"), "results");
+  await mkdir(path.join(out, "raw", "baseline"), { recursive: true });
+  // The real result row.
+  await writeFile(
+    path.join(out, "raw", "baseline", "swebench-2026-06-03.jsonl"),
+    JSON.stringify(REAL_VEXP_ROW),
+  );
+  // Run metadata (prefixed) and a stray non-canonical export with conflicting
+  // data — neither must contribute a row when the canonical log is present.
+  await writeFile(path.join(out, "raw", "baseline", "_run.meta.json"), JSON.stringify({ instances: ["django__django-11133"] }));
+  await writeFile(
+    path.join(out, "raw", "baseline", "results.json"),
+    JSON.stringify([{ instance_id: "django__django-11133", resolved: true, total_tokens: 144 }]),
+  );
+
+  const artifact = await runIngest(baseConfig({ out }));
+  const baselineRows = artifact.rows.filter((row) => row.condition === "baseline");
+  assert.equal(baselineRows.length, 1);
+  const row = baselineRows[0]!;
+  assert.equal(row.parserKind, "vexp_swebench_jsonl");
+  assert.equal(row.totalTokens, 479691);
+  assert.equal(row.resolved, "unknown");
+  assert.match(row.rawResultPath, /swebench-2026-06-03\.jsonl$/);
+});
+
 test("missing fields become unknown, never guessed", () => {
   const row = extractRow({ instance_id: "a__1" }, "baseline", "raw/baseline/r.json")!;
   assert.equal(row.resolved, "unknown");
@@ -221,11 +300,22 @@ function makeRow(instanceId: string, condition: "baseline" | "vtrace", overrides
     durationMs: "unknown",
     inputTokens: "unknown",
     outputTokens: "unknown",
+    cacheReadTokens: "unknown",
+    cacheCreationTokens: "unknown",
     totalTokens: "unknown",
+    tokenAccountingMethod: "unavailable",
     numTurns: "unknown",
+    toolCallsTotal: "unknown",
+    toolCallsBreakdown: null,
     patchAvailable: "unknown",
+    patchLines: "unknown",
+    model: null,
+    agent: null,
+    repo: null,
     error: null,
     rawResultPath: `raw/${condition}/r.json`,
+    parserKind: "json",
+    parsedFieldCount: 1,
     notes: [],
     ...overrides,
   };

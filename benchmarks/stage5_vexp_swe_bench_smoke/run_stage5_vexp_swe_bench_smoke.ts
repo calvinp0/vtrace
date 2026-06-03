@@ -63,11 +63,22 @@ export interface Stage5Row {
   readonly durationMs: Unknownable<number>;
   readonly inputTokens: Unknownable<number>;
   readonly outputTokens: Unknownable<number>;
+  readonly cacheReadTokens: Unknownable<number>;
+  readonly cacheCreationTokens: Unknownable<number>;
   readonly totalTokens: Unknownable<number>;
+  readonly tokenAccountingMethod: string;
   readonly numTurns: Unknownable<number>;
+  readonly toolCallsTotal: Unknownable<number>;
+  readonly toolCallsBreakdown: string | null;
   readonly patchAvailable: Unknownable<boolean>;
+  readonly patchLines: Unknownable<number>;
+  readonly model: string | null;
+  readonly agent: string | null;
+  readonly repo: string | null;
   readonly error: string | null;
   readonly rawResultPath: string;
+  readonly parserKind: string;
+  readonly parsedFieldCount: number;
   readonly notes: readonly string[];
 }
 
@@ -129,11 +140,16 @@ const CSV_COLUMNS = [
   "duration_ms",
   "input_tokens",
   "output_tokens",
+  "cache_read_tokens",
+  "cache_creation_tokens",
   "total_tokens",
+  "token_accounting_method",
   "num_turns",
+  "tool_calls_total",
   "patch_available",
   "error",
   "raw_result_path",
+  "parser_kind",
   "notes",
 ];
 
@@ -277,9 +293,15 @@ const FIELD_ALIASES: Record<string, readonly string[]> = {
   durationMs: ["duration_ms", "durationMs", "duration", "elapsed_ms", "wall_ms"],
   inputTokens: ["input_tokens", "inputTokens", "prompt_tokens", "promptTokens"],
   outputTokens: ["output_tokens", "outputTokens", "completion_tokens", "completionTokens"],
+  cacheReadTokens: ["cache_read_tokens", "cacheReadTokens", "cache_read_input_tokens"],
+  cacheCreationTokens: ["cache_creation_tokens", "cacheCreationTokens", "cache_creation_input_tokens"],
   totalTokens: ["total_tokens", "totalTokens", "tokens"],
   numTurns: ["num_turns", "numTurns", "turns", "iterations", "steps"],
-  patch: ["patch", "model_patch", "prediction", "patch_path", "model_patch_path"],
+  toolCalls: ["tool_calls", "toolCalls"],
+  patch: ["modelPatch", "patch", "model_patch", "prediction", "patch_path", "model_patch_path"],
+  model: ["model"],
+  agent: ["agent"],
+  repo: ["repo"],
   error: ["error", "error_message", "exception", "failure"],
 };
 
@@ -310,40 +332,135 @@ function asUnknownableBoolean(value: unknown): Unknownable<boolean> {
   return "unknown";
 }
 
+// Sum input/output/cache token components for total_tokens, recording exactly
+// which fields contributed (token_accounting_method) so the report never hides
+// that cache tokens dominate. An explicit total_tokens is only trusted when no
+// components are present.
+function accountTokens(
+  inputTokens: Unknownable<number>,
+  outputTokens: Unknownable<number>,
+  cacheReadTokens: Unknownable<number>,
+  cacheCreationTokens: Unknownable<number>,
+  explicitTotal: Unknownable<number>,
+): { totalTokens: Unknownable<number>; method: string } {
+  const components: Array<[string, Unknownable<number>]> = [
+    ["input", inputTokens],
+    ["output", outputTokens],
+    ["cache_read", cacheReadTokens],
+    ["cache_creation", cacheCreationTokens],
+  ];
+  const present = components.filter(([, value]) => isNumber(value)) as Array<[string, number]>;
+  if (present.length > 0) {
+    return {
+      totalTokens: present.reduce((sum, [, value]) => sum + value, 0),
+      method: present.map(([name]) => name).join("+"),
+    };
+  }
+  if (isNumber(explicitTotal)) return { totalTokens: explicitTotal, method: "total_tokens" };
+  return { totalTokens: "unknown", method: "unavailable" };
+}
+
+// vexp-swe-bench reports tool usage as an object of {ToolName: count}; the total
+// is the sum of those counts. We also retain the raw breakdown as a JSON string.
+function accountToolCalls(value: unknown): { total: Unknownable<number>; breakdown: string | null } {
+  if (!isRecord(value)) return { total: "unknown", breakdown: null };
+  const counts = Object.values(value).filter(isNumber);
+  if (counts.length === 0) return { total: "unknown", breakdown: JSON.stringify(value) };
+  return { total: counts.reduce((sum, count) => sum + count, 0), breakdown: JSON.stringify(value) };
+}
+
 export function extractRow(
   record: Record<string, unknown>,
   condition: Stage5Condition,
   rawResultPath: string,
+  parserKind = "json",
 ): Stage5Row | null {
   const instanceRaw = pick(record, FIELD_ALIASES.instanceId!);
   if (!isString(instanceRaw)) return null;
 
   const inputTokens = asUnknownableNumber(pick(record, FIELD_ALIASES.inputTokens!));
   const outputTokens = asUnknownableNumber(pick(record, FIELD_ALIASES.outputTokens!));
-  let totalTokens = asUnknownableNumber(pick(record, FIELD_ALIASES.totalTokens!));
-  if (totalTokens === "unknown" && isNumber(inputTokens) && isNumber(outputTokens)) {
-    totalTokens = inputTokens + outputTokens;
-  }
-  const patchValue = pick(record, FIELD_ALIASES.patch!);
-  const patchAvailable: Unknownable<boolean> =
-    patchValue === undefined ? "unknown" : isString(patchValue) ? patchValue.trim().length > 0 : Boolean(patchValue);
-  const errorValue = pick(record, FIELD_ALIASES.error!);
+  const cacheReadTokens = asUnknownableNumber(pick(record, FIELD_ALIASES.cacheReadTokens!));
+  const cacheCreationTokens = asUnknownableNumber(pick(record, FIELD_ALIASES.cacheCreationTokens!));
+  const { totalTokens, method } = accountTokens(
+    inputTokens,
+    outputTokens,
+    cacheReadTokens,
+    cacheCreationTokens,
+    asUnknownableNumber(pick(record, FIELD_ALIASES.totalTokens!)),
+  );
 
-  return {
+  const toolCalls = accountToolCalls(pick(record, FIELD_ALIASES.toolCalls!));
+
+  // resolved is left as "unknown" when null/absent: a generated-but-unevaluated
+  // patch must never be coerced to a pass or a fail.
+  const resolvedValue = pick(record, FIELD_ALIASES.resolved!);
+  const resolved = resolvedValue === undefined ? "unknown" : asUnknownableBoolean(resolvedValue);
+
+  const patchValue = pick(record, FIELD_ALIASES.patch!);
+  const patchIsString = isString(patchValue);
+  const patchAvailable: Unknownable<boolean> =
+    patchValue === undefined ? "unknown" : patchIsString ? patchValue.trim().length > 0 : Boolean(patchValue);
+  const patchLines: Unknownable<number> = patchIsString
+    ? patchValue.replace(/\n$/, "").split(/\r?\n/).length
+    : "unknown";
+
+  const errorValue = pick(record, FIELD_ALIASES.error!);
+  const modelValue = pick(record, FIELD_ALIASES.model!);
+  const agentValue = pick(record, FIELD_ALIASES.agent!);
+  const repoValue = pick(record, FIELD_ALIASES.repo!);
+
+  const row: Stage5Row = {
     instanceId: instanceRaw,
     condition,
-    resolved: asUnknownableBoolean(pick(record, FIELD_ALIASES.resolved!)),
+    resolved,
     costUsd: asUnknownableNumber(pick(record, FIELD_ALIASES.costUsd!)),
     durationMs: asUnknownableNumber(pick(record, FIELD_ALIASES.durationMs!)),
     inputTokens,
     outputTokens,
+    cacheReadTokens,
+    cacheCreationTokens,
     totalTokens,
+    tokenAccountingMethod: method,
     numTurns: asUnknownableNumber(pick(record, FIELD_ALIASES.numTurns!)),
+    toolCallsTotal: toolCalls.total,
+    toolCallsBreakdown: toolCalls.breakdown,
     patchAvailable,
+    patchLines,
+    model: isString(modelValue) ? modelValue : null,
+    agent: isString(agentValue) ? agentValue : null,
+    repo: isString(repoValue) ? repoValue : null,
     error: isString(errorValue) ? errorValue : null,
     rawResultPath,
+    parserKind,
+    parsedFieldCount: 0,
     notes: [],
   };
+  return { ...row, parsedFieldCount: countParsedFields(row) };
+}
+
+// Count normalized fields that carry a concrete (non-"unknown", non-null) value,
+// for the diagnostics block. instanceId is always present so it always counts.
+function countParsedFields(row: Stage5Row): number {
+  const values: Array<Unknownable<unknown> | string | null> = [
+    row.instanceId,
+    row.resolved,
+    row.costUsd,
+    row.durationMs,
+    row.inputTokens,
+    row.outputTokens,
+    row.cacheReadTokens,
+    row.cacheCreationTokens,
+    row.totalTokens,
+    row.numTurns,
+    row.toolCallsTotal,
+    row.patchAvailable,
+    row.patchLines,
+    row.model,
+    row.agent,
+    row.repo,
+  ];
+  return values.filter((value) => value !== "unknown" && value !== null).length;
 }
 
 // Pull candidate result records out of one file's contents, trying JSON, then
@@ -356,12 +473,33 @@ export function parseResultRecords(
   rawResultPath: string,
 ): Stage5Row[] {
   const records = collectRecords(content, filename);
+  const parserKind = parserKindFor(filename);
   const rows: Stage5Row[] = [];
   for (const record of records) {
-    const row = extractRow(record, condition, rawResultPath);
+    const row = extractRow(record, condition, rawResultPath, parserKind);
     if (row !== null) rows.push(row);
   }
   return rows;
+}
+
+// Canonical vexp-swe-bench result logs are named `swebench-<date>.jsonl` and use
+// the camelCase schema; tag them so the report records which reader was used.
+export function parserKindFor(filename: string): string {
+  const base = filename.toLowerCase();
+  if (/^swebench-.*\.jsonl$/.test(base)) return "vexp_swebench_jsonl";
+  const ext = path.extname(base);
+  if (ext === ".jsonl") return "jsonl";
+  if (ext === ".json") return "json";
+  if (ext === ".csv") return "csv";
+  if (ext === ".md" || ext === ".markdown") return "markdown";
+  return "unknown";
+}
+
+// True when a file is a canonical vexp-swe-bench result log. When any are
+// present in a condition dir we parse ONLY those, so run metadata/stdout never
+// competes with the real result rows.
+export function isCanonicalResultFile(filename: string): boolean {
+  return /^swebench-.*\.jsonl$/i.test(filename);
 }
 
 function collectRecords(content: string, filename: string): Record<string, unknown>[] {
@@ -580,10 +718,15 @@ export async function runReport(config: CliConfig, deps: RunDeps = {}): Promise<
 
 async function parseConditionDir(dir: string, condition: Stage5Condition): Promise<Stage5Row[]> {
   const files = await listFilesRecursive(dir).catch(() => [] as string[]);
+  const readable = files.filter((absolute) => !path.basename(absolute).startsWith(RUNNER_ARTIFACT_PREFIX));
+  // Prefer canonical `swebench-*.jsonl` logs over anything else when present, so
+  // run metadata/stdout (or any stray export) never shadows the real result row.
+  const canonical = readable.filter((absolute) => isCanonicalResultFile(path.basename(absolute)));
+  const chosen = canonical.length > 0 ? canonical : readable;
+
   const rows: Stage5Row[] = [];
-  for (const absolute of files) {
+  for (const absolute of chosen) {
     const filename = path.basename(absolute);
-    if (filename.startsWith(RUNNER_ARTIFACT_PREFIX)) continue;
     const content = await readFile(absolute, "utf8").catch(() => "");
     if (content.length === 0) continue;
     const rawResultPath = path.join("raw", condition, path.relative(dir, absolute));
@@ -608,19 +751,30 @@ function mergeRows(rows: readonly Stage5Row[]): Stage5Row[] {
 
 function mergeRow(base: Stage5Row, next: Stage5Row): Stage5Row {
   const fill = <T>(a: Unknownable<T>, b: Unknownable<T>): Unknownable<T> => (a === "unknown" ? b : a);
-  return {
+  const merged: Stage5Row = {
     ...base,
     resolved: fill(base.resolved, next.resolved),
     costUsd: fill(base.costUsd, next.costUsd),
     durationMs: fill(base.durationMs, next.durationMs),
     inputTokens: fill(base.inputTokens, next.inputTokens),
     outputTokens: fill(base.outputTokens, next.outputTokens),
+    cacheReadTokens: fill(base.cacheReadTokens, next.cacheReadTokens),
+    cacheCreationTokens: fill(base.cacheCreationTokens, next.cacheCreationTokens),
     totalTokens: fill(base.totalTokens, next.totalTokens),
+    tokenAccountingMethod: base.tokenAccountingMethod === "unavailable" ? next.tokenAccountingMethod : base.tokenAccountingMethod,
     numTurns: fill(base.numTurns, next.numTurns),
+    toolCallsTotal: fill(base.toolCallsTotal, next.toolCallsTotal),
+    toolCallsBreakdown: base.toolCallsBreakdown ?? next.toolCallsBreakdown,
     patchAvailable: fill(base.patchAvailable, next.patchAvailable),
+    patchLines: fill(base.patchLines, next.patchLines),
+    model: base.model ?? next.model,
+    agent: base.agent ?? next.agent,
+    repo: base.repo ?? next.repo,
     error: base.error ?? next.error,
+    parserKind: base.parserKind === "unknown" ? next.parserKind : base.parserKind,
     notes: [...new Set([...base.notes, ...next.notes])],
   };
+  return { ...merged, parsedFieldCount: countParsedFields(merged) };
 }
 
 function buildArtifact(rows: readonly Stage5Row[]): NormalizedArtifact {
@@ -671,11 +825,16 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         cell(row.durationMs),
         cell(row.inputTokens),
         cell(row.outputTokens),
+        cell(row.cacheReadTokens),
+        cell(row.cacheCreationTokens),
         cell(row.totalTokens),
+        row.tokenAccountingMethod,
         cell(row.numTurns),
+        cell(row.toolCallsTotal),
         cell(row.patchAvailable),
         row.error ?? "",
         row.rawResultPath,
+        row.parserKind,
         row.notes.join("; "),
       ]
         .map(csvEscape)
@@ -786,8 +945,11 @@ function unknownFieldsOf(row: Stage5Row): string[] {
     ["duration_ms", row.durationMs],
     ["input_tokens", row.inputTokens],
     ["output_tokens", row.outputTokens],
+    ["cache_read_tokens", row.cacheReadTokens],
+    ["cache_creation_tokens", row.cacheCreationTokens],
     ["total_tokens", row.totalTokens],
     ["num_turns", row.numTurns],
+    ["tool_calls_total", row.toolCallsTotal],
     ["patch_available", row.patchAvailable],
   ];
   return fields.filter(([, value]) => value === "unknown").map(([name]) => name);
