@@ -1,0 +1,7 @@
+[test]
+# Stage 5B (benchmarks/stage5_vexp_swe_bench_smoke) reproduces SWE-bench task
+# checkouts by cloning full upstream repos into results/workspaces/<instance_id>/.
+# Those clones carry their own test files (e.g. Django's js_tests/*.test.js), which
+# `bun test` would otherwise discover and fail on. Exclude all cloned benchmark
+# workspaces from test discovery — they are generated artifacts, not our tests.
+pathIgnorePatterns = ["**/results/workspaces/**"]

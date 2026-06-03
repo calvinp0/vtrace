@@ -182,6 +182,10 @@ The report gains a `## Vtrace indexed context evidence` table (`vtrace_method`, 
 
 > **Per-run overwrite.** The `raw/baseline` and `raw/vtrace` output dirs and `results/_vtrace_instructions.md` are overwritten on each run. That is fine for single-instance smoke. Use `--run-label <label>` to isolate the reproduced workspaces (`results/workspaces/<label>/<instance_id>/`) across multiple instance runs.
 
+## Stage 5B indexed-context result
+
+The first indexed-context smoke result is documented in [STAGE5B_INDEXED_CONTEXT_RESULTS.md](./STAGE5B_INDEXED_CONTEXT_RESULTS.md).
+
 ## Instances
 
 `smoke_instances.json` holds the smoke instance IDs:
