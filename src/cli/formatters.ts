@@ -3,6 +3,7 @@ import path from "node:path";
 import type { EdgeRecord, FileRecord, SymbolRecord } from "../domain/types";
 import type { IndexProjectResult } from "../indexer/types";
 import type { Capsule, CapsuleItem } from "../capsule/types";
+import type { CapsuleDiagnostics } from "../capsule/capsuleDiagnostics";
 import type { CapsuleProfileSelectionResult } from "../capsuleProfiles/types";
 import type { HandoffPayload } from "../handoff/types";
 import type { CapsuleStalenessResult, IndexRunSummary } from "../memory/types";
@@ -66,6 +67,7 @@ export interface CapsuleInspectionOutput {
   capsule: CapsuleOutput & {
     profileBudgetUsage?: Capsule["profileBudgetUsage"];
   };
+  diagnostics?: CapsuleDiagnostics;
 }
 
 export interface RunsOutput {
@@ -223,6 +225,7 @@ export function formatCapsuleInspection(input: {
   routedQuery: RoutedQueryResult;
   capsuleProfileSelection: CapsuleProfileSelectionResult;
   capsule: Capsule;
+  diagnostics?: CapsuleDiagnostics;
 }): string {
   const output: CapsuleInspectionOutput = {
     query: input.routedQuery.query,
@@ -248,6 +251,7 @@ export function formatCapsuleInspection(input: {
         ? {}
         : { profileBudgetUsage: input.capsule.profileBudgetUsage }),
     },
+    ...(input.diagnostics === undefined ? {} : { diagnostics: input.diagnostics }),
   };
 
   return formatJson(output);

@@ -2,6 +2,15 @@ import { spawn } from "node:child_process";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { CapsuleMode, type CapsuleMode as CapsuleModeT } from "../../src/capsule/capsuleModes";
+import {
+  RecommendedCapsuleMode,
+  deriveModeSignals,
+  recommendCapsuleMode,
+  type RecommendedCapsuleMode as RecommendedCapsuleModeT,
+} from "../../src/capsule/recommendMode";
+import { shapeSweQuery } from "../../src/capsule/sweQueryShaping";
+
 // Stage 5 is a SMOKE integration harness around the external `vexp-swe-bench`
 // benchmark. It proves the baseline-vs-vtrace measurement workflow on a tiny
 // subset. It does not vendor vexp-swe-bench, does not run the full benchmark,
@@ -1339,27 +1348,55 @@ export function buildVtraceQueryCommand(
   config: CliConfig,
   workspace: string,
   query: string,
+  mode?: CapsuleModeT,
 ): { command: string; args: string[] } {
   const [command, ...base] = splitArgs(config.vtraceCommand);
   if (command === undefined) throw new Error("--vtrace-command is empty; cannot build the vtrace query command.");
-  return { command, args: [...base, "capsule", workspace, query, ...splitArgs(config.vtraceQueryArgs)] };
+  // When a mode is chosen, request the compact JSON capsule (`--mode <m> --json`)
+  // so retrieved context — not a copy of the issue — is what gets injected.
+  const modeArgs = mode === undefined ? [] : ["--mode", mode, "--json"];
+  return {
+    command,
+    args: [...base, "capsule", workspace, query, ...modeArgs, ...splitArgs(config.vtraceQueryArgs)],
+  };
 }
 
-// Build the vtrace query string from an instance: the problem statement is the
-// core, optionally augmented with repo/instance/hints/failing-test signals.
-export function buildInstanceQuery(instance: SweBenchInstance): string {
-  const parts = [
-    `repo: ${instance.repo}`,
-    `instance: ${instance.instanceId}`,
-    "",
-    instance.problemStatement,
-  ];
-  if (instance.failToPass.length > 0) {
-    parts.push("", `failing tests: ${instance.failToPass.join(", ")}`);
+// The capsule `--json` output is `{ diagnostics, context }`; older raw output is
+// plain text. Extract the injectable context from either, tolerating non-JSON.
+export function extractCapsuleContext(stdout: string): string {
+  const trimmed = stdout.trim();
+  if (!trimmed.startsWith("{")) return trimmed;
+  try {
+    const parsed = JSON.parse(trimmed) as { context?: unknown };
+    return typeof parsed.context === "string" ? parsed.context.trim() : trimmed;
+  } catch {
+    return trimmed;
   }
-  if (instance.hintsText) parts.push("", `hints: ${instance.hintsText}`);
-  const query = parts.join("\n").trim();
+}
+
+// Build the vtrace query string from an instance. Rather than dumping the whole
+// problem statement, shape it into a compact, signal-first query (failing tests,
+// explicit files/symbols, a short issue lead) via the shared shaping helper. The
+// instance id is prepended so multi-instance context stays attributable.
+export function buildInstanceQuery(instance: SweBenchInstance): string {
+  const shaped = shapeSweQuery(instance, { maxQueryChars: MAX_VTRACE_QUERY_CHARS });
+  const header = `instance: ${instance.instanceId}`;
+  const query = shaped.query.length > 0 ? `${header}\n${shaped.query}` : header;
   return query.length > MAX_VTRACE_QUERY_CHARS ? query.slice(0, MAX_VTRACE_QUERY_CHARS) : query;
+}
+
+// Recommend a capsule mode for an instance from its shaped signals. Diagnostic
+// first: navigation-heavy issues get `full`, small/local edits get `micro`.
+export function recommendedCapsuleModeFor(instance: SweBenchInstance): RecommendedCapsuleModeT {
+  const shaped = shapeSweQuery(instance);
+  return recommendCapsuleMode(deriveModeSignals(instance, shaped)).recommendedMode;
+}
+
+// Map a recommendation onto a concrete capsule CLI mode. `skip` has no CLI
+// equivalent, so it degrades to `micro` (the smallest real envelope).
+export function capsuleModeForInstance(instance: SweBenchInstance): CapsuleModeT {
+  const recommended = recommendedCapsuleModeFor(instance);
+  return recommended === RecommendedCapsuleMode.Skip ? CapsuleMode.Micro : recommended;
 }
 
 // Truncate one instance's raw vtrace context by item count (non-empty lines) then
@@ -1420,16 +1457,16 @@ export function buildVtraceContextMarkdown(
   let anyTruncated = false;
   for (const section of sections) {
     const { instance } = section;
+    // NOTE: the full problem statement is intentionally NOT repeated here. The
+    // agent already receives the issue text from the SWE-bench harness; dumping
+    // it again is pure overhead (it inflated small/local tasks in Stage 5C).
+    // vtrace injects retrieved context only.
     lines.push(
       "## Instance",
       "",
       `- instance_id: ${instance.instanceId}`,
       `- repo: ${instance.repo}`,
       `- base_commit: ${instance.baseCommit}`,
-      "",
-      "## Problem statement",
-      "",
-      instance.problemStatement.trim(),
       "",
       "## vtrace context",
       "",
@@ -1510,13 +1547,14 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
           throw new Error(`vtrace index failed (exit ${indexResult.exitCode}): ${indexResult.stderr.trim() || "(no stderr)"}`);
         }
       }
-      const querySpec = buildVtraceQueryCommand(config, workspace, buildInstanceQuery(instance));
+      const mode = capsuleModeForInstance(instance);
+      const querySpec = buildVtraceQueryCommand(config, workspace, buildInstanceQuery(instance), mode);
       queryCommand = renderCommand(querySpec);
       const queryResult = await runProc(querySpec.command, querySpec.args);
       if (queryResult.exitCode !== 0) {
         throw new Error(`vtrace query failed (exit ${queryResult.exitCode}): ${queryResult.stderr.trim() || "(no stderr)"}`);
       }
-      rawContext = queryResult.stdout.trim();
+      rawContext = extractCapsuleContext(queryResult.stdout);
       if (rawContext.length === 0) throw new Error("vtrace query returned empty context.");
     } catch (error) {
       sectionError = error instanceof Error ? error.message : String(error);

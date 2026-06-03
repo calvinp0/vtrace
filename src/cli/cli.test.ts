@@ -1372,6 +1372,69 @@ test("capsule command now shows intent, routing profile, capsule profile, and so
   });
 });
 
+test("capsule default output now includes machine-readable diagnostics", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["index", repoRoot]);
+
+    const result = await runCli(["capsule", repoRoot, "Session"]);
+    assert.equal(result.exitCode, 0);
+    const output = JSON.parse(result.stdout);
+    assert.ok(output.diagnostics);
+    assert.equal(output.diagnostics.mode, "standard");
+    assert.ok(["skip", "micro", "standard", "full"].includes(output.diagnostics.recommended_mode));
+    assert.ok(["low", "medium", "high"].includes(output.diagnostics.target_confidence));
+    assert.equal(Array.isArray(output.diagnostics.likely_files), true);
+    assert.equal(Array.isArray(output.diagnostics.likely_symbols), true);
+  });
+});
+
+test("capsule --json emits compact diagnostics + context without inspection prose", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["index", repoRoot]);
+
+    const result = await runCli(["capsule", repoRoot, "Session", "--json"]);
+    assert.equal(result.exitCode, 0);
+    const output = JSON.parse(result.stdout);
+    assert.deepEqual(Object.keys(output).sort(), ["context", "diagnostics"]);
+    assert.equal(typeof output.context, "string");
+    assert.equal(output.diagnostics.context_chars, output.context.length);
+    // The compact context must not re-dump the raw query/problem statement block.
+    assert.equal(output.context.includes("routingProfile"), false);
+  });
+});
+
+test("capsule --mode micro keeps the context within the micro char budget", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["index", repoRoot]);
+
+    const micro = await runCli(["capsule", repoRoot, "Session", "--mode", "micro", "--json"]);
+    assert.equal(micro.exitCode, 0);
+    const microOut = JSON.parse(micro.stdout);
+    assert.equal(microOut.diagnostics.mode, "micro");
+    // micro budget is 1500 chars; context may carry a truncation marker.
+    assert.ok(microOut.diagnostics.context_chars <= 1_500 + 40);
+    assert.ok(microOut.diagnostics.context_items <= 2);
+  });
+});
+
+test("capsule rejects an unknown mode and bad numeric flags", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["index", repoRoot]);
+
+    const badMode = await runCli(["capsule", repoRoot, "Session", "--mode", "huge"]);
+    assert.equal(badMode.exitCode, 1);
+    assert.match(badMode.stderr, /micro\|standard\|full/);
+
+    const badItems = await runCli(["capsule", repoRoot, "Session", "--max-items", "-3"]);
+    assert.equal(badItems.exitCode, 1);
+    assert.match(badItems.stderr, /non-negative integer/);
+  });
+});
+
 test("handoff command prints deterministic payload output", async () => {
   await withFixture(async ({ repoRoot }) => {
     await writeCapsuleFixtureRepo(repoRoot);

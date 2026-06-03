@@ -36,7 +36,7 @@ const CLI_USAGE = [
   "  vtrace init <repo>",
   "  vtrace index <repo> [--json] [--quiet|--no-progress]",
   "  vtrace intent <repo> <query>",
-  "  vtrace capsule <repo> <query>",
+  "  vtrace capsule <repo> <query> [--mode <micro|standard|full>] [--max-items <n>] [--max-chars <n>] [--json]",
   "  vtrace run-pipeline <repo> <query> [--intent <auto|explore|debug|modify|refactor>] [--session-id ID]",
   "  vtrace expand-vexp-ref <repo> <hash> [--query <query>] [--session-id ID]",
   "  vtrace skeleton <repo> <file> [--detail <minimal|standard|detailed>]",

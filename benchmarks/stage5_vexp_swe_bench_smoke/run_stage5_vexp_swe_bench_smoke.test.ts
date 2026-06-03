@@ -20,10 +20,12 @@ import {
   buildVtracePatchBlock,
   buildVtraceQueryCommand,
   buildVtraceCommand,
+  capsuleModeForInstance,
   classifyOutcome,
   combineRunEvidence,
   comparePairs,
   evaluateCondition,
+  extractCapsuleContext,
   extractRow,
   findCanonicalResultsFile,
   findSweBenchRecord,
@@ -816,7 +818,54 @@ test("buildInstanceQuery uses the problem statement plus repo/instance/test sign
   assert.match(query, /failing tests:/);
 });
 
-test("buildVtraceContextMarkdown emits one section per instance with the required headings", () => {
+test("buildVtraceQueryCommand requests a compact JSON capsule when a mode is given", () => {
+  const config = baseConfig({ vtraceCommand: "bun src/cli/index.ts", vtraceQueryArgs: "" });
+  const query = buildVtraceQueryCommand(config, "/ws", "fix the bug", "micro");
+  assert.deepEqual(query.args, [
+    "src/cli/index.ts", "capsule", "/ws", "fix the bug", "--mode", "micro", "--json",
+  ]);
+});
+
+test("capsuleModeForInstance picks micro for a small/local single-test issue", () => {
+  const mode = capsuleModeForInstance(
+    toSweBenchInstance({
+      repo: "django/django",
+      instance_id: "django__django-10880",
+      base_commit: "abc",
+      problem_statement:
+        "Add an encoder parameter to django.utils.html.json_script(). It hardcodes DjangoJSONEncoder.",
+      hints_text: null,
+      FAIL_TO_PASS: '["tests.utils_tests.test_html.TestUtilsHtml.test_json_script_custom_encoder"]',
+    }),
+  );
+  assert.equal(mode, "micro");
+});
+
+test("capsuleModeForInstance picks full for a migrations/autodetector issue", () => {
+  const mode = capsuleModeForInstance(
+    toSweBenchInstance({
+      repo: "django/django",
+      instance_id: "django__django-11740",
+      base_commit: "abc",
+      problem_statement:
+        "Change uuid field to FK does not create dependency. The migrations autodetector in "
+        + "django/db/migrations/autodetector.py builds AlterField without a dependency on the "
+        + "referenced model, and django/db/migrations/operations/fields.py is also involved.",
+      hints_text: "generate_altered_fields() should add dependencies for new FK targets.",
+      FAIL_TO_PASS: '["tests.migrations.test_autodetector.AutodetectorTests.test_alter_field_to_fk_dependency"]',
+    }),
+  );
+  assert.equal(mode, "full");
+});
+
+test("extractCapsuleContext reads the context field from --json output and tolerates raw text", () => {
+  const json = JSON.stringify({ diagnostics: { mode: "micro" }, context: "# vtrace context\nfoo" });
+  assert.equal(extractCapsuleContext(json), "# vtrace context\nfoo");
+  assert.equal(extractCapsuleContext("  plain text  "), "plain text");
+  assert.equal(extractCapsuleContext("{not json"), "{not json");
+});
+
+test("buildVtraceContextMarkdown injects retrieved context without duplicating the problem statement", () => {
   const result = buildVtraceContextMarkdown(
     [{ instance: sampleInstance(), rawContext: "symbol: replace_named_groups\nfile: utils.py", error: null }],
     { maxChars: 12000, maxItems: 8 },
@@ -825,10 +874,12 @@ test("buildVtraceContextMarkdown emits one section per instance with the require
   assert.match(result.markdown, /vexp is disabled/);
   assert.match(result.markdown, /## Instance/);
   assert.match(result.markdown, /- instance_id: django__django-11728/);
-  assert.match(result.markdown, /## Problem statement/);
   assert.match(result.markdown, /## vtrace context/);
   assert.match(result.markdown, /symbol: replace_named_groups/);
   assert.match(result.markdown, /## Instruction/);
+  // The full problem statement must NOT be re-dumped (the agent already has it).
+  assert.doesNotMatch(result.markdown, /## Problem statement/);
+  assert.doesNotMatch(result.markdown, /replace_named_groups does not handle trailing groups/);
   assert.ok(result.items > 0);
   assert.equal(result.truncated, false);
 });
