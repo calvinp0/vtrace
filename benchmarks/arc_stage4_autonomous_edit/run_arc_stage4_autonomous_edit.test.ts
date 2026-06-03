@@ -73,7 +73,10 @@ test("prompt generation separates baseline and vtrace context", () => {
   assert.doesNotMatch(baseline, /## vtrace context/);
   assert.match(vtrace, /## vtrace context/);
   assert.match(vtrace, /vtrace context/);
-  assert.match(vtrace, /Do not modify files outside the allowed list/);
+  assert.match(vtrace, /You may edit only the allowed files listed below/);
+  assert.match(vtrace, /Changing any file outside the allowed list fails the benchmark/);
+  assert.match(vtrace, /write the answer only in STAGE4_NOTES.md/);
+  assert.match(vtrace, /Do not update ARC documentation files, source files, tests, or markdown files other than STAGE4_NOTES.md/);
 });
 
 test("Claude args default to autonomous edit permissions with narrow tools", () => {
@@ -117,7 +120,62 @@ test("allowed-files-only validation fails for outside edits", async () => {
 
   assert.equal(result.passed, false);
   assert.equal(result.allowedFilesOnly, false);
+  assert.deepEqual(result.disallowedChangedFiles, ["arc/scheduler.py"]);
+  assert.deepEqual(result.ignoredChangedFiles, []);
   assert.ok(result.failedChecks.includes("allowed_files_only"));
+});
+
+test("tool state path changes are ignored for allowed-files-only validation", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage4-validate-ignore-"));
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "arc/statmech/arkane.py render_arkane_input_template");
+
+  const result = await validateTaskRun(dir, TASK, [
+    "STAGE4_NOTES.md",
+    ".vtrace/state.json",
+    ".mytool/cache.json",
+    ".claude/settings.local.json",
+  ]);
+
+  assert.equal(result.passed, true);
+  assert.equal(result.allowedFilesOnly, true);
+  assert.deepEqual(result.ignoredChangedFiles, [
+    ".vtrace/state.json",
+    ".mytool/cache.json",
+    ".claude/settings.local.json",
+  ]);
+  assert.deepEqual(result.disallowedChangedFiles, []);
+});
+
+test("real docs changes remain disallowed while tool state is ignored", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage4-validate-docs-"));
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "arc/statmech/arkane.py render_arkane_input_template");
+
+  const result = await validateTaskRun(dir, TASK, [
+    "STAGE4_NOTES.md",
+    ".vtrace/state.json",
+    "docs/gaussian.md",
+  ]);
+
+  assert.equal(result.passed, false);
+  assert.equal(result.allowedFilesOnly, false);
+  assert.deepEqual(result.ignoredChangedFiles, [".vtrace/state.json"]);
+  assert.deepEqual(result.disallowedChangedFiles, ["docs/gaussian.md"]);
+  assert.ok(result.failedChecks.includes("allowed_files_only"));
+});
+
+test("task-level ignored changed paths are honored", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage4-validate-task-ignore-"));
+  await writeFile(path.join(dir, "STAGE4_NOTES.md"), "arc/statmech/arkane.py render_arkane_input_template");
+
+  const result = await validateTaskRun(dir, { ...TASK, ignored_changed_paths: ["custom_state/"] }, [
+    "STAGE4_NOTES.md",
+    "custom_state/cache.json",
+  ]);
+
+  assert.equal(result.passed, true);
+  assert.equal(result.allowedFilesOnly, true);
+  assert.deepEqual(result.ignoredChangedFiles, ["custom_state/cache.json"]);
+  assert.deepEqual(result.disallowedChangedFiles, []);
 });
 
 test("required_file_contains_any validation accepts any complete group", async () => {
@@ -202,6 +260,8 @@ function makeRow(condition: "baseline" | "vtrace", passed: boolean, totalTokens:
     actualCostUsd: costUsd,
     durationMs: 1000,
     changedFiles: ["STAGE4_NOTES.md"],
+    ignoredChangedFiles: [],
+    disallowedChangedFiles: [],
     allowedFilesOnly: true,
     validationFailedChecks: [],
     responseParseError: null,

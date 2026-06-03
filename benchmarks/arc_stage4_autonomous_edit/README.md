@@ -35,6 +35,21 @@ benchmarks/arc_stage4_autonomous_edit/results/worktrees/<task_id>.<condition>/
 
 The default `--worktree-mode copy` copies ARC into the isolated run directory. Pass `--overwrite` to replace an existing run directory.
 
+The validator enforces `allowed_files_only` for every task. For the initial task set, Claude may write only `STAGE4_NOTES.md`; changes to real ARC source, docs, tests, or other markdown files fail validation.
+
+Benchmark/tool state paths are ignored for changed-file safety because local tools may create them while inspecting the isolated copy:
+
+```text
+.vtrace/
+.mytool/
+.claude/
+.pytest_cache/
+__pycache__/
+.vexb/
+```
+
+Ignored state paths are reported separately from disallowed changed files. They do not make a run fail, but they remain visible in validation JSON and the Markdown report.
+
 ## Running
 
 Run one pair:
@@ -47,6 +62,20 @@ bun benchmarks/arc_stage4_autonomous_edit/run_arc_stage4_autonomous_edit.ts \
   --agent-source claude \
   --mode run-pair \
   --task-id doc_find_arkane_input \
+  --yes
+```
+
+Rerun a failed pair by recreating its isolated worktrees:
+
+```bash
+bun benchmarks/arc_stage4_autonomous_edit/run_arc_stage4_autonomous_edit.ts \
+  --repo /home/calvin/code/ARC \
+  --tasks benchmarks/arc_stage4_autonomous_edit/tasks.arc.stage4.json \
+  --out benchmarks/arc_stage4_autonomous_edit/results \
+  --agent-source claude \
+  --mode run-pair \
+  --task-id doc_find_arkane_input \
+  --overwrite \
   --yes
 ```
 

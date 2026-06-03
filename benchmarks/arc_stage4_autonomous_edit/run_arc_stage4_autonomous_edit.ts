@@ -22,6 +22,7 @@ export interface Stage4Task {
   readonly task: string;
   readonly query: string;
   readonly allowed_files: readonly string[];
+  readonly ignored_changed_paths?: readonly string[];
   readonly setup?: {
     readonly create_files?: Record<string, string>;
   };
@@ -73,6 +74,8 @@ export interface ValidationResult {
   readonly passed: boolean;
   readonly allowedFilesOnly: boolean;
   readonly changedFiles: readonly string[];
+  readonly ignoredChangedFiles: readonly string[];
+  readonly disallowedChangedFiles: readonly string[];
   readonly failedChecks: readonly string[];
   readonly notes: readonly string[];
 }
@@ -94,6 +97,8 @@ export interface Stage4RunRow {
   readonly actualCostUsd: number | null;
   readonly durationMs: number | null;
   readonly changedFiles: readonly string[];
+  readonly ignoredChangedFiles: readonly string[];
+  readonly disallowedChangedFiles: readonly string[];
   readonly allowedFilesOnly: boolean;
   readonly validationFailedChecks: readonly string[];
   readonly responseParseError: string | null;
@@ -144,6 +149,15 @@ const DEFAULT_CONFIG: CliConfig = {
   toolCommand: "handoff",
 };
 
+const DEFAULT_IGNORED_CHANGED_PATH_PREFIXES = [
+  ".vtrace/",
+  ".mytool/",
+  ".claude/",
+  ".pytest_cache/",
+  "__pycache__/",
+  ".vexb/",
+];
+
 const CSV_COLUMNS = [
   "task_id",
   "condition",
@@ -161,6 +175,8 @@ const CSV_COLUMNS = [
   "actual_cost_usd",
   "duration_ms",
   "changed_files",
+  "ignored_changed_files",
+  "disallowed_changed_files",
   "allowed_files_only",
   "validation_failed_checks",
   "response_parse_error",
@@ -190,15 +206,26 @@ export async function applyTaskSetup(worktree: string, task: Stage4Task): Promis
 
 export function buildPrompt(task: Stage4Task, condition: BenchmarkCondition, vtraceContext: string): string {
   const allowedFiles = task.allowed_files.map((file) => `- ${file}`).join("\n");
+  const initialDocTaskInstruction = task.allowed_files.length === 1 && task.allowed_files[0] === "STAGE4_NOTES.md"
+    ? "\nFor this task, write the answer only in STAGE4_NOTES.md.\nDo not update ARC documentation files, source files, tests, or markdown files other than STAGE4_NOTES.md.\n"
+    : "";
   const vtraceSection = condition === "vtrace"
     ? `\n## vtrace context\n\n${vtraceContext.trim() || "(no vtrace context available)"}\n`
     : "";
 
   return `You are running an autonomous edit benchmark on an isolated copy of ARC.
 
-You may inspect files and edit only the files listed as allowed.
+You may edit only the allowed files listed below.
 
-Do not modify files outside the allowed list.
+For this task, the allowed files are:
+${allowedFiles}
+
+Do not edit, create, delete, reformat, or otherwise modify any other file.
+Changing any file outside the allowed list fails the benchmark.
+You may inspect other files for information, but all written changes must go only into the allowed file(s).
+If you cannot complete the task by editing only the allowed file(s), leave other files unchanged and explain that in the final JSON.
+${initialDocTaskInstruction}
+
 Do not change git history.
 Do not install packages.
 Do not access the network.
@@ -252,7 +279,11 @@ export async function validateTaskRun(worktree: string, task: Stage4Task, change
   const notes: string[] = [];
   const allowed = new Set(task.allowed_files.map(normalizePath));
   const normalizedChanged = [...changedFiles].map(normalizePath).filter((file) => file.length > 0);
-  const allowedFilesOnly = normalizedChanged.every((file) => allowed.has(file));
+  const ignoredPrefixes = ignoredChangedPathPrefixes(task);
+  const ignoredChangedFiles = normalizedChanged.filter((file) => isIgnoredChangedPath(file, ignoredPrefixes));
+  const relevantChangedFiles = normalizedChanged.filter((file) => !isIgnoredChangedPath(file, ignoredPrefixes));
+  const disallowedChangedFiles = relevantChangedFiles.filter((file) => !allowed.has(file));
+  const allowedFilesOnly = disallowedChangedFiles.length === 0;
   if (!allowedFilesOnly) {
     failedChecks.push("allowed_files_only");
   }
@@ -282,6 +313,8 @@ export async function validateTaskRun(worktree: string, task: Stage4Task, change
     passed: failedChecks.length === 0,
     allowedFilesOnly,
     changedFiles: normalizedChanged,
+    ignoredChangedFiles,
+    disallowedChangedFiles,
     failedChecks,
     notes,
   };
@@ -553,6 +586,8 @@ async function ingestRun(config: CliConfig, task: Stage4Task, condition: Benchma
     actualCostUsd: delta.method === "unavailable" ? null : delta.costUsd,
     durationMs,
     changedFiles: Array.isArray(validation.changedFiles) ? validation.changedFiles.filter(isString) : [],
+    ignoredChangedFiles: Array.isArray(validation.ignoredChangedFiles) ? validation.ignoredChangedFiles.filter(isString) : [],
+    disallowedChangedFiles: Array.isArray(validation.disallowedChangedFiles) ? validation.disallowedChangedFiles.filter(isString) : [],
     allowedFilesOnly: validation.allowedFilesOnly === true,
     validationFailedChecks: Array.isArray(validation.failedChecks) ? validation.failedChecks.filter(isString) : [],
     responseParseError: parseError,
@@ -658,6 +693,8 @@ function renderCsv(rows: readonly Stage4RunRow[]): string {
       row.actualCostUsd,
       row.durationMs,
       row.changedFiles.join("; "),
+      row.ignoredChangedFiles.join("; "),
+      row.disallowedChangedFiles.join("; "),
       row.allowedFilesOnly,
       row.validationFailedChecks.join("; "),
       row.responseParseError,
@@ -696,14 +733,29 @@ function renderPairTable(pairs: readonly PairComparison[]): string {
 function renderValidationFailures(rows: readonly Stage4RunRow[]): string {
   const failures = rows.filter((row) => row.validationFailedChecks.length > 0);
   if (failures.length === 0) return "No validation failures.";
-  return failures.map((row) => `- ${row.taskId}.${row.condition}: ${row.validationFailedChecks.join("; ")}`).join("\n");
+  return failures.map((row) => {
+    const details = row.disallowedChangedFiles.length > 0 ? `; disallowed: ${row.disallowedChangedFiles.join(", ")}` : "";
+    return `- ${row.taskId}.${row.condition}: ${row.validationFailedChecks.join("; ")}${details}`;
+  }).join("\n");
 }
 
 function renderSafetySummary(rows: readonly Stage4RunRow[]): string {
   if (rows.length === 0) return "No completed runs.";
   const failures = rows.filter((row) => !row.allowedFilesOnly);
-  if (failures.length === 0) return "All completed runs changed only allowed files.";
-  return failures.map((row) => `- ${row.taskId}.${row.condition}: ${row.changedFiles.join(", ")}`).join("\n");
+  const ignoredRows = rows.filter((row) => row.ignoredChangedFiles.length > 0);
+  const lines: string[] = [];
+  if (failures.length === 0) {
+    lines.push("All completed runs changed only allowed files, apart from ignored benchmark/tool state paths.");
+  } else {
+    lines.push("Disallowed changed files:");
+    lines.push(...failures.map((row) => `- ${row.taskId}.${row.condition}: ${row.disallowedChangedFiles.join(", ")}`));
+  }
+  if (ignoredRows.length > 0) {
+    lines.push("");
+    lines.push("Ignored changed files:");
+    lines.push(...ignoredRows.map((row) => `- ${row.taskId}.${row.condition}: ${row.ignoredChangedFiles.join(", ")}`));
+  }
+  return lines.join("\n");
 }
 
 function parseGitStatusChangedFiles(status: string): string[] {
@@ -715,6 +767,18 @@ function parseGitStatusChangedFiles(status: string): string[] {
     files.push(normalizePath(renamed));
   }
   return [...new Set(files)].sort();
+}
+
+function ignoredChangedPathPrefixes(task: Stage4Task): string[] {
+  return [...DEFAULT_IGNORED_CHANGED_PATH_PREFIXES, ...(task.ignored_changed_paths ?? [])]
+    .map(normalizePath)
+    .filter((prefix) => prefix.length > 0)
+    .map((prefix) => prefix.endsWith("/") ? prefix : `${prefix}/`);
+}
+
+function isIgnoredChangedPath(file: string, prefixes: readonly string[]): boolean {
+  const normalized = normalizePath(file);
+  return prefixes.some((prefix) => normalized === prefix.slice(0, -1) || normalized.startsWith(prefix));
 }
 
 function extractResponseJson(stdout: string): unknown {
