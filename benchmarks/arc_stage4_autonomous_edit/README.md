@@ -4,6 +4,10 @@ Stage 4 measures whether vtrace helps Claude Code complete small autonomous ARC 
 
 Stage 4 is an autonomous edit benchmark on isolated ARC copies. It is not SWE-bench and not a general pass@1 benchmark.
 
+## Stage 4 result
+
+The completed Stage 4 autonomous edit benchmark is documented in [STAGE4_RESULTS.md](./STAGE4_RESULTS.md).
+
 ## Scope
 
 Stage 4 differs from Stages 1-3:
