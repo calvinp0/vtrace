@@ -22,6 +22,7 @@ import {
   runIngest,
   runPrepare,
   runVtrace,
+  STAGE5_VTRACE_INJECTION_LOG,
   STAGE5_VTRACE_PATCH_MARKER,
   verifyVtracePatch,
   type CliConfig,
@@ -463,6 +464,119 @@ test("README documents the instructions-file no-op risk and recommends local-pat
   assert.match(readme, /local-patch/);
   assert.match(readme, /install-vtrace-patch/);
   assert.match(readme, /verify-vtrace-patch/);
+});
+
+// Write a condition's raw artifacts: a canonical swebench result row plus the
+// runner-written _run.meta.json / _run.stderr.txt that ingest reads for evidence.
+async function seedCondition(
+  out: string,
+  condition: "baseline" | "vtrace",
+  opts: { resolved?: boolean | null; vtraceMethod?: string | null; instructionsFile?: string; stderr?: string } = {},
+): Promise<void> {
+  const dir = path.join(out, "raw", condition);
+  await mkdir(dir, { recursive: true });
+  await writeFile(
+    path.join(dir, "swebench-2026-06-03.jsonl"),
+    JSON.stringify({
+      instanceId: "django__django-11133",
+      inputTokens: 100,
+      outputTokens: 50,
+      modelPatch: "diff --git a/x b/x\n+patch\n",
+      resolved: opts.resolved ?? null,
+    }),
+  );
+  const meta: Record<string, unknown> = {
+    condition,
+    vtraceMethod: opts.vtraceMethod ?? null,
+    exitCode: 0,
+  };
+  if (opts.instructionsFile) meta.env = { VTRACE_AGENT_INSTRUCTIONS_FILE: opts.instructionsFile };
+  await writeFile(path.join(dir, "_run.meta.json"), JSON.stringify(meta, null, 2));
+  if (opts.stderr !== undefined) await writeFile(path.join(dir, "_run.stderr.txt"), opts.stderr);
+}
+
+test("report uses the recorded vtrace run metadata method, not the config default", async () => {
+  const out = path.join(await tmpDir("evidence-method"), "results");
+  await seedCondition(out, "baseline", { vtraceMethod: null });
+  await seedCondition(out, "vtrace", { vtraceMethod: "local-patch", instructionsFile: "/tmp/_vtrace_instructions.md" });
+
+  // Config requests the default instructions-file; the run actually used local-patch.
+  const artifact = await runIngest(baseConfig({ out, vtraceMethod: "instructions-file" }));
+  assert.equal(artifact.evidence.vtraceMethod, "local-patch");
+  assert.equal(artifact.evidence.vtraceInstructionsFile, "/tmp/_vtrace_instructions.md");
+
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /vtrace method \(recorded\): local-patch/);
+  assert.match(md, /vtrace method \(requested\): instructions-file/);
+});
+
+test("disagreeing recorded methods are reported as mixed, never the default", async () => {
+  const out = path.join(await tmpDir("evidence-mixed"), "results");
+  await seedCondition(out, "baseline", { vtraceMethod: "mcp" });
+  await seedCondition(out, "vtrace", { vtraceMethod: "local-patch" });
+  const artifact = await runIngest(baseConfig({ out, vtraceMethod: "instructions-file" }));
+  assert.equal(artifact.evidence.vtraceMethod, "mixed");
+});
+
+test("local-patch run writes the instruction file and exports VTRACE_AGENT_INSTRUCTIONS_FILE", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("vtrace-env"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+
+  let capturedEnv: Record<string, string> | undefined;
+  const runProcess = async (_cmd: string, _args: readonly string[], options?: { env?: Record<string, string> }) => {
+    capturedEnv = options?.env;
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({ vexpSweBenchDir: vexpDir, out, vtraceMethod: "local-patch", instances: ["a__1"] });
+  await runVtrace(config, { runProcess });
+
+  // The env passed to the child exports the instructions file path...
+  const expectedFile = path.join(out, "raw", "vtrace", "_vtrace_instructions.md");
+  assert.equal(capturedEnv?.VTRACE_AGENT_INSTRUCTIONS_FILE, expectedFile);
+  assert.equal(capturedEnv?.VTRACE_METHOD, "local-patch");
+  // ...and that file actually exists on disk before the run.
+  const instructions = await readFile(expectedFile, "utf8");
+  assert.match(instructions, /vtrace agent instructions/i);
+});
+
+test("injection log in captured vtrace stderr sets vtrace_injection_observed = true", async () => {
+  const out = path.join(await tmpDir("evidence-observed"), "results");
+  await seedCondition(out, "baseline", {});
+  await seedCondition(out, "vtrace", {
+    vtraceMethod: "local-patch",
+    stderr: `${STAGE5_VTRACE_INJECTION_LOG} /tmp/_vtrace_instructions.md\n`,
+  });
+  const artifact = await runIngest(baseConfig({ out }));
+  assert.equal(artifact.evidence.vtraceInjectionObserved, true);
+});
+
+test("missing injection marker under local-patch produces a markdown warning", async () => {
+  const out = path.join(await tmpDir("evidence-missing"), "results");
+  await seedCondition(out, "baseline", {});
+  await seedCondition(out, "vtrace", { vtraceMethod: "local-patch", stderr: "some unrelated stderr output\n" });
+  const artifact = await runIngest(baseConfig({ out }));
+  assert.equal(artifact.evidence.vtraceInjectionObserved, false);
+
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /⚠️ Warning/);
+  assert.match(md, /local-patch/);
+  assert.match(md, /no runtime injection was observed/i);
+});
+
+test("an unknown/unknown resolved pair is described as patch-generation smoke, not pass/fail", async () => {
+  const out = path.join(await tmpDir("smoke-mode"), "results");
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", { resolved: null, vtraceMethod: "local-patch", stderr: `${STAGE5_VTRACE_INJECTION_LOG} /x\n` });
+  const artifact = await runIngest(baseConfig({ out }));
+
+  // Both unknown -> the pair outcome is "unknown", never a pass/fail verdict.
+  assert.equal(artifact.pairs.length, 1);
+  assert.equal(artifact.pairs[0]!.outcome, "unknown");
+
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /paired patch-generation smoke, not evaluated pass\/fail/);
 });
 
 function makeRow(instanceId: string, condition: "baseline" | "vtrace", overrides: Partial<Stage5Row>): Stage5Row {

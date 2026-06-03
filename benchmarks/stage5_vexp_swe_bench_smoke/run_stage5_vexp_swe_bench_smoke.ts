@@ -121,10 +121,26 @@ export interface Stage5Summary {
   readonly vtraceConditionRun: boolean;
 }
 
+// Run-level evidence reconstructed from the captured raw artifacts (run meta +
+// stderr + patch manifest), NOT from the CLI config. The report trusts what the
+// run actually recorded over what was requested.
+export interface Stage5RunEvidence {
+  // The vtrace method as recorded in the vtrace run meta. "unknown" if no vtrace
+  // run was recorded; "mixed" if recorded vtrace runs disagree.
+  readonly vtraceMethod: VtraceMethod | "unknown" | "mixed";
+  readonly vtracePatchInstalled: boolean | "unknown";
+  readonly vtraceInstructionsFile: string | null;
+  // Whether "Stage5 vtrace instructions injected from ..." was seen in the
+  // captured vtrace stderr. "unknown" if no vtrace run was captured.
+  readonly vtraceInjectionObserved: boolean | "unknown";
+  readonly notes: readonly string[];
+}
+
 export interface NormalizedArtifact {
   readonly rows: readonly Stage5Row[];
   readonly pairs: readonly PairComparison[];
   readonly summary: Stage5Summary;
+  readonly evidence: Stage5RunEvidence;
 }
 
 const DEFAULT_CONFIG: CliConfig = {
@@ -168,6 +184,11 @@ export const STAGE5_VTRACE_PATCH_MARKER = "STAGE5_VTRACE_INSTRUCTIONS_PATCH";
 
 const VTRACE_PATCH_MANIFEST_FILENAME = "vtrace_patch_manifest.json";
 const VTRACE_PATCH_BACKUP_SUFFIX = ".stage5-vtrace-backup";
+
+// Stderr line the patched adapter logs when it actually injects the instructions
+// at runtime. ingest greps the captured vtrace stderr for this exact prefix to
+// prove the injection executed (not merely that the patch is installed on disk).
+export const STAGE5_VTRACE_INJECTION_LOG = "Stage5 vtrace instructions injected from";
 
 // Candidate locations (relative to --vexp-swe-bench-dir) for the Claude Code
 // adapter that builds the `claude -p <prompt>` invocation. dist/ is preferred
@@ -745,7 +766,8 @@ export async function runIngest(config: CliConfig, deps: RunDeps = {}): Promise<
     rows.push(...(await parseConditionDir(rawConditionDir(config.out, condition), condition)));
   }
   const merged = mergeRows(rows);
-  const artifact = buildArtifact(merged);
+  const evidence = await collectRunEvidence(config.out);
+  const artifact = buildArtifact(merged, evidence);
   await writeFile(path.join(config.out, NORMALIZED_FILENAME), `${JSON.stringify(artifact, null, 2)}\n`);
   await writeReports(config, artifact);
   return artifact;
@@ -756,7 +778,12 @@ export async function runReport(config: CliConfig, deps: RunDeps = {}): Promise<
   const normalized = await readJsonIfExists(path.join(config.out, NORMALIZED_FILENAME));
   if (isRecord(normalized) && Array.isArray(normalized.rows)) {
     const rows = (normalized.rows as unknown[]).filter(isRecord) as unknown as Stage5Row[];
-    const artifact = buildArtifact(rows);
+    // Prefer evidence already stored in the normalized intermediate; otherwise
+    // re-derive it from the raw artifacts (do not fall back to config).
+    const evidence = isRecord(normalized.evidence)
+      ? (normalized.evidence as unknown as Stage5RunEvidence)
+      : await collectRunEvidence(config.out);
+    const artifact = buildArtifact(rows, evidence);
     await writeReports(config, artifact);
     return artifact;
   }
@@ -781,7 +808,7 @@ export function buildVtracePatchBlock(): string {
     '                const { readFile: __stage5ReadFile } = await import("node:fs/promises");',
     '                const __stage5VtraceText = await __stage5ReadFile(__stage5VtraceFile, "utf8");',
     "                opts.prompt = `${opts.prompt}\\n\\n## Additional vtrace context/instructions\\n\\n${__stage5VtraceText}`;",
-    "                console.error(`Stage5 vtrace instructions injected from ${__stage5VtraceFile}`);",
+    `                console.error(\`${STAGE5_VTRACE_INJECTION_LOG} \${__stage5VtraceFile}\`);`,
     "            } catch (__stage5Err) {",
     "                console.error(`Stage5 vtrace injection skipped: ${__stage5Err instanceof Error ? __stage5Err.message : String(__stage5Err)}`);",
     "            }",
@@ -953,7 +980,7 @@ async function parseConditionDir(dir: string, condition: Stage5Condition): Promi
 function mergeRows(rows: readonly Stage5Row[]): Stage5Row[] {
   const byKey = new Map<string, Stage5Row>();
   for (const row of rows) {
-    const key = `${row.instanceId} ${row.condition}`;
+    const key = `${row.instanceId} ${row.condition}`;
     const existing = byKey.get(key);
     byKey.set(key, existing === undefined ? row : mergeRow(existing, row));
   }
@@ -990,9 +1017,67 @@ function mergeRow(base: Stage5Row, next: Stage5Row): Stage5Row {
   return { ...merged, parsedFieldCount: countParsedFields(merged) };
 }
 
-function buildArtifact(rows: readonly Stage5Row[]): NormalizedArtifact {
+function buildArtifact(rows: readonly Stage5Row[], evidence: Stage5RunEvidence): NormalizedArtifact {
   const pairs = comparePairs(rows);
-  return { rows: [...rows], pairs, summary: summarize(rows, pairs) };
+  return { rows: [...rows], pairs, summary: summarize(rows, pairs), evidence };
+}
+
+function emptyEvidence(): Stage5RunEvidence {
+  return {
+    vtraceMethod: "unknown",
+    vtracePatchInstalled: "unknown",
+    vtraceInstructionsFile: null,
+    vtraceInjectionObserved: "unknown",
+    notes: [],
+  };
+}
+
+// Reconstruct run-level vtrace evidence from the captured raw artifacts: the per
+// condition `_run.meta.json` (method + instructions-file env), the vtrace
+// `_run.stderr.txt` (runtime injection log), and the patch manifest (install
+// state). Everything here is observed, never inferred from the requested config.
+async function collectRunEvidence(outDir: string): Promise<Stage5RunEvidence> {
+  const notes: string[] = [];
+
+  // Resolve the vtrace method from RECORDED run metas only (non-null values).
+  const methods = new Set<VtraceMethod>();
+  let instructionsFile: string | null = null;
+  let vtraceRunRecorded = false;
+  for (const condition of ["baseline", "vtrace"] as const) {
+    const meta = await readJsonIfExists(path.join(rawConditionDir(outDir, condition), "_run.meta.json"));
+    if (!isRecord(meta)) continue;
+    if (condition === "vtrace") vtraceRunRecorded = true;
+    if (isString(meta.vtraceMethod) && isVtraceMethod(meta.vtraceMethod)) methods.add(meta.vtraceMethod);
+    if (isRecord(meta.env) && isString(meta.env.VTRACE_AGENT_INSTRUCTIONS_FILE)) {
+      instructionsFile = meta.env.VTRACE_AGENT_INSTRUCTIONS_FILE;
+    }
+  }
+  const vtraceMethod: VtraceMethod | "unknown" | "mixed" =
+    methods.size === 0 ? "unknown" : methods.size === 1 ? [...methods][0]! : "mixed";
+  if (vtraceMethod === "mixed") notes.push("Recorded vtrace run metadata disagree on the method.");
+
+  // Patch install state from the manifest (on-disk install, distinct from runtime injection).
+  const manifest = await readJsonIfExists(path.join(outDir, VTRACE_PATCH_MANIFEST_FILENAME));
+  const vtracePatchInstalled: boolean | "unknown" = isRecord(manifest) && typeof manifest.installed === "boolean"
+    ? manifest.installed
+    : "unknown";
+
+  // Runtime injection evidence: parse the captured vtrace stderr for the log line.
+  const stderrPath = path.join(rawConditionDir(outDir, "vtrace"), "_run.stderr.txt");
+  const stderr = await readFile(stderrPath, "utf8").catch(() => null);
+  let vtraceInjectionObserved: boolean | "unknown";
+  if (stderr === null && !vtraceRunRecorded) {
+    vtraceInjectionObserved = "unknown";
+  } else {
+    vtraceInjectionObserved = (stderr ?? "").includes(STAGE5_VTRACE_INJECTION_LOG);
+  }
+  if (vtraceInjectionObserved === true) {
+    notes.push("Runtime vtrace injection log observed in captured vtrace stderr.");
+  } else if (vtraceInjectionObserved === false) {
+    notes.push("No runtime vtrace injection log found in captured vtrace stderr.");
+  }
+
+  return { vtraceMethod, vtracePatchInstalled, vtraceInstructionsFile: instructionsFile, vtraceInjectionObserved, notes };
 }
 
 function summarize(rows: readonly Stage5Row[], pairs: readonly PairComparison[]): Stage5Summary {
@@ -1058,6 +1143,7 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
 
 export function renderMarkdown(artifact: NormalizedArtifact, config: CliConfig): string {
   const { rows, pairs, summary } = artifact;
+  const evidence = artifact.evidence ?? emptyEvidence();
   const lines: string[] = [
     "# Stage 5 vexp-swe-bench Smoke Benchmark",
     "",
@@ -1071,7 +1157,8 @@ export function renderMarkdown(artifact: NormalizedArtifact, config: CliConfig):
     "",
     `- External benchmark dir: ${config.vexpSweBenchDir ?? "(not provided)"}`,
     `- CLI entry: ${config.cliEntry}`,
-    `- vtrace method: ${config.vtraceMethod}`,
+    `- vtrace method (recorded): ${evidence.vtraceMethod}`,
+    `- vtrace method (requested): ${config.vtraceMethod}`,
     "",
     "See README.md for the full clone/setup workflow. vexp-swe-bench is not vendored.",
     "",
@@ -1108,6 +1195,14 @@ export function renderMarkdown(artifact: NormalizedArtifact, config: CliConfig):
     `| Mean cost reduction (both resolved) | ${formatPct(summary.meanCostReductionBothResolved)} |`,
     `| Mean duration reduction (both resolved) | ${formatPct(summary.meanDurationReductionBothResolved)} |`,
     "",
+    "## Vtrace injection evidence",
+    "",
+    ...renderVtraceEvidence(evidence),
+    "",
+    "## Result mode",
+    "",
+    describeResultMode(pairs, rows),
+    "",
     "## Per-instance table",
     "",
     renderPairTable(pairs),
@@ -1122,7 +1217,7 @@ export function renderMarkdown(artifact: NormalizedArtifact, config: CliConfig):
     "",
     "## Interpretation",
     "",
-    "Pass/resolution is primary. Token, cost, and duration reductions are only meaningful for instances where both conditions resolved. A `vtrace_only_resolved` instance is a qualitative win even if tokens are higher. Any `unknown` field means the benchmark output did not expose that value; it was not guessed.",
+    "Pass/resolution is primary. Token, cost, and duration reductions are only meaningful for instances where both conditions resolved. A `vtrace_only_resolved` instance is a qualitative win even if tokens are higher. When all paired `resolved` values are `unknown`, this is a patch-generation smoke — patches were produced but not evaluated pass/fail — and must not be read as a win/loss. Any `unknown` field means the benchmark output did not expose that value; it was not guessed.",
     "",
     "## Next step",
     "",
@@ -1130,6 +1225,49 @@ export function renderMarkdown(artifact: NormalizedArtifact, config: CliConfig):
     "",
   );
   return `${lines.join("\n")}\n`;
+}
+
+// Run-level injection evidence table plus a warning when local-patch was the
+// method but the runtime injection log was not observed.
+function renderVtraceEvidence(evidence: Stage5RunEvidence): string[] {
+  const lines = [
+    "| Field | Value |",
+    "| --- | --- |",
+    `| vtrace_method | ${evidence.vtraceMethod} |`,
+    `| vtrace_patch_installed | ${String(evidence.vtracePatchInstalled)} |`,
+    `| vtrace_instructions_file | ${evidence.vtraceInstructionsFile ?? "(none)"} |`,
+    `| vtrace_injection_observed | ${String(evidence.vtraceInjectionObserved)} |`,
+  ];
+  if (evidence.vtraceMethod === "local-patch" && evidence.vtraceInjectionObserved !== true) {
+    lines.push(
+      "",
+      "> ⚠️ Warning: the recorded vtrace method is `local-patch`, but no runtime injection was observed " +
+        `in the captured vtrace stderr (\`${STAGE5_VTRACE_INJECTION_LOG} ...\` was not found). The vtrace ` +
+        "condition may have run WITHOUT the injected vtrace context, making it indistinguishable from " +
+        "baseline. Treat this comparison as suspect: confirm the patch is installed and re-run the vtrace " +
+        "condition until the injection log appears.",
+    );
+  }
+  return lines;
+}
+
+// Resolution was never evaluated when all paired outcomes are "unknown"; say so
+// plainly instead of letting an "unknown" outcome read like a pass/fail verdict.
+function describeResultMode(pairs: readonly PairComparison[], rows: readonly Stage5Row[]): string {
+  const pairedKnown = pairs.filter((pair) => pair.baselineResolved !== null && pair.vtraceResolved !== null);
+  const allUnknownResolution = pairedKnown.length > 0 && pairedKnown.every((pair) => pair.outcome === "unknown");
+  if (!allUnknownResolution) {
+    return "Resolution pass/fail was evaluated for at least one paired instance; see the per-instance table.";
+  }
+  const patchesGenerated = rows.some((row) => row.patchAvailable === true);
+  const patchClause = patchesGenerated
+    ? "Patches were generated for both conditions but resolution was not evaluated."
+    : "Resolution was not evaluated for any paired instance.";
+  return (
+    `This run is a **paired patch-generation smoke, not evaluated pass/fail**. ${patchClause} ` +
+    "All paired `resolved` values are `unknown`, so this must NOT be read as a pass/fail or win/loss result. " +
+    "Token/cost/duration deltas here describe effort, not correctness."
+  );
 }
 
 function renderPairTable(pairs: readonly PairComparison[]): string {
@@ -1280,6 +1418,10 @@ function isString(value: unknown): value is string {
 
 function isNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function isVtraceMethod(value: string): value is VtraceMethod {
+  return value === "instructions-file" || value === "mcp" || value === "local-patch";
 }
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
