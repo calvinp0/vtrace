@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "bun:test";
 
 import {
   applyVtracePatch,
+  assertVtraceInstructionsFileValid,
   buildBaselineCommand,
   buildVtracePatchBlock,
   buildVtraceCommand,
@@ -23,8 +24,10 @@ import {
   runPrepare,
   runVtrace,
   STAGE5_VTRACE_INJECTION_LOG,
+  STAGE5_VTRACE_INJECTION_SKIPPED,
   STAGE5_VTRACE_PATCH_MARKER,
   verifyVtracePatch,
+  vtraceInstructionsFilePath,
   type CliConfig,
   type Stage5Row,
 } from "./run_stage5_vexp_swe_bench_smoke";
@@ -532,13 +535,16 @@ test("local-patch run writes the instruction file and exports VTRACE_AGENT_INSTR
   const config = baseConfig({ vexpSweBenchDir: vexpDir, out, vtraceMethod: "local-patch", instances: ["a__1"] });
   await runVtrace(config, { runProcess });
 
-  // The env passed to the child exports the instructions file path...
-  const expectedFile = path.join(out, "raw", "vtrace", "_vtrace_instructions.md");
+  // The env exports the instructions file path at the results ROOT (NOT under
+  // raw/vtrace, which vexp wipes), and that file exists & is non-empty pre-spawn.
+  const expectedFile = vtraceInstructionsFilePath(out);
+  assert.equal(expectedFile, path.join(out, "_vtrace_instructions.md"));
   assert.equal(capturedEnv?.VTRACE_AGENT_INSTRUCTIONS_FILE, expectedFile);
   assert.equal(capturedEnv?.VTRACE_METHOD, "local-patch");
-  // ...and that file actually exists on disk before the run.
   const instructions = await readFile(expectedFile, "utf8");
-  assert.match(instructions, /vtrace agent instructions/i);
+  assert.match(instructions, /vtrace instructions/i);
+  assert.match(instructions, /running with vtrace assistance/i);
+  assert.ok(instructions.length > 0);
 });
 
 test("injection log in captured vtrace stderr sets vtrace_injection_observed = true", async () => {
@@ -579,6 +585,89 @@ test("an unknown/unknown resolved pair is described as patch-generation smoke, n
   assert.match(md, /paired patch-generation smoke, not evaluated pass\/fail/);
 });
 
+test("assertVtraceInstructionsFileValid fails fast on a missing or empty file", async () => {
+  const dir = await tmpDir("instr-valid");
+  const missing = path.join(dir, "nope.md");
+  await assert.rejects(() => assertVtraceInstructionsFileValid(missing), /missing/);
+
+  const empty = path.join(dir, "empty.md");
+  await writeFile(empty, "");
+  await assert.rejects(() => assertVtraceInstructionsFileValid(empty), /empty/);
+
+  const ok = path.join(dir, "ok.md");
+  await writeFile(ok, "# vtrace instructions\n");
+  await assertVtraceInstructionsFileValid(ok); // does not throw
+});
+
+test("run-vtrace local-patch writes a non-empty instruction file and validates it before spawn", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("instr-prespawn"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+
+  // The instruction file must exist and be non-empty at the moment of spawn —
+  // assert it from inside the runProcess stub, before the (fake) CLI returns.
+  let sizeAtSpawn = -1;
+  const runProcess = async () => {
+    const stats = await stat(vtraceInstructionsFilePath(out)).catch(() => null);
+    sizeAtSpawn = stats?.size ?? -1;
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({ vexpSweBenchDir: vexpDir, out, vtraceMethod: "local-patch", instances: ["a__1"] });
+  await runVtrace(config, { runProcess });
+  assert.ok(sizeAtSpawn > 0, "instruction file should be present and non-empty when the external CLI is spawned");
+});
+
+test("vtrace stderr 'injected from' sets vtrace_injection_observed=true and treatment valid", async () => {
+  const out = path.join(await tmpDir("inj-true"), "results");
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", {
+    resolved: null,
+    vtraceMethod: "local-patch",
+    stderr: `${STAGE5_VTRACE_INJECTION_LOG} ${out}/_vtrace_instructions.md\n`,
+  });
+  const artifact = await runIngest(baseConfig({ out }));
+  assert.equal(artifact.evidence.vtraceInjectionObserved, true);
+  assert.equal(artifact.evidence.vtraceTreatmentValid, true);
+
+  const vtraceRow = artifact.rows.find((row) => row.condition === "vtrace")!;
+  assert.equal(vtraceRow.vtraceInjectionObserved, true);
+  assert.equal(vtraceRow.vtraceTreatmentValid, true);
+  assert.equal(vtraceRow.vtraceMethod, "local-patch");
+});
+
+test("vtrace stderr 'injection skipped' sets vtrace_treatment_valid=false and records the error", async () => {
+  const out = path.join(await tmpDir("inj-skip"), "results");
+  const skipLine = `${STAGE5_VTRACE_INJECTION_SKIPPED}: ENOENT: no such file or directory, open '/gone/_vtrace_instructions.md'`;
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", { resolved: null, vtraceMethod: "local-patch", stderr: `${skipLine}\n` });
+  const artifact = await runIngest(baseConfig({ out }));
+
+  assert.equal(artifact.evidence.vtraceInjectionObserved, false);
+  assert.equal(artifact.evidence.vtraceTreatmentValid, false);
+  assert.equal(artifact.evidence.vtraceInjectionError, skipLine);
+
+  const vtraceRow = artifact.rows.find((row) => row.condition === "vtrace")!;
+  assert.equal(vtraceRow.vtraceTreatmentValid, false);
+  assert.equal(vtraceRow.vtraceInjectionError, skipLine);
+});
+
+test("an invalid local-patch treatment produces a markdown warning and suppresses deltas", async () => {
+  const out = path.join(await tmpDir("invalid-treat"), "results");
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", {
+    resolved: null,
+    vtraceMethod: "local-patch",
+    stderr: `${STAGE5_VTRACE_INJECTION_SKIPPED}: ENOENT\n`,
+  });
+  await runIngest(baseConfig({ out }));
+
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /Vtrace injection was skipped; this run is not a valid vtrace treatment\./);
+  // Efficiency deltas must not be advertised as vtrace performance.
+  assert.match(md, /\| invalid \|/);
+});
+
 function makeRow(instanceId: string, condition: "baseline" | "vtrace", overrides: Partial<Stage5Row>): Stage5Row {
   return {
     instanceId,
@@ -600,6 +689,13 @@ function makeRow(instanceId: string, condition: "baseline" | "vtrace", overrides
     model: null,
     agent: null,
     repo: null,
+    vtraceMethod: null,
+    vtraceInstructionsFile: null,
+    vtraceInstructionsFileExists: null,
+    vtraceInstructionsFileSize: null,
+    vtraceInjectionObserved: null,
+    vtraceInjectionError: null,
+    vtraceTreatmentValid: null,
     error: null,
     rawResultPath: `raw/${condition}/r.json`,
     parserKind: "json",

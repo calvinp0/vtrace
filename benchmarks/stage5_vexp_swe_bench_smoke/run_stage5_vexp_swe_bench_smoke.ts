@@ -82,6 +82,15 @@ export interface Stage5Row {
   readonly model: string | null;
   readonly agent: string | null;
   readonly repo: string | null;
+  // vtrace local-patch run context. null on baseline rows; populated on vtrace
+  // rows from the recorded run metadata + captured stderr (see collectRunEvidence).
+  readonly vtraceMethod: string | null;
+  readonly vtraceInstructionsFile: string | null;
+  readonly vtraceInstructionsFileExists: boolean | null;
+  readonly vtraceInstructionsFileSize: number | null;
+  readonly vtraceInjectionObserved: boolean | "unknown" | null;
+  readonly vtraceInjectionError: string | null;
+  readonly vtraceTreatmentValid: boolean | "unknown" | null;
   readonly error: string | null;
   readonly rawResultPath: string;
   readonly parserKind: string;
@@ -103,6 +112,9 @@ export interface PairComparison {
   readonly baselineDurationMs: Unknownable<number> | null;
   readonly vtraceDurationMs: Unknownable<number> | null;
   readonly durationReductionPct: number | null;
+  // From the vtrace row: false means the vtrace injection was skipped, so the
+  // efficiency deltas must NOT be advertised as vtrace performance for this pair.
+  readonly vtraceTreatmentValid: boolean | "unknown" | null;
 }
 
 export interface Stage5Summary {
@@ -130,9 +142,16 @@ export interface Stage5RunEvidence {
   readonly vtraceMethod: VtraceMethod | "unknown" | "mixed";
   readonly vtracePatchInstalled: boolean | "unknown";
   readonly vtraceInstructionsFile: string | null;
+  readonly vtraceInstructionsFileExists: boolean;
+  readonly vtraceInstructionsFileSize: number | null;
   // Whether "Stage5 vtrace instructions injected from ..." was seen in the
   // captured vtrace stderr. "unknown" if no vtrace run was captured.
   readonly vtraceInjectionObserved: boolean | "unknown";
+  // The "Stage5 vtrace injection skipped: ..." line, if injection was skipped.
+  readonly vtraceInjectionError: string | null;
+  // True only for a local-patch vtrace run whose injection was actually observed.
+  // false means the vtrace condition was a no-op (not a real vtrace treatment).
+  readonly vtraceTreatmentValid: boolean | "unknown";
   readonly notes: readonly string[];
 }
 
@@ -170,6 +189,9 @@ const CSV_COLUMNS = [
   "num_turns",
   "tool_calls_total",
   "patch_available",
+  "vtrace_method",
+  "vtrace_injection_observed",
+  "vtrace_treatment_valid",
   "error",
   "raw_result_path",
   "parser_kind",
@@ -189,6 +211,11 @@ const VTRACE_PATCH_BACKUP_SUFFIX = ".stage5-vtrace-backup";
 // at runtime. ingest greps the captured vtrace stderr for this exact prefix to
 // prove the injection executed (not merely that the patch is installed on disk).
 export const STAGE5_VTRACE_INJECTION_LOG = "Stage5 vtrace instructions injected from";
+
+// Stderr line the patched adapter logs when the instructions file is set but
+// could not be read (e.g. it was wiped from the output dir). Its presence proves
+// the vtrace condition ran WITHOUT the injected context — i.e. a no-op.
+export const STAGE5_VTRACE_INJECTION_SKIPPED = "Stage5 vtrace injection skipped";
 
 // Candidate locations (relative to --vexp-swe-bench-dir) for the Claude Code
 // adapter that builds the `claude -p <prompt>` invocation. dist/ is preferred
@@ -278,27 +305,38 @@ export function buildVtraceCommand(
   };
 }
 
+// The vtrace instructions file lives at the results ROOT, deliberately NOT under
+// the per-condition raw/<condition> dir. vexp-swe-bench's `run` clears its
+// `--output` dir (raw/vtrace) at start (cleanPreviousRun), which would delete an
+// instructions file written there before the agent ever reads it — the original
+// cause of the "injection skipped: ENOENT" no-op. The results root is never
+// passed to vexp as --output, so the file survives the run.
+export function vtraceInstructionsFilePath(outDir: string): string {
+  return path.join(outDir, "_vtrace_instructions.md");
+}
+
 function vtraceEnv(config: CliConfig): Record<string, string> {
   return {
     VTRACE_SMOKE: "1",
     VTRACE_METHOD: config.vtraceMethod,
-    VTRACE_AGENT_INSTRUCTIONS_FILE: path.join(rawConditionDir(config.out, "vtrace"), "_vtrace_instructions.md"),
+    VTRACE_AGENT_INSTRUCTIONS_FILE: vtraceInstructionsFilePath(config.out),
   };
 }
 
-function vtraceInstructionsText(): string {
+export function vtraceInstructionsText(): string {
   return [
-    "# vtrace agent instructions (Stage 5 smoke)",
+    "# vtrace instructions",
     "",
-    "Before working on the task, initialize vtrace in the task repository and use it",
-    "to orient: build/refresh the vtrace index, then request a handoff/capsule for the",
-    "failing area instead of broad grep/file reads. Keep vexp disabled. Do not change",
-    "the model, agent, or budget relative to the baseline condition.",
+    "You are running with vtrace assistance enabled.",
     "",
-    "This file is consumed only if the vexp-swe-bench agent wrapper supports an",
-    "instructions file (VTRACE_AGENT_INSTRUCTIONS_FILE). If it does not, this is a",
-    "documented no-op for the smoke run and the vtrace method must be recorded as such",
-    "in the Stage 5 report.",
+    "Before editing, use vtrace-oriented repository navigation when useful:",
+    "- identify likely files/symbols before broad exploration",
+    "- prefer compact symbol/context lookup over opening many files",
+    "- use vtrace context if available in this repository",
+    "- keep vexp disabled",
+    "",
+    "If vtrace tooling is unavailable in this task environment, continue normally",
+    "but do not use vexp.",
   ].join("\n");
 }
 
@@ -345,6 +383,7 @@ export function comparePairs(rows: readonly Stage5Row[]): PairComparison[] {
       baselineDurationMs: baseline?.durationMs ?? null,
       vtraceDurationMs: vtrace?.durationMs ?? null,
       durationReductionPct: reductionPct(baseline?.durationMs ?? null, vtrace?.durationMs ?? null),
+      vtraceTreatmentValid: vtrace?.vtraceTreatmentValid ?? null,
     });
   }
   return pairs.sort((left, right) => left.instanceId.localeCompare(right.instanceId));
@@ -496,6 +535,15 @@ export function extractRow(
     model: isString(modelValue) ? modelValue : null,
     agent: isString(agentValue) ? agentValue : null,
     repo: isString(repoValue) ? repoValue : null,
+    // vtrace run context is stamped onto vtrace rows during ingest, not parsed
+    // from the per-instance result record; default to null here.
+    vtraceMethod: null,
+    vtraceInstructionsFile: null,
+    vtraceInstructionsFileExists: null,
+    vtraceInstructionsFileSize: null,
+    vtraceInjectionObserved: null,
+    vtraceInjectionError: null,
+    vtraceTreatmentValid: null,
     error: isString(errorValue) ? errorValue : null,
     rawResultPath,
     parserKind,
@@ -712,13 +760,31 @@ export async function runBaseline(config: CliConfig, deps: RunDeps = {}): Promis
 }
 
 export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<void> {
-  // local-patch promises a real (non-no-op) vtrace condition; refuse to run it
-  // until the external prompt builder is actually patched, before spending tokens.
-  if (config.vtraceMethod === "local-patch") await assertVtracePatchInstalled(config);
-  const dir = rawConditionDir(config.out, "vtrace");
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, "_vtrace_instructions.md"), `${vtraceInstructionsText()}\n`);
+  await ensureOutputTree(config.out);
+  // Write the instructions file at the results root (survives vexp's --output
+  // wipe) BEFORE any validation or spawn, so the patched adapter can read it.
+  const instructionsPath = vtraceInstructionsFilePath(config.out);
+  await writeFile(instructionsPath, `${vtraceInstructionsText()}\n`);
+
+  // Fail fast for local-patch BEFORE spawning the external CLI / spending tokens:
+  // the instructions file must exist and be non-empty, and the patch installed.
+  if (config.vtraceMethod === "local-patch") {
+    await assertVtraceInstructionsFileValid(instructionsPath);
+    await assertVtracePatchInstalled(config);
+  }
   await runCondition(config, "vtrace", deps);
+}
+
+// Throws unless the vtrace instructions file exists and is non-empty. Called
+// before spawning the external CLI so a no-op vtrace run is caught up front.
+export async function assertVtraceInstructionsFileValid(instructionsPath: string): Promise<void> {
+  const stats = await stat(instructionsPath).catch(() => null);
+  if (stats === null || !stats.isFile()) {
+    throw new Error(`vtrace instructions file is missing at ${instructionsPath}; aborting before spawn.`);
+  }
+  if (stats.size === 0) {
+    throw new Error(`vtrace instructions file at ${instructionsPath} is empty; aborting before spawn.`);
+  }
 }
 
 async function runCondition(config: CliConfig, condition: Stage5Condition, deps: RunDeps): Promise<void> {
@@ -739,6 +805,11 @@ async function runCondition(config: CliConfig, condition: Stage5Condition, deps:
     cwd: spec.cwd ?? undefined,
     env,
   });
+  // For the vtrace condition, record the instruction-file state and the runtime
+  // injection status parsed from this run's stderr, so the raw meta is itself
+  // sufficient evidence of whether the treatment actually applied.
+  const vtraceMeta =
+    condition === "vtrace" ? await vtraceRunMetaFields(config, result.stderr) : {};
   const meta = {
     condition,
     command: spec.command,
@@ -747,6 +818,7 @@ async function runCondition(config: CliConfig, condition: Stage5Condition, deps:
     env,
     instances,
     vtraceMethod: condition === "vtrace" ? config.vtraceMethod : null,
+    ...vtraceMeta,
     exitCode: result.exitCode,
     durationMs: Date.now() - startedMs,
   };
@@ -767,10 +839,29 @@ export async function runIngest(config: CliConfig, deps: RunDeps = {}): Promise<
   }
   const merged = mergeRows(rows);
   const evidence = await collectRunEvidence(config.out);
-  const artifact = buildArtifact(merged, evidence);
+  const artifact = buildArtifact(stampVtraceRows(merged, evidence), evidence);
   await writeFile(path.join(config.out, NORMALIZED_FILENAME), `${JSON.stringify(artifact, null, 2)}\n`);
   await writeReports(config, artifact);
   return artifact;
+}
+
+// Copy the run-level vtrace evidence onto each vtrace row (baseline rows keep
+// their null vtrace fields), so the normalized rows carry the treatment metadata.
+function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence): Stage5Row[] {
+  return rows.map((row) =>
+    row.condition !== "vtrace"
+      ? row
+      : {
+          ...row,
+          vtraceMethod: evidence.vtraceMethod,
+          vtraceInstructionsFile: evidence.vtraceInstructionsFile,
+          vtraceInstructionsFileExists: evidence.vtraceInstructionsFileExists,
+          vtraceInstructionsFileSize: evidence.vtraceInstructionsFileSize,
+          vtraceInjectionObserved: evidence.vtraceInjectionObserved,
+          vtraceInjectionError: evidence.vtraceInjectionError,
+          vtraceTreatmentValid: evidence.vtraceTreatmentValid,
+        },
+  );
 }
 
 export async function runReport(config: CliConfig, deps: RunDeps = {}): Promise<NormalizedArtifact> {
@@ -783,7 +874,7 @@ export async function runReport(config: CliConfig, deps: RunDeps = {}): Promise<
     const evidence = isRecord(normalized.evidence)
       ? (normalized.evidence as unknown as Stage5RunEvidence)
       : await collectRunEvidence(config.out);
-    const artifact = buildArtifact(rows, evidence);
+    const artifact = buildArtifact(stampVtraceRows(rows, evidence), evidence);
     await writeReports(config, artifact);
     return artifact;
   }
@@ -1027,19 +1118,72 @@ function emptyEvidence(): Stage5RunEvidence {
     vtraceMethod: "unknown",
     vtracePatchInstalled: "unknown",
     vtraceInstructionsFile: null,
+    vtraceInstructionsFileExists: false,
+    vtraceInstructionsFileSize: null,
     vtraceInjectionObserved: "unknown",
+    vtraceInjectionError: null,
+    vtraceTreatmentValid: "unknown",
     notes: [],
   };
 }
 
+// Parse a captured vtrace stderr for the runtime injection outcome. A null stderr
+// means none was captured (observed = "unknown").
+function parseVtraceInjection(stderr: string | null): { observed: boolean | "unknown"; error: string | null } {
+  if (stderr === null) return { observed: "unknown", error: null };
+  if (stderr.includes(STAGE5_VTRACE_INJECTION_LOG)) return { observed: true, error: null };
+  const skipped = stderr.split(/\r?\n/).find((line) => line.includes(STAGE5_VTRACE_INJECTION_SKIPPED));
+  return { observed: false, error: skipped ? skipped.trim() : null };
+}
+
+// A vtrace run is only a valid treatment when it used local-patch AND the runtime
+// injection was actually observed. Any other method, or an unobserved injection,
+// is not assertable as a real treatment.
+function computeTreatmentValid(
+  method: VtraceMethod | "unknown" | "mixed",
+  injectionObserved: boolean | "unknown",
+): boolean | "unknown" {
+  if (method !== "local-patch") return "unknown";
+  if (injectionObserved === "unknown") return "unknown";
+  return injectionObserved === true;
+}
+
+// Run-level vtrace metadata stamped into the vtrace _run.meta.json at run time and
+// recomputed at ingest. `stderr` is the captured vtrace stderr (null if absent).
+async function vtraceRunMetaFields(
+  config: CliConfig,
+  stderr: string | null,
+): Promise<{
+  vtraceInstructionsFile: string;
+  vtraceInstructionsFileExists: boolean;
+  vtraceInstructionsFileSize: number | null;
+  vtraceInjectionObserved: boolean | "unknown";
+  vtraceInjectionError: string | null;
+  vtraceTreatmentValid: boolean | "unknown";
+}> {
+  const file = vtraceInstructionsFilePath(config.out);
+  const stats = await stat(file).catch(() => null);
+  const exists = stats !== null && stats.isFile();
+  const injection = parseVtraceInjection(stderr);
+  return {
+    vtraceInstructionsFile: file,
+    vtraceInstructionsFileExists: exists,
+    vtraceInstructionsFileSize: exists ? stats!.size : null,
+    vtraceInjectionObserved: injection.observed,
+    vtraceInjectionError: injection.error,
+    vtraceTreatmentValid: computeTreatmentValid(config.vtraceMethod, injection.observed),
+  };
+}
+
 // Reconstruct run-level vtrace evidence from the captured raw artifacts: the per
-// condition `_run.meta.json` (method + instructions-file env), the vtrace
+// condition `_run.meta.json` (method + instructions-file path), the vtrace
 // `_run.stderr.txt` (runtime injection log), and the patch manifest (install
 // state). Everything here is observed, never inferred from the requested config.
 async function collectRunEvidence(outDir: string): Promise<Stage5RunEvidence> {
   const notes: string[] = [];
 
-  // Resolve the vtrace method from RECORDED run metas only (non-null values).
+  // Resolve the vtrace method from RECORDED run metas only (non-null values),
+  // and recover the instructions-file path the run actually used.
   const methods = new Set<VtraceMethod>();
   let instructionsFile: string | null = null;
   let vtraceRunRecorded = false;
@@ -1048,13 +1192,22 @@ async function collectRunEvidence(outDir: string): Promise<Stage5RunEvidence> {
     if (!isRecord(meta)) continue;
     if (condition === "vtrace") vtraceRunRecorded = true;
     if (isString(meta.vtraceMethod) && isVtraceMethod(meta.vtraceMethod)) methods.add(meta.vtraceMethod);
-    if (isRecord(meta.env) && isString(meta.env.VTRACE_AGENT_INSTRUCTIONS_FILE)) {
-      instructionsFile = meta.env.VTRACE_AGENT_INSTRUCTIONS_FILE;
+    // Prefer the explicit field (new meta); fall back to the env path (old meta).
+    if (condition === "vtrace") {
+      if (isString(meta.vtraceInstructionsFile)) instructionsFile = meta.vtraceInstructionsFile;
+      else if (isRecord(meta.env) && isString(meta.env.VTRACE_AGENT_INSTRUCTIONS_FILE)) {
+        instructionsFile = meta.env.VTRACE_AGENT_INSTRUCTIONS_FILE;
+      }
     }
   }
   const vtraceMethod: VtraceMethod | "unknown" | "mixed" =
     methods.size === 0 ? "unknown" : methods.size === 1 ? [...methods][0]! : "mixed";
   if (vtraceMethod === "mixed") notes.push("Recorded vtrace run metadata disagree on the method.");
+
+  // Instruction-file existence/size, observed at ingest time.
+  const stats = instructionsFile === null ? null : await stat(instructionsFile).catch(() => null);
+  const vtraceInstructionsFileExists = stats !== null && stats.isFile();
+  const vtraceInstructionsFileSize = vtraceInstructionsFileExists ? stats!.size : null;
 
   // Patch install state from the manifest (on-disk install, distinct from runtime injection).
   const manifest = await readJsonIfExists(path.join(outDir, VTRACE_PATCH_MANIFEST_FILENAME));
@@ -1062,22 +1215,35 @@ async function collectRunEvidence(outDir: string): Promise<Stage5RunEvidence> {
     ? manifest.installed
     : "unknown";
 
-  // Runtime injection evidence: parse the captured vtrace stderr for the log line.
+  // Runtime injection evidence: parse the captured vtrace stderr.
   const stderrPath = path.join(rawConditionDir(outDir, "vtrace"), "_run.stderr.txt");
   const stderr = await readFile(stderrPath, "utf8").catch(() => null);
-  let vtraceInjectionObserved: boolean | "unknown";
-  if (stderr === null && !vtraceRunRecorded) {
-    vtraceInjectionObserved = "unknown";
-  } else {
-    vtraceInjectionObserved = (stderr ?? "").includes(STAGE5_VTRACE_INJECTION_LOG);
-  }
+  const injection = stderr === null && !vtraceRunRecorded ? { observed: "unknown" as const, error: null } : parseVtraceInjection(stderr ?? "");
+  const vtraceInjectionObserved = injection.observed;
+  const vtraceInjectionError = injection.error;
   if (vtraceInjectionObserved === true) {
     notes.push("Runtime vtrace injection log observed in captured vtrace stderr.");
   } else if (vtraceInjectionObserved === false) {
     notes.push("No runtime vtrace injection log found in captured vtrace stderr.");
   }
+  if (vtraceInjectionError !== null) notes.push(vtraceInjectionError);
 
-  return { vtraceMethod, vtracePatchInstalled, vtraceInstructionsFile: instructionsFile, vtraceInjectionObserved, notes };
+  const vtraceTreatmentValid = computeTreatmentValid(vtraceMethod, vtraceInjectionObserved);
+  if (vtraceMethod === "local-patch" && vtraceTreatmentValid === false) {
+    notes.push("Vtrace injection was skipped; this run is not a valid vtrace treatment.");
+  }
+
+  return {
+    vtraceMethod,
+    vtracePatchInstalled,
+    vtraceInstructionsFile: instructionsFile,
+    vtraceInstructionsFileExists,
+    vtraceInstructionsFileSize,
+    vtraceInjectionObserved,
+    vtraceInjectionError,
+    vtraceTreatmentValid,
+    notes,
+  };
 }
 
 function summarize(rows: readonly Stage5Row[], pairs: readonly PairComparison[]): Stage5Summary {
@@ -1130,6 +1296,9 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         cell(row.numTurns),
         cell(row.toolCallsTotal),
         cell(row.patchAvailable),
+        row.vtraceMethod ?? "",
+        row.vtraceInjectionObserved === null ? "" : String(row.vtraceInjectionObserved),
+        row.vtraceTreatmentValid === null ? "" : String(row.vtraceTreatmentValid),
         row.error ?? "",
         row.rawResultPath,
         row.parserKind,
@@ -1228,7 +1397,7 @@ export function renderMarkdown(artifact: NormalizedArtifact, config: CliConfig):
 }
 
 // Run-level injection evidence table plus a warning when local-patch was the
-// method but the runtime injection log was not observed.
+// method but the runtime injection was not actually observed (a no-op treatment).
 function renderVtraceEvidence(evidence: Stage5RunEvidence): string[] {
   const lines = [
     "| Field | Value |",
@@ -1236,17 +1405,25 @@ function renderVtraceEvidence(evidence: Stage5RunEvidence): string[] {
     `| vtrace_method | ${evidence.vtraceMethod} |`,
     `| vtrace_patch_installed | ${String(evidence.vtracePatchInstalled)} |`,
     `| vtrace_instructions_file | ${evidence.vtraceInstructionsFile ?? "(none)"} |`,
+    `| vtrace_instructions_file_exists | ${String(evidence.vtraceInstructionsFileExists)} |`,
+    `| vtrace_instructions_file_size | ${evidence.vtraceInstructionsFileSize ?? "(n/a)"} |`,
     `| vtrace_injection_observed | ${String(evidence.vtraceInjectionObserved)} |`,
+    `| vtrace_injection_error | ${evidence.vtraceInjectionError ?? "(none)"} |`,
+    `| vtrace_treatment_valid | ${String(evidence.vtraceTreatmentValid)} |`,
   ];
-  if (evidence.vtraceMethod === "local-patch" && evidence.vtraceInjectionObserved !== true) {
+  if (evidence.vtraceMethod === "local-patch" && evidence.vtraceTreatmentValid !== true) {
     lines.push(
       "",
-      "> ⚠️ Warning: the recorded vtrace method is `local-patch`, but no runtime injection was observed " +
-        `in the captured vtrace stderr (\`${STAGE5_VTRACE_INJECTION_LOG} ...\` was not found). The vtrace ` +
-        "condition may have run WITHOUT the injected vtrace context, making it indistinguishable from " +
-        "baseline. Treat this comparison as suspect: confirm the patch is installed and re-run the vtrace " +
-        "condition until the injection log appears.",
+      "> ⚠️ Warning: Vtrace injection was skipped; this run is not a valid vtrace treatment. The recorded " +
+        "vtrace method is `local-patch`, but no runtime injection was observed in the captured vtrace stderr " +
+        `(\`${STAGE5_VTRACE_INJECTION_LOG} ...\` was not found). The vtrace condition ran WITHOUT the injected ` +
+        "vtrace context, making it indistinguishable from baseline, so its token/cost/duration deltas must NOT " +
+        "be advertised as vtrace performance. Confirm the patch is installed and that the instructions file " +
+        "survives into the run, then re-run the vtrace condition until the injection log appears.",
     );
+    if (evidence.vtraceInjectionError !== null) {
+      lines.push("", `> Injection error: \`${evidence.vtraceInjectionError}\``);
+    }
   }
   return lines;
 }
@@ -1272,11 +1449,15 @@ function describeResultMode(pairs: readonly PairComparison[], rows: readonly Sta
 
 function renderPairTable(pairs: readonly PairComparison[]): string {
   if (pairs.length === 0) return "No paired instances have been ingested yet.";
+  // When the vtrace treatment is invalid (injection skipped) the efficiency
+  // deltas are NOT vtrace performance, so we show "invalid" instead of a number.
+  const reductionCell = (pair: PairComparison, value: number | null): string =>
+    pair.vtraceTreatmentValid === false ? "invalid" : formatPct(value);
   return [
-    "| instance | baseline resolved | vtrace resolved | outcome | baseline tokens | vtrace tokens | token reduction | cost reduction | duration reduction |",
-    "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
+    "| instance | baseline resolved | vtrace resolved | outcome | treatment valid | baseline tokens | vtrace tokens | token reduction | cost reduction | duration reduction |",
+    "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
     ...pairs.map((pair) =>
-      `| ${pair.instanceId} | ${cellOrDash(pair.baselineResolved)} | ${cellOrDash(pair.vtraceResolved)} | ${pair.outcome} | ${cellOrDash(pair.baselineTotalTokens)} | ${cellOrDash(pair.vtraceTotalTokens)} | ${formatPct(pair.tokenReductionPct)} | ${formatPct(pair.costReductionPct)} | ${formatPct(pair.durationReductionPct)} |`,
+      `| ${pair.instanceId} | ${cellOrDash(pair.baselineResolved)} | ${cellOrDash(pair.vtraceResolved)} | ${pair.outcome} | ${cellOrDash(pair.vtraceTreatmentValid)} | ${cellOrDash(pair.baselineTotalTokens)} | ${cellOrDash(pair.vtraceTotalTokens)} | ${reductionCell(pair, pair.tokenReductionPct)} | ${reductionCell(pair, pair.costReductionPct)} | ${reductionCell(pair, pair.durationReductionPct)} |`,
     ),
   ].join("\n");
 }

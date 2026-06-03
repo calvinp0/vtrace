@@ -104,7 +104,9 @@ Valid first smoke options:
 
 The chosen method must be recorded in the report.
 
-This harness defaults to **Approach A (instructions-file)**: `run-vtrace` writes `results/raw/vtrace/_vtrace_instructions.md` and exports `VTRACE_AGENT_INSTRUCTIONS_FILE` (plus `VTRACE_SMOKE=1`, `VTRACE_METHOD`) into the benchmark process environment, while running the **identical** `--no-vexp` command as baseline (same model/agent/budget).
+This harness defaults to **Approach A (instructions-file)**: `run-vtrace` writes `results/_vtrace_instructions.md` and exports `VTRACE_AGENT_INSTRUCTIONS_FILE` (plus `VTRACE_SMOKE=1`, `VTRACE_METHOD`) into the benchmark process environment, while running the **identical** `--no-vexp` command as baseline (same model/agent/budget).
+
+> The instructions file lives at the **results root**, not under `raw/vtrace/`. vexp-swe-bench's `run` clears its `--output` dir (`raw/vtrace`) at startup, which would delete an instructions file written there before the agent ever reads it (the original `injection skipped: ENOENT` no-op). The results root is never passed to vexp as `--output`, so the file survives the run.
 
 > ⚠️ **`instructions-file` may be a no-op.** The external `vexp-swe-bench` Claude Code adapter (`dist/agents/claude-code.js`) builds its prompt from the task `problem_statement` only and does **not** read `VTRACE_AGENT_INSTRUCTIONS_FILE`. With the bare `instructions-file` method the env var is exported but never consumed, so the vtrace condition runs the same prompt as baseline. Treat any `instructions-file` result as suspect unless you confirm the wrapper reads the file.
 
@@ -116,8 +118,10 @@ The patch:
 
 - inserts a block guarded by the marker `STAGE5_VTRACE_INSTRUCTIONS_PATCH` (idempotent — re-running install is a no-op);
 - backs the file up once to `<file>.stage5-vtrace-backup` (never overwritten);
-- logs `Stage5 vtrace instructions injected from <path>` to **stderr** (stdout is parsed as stream-json for metrics);
+- logs `Stage5 vtrace instructions injected from <path>` to **stderr** (stdout is parsed as stream-json for metrics), or `Stage5 vtrace injection skipped: <error>` if the file could not be read;
 - targets the built `dist/` output directly, so it is a **local smoke patch** that is lost on `npm run build` and must be re-installed after a rebuild.
+
+`run-vtrace --vtrace-method local-patch` writes the instructions file, then — **before spawning** the external CLI — asserts the file exists, is non-empty, and that the patch marker is installed; it aborts up front otherwise (no tokens spent). After the run, `ingest`/`report` parse the captured vtrace `_run.stderr.txt` and record `vtrace_injection_observed`, `vtrace_injection_error`, and `vtrace_treatment_valid`. If injection was skipped, the report prints **"Vtrace injection was skipped; this run is not a valid vtrace treatment."**, marks the per-instance efficiency deltas as `invalid`, and does not advertise them as vtrace performance.
 
 `run-vtrace --vtrace-method local-patch` refuses to run until the marker is present, failing **before** any agent is spawned so no tokens are wasted on a silent no-op.
 
