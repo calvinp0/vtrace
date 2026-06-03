@@ -37,6 +37,14 @@ The default `--worktree-mode copy` copies ARC into the isolated run directory. P
 
 The validator enforces `allowed_files_only` for every task. For the initial task set, Claude may write only `STAGE4_NOTES.md`; changes to real ARC source, docs, tests, or other markdown files fail validation.
 
+Prompt-only constraints were insufficient in the first smoke pair: Claude still updated ARC documentation files while also writing `STAGE4_NOTES.md`. For the initial doc-note tasks, use protected allowed-file mode:
+
+```text
+--claude-protect-allowed-files
+```
+
+This mode attempts to configure Claude Code tool permissions so reads remain available while `Edit`/`Write` are scoped to the task `allowed_files`, with explicit disallows for common ARC source/doc paths. These tool restrictions are best-effort; validation still enforces `allowed_files_only` and remains the source of truth.
+
 Benchmark/tool state paths are ignored for changed-file safety because local tools may create them while inspecting the isolated copy:
 
 ```text
@@ -62,6 +70,7 @@ bun benchmarks/arc_stage4_autonomous_edit/run_arc_stage4_autonomous_edit.ts \
   --agent-source claude \
   --mode run-pair \
   --task-id doc_find_arkane_input \
+  --claude-protect-allowed-files \
   --yes
 ```
 
@@ -76,6 +85,7 @@ bun benchmarks/arc_stage4_autonomous_edit/run_arc_stage4_autonomous_edit.ts \
   --mode run-pair \
   --task-id doc_find_arkane_input \
   --overwrite \
+  --claude-protect-allowed-files \
   --yes
 ```
 

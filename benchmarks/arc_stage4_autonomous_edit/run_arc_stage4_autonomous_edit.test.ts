@@ -8,9 +8,11 @@ import {
   applyTaskSetup,
   buildPrompt,
   buildClaudeArgs,
+  buildClaudeToolPolicy,
   classifyOutcome,
   comparePairs,
   loadStage4Tasks,
+  parseArgs,
   runMatrix,
   runOne,
   validateTaskRun,
@@ -68,6 +70,7 @@ test("setup file creation writes benchmark-local files", async () => {
 test("prompt generation separates baseline and vtrace context", () => {
   const baseline = buildPrompt(TASK, "baseline", "vtrace context");
   const vtrace = buildPrompt(TASK, "vtrace", "vtrace context");
+  const protectedPrompt = buildPrompt(TASK, "baseline", "", true);
 
   assert.match(baseline, /You are running an autonomous edit benchmark/);
   assert.doesNotMatch(baseline, /## vtrace context/);
@@ -77,6 +80,8 @@ test("prompt generation separates baseline and vtrace context", () => {
   assert.match(vtrace, /Changing any file outside the allowed list fails the benchmark/);
   assert.match(vtrace, /write the answer only in STAGE4_NOTES.md/);
   assert.match(vtrace, /Do not update ARC documentation files, source files, tests, or markdown files other than STAGE4_NOTES.md/);
+  assert.doesNotMatch(baseline, /runner has attempted to restrict edit tools/);
+  assert.match(protectedPrompt, /runner has attempted to restrict edit tools to the allowed files/);
 });
 
 test("Claude args default to autonomous edit permissions with narrow tools", () => {
@@ -88,6 +93,7 @@ test("Claude args default to autonomous edit permissions with narrow tools", () 
     claudeAppendSystemPromptFile: null,
     claudeBare: false,
     claudeDisableTools: false,
+    claudeProtectAllowedFiles: false,
     claudePermissionMode: "acceptEdits",
     claudeAllowedTools: ["Read", "Grep", "Glob", "LS", "Edit", "Write"],
     claudeExtraArgs: [],
@@ -100,6 +106,70 @@ test("Claude args default to autonomous edit permissions with narrow tools", () 
     "--permission-mode", "acceptEdits",
     "--allowedTools", "Read,Grep,Glob,LS,Edit,Write",
   ]);
+});
+
+test("Claude args include protected edit policy when enabled", () => {
+  const args = buildClaudeArgs({
+    claudeOutputFormat: "json",
+    claudeMaxTurns: 8,
+    claudeModel: null,
+    claudeSystemPromptFile: null,
+    claudeAppendSystemPromptFile: null,
+    claudeBare: false,
+    claudeDisableTools: false,
+    claudeProtectAllowedFiles: true,
+    claudePermissionMode: "acceptEdits",
+    claudeAllowedTools: ["Read", "Grep", "Glob", "LS", "Edit", "Write"],
+    claudeExtraArgs: [],
+  }, TASK);
+
+  assert.deepEqual(args, [
+    "-p",
+    "--output-format", "json",
+    "--max-turns", "8",
+    "--permission-mode", "acceptEdits",
+    "--tools", "Read,Grep,Glob,LS,Edit,Write",
+    "--allowedTools", "Read",
+    "--allowedTools", "Grep",
+    "--allowedTools", "Glob",
+    "--allowedTools", "LS",
+    "--allowedTools", "Edit(STAGE4_NOTES.md)",
+    "--allowedTools", "Write(STAGE4_NOTES.md)",
+    "--disallowedTools", "Edit(docs/*)",
+    "--disallowedTools", "Write(docs/*)",
+    "--disallowedTools", "Edit(arc/*)",
+    "--disallowedTools", "Write(arc/*)",
+    "--disallowedTools", "Edit(leng_gauss.md)",
+    "--disallowedTools", "Write(leng_gauss.md)",
+    "--disallowedTools", "Edit(wang_gauss.md)",
+    "--disallowedTools", "Write(wang_gauss.md)",
+  ]);
+});
+
+test("--claude-protect-allowed-files is parsed", () => {
+  const config = parseArgs([
+    "--repo", "/tmp/arc",
+    "--tasks", "/tmp/tasks.json",
+    "--out", "/tmp/out",
+    "--agent-source", "claude",
+    "--mode", "run-one",
+    "--task-id", TASK.id,
+    "--condition", "baseline",
+    "--claude-protect-allowed-files",
+    "--yes",
+  ]);
+
+  assert.equal(config.claudeProtectAllowedFiles, true);
+});
+
+test("protected tool policy is explicit and task-scoped", () => {
+  const policy = buildClaudeToolPolicy(TASK);
+
+  assert.equal(policy.tools, "Read,Grep,Glob,LS,Edit,Write");
+  assert.ok(policy.allowedTools.includes("Edit(STAGE4_NOTES.md)"));
+  assert.ok(policy.allowedTools.includes("Write(STAGE4_NOTES.md)"));
+  assert.ok(policy.disallowedTools.includes("Edit(docs/*)"));
+  assert.ok(policy.disallowedTools.includes("Edit(arc/*)"));
 });
 
 test("required_file_contains validation passes when all strings exist", async () => {
@@ -242,6 +312,27 @@ test("run-one uses isolated worktree cwd and captures patch status with mocked r
   assert.equal(validation.passed, true);
 });
 
+test("run-one records protected allowed-file status in meta and reports", async () => {
+  const config = { ...(await makeConfig()), claudeProtectAllowedFiles: true, ingestAfterRun: true };
+
+  await runOne(config, { runProcess: mockRunner() });
+
+  const meta = JSON.parse(await readFile(path.join(config.out, "agent_runs", `${TASK.id}.baseline.meta.json`), "utf8"));
+  assert.equal(meta.protectAllowedFiles, true);
+  assert.deepEqual(meta.allowedFiles, ["STAGE4_NOTES.md"]);
+  assert.deepEqual(meta.claudeToolPolicy.allowedTools.slice(-2), ["Edit(STAGE4_NOTES.md)", "Write(STAGE4_NOTES.md)"]);
+
+  const csv = await readFile(path.join(config.out, "arc_stage4_autonomous_edit.csv"), "utf8");
+  assert.match(csv.split(/\r?\n/)[0]!, /protected_allowed_files/);
+  assert.match(csv, /,true,true,/);
+
+  const json = JSON.parse(await readFile(path.join(config.out, "arc_stage4_autonomous_edit.json"), "utf8"));
+  assert.equal(json.rows[0].protectedAllowedFiles, true);
+
+  const markdown = await readFile(path.join(config.out, "arc_stage4_autonomous_edit.md"), "utf8");
+  assert.match(markdown, /Protected allowed-file runs: 1/);
+});
+
 function makeRow(condition: "baseline" | "vtrace", passed: boolean, totalTokens: number, costUsd: number): Stage4RunRow {
   return {
     taskId: TASK.id,
@@ -262,6 +353,7 @@ function makeRow(condition: "baseline" | "vtrace", passed: boolean, totalTokens:
     changedFiles: ["STAGE4_NOTES.md"],
     ignoredChangedFiles: [],
     disallowedChangedFiles: [],
+    protectedAllowedFiles: false,
     allowedFilesOnly: true,
     validationFailedChecks: [],
     responseParseError: null,
@@ -300,6 +392,7 @@ async function makeConfig(): Promise<CliConfig> {
     claudeAppendSystemPromptFile: null,
     claudeBare: false,
     claudeDisableTools: false,
+    claudeProtectAllowedFiles: false,
     claudePermissionMode: "acceptEdits",
     claudeAllowedTools: ["Read", "Grep", "Glob", "LS", "Edit", "Write"],
     toolCommand: "handoff",

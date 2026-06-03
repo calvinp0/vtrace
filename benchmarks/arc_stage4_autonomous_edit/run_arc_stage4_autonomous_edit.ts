@@ -55,6 +55,7 @@ export interface CliConfig {
   readonly claudeAppendSystemPromptFile: string | null;
   readonly claudeBare: boolean;
   readonly claudeDisableTools: boolean;
+  readonly claudeProtectAllowedFiles: boolean;
   readonly claudePermissionMode: string | null;
   readonly claudeAllowedTools: readonly string[];
   readonly toolCommand: "capsule" | "handoff";
@@ -80,6 +81,12 @@ export interface ValidationResult {
   readonly notes: readonly string[];
 }
 
+export interface ClaudeToolPolicy {
+  readonly tools: string | null;
+  readonly allowedTools: readonly string[];
+  readonly disallowedTools: readonly string[];
+}
+
 export interface Stage4RunRow {
   readonly taskId: string;
   readonly condition: BenchmarkCondition;
@@ -99,6 +106,7 @@ export interface Stage4RunRow {
   readonly changedFiles: readonly string[];
   readonly ignoredChangedFiles: readonly string[];
   readonly disallowedChangedFiles: readonly string[];
+  readonly protectedAllowedFiles: boolean;
   readonly allowedFilesOnly: boolean;
   readonly validationFailedChecks: readonly string[];
   readonly responseParseError: string | null;
@@ -144,6 +152,7 @@ const DEFAULT_CONFIG: CliConfig = {
   claudeAppendSystemPromptFile: null,
   claudeBare: false,
   claudeDisableTools: false,
+  claudeProtectAllowedFiles: false,
   claudePermissionMode: "acceptEdits",
   claudeAllowedTools: ["Read", "Grep", "Glob", "LS", "Edit", "Write"],
   toolCommand: "handoff",
@@ -177,6 +186,7 @@ const CSV_COLUMNS = [
   "changed_files",
   "ignored_changed_files",
   "disallowed_changed_files",
+  "protected_allowed_files",
   "allowed_files_only",
   "validation_failed_checks",
   "response_parse_error",
@@ -204,10 +214,13 @@ export async function applyTaskSetup(worktree: string, task: Stage4Task): Promis
   }
 }
 
-export function buildPrompt(task: Stage4Task, condition: BenchmarkCondition, vtraceContext: string): string {
+export function buildPrompt(task: Stage4Task, condition: BenchmarkCondition, vtraceContext: string, protectAllowedFiles = false): string {
   const allowedFiles = task.allowed_files.map((file) => `- ${file}`).join("\n");
   const initialDocTaskInstruction = task.allowed_files.length === 1 && task.allowed_files[0] === "STAGE4_NOTES.md"
     ? "\nFor this task, write the answer only in STAGE4_NOTES.md.\nDo not update ARC documentation files, source files, tests, or markdown files other than STAGE4_NOTES.md.\n"
+    : "";
+  const protectedInstruction = protectAllowedFiles
+    ? "\nThe runner has attempted to restrict edit tools to the allowed files. If a tool refuses an edit outside the allowed list, choose the allowed file instead.\n"
     : "";
   const vtraceSection = condition === "vtrace"
     ? `\n## vtrace context\n\n${vtraceContext.trim() || "(no vtrace context available)"}\n`
@@ -225,6 +238,7 @@ Changing any file outside the allowed list fails the benchmark.
 You may inspect other files for information, but all written changes must go only into the allowed file(s).
 If you cannot complete the task by editing only the allowed file(s), leave other files unchanged and explain that in the final JSON.
 ${initialDocTaskInstruction}
+${protectedInstruction}
 
 Do not change git history.
 Do not install packages.
@@ -258,10 +272,11 @@ export function buildClaudeArgs(config: Pick<CliConfig,
   | "claudeAppendSystemPromptFile"
   | "claudeBare"
   | "claudeDisableTools"
+  | "claudeProtectAllowedFiles"
   | "claudePermissionMode"
   | "claudeAllowedTools"
   | "claudeExtraArgs"
->): string[] {
+>, task?: Pick<Stage4Task, "allowed_files">): string[] {
   const args = ["-p", "--output-format", config.claudeOutputFormat, "--max-turns", String(config.claudeMaxTurns)];
   if (config.claudeModel !== null) args.push("--model", config.claudeModel);
   if (config.claudeSystemPromptFile !== null) args.push("--system-prompt-file", config.claudeSystemPromptFile);
@@ -269,9 +284,33 @@ export function buildClaudeArgs(config: Pick<CliConfig,
   if (config.claudeBare) args.push("--bare");
   if (config.claudeDisableTools) args.push("--tools", "");
   if (!config.claudeDisableTools && config.claudePermissionMode !== null) args.push("--permission-mode", config.claudePermissionMode);
-  if (!config.claudeDisableTools && config.claudeAllowedTools.length > 0) args.push("--allowedTools", config.claudeAllowedTools.join(","));
+  if (!config.claudeDisableTools && config.claudeProtectAllowedFiles && task !== undefined) {
+    const policy = buildClaudeToolPolicy(task);
+    if (policy.tools !== null) args.push("--tools", policy.tools);
+    for (const allowed of policy.allowedTools) args.push("--allowedTools", allowed);
+    for (const disallowed of policy.disallowedTools) args.push("--disallowedTools", disallowed);
+  } else if (!config.claudeDisableTools && config.claudeAllowedTools.length > 0) {
+    args.push("--allowedTools", config.claudeAllowedTools.join(","));
+  }
   args.push(...config.claudeExtraArgs);
   return args;
+}
+
+export function buildClaudeToolPolicy(task: Pick<Stage4Task, "allowed_files">): ClaudeToolPolicy {
+  const allowedFiles = task.allowed_files.map(normalizePath);
+  const editAllowedTools = allowedFiles.flatMap((file) => [`Edit(${file})`, `Write(${file})`]);
+  const disallowedTargets = [
+    "docs/*",
+    "arc/*",
+    "leng_gauss.md",
+    "wang_gauss.md",
+  ].filter((target) => !allowedFiles.includes(target));
+  const disallowedTools = disallowedTargets.flatMap((target) => [`Edit(${target})`, `Write(${target})`]);
+  return {
+    tools: "Read,Grep,Glob,LS,Edit,Write",
+    allowedTools: ["Read", "Grep", "Glob", "LS", ...editAllowedTools],
+    disallowedTools,
+  };
 }
 
 export async function validateTaskRun(worktree: string, task: Stage4Task, changedFiles: readonly string[]): Promise<ValidationResult> {
@@ -472,7 +511,7 @@ async function writePromptsForTask(config: CliConfig, task: Stage4Task, deps: Ru
 
 async function writePromptForCondition(config: CliConfig, task: Stage4Task, condition: BenchmarkCondition, deps: RunDeps): Promise<string> {
   const context = condition === "vtrace" ? await collectVtraceContext(config, task, deps) : "";
-  const prompt = buildPrompt(task, condition, context);
+  const prompt = buildPrompt(task, condition, context, config.claudeProtectAllowedFiles);
   const promptPath = path.join(config.out, "prompts", `${task.id}.${condition}.md`);
   await mkdir(path.dirname(promptPath), { recursive: true });
   await writeFile(promptPath, prompt);
@@ -490,7 +529,8 @@ async function collectVtraceContext(config: CliConfig, task: Stage4Task, deps: R
 async function runClaude(config: CliConfig, task: Stage4Task, condition: BenchmarkCondition, wt: string, promptPath: string, deps: RunDeps): Promise<void> {
   if (path.resolve(wt) === path.resolve(config.repo)) throw new Error("Refusing to run Claude in source ARC repo.");
   const prompt = await readFile(promptPath, "utf8");
-  const args = buildClaudeArgs(config);
+  const toolPolicy = config.claudeProtectAllowedFiles && !config.claudeDisableTools ? buildClaudeToolPolicy(task) : { tools: null, allowedTools: [], disallowedTools: [] };
+  const args = buildClaudeArgs(config, task);
   const startedAt = new Date();
   const startedMs = Date.now();
   const result = await (deps.runProcess ?? runProcess)(config.claudeCommand, args, { stdin: prompt, cwd: wt });
@@ -503,6 +543,9 @@ async function runClaude(config: CliConfig, task: Stage4Task, condition: Benchma
     command: config.claudeCommand,
     args,
     promptPath,
+    protectAllowedFiles: config.claudeProtectAllowedFiles,
+    allowedFiles: task.allowed_files,
+    claudeToolPolicy: toolPolicy,
     startedAt: startedAt.toISOString(),
     finishedAt: finishedAt.toISOString(),
     exitCode: result.exitCode,
@@ -569,6 +612,7 @@ async function ingestRun(config: CliConfig, task: Stage4Task, condition: Benchma
   const notes = [...delta.notes];
   const parseError = isRecord(response) && typeof response.parse_error === "string" ? response.parse_error : null;
   const durationMs = isRecord(meta) && typeof meta.durationMs === "number" ? meta.durationMs : null;
+  const protectedAllowedFiles = isRecord(meta) && meta.protectAllowedFiles === true;
   return {
     taskId: task.id,
     condition,
@@ -588,6 +632,7 @@ async function ingestRun(config: CliConfig, task: Stage4Task, condition: Benchma
     changedFiles: Array.isArray(validation.changedFiles) ? validation.changedFiles.filter(isString) : [],
     ignoredChangedFiles: Array.isArray(validation.ignoredChangedFiles) ? validation.ignoredChangedFiles.filter(isString) : [],
     disallowedChangedFiles: Array.isArray(validation.disallowedChangedFiles) ? validation.disallowedChangedFiles.filter(isString) : [],
+    protectedAllowedFiles,
     allowedFilesOnly: validation.allowedFilesOnly === true,
     validationFailedChecks: Array.isArray(validation.failedChecks) ? validation.failedChecks.filter(isString) : [],
     responseParseError: parseError,
@@ -609,6 +654,7 @@ function summarize(rows: readonly Stage4RunRow[], pairs: readonly PairComparison
     meanTokenReductionAllPairs: mean(pairs.map((pair) => pair.actualTotalTokenReductionPct).filter(isNumber)),
     meanCostReduction: mean(pairs.map((pair) => pair.actualCostReductionPct).filter(isNumber)),
     changedFilesSafetyFailures: rows.filter((row) => !row.allowedFilesOnly).length,
+    protectedAllowedFileRuns: rows.filter((row) => row.protectedAllowedFiles).length,
     ambiguousCcusageDeltas: rows.filter((row) => row.notes.some((note) => note.includes("multiple new sessions"))).length,
     invalidResponses: rows.filter((row) => row.responseParseError !== null).length,
   };
@@ -633,6 +679,7 @@ function renderMarkdown(rows: readonly Stage4RunRow[], pairs: readonly PairCompa
     `- Mean token reduction across all pairs: ${formatPct(summary.meanTokenReductionAllPairs) || "n/a"}`,
     `- Mean cost reduction: ${formatPct(summary.meanCostReduction) || "n/a"}`,
     `- Changed-files safety failures: ${summary.changedFilesSafetyFailures}`,
+    `- Protected allowed-file runs: ${summary.protectedAllowedFileRuns}`,
     `- Ambiguous ccusage deltas: ${summary.ambiguousCcusageDeltas}`,
     `- Invalid responses: ${summary.invalidResponses}`,
     "",
@@ -695,6 +742,7 @@ function renderCsv(rows: readonly Stage4RunRow[]): string {
       row.changedFiles.join("; "),
       row.ignoredChangedFiles.join("; "),
       row.disallowedChangedFiles.join("; "),
+      row.protectedAllowedFiles,
       row.allowedFilesOnly,
       row.validationFailedChecks.join("; "),
       row.responseParseError,
@@ -917,7 +965,7 @@ function isNodeError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error;
 }
 
-function parseArgs(argv: readonly string[]): CliConfig {
+export function parseArgs(argv: readonly string[]): CliConfig {
   const config = { ...DEFAULT_CONFIG };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index]!;
@@ -965,6 +1013,7 @@ function parseArgs(argv: readonly string[]): CliConfig {
       case "--claude-append-system-prompt-file": config.claudeAppendSystemPromptFile = requireValue(argv, ++index, arg); break;
       case "--claude-bare": config.claudeBare = true; break;
       case "--claude-disable-tools": config.claudeDisableTools = true; break;
+      case "--claude-protect-allowed-files": config.claudeProtectAllowedFiles = true; break;
       case "--claude-permission-mode": config.claudePermissionMode = requireValue(argv, ++index, arg); break;
       case "--no-claude-permission-mode": config.claudePermissionMode = null; break;
       case "--claude-allowed-tool": config.claudeAllowedTools = [...config.claudeAllowedTools, requireValue(argv, ++index, arg)]; break;
@@ -1006,7 +1055,7 @@ function parsePositiveInt(value: string, flag: string): number {
 }
 
 function printUsageAndExit(exitCode: number): never {
-  process.stdout.write("Usage: bun benchmarks/arc_stage4_autonomous_edit/run_arc_stage4_autonomous_edit.ts --repo /home/calvin/code/ARC --tasks benchmarks/arc_stage4_autonomous_edit/tasks.arc.stage4.json --out benchmarks/arc_stage4_autonomous_edit/results --agent-source claude --mode run-pair --task-id doc_find_arkane_input --yes\n");
+  process.stdout.write("Usage: bun benchmarks/arc_stage4_autonomous_edit/run_arc_stage4_autonomous_edit.ts --repo /home/calvin/code/ARC --tasks benchmarks/arc_stage4_autonomous_edit/tasks.arc.stage4.json --out benchmarks/arc_stage4_autonomous_edit/results --agent-source claude --mode run-pair --task-id doc_find_arkane_input --claude-protect-allowed-files --yes\n");
   process.exit(exitCode);
 }
 
