@@ -11,6 +11,10 @@ The runner supports both a manual workflow and automated Claude Code print-mode 
 
 These token counts come from ccusage local CLI usage data. They measure controlled orientation sessions, not full autonomous patch-solving.
 
+## Current Smoke Result
+
+The current Claude Code ccusage-backed smoke result is documented in [STAGE3_SMOKE.md](./STAGE3_SMOKE.md). It currently includes 4 paired controlled orientation tasks and reports both actual token reduction and quality-preserving actual reduction.
+
 ## Manual Workflow
 
 ```bash
