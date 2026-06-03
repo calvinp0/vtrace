@@ -11,12 +11,27 @@ export type Stage5Mode =
   | "prepare"
   | "run-baseline"
   | "run-vtrace"
+  | "run-vexp"
+  | "run-protocol"
+  | "evaluate"
   | "ingest"
   | "report"
   | "install-vtrace-patch"
   | "verify-vtrace-patch";
-export type Stage5Condition = "baseline" | "vtrace";
+export type Stage5Condition = "baseline" | "vtrace" | "vexp";
 export type VtraceMethod = "instructions-file" | "mcp" | "local-patch" | "indexed-context";
+// Stage 5C named protocols. A protocol selects which condition(s) to run and how:
+//   baseline       -> `run --no-vexp`
+//   vtrace-indexed -> `run --no-vexp` + vtrace indexed-context injection
+//   vexp           -> `run` (vexp ENABLED) — gated behind --allow-vexp, never default
+//   all            -> baseline + vtrace-indexed (+ vexp only if --allow-vexp)
+export type Stage5Protocol = "baseline" | "vtrace-indexed" | "vexp" | "all";
+// vexp-swe-bench evaluation modes. Stage 5C invokes the EXTERNAL benchmark's
+// separate `evaluate` step (see README "Stage 5C"); `run` alone always leaves
+// `resolved: null`. "docker" runs the real SWE-bench test suite; "lightweight"
+// only checks patch non-emptiness and is NOT a pass/fail signal.
+export type EvalMode = "docker" | "lightweight";
+export const STAGE5_CONDITIONS: readonly Stage5Condition[] = ["baseline", "vtrace", "vexp"];
 export type Outcome =
   | "both_resolved"
   | "vtrace_only_resolved"
@@ -64,6 +79,15 @@ export interface CliConfig {
   readonly vtraceContextMaxItems: number;
   readonly sweBenchDataFile: string | null;
   readonly runLabel: string | null;
+  // Stage 5C (evaluated protocol) configuration.
+  readonly protocol: Stage5Protocol;
+  // vexp is NEVER enabled unless this is explicitly set; guards every vexp run.
+  readonly allowVexp: boolean;
+  readonly evalMode: EvalMode;
+  // Full SWE-bench dataset JSONL (or HF name) passed to the external Docker
+  // evaluator as --dataset. null defers to the evaluator's own default.
+  readonly evalDataset: string | null;
+  readonly evalTimeout: number;
 }
 
 export interface SmokeInstancesFile {
@@ -86,7 +110,21 @@ export interface IndexedContextFields {
   readonly vtraceContextError: string | null;
 }
 
-export interface Stage5Row extends IndexedContextFields {
+// Stage 5C evaluation evidence, normalized per instance. resolved itself stays
+// on the row (it is the primary signal); these are the supporting fields proving
+// HOW it was reached. All null/"unknown" until an `evaluate` run populates them —
+// a generated-but-unevaluated patch never fabricates a pass/fail.
+export interface EvaluationFields {
+  readonly evaluationRan: boolean | null;
+  readonly evaluationMethod: EvalMode | "unknown" | null;
+  readonly failToPassPassed: Unknownable<boolean> | null;
+  readonly passToPassPassed: Unknownable<boolean> | null;
+  readonly testStatus: string | null;
+  readonly dockerUsed: boolean | "unknown" | null;
+  readonly evaluationError: string | null;
+}
+
+export interface Stage5Row extends IndexedContextFields, EvaluationFields {
   readonly instanceId: string;
   readonly condition: Stage5Condition;
   readonly resolved: Unknownable<boolean>;
@@ -139,6 +177,45 @@ export interface PairComparison {
   // From the vtrace row: false means the vtrace injection was skipped, so the
   // efficiency deltas must NOT be advertised as vtrace performance for this pair.
   readonly vtraceTreatmentValid: boolean | "unknown" | null;
+  // Stage 5C: the vexp condition (null when the vexp protocol was not run), so a
+  // single row can present baseline vs vtrace vs vexp side by side.
+  readonly vexpResolved: Unknownable<boolean> | null;
+  readonly vexpTotalTokens: Unknownable<number> | null;
+  readonly vexpTokenReductionPct: number | null;
+  // Whether at least two conditions produced a patch, so a diff/similarity could
+  // be computed for this instance (we do not compute similarity here, only flag it).
+  readonly patchDiffAvailable: boolean;
+}
+
+// Stage 5C per-condition aggregate. resolvedRate is over EVALUATED instances
+// (resolved !== "unknown") only — unknown never counts as a pass or a fail.
+export interface ConditionSummary {
+  readonly condition: Stage5Condition;
+  readonly instances: number;
+  readonly resolvedCount: number;
+  readonly evaluatedCount: number;
+  readonly resolvedRate: number | null;
+  readonly meanCost: number | null;
+  readonly meanDuration: number | null;
+  readonly meanTotalTokens: number | null;
+  readonly meanTokensForResolved: number | null;
+  readonly meanCostForResolved: number | null;
+  readonly validTreatments: number;
+  readonly invalidTreatments: number;
+}
+
+// Stage 5C per-condition evaluation evidence, reconstructed from the recorded
+// `_eval.meta.json` an `evaluate` run writes next to each condition's results.
+export interface EvaluationEvidence {
+  readonly condition: Stage5Condition;
+  readonly evaluationRan: boolean;
+  readonly evaluationMethod: EvalMode | "unknown";
+  readonly dockerUsed: boolean | "unknown";
+  readonly evaluationError: string | null;
+  readonly resultsFile: string | null;
+  readonly instancesEvaluated: number;
+  readonly resolvedCount: number;
+  readonly notes: readonly string[];
 }
 
 export interface Stage5Summary {
@@ -184,6 +261,9 @@ export interface NormalizedArtifact {
   readonly pairs: readonly PairComparison[];
   readonly summary: Stage5Summary;
   readonly evidence: Stage5RunEvidence;
+  // Stage 5C aggregate report fields.
+  readonly conditionSummaries: readonly ConditionSummary[];
+  readonly evaluations: readonly EvaluationEvidence[];
 }
 
 const DEFAULT_CONFIG: CliConfig = {
@@ -206,6 +286,12 @@ const DEFAULT_CONFIG: CliConfig = {
   vtraceContextMaxItems: 8,
   sweBenchDataFile: null,
   runLabel: null,
+  // Stage 5C: baseline protocol by default; vexp stays off unless --allow-vexp.
+  protocol: "baseline",
+  allowVexp: false,
+  evalMode: "docker",
+  evalDataset: null,
+  evalTimeout: 1800,
 };
 
 const CSV_COLUMNS = [
@@ -304,14 +390,26 @@ export async function resolveInstances(config: CliConfig): Promise<string[]> {
   return file === null ? [] : [...file.instances];
 }
 
-export function rawConditionDir(outDir: string, condition: Stage5Condition): string {
-  return path.join(outDir, "raw", condition);
+// Per-condition raw output dir. With --run-label, runs are isolated under
+// runs/<label>/ so multiple instances/protocols do not overwrite each other:
+//   results/runs/<label>/raw/{baseline,vtrace,vexp}
+// Without a label the legacy flat layout (results/raw/<condition>) is kept.
+export function rawConditionDir(outDir: string, condition: Stage5Condition, runLabel: string | null = null): string {
+  const root = runLabel === null ? outDir : path.join(outDir, "runs", runLabel);
+  return path.join(root, "raw", condition);
 }
 
-export function buildRunArgs(config: CliConfig, instances: readonly string[], outputDir: string): string[] {
-  // --no-vexp keeps vexp disabled in BOTH conditions. Stage 5 compares the
-  // baseline agent against the same agent with vtrace, never vexp vs vtrace.
-  return [config.cliEntry, "run", "--instances", instances.join(","), "--no-vexp", "--output", outputDir];
+export function buildRunArgs(
+  config: CliConfig,
+  instances: readonly string[],
+  outputDir: string,
+  enableVexp: boolean,
+): string[] {
+  const args = [config.cliEntry, "run", "--instances", instances.join(","), "--output", outputDir];
+  // --no-vexp keeps vexp disabled for the baseline and vtrace conditions. Only
+  // the explicit, --allow-vexp-gated vexp condition omits it to enable vexp.
+  if (!enableVexp) args.splice(4, 0, "--no-vexp");
+  return args;
 }
 
 export function buildBaselineCommand(
@@ -320,7 +418,7 @@ export function buildBaselineCommand(
 ): { command: string; args: string[]; cwd: string | null } {
   return {
     command: config.nodeCommand,
-    args: buildRunArgs(config, instances, rawConditionDir(config.out, "baseline")),
+    args: buildRunArgs(config, instances, rawConditionDir(config.out, "baseline", config.runLabel), false),
     cwd: config.vexpSweBenchDir,
   };
 }
@@ -334,9 +432,23 @@ export function buildVtraceCommand(
   // via environment so vexp is never enabled and command parity is preserved.
   return {
     command: config.nodeCommand,
-    args: buildRunArgs(config, instances, rawConditionDir(config.out, "vtrace")),
+    args: buildRunArgs(config, instances, rawConditionDir(config.out, "vtrace", config.runLabel), false),
     cwd: config.vexpSweBenchDir,
     env: vtraceEnv(config),
+  };
+}
+
+// The vexp condition runs the EXTERNAL benchmark with vexp ENABLED (no --no-vexp).
+// It is the only condition that turns vexp on, and only callers that have already
+// asserted --allow-vexp should build it. No vtrace env is attached.
+export function buildVexpCommand(
+  config: CliConfig,
+  instances: readonly string[],
+): { command: string; args: string[]; cwd: string | null } {
+  return {
+    command: config.nodeCommand,
+    args: buildRunArgs(config, instances, rawConditionDir(config.out, "vexp", config.runLabel), true),
+    cwd: config.vexpSweBenchDir,
   };
 }
 
@@ -404,6 +516,10 @@ export function comparePairs(rows: readonly Stage5Row[]): PairComparison[] {
   for (const [instanceId, conditions] of byInstance) {
     const baseline = conditions.get("baseline") ?? null;
     const vtrace = conditions.get("vtrace") ?? null;
+    const vexp = conditions.get("vexp") ?? null;
+    // A diff/similarity could be computed only if at least two conditions actually
+    // produced a patch. We flag availability; we do not compute the diff here.
+    const patchCount = [baseline, vtrace, vexp].filter((row) => row?.patchAvailable === true).length;
     pairs.push({
       instanceId,
       baselineResolved: baseline?.resolved ?? null,
@@ -419,6 +535,10 @@ export function comparePairs(rows: readonly Stage5Row[]): PairComparison[] {
       vtraceDurationMs: vtrace?.durationMs ?? null,
       durationReductionPct: reductionPct(baseline?.durationMs ?? null, vtrace?.durationMs ?? null),
       vtraceTreatmentValid: vtrace?.vtraceTreatmentValid ?? null,
+      vexpResolved: vexp?.resolved ?? null,
+      vexpTotalTokens: vexp?.totalTokens ?? null,
+      vexpTokenReductionPct: reductionPct(baseline?.totalTokens ?? null, vexp?.totalTokens ?? null),
+      patchDiffAvailable: patchCount >= 2,
     });
   }
   return pairs.sort((left, right) => left.instanceId.localeCompare(right.instanceId));
@@ -580,6 +700,7 @@ export function extractRow(
     vtraceInjectionError: null,
     vtraceTreatmentValid: null,
     ...nullIndexedContextFields(),
+    ...nullEvaluationFields(),
     error: isString(errorValue) ? errorValue : null,
     rawResultPath,
     parserKind,
@@ -775,17 +896,24 @@ export async function runPrepare(config: CliConfig, deps: RunDeps = {}): Promise
     instances,
     instancesSelected: instances.length,
     vtraceMethod: config.vtraceMethod,
+    protocol: config.protocol,
+    allowVexp: config.allowVexp,
+    runLabel: config.runLabel,
     outputDirs: {
-      baselineRaw: rawConditionDir(config.out, "baseline"),
-      vtraceRaw: rawConditionDir(config.out, "vtrace"),
+      baselineRaw: rawConditionDir(config.out, "baseline", config.runLabel),
+      vtraceRaw: rawConditionDir(config.out, "vtrace", config.runLabel),
+      vexpRaw: rawConditionDir(config.out, "vexp", config.runLabel),
     },
     commands: {
       baseline: renderCommand(buildBaselineCommand(config, instances)),
       vtrace: renderCommand(buildVtraceCommand(config, instances)),
+      // The vexp command is shown for transparency; it only RUNS with --allow-vexp.
+      vexp: renderCommand(buildVexpCommand(config, instances)),
     },
     notes: [
       instances.length === 0 ? "No instances selected; pass --instances or populate smoke_instances.json." : "",
       config.vexpSweBenchDir === null ? "No --vexp-swe-bench-dir provided." : "",
+      !config.allowVexp ? "vexp condition is gated: pass --allow-vexp to run the vexp protocol." : "",
     ].filter((note) => note.length > 0),
   };
   await writeFile(path.join(config.out, "run_plan.json"), `${JSON.stringify(plan, null, 2)}\n`);
@@ -827,6 +955,254 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
     }
   }
   await runCondition(config, "vtrace", deps, extraVtraceMeta);
+}
+
+// Stage 5C: run the EXTERNAL benchmark with vexp ENABLED. This is the only
+// condition that turns vexp on, so it is hard-gated behind --allow-vexp. The
+// guard fires BEFORE any spawn so an accidental vexp run is impossible.
+export async function runVexp(config: CliConfig, deps: RunDeps = {}): Promise<void> {
+  assertVexpAllowed(config);
+  await ensureOutputTree(config.out);
+  await runCondition(config, "vexp", deps);
+}
+
+// Throws unless --allow-vexp was explicitly passed. Centralized so every vexp
+// entry point (run-vexp, protocol vexp/all) shares the identical guard.
+export function assertVexpAllowed(config: CliConfig): void {
+  if (!config.allowVexp) {
+    throw new Error(
+      "Refusing to run the vexp-enabled condition without --allow-vexp. The vexp protocol runs " +
+        "`node dist/cli.js run` WITHOUT --no-vexp; pass --allow-vexp to opt in explicitly.",
+    );
+  }
+}
+
+// Stage 5C: dispatch a named protocol to the underlying condition runner(s).
+// `all` runs baseline + vtrace-indexed always, and vexp only when --allow-vexp
+// is set (otherwise it is skipped with a clear note rather than failing the run).
+export async function runProtocol(config: CliConfig, deps: RunDeps = {}): Promise<void> {
+  switch (config.protocol) {
+    case "baseline":
+      await runBaseline(config, deps);
+      return;
+    case "vtrace-indexed":
+      // The vtrace-indexed protocol always means the indexed-context method.
+      await runVtrace({ ...config, vtraceMethod: "indexed-context" }, deps);
+      return;
+    case "vexp":
+      await runVexp(config, deps);
+      return;
+    case "all": {
+      await runBaseline(config, deps);
+      await runVtrace({ ...config, vtraceMethod: "indexed-context" }, deps);
+      if (config.allowVexp) {
+        await runVexp(config, deps);
+      } else {
+        process.stderr.write(
+          "Stage5 protocol all: skipping vexp condition (no --allow-vexp). Baseline and vtrace-indexed ran.\n",
+        );
+      }
+      return;
+    }
+  }
+}
+
+// ----- Stage 5C: evaluate mode ------------------------------------------------
+
+// Canonical evidence file written next to each condition's results when an
+// evaluate run completes, so ingest can report HOW resolved was reached.
+const EVAL_META_FILENAME = "_eval.meta.json";
+
+// Build the external evaluator command. vexp-swe-bench evaluates as a SEPARATE
+// step from `run` (which always leaves resolved=null): `evaluate <jsonl>` mutates
+// `resolved` IN-PLACE in the same JSONL. docker mode runs the real SWE-bench
+// suite; lightweight only checks patch non-emptiness and is NOT a pass/fail signal.
+export function buildEvaluateCommand(
+  config: CliConfig,
+  resultsFile: string,
+): { command: string; args: string[]; cwd: string | null } {
+  const args = [config.cliEntry, "evaluate", resultsFile, "--mode", config.evalMode, "--timeout", String(config.evalTimeout)];
+  if (config.evalMode === "docker" && config.evalDataset !== null) args.push("--dataset", config.evalDataset);
+  return { command: config.nodeCommand, args, cwd: config.vexpSweBenchDir };
+}
+
+// Find the canonical `swebench-*.jsonl` result log in a condition dir (the file
+// the evaluator reads and rewrites). Returns null when no result has been run.
+export async function findCanonicalResultsFile(dir: string): Promise<string | null> {
+  const files = await listFilesRecursive(dir).catch(() => [] as string[]);
+  const canonical = files.filter((absolute) => isCanonicalResultFile(path.basename(absolute)));
+  return canonical.sort().at(-1) ?? null;
+}
+
+// Count rows with a concrete resolved=true in a JSONL results file (post-eval),
+// tolerating the same field aliases the row parser uses.
+async function summarizeResolvedFromFile(resultsFile: string): Promise<{ evaluated: number; resolved: number }> {
+  const content = await readFile(resultsFile, "utf8").catch(() => "");
+  const records = parseJsonlRecords(content);
+  let evaluated = 0;
+  let resolved = 0;
+  for (const record of records) {
+    const value = pick(record, FIELD_ALIASES.resolved!);
+    if (value === undefined || value === null) continue;
+    const flag = asUnknownableBoolean(value);
+    if (flag === "unknown") continue;
+    evaluated += 1;
+    if (flag === true) resolved += 1;
+  }
+  return { evaluated, resolved };
+}
+
+// Invoke the external evaluator for ONE condition's results file and capture
+// per-condition evidence. The evaluator mutates `resolved` in-place; we re-read
+// the file to count outcomes. Never throws on a non-zero evaluator exit — the
+// failure is recorded as evaluation_error so a later run can be retried.
+export async function evaluateCondition(
+  config: CliConfig,
+  condition: Stage5Condition,
+  resultsFile: string,
+  deps: RunDeps = {},
+): Promise<EvaluationEvidence> {
+  const spec = buildEvaluateCommand(config, resultsFile);
+  const result = await (deps.runProcess ?? runProcess)(spec.command, spec.args, { cwd: spec.cwd ?? undefined });
+  const ran = result.exitCode === 0;
+  const evaluationError = ran ? null : `evaluate exited ${result.exitCode}: ${result.stderr.trim() || "(no stderr)"}`;
+  const counts = await summarizeResolvedFromFile(resultsFile);
+  const notes: string[] = [];
+  if (config.evalMode === "lightweight") {
+    notes.push("Lightweight evaluation does NOT run tests; resolved=unknown patches stay unevaluated.");
+  }
+  if (!ran) notes.push("Evaluation command failed; resolved values were not updated.");
+  return {
+    condition,
+    evaluationRan: ran,
+    evaluationMethod: config.evalMode,
+    // docker_used is true only when docker mode actually completed.
+    dockerUsed: config.evalMode === "docker" ? ran : false,
+    evaluationError,
+    resultsFile,
+    instancesEvaluated: counts.evaluated,
+    resolvedCount: counts.resolved,
+    notes,
+  };
+}
+
+// Stage 5C evaluate mode: run the external evaluator for every condition that has
+// results, writing per-condition `_eval.meta.json`. Returns the collected evidence.
+export async function runEvaluate(config: CliConfig, deps: RunDeps = {}): Promise<EvaluationEvidence[]> {
+  if (config.vexpSweBenchDir === null) throw new Error("--mode evaluate requires --vexp-swe-bench-dir.");
+  const cliPath = path.join(config.vexpSweBenchDir, config.cliEntry);
+  if (!(await pathExists(cliPath))) {
+    throw new Error(`vexp-swe-bench CLI not found at ${cliPath}. Run ./setup.sh in the external checkout first.`);
+  }
+  await ensureOutputTree(config.out);
+  const evaluations: EvaluationEvidence[] = [];
+  for (const condition of STAGE5_CONDITIONS) {
+    const dir = rawConditionDir(config.out, condition, config.runLabel);
+    const resultsFile = await findCanonicalResultsFile(dir);
+    if (resultsFile === null) continue; // condition not run; nothing to evaluate
+    const evidence = await evaluateCondition(config, condition, resultsFile, deps);
+    await writeFile(path.join(dir, EVAL_META_FILENAME), `${JSON.stringify(evidence, null, 2)}\n`);
+    evaluations.push(evidence);
+  }
+  if (evaluations.length === 0) {
+    throw new Error("No condition results found to evaluate. Run a protocol/condition first, then --mode evaluate.");
+  }
+  return evaluations;
+}
+
+// Normalize one instance's evaluation evidence out of a SWE-bench per-instance
+// report object (the structure swebench writes to report.json), keeping every
+// field "unknown" when the report does not expose it. Pure + easily testable:
+//
+//   { "<id>": { resolved, tests_status: { FAIL_TO_PASS: {success, failure}, ... } } }
+//
+export function normalizeEvaluationEvidence(
+  report: unknown,
+  instanceId: string,
+  method: EvalMode | "unknown",
+): {
+  resolved: Unknownable<boolean>;
+  failToPassPassed: Unknownable<boolean>;
+  passToPassPassed: Unknownable<boolean>;
+  testStatus: string | null;
+} {
+  const unknown = { resolved: "unknown" as const, failToPassPassed: "unknown" as const, passToPassPassed: "unknown" as const, testStatus: null };
+  if (!isRecord(report)) return unknown;
+  // Reports may be keyed by instance id, or be the instance entry directly.
+  const entry = isRecord(report[instanceId]) ? (report[instanceId] as Record<string, unknown>) : report;
+  const resolved = typeof entry.resolved === "boolean" ? entry.resolved : ("unknown" as const);
+  const status = isRecord(entry.tests_status) ? entry.tests_status : null;
+  // A bucket "passed" iff it has at least one success and no failures.
+  const bucketPassed = (name: string): Unknownable<boolean> => {
+    if (status === null || !isRecord(status[name])) return "unknown";
+    const bucket = status[name] as Record<string, unknown>;
+    const success = Array.isArray(bucket.success) ? bucket.success.length : null;
+    const failure = Array.isArray(bucket.failure) ? bucket.failure.length : null;
+    if (success === null && failure === null) return "unknown";
+    return (failure ?? 0) === 0 && (success ?? 0) > 0;
+  };
+  const failToPassPassed = bucketPassed("FAIL_TO_PASS");
+  const passToPassPassed = bucketPassed("PASS_TO_PASS");
+  const testStatus =
+    status === null
+      ? null
+      : `FAIL_TO_PASS=${describeBucket(status.FAIL_TO_PASS)}; PASS_TO_PASS=${describeBucket(status.PASS_TO_PASS)} (${method})`;
+  return { resolved, failToPassPassed, passToPassPassed, testStatus };
+}
+
+function describeBucket(bucket: unknown): string {
+  if (!isRecord(bucket)) return "n/a";
+  const success = Array.isArray(bucket.success) ? bucket.success.length : 0;
+  const failure = Array.isArray(bucket.failure) ? bucket.failure.length : 0;
+  return `${success} pass / ${failure} fail`;
+}
+
+// Reconstruct per-condition evaluation evidence from the recorded _eval.meta.json
+// files. Returns [] when no evaluation has been run (resolved fields stay unknown).
+async function collectEvaluationEvidence(outDir: string, runLabel: string | null = null): Promise<EvaluationEvidence[]> {
+  const evaluations: EvaluationEvidence[] = [];
+  for (const condition of STAGE5_CONDITIONS) {
+    const dir = rawConditionDir(outDir, condition, runLabel);
+    const meta = await readJsonIfExists(path.join(dir, EVAL_META_FILENAME));
+    if (!isRecord(meta)) continue;
+    evaluations.push(evaluationEvidenceFromMeta(meta, condition));
+  }
+  return evaluations;
+}
+
+function evaluationEvidenceFromMeta(meta: Record<string, unknown>, condition: Stage5Condition): EvaluationEvidence {
+  const method = meta.evaluationMethod === "docker" || meta.evaluationMethod === "lightweight" ? meta.evaluationMethod : "unknown";
+  return {
+    condition,
+    evaluationRan: meta.evaluationRan === true,
+    evaluationMethod: method,
+    dockerUsed: typeof meta.dockerUsed === "boolean" ? meta.dockerUsed : "unknown",
+    evaluationError: isString(meta.evaluationError) ? meta.evaluationError : null,
+    resultsFile: isString(meta.resultsFile) ? meta.resultsFile : null,
+    instancesEvaluated: isNumber(meta.instancesEvaluated) ? meta.instancesEvaluated : 0,
+    resolvedCount: isNumber(meta.resolvedCount) ? meta.resolvedCount : 0,
+    notes: Array.isArray(meta.notes) ? meta.notes.filter(isString) : [],
+  };
+}
+
+// Stamp the per-condition evaluation evidence onto each row so the normalized
+// rows carry the run-level eval status. Per-instance test detail (FAIL_TO_PASS
+// counts) stays "unknown" here: it lives in swebench's own report.json, which the
+// evaluator does not surface into the JSONL, so we never fabricate it.
+function stampEvaluationRows(rows: readonly Stage5Row[], evaluations: readonly EvaluationEvidence[]): Stage5Row[] {
+  const byCondition = new Map<Stage5Condition, EvaluationEvidence>();
+  for (const evidence of evaluations) byCondition.set(evidence.condition, evidence);
+  return rows.map((row) => {
+    const evidence = byCondition.get(row.condition);
+    if (evidence === undefined) return row;
+    return {
+      ...row,
+      evaluationRan: evidence.evaluationRan,
+      evaluationMethod: evidence.evaluationMethod,
+      dockerUsed: evidence.dockerUsed,
+      evaluationError: evidence.evaluationError,
+    };
+  });
 }
 
 // Throws unless the vtrace instructions file exists and is non-empty. Called
@@ -1206,9 +1582,18 @@ async function runCondition(
   const instances = await resolveInstances(config);
   if (instances.length === 0) throw new Error(`--mode run-${condition} requires instances (via --instances or smoke_instances.json).`);
 
-  const dir = rawConditionDir(config.out, condition);
+  // The vexp condition is the only one that enables vexp, so re-assert the gate
+  // here as a defense-in-depth check even though runVexp already asserted it.
+  if (condition === "vexp") assertVexpAllowed(config);
+
+  const dir = rawConditionDir(config.out, condition, config.runLabel);
   await mkdir(dir, { recursive: true });
-  const spec = condition === "baseline" ? buildBaselineCommand(config, instances) : buildVtraceCommand(config, instances);
+  const spec =
+    condition === "baseline"
+      ? buildBaselineCommand(config, instances)
+      : condition === "vexp"
+        ? buildVexpCommand(config, instances)
+        : buildVtraceCommand(config, instances);
   const env = condition === "vtrace" ? (spec as { env: Record<string, string> }).env : {};
   const startedMs = Date.now();
   const result = await (deps.runProcess ?? runProcess)(spec.command, spec.args, {
@@ -1248,12 +1633,14 @@ export async function runIngest(config: CliConfig, deps: RunDeps = {}): Promise<
   void deps;
   await ensureOutputTree(config.out);
   const rows: Stage5Row[] = [];
-  for (const condition of ["baseline", "vtrace"] as const) {
-    rows.push(...(await parseConditionDir(rawConditionDir(config.out, condition), condition)));
+  for (const condition of STAGE5_CONDITIONS) {
+    rows.push(...(await parseConditionDir(rawConditionDir(config.out, condition, config.runLabel), condition)));
   }
   const merged = mergeRows(rows);
-  const evidence = await collectRunEvidence(config.out);
-  const artifact = buildArtifact(stampVtraceRows(merged, evidence), evidence);
+  const evidence = await collectRunEvidence(config.out, config.runLabel);
+  const evaluations = await collectEvaluationEvidence(config.out, config.runLabel);
+  const stamped = stampEvaluationRows(stampVtraceRows(merged, evidence), evaluations);
+  const artifact = buildArtifact(stamped, evidence, evaluations);
   await writeFile(path.join(config.out, NORMALIZED_FILENAME), `${JSON.stringify(artifact, null, 2)}\n`);
   await writeReports(config, artifact);
   return artifact;
@@ -1297,8 +1684,11 @@ export async function runReport(config: CliConfig, deps: RunDeps = {}): Promise<
     // re-derive it from the raw artifacts (do not fall back to config).
     const evidence = isRecord(normalized.evidence)
       ? (normalized.evidence as unknown as Stage5RunEvidence)
-      : await collectRunEvidence(config.out);
-    const artifact = buildArtifact(stampVtraceRows(rows, evidence), evidence);
+      : await collectRunEvidence(config.out, config.runLabel);
+    const evaluations = Array.isArray(normalized.evaluations)
+      ? ((normalized.evaluations as unknown[]).filter(isRecord) as unknown as EvaluationEvidence[])
+      : await collectEvaluationEvidence(config.out, config.runLabel);
+    const artifact = buildArtifact(stampVtraceRows(rows, evidence), evidence, evaluations);
     await writeReports(config, artifact);
     return artifact;
   }
@@ -1532,9 +1922,53 @@ function mergeRow(base: Stage5Row, next: Stage5Row): Stage5Row {
   return { ...merged, parsedFieldCount: countParsedFields(merged) };
 }
 
-function buildArtifact(rows: readonly Stage5Row[], evidence: Stage5RunEvidence): NormalizedArtifact {
+function buildArtifact(
+  rows: readonly Stage5Row[],
+  evidence: Stage5RunEvidence,
+  evaluations: readonly EvaluationEvidence[] = [],
+): NormalizedArtifact {
   const pairs = comparePairs(rows);
-  return { rows: [...rows], pairs, summary: summarize(rows, pairs), evidence };
+  return {
+    rows: [...rows],
+    pairs,
+    summary: summarize(rows, pairs),
+    evidence,
+    conditionSummaries: buildConditionSummaries(rows),
+    evaluations: [...evaluations],
+  };
+}
+
+// Stage 5C per-condition aggregate. resolvedRate divides resolved by EVALUATED
+// instances (resolved is a concrete true/false), so `unknown` patches — generated
+// but never run through tests — pull neither toward pass nor fail.
+export function buildConditionSummaries(rows: readonly Stage5Row[]): ConditionSummary[] {
+  const summaries: ConditionSummary[] = [];
+  for (const condition of STAGE5_CONDITIONS) {
+    const conditionRows = rows.filter((row) => row.condition === condition);
+    if (conditionRows.length === 0) continue;
+    const evaluated = conditionRows.filter((row) => row.resolved !== "unknown");
+    const resolved = conditionRows.filter((row) => row.resolved === true);
+    const numbersOf = (pick: (row: Stage5Row) => Unknownable<number>): number[] =>
+      conditionRows.map(pick).filter(isNumber);
+    // Treatment validity is only meaningful for the injected conditions.
+    const treatmentRows =
+      condition === "baseline" ? [] : conditionRows.filter((row) => row.vtraceTreatmentValid !== null);
+    summaries.push({
+      condition,
+      instances: new Set(conditionRows.map((row) => row.instanceId)).size,
+      resolvedCount: resolved.length,
+      evaluatedCount: evaluated.length,
+      resolvedRate: evaluated.length === 0 ? null : resolved.length / evaluated.length,
+      meanCost: mean(numbersOf((row) => row.costUsd)),
+      meanDuration: mean(numbersOf((row) => row.durationMs)),
+      meanTotalTokens: mean(numbersOf((row) => row.totalTokens)),
+      meanTokensForResolved: mean(resolved.map((row) => row.totalTokens).filter(isNumber)),
+      meanCostForResolved: mean(resolved.map((row) => row.costUsd).filter(isNumber)),
+      validTreatments: treatmentRows.filter((row) => row.vtraceTreatmentValid === true).length,
+      invalidTreatments: treatmentRows.filter((row) => row.vtraceTreatmentValid === false).length,
+    });
+  }
+  return summaries;
 }
 
 // The IndexedContextFields, all null — used to default baseline/result rows and
@@ -1550,6 +1984,18 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtraceContextItems: null,
     vtraceContextTruncated: null,
     vtraceContextError: null,
+  };
+}
+
+function nullEvaluationFields(): EvaluationFields {
+  return {
+    evaluationRan: null,
+    evaluationMethod: null,
+    failToPassPassed: null,
+    passToPassPassed: null,
+    testStatus: null,
+    dockerUsed: null,
+    evaluationError: null,
   };
 }
 
@@ -1641,7 +2087,7 @@ async function vtraceRunMetaFields(
 // condition `_run.meta.json` (method + instructions-file path), the vtrace
 // `_run.stderr.txt` (runtime injection log), and the patch manifest (install
 // state). Everything here is observed, never inferred from the requested config.
-async function collectRunEvidence(outDir: string): Promise<Stage5RunEvidence> {
+async function collectRunEvidence(outDir: string, runLabel: string | null = null): Promise<Stage5RunEvidence> {
   const notes: string[] = [];
 
   // Resolve the vtrace method from RECORDED run metas only (non-null values),
@@ -1651,7 +2097,7 @@ async function collectRunEvidence(outDir: string): Promise<Stage5RunEvidence> {
   let vtraceRunRecorded = false;
   let indexed: IndexedContextFields = nullIndexedContextFields();
   for (const condition of ["baseline", "vtrace"] as const) {
-    const meta = await readJsonIfExists(path.join(rawConditionDir(outDir, condition), "_run.meta.json"));
+    const meta = await readJsonIfExists(path.join(rawConditionDir(outDir, condition, runLabel), "_run.meta.json"));
     if (!isRecord(meta)) continue;
     if (condition === "vtrace") vtraceRunRecorded = true;
     if (isString(meta.vtraceMethod) && isVtraceMethod(meta.vtraceMethod)) methods.add(meta.vtraceMethod);
@@ -1680,7 +2126,7 @@ async function collectRunEvidence(outDir: string): Promise<Stage5RunEvidence> {
     : "unknown";
 
   // Runtime injection evidence: parse the captured vtrace stderr.
-  const stderrPath = path.join(rawConditionDir(outDir, "vtrace"), "_run.stderr.txt");
+  const stderrPath = path.join(rawConditionDir(outDir, "vtrace", runLabel), "_run.stderr.txt");
   const stderr = await readFile(stderrPath, "utf8").catch(() => null);
   const injection = stderr === null && !vtraceRunRecorded ? { observed: "unknown" as const, error: null } : parseVtraceInjection(stderr ?? "");
   const vtraceInjectionObserved = injection.observed;
@@ -1868,13 +2314,19 @@ export function renderMarkdown(artifact: NormalizedArtifact, config: CliConfig):
     ...renderVtraceEvidence(evidence),
     "",
     ...renderIndexedContextEvidence(evidence),
+    ...renderConditionSummaryTable(artifact.conditionSummaries ?? []),
+    ...renderEvaluationEvidence(artifact.evaluations ?? []),
     "## Result mode",
     "",
     describeResultMode(pairs, rows),
     "",
-    "## Per-instance table",
+    "## Per-instance table (baseline vs vtrace)",
     "",
     renderPairTable(pairs),
+    "",
+    "## Per-instance comparison (baseline vs vtrace vs vexp)",
+    "",
+    renderTripleTable(pairs),
     "",
     "## Missing/unknown fields",
     "",
@@ -1998,6 +2450,66 @@ function renderPairTable(pairs: readonly PairComparison[]): string {
     "| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
     ...pairs.map((pair) =>
       `| ${pair.instanceId} | ${cellOrDash(pair.baselineResolved)} | ${cellOrDash(pair.vtraceResolved)} | ${pair.outcome} | ${cellOrDash(pair.vtraceTreatmentValid)} | ${cellOrDash(pair.baselineTotalTokens)} | ${cellOrDash(pair.vtraceTotalTokens)} | ${reductionCell(pair, pair.tokenReductionPct)} | ${reductionCell(pair, pair.costReductionPct)} | ${reductionCell(pair, pair.durationReductionPct)} |`,
+    ),
+  ].join("\n");
+}
+
+// Stage 5C aggregate: one row per condition. resolved_rate is over EVALUATED
+// instances only (the denominator is shown so `unknown` is never read as a fail).
+function renderConditionSummaryTable(summaries: readonly ConditionSummary[]): string[] {
+  if (summaries.length === 0) return [];
+  const rate = (summary: ConditionSummary): string =>
+    summary.resolvedRate === null ? "n/a" : `${(summary.resolvedRate * 100).toFixed(1)}% (${summary.resolvedCount}/${summary.evaluatedCount})`;
+  const num = (value: number | null): string => (value === null ? "n/a" : value.toFixed(2));
+  return [
+    "## Per-condition aggregate",
+    "",
+    "| condition | instances | resolved | resolved_rate (of evaluated) | mean_cost | mean_duration_ms | mean_total_tokens | mean_tokens_resolved | mean_cost_resolved | valid_treatments | invalid_treatments |",
+    "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ...summaries.map((summary) =>
+      `| ${summary.condition} | ${summary.instances} | ${summary.resolvedCount} | ${rate(summary)} | ${num(summary.meanCost)} | ${num(summary.meanDuration)} | ${num(summary.meanTotalTokens)} | ${num(summary.meanTokensForResolved)} | ${num(summary.meanCostForResolved)} | ${summary.validTreatments} | ${summary.invalidTreatments} |`,
+    ),
+    "",
+  ];
+}
+
+// Stage 5C evaluation evidence: proves HOW resolved was reached (or why it is
+// still unknown) per condition. Only rendered once an evaluate run has recorded it.
+function renderEvaluationEvidence(evaluations: readonly EvaluationEvidence[]): string[] {
+  if (evaluations.length === 0) {
+    return [
+      "## Evaluation evidence",
+      "",
+      "No evaluation has been run yet. `resolved` is `unknown` (patch-generation only) until " +
+        "`--mode evaluate` runs the external `node dist/cli.js evaluate` step. `--eval-mode docker` is the only " +
+        "real pass/fail signal; `lightweight` does not run tests.",
+      "",
+    ];
+  }
+  return [
+    "## Evaluation evidence",
+    "",
+    "| condition | evaluation_ran | method | docker_used | instances_evaluated | resolved | error |",
+    "| --- | --- | --- | --- | ---: | ---: | --- |",
+    ...evaluations.map((evidence) =>
+      `| ${evidence.condition} | ${String(evidence.evaluationRan)} | ${evidence.evaluationMethod} | ${String(evidence.dockerUsed)} | ${evidence.instancesEvaluated} | ${evidence.resolvedCount} | ${evidence.evaluationError ?? "(none)"} |`,
+    ),
+    "",
+    ...(evaluations.some((evidence) => evidence.evaluationMethod === "lightweight")
+      ? ["> ⚠️ Lightweight evaluation does not run tests; it is NOT a pass/fail signal. Use `--eval-mode docker`.", ""]
+      : []),
+  ];
+}
+
+// Stage 5C three-condition comparison (requirement #7 paired table). vexp columns
+// are dashes until the vexp protocol is run with --allow-vexp.
+function renderTripleTable(pairs: readonly PairComparison[]): string {
+  if (pairs.length === 0) return "No paired instances have been ingested yet.";
+  return [
+    "| instance | baseline_resolved | vtrace_resolved | vexp_resolved | baseline_tokens | vtrace_tokens | vexp_tokens | vtrace_token_reduction | vexp_token_reduction | patch_diff_available |",
+    "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |",
+    ...pairs.map((pair) =>
+      `| ${pair.instanceId} | ${cellOrDash(pair.baselineResolved)} | ${cellOrDash(pair.vtraceResolved)} | ${cellOrDash(pair.vexpResolved)} | ${cellOrDash(pair.baselineTotalTokens)} | ${cellOrDash(pair.vtraceTotalTokens)} | ${cellOrDash(pair.vexpTotalTokens)} | ${pair.vtraceTreatmentValid === false ? "invalid" : formatPct(pair.tokenReductionPct)} | ${formatPct(pair.vexpTokenReductionPct)} | ${String(pair.patchDiffAvailable)} |`,
     ),
   ].join("\n");
 }
@@ -2161,6 +2673,9 @@ export function parseArgs(argv: readonly string[]): CliConfig {
             "prepare",
             "run-baseline",
             "run-vtrace",
+            "run-vexp",
+            "run-protocol",
+            "evaluate",
             "ingest",
             "report",
             "install-vtrace-patch",
@@ -2171,6 +2686,21 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         config.mode = value as Stage5Mode;
         break;
       }
+      case "--protocol": {
+        const value = requireValue(argv, ++index, arg);
+        if (!["baseline", "vtrace-indexed", "vexp", "all"].includes(value)) throw new Error("Invalid --protocol.");
+        config.protocol = value as Stage5Protocol;
+        break;
+      }
+      case "--allow-vexp": config.allowVexp = true; break;
+      case "--eval-mode": {
+        const value = requireValue(argv, ++index, arg);
+        if (!["docker", "lightweight"].includes(value)) throw new Error("Invalid --eval-mode.");
+        config.evalMode = value as EvalMode;
+        break;
+      }
+      case "--eval-dataset": config.evalDataset = requireValue(argv, ++index, arg); break;
+      case "--eval-timeout": config.evalTimeout = requirePositiveInt(argv, ++index, arg); break;
       case "--vexp-swe-bench-dir": config.vexpSweBenchDir = requireValue(argv, ++index, arg); break;
       case "--instances": config.instances = requireValue(argv, ++index, arg).split(",").map((value) => value.trim()).filter(Boolean); break;
       case "--instances-file": config.instancesFile = requireValue(argv, ++index, arg); break;
@@ -2223,7 +2753,20 @@ function requirePositiveInt(argv: readonly string[], index: number, flag: string
 
 function printUsageAndExit(exitCode: number): never {
   process.stdout.write(
-    "Usage: bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts --mode prepare|run-baseline|run-vtrace|ingest|report|install-vtrace-patch|verify-vtrace-patch --vexp-swe-bench-dir /path/to/vexp-swe-bench --instances id1,id2,id3 --out benchmarks/stage5_vexp_swe_bench_smoke/results\n",
+    [
+      "Usage: bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\",
+      "  --mode prepare|run-baseline|run-vtrace|run-vexp|run-protocol|evaluate|ingest|report|install-vtrace-patch|verify-vtrace-patch \\",
+      "  --vexp-swe-bench-dir /path/to/vexp-swe-bench --instances id1,id2,id3 --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+      "",
+      "Stage 5C protocol/evaluation flags:",
+      "  --protocol baseline|vtrace-indexed|vexp|all   (with --mode run-protocol)",
+      "  --allow-vexp                                  required before any vexp-enabled run",
+      "  --eval-mode docker|lightweight                (with --mode evaluate; docker is the only real signal)",
+      "  --eval-dataset <jsonl-or-hf-name>             full SWE-bench dataset for docker evaluation",
+      "  --eval-timeout <seconds>                      per-instance evaluation timeout",
+      "  --run-label <label>                           isolate runs under results/runs/<label>/",
+      "",
+    ].join("\n"),
   );
   process.exit(exitCode);
 }
@@ -2233,6 +2776,13 @@ async function main(config: CliConfig): Promise<void> {
     case "prepare": await runPrepare(config); break;
     case "run-baseline": await runBaseline(config); break;
     case "run-vtrace": await runVtrace(config); break;
+    case "run-vexp": await runVexp(config); break;
+    case "run-protocol": await runProtocol(config); break;
+    case "evaluate": {
+      const evaluations = await runEvaluate(config);
+      process.stdout.write(`${JSON.stringify(evaluations, null, 2)}\n`);
+      break;
+    }
     case "ingest": await runIngest(config); break;
     case "report": await runReport(config); break;
     case "install-vtrace-patch": {

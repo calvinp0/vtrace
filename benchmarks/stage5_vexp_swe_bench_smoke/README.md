@@ -22,13 +22,13 @@ It only checks whether the benchmark workflow runs on a tiny subset, and whether
 
 ## Evidence ladder
 
-| Stage | What it measured | Current result |
-| --- | --- | --- |
-| Stage 1 | Static ARC context-size reduction | 97.53% mean reduction vs grep snippets, 18/20 strong |
-| Stage 2 | Static ARC orientation equivalence | 11/12 parity-or-better, 97.89% quality-preserving static reduction |
-| Stage 3 | Actual Claude Code controlled ARC usage | 12 paired tasks, 46.51% mean actual token reduction, 44.46% quality-preserving |
-| Stage 4 | Small autonomous ARC edit tasks | 4/4 both-passed pairs, 36.45% mean token reduction |
-| Stage 5 | External vexp-swe-bench smoke integration | workflow smoke only (this stage) |
+| Stage   | What it measured                          | Current result                                                                 |
+| ------- | ----------------------------------------- | ------------------------------------------------------------------------------ |
+| Stage 1 | Static ARC context-size reduction         | 97.53% mean reduction vs grep snippets, 18/20 strong                           |
+| Stage 2 | Static ARC orientation equivalence        | 11/12 parity-or-better, 97.89% quality-preserving static reduction             |
+| Stage 3 | Actual Claude Code controlled ARC usage   | 12 paired tasks, 46.51% mean actual token reduction, 44.46% quality-preserving |
+| Stage 4 | Small autonomous ARC edit tasks           | 4/4 both-passed pairs, 36.45% mean token reduction                             |
+| Stage 5 | External vexp-swe-bench smoke integration | workflow smoke only (this stage)                                               |
 
 ## Suggested first manual workflow
 
@@ -72,15 +72,18 @@ bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
 
 ## CLI modes
 
-| Mode | What it does |
-| --- | --- |
-| `prepare` | Checks `--vexp-swe-bench-dir`/`dist/cli.js` exist, resolves instances, creates output dirs, and writes `results/run_plan.json` with the exact baseline and vtrace commands. |
-| `run-baseline` | Runs the no-vexp baseline condition via `node dist/cli.js run ... --no-vexp` inside the external checkout; captures stdout/stderr/meta into `results/raw/baseline/`. |
-| `run-vtrace` | Runs the same command (still `--no-vexp`) for the vtrace condition; writes the vtrace instructions artifact and captures output into `results/raw/vtrace/`. |
-| `ingest` | Tolerantly parses everything under `results/raw/baseline` and `results/raw/vtrace`, normalizes rows, computes pairs, and writes the CSV/JSON/Markdown reports. |
-| `report` | Re-renders the CSV/JSON/Markdown from the normalized intermediate (`stage5_normalized.json`); falls back to re-ingesting raw if no intermediate exists. |
-| `install-vtrace-patch` | Patches the external checkout's Claude Code adapter so it injects `VTRACE_AGENT_INSTRUCTIONS_FILE` into the prompt (local-patch method). Backs up the file once, is idempotent, and writes `results/vtrace_patch_manifest.json`. |
-| `verify-vtrace-patch` | Reports whether the local vtrace patch marker is present in the external checkout. Exits non-zero if not installed. |
+| Mode                   | What it does                                                                                                                                                                                                                                                                                                   |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prepare`              | Checks `--vexp-swe-bench-dir`/`dist/cli.js` exist, resolves instances, creates output dirs, and writes `results/run_plan.json` with the exact baseline and vtrace commands.                                                                                                                                    |
+| `run-baseline`         | Runs the no-vexp baseline condition via `node dist/cli.js run ... --no-vexp` inside the external checkout; captures stdout/stderr/meta into `results/raw/baseline/`.                                                                                                                                           |
+| `run-vtrace`           | Runs the same command (still `--no-vexp`) for the vtrace condition; writes the vtrace instructions artifact and captures output into `results/raw/vtrace/`.                                                                                                                                                    |
+| `run-vexp`             | **Stage 5C.** Runs `node dist/cli.js run` **with vexp enabled** (no `--no-vexp`) into `results/raw/vexp/`. Hard-gated behind `--allow-vexp`; refuses to spawn otherwise.                                                                                                                                       |
+| `run-protocol`         | **Stage 5C.** Runs the conditions selected by `--protocol baseline\|vtrace-indexed\|vexp\|all`. `all` runs baseline + vtrace-indexed, and vexp only when `--allow-vexp` is set (otherwise vexp is skipped with a note).                                                                                        |
+| `evaluate`             | **Stage 5C.** Runs the external evaluator (`node dist/cli.js evaluate <jsonl>`) for every condition that has results, populating `resolved` in-place and writing per-condition `_eval.meta.json`. `--eval-mode docker` (default) runs the real SWE-bench suite; `lightweight` only checks patch non-emptiness. |
+| `ingest`               | Tolerantly parses everything under `results/raw/{baseline,vtrace,vexp}`, normalizes rows, computes pairs, builds the per-condition aggregate + evaluation evidence, and writes the CSV/JSON/Markdown reports.                                                                                                  |
+| `report`               | Re-renders the CSV/JSON/Markdown from the normalized intermediate (`stage5_normalized.json`); falls back to re-ingesting raw if no intermediate exists.                                                                                                                                                        |
+| `install-vtrace-patch` | Patches the external checkout's Claude Code adapter so it injects `VTRACE_AGENT_INSTRUCTIONS_FILE` into the prompt (local-patch method). Backs up the file once, is idempotent, and writes `results/vtrace_patch_manifest.json`.                                                                               |
+| `verify-vtrace-patch`  | Reports whether the local vtrace patch marker is present in the external checkout. Exits non-zero if not installed.                                                                                                                                                                                            |
 
 ### Baseline command
 
@@ -153,7 +156,7 @@ Select the method with `--vtrace-method instructions-file|mcp|local-patch|indexe
 
 ## Stage 5B: `indexed-context` (real vtrace retrieval)
 
-Plain `local-patch` injects a *generic* instruction file — it tells the agent to use vtrace but provides no task-specific retrieval. **Stage 5B** (`--vtrace-method indexed-context`) makes the injected file contain **real vtrace context** for each instance. It still compares `baseline --no-vexp` vs `vtrace-indexed --no-vexp` — never vexp vs vtrace.
+Plain `local-patch` injects a _generic_ instruction file — it tells the agent to use vtrace but provides no task-specific retrieval. **Stage 5B** (`--vtrace-method indexed-context`) makes the injected file contain **real vtrace context** for each instance. It still compares `baseline --no-vexp` vs `vtrace-indexed --no-vexp` — never vexp vs vtrace.
 
 For each selected instance, `run-vtrace --vtrace-method indexed-context`:
 
@@ -185,6 +188,94 @@ The report gains a `## Vtrace indexed context evidence` table (`vtrace_method`, 
 ## Stage 5B indexed-context result
 
 The first indexed-context smoke result is documented in [STAGE5B_INDEXED_CONTEXT_RESULTS.md](./STAGE5B_INDEXED_CONTEXT_RESULTS.md).
+
+## Stage 5C: evaluated SWE-bench protocol
+
+Stages 5A/5B generate **patches** but leave `resolved` as `unknown` — they are effort signals, not correctness signals:
+
+- **Stage 5A** (`instructions-file`) = generic instruction injection. **Not a performance signal**: the external adapter may not even read the instructions file, so it can be indistinguishable from baseline.
+- **Stage 5B** (`indexed-context`) = real per-instance vtrace retrieval injected into the prompt. A **patch-generation smoke**: it shows token/cost/duration effort, but `resolved` is still `unknown` (patches were produced, not tested).
+- **Stage 5C** (`evaluate` + protocols) = **evaluated** SWE-bench comparison. It runs the external benchmark's separate evaluation step so each patch gets a real pass/fail `resolved`, then aggregates resolved-rate, cost, duration, and tokens per condition.
+
+### How `resolved` is populated (discovery)
+
+`vexp-swe-bench` evaluates in **two steps**, by design:
+
+1. `node dist/cli.js run …` produces `results/swebench-<date>.jsonl` with `modelPatch` populated but **`resolved: null`** (the orchestrator leaves it for the evaluator).
+2. `node dist/cli.js evaluate <jsonl>` mutates **`resolved` in-place in the same JSONL**:
+   - `--mode docker` (default) runs the real SWE-bench test suite in Docker (`pip install swebench` + the full dataset via `--dataset`); this is the **only** real pass/fail signal.
+   - `--mode lightweight` runs **no tests** — it sets `resolved: false` for empty patches and leaves genuine patches `null`. Not a correctness signal.
+
+The per-test detail (`FAIL_TO_PASS`/`PASS_TO_PASS` success/failure) lives in swebench's own `report.json`, **not** in the vexp JSONL, so those evidence fields stay `unknown` unless that report is found. `normalizeEvaluationEvidence` parses it when available and never fabricates a value otherwise.
+
+### Protocols and the vexp gate
+
+| Protocol         | Conditions run                                                  | Command shape                                      |
+| ---------------- | --------------------------------------------------------------- | -------------------------------------------------- |
+| `baseline`       | baseline                                                        | `run --no-vexp`                                    |
+| `vtrace-indexed` | vtrace (indexed-context)                                        | `run --no-vexp` + vtrace indexed-context injection |
+| `vexp`           | vexp                                                            | `run` (vexp **enabled**) — requires `--allow-vexp` |
+| `all`            | baseline + vtrace-indexed (+ vexp **only** with `--allow-vexp`) | all of the above                                   |
+
+> **The vexp condition never runs by default.** `run-vexp` and the `vexp`/`all` protocols refuse to spawn a vexp-enabled run unless `--allow-vexp` is passed explicitly. `--protocol all` without `--allow-vexp` runs baseline + vtrace-indexed and **skips** vexp with a printed note (it does not fail).
+
+### Run isolation
+
+Use `--run-label <label>` to isolate an entire run (not just workspaces) so multiple instances/protocols never overwrite each other:
+
+```text
+results/runs/<run-label>/raw/baseline
+results/runs/<run-label>/raw/vtrace
+results/runs/<run-label>/raw/vexp
+```
+
+`evaluate`, `ingest`, and `report` all honor the same `--run-label`.
+
+### Evaluated workflow
+
+```bash
+# 1. Run the baseline + vtrace-indexed protocol (vexp stays off)
+bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
+  --mode run-protocol --protocol all \
+  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \
+  --instances django__django-11728 \
+  --run-label smoke-1 \
+  --out benchmarks/stage5_vexp_swe_bench_smoke/results
+
+# 2. Evaluate every condition's patches (real pass/fail via Docker)
+bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
+  --mode evaluate --eval-mode docker --eval-dataset princeton-nlp/SWE-bench_Verified \
+  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \
+  --run-label smoke-1 \
+  --out benchmarks/stage5_vexp_swe_bench_smoke/results
+
+# 3. Ingest -> aggregate report with resolved/cost/duration/tokens per condition
+bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
+  --mode ingest --run-label smoke-1 \
+  --out benchmarks/stage5_vexp_swe_bench_smoke/results
+
+# To include the vexp condition, add --allow-vexp to steps 1-2.
+```
+
+### Aggregate report
+
+`ingest` adds two Stage 5C sections to the Markdown/JSON report:
+
+- **Per-condition aggregate** (`condition`, `instances`, `resolved_count`, `resolved_rate`, `mean_cost`, `mean_duration`, `mean_total_tokens`, `mean_tokens_for_resolved`, `mean_cost_for_resolved`, `valid_treatments`, `invalid_treatments`). `resolved_rate` divides resolved by **evaluated** instances (`resolved !== unknown`) only — an unevaluated patch counts as neither a pass nor a fail. Invalid vtrace treatments (injection skipped) are counted in `invalid_treatments` and excluded from vtrace performance.
+- **Per-instance comparison** (`baseline_resolved`, `vtrace_resolved`, `vexp_resolved`, `baseline_tokens`, `vtrace_tokens`, `vexp_tokens`, `vtrace_token_reduction_vs_baseline`, `vexp_token_reduction_vs_baseline`, `patch_diff_available`).
+- **Evaluation evidence** per condition (`evaluation_ran`, `evaluation_method`, `docker_used`, `instances_evaluated`, `resolved`, `evaluation_error`).
+
+### Stage 5C smoke ladder
+
+Scale deliberately; decide whether to continue at each rung:
+
+1. **1 instance evaluated** — confirm the run → evaluate → ingest pipeline produces a real `resolved`.
+2. **3 instances evaluated** — confirm the aggregate report and paired comparison hold.
+3. **5 instances evaluated** — confirm stability, then decide whether to scale further.
+
+Recommended initial instances: `django__django-11728`, `django__django-11740`, `django__django-11490`.
+
+**No public claims** until enough evaluated tasks have run. A handful of evaluated instances is a smoke check, not a benchmark result, and the vexp protocol is only meaningful when intentionally enabled with `--allow-vexp`.
 
 ## Instances
 
@@ -225,6 +316,8 @@ baseline_cost_usd, vtrace_cost_usd, cost_reduction_pct,
 baseline_duration_ms, vtrace_duration_ms, duration_reduction_pct
 ```
 
+Stage 5C extends the paired comparison with the vexp condition (`vexp_resolved`, `vexp_total_tokens`, `vexp_token_reduction_pct`, `patch_diff_available`) and adds the per-condition aggregate + evaluation-evidence tables described under [Stage 5C](#stage-5c-evaluated-swe-bench-protocol).
+
 Outcome categories: `both_resolved`, `vtrace_only_resolved`, `baseline_only_resolved`, `both_failed`, `unpaired`, `unknown`.
 
 ### Tolerant parsing
@@ -235,9 +328,15 @@ Outcome categories: `both_resolved`, `vtrace_only_resolved`, `baseline_only_reso
 
 ```text
 benchmarks/stage5_vexp_swe_bench_smoke/results/
-  raw/
+  raw/                         # flat layout when no --run-label is used
     baseline/
     vtrace/
+    vexp/                      # Stage 5C, only with --allow-vexp
+      swebench-<date>.jsonl
+      _run.meta.json
+      _eval.meta.json          # Stage 5C, written by --mode evaluate
+  runs/<run-label>/            # isolated layout when --run-label is used
+    raw/{baseline,vtrace,vexp}/
   run_plan.json
   stage5_normalized.json
   stage5_vexp_swe_bench_smoke.csv
@@ -249,9 +348,10 @@ benchmarks/stage5_vexp_swe_bench_smoke/results/
 ## Limitations
 
 - Tiny instance subset; no statistical significance.
-- vexp is disabled in both conditions; this is not a vexp-vs-vtrace comparison.
+- vexp is disabled in the baseline/vtrace conditions; a vexp-vs-vtrace comparison requires the Stage 5C `vexp` protocol, explicitly enabled with `--allow-vexp`.
 - The instructions-file vtrace method is best-effort and may be a no-op unless the benchmark agent wrapper consumes it.
 - Token/cost/duration reductions are only meaningful for instances where both conditions resolved.
+- `resolved` is `unknown` until a Stage 5C `evaluate` run populates it; `--eval-mode lightweight` does not run tests and is not a pass/fail signal.
 - Results must not be used for public SWE-bench claims.
 
 ## Tests

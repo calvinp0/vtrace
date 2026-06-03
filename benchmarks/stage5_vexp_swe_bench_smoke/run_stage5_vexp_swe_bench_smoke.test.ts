@@ -6,11 +6,15 @@ import { test } from "bun:test";
 
 import {
   applyVtracePatch,
+  assertVexpAllowed,
   assertVtraceInstructionsFileValid,
   buildBaselineCommand,
   buildCheckoutCommand,
   buildCloneCommand,
+  buildConditionSummaries,
+  buildEvaluateCommand,
   buildInstanceQuery,
+  buildVexpCommand,
   buildVtraceContextMarkdown,
   buildVtraceIndexCommand,
   buildVtracePatchBlock,
@@ -18,19 +22,26 @@ import {
   buildVtraceCommand,
   classifyOutcome,
   comparePairs,
+  evaluateCondition,
   extractRow,
+  findCanonicalResultsFile,
   findSweBenchRecord,
   installVtracePatch,
   isVtracePatched,
   loadSmokeInstances,
   loadSweBenchData,
+  normalizeEvaluationEvidence,
   parseArgs,
   parseResultRecords,
   prepareIndexedContext,
+  rawConditionDir,
   reductionPct,
   renderMarkdown,
+  runEvaluate,
   runIngest,
   runPrepare,
+  runProtocol,
+  runVexp,
   runVtrace,
   STAGE5_VTRACE_INJECTION_LOG,
   STAGE5_VTRACE_INJECTION_SKIPPED,
@@ -90,6 +101,11 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     vtraceContextMaxItems: 8,
     sweBenchDataFile: null,
     runLabel: null,
+    protocol: "baseline",
+    allowVexp: false,
+    evalMode: "docker",
+    evalDataset: null,
+    evalTimeout: 1800,
     ...overrides,
   };
 }
@@ -495,7 +511,7 @@ test("README documents the instructions-file no-op risk and recommends local-pat
 // runner-written _run.meta.json / _run.stderr.txt that ingest reads for evidence.
 async function seedCondition(
   out: string,
-  condition: "baseline" | "vtrace",
+  condition: "baseline" | "vtrace" | "vexp",
   opts: {
     resolved?: boolean | null;
     vtraceMethod?: string | null;
@@ -504,16 +520,21 @@ async function seedCondition(
     indexedContext?: boolean;
     contextFileContent?: string;
     metaExtra?: Record<string, unknown>;
+    instanceId?: string;
+    inputTokens?: number;
+    outputTokens?: number;
+    runLabel?: string | null;
   } = {},
 ): Promise<void> {
-  const dir = path.join(out, "raw", condition);
+  const root = opts.runLabel ? path.join(out, "runs", opts.runLabel) : out;
+  const dir = path.join(root, "raw", condition);
   await mkdir(dir, { recursive: true });
   await writeFile(
     path.join(dir, "swebench-2026-06-03.jsonl"),
     JSON.stringify({
-      instanceId: "django__django-11133",
-      inputTokens: 100,
-      outputTokens: 50,
+      instanceId: opts.instanceId ?? "django__django-11133",
+      inputTokens: opts.inputTokens ?? 100,
+      outputTokens: opts.outputTokens ?? 50,
       modelPatch: "diff --git a/x b/x\n+patch\n",
       resolved: opts.resolved ?? null,
     }),
@@ -981,7 +1002,11 @@ test("--vtrace-method indexed-context is accepted by the parser", () => {
   assert.equal(parseArgs(["--vtrace-method", "indexed-context"]).vtraceMethod, "indexed-context");
 });
 
-function makeRow(instanceId: string, condition: "baseline" | "vtrace", overrides: Partial<Stage5Row>): Stage5Row {
+function makeRow(
+  instanceId: string,
+  condition: "baseline" | "vtrace" | "vexp",
+  overrides: Partial<Stage5Row>,
+): Stage5Row {
   return {
     instanceId,
     condition,
@@ -1018,6 +1043,13 @@ function makeRow(instanceId: string, condition: "baseline" | "vtrace", overrides
     vtraceContextItems: null,
     vtraceContextTruncated: null,
     vtraceContextError: null,
+    evaluationRan: null,
+    evaluationMethod: null,
+    failToPassPassed: null,
+    passToPassPassed: null,
+    testStatus: null,
+    dockerUsed: null,
+    evaluationError: null,
     error: null,
     rawResultPath: `raw/${condition}/r.json`,
     parserKind: "json",
@@ -1044,3 +1076,260 @@ function summaryOf(rows: Stage5Row[]) {
     vtraceConditionRun: rows.some((row) => row.condition === "vtrace"),
   };
 }
+
+// ----- Stage 5C: evaluated SWE-bench protocol --------------------------------
+
+// Create a fake vexp-swe-bench dir whose dist/cli.js exists so the run/evaluate
+// guards pass without the real external checkout.
+async function fakeVexpCliDir(): Promise<string> {
+  const dir = await tmpDir("vexp-cli");
+  await mkdir(path.join(dir, "dist"), { recursive: true });
+  await writeFile(path.join(dir, "dist", "cli.js"), "// fake cli\n");
+  return dir;
+}
+
+test("resolved is detected from a record, and absent resolved stays unknown", () => {
+  const yes = extractRow({ instance_id: "a__1", resolved: true }, "baseline", "raw/baseline/r.json");
+  const no = extractRow({ instance_id: "a__1", solved: false }, "baseline", "raw/baseline/r.json");
+  const absent = extractRow({ instance_id: "a__1" }, "baseline", "raw/baseline/r.json");
+  assert.equal(yes?.resolved, true);
+  assert.equal(no?.resolved, false); // via the "solved" alias
+  // A generated-but-unevaluated patch must never be coerced to a pass or a fail.
+  assert.equal(absent?.resolved, "unknown");
+});
+
+test("evaluation evidence is normalized from a swebench report, unknown when absent", () => {
+  const report = {
+    "django__django-11728": {
+      resolved: true,
+      tests_status: {
+        FAIL_TO_PASS: { success: ["test_x"], failure: [] },
+        PASS_TO_PASS: { success: ["test_y", "test_z"], failure: [] },
+      },
+    },
+  };
+  const ok = normalizeEvaluationEvidence(report, "django__django-11728", "docker");
+  assert.equal(ok.resolved, true);
+  assert.equal(ok.failToPassPassed, true);
+  assert.equal(ok.passToPassPassed, true);
+  assert.match(ok.testStatus ?? "", /FAIL_TO_PASS=1 pass \/ 0 fail/);
+
+  // A bucket with a failure does not "pass".
+  const withFailure = normalizeEvaluationEvidence(
+    { x: { resolved: false, tests_status: { FAIL_TO_PASS: { success: [], failure: ["test_x"] } } } },
+    "x",
+    "docker",
+  );
+  assert.equal(withFailure.resolved, false);
+  assert.equal(withFailure.failToPassPassed, false);
+
+  // No report / no tests_status -> everything unknown, nothing fabricated.
+  const missing = normalizeEvaluationEvidence(null, "x", "unknown");
+  assert.equal(missing.resolved, "unknown");
+  assert.equal(missing.failToPassPassed, "unknown");
+  assert.equal(missing.passToPassPassed, "unknown");
+  assert.equal(missing.testStatus, null);
+});
+
+test("protocol command construction: baseline/vtrace keep --no-vexp, vexp omits it", () => {
+  const config = baseConfig({ vexpSweBenchDir: "/x", out: "/out" });
+  const baseline = buildBaselineCommand(config, ["a__1"]);
+  const vtrace = buildVtraceCommand(config, ["a__1"]);
+  const vexp = buildVexpCommand(config, ["a__1"]);
+  assert.ok(baseline.args.includes("--no-vexp"));
+  assert.ok(vtrace.args.includes("--no-vexp"));
+  // The vexp condition is the ONLY one that enables vexp (no --no-vexp).
+  assert.ok(!vexp.args.includes("--no-vexp"));
+  assert.ok(vexp.args.some((arg) => arg.endsWith(path.join("raw", "vexp"))));
+  assert.ok(vexp.args.includes("run"));
+});
+
+test("evaluate command targets the external evaluator with the chosen mode/dataset", () => {
+  const config = baseConfig({ vexpSweBenchDir: "/x", evalMode: "docker", evalDataset: "swe.jsonl", evalTimeout: 600 });
+  const { command, args } = buildEvaluateCommand(config, "/out/raw/baseline/swebench-2026-06-03.jsonl");
+  assert.equal(command, "node");
+  assert.equal(args[1], "evaluate");
+  assert.ok(args.includes("--mode"));
+  assert.ok(args.includes("docker"));
+  assert.ok(args.includes("--dataset"));
+  assert.ok(args.includes("swe.jsonl"));
+  assert.ok(args.includes("--timeout"));
+  assert.ok(args.includes("600"));
+
+  // lightweight mode never forwards a dataset.
+  const light = buildEvaluateCommand(baseConfig({ evalMode: "lightweight", evalDataset: "swe.jsonl" }), "/x.jsonl");
+  assert.ok(!light.args.includes("--dataset"));
+  assert.ok(light.args.includes("lightweight"));
+});
+
+test("vexp protocol is blocked without --allow-vexp and never spawns", async () => {
+  assert.throws(() => assertVexpAllowed(baseConfig({ allowVexp: false })), /--allow-vexp/);
+  assert.doesNotThrow(() => assertVexpAllowed(baseConfig({ allowVexp: true })));
+
+  // runVexp must reject BEFORE spawning anything.
+  let spawned = false;
+  const runProcess = async () => {
+    spawned = true;
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const vexpDir = await fakeVexpCliDir();
+  await assert.rejects(
+    runVexp(baseConfig({ vexpSweBenchDir: vexpDir, instances: ["a__1"], allowVexp: false }), { runProcess }),
+    /--allow-vexp/,
+  );
+  assert.equal(spawned, false);
+
+  // The `all` protocol runs baseline + vtrace-indexed but SKIPS vexp (no spawn of a vexp run).
+  await assert.rejects(
+    runProtocol(baseConfig({ vexpSweBenchDir: vexpDir, instances: ["a__1"], protocol: "vexp", allowVexp: false }), { runProcess }),
+    /--allow-vexp/,
+  );
+  assert.equal(spawned, false);
+});
+
+test("run-label isolates raw outputs and ingest reads only that label", async () => {
+  const out = path.join(await tmpDir("run-label"), "results");
+  // Same instance id, different token magnitudes, under two distinct labels.
+  await seedCondition(out, "baseline", { runLabel: "labelA", instanceId: "a__1", inputTokens: 1000, outputTokens: 0, resolved: true });
+  await seedCondition(out, "baseline", { runLabel: "labelB", instanceId: "a__1", inputTokens: 9, outputTokens: 0, resolved: false });
+
+  // The two labels live in separate trees.
+  assert.match(rawConditionDir(out, "baseline", "labelA"), /runs[\\/]labelA[\\/]raw[\\/]baseline/);
+  assert.notEqual(rawConditionDir(out, "baseline", "labelA"), rawConditionDir(out, "baseline", "labelB"));
+
+  const artifactA = await runIngest(baseConfig({ out, runLabel: "labelA" }));
+  const baselineA = artifactA.rows.find((row) => row.condition === "baseline");
+  assert.equal(baselineA?.totalTokens, 1000);
+  assert.equal(baselineA?.resolved, true);
+});
+
+test("aggregate resolved-rate excludes unknown from the denominator", () => {
+  const rows = [
+    makeRow("a__1", "baseline", { resolved: true, totalTokens: 100, costUsd: 1 }),
+    makeRow("b__2", "baseline", { resolved: false, totalTokens: 200, costUsd: 2 }),
+    // Unknown: generated-but-unevaluated; counts as neither pass nor fail.
+    makeRow("c__3", "baseline", { resolved: "unknown", totalTokens: 300, costUsd: 3 }),
+  ];
+  const [baseline] = buildConditionSummaries(rows);
+  assert.equal(baseline?.condition, "baseline");
+  assert.equal(baseline?.instances, 3);
+  assert.equal(baseline?.resolvedCount, 1);
+  assert.equal(baseline?.evaluatedCount, 2); // unknown excluded
+  assert.equal(baseline?.resolvedRate, 0.5); // 1 of 2 evaluated, NOT 1 of 3
+});
+
+test("all-unknown condition has a null resolved-rate (no pass/fail invented)", () => {
+  const rows = [
+    makeRow("a__1", "vtrace", { resolved: "unknown", totalTokens: 100 }),
+    makeRow("b__2", "vtrace", { resolved: "unknown", totalTokens: 200 }),
+  ];
+  const [vtrace] = buildConditionSummaries(rows);
+  assert.equal(vtrace?.resolvedCount, 0);
+  assert.equal(vtrace?.evaluatedCount, 0);
+  assert.equal(vtrace?.resolvedRate, null);
+});
+
+test("invalid vtrace treatment is excluded from the vtrace performance summary", () => {
+  const rows = [
+    makeRow("a__1", "vtrace", { resolved: true, totalTokens: 100, vtraceTreatmentValid: true }),
+    makeRow("b__2", "vtrace", { resolved: true, totalTokens: 200, vtraceTreatmentValid: false }),
+  ];
+  const [vtrace] = buildConditionSummaries(rows);
+  assert.equal(vtrace?.validTreatments, 1);
+  assert.equal(vtrace?.invalidTreatments, 1);
+
+  // In the paired report, an invalid treatment renders "invalid" instead of a delta.
+  const pairRows = [
+    makeRow("b__2", "baseline", { resolved: true, totalTokens: 400 }),
+    makeRow("b__2", "vtrace", { resolved: true, totalTokens: 200, vtraceTreatmentValid: false }),
+  ];
+  const md = renderMarkdown(
+    { rows: pairRows, pairs: comparePairs(pairRows), summary: summaryOf(pairRows) as never, evidence: undefined as never, conditionSummaries: buildConditionSummaries(pairRows), evaluations: [] },
+    baseConfig({}),
+  );
+  assert.match(md, /invalid/);
+});
+
+test("evaluateCondition reads resolved after the external evaluator rewrites the JSONL", async () => {
+  const out = path.join(await tmpDir("eval-cond"), "results");
+  const vexpDir = await fakeVexpCliDir();
+  await seedCondition(out, "baseline", { resolved: null, instanceId: "a__1" });
+  const resultsFile = path.join(out, "raw", "baseline", "swebench-2026-06-03.jsonl");
+
+  // The mock evaluator simulates the real one: it mutates `resolved` in-place.
+  const runProcess = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    if ([command, ...args].join(" ").includes("evaluate")) {
+      await writeFile(resultsFile, JSON.stringify({ instanceId: "a__1", inputTokens: 100, outputTokens: 50, resolved: true }));
+    }
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const evidence = await evaluateCondition(baseConfig({ vexpSweBenchDir: vexpDir, out }), "baseline", resultsFile, { runProcess });
+  assert.equal(evidence.evaluationRan, true);
+  assert.equal(evidence.evaluationMethod, "docker");
+  assert.equal(evidence.dockerUsed, true);
+  assert.equal(evidence.instancesEvaluated, 1);
+  assert.equal(evidence.resolvedCount, 1);
+});
+
+test("runEvaluate evaluates every seeded condition and ingest reports the evidence", async () => {
+  const out = path.join(await tmpDir("eval-run"), "results");
+  const vexpDir = await fakeVexpCliDir();
+  await seedCondition(out, "baseline", { resolved: null, instanceId: "a__1" });
+  await seedCondition(out, "vtrace", { resolved: null, instanceId: "a__1", vtraceMethod: "indexed-context" });
+
+  const runProcess = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes("evaluate")) {
+      // The evaluated file path is the last positional before flags.
+      const file = args[2]!;
+      await writeFile(file, JSON.stringify({ instanceId: "a__1", inputTokens: 100, outputTokens: 50, resolved: true }));
+    }
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const evaluations = await runEvaluate(baseConfig({ vexpSweBenchDir: vexpDir, out }), { runProcess });
+  assert.equal(evaluations.length, 2);
+  assert.ok(evaluations.every((evidence) => evidence.evaluationRan));
+
+  const artifact = await runIngest(baseConfig({ out }));
+  assert.equal(artifact.evaluations.length, 2);
+  const baselineRow = artifact.rows.find((row) => row.condition === "baseline");
+  assert.equal(baselineRow?.resolved, true);
+  assert.equal(baselineRow?.evaluationRan, true);
+  assert.equal(baselineRow?.evaluationMethod, "docker");
+});
+
+test("a failing evaluator records evaluation_error and does not invent resolved", async () => {
+  const out = path.join(await tmpDir("eval-fail"), "results");
+  const vexpDir = await fakeVexpCliDir();
+  await seedCondition(out, "baseline", { resolved: null, instanceId: "a__1" });
+  const resultsFile = path.join(out, "raw", "baseline", "swebench-2026-06-03.jsonl");
+  const runProcess = async (): Promise<ProcessResult> => ({ exitCode: 1, stdout: "", stderr: "docker not running" });
+  const evidence = await evaluateCondition(baseConfig({ vexpSweBenchDir: vexpDir, out }), "baseline", resultsFile, { runProcess });
+  assert.equal(evidence.evaluationRan, false);
+  assert.equal(evidence.dockerUsed, false);
+  assert.match(evidence.evaluationError ?? "", /docker not running/);
+  assert.equal(evidence.resolvedCount, 0);
+});
+
+test("findCanonicalResultsFile finds the swebench JSONL and ignores runner artifacts", async () => {
+  const out = path.join(await tmpDir("find-canon"), "results");
+  await seedCondition(out, "baseline", { resolved: null });
+  const found = await findCanonicalResultsFile(path.join(out, "raw", "baseline"));
+  assert.match(found ?? "", /swebench-2026-06-03\.jsonl$/);
+  const none = await findCanonicalResultsFile(path.join(out, "raw", "vexp"));
+  assert.equal(none, null);
+});
+
+test("run-protocol baseline runs only the baseline condition", async () => {
+  const out = path.join(await tmpDir("proto-baseline"), "results");
+  const vexpDir = await fakeVexpCliDir();
+  const calls: string[] = [];
+  const runProcess = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    calls.push([command, ...args].join(" "));
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  await runProtocol(baseConfig({ vexpSweBenchDir: vexpDir, out, instances: ["a__1"], protocol: "baseline" }), { runProcess });
+  assert.equal(calls.length, 1);
+  assert.ok(calls[0]!.includes("--no-vexp"));
+  assert.ok(calls[0]!.includes(path.join("raw", "baseline")));
+});
