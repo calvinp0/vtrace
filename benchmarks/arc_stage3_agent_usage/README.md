@@ -7,7 +7,7 @@ It compares two conditions:
 - `baseline`: prompt includes grep-snippet ARC context and instructs the agent not to use vtrace/MCP.
 - `vtrace`: prompt includes directly inserted vtrace capsule/handoff context.
 
-The runner does not execute Claude Code or Codex. It prepares prompts, records `ccusage` snapshots, and ingests manually saved responses.
+The runner supports both a manual workflow and automated Claude Code print-mode runs. Automated runs still use controlled orientation prompts only; they are not full autonomous patch-solving sessions.
 
 These token counts come from ccusage local CLI usage data. They measure controlled orientation sessions, not full autonomous patch-solving.
 
@@ -122,3 +122,63 @@ The parser is intentionally tolerant because `ccusage` JSON can vary by source a
 Stage 3 supports controlled orientation-session token and cost comparisons only after paired baseline/vtrace runs are ingested.
 
 Do not interpret the report as full agent cost savings, patch correctness, pass@1, or SWE-bench performance.
+
+## Automated Workflow
+
+Automated Claude Code execution spends real tokens/cost. Start with one task pair.
+
+```bash
+# Run one pair
+bun benchmarks/arc_stage3_agent_usage/run_arc_stage3_agent_usage.ts \
+  --repo /home/calvin/code/ARC \
+  --tasks benchmarks/arc_stage2_orientation/tasks.arc.stage2.json \
+  --expected benchmarks/arc_stage2_orientation/expected.arc.stage2.json \
+  --out benchmarks/arc_stage3_agent_usage/results \
+  --agent-source claude \
+  --mode run-pair \
+  --task-id workflow_arkane_input \
+  --yes
+
+# Run three smoke pairs
+bun benchmarks/arc_stage3_agent_usage/run_arc_stage3_agent_usage.ts \
+  --repo /home/calvin/code/ARC \
+  --tasks benchmarks/arc_stage2_orientation/tasks.arc.stage2.json \
+  --expected benchmarks/arc_stage2_orientation/expected.arc.stage2.json \
+  --out benchmarks/arc_stage3_agent_usage/results \
+  --agent-source claude \
+  --mode run-matrix \
+  --task-ids exact_scheduler,workflow_conformer_filtering,known_weak_rotor_scans \
+  --yes
+```
+
+`run-one` runs a single task/condition, writes before/after ccusage snapshots, saves raw Claude stdout/stderr/meta files, extracts the requested JSON response, and updates the manifest. It only ingests when `--ingest-after-run` is passed.
+
+`run-pair` runs baseline then vtrace for one task and ingests by default after both conditions finish.
+
+`run-matrix` runs both conditions for the explicit comma-separated `--task-ids` list and ingests by default after all selected runs finish. It requires `--yes`.
+
+The default Claude invocation is equivalent to passing the prompt through stdin:
+
+```bash
+claude -p \
+  --output-format json \
+  --max-turns 1 \
+  --append-system-prompt-file benchmarks/arc_stage3_agent_usage/claude_orientation_system_prompt.md
+```
+
+Useful Claude options:
+
+```text
+--claude-command claude
+--claude-model <model>
+--claude-max-turns 1
+--claude-output-format json
+--claude-extra-arg <arg>
+--claude-system-prompt-file <path>
+--claude-append-system-prompt-file <path>
+--claude-bare
+--claude-disable-tools
+--allow-missing-ccusage
+--ingest-after-run
+--no-ingest-after-run
+```

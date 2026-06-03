@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -16,7 +17,7 @@ import {
 
 export type AgentSource = "claude" | "codex";
 export type BenchmarkCondition = "baseline" | "vtrace";
-export type BenchmarkMode = "prepare" | "snapshot" | "ingest";
+export type BenchmarkMode = "prepare" | "snapshot" | "ingest" | "run-one" | "run-pair" | "run-matrix";
 export type SnapshotLabel = "before" | "after";
 export type DeltaMethod = "new_session" | "aggregate_difference" | "unavailable";
 export type ResponseQuality = "strong" | "acceptable" | "weak" | "missing" | "invalid";
@@ -30,12 +31,25 @@ export interface CliConfig {
   readonly mode: BenchmarkMode;
   readonly snapshotLabel: SnapshotLabel | null;
   readonly taskId: string | null;
+  readonly taskIds: readonly string[];
   readonly condition: BenchmarkCondition | null;
   readonly allowAggregateAmbiguous: boolean;
+  readonly allowMissingCcusage: boolean;
+  readonly yes: boolean;
+  readonly ingestAfterRun: boolean | null;
   readonly baselineMaxFiles: number;
   readonly snippetContextLines: number;
   readonly maxSnippetsPerFile: number;
   readonly toolCommand: "capsule" | "handoff";
+  readonly claudeCommand: string;
+  readonly claudeModel: string | null;
+  readonly claudeMaxTurns: number;
+  readonly claudeOutputFormat: string;
+  readonly claudeExtraArgs: readonly string[];
+  readonly claudeSystemPromptFile: string | null;
+  readonly claudeAppendSystemPromptFile: string | null;
+  readonly claudeBare: boolean;
+  readonly claudeDisableTools: boolean;
 }
 
 export interface PromptPair {
@@ -119,6 +133,35 @@ export interface PairComparison {
   readonly qualityPreservingActualReductionPct: number | null;
 }
 
+export interface ProcessResult {
+  readonly exitCode: number;
+  readonly stdout: string;
+  readonly stderr: string;
+}
+
+export type ProcessRunner = (
+  command: string,
+  args: readonly string[],
+  options?: { readonly stdin?: string },
+) => Promise<ProcessResult>;
+
+export interface RunDeps {
+  readonly runProcess?: ProcessRunner;
+}
+
+export interface ClaudeRunMeta {
+  readonly taskId: string;
+  readonly condition: BenchmarkCondition;
+  readonly agentSource: AgentSource;
+  readonly command: string;
+  readonly args: readonly string[];
+  readonly promptPath: string;
+  readonly startedAt: string;
+  readonly finishedAt: string;
+  readonly exitCode: number;
+  readonly durationMs: number;
+}
+
 const DEFAULT_CONFIG: CliConfig = {
   repo: "/home/calvin/code/ARC",
   tasks: "benchmarks/arc_stage2_orientation/tasks.arc.stage2.json",
@@ -128,12 +171,25 @@ const DEFAULT_CONFIG: CliConfig = {
   mode: "prepare",
   snapshotLabel: null,
   taskId: null,
+  taskIds: [],
   condition: null,
   allowAggregateAmbiguous: false,
+  allowMissingCcusage: false,
+  yes: false,
+  ingestAfterRun: null,
   baselineMaxFiles: 5,
   snippetContextLines: 40,
   maxSnippetsPerFile: 3,
   toolCommand: "handoff",
+  claudeCommand: "claude",
+  claudeModel: null,
+  claudeMaxTurns: 1,
+  claudeOutputFormat: "json",
+  claudeExtraArgs: [],
+  claudeSystemPromptFile: null,
+  claudeAppendSystemPromptFile: "benchmarks/arc_stage3_agent_usage/claude_orientation_system_prompt.md",
+  claudeBare: false,
+  claudeDisableTools: false,
 };
 
 const SHARED_INSTRUCTION_TEMPLATE = `You are evaluating repository orientation context.
@@ -218,6 +274,59 @@ export function computePromptPair(task: ArcStage2Task, baselineContext: string, 
       ? null
       : 100 * (baselinePromptEstTokens - vtracePromptEstTokens) / baselinePromptEstTokens,
   };
+}
+
+export function buildClaudeArgs(config: Pick<CliConfig,
+  | "claudeOutputFormat"
+  | "claudeMaxTurns"
+  | "claudeModel"
+  | "claudeSystemPromptFile"
+  | "claudeAppendSystemPromptFile"
+  | "claudeBare"
+  | "claudeDisableTools"
+  | "claudeExtraArgs"
+>): string[] {
+  const args = [
+    "-p",
+    "--output-format", config.claudeOutputFormat,
+    "--max-turns", String(config.claudeMaxTurns),
+  ];
+
+  if (config.claudeModel !== null) {
+    args.push("--model", config.claudeModel);
+  }
+  if (config.claudeSystemPromptFile !== null) {
+    args.push("--system-prompt-file", config.claudeSystemPromptFile);
+  }
+  if (config.claudeAppendSystemPromptFile !== null) {
+    args.push("--append-system-prompt-file", config.claudeAppendSystemPromptFile);
+  }
+  if (config.claudeBare) {
+    args.push("--bare");
+  }
+  if (config.claudeDisableTools) {
+    args.push("--tools", "");
+  }
+  args.push(...config.claudeExtraArgs);
+
+  return args;
+}
+
+export function extractResponseJson(stdout: string): unknown {
+  const direct = parseJsonIfPossible(stdout);
+  const directMatch = findBenchmarkResponseObject(direct);
+  if (directMatch !== null) {
+    return directMatch;
+  }
+
+  for (const fenced of extractFencedJsonBlocks(stdout)) {
+    const fencedMatch = findBenchmarkResponseObject(parseJsonIfPossible(fenced));
+    if (fencedMatch !== null) {
+      return fencedMatch;
+    }
+  }
+
+  throw new Error("Could not extract benchmark response JSON from Claude stdout.");
 }
 
 export function parseCcusageSnapshot(snapshot: unknown): ParsedCcusageSnapshot {
@@ -500,12 +609,12 @@ export async function runPrepare(config: CliConfig): Promise<void> {
   await writeFile(path.join(config.out, "arc_stage3_agent_usage.md"), renderPrepareMarkdown(promptPairs, metadata));
 }
 
-export async function runSnapshot(config: CliConfig): Promise<void> {
+export async function runSnapshot(config: CliConfig, deps: RunDeps = {}): Promise<void> {
   if (config.taskId === null || config.condition === null || config.snapshotLabel === null) {
     throw new Error("--mode snapshot requires --task-id, --condition, and --snapshot-label.");
   }
 
-  const result = await runProcess("bunx", ["ccusage", config.agentSource, "session", "--json"]);
+  const result = await (deps.runProcess ?? runProcess)("bunx", ["ccusage", config.agentSource, "session", "--json"]);
   if (result.exitCode !== 0) {
     throw new Error(`ccusage snapshot failed: ${result.stderr.trim() || `exit ${result.exitCode}`}`);
   }
@@ -517,6 +626,56 @@ export async function runSnapshot(config: CliConfig): Promise<void> {
     path.join(snapshotsDir, `${config.taskId}.${config.condition}.${config.snapshotLabel}.json`),
     result.stdout.endsWith("\n") ? result.stdout : `${result.stdout}\n`,
   );
+}
+
+export async function runOne(config: CliConfig, deps: RunDeps = {}): Promise<void> {
+  if (config.agentSource !== "claude") {
+    throw new Error("--mode run-one currently requires --agent-source claude.");
+  }
+  if (config.taskId === null || config.condition === null) {
+    throw new Error("--mode run-one requires --task-id and --condition.");
+  }
+
+  await ensurePromptExists(config, config.taskId, config.condition);
+  await takeSnapshotForRun(config, config.taskId, config.condition, "before", deps);
+  await runPreparedClaudePrompt(config, config.taskId, config.condition, deps);
+  await takeSnapshotForRun(config, config.taskId, config.condition, "after", deps);
+  await updateAutomatedRunManifest(config, config.taskId, config.condition);
+
+  if (shouldIngestAfterRun(config, false)) {
+    await runIngest(config);
+  }
+}
+
+export async function runPair(config: CliConfig, deps: RunDeps = {}): Promise<void> {
+  if (config.taskId === null) {
+    throw new Error("--mode run-pair requires --task-id.");
+  }
+
+  await runOne({ ...config, mode: "run-one", condition: "baseline", ingestAfterRun: false }, deps);
+  await runOne({ ...config, mode: "run-one", condition: "vtrace", ingestAfterRun: false }, deps);
+
+  if (shouldIngestAfterRun(config, true)) {
+    await runIngest(config);
+  }
+}
+
+export async function runMatrix(config: CliConfig, deps: RunDeps = {}): Promise<void> {
+  if (!config.yes) {
+    throw new Error("--mode run-matrix spends real Claude Code tokens; pass --yes to confirm.");
+  }
+  if (config.taskIds.length === 0) {
+    throw new Error("--mode run-matrix requires explicit --task-ids.");
+  }
+
+  for (const taskId of config.taskIds) {
+    await runOne({ ...config, mode: "run-one", taskId, condition: "baseline", ingestAfterRun: false }, deps);
+    await runOne({ ...config, mode: "run-one", taskId, condition: "vtrace", ingestAfterRun: false }, deps);
+  }
+
+  if (shouldIngestAfterRun(config, true)) {
+    await runIngest(config);
+  }
 }
 
 export async function runIngest(config: CliConfig): Promise<void> {
@@ -543,6 +702,127 @@ export async function runIngest(config: CliConfig): Promise<void> {
   await writeFile(path.join(config.out, "arc_stage3_agent_usage.csv"), renderCsv(rows));
   await writeFile(path.join(config.out, "arc_stage3_agent_usage.json"), `${JSON.stringify(report, null, 2)}\n`);
   await writeFile(path.join(config.out, "arc_stage3_agent_usage.md"), renderIngestMarkdown(rows, pairs, summary, metadata));
+}
+
+async function runPreparedClaudePrompt(
+  config: CliConfig,
+  taskId: string,
+  condition: BenchmarkCondition,
+  deps: RunDeps,
+): Promise<void> {
+  const promptPath = path.join(config.out, "prompts", `${taskId}.${condition}.md`);
+  const prompt = await readFile(promptPath, "utf8");
+  const args = buildClaudeArgs(config);
+  const startedAt = new Date();
+  const startedMs = Date.now();
+  const result = await (deps.runProcess ?? runProcess)(config.claudeCommand, args, { stdin: prompt });
+  const finishedAt = new Date();
+  const meta: ClaudeRunMeta = {
+    taskId,
+    condition,
+    agentSource: config.agentSource,
+    command: config.claudeCommand,
+    args,
+    promptPath,
+    startedAt: startedAt.toISOString(),
+    finishedAt: finishedAt.toISOString(),
+    exitCode: result.exitCode,
+    durationMs: Date.now() - startedMs,
+  };
+
+  const agentRunsDir = path.join(config.out, "agent_runs");
+  const responsesDir = path.join(config.out, "responses");
+  await mkdir(agentRunsDir, { recursive: true });
+  await mkdir(responsesDir, { recursive: true });
+  await writeFile(path.join(agentRunsDir, `${taskId}.${condition}.claude.stdout.json`), result.stdout.endsWith("\n") ? result.stdout : `${result.stdout}\n`);
+  await writeFile(path.join(agentRunsDir, `${taskId}.${condition}.claude.stderr.txt`), result.stderr.endsWith("\n") ? result.stderr : `${result.stderr}\n`);
+  await writeFile(path.join(agentRunsDir, `${taskId}.${condition}.claude.meta.json`), `${JSON.stringify(meta, null, 2)}\n`);
+
+  let responseJson: unknown;
+  try {
+    responseJson = extractResponseJson(result.stdout);
+  } catch (error) {
+    responseJson = {
+      target_file: null,
+      target_symbol: null,
+      quality: "invalid",
+      confidence: "low",
+      reason: "Claude stdout did not contain a parseable benchmark response object.",
+      parse_error: error instanceof Error ? error.message : String(error),
+    };
+  }
+  await writeFile(path.join(responsesDir, `${taskId}.${condition}.response.json`), `${JSON.stringify(responseJson, null, 2)}\n`);
+
+  if (result.exitCode !== 0) {
+    throw new Error(`Claude run failed for ${taskId}.${condition}: ${result.stderr.trim() || `exit ${result.exitCode}`}`);
+  }
+}
+
+async function takeSnapshotForRun(
+  config: CliConfig,
+  taskId: string,
+  condition: BenchmarkCondition,
+  snapshotLabel: SnapshotLabel,
+  deps: RunDeps,
+): Promise<void> {
+  try {
+    await runSnapshot({ ...config, mode: "snapshot", taskId, condition, snapshotLabel }, deps);
+  } catch (error) {
+    if (!config.allowMissingCcusage) {
+      throw error;
+    }
+    const snapshotsDir = path.join(config.out, "snapshots");
+    await mkdir(snapshotsDir, { recursive: true });
+    await writeFile(path.join(snapshotsDir, `${taskId}.${condition}.${snapshotLabel}.json`), `${JSON.stringify({
+      error: error instanceof Error ? error.message : String(error),
+      allowMissingCcusage: true,
+      capturedAt: new Date().toISOString(),
+    }, null, 2)}\n`);
+  }
+}
+
+async function ensurePromptExists(config: CliConfig, taskId: string, condition: BenchmarkCondition): Promise<void> {
+  const promptPath = path.join(config.out, "prompts", `${taskId}.${condition}.md`);
+  try {
+    await readFile(promptPath, "utf8");
+  } catch (error) {
+    if (!isNodeError(error) || error.code !== "ENOENT") {
+      throw error;
+    }
+    await runPrepare(config);
+    await readFile(promptPath, "utf8");
+  }
+}
+
+async function updateAutomatedRunManifest(config: CliConfig, taskId: string, condition: BenchmarkCondition): Promise<void> {
+  const manifestPath = path.join(config.out, "arc_stage3_agent_usage_manifest.json");
+  const manifest = await readJsonIfExists(manifestPath);
+  const record = {
+    task_id: taskId,
+    condition,
+    agent_source: config.agentSource,
+    prompt: `prompts/${taskId}.${condition}.md`,
+    stdout: `agent_runs/${taskId}.${condition}.claude.stdout.json`,
+    stderr: `agent_runs/${taskId}.${condition}.claude.stderr.txt`,
+    meta: `agent_runs/${taskId}.${condition}.claude.meta.json`,
+    response: `responses/${taskId}.${condition}.response.json`,
+    before_snapshot: `snapshots/${taskId}.${condition}.before.json`,
+    after_snapshot: `snapshots/${taskId}.${condition}.after.json`,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (!isRecord(manifest)) {
+    await writeFile(manifestPath, `${JSON.stringify({ metadata: makeMetadata(config), automated_runs: [record] }, null, 2)}\n`);
+    return;
+  }
+
+  const existingRuns = Array.isArray(manifest.automated_runs) ? manifest.automated_runs.filter(isRecord) : [];
+  const filteredRuns = existingRuns.filter((item) => item.task_id !== taskId || item.condition !== condition);
+  await writeFile(manifestPath, `${JSON.stringify({ ...manifest, automated_runs: [...filteredRuns, record] }, null, 2)}\n`);
+}
+
+function shouldIngestAfterRun(config: CliConfig, defaultValue: boolean): boolean {
+  return config.ingestAfterRun ?? defaultValue;
 }
 
 async function ingestRun(
@@ -1053,18 +1333,38 @@ function deduplicateMatches(matches: readonly BaselineMatch[]): BaselineMatch[] 
 async function runProcess(
   command: string,
   args: readonly string[],
-): Promise<{ readonly exitCode: number; readonly stdout: string; readonly stderr: string }> {
-  const proc = Bun.spawn([command, ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
+  options: { readonly stdin?: string } = {},
+): Promise<ProcessResult> {
+  return await new Promise((resolve) => {
+    const proc = spawn(command, [...args], {
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    const stdoutChunks: Buffer[] = [];
+    const stderrChunks: Buffer[] = [];
 
-  return { exitCode, stdout, stderr };
+    proc.stdout.on("data", (chunk: Buffer) => stdoutChunks.push(chunk));
+    proc.stderr.on("data", (chunk: Buffer) => stderrChunks.push(chunk));
+    proc.on("error", (error) => {
+      resolve({
+        exitCode: 1,
+        stdout: Buffer.concat(stdoutChunks).toString("utf8"),
+        stderr: `${Buffer.concat(stderrChunks).toString("utf8")}${error.message}`,
+      });
+    });
+    proc.on("close", (code) => {
+      resolve({
+        exitCode: code ?? 1,
+        stdout: Buffer.concat(stdoutChunks).toString("utf8"),
+        stderr: Buffer.concat(stderrChunks).toString("utf8"),
+      });
+    });
+
+    if (options.stdin !== undefined) {
+      proc.stdin.end(options.stdin);
+    } else {
+      proc.stdin.end();
+    }
+  });
 }
 
 type ManifestPromptLookup = Map<string, number>;
@@ -1105,6 +1405,7 @@ async function readJsonIfExists(filePath: string): Promise<unknown | null> {
 }
 
 async function ensureOutputTree(outDir: string): Promise<void> {
+  await mkdir(path.join(outDir, "agent_runs"), { recursive: true });
   await mkdir(path.join(outDir, "prompts"), { recursive: true });
   await mkdir(path.join(outDir, "snapshots"), { recursive: true });
   await mkdir(path.join(outDir, "responses"), { recursive: true });
@@ -1143,6 +1444,72 @@ function findRecords(value: unknown): Record<string, unknown>[] {
     }
   }, 5);
   return records;
+}
+
+function parseJsonIfPossible(text: string): unknown | null {
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function findBenchmarkResponseObject(value: unknown): Record<string, unknown> | null {
+  if (isBenchmarkResponseObject(value)) {
+    return value;
+  }
+
+  if (isRecord(value)) {
+    for (const field of ["result", "response", "content", "message", "text"]) {
+      const fieldValue = value[field];
+      if (typeof fieldValue === "string") {
+        const parsed = parseJsonIfPossible(fieldValue);
+        const parsedMatch = findBenchmarkResponseObject(parsed);
+        if (parsedMatch !== null) {
+          return parsedMatch;
+        }
+        for (const fenced of extractFencedJsonBlocks(fieldValue)) {
+          const fencedMatch = findBenchmarkResponseObject(parseJsonIfPossible(fenced));
+          if (fencedMatch !== null) {
+            return fencedMatch;
+          }
+        }
+      } else {
+        const nestedMatch = findBenchmarkResponseObject(fieldValue);
+        if (nestedMatch !== null) {
+          return nestedMatch;
+        }
+      }
+    }
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const match = findBenchmarkResponseObject(item);
+      if (match !== null) {
+        return match;
+      }
+    }
+  }
+
+  return null;
+}
+
+function isBenchmarkResponseObject(value: unknown): value is Record<string, unknown> {
+  if (!isRecord(value)) {
+    return false;
+  }
+  return ["target_file", "target_symbol", "quality", "confidence", "reason"].every((key) => key in value);
+}
+
+function extractFencedJsonBlocks(text: string): string[] {
+  const blocks: string[] = [];
+  const pattern = /```(?:json)?\s*([\s\S]*?)```/gi;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(text)) !== null) {
+    blocks.push(match[1]!.trim());
+  }
+  return blocks;
 }
 
 function visit(
@@ -1274,8 +1641,8 @@ function parseArgs(argv: readonly string[]): CliConfig {
       }
       case "--mode": {
         const value = requireValue(argv, ++index, arg);
-        if (value !== "prepare" && value !== "snapshot" && value !== "ingest") {
-          throw new Error("--mode must be prepare, snapshot, or ingest.");
+        if (value !== "prepare" && value !== "snapshot" && value !== "ingest" && value !== "run-one" && value !== "run-pair" && value !== "run-matrix") {
+          throw new Error("--mode must be prepare, snapshot, ingest, run-one, run-pair, or run-matrix.");
         }
         config.mode = value;
         break;
@@ -1291,6 +1658,9 @@ function parseArgs(argv: readonly string[]): CliConfig {
       case "--task-id":
         config.taskId = requireValue(argv, ++index, arg);
         break;
+      case "--task-ids":
+        config.taskIds = requireValue(argv, ++index, arg).split(",").map((value) => value.trim()).filter((value) => value.length > 0);
+        break;
       case "--condition": {
         const value = requireValue(argv, ++index, arg);
         if (value !== "baseline" && value !== "vtrace") {
@@ -1301,6 +1671,18 @@ function parseArgs(argv: readonly string[]): CliConfig {
       }
       case "--allow-aggregate-ambiguous":
         config.allowAggregateAmbiguous = true;
+        break;
+      case "--allow-missing-ccusage":
+        config.allowMissingCcusage = true;
+        break;
+      case "--yes":
+        config.yes = true;
+        break;
+      case "--ingest-after-run":
+        config.ingestAfterRun = true;
+        break;
+      case "--no-ingest-after-run":
+        config.ingestAfterRun = false;
         break;
       case "--baseline-max-files":
         config.baselineMaxFiles = parsePositiveInt(requireValue(argv, ++index, arg), arg);
@@ -1319,6 +1701,36 @@ function parseArgs(argv: readonly string[]): CliConfig {
         config.toolCommand = value;
         break;
       }
+      case "--claude-command":
+        config.claudeCommand = requireValue(argv, ++index, arg);
+        break;
+      case "--claude-model":
+        config.claudeModel = requireValue(argv, ++index, arg);
+        break;
+      case "--claude-max-turns":
+        config.claudeMaxTurns = parsePositiveInt(requireValue(argv, ++index, arg), arg);
+        break;
+      case "--claude-output-format":
+        config.claudeOutputFormat = requireValue(argv, ++index, arg);
+        break;
+      case "--claude-extra-arg":
+        config.claudeExtraArgs = [...config.claudeExtraArgs, requireValue(argv, ++index, arg)];
+        break;
+      case "--claude-system-prompt-file":
+        config.claudeSystemPromptFile = requireValue(argv, ++index, arg);
+        break;
+      case "--claude-append-system-prompt-file":
+        config.claudeAppendSystemPromptFile = requireValue(argv, ++index, arg);
+        break;
+      case "--no-claude-append-system-prompt-file":
+        config.claudeAppendSystemPromptFile = null;
+        break;
+      case "--claude-bare":
+        config.claudeBare = true;
+        break;
+      case "--claude-disable-tools":
+        config.claudeDisableTools = true;
+        break;
       case "--help":
       case "-h":
         printUsageAndExit(0);
@@ -1334,6 +1746,8 @@ function parseArgs(argv: readonly string[]): CliConfig {
     tasks: path.resolve(config.tasks),
     expected: path.resolve(config.expected),
     out: path.resolve(config.out),
+    claudeSystemPromptFile: config.claudeSystemPromptFile === null ? null : path.resolve(config.claudeSystemPromptFile),
+    claudeAppendSystemPromptFile: config.claudeAppendSystemPromptFile === null ? null : path.resolve(config.claudeAppendSystemPromptFile),
   };
 }
 
@@ -1367,6 +1781,8 @@ function printUsageAndExit(exitCode: number): never {
     "  bun benchmarks/arc_stage3_agent_usage/run_arc_stage3_agent_usage.ts --repo /home/calvin/code/ARC --tasks benchmarks/arc_stage2_orientation/tasks.arc.stage2.json --expected benchmarks/arc_stage2_orientation/expected.arc.stage2.json --out benchmarks/arc_stage3_agent_usage/results --agent-source claude --mode prepare",
     "  bun benchmarks/arc_stage3_agent_usage/run_arc_stage3_agent_usage.ts --out benchmarks/arc_stage3_agent_usage/results --agent-source claude --mode snapshot --snapshot-label before --task-id workflow_arkane_input --condition baseline",
     "  bun benchmarks/arc_stage3_agent_usage/run_arc_stage3_agent_usage.ts --repo /home/calvin/code/ARC --tasks benchmarks/arc_stage2_orientation/tasks.arc.stage2.json --expected benchmarks/arc_stage2_orientation/expected.arc.stage2.json --out benchmarks/arc_stage3_agent_usage/results --agent-source claude --mode ingest",
+    "  bun benchmarks/arc_stage3_agent_usage/run_arc_stage3_agent_usage.ts --repo /home/calvin/code/ARC --tasks benchmarks/arc_stage2_orientation/tasks.arc.stage2.json --expected benchmarks/arc_stage2_orientation/expected.arc.stage2.json --out benchmarks/arc_stage3_agent_usage/results --agent-source claude --mode run-pair --task-id workflow_arkane_input --yes",
+    "  bun benchmarks/arc_stage3_agent_usage/run_arc_stage3_agent_usage.ts --repo /home/calvin/code/ARC --tasks benchmarks/arc_stage2_orientation/tasks.arc.stage2.json --expected benchmarks/arc_stage2_orientation/expected.arc.stage2.json --out benchmarks/arc_stage3_agent_usage/results --agent-source claude --mode run-matrix --task-ids exact_scheduler,workflow_conformer_filtering,known_weak_rotor_scans --yes",
     "",
   ].join("\n"));
   process.exit(exitCode);
@@ -1383,6 +1799,15 @@ async function main(config: CliConfig): Promise<void> {
       break;
     case "ingest":
       await runIngest(config);
+      break;
+    case "run-one":
+      await runOne(config);
+      break;
+    case "run-pair":
+      await runPair(config);
+      break;
+    case "run-matrix":
+      await runMatrix(config);
       break;
   }
 }

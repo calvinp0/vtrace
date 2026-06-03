@@ -1,17 +1,27 @@
 import assert from "node:assert/strict";
+import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { test } from "bun:test";
 
 import {
+  buildClaudeArgs,
   buildPrompt,
   buildSharedInstruction,
   comparePairs,
   computeCcusageDelta,
   computePromptPair,
+  extractResponseJson,
   parseCcusageSnapshot,
   qualityScore,
   renderPrepareMarkdown,
+  runMatrix,
+  runOne,
+  runPair,
   scoreResponseJson,
+  type CliConfig,
   type IngestRow,
+  type ProcessRunner,
 } from "./run_arc_stage3_agent_usage";
 import type { ArcStage2Task, ExpectedTarget } from "../arc_stage2_orientation/run_arc_stage2_orientation";
 
@@ -219,6 +229,145 @@ test("markdown prepare-mode summary avoids actual ccusage claims", () => {
   assert.match(markdown, /Estimated prompt token comparison/);
 });
 
+test("Claude command arg construction includes configured options", () => {
+  const args = buildClaudeArgs({
+    claudeOutputFormat: "json",
+    claudeMaxTurns: 2,
+    claudeModel: "claude-sonnet-4",
+    claudeSystemPromptFile: "/tmp/system.md",
+    claudeAppendSystemPromptFile: "/tmp/append.md",
+    claudeBare: true,
+    claudeDisableTools: true,
+    claudeExtraArgs: ["--permission-mode", "plan"],
+  });
+
+  assert.deepEqual(args, [
+    "-p",
+    "--output-format", "json",
+    "--max-turns", "2",
+    "--model", "claude-sonnet-4",
+    "--system-prompt-file", "/tmp/system.md",
+    "--append-system-prompt-file", "/tmp/append.md",
+    "--bare",
+    "--tools", "",
+    "--permission-mode", "plan",
+  ]);
+});
+
+test("response extraction handles direct JSON stdout", () => {
+  const extracted = extractResponseJson(JSON.stringify(responseObject("strong")));
+  assert.deepEqual(extracted, responseObject("strong"));
+});
+
+test("response extraction handles Claude wrapper JSON field", () => {
+  const extracted = extractResponseJson(JSON.stringify({ result: JSON.stringify(responseObject("acceptable")) }));
+  assert.deepEqual(extracted, responseObject("acceptable"));
+});
+
+test("response extraction handles fenced JSON", () => {
+  const extracted = extractResponseJson([
+    "Here is the answer:",
+    "```json",
+    JSON.stringify(responseObject("weak")),
+    "```",
+  ].join("\n"));
+  assert.deepEqual(extracted, responseObject("weak"));
+});
+
+test("invalid extraction through run-one produces parse error response", async () => {
+  const { config } = await makeRunFixture();
+  const calls: string[] = [];
+  const mock = makeRunner(calls, "not json");
+
+  await runOne(config, { runProcess: mock });
+
+  const response = JSON.parse(await readFile(path.join(config.out, "responses", `${TASK.id}.baseline.response.json`), "utf8"));
+  assert.equal(response.quality, "invalid");
+  assert.equal(typeof response.parse_error, "string");
+});
+
+test("run-one passes prompt through stdin and writes stdout stderr meta", async () => {
+  const { config, prompt } = await makeRunFixture();
+  const stdinValues: string[] = [];
+  const mock: ProcessRunner = async (command, args, options) => {
+    if (command === "claude") {
+      stdinValues.push(options?.stdin ?? "");
+      return { exitCode: 0, stdout: JSON.stringify(responseObject("strong")), stderr: "warn" };
+    }
+    return { exitCode: 0, stdout: JSON.stringify({ sessions: [{ sessionId: `${args[3]}-${stdinValues.length}`, inputTokens: 1, outputTokens: 1, totalTokens: 2 }] }), stderr: "" };
+  };
+
+  await runOne(config, { runProcess: mock });
+
+  assert.deepEqual(stdinValues, [prompt]);
+  assert.equal(await readFile(path.join(config.out, "agent_runs", `${TASK.id}.baseline.claude.stdout.json`), "utf8"), `${JSON.stringify(responseObject("strong"))}\n`);
+  assert.equal(await readFile(path.join(config.out, "agent_runs", `${TASK.id}.baseline.claude.stderr.txt`), "utf8"), "warn\n");
+  const meta = JSON.parse(await readFile(path.join(config.out, "agent_runs", `${TASK.id}.baseline.claude.meta.json`), "utf8"));
+  assert.equal(meta.command, "claude");
+  assert.deepEqual(meta.args.slice(0, 5), ["-p", "--output-format", "json", "--max-turns", "1"]);
+});
+
+test("run-one calls snapshot before and after using mocked ccusage", async () => {
+  const { config } = await makeRunFixture();
+  const calls: string[] = [];
+
+  await runOne(config, { runProcess: makeRunner(calls, JSON.stringify(responseObject("strong"))) });
+
+  assert.deepEqual(calls, ["bunx ccusage", "claude", "bunx ccusage"]);
+  assert.notEqual(await readFile(path.join(config.out, "snapshots", `${TASK.id}.baseline.before.json`), "utf8"), "");
+  assert.notEqual(await readFile(path.join(config.out, "snapshots", `${TASK.id}.baseline.after.json`), "utf8"), "");
+});
+
+test("run-pair runs baseline then vtrace", async () => {
+  const { config } = await makeRunFixture("baseline", true);
+  await writePrompt(config, "vtrace");
+  const claudeRuns: string[] = [];
+  const mock: ProcessRunner = async (command, args, options) => {
+    if (command === "claude") {
+      claudeRuns.push(options?.stdin?.includes("vtrace prompt") ? "vtrace" : "baseline");
+      return { exitCode: 0, stdout: JSON.stringify(responseObject("strong")), stderr: "" };
+    }
+    return { exitCode: 0, stdout: JSON.stringify({ sessions: [{ sessionId: `${claudeRuns.length}`, inputTokens: 1, outputTokens: 1, totalTokens: 2 }] }), stderr: "" };
+  };
+
+  await runPair({ ...config, mode: "run-pair", condition: null, ingestAfterRun: false }, { runProcess: mock });
+
+  assert.deepEqual(claudeRuns, ["baseline", "vtrace"]);
+});
+
+test("run-matrix respects explicit task IDs", async () => {
+  const { config } = await makeRunFixture("baseline", false);
+  for (const taskId of ["exact_scheduler", "known_weak_rotor_scans"]) {
+    await writePrompt({ ...config, taskId }, "baseline");
+    await writePrompt({ ...config, taskId }, "vtrace");
+  }
+  const claudeRuns: string[] = [];
+  const mock: ProcessRunner = async (command, _args, options) => {
+    if (command === "claude") {
+      claudeRuns.push(options?.stdin ?? "");
+      return { exitCode: 0, stdout: JSON.stringify(responseObject("strong")), stderr: "" };
+    }
+    return { exitCode: 0, stdout: JSON.stringify({ sessions: [{ sessionId: `${claudeRuns.length}`, inputTokens: 1, outputTokens: 1, totalTokens: 2 }] }), stderr: "" };
+  };
+
+  await runMatrix({ ...config, mode: "run-matrix", taskIds: ["exact_scheduler", "known_weak_rotor_scans"], yes: true, ingestAfterRun: false }, { runProcess: mock });
+
+  assert.deepEqual(claudeRuns, [
+    "exact_scheduler baseline prompt",
+    "exact_scheduler vtrace prompt",
+    "known_weak_rotor_scans baseline prompt",
+    "known_weak_rotor_scans vtrace prompt",
+  ]);
+});
+
+test("run-matrix requires --yes", async () => {
+  const { config } = await makeRunFixture();
+  await assert.rejects(
+    () => runMatrix({ ...config, mode: "run-matrix", taskIds: ["exact_scheduler"], yes: false, ingestAfterRun: false }, { runProcess: makeRunner([], JSON.stringify(responseObject("strong"))) }),
+    /--yes/,
+  );
+});
+
 function makeRow(condition: "baseline" | "vtrace", totalTokens: number, quality: "strong" | "acceptable" | "weak"): IngestRow {
   return {
     taskId: TASK.id,
@@ -242,5 +391,89 @@ function makeRow(condition: "baseline" | "vtrace", totalTokens: number, quality:
     matchedExpectedSymbol: "render_arkane_input_template",
     parseError: null,
     notes: [],
+  };
+}
+
+function responseObject(quality: "strong" | "acceptable" | "weak") {
+  return {
+    target_file: "arc/statmech/arkane.py",
+    target_symbol: "render_arkane_input_template",
+    quality,
+    confidence: "high",
+    reason: "Located the benchmark target.",
+  };
+}
+
+async function makeRunFixture(condition: "baseline" | "vtrace" = "baseline", writeInitialPrompt = true): Promise<{ config: CliConfig; prompt: string }> {
+  const out = await mkdtemp(path.join(os.tmpdir(), "arc-stage3-"));
+  const config: CliConfig = {
+    repo: "/tmp/arc",
+    tasks: path.join(out, "tasks.json"),
+    expected: path.join(out, "expected.json"),
+    out,
+    agentSource: "claude",
+    mode: "run-one",
+    snapshotLabel: null,
+    taskId: TASK.id,
+    taskIds: [],
+    condition,
+    allowAggregateAmbiguous: false,
+    allowMissingCcusage: false,
+    yes: false,
+    ingestAfterRun: false,
+    baselineMaxFiles: 5,
+    snippetContextLines: 40,
+    maxSnippetsPerFile: 3,
+    toolCommand: "handoff",
+    claudeCommand: "claude",
+    claudeModel: null,
+    claudeMaxTurns: 1,
+    claudeOutputFormat: "json",
+    claudeExtraArgs: [],
+    claudeSystemPromptFile: null,
+    claudeAppendSystemPromptFile: "/tmp/system.md",
+    claudeBare: false,
+    claudeDisableTools: false,
+  };
+
+  await writeFile(config.tasks, `${JSON.stringify([TASK])}\n`);
+  await writeFile(config.expected, `${JSON.stringify({ [TASK.id]: EXPECTED })}\n`);
+  await mkdir(path.join(out, "prompts"), { recursive: true });
+  await mkdir(path.join(out, "snapshots"), { recursive: true });
+  await mkdir(path.join(out, "responses"), { recursive: true });
+  await mkdir(path.join(out, "agent_runs"), { recursive: true });
+  await writeFile(path.join(out, "arc_stage3_agent_usage_manifest.json"), `${JSON.stringify({
+    metadata: {},
+    prompts: [{
+      task_id: TASK.id,
+      baseline_prompt_est_tokens: 10,
+      vtrace_prompt_est_tokens: 8,
+    }],
+  })}\n`);
+
+  const prompt = `${TASK.id} ${condition} prompt`;
+  if (writeInitialPrompt) {
+    await writePrompt(config, condition, prompt);
+  }
+  return { config, prompt };
+}
+
+async function writePrompt(config: CliConfig, condition: "baseline" | "vtrace", prompt = `${config.taskId} ${condition} prompt`): Promise<void> {
+  await mkdir(path.join(config.out, "prompts"), { recursive: true });
+  await writeFile(path.join(config.out, "prompts", `${config.taskId}.${condition}.md`), prompt);
+}
+
+function makeRunner(calls: string[], claudeStdout: string): ProcessRunner {
+  return async (command, args) => {
+    if (command === "claude") {
+      calls.push("claude");
+      return { exitCode: 0, stdout: claudeStdout, stderr: "" };
+    }
+    calls.push(`${command} ${args[0]}`);
+    return {
+      exitCode: 0,
+      stdout: JSON.stringify({ sessions: [{ sessionId: `${calls.length}`, inputTokens: 1, outputTokens: 1, totalTokens: 2 }] }),
+      stderr: "",
+    };
   };
 }
