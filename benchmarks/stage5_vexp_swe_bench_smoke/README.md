@@ -82,6 +82,7 @@ bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
 | `evaluate`             | **Stage 5C.** Runs the external evaluator (`node dist/cli.js evaluate <jsonl>`) for every condition that has results, populating `resolved` in-place and writing per-condition `_eval.meta.json`. `--eval-mode docker` (default) runs the real SWE-bench suite; `lightweight` only checks patch non-emptiness. |
 | `ingest`               | Tolerantly parses everything under `results/raw/{baseline,vtrace,vexp}`, normalizes rows, computes pairs, builds the per-condition aggregate + evaluation evidence, and writes the CSV/JSON/Markdown reports.                                                                                                  |
 | `report`               | Re-renders the CSV/JSON/Markdown from the normalized intermediate (`stage5_normalized.json`); falls back to re-ingesting raw if no intermediate exists.                                                                                                                                                        |
+| `aggregate-runs`       | **Stage 5C.** Combines several isolated single-instance runs (each its own `--run-label`) into one report. Takes `--run-labels a,b,c`, parses/stamps each label exactly as `ingest` does, concatenates the rows, and writes the combined report + `stage5_normalized.json` to `results/aggregate/` (single-run flat outputs are left untouched). A duplicate `instance_id` across labels is a hard error.                |
 | `install-vtrace-patch` | Patches the external checkout's Claude Code adapter so it injects `VTRACE_AGENT_INSTRUCTIONS_FILE` into the prompt (local-patch method). Backs up the file once, is idempotent, and writes `results/vtrace_patch_manifest.json`.                                                                               |
 | `verify-vtrace-patch`  | Reports whether the local vtrace patch marker is present in the external checkout. Exits non-zero if not installed.                                                                                                                                                                                            |
 
@@ -191,7 +192,7 @@ The first indexed-context smoke result is documented in [STAGE5B_INDEXED_CONTEXT
 
 ## Stage 5C evaluated smoke result
 
-The preliminary three-task evaluated result is documented in [STAGE5C_EVALUATED_RESULTS.md](./STAGE5C_EVALUATED_RESULTS.md).
+The preliminary five-task evaluated result is documented in [STAGE5C_EVALUATED_RESULTS.md](./STAGE5C_EVALUATED_RESULTS.md). It is a **mixed** result: resolution is preserved (5/5 both conditions), but vtrace indexed-context reduced effort on the three larger tasks and added overhead on the two smaller ones, so the mean per-task token reduction (−9.92%) and the pooled token reduction (+18.09%) disagree in sign.
 
 ## Stage 5C: evaluated SWE-bench protocol
 
@@ -260,6 +261,30 @@ bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
 
 # To include the vexp condition, add --allow-vexp to steps 1-2.
 ```
+
+### Combining several isolated runs (`aggregate-runs`)
+
+When each instance is run under its own `--run-label` (the recommended way to keep
+runs from overwriting each other), combine them into one report with
+`--mode aggregate-runs --run-labels a,b,c`:
+
+```bash
+bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
+  --mode aggregate-runs \
+  --run-labels eval-11728,eval-11740,eval-11490,eval-10880,eval-11095 \
+  --out benchmarks/stage5_vexp_swe_bench_smoke/results
+```
+
+Each label is parsed and stamped exactly as `ingest` does for a single run, then
+the rows are concatenated so the per-condition aggregate and paired comparison are
+computed across all instances. The combined report (`stage5_vexp_swe_bench_smoke.{csv,json,md}`
++ `stage5_normalized.json`) is written to `results/aggregate/`, leaving each
+single-run output untouched. A duplicate `instance_id` across two labels is a hard
+error — pick one canonical run-label per instance. The combined run-level vtrace
+evidence is reported as unanimous-or-`mixed`: a method/validity fact is shown only
+when **all** combined runs agree, and per-run-specific paths/byte counts (which
+cannot be aggregated) are nulled; authoritative per-instance validity stays in the
+per-condition aggregate's `valid_treatments`/`invalid_treatments`.
 
 ### Aggregate report
 
@@ -341,6 +366,9 @@ benchmarks/stage5_vexp_swe_bench_smoke/results/
       _eval.meta.json          # Stage 5C, written by --mode evaluate
   runs/<run-label>/            # isolated layout when --run-label is used
     raw/{baseline,vtrace,vexp}/
+  aggregate/                   # written by --mode aggregate-runs --run-labels a,b,c
+    stage5_normalized.json
+    stage5_vexp_swe_bench_smoke.{csv,json,md}
   run_plan.json
   stage5_normalized.json
   stage5_vexp_swe_bench_smoke.csv

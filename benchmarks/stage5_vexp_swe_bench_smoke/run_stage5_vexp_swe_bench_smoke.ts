@@ -16,6 +16,7 @@ export type Stage5Mode =
   | "evaluate"
   | "ingest"
   | "report"
+  | "aggregate-runs"
   | "install-vtrace-patch"
   | "verify-vtrace-patch";
 export type Stage5Condition = "baseline" | "vtrace" | "vexp";
@@ -79,6 +80,9 @@ export interface CliConfig {
   readonly vtraceContextMaxItems: number;
   readonly sweBenchDataFile: string | null;
   readonly runLabel: string | null;
+  // Stage 5C aggregate-runs: the set of run-labels to combine into one report.
+  // null unless --mode aggregate-runs --run-labels a,b,c is used.
+  readonly runLabels: readonly string[] | null;
   // Stage 5C (evaluated protocol) configuration.
   readonly protocol: Stage5Protocol;
   // vexp is NEVER enabled unless this is explicitly set; guards every vexp run.
@@ -286,6 +290,7 @@ const DEFAULT_CONFIG: CliConfig = {
   vtraceContextMaxItems: 8,
   sweBenchDataFile: null,
   runLabel: null,
+  runLabels: null,
   // Stage 5C: baseline protocol by default; vexp stays off unless --allow-vexp.
   protocol: "baseline",
   allowVexp: false,
@@ -1696,6 +1701,104 @@ export async function runReport(config: CliConfig, deps: RunDeps = {}): Promise<
   return runIngest(config, deps);
 }
 
+// Subdir under --out where the combined aggregate report is written, so it never
+// clobbers the single-run flat outputs at the --out root.
+export const AGGREGATE_SUBDIR = "aggregate";
+
+// Stage 5C aggregate-runs: combine several isolated runs (each its own --run-label)
+// into one normalized artifact + report. Each label is parsed and stamped exactly
+// as `ingest` does for a single run, then their rows are concatenated so the
+// shared, row-pure machinery (comparePairs, buildConditionSummaries, summarize)
+// produces the combined paired comparison and per-condition aggregate for free.
+//
+// Duplicate-instance policy: if the same instance_id appears under more than one
+// label (e.g. an accidental re-run), this errors out rather than silently mixing
+// or double-counting — the caller must pick one canonical label per instance.
+export async function runAggregateRuns(config: CliConfig, deps: RunDeps = {}): Promise<NormalizedArtifact> {
+  void deps;
+  const labels = config.runLabels;
+  if (labels === null || labels.length === 0) {
+    throw new Error("--mode aggregate-runs requires --run-labels label1,label2,...");
+  }
+  await ensureOutputTree(config.out);
+
+  const allRows: Stage5Row[] = [];
+  const allEvaluations: EvaluationEvidence[] = [];
+  const perRunEvidence: Stage5RunEvidence[] = [];
+  // instance_id -> the run-label that first contributed it; guards against the
+  // same instance being counted under two labels.
+  const instanceOwner = new Map<string, string>();
+
+  for (const label of labels) {
+    const rows: Stage5Row[] = [];
+    for (const condition of STAGE5_CONDITIONS) {
+      rows.push(...(await parseConditionDir(rawConditionDir(config.out, condition, label), condition)));
+    }
+    const evidence = await collectRunEvidence(config.out, label);
+    const evaluations = await collectEvaluationEvidence(config.out, label);
+    const stamped = stampEvaluationRows(stampVtraceRows(mergeRows(rows), evidence), evaluations);
+
+    for (const row of stamped) {
+      const prior = instanceOwner.get(row.instanceId);
+      if (prior !== undefined && prior !== label) {
+        throw new Error(
+          `Duplicate instance ${row.instanceId} found in run-labels "${prior}" and "${label}". ` +
+            "aggregate-runs refuses to combine repeated instances; pick one canonical run-label per instance.",
+        );
+      }
+      instanceOwner.set(row.instanceId, label);
+    }
+
+    allRows.push(...stamped);
+    allEvaluations.push(...evaluations);
+    perRunEvidence.push(evidence);
+  }
+
+  const artifact = buildArtifact(allRows, combineRunEvidence(perRunEvidence), allEvaluations);
+  const aggregateOut = path.join(config.out, AGGREGATE_SUBDIR);
+  await ensureOutputTree(aggregateOut);
+  await writeFile(path.join(aggregateOut, NORMALIZED_FILENAME), `${JSON.stringify(artifact, null, 2)}\n`);
+  await writeReports({ ...config, out: aggregateOut }, artifact);
+  return artifact;
+}
+
+// Reconcile per-run evidence into one summary for the aggregate report. A boolean
+// or method fact is reported only when ALL runs agree (unanimous); otherwise it
+// collapses to "mixed"/"unknown" rather than implying a single run's value holds
+// for the whole set. Per-run-specific fields (file paths, byte/item counts) are
+// not aggregatable, so they are nulled — the authoritative per-instance treatment
+// validity lives in the per-condition aggregate's valid_treatments/invalid_treatments.
+export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5RunEvidence {
+  if (perRun.length === 0) return emptyEvidence();
+  const first = perRun[0]!;
+  function unanimous<T>(pick: (e: Stage5RunEvidence) => T, fallback: T): T {
+    const head = pick(first);
+    return perRun.every((e) => pick(e) === head) ? head : fallback;
+  }
+  const firstError = (pick: (e: Stage5RunEvidence) => string | null): string | null =>
+    perRun.map(pick).find((value) => value !== null) ?? null;
+  return {
+    vtraceMethod: unanimous((e) => e.vtraceMethod, "mixed"),
+    vtracePatchInstalled: unanimous((e) => e.vtracePatchInstalled, "unknown"),
+    vtraceInstructionsFile: null,
+    vtraceInstructionsFileExists: perRun.every((e) => e.vtraceInstructionsFileExists),
+    vtraceInstructionsFileSize: null,
+    vtraceInjectionObserved: unanimous((e) => e.vtraceInjectionObserved, "unknown"),
+    vtraceInjectionError: firstError((e) => e.vtraceInjectionError),
+    vtraceTreatmentValid: unanimous((e) => e.vtraceTreatmentValid, "unknown"),
+    vtraceIndexedContext: unanimous((e) => e.vtraceIndexedContext, null),
+    vtraceIndexCommand: null,
+    vtraceQueryCommand: null,
+    vtraceWorkspacePath: null,
+    vtraceContextFile: null,
+    vtraceContextChars: null,
+    vtraceContextItems: null,
+    vtraceContextTruncated: null,
+    vtraceContextError: firstError((e) => e.vtraceContextError),
+    notes: perRun.flatMap((e) => e.notes),
+  };
+}
+
 // ----- vtrace local-patch mode ------------------------------------------------
 
 // The code inserted into the external Claude Code adapter. When
@@ -2678,6 +2781,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
             "evaluate",
             "ingest",
             "report",
+            "aggregate-runs",
             "install-vtrace-patch",
             "verify-vtrace-patch",
           ].includes(value)
@@ -2721,6 +2825,9 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--vtrace-context-max-items": config.vtraceContextMaxItems = requirePositiveInt(argv, ++index, arg); break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
+      case "--run-labels":
+        config.runLabels = requireValue(argv, ++index, arg).split(",").map((value) => value.trim()).filter(Boolean);
+        break;
       case "--yes": config.yes = true; break;
       case "--help":
       case "-h":
@@ -2755,7 +2862,7 @@ function printUsageAndExit(exitCode: number): never {
   process.stdout.write(
     [
       "Usage: bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\",
-      "  --mode prepare|run-baseline|run-vtrace|run-vexp|run-protocol|evaluate|ingest|report|install-vtrace-patch|verify-vtrace-patch \\",
+      "  --mode prepare|run-baseline|run-vtrace|run-vexp|run-protocol|evaluate|ingest|report|aggregate-runs|install-vtrace-patch|verify-vtrace-patch \\",
       "  --vexp-swe-bench-dir /path/to/vexp-swe-bench --instances id1,id2,id3 --out benchmarks/stage5_vexp_swe_bench_smoke/results",
       "",
       "Stage 5C protocol/evaluation flags:",
@@ -2765,6 +2872,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --eval-dataset <jsonl-or-hf-name>             full SWE-bench dataset for docker evaluation",
       "  --eval-timeout <seconds>                      per-instance evaluation timeout",
       "  --run-label <label>                           isolate runs under results/runs/<label>/",
+      "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),
   );
@@ -2785,6 +2893,11 @@ async function main(config: CliConfig): Promise<void> {
     }
     case "ingest": await runIngest(config); break;
     case "report": await runReport(config); break;
+    case "aggregate-runs": {
+      const artifact = await runAggregateRuns(config);
+      process.stdout.write(`${JSON.stringify(artifact.summary, null, 2)}\n`);
+      break;
+    }
     case "install-vtrace-patch": {
       const manifest = await installVtracePatch(config);
       process.stdout.write(`${JSON.stringify(manifest, null, 2)}\n`);

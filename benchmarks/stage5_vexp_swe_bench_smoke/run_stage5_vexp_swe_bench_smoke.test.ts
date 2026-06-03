@@ -21,6 +21,7 @@ import {
   buildVtraceQueryCommand,
   buildVtraceCommand,
   classifyOutcome,
+  combineRunEvidence,
   comparePairs,
   evaluateCondition,
   extractRow,
@@ -38,6 +39,7 @@ import {
   reductionPct,
   renderMarkdown,
   runEvaluate,
+  runAggregateRuns,
   runIngest,
   runPrepare,
   runProtocol,
@@ -55,6 +57,7 @@ import {
   type ProcessResult,
   type SweBenchInstance,
   type Stage5Row,
+  type Stage5RunEvidence,
 } from "./run_stage5_vexp_swe_bench_smoke";
 
 // Minimal stand-in for the external vexp-swe-bench Claude Code adapter: it has
@@ -101,6 +104,7 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     vtraceContextMaxItems: 8,
     sweBenchDataFile: null,
     runLabel: null,
+    runLabels: null,
     protocol: "baseline",
     allowVexp: false,
     evalMode: "docker",
@@ -1332,4 +1336,89 @@ test("run-protocol baseline runs only the baseline condition", async () => {
   assert.equal(calls.length, 1);
   assert.ok(calls[0]!.includes("--no-vexp"));
   assert.ok(calls[0]!.includes(path.join("raw", "baseline")));
+});
+
+test("aggregate-runs combines distinct instances from multiple run-labels", async () => {
+  const out = path.join(await tmpDir("aggregate"), "results");
+  // Two labels, each a distinct instance with a baseline + vtrace pair.
+  await seedCondition(out, "baseline", { runLabel: "lab-1", instanceId: "a__1", inputTokens: 1000, outputTokens: 0, resolved: true });
+  await seedCondition(out, "vtrace", { runLabel: "lab-1", instanceId: "a__1", inputTokens: 700, outputTokens: 0, resolved: true });
+  await seedCondition(out, "baseline", { runLabel: "lab-2", instanceId: "b__2", inputTokens: 500, outputTokens: 0, resolved: true });
+  await seedCondition(out, "vtrace", { runLabel: "lab-2", instanceId: "b__2", inputTokens: 400, outputTokens: 0, resolved: true });
+
+  const artifact = await runAggregateRuns(baseConfig({ out, runLabels: ["lab-1", "lab-2"] }));
+
+  // Both instances are present and paired; nothing is dropped or double-counted.
+  assert.equal(artifact.summary.instanceCount, 2);
+  assert.equal(artifact.summary.bothResolved, 2);
+  assert.equal(artifact.pairs.length, 2);
+  const baseline = artifact.conditionSummaries.find((s) => s.condition === "baseline");
+  assert.equal(baseline?.instances, 2);
+
+  // The combined report is written under results/aggregate/, not the --out root.
+  const md = await readFile(path.join(out, "aggregate", "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /a__1/);
+  assert.match(md, /b__2/);
+  // The single-run flat outputs at the root are left untouched.
+  assert.equal(await stat(path.join(out, "stage5_vexp_swe_bench_smoke.md")).then(() => true).catch(() => false), false);
+});
+
+test("aggregate-runs refuses to combine a duplicate instance across labels", async () => {
+  const out = path.join(await tmpDir("aggregate-dup"), "results");
+  await seedCondition(out, "baseline", { runLabel: "lab-1", instanceId: "dup__1", inputTokens: 1000, outputTokens: 0, resolved: true });
+  await seedCondition(out, "baseline", { runLabel: "lab-2", instanceId: "dup__1", inputTokens: 500, outputTokens: 0, resolved: true });
+
+  await assert.rejects(
+    runAggregateRuns(baseConfig({ out, runLabels: ["lab-1", "lab-2"] })),
+    /Duplicate instance dup__1/,
+  );
+});
+
+test("aggregate-runs requires at least one run-label", async () => {
+  const out = path.join(await tmpDir("aggregate-empty"), "results");
+  await assert.rejects(runAggregateRuns(baseConfig({ out, runLabels: null })), /requires --run-labels/);
+  await assert.rejects(runAggregateRuns(baseConfig({ out, runLabels: [] })), /requires --run-labels/);
+});
+
+test("parseArgs understands --mode aggregate-runs and --run-labels", () => {
+  const config = parseArgs(["--mode", "aggregate-runs", "--run-labels", "lab-1, lab-2 ,lab-3"]);
+  assert.equal(config.mode, "aggregate-runs");
+  assert.deepEqual(config.runLabels, ["lab-1", "lab-2", "lab-3"]);
+});
+
+test("combineRunEvidence reports a fact only when all runs agree", () => {
+  const valid: Stage5RunEvidence = {
+    vtraceMethod: "indexed-context",
+    vtracePatchInstalled: true,
+    vtraceInstructionsFile: "/tmp/lab-1/_vtrace_instructions.md",
+    vtraceInstructionsFileExists: true,
+    vtraceInstructionsFileSize: 100,
+    vtraceInjectionObserved: true,
+    vtraceInjectionError: null,
+    vtraceTreatmentValid: true,
+    vtraceIndexedContext: true,
+    vtraceIndexCommand: "vtrace index .",
+    vtraceQueryCommand: "vtrace capsule . q",
+    vtraceWorkspacePath: "/tmp/lab-1/ws",
+    vtraceContextFile: "/tmp/lab-1/ctx.md",
+    vtraceContextChars: 6000,
+    vtraceContextItems: 8,
+    vtraceContextTruncated: true,
+    vtraceContextError: null,
+    notes: ["lab-1 note"],
+  };
+
+  // All-agree: the unanimous facts survive; per-run paths/counts are nulled.
+  const unanimous = combineRunEvidence([valid, { ...valid, vtraceInstructionsFile: "/tmp/lab-2/x.md", notes: ["lab-2 note"] }]);
+  assert.equal(unanimous.vtraceMethod, "indexed-context");
+  assert.equal(unanimous.vtraceTreatmentValid, true);
+  assert.equal(unanimous.vtraceIndexedContext, true);
+  assert.equal(unanimous.vtraceInstructionsFile, null);
+  assert.equal(unanimous.vtraceContextChars, null);
+  assert.deepEqual(unanimous.notes, ["lab-1 note", "lab-2 note"]);
+
+  // Disagreement collapses to "mixed"/"unknown" rather than picking one run's value.
+  const mixed = combineRunEvidence([valid, { ...valid, vtraceMethod: "local-patch", vtraceTreatmentValid: false }]);
+  assert.equal(mixed.vtraceMethod, "mixed");
+  assert.equal(mixed.vtraceTreatmentValid, "unknown");
 });
