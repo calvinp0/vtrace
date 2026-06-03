@@ -43,6 +43,10 @@ benchmarks/arc_stage1_context_reduction/results/
   arc_stage1_context_reduction.md
 ```
 
+## Stage 1 result
+
+The final Stage 1 closeout is recorded in [STAGE1_RESULTS.md](./STAGE1_RESULTS.md). It reports the clean quality-labeled ARC run, repeatability check, and careful interpretation of the context-reduction claim.
+
 The baseline uses `rg` against the ARC repo, excludes common irrelevant directories and build artifacts, and takes up to `--baseline-max-files` unique files per query. Token estimates are `Math.ceil(chars / 4)`.
 
 Baseline modes:
