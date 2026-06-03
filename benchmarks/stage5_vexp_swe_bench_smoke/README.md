@@ -191,7 +191,7 @@ The first indexed-context smoke result is documented in [STAGE5B_INDEXED_CONTEXT
 
 ## Stage 5C evaluated smoke result
 
-The preliminary two-task evaluated Stage 5C result is documented in [STAGE5C_EVALUATED_RESULTS.md](./STAGE5C_EVALUATED_RESULTS.md).
+The preliminary three-task evaluated result is documented in [STAGE5C_EVALUATED_RESULTS.md](./STAGE5C_EVALUATED_RESULTS.md).
 
 ## Stage 5C: evaluated SWE-bench protocol
 
