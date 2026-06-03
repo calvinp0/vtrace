@@ -1,0 +1,96 @@
+[
+  {
+    "id": "doc_find_arkane_input",
+    "category": "docs",
+    "task": "Add a short developer note to a benchmark-local markdown file explaining where ARC renders Arkane input templates.",
+    "query": "where is Arkane input written",
+    "allowed_files": [
+      "STAGE4_NOTES.md"
+    ],
+    "setup": {
+      "create_files": {
+        "STAGE4_NOTES.md": "# Stage 4 Notes\n\n"
+      }
+    },
+    "success": {
+      "required_file_contains": {
+        "STAGE4_NOTES.md": [
+          "arc/statmech/arkane.py",
+          "render_arkane_input_template"
+        ]
+      }
+    }
+  },
+  {
+    "id": "doc_find_conformer_filtering",
+    "category": "docs",
+    "task": "Add a short developer note to a benchmark-local markdown file explaining where conformer filtering/selection logic lives.",
+    "query": "where are conformers filtered",
+    "allowed_files": [
+      "STAGE4_NOTES.md"
+    ],
+    "setup": {
+      "create_files": {
+        "STAGE4_NOTES.md": "# Stage 4 Notes\n\n"
+      }
+    },
+    "success": {
+      "required_file_contains": {
+        "STAGE4_NOTES.md": [
+          "arc/species/conformers.py",
+          "conformers_combinations_by_lowest_conformer"
+        ]
+      }
+    }
+  },
+  {
+    "id": "doc_find_scheduler",
+    "category": "docs",
+    "task": "Add a short developer note to a benchmark-local markdown file identifying the ARC scheduler class and file.",
+    "query": "Scheduler",
+    "allowed_files": [
+      "STAGE4_NOTES.md"
+    ],
+    "setup": {
+      "create_files": {
+        "STAGE4_NOTES.md": "# Stage 4 Notes\n\n"
+      }
+    },
+    "success": {
+      "required_file_contains": {
+        "STAGE4_NOTES.md": [
+          "arc/scheduler.py",
+          "Scheduler"
+        ]
+      }
+    }
+  },
+  {
+    "id": "doc_find_cython_boundary",
+    "category": "docs",
+    "task": "Add a short developer note to a benchmark-local markdown file identifying one Cython-backed ARC molecule file and one relevant symbol.",
+    "query": "cython",
+    "allowed_files": [
+      "STAGE4_NOTES.md"
+    ],
+    "setup": {
+      "create_files": {
+        "STAGE4_NOTES.md": "# Stage 4 Notes\n\n"
+      }
+    },
+    "success": {
+      "required_file_contains_any": {
+        "STAGE4_NOTES.md": [
+          [
+            "arc/molecule/atomtype.pxd",
+            "get_atomtype"
+          ],
+          [
+            "arc/molecule/graph.pyx",
+            "Edge"
+          ]
+        ]
+      }
+    }
+  }
+]
