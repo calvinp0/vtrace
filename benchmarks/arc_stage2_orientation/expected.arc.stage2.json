@@ -1,0 +1,66 @@
+{
+  "exact_arc_species": {
+    "expected_paths": ["arc/species/species.py"],
+    "expected_symbols": ["ARCSpecies"],
+    "notes": "Exact class lookup."
+  },
+  "exact_scheduler": {
+    "expected_paths": ["arc/scheduler.py"],
+    "expected_symbols": ["Scheduler"],
+    "notes": "Exact scheduler class lookup."
+  },
+  "exact_determine_family": {
+    "expected_paths": ["arc/reaction/reaction.py"],
+    "expected_symbols": ["determine_family", "ARCReaction.determine_family"],
+    "notes": "Reaction family determination method."
+  },
+  "workflow_ts_guesses": {
+    "expected_paths": [
+      "arc/species/species.py",
+      "arc/job/adapters/ts",
+      "arc/job/pipe"
+    ],
+    "expected_symbols": ["TSGuess"],
+    "notes": "TS guess generation may land in TSGuess or TS adapter/pipe code."
+  },
+  "workflow_conformer_filtering": {
+    "expected_paths": ["arc/species/conformers.py"],
+    "expected_symbols": ["conformers_combinations_by_lowest_conformer"],
+    "notes": "Conformer filtering/selection logic."
+  },
+  "workflow_arkane_input": {
+    "expected_paths": ["arc/statmech/arkane.py"],
+    "expected_symbols": ["render_arkane_input_template", "ArkaneAdapter.render_arkane_input_template"],
+    "notes": "Arkane input rendering."
+  },
+  "workflow_kinetics_jobs": {
+    "expected_paths": ["arc/scheduler.py", "arc/statmech/arkane.py"],
+    "expected_symbols": ["Scheduler"],
+    "notes": "Scheduling/coordinating kinetics jobs."
+  },
+  "concept_reaction_family_matching": {
+    "expected_paths": ["arc/family/family.py", "arc/reaction/reaction.py"],
+    "expected_symbols": ["ReactionFamily", "determine_family"],
+    "notes": "Reaction family matching area."
+  },
+  "concept_kinetics_calculation": {
+    "expected_paths": ["arc/statmech/arkane.py", "arc/scheduler.py", "arc/checks/ts.py"],
+    "expected_symbols": ["ArkaneAdapter", "check_ts"],
+    "notes": "Accept ARC kinetics setup/validation surfaces."
+  },
+  "boundary_cython": {
+    "expected_paths": ["arc/molecule/atomtype.pxd", "arc/molecule/graph.pyx"],
+    "expected_symbols": ["get_atomtype", "Edge"],
+    "notes": "Cython-backed molecule code."
+  },
+  "boundary_python_wrapper_cython": {
+    "expected_paths": ["arc/molecule/atomtype.pxd", "arc/molecule/atomtype.py"],
+    "expected_symbols": ["get_atomtype"],
+    "notes": "Python/Cython boundary around atomtype."
+  },
+  "known_weak_rotor_scans": {
+    "expected_paths": ["arc/scheduler.py", "arc/job", "arc/species"],
+    "expected_symbols": ["rotor", "scan"],
+    "notes": "Known weak/broad case; keep as diagnostic."
+  }
+}

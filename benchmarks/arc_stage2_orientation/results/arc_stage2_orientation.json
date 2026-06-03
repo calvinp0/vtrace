@@ -1,0 +1,1763 @@
+{
+  "metadata": {
+    "benchmark": "arc_stage2_orientation",
+    "timestamp": "2026-06-03T08:11:40.731Z",
+    "arcRepoPath": "/home/calvin/code/ARC",
+    "taskFile": "/home/calvin/code/vtrace/benchmarks/arc_stage2_orientation/tasks.arc.stage2.json",
+    "expectedFile": "/home/calvin/code/vtrace/benchmarks/arc_stage2_orientation/expected.arc.stage2.json",
+    "outputDirectory": "/home/calvin/code/vtrace/benchmarks/arc_stage2_orientation/results",
+    "baseline": "grep-snippet",
+    "baselineMaxFiles": 5,
+    "snippetContextLines": 40,
+    "maxSnippetsPerFile": 3,
+    "toolCommand": "handoff",
+    "maxBudgetCharacters": null,
+    "includeContext": false,
+    "tokenEstimate": "Math.ceil(chars / 4)",
+    "repeatabilityStatus": "not_checked",
+    "notes": []
+  },
+  "tasks": [
+    {
+      "id": "exact_arc_species",
+      "category": "exact",
+      "task": "Find the ARC species class implementation.",
+      "query": "ARCSpecies"
+    },
+    {
+      "id": "exact_scheduler",
+      "category": "exact",
+      "task": "Find the scheduler class responsible for coordinating ARC jobs.",
+      "query": "Scheduler"
+    },
+    {
+      "id": "exact_determine_family",
+      "category": "exact",
+      "task": "Find where an ARC reaction determines its reaction family.",
+      "query": "determine_family"
+    },
+    {
+      "id": "workflow_ts_guesses",
+      "category": "workflow",
+      "task": "Identify the code region involved in transition-state guess generation.",
+      "query": "how does ARC generate TS guesses"
+    },
+    {
+      "id": "workflow_conformer_filtering",
+      "category": "workflow",
+      "task": "Identify where conformer filtering or conformer combination selection happens.",
+      "query": "where are conformers filtered"
+    },
+    {
+      "id": "workflow_arkane_input",
+      "category": "workflow",
+      "task": "Identify where Arkane input files are written or rendered.",
+      "query": "where is Arkane input written"
+    },
+    {
+      "id": "workflow_kinetics_jobs",
+      "category": "workflow",
+      "task": "Identify where kinetics jobs are scheduled or coordinated.",
+      "query": "where are kinetics jobs scheduled"
+    },
+    {
+      "id": "concept_reaction_family_matching",
+      "category": "concept",
+      "task": "Identify the code responsible for reaction family matching.",
+      "query": "reaction family matching"
+    },
+    {
+      "id": "concept_kinetics_calculation",
+      "category": "concept",
+      "task": "Identify the ARC area related to kinetics calculation setup or validation.",
+      "query": "kinetics calculation"
+    },
+    {
+      "id": "boundary_cython",
+      "category": "boundary",
+      "task": "Identify Cython-backed ARC molecule code.",
+      "query": "cython"
+    },
+    {
+      "id": "boundary_python_wrapper_cython",
+      "category": "boundary",
+      "task": "Identify Python/Cython boundary code in ARC.",
+      "query": "python wrapper around cython"
+    },
+    {
+      "id": "known_weak_rotor_scans",
+      "category": "diagnostic",
+      "task": "Identify the implementation area for rotor scans.",
+      "query": "rotor scans"
+    }
+  ],
+  "rows": [
+    {
+      "id": "exact_arc_species",
+      "category": "exact",
+      "task": "Find the ARC species class implementation.",
+      "query": "ARCSpecies",
+      "expected": {
+        "expected_paths": [
+          "arc/species/species.py"
+        ],
+        "expected_symbols": [
+          "ARCSpecies"
+        ],
+        "notes": "Exact class lookup."
+      },
+      "baseline": {
+        "files": [
+          "arc/checks/nmd_test.py",
+          "arc/checks/ts_test.py",
+          "arc/checks/ts.py",
+          "arc/common_test.py",
+          "arc/family/arc_families_test.py"
+        ],
+        "fileCount": 5,
+        "topFile": "arc/checks/nmd_test.py",
+        "snippetCount": 10,
+        "snippets": [
+          {
+            "file": "arc/checks/nmd_test.py",
+            "startLine": 1,
+            "endLine": 447,
+            "chars": 33706
+          },
+          {
+            "file": "arc/checks/nmd_test.py",
+            "startLine": 517,
+            "endLine": 672,
+            "chars": 10920
+          },
+          {
+            "file": "arc/checks/nmd_test.py",
+            "startLine": 682,
+            "endLine": 937,
+            "chars": 16394
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "startLine": 1,
+            "endLine": 873,
+            "chars": 58602
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 1,
+            "endLine": 592,
+            "chars": 28526
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 604,
+            "endLine": 694,
+            "chars": 3305
+          },
+          {
+            "file": "arc/common_test.py",
+            "startLine": 1,
+            "endLine": 63,
+            "chars": 1933
+          },
+          {
+            "file": "arc/common_test.py",
+            "startLine": 82,
+            "endLine": 210,
+            "chars": 9066
+          },
+          {
+            "file": "arc/common_test.py",
+            "startLine": 838,
+            "endLine": 929,
+            "chars": 6839
+          },
+          {
+            "file": "arc/family/arc_families_test.py",
+            "startLine": 1,
+            "endLine": 143,
+            "chars": 5954
+          }
+        ],
+        "chars": 175245,
+        "estTokens": 43812,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 1,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "topResult": "arc/species/species.py::ARCSpecies",
+        "topFile": "arc/species/species.py",
+        "files": [
+          "arc/species/species.py"
+        ],
+        "symbols": [
+          "arc/species/species.py::ARCSpecies"
+        ],
+        "chars": 877,
+        "estTokens": 220,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated",
+          "handoff capsule compressed"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "weak",
+          "qualityScore": 1,
+          "matchedExpectedPath": null,
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/species/species.py",
+          "matchedExpectedSymbol": "ARCSpecies"
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": true,
+        "qualityPreservingReductionPct": 99.49785446909523
+      },
+      "notes": [
+        "Exact class lookup.",
+        "handoff capsule truncated",
+        "handoff capsule compressed"
+      ]
+    },
+    {
+      "id": "exact_scheduler",
+      "category": "exact",
+      "task": "Find the scheduler class responsible for coordinating ARC jobs.",
+      "query": "Scheduler",
+      "expected": {
+        "expected_paths": [
+          "arc/scheduler.py"
+        ],
+        "expected_symbols": [
+          "Scheduler"
+        ],
+        "notes": "Exact scheduler class lookup."
+      },
+      "baseline": {
+        "files": [
+          "arc/__init__.py",
+          "arc/checks/common.py",
+          "arc/checks/ts.py",
+          "arc/exceptions.py",
+          "arc/job/adapter.py"
+        ],
+        "fileCount": 5,
+        "topFile": "arc/__init__.py",
+        "snippetCount": 7,
+        "snippets": [
+          {
+            "file": "arc/__init__.py",
+            "startLine": 1,
+            "endLine": 22,
+            "chars": 383
+          },
+          {
+            "file": "arc/checks/common.py",
+            "startLine": 1,
+            "endLine": 43,
+            "chars": 1118
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 1,
+            "endLine": 109,
+            "chars": 5143
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 143,
+            "endLine": 226,
+            "chars": 4556
+          },
+          {
+            "file": "arc/exceptions.py",
+            "startLine": 92,
+            "endLine": 174,
+            "chars": 1706
+          },
+          {
+            "file": "arc/job/adapter.py",
+            "startLine": 195,
+            "endLine": 275,
+            "chars": 3995
+          },
+          {
+            "file": "arc/job/adapter.py",
+            "startLine": 563,
+            "endLine": 643,
+            "chars": 5060
+          }
+        ],
+        "chars": 21961,
+        "estTokens": 5491,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "topResult": "arc/scheduler.py::Scheduler",
+        "topFile": "arc/scheduler.py",
+        "files": [
+          "arc/scheduler.py",
+          "arc/scheduler_test.py"
+        ],
+        "symbols": [
+          "arc/scheduler.py::Scheduler",
+          "arc/scheduler_test.py::TestScheduler"
+        ],
+        "chars": 940,
+        "estTokens": 235,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated",
+          "handoff capsule compressed"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "weak",
+          "qualityScore": 1,
+          "matchedExpectedPath": null,
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/scheduler.py",
+          "matchedExpectedSymbol": "Scheduler"
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": true,
+        "qualityPreservingReductionPct": 95.72026953196139
+      },
+      "notes": [
+        "Exact scheduler class lookup.",
+        "handoff capsule truncated",
+        "handoff capsule compressed"
+      ]
+    },
+    {
+      "id": "exact_determine_family",
+      "category": "exact",
+      "task": "Find where an ARC reaction determines its reaction family.",
+      "query": "determine_family",
+      "expected": {
+        "expected_paths": [
+          "arc/reaction/reaction.py"
+        ],
+        "expected_symbols": [
+          "determine_family",
+          "ARCReaction.determine_family"
+        ],
+        "notes": "Reaction family determination method."
+      },
+      "baseline": {
+        "files": [
+          "arc/family/family_test.py",
+          "arc/reaction/reaction.py",
+          "ipython/Tools/TS Guesses.ipynb",
+          "arc/checks/ts_test.py",
+          "arc/checks/ts.py"
+        ],
+        "fileCount": 5,
+        "topFile": "arc/family/family_test.py",
+        "snippetCount": 11,
+        "snippets": [
+          {
+            "file": "arc/family/family_test.py",
+            "startLine": 1,
+            "endLine": 1497,
+            "chars": 96750
+          },
+          {
+            "file": "arc/reaction/reaction.py",
+            "startLine": 1,
+            "endLine": 431,
+            "chars": 23804
+          },
+          {
+            "file": "arc/reaction/reaction.py",
+            "startLine": 468,
+            "endLine": 613,
+            "chars": 8790
+          },
+          {
+            "file": "arc/reaction/reaction.py",
+            "startLine": 761,
+            "endLine": 863,
+            "chars": 4953
+          },
+          {
+            "file": "ipython/Tools/TS Guesses.ipynb",
+            "startLine": 1,
+            "endLine": 228,
+            "chars": 7597
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "startLine": 1,
+            "endLine": 81,
+            "chars": 4448
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "startLine": 272,
+            "endLine": 367,
+            "chars": 5295
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "startLine": 499,
+            "endLine": 579,
+            "chars": 6274
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 25,
+            "endLine": 105,
+            "chars": 4116
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 125,
+            "endLine": 206,
+            "chars": 4254
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 266,
+            "endLine": 389,
+            "chars": 6573
+          }
+        ],
+        "chars": 172854,
+        "estTokens": 43214,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "topResult": "arc/reaction/reaction.py::ARCReaction.determine_family",
+        "topFile": "arc/reaction/reaction.py",
+        "files": [
+          "arc/reaction/reaction.py",
+          "arc/family/family_test.py"
+        ],
+        "symbols": [
+          "arc/reaction/reaction.py::ARCReaction.determine_family",
+          "arc/family/family_test.py::TestReactionFamily.test_determine_family_for_various_reactions"
+        ],
+        "chars": 1202,
+        "estTokens": 301,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated",
+          "handoff capsule compressed"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "acceptable",
+          "qualityScore": 2,
+          "matchedExpectedPath": "arc/reaction/reaction.py",
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/reaction/reaction.py",
+          "matchedExpectedSymbol": "determine_family"
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": true,
+        "qualityPreservingReductionPct": 99.30346646919979
+      },
+      "notes": [
+        "Reaction family determination method.",
+        "handoff capsule truncated",
+        "handoff capsule compressed"
+      ]
+    },
+    {
+      "id": "workflow_ts_guesses",
+      "category": "workflow",
+      "task": "Identify the code region involved in transition-state guess generation.",
+      "query": "how does ARC generate TS guesses",
+      "expected": {
+        "expected_paths": [
+          "arc/species/species.py",
+          "arc/job/adapters/ts",
+          "arc/job/pipe"
+        ],
+        "expected_symbols": [
+          "TSGuess"
+        ],
+        "notes": "TS guess generation may land in TSGuess or TS adapter/pipe code."
+      },
+      "baseline": {
+        "files": [
+          "arc/common_test.py",
+          "arc/family/arc_families_test.py",
+          "arc/family/family_test.py",
+          "arc/family/family.py",
+          "arc/job/adapters/cfour.py"
+        ],
+        "fileCount": 5,
+        "topFile": "arc/common_test.py",
+        "snippetCount": 9,
+        "snippets": [
+          {
+            "file": "arc/common_test.py",
+            "startLine": 752,
+            "endLine": 832,
+            "chars": 8526
+          },
+          {
+            "file": "arc/family/arc_families_test.py",
+            "startLine": 1,
+            "endLine": 143,
+            "chars": 5954
+          },
+          {
+            "file": "arc/family/family_test.py",
+            "startLine": 1,
+            "endLine": 76,
+            "chars": 3386
+          },
+          {
+            "file": "arc/family/family_test.py",
+            "startLine": 530,
+            "endLine": 610,
+            "chars": 5921
+          },
+          {
+            "file": "arc/family/family_test.py",
+            "startLine": 753,
+            "endLine": 894,
+            "chars": 8561
+          },
+          {
+            "file": "arc/family/family.py",
+            "startLine": 1,
+            "endLine": 54,
+            "chars": 1625
+          },
+          {
+            "file": "arc/family/family.py",
+            "startLine": 62,
+            "endLine": 357,
+            "chars": 18277
+          },
+          {
+            "file": "arc/family/family.py",
+            "startLine": 441,
+            "endLine": 543,
+            "chars": 5747
+          },
+          {
+            "file": "arc/job/adapters/cfour.py",
+            "startLine": 29,
+            "endLine": 136,
+            "chars": 6567
+          }
+        ],
+        "chars": 64564,
+        "estTokens": 16141,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "topResult": "arc/species/species.py::TSGuess",
+        "topFile": "arc/species/species.py",
+        "files": [
+          "arc/species/species.py",
+          "arc/job/adapters/ts/heuristics.py"
+        ],
+        "symbols": [
+          "arc/species/species.py::TSGuess",
+          "arc/job/adapters/ts/heuristics.py::generate_hydrolysis_ts_guess"
+        ],
+        "chars": 986,
+        "estTokens": 247,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated",
+          "handoff capsule compressed"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "weak",
+          "qualityScore": 1,
+          "matchedExpectedPath": null,
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/species/species.py",
+          "matchedExpectedSymbol": "TSGuess"
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": true,
+        "qualityPreservingReductionPct": 98.46973545629143
+      },
+      "notes": [
+        "TS guess generation may land in TSGuess or TS adapter/pipe code.",
+        "handoff capsule truncated",
+        "handoff capsule compressed"
+      ]
+    },
+    {
+      "id": "workflow_conformer_filtering",
+      "category": "workflow",
+      "task": "Identify where conformer filtering or conformer combination selection happens.",
+      "query": "where are conformers filtered",
+      "expected": {
+        "expected_paths": [
+          "arc/species/conformers.py"
+        ],
+        "expected_symbols": [
+          "conformers_combinations_by_lowest_conformer"
+        ],
+        "notes": "Conformer filtering/selection logic."
+      },
+      "baseline": {
+        "files": [
+          "arc/common.py",
+          "arc/exceptions.py",
+          "arc/job/adapters/cfour.py",
+          "arc/job/adapters/gaussian.py",
+          "arc/job/adapters/mockter.py"
+        ],
+        "fileCount": 5,
+        "topFile": "arc/common.py",
+        "snippetCount": 5,
+        "snippets": [
+          {
+            "file": "arc/common.py",
+            "startLine": 286,
+            "endLine": 391,
+            "chars": 3328
+          },
+          {
+            "file": "arc/exceptions.py",
+            "startLine": 1,
+            "endLine": 62,
+            "chars": 1086
+          },
+          {
+            "file": "arc/job/adapters/cfour.py",
+            "startLine": 26,
+            "endLine": 106,
+            "chars": 5144
+          },
+          {
+            "file": "arc/job/adapters/gaussian.py",
+            "startLine": 46,
+            "endLine": 126,
+            "chars": 5497
+          },
+          {
+            "file": "arc/job/adapters/mockter.py",
+            "startLine": 4,
+            "endLine": 84,
+            "chars": 5165
+          }
+        ],
+        "chars": 20220,
+        "estTokens": 5055,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 1,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "topResult": "arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
+        "topFile": "arc/species/conformers.py",
+        "files": [
+          "arc/species/conformers.py"
+        ],
+        "symbols": [
+          "arc/species/conformers.py::conformers_combinations_by_lowest_conformer"
+        ],
+        "chars": 1180,
+        "estTokens": 295,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated",
+          "handoff capsule compressed"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "weak",
+          "qualityScore": 1,
+          "matchedExpectedPath": null,
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/species/conformers.py",
+          "matchedExpectedSymbol": "conformers_combinations_by_lowest_conformer"
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": true,
+        "qualityPreservingReductionPct": 94.16419386745797
+      },
+      "notes": [
+        "Conformer filtering/selection logic.",
+        "handoff capsule truncated",
+        "handoff capsule compressed"
+      ]
+    },
+    {
+      "id": "workflow_arkane_input",
+      "category": "workflow",
+      "task": "Identify where Arkane input files are written or rendered.",
+      "query": "where is Arkane input written",
+      "expected": {
+        "expected_paths": [
+          "arc/statmech/arkane.py"
+        ],
+        "expected_symbols": [
+          "render_arkane_input_template",
+          "ArkaneAdapter.render_arkane_input_template"
+        ],
+        "notes": "Arkane input rendering."
+      },
+      "baseline": {
+        "files": [
+          "arc/checks/ts_test.py",
+          "arc/job/adapters/gaussian.py",
+          "arc/job/adapters/psi_4.py",
+          "arc/level.py",
+          "arc/main_test.py"
+        ],
+        "fileCount": 5,
+        "topFile": "arc/checks/ts_test.py",
+        "snippetCount": 7,
+        "snippets": [
+          {
+            "file": "arc/checks/ts_test.py",
+            "startLine": 306,
+            "endLine": 406,
+            "chars": 6403
+          },
+          {
+            "file": "arc/job/adapters/gaussian.py",
+            "startLine": 14,
+            "endLine": 94,
+            "chars": 4480
+          },
+          {
+            "file": "arc/job/adapters/psi_4.py",
+            "startLine": 44,
+            "endLine": 124,
+            "chars": 4174
+          },
+          {
+            "file": "arc/level.py",
+            "startLine": 282,
+            "endLine": 371,
+            "chars": 4670
+          },
+          {
+            "file": "arc/main_test.py",
+            "startLine": 31,
+            "endLine": 111,
+            "chars": 4586
+          },
+          {
+            "file": "arc/main_test.py",
+            "startLine": 172,
+            "endLine": 392,
+            "chars": 13090
+          },
+          {
+            "file": "arc/main_test.py",
+            "startLine": 398,
+            "endLine": 494,
+            "chars": 4960
+          }
+        ],
+        "chars": 42363,
+        "estTokens": 10591,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 1,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "topResult": "arc/statmech/arkane.py::ArkaneAdapter.render_arkane_input_template",
+        "topFile": "arc/statmech/arkane.py",
+        "files": [
+          "arc/statmech/arkane.py"
+        ],
+        "symbols": [
+          "arc/statmech/arkane.py::ArkaneAdapter.render_arkane_input_template"
+        ],
+        "chars": 951,
+        "estTokens": 238,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated",
+          "handoff capsule compressed"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "weak",
+          "qualityScore": 1,
+          "matchedExpectedPath": null,
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/statmech/arkane.py",
+          "matchedExpectedSymbol": "render_arkane_input_template"
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": true,
+        "qualityPreservingReductionPct": 97.75280898876404
+      },
+      "notes": [
+        "Arkane input rendering.",
+        "handoff capsule truncated",
+        "handoff capsule compressed"
+      ]
+    },
+    {
+      "id": "workflow_kinetics_jobs",
+      "category": "workflow",
+      "task": "Identify where kinetics jobs are scheduled or coordinated.",
+      "query": "where are kinetics jobs scheduled",
+      "expected": {
+        "expected_paths": [
+          "arc/scheduler.py",
+          "arc/statmech/arkane.py"
+        ],
+        "expected_symbols": [
+          "Scheduler"
+        ],
+        "notes": "Scheduling/coordinating kinetics jobs."
+      },
+      "baseline": {
+        "files": [
+          "arc/checks/ts_test.py",
+          "arc/checks/ts.py",
+          "arc/family/family_test.py",
+          "arc/family/family.py",
+          "arc/main.py"
+        ],
+        "fileCount": 5,
+        "topFile": "arc/checks/ts_test.py",
+        "snippetCount": 11,
+        "snippets": [
+          {
+            "file": "arc/checks/ts_test.py",
+            "startLine": 306,
+            "endLine": 406,
+            "chars": 6403
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 5,
+            "endLine": 125,
+            "chars": 5745
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 132,
+            "endLine": 248,
+            "chars": 6322
+          },
+          {
+            "file": "arc/family/family_test.py",
+            "startLine": 18,
+            "endLine": 98,
+            "chars": 4392
+          },
+          {
+            "file": "arc/family/family_test.py",
+            "startLine": 890,
+            "endLine": 1038,
+            "chars": 9199
+          },
+          {
+            "file": "arc/family/family.py",
+            "startLine": 52,
+            "endLine": 132,
+            "chars": 3945
+          },
+          {
+            "file": "arc/family/family.py",
+            "startLine": 380,
+            "endLine": 460,
+            "chars": 4876
+          },
+          {
+            "file": "arc/family/family.py",
+            "startLine": 642,
+            "endLine": 728,
+            "chars": 3822
+          },
+          {
+            "file": "arc/main.py",
+            "startLine": 31,
+            "endLine": 347,
+            "chars": 21653
+          },
+          {
+            "file": "arc/main.py",
+            "startLine": 376,
+            "endLine": 659,
+            "chars": 15180
+          },
+          {
+            "file": "arc/main.py",
+            "startLine": 712,
+            "endLine": 792,
+            "chars": 3936
+          }
+        ],
+        "chars": 85473,
+        "estTokens": 21369,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "topResult": "arc/scheduler.py::Scheduler",
+        "topFile": "arc/scheduler.py",
+        "files": [
+          "arc/scheduler.py"
+        ],
+        "symbols": [
+          "arc/scheduler.py::Scheduler",
+          "arc/scheduler.py::Scheduler.__init__"
+        ],
+        "chars": 803,
+        "estTokens": 201,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated",
+          "handoff capsule compressed"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "weak",
+          "qualityScore": 1,
+          "matchedExpectedPath": null,
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/scheduler.py",
+          "matchedExpectedSymbol": "Scheduler"
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": true,
+        "qualityPreservingReductionPct": 99.05938509055173
+      },
+      "notes": [
+        "Scheduling/coordinating kinetics jobs.",
+        "handoff capsule truncated",
+        "handoff capsule compressed"
+      ]
+    },
+    {
+      "id": "concept_reaction_family_matching",
+      "category": "concept",
+      "task": "Identify the code responsible for reaction family matching.",
+      "query": "reaction family matching",
+      "expected": {
+        "expected_paths": [
+          "arc/family/family.py",
+          "arc/reaction/reaction.py"
+        ],
+        "expected_symbols": [
+          "ReactionFamily",
+          "determine_family"
+        ],
+        "notes": "Reaction family matching area."
+      },
+      "baseline": {
+        "files": [
+          "arc/__init__.py",
+          "arc/checks/nmd_test.py",
+          "arc/checks/nmd.py",
+          "arc/checks/ts_test.py",
+          "arc/checks/ts.py"
+        ],
+        "fileCount": 5,
+        "topFile": "arc/__init__.py",
+        "snippetCount": 10,
+        "snippets": [
+          {
+            "file": "arc/__init__.py",
+            "startLine": 1,
+            "endLine": 22,
+            "chars": 383
+          },
+          {
+            "file": "arc/checks/nmd_test.py",
+            "startLine": 1,
+            "endLine": 139,
+            "chars": 9011
+          },
+          {
+            "file": "arc/checks/nmd_test.py",
+            "startLine": 145,
+            "endLine": 455,
+            "chars": 24890
+          },
+          {
+            "file": "arc/checks/nmd_test.py",
+            "startLine": 515,
+            "endLine": 734,
+            "chars": 14688
+          },
+          {
+            "file": "arc/checks/nmd.py",
+            "startLine": 1,
+            "endLine": 288,
+            "chars": 13824
+          },
+          {
+            "file": "arc/checks/nmd.py",
+            "startLine": 347,
+            "endLine": 548,
+            "chars": 9412
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "startLine": 1,
+            "endLine": 716,
+            "chars": 50186
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "startLine": 784,
+            "endLine": 873,
+            "chars": 4968
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 1,
+            "endLine": 585,
+            "chars": 28373
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 609,
+            "endLine": 697,
+            "chars": 3224
+          }
+        ],
+        "chars": 158959,
+        "estTokens": 39740,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 1,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "topResult": "arc/family/family.py::ReactionFamily",
+        "topFile": "arc/family/family.py",
+        "files": [
+          "arc/family/family.py"
+        ],
+        "symbols": [
+          "arc/family/family.py::ReactionFamily"
+        ],
+        "chars": 1161,
+        "estTokens": 291,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated",
+          "handoff capsule compressed"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "weak",
+          "qualityScore": 1,
+          "matchedExpectedPath": null,
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/family/family.py",
+          "matchedExpectedSymbol": "ReactionFamily"
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": true,
+        "qualityPreservingReductionPct": 99.26774031202818
+      },
+      "notes": [
+        "Reaction family matching area.",
+        "handoff capsule truncated",
+        "handoff capsule compressed"
+      ]
+    },
+    {
+      "id": "concept_kinetics_calculation",
+      "category": "concept",
+      "task": "Identify the ARC area related to kinetics calculation setup or validation.",
+      "query": "kinetics calculation",
+      "expected": {
+        "expected_paths": [
+          "arc/statmech/arkane.py",
+          "arc/scheduler.py",
+          "arc/checks/ts.py"
+        ],
+        "expected_symbols": [
+          "ArkaneAdapter",
+          "check_ts"
+        ],
+        "notes": "Accept ARC kinetics setup/validation surfaces."
+      },
+      "baseline": {
+        "files": [
+          "arc/statmech/arkane_test.py",
+          "arc/checks/ts_test.py",
+          "arc/checks/ts.py",
+          "arc/family/family_test.py",
+          "arc/family/family.py"
+        ],
+        "fileCount": 5,
+        "topFile": "arc/statmech/arkane_test.py",
+        "snippetCount": 10,
+        "snippets": [
+          {
+            "file": "arc/statmech/arkane_test.py",
+            "startLine": 349,
+            "endLine": 437,
+            "chars": 3952
+          },
+          {
+            "file": "arc/statmech/arkane_test.py",
+            "startLine": 444,
+            "endLine": 587,
+            "chars": 5156
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "startLine": 306,
+            "endLine": 406,
+            "chars": 6403
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 1,
+            "endLine": 125,
+            "chars": 5857
+          },
+          {
+            "file": "arc/checks/ts.py",
+            "startLine": 132,
+            "endLine": 248,
+            "chars": 6322
+          },
+          {
+            "file": "arc/family/family_test.py",
+            "startLine": 18,
+            "endLine": 98,
+            "chars": 4392
+          },
+          {
+            "file": "arc/family/family_test.py",
+            "startLine": 890,
+            "endLine": 1038,
+            "chars": 9199
+          },
+          {
+            "file": "arc/family/family.py",
+            "startLine": 52,
+            "endLine": 132,
+            "chars": 3945
+          },
+          {
+            "file": "arc/family/family.py",
+            "startLine": 380,
+            "endLine": 460,
+            "chars": 4876
+          },
+          {
+            "file": "arc/family/family.py",
+            "startLine": 642,
+            "endLine": 728,
+            "chars": 3822
+          }
+        ],
+        "chars": 53924,
+        "estTokens": 13481,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "topResult": "arc/checks/ts.py::check_ts",
+        "topFile": "arc/checks/ts.py",
+        "files": [
+          "arc/checks/ts.py",
+          "arc/main.py"
+        ],
+        "symbols": [
+          "arc/checks/ts.py::check_ts",
+          "arc/main.py::ARC"
+        ],
+        "chars": 1176,
+        "estTokens": 294,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated",
+          "handoff capsule compressed"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "acceptable",
+          "qualityScore": 2,
+          "matchedExpectedPath": "arc/checks/ts.py",
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/checks/ts.py",
+          "matchedExpectedSymbol": "check_ts"
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": true,
+        "qualityPreservingReductionPct": 97.81915288183369
+      },
+      "notes": [
+        "Accept ARC kinetics setup/validation surfaces.",
+        "handoff capsule truncated",
+        "handoff capsule compressed"
+      ]
+    },
+    {
+      "id": "boundary_cython",
+      "category": "boundary",
+      "task": "Identify Cython-backed ARC molecule code.",
+      "query": "cython",
+      "expected": {
+        "expected_paths": [
+          "arc/molecule/atomtype.pxd",
+          "arc/molecule/graph.pyx"
+        ],
+        "expected_symbols": [
+          "get_atomtype",
+          "Edge"
+        ],
+        "notes": "Cython-backed molecule code."
+      },
+      "baseline": {
+        "files": [
+          "arc/constants.py",
+          "arc/molecule/atomtype.py",
+          "arc/molecule/converter.py",
+          "arc/molecule/element.py",
+          "arc/molecule/group.py"
+        ],
+        "fileCount": 5,
+        "topFile": "arc/constants.py",
+        "snippetCount": 11,
+        "snippets": [
+          {
+            "file": "arc/constants.py",
+            "startLine": 42,
+            "endLine": 105,
+            "chars": 1597
+          },
+          {
+            "file": "arc/molecule/atomtype.py",
+            "startLine": 1,
+            "endLine": 52,
+            "chars": 3886
+          },
+          {
+            "file": "arc/molecule/atomtype.py",
+            "startLine": 796,
+            "endLine": 903,
+            "chars": 8264
+          },
+          {
+            "file": "arc/molecule/converter.py",
+            "startLine": 1,
+            "endLine": 47,
+            "chars": 1691
+          },
+          {
+            "file": "arc/molecule/converter.py",
+            "startLine": 53,
+            "endLine": 138,
+            "chars": 3138
+          },
+          {
+            "file": "arc/molecule/converter.py",
+            "startLine": 203,
+            "endLine": 290,
+            "chars": 3166
+          },
+          {
+            "file": "arc/molecule/element.py",
+            "startLine": 1,
+            "endLine": 54,
+            "chars": 2148
+          },
+          {
+            "file": "arc/molecule/element.py",
+            "startLine": 74,
+            "endLine": 154,
+            "chars": 4342
+          },
+          {
+            "file": "arc/molecule/group.py",
+            "startLine": 1,
+            "endLine": 49,
+            "chars": 2779
+          },
+          {
+            "file": "arc/molecule/group.py",
+            "startLine": 341,
+            "endLine": 432,
+            "chars": 4093
+          },
+          {
+            "file": "arc/molecule/group.py",
+            "startLine": 437,
+            "endLine": 606,
+            "chars": 6982
+          }
+        ],
+        "chars": 42086,
+        "estTokens": 10522,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "topResult": "arc/molecule/atomtype.pxd::get_atomtype",
+        "topFile": "arc/molecule/atomtype.pxd",
+        "files": [
+          "arc/molecule/atomtype.pxd"
+        ],
+        "symbols": [
+          "arc/molecule/atomtype.pxd::get_atomtype",
+          "arc/molecule/atomtype.pxd::get_features"
+        ],
+        "chars": 468,
+        "estTokens": 117,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "weak",
+          "qualityScore": 1,
+          "matchedExpectedPath": null,
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/molecule/atomtype.pxd",
+          "matchedExpectedSymbol": "get_atomtype"
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": true,
+        "qualityPreservingReductionPct": 98.88804409808021
+      },
+      "notes": [
+        "Cython-backed molecule code.",
+        "handoff capsule truncated"
+      ]
+    },
+    {
+      "id": "boundary_python_wrapper_cython",
+      "category": "boundary",
+      "task": "Identify Python/Cython boundary code in ARC.",
+      "query": "python wrapper around cython",
+      "expected": {
+        "expected_paths": [
+          "arc/molecule/atomtype.pxd",
+          "arc/molecule/atomtype.py"
+        ],
+        "expected_symbols": [
+          "get_atomtype"
+        ],
+        "notes": "Python/Cython boundary around atomtype."
+      },
+      "baseline": {
+        "files": [
+          "ARC.py",
+          "arc/checks/common_test.py",
+          "arc/checks/nmd_test.py",
+          "arc/checks/ts_test.py",
+          "arc/common_test.py"
+        ],
+        "fileCount": 5,
+        "topFile": "ARC.py",
+        "snippetCount": 7,
+        "snippets": [
+          {
+            "file": "ARC.py",
+            "startLine": 1,
+            "endLine": 41,
+            "chars": 1212
+          },
+          {
+            "file": "arc/checks/common_test.py",
+            "startLine": 1,
+            "endLine": 41,
+            "chars": 1877
+          },
+          {
+            "file": "arc/checks/nmd_test.py",
+            "startLine": 1,
+            "endLine": 41,
+            "chars": 1309
+          },
+          {
+            "file": "arc/checks/ts_test.py",
+            "startLine": 1,
+            "endLine": 41,
+            "chars": 1414
+          },
+          {
+            "file": "arc/common_test.py",
+            "startLine": 1,
+            "endLine": 41,
+            "chars": 911
+          },
+          {
+            "file": "arc/common_test.py",
+            "startLine": 499,
+            "endLine": 579,
+            "chars": 4225
+          },
+          {
+            "file": "arc/common_test.py",
+            "startLine": 1067,
+            "endLine": 1147,
+            "chars": 5558
+          }
+        ],
+        "chars": 16506,
+        "estTokens": 4127,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "topResult": "arc/molecule/atomtype.pxd::get_atomtype",
+        "topFile": "arc/molecule/atomtype.pxd",
+        "files": [
+          "arc/molecule/atomtype.pxd"
+        ],
+        "symbols": [
+          "arc/molecule/atomtype.pxd::get_atomtype",
+          "arc/molecule/atomtype.pxd::get_features"
+        ],
+        "chars": 518,
+        "estTokens": 130,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "weak",
+          "qualityScore": 1,
+          "matchedExpectedPath": null,
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/molecule/atomtype.pxd",
+          "matchedExpectedSymbol": "get_atomtype"
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": true,
+        "qualityPreservingReductionPct": 96.85001211533802
+      },
+      "notes": [
+        "Python/Cython boundary around atomtype.",
+        "handoff capsule truncated"
+      ]
+    },
+    {
+      "id": "known_weak_rotor_scans",
+      "category": "diagnostic",
+      "task": "Identify the implementation area for rotor scans.",
+      "query": "rotor scans",
+      "expected": {
+        "expected_paths": [
+          "arc/scheduler.py",
+          "arc/job",
+          "arc/species"
+        ],
+        "expected_symbols": [
+          "rotor",
+          "scan"
+        ],
+        "notes": "Known weak/broad case; keep as diagnostic."
+      },
+      "baseline": {
+        "files": [
+          "arc/job/pipe/pipe_planner.py",
+          "arc/job/trsh.py",
+          "arc/main.py",
+          "arc/scheduler_test.py",
+          "arc/scheduler.py"
+        ],
+        "fileCount": 5,
+        "topFile": "arc/job/pipe/pipe_planner.py",
+        "snippetCount": 14,
+        "snippets": [
+          {
+            "file": "arc/job/pipe/pipe_planner.py",
+            "startLine": 1,
+            "endLine": 78,
+            "chars": 2509
+          },
+          {
+            "file": "arc/job/pipe/pipe_planner.py",
+            "startLine": 255,
+            "endLine": 315,
+            "chars": 2495
+          },
+          {
+            "file": "arc/job/trsh.py",
+            "startLine": 1,
+            "endLine": 86,
+            "chars": 3688
+          },
+          {
+            "file": "arc/job/trsh.py",
+            "startLine": 496,
+            "endLine": 858,
+            "chars": 18817
+          },
+          {
+            "file": "arc/job/trsh.py",
+            "startLine": 1426,
+            "endLine": 1819,
+            "chars": 21192
+          },
+          {
+            "file": "arc/main.py",
+            "startLine": 35,
+            "endLine": 462,
+            "chars": 27792
+          },
+          {
+            "file": "arc/main.py",
+            "startLine": 486,
+            "endLine": 641,
+            "chars": 8506
+          },
+          {
+            "file": "arc/main.py",
+            "startLine": 659,
+            "endLine": 742,
+            "chars": 3935
+          },
+          {
+            "file": "arc/scheduler_test.py",
+            "startLine": 29,
+            "endLine": 128,
+            "chars": 6575
+          },
+          {
+            "file": "arc/scheduler_test.py",
+            "startLine": 234,
+            "endLine": 492,
+            "chars": 28847
+          },
+          {
+            "file": "arc/scheduler_test.py",
+            "startLine": 605,
+            "endLine": 753,
+            "chars": 12691
+          },
+          {
+            "file": "arc/scheduler.py",
+            "startLine": 1,
+            "endLine": 332,
+            "chars": 19583
+          },
+          {
+            "file": "arc/scheduler.py",
+            "startLine": 380,
+            "endLine": 538,
+            "chars": 10905
+          },
+          {
+            "file": "arc/scheduler.py",
+            "startLine": 704,
+            "endLine": 793,
+            "chars": 7034
+          }
+        ],
+        "chars": 174569,
+        "estTokens": 43643,
+        "notes": []
+      },
+      "vtrace": {
+        "selectedIntent": "explain",
+        "routingProfile": "explain",
+        "capsuleProfile": "explain_stable",
+        "itemCount": 2,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "topResult": "arc/main.py::ARC",
+        "topFile": "arc/main.py",
+        "files": [
+          "arc/main.py",
+          "arc/job/trsh.py"
+        ],
+        "symbols": [
+          "arc/main.py::ARC",
+          "arc/job/trsh.py::scan_quality_check"
+        ],
+        "chars": 809,
+        "estTokens": 203,
+        "contaminationDetected": false,
+        "contaminatedPaths": [],
+        "diagnostics": [
+          "handoff capsule truncated",
+          "handoff capsule compressed"
+        ]
+      },
+      "quality": {
+        "baseline": {
+          "qualityLabel": "strong",
+          "qualityScore": 3,
+          "matchedExpectedPath": "arc/job",
+          "matchedExpectedSymbol": null
+        },
+        "vtrace": {
+          "qualityLabel": "acceptable",
+          "qualityScore": 2,
+          "matchedExpectedPath": "arc/job",
+          "matchedExpectedSymbol": null
+        }
+      },
+      "parity": {
+        "vtraceOrientationParity": false,
+        "qualityPreservingReductionPct": null
+      },
+      "notes": [
+        "Known weak/broad case; keep as diagnostic.",
+        "handoff capsule truncated",
+        "handoff capsule compressed"
+      ]
+    }
+  ],
+  "summary": {
+    "totalTasks": 12,
+    "checkedTasks": 12,
+    "vtraceStrongCount": 11,
+    "vtraceAcceptableCount": 1,
+    "vtraceWeakCount": 0,
+    "vtraceMissingCount": 0,
+    "baselineStrongCount": 1,
+    "baselineAcceptableCount": 2,
+    "baselineWeakCount": 9,
+    "baselineMissingCount": 0,
+    "parityCount": 11,
+    "parityRate": 0.9166666666666666,
+    "vtraceBetterCount": 11,
+    "vtraceWorseCount": 1,
+    "meanQualityPreservingReductionPercent": 97.89024211641832,
+    "medianQualityPreservingReductionPercent": 98.46973545629143,
+    "rowsWithContaminatedVtracePaths": 0,
+    "contaminatedVtracePathCount": 0,
+    "benchmarkAcceptableForOrientationClaim": true,
+    "repeatabilityStatus": "not_checked"
+  }
+}

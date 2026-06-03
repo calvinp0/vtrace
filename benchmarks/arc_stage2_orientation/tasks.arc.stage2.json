@@ -1,0 +1,74 @@
+[
+  {
+    "id": "exact_arc_species",
+    "category": "exact",
+    "task": "Find the ARC species class implementation.",
+    "query": "ARCSpecies"
+  },
+  {
+    "id": "exact_scheduler",
+    "category": "exact",
+    "task": "Find the scheduler class responsible for coordinating ARC jobs.",
+    "query": "Scheduler"
+  },
+  {
+    "id": "exact_determine_family",
+    "category": "exact",
+    "task": "Find where an ARC reaction determines its reaction family.",
+    "query": "determine_family"
+  },
+  {
+    "id": "workflow_ts_guesses",
+    "category": "workflow",
+    "task": "Identify the code region involved in transition-state guess generation.",
+    "query": "how does ARC generate TS guesses"
+  },
+  {
+    "id": "workflow_conformer_filtering",
+    "category": "workflow",
+    "task": "Identify where conformer filtering or conformer combination selection happens.",
+    "query": "where are conformers filtered"
+  },
+  {
+    "id": "workflow_arkane_input",
+    "category": "workflow",
+    "task": "Identify where Arkane input files are written or rendered.",
+    "query": "where is Arkane input written"
+  },
+  {
+    "id": "workflow_kinetics_jobs",
+    "category": "workflow",
+    "task": "Identify where kinetics jobs are scheduled or coordinated.",
+    "query": "where are kinetics jobs scheduled"
+  },
+  {
+    "id": "concept_reaction_family_matching",
+    "category": "concept",
+    "task": "Identify the code responsible for reaction family matching.",
+    "query": "reaction family matching"
+  },
+  {
+    "id": "concept_kinetics_calculation",
+    "category": "concept",
+    "task": "Identify the ARC area related to kinetics calculation setup or validation.",
+    "query": "kinetics calculation"
+  },
+  {
+    "id": "boundary_cython",
+    "category": "boundary",
+    "task": "Identify Cython-backed ARC molecule code.",
+    "query": "cython"
+  },
+  {
+    "id": "boundary_python_wrapper_cython",
+    "category": "boundary",
+    "task": "Identify Python/Cython boundary code in ARC.",
+    "query": "python wrapper around cython"
+  },
+  {
+    "id": "known_weak_rotor_scans",
+    "category": "diagnostic",
+    "task": "Identify the implementation area for rotor scans.",
+    "query": "rotor scans"
+  }
+]
