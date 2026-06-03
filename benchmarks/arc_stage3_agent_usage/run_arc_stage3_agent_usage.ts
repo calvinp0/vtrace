@@ -102,6 +102,7 @@ export interface IngestRow {
   readonly taskId: string;
   readonly condition: BenchmarkCondition;
   readonly agentSource: AgentSource;
+  readonly toolsDisabled: boolean;
   readonly model: string | null;
   readonly sessionId: string | null;
   readonly deltaMethod: DeltaMethod;
@@ -160,6 +161,7 @@ export interface ClaudeRunMeta {
   readonly finishedAt: string;
   readonly exitCode: number;
   readonly durationMs: number;
+  readonly toolsDisabled: boolean;
 }
 
 const DEFAULT_CONFIG: CliConfig = {
@@ -215,6 +217,7 @@ const CSV_COLUMNS = [
   "task_id",
   "condition",
   "agent_source",
+  "tools_disabled",
   "model",
   "session_id",
   "delta_method",
@@ -552,10 +555,15 @@ export function renderIngestMarkdown(
     `- vtrace quality same/better/worse: ${summary.vtraceQualitySameCount}/${summary.vtraceQualityBetterCount}/${summary.vtraceQualityWorseCount}`,
     `- Ambiguous ccusage delta count: ${summary.ambiguousCcusageDeltaCount}`,
     `- Invalid response count: ${summary.invalidResponseCount}`,
+    `- Tools disabled: ${formatToolsDisabled(rows)}`,
     "",
     "## Per-task paired table",
     "",
     renderPairTable(pairs),
+    "",
+    "## Methodology caveat",
+    "",
+    "Stage 3 uses ccusage local CLI usage data. Token accounting includes Claude Code session/system/cache behavior, so reductions are not expected to match prompt-size reductions from Stage 1/2.",
     "",
     "## Metadata",
     "",
@@ -728,6 +736,7 @@ async function runPreparedClaudePrompt(
     finishedAt: finishedAt.toISOString(),
     exitCode: result.exitCode,
     durationMs: Date.now() - startedMs,
+    toolsDisabled: config.claudeDisableTools,
   };
 
   const agentRunsDir = path.join(config.out, "agent_runs");
@@ -835,6 +844,7 @@ async function ingestRun(
   const beforePath = path.join(config.out, "snapshots", `${task.id}.${condition}.before.json`);
   const afterPath = path.join(config.out, "snapshots", `${task.id}.${condition}.after.json`);
   const responsePath = path.join(config.out, "responses", `${task.id}.${condition}.response.json`);
+  const metaPath = path.join(config.out, "agent_runs", `${task.id}.${condition}.claude.meta.json`);
   const notes: string[] = [];
 
   const [beforeSnapshot, afterSnapshot] = await Promise.all([
@@ -861,11 +871,13 @@ async function ingestRun(
     ? makeScoredResponse("invalid", null, null, null, null, "response file missing")
     : scoreResponseJson(responseJson, expected);
   const promptEstTokens = manifest.get(`${task.id}.${condition}`) ?? 0;
+  const toolsDisabled = await readToolsDisabled(metaPath, config.claudeDisableTools);
 
   return {
     taskId: task.id,
     condition,
     agentSource: config.agentSource,
+    toolsDisabled,
     model: delta.model,
     sessionId: delta.sessionId,
     deltaMethod: delta.method,
@@ -1242,6 +1254,7 @@ function renderCsv(rows: readonly IngestRow[]): string {
       row.taskId,
       row.condition,
       row.agentSource,
+      row.toolsDisabled,
       row.model,
       row.sessionId,
       row.deltaMethod,
@@ -1261,6 +1274,35 @@ function renderCsv(rows: readonly IngestRow[]): string {
       row.notes.join("; "),
     ].map(csvEscape).join(",")),
   ].join("\n")}\n`;
+}
+
+async function readToolsDisabled(metaPath: string, fallback: boolean): Promise<boolean> {
+  const meta = await readJsonIfExists(metaPath);
+  if (isRecord(meta) && typeof meta.toolsDisabled === "boolean") {
+    return meta.toolsDisabled;
+  }
+  if (isRecord(meta) && Array.isArray(meta.args)) {
+    for (let index = 0; index < meta.args.length - 1; index += 1) {
+      if (meta.args[index] === "--tools" && meta.args[index + 1] === "") {
+        return true;
+      }
+    }
+  }
+  return fallback;
+}
+
+function formatToolsDisabled(rows: readonly IngestRow[]): string {
+  if (rows.length === 0) {
+    return "n/a";
+  }
+  const disabledCount = rows.filter((row) => row.toolsDisabled).length;
+  if (disabledCount === rows.length) {
+    return "yes";
+  }
+  if (disabledCount === 0) {
+    return "no";
+  }
+  return `mixed (${disabledCount}/${rows.length} runs)`;
 }
 
 function renderPairTable(pairs: readonly PairComparison[]): string {

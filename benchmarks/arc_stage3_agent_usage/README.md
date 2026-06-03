@@ -15,6 +15,12 @@ These token counts come from ccusage local CLI usage data. They measure controll
 
 The current Claude Code ccusage-backed smoke result is documented in [STAGE3_SMOKE.md](./STAGE3_SMOKE.md). It currently includes 4 paired controlled orientation tasks and reports both actual token reduction and quality-preserving actual reduction.
 
+## Stage 3 Result
+
+The completed controlled Claude Code usage result is documented in [STAGE3_RESULTS.md](./STAGE3_RESULTS.md).
+
+Controlled orientation runs should disable tools unless intentionally running a separate autonomous-exploration variant.
+
 ## Manual Workflow
 
 ```bash
@@ -86,6 +92,10 @@ benchmarks/arc_stage3_agent_usage/results/
   snapshots/
     <task_id>.<condition>.before.json
     <task_id>.<condition>.after.json
+  agent_runs/
+    <task_id>.<condition>.claude.stdout.json
+    <task_id>.<condition>.claude.stderr.txt
+    <task_id>.<condition>.claude.meta.json
   responses/
     <task_id>.<condition>.response.json
   arc_stage3_agent_usage_manifest.json

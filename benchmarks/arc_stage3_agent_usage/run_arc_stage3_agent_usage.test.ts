@@ -14,6 +14,7 @@ import {
   extractResponseJson,
   parseCcusageSnapshot,
   qualityScore,
+  renderIngestMarkdown,
   renderPrepareMarkdown,
   runMatrix,
   runOne,
@@ -229,6 +230,33 @@ test("markdown prepare-mode summary avoids actual ccusage claims", () => {
   assert.match(markdown, /Estimated prompt token comparison/);
 });
 
+test("ingest markdown reports tools-disabled status and methodology caveat", () => {
+  const rows = [
+    makeRow("baseline", 100, "strong"),
+    makeRow("vtrace", 60, "strong"),
+  ];
+  const pairs = comparePairs(rows);
+  const markdown = renderIngestMarkdown(rows, pairs, {
+    completedRuns: rows.length,
+    pairedTasks: pairs.length,
+    meanActualTotalTokenReductionPct: 40,
+    medianActualTotalTokenReductionPct: 40,
+    meanQualityPreservingActualReductionPct: 40,
+    vtraceQualitySameCount: 1,
+    vtraceQualityBetterCount: 0,
+    vtraceQualityWorseCount: 0,
+    ambiguousCcusageDeltaCount: 0,
+    invalidResponseCount: 0,
+  }, {
+    arcRepoPath: "/tmp/arc",
+    agentSource: "claude",
+  });
+
+  assert.match(markdown, /Tools disabled: yes/);
+  assert.match(markdown, /ccusage local CLI usage data/);
+  assert.match(markdown, /session\/system\/cache behavior/);
+});
+
 test("Claude command arg construction includes configured options", () => {
   const args = buildClaudeArgs({
     claudeOutputFormat: "json",
@@ -304,6 +332,7 @@ test("run-one passes prompt through stdin and writes stdout stderr meta", async 
   assert.equal(await readFile(path.join(config.out, "agent_runs", `${TASK.id}.baseline.claude.stderr.txt`), "utf8"), "warn\n");
   const meta = JSON.parse(await readFile(path.join(config.out, "agent_runs", `${TASK.id}.baseline.claude.meta.json`), "utf8"));
   assert.equal(meta.command, "claude");
+  assert.equal(meta.toolsDisabled, true);
   assert.deepEqual(meta.args.slice(0, 5), ["-p", "--output-format", "json", "--max-turns", "1"]);
 });
 
@@ -373,6 +402,7 @@ function makeRow(condition: "baseline" | "vtrace", totalTokens: number, quality:
     taskId: TASK.id,
     condition,
     agentSource: "claude",
+    toolsDisabled: true,
     model: "claude-sonnet-4",
     sessionId: `${TASK.id}.${condition}`,
     deltaMethod: "new_session",
