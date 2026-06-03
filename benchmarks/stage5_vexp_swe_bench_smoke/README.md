@@ -189,6 +189,10 @@ The report gains a `## Vtrace indexed context evidence` table (`vtrace_method`, 
 
 The first indexed-context smoke result is documented in [STAGE5B_INDEXED_CONTEXT_RESULTS.md](./STAGE5B_INDEXED_CONTEXT_RESULTS.md).
 
+## Stage 5C evaluated smoke result
+
+The preliminary two-task evaluated Stage 5C result is documented in [STAGE5C_EVALUATED_RESULTS.md](./STAGE5C_EVALUATED_RESULTS.md).
+
 ## Stage 5C: evaluated SWE-bench protocol
 
 Stages 5A/5B generate **patches** but leave `resolved` as `unknown` — they are effort signals, not correctness signals:
