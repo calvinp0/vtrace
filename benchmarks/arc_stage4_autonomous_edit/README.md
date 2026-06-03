@@ -87,6 +87,17 @@ Pass/fail is primary. Token reduction is quality-preserving only when both basel
 
 The `vtrace` condition receives embedded vtrace context. The `baseline` condition receives no vtrace output and may inspect the isolated repo normally.
 
+## Claude Permissions
+
+Autonomous edit runs keep tools enabled, but use non-interactive-safe defaults for isolated worktrees:
+
+```text
+--permission-mode acceptEdits
+--allowedTools Read,Grep,Glob,LS,Edit,Write
+```
+
+This allows repository inspection and edits to the benchmark-local allowed file without interactive permission prompts. It intentionally does not allow Bash by default.
+
 ## Outputs
 
 ```text

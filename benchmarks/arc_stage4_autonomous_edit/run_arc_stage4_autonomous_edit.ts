@@ -54,6 +54,8 @@ export interface CliConfig {
   readonly claudeAppendSystemPromptFile: string | null;
   readonly claudeBare: boolean;
   readonly claudeDisableTools: boolean;
+  readonly claudePermissionMode: string | null;
+  readonly claudeAllowedTools: readonly string[];
   readonly toolCommand: "capsule" | "handoff";
 }
 
@@ -137,6 +139,8 @@ const DEFAULT_CONFIG: CliConfig = {
   claudeAppendSystemPromptFile: null,
   claudeBare: false,
   claudeDisableTools: false,
+  claudePermissionMode: "acceptEdits",
+  claudeAllowedTools: ["Read", "Grep", "Glob", "LS", "Edit", "Write"],
   toolCommand: "handoff",
 };
 
@@ -227,6 +231,8 @@ export function buildClaudeArgs(config: Pick<CliConfig,
   | "claudeAppendSystemPromptFile"
   | "claudeBare"
   | "claudeDisableTools"
+  | "claudePermissionMode"
+  | "claudeAllowedTools"
   | "claudeExtraArgs"
 >): string[] {
   const args = ["-p", "--output-format", config.claudeOutputFormat, "--max-turns", String(config.claudeMaxTurns)];
@@ -235,6 +241,8 @@ export function buildClaudeArgs(config: Pick<CliConfig,
   if (config.claudeAppendSystemPromptFile !== null) args.push("--append-system-prompt-file", config.claudeAppendSystemPromptFile);
   if (config.claudeBare) args.push("--bare");
   if (config.claudeDisableTools) args.push("--tools", "");
+  if (!config.claudeDisableTools && config.claudePermissionMode !== null) args.push("--permission-mode", config.claudePermissionMode);
+  if (!config.claudeDisableTools && config.claudeAllowedTools.length > 0) args.push("--allowedTools", config.claudeAllowedTools.join(","));
   args.push(...config.claudeExtraArgs);
   return args;
 }
@@ -893,6 +901,10 @@ function parseArgs(argv: readonly string[]): CliConfig {
       case "--claude-append-system-prompt-file": config.claudeAppendSystemPromptFile = requireValue(argv, ++index, arg); break;
       case "--claude-bare": config.claudeBare = true; break;
       case "--claude-disable-tools": config.claudeDisableTools = true; break;
+      case "--claude-permission-mode": config.claudePermissionMode = requireValue(argv, ++index, arg); break;
+      case "--no-claude-permission-mode": config.claudePermissionMode = null; break;
+      case "--claude-allowed-tool": config.claudeAllowedTools = [...config.claudeAllowedTools, requireValue(argv, ++index, arg)]; break;
+      case "--claude-allowed-tools": config.claudeAllowedTools = requireValue(argv, ++index, arg).split(",").map((value) => value.trim()).filter(Boolean); break;
       case "--tool-command": {
         const value = requireValue(argv, ++index, arg);
         if (value !== "capsule" && value !== "handoff") throw new Error("--tool-command must be capsule or handoff.");

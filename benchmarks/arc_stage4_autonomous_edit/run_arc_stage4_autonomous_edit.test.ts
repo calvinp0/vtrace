@@ -7,6 +7,7 @@ import { test } from "bun:test";
 import {
   applyTaskSetup,
   buildPrompt,
+  buildClaudeArgs,
   classifyOutcome,
   comparePairs,
   loadStage4Tasks,
@@ -73,6 +74,29 @@ test("prompt generation separates baseline and vtrace context", () => {
   assert.match(vtrace, /## vtrace context/);
   assert.match(vtrace, /vtrace context/);
   assert.match(vtrace, /Do not modify files outside the allowed list/);
+});
+
+test("Claude args default to autonomous edit permissions with narrow tools", () => {
+  const args = buildClaudeArgs({
+    claudeOutputFormat: "json",
+    claudeMaxTurns: 8,
+    claudeModel: null,
+    claudeSystemPromptFile: null,
+    claudeAppendSystemPromptFile: null,
+    claudeBare: false,
+    claudeDisableTools: false,
+    claudePermissionMode: "acceptEdits",
+    claudeAllowedTools: ["Read", "Grep", "Glob", "LS", "Edit", "Write"],
+    claudeExtraArgs: [],
+  });
+
+  assert.deepEqual(args, [
+    "-p",
+    "--output-format", "json",
+    "--max-turns", "8",
+    "--permission-mode", "acceptEdits",
+    "--allowedTools", "Read,Grep,Glob,LS,Edit,Write",
+  ]);
 });
 
 test("required_file_contains validation passes when all strings exist", async () => {
@@ -216,6 +240,8 @@ async function makeConfig(): Promise<CliConfig> {
     claudeAppendSystemPromptFile: null,
     claudeBare: false,
     claudeDisableTools: false,
+    claudePermissionMode: "acceptEdits",
+    claudeAllowedTools: ["Read", "Grep", "Glob", "LS", "Edit", "Write"],
     toolCommand: "handoff",
   };
 }
