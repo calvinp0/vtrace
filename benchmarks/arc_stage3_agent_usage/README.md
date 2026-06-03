@@ -167,8 +167,11 @@ The default Claude invocation is equivalent to passing the prompt through stdin:
 claude -p \
   --output-format json \
   --max-turns 1 \
-  --append-system-prompt-file benchmarks/arc_stage3_agent_usage/claude_orientation_system_prompt.md
+  --append-system-prompt-file benchmarks/arc_stage3_agent_usage/claude_orientation_system_prompt.md \
+  --tools ""
 ```
+
+Tools are disabled by default for controlled orientation runs. Pass `--claude-enable-tools` only when intentionally running a non-controlled diagnostic.
 
 Useful Claude options:
 
@@ -182,6 +185,7 @@ Useful Claude options:
 --claude-append-system-prompt-file <path>
 --claude-bare
 --claude-disable-tools
+--claude-enable-tools
 --allow-missing-ccusage
 --ingest-after-run
 --no-ingest-after-run

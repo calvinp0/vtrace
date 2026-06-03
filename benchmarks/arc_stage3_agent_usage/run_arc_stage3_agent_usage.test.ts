@@ -433,7 +433,7 @@ async function makeRunFixture(condition: "baseline" | "vtrace" = "baseline", wri
     claudeSystemPromptFile: null,
     claudeAppendSystemPromptFile: "/tmp/system.md",
     claudeBare: false,
-    claudeDisableTools: false,
+    claudeDisableTools: true,
   };
 
   await writeFile(config.tasks, `${JSON.stringify([TASK])}\n`);

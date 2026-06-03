@@ -189,7 +189,7 @@ const DEFAULT_CONFIG: CliConfig = {
   claudeSystemPromptFile: null,
   claudeAppendSystemPromptFile: "benchmarks/arc_stage3_agent_usage/claude_orientation_system_prompt.md",
   claudeBare: false,
-  claudeDisableTools: false,
+  claudeDisableTools: true,
 };
 
 const SHARED_INSTRUCTION_TEMPLATE = `You are evaluating repository orientation context.
@@ -1730,6 +1730,9 @@ function parseArgs(argv: readonly string[]): CliConfig {
         break;
       case "--claude-disable-tools":
         config.claudeDisableTools = true;
+        break;
+      case "--claude-enable-tools":
+        config.claudeDisableTools = false;
         break;
       case "--help":
       case "-h":
