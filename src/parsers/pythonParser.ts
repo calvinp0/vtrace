@@ -1008,7 +1008,7 @@ function makeReferencesEdge(srcSymbolId: string, dstSymbolId: string): EdgeRecor
 }
 
 function edgePairKey(srcSymbolId: string, dstSymbolId: string): string {
-  return `${srcSymbolId} ${dstSymbolId}`;
+  return `${srcSymbolId}\x00${dstSymbolId}`;
 }
 
 interface ExtractCallEdgesInput {
