@@ -56,7 +56,10 @@ This is not semantic memory consolidation or automatic rule promotion.
 
 ## Session Lifecycle Compression
 
-`vtrace` can compress inactive sessions into compact structural summaries through an explicit lifecycle service. There is no background scheduler or passive file watcher requirement.
+`vtrace` compresses inactive sessions into compact structural summaries. There is no background daemon or always-on scheduler; compression runs only through two deterministic, bounded triggers:
+
+- **Explicit CLI command.** `vtrace compress-sessions <repo> [--idle-hours N] [--limit N] [--dry-run] [--json]` compresses every eligible inactive session on demand. `--idle-hours` overrides the inactivity threshold (`0` makes all active sessions eligible), `--limit` bounds how many sessions are processed, and `--dry-run` reports what would be compressed and consolidated without writing anything.
+- **Bounded reindex sweep.** Every successful reindex (`vtrace index`, the `index_repo` MCP tool, and watcher auto-reindex) runs a small bounded sweep that compresses up to the first 20 sessions inactive past the default threshold. The sweep is idempotent, deterministic in which sessions it selects, and isolated — any failure is captured as a diagnostic on the reindex result and never fails indexing. When it compresses anything, it surfaces a `compress_sessions` progress line; otherwise it emits nothing.
 
 The default compression threshold is two hours of inactivity. Compression records a deterministic summary with observation counts, tool-call counts by tool, unique linked files, unique linked symbol ids and FQNs, key lexical terms, first/last activity times, compression time, preserved durable count, and repeated passive tool-call source rows pruned through consolidation.
 
@@ -65,6 +68,17 @@ Compression also triggers conservative passive consolidation for the inactive se
 Compressed sessions remain inspectable through session context: `get_session_context` reports the compression summary and returns preserved observations, including durable observations and compact consolidated passive summaries where present, without flooding the response with pruned repeated tool calls. Compression summaries and consolidated summaries are searchable, so `search_memory`, `run_pipeline.memory`, and capsule memory surfacing can find them through deterministic lexical and structural signals such as key terms, tool names, file paths, and symbol FQNs.
 
 The default retention threshold is 90 days. This milestone reports deterministic cleanup candidates for old compressed sessions; physical deletion of compressed summaries and durable data is intentionally deferred.
+
+## Capsule Manifest Staleness
+
+`get_context_capsule` and `run_pipeline` persist a deterministic capsule manifest each time they build a non-empty capsule on an indexed repo, and surface its id:
+
+- `get_context_capsule` returns `capsuleManifestId` at the top level of its output.
+- `run_pipeline` returns it as `context.capsuleManifestId`.
+
+The manifest id is a content hash of the source run id, query, and the capsule's items (file paths, symbol ids, FQNs, content modes), so repeated calls on the same repo state return the same id and persistence is idempotent — no duplicate rows. The id is `null` only for multi-repo capsules or before the repo has any index run.
+
+Pass that id to the `check_capsule_staleness` MCP tool or `vtrace check-capsule <repo> <manifest-id> <comparison-run-id>` to evaluate whether the capsule's source-backed items are still fresh against a later index run. After a file or symbol referenced by the capsule is modified or removed and the repo is reindexed, the manifest reports `stale` with per-item reasons; otherwise it reports `fresh`. This is the same conservative structural diff machinery used for observation staleness — it is not semantic or runtime reachability.
 
 ## Optional Passive File Awareness
 

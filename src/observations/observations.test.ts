@@ -8,6 +8,7 @@ import {
   countObservations,
   getObservationById,
   listObservations,
+  listObservationsForSession,
   persistObservation,
 } from "../db/repositories/observationsRepository";
 import {
@@ -1105,6 +1106,131 @@ test("best-effort visible-capsule auto-capture never fails the primary path", ()
     });
 
     assert.equal(captured, undefined);
+  });
+});
+
+test("compressInactiveSessions honors a bounded limit with deterministic session selection", async () => {
+  await withObservationFixture(async ({ repoRoot, db }) => {
+    await indexProject({ repoRoot, db });
+    const sourceRunId = getLatestIndexRun(db)?.id;
+
+    for (const [sessionId, createdAtMs] of [
+      ["session-a", 100],
+      ["session-b", 200],
+      ["session-c", 300],
+    ] as const) {
+      persistObservation(db, {
+        repoRoot,
+        sessionId,
+        kind: ObservationKind.ToolCall,
+        source: ObservationSource.McpAuto,
+        toolName: "run_pipeline",
+        summary: `Context capsule for ${sessionId}`,
+        body: `tool=run_pipeline\nquery=session lifecycle\npivot_count=1\nsupport_count=1\ncall=${sessionId}`,
+        queryText: "session lifecycle",
+        intent: "explain",
+        sourceRunId,
+        createdAtMs,
+        linkedFilePaths: ["src/service.ts"],
+      });
+    }
+
+    const nowMs = 300 + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS;
+
+    const first = compressInactiveSessions(db, { repoRoot, nowMs, limit: 2 });
+    const firstAgainPreviewOnly = compressInactiveSessions(db, {
+      repoRoot,
+      nowMs,
+      limit: 2,
+      dryRun: true,
+    });
+
+    // The bound is respected and selection is the two most-inactive sessions.
+    assert.equal(first.eligibleSessionCount, 3);
+    assert.equal(first.processedSessionCount, 2);
+    assert.deepEqual(
+      first.compressedSummaries.map((summary) => summary.sessionId),
+      ["session-a", "session-b"],
+    );
+    // Selection is deterministic: a repeated bounded view picks the remaining
+    // most-inactive session (only session-c is still active now).
+    assert.deepEqual(
+      firstAgainPreviewOnly.previews.map((preview) => preview.sessionId),
+      ["session-c"],
+    );
+    assert.equal(getSessionById(db, "session-c")?.status, SessionStatus.Active);
+
+    // A second bounded sweep finishes the remainder.
+    const second = compressInactiveSessions(db, { repoRoot, nowMs, limit: 2 });
+    assert.equal(second.eligibleSessionCount, 1);
+    assert.equal(second.processedSessionCount, 1);
+    assert.deepEqual(
+      second.compressedSummaries.map((summary) => summary.sessionId),
+      ["session-c"],
+    );
+    assert.equal(getSessionById(db, "session-c")?.status, SessionStatus.Compressed);
+  });
+});
+
+test("compressInactiveSessions dry run previews the effect without mutating observations or sessions", async () => {
+  await withObservationFixture(async ({ repoRoot, db }) => {
+    await indexProject({ repoRoot, db });
+    const sourceRunId = getLatestIndexRun(db)?.id;
+
+    for (const [index, createdAtMs] of [100, 120, 140].entries()) {
+      persistObservation(db, {
+        repoRoot,
+        sessionId: "session-dry",
+        kind: ObservationKind.ToolCall,
+        source: ObservationSource.McpAuto,
+        toolName: "run_pipeline",
+        summary: `Repeated capsule ${index}`,
+        body: `tool=run_pipeline\nquery=dry run preview\npivot_count=1\nsupport_count=2\ncall=${index}`,
+        queryText: "dry run preview",
+        intent: "explain",
+        sourceRunId,
+        createdAtMs,
+        linkedFilePaths: ["src/service.ts"],
+      });
+    }
+    persistObservation(db, {
+      repoRoot,
+      sessionId: "session-dry",
+      kind: ObservationKind.Decision,
+      source: ObservationSource.Manual,
+      toolName: "save_observation",
+      summary: "Durable decision must survive a real compression",
+      body: "Manual decision retained across lifecycle compression.",
+      queryText: "durable decision",
+      createdAtMs: 160,
+      linkedFilePaths: ["src/service.ts"],
+    });
+
+    const observationsBefore = listObservationsForSession(db, "session-dry").length;
+    assert.equal(observationsBefore, 4);
+
+    const nowMs = 160 + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS;
+    const preview = compressInactiveSessions(db, { repoRoot, nowMs, dryRun: true });
+
+    assert.equal(preview.dryRun, true);
+    assert.deepEqual(preview.compressedSummaries, []);
+    assert.equal(preview.eligibleSessionCount, 1);
+    assert.equal(preview.processedSessionCount, 1);
+    assert.equal(preview.previews.length, 1);
+    assert.equal(preview.previews[0]!.sessionId, "session-dry");
+    assert.equal(preview.previews[0]!.observationCount, 4);
+    assert.equal(preview.previews[0]!.prunedToolCallObservationCount, 3);
+
+    // Dry run mutates nothing.
+    assert.equal(listObservationsForSession(db, "session-dry").length, observationsBefore);
+    assert.equal(getSessionById(db, "session-dry")?.status, SessionStatus.Active);
+
+    // A real run then performs exactly what the preview promised.
+    const applied = compressInactiveSessions(db, { repoRoot, nowMs });
+    assert.equal(applied.dryRun, false);
+    assert.equal(applied.compressedSummaries.length, 1);
+    assert.equal(applied.compressedSummaries[0]!.prunedToolCallObservationCount, 3);
+    assert.equal(getSessionById(db, "session-dry")?.status, SessionStatus.Compressed);
   });
 });
 

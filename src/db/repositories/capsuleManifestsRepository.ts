@@ -107,6 +107,35 @@ export function persistCapsuleManifest(
   return getCapsuleManifestById(db, manifestId)!;
 }
 
+/**
+ * Persist a capsule manifest as a best-effort side effect of a user-facing
+ * capsule build (get_context_capsule, run_pipeline). Returns the deterministic
+ * manifest id, or null when no manifest could be persisted: no index run exists
+ * yet, the capsule has no items, or persistence failed unexpectedly. This must
+ * never throw — manifest persistence is an auxiliary trust signal and must not
+ * fail the primary tool/CLI response. Persistence is idempotent, so repeated
+ * calls on the same repo state return the same id without duplicate rows.
+ */
+export function persistCapsuleManifestBestEffort(
+  db: Database,
+  capsule: Capsule,
+  sourceRunId: number | null,
+): string | null {
+  if (sourceRunId === null) {
+    return null;
+  }
+
+  if (capsule.pivots.length + capsule.supportingItems.length === 0) {
+    return null;
+  }
+
+  try {
+    return persistCapsuleManifest(db, { sourceRunId, capsule }).id;
+  } catch {
+    return null;
+  }
+}
+
 export function getCapsuleManifestById(
   db: Database,
   capsuleId: string,

@@ -100,6 +100,7 @@ There are also direct inspection commands for manual flows:
 - `runs`
 - `rules`
 - `check-capsule`
+- `compress-sessions`
 - `run-pipeline`
 - `expand-vexp-ref`
 

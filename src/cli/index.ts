@@ -1,6 +1,7 @@
 import type { CliOptions, CommandResult } from "./types";
 import { runCheckCapsuleCommand } from "./commands/checkCapsuleCommand";
 import { runCapsuleCommand } from "./commands/capsuleCommand";
+import { runCompressSessionsCommand } from "./commands/compressSessionsCommand";
 import { runClaudeConfigCommand } from "./commands/claudeConfigCommand";
 import { runDaemonCommand, runDaemonRunnerCommand } from "./commands/daemonCommand";
 import { runHandoffCommand } from "./commands/handoffCommand";
@@ -45,6 +46,7 @@ const CLI_USAGE = [
   "  vtrace runs <repo>",
   "  vtrace rules <list|generate-candidates|generate|add-active|promote|dismiss|disable> <repo> [rule-id|options]",
   "  vtrace check-capsule <repo> <manifest-id> <comparison-run-id>",
+  "  vtrace compress-sessions <repo> [--idle-hours N] [--limit N] [--dry-run] [--json]",
   "",
   "Repeated setup is safe. Supported shell agents: claude-code (default), codex. See README.md and docs/getting_started.md for setup, CLI usage, MCP reference, and the tool cheat sheet.",
 ].join("\n");
@@ -68,6 +70,8 @@ export async function runCli(
       return runCapsuleCommand(args, options);
     case "check-capsule":
       return runCheckCapsuleCommand(args, options);
+    case "compress-sessions":
+      return runCompressSessionsCommand(args, options);
     case "claude-config":
       return runClaudeConfigCommand(args, options);
     case "handoff":

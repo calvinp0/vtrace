@@ -34,6 +34,7 @@ export function formatRunPipelineOrchestrationOutput(
     capsuleProfileId: context.preparedAssembly.selection.profile.id,
     routingProfileId: context.routedQuery.profile.id,
     capsuleRef: `vexp:capsule:${compactOrchestrationHash(orchestration.request.query)}`,
+    capsuleManifestId: orchestration.capsuleManifestId,
   };
   const capsuleSurfacedMemories = context.capsule.memories ?? [];
 

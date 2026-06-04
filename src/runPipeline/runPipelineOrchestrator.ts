@@ -36,6 +36,7 @@ import { createCharacterBudget } from "../capsule/budget";
 import { createSourceBackedCapsuleBuilder } from "../capsule/buildCapsule";
 import { computeVisibleCapsuleObservationDedupeKey } from "../observations/autoCapture";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
+import { persistCapsuleManifestBestEffort } from "../db/repositories/capsuleManifestsRepository";
 import { persistDeferredVexpRef } from "../db/repositories/deferredVexpRefsRepository";
 import {
   selectRelevantProjectRules,
@@ -200,6 +201,12 @@ export interface RunPipelineOrchestration {
   readonly memory: OrchestrationMemorySection;
   readonly rules: OrchestrationRulesSection;
   readonly deferred: readonly RunPipelineDeferredPlaceholder[];
+  /**
+   * Persisted capsule manifest id for the context capsule, or null when no
+   * manifest could be persisted (no index run, empty capsule). Lets a caller
+   * feed the id straight into check_capsule_staleness / `vtrace check-capsule`.
+   */
+  readonly capsuleManifestId: string | null;
 }
 
 interface ImpactCandidate {
@@ -244,6 +251,13 @@ export function runPipelineOrchestrator(
     maxBudgetCharacters,
     preset: intentDecision.selected,
   });
+  // Persist a deterministic capsule manifest so the emitted manifest id
+  // resolves against a real store in check_capsule_staleness / check-capsule.
+  const capsuleManifestId = persistCapsuleManifestBestEffort(
+    db,
+    context.capsule,
+    getLatestIndexRun(db)?.id ?? null,
+  );
 
   const impact = runImpactSection(db, context, intentDecision);
   const flow = runFlowSection(db, context);
@@ -293,6 +307,7 @@ export function runPipelineOrchestrator(
     memory,
     rules,
     deferred,
+    capsuleManifestId,
   };
 }
 

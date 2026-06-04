@@ -72,7 +72,12 @@ These are useful when you want manual control instead of the full MCP shell flow
 ./bin/vtrace runs <repo>
 ./bin/vtrace rules <list|generate-candidates|generate|add-active|promote|dismiss|disable> <repo> [rule-id|options]
 ./bin/vtrace check-capsule <repo> <manifest-id> <comparison-run-id>
+./bin/vtrace compress-sessions <repo> [--idle-hours N] [--limit N] [--dry-run] [--json]
 ```
+
+`check-capsule` evaluates a persisted capsule manifest against a later index run. Manifest ids are produced by real capsule builds: `get_context_capsule` returns `capsuleManifestId`, and `run_pipeline` returns `context.capsuleManifestId`. Pass that id (and a comparison run id from `vtrace runs`) to get a `fresh`/`stale` verdict with per-item reasons.
+
+`compress-sessions` compresses inactive sessions and consolidates their repeated passive tool-call observations. It is the explicit counterpart to the bounded sweep that also runs automatically after each successful `index`. `--idle-hours 0` makes all active sessions eligible, `--limit` bounds how many sessions are processed, and `--dry-run` previews the effect (including how many observations would be consolidated) without writing anything. Compression is idempotent and never removes durable/manual observations.
 
 ## Common Examples
 

@@ -821,7 +821,118 @@ test("get_context_capsule is a thin visible wrapper over the existing capsule pi
 
     assert.equal(visible.result.ok, true);
     assert.equal(legacy.result.ok, true);
-    assert.deepEqual(visible.result.output, legacy.result.output);
+    // get_context_capsule additionally persists a capsule manifest and surfaces
+    // its id; build_capsule does not. Aside from that field the visible tool is
+    // still a thin wrapper over the same pipeline output.
+    const { capsuleManifestId, ...visibleWithoutManifest } = visible.result.output;
+    assert.deepEqual(visibleWithoutManifest, legacy.result.output);
+    assert.equal(typeof capsuleManifestId, "string");
+    assert.equal((capsuleManifestId as string).length > 0, true);
+  });
+});
+
+test("get_context_capsule persists a manifest that check_capsule_staleness resolves, and reindex makes it stale", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    const capsuleRequest = {
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-capsule-manifest",
+      toolId: McpToolId.GetContextCapsule,
+      input: { query: "Session", maxBudgetCharacters: 5_000 },
+    } as const;
+
+    const capsule = await server.handleRequest(capsuleRequest);
+    assert.equal(capsule.result.ok, true);
+    const manifestId = capsule.result.output.capsuleManifestId;
+    assert.equal(typeof manifestId, "string");
+    assert.equal((manifestId as string).length > 0, true);
+
+    // Deterministic: the same call returns the same persisted manifest id.
+    const capsuleAgain = await server.handleRequest({
+      ...capsuleRequest,
+      requestId: "req-capsule-manifest-again",
+    });
+    assert.equal(capsuleAgain.result.output.capsuleManifestId, manifestId);
+
+    // The manifest resolves against the run it was built from instead of
+    // returning "Capsule manifest not found".
+    const fresh = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-staleness-fresh",
+      toolId: McpToolId.CheckCapsuleStaleness,
+      input: { manifestId, comparisonRunId: 1 },
+    });
+    assert.equal(fresh.result.ok, true);
+    assert.equal(fresh.result.output.status, "fresh");
+
+    // Modify a linked source file and reindex into a new comparison run.
+    await writeFile(
+      path.join(repoRoot, "src", "session.ts"),
+      [
+        "export type Session = string;",
+        "",
+        "export class SessionManager {",
+        "  createSession(accountId: string, label: string): Session {",
+        "    return `${accountId}:${label}`;",
+        "  }",
+        "}",
+        "",
+      ].join("\n"),
+    );
+
+    const reindex = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-reindex-stale",
+      toolId: McpToolId.IndexRepo,
+      input: {},
+    });
+    assert.equal(reindex.result.ok, true);
+    const comparisonRunId = reindex.result.output.latestRunId;
+    assert.equal(comparisonRunId > 1, true);
+
+    const stale = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-staleness-stale",
+      toolId: McpToolId.CheckCapsuleStaleness,
+      input: { manifestId, comparisonRunId },
+    });
+    assert.equal(stale.result.ok, true);
+    assert.equal(stale.result.output.status, "stale");
+  });
+});
+
+test("run_pipeline persists a manifest surfaced in context.capsuleManifestId and resolvable by check_capsule_staleness", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    const pipeline = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-manifest",
+      toolId: McpToolId.RunPipeline,
+      input: { query: "Session" },
+    });
+    assert.equal(pipeline.result.ok, true);
+    const manifestId = pipeline.result.output.context.capsuleManifestId;
+    assert.equal(typeof manifestId, "string");
+    assert.equal((manifestId as string).length > 0, true);
+
+    const fresh = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-staleness",
+      toolId: McpToolId.CheckCapsuleStaleness,
+      input: { manifestId, comparisonRunId: 1 },
+    });
+    assert.equal(fresh.result.ok, true);
+    assert.equal(fresh.result.output.status, "fresh");
   });
 });
 

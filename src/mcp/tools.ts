@@ -16,6 +16,7 @@ import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
 import {
   getCapsuleManifestById,
   getCapsuleStaleness,
+  persistCapsuleManifestBestEffort,
 } from "../db/repositories/capsuleManifestsRepository";
 import { hasIndexedFiles } from "../db/repositories/filesRepository";
 import {
@@ -1470,6 +1471,10 @@ const RUN_PIPELINE_CONTEXT_SECTION_SCHEMA = objectProperty(
     capsuleProfileId: stringProperty("Capsule profile id used for this context."),
     routingProfileId: stringProperty("Routing profile id used for this context."),
     capsuleRef: stringProperty("Stable deferred reference id for the expanded capsule content."),
+    capsuleManifestId: {
+      type: ["string", "null"],
+      description: "Persisted capsule manifest id for this context capsule. Pass to check_capsule_staleness or `vtrace check-capsule` to evaluate freshness against a later run. Null for multi-repo context or when the repo has no index run yet.",
+    },
   },
   [
     "included",
@@ -4452,6 +4457,7 @@ function formatCapsuleProfileOutput(
 
 function formatContextCapsulePipelineOutput(
   pipeline: ReturnType<typeof runIntentAwareCapsulePipeline>,
+  capsuleManifestId: string | null = null,
 ) {
   return {
     query: pipeline.routedQuery.query,
@@ -4459,6 +4465,7 @@ function formatContextCapsulePipelineOutput(
     classification: structuredClone(pipeline.routedQuery.classification),
     routingProfile: formatRoutingProfileOutput(pipeline.routedQuery.profile),
     capsuleProfile: formatCapsuleProfileOutput(pipeline.preparedAssembly.selection),
+    capsuleManifestId,
     capsule: {
       ...formatCapsuleOutput(pipeline.capsule),
       profileBudgetUsage: pipeline.capsule.profileBudgetUsage === undefined
@@ -7285,6 +7292,10 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           classification: CLASSIFICATION_SCHEMA,
           routingProfile: ROUTING_PROFILE_SCHEMA,
           capsuleProfile: CAPSULE_PROFILE_SCHEMA,
+          capsuleManifestId: {
+            type: ["string", "null"],
+            description: "Persisted capsule manifest id for this capsule. Pass to check_capsule_staleness or `vtrace check-capsule` to evaluate freshness against a later run. Null for multi-repo capsules or when the repo has no index run yet.",
+          },
           capsule: objectProperty(
             "Capsule output.",
             {
@@ -7380,20 +7391,29 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           // visible capsule-building tool. Dedupe key is shared across tools so
           // repeated calls with the same inputs collapse to a single
           // observation regardless of which visible tool was used.
+          const sourceRunId = getLatestIndexRun(db)?.id ?? null;
           if (pipeline.capsule.pivots.length + pipeline.capsule.supportingItems.length > 0) {
             captureVisibleCapsuleObservationBestEffort({
               db,
               repoRoot: binding.repoRoot,
-              sourceRunId: getLatestIndexRun(db)?.id ?? null,
+              sourceRunId,
               routedQuery: pipeline.routedQuery,
               capsuleProfileId: pipeline.preparedAssembly.selection.profile.id,
               capsule: pipeline.capsule,
               toolName: McpToolId.GetContextCapsule,
             });
           }
+          // Persist a deterministic capsule manifest so a follow-up
+          // check_capsule_staleness / `vtrace check-capsule` call on the
+          // returned id resolves against a real store instead of "not found".
+          const capsuleManifestId = persistCapsuleManifestBestEffort(
+            db,
+            pipeline.capsule,
+            sourceRunId,
+          );
           return {
             ok: true,
-            output: formatContextCapsulePipelineOutput(pipeline),
+            output: formatContextCapsulePipelineOutput(pipeline, capsuleManifestId),
           };
         },
       );

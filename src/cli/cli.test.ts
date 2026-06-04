@@ -11,6 +11,11 @@ import { createCharacterBudget } from "../capsule/budget";
 import { CapsuleInclusionReasonKind, type CapsuleSupportingCandidate } from "../capsule/types";
 import { persistCapsuleManifest } from "../db/repositories/capsuleManifestsRepository";
 import { listIndexRuns } from "../db/repositories/indexRunsRepository";
+import {
+  listObservationsForSession,
+  persistObservation,
+} from "../db/repositories/observationsRepository";
+import { ObservationKind, ObservationSource } from "../observations/types";
 import { listSymbolsForFile } from "../db/repositories/symbolsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
 import { EdgeType, SymbolKind, type SymbolRecord } from "../domain/types";
@@ -1929,6 +1934,177 @@ test("missing symbol lookups fail cleanly with deterministic messages", async ()
       stdout: "",
       stderr: "Symbol not found: missing-symbol\n",
     });
+  });
+});
+
+function seedRepeatedPassiveSession(
+  db: ReturnType<typeof openIndexerDatabase>,
+  repoRoot: string,
+  sessionId: string,
+): void {
+  const sourceRunId = listIndexRuns(db).at(-1)?.id;
+
+  for (const [index, createdAtMs] of [100, 120, 140].entries()) {
+    persistObservation(db, {
+      repoRoot,
+      sessionId,
+      kind: ObservationKind.ToolCall,
+      source: ObservationSource.McpAuto,
+      toolName: "run_pipeline",
+      summary: `Repeated capsule ${index}`,
+      body: `tool=run_pipeline\nquery=cli compression\npivot_count=1\nsupport_count=2\ncall=${index}`,
+      queryText: "cli compression",
+      intent: "explain",
+      sourceRunId,
+      createdAtMs,
+      linkedFilePaths: ["src/service.ts"],
+    });
+  }
+  persistObservation(db, {
+    repoRoot,
+    sessionId,
+    kind: ObservationKind.Decision,
+    source: ObservationSource.Manual,
+    toolName: "save_observation",
+    summary: "Durable decision kept",
+    body: "Manual decision retained across CLI compression.",
+    queryText: "durable decision",
+    createdAtMs: 160,
+    linkedFilePaths: ["src/service.ts"],
+  });
+}
+
+test("compress-sessions consolidates repeated passive observations, preserves durable ones, and is idempotent", async () => {
+  await withFixture(async ({ repoRoot, dbPath }) => {
+    await writeFixtureRepo(repoRoot);
+    const indexed = await runCli(["index", repoRoot], { dbPath });
+    assert.equal(indexed.exitCode, 0);
+
+    const db = openIndexerDatabase(dbPath);
+    try {
+      seedRepeatedPassiveSession(db, repoRoot, "session-cli");
+    } finally {
+      db.close();
+    }
+
+    // --idle-hours 0 makes every active session eligible without depending on
+    // wall-clock timing, so the assertion is deterministic.
+    const result = await runCli(
+      ["compress-sessions", repoRoot, "--idle-hours", "0", "--json"],
+      { dbPath },
+    );
+    assert.equal(result.exitCode, 0);
+    assert.equal(result.stderr, "");
+
+    const report = JSON.parse(result.stdout);
+    assert.equal(report.dryRun, false);
+    assert.equal(report.eligibleSessionCount, 1);
+    assert.equal(report.processedSessionCount, 1);
+    assert.equal(report.compressedSessionCount, 1);
+    assert.equal(report.prunedToolCallObservationCount, 3);
+    assert.deepEqual(report.compressedSessionIds, ["session-cli"]);
+
+    const after = openIndexerDatabase(dbPath);
+    try {
+      const observations = listObservationsForSession(after, "session-cli");
+      // The three repeated passive tool calls are gone.
+      assert.equal(
+        observations.filter((observation) => observation.summary.startsWith("Repeated capsule")).length,
+        0,
+      );
+      // A consolidated insight replaced them.
+      assert.equal(
+        observations.some((observation) => observation.toolName === "consolidate_passive_observations"),
+        true,
+      );
+      // The durable manual decision survived.
+      assert.equal(
+        observations.some((observation) => observation.summary === "Durable decision kept"),
+        true,
+      );
+    } finally {
+      after.close();
+    }
+
+    // Idempotent: the now-compressed session is no longer eligible.
+    const again = await runCli(
+      ["compress-sessions", repoRoot, "--idle-hours", "0", "--json"],
+      { dbPath },
+    );
+    const againReport = JSON.parse(again.stdout);
+    assert.equal(againReport.eligibleSessionCount, 0);
+    assert.equal(againReport.compressedSessionCount, 0);
+  });
+});
+
+test("compress-sessions --dry-run previews the effect without mutating", async () => {
+  await withFixture(async ({ repoRoot, dbPath }) => {
+    await writeFixtureRepo(repoRoot);
+    assert.equal((await runCli(["index", repoRoot], { dbPath })).exitCode, 0);
+
+    const db = openIndexerDatabase(dbPath);
+    try {
+      seedRepeatedPassiveSession(db, repoRoot, "session-cli");
+    } finally {
+      db.close();
+    }
+
+    const dry = await runCli(
+      ["compress-sessions", repoRoot, "--idle-hours", "0", "--dry-run", "--json"],
+      { dbPath },
+    );
+    assert.equal(dry.exitCode, 0);
+
+    const report = JSON.parse(dry.stdout);
+    assert.equal(report.dryRun, true);
+    assert.equal(report.eligibleSessionCount, 1);
+    assert.equal(report.processedSessionCount, 1);
+    assert.equal(report.compressedSessionCount, 0);
+    assert.equal(report.previews.length, 1);
+    assert.equal(report.previews[0].sessionId, "session-cli");
+    assert.equal(report.previews[0].prunedToolCallObservationCount, 3);
+
+    // Nothing was mutated by the dry run.
+    const after = openIndexerDatabase(dbPath);
+    try {
+      assert.equal(listObservationsForSession(after, "session-cli").length, 4);
+    } finally {
+      after.close();
+    }
+  });
+});
+
+test("compress-sessions skips recent active sessions under the default idle threshold", async () => {
+  await withFixture(async ({ repoRoot, dbPath }) => {
+    await writeFixtureRepo(repoRoot);
+    assert.equal((await runCli(["index", repoRoot], { dbPath })).exitCode, 0);
+
+    const db = openIndexerDatabase(dbPath);
+    try {
+      persistObservation(db, {
+        repoRoot,
+        sessionId: "session-recent",
+        kind: ObservationKind.ToolCall,
+        source: ObservationSource.McpAuto,
+        toolName: "run_pipeline",
+        summary: "Recent capsule call",
+        body: "tool=run_pipeline\nquery=recent\npivot_count=1\nsupport_count=1\ncall=0",
+        queryText: "recent",
+        intent: "explain",
+        sourceRunId: listIndexRuns(db).at(-1)?.id,
+        createdAtMs: Date.now(),
+        linkedFilePaths: ["src/service.ts"],
+      });
+    } finally {
+      db.close();
+    }
+
+    const result = await runCli(["compress-sessions", repoRoot, "--json"], { dbPath });
+    assert.equal(result.exitCode, 0);
+
+    const report = JSON.parse(result.stdout);
+    assert.equal(report.eligibleSessionCount, 0);
+    assert.equal(report.compressedSessionCount, 0);
   });
 });
 

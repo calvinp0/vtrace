@@ -31,6 +31,12 @@ import {
 
 export const DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS = 2 * 60 * 60 * 1000;
 export const DEFAULT_SESSION_RETENTION_AFTER_MS = 90 * 24 * 60 * 60 * 1000;
+/**
+ * Upper bound on how many sessions a single automatic reindex sweep compresses.
+ * Keeps the post-index maintenance cheap and bounded; explicit CLI callers can
+ * raise or remove the bound via the `limit` input.
+ */
+export const DEFAULT_REINDEX_SESSION_COMPRESSION_LIMIT = 20;
 
 const SUMMARY_TOOL_NAME = "compress_inactive_sessions";
 const MAX_SUMMARY_LINKS = 20;
@@ -56,11 +62,38 @@ export interface CompressInactiveSessionsInput {
   nowMs: number;
   inactiveAfterMs?: number;
   retentionAfterMs?: number;
+  /**
+   * Maximum number of eligible sessions to compress in this call. When
+   * omitted, every eligible session is compressed. Selection is deterministic
+   * (most-inactive first, ties broken by session id), so a bound always picks
+   * the same sessions for a given repo state regardless of `nowMs`.
+   */
+  limit?: number;
+  /**
+   * When true, compute the preview of what would be compressed without
+   * mutating any observations or session state.
+   */
+  dryRun?: boolean;
+}
+
+export interface SessionCompressionPreview {
+  sessionId: string;
+  inactiveForMs: number;
+  observationCount: number;
+  prunedToolCallObservationCount: number;
 }
 
 export interface CompressInactiveSessionsResult {
   compressedSummaries: SessionCompressionSummary[];
   cleanupCandidates: SessionCleanupCandidate[];
+  /** Total sessions eligible for compression before the `limit` bound. */
+  eligibleSessionCount: number;
+  /** Sessions actually visited this call (≤ limit). */
+  processedSessionCount: number;
+  /** Per-session preview of compression effect (populated for processed sessions). */
+  previews: SessionCompressionPreview[];
+  /** Whether this was a non-mutating dry run. */
+  dryRun: boolean;
 }
 
 export function getSessionCompressionEligibility(
@@ -97,10 +130,21 @@ export function compressInactiveSessions(
   db: Database,
   input: CompressInactiveSessionsInput,
 ): CompressInactiveSessionsResult {
-  const compressedSummaries: SessionCompressionSummary[] = [];
+  const dryRun = input.dryRun === true;
+  const eligible = getSessionCompressionEligibility(db, input)
+    .filter((eligibility) => eligibility.eligible);
+  const limit = input.limit === undefined
+    ? eligible.length
+    : Math.max(0, Math.trunc(input.limit));
+  const selected = eligible.slice(0, limit);
 
-  for (const eligibility of getSessionCompressionEligibility(db, input)) {
-    if (!eligibility.eligible) {
+  const compressedSummaries: SessionCompressionSummary[] = [];
+  const previews: SessionCompressionPreview[] = [];
+
+  for (const eligibility of selected) {
+    previews.push(previewSessionCompression(db, eligibility));
+
+    if (dryRun) {
       continue;
     }
 
@@ -120,6 +164,31 @@ export function compressInactiveSessions(
       nowMs: input.nowMs,
       retentionAfterMs: input.retentionAfterMs ?? DEFAULT_SESSION_RETENTION_AFTER_MS,
     }),
+    eligibleSessionCount: eligible.length,
+    processedSessionCount: selected.length,
+    previews,
+    dryRun,
+  };
+}
+
+function previewSessionCompression(
+  db: Database,
+  eligibility: SessionCompressionEligibility,
+): SessionCompressionPreview {
+  const sessionId = eligibility.session.sessionId;
+  const observations = listObservationsForSession(db, sessionId);
+  const consolidationGroups = previewPassiveObservationConsolidationForSession(db, {
+    sessionId,
+  });
+
+  return {
+    sessionId,
+    inactiveForMs: eligibility.inactiveForMs,
+    observationCount: observations.length,
+    prunedToolCallObservationCount: consolidationGroups.reduce(
+      (total, group) => total + group.sourceObservationCount,
+      0,
+    ),
   };
 }
 
