@@ -40,6 +40,51 @@ async function withRepoFixture(run: (repoRoot: string) => Promise<void>): Promis
   }
 }
 
+async function withFlowRepoFixture(run: (repoRoot: string) => Promise<void>): Promise<void> {
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-expand-vexp-flow-"));
+  const repoRoot = path.join(root, "repo");
+  try {
+    await mkdir(repoRoot, { recursive: true });
+    await writeFlowFixtureRepo(repoRoot);
+    await run(repoRoot);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+// beta -> alpha -> base import chain gives a real directed structural path so a
+// directional query resolves two flow endpoints and run_pipeline emits a
+// logic_flow deferred V-REF.
+async function writeFlowFixtureRepo(repoRoot: string): Promise<void> {
+  await mkdir(path.join(repoRoot, "src"), { recursive: true });
+  await writeFile(
+    path.join(repoRoot, "src", "base.ts"),
+    ["export function base(): string {", "  return \"base\";", "}", ""].join("\n"),
+  );
+  await writeFile(
+    path.join(repoRoot, "src", "alpha.ts"),
+    [
+      "import { base } from \"./base\";",
+      "",
+      "export function alpha(): string {",
+      "  return base();",
+      "}",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
+    path.join(repoRoot, "src", "beta.ts"),
+    [
+      "import { alpha } from \"./alpha\";",
+      "",
+      "export function beta(): string {",
+      "  return alpha();",
+      "}",
+      "",
+    ].join("\n"),
+  );
+}
+
 async function writeFixtureRepo(repoRoot: string): Promise<void> {
   await mkdir(path.join(repoRoot, "src"), { recursive: true });
   await writeFile(
@@ -611,6 +656,103 @@ test("expand_vexp_ref returns expired when a previously published V-REF has been
     if (!response.result.ok) throw new Error("unreachable");
     assert.equal(response.result.output.resolved, false);
     assert.equal(response.result.output.reason, "expired");
+  });
+});
+
+test("every deferred V-REF emitted by run_pipeline is expandable", async () => {
+  await withFlowRepoFixture(async (repoRoot) => {
+    resetSharedDeferredVexpStoreForTests();
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+
+    const pipeline = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-pipeline-all-expandable",
+      toolId: McpToolId.RunPipeline,
+      input: { query: "trace the flow from beta to base", intent: "explore", maxBudgetCharacters: 4_000 },
+    });
+    assert.equal(pipeline.result.ok, true);
+    if (!pipeline.result.ok) throw new Error("pipeline failed");
+
+    const placeholders = pipeline.result.output.deferred.items;
+    assert.equal(placeholders.length > 0, true, "run_pipeline must emit at least one deferred V-REF");
+    // The flow query must emit a logic_flow ref alongside the always-present capsule.
+    assert.equal(placeholders.some((p) => p.kind === "logic_flow"), true);
+
+    // Exhaustively expand every emitted hash; each must resolve to stored truth.
+    for (const placeholder of placeholders) {
+      assert.match(placeholder.hash, DEFERRED_VEXP_HASH_PATTERN);
+      assert.equal(placeholder.expandable, true);
+      assert.equal(placeholder.expansionTool, "expand_vexp_ref");
+
+      const expanded = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: `req-expand-all-${placeholder.hash}`,
+        toolId: McpToolId.ExpandVexpRef,
+        input: { hash: placeholder.hash },
+      });
+      assert.equal(expanded.result.ok, true);
+      if (!expanded.result.ok) throw new Error("unreachable");
+      assert.equal(
+        expanded.result.output.resolved,
+        true,
+        `deferred V-REF ${placeholder.kind} (${placeholder.hash}) must be expandable`,
+      );
+      assert.equal(expanded.result.output.requestedHash, placeholder.hash);
+      assert.equal(expanded.result.output.stableId, placeholder.id);
+      assert.equal(
+        (expanded.result.output.metadata as Record<string, unknown>)["origin"],
+        "run_pipeline",
+      );
+    }
+  });
+});
+
+test("logic_flow deferred V-REF expands to the full LogicFlowOutput", async () => {
+  await withFlowRepoFixture(async (repoRoot) => {
+    resetSharedDeferredVexpStoreForTests();
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+
+    const pipeline = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-pipeline-flow",
+      toolId: McpToolId.RunPipeline,
+      input: { query: "trace the flow from beta to base", intent: "explore", maxBudgetCharacters: 4_000 },
+    });
+    assert.equal(pipeline.result.ok, true);
+    if (!pipeline.result.ok) throw new Error("pipeline failed");
+
+    const flowPlaceholder = pipeline.result.output.deferred.items.find((p) => p.kind === "logic_flow");
+    assert.notEqual(flowPlaceholder, undefined, "run_pipeline must emit a logic_flow deferred V-REF");
+
+    const expanded = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-expand-flow",
+      toolId: McpToolId.ExpandVexpRef,
+      input: { hash: flowPlaceholder!.hash },
+    });
+    assert.equal(expanded.result.ok, true);
+    if (!expanded.result.ok) throw new Error("unreachable");
+    assert.equal(expanded.result.output.resolved, true);
+    assert.equal(expanded.result.output.category, "logic_flow");
+
+    // The stored content must be the complete structural LogicFlowOutput, not a
+    // trimmed summary: every top-level key of LogicFlowOutput must be present.
+    const content = expanded.result.output.content as Record<string, unknown>;
+    assert.equal(content.kind, "json");
+    const flow = content.value as Record<string, unknown>;
+    for (const key of ["requested", "resolvedStart", "resolvedEnd", "coverage", "summary", "paths"]) {
+      assert.equal(key in flow, true, `LogicFlowOutput must retain '${key}'`);
+    }
+    assert.equal(Array.isArray(flow.paths), true);
+    assert.equal((flow.paths as unknown[]).length >= 1, true, "reachable flow must include at least one path");
+    const summary = flow.summary as Record<string, unknown>;
+    assert.equal(summary.reachable, true);
+    const resolvedStart = flow.resolvedStart as Record<string, unknown>;
+    const resolvedEnd = flow.resolvedEnd as Record<string, unknown>;
+    assert.equal(resolvedStart.localName, "beta");
+    assert.equal(resolvedEnd.localName, "base");
   });
 });
 
