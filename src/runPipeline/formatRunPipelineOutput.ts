@@ -18,6 +18,7 @@ export function formatRunPipelineOrchestrationOutput(
 ) {
   const context = orchestration.context;
   const impact = orchestration.impact;
+  const flow = orchestration.flow;
   const memory = orchestration.memory;
   const rules = orchestration.rules;
   const itemCount = context.capsule.pivots.length + context.capsule.supportingItems.length;
@@ -64,6 +65,28 @@ export function formatRunPipelineOrchestrationOutput(
       : `vexp:impact:${impact.focalSymbol.fqName}`,
     candidatesConsidered: impact.candidatesConsidered,
     matchedCandidates: impact.matchedCandidates,
+  };
+
+  const flowSection = {
+    included: flow.included,
+    skipReason: flow.skipReason,
+    endpointStrategy: flow.endpointStrategy,
+    bothDirectionsReachable: flow.bothDirectionsReachable,
+    start: flow.start === null ? null : formatRunPipelineFlowEndpoint(flow.start),
+    end: flow.end === null ? null : formatRunPipelineFlowEndpoint(flow.end),
+    summary: flow.output === null ? null : structuredClone(flow.output.summary),
+    paths: flow.output === null
+      ? null
+      : flow.output.paths.map((path) => ({
+        pathIndex: path.pathIndex,
+        edgeCount: path.edgeCount,
+        nodeFqNames: path.nodes.map((node) => node.fqName),
+      })),
+    flowRef: flow.start === null || flow.end === null
+      ? null
+      : `vexp:flow:${flow.start.fqName}->${flow.end.fqName}`,
+    candidatesConsidered: flow.candidatesConsidered,
+    matchedCandidates: flow.matchedCandidates,
   };
 
   const memorySection = {
@@ -133,6 +156,7 @@ export function formatRunPipelineOrchestrationOutput(
   const omittedSectionCount = [
     !contextSection.included,
     !impactSection.included,
+    !flowSection.included,
     !memorySection.session.included,
     !memorySection.durable.included,
     !memorySection.capsuleSurfaced.included,
@@ -177,6 +201,7 @@ export function formatRunPipelineOrchestrationOutput(
     },
     context: contextSection,
     impact: impactSection,
+    flow: flowSection,
     memory: memorySection,
     rules: rulesSection,
     diagnostics: {
@@ -205,6 +230,15 @@ export function formatRunPipelineOrchestrationOutput(
         triggerReason: impact.triggerReason,
         candidatesConsidered: impact.candidatesConsidered,
         matchedCandidates: impact.matchedCandidates,
+      },
+      flow: {
+        included: flow.included,
+        skipReason: flow.skipReason,
+        endpointStrategy: flow.endpointStrategy,
+        bothDirectionsReachable: flow.bothDirectionsReachable,
+        reachable: flow.output === null ? null : flow.output.summary.reachable,
+        candidatesConsidered: flow.candidatesConsidered,
+        matchedCandidates: flow.matchedCandidates,
       },
       memory: {
         sessionIncluded: memory.session.included,
@@ -267,6 +301,18 @@ export function formatRunPipelineCompactContextItem(item: CapsuleItem) {
     ...(item.lexicalScore === undefined ? {} : { lexicalScore: item.lexicalScore }),
     ...(item.graphScore === undefined ? {} : { graphScore: item.graphScore }),
     ...(item.finalScore === undefined ? {} : { finalScore: item.finalScore }),
+  };
+}
+
+function formatRunPipelineFlowEndpoint(
+  endpoint: NonNullable<RunPipelineOrchestration["flow"]["start"]>,
+) {
+  return {
+    symbolId: endpoint.symbolId,
+    filePath: endpoint.filePath,
+    fqName: endpoint.fqName,
+    localName: endpoint.localName,
+    kind: endpoint.kind,
   };
 }
 

@@ -12,6 +12,10 @@ import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
 import type { PreparedCapsuleAssembly } from "../capsuleProfiles/types";
 import { getImpactGraph, type ImpactGraphOutput } from "../impact/getImpactGraph";
 import {
+  searchLogicFlow,
+  type LogicFlowOutput,
+} from "../logicFlow/searchLogicFlow";
+import {
   defaultIntentClassifier,
   type IntentClassifier,
 } from "../intent/classifier";
@@ -47,6 +51,8 @@ import {
   RunPipelineContextSkipReason,
   RunPipelineDeferredKind,
   RunPipelineDurableMemorySkipReason,
+  RunPipelineFlowEndpointStrategy,
+  RunPipelineFlowSkipReason,
   RunPipelineImpactSkipReason,
   RunPipelineIntentSource,
   RunPipelinePresetIntent,
@@ -79,6 +85,7 @@ export const RUN_PIPELINE_DEFAULTS = Object.freeze({
   durableMemoryMaxResults: 3,
   impactDepth: 2,
   impactMaxTopDependents: 4,
+  flowMaxPaths: 3,
 });
 
 export interface OrchestrationRetrievalDiagnostics {
@@ -119,6 +126,27 @@ export interface OrchestrationImpactSection {
   readonly selectionSource: string | null;
   readonly focalSymbol: OrchestrationImpactFocalSymbol | null;
   readonly graph: ImpactGraphOutput | null;
+  readonly candidatesConsidered: number;
+  readonly matchedCandidates: number;
+}
+
+export interface OrchestrationFlowEndpoint {
+  readonly symbolId: string;
+  readonly filePath: string;
+  readonly fqName: string;
+  readonly localName: string;
+  readonly kind: SymbolKind;
+  readonly mentionIndex: number;
+}
+
+export interface OrchestrationFlowSection {
+  readonly included: boolean;
+  readonly skipReason: RunPipelineFlowSkipReason | null;
+  readonly endpointStrategy: RunPipelineFlowEndpointStrategy | null;
+  readonly bothDirectionsReachable: boolean;
+  readonly start: OrchestrationFlowEndpoint | null;
+  readonly end: OrchestrationFlowEndpoint | null;
+  readonly output: LogicFlowOutput | null;
   readonly candidatesConsidered: number;
   readonly matchedCandidates: number;
 }
@@ -168,6 +196,7 @@ export interface RunPipelineOrchestration {
   readonly intentDecision: RunPipelineIntentDecision;
   readonly context: OrchestrationContextSection;
   readonly impact: OrchestrationImpactSection;
+  readonly flow: OrchestrationFlowSection;
   readonly memory: OrchestrationMemorySection;
   readonly rules: OrchestrationRulesSection;
   readonly deferred: readonly RunPipelineDeferredPlaceholder[];
@@ -217,6 +246,7 @@ export function runPipelineOrchestrator(
   });
 
   const impact = runImpactSection(db, context, intentDecision);
+  const flow = runFlowSection(db, context);
   const memory = runMemorySection(db, {
     query,
     sessionId: rawInput.sessionId ?? null,
@@ -233,6 +263,7 @@ export function runPipelineOrchestrator(
     db,
     context,
     impact,
+    flow,
     memory,
     repoRoot,
     store: deferredStore,
@@ -258,6 +289,7 @@ export function runPipelineOrchestrator(
     intentDecision,
     context,
     impact,
+    flow,
     memory,
     rules,
     deferred,
@@ -694,6 +726,254 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// Directional cues that force a single attempted direction. A cue between the
+// two mentioned endpoints is authoritative: when present we never probe the
+// reverse direction. Position order is used only to label which endpoint is
+// "earlier" so a forward cue reads earlier -> later.
+const FLOW_FORWARD_CUES = Object.freeze([
+  "->",
+  "=>",
+  "→", // →
+  " to ",
+  " into ",
+  " reach",
+  " calls",
+  " call ",
+  " invokes",
+  " invoke ",
+  " leads to",
+  " flows to",
+  " flow to",
+  " down to",
+  " through to",
+  " path to",
+]);
+
+const FLOW_REVERSE_CUES = Object.freeze([
+  "<-",
+  "←", // ←
+  " from ",
+  " called by",
+  " invoked by",
+  " comes from",
+  " reached from",
+]);
+
+const EMPTY_FLOW_RESULT = Object.freeze({
+  endpointStrategy: null,
+  bothDirectionsReachable: false,
+  start: null,
+  end: null,
+  output: null,
+});
+
+function runFlowSection(
+  db: Database,
+  context: OrchestrationContextSection,
+): OrchestrationFlowSection {
+  const query = context.routedQuery.query;
+
+  if (normalizeSearchQuery(query).length === 0 || !hasSupportedQueryShape(query)) {
+    return {
+      included: false,
+      skipReason: RunPipelineFlowSkipReason.UnsupportedQueryShape,
+      ...EMPTY_FLOW_RESULT,
+      candidatesConsidered: 0,
+      matchedCandidates: 0,
+    };
+  }
+
+  const candidates = collectImpactCandidates(context);
+  const mentioned: OrchestrationFlowEndpoint[] = [];
+  for (const candidate of candidates) {
+    const mentionIndex = findCandidateMentionIndex(query, candidate);
+    if (mentionIndex !== null) {
+      mentioned.push({
+        symbolId: candidate.symbolId,
+        filePath: candidate.filePath,
+        fqName: candidate.fqName,
+        localName: candidate.localName,
+        kind: candidate.kind,
+        mentionIndex,
+      });
+    }
+  }
+
+  const candidatesConsidered = candidates.length;
+  const matchedCandidates = mentioned.length;
+
+  if (mentioned.length < 2) {
+    return {
+      included: false,
+      skipReason: RunPipelineFlowSkipReason.NotEnoughEndpoints,
+      ...EMPTY_FLOW_RESULT,
+      candidatesConsidered,
+      matchedCandidates,
+    };
+  }
+
+  if (mentioned.length > 2) {
+    return {
+      included: false,
+      skipReason: RunPipelineFlowSkipReason.AmbiguousEndpoints,
+      ...EMPTY_FLOW_RESULT,
+      candidatesConsidered,
+      matchedCandidates,
+    };
+  }
+
+  // Position order labels the endpoints; it never decides direction on its own,
+  // only which direction is attempted first when probing.
+  const ordered = [...mentioned].sort(
+    (a, b) => a.mentionIndex - b.mentionIndex || a.fqName.localeCompare(b.fqName),
+  );
+  const earlier = ordered[0]!;
+  const later = ordered[1]!;
+  const cue = detectFlowDirectionalCue(query, earlier, later);
+
+  const probe = (start: OrchestrationFlowEndpoint, end: OrchestrationFlowEndpoint) =>
+    searchLogicFlow(db, {
+      start: start.fqName,
+      end: end.fqName,
+      maxPaths: RUN_PIPELINE_DEFAULTS.flowMaxPaths,
+    });
+
+  const finalize = (
+    section: Omit<OrchestrationFlowSection, "candidatesConsidered" | "matchedCandidates">,
+  ): OrchestrationFlowSection => ({
+    ...section,
+    candidatesConsidered,
+    matchedCandidates,
+  });
+
+  // Directional cue is authoritative: attempt exactly that direction, no probe.
+  if (cue === "forward" || cue === "reverse") {
+    const start = cue === "forward" ? earlier : later;
+    const end = cue === "forward" ? later : earlier;
+    const result = probe(start, end);
+    if (!result.ok) {
+      return finalize({
+        included: false,
+        skipReason: RunPipelineFlowSkipReason.FlowError,
+        endpointStrategy: RunPipelineFlowEndpointStrategy.DirectionalCue,
+        bothDirectionsReachable: false,
+        start,
+        end,
+        output: null,
+      });
+    }
+    return finalize({
+      included: result.output.summary.reachable,
+      skipReason: result.output.summary.reachable
+        ? null
+        : RunPipelineFlowSkipReason.EndpointsNotConnected,
+      endpointStrategy: RunPipelineFlowEndpointStrategy.DirectionalCue,
+      bothDirectionsReachable: false,
+      start,
+      end,
+      output: result.output,
+    });
+  }
+
+  // No cue: probe both directions, position order attempted first.
+  const forward = probe(earlier, later);
+  const reverse = probe(later, earlier);
+
+  if (!forward.ok && !reverse.ok) {
+    return finalize({
+      included: false,
+      skipReason: RunPipelineFlowSkipReason.FlowError,
+      endpointStrategy: RunPipelineFlowEndpointStrategy.BidirectionalProbe,
+      bothDirectionsReachable: false,
+      start: earlier,
+      end: later,
+      output: null,
+    });
+  }
+
+  const forwardReachable = forward.ok && forward.output.summary.reachable;
+  const reverseReachable = reverse.ok && reverse.output.summary.reachable;
+  const bothDirectionsReachable = forwardReachable && reverseReachable;
+
+  // Tie-break in favor of position order when both directions connect.
+  if (forwardReachable) {
+    return finalize({
+      included: true,
+      skipReason: null,
+      endpointStrategy: RunPipelineFlowEndpointStrategy.BidirectionalProbe,
+      bothDirectionsReachable,
+      start: earlier,
+      end: later,
+      output: (forward as { output: LogicFlowOutput }).output,
+    });
+  }
+
+  if (reverseReachable) {
+    return finalize({
+      included: true,
+      skipReason: null,
+      endpointStrategy: RunPipelineFlowEndpointStrategy.BidirectionalProbe,
+      bothDirectionsReachable: false,
+      start: later,
+      end: earlier,
+      output: (reverse as { output: LogicFlowOutput }).output,
+    });
+  }
+
+  // Neither direction connects: keep the position-order attempt as evidence.
+  const representative = forward.ok ? forward.output : reverse.ok ? reverse.output : null;
+  return finalize({
+    included: false,
+    skipReason: RunPipelineFlowSkipReason.EndpointsNotConnected,
+    endpointStrategy: RunPipelineFlowEndpointStrategy.BidirectionalProbe,
+    bothDirectionsReachable: false,
+    start: earlier,
+    end: later,
+    output: representative,
+  });
+}
+
+function findCandidateMentionIndex(
+  query: string,
+  candidate: ImpactCandidate,
+): number | null {
+  if (candidate.fqName.length > 0) {
+    const fqIndex = query.indexOf(candidate.fqName);
+    if (fqIndex >= 0) {
+      return fqIndex;
+    }
+  }
+  if (candidate.localName.length === 0) {
+    return null;
+  }
+  const match = new RegExp(
+    `(^|[^\\p{L}\\p{N}_])(${escapeRegExp(candidate.localName)})($|[^\\p{L}\\p{N}_])`,
+    "u",
+  ).exec(query);
+  if (match === null) {
+    return null;
+  }
+  // Offset past the leading boundary group so ordering reflects the name itself.
+  return match.index + (match[1]?.length ?? 0);
+}
+
+function detectFlowDirectionalCue(
+  query: string,
+  earlier: OrchestrationFlowEndpoint,
+  later: OrchestrationFlowEndpoint,
+): "forward" | "reverse" | null {
+  const between = query.slice(earlier.mentionIndex, later.mentionIndex).toLowerCase();
+  const forward = FLOW_FORWARD_CUES.some((cue) => between.includes(cue));
+  const reverse = FLOW_REVERSE_CUES.some((cue) => between.includes(cue));
+  if (forward && !reverse) {
+    return "forward";
+  }
+  if (reverse && !forward) {
+    return "reverse";
+  }
+  return null;
+}
+
 function runMemorySection(
   db: Database,
   input: {
@@ -839,6 +1119,7 @@ function buildDeferredPlaceholders(input: {
   db: Database;
   context: OrchestrationContextSection;
   impact: OrchestrationImpactSection;
+  flow: OrchestrationFlowSection;
   memory: OrchestrationMemorySection;
   repoRoot: string;
   store: DeferredVexpStore;
@@ -925,6 +1206,51 @@ function buildDeferredPlaceholders(input: {
       suggestedInput: {
         symbol_fqn: input.impact.focalSymbol.fqName,
         depth: RUN_PIPELINE_DEFAULTS.impactDepth,
+      },
+    });
+  }
+
+  if (
+    input.flow.included
+    && input.flow.start !== null
+    && input.flow.end !== null
+    && input.flow.output !== null
+  ) {
+    const stableId = `vexp:flow:${input.flow.start.fqName}->${input.flow.end.fqName}`;
+    const entry = input.store.publish({
+      stableId,
+      category: DeferredVexpCategory.LogicFlow,
+      content: {
+        kind: "json",
+        value: structuredClone(input.flow.output),
+      },
+      metadata: {
+        repoRoot: input.repoRoot,
+        startFqName: input.flow.start.fqName,
+        endFqName: input.flow.end.fqName,
+        maxPaths: RUN_PIPELINE_DEFAULTS.flowMaxPaths,
+        origin: "run_pipeline",
+      },
+    });
+    persistDeferredVexpRef(input.db, {
+      entry,
+      repoRoot: input.repoRoot,
+      sourceRunId: input.sourceRunId,
+      sessionId: input.request.sessionId,
+      notes: [
+        "Stored by run_pipeline; expansion returns this payload without disk recomputation.",
+      ],
+    });
+    deferred.push({
+      id: stableId,
+      hash: entry.hash,
+      kind: RunPipelineDeferredKind.LogicFlow,
+      summary: "Full structural logic-flow output (resolved endpoints, coverage, and all returned paths).",
+      suggestedTool: "search_logic_flow",
+      suggestedInput: {
+        start: input.flow.start.fqName,
+        end: input.flow.end.fqName,
+        max_paths: RUN_PIPELINE_DEFAULTS.flowMaxPaths,
       },
     });
   }

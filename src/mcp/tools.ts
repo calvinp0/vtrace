@@ -1553,6 +1553,93 @@ const RUN_PIPELINE_IMPACT_SECTION_SCHEMA = objectProperty(
   ],
 );
 
+const RUN_PIPELINE_FLOW_ENDPOINT_SCHEMA: McpSchemaProperty = {
+  type: ["object", "null"],
+  description: "A resolved logic-flow endpoint, when inferred.",
+  properties: {
+    symbolId: stringProperty("Stable persisted symbol id."),
+    filePath: stringProperty("Normalized repo-relative file path."),
+    fqName: stringProperty("Fully qualified symbol name."),
+    localName: stringProperty("Local symbol name."),
+    kind: stringProperty("Symbol kind."),
+  },
+  required: ["symbolId", "filePath", "fqName", "localName", "kind"],
+  additionalProperties: false,
+};
+
+const RUN_PIPELINE_FLOW_PATH_SCHEMA = objectProperty(
+  "A compact structural logic-flow path; full steps live in the deferred logic-flow payload.",
+  {
+    pathIndex: integerProperty("1-based deterministic path index."),
+    edgeCount: integerProperty("Number of structural edges in the path."),
+    nodeFqNames: arrayProperty(
+      "Ordered fully qualified symbol names along the path.",
+      stringProperty("FQ name on the path."),
+    ),
+  },
+  ["pathIndex", "edgeCount", "nodeFqNames"],
+);
+
+const RUN_PIPELINE_FLOW_SECTION_SCHEMA = objectProperty(
+  "Logic-flow integration decision and compact result when two endpoints can be inferred from the task and candidates.",
+  {
+    included: booleanProperty("Whether a reachable directed structural flow was included."),
+    skipReason: {
+      type: ["string", "null"],
+      description: "Why the flow section was omitted, when applicable.",
+    },
+    endpointStrategy: {
+      type: ["string", "null"],
+      description: "How directed endpoints were resolved (directional_cue or bidirectional_probe), when evaluated.",
+    },
+    bothDirectionsReachable: booleanProperty(
+      "Whether both directed orderings of the endpoints were reachable during bidirectional probing.",
+    ),
+    start: RUN_PIPELINE_FLOW_ENDPOINT_SCHEMA,
+    end: RUN_PIPELINE_FLOW_ENDPOINT_SCHEMA,
+    summary: {
+      type: ["object", "null"],
+      description: "Compact structural logic-flow summary when a flow was attempted.",
+      properties: {
+        reachable: booleanProperty("Whether at least one structural path was found."),
+        pathCount: integerProperty("Number of returned paths."),
+        maxPaths: integerProperty("Maximum number of paths requested."),
+        shortestPathEdgeCount: {
+          type: ["integer", "null"],
+          description: "Shortest directed structural path length in edges when reachable.",
+        },
+        truncated: booleanProperty("Whether additional shortest paths were omitted after reaching maxPaths."),
+      },
+      required: ["reachable", "pathCount", "maxPaths", "shortestPathEdgeCount", "truncated"],
+      additionalProperties: false,
+    },
+    paths: {
+      type: ["array", "null"],
+      description: "Compact ordered shortest paths when a flow was attempted.",
+      items: RUN_PIPELINE_FLOW_PATH_SCHEMA,
+    },
+    flowRef: {
+      type: ["string", "null"],
+      description: "Stable deferred reference id for the full logic-flow output, when included.",
+    },
+    candidatesConsidered: integerProperty("Number of conservative endpoint candidates considered."),
+    matchedCandidates: integerProperty("Number of candidates explicitly mentioned by the task."),
+  },
+  [
+    "included",
+    "skipReason",
+    "endpointStrategy",
+    "bothDirectionsReachable",
+    "start",
+    "end",
+    "summary",
+    "paths",
+    "flowRef",
+    "candidatesConsidered",
+    "matchedCandidates",
+  ],
+);
+
 const RUN_PIPELINE_MEMORY_OBSERVATION_SCHEMA = objectProperty(
   "Compact observation summary surfaced for memory evidence.",
   {
@@ -1793,6 +1880,36 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
       },
       ["included", "skipReason", "triggerReason", "candidatesConsidered", "matchedCandidates"],
     ),
+    flow: objectProperty(
+      "Logic-flow decision diagnostics.",
+      {
+        included: booleanProperty("Whether a reachable structural flow was included."),
+        skipReason: {
+          type: ["string", "null"],
+          description: "Why the flow section was omitted, when applicable.",
+        },
+        endpointStrategy: {
+          type: ["string", "null"],
+          description: "How directed endpoints were resolved, when evaluated.",
+        },
+        bothDirectionsReachable: booleanProperty("Whether both directed orderings were reachable during probing."),
+        reachable: {
+          type: ["boolean", "null"],
+          description: "Whether the chosen directed flow was reachable, when a flow was attempted.",
+        },
+        candidatesConsidered: integerProperty("Number of conservative endpoint candidates considered."),
+        matchedCandidates: integerProperty("Number of task-mentioned endpoint candidates."),
+      },
+      [
+        "included",
+        "skipReason",
+        "endpointStrategy",
+        "bothDirectionsReachable",
+        "reachable",
+        "candidatesConsidered",
+        "matchedCandidates",
+      ],
+    ),
     memory: objectProperty(
       "Memory decision diagnostics.",
       {
@@ -1869,9 +1986,9 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
     indexFreshness: GET_CODE_CONTEXT_INDEX_FRESHNESS_DIAGNOSTIC_SCHEMA,
     nudge: OBSERVATION_NUDGE_SCHEMA,
     deferredCount: integerProperty("Number of deferred expandable placeholders emitted."),
-    omittedSectionCount: integerProperty("Number of top-level sections (context, impact, session, durable) omitted."),
+    omittedSectionCount: integerProperty("Number of top-level sections (context, impact, flow, session, durable) omitted."),
   },
-  ["intent", "retrieval", "impact", "memory", "rules", "budget", "deferredCount", "omittedSectionCount"],
+  ["intent", "retrieval", "impact", "flow", "memory", "rules", "budget", "deferredCount", "omittedSectionCount"],
 );
 
 const RUN_PIPELINE_DEFERRED_ITEM_SCHEMA = objectProperty(
@@ -1879,7 +1996,7 @@ const RUN_PIPELINE_DEFERRED_ITEM_SCHEMA = objectProperty(
   {
     id: stringProperty("Stable internal reference id."),
     hash: stringProperty("Public 12-hex V-REF hash accepted by expand_vexp_ref when expandable=true."),
-    kind: stringProperty("Kind of deferred content (context_capsule, impact_graph, session_context, durable_memory)."),
+    kind: stringProperty("Kind of deferred content (context_capsule, impact_graph, logic_flow, session_context, durable_memory)."),
     summary: stringProperty("Human-readable description of what would be expanded."),
     expandable: booleanProperty("Whether this item has a real expansion path."),
     expansionTool: stringProperty("Expansion tool when expandable."),
@@ -1892,6 +2009,9 @@ const RUN_PIPELINE_DEFERRED_ITEM_SCHEMA = objectProperty(
         symbol_fqn: { type: ["string", "null"], description: "Symbol fqn when applicable." },
         depth: { type: ["integer", "null"], description: "Depth when applicable." },
         sessionId: { type: ["string", "null"], description: "Session id when applicable." },
+        start: { type: ["string", "null"], description: "Logic-flow start fqn when applicable." },
+        end: { type: ["string", "null"], description: "Logic-flow end fqn when applicable." },
+        max_paths: { type: ["integer", "null"], description: "Logic-flow max paths when applicable." },
       },
       [],
     ),
@@ -6663,6 +6783,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           taskSummary: RUN_PIPELINE_TASK_SUMMARY_SCHEMA,
           context: RUN_PIPELINE_CONTEXT_SECTION_SCHEMA,
           impact: RUN_PIPELINE_IMPACT_SECTION_SCHEMA,
+          flow: RUN_PIPELINE_FLOW_SECTION_SCHEMA,
           memory: RUN_PIPELINE_MEMORY_SECTION_SCHEMA,
           rules: RUN_PIPELINE_RULE_SECTION_SCHEMA,
           diagnostics: RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA,
@@ -6685,6 +6806,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           "taskSummary",
           "context",
           "impact",
+          "flow",
           "memory",
           "rules",
           "diagnostics",

@@ -1086,6 +1086,7 @@ test("run_pipeline vNext returns a compact orchestration result that differs mat
         "context",
         "deferred",
         "diagnostics",
+        "flow",
         "impact",
         "intent",
         "memory",

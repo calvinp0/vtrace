@@ -13,6 +13,7 @@ import { createHash } from "node:crypto";
 export const DeferredVexpCategory = Object.freeze({
   ContextCapsule: "context_capsule",
   ImpactGraph: "impact_graph",
+  LogicFlow: "logic_flow",
   SessionContext: "session_context",
   DurableMemory: "durable_memory",
 });
@@ -23,6 +24,7 @@ export type DeferredVexpCategory =
 export const DEFERRED_VEXP_SUPPORTED_CATEGORIES = Object.freeze([
   DeferredVexpCategory.ContextCapsule,
   DeferredVexpCategory.ImpactGraph,
+  DeferredVexpCategory.LogicFlow,
   DeferredVexpCategory.SessionContext,
   DeferredVexpCategory.DurableMemory,
 ] as const);

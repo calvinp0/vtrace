@@ -74,6 +74,25 @@ export const RunPipelineImpactSkipReason = Object.freeze({
 export type RunPipelineImpactSkipReason =
   (typeof RunPipelineImpactSkipReason)[keyof typeof RunPipelineImpactSkipReason];
 
+export const RunPipelineFlowSkipReason = Object.freeze({
+  UnsupportedQueryShape: "unsupported_query_shape",
+  NotEnoughEndpoints: "not_enough_endpoints",
+  AmbiguousEndpoints: "ambiguous_endpoints",
+  EndpointsNotConnected: "endpoints_not_connected",
+  FlowError: "flow_error",
+});
+
+export type RunPipelineFlowSkipReason =
+  (typeof RunPipelineFlowSkipReason)[keyof typeof RunPipelineFlowSkipReason];
+
+export const RunPipelineFlowEndpointStrategy = Object.freeze({
+  DirectionalCue: "directional_cue",
+  BidirectionalProbe: "bidirectional_probe",
+});
+
+export type RunPipelineFlowEndpointStrategy =
+  (typeof RunPipelineFlowEndpointStrategy)[keyof typeof RunPipelineFlowEndpointStrategy];
+
 export const RunPipelineSessionSkipReason = Object.freeze({
   NoSessionRequested: "no_session_requested",
   SessionEmpty: "session_empty",
@@ -94,6 +113,7 @@ export type RunPipelineDurableMemorySkipReason =
 export const RunPipelineDeferredKind = Object.freeze({
   ContextCapsule: "context_capsule",
   ImpactGraph: "impact_graph",
+  LogicFlow: "logic_flow",
   SessionContext: "session_context",
   DurableMemory: "durable_memory",
 });
