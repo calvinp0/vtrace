@@ -220,6 +220,13 @@ Several direct inspection commands, including `run-pipeline` and `expand-vexp-re
 - `.vtrace/index.sqlite`
 - `.vtrace/workspace.json` when a multi-repo workspace is configured
 
+## Scanning and Ignore Files
+
+- indexing scans the repo deterministically and honors gitignore-style ignore files: `.gitignore`, `.ignore`, and `.vtraceignore` (highest precedence)
+- ignore rules accumulate down the directory tree and apply before parsing, so ignored files never produce parser errors and never appear in the active `files`/`symbols`/`edges` tables
+- built-in directory ignores (such as `node_modules`, `.git`, `.vtrace`, `dist`, `__pycache__`) always apply as defaults
+- each successful reindex prunes the active graph: files that were deleted or have become ignored are removed along with their symbols and edges, while run history keeps its own per-run snapshots for deletion/modification diffs
+
 ## Notes
 
 - repeated `setup` is safe

@@ -832,6 +832,224 @@ const unsupportedLanguageRegistry: ParserRegistry = {
   },
 };
 
+test("a .gitignore entry excludes a file from indexing", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMemoryFixtureRepo(repoRoot);
+    await writeFile(path.join(repoRoot, ".gitignore"), "src/models.ts\n");
+    const db = openIndexerDatabase();
+
+    try {
+      const result = await indexProject({ repoRoot, db });
+
+      assert.equal(getFileByPath(db, "src/models.ts"), undefined);
+      assert.deepEqual(listSymbolsForFile(db, "src/models.ts"), []);
+      assert.equal(getFileByPath(db, "src/service.ts")?.path, "src/service.ts");
+      assert.equal(result.files.some((file) => file.path === "src/models.ts"), false);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("a .vtraceignore entry excludes a file from indexing", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMemoryFixtureRepo(repoRoot);
+    await writeFile(path.join(repoRoot, ".vtraceignore"), "*.models.ts\nsrc/models.ts\n");
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+
+      assert.equal(getFileByPath(db, "src/models.ts"), undefined);
+      assert.equal(getFileByPath(db, "src/service.ts")?.path, "src/service.ts");
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("built-in ignored directories are still excluded by default", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMemoryFixtureRepo(repoRoot);
+    await mkdir(path.join(repoRoot, "node_modules", "pkg"), { recursive: true });
+    await writeFile(
+      path.join(repoRoot, "node_modules", "pkg", "index.ts"),
+      "export const fromDependency = 1;\n",
+    );
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+
+      assert.equal(getFileByPath(db, "node_modules/pkg/index.ts"), undefined);
+      assert.equal(listSymbolsForFile(db, "node_modules/pkg/index.ts").length, 0);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("an ignored file produces no parser outcome and no error", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMemoryFixtureRepo(repoRoot);
+    // A syntactically broken file that would normally surface a parse failure.
+    await writeFile(path.join(repoRoot, "src", "broken.ts"), "export function broken( {");
+    await writeFile(path.join(repoRoot, ".gitignore"), "src/broken.ts\n");
+    const db = openIndexerDatabase();
+
+    try {
+      const result = await indexProject({ repoRoot, db });
+
+      assert.equal(result.files.some((file) => file.path === "src/broken.ts"), false);
+      assert.equal(result.totalParseFailures, 0);
+      assert.equal(result.totalReadFailures, 0);
+      assert.equal(getFileByPath(db, "src/broken.ts"), undefined);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("deleting a file and reindexing removes its file, symbols, and edges from the live graph", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMemoryFixtureRepo(repoRoot);
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+
+      const removedSymbolIds = listSymbolsForFile(db, "src/models.ts").map((symbol) => symbol.id);
+      assert.equal(removedSymbolIds.length > 0, true);
+      // The cross-file import/reference edges into models.ts exist before deletion.
+      assert.equal(listEdgesForFile(db, "src/service.ts").length > 0, true);
+
+      await rm(path.join(repoRoot, "src", "models.ts"));
+      await indexProject({ repoRoot, db });
+
+      // file row removed
+      assert.equal(getFileByPath(db, "src/models.ts"), undefined);
+      // symbols removed
+      assert.deepEqual(listSymbolsForFile(db, "src/models.ts"), []);
+      // edges referencing the removed symbols removed (cascade)
+      const danglingEdges = listAllEdges(db).filter(
+        (edge) =>
+          removedSymbolIds.includes(edge.srcSymbolId)
+          || removedSymbolIds.includes(edge.dstSymbolId),
+      );
+      assert.deepEqual(danglingEdges, []);
+      assert.deepEqual(listEdgesForFile(db, "src/service.ts"), []);
+      // surviving file is intact
+      assert.equal(getFileByPath(db, "src/service.ts")?.path, "src/service.ts");
+      assertGraphIntegrity(db);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("changing a previously indexed file to ignored prunes it from the live graph", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMemoryFixtureRepo(repoRoot);
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      assert.equal(getFileByPath(db, "src/models.ts")?.path, "src/models.ts");
+
+      await writeFile(path.join(repoRoot, ".vtraceignore"), "src/models.ts\n");
+      await indexProject({ repoRoot, db });
+
+      assert.equal(getFileByPath(db, "src/models.ts"), undefined);
+      assert.deepEqual(listSymbolsForFile(db, "src/models.ts"), []);
+      assertGraphIntegrity(db);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("run history still reports a removed file while the live graph is pruned", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMemoryFixtureRepo(repoRoot);
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      await rm(path.join(repoRoot, "src", "models.ts"));
+      await indexProject({ repoRoot, db });
+
+      // Active graph reflects current repo state only.
+      assert.equal(getFileByPath(db, "src/models.ts"), undefined);
+
+      // Run history still reports the removal from its per-run snapshots.
+      const secondRun = listIndexRuns(db)[1];
+      const fileDiffs = listFileDiffsForRun(db, secondRun!.id);
+      const symbolDiffs = listSymbolDiffsForRun(db, secondRun!.id);
+
+      assert.equal(
+        fileDiffs?.some(
+          (diff) => diff.filePath === "src/models.ts" && diff.changeType === FileChangeType.Removed,
+        ),
+        true,
+      );
+      assert.equal(
+        symbolDiffs?.some(
+          (diff) =>
+            diff.filePath === "src/models.ts" && diff.changeType === FileChangeType.Removed,
+        ),
+        true,
+      );
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("repeated reindex with ignore files produces a deterministic active graph", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMemoryFixtureRepo(repoRoot);
+    await writeFile(path.join(repoRoot, ".gitignore"), "src/models.ts\n");
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const firstSnapshot = snapshotMixedDatabase(db);
+      await indexProject({ repoRoot, db });
+      const secondSnapshot = snapshotMixedDatabase(db);
+
+      assert.deepEqual(secondSnapshot, firstSnapshot);
+      assert.equal(getFileByPath(db, "src/models.ts"), undefined);
+      assertGraphIntegrity(db);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+function assertGraphIntegrity(db: Database): void {
+  const danglingEdges = db.query(`
+    SELECT src_symbol_id, dst_symbol_id
+    FROM edges
+    WHERE src_symbol_id NOT IN (SELECT id FROM symbols)
+       OR dst_symbol_id NOT IN (SELECT id FROM symbols)
+  `).all();
+  assert.deepEqual(danglingEdges, []);
+
+  const orphanSymbols = db.query(`
+    SELECT id
+    FROM symbols
+    WHERE file_id NOT IN (SELECT id FROM files)
+  `).all();
+  assert.deepEqual(orphanSymbols, []);
+
+  const orphanFtsRows = db.query(`
+    SELECT file_path_raw
+    FROM symbol_search_fts
+    WHERE file_path_raw NOT IN (SELECT path FROM files)
+  `).all();
+  assert.deepEqual(orphanFtsRows, []);
+}
+
 async function withFixture(run: (repoRoot: string) => Promise<void>): Promise<void> {
   const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-index-"));
 

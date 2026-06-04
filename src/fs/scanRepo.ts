@@ -10,6 +10,11 @@ import {
 } from "../domain/types";
 import { hashFile } from "./hashFile";
 import { detectLanguage } from "./languageDetection";
+import {
+  isPathIgnored,
+  loadIgnoreRulesForDirectory,
+  type IgnoreRule,
+} from "./ignoreRules";
 
 const IGNORED_DIRECTORIES = new Set([
   ".git",
@@ -49,7 +54,7 @@ export interface RepoSourceSnapshot {
 
 export async function scanRepo(repoRoot: string): Promise<FileRecord[]> {
   const root = path.resolve(repoRoot);
-  const files = await scanDirectory(root, root);
+  const files = await scanDirectory(root, root, []);
 
   return files.sort((left, right) => left.path.localeCompare(right.path));
 }
@@ -59,7 +64,7 @@ export async function captureRepoSourceSnapshot(
 ): Promise<RepoSourceSnapshot> {
   const root = path.resolve(repoRoot);
   const fingerprint = createHash("sha256");
-  const fileCount = await updateSourceSnapshotFingerprint(root, root, fingerprint);
+  const fileCount = await updateSourceSnapshotFingerprint(root, root, fingerprint, []);
 
   return {
     fileCount,
@@ -78,19 +83,26 @@ export function isIndexableRepoSourcePath(filePath: string): boolean {
   return detectLanguage(normalizedPath) !== undefined;
 }
 
-async function scanDirectory(root: string, directory: string): Promise<FileRecord[]> {
+async function scanDirectory(
+  root: string,
+  directory: string,
+  inheritedRules: readonly IgnoreRule[],
+): Promise<FileRecord[]> {
   const entries = await readdir(directory, { withFileTypes: true });
   entries.sort((left, right) => left.name.localeCompare(right.name));
 
+  const rules = await accumulateIgnoreRules(root, directory, inheritedRules, entries);
   const files: FileRecord[] = [];
 
   for (const entry of entries) {
+    const relativePath = toRepoRelativePath(root, path.join(directory, entry.name));
+
     if (entry.isDirectory()) {
-      if (IGNORED_DIRECTORIES.has(entry.name)) {
+      if (IGNORED_DIRECTORIES.has(entry.name) || isPathIgnored(rules, relativePath, true)) {
         continue;
       }
 
-      files.push(...(await scanDirectory(root, path.join(directory, entry.name))));
+      files.push(...(await scanDirectory(root, path.join(directory, entry.name), rules)));
       continue;
     }
 
@@ -98,14 +110,17 @@ async function scanDirectory(root: string, directory: string): Promise<FileRecor
       continue;
     }
 
-    const absolutePath = path.join(directory, entry.name);
-    const relativePath = toRepoRelativePath(root, absolutePath);
+    if (isPathIgnored(rules, relativePath, false)) {
+      continue;
+    }
+
     const language = detectLanguage(relativePath);
 
     if (language === undefined) {
       continue;
     }
 
+    const absolutePath = path.join(directory, entry.name);
     const [fileStat, contentHash] = await Promise.all([
       stat(absolutePath),
       hashFile(absolutePath),
@@ -123,19 +138,39 @@ async function scanDirectory(root: string, directory: string): Promise<FileRecor
   return files;
 }
 
+async function accumulateIgnoreRules(
+  root: string,
+  directory: string,
+  inheritedRules: readonly IgnoreRule[],
+  entries: readonly import("node:fs").Dirent[],
+): Promise<IgnoreRule[]> {
+  const entryNames = new Set(
+    entries.filter((entry) => entry.isFile()).map((entry) => entry.name),
+  );
+  const relativeDirectory = path.relative(root, directory);
+  const baseDir = relativeDirectory.length === 0 ? "" : normalizeFilePath(relativeDirectory);
+  const localRules = await loadIgnoreRulesForDirectory(directory, baseDir, entryNames);
+
+  return [...inheritedRules, ...localRules];
+}
+
 async function updateSourceSnapshotFingerprint(
   root: string,
   directory: string,
   fingerprint: ReturnType<typeof createHash>,
+  inheritedRules: readonly IgnoreRule[],
 ): Promise<number> {
   const entries = await readdir(directory, { withFileTypes: true });
   entries.sort((left, right) => left.name.localeCompare(right.name));
 
+  const rules = await accumulateIgnoreRules(root, directory, inheritedRules, entries);
   let fileCount = 0;
 
   for (const entry of entries) {
+    const relativePath = toRepoRelativePath(root, path.join(directory, entry.name));
+
     if (entry.isDirectory()) {
-      if (IGNORED_DIRECTORIES.has(entry.name)) {
+      if (IGNORED_DIRECTORIES.has(entry.name) || isPathIgnored(rules, relativePath, true)) {
         continue;
       }
 
@@ -143,6 +178,7 @@ async function updateSourceSnapshotFingerprint(
         root,
         path.join(directory, entry.name),
         fingerprint,
+        rules,
       );
       continue;
     }
@@ -151,8 +187,11 @@ async function updateSourceSnapshotFingerprint(
       continue;
     }
 
+    if (isPathIgnored(rules, relativePath, false)) {
+      continue;
+    }
+
     const absolutePath = path.join(directory, entry.name);
-    const relativePath = toRepoRelativePath(root, absolutePath);
 
     if (detectLanguage(relativePath) === undefined) {
       continue;

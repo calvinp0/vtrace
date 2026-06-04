@@ -7,6 +7,19 @@ import {
 } from "../../domain/types";
 import { buildFtsSearchText } from "../../retrieval/searchSymbolsShared";
 
+export function deleteSymbolSearchIndexForFile(
+  db: Database,
+  file: Pick<FileRecord, "path">,
+): void {
+  db.run(
+    `
+      DELETE FROM symbol_search_fts
+      WHERE file_path_raw = ?
+    `,
+    [normalizeFilePath(file.path)],
+  );
+}
+
 export function replaceSymbolSearchIndexForFile(
   db: Database,
   file: Pick<FileRecord, "path">,
@@ -14,13 +27,7 @@ export function replaceSymbolSearchIndexForFile(
 ): void {
   const normalizedPath = normalizeFilePath(file.path);
 
-  db.run(
-    `
-      DELETE FROM symbol_search_fts
-      WHERE file_path_raw = ?
-    `,
-    [normalizedPath],
-  );
+  deleteSymbolSearchIndexForFile(db, { path: normalizedPath });
 
   for (const symbol of symbols) {
     if (normalizeFilePath(symbol.filePath) !== normalizedPath) {

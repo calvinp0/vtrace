@@ -41,6 +41,26 @@ export function deleteFile(db: Database, file: Pick<FileRecord, "id" | "path">):
   );
 }
 
+export function deleteFileByPath(db: Database, filePath: FilePath): void {
+  db.run(
+    `
+      DELETE FROM files
+      WHERE path = ?
+    `,
+    [normalizeFilePath(filePath)],
+  );
+}
+
+export function listAllFilePaths(db: Database): FilePath[] {
+  const rows = db.query(`
+    SELECT path
+    FROM files
+    ORDER BY path
+  `).all() as Array<{ path: string }>;
+
+  return rows.map((row) => row.path);
+}
+
 export function getFileByPath(
   db: Database,
   filePath: FilePath,

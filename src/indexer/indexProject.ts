@@ -7,9 +7,14 @@ import { nullProgressReporter } from "../cli/progress";
 import { EdgeType, normalizeFilePath, type EdgeRecord, type ParseResult } from "../domain/types";
 import { scanRepo } from "../fs/scanRepo";
 import { insertEdges } from "../db/repositories/edgesRepository";
+import {
+  deleteFileByPath,
+  listAllFilePaths,
+} from "../db/repositories/filesRepository";
 import { insertFileRunStates } from "../db/repositories/fileRunStatesRepository";
 import { createIndexRun } from "../db/repositories/indexRunsRepository";
 import { insertSymbolRunStates } from "../db/repositories/symbolRunStatesRepository";
+import { deleteSymbolSearchIndexForFile } from "../db/repositories/symbolSearchFtsRepository";
 import { persistParseResult } from "../db/persistParseResult";
 import {
   ParserError,
@@ -154,6 +159,8 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     });
   }
   progress.report({ kind: "phase_end", phase: "persist" });
+
+  pruneRemovedFiles(options.db, scannedFiles);
 
   progress.report({
     kind: "phase_begin",
@@ -314,6 +321,32 @@ function persistResolvableInterFileEdges(
 
   const transaction = db.transaction(() => {
     insertEdges(db, importEdges);
+  });
+
+  transaction();
+}
+
+// Removes live graph rows for files that are no longer scanned (deleted on disk
+// or newly ignored), so the active files/symbols/edges tables represent the
+// current repo state only. Symbols and edges cascade via ON DELETE CASCADE; the
+// FTS index has no foreign key and is pruned explicitly. Run-history snapshots
+// are computed from separate per-run tables and are left untouched.
+function pruneRemovedFiles(
+  db: Database,
+  scannedFiles: readonly IndexProjectFileContent["file"][],
+): void {
+  const scannedPaths = new Set(scannedFiles.map((file) => normalizeFilePath(file.path)));
+  const removedPaths = listAllFilePaths(db).filter((filePath) => !scannedPaths.has(filePath));
+
+  if (removedPaths.length === 0) {
+    return;
+  }
+
+  const transaction = db.transaction(() => {
+    for (const filePath of removedPaths) {
+      deleteSymbolSearchIndexForFile(db, { path: filePath });
+      deleteFileByPath(db, filePath);
+    }
   });
 
   transaction();
