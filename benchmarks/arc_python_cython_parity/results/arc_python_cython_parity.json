@@ -1,0 +1,4752 @@
+{
+  "schemaVersion": "1.0.0",
+  "repoRoot": "/home/calvin/code/ARC",
+  "validationRunId": "f8d985cb3eebff9ed420a89c4d3e889216b86fafdbbd0df89252b4c04d5387d4",
+  "querySetSource": "/home/calvin/code/vtrace/benchmarks/arc_python_cython_parity/queries.md",
+  "queries": [
+    {
+      "query": "run_arc",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup"
+    },
+    {
+      "query": "species_to_dict",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup"
+    },
+    {
+      "query": "Graph",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup"
+    },
+    {
+      "query": "VF2",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup"
+    },
+    {
+      "query": "kekulize",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup"
+    },
+    {
+      "query": "is_isomorphic",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup"
+    },
+    {
+      "query": "AromaticRing",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup"
+    },
+    {
+      "query": "get_all_edges",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup"
+    },
+    {
+      "query": "cython",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries"
+    },
+    {
+      "query": "cimport",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries"
+    },
+    {
+      "query": "compiled helper",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries"
+    },
+    {
+      "query": "python wrapper around cython",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries"
+    },
+    {
+      "query": "numerical kernel",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries"
+    },
+    {
+      "query": "parser kernel",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries"
+    },
+    {
+      "query": "low level utility",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries"
+    },
+    {
+      "query": "fast parser",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries"
+    },
+    {
+      "query": "extension module",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries"
+    },
+    {
+      "query": "where is the ESS output parsed",
+      "category": "workflow_tracing",
+      "sectionTitle": "ARC workflow tracing"
+    },
+    {
+      "query": "how does ARC generate TS guesses",
+      "category": "workflow_tracing",
+      "sectionTitle": "ARC workflow tracing"
+    },
+    {
+      "query": "how are transition state jobs validated",
+      "category": "workflow_tracing",
+      "sectionTitle": "ARC workflow tracing"
+    },
+    {
+      "query": "transition state generation",
+      "category": "workflow_tracing",
+      "sectionTitle": "ARC workflow tracing"
+    },
+    {
+      "query": "conformer filtering",
+      "category": "scientific_domain_concept",
+      "sectionTitle": "Scientific domain concept queries"
+    },
+    {
+      "query": "kinetics calculation",
+      "category": "scientific_domain_concept",
+      "sectionTitle": "Scientific domain concept queries"
+    },
+    {
+      "query": "reaction family matching",
+      "category": "scientific_domain_concept",
+      "sectionTitle": "Scientific domain concept queries"
+    }
+  ],
+  "interestingSymbols": [
+    "ARCSpecies",
+    "Graph",
+    "VF2",
+    "kekulize",
+    "is_isomorphic",
+    "as_dict"
+  ],
+  "interestingFiles": [
+    "arc/molecule/graph.pyx",
+    "arc/molecule/kekulize.pyx",
+    "arc/parser/adapter.py",
+    "arc/species/species.py"
+  ],
+  "summaryCounts": {
+    "indexedFileCount": 212,
+    "indexedPythonFileCount": 196,
+    "indexedCythonFileCount": 16,
+    "indexedSymbolCount": 5152,
+    "indexedPythonSymbolCount": 4686,
+    "indexedCythonSymbolCount": 466,
+    "indexedEdgeCount": 10413,
+    "parseFailureCount": 0,
+    "readFailureCount": 0,
+    "persistenceFailureCount": 0,
+    "queryCount": 24,
+    "queriesWithCandidates": 24,
+    "queriesWithCapsules": 24,
+    "queriesWithSourceBackedPivots": 5,
+    "exactQueriesWithExpectedSurface": 6,
+    "exactQueriesImprovedAgainstBaseline": 2,
+    "exactQueriesRegressedAgainstBaseline": 0,
+    "narrowQueriesImprovedAgainstBaseline": 8,
+    "narrowQueriesRegressedAgainstBaseline": 0,
+    "boundaryQueriesWithCythonCandidates": 9,
+    "boundaryQueriesImprovedAgainstBaseline": 9,
+    "boundaryQueriesRegressedAgainstBaseline": 0,
+    "broadQueriesImprovedAgainstBaseline": 7,
+    "broadQueriesRegressedAgainstBaseline": 0,
+    "broadQueriesWithLikelyTestTopCandidate": 0,
+    "broadQueriesTestMisrankingImprovedAgainstBaseline": 3,
+    "broadQueriesTestMisrankingRegressedAgainstBaseline": 0
+  },
+  "structuralEvidence": {
+    "edgeCountsByType": [
+      {
+        "edgeType": "contains",
+        "count": 3388
+      },
+      {
+        "edgeType": "imports",
+        "count": 298
+      },
+      {
+        "edgeType": "calls",
+        "count": 5228
+      },
+      {
+        "edgeType": "references",
+        "count": 1499
+      }
+    ],
+    "edgeCountsByLanguage": [
+      {
+        "language": "python",
+        "edgeType": "contains",
+        "count": 3052
+      },
+      {
+        "language": "python",
+        "edgeType": "imports",
+        "count": 293
+      },
+      {
+        "language": "python",
+        "edgeType": "calls",
+        "count": 5175
+      },
+      {
+        "language": "python",
+        "edgeType": "references",
+        "count": 1452
+      },
+      {
+        "language": "cython",
+        "edgeType": "contains",
+        "count": 336
+      },
+      {
+        "language": "cython",
+        "edgeType": "imports",
+        "count": 5
+      },
+      {
+        "language": "cython",
+        "edgeType": "calls",
+        "count": 53
+      },
+      {
+        "language": "cython",
+        "edgeType": "references",
+        "count": 47
+      }
+    ],
+    "crossLanguageEdgeCounts": [
+      {
+        "srcLanguage": "cython",
+        "dstLanguage": "python",
+        "edgeType": "calls",
+        "count": 3
+      },
+      {
+        "srcLanguage": "cython",
+        "dstLanguage": "python",
+        "edgeType": "imports",
+        "count": 1
+      },
+      {
+        "srcLanguage": "cython",
+        "dstLanguage": "python",
+        "edgeType": "references",
+        "count": 1
+      }
+    ],
+    "impactProbes": [
+      {
+        "symbolFqn": "arc/main.py::ARC",
+        "resolved": true,
+        "language": "python",
+        "dependentSymbolCount": 20,
+        "dependentFileCount": 4,
+        "observedEdgeTypes": [
+          "calls",
+          "contains",
+          "imports"
+        ],
+        "foundRealDependents": true
+      },
+      {
+        "symbolFqn": "arc/molecule/graph.pyx::Graph.get_all_edges",
+        "resolved": true,
+        "language": "cython",
+        "dependentSymbolCount": 14,
+        "dependentFileCount": 1,
+        "observedEdgeTypes": [
+          "calls",
+          "contains",
+          "references"
+        ],
+        "foundRealDependents": true
+      },
+      {
+        "symbolFqn": "arc/molecule/graph.pyx::Graph.is_isomorphic",
+        "resolved": true,
+        "language": "cython",
+        "dependentSymbolCount": 7,
+        "dependentFileCount": 1,
+        "observedEdgeTypes": [
+          "calls",
+          "contains",
+          "references"
+        ],
+        "foundRealDependents": true
+      },
+      {
+        "symbolFqn": "arc/molecule/kekulize.pyx::kekulize",
+        "resolved": true,
+        "language": "cython",
+        "dependentSymbolCount": 0,
+        "dependentFileCount": 0,
+        "observedEdgeTypes": [],
+        "foundRealDependents": false
+      },
+      {
+        "symbolFqn": "arc/molecule/vf2.pyx::VF2",
+        "resolved": true,
+        "language": "cython",
+        "dependentSymbolCount": 0,
+        "dependentFileCount": 0,
+        "observedEdgeTypes": [],
+        "foundRealDependents": false
+      },
+      {
+        "symbolFqn": "arc/species/species.py::ARCSpecies",
+        "resolved": true,
+        "language": "python",
+        "dependentSymbolCount": 418,
+        "dependentFileCount": 32,
+        "observedEdgeTypes": [
+          "calls",
+          "contains",
+          "imports",
+          "references"
+        ],
+        "foundRealDependents": true
+      }
+    ],
+    "logicFlowProbes": [
+      {
+        "start": "arc/molecule/molecule.py::Molecule.kekulize",
+        "end": "arc/molecule/kekulize.pyx::kekulize",
+        "startResolved": true,
+        "endResolved": true,
+        "reachable": false,
+        "pathCount": 0,
+        "callFlowEvidenceAvailable": true,
+        "callFlowEvidenceUsed": false
+      },
+      {
+        "start": "arc/molecule/vf2.pyx::VF2.find_isomorphism",
+        "end": "arc/molecule/vf2.pyx::VF2.isomorphism",
+        "startResolved": true,
+        "endResolved": true,
+        "reachable": true,
+        "pathCount": 1,
+        "callFlowEvidenceAvailable": true,
+        "callFlowEvidenceUsed": true
+      },
+      {
+        "start": "arc/molecule/vf2.pyx::VF2.find_isomorphism",
+        "end": "arc/molecule/vf2.pyx::VF2.match",
+        "startResolved": true,
+        "endResolved": true,
+        "reachable": true,
+        "pathCount": 1,
+        "callFlowEvidenceAvailable": true,
+        "callFlowEvidenceUsed": true
+      }
+    ]
+  },
+  "areaResults": {
+    "indexingAndPersistence": {
+      "status": "pass",
+      "summary": "Indexing and persistence completed with persisted structural state."
+    },
+    "representativePythonQueries": {
+      "status": "pass",
+      "summary": "Representative validation queries surfaced Python candidates."
+    },
+    "representativeCythonQueries": {
+      "status": "pass",
+      "summary": "Representative boundary validation queries surfaced Cython candidates often enough without regressing the baseline."
+    },
+    "graphAwareReranking": {
+      "status": "pass",
+      "summary": "Graph-aware reranking executed deterministically for the validation queries."
+    },
+    "capsuleAssembly": {
+      "status": "pass",
+      "summary": "Capsule assembly succeeded for validation queries with candidates."
+    },
+    "sourceBackedCapsuleBehavior": {
+      "status": "pass",
+      "summary": "At least one validation query produced a safe source-backed pivot."
+    },
+    "controlledChange": {
+      "status": "pass",
+      "summary": "Controlled-change validation succeeded on a temporary source copy."
+    },
+    "handoffPayloadGeneration": {
+      "status": "pass",
+      "summary": "Handoff payload generation succeeded for the validation queries."
+    },
+    "determinism": {
+      "status": "pass",
+      "summary": "Repeated identical validation runs produced stable indexing, reranking, capsule, and handoff outputs."
+    }
+  },
+  "queryResults": [
+    {
+      "query": "run_arc",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 6,
+      "cythonCandidateCount": 0,
+      "rerankedResults": [
+        {
+          "symbolId": "6d6360fa5917421eec20d5eeb8c881c0b240dab210fe2e872fec238949c35a86",
+          "filePath": "arc/main.py",
+          "fqName": "arc/main.py::ARC",
+          "localName": "ARC",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 88,
+          "graphScore": 24,
+          "finalScore": 112,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "4a2427d3865774a0a595e6c0dfeea6c14e73cc5c17ae93582ab8298b791d710b",
+          "filePath": "arc/main.py",
+          "fqName": "arc/main.py::ARC.execute",
+          "localName": "execute",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 92,
+          "graphScore": 17,
+          "finalScore": 109,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "08a4796615d128f536d83cffbf74e293372be2afbd2e830addc7d1dd574ba513",
+          "filePath": "arc/job/env_run.py",
+          "fqName": "arc/job/env_run.py::run_in_conda_env",
+          "localName": "run_in_conda_env",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 84,
+          "graphScore": 15,
+          "finalScore": 99,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "e54a7668855ddbb7403b3e35271a0a88dbf827db7c31d8164bbb2f66a26e5776",
+          "filePath": "arc/job/adapters/scripts/tani_script.py",
+          "fqName": "arc/job/adapters/scripts/tani_script.py::main",
+          "localName": "main",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 86,
+          "graphScore": 10,
+          "finalScore": 96,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "35ff1462044a318234961b6c35f0754c7fdf001c5e2a6ae2e87bbc44a0b41817",
+          "filePath": "arc/scripts/pipe_worker.py",
+          "fqName": "arc/scripts/pipe_worker.py::main",
+          "localName": "main",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 86,
+          "graphScore": 8,
+          "finalScore": 94,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "50be90b8beaf869f3decf58e2978e2786df7e30abe7d75265688d68b6768d82f",
+          "filePath": "arc/job/adapters/scripts/ob_script.py",
+          "fqName": "arc/job/adapters/scripts/ob_script.py::main",
+          "localName": "main",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 86,
+          "graphScore": 7,
+          "finalScore": 93,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": false,
+        "interestingMatches": []
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": true,
+        "baselineExpectedSurfaceObserved": false,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "narrowBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": false,
+        "baselineFirstCythonCandidateRank": null,
+        "baselineTopCandidateLikelyTest": false,
+        "baselineTopCandidateMatchedFields": [],
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "ARC",
+            "filePath": "arc/main.py",
+            "fqName": "arc/main.py::ARC",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "execute",
+            "filePath": "arc/main.py",
+            "fqName": "arc/main.py::ARC.execute",
+            "role": "pivot",
+            "contentMode": "summary",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "species_to_dict",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 6,
+      "cythonCandidateCount": 0,
+      "rerankedResults": [
+        {
+          "symbolId": "efc403ba285a3797493c2ccd25e40911c875a976d28ef52dd41b9535fc62262a",
+          "filePath": "arc/species/species.py",
+          "fqName": "arc/species/species.py::ARCSpecies.from_dict",
+          "localName": "from_dict",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 82,
+          "graphScore": 14,
+          "finalScore": 96,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "6cf8feaefc7b79e44b6037149192510a0db50227bc9e272e4037bb15bb11821b",
+          "filePath": "arc/species/species.py",
+          "fqName": "arc/species/species.py::ARCSpecies.as_dict",
+          "localName": "as_dict",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 82,
+          "graphScore": 12,
+          "finalScore": 94,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "5a022059b0a69e781ebbc27f38384400c1928876d0150b52657e4e31761ccabf",
+          "filePath": "arc/species/species.py",
+          "fqName": "arc/species/species.py::TSGuess.from_dict",
+          "localName": "from_dict",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 82,
+          "graphScore": 8,
+          "finalScore": 90,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "0c39d454481b63521b077bbf77f40a5291f3f2e58b9707a2d292abaed43b2a1c",
+          "filePath": "arc/species/species.py",
+          "fqName": "arc/species/species.py::TSGuess.as_dict",
+          "localName": "as_dict",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 82,
+          "graphScore": 6,
+          "finalScore": 88,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "351470441c2bf8d6734440517b9d755b245afb05d565ad2d0361314fa93e0830",
+          "filePath": "arc/species/converter.py",
+          "fqName": "arc/species/converter.py::check_xyz_dict",
+          "localName": "check_xyz_dict",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 62,
+          "graphScore": 16,
+          "finalScore": 78,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "7c9fbc0fc3fa0c27f19780af972363c0bcfb1d63fc9587e50d9fd7bf46dda27a",
+          "filePath": "arc/species/converter.py",
+          "fqName": "arc/species/converter.py::check_zmat_dict",
+          "localName": "check_zmat_dict",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 62,
+          "graphScore": 16,
+          "finalScore": 78,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": false,
+        "interestingMatches": [
+          "symbol:ARCSpecies",
+          "symbol:as_dict",
+          "file:arc/species/species.py"
+        ]
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": true,
+        "baselineExpectedSurfaceObserved": false,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "narrowBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": false,
+        "baselineFirstCythonCandidateRank": null,
+        "baselineTopCandidateLikelyTest": false,
+        "baselineTopCandidateMatchedFields": [],
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "from_dict",
+            "filePath": "arc/species/species.py",
+            "fqName": "arc/species/species.py::ARCSpecies.from_dict",
+            "role": "pivot",
+            "contentMode": "summary",
+            "sourceBacked": false
+          },
+          {
+            "localName": "as_dict",
+            "filePath": "arc/species/species.py",
+            "fqName": "arc/species/species.py::ARCSpecies.as_dict",
+            "role": "pivot",
+            "contentMode": "stub",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "Graph",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 2,
+      "cythonCandidateCount": 4,
+      "rerankedResults": [
+        {
+          "symbolId": "90885a76cf4667bd3d9f6970f687aa3519617a0ac2bc0cb2354c59dcbc436cc8",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 134,
+          "graphScore": 10,
+          "finalScore": 144,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "c6fa17711a6bef19882acb1afc56452d06981a400b74154dc9a4a822931e52f6",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 134,
+          "graphScore": 10,
+          "finalScore": 144,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "1e6edd975f9776411c45848ab7f698127a8f50a429e5487d5cf5359c898ccce7",
+          "filePath": "arc/molecule/graph_test.py",
+          "fqName": "arc/molecule/graph_test.py::TestGraph",
+          "localName": "TestGraph",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": true,
+          "lexicalScore": 82,
+          "graphScore": 15,
+          "finalScore": 97,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "docstring",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "aa88dd71ffd105ce999bfedb3d4eaace79f141941da15b46cda576c4dee846e0",
+          "filePath": "arc/molecule/graph_test.py",
+          "fqName": "arc/molecule/graph_test.py::TestGraph.test_subgraph_isomorphism",
+          "localName": "test_subgraph_isomorphism",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": true,
+          "lexicalScore": 82,
+          "graphScore": 13,
+          "finalScore": 95,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "docstring",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "ca007e6beff1eafb2052a6a63d45c49f097a23b09b80d5ca707f62c751f38caa",
+          "filePath": "arc/molecule/vf2.pyx",
+          "fqName": "arc/molecule/vf2.pyx::VF2.graphA",
+          "localName": "graphA",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 90,
+          "graphScore": 2,
+          "finalScore": 92,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        },
+        {
+          "symbolId": "ddc10913d8c4b6eeca22eee9eca1fd1b4401be6d1e784c1fae2f936946c02ef2",
+          "filePath": "arc/molecule/vf2.pyx",
+          "fqName": "arc/molecule/vf2.pyx::VF2.graphA",
+          "localName": "graphA",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 90,
+          "graphScore": 2,
+          "finalScore": 92,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": true,
+        "interestingMatches": [
+          "symbol:Graph",
+          "symbol:VF2",
+          "file:arc/molecule/graph.pyx"
+        ]
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": true,
+        "baselineExpectedSurfaceObserved": true,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "Graph",
+            "filePath": "arc/molecule/graph.pxd",
+            "fqName": "arc/molecule/graph.pxd::Graph",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "Graph",
+            "filePath": "arc/molecule/graph.pyx",
+            "fqName": "arc/molecule/graph.pyx::Graph",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "VF2",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 4,
+      "cythonCandidateCount": 2,
+      "rerankedResults": [
+        {
+          "symbolId": "ca050ec571b89102c251142830c9a306f7aa3a4228abb24cc8c67cb144fda601",
+          "filePath": "arc/molecule/vf2.pxd",
+          "fqName": "arc/molecule/vf2.pxd::VF2",
+          "localName": "VF2",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 134,
+          "graphScore": 26,
+          "finalScore": 160,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "96ad359118b20e8be1426123b04f96b300439490436e0dea5f749666aafd49b4",
+          "filePath": "arc/molecule/vf2.pyx",
+          "fqName": "arc/molecule/vf2.pyx::VF2",
+          "localName": "VF2",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 134,
+          "graphScore": 13,
+          "finalScore": 147,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "ca28c615546de16422b00f3efdcbc37309a88e3ec8dda198985f47dd4abfb58d",
+          "filePath": "arc/exceptions.py",
+          "fqName": "arc/exceptions.py::VF2Error",
+          "localName": "VF2Error",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 90,
+          "graphScore": 13,
+          "finalScore": 103,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        },
+        {
+          "symbolId": "5af137f0aa3cc074613a1959c52e53156a3092d85678e4661a64d127ce684892",
+          "filePath": "arc/molecule/vf2_test.py",
+          "fqName": "arc/molecule/vf2_test.py::TestVF2",
+          "localName": "TestVF2",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": true,
+          "lexicalScore": 74,
+          "graphScore": 26,
+          "finalScore": 100,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "767069853e558bdf57987e9942887b4285c954b64350f861f7196d9e72116a48",
+          "filePath": "arc/molecule/vf2_test.py",
+          "fqName": "arc/molecule/vf2_test.py::TestVF2.setUp",
+          "localName": "setUp",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": true,
+          "lexicalScore": 24,
+          "graphScore": 14,
+          "finalScore": 38,
+          "matchedFields": [
+            "fq_name",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "3fae10685935ee74b677b110f1e49637bd8099c4b57651ca9b7749717b9800de",
+          "filePath": "arc/molecule/vf2_test.py",
+          "fqName": "arc/molecule/vf2_test.py::TestVF2.test_clear_mapping",
+          "localName": "test_clear_mapping",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": true,
+          "lexicalScore": 24,
+          "graphScore": 13,
+          "finalScore": 37,
+          "matchedFields": [
+            "fq_name",
+            "file_path"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": true,
+        "interestingMatches": [
+          "symbol:VF2"
+        ]
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": true,
+        "baselineExpectedSurfaceObserved": true,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "VF2",
+            "filePath": "arc/molecule/vf2.pxd",
+            "fqName": "arc/molecule/vf2.pxd::VF2",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "VF2",
+            "filePath": "arc/molecule/vf2.pyx",
+            "fqName": "arc/molecule/vf2.pyx::VF2",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "kekulize",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 3,
+      "cythonCandidateCount": 3,
+      "rerankedResults": [
+        {
+          "symbolId": "a52d62b980576410350842b3ac7db8b4a49ad9eeead069ee22bbc7204c4f1440",
+          "filePath": "arc/molecule/molecule.py",
+          "fqName": "arc/molecule/molecule.py::Molecule.kekulize",
+          "localName": "kekulize",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 138,
+          "graphScore": 2,
+          "finalScore": 140,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "docstring"
+          ]
+        },
+        {
+          "symbolId": "c161aa3c7dcdd3bf4d9da47dc7b23335c06126ef245cc789fc701f351f14f624",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing.kekulize",
+          "localName": "kekulize",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 134,
+          "graphScore": 4,
+          "finalScore": 138,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 134,
+          "graphScore": 4,
+          "finalScore": 138,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "f92d6b046355d6fe716eea624237e9988229e655937c44dc97e75216c001d755",
+          "filePath": "arc/molecule/molecule.pxd",
+          "fqName": "arc/molecule/molecule.pxd::Molecule.kekulize",
+          "localName": "kekulize",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 130,
+          "graphScore": 2,
+          "finalScore": 132,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        },
+        {
+          "symbolId": "270c991e5152daeac0914d2f946c237ba08cc8fa499b7c0ddc5edbba3cb408c2",
+          "filePath": "arc/molecule/kekulize_test.py",
+          "fqName": "arc/molecule/kekulize_test.py::KekulizeTest",
+          "localName": "KekulizeTest",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": true,
+          "lexicalScore": 94,
+          "graphScore": 4,
+          "finalScore": 98,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "84c6dd2e00d677a96a97a9063611a50ef824341c4c8b05668e65fae42a875620",
+          "filePath": "arc/molecule/resonance_test.py",
+          "fqName": "arc/molecule/resonance_test.py::ResonanceTest.test_kekulize_benzene",
+          "localName": "test_kekulize_benzene",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": true,
+          "lexicalScore": 78,
+          "graphScore": 4,
+          "finalScore": 82,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "docstring"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": true,
+        "interestingMatches": [
+          "symbol:kekulize",
+          "file:arc/molecule/kekulize.pyx"
+        ]
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": true,
+        "baselineExpectedSurfaceObserved": true,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 1,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "kekulize",
+            "filePath": "arc/molecule/molecule.py",
+            "fqName": "arc/molecule/molecule.py::Molecule.kekulize",
+            "role": "pivot",
+            "contentMode": "full",
+            "sourceBacked": true
+          },
+          {
+            "localName": "kekulize",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticRing.kekulize",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "is_isomorphic",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 3,
+      "cythonCandidateCount": 3,
+      "rerankedResults": [
+        {
+          "symbolId": "073825aafe9142fb7661c270ccf28fcafeebe6759e9cebbd55323c754dde6ea4",
+          "filePath": "arc/species/species.py",
+          "fqName": "arc/species/species.py::ARCSpecies.is_isomorphic",
+          "localName": "is_isomorphic",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 130,
+          "graphScore": 6,
+          "finalScore": 136,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        },
+        {
+          "symbolId": "7f1729c98331d0bc406a222698d607637f85cdd4693cc90cf9d90b09ce6e726e",
+          "filePath": "arc/molecule/molecule.py",
+          "fqName": "arc/molecule/molecule.py::Molecule.is_isomorphic",
+          "localName": "is_isomorphic",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 130,
+          "graphScore": 4,
+          "finalScore": 134,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        },
+        {
+          "symbolId": "934e79bd561b7a3c2c3e0837676ffc21a5e0970ffa221e479a5a36a368aa37a6",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph.is_isomorphic",
+          "localName": "is_isomorphic",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 130,
+          "graphScore": 3,
+          "finalScore": 133,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        },
+        {
+          "symbolId": "0d26aae09dc601ca3ec3e81fe65579370fc69816cb11974e75fec77520e6933b",
+          "filePath": "arc/molecule/group.py",
+          "fqName": "arc/molecule/group.py::Group.is_isomorphic",
+          "localName": "is_isomorphic",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 130,
+          "graphScore": 3,
+          "finalScore": 133,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        },
+        {
+          "symbolId": "5238f42aefc38e54d9d74d5b65ca0753bd86b2df01abb40140c834440d70c26d",
+          "filePath": "arc/molecule/vf2.pyx",
+          "fqName": "arc/molecule/vf2.pyx::VF2.is_isomorphic",
+          "localName": "is_isomorphic",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 130,
+          "graphScore": 3,
+          "finalScore": 133,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        },
+        {
+          "symbolId": "7fb965c8665a6dabc6fafdb0f72269b269b8bb1e78ce9fadf99637c275a097b2",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Graph.is_isomorphic",
+          "localName": "is_isomorphic",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 130,
+          "graphScore": 2,
+          "finalScore": 132,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": true,
+        "interestingMatches": [
+          "symbol:ARCSpecies",
+          "symbol:Graph",
+          "symbol:VF2",
+          "symbol:is_isomorphic",
+          "file:arc/molecule/graph.pyx",
+          "file:arc/species/species.py"
+        ]
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": true,
+        "baselineExpectedSurfaceObserved": true,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "narrowBenchmark": {
+        "baselineHasCandidates": true,
+        "baselineExpectedSurfaceObserved": true,
+        "baselineFirstCythonCandidateRank": 3,
+        "baselineTopCandidateLikelyTest": false,
+        "baselineTopCandidateMatchedFields": [
+          "local_name",
+          "fq_name",
+          "signature"
+        ],
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "is_isomorphic",
+            "filePath": "arc/species/species.py",
+            "fqName": "arc/species/species.py::ARCSpecies.is_isomorphic",
+            "role": "pivot",
+            "contentMode": "summary",
+            "sourceBacked": false
+          },
+          {
+            "localName": "is_isomorphic",
+            "filePath": "arc/molecule/molecule.py",
+            "fqName": "arc/molecule/molecule.py::Molecule.is_isomorphic",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "AromaticRing",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 1,
+      "cythonCandidateCount": 5,
+      "rerankedResults": [
+        {
+          "symbolId": "4497c7ebb1e6d11ef2e5e5775e0b9dc31c18f202f60d18cc1c1fa643379f8067",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+          "localName": "AromaticRing",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 130,
+          "graphScore": 30,
+          "finalScore": 160,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        },
+        {
+          "symbolId": "ad1cff9b05b607abf33d820244fdd6fb90b6fad1edee307117b6bbaf76289133",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing.process_bonds",
+          "localName": "process_bonds",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 20,
+          "graphScore": 20,
+          "finalScore": 40,
+          "matchedFields": [
+            "fq_name"
+          ]
+        },
+        {
+          "symbolId": "ad930531345d219e8b829a18baa3c5e9ed1592120d708b444d83285c73842d74",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing.update",
+          "localName": "update",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 20,
+          "graphScore": 18,
+          "finalScore": 38,
+          "matchedFields": [
+            "fq_name"
+          ]
+        },
+        {
+          "symbolId": "c161aa3c7dcdd3bf4d9da47dc7b23335c06126ef245cc789fc701f351f14f624",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing.kekulize",
+          "localName": "kekulize",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 20,
+          "graphScore": 15,
+          "finalScore": 35,
+          "matchedFields": [
+            "fq_name"
+          ]
+        },
+        {
+          "symbolId": "44a73fa42e435c43a4516fad20e04527634a81f5cbd9ae9c185dfa3e0f121182",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing.__init__",
+          "localName": "__init__",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 20,
+          "graphScore": 13,
+          "finalScore": 33,
+          "matchedFields": [
+            "fq_name"
+          ]
+        },
+        {
+          "symbolId": "82e31f3c52b3a4fde3599cba6e662d335d8ed539e8fb2bd15dacdf9eb99fd737",
+          "filePath": "arc/molecule/resonance.py",
+          "fqName": "arc/molecule/resonance.py::_clar_transformation",
+          "localName": "_clar_transformation",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 8,
+          "graphScore": 4,
+          "finalScore": 12,
+          "matchedFields": [
+            "docstring"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": true,
+        "interestingMatches": [
+          "symbol:kekulize",
+          "file:arc/molecule/kekulize.pyx"
+        ]
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": true,
+        "baselineExpectedSurfaceObserved": true,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "AromaticRing",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "process_bonds",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticRing.process_bonds",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "get_all_edges",
+      "category": "exact_symbol_api_lookup",
+      "sectionTitle": "Exact symbol / API lookup",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 4,
+      "cythonCandidateCount": 2,
+      "rerankedResults": [
+        {
+          "symbolId": "dc69368bdecdf0290968a9221d07ac40b979ecd3e304fd06e48f1c56a73ca93b",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph.get_all_edges",
+          "localName": "get_all_edges",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 170,
+          "graphScore": 8,
+          "finalScore": 178,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "query_coverage"
+          ]
+        },
+        {
+          "symbolId": "29eb9bea00cda759b15e3a06a16b472f6d469f9f4f2ad691e0282eec74546cab",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Graph.get_all_edges",
+          "localName": "get_all_edges",
+          "kind": "method",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 170,
+          "graphScore": 2,
+          "finalScore": 172,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "query_coverage"
+          ]
+        },
+        {
+          "symbolId": "64bac10c3abf89adc8004e67475bdddde7f5d40e4e9d716a15b9db4ff203fefc",
+          "filePath": "arc/molecule/graph_test.py",
+          "fqName": "arc/molecule/graph_test.py::TestGraph.test_get_all_edges",
+          "localName": "test_get_all_edges",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": true,
+          "lexicalScore": 100,
+          "graphScore": 13,
+          "finalScore": 113,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "docstring",
+            "query_coverage",
+            "likely_test_penalty"
+          ]
+        },
+        {
+          "symbolId": "d3a318546bba089726dd143af3888f4301bfdf493a43ccaa92ff8789673236df",
+          "filePath": "arc/molecule/group.py",
+          "fqName": "arc/molecule/group.py::GroupBond",
+          "localName": "GroupBond",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "docstring",
+            "signature",
+            "query_coverage"
+          ]
+        },
+        {
+          "symbolId": "a85906bfe83a0e07db2d6de2bf0ad5b51a3a3e32de1438aacc77623f218ada8b",
+          "filePath": "arc/species/perceive.py",
+          "fqName": "arc/species/perceive.py::alternative_perception",
+          "localName": "alternative_perception",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 32,
+          "graphScore": 6,
+          "finalScore": 38,
+          "matchedFields": [
+            "docstring",
+            "query_coverage"
+          ]
+        },
+        {
+          "symbolId": "a8ad4a5b8f817dceae4ac3fe24ffa7fa7466b8c2bf9d225834698250a6e025e0",
+          "filePath": "arc/species/perceive.py",
+          "fqName": "arc/species/perceive.py::generate_lewis_structure",
+          "localName": "generate_lewis_structure",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 32,
+          "graphScore": 6,
+          "finalScore": 38,
+          "matchedFields": [
+            "docstring",
+            "query_coverage"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": true,
+        "interestingMatches": [
+          "symbol:Graph",
+          "file:arc/molecule/graph.pyx"
+        ]
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": true,
+        "baselineExpectedSurfaceObserved": true,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "narrowBenchmark": {
+        "baselineHasCandidates": true,
+        "baselineExpectedSurfaceObserved": true,
+        "baselineFirstCythonCandidateRank": 1,
+        "baselineTopCandidateLikelyTest": false,
+        "baselineTopCandidateMatchedFields": [
+          "local_name",
+          "fq_name",
+          "signature"
+        ],
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 2,
+        "truncated": true,
+        "compressed": false,
+        "items": [
+          {
+            "localName": "get_all_edges",
+            "filePath": "arc/molecule/graph.pyx",
+            "fqName": "arc/molecule/graph.pyx::Graph.get_all_edges",
+            "role": "pivot",
+            "contentMode": "full",
+            "sourceBacked": true
+          },
+          {
+            "localName": "get_all_edges",
+            "filePath": "arc/molecule/graph.pxd",
+            "fqName": "arc/molecule/graph.pxd::Graph.get_all_edges",
+            "role": "pivot",
+            "contentMode": "full",
+            "sourceBacked": true
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "cython",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 0,
+      "cythonCandidateCount": 6,
+      "rerankedResults": [
+        {
+          "symbolId": "2f018cb723280d2bcdb6a91285a780fa803d100084f419987f392b0f076c10f8",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Edge",
+          "localName": "Edge",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 13,
+          "finalScore": 47,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "90885a76cf4667bd3d9f6970f687aa3519617a0ac2bc0cb2354c59dcbc436cc8",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 13,
+          "finalScore": 47,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "08274571150a68d61a04f978432e9f7c7395f418b88e87ed1a62bdae83ebe67c",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Vertex",
+          "localName": "Vertex",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 13,
+          "finalScore": 47,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "d7c92944ca8ff5f42490db2ede7efd9da2eb593817e4781aa2a6332ecd45d421",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Edge",
+          "localName": "Edge",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "c6fa17711a6bef19882acb1afc56452d06981a400b74154dc9a4a822931e52f6",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "e3c42b2462aa70e81ccbecccac98ccc7b4f2d20dea727a2b96a5957e3d1d48d1",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Vertex",
+          "localName": "Vertex",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": [
+          "symbol:Graph",
+          "file:arc/molecule/graph.pyx"
+        ]
+      },
+      "boundaryBenchmark": {
+        "anyCythonCandidate": true,
+        "firstCythonCandidateRank": 1,
+        "baselineAnyCythonCandidate": false,
+        "baselineFirstCythonCandidateRank": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 1,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "Edge",
+            "filePath": "arc/molecule/graph.pxd",
+            "fqName": "arc/molecule/graph.pxd::Edge",
+            "role": "pivot",
+            "contentMode": "full",
+            "sourceBacked": true
+          },
+          {
+            "localName": "Graph",
+            "filePath": "arc/molecule/graph.pxd",
+            "fqName": "arc/molecule/graph.pxd::Graph",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "cimport",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 0,
+      "cythonCandidateCount": 6,
+      "rerankedResults": [
+        {
+          "symbolId": "08274571150a68d61a04f978432e9f7c7395f418b88e87ed1a62bdae83ebe67c",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Vertex",
+          "localName": "Vertex",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 16,
+          "finalScore": 50,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "2f018cb723280d2bcdb6a91285a780fa803d100084f419987f392b0f076c10f8",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Edge",
+          "localName": "Edge",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 13,
+          "finalScore": 47,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "90885a76cf4667bd3d9f6970f687aa3519617a0ac2bc0cb2354c59dcbc436cc8",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 13,
+          "finalScore": 47,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "7fefabe6c91d7f44a5cf77638da6f119a2a72ce6d8f86ace5e24075355c335f6",
+          "filePath": "arc/molecule/molecule.pxd",
+          "fqName": "arc/molecule/molecule.pxd::Atom",
+          "localName": "Atom",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 9,
+          "finalScore": 43,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "f1f7fb64e22ea2c8d4ed62f38fd7da329d66e55d0459378f0a89e267bc025166",
+          "filePath": "arc/molecule/group.pxd",
+          "fqName": "arc/molecule/group.pxd::Group",
+          "localName": "Group",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 7,
+          "finalScore": 41,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "214a31f489dd59b8cc64ae47d96c1f4c1998d4b37b4f86c45842e4d5ee065dfd",
+          "filePath": "arc/molecule/group.pxd",
+          "fqName": "arc/molecule/group.pxd::GroupAtom",
+          "localName": "GroupAtom",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 7,
+          "finalScore": 41,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": [
+          "symbol:Graph"
+        ]
+      },
+      "boundaryBenchmark": {
+        "anyCythonCandidate": true,
+        "firstCythonCandidateRank": 1,
+        "baselineAnyCythonCandidate": false,
+        "baselineFirstCythonCandidateRank": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 1,
+        "truncated": true,
+        "compressed": false,
+        "items": [
+          {
+            "localName": "Vertex",
+            "filePath": "arc/molecule/graph.pxd",
+            "fqName": "arc/molecule/graph.pxd::Vertex",
+            "role": "pivot",
+            "contentMode": "full",
+            "sourceBacked": true
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 1,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "compiled helper",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 1,
+      "cythonCandidateCount": 5,
+      "rerankedResults": [
+        {
+          "symbolId": "4497c7ebb1e6d11ef2e5e5775e0b9dc31c18f202f60d18cc1c1fa643379f8067",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+          "localName": "AromaticRing",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 14,
+          "finalScore": 64,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "892b9e9eac1cd6c105d3907bd541648e5d2db67334937bf6791ec2ff6a3c28e4",
+          "filePath": "utilities.py",
+          "fqName": "utilities.py::clean",
+          "localName": "clean",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 62,
+          "graphScore": 0,
+          "finalScore": 62,
+          "matchedFields": [
+            "docstring",
+            "fq_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "b277a186de939a539e3cc2457e25b508d7106beecc58773806fb611d9b178d24",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+          "localName": "AromaticBond",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 11,
+          "finalScore": 61,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "d7c92944ca8ff5f42490db2ede7efd9da2eb593817e4781aa2a6332ecd45d421",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Edge",
+          "localName": "Edge",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 10,
+          "finalScore": 60,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "c6fa17711a6bef19882acb1afc56452d06981a400b74154dc9a4a822931e52f6",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 10,
+          "finalScore": 60,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "e3c42b2462aa70e81ccbecccac98ccc7b4f2d20dea727a2b96a5957e3d1d48d1",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Vertex",
+          "localName": "Vertex",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 10,
+          "finalScore": 60,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": [
+          "symbol:Graph",
+          "symbol:kekulize",
+          "file:arc/molecule/graph.pyx",
+          "file:arc/molecule/kekulize.pyx"
+        ]
+      },
+      "boundaryBenchmark": {
+        "anyCythonCandidate": true,
+        "firstCythonCandidateRank": 1,
+        "baselineAnyCythonCandidate": false,
+        "baselineFirstCythonCandidateRank": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "narrowBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "baselineFirstCythonCandidateRank": null,
+        "baselineTopCandidateLikelyTest": false,
+        "baselineTopCandidateMatchedFields": [],
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "AromaticRing",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "clean",
+            "filePath": "utilities.py",
+            "fqName": "utilities.py::clean",
+            "role": "pivot",
+            "contentMode": "summary",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "python wrapper around cython",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 0,
+      "cythonCandidateCount": 6,
+      "rerankedResults": [
+        {
+          "symbolId": "2f018cb723280d2bcdb6a91285a780fa803d100084f419987f392b0f076c10f8",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Edge",
+          "localName": "Edge",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 16,
+          "finalScore": 66,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "90885a76cf4667bd3d9f6970f687aa3519617a0ac2bc0cb2354c59dcbc436cc8",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 16,
+          "finalScore": 66,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "08274571150a68d61a04f978432e9f7c7395f418b88e87ed1a62bdae83ebe67c",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Vertex",
+          "localName": "Vertex",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 16,
+          "finalScore": 66,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "4497c7ebb1e6d11ef2e5e5775e0b9dc31c18f202f60d18cc1c1fa643379f8067",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+          "localName": "AromaticRing",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 14,
+          "finalScore": 64,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "c6aa8495f52885cd8756aea68056d5d529ec545eba0db3d285f955a67877c6ca",
+          "filePath": "arc/molecule/molecule.pxd",
+          "fqName": "arc/molecule/molecule.pxd::Bond",
+          "localName": "Bond",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 13,
+          "finalScore": 63,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "b277a186de939a539e3cc2457e25b508d7106beecc58773806fb611d9b178d24",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+          "localName": "AromaticBond",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 11,
+          "finalScore": 61,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": [
+          "symbol:Graph",
+          "symbol:kekulize",
+          "file:arc/molecule/kekulize.pyx"
+        ]
+      },
+      "boundaryBenchmark": {
+        "anyCythonCandidate": true,
+        "firstCythonCandidateRank": 1,
+        "baselineAnyCythonCandidate": false,
+        "baselineFirstCythonCandidateRank": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 1,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "Edge",
+            "filePath": "arc/molecule/graph.pxd",
+            "fqName": "arc/molecule/graph.pxd::Edge",
+            "role": "pivot",
+            "contentMode": "full",
+            "sourceBacked": true
+          },
+          {
+            "localName": "Graph",
+            "filePath": "arc/molecule/graph.pxd",
+            "fqName": "arc/molecule/graph.pxd::Graph",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "numerical kernel",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 0,
+      "cythonCandidateCount": 6,
+      "rerankedResults": [
+        {
+          "symbolId": "4497c7ebb1e6d11ef2e5e5775e0b9dc31c18f202f60d18cc1c1fa643379f8067",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+          "localName": "AromaticRing",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 14,
+          "finalScore": 48,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "b277a186de939a539e3cc2457e25b508d7106beecc58773806fb611d9b178d24",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+          "localName": "AromaticBond",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 11,
+          "finalScore": 45,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "d7c92944ca8ff5f42490db2ede7efd9da2eb593817e4781aa2a6332ecd45d421",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Edge",
+          "localName": "Edge",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "c6fa17711a6bef19882acb1afc56452d06981a400b74154dc9a4a822931e52f6",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "e3c42b2462aa70e81ccbecccac98ccc7b4f2d20dea727a2b96a5957e3d1d48d1",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Vertex",
+          "localName": "Vertex",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": [
+          "symbol:Graph",
+          "symbol:kekulize",
+          "file:arc/molecule/graph.pyx",
+          "file:arc/molecule/kekulize.pyx"
+        ]
+      },
+      "boundaryBenchmark": {
+        "anyCythonCandidate": true,
+        "firstCythonCandidateRank": 1,
+        "baselineAnyCythonCandidate": false,
+        "baselineFirstCythonCandidateRank": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "AromaticRing",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "AromaticBond",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "parser kernel",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 0,
+      "cythonCandidateCount": 6,
+      "rerankedResults": [
+        {
+          "symbolId": "4497c7ebb1e6d11ef2e5e5775e0b9dc31c18f202f60d18cc1c1fa643379f8067",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+          "localName": "AromaticRing",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 14,
+          "finalScore": 48,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "b277a186de939a539e3cc2457e25b508d7106beecc58773806fb611d9b178d24",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+          "localName": "AromaticBond",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 11,
+          "finalScore": 45,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "d7c92944ca8ff5f42490db2ede7efd9da2eb593817e4781aa2a6332ecd45d421",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Edge",
+          "localName": "Edge",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "c6fa17711a6bef19882acb1afc56452d06981a400b74154dc9a4a822931e52f6",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "e3c42b2462aa70e81ccbecccac98ccc7b4f2d20dea727a2b96a5957e3d1d48d1",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Vertex",
+          "localName": "Vertex",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 10,
+          "finalScore": 44,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": [
+          "symbol:Graph",
+          "symbol:kekulize",
+          "file:arc/molecule/graph.pyx",
+          "file:arc/molecule/kekulize.pyx"
+        ]
+      },
+      "boundaryBenchmark": {
+        "anyCythonCandidate": true,
+        "firstCythonCandidateRank": 1,
+        "baselineAnyCythonCandidate": false,
+        "baselineFirstCythonCandidateRank": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "narrowBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "baselineFirstCythonCandidateRank": null,
+        "baselineTopCandidateLikelyTest": false,
+        "baselineTopCandidateMatchedFields": [],
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "AromaticRing",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "AromaticBond",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "low level utility",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 4,
+      "cythonCandidateCount": 2,
+      "rerankedResults": [
+        {
+          "symbolId": "d7c92944ca8ff5f42490db2ede7efd9da2eb593817e4781aa2a6332ecd45d421",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Edge",
+          "localName": "Edge",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 54,
+          "graphScore": 32,
+          "finalScore": 86,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "c6fa17711a6bef19882acb1afc56452d06981a400b74154dc9a4a822931e52f6",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 54,
+          "graphScore": 32,
+          "finalScore": 86,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "19e45c6b93619dc6543d9f5dc7b19a5d7ab80ed76e8b67d2f48b864e8fff1ffe",
+          "filePath": "arc/job/adapters/common.py",
+          "fqName": "arc/job/adapters/common.py::_initialize_adapter",
+          "localName": "_initialize_adapter",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 64,
+          "graphScore": 16,
+          "finalScore": 80,
+          "matchedFields": [
+            "signature",
+            "fq_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "3e79bbe2b4575aabb0717f547253f67837d44d7f480a5afbfa3a896ab6d41fc6",
+          "filePath": "arc/utils/scale.py",
+          "fqName": "arc/utils/scale.py::determine_scaling_factors",
+          "localName": "determine_scaling_factors",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 64,
+          "graphScore": 12,
+          "finalScore": 76,
+          "matchedFields": [
+            "signature",
+            "fq_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "18cff95f1c055df1f2f28752c4e2552080a73102da8976eab17b12d1b0180958",
+          "filePath": "arc/utils/scale.py",
+          "fqName": "arc/utils/scale.py::summarize_results",
+          "localName": "summarize_results",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 64,
+          "graphScore": 12,
+          "finalScore": 76,
+          "matchedFields": [
+            "signature",
+            "fq_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "09e21c4d50688b5df84a1f879c68c6b09e841ea1853587ed0493f37958314c03",
+          "filePath": "arc/utils/scale.py",
+          "fqName": "arc/utils/scale.py::rename_level",
+          "localName": "rename_level",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 66,
+          "graphScore": 9,
+          "finalScore": 75,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": [
+          "symbol:Graph",
+          "file:arc/molecule/graph.pyx"
+        ]
+      },
+      "boundaryBenchmark": {
+        "anyCythonCandidate": true,
+        "firstCythonCandidateRank": 1,
+        "baselineAnyCythonCandidate": false,
+        "baselineFirstCythonCandidateRank": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "narrowBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "baselineFirstCythonCandidateRank": null,
+        "baselineTopCandidateLikelyTest": false,
+        "baselineTopCandidateMatchedFields": [],
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "Edge",
+            "filePath": "arc/molecule/graph.pyx",
+            "fqName": "arc/molecule/graph.pyx::Edge",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "summarize_results",
+            "filePath": "arc/utils/scale.py",
+            "fqName": "arc/utils/scale.py::summarize_results",
+            "role": "pivot",
+            "contentMode": "stub",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "fast parser",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 0,
+      "cythonCandidateCount": 6,
+      "rerankedResults": [
+        {
+          "symbolId": "4497c7ebb1e6d11ef2e5e5775e0b9dc31c18f202f60d18cc1c1fa643379f8067",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+          "localName": "AromaticRing",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 54,
+          "graphScore": 14,
+          "finalScore": 68,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "b277a186de939a539e3cc2457e25b508d7106beecc58773806fb611d9b178d24",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+          "localName": "AromaticBond",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 54,
+          "graphScore": 11,
+          "finalScore": 65,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "d7c92944ca8ff5f42490db2ede7efd9da2eb593817e4781aa2a6332ecd45d421",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Edge",
+          "localName": "Edge",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 54,
+          "graphScore": 10,
+          "finalScore": 64,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "c6fa17711a6bef19882acb1afc56452d06981a400b74154dc9a4a822931e52f6",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 54,
+          "graphScore": 10,
+          "finalScore": 64,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "e3c42b2462aa70e81ccbecccac98ccc7b4f2d20dea727a2b96a5957e3d1d48d1",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Vertex",
+          "localName": "Vertex",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 54,
+          "graphScore": 10,
+          "finalScore": 64,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 54,
+          "graphScore": 10,
+          "finalScore": 64,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": [
+          "symbol:Graph",
+          "symbol:kekulize",
+          "file:arc/molecule/graph.pyx",
+          "file:arc/molecule/kekulize.pyx"
+        ]
+      },
+      "boundaryBenchmark": {
+        "anyCythonCandidate": true,
+        "firstCythonCandidateRank": 1,
+        "baselineAnyCythonCandidate": false,
+        "baselineFirstCythonCandidateRank": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "narrowBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "baselineFirstCythonCandidateRank": null,
+        "baselineTopCandidateLikelyTest": false,
+        "baselineTopCandidateMatchedFields": [],
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "AromaticRing",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "AromaticBond",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "extension module",
+      "category": "python_cython_boundary",
+      "sectionTitle": "Python/Cython boundary queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 0,
+      "cythonCandidateCount": 6,
+      "rerankedResults": [
+        {
+          "symbolId": "4497c7ebb1e6d11ef2e5e5775e0b9dc31c18f202f60d18cc1c1fa643379f8067",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+          "localName": "AromaticRing",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 14,
+          "finalScore": 64,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "b277a186de939a539e3cc2457e25b508d7106beecc58773806fb611d9b178d24",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+          "localName": "AromaticBond",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 11,
+          "finalScore": 61,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "d7c92944ca8ff5f42490db2ede7efd9da2eb593817e4781aa2a6332ecd45d421",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Edge",
+          "localName": "Edge",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 10,
+          "finalScore": 60,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "c6fa17711a6bef19882acb1afc56452d06981a400b74154dc9a4a822931e52f6",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph",
+          "localName": "Graph",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 10,
+          "finalScore": 60,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "e3c42b2462aa70e81ccbecccac98ccc7b4f2d20dea727a2b96a5957e3d1d48d1",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Vertex",
+          "localName": "Vertex",
+          "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 10,
+          "finalScore": 60,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 10,
+          "finalScore": 60,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": [
+          "symbol:Graph",
+          "symbol:kekulize",
+          "file:arc/molecule/graph.pyx",
+          "file:arc/molecule/kekulize.pyx"
+        ]
+      },
+      "boundaryBenchmark": {
+        "anyCythonCandidate": true,
+        "firstCythonCandidateRank": 1,
+        "baselineAnyCythonCandidate": false,
+        "baselineFirstCythonCandidateRank": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "narrowBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "baselineFirstCythonCandidateRank": null,
+        "baselineTopCandidateLikelyTest": false,
+        "baselineTopCandidateMatchedFields": [],
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "AromaticRing",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "AromaticBond",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "where is the ESS output parsed",
+      "category": "workflow_tracing",
+      "sectionTitle": "ARC workflow tracing",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 6,
+      "cythonCandidateCount": 0,
+      "rerankedResults": [
+        {
+          "symbolId": "2bbfb5f881f55ecc4c816967f2f70db9aa5563f8177b686155f29d6d8ac69d03",
+          "filePath": "arc/parser/adapter.py",
+          "fqName": "arc/parser/adapter.py::ESSAdapter",
+          "localName": "ESSAdapter",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 76,
+          "graphScore": 32,
+          "finalScore": 108,
+          "matchedFields": [
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "ec806034ac7205323ac455a4a1d4a5603c4b5c8c58898ee0fde9607374fed1f7",
+          "filePath": "arc/parser/adapter.py",
+          "fqName": "arc/parser/adapter.py::ESSAdapter.parse_dipole_moment",
+          "localName": "parse_dipole_moment",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 92,
+          "graphScore": 13,
+          "finalScore": 105,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "67272fab2e6b6c678fe5cb79b715ba828cd3f834f39026e4e170b9522f2d6dd2",
+          "filePath": "arc/parser/adapter.py",
+          "fqName": "arc/parser/adapter.py::ESSAdapter.parse_e_elect",
+          "localName": "parse_e_elect",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 92,
+          "graphScore": 13,
+          "finalScore": 105,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "41e9c32e465b70b473821983d7722e4bf0b68519a826c57f835977e004211e53",
+          "filePath": "arc/parser/adapter.py",
+          "fqName": "arc/parser/adapter.py::ESSAdapter.parse_frequencies",
+          "localName": "parse_frequencies",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 92,
+          "graphScore": 13,
+          "finalScore": 105,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "966ee10d8c631d0adfd46ecec0aeafda2cd4f92fe9416aff07e538a19a29ac60",
+          "filePath": "arc/parser/adapter.py",
+          "fqName": "arc/parser/adapter.py::ESSAdapter.parse_opt_steps",
+          "localName": "parse_opt_steps",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 92,
+          "graphScore": 13,
+          "finalScore": 105,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "9b82c03fb71fee326d7a22aa0752340d0b290a34673ee2b901214f3b6ae14f5a",
+          "filePath": "arc/parser/adapter.py",
+          "fqName": "arc/parser/adapter.py::ESSAdapter.parse_polarizability",
+          "localName": "parse_polarizability",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 92,
+          "graphScore": 13,
+          "finalScore": 105,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "local_name",
+            "query_coverage",
+            "technical_hint",
+            "path_segment_signal"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": [
+          "file:arc/parser/adapter.py"
+        ]
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "testAwareBenchmark": {
+        "baselineTopCandidateLikelyTest": true,
+        "currentTopCandidateLikelyTest": false,
+        "baselineFirstNonTestCandidateRank": 2,
+        "firstNonTestCandidateRank": 1,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "narrowBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "baselineFirstCythonCandidateRank": null,
+        "baselineTopCandidateLikelyTest": false,
+        "baselineTopCandidateMatchedFields": [],
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "ESSAdapter",
+            "filePath": "arc/parser/adapter.py",
+            "fqName": "arc/parser/adapter.py::ESSAdapter",
+            "role": "pivot",
+            "contentMode": "stub",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 1,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "how does ARC generate TS guesses",
+      "category": "workflow_tracing",
+      "sectionTitle": "ARC workflow tracing",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 6,
+      "cythonCandidateCount": 0,
+      "rerankedResults": [
+        {
+          "symbolId": "94fae414c13b885499f8dabf7b89d15df1589add1cbee2e10ea947fcdd13a7c1",
+          "filePath": "arc/species/species.py",
+          "fqName": "arc/species/species.py::TSGuess",
+          "localName": "TSGuess",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 98,
+          "graphScore": 21,
+          "finalScore": 119,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "local_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "67f374a7ad31eecba51a7af251db2199dcbbd83a509a280a1f41c04fa16ed160",
+          "filePath": "arc/job/adapters/ts/heuristics.py",
+          "fqName": "arc/job/adapters/ts/heuristics.py::generate_hydrolysis_ts_guess",
+          "localName": "generate_hydrolysis_ts_guess",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 102,
+          "graphScore": 12,
+          "finalScore": 114,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "8344dfda0ade279db898a746ac768b4a517337c8acb00650bec19377cab46acd",
+          "filePath": "arc/scheduler.py",
+          "fqName": "arc/scheduler.py::Scheduler.generate_final_ts_guess_report",
+          "localName": "generate_final_ts_guess_report",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 102,
+          "graphScore": 6,
+          "finalScore": 108,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "771ca950d14faf8583ea3c3f9aa241657cab4c2a54c71dec2af4ab1e31f08573",
+          "filePath": "arc/species/conformers.py",
+          "fqName": "arc/species/conformers.py::generate_conformers",
+          "localName": "generate_conformers",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 94,
+          "graphScore": 13,
+          "finalScore": 107,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "docstring",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "29fb877feb704b62edbcf8a035ca86f8308924dbb54c7627ace9d4df931791a6",
+          "filePath": "arc/species/conformers.py",
+          "fqName": "arc/species/conformers.py::generate_force_field_conformers",
+          "localName": "generate_force_field_conformers",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 94,
+          "graphScore": 13,
+          "finalScore": 107,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "docstring",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "0c39d454481b63521b077bbf77f40a5291f3f2e58b9707a2d292abaed43b2a1c",
+          "filePath": "arc/species/species.py",
+          "fqName": "arc/species/species.py::TSGuess.as_dict",
+          "localName": "as_dict",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 92,
+          "graphScore": 14,
+          "finalScore": 106,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": [
+          "symbol:as_dict",
+          "file:arc/species/species.py"
+        ]
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "testAwareBenchmark": {
+        "baselineTopCandidateLikelyTest": false,
+        "currentTopCandidateLikelyTest": false,
+        "baselineFirstNonTestCandidateRank": 1,
+        "firstNonTestCandidateRank": 1,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "TSGuess",
+            "filePath": "arc/species/species.py",
+            "fqName": "arc/species/species.py::TSGuess",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "generate_hydrolysis_ts_guess",
+            "filePath": "arc/job/adapters/ts/heuristics.py",
+            "fqName": "arc/job/adapters/ts/heuristics.py::generate_hydrolysis_ts_guess",
+            "role": "pivot",
+            "contentMode": "stub",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "how are transition state jobs validated",
+      "category": "workflow_tracing",
+      "sectionTitle": "ARC workflow tracing",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 6,
+      "cythonCandidateCount": 0,
+      "rerankedResults": [
+        {
+          "symbolId": "c3b3db548b994f7d527409ce6d6ca3632818877caa244caca0f420235ba45574",
+          "filePath": "arc/job/pipe/pipe_state.py",
+          "fqName": "arc/job/pipe/pipe_state.py::check_valid_transition",
+          "localName": "check_valid_transition",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 94,
+          "graphScore": 16,
+          "finalScore": 110,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "docstring",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "3bdc065e7997834a51a407d4c08c63f3d6a67c2f4e25ad5167c042f6e586ddd5",
+          "filePath": "arc/job/pipe/pipe_state.py",
+          "fqName": "arc/job/pipe/pipe_state.py::update_task_state",
+          "localName": "update_task_state",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 90,
+          "graphScore": 16,
+          "finalScore": 106,
+          "matchedFields": [
+            "docstring",
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "23fecfaedb5e23c7cac05567e036b23767e75a967729adc2bdfc34491f71ffb6",
+          "filePath": "arc/job/pipe/pipe_state.py",
+          "fqName": "arc/job/pipe/pipe_state.py::TaskSpec.from_dict",
+          "localName": "from_dict",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 80,
+          "graphScore": 21,
+          "finalScore": 101,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "e2f37cbbb54637296b704f17c3b3f31e3310f43376b82a68eadb49a32f435fa4",
+          "filePath": "arc/job/pipe/pipe_state.py",
+          "fqName": "arc/job/pipe/pipe_state.py::TASK_TRANSITIONS",
+          "localName": "TASK_TRANSITIONS",
+          "kind": "module_constant",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 84,
+          "graphScore": 12,
+          "finalScore": 96,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "bae9bb505b968442958fc619c3c5060e74988148ea38f4a79c529c3906313fec",
+          "filePath": "arc/job/pipe/pipe_state.py",
+          "fqName": "arc/job/pipe/pipe_state.py::PipeRunState",
+          "localName": "PipeRunState",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 64,
+          "graphScore": 32,
+          "finalScore": 96,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "293c257fcd07e55e334a1819ddc278123e5af958fd80449f798f0776a5927d57",
+          "filePath": "arc/job/pipe/pipe_state.py",
+          "fqName": "arc/job/pipe/pipe_state.py::TaskSpec",
+          "localName": "TaskSpec",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 64,
+          "graphScore": 31,
+          "finalScore": 95,
+          "matchedFields": [
+            "fq_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": []
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "testAwareBenchmark": {
+        "baselineTopCandidateLikelyTest": false,
+        "currentTopCandidateLikelyTest": false,
+        "baselineFirstNonTestCandidateRank": 1,
+        "firstNonTestCandidateRank": 1,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "check_valid_transition",
+            "filePath": "arc/job/pipe/pipe_state.py",
+            "fqName": "arc/job/pipe/pipe_state.py::check_valid_transition",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 1,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "transition state generation",
+      "category": "workflow_tracing",
+      "sectionTitle": "ARC workflow tracing",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 6,
+      "cythonCandidateCount": 0,
+      "rerankedResults": [
+        {
+          "symbolId": "c3b3db548b994f7d527409ce6d6ca3632818877caa244caca0f420235ba45574",
+          "filePath": "arc/job/pipe/pipe_state.py",
+          "fqName": "arc/job/pipe/pipe_state.py::check_valid_transition",
+          "localName": "check_valid_transition",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 58,
+          "graphScore": 16,
+          "finalScore": 74,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "2c243a158e7e264d1f73e7ac8eaca347f9f9d5293cc6ffe13011f33a4d1e40ae",
+          "filePath": "arc/job/pipe/pipe_state.py",
+          "fqName": "arc/job/pipe/pipe_state.py::generate_claim_token",
+          "localName": "generate_claim_token",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 64,
+          "graphScore": 9,
+          "finalScore": 73,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "67f374a7ad31eecba51a7af251db2199dcbbd83a509a280a1f41c04fa16ed160",
+          "filePath": "arc/job/adapters/ts/heuristics.py",
+          "fqName": "arc/job/adapters/ts/heuristics.py::generate_hydrolysis_ts_guess",
+          "localName": "generate_hydrolysis_ts_guess",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 58,
+          "graphScore": 12,
+          "finalScore": 70,
+          "matchedFields": [
+            "docstring",
+            "local_name",
+            "query_coverage"
+          ]
+        },
+        {
+          "symbolId": "e2f37cbbb54637296b704f17c3b3f31e3310f43376b82a68eadb49a32f435fa4",
+          "filePath": "arc/job/pipe/pipe_state.py",
+          "fqName": "arc/job/pipe/pipe_state.py::TASK_TRANSITIONS",
+          "localName": "TASK_TRANSITIONS",
+          "kind": "module_constant",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 58,
+          "graphScore": 12,
+          "finalScore": 70,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "3bdc065e7997834a51a407d4c08c63f3d6a67c2f4e25ad5167c042f6e586ddd5",
+          "filePath": "arc/job/pipe/pipe_state.py",
+          "fqName": "arc/job/pipe/pipe_state.py::update_task_state",
+          "localName": "update_task_state",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 54,
+          "graphScore": 16,
+          "finalScore": 70,
+          "matchedFields": [
+            "docstring",
+            "local_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "639122a7baf68adce270b2333eb5c8817a10050bc6d043823c49d815c8606809",
+          "filePath": "arc/job/pipe/pipe_state_test.py",
+          "fqName": "arc/job/pipe/pipe_state_test.py::TestTaskTransitions",
+          "localName": "TestTaskTransitions",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": true,
+          "lexicalScore": 40,
+          "graphScore": 25,
+          "finalScore": 65,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "query_coverage",
+            "likely_test_penalty",
+            "path_segment_signal"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": []
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "testAwareBenchmark": {
+        "baselineTopCandidateLikelyTest": true,
+        "currentTopCandidateLikelyTest": false,
+        "baselineFirstNonTestCandidateRank": null,
+        "firstNonTestCandidateRank": 1,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "check_valid_transition",
+            "filePath": "arc/job/pipe/pipe_state.py",
+            "fqName": "arc/job/pipe/pipe_state.py::check_valid_transition",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 1,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "conformer filtering",
+      "category": "scientific_domain_concept",
+      "sectionTitle": "Scientific domain concept queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 6,
+      "cythonCandidateCount": 0,
+      "rerankedResults": [
+        {
+          "symbolId": "cd183582f4f3910e062aac6aba66f29aa30511f247715b1f3973be5b20d45e12",
+          "filePath": "arc/species/conformers.py",
+          "fqName": "arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
+          "localName": "conformers_combinations_by_lowest_conformer",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 12,
+          "finalScore": 46,
+          "matchedFields": [
+            "local_name",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "767c6be6bc8e992faf76465fb49b703c3ffbc5e51c4d25298bad7bbfabc92163",
+          "filePath": "arc/species/conformers.py",
+          "fqName": "arc/species/conformers.py::change_dihedrals_and_force_field_it",
+          "localName": "change_dihedrals_and_force_field_it",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 28,
+          "graphScore": 16,
+          "finalScore": 44,
+          "matchedFields": [
+            "fq_name",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "5f1aad5ffae92629ee2e129deaaf07a36a380731c149fb2cd53183634347ae64",
+          "filePath": "arc/species/conformers.py",
+          "fqName": "arc/species/conformers.py::determine_chirality",
+          "localName": "determine_chirality",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 28,
+          "graphScore": 16,
+          "finalScore": 44,
+          "matchedFields": [
+            "fq_name",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "e0764976f3cca18f954aaace594f5993924fa355bba9ec377dafced472124404",
+          "filePath": "arc/species/conformers.py",
+          "fqName": "arc/species/conformers.py::embed_rdkit",
+          "localName": "embed_rdkit",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 28,
+          "graphScore": 16,
+          "finalScore": 44,
+          "matchedFields": [
+            "fq_name",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "4a8ac51faab481d1e98ad9f66f6ee2d9a77a9af8f52895327be61e5ba2b23381",
+          "filePath": "arc/species/conformers.py",
+          "fqName": "arc/species/conformers.py::find_internal_rotors",
+          "localName": "find_internal_rotors",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 28,
+          "graphScore": 16,
+          "finalScore": 44,
+          "matchedFields": [
+            "fq_name",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "771ca950d14faf8583ea3c3f9aa241657cab4c2a54c71dec2af4ab1e31f08573",
+          "filePath": "arc/species/conformers.py",
+          "fqName": "arc/species/conformers.py::generate_conformers",
+          "localName": "generate_conformers",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 28,
+          "graphScore": 16,
+          "finalScore": 44,
+          "matchedFields": [
+            "local_name",
+            "path_segment_signal"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": []
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "testAwareBenchmark": {
+        "baselineTopCandidateLikelyTest": true,
+        "currentTopCandidateLikelyTest": false,
+        "baselineFirstNonTestCandidateRank": null,
+        "firstNonTestCandidateRank": 1,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "conformers_combinations_by_lowest_conformer",
+            "filePath": "arc/species/conformers.py",
+            "fqName": "arc/species/conformers.py::conformers_combinations_by_lowest_conformer",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 1,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "kinetics calculation",
+      "category": "scientific_domain_concept",
+      "sectionTitle": "Scientific domain concept queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 6,
+      "cythonCandidateCount": 0,
+      "rerankedResults": [
+        {
+          "symbolId": "b50c2ef60b4883aa90972d8d5788aed2b0fcdbf4187b3a7b5946426357b61e01",
+          "filePath": "arc/checks/ts.py",
+          "fqName": "arc/checks/ts.py::check_ts",
+          "localName": "check_ts",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 13,
+          "finalScore": 47,
+          "matchedFields": [
+            "signature",
+            "docstring",
+            "query_coverage"
+          ]
+        },
+        {
+          "symbolId": "6b8636cf2c5a1cc94e16fea0badd607e36088e11cc7bb8d48822ca3bfb22d4ff",
+          "filePath": "arc/checks/ts.py",
+          "fqName": "arc/checks/ts.py::compute_rxn_e0",
+          "localName": "compute_rxn_e0",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 13,
+          "finalScore": 47,
+          "matchedFields": [
+            "signature",
+            "docstring",
+            "query_coverage"
+          ]
+        },
+        {
+          "symbolId": "4b1421e7b19d90e2f09e330f161f61505389490344cbadb826e49b9961892cfb",
+          "filePath": "arc/statmech/factory.py",
+          "fqName": "arc/statmech/factory.py::statmech_factory",
+          "localName": "statmech_factory",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 32,
+          "graphScore": 12,
+          "finalScore": 44,
+          "matchedFields": [
+            "docstring",
+            "query_coverage"
+          ]
+        },
+        {
+          "symbolId": "31a5b6bd23bb35a73db19901c277ddd275badc9ced005347f0dde12b5c87fc1f",
+          "filePath": "arc/processor.py",
+          "fqName": "arc/processor.py::process_arc_project",
+          "localName": "process_arc_project",
+          "kind": "function",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 9,
+          "finalScore": 43,
+          "matchedFields": [
+            "signature",
+            "docstring",
+            "query_coverage"
+          ]
+        },
+        {
+          "symbolId": "6d6360fa5917421eec20d5eeb8c881c0b240dab210fe2e872fec238949c35a86",
+          "filePath": "arc/main.py",
+          "fqName": "arc/main.py::ARC",
+          "localName": "ARC",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 32,
+          "graphScore": 10,
+          "finalScore": 42,
+          "matchedFields": [
+            "docstring",
+            "query_coverage"
+          ]
+        },
+        {
+          "symbolId": "62eddaa41d593c9776db6a0ec066653abe02aeecc611fc52ee03982acc31b5bf",
+          "filePath": "arc/scheduler.py",
+          "fqName": "arc/scheduler.py::Scheduler",
+          "localName": "Scheduler",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 32,
+          "graphScore": 10,
+          "finalScore": 42,
+          "matchedFields": [
+            "docstring",
+            "query_coverage"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": []
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "testAwareBenchmark": {
+        "baselineTopCandidateLikelyTest": false,
+        "currentTopCandidateLikelyTest": false,
+        "baselineFirstNonTestCandidateRank": 1,
+        "firstNonTestCandidateRank": 1,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 2,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "check_ts",
+            "filePath": "arc/checks/ts.py",
+            "fqName": "arc/checks/ts.py::check_ts",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "ARC",
+            "filePath": "arc/main.py",
+            "fqName": "arc/main.py::ARC",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 2,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    },
+    {
+      "query": "reaction family matching",
+      "category": "scientific_domain_concept",
+      "sectionTitle": "Scientific domain concept queries",
+      "intent": "explain",
+      "routingProfileId": "explain",
+      "hasCandidates": true,
+      "pythonCandidateCount": 6,
+      "cythonCandidateCount": 0,
+      "rerankedResults": [
+        {
+          "symbolId": "901628b99114bcfdc30f35c28d04f6e2f0aba13ecad116ffdaa7aa1f749ad757",
+          "filePath": "arc/reaction/reaction.py",
+          "fqName": "arc/reaction/reaction.py::ARCReaction",
+          "localName": "ARCReaction",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 70,
+          "graphScore": 32,
+          "finalScore": 102,
+          "matchedFields": [
+            "local_name",
+            "docstring",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "2ce59b9d1c314e66457b6df8808ed902909185cead65d22e2175db6f0f7120e0",
+          "filePath": "arc/family/family.py",
+          "fqName": "arc/family/family.py::ReactionFamily",
+          "localName": "ReactionFamily",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 64,
+          "graphScore": 32,
+          "finalScore": 96,
+          "matchedFields": [
+            "local_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "dc6b9bcf3386e041cea12139713b55856a0e9ba1c94f79bcae551274778e0939",
+          "filePath": "arc/family/family.py",
+          "fqName": "arc/family/family.py::ReactionFamily.generate_bimolecular_products",
+          "localName": "generate_bimolecular_products",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 74,
+          "graphScore": 21,
+          "finalScore": 95,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "f5c5226e1fee0904e04a7f67e57da7d6efdb992317809d5cb4b6f660efeb864d",
+          "filePath": "arc/family/family.py",
+          "fqName": "arc/family/family.py::ReactionFamily.generate_products_by_reactant_groups",
+          "localName": "generate_products_by_reactant_groups",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 74,
+          "graphScore": 21,
+          "finalScore": 95,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "bf14e1f193d1d57a3a03e31188aac6b66eff94dae0ca1d0e9cf1e8ce14761c4b",
+          "filePath": "arc/family/family.py",
+          "fqName": "arc/family/family.py::ReactionFamily.generate_unimolecular_products",
+          "localName": "generate_unimolecular_products",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 74,
+          "graphScore": 20,
+          "finalScore": 94,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
+          "symbolId": "4775bde0df71f6f8e4061fedb1dc137b8fbb4717909125fd39ecae017f68255f",
+          "filePath": "arc/reaction/reaction.py",
+          "fqName": "arc/reaction/reaction.py::ARCReaction.family",
+          "localName": "family",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 72,
+          "graphScore": 13,
+          "finalScore": 85,
+          "matchedFields": [
+            "fq_name",
+            "local_name",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        }
+      ],
+      "graphOrderingDeterministic": true,
+      "capsuleDeterministic": true,
+      "handoffDeterministic": true,
+      "surfaceReview": {
+        "expectedSurfaceObserved": null,
+        "interestingMatches": []
+      },
+      "broadBenchmark": {
+        "baselineHasCandidates": false,
+        "baselineExpectedSurfaceObserved": null,
+        "improvedAgainstBaseline": true,
+        "regressedAgainstBaseline": false
+      },
+      "testAwareBenchmark": {
+        "baselineTopCandidateLikelyTest": false,
+        "currentTopCandidateLikelyTest": false,
+        "baselineFirstNonTestCandidateRank": 1,
+        "firstNonTestCandidateRank": 1,
+        "improvedAgainstBaseline": false,
+        "regressedAgainstBaseline": false
+      },
+      "capsule": {
+        "built": true,
+        "pivotCount": 1,
+        "supportCount": 0,
+        "sourceBackedPivotCount": 0,
+        "truncated": true,
+        "compressed": true,
+        "items": [
+          {
+            "localName": "ReactionFamily",
+            "filePath": "arc/family/family.py",
+            "fqName": "arc/family/family.py::ReactionFamily",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          }
+        ]
+      },
+      "handoff": {
+        "built": true,
+        "itemCount": 1,
+        "selectedIntent": "explain",
+        "schemaName": "vtrace.external_handoff",
+        "schemaVersion": "1.0.0",
+        "trustStatus": null
+      }
+    }
+  ],
+  "controlledChange": {
+    "status": "pass",
+    "usedTemporaryCopy": true,
+    "sourceRepoMutated": false,
+    "targetFilePath": "arc/parser/adapter.py",
+    "query": "parse_e_elect",
+    "fileChangeCounts": {
+      "added": 0,
+      "removed": 0,
+      "modified": 1,
+      "unchanged": 211
+    },
+    "symbolChangeCounts": {
+      "added": 0,
+      "removed": 0,
+      "modified": 30,
+      "unchanged": 5122
+    },
+    "modifiedFilePaths": [
+      "arc/parser/adapter.py"
+    ],
+    "modifiedSymbols": [
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.__init__",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.check_logfile_exists",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.logfile_contains_errors",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_1d_scan_coords",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_1d_scan_energies",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_dipole_moment",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_e_elect",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_ess_version",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_frequencies",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_geometry",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_irc_traj",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_nd_scan_energies",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_normal_mode_displacement",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_opt_steps",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_polarizability",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_scan_conformers",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_t1",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter.parse_zpe_correction",
+        "kind": "method",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSAdapter",
+        "kind": "class",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSEnum.cfour",
+        "kind": "module_variable",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSEnum.gaussian",
+        "kind": "module_variable",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSEnum.molpro",
+        "kind": "module_variable",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSEnum.orca",
+        "kind": "module_variable",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSEnum.psi4",
+        "kind": "module_variable",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSEnum.qchem",
+        "kind": "module_variable",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSEnum.terachem",
+        "kind": "module_variable",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSEnum.xtb",
+        "kind": "module_variable",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSEnum.yaml",
+        "kind": "module_variable",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::ESSEnum",
+        "kind": "class",
+        "changeType": "modified"
+      },
+      {
+        "filePath": "arc/parser/adapter.py",
+        "fqName": "arc/parser/adapter.py::logger",
+        "kind": "module_variable",
+        "changeType": "modified"
+      }
+    ],
+    "capsuleTrustStatus": "stale"
+  },
+  "topFindings": [
+    {
+      "code": "retrieval.exact_query_expected_surface_missing",
+      "severity": "warning",
+      "summary": "An exact-symbol validation query did not surface the expected name or area in the top reranked results.",
+      "query": "run_arc",
+      "details": {
+        "topResultLocalNames": [
+          "ARC",
+          "execute",
+          "run_in_conda_env",
+          "main",
+          "main",
+          "main"
+        ]
+      }
+    },
+    {
+      "code": "retrieval.exact_query_expected_surface_missing",
+      "severity": "warning",
+      "summary": "An exact-symbol validation query did not surface the expected name or area in the top reranked results.",
+      "query": "species_to_dict",
+      "details": {
+        "topResultLocalNames": [
+          "from_dict",
+          "as_dict",
+          "from_dict",
+          "as_dict",
+          "check_xyz_dict",
+          "check_zmat_dict"
+        ]
+      }
+    },
+    {
+      "code": "limitation.logic_flow_probe_unreachable",
+      "severity": "info",
+      "summary": "A requested logic-flow probe resolved both endpoints but found no connecting path; cross-module call resolution may be conservative for this pair.",
+      "details": {
+        "start": "arc/molecule/molecule.py::Molecule.kekulize",
+        "end": "arc/molecule/kekulize.pyx::kekulize"
+      }
+    }
+  ],
+  "classifiedGaps": [
+    {
+      "category": "accepted limitation",
+      "findingCode": "limitation.logic_flow_probe_unreachable",
+      "severity": "info",
+      "summary": "A requested logic-flow probe resolved both endpoints but found no connecting path; cross-module call resolution may be conservative for this pair.",
+      "rationale": "Finding limitation.logic_flow_probe_unreachable matches a conservative behavior that is currently documented and explainable for RC1.",
+      "details": {
+        "start": "arc/molecule/molecule.py::Molecule.kekulize",
+        "end": "arc/molecule/kekulize.pyx::kekulize"
+      }
+    },
+    {
+      "category": "retrieval/reranking gap",
+      "findingCode": "retrieval.exact_query_expected_surface_missing",
+      "severity": "warning",
+      "summary": "An exact-symbol validation query did not surface the expected name or area in the top reranked results.",
+      "query": "run_arc",
+      "rationale": "Finding retrieval.exact_query_expected_surface_missing points to relevant indexed structure not surfacing strongly enough in retrieval or reranking.",
+      "details": {
+        "topResultLocalNames": [
+          "ARC",
+          "execute",
+          "run_in_conda_env",
+          "main",
+          "main",
+          "main"
+        ]
+      }
+    },
+    {
+      "category": "retrieval/reranking gap",
+      "findingCode": "retrieval.exact_query_expected_surface_missing",
+      "severity": "warning",
+      "summary": "An exact-symbol validation query did not surface the expected name or area in the top reranked results.",
+      "query": "species_to_dict",
+      "rationale": "Finding retrieval.exact_query_expected_surface_missing points to relevant indexed structure not surfacing strongly enough in retrieval or reranking.",
+      "details": {
+        "topResultLocalNames": [
+          "from_dict",
+          "as_dict",
+          "from_dict",
+          "as_dict",
+          "check_xyz_dict",
+          "check_zmat_dict"
+        ]
+      }
+    }
+  ],
+  "rc1ReadinessRecommendation": "ready with known limitations"
+}

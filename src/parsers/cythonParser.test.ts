@@ -89,6 +89,41 @@ test("top-level cpdef functions are extracted conservatively when the declaratio
   );
 });
 
+test("typed cdef module variables with initializer calls are not extracted as functions", async () => {
+  const result = await parseCythonSource(
+    [
+      "cdef class VF2:",
+      "    pass",
+      "",
+      "cdef VF2 vf2 = VF2()",
+      "cdef int counter = compute()",
+      "",
+      "cpdef int real_function(int value):",
+      "    return value",
+      "",
+    ].join("\n"),
+  );
+
+  const functions = result.symbols.filter(
+    (symbol) => symbol.kind === SymbolKind.Function,
+  );
+
+  assert.deepEqual(
+    functions.map((symbol) => symbol.localName),
+    ["real_function"],
+  );
+  assert.equal(
+    result.symbols.some(
+      (symbol) => symbol.localName === "VF2" && symbol.kind === SymbolKind.Function,
+    ),
+    false,
+  );
+  assert.equal(
+    findSymbolOfKind(result.symbols, "VF2", SymbolKind.Class).signature,
+    "cdef class VF2:",
+  );
+});
+
 test("cdef classes and their methods are indexed while nested defs stay skipped", async () => {
   const result = await parseCoreFixture("src/pkg/module.pyx", MODULE_FIXTURE_URL);
 

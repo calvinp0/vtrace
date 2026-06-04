@@ -1,6 +1,6 @@
 // @ts-nocheck
 import type { CapsuleContentMode, CapsuleItemRole } from "../capsule/types";
-import type { Language, SymbolKind } from "../domain/types";
+import type { EdgeType, Language, SymbolKind } from "../domain/types";
 import type { HandoffPayload } from "../handoff/types";
 import type { QueryIntent } from "../intent/types";
 import type { StaleStateStatus, FileChangeType } from "../memory/types";
@@ -46,12 +46,27 @@ export interface ValidationQueryDefinition {
   readonly sectionTitle: string;
 }
 
+export interface LogicFlowProbeDefinition {
+  readonly start: string;
+  readonly end: string;
+}
+
 export interface RealRepoValidationOptions {
   readonly repoRoot: string;
   readonly queries?: readonly string[] | readonly ValidationQueryDefinition[];
   readonly queriesFilePath?: string;
   readonly interestingSymbols?: readonly string[];
   readonly interestingFiles?: readonly string[];
+  /**
+   * Fully-qualified symbol names to probe through the impact graph so the
+   * report can record whether structural dependents are discoverable.
+   */
+  readonly impactProbeSymbols?: readonly string[];
+  /**
+   * Start/end fully-qualified symbol pairs to probe through logic-flow search
+   * so the report can record whether call-edge evidence connects them.
+   */
+  readonly logicFlowProbes?: readonly LogicFlowProbeDefinition[];
   readonly maxResults?: number;
   readonly maxBudgetCharacters?: number;
   readonly enableControlledChange?: boolean;
@@ -249,6 +264,56 @@ export interface RealRepoValidationSummaryCounts {
   readonly broadQueriesTestMisrankingRegressedAgainstBaseline: number;
 }
 
+export interface ValidationEdgeTypeCount {
+  readonly edgeType: EdgeType;
+  readonly count: number;
+}
+
+export interface ValidationEdgeLanguageCount {
+  readonly language: Language;
+  readonly edgeType: EdgeType;
+  readonly count: number;
+}
+
+export interface ValidationCrossLanguageEdgeCount {
+  readonly srcLanguage: Language;
+  readonly dstLanguage: Language;
+  readonly edgeType: EdgeType;
+  readonly count: number;
+}
+
+export interface ValidationImpactProbe {
+  readonly symbolFqn: string;
+  readonly resolved: boolean;
+  readonly language: Language | null;
+  readonly dependentSymbolCount: number;
+  readonly dependentFileCount: number;
+  readonly observedEdgeTypes: readonly EdgeType[];
+  /** Whether the impact graph surfaced at least one real dependent symbol. */
+  readonly foundRealDependents: boolean;
+}
+
+export interface ValidationLogicFlowProbe {
+  readonly start: string;
+  readonly end: string;
+  readonly startResolved: boolean;
+  readonly endResolved: boolean;
+  readonly reachable: boolean;
+  readonly pathCount: number;
+  /** Whether any `calls` edge exists in the indexed graph for this repo. */
+  readonly callFlowEvidenceAvailable: boolean;
+  /** Whether at least one `calls` edge appears in a returned path. */
+  readonly callFlowEvidenceUsed: boolean;
+}
+
+export interface ValidationStructuralEvidence {
+  readonly edgeCountsByType: readonly ValidationEdgeTypeCount[];
+  readonly edgeCountsByLanguage: readonly ValidationEdgeLanguageCount[];
+  readonly crossLanguageEdgeCounts: readonly ValidationCrossLanguageEdgeCount[];
+  readonly impactProbes: readonly ValidationImpactProbe[];
+  readonly logicFlowProbes: readonly ValidationLogicFlowProbe[];
+}
+
 export interface RealRepoValidationReport {
   readonly schemaVersion: "1.0.0";
   readonly repoRoot: string;
@@ -258,6 +323,7 @@ export interface RealRepoValidationReport {
   readonly interestingSymbols: readonly string[];
   readonly interestingFiles: readonly string[];
   readonly summaryCounts: RealRepoValidationSummaryCounts;
+  readonly structuralEvidence: ValidationStructuralEvidence;
   readonly areaResults: {
     readonly indexingAndPersistence: ValidationAreaResult;
     readonly representativePythonQueries: ValidationAreaResult;

@@ -432,6 +432,65 @@ test("validation report records deterministic narrow-query benchmark improvement
   });
 });
 
+test("validation report records deterministic structural edge, impact, and logic-flow evidence", async () => {
+  await withMixedPyCythonRepo(async (repoRoot) => {
+    const options = {
+      repoRoot,
+      queries: FIXTURE_QUERIES,
+      enableControlledChange: false,
+      impactProbeSymbols: [
+        "src/spectra_lab/utils/grid.py::clamp_window",
+        "src/spectra_lab/utils/grid.py::does_not_exist",
+      ],
+      logicFlowProbes: [
+        {
+          start: "src/spectra_lab/analysis/background.py::estimate_background",
+          end: "src/spectra_lab/utils/grid.py::clamp_window",
+        },
+      ],
+    } as const;
+
+    const report = await runRealRepoValidation(options);
+    const evidence = report.structuralEvidence;
+
+    const callEdges = evidence.edgeCountsByType.find((entry) => entry.edgeType === "calls");
+    const containsEdges = evidence.edgeCountsByType.find((entry) => entry.edgeType === "contains");
+    assert.equal((callEdges?.count ?? 0) > 0, true);
+    assert.equal((containsEdges?.count ?? 0) > 0, true);
+
+    const pythonCallEdges = evidence.edgeCountsByLanguage.find(
+      (entry) => entry.language === "python" && entry.edgeType === "calls",
+    );
+    assert.equal((pythonCallEdges?.count ?? 0) > 0, true);
+
+    const clampProbe = evidence.impactProbes.find(
+      (probe) => probe.symbolFqn === "src/spectra_lab/utils/grid.py::clamp_window",
+    );
+    assert.notEqual(clampProbe, undefined);
+    assert.equal(clampProbe!.resolved, true);
+    assert.equal(clampProbe!.language, "python");
+    assert.equal(clampProbe!.foundRealDependents, true);
+
+    const missingProbe = evidence.impactProbes.find(
+      (probe) => probe.symbolFqn === "src/spectra_lab/utils/grid.py::does_not_exist",
+    );
+    assert.notEqual(missingProbe, undefined);
+    assert.equal(missingProbe!.resolved, false);
+    assert.equal(missingProbe!.foundRealDependents, false);
+
+    const flowProbe = evidence.logicFlowProbes[0];
+    assert.notEqual(flowProbe, undefined);
+    assert.equal(flowProbe!.startResolved, true);
+    assert.equal(flowProbe!.endResolved, true);
+    assert.equal(flowProbe!.reachable, true);
+    assert.equal(flowProbe!.callFlowEvidenceAvailable, true);
+    assert.equal(flowProbe!.callFlowEvidenceUsed, true);
+
+    const second = await runRealRepoValidation(options);
+    assert.deepEqual(second.structuralEvidence, evidence);
+  });
+}, 20_000);
+
 async function withTestAwareValidationRepo(
   fn: (repoRoot: string) => Promise<void>,
 ): Promise<void> {

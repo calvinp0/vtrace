@@ -638,6 +638,16 @@ def parse_def_header(tokens, start_index):
     if open_paren_index is None:
         return None
 
+    # A top-level "=" before the first parenthesis means the parenthesis belongs
+    # to an initializer expression (e.g. "cdef VF2 vf2 = VF2()"), so this is a
+    # typed variable declaration rather than a function definition. find_open_paren
+    # returns the first unnested "(", so any "=" before it is at depth zero.
+    for scan_index in range(start_index + 1, open_paren_index):
+        scan_tok = tokens[scan_index]
+
+        if scan_tok.type == token.OP and scan_tok.string == "=":
+            return None
+
     name_token = previous_significant(tokens, start_index + 1, open_paren_index - 1)
     first_parameter_token = next_significant(tokens, open_paren_index + 1)
 

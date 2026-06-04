@@ -19,6 +19,8 @@ import {
   persistCapsuleManifest,
 } from "../db/repositories/capsuleManifestsRepository";
 import { listAllEdges } from "../db/repositories/edgesRepository";
+import { getImpactGraph } from "../impact/getImpactGraph";
+import { searchLogicFlow } from "../logicFlow/searchLogicFlow";
 import {
   getIndexRunSummary,
   getLatestIndexRun,
@@ -27,7 +29,7 @@ import {
 } from "../db/repositories/indexRunsRepository";
 import { listAllSymbols, listSymbolsForFile } from "../db/repositories/symbolsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
-import { Language, type SymbolRecord } from "../domain/types";
+import { EdgeType, Language, type EdgeRecord, type SymbolRecord } from "../domain/types";
 import { detectLanguage } from "../fs/languageDetection";
 import { buildHandoffPayload, deterministicHandoffBuilder } from "../handoff/buildHandoff";
 import type { IntentAwareCapsulePipelineResult } from "../handoff/types";
@@ -66,6 +68,10 @@ import {
   type ValidationQueryResult,
   type ValidationStatus,
   ValidationStatus as ValidationStatusEnum,
+  type ValidationStructuralEvidence,
+  type ValidationImpactProbe,
+  type ValidationLogicFlowProbe,
+  type LogicFlowProbeDefinition,
 } from "./types";
 
 const DEFAULT_QUERY_FILE_PATH = fileURLToPath(
@@ -164,6 +170,14 @@ export async function runRealRepoValidation(
       edges: allEdges,
       queryResults,
     });
+    const structuralEvidence = summarizeStructuralEvidence({
+      db,
+      symbols: allSymbols,
+      edges: allEdges,
+      impactProbeSymbols: normalizeList(options.impactProbeSymbols),
+      logicFlowProbes: normalizeLogicFlowProbes(options.logicFlowProbes),
+    });
+    addStructuralFindings(findings, structuralEvidence);
     const areaResults = summarizeAreaResults({
       indexResult: secondIndex,
       summaryCounts,
@@ -188,6 +202,7 @@ export async function runRealRepoValidation(
       interestingSymbols,
       interestingFiles,
       summaryCounts,
+      structuralEvidence,
       areaResults,
       queryResults,
       controlledChange,
@@ -1584,6 +1599,214 @@ function normalizePathList(values: readonly string[] | undefined): string[] {
 
 function normalizePath(value: string): string {
   return value.replace(/\\/g, "/");
+}
+
+function normalizeLogicFlowProbes(
+  probes: readonly LogicFlowProbeDefinition[] | undefined,
+): LogicFlowProbeDefinition[] {
+  if (probes === undefined) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const normalized: LogicFlowProbeDefinition[] = [];
+
+  for (const probe of probes) {
+    const start = probe.start.trim();
+    const end = probe.end.trim();
+
+    if (start.length === 0 || end.length === 0) {
+      continue;
+    }
+
+    const key = `${start} ${end}`;
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    normalized.push({ start, end });
+  }
+
+  return normalized;
+}
+
+const STRUCTURAL_EDGE_TYPES: readonly EdgeType[] = [
+  EdgeType.Contains,
+  EdgeType.Imports,
+  EdgeType.Calls,
+  EdgeType.References,
+];
+
+const STRUCTURAL_LANGUAGES: readonly Language[] = [
+  Language.TypeScript,
+  Language.JavaScript,
+  Language.Python,
+  Language.Cython,
+  Language.Go,
+  Language.Rust,
+];
+
+function summarizeStructuralEvidence(input: {
+  db: ReturnType<typeof openIndexerDatabase>;
+  symbols: readonly SymbolRecord[];
+  edges: readonly EdgeRecord[];
+  impactProbeSymbols: readonly string[];
+  logicFlowProbes: readonly LogicFlowProbeDefinition[];
+}): ValidationStructuralEvidence {
+  const languageBySymbolId = new Map<string, Language>();
+
+  for (const symbol of input.symbols) {
+    const language = detectLanguage(symbol.filePath);
+
+    if (language !== undefined) {
+      languageBySymbolId.set(symbol.id, language);
+    }
+  }
+
+  const byType = new Map<EdgeType, number>();
+  const byLanguage = new Map<string, number>();
+  const byCrossLanguage = new Map<string, number>();
+
+  for (const edge of input.edges) {
+    byType.set(edge.edgeType, (byType.get(edge.edgeType) ?? 0) + 1);
+
+    const srcLanguage = languageBySymbolId.get(edge.srcSymbolId);
+    const dstLanguage = languageBySymbolId.get(edge.dstSymbolId);
+
+    if (srcLanguage !== undefined) {
+      const key = `${srcLanguage} ${edge.edgeType}`;
+      byLanguage.set(key, (byLanguage.get(key) ?? 0) + 1);
+    }
+
+    if (srcLanguage !== undefined && dstLanguage !== undefined && srcLanguage !== dstLanguage) {
+      const key = `${srcLanguage} ${dstLanguage} ${edge.edgeType}`;
+      byCrossLanguage.set(key, (byCrossLanguage.get(key) ?? 0) + 1);
+    }
+  }
+
+  const edgeCountsByType = STRUCTURAL_EDGE_TYPES
+    .filter((edgeType) => byType.has(edgeType))
+    .map((edgeType) => ({ edgeType, count: byType.get(edgeType) ?? 0 }));
+
+  const edgeCountsByLanguage = STRUCTURAL_LANGUAGES.flatMap((language) =>
+    STRUCTURAL_EDGE_TYPES
+      .map((edgeType) => ({ language, edgeType, key: `${language} ${edgeType}` }))
+      .filter((entry) => byLanguage.has(entry.key))
+      .map((entry) => ({ language: entry.language, edgeType: entry.edgeType, count: byLanguage.get(entry.key) ?? 0 })),
+  );
+
+  const crossLanguageEdgeCounts = [...byCrossLanguage.entries()]
+    .map(([key, count]) => {
+      const [srcLanguage, dstLanguage, edgeType] = key.split(" ");
+      return {
+        srcLanguage: srcLanguage as Language,
+        dstLanguage: dstLanguage as Language,
+        edgeType: edgeType as EdgeType,
+        count,
+      };
+    })
+    .sort((left, right) =>
+      left.srcLanguage.localeCompare(right.srcLanguage)
+      || left.dstLanguage.localeCompare(right.dstLanguage)
+      || left.edgeType.localeCompare(right.edgeType));
+
+  const impactProbes = [...input.impactProbeSymbols]
+    .sort((left, right) => left.localeCompare(right))
+    .map((symbolFqn) => probeImpact(input.db, symbolFqn));
+
+  const logicFlowProbes = input.logicFlowProbes
+    .map((probe) => probeLogicFlow(input.db, probe))
+    .sort((left, right) =>
+      left.start.localeCompare(right.start) || left.end.localeCompare(right.end));
+
+  return {
+    edgeCountsByType,
+    edgeCountsByLanguage,
+    crossLanguageEdgeCounts,
+    impactProbes,
+    logicFlowProbes,
+  };
+}
+
+function probeImpact(
+  db: ReturnType<typeof openIndexerDatabase>,
+  symbolFqn: string,
+): ValidationImpactProbe {
+  const result = getImpactGraph(db, { symbolFqn, depth: 2, format: "list" });
+
+  if (!result.ok) {
+    return {
+      symbolFqn,
+      resolved: false,
+      language: null,
+      dependentSymbolCount: 0,
+      dependentFileCount: 0,
+      observedEdgeTypes: [],
+      foundRealDependents: false,
+    };
+  }
+
+  return {
+    symbolFqn,
+    resolved: true,
+    language: languageFromFilePath(result.output.resolvedSymbol.filePath) ?? null,
+    dependentSymbolCount: result.output.summary.dependentSymbolCount,
+    dependentFileCount: result.output.summary.dependentFileCount,
+    observedEdgeTypes: result.output.coverage.observedEdgeTypes,
+    foundRealDependents: result.output.summary.dependentSymbolCount > 0,
+  };
+}
+
+function probeLogicFlow(
+  db: ReturnType<typeof openIndexerDatabase>,
+  probe: LogicFlowProbeDefinition,
+): ValidationLogicFlowProbe {
+  const result = searchLogicFlow(db, { start: probe.start, end: probe.end, maxPaths: 8 });
+
+  if (!result.ok) {
+    const startResolved = result.error.code !== "unknown_start" && result.error.code !== "ambiguous_start";
+
+    return {
+      start: probe.start,
+      end: probe.end,
+      startResolved,
+      endResolved: startResolved && result.error.code !== "unknown_end" && result.error.code !== "ambiguous_end",
+      reachable: false,
+      pathCount: 0,
+      callFlowEvidenceAvailable: false,
+      callFlowEvidenceUsed: false,
+    };
+  }
+
+  return {
+    start: probe.start,
+    end: probe.end,
+    startResolved: true,
+    endResolved: true,
+    reachable: result.output.summary.reachable,
+    pathCount: result.output.summary.pathCount,
+    callFlowEvidenceAvailable: result.output.coverage.callFlowEvidenceAvailable,
+    callFlowEvidenceUsed: result.output.coverage.callFlowEvidenceUsed,
+  };
+}
+
+function addStructuralFindings(
+  findings: ValidationFinding[],
+  structuralEvidence: ValidationStructuralEvidence,
+): void {
+  for (const probe of structuralEvidence.logicFlowProbes) {
+    if (probe.startResolved && probe.endResolved && !probe.reachable) {
+      findings.push({
+        code: "limitation.logic_flow_probe_unreachable",
+        severity: ValidationFindingSeverity.Info,
+        summary:
+          "A requested logic-flow probe resolved both endpoints but found no connecting path; cross-module call resolution may be conservative for this pair.",
+        details: { start: probe.start, end: probe.end },
+      });
+    }
+  }
 }
 
 function normalizeSearchText(value: string): string {
