@@ -873,6 +873,13 @@ interface PythonExportIndex {
   namedSymbols: ReadonlyMap<string, SymbolRecord>;
   classMembersByClassName?: ReadonlyMap<string, ReadonlyMap<string, SymbolRecord>>;
   basesByClassName?: ReadonlyMap<string, readonly BaseClassRef[]>;
+  /**
+   * Names this module re-exports via an exact, unambiguous `from X import name`
+   * (alias-aware). Used to resolve package `__init__.py` re-exports to the
+   * defining module. Wildcard and ambiguous re-exports are excluded upstream by
+   * `buildImportMaps`.
+   */
+  fromReExportsByName?: ReadonlyMap<string, { importedName: string; targetPath: string }>;
 }
 
 function extractImportEdges(input: ExtractImportEdgesInput): EdgeRecord[] {
@@ -908,7 +915,11 @@ function extractImportEdges(input: ExtractImportEdgesInput): EdgeRecord[] {
       input.context,
       exportIndexByPath,
     );
-    const targetSymbol = resolveImportedSymbol(imported, exportIndex);
+    const targetSymbol = imported.kind === "from_import" && imported.importedName !== "*"
+      // Follow exact re-exports so a `from pkg import name` import edge points at
+      // the defining module rather than missing when `pkg/__init__.py` re-exports.
+      ? resolveExportedSymbol(targetPath, imported.importedName, input.context, exportIndexByPath)
+      : resolveImportedSymbol(imported, exportIndex);
 
     if (targetSymbol === undefined) {
       continue;
@@ -1431,6 +1442,24 @@ function resolveExportedClassMemberWithInheritance(
   }
 
   const exportIndex = getPythonExportIndex(targetPath, targetContent, context, exportIndexByPath);
+
+  // A class re-exported by this module (not defined here) resolves its members
+  // through the defining module via the exact re-export chain.
+  if (exportIndex.namedSymbols.get(className) === undefined) {
+    const reExport = exportIndex.fromReExportsByName?.get(className);
+
+    if (reExport !== undefined) {
+      return resolveExportedClassMemberWithInheritance(
+        reExport.targetPath,
+        reExport.importedName,
+        memberName,
+        context,
+        exportIndexByPath,
+        visited,
+      );
+    }
+  }
+
   const bases = exportIndex.basesByClassName?.get(className);
 
   if (bases === undefined || bases.length === 0) {
@@ -1492,7 +1521,16 @@ function resolveExportedSymbol(
   name: string,
   context: PythonParserContext,
   exportIndexByPath: Map<string, PythonExportIndex>,
+  visited: Set<string> = new Set(),
 ): SymbolRecord | undefined {
+  const visitKey = `${targetPath}\0${name}`;
+
+  if (visited.has(visitKey)) {
+    return undefined;
+  }
+
+  visited.add(visitKey);
+
   const targetContent = context.knownFilesByPath.get(targetPath);
 
   if (targetContent === undefined) {
@@ -1500,7 +1538,28 @@ function resolveExportedSymbol(
   }
 
   const exportIndex = getPythonExportIndex(targetPath, targetContent, context, exportIndexByPath);
-  return exportIndex.namedSymbols.get(name);
+  const direct = exportIndex.namedSymbols.get(name);
+
+  if (direct !== undefined) {
+    return direct;
+  }
+
+  // Follow an exact, unambiguous re-export (e.g. a package `__init__.py` doing
+  // `from .submodule import name`) to the defining module. The visited guard
+  // keeps re-export chains finite and cycle-safe.
+  const reExport = exportIndex.fromReExportsByName?.get(name);
+
+  if (reExport !== undefined) {
+    return resolveExportedSymbol(
+      reExport.targetPath,
+      reExport.importedName,
+      context,
+      exportIndexByPath,
+      visited,
+    );
+  }
+
+  return undefined;
 }
 
 interface ExtractReferenceEdgesInput {
@@ -2533,6 +2592,7 @@ function getPythonExportIndex(
       namedSymbols,
       classMembersByClassName,
       basesByClassName,
+      fromReExportsByName: fromImportsByName,
     };
 
     exportIndexByPath.set(filePath, exportIndex);

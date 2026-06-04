@@ -9,7 +9,7 @@
 
 - Files indexed: 212 (python 196, cython 16)
 - Symbols indexed: 5152 (python 4686, cython 466)
-- Edges indexed: 10632
+- Edges indexed: 11023
 - Parser outcomes: 0 parse failures, 0 read failures, 0 persistence failures
 
 ## Edges by type
@@ -17,18 +17,18 @@
 | Edge type | Count |
 | --- | --- |
 | contains | 3388 |
-| imports | 304 |
-| calls | 5358 |
-| references | 1582 |
+| imports | 341 |
+| calls | 5647 |
+| references | 1647 |
 
 ## Edges by language
 
 | Language | Edge type | Count |
 | --- | --- | --- |
 | python | contains | 3052 |
-| python | imports | 299 |
-| python | calls | 5305 |
-| python | references | 1535 |
+| python | imports | 336 |
+| python | calls | 5594 |
+| python | references | 1600 |
 | cython | contains | 336 |
 | cython | imports | 5 |
 | cython | calls | 53 |
@@ -78,12 +78,12 @@
 
 | Symbol | Resolved | Language | Dependent symbols | Dependent files | Observed edges | Found dependents |
 | --- | --- | --- | --- | --- | --- | --- |
-| arc/main.py::ARC | yes | python | 20 | 4 | calls, contains, imports | yes |
+| arc/main.py::ARC | yes | python | 22 | 5 | calls, contains, imports | yes |
 | arc/molecule/graph.pyx::Graph.get_all_edges | yes | cython | 70 | 5 | calls, contains, imports, references | yes |
 | arc/molecule/graph.pyx::Graph.is_isomorphic | yes | cython | 54 | 5 | calls, contains, imports, references | yes |
 | arc/molecule/kekulize.pyx::kekulize | yes | cython | 14 | 4 | calls, contains, references | yes |
 | arc/molecule/vf2.pyx::VF2 | yes | cython | 2 | 1 | calls, imports | yes |
-| arc/species/species.py::ARCSpecies | yes | python | 418 | 32 | calls, contains, imports, references | yes |
+| arc/species/species.py::ARCSpecies | yes | python | 647 | 60 | calls, contains, imports, references | yes |
 
 ## Logic-flow probes (wrapper-to-kernel)
 

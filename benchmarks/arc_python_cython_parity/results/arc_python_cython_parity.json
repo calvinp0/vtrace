@@ -146,7 +146,7 @@
     "indexedSymbolCount": 5152,
     "indexedPythonSymbolCount": 4686,
     "indexedCythonSymbolCount": 466,
-    "indexedEdgeCount": 10632,
+    "indexedEdgeCount": 11023,
     "parseFailureCount": 0,
     "readFailureCount": 0,
     "persistenceFailureCount": 0,
@@ -176,15 +176,15 @@
       },
       {
         "edgeType": "imports",
-        "count": 304
+        "count": 341
       },
       {
         "edgeType": "calls",
-        "count": 5358
+        "count": 5647
       },
       {
         "edgeType": "references",
-        "count": 1582
+        "count": 1647
       }
     ],
     "edgeCountsByLanguage": [
@@ -196,17 +196,17 @@
       {
         "language": "python",
         "edgeType": "imports",
-        "count": 299
+        "count": 336
       },
       {
         "language": "python",
         "edgeType": "calls",
-        "count": 5305
+        "count": 5594
       },
       {
         "language": "python",
         "edgeType": "references",
-        "count": 1535
+        "count": 1600
       },
       {
         "language": "cython",
@@ -272,8 +272,8 @@
         "symbolFqn": "arc/main.py::ARC",
         "resolved": true,
         "language": "python",
-        "dependentSymbolCount": 20,
-        "dependentFileCount": 4,
+        "dependentSymbolCount": 22,
+        "dependentFileCount": 5,
         "observedEdgeTypes": [
           "calls",
           "contains",
@@ -338,8 +338,8 @@
         "symbolFqn": "arc/species/species.py::ARCSpecies",
         "resolved": true,
         "language": "python",
-        "dependentSymbolCount": 418,
-        "dependentFileCount": 32,
+        "dependentSymbolCount": 647,
+        "dependentFileCount": 60,
         "observedEdgeTypes": [
           "calls",
           "contains",
@@ -4340,6 +4340,24 @@
           ]
         },
         {
+          "symbolId": "dc6b9bcf3386e041cea12139713b55856a0e9ba1c94f79bcae551274778e0939",
+          "filePath": "arc/family/family.py",
+          "fqName": "arc/family/family.py::ReactionFamily.generate_bimolecular_products",
+          "localName": "generate_bimolecular_products",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 74,
+          "graphScore": 22,
+          "finalScore": 96,
+          "matchedFields": [
+            "fq_name",
+            "docstring",
+            "query_coverage",
+            "path_segment_signal"
+          ]
+        },
+        {
           "symbolId": "2ce59b9d1c314e66457b6df8808ed902909185cead65d22e2175db6f0f7120e0",
           "filePath": "arc/family/family.py",
           "fqName": "arc/family/family.py::ReactionFamily",
@@ -4352,24 +4370,6 @@
           "finalScore": 96,
           "matchedFields": [
             "local_name",
-            "query_coverage",
-            "path_segment_signal"
-          ]
-        },
-        {
-          "symbolId": "dc6b9bcf3386e041cea12139713b55856a0e9ba1c94f79bcae551274778e0939",
-          "filePath": "arc/family/family.py",
-          "fqName": "arc/family/family.py::ReactionFamily.generate_bimolecular_products",
-          "localName": "generate_bimolecular_products",
-          "kind": "method",
-          "language": "python",
-          "likelyTestCandidate": false,
-          "lexicalScore": 74,
-          "graphScore": 21,
-          "finalScore": 95,
-          "matchedFields": [
-            "fq_name",
-            "docstring",
             "query_coverage",
             "path_segment_signal"
           ]
@@ -4401,8 +4401,8 @@
           "language": "python",
           "likelyTestCandidate": false,
           "lexicalScore": 74,
-          "graphScore": 20,
-          "finalScore": 94,
+          "graphScore": 21,
+          "finalScore": 95,
           "matchedFields": [
             "fq_name",
             "docstring",
@@ -4459,9 +4459,9 @@
         "compressed": true,
         "items": [
           {
-            "localName": "ReactionFamily",
+            "localName": "generate_bimolecular_products",
             "filePath": "arc/family/family.py",
-            "fqName": "arc/family/family.py::ReactionFamily",
+            "fqName": "arc/family/family.py::ReactionFamily.generate_bimolecular_products",
             "role": "pivot",
             "contentMode": "signature_only",
             "sourceBacked": false

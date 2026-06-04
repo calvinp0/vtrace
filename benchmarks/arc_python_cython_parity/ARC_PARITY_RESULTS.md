@@ -6,12 +6,23 @@ report: `results/arc_python_cython_parity.{json,md}`. Regenerate with
 
 ## Headline
 
-- 212 files indexed (196 Python, 16 Cython), 5152 symbols, 10632 edges,
+- 212 files indexed (196 Python, 16 Cython), 5152 symbols, 11023 edges,
   **0 parse / read / persistence failures**.
 - All four edge types are produced for both languages.
-- **Python -> Cython resolution now works**: 130 calls, 6 imports, and 83
-  references cross from Python into indexed Cython symbols (previously 0). This
-  closes the wrapper-to-kernel limitation from the prior milestone.
+- **Python -> Cython resolution works**: 130 calls, 6 imports, and 83 references
+  cross from Python into indexed Cython symbols. The wrapper-to-kernel limitation
+  stays closed.
+- **Package/relative/alias/re-export hardening added 391 exact edges** vs. the
+  prior run (10632 -> 11023): Python imports 299 -> 336, calls 5305 -> 5594,
+  references 1535 -> 1600. These come mainly from `arc/molecule/__init__.py`
+  re-exports and package imports (`from arc.molecule import Molecule`, ...) now
+  resolving exactly. Impact coverage grew accordingly: `ARCSpecies` dependents
+  418 -> 647 (32 -> 60 files), `ARC` 20 -> 22.
+- The Python -> Cython count is unchanged because ARC's re-exported `molecule`
+  modules (`atomtype`, `element`, `group`, `molecule`) ship `.py` implementations
+  that correctly win the `.py > .pyx > .pxd` precedence; the re-exports resolve to
+  those Python implementations, not the `.pxd` declarations. This is the intended
+  deterministic behavior.
 - Exact, dotted, Cython-structural, and concept/workflow retrieval surface the
   correct production symbol at rank 1 (test files demoted below production).
 - RC1 readiness: **ready with known limitations** (the only remaining gaps are
