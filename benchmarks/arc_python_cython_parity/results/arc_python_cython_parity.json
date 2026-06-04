@@ -146,7 +146,7 @@
     "indexedSymbolCount": 5152,
     "indexedPythonSymbolCount": 4686,
     "indexedCythonSymbolCount": 466,
-    "indexedEdgeCount": 10413,
+    "indexedEdgeCount": 10632,
     "parseFailureCount": 0,
     "readFailureCount": 0,
     "persistenceFailureCount": 0,
@@ -176,15 +176,15 @@
       },
       {
         "edgeType": "imports",
-        "count": 298
+        "count": 304
       },
       {
         "edgeType": "calls",
-        "count": 5228
+        "count": 5358
       },
       {
         "edgeType": "references",
-        "count": 1499
+        "count": 1582
       }
     ],
     "edgeCountsByLanguage": [
@@ -196,17 +196,17 @@
       {
         "language": "python",
         "edgeType": "imports",
-        "count": 293
+        "count": 299
       },
       {
         "language": "python",
         "edgeType": "calls",
-        "count": 5175
+        "count": 5305
       },
       {
         "language": "python",
         "edgeType": "references",
-        "count": 1452
+        "count": 1535
       },
       {
         "language": "cython",
@@ -247,6 +247,24 @@
         "dstLanguage": "python",
         "edgeType": "references",
         "count": 1
+      },
+      {
+        "srcLanguage": "python",
+        "dstLanguage": "cython",
+        "edgeType": "calls",
+        "count": 130
+      },
+      {
+        "srcLanguage": "python",
+        "dstLanguage": "cython",
+        "edgeType": "imports",
+        "count": 6
+      },
+      {
+        "srcLanguage": "python",
+        "dstLanguage": "cython",
+        "edgeType": "references",
+        "count": 83
       }
     ],
     "impactProbes": [
@@ -267,11 +285,12 @@
         "symbolFqn": "arc/molecule/graph.pyx::Graph.get_all_edges",
         "resolved": true,
         "language": "cython",
-        "dependentSymbolCount": 14,
-        "dependentFileCount": 1,
+        "dependentSymbolCount": 70,
+        "dependentFileCount": 5,
         "observedEdgeTypes": [
           "calls",
           "contains",
+          "imports",
           "references"
         ],
         "foundRealDependents": true
@@ -280,11 +299,12 @@
         "symbolFqn": "arc/molecule/graph.pyx::Graph.is_isomorphic",
         "resolved": true,
         "language": "cython",
-        "dependentSymbolCount": 7,
-        "dependentFileCount": 1,
+        "dependentSymbolCount": 54,
+        "dependentFileCount": 5,
         "observedEdgeTypes": [
           "calls",
           "contains",
+          "imports",
           "references"
         ],
         "foundRealDependents": true
@@ -293,19 +313,26 @@
         "symbolFqn": "arc/molecule/kekulize.pyx::kekulize",
         "resolved": true,
         "language": "cython",
-        "dependentSymbolCount": 0,
-        "dependentFileCount": 0,
-        "observedEdgeTypes": [],
-        "foundRealDependents": false
+        "dependentSymbolCount": 14,
+        "dependentFileCount": 4,
+        "observedEdgeTypes": [
+          "calls",
+          "contains",
+          "references"
+        ],
+        "foundRealDependents": true
       },
       {
         "symbolFqn": "arc/molecule/vf2.pyx::VF2",
         "resolved": true,
         "language": "cython",
-        "dependentSymbolCount": 0,
-        "dependentFileCount": 0,
-        "observedEdgeTypes": [],
-        "foundRealDependents": false
+        "dependentSymbolCount": 2,
+        "dependentFileCount": 1,
+        "observedEdgeTypes": [
+          "calls",
+          "imports"
+        ],
+        "foundRealDependents": true
       },
       {
         "symbolFqn": "arc/species/species.py::ARCSpecies",
@@ -328,10 +355,10 @@
         "end": "arc/molecule/kekulize.pyx::kekulize",
         "startResolved": true,
         "endResolved": true,
-        "reachable": false,
-        "pathCount": 0,
+        "reachable": true,
+        "pathCount": 1,
         "callFlowEvidenceAvailable": true,
-        "callFlowEvidenceUsed": false
+        "callFlowEvidenceUsed": true
       },
       {
         "start": "arc/molecule/vf2.pyx::VF2.find_isomorphism",
@@ -773,16 +800,16 @@
       "cythonCandidateCount": 4,
       "rerankedResults": [
         {
-          "symbolId": "90885a76cf4667bd3d9f6970f687aa3519617a0ac2bc0cb2354c59dcbc436cc8",
-          "filePath": "arc/molecule/graph.pxd",
-          "fqName": "arc/molecule/graph.pxd::Graph",
+          "symbolId": "c6fa17711a6bef19882acb1afc56452d06981a400b74154dc9a4a822931e52f6",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph",
           "localName": "Graph",
           "kind": "class",
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 134,
-          "graphScore": 10,
-          "finalScore": 144,
+          "graphScore": 22,
+          "finalScore": 156,
           "matchedFields": [
             "local_name",
             "fq_name",
@@ -791,9 +818,9 @@
           ]
         },
         {
-          "symbolId": "c6fa17711a6bef19882acb1afc56452d06981a400b74154dc9a4a822931e52f6",
-          "filePath": "arc/molecule/graph.pyx",
-          "fqName": "arc/molecule/graph.pyx::Graph",
+          "symbolId": "90885a76cf4667bd3d9f6970f687aa3519617a0ac2bc0cb2354c59dcbc436cc8",
+          "filePath": "arc/molecule/graph.pxd",
+          "fqName": "arc/molecule/graph.pxd::Graph",
           "localName": "Graph",
           "kind": "class",
           "language": "cython",
@@ -817,8 +844,8 @@
           "language": "python",
           "likelyTestCandidate": true,
           "lexicalScore": 82,
-          "graphScore": 15,
-          "finalScore": 97,
+          "graphScore": 24,
+          "finalScore": 106,
           "matchedFields": [
             "local_name",
             "fq_name",
@@ -836,8 +863,8 @@
           "language": "python",
           "likelyTestCandidate": true,
           "lexicalScore": 82,
-          "graphScore": 13,
-          "finalScore": 95,
+          "graphScore": 19,
+          "finalScore": 101,
           "matchedFields": [
             "local_name",
             "fq_name",
@@ -908,16 +935,16 @@
         "items": [
           {
             "localName": "Graph",
-            "filePath": "arc/molecule/graph.pxd",
-            "fqName": "arc/molecule/graph.pxd::Graph",
+            "filePath": "arc/molecule/graph.pyx",
+            "fqName": "arc/molecule/graph.pyx::Graph",
             "role": "pivot",
             "contentMode": "signature_only",
             "sourceBacked": false
           },
           {
             "localName": "Graph",
-            "filePath": "arc/molecule/graph.pyx",
-            "fqName": "arc/molecule/graph.pyx::Graph",
+            "filePath": "arc/molecule/graph.pxd",
+            "fqName": "arc/molecule/graph.pxd::Graph",
             "role": "pivot",
             "contentMode": "signature_only",
             "sourceBacked": false
@@ -970,8 +997,26 @@
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 134,
-          "graphScore": 13,
-          "finalScore": 147,
+          "graphScore": 26,
+          "finalScore": 160,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "file_path"
+          ]
+        },
+        {
+          "symbolId": "5af137f0aa3cc074613a1959c52e53156a3092d85678e4661a64d127ce684892",
+          "filePath": "arc/molecule/vf2_test.py",
+          "fqName": "arc/molecule/vf2_test.py::TestVF2",
+          "localName": "TestVF2",
+          "kind": "class",
+          "language": "python",
+          "likelyTestCandidate": true,
+          "lexicalScore": 74,
+          "graphScore": 32,
+          "finalScore": 106,
           "matchedFields": [
             "local_name",
             "fq_name",
@@ -997,24 +1042,6 @@
           ]
         },
         {
-          "symbolId": "5af137f0aa3cc074613a1959c52e53156a3092d85678e4661a64d127ce684892",
-          "filePath": "arc/molecule/vf2_test.py",
-          "fqName": "arc/molecule/vf2_test.py::TestVF2",
-          "localName": "TestVF2",
-          "kind": "class",
-          "language": "python",
-          "likelyTestCandidate": true,
-          "lexicalScore": 74,
-          "graphScore": 26,
-          "finalScore": 100,
-          "matchedFields": [
-            "local_name",
-            "fq_name",
-            "signature",
-            "file_path"
-          ]
-        },
-        {
           "symbolId": "767069853e558bdf57987e9942887b4285c954b64350f861f7196d9e72116a48",
           "filePath": "arc/molecule/vf2_test.py",
           "fqName": "arc/molecule/vf2_test.py::TestVF2.setUp",
@@ -1023,24 +1050,24 @@
           "language": "python",
           "likelyTestCandidate": true,
           "lexicalScore": 24,
-          "graphScore": 14,
-          "finalScore": 38,
+          "graphScore": 18,
+          "finalScore": 42,
           "matchedFields": [
             "fq_name",
             "file_path"
           ]
         },
         {
-          "symbolId": "3fae10685935ee74b677b110f1e49637bd8099c4b57651ca9b7749717b9800de",
+          "symbolId": "bde991ce03bae2c593ef45c1779957271f3efbeed8b074ccd6af1d6868842408",
           "filePath": "arc/molecule/vf2_test.py",
-          "fqName": "arc/molecule/vf2_test.py::TestVF2.test_clear_mapping",
-          "localName": "test_clear_mapping",
+          "fqName": "arc/molecule/vf2_test.py::TestVF2.test_feasible",
+          "localName": "test_feasible",
           "kind": "method",
           "language": "python",
           "likelyTestCandidate": true,
           "lexicalScore": 24,
-          "graphScore": 13,
-          "finalScore": 37,
+          "graphScore": 14,
+          "finalScore": 38,
           "matchedFields": [
             "fq_name",
             "file_path"
@@ -1108,6 +1135,24 @@
       "cythonCandidateCount": 3,
       "rerankedResults": [
         {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 134,
+          "graphScore": 11,
+          "finalScore": 145,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature",
+            "file_path"
+          ]
+        },
+        {
           "symbolId": "a52d62b980576410350842b3ac7db8b4a49ad9eeead069ee22bbc7204c4f1440",
           "filePath": "arc/molecule/molecule.py",
           "fqName": "arc/molecule/molecule.py::Molecule.kekulize",
@@ -1116,8 +1161,8 @@
           "language": "python",
           "likelyTestCandidate": false,
           "lexicalScore": 138,
-          "graphScore": 2,
-          "finalScore": 140,
+          "graphScore": 6,
+          "finalScore": 144,
           "matchedFields": [
             "local_name",
             "fq_name",
@@ -1131,24 +1176,6 @@
           "fqName": "arc/molecule/kekulize.pyx::AromaticRing.kekulize",
           "localName": "kekulize",
           "kind": "method",
-          "language": "cython",
-          "likelyTestCandidate": false,
-          "lexicalScore": 134,
-          "graphScore": 4,
-          "finalScore": 138,
-          "matchedFields": [
-            "local_name",
-            "fq_name",
-            "signature",
-            "file_path"
-          ]
-        },
-        {
-          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
-          "filePath": "arc/molecule/kekulize.pyx",
-          "fqName": "arc/molecule/kekulize.pyx::kekulize",
-          "localName": "kekulize",
-          "kind": "function",
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 134,
@@ -1241,19 +1268,19 @@
         "items": [
           {
             "localName": "kekulize",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::kekulize",
+            "role": "pivot",
+            "contentMode": "signature_only",
+            "sourceBacked": false
+          },
+          {
+            "localName": "kekulize",
             "filePath": "arc/molecule/molecule.py",
             "fqName": "arc/molecule/molecule.py::Molecule.kekulize",
             "role": "pivot",
             "contentMode": "full",
             "sourceBacked": true
-          },
-          {
-            "localName": "kekulize",
-            "filePath": "arc/molecule/kekulize.pyx",
-            "fqName": "arc/molecule/kekulize.pyx::AromaticRing.kekulize",
-            "role": "pivot",
-            "contentMode": "signature_only",
-            "sourceBacked": false
           }
         ]
       },
@@ -1277,16 +1304,16 @@
       "cythonCandidateCount": 3,
       "rerankedResults": [
         {
-          "symbolId": "073825aafe9142fb7661c270ccf28fcafeebe6759e9cebbd55323c754dde6ea4",
-          "filePath": "arc/species/species.py",
-          "fqName": "arc/species/species.py::ARCSpecies.is_isomorphic",
+          "symbolId": "934e79bd561b7a3c2c3e0837676ffc21a5e0970ffa221e479a5a36a368aa37a6",
+          "filePath": "arc/molecule/graph.pyx",
+          "fqName": "arc/molecule/graph.pyx::Graph.is_isomorphic",
           "localName": "is_isomorphic",
           "kind": "method",
-          "language": "python",
+          "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 130,
-          "graphScore": 6,
-          "finalScore": 136,
+          "graphScore": 13,
+          "finalScore": 143,
           "matchedFields": [
             "local_name",
             "fq_name",
@@ -1302,25 +1329,8 @@
           "language": "python",
           "likelyTestCandidate": false,
           "lexicalScore": 130,
-          "graphScore": 4,
-          "finalScore": 134,
-          "matchedFields": [
-            "local_name",
-            "fq_name",
-            "signature"
-          ]
-        },
-        {
-          "symbolId": "934e79bd561b7a3c2c3e0837676ffc21a5e0970ffa221e479a5a36a368aa37a6",
-          "filePath": "arc/molecule/graph.pyx",
-          "fqName": "arc/molecule/graph.pyx::Graph.is_isomorphic",
-          "localName": "is_isomorphic",
-          "kind": "method",
-          "language": "cython",
-          "likelyTestCandidate": false,
-          "lexicalScore": 130,
-          "graphScore": 3,
-          "finalScore": 133,
+          "graphScore": 10,
+          "finalScore": 140,
           "matchedFields": [
             "local_name",
             "fq_name",
@@ -1336,8 +1346,25 @@
           "language": "python",
           "likelyTestCandidate": false,
           "lexicalScore": 130,
-          "graphScore": 3,
-          "finalScore": 133,
+          "graphScore": 8,
+          "finalScore": 138,
+          "matchedFields": [
+            "local_name",
+            "fq_name",
+            "signature"
+          ]
+        },
+        {
+          "symbolId": "073825aafe9142fb7661c270ccf28fcafeebe6759e9cebbd55323c754dde6ea4",
+          "filePath": "arc/species/species.py",
+          "fqName": "arc/species/species.py::ARCSpecies.is_isomorphic",
+          "localName": "is_isomorphic",
+          "kind": "method",
+          "language": "python",
+          "likelyTestCandidate": false,
+          "lexicalScore": 130,
+          "graphScore": 6,
+          "finalScore": 136,
           "matchedFields": [
             "local_name",
             "fq_name",
@@ -1402,7 +1429,7 @@
       "narrowBenchmark": {
         "baselineHasCandidates": true,
         "baselineExpectedSurfaceObserved": true,
-        "baselineFirstCythonCandidateRank": 3,
+        "baselineFirstCythonCandidateRank": 1,
         "baselineTopCandidateLikelyTest": false,
         "baselineTopCandidateMatchedFields": [
           "local_name",
@@ -1422,10 +1449,10 @@
         "items": [
           {
             "localName": "is_isomorphic",
-            "filePath": "arc/species/species.py",
-            "fqName": "arc/species/species.py::ARCSpecies.is_isomorphic",
+            "filePath": "arc/molecule/graph.pyx",
+            "fqName": "arc/molecule/graph.pyx::Graph.is_isomorphic",
             "role": "pivot",
-            "contentMode": "summary",
+            "contentMode": "signature_only",
             "sourceBacked": false
           },
           {
@@ -1466,8 +1493,8 @@
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 130,
-          "graphScore": 30,
-          "finalScore": 160,
+          "graphScore": 32,
+          "finalScore": 162,
           "matchedFields": [
             "local_name",
             "fq_name",
@@ -1543,8 +1570,8 @@
           "language": "python",
           "likelyTestCandidate": false,
           "lexicalScore": 8,
-          "graphScore": 4,
-          "finalScore": 12,
+          "graphScore": 6,
+          "finalScore": 14,
           "matchedFields": [
             "docstring"
           ]
@@ -2099,6 +2126,22 @@
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 50,
+          "graphScore": 16,
+          "finalScore": 66,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
           "graphScore": 14,
           "finalScore": 64,
           "matchedFields": [
@@ -2172,22 +2215,6 @@
             "boundary_hint",
             "technical_hint"
           ]
-        },
-        {
-          "symbolId": "e3c42b2462aa70e81ccbecccac98ccc7b4f2d20dea727a2b96a5957e3d1d48d1",
-          "filePath": "arc/molecule/graph.pyx",
-          "fqName": "arc/molecule/graph.pyx::Vertex",
-          "localName": "Vertex",
-          "kind": "class",
-          "language": "cython",
-          "likelyTestCandidate": false,
-          "lexicalScore": 50,
-          "graphScore": 10,
-          "finalScore": 60,
-          "matchedFields": [
-            "boundary_hint",
-            "technical_hint"
-          ]
         }
       ],
       "graphOrderingDeterministic": true,
@@ -2236,11 +2263,11 @@
             "sourceBacked": false
           },
           {
-            "localName": "clean",
-            "filePath": "utilities.py",
-            "fqName": "utilities.py::clean",
+            "localName": "kekulize",
+            "filePath": "arc/molecule/kekulize.pyx",
+            "fqName": "arc/molecule/kekulize.pyx::kekulize",
             "role": "pivot",
-            "contentMode": "summary",
+            "contentMode": "signature_only",
             "sourceBacked": false
           }
         ]
@@ -2321,6 +2348,22 @@
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 50,
+          "graphScore": 16,
+          "finalScore": 66,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
           "graphScore": 14,
           "finalScore": 64,
           "matchedFields": [
@@ -2339,22 +2382,6 @@
           "lexicalScore": 50,
           "graphScore": 13,
           "finalScore": 63,
-          "matchedFields": [
-            "boundary_hint",
-            "technical_hint"
-          ]
-        },
-        {
-          "symbolId": "b277a186de939a539e3cc2457e25b508d7106beecc58773806fb611d9b178d24",
-          "filePath": "arc/molecule/kekulize.pyx",
-          "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
-          "localName": "AromaticBond",
-          "kind": "class",
-          "language": "cython",
-          "likelyTestCandidate": false,
-          "lexicalScore": 50,
-          "graphScore": 11,
-          "finalScore": 61,
           "matchedFields": [
             "boundary_hint",
             "technical_hint"
@@ -2434,6 +2461,21 @@
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 34,
+          "graphScore": 16,
+          "finalScore": 50,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
           "graphScore": 14,
           "finalScore": 48,
           "matchedFields": [
@@ -2491,21 +2533,6 @@
           "fqName": "arc/molecule/graph.pyx::Vertex",
           "localName": "Vertex",
           "kind": "class",
-          "language": "cython",
-          "likelyTestCandidate": false,
-          "lexicalScore": 34,
-          "graphScore": 10,
-          "finalScore": 44,
-          "matchedFields": [
-            "boundary_hint"
-          ]
-        },
-        {
-          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
-          "filePath": "arc/molecule/kekulize.pyx",
-          "fqName": "arc/molecule/kekulize.pyx::kekulize",
-          "localName": "kekulize",
-          "kind": "function",
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 34,
@@ -2553,9 +2580,9 @@
             "sourceBacked": false
           },
           {
-            "localName": "AromaticBond",
+            "localName": "kekulize",
             "filePath": "arc/molecule/kekulize.pyx",
-            "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+            "fqName": "arc/molecule/kekulize.pyx::kekulize",
             "role": "pivot",
             "contentMode": "signature_only",
             "sourceBacked": false
@@ -2587,6 +2614,21 @@
           "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
           "localName": "AromaticRing",
           "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 34,
+          "graphScore": 16,
+          "finalScore": 50,
+          "matchedFields": [
+            "boundary_hint"
+          ]
+        },
+        {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 34,
@@ -2647,21 +2689,6 @@
           "fqName": "arc/molecule/graph.pyx::Vertex",
           "localName": "Vertex",
           "kind": "class",
-          "language": "cython",
-          "likelyTestCandidate": false,
-          "lexicalScore": 34,
-          "graphScore": 10,
-          "finalScore": 44,
-          "matchedFields": [
-            "boundary_hint"
-          ]
-        },
-        {
-          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
-          "filePath": "arc/molecule/kekulize.pyx",
-          "fqName": "arc/molecule/kekulize.pyx::kekulize",
-          "localName": "kekulize",
-          "kind": "function",
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 34,
@@ -2718,9 +2745,9 @@
             "sourceBacked": false
           },
           {
-            "localName": "AromaticBond",
+            "localName": "kekulize",
             "filePath": "arc/molecule/kekulize.pyx",
-            "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+            "fqName": "arc/molecule/kekulize.pyx::kekulize",
             "role": "pivot",
             "contentMode": "signature_only",
             "sourceBacked": false
@@ -2936,6 +2963,22 @@
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 54,
+          "graphScore": 16,
+          "finalScore": 70,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 54,
           "graphScore": 14,
           "finalScore": 68,
           "matchedFields": [
@@ -3006,22 +3049,6 @@
             "boundary_hint",
             "technical_hint"
           ]
-        },
-        {
-          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
-          "filePath": "arc/molecule/kekulize.pyx",
-          "fqName": "arc/molecule/kekulize.pyx::kekulize",
-          "localName": "kekulize",
-          "kind": "function",
-          "language": "cython",
-          "likelyTestCandidate": false,
-          "lexicalScore": 54,
-          "graphScore": 10,
-          "finalScore": 64,
-          "matchedFields": [
-            "boundary_hint",
-            "technical_hint"
-          ]
         }
       ],
       "graphOrderingDeterministic": true,
@@ -3070,9 +3097,9 @@
             "sourceBacked": false
           },
           {
-            "localName": "AromaticBond",
+            "localName": "kekulize",
             "filePath": "arc/molecule/kekulize.pyx",
-            "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+            "fqName": "arc/molecule/kekulize.pyx::kekulize",
             "role": "pivot",
             "contentMode": "signature_only",
             "sourceBacked": false
@@ -3104,6 +3131,22 @@
           "fqName": "arc/molecule/kekulize.pyx::AromaticRing",
           "localName": "AromaticRing",
           "kind": "class",
+          "language": "cython",
+          "likelyTestCandidate": false,
+          "lexicalScore": 50,
+          "graphScore": 16,
+          "finalScore": 66,
+          "matchedFields": [
+            "boundary_hint",
+            "technical_hint"
+          ]
+        },
+        {
+          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
+          "filePath": "arc/molecule/kekulize.pyx",
+          "fqName": "arc/molecule/kekulize.pyx::kekulize",
+          "localName": "kekulize",
+          "kind": "function",
           "language": "cython",
           "likelyTestCandidate": false,
           "lexicalScore": 50,
@@ -3177,22 +3220,6 @@
             "boundary_hint",
             "technical_hint"
           ]
-        },
-        {
-          "symbolId": "d38e5d5ee4df1f5a28fa04bf2e542382b8f858ddeab6c7f06c4733bf31f2e65f",
-          "filePath": "arc/molecule/kekulize.pyx",
-          "fqName": "arc/molecule/kekulize.pyx::kekulize",
-          "localName": "kekulize",
-          "kind": "function",
-          "language": "cython",
-          "likelyTestCandidate": false,
-          "lexicalScore": 50,
-          "graphScore": 10,
-          "finalScore": 60,
-          "matchedFields": [
-            "boundary_hint",
-            "technical_hint"
-          ]
         }
       ],
       "graphOrderingDeterministic": true,
@@ -3241,9 +3268,9 @@
             "sourceBacked": false
           },
           {
-            "localName": "AromaticBond",
+            "localName": "kekulize",
             "filePath": "arc/molecule/kekulize.pyx",
-            "fqName": "arc/molecule/kekulize.pyx::AromaticBond",
+            "fqName": "arc/molecule/kekulize.pyx::kekulize",
             "role": "pivot",
             "contentMode": "signature_only",
             "sourceBacked": false
@@ -4688,29 +4715,9 @@
           "check_zmat_dict"
         ]
       }
-    },
-    {
-      "code": "limitation.logic_flow_probe_unreachable",
-      "severity": "info",
-      "summary": "A requested logic-flow probe resolved both endpoints but found no connecting path; cross-module call resolution may be conservative for this pair.",
-      "details": {
-        "start": "arc/molecule/molecule.py::Molecule.kekulize",
-        "end": "arc/molecule/kekulize.pyx::kekulize"
-      }
     }
   ],
   "classifiedGaps": [
-    {
-      "category": "accepted limitation",
-      "findingCode": "limitation.logic_flow_probe_unreachable",
-      "severity": "info",
-      "summary": "A requested logic-flow probe resolved both endpoints but found no connecting path; cross-module call resolution may be conservative for this pair.",
-      "rationale": "Finding limitation.logic_flow_probe_unreachable matches a conservative behavior that is currently documented and explainable for RC1.",
-      "details": {
-        "start": "arc/molecule/molecule.py::Molecule.kekulize",
-        "end": "arc/molecule/kekulize.pyx::kekulize"
-      }
-    },
     {
       "category": "retrieval/reranking gap",
       "findingCode": "retrieval.exact_query_expected_surface_missing",

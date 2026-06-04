@@ -36,10 +36,12 @@ bun run benchmarks/arc_python_cython_parity/run_arc_python_cython_parity.ts [rep
 The pure markdown-rendering helpers are unit-tested in
 `run_arc_python_cython_parity.test.ts`, which **does** run under `bun test`.
 
-## Known limitation (documented, not a regression)
+## Cross-language Python -> Cython resolution
 
-Python wrapper -> Cython kernel call edges are not produced: the Python import
-resolver re-parses imported modules with the CPython `ast`, which raises
-`SyntaxError` on Cython source, so the cross-language export index is empty.
-The wrapper-to-kernel logic-flow probe is therefore unreachable and is recorded
-as an accepted limitation in the report. See `ARC_PARITY_RESULTS.md`.
+Python wrapper -> Cython kernel call/reference edges **are** produced: when
+Python imports a `.pyx` / `.pxd` / `.pxi` module, the Python resolver reuses the
+Cython parser's already-indexed symbols (via `src/parsers/cythonExports.ts`)
+instead of the CPython `ast`. On ARC this yields 130 Python -> Cython call edges,
+and the wrapper-to-kernel logic-flow probe is reachable. Resolution is
+conservative: ambiguous targets, missing modules, deep dotted package paths,
+dynamic dispatch, and Cython inheritance are skipped. See `ARC_PARITY_RESULTS.md`.

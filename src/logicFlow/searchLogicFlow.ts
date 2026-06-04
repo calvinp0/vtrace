@@ -5,10 +5,12 @@ import { listAllEdges } from "../db/repositories/edgesRepository";
 import { listAllSymbols, listSymbolsByFqName } from "../db/repositories/symbolsRepository";
 import {
   EdgeType,
+  Language,
   type EdgeRecord,
   type SymbolKind,
   type SymbolRecord,
 } from "../domain/types";
+import { detectLanguage } from "../fs/languageDetection";
 
 export interface SearchLogicFlowInput {
   readonly start: string;
@@ -161,6 +163,7 @@ export function searchLogicFlow(
 
   const observedEdgeTypes = collectObservedEdgeTypes(returnedPaths);
   const callFlowEvidenceUsed = observedEdgeTypes.includes(EdgeType.Calls);
+  const crossLanguageEvidenceUsed = hasCrossLanguagePythonCythonStep(returnedPaths);
 
   return {
     ok: true,
@@ -189,6 +192,7 @@ export function searchLogicFlow(
           truncated,
           callFlowEvidenceAvailable,
           callFlowEvidenceUsed,
+          crossLanguageEvidenceUsed,
         ),
       },
       summary: {
@@ -454,6 +458,26 @@ function toLogicFlowPath(
   };
 }
 
+function hasCrossLanguagePythonCythonStep(
+  paths: readonly LogicFlowPath[],
+): boolean {
+  for (const path of paths) {
+    for (let index = 0; index + 1 < path.nodes.length; index += 1) {
+      const fromLanguage = detectLanguage(path.nodes[index].filePath);
+      const toLanguage = detectLanguage(path.nodes[index + 1].filePath);
+
+      if (
+        (fromLanguage === Language.Python && toLanguage === Language.Cython)
+        || (fromLanguage === Language.Cython && toLanguage === Language.Python)
+      ) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 function buildCoverageNotes(
   startSymbol: SymbolRecord,
   endSymbol: SymbolRecord,
@@ -461,6 +485,7 @@ function buildCoverageNotes(
   truncated: boolean,
   callFlowEvidenceAvailable: boolean,
   callFlowEvidenceUsed: boolean,
+  crossLanguageEvidenceUsed: boolean,
 ): string[] {
   const notes = [
     "Directed structural path search built from indexed contains, imports, and statically resolved calls edges.",
@@ -481,6 +506,12 @@ function buildCoverageNotes(
   } else {
     notes.push(
       "Calls edges existed in the indexed graph but none lay on a returned shortest path; the returned paths rest on contains/imports edges only.",
+    );
+  }
+
+  if (crossLanguageEvidenceUsed) {
+    notes.push(
+      "At least one returned path crosses a Python<->Cython boundary through an exact import/reference, so the path reflects cross-language structural evidence.",
     );
   }
 

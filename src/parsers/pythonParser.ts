@@ -14,6 +14,8 @@ import {
   type ParseResult,
   type SymbolRecord,
 } from "../domain/types";
+import { detectLanguage } from "../fs/languageDetection";
+import { getCythonExportIndex, type CrossLanguageExportIndex } from "./cythonExports";
 import { ParserError } from "./errors";
 import type { LanguageParser } from "./LanguageParser";
 import type { ParseFileInput } from "./types";
@@ -28,6 +30,13 @@ interface PythonParserContext {
   knownFilesByPath: ReadonlyMap<string, string>;
   moduleNameByFilePath: ReadonlyMap<string, string>;
   modulePathsByName: ReadonlyMap<string, readonly string[]>;
+  /**
+   * Parser-instance-wide cache of Cython module export indexes, keyed by file
+   * path. Cython export extraction spawns a subprocess, so this avoids
+   * re-extracting the same Cython module for every Python file that imports it.
+   * Shared by reference across `withKnownFile` copies.
+   */
+  cythonExportIndexCache: Map<string, CrossLanguageExportIndex>;
 }
 
 interface PythonAstRoot {
@@ -2183,6 +2192,7 @@ function makeParserContext(options: PythonParserOptions): PythonParserContext {
     knownFilesByPath,
     moduleNameByFilePath,
     modulePathsByName,
+    cythonExportIndexCache: new Map(),
   };
 }
 
@@ -2207,19 +2217,20 @@ function withKnownFile(
     knownFilesByPath,
     moduleNameByFilePath,
     modulePathsByName,
+    cythonExportIndexCache: context.cythonExportIndexCache,
   };
 }
 
 function buildModuleIndexes(
   knownFilesByPath: ReadonlyMap<string, string>,
 ): Pick<PythonParserContext, "moduleNameByFilePath" | "modulePathsByName"> {
-  const pythonFiles = [...knownFilesByPath.keys()]
-    .filter((filePath) => filePath.endsWith(".py"))
+  const moduleFiles = [...knownFilesByPath.keys()]
+    .filter((filePath) => moduleFileExtension(filePath) !== undefined)
     .sort((left, right) => left.localeCompare(right));
   const moduleNameByFilePath = new Map<string, string>();
   const modulePathsByName = new Map<string, string[]>();
 
-  for (const filePath of pythonFiles) {
+  for (const filePath of moduleFiles) {
     const moduleName = getCanonicalModuleName(filePath, knownFilesByPath);
 
     if (moduleName === undefined) {
@@ -2241,11 +2252,32 @@ function buildModuleIndexes(
   return { moduleNameByFilePath, modulePathsByName };
 }
 
+/**
+ * Importable module file extensions in resolution-precedence order. Python
+ * source wins over a Cython implementation, which wins over Cython declaration
+ * (`.pxd`) and include (`.pxi`) files. `.pxd`/`.pxi` are not Python-importable
+ * on their own, but indexing them lets exact wrapper -> declaration references
+ * resolve when no implementation file is present.
+ */
+const MODULE_FILE_EXTENSIONS: readonly string[] = [".py", ".pyx", ".pxd", ".pxi"];
+
+function moduleFileExtension(filePath: string): string | undefined {
+  return MODULE_FILE_EXTENSIONS.find((extension) => filePath.endsWith(extension));
+}
+
+function moduleFileExtensionPriority(filePath: string): number {
+  const index = MODULE_FILE_EXTENSIONS.findIndex((extension) => filePath.endsWith(extension));
+
+  return index === -1 ? MODULE_FILE_EXTENSIONS.length : index;
+}
+
 function getCanonicalModuleName(
   filePath: string,
   knownFilesByPath: ReadonlyMap<string, string>,
 ): string | undefined {
-  if (!filePath.endsWith(".py")) {
+  const extension = moduleFileExtension(filePath);
+
+  if (extension === undefined) {
     return undefined;
   }
 
@@ -2275,7 +2307,7 @@ function getCanonicalModuleName(
     return moduleSegments.length === 0 ? undefined : moduleSegments.join(".");
   }
 
-  const stem = fileName.slice(0, -3);
+  const stem = fileName.slice(0, -extension.length);
 
   if (stem.length === 0) {
     return undefined;
@@ -2375,7 +2407,66 @@ function resolveAbsoluteModulePath(
 
   const paths = context.modulePathsByName.get(normalizedModuleName);
 
-  return paths?.length === 1 ? paths[0] : undefined;
+  if (paths === undefined || paths.length === 0) {
+    return undefined;
+  }
+
+  if (paths.length === 1) {
+    return paths[0];
+  }
+
+  // Multiple files map to one module name (commonly a Cython `.pyx` paired with
+  // its `.pxd`). Resolve to the single highest-precedence file. If two files
+  // share the top precedence (e.g. two `.py` files) the target is genuinely
+  // ambiguous and is skipped.
+  return selectByExtensionPrecedence(paths);
+}
+
+function selectByExtensionPrecedence(
+  paths: readonly string[],
+): string | undefined {
+  let bestPath: string | undefined;
+  let bestPriority = Number.POSITIVE_INFINITY;
+  let bestIsTied = false;
+
+  for (const candidate of paths) {
+    const priority = moduleFileExtensionPriority(candidate);
+
+    if (priority < bestPriority) {
+      bestPriority = priority;
+      bestPath = candidate;
+      bestIsTied = false;
+    } else if (priority === bestPriority) {
+      bestIsTied = true;
+    }
+  }
+
+  return bestIsTied ? undefined : bestPath;
+}
+
+function getCythonBackedExportIndex(
+  filePath: string,
+  content: string,
+  context: PythonParserContext,
+): PythonExportIndex {
+  const cached = context.cythonExportIndexCache.get(filePath);
+  const cythonExports: CrossLanguageExportIndex = cached
+    ?? getCythonExportIndex(filePath, content);
+
+  if (cached === undefined) {
+    context.cythonExportIndexCache.set(filePath, cythonExports);
+  }
+
+  // Cython inheritance is intentionally not resolved (no basesByClassName): we
+  // prefer missing an inherited-member edge over guessing across `cdef class`
+  // hierarchies we have not fully modelled.
+  return {
+    ...(cythonExports.moduleSymbol === undefined
+      ? {}
+      : { moduleSymbol: cythonExports.moduleSymbol }),
+    namedSymbols: cythonExports.namedSymbols,
+    classMembersByClassName: cythonExports.classMembersByClassName,
+  };
 }
 
 function getPythonExportIndex(
@@ -2388,6 +2479,14 @@ function getPythonExportIndex(
 
   if (existing !== undefined) {
     return existing;
+  }
+
+  // Cython-backed modules cannot be inspected with the CPython `ast`; reuse the
+  // Cython parser's extracted symbols as the source of truth instead.
+  if (detectLanguage(filePath) === Language.Cython) {
+    const exportIndex = getCythonBackedExportIndex(filePath, content, context);
+    exportIndexByPath.set(filePath, exportIndex);
+    return exportIndex;
   }
 
   try {

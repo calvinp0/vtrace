@@ -4,10 +4,12 @@ import { listEdgesForSymbols } from "../db/repositories/edgesRepository";
 import { getSymbolById, listSymbolsByFqName } from "../db/repositories/symbolsRepository";
 import {
   EdgeType,
+  Language,
   type EdgeRecord,
   type SymbolKind,
   type SymbolRecord,
 } from "../domain/types";
+import { detectLanguage } from "../fs/languageDetection";
 
 export const IMPACT_FORMATS = ["list", "tree", "mermaid"] as const;
 
@@ -152,12 +154,14 @@ export function getImpactGraph(
   const observedEdgeTypes = collectObservedEdgeTypes(edges);
   const memberEvidencePresent = hasMemberResolutionEvidence(edges, symbolsById);
   const inheritedEvidencePresent = hasInheritedMemberEvidence(edges, symbolsById);
+  const crossLanguageEvidencePresent = hasCrossLanguagePythonCythonEvidence(edges, nodes);
   const notes = buildCoverageNotes(
     edges,
     nodes,
     input.depth,
     memberEvidencePresent,
     inheritedEvidencePresent,
+    crossLanguageEvidencePresent,
   );
 
   return {
@@ -378,12 +382,32 @@ function hasInheritedMemberEvidence(
   return false;
 }
 
+function hasCrossLanguagePythonCythonEvidence(
+  edges: readonly ImpactEdge[],
+  nodes: readonly ImpactNode[],
+): boolean {
+  const languageBySymbolId = new Map<string, ReturnType<typeof detectLanguage>>();
+
+  for (const node of nodes) {
+    languageBySymbolId.set(node.symbolId, detectLanguage(node.filePath));
+  }
+
+  return edges.some((edge) => {
+    const fromLanguage = languageBySymbolId.get(edge.fromSymbolId);
+    const toLanguage = languageBySymbolId.get(edge.toSymbolId);
+
+    return (fromLanguage === Language.Python && toLanguage === Language.Cython)
+      || (fromLanguage === Language.Cython && toLanguage === Language.Python);
+  });
+}
+
 function buildCoverageNotes(
   edges: readonly ImpactEdge[],
   nodes: readonly ImpactNode[],
   maxDepth: number,
   memberEvidencePresent: boolean,
   inheritedEvidencePresent: boolean,
+  crossLanguageEvidencePresent: boolean,
 ): string[] {
   const observed = new Set(edges.map((edge) => edge.edgeType));
   const notes = [
@@ -414,6 +438,12 @@ function buildCoverageNotes(
   if (inheritedEvidencePresent) {
     notes.push(
       "Inherited-member or cross-class-qualified evidence contributed to this result (at least one calls/references edge connects members of different classes, consistent with super(), inherited self/cls, or ClassName.x fallback).",
+    );
+  }
+
+  if (crossLanguageEvidencePresent) {
+    notes.push(
+      "Cross-language Python<->Cython evidence contributed to this result (at least one calls/references edge connects a Python symbol and a Cython symbol through an exact import/reference).",
     );
   }
 

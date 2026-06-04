@@ -9,7 +9,7 @@
 
 - Files indexed: 212 (python 196, cython 16)
 - Symbols indexed: 5152 (python 4686, cython 466)
-- Edges indexed: 10413
+- Edges indexed: 10632
 - Parser outcomes: 0 parse failures, 0 read failures, 0 persistence failures
 
 ## Edges by type
@@ -17,18 +17,18 @@
 | Edge type | Count |
 | --- | --- |
 | contains | 3388 |
-| imports | 298 |
-| calls | 5228 |
-| references | 1499 |
+| imports | 304 |
+| calls | 5358 |
+| references | 1582 |
 
 ## Edges by language
 
 | Language | Edge type | Count |
 | --- | --- | --- |
 | python | contains | 3052 |
-| python | imports | 293 |
-| python | calls | 5175 |
-| python | references | 1452 |
+| python | imports | 299 |
+| python | calls | 5305 |
+| python | references | 1535 |
 | cython | contains | 336 |
 | cython | imports | 5 |
 | cython | calls | 53 |
@@ -41,6 +41,9 @@
 | cython | python | calls | 3 |
 | cython | python | imports | 1 |
 | cython | python | references | 1 |
+| python | cython | calls | 130 |
+| python | cython | imports | 6 |
+| python | cython | references | 83 |
 
 ## Queries
 
@@ -48,10 +51,10 @@
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | run_arc | exact_symbol_api_lookup | 6 | 0 | no | 1 | ARC [class] arc/main.py | 0 |
 | species_to_dict | exact_symbol_api_lookup | 6 | 0 | no | 1 | from_dict [method] arc/species/species.py | 0 |
-| Graph | exact_symbol_api_lookup | 6 | 4 | yes | 1 | Graph [class] arc/molecule/graph.pxd | 0 |
+| Graph | exact_symbol_api_lookup | 6 | 4 | yes | 1 | Graph [class] arc/molecule/graph.pyx | 0 |
 | VF2 | exact_symbol_api_lookup | 6 | 2 | yes | 1 | VF2 [class] arc/molecule/vf2.pxd | 0 |
-| kekulize | exact_symbol_api_lookup | 6 | 3 | yes | 1 | kekulize [method] arc/molecule/molecule.py | 1 |
-| is_isomorphic | exact_symbol_api_lookup | 6 | 3 | yes | 1 | is_isomorphic [method] arc/species/species.py | 0 |
+| kekulize | exact_symbol_api_lookup | 6 | 3 | yes | 1 | kekulize [function] arc/molecule/kekulize.pyx | 1 |
+| is_isomorphic | exact_symbol_api_lookup | 6 | 3 | yes | 1 | is_isomorphic [method] arc/molecule/graph.pyx | 0 |
 | AromaticRing | exact_symbol_api_lookup | 6 | 5 | yes | 1 | AromaticRing [class] arc/molecule/kekulize.pyx | 0 |
 | get_all_edges | exact_symbol_api_lookup | 6 | 2 | yes | 1 | get_all_edges [method] arc/molecule/graph.pyx | 2 |
 | cython | python_cython_boundary | 6 | 6 | n/a | 1 | Edge [class] arc/molecule/graph.pxd | 1 |
@@ -76,17 +79,17 @@
 | Symbol | Resolved | Language | Dependent symbols | Dependent files | Observed edges | Found dependents |
 | --- | --- | --- | --- | --- | --- | --- |
 | arc/main.py::ARC | yes | python | 20 | 4 | calls, contains, imports | yes |
-| arc/molecule/graph.pyx::Graph.get_all_edges | yes | cython | 14 | 1 | calls, contains, references | yes |
-| arc/molecule/graph.pyx::Graph.is_isomorphic | yes | cython | 7 | 1 | calls, contains, references | yes |
-| arc/molecule/kekulize.pyx::kekulize | yes | cython | 0 | 0 | (none) | no |
-| arc/molecule/vf2.pyx::VF2 | yes | cython | 0 | 0 | (none) | no |
+| arc/molecule/graph.pyx::Graph.get_all_edges | yes | cython | 70 | 5 | calls, contains, imports, references | yes |
+| arc/molecule/graph.pyx::Graph.is_isomorphic | yes | cython | 54 | 5 | calls, contains, imports, references | yes |
+| arc/molecule/kekulize.pyx::kekulize | yes | cython | 14 | 4 | calls, contains, references | yes |
+| arc/molecule/vf2.pyx::VF2 | yes | cython | 2 | 1 | calls, imports | yes |
 | arc/species/species.py::ARCSpecies | yes | python | 418 | 32 | calls, contains, imports, references | yes |
 
 ## Logic-flow probes (wrapper-to-kernel)
 
 | Start | End | Reachable | Paths | Call evidence available | Call evidence used |
 | --- | --- | --- | --- | --- | --- |
-| arc/molecule/molecule.py::Molecule.kekulize | arc/molecule/kekulize.pyx::kekulize | no | 0 | yes | no |
+| arc/molecule/molecule.py::Molecule.kekulize | arc/molecule/kekulize.pyx::kekulize | yes | 1 | yes | yes |
 | arc/molecule/vf2.pyx::VF2.find_isomorphism | arc/molecule/vf2.pyx::VF2.isomorphism | yes | 1 | yes | yes |
 | arc/molecule/vf2.pyx::VF2.find_isomorphism | arc/molecule/vf2.pyx::VF2.match | yes | 1 | yes | yes |
 
@@ -102,7 +105,6 @@
 
 | Category | Severity | Finding | Query |
 | --- | --- | --- | --- |
-| accepted limitation | info | limitation.logic_flow_probe_unreachable |  |
 | retrieval/reranking gap | warning | retrieval.exact_query_expected_surface_missing | run_arc |
 | retrieval/reranking gap | warning | retrieval.exact_query_expected_surface_missing | species_to_dict |
 

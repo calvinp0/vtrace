@@ -71,10 +71,10 @@ export const ARC_LOGIC_FLOW_PROBES: readonly LogicFlowProbeDefinition[] = [
     start: "arc/molecule/vf2.pyx::VF2.find_isomorphism",
     end: "arc/molecule/vf2.pyx::VF2.isomorphism",
   },
-  // Python wrapper -> Cython kernel. Currently unreachable: Python import
-  // resolution re-parses target modules with the CPython `ast`, which cannot
-  // parse Cython source, so cross-language call edges are not produced. This
-  // probe documents that accepted limitation.
+  // Python wrapper -> Cython kernel. `molecule.py` does
+  // `from arc.molecule.kekulize import kekulize` and calls `kekulize(self)`;
+  // cross-parser resolution now resolves that import against the indexed Cython
+  // symbols, so this flow is reachable via a Python -> Cython call edge.
   {
     start: "arc/molecule/molecule.py::Molecule.kekulize",
     end: "arc/molecule/kekulize.pyx::kekulize",

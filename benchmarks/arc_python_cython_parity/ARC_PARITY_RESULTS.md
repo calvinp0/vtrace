@@ -6,12 +6,16 @@ report: `results/arc_python_cython_parity.{json,md}`. Regenerate with
 
 ## Headline
 
-- 212 files indexed (196 Python, 16 Cython), 5152 symbols, 10413 edges,
+- 212 files indexed (196 Python, 16 Cython), 5152 symbols, 10632 edges,
   **0 parse / read / persistence failures**.
 - All four edge types are produced for both languages.
+- **Python -> Cython resolution now works**: 130 calls, 6 imports, and 83
+  references cross from Python into indexed Cython symbols (previously 0). This
+  closes the wrapper-to-kernel limitation from the prior milestone.
 - Exact, dotted, Cython-structural, and concept/workflow retrieval surface the
   correct production symbol at rank 1 (test files demoted below production).
-- RC1 readiness: **ready with known limitations**.
+- RC1 readiness: **ready with known limitations** (the only remaining gaps are
+  two outdated query strings; see below).
 
 ## What works on real Cython code
 
@@ -22,8 +26,11 @@ report: `results/arc_python_cython_parity.{json,md}`. Regenerate with
   (`kekulize`) resolve to `graph.pyx` / `vf2.pyx` / `kekulize.pyx`.
 - **Cython call-flow traversal** — `VF2.find_isomorphism -> VF2.isomorphism`
   and `-> VF2.match` are reachable with `callFlowEvidenceUsed = true`.
-- **Impact-graph dependents** — Cython (`Graph.get_all_edges`: 14 dependents,
-  `Graph.is_isomorphic`: 7) and Python (`ARCSpecies`: 418, `ARC`: 20).
+- **Cross-language call-flow traversal** — `Molecule.kekulize` (Python) ->
+  `kekulize` (Cython kernel) is now reachable via a Python -> Cython call edge.
+- **Impact-graph dependents** — Cython kernels now surface their Python callers:
+  `kekulize` 0 -> 14 dependents (4 files), `Graph.get_all_edges` 14 -> 70,
+  `Graph.is_isomorphic` 7 -> 54; Python (`ARCSpecies`: 418, `ARC`: 20).
 - **Concept / workflow retrieval** — `where is the ESS output parsed` ->
   `arc/parser/adapter.py`, `how are transition state jobs validated` ->
   `check_valid_transition`, `reaction family matching` -> `family.py`.
@@ -44,17 +51,32 @@ first parenthesis now marks the statement as a variable declaration, not a
 function. Symbol count dropped 5153 -> 5152 (the phantom removed); covered by a
 new parser test.
 
-### Accepted limitation — Python wrapper -> Cython kernel call edges
+### Previously-accepted limitation — Python wrapper -> Cython kernel — CLOSED
 
 `molecule.py` does `from arc.molecule.kekulize import kekulize` and calls
-`kekulize(self)`, but no `python -> cython` call edge is produced, so the
-wrapper-to-kernel logic-flow probe is **unreachable** (recorded as
-`limitation.logic_flow_probe_unreachable`). Root cause: the Python import
-resolver re-parses imported modules with the CPython `ast`, which raises
-`SyntaxError` on Cython source, leaving the cross-language export index empty.
-Producing these edges requires sharing the Cython parser's extracted symbols
-with the Python resolver — a cross-parser change that is out of scope for this
-conservative parity milestone. Documented, not fixed.
+`kekulize(self)`. Previously no `python -> cython` call edge was produced
+because the Python import resolver re-parsed imported modules with the CPython
+`ast`, which raises `SyntaxError` on Cython source.
+
+Closed by a cross-parser symbol lookup (`src/parsers/cythonExports.ts`): when
+Python imports a `.pyx` / `.pxd` / `.pxi` module, the Python resolver now reuses
+the Cython parser's already-indexed symbols (the source of truth) instead of the
+CPython `ast`. The Python module index includes Cython files (with `.py` > `.pyx`
+> `.pxd` > `.pxi` precedence), and `getPythonExportIndex` builds the export index
+from Cython symbols whose ids match the indexed Cython symbols exactly.
+
+Result on ARC: 130 Python -> Cython call edges, 83 references, 6 imports; the
+`Molecule.kekulize -> kekulize` logic-flow probe is reachable; the
+`limitation.logic_flow_probe_unreachable` finding is no longer raised.
+Resolution stays conservative — ambiguous targets, missing modules, dynamic
+dispatch, and Cython inheritance are skipped rather than guessed.
+
+### Narrowed remaining limitation — deep dotted package paths
+
+`import pkg.sub.mod; pkg.sub.mod.kernel()` (3+ segment attribute chains) is still
+skipped, identically to the pre-existing Python -> Python behavior. The
+conservative supported cases are `from mod import name`, `import mod` +
+`mod.name`, and exact class constructor / static-method calls.
 
 ### Test expectation wrong / outdated — `run_arc`, `species_to_dict`
 
