@@ -79,6 +79,10 @@ These are useful when you want manual control instead of the full MCP shell flow
 
 `compress-sessions` compresses inactive sessions and consolidates their repeated passive tool-call observations. It is the explicit counterpart to the bounded sweep that also runs automatically after each successful `index`. `--idle-hours 0` makes all active sessions eligible, `--limit` bounds how many sessions are processed, and `--dry-run` previews the effect (including how many observations would be consolidated) without writing anything. Compression is idempotent and never removes durable/manual observations.
 
+`capsule` builds the compact source-backed capsule for a query. Capsule budgeting is **character-based**, not token-based: the budget is a character count (`run-pipeline` exposes it as `--max-budget-characters`, default applied by the capsule defaults), and inclusion stops when the next item would exceed that character budget. There is no token-aware budgeting or model-specific tokenizer in this milestone.
+
+`handoff` builds the same capsule/pipeline view and **prints a JSON payload to stdout**. It does not yet write an export file or persist a handoff artifact; redirect stdout yourself (for example `./bin/vtrace handoff <repo> "<query>" > handoff.json`) if you want to save it.
+
 ## Common Examples
 
 Set up a repo:

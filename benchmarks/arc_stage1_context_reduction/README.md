@@ -1,6 +1,6 @@
 # ARC Stage 1 Context Reduction Benchmark
 
-This benchmark compares naive ARC context gathering against existing vtrace/vexb capsule or handoff output for a fixed ARC query set.
+This benchmark compares naive ARC context gathering against existing vtrace capsule or handoff output for a fixed ARC query set.
 
 It is not a task-solving benchmark. It measures context size reduction, file/item counts, source-backed pivots, expected ARC area surfacing, and deterministic repeatability signals for the same ARC repository state.
 

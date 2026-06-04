@@ -26,6 +26,25 @@ The current visible tool names are:
 
 Most of those are directly useful today. `expand_vexp_ref` is the advanced exception.
 
+## Language Coverage
+
+Structural tools (`get_skeleton`, `get_impact_graph`, `search_logic_flow`, retrieval, and capsule shaping) only see what the per-language parser extracts. Coverage is deliberately uneven and conservative:
+
+| Language   | Extensions             | Parser         | Indexed graph evidence                                                                                                                                                     | Status                                                                                                                         |
+| ---------- | ---------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Python     | `.py`                  | Registered     | Symbols + `contains`, `imports`, statically resolved `calls` and `references`; conservative member (`self.x`, `cls.x`, `ClassName.x`) and inheritance/`super()` resolution | Strongest. The only language with call/reference, member, and inheritance evidence.                                            |
+| TypeScript | `.ts`, `.tsx`          | Registered     | Symbols + `contains`, `imports` (structural)                                                                                                                               | Structural only. No `calls`/`references` edges yet, so call-flow evidence is unavailable.                                      |
+| Cython     | `.pyx`, `.pxd`, `.pxi` | Registered     | Symbols + conservative `imports` edges only                                                                                                                                | Narrow/conservative. No `contains`, `calls`, `references`, member, or inheritance graph.                                       |
+| JavaScript | `.js`, `.jsx`          | Not registered | None                                                                                                                                                                       | Detected by extension but has no registered parser, so files are scanned and skipped as `unregistered_language` (not indexed). |
+| Go         | `.go`                  | None           | None                                                                                                                                                                       | Not currently implemented; not detected as an indexable source file.                                                           |
+| Rust       | `.rs`                  | None           | None                                                                                                                                                                       | Not currently implemented; not detected as an indexable source file.                                                           |
+
+Notes:
+
+- "Statically resolved" means exact, conservative resolution; ambiguous targets, dynamic dispatch, and unresolved references are skipped rather than guessed.
+- A repo with only TypeScript, Cython, JavaScript, Go, or Rust sources will report `callFlowEvidenceAvailable: false` from `search_logic_flow` because `calls` edges are Python-only in this milestone.
+- This matrix reflects current behavior, not a roadmap commitment.
+
 ## Passive Tool-Call Observations
 
 `vtrace` auto-captures compact `tool_call` observations for meaningful visible MCP tool calls. Current capture covers successful, useful calls to `get_code_context`/`run_pipeline`, `get_context_capsule`, `get_impact_graph`, `search_logic_flow`, `get_skeleton`, `search_memory`, `get_session_context`, and resolved `expand_vexp_ref` expansions.

@@ -80,7 +80,9 @@ The compatibility command name stays `claude-config`, even when you target Codex
 Config paths:
 
 - Claude Code: `~/.claude.json` local MCP scope
-- Codex: `.codex/config.toml`
+- Codex: project-local `.codex/config.toml`
+
+The Codex config is **project-local**: `vtrace` writes `.codex/config.toml` at the repo root and registers a `vtrace` MCP server whose working directory is that same repo root. Because Codex reads project-local config from its working directory, **launch Codex from the repo root** so it picks up `.codex/config.toml`. Running Codex from a different directory means it will not load this repo's vtrace MCP server.
 
 After setup, `/mcp` in the selected agent should show `get_code_context`. For broad coding, debugging, refactor, and repo-understanding tasks, start with `get_code_context`; `run_pipeline` remains available as the stable/internal equivalent.
 

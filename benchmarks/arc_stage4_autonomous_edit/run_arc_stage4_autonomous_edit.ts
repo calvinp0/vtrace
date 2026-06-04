@@ -195,7 +195,6 @@ const DEFAULT_IGNORED_CHANGED_PATH_PREFIXES = [
   ".claude/",
   ".pytest_cache/",
   "__pycache__/",
-  ".vexb/",
 ];
 
 const CSV_COLUMNS = [

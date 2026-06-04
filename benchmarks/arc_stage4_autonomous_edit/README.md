@@ -57,7 +57,6 @@ Benchmark/tool state paths are ignored for changed-file safety because local too
 .claude/
 .pytest_cache/
 __pycache__/
-.vexb/
 ```
 
 Ignored state paths are reported separately from disallowed changed files. They do not make a run fail, but they remain visible in validation JSON and the Markdown report.
