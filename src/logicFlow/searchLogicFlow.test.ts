@@ -148,6 +148,116 @@ test("unreachable symbols return an explicit no-path result", async () => {
   });
 });
 
+test("a TypeScript-only repo reports call-flow evidence as unavailable with an honest note", async () => {
+  await withLogicFlowFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = requireLogicFlow(db, {
+        start: "src/beta.ts::beta",
+        end: "src/base.ts::base",
+        maxPaths: 2,
+      });
+
+      assert.equal(result.coverage.supportedEdgeTypes.includes("calls"), true);
+      assert.equal(result.coverage.observedEdgeTypes.includes("calls"), false);
+      assert.equal(result.coverage.callFlowEvidenceAvailable, false);
+      assert.equal(result.coverage.callFlowEvidenceUsed, false);
+      assert.equal(
+        result.coverage.notes.some((note) =>
+          note.includes("No statically resolved calls edges were available")
+        ),
+        true,
+      );
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("a direct A -> B call path is found through a statically resolved calls edge", async () => {
+  await withPythonCallFlowFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = requireLogicFlow(db, {
+        start: "src/pkg/user.py::entry",
+        end: "src/pkg/target.py::do_work",
+        maxPaths: 3,
+      });
+
+      assert.equal(result.summary.reachable, true);
+      assert.equal(result.summary.shortestPathEdgeCount, 1);
+      assert.deepEqual(
+        result.paths[0]?.steps.map((step) => [step.edgeType, step.fromFqName, step.toFqName]),
+        [["calls", "src/pkg/user.py::entry", "src/pkg/target.py::do_work"]],
+      );
+      assert.equal(result.coverage.callFlowEvidenceAvailable, true);
+      assert.equal(result.coverage.callFlowEvidenceUsed, true);
+      assert.equal(result.coverage.observedEdgeTypes.includes("calls"), true);
+      assert.equal(
+        result.coverage.notes.some((note) =>
+          note.includes("traverses a statically resolved calls edge")
+        ),
+        true,
+      );
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("a mixed imports + calls path is found when both edge types are available", async () => {
+  await withPythonMixedFlowFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = requireLogicFlow(db, {
+        start: "src/pkg/caller.py::caller",
+        end: "src/pkg/leaf.py::leaf",
+        maxPaths: 3,
+      });
+
+      assert.equal(result.summary.reachable, true);
+      const observedTypes = new Set(
+        result.paths.flatMap((path) => path.steps.map((step) => step.edgeType)),
+      );
+      assert.equal(observedTypes.has("calls"), true);
+      assert.equal(result.coverage.callFlowEvidenceAvailable, true);
+      assert.equal(result.coverage.callFlowEvidenceUsed, true);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("call-flow path search is deterministic across repeated calls", async () => {
+  await withPythonCallFlowFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const first = requireLogicFlow(db, {
+        start: "src/pkg/user.py::entry",
+        end: "src/pkg/target.py::do_work",
+        maxPaths: 3,
+      });
+      const second = requireLogicFlow(db, {
+        start: "src/pkg/user.py::entry",
+        end: "src/pkg/target.py::do_work",
+        maxPaths: 3,
+      });
+
+      assert.deepEqual(second, first);
+    } finally {
+      db.close();
+    }
+  });
+});
+
 test("shortest-path ordering is deterministic across repeated calls", async () => {
   await withLogicFlowFixture(async (repoRoot) => {
     const db = openIndexerDatabase();
@@ -196,6 +306,77 @@ async function withLogicFlowFixture(
   try {
     await mkdir(path.join(repoRoot, "src"), { recursive: true });
     await writeLogicFlowFixtureRepo(repoRoot);
+    await run(repoRoot);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+async function withPythonCallFlowFixture(
+  run: (repoRoot: string) => Promise<void>,
+): Promise<void> {
+  await withPythonFixture(run, async (pkgRoot) => {
+    await writeFile(path.join(pkgRoot, "__init__.py"), "");
+    await writeFile(
+      path.join(pkgRoot, "target.py"),
+      ["def do_work(x):", "    return x", ""].join("\n"),
+    );
+    await writeFile(
+      path.join(pkgRoot, "user.py"),
+      [
+        "from .target import do_work",
+        "",
+        "def entry():",
+        "    return do_work(1)",
+        "",
+      ].join("\n"),
+    );
+  });
+}
+
+async function withPythonMixedFlowFixture(
+  run: (repoRoot: string) => Promise<void>,
+): Promise<void> {
+  await withPythonFixture(run, async (pkgRoot) => {
+    await writeFile(path.join(pkgRoot, "__init__.py"), "");
+    await writeFile(
+      path.join(pkgRoot, "leaf.py"),
+      ["def leaf():", "    return 1", ""].join("\n"),
+    );
+    await writeFile(
+      path.join(pkgRoot, "middle.py"),
+      [
+        "from .leaf import leaf",
+        "",
+        "def middle():",
+        "    return leaf()",
+        "",
+      ].join("\n"),
+    );
+    await writeFile(
+      path.join(pkgRoot, "caller.py"),
+      [
+        "from .middle import middle",
+        "",
+        "def caller():",
+        "    return middle",
+        "",
+      ].join("\n"),
+    );
+  });
+}
+
+async function withPythonFixture(
+  run: (repoRoot: string) => Promise<void>,
+  writePackage: (pkgRoot: string) => Promise<void>,
+): Promise<void> {
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-logic-flow-py-"));
+  const repoRoot = path.join(root, "repo");
+  const pkgRoot = path.join(repoRoot, "src", "pkg");
+
+  try {
+    await mkdir(pkgRoot, { recursive: true });
+    await writePackage(pkgRoot);
     await run(repoRoot);
   } finally {
     await rm(root, { recursive: true, force: true });

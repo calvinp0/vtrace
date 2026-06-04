@@ -229,20 +229,28 @@ Use `search_symbols` for exact symbol lookup or when the context result is weak.
 
 ### `search_logic_flow`
 
-Return bounded structural paths between two exact indexed symbol FQNs.
+Return bounded directed paths between two exact indexed symbol FQNs over indexed `contains`, `imports`, and statically resolved `calls` edges.
 
 Use it when:
 
 - you know the exact start symbol
 - you know the exact end symbol
-- you want the conservative structural path between them
+- you want the conservative static path between them, including call-flow edges where they were statically resolved
 
 Important limits:
 
 - exact FQN resolution only
-- bounded deterministic structural paths only
-- not runtime tracing
+- bounded deterministic paths only
+- `calls` edges are static, conservative call-target resolution (Python only in this milestone); ambiguous or dynamic-dispatch targets are skipped, never guessed
+- static evidence only — a traversed `calls` edge is not proof a call executes; this is not runtime tracing
 - not semantic dataflow
+
+Coverage is explicit. Each result reports:
+
+- `supportedEdgeTypes` — the edge types traversal may use (`contains`, `imports`, `calls`)
+- `observedEdgeTypes` — the edge types actually present in the returned paths
+- `callFlowEvidenceAvailable` — whether any statically resolved `calls` edge existed in the indexed graph for the repo. When `false` (for example, a TypeScript-only repo), the result is honest structural containment/import traversal only and does not trace call flow
+- `callFlowEvidenceUsed` — whether a returned path actually traverses a `calls` edge
 
 Prefer this specialist tool over `run_pipeline` when you already know the exact start and end FQNs.
 

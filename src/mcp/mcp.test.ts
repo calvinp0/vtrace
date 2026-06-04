@@ -2642,6 +2642,16 @@ test("search_logic_flow returns a real bounded structural path view for exact in
         ["contains", "src/session.ts::SessionManager", "src/session.ts::SessionManager.createSession"],
       ],
     );
+    assert.equal(response.result.output.coverage.supportedEdgeTypes.includes("calls"), true);
+    assert.equal(typeof response.result.output.coverage.callFlowEvidenceAvailable, "boolean");
+    assert.equal(typeof response.result.output.coverage.callFlowEvidenceUsed, "boolean");
+    // This TypeScript fixture has no statically resolved calls edges, so the
+    // result must honestly report that call-flow evidence was unavailable.
+    assert.equal(response.result.output.coverage.callFlowEvidenceAvailable, false);
+    assert.equal(response.result.output.coverage.callFlowEvidenceUsed, false);
+    // The emitted output (including the new coverage fields) must still conform
+    // to the tool's additionalProperties:false schema.
+    assertOutputConformsToToolSchema(McpToolId.SearchLogicFlow, response.result.output);
   });
 });
 

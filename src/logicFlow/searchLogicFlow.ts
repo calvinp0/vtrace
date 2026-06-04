@@ -58,6 +58,14 @@ export interface LogicFlowCoverage {
   readonly crossRepo: false;
   readonly supportedEdgeTypes: readonly EdgeType[];
   readonly observedEdgeTypes: readonly EdgeType[];
+  /**
+   * Whether any statically resolved `calls` edge existed in the indexed graph
+   * for the queried repo. When false, no call-flow evidence was available and
+   * any returned path rests purely on structural containment/import edges.
+   */
+  readonly callFlowEvidenceAvailable: boolean;
+  /** Whether at least one `calls` edge appears in the returned paths. */
+  readonly callFlowEvidenceUsed: boolean;
   readonly notes: readonly string[];
 }
 
@@ -102,6 +110,7 @@ export type LogicFlowResult =
 const SUPPORTED_EDGE_TYPES = Object.freeze([
   EdgeType.Contains,
   EdgeType.Imports,
+  EdgeType.Calls,
 ]);
 
 export function searchLogicFlow(
@@ -124,6 +133,7 @@ export function searchLogicFlow(
     listAllSymbols(db).map((symbol) => [symbol.id, symbol] as const),
   );
   const graph = buildGraph(listAllEdges(db), symbolsById);
+  const callFlowEvidenceAvailable = graph.graphEdgeTypes.has(EdgeType.Calls);
   const distanceFromStart = computeForwardDistances(resolvedStart.symbol.id, graph.outgoingBySymbolId);
   const shortestPathEdgeCount = distanceFromStart.get(resolvedEnd.symbol.id) ?? null;
 
@@ -150,6 +160,7 @@ export function searchLogicFlow(
   }
 
   const observedEdgeTypes = collectObservedEdgeTypes(returnedPaths);
+  const callFlowEvidenceUsed = observedEdgeTypes.includes(EdgeType.Calls);
 
   return {
     ok: true,
@@ -169,11 +180,15 @@ export function searchLogicFlow(
         crossRepo: false,
         supportedEdgeTypes: SUPPORTED_EDGE_TYPES,
         observedEdgeTypes,
+        callFlowEvidenceAvailable,
+        callFlowEvidenceUsed,
         notes: buildCoverageNotes(
           resolvedStart.symbol,
           resolvedEnd.symbol,
           returnedPaths,
           truncated,
+          callFlowEvidenceAvailable,
+          callFlowEvidenceUsed,
         ),
       },
       summary: {
@@ -248,9 +263,11 @@ function buildGraph(
 ): {
   readonly outgoingBySymbolId: ReadonlyMap<string, readonly EdgeRecord[]>;
   readonly incomingBySymbolId: ReadonlyMap<string, readonly EdgeRecord[]>;
+  readonly graphEdgeTypes: ReadonlySet<EdgeType>;
 } {
   const outgoingBySymbolId = new Map<string, EdgeRecord[]>();
   const incomingBySymbolId = new Map<string, EdgeRecord[]>();
+  const graphEdgeTypes = new Set<EdgeType>();
 
   for (const edge of edges) {
     if (!SUPPORTED_EDGE_TYPES.includes(edge.edgeType)) {
@@ -260,6 +277,8 @@ function buildGraph(
     if (!symbolsById.has(edge.srcSymbolId) || !symbolsById.has(edge.dstSymbolId)) {
       continue;
     }
+
+    graphEdgeTypes.add(edge.edgeType);
 
     const outgoing = outgoingBySymbolId.get(edge.srcSymbolId);
 
@@ -289,6 +308,7 @@ function buildGraph(
   return {
     outgoingBySymbolId,
     incomingBySymbolId,
+    graphEdgeTypes,
   };
 }
 
@@ -439,13 +459,30 @@ function buildCoverageNotes(
   endSymbol: SymbolRecord,
   paths: readonly LogicFlowPath[],
   truncated: boolean,
+  callFlowEvidenceAvailable: boolean,
+  callFlowEvidenceUsed: boolean,
 ): string[] {
   const notes = [
-    "Directed structural path search built from indexed contains/imports edges.",
+    "Directed structural path search built from indexed contains, imports, and statically resolved calls edges.",
     "Exact FQN resolution is required; no fuzzy symbol matching is applied.",
-    "This does not represent runtime execution flow, semantic reachability, or dataflow.",
+    "Calls edges are static, conservative call-target resolution (Python only in this milestone); ambiguous or dynamic-dispatch targets are skipped rather than guessed.",
+    "This does not represent runtime execution flow, semantic reachability, or dataflow; even paths that traverse calls edges are static evidence, not proof a call executes.",
     "This first version only returns shortest structural paths; longer alternative paths are not enumerated once the minimum distance is found.",
   ];
+
+  if (!callFlowEvidenceAvailable) {
+    notes.push(
+      "No statically resolved calls edges were available for the indexed repo (e.g. a TypeScript-only repo, or a language/file set with no extracted call edges); this result is structural containment/import traversal only and does not trace call flow.",
+    );
+  } else if (callFlowEvidenceUsed) {
+    notes.push(
+      "At least one returned path traverses a statically resolved calls edge, so the path reflects static call-flow evidence (not runtime execution truth).",
+    );
+  } else {
+    notes.push(
+      "Calls edges existed in the indexed graph but none lay on a returned shortest path; the returned paths rest on contains/imports edges only.",
+    );
+  }
 
   if (startSymbol.id === endSymbol.id) {
     notes.push("Start and end resolve to the same indexed symbol; the zero-edge path is returned.");

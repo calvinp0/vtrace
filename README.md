@@ -115,7 +115,7 @@ Use the specialized tools when the question becomes narrower:
 - `get_impact_graph`: use when the user asks what breaks, blast radius, dependents, callers, references, or impact of changing a known symbol
 - `get_skeleton`: use when the relevant file path is already known and you need structural overview
 - `search_symbols`: use for exact symbol lookup or when the context result is weak
-- `search_logic_flow`: bounded path between two exact symbol FQNs
+- `search_logic_flow`: bounded static path between two exact symbol FQNs over `contains`, `imports`, and statically resolved `calls` edges (coverage reports whether call-flow evidence was available; not runtime tracing)
 - `search_memory` / `get_session_context`: continuity
 - `index_status` / `workspace_setup`: health and setup
 - `save_observation`: durable memory
@@ -190,7 +190,7 @@ The README uses the project artwork from [docs/assets/brand](./docs/assets/brand
 `vtrace` is conservative by design:
 
 - structural outputs are based on indexed repository data
-- `search_logic_flow` requires exact start and end FQNs
+- `search_logic_flow` requires exact start and end FQNs and traverses `contains`, `imports`, and statically resolved `calls` edges; `calls` edges are Python-only in this milestone, so repos without extracted call edges report `callFlowEvidenceAvailable: false` rather than implying call flow was traced
 - impact and flow tools are not runtime execution proofs
 - watcher freshness is mark-stale-only by default; `watch --auto-reindex` is explicit opt-in and keeps failures visible
 - V-REF expansion is exact stored-payload lookup with bounded repo-local retention, not fuzzy reconstruction

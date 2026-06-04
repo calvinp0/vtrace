@@ -541,6 +541,12 @@ const LOGIC_FLOW_COVERAGE_SCHEMA = objectProperty(
       "Indexed edge types actually observed in the returned paths.",
       stringProperty("Observed edge type."),
     ),
+    callFlowEvidenceAvailable: booleanProperty(
+      "Whether any statically resolved calls edge existed in the indexed graph for the queried repo. False means call-flow evidence was unavailable and the result is structural containment/import traversal only.",
+    ),
+    callFlowEvidenceUsed: booleanProperty(
+      "Whether at least one returned path traverses a statically resolved calls edge.",
+    ),
     notes: arrayProperty(
       "Honest scope and limitation notes for interpreting the result.",
       stringProperty("Coverage note."),
@@ -553,6 +559,8 @@ const LOGIC_FLOW_COVERAGE_SCHEMA = objectProperty(
     "crossRepo",
     "supportedEdgeTypes",
     "observedEdgeTypes",
+    "callFlowEvidenceAvailable",
+    "callFlowEvidenceUsed",
     "notes",
   ],
 );
@@ -7529,7 +7537,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
     metadata: {
       toolId: McpToolId.SearchLogicFlow,
       displayName: "Search Logic Flow",
-      description: "Return bounded directed structural paths between two exact indexed symbol FQNs.",
+      description: "Return bounded directed paths between two exact indexed symbol FQNs over indexed contains, imports, and statically resolved calls edges. Static structural evidence only — calls edges are conservative (Python only in this milestone) and this is not runtime execution flow; coverage reports whether call-flow evidence was available.",
       inputSchema: objectSchema(
         "Logic-flow request.",
         {
