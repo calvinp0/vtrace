@@ -187,18 +187,23 @@ test("a mixed Python/Cython fixture repo indexes end-to-end and persists expecte
       );
       assert.equal(listAllSymbols(db).length, MIXED_PY_CYTHON_FIXTURE_SYMBOL_COUNT);
       assert.equal(listAllEdges(db).length, MIXED_PY_CYTHON_FIXTURE_EDGE_COUNT);
-      assert.equal(kernelEdges.length, 4);
-      assert.equal(kernelEdges.every((edge) => edge.edgeType === EdgeType.Imports), true);
+      // The Cython kernel now carries both imports and statically resolved
+      // calls to the same imported/cimported/included targets.
+      const kernelImports = kernelEdges.filter((edge) => edge.edgeType === EdgeType.Imports);
+      const kernelCalls = kernelEdges.filter((edge) => edge.edgeType === EdgeType.Calls);
+      const kernelTargets = [
+        backgroundSymbol.id,
+        clampWindowSymbol.id,
+        declaredStepSymbol.id,
+        stencilSmoothSymbol.id,
+      ].sort();
+
+      assert.equal(kernelEdges.length, 8);
       assert.equal(kernelEdges.every((edge) => edge.srcSymbolId === kernelSymbol.id), true);
-      assert.deepEqual(
-        kernelEdges.map((edge) => edge.dstSymbolId).sort(),
-        [
-          backgroundSymbol.id,
-          clampWindowSymbol.id,
-          declaredStepSymbol.id,
-          stencilSmoothSymbol.id,
-        ].sort(),
-      );
+      assert.equal(kernelImports.length, 4);
+      assert.equal(kernelCalls.length, 4);
+      assert.deepEqual(kernelImports.map((edge) => edge.dstSymbolId).sort(), kernelTargets);
+      assert.deepEqual(kernelCalls.map((edge) => edge.dstSymbolId).sort(), kernelTargets);
       assert.equal(getIndexRunSummary(db, listIndexRuns(db)[0]!.id)?.totalFiles, MIXED_PY_CYTHON_FIXTURE_FILE_COUNT);
       assert.equal(
         getIndexRunSummary(db, listIndexRuns(db)[0]!.id)?.totalSymbols,

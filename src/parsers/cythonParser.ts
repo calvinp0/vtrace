@@ -28,17 +28,59 @@ interface CythonParserContext {
 }
 
 interface CythonParsePayload {
-  items: CythonFunctionItem[];
+  items: CythonItem[];
   imports: CythonImport[];
 }
 
-interface CythonFunctionItem {
+type CythonItem = CythonFunctionItem | CythonClassItem;
+
+interface CythonCallSite {
+  target: string;
+  line: number;
+}
+
+interface CythonReferenceSite {
+  target: string;
+  line: number;
+}
+
+interface CythonScopeEvidence {
+  calls: readonly CythonCallSite[];
+  references: readonly CythonReferenceSite[];
+  localBindings: readonly string[];
+  firstArg: string | null;
+}
+
+interface CythonFunctionItem extends CythonScopeEvidence {
+  kind: "function";
   name: string;
   signature: string;
   startLine: number;
   endLine: number;
   startByte: number;
   endByte: number;
+}
+
+interface CythonMethodItem extends CythonScopeEvidence {
+  kind: "method";
+  name: string;
+  signature: string;
+  startLine: number;
+  endLine: number;
+  startByte: number;
+  endByte: number;
+}
+
+interface CythonClassItem {
+  kind: "class";
+  name: string;
+  signature: string;
+  startLine: number;
+  endLine: number;
+  startByte: number;
+  endByte: number;
+  bases: readonly CythonReferenceSite[];
+  members: readonly CythonMethodItem[];
 }
 
 type CythonImport =
@@ -95,6 +137,7 @@ const CYTHON_TOKENIZER_SCRIPT = `
 import ast
 import io
 import json
+import keyword
 import token
 import tokenize
 import sys
@@ -220,9 +263,11 @@ def collect_statement_tokens(tokens, start_index):
 
     return statement, len(tokens)
 
-def block_end(tokens, header_end_index, header_end_token):
+def block_range(tokens, header_end_index, header_end_token):
+    # (body_start_index, body_end_index) over the indented block, or None when
+    # the header has no indented block (e.g. a bodyless .pxd declaration).
     if header_end_token is None or header_end_token.type != token.OP or header_end_token.string != ":":
-        return header_end_token
+        return None
 
     for index in range(header_end_index + 1, len(tokens)):
         tok = tokens[index]
@@ -231,32 +276,205 @@ def block_end(tokens, header_end_index, header_end_token):
             continue
 
         if tok.type != token.INDENT:
-            return header_end_token
+            return None
 
         depth = 1
-        last_body_token = None
 
         for body_index in range(index + 1, len(tokens)):
             body_tok = tokens[body_index]
 
             if body_tok.type == token.INDENT:
                 depth += 1
-                continue
-
-            if body_tok.type == token.DEDENT:
+            elif body_tok.type == token.DEDENT:
                 depth -= 1
 
                 if depth == 0:
-                    return last_body_token if last_body_token is not None else header_end_token
+                    return (index + 1, body_index)
 
+        return (index + 1, len(tokens))
+
+    return None
+
+def find_open_paren(tokens, start_index, header_end_index):
+    paren_depth = 0
+    bracket_depth = 0
+    brace_depth = 0
+
+    for index in range(start_index + 1, len(tokens)):
+        if index > header_end_index:
+            break
+
+        tok = tokens[index]
+
+        if tok.type != token.OP:
+            continue
+
+        if tok.string == "(":
+            if paren_depth == 0 and bracket_depth == 0 and brace_depth == 0:
+                return index
+
+            paren_depth += 1
+        elif tok.string == ")":
+            paren_depth = max(paren_depth - 1, 0)
+        elif tok.string == "[":
+            bracket_depth += 1
+        elif tok.string == "]":
+            bracket_depth = max(bracket_depth - 1, 0)
+        elif tok.string == "{":
+            brace_depth += 1
+        elif tok.string == "}":
+            brace_depth = max(brace_depth - 1, 0)
+
+    return None
+
+def matching_close_paren(tokens, open_index):
+    depth = 0
+
+    for index in range(open_index, len(tokens)):
+        tok = tokens[index]
+
+        if tok.type == token.OP:
+            if tok.string == "(":
+                depth += 1
+            elif tok.string == ")":
+                depth -= 1
+
+                if depth == 0:
+                    return index
+
+    return None
+
+def extract_params(tokens, open_index):
+    close_index = matching_close_paren(tokens, open_index)
+
+    if close_index is None:
+        return [], None
+
+    segments = []
+    segment = []
+    depth = 0
+
+    for index in range(open_index + 1, close_index):
+        tok = tokens[index]
+
+        if tok.type == token.OP and tok.string in "([{":
+            depth += 1
+        elif tok.type == token.OP and tok.string in ")]}":
+            depth -= 1
+
+        if depth == 0 and tok.type == token.OP and tok.string == ",":
+            segments.append(segment)
+            segment = []
+            continue
+
+        segment.append(tok)
+
+    if segment:
+        segments.append(segment)
+
+    params = []
+    first_arg = None
+
+    for seg in segments:
+        head = []
+        seg_depth = 0
+
+        for tok in seg:
+            if tok.type == token.OP and tok.string in "([{":
+                seg_depth += 1
+            elif tok.type == token.OP and tok.string in ")]}":
+                seg_depth -= 1
+
+            if seg_depth == 0 and tok.type == token.OP and tok.string == "=":
+                break
+
+            head.append(tok)
+
+        name_tok = None
+
+        for tok in head:
+            if tok.type == token.NAME and not keyword.iskeyword(tok.string):
+                name_tok = tok
+
+        if name_tok is not None:
+            params.append(name_tok.string)
+
+            if first_arg is None:
+                first_arg = name_tok.string
+
+    return params, first_arg
+
+CYTHON_KEYWORDS = {
+    "cdef", "cpdef", "cimport", "ctypedef", "cppclass", "nogil", "gil",
+    "include", "DEF", "IF", "ELIF", "ELSE", "api", "public", "readonly",
+    "inline", "extern", "namespace", "struct", "union", "enum", "packed",
+    "fused", "by", "new",
+}
+
+def scan_scope(tokens, body_start, body_end):
+    # Conservative token-level evidence: dotted name chains immediately followed
+    # by "(" are calls; bare single names in use position are reference
+    # candidates; assignment/loop/with targets are local bindings. Resolution
+    # gating (exact same-file or imported symbol) happens on the host side, so
+    # over-collecting candidates here is safe.
+    calls = []
+    name_uses = []
+    bindings = set()
+    index = body_start
+
+    while index < body_end:
+        tok = tokens[index]
+
+        if tok.type != token.NAME:
+            index += 1
+            continue
+
+        prev = previous_significant(tokens, body_start, index - 1)
+
+        if prev is not None and prev.type == token.OP and prev.string == ".":
+            index += 1
+            continue
+
+        if keyword.iskeyword(tok.string) or tok.string in CYTHON_KEYWORDS:
+            index += 1
+            continue
+
+        chain = [tok.string]
+        j = index + 1
+
+        while j + 1 < body_end and tokens[j].type == token.OP and tokens[j].string == "." and tokens[j + 1].type == token.NAME:
+            chain.append(tokens[j + 1].string)
+            j += 2
+
+        nxt = tokens[j] if j < body_end else None
+
+        if nxt is not None and nxt.type == token.OP and nxt.string == "(":
+            if prev is not None and prev.type == token.NAME and prev.string in {"def", "cdef", "cpdef", "class"}:
+                index = j + 1
                 continue
 
-            if is_significant(body_tok):
-                last_body_token = body_tok
+            calls.append({"target": ".".join(chain), "line": tok.start[0]})
+            index = j + 1
+            continue
 
-        return last_body_token if last_body_token is not None else header_end_token
+        if len(chain) == 1:
+            is_assignment = (
+                nxt is not None
+                and nxt.type == token.OP
+                and nxt.string == "="
+                and not (j + 1 < body_end and tokens[j + 1].type == token.OP and tokens[j + 1].string == "=")
+            )
 
-    return header_end_token
+            if is_assignment:
+                bindings.add(chain[0])
+            elif prev is not None and prev.type == token.NAME and prev.string in {"as", "for"}:
+                bindings.add(chain[0])
+            else:
+                name_uses.append({"target": chain[0], "line": tok.start[0]})
+
+        index = j
+
+    return calls, name_uses, sorted(bindings)
 
 def read_dotted_name(tokens, start_index):
     index = start_index
@@ -412,83 +630,211 @@ def parse_include(statement_tokens):
 
     return {"kind": "include_file", "includePath": include_path}
 
-def parse_function(tokens, start_index):
-    keyword = tokens[start_index]
+def parse_def_header(tokens, start_index):
+    keyword_tok = tokens[start_index]
     header_end_index, signature_end_token = statement_end(tokens, start_index)
-    terminator_index = header_end_index
-    terminator_token = signature_end_token
-    open_paren_index = None
-    paren_depth = 0
-    bracket_depth = 0
-    brace_depth = 0
-
-    for index in range(start_index + 1, len(tokens)):
-        tok = tokens[index]
-
-        if index > header_end_index:
-            break
-
-        if tok.type != token.OP:
-            continue
-
-        if tok.string == "(":
-            if (
-                paren_depth == 0
-                and bracket_depth == 0
-                and brace_depth == 0
-                and open_paren_index is None
-            ):
-                open_paren_index = index
-                break
-
-            paren_depth += 1
-        elif tok.string == ")":
-            paren_depth = max(paren_depth - 1, 0)
-        elif tok.string == "[":
-            bracket_depth += 1
-        elif tok.string == "]":
-            bracket_depth = max(bracket_depth - 1, 0)
-        elif tok.string == "{":
-            brace_depth += 1
-        elif tok.string == "}":
-            brace_depth = max(brace_depth - 1, 0)
+    open_paren_index = find_open_paren(tokens, start_index, header_end_index)
 
     if open_paren_index is None:
-        return None, terminator_index + 1
+        return None
 
     name_token = previous_significant(tokens, start_index + 1, open_paren_index - 1)
     first_parameter_token = next_significant(tokens, open_paren_index + 1)
 
     if name_token is None or name_token.type != token.NAME:
-        return None, terminator_index + 1
+        return None
 
     if name_token.string in {"class", "enum", "extern", "from", "struct", "union"}:
-        return None, terminator_index + 1
+        return None
 
     if first_parameter_token is not None and first_parameter_token.string in {"*", "&"}:
-        return None, terminator_index + 1
+        return None
 
-    block_end_token = block_end(tokens, header_end_index, terminator_token)
+    block = block_range(tokens, header_end_index, signature_end_token)
+    block_end_tok = None
 
-    if block_end_token is None:
-        return None, terminator_index + 1
+    if block is not None:
+        block_end_tok = previous_significant(tokens, block[0], block[1] - 1)
 
-    start_byte = absolute_byte(keyword.start)
+    if block_end_tok is None:
+        block_end_tok = signature_end_token
+
+    start_byte = absolute_byte(keyword_tok.start)
     signature_end_byte = absolute_byte(signature_end_token.end)
-    end_byte = absolute_byte(block_end_token.end)
+    end_byte = absolute_byte(block_end_tok.end)
     signature = source.encode("utf-8")[start_byte:signature_end_byte].decode("utf-8").strip()
 
     if not signature:
-        return None, terminator_index + 1
+        return None
+
+    params, first_arg = extract_params(tokens, open_paren_index)
+    calls = []
+    name_uses = []
+    bindings = sorted(set(params))
+
+    if block is not None:
+        calls, name_uses, body_bindings = scan_scope(tokens, block[0], block[1])
+        bindings = sorted(set(params) | set(body_bindings))
 
     return {
         "name": name_token.string,
         "signature": signature,
-        "startLine": keyword.start[0],
-        "endLine": block_end_token.end[0],
+        "startLine": keyword_tok.start[0],
+        "endLine": block_end_tok.end[0],
         "startByte": start_byte,
         "endByte": end_byte,
-    }, terminator_index + 1
+        "calls": calls,
+        "references": name_uses,
+        "localBindings": bindings,
+        "firstArg": first_arg,
+        "headerEndIndex": header_end_index,
+        "block": block,
+    }
+
+MEMBER_KEYS = (
+    "name", "signature", "startLine", "endLine", "startByte", "endByte",
+    "calls", "references", "localBindings", "firstArg",
+)
+
+def parse_function(tokens, start_index):
+    header = parse_def_header(tokens, start_index)
+
+    if header is None:
+        return None, statement_end(tokens, start_index)[0] + 1
+
+    item = {key: header[key] for key in MEMBER_KEYS}
+    item["kind"] = "function"
+    return item, header["headerEndIndex"] + 1
+
+def read_class_bases(tokens, open_index):
+    close_index = matching_close_paren(tokens, open_index)
+
+    if close_index is None:
+        return []
+
+    bases = []
+    index = open_index + 1
+
+    while index < close_index:
+        tok = tokens[index]
+
+        if tok.type != token.NAME or keyword.iskeyword(tok.string):
+            index += 1
+            continue
+
+        nxt = tokens[index + 1] if index + 1 < close_index else None
+
+        if nxt is not None and nxt.type == token.OP and nxt.string == "=":
+            index += 2
+            continue
+
+        name, next_index = read_dotted_name(tokens, index)
+
+        if name is not None:
+            bases.append({"target": name, "line": tok.start[0]})
+            index = next_index
+        else:
+            index += 1
+
+    return bases
+
+def parse_class(tokens, start_index, keyword_start_index):
+    header_end_index, signature_end_token = statement_end(tokens, keyword_start_index)
+    name_token = next_significant(tokens, keyword_start_index + 1)
+
+    if name_token is None or name_token.type != token.NAME or keyword.iskeyword(name_token.string):
+        return None, header_end_index + 1
+
+    bases = []
+    open_paren_index = find_open_paren(tokens, keyword_start_index, header_end_index)
+
+    if open_paren_index is not None:
+        bases = read_class_bases(tokens, open_paren_index)
+
+    block = block_range(tokens, header_end_index, signature_end_token)
+    block_end_tok = None
+
+    if block is not None:
+        block_end_tok = previous_significant(tokens, block[0], block[1] - 1)
+
+    if block_end_tok is None:
+        block_end_tok = signature_end_token
+
+    start_byte = absolute_byte(tokens[start_index].start)
+    signature_end_byte = absolute_byte(signature_end_token.end)
+    end_byte = absolute_byte(block_end_tok.end)
+    signature = source.encode("utf-8")[start_byte:signature_end_byte].decode("utf-8").strip()
+
+    if not signature:
+        return None, header_end_index + 1
+
+    members = []
+
+    if block is not None:
+        body_start, body_end = block
+        depth = 0
+        idx = body_start
+        at_stmt = True
+
+        while idx < body_end:
+            member_tok = tokens[idx]
+
+            if member_tok.type == token.INDENT:
+                depth += 1
+                at_stmt = True
+                idx += 1
+                continue
+
+            if member_tok.type == token.DEDENT:
+                depth -= 1
+                at_stmt = True
+                idx += 1
+                continue
+
+            if member_tok.type == tokenize.NL or member_tok.type == token.NEWLINE:
+                at_stmt = True
+                idx += 1
+                continue
+
+            if member_tok.type == tokenize.COMMENT:
+                idx += 1
+                continue
+
+            if depth == 0 and at_stmt and member_tok.type == token.NAME and member_tok.string in {"def", "cdef", "cpdef"}:
+                header = parse_def_header(tokens, idx)
+
+                if header is not None:
+                    member = {key: header[key] for key in MEMBER_KEYS}
+                    member["kind"] = "method"
+                    members.append(member)
+
+                    if header["block"] is not None:
+                        idx = header["block"][1] + 1
+                    else:
+                        idx = statement_end(tokens, idx)[0] + 1
+
+                    at_stmt = True
+                    continue
+
+                idx = statement_end(tokens, idx)[0] + 1
+                at_stmt = True
+                continue
+
+            at_stmt = False
+            idx += 1
+
+    item = {
+        "kind": "class",
+        "name": name_token.string,
+        "signature": signature,
+        "startLine": tokens[start_index].start[0],
+        "endLine": block_end_tok.end[0],
+        "startByte": start_byte,
+        "endByte": end_byte,
+        "bases": bases,
+        "members": members,
+    }
+    return item, header_end_index + 1
 
 try:
     tokens = list(tokenize.generate_tokens(io.StringIO(source).readline))
@@ -534,6 +880,37 @@ while index < len(tokens):
         continue
 
     if indent_depth == 0 and at_statement_start and tok.type == token.NAME:
+        if tok.string == "class":
+            item, next_index = parse_class(tokens, index, index)
+
+            if item is not None:
+                items.append(item)
+
+            index = next_index
+            at_statement_start = True
+            continue
+
+        if tok.string in {"cdef", "cpdef"}:
+            following = next_significant(tokens, index + 1)
+
+            if following is not None and following.type == token.NAME and following.string == "class":
+                class_keyword_index = None
+
+                for lookahead in range(index + 1, len(tokens)):
+                    if tokens[lookahead].type == token.NAME and tokens[lookahead].string == "class":
+                        class_keyword_index = lookahead
+                        break
+
+                if class_keyword_index is not None:
+                    item, next_index = parse_class(tokens, index, class_keyword_index)
+
+                    if item is not None:
+                        items.append(item)
+
+                    index = next_index
+                    at_statement_start = True
+                    continue
+
         if tok.string in {"def", "cdef", "cpdef"}:
             item, next_index = parse_function(tokens, index)
 
@@ -614,11 +991,18 @@ function parseCythonWithContext(
 
   const resolutionContext = withKnownFile(context, input.path, input.content);
   const payload = parseCythonItems(input.path, input.content, resolutionContext);
-  const symbols = extractTopLevelSymbols(input.path, payload.items);
+  const { symbols, containsEdges } = buildCythonSymbols(input.path, payload.items);
   const importEdges = extractImportEdges({
     filePath: input.path,
     imports: payload.imports,
     sourceSymbols: symbols,
+    context: resolutionContext,
+  });
+  const callReferenceEdges = extractCythonCallAndReferenceEdges({
+    filePath: input.path,
+    items: payload.items,
+    imports: payload.imports,
+    symbols,
     context: resolutionContext,
   });
 
@@ -631,7 +1015,7 @@ function parseCythonWithContext(
       sizeBytes: Buffer.byteLength(input.content),
     },
     symbols,
-    edges: importEdges,
+    edges: [...containsEdges, ...importEdges, ...callReferenceEdges],
     diagnostics: [],
   };
 }
@@ -672,11 +1056,69 @@ function parseCythonItems(
   throw new Error(`No Python interpreter available for Cython parser (${attempted})${cause}`);
 }
 
-function extractTopLevelSymbols(
+interface CythonSymbolBuild {
+  symbols: SymbolRecord[];
+  containsEdges: EdgeRecord[];
+}
+
+function buildCythonSymbols(
   filePath: string,
-  items: readonly CythonFunctionItem[],
-): SymbolRecord[] {
-  return items.map((item) => makeSymbolRecord(filePath, item));
+  items: readonly CythonItem[],
+): CythonSymbolBuild {
+  const symbols: SymbolRecord[] = [];
+  const containsEdges: EdgeRecord[] = [];
+
+  for (const item of items) {
+    if (item.kind === "class") {
+      const classSymbol = makeCythonSymbol({
+        filePath,
+        localName: item.name,
+        kind: SymbolKind.Class,
+        signature: item.signature,
+        startLine: item.startLine,
+        endLine: item.endLine,
+        startByte: item.startByte,
+        endByte: item.endByte,
+        symbolPath: [item.name],
+      });
+      symbols.push(classSymbol);
+
+      for (const member of item.members) {
+        const methodSymbol = makeCythonSymbol({
+          filePath,
+          localName: member.name,
+          kind: SymbolKind.Method,
+          signature: member.signature,
+          startLine: member.startLine,
+          endLine: member.endLine,
+          startByte: member.startByte,
+          endByte: member.endByte,
+          symbolPath: [item.name, member.name],
+          parentSymbolId: classSymbol.id,
+        });
+        symbols.push(methodSymbol);
+        containsEdges.push(makeContainsEdge(classSymbol.id, methodSymbol.id));
+      }
+
+      continue;
+    }
+
+    symbols.push(
+      makeCythonSymbol({
+        filePath,
+        localName: item.name,
+        kind: SymbolKind.Function,
+        signature: item.signature,
+        startLine: item.startLine,
+        endLine: item.endLine,
+        startByte: item.startByte,
+        endByte: item.endByte,
+        symbolPath: [item.name],
+      }),
+    );
+  }
+
+  return { symbols, containsEdges };
 }
 
 function extractImportEdges(input: ExtractImportEdgesInput): EdgeRecord[] {
@@ -957,39 +1399,63 @@ function extractExportSymbols(
   }
 
   if (isCythonFilePath(filePath)) {
-    return extractTopLevelSymbols(
+    return buildCythonSymbols(
       filePath,
       parseCythonItems(filePath, content, context).items,
-    );
+    ).symbols.filter((symbol) => symbol.parentSymbolId === undefined);
   }
 
   return [];
 }
 
-function makeSymbolRecord(filePath: string, item: CythonFunctionItem): SymbolRecord {
+interface MakeCythonSymbolInput {
+  filePath: string;
+  localName: string;
+  kind: SymbolKind;
+  signature: string;
+  startLine: number;
+  endLine: number;
+  startByte: number;
+  endByte: number;
+  symbolPath: readonly string[];
+  parentSymbolId?: string;
+}
+
+function makeCythonSymbol(input: MakeCythonSymbolInput): SymbolRecord {
   const fqName = buildFQName({
-    filePath,
-    symbolPath: [item.name],
+    filePath: input.filePath,
+    symbolPath: input.symbolPath,
   });
 
   return {
     id: computeSymbolId({
-      filePath,
+      filePath: input.filePath,
       fqName,
-      kind: SymbolKind.Function,
-      startByte: item.startByte,
-      endByte: item.endByte,
+      kind: input.kind,
+      startByte: input.startByte,
+      endByte: input.endByte,
     }),
-    filePath,
+    filePath: input.filePath,
     fqName,
-    localName: item.name,
-    kind: SymbolKind.Function,
-    signature: item.signature,
-    startLine: item.startLine,
-    endLine: item.endLine,
-    startByte: item.startByte,
-    endByte: item.endByte,
+    localName: input.localName,
+    kind: input.kind,
+    signature: input.signature,
+    startLine: input.startLine,
+    endLine: input.endLine,
+    startByte: input.startByte,
+    endByte: input.endByte,
+    parentSymbolId: input.parentSymbolId,
     exported: false,
+  };
+}
+
+function makeContainsEdge(srcSymbolId: string, dstSymbolId: string): EdgeRecord {
+  return {
+    id: hashParts([srcSymbolId, dstSymbolId, EdgeType.Contains]),
+    srcSymbolId,
+    dstSymbolId,
+    edgeType: EdgeType.Contains,
+    confidence: 1,
   };
 }
 
@@ -1001,6 +1467,470 @@ function makeImportEdge(srcSymbolId: string, dstSymbolId: string): EdgeRecord {
     edgeType: EdgeType.Imports,
     confidence: 1,
   };
+}
+
+function makeCallsEdge(srcSymbolId: string, dstSymbolId: string): EdgeRecord {
+  return {
+    id: hashParts([srcSymbolId, dstSymbolId, EdgeType.Calls]),
+    srcSymbolId,
+    dstSymbolId,
+    edgeType: EdgeType.Calls,
+    confidence: 1,
+  };
+}
+
+function makeReferencesEdge(srcSymbolId: string, dstSymbolId: string): EdgeRecord {
+  return {
+    id: hashParts([srcSymbolId, dstSymbolId, EdgeType.References]),
+    srcSymbolId,
+    dstSymbolId,
+    edgeType: EdgeType.References,
+    confidence: 1,
+  };
+}
+
+function edgePairKey(srcSymbolId: string, dstSymbolId: string): string {
+  return `${srcSymbolId}\x00${dstSymbolId}`;
+}
+
+interface ExtractCythonCallReferenceInput {
+  filePath: string;
+  items: readonly CythonItem[];
+  imports: readonly CythonImport[];
+  symbols: readonly SymbolRecord[];
+  context: CythonParserContext;
+}
+
+// Conservative static resolution surface for Cython calls and references. All
+// lookups are exact: same-file top-level symbols, same-class methods (via the
+// enclosing method's first parameter, e.g. `self`), exactly resolved
+// from-import/cimport/include names, and module-qualified members on an
+// aliased/single-segment module import. Ambiguous receivers and dynamic
+// dispatch are skipped rather than guessed.
+interface CythonResolution {
+  topLevelByName: ReadonlyMap<string, SymbolRecord>;
+  ambiguousNames: ReadonlySet<string>;
+  classMembersByClassName: ReadonlyMap<string, ReadonlyMap<string, SymbolRecord>>;
+  fromImportsByName: ReadonlyMap<string, SymbolRecord>;
+  moduleExportsByLocalName: ReadonlyMap<string, CythonExportIndex>;
+}
+
+interface CythonReferencePair {
+  src: string;
+  dst: string;
+}
+
+/**
+ * Conservative static extraction of Cython `calls` and `references` edges.
+ *
+ * Calls are emitted only when the dotted target resolves exactly: a same-file
+ * top-level function/class, a `self.method()`-style call whose receiver is the
+ * enclosing method's first parameter, a `ClassName.method()` on a same-file
+ * class, an exactly resolved imported/cimported/included callable, or a
+ * `module.member()` on an aliased/single-segment module import. References cover
+ * exact inheritance bases and bare-name uses (e.g. Cython type names) that
+ * resolve to a known same-file or imported symbol. `calls` and `references` are
+ * kept distinct, and ambiguous receivers are skipped rather than guessed.
+ */
+function extractCythonCallAndReferenceEdges(
+  input: ExtractCythonCallReferenceInput,
+): EdgeRecord[] {
+  const resolution = buildCythonResolution(input);
+  const symbolByStartByte = new Map<number, SymbolRecord>();
+
+  for (const symbol of input.symbols) {
+    symbolByStartByte.set(symbol.startByte, symbol);
+  }
+
+  const callEdges = new Map<string, EdgeRecord>();
+  const referencePairs: CythonReferencePair[] = [];
+
+  for (const item of input.items) {
+    if (item.kind === "class") {
+      const classSymbol = symbolByStartByte.get(item.startByte);
+
+      if (classSymbol !== undefined) {
+        for (const base of item.bases) {
+          const target = resolveCythonReferenceTarget(base.target, EMPTY_BINDINGS, resolution);
+
+          if (target !== undefined && target.id !== classSymbol.id) {
+            referencePairs.push({ src: classSymbol.id, dst: target.id });
+          }
+        }
+      }
+
+      for (const member of item.members) {
+        const methodSymbol = symbolByStartByte.get(member.startByte);
+
+        if (methodSymbol === undefined) {
+          continue;
+        }
+
+        emitCythonScopeEdges(
+          member,
+          methodSymbol,
+          item.name,
+          member.firstArg,
+          resolution,
+          callEdges,
+          referencePairs,
+        );
+      }
+
+      continue;
+    }
+
+    const source = symbolByStartByte.get(item.startByte);
+
+    if (source === undefined) {
+      continue;
+    }
+
+    emitCythonScopeEdges(item, source, null, null, resolution, callEdges, referencePairs);
+  }
+
+  const callPairs = new Set<string>();
+
+  for (const edge of callEdges.values()) {
+    callPairs.add(edgePairKey(edge.srcSymbolId, edge.dstSymbolId));
+  }
+
+  const referenceEdges = new Map<string, EdgeRecord>();
+
+  for (const pair of referencePairs) {
+    if (pair.src === pair.dst) {
+      continue;
+    }
+
+    if (callPairs.has(edgePairKey(pair.src, pair.dst))) {
+      continue;
+    }
+
+    const edge = makeReferencesEdge(pair.src, pair.dst);
+    referenceEdges.set(edge.id, edge);
+  }
+
+  const calls = [...callEdges.values()].sort((left, right) => left.id.localeCompare(right.id));
+  const references = [...referenceEdges.values()].sort((left, right) =>
+    left.id.localeCompare(right.id),
+  );
+
+  return [...calls, ...references];
+}
+
+const EMPTY_BINDINGS: ReadonlySet<string> = new Set();
+
+function emitCythonScopeEdges(
+  scope: CythonScopeEvidence,
+  source: SymbolRecord,
+  enclosingClassName: string | null,
+  firstArg: string | null,
+  resolution: CythonResolution,
+  callEdges: Map<string, EdgeRecord>,
+  referencePairs: CythonReferencePair[],
+): void {
+  const localBindings = new Set(scope.localBindings);
+
+  for (const call of scope.calls) {
+    const target = resolveCythonCallTarget(
+      call.target,
+      enclosingClassName,
+      firstArg,
+      localBindings,
+      resolution,
+    );
+
+    if (target !== undefined && target.id !== source.id) {
+      const edge = makeCallsEdge(source.id, target.id);
+      callEdges.set(edge.id, edge);
+    }
+  }
+
+  for (const reference of scope.references) {
+    const target = resolveCythonReferenceTarget(reference.target, localBindings, resolution);
+
+    if (target !== undefined && target.id !== source.id) {
+      referencePairs.push({ src: source.id, dst: target.id });
+    }
+  }
+}
+
+function buildCythonResolution(input: ExtractCythonCallReferenceInput): CythonResolution {
+  const topLevelByName = new Map<string, SymbolRecord>();
+  const ambiguousNames = new Set<string>();
+
+  for (const symbol of input.symbols) {
+    if (symbol.parentSymbolId !== undefined) {
+      continue;
+    }
+
+    if (topLevelByName.has(symbol.localName)) {
+      ambiguousNames.add(symbol.localName);
+      continue;
+    }
+
+    topLevelByName.set(symbol.localName, symbol);
+  }
+
+  const classMembersByClassName = new Map<string, Map<string, SymbolRecord>>();
+
+  for (const symbol of input.symbols) {
+    if (
+      symbol.parentSymbolId !== undefined
+      || symbol.kind !== SymbolKind.Class
+      || ambiguousNames.has(symbol.localName)
+    ) {
+      continue;
+    }
+
+    const members = new Map<string, SymbolRecord>();
+
+    for (const member of input.symbols) {
+      if (
+        member.parentSymbolId === symbol.id
+        && member.kind === SymbolKind.Method
+        && !members.has(member.localName)
+      ) {
+        members.set(member.localName, member);
+      }
+    }
+
+    classMembersByClassName.set(symbol.localName, members);
+  }
+
+  const { fromImportsByName, moduleExportsByLocalName } = buildCythonImportResolution(
+    input.filePath,
+    input.imports,
+    input.context,
+  );
+
+  return {
+    topLevelByName,
+    ambiguousNames,
+    classMembersByClassName,
+    fromImportsByName,
+    moduleExportsByLocalName,
+  };
+}
+
+function buildCythonImportResolution(
+  filePath: string,
+  imports: readonly CythonImport[],
+  context: CythonParserContext,
+): {
+  fromImportsByName: Map<string, SymbolRecord>;
+  moduleExportsByLocalName: Map<string, CythonExportIndex>;
+} {
+  const fromImportsByName = new Map<string, SymbolRecord>();
+  const moduleExportsByLocalName = new Map<string, CythonExportIndex>();
+  const ambiguousNames = new Set<string>();
+  const exportIndexByPath = new Map<string, CythonExportIndex>();
+
+  const recordFromImport = (localName: string, symbol: SymbolRecord): void => {
+    const existing = fromImportsByName.get(localName);
+
+    if (existing !== undefined) {
+      if (existing.id !== symbol.id) {
+        ambiguousNames.add(localName);
+      }
+
+      return;
+    }
+
+    fromImportsByName.set(localName, symbol);
+  };
+
+  for (const imported of imports) {
+    const targetPath = resolveImportedTargetPath(filePath, imported, context);
+
+    if (targetPath === undefined) {
+      continue;
+    }
+
+    const targetContent = context.knownFilesByPath.get(targetPath);
+
+    if (targetContent === undefined) {
+      continue;
+    }
+
+    const exportIndex = getCythonExportIndex(targetPath, targetContent, context, exportIndexByPath);
+
+    if (imported.kind === "import_module" || imported.kind === "cimport_module") {
+      const boundName = imported.asName ?? singleSegmentModuleName(imported.module);
+
+      if (boundName !== undefined && !moduleExportsByLocalName.has(boundName)) {
+        moduleExportsByLocalName.set(boundName, exportIndex);
+      }
+
+      continue;
+    }
+
+    if (imported.kind === "include_file") {
+      // `include` textually splices the file, so its names are directly usable.
+      for (const [name, symbol] of exportIndex.namedSymbols) {
+        recordFromImport(name, symbol);
+      }
+
+      continue;
+    }
+
+    if (imported.importedName === "*") {
+      continue;
+    }
+
+    const target = exportIndex.namedSymbols.get(imported.importedName);
+
+    if (target === undefined) {
+      continue;
+    }
+
+    recordFromImport(imported.asName ?? imported.importedName, target);
+  }
+
+  for (const name of ambiguousNames) {
+    fromImportsByName.delete(name);
+  }
+
+  return { fromImportsByName, moduleExportsByLocalName };
+}
+
+function singleSegmentModuleName(module: string): string | undefined {
+  return module.includes(".") ? undefined : module;
+}
+
+function resolveCythonCallTarget(
+  target: string,
+  enclosingClassName: string | null,
+  firstArg: string | null,
+  localBindings: ReadonlySet<string>,
+  resolution: CythonResolution,
+): SymbolRecord | undefined {
+  const segments = target.split(".");
+
+  if (segments.length === 1) {
+    const name = segments[0] as string;
+
+    if (localBindings.has(name)) {
+      return undefined;
+    }
+
+    const local = resolveUnambiguousTopLevel(name, resolution);
+
+    if (local !== undefined && isCythonCallableKind(local.kind)) {
+      return local;
+    }
+
+    const imported = resolution.fromImportsByName.get(name);
+
+    if (imported !== undefined && isCythonCallableKind(imported.kind)) {
+      return imported;
+    }
+
+    return undefined;
+  }
+
+  if (segments.length === 2) {
+    const [receiver, member] = segments as [string, string];
+
+    if (enclosingClassName !== null && firstArg !== null && receiver === firstArg) {
+      return resolution.classMembersByClassName.get(enclosingClassName)?.get(member);
+    }
+
+    if (localBindings.has(receiver)) {
+      return undefined;
+    }
+
+    const receiverClass = resolveUnambiguousTopLevel(receiver, resolution);
+
+    if (receiverClass !== undefined && receiverClass.kind === SymbolKind.Class) {
+      return resolution.classMembersByClassName.get(receiver)?.get(member);
+    }
+
+    const moduleIndex = resolution.moduleExportsByLocalName.get(receiver);
+
+    if (moduleIndex !== undefined) {
+      const exported = moduleIndex.namedSymbols.get(member);
+
+      if (exported !== undefined && isCythonCallableKind(exported.kind)) {
+        return exported;
+      }
+    }
+
+    return undefined;
+  }
+
+  return undefined;
+}
+
+function resolveCythonReferenceTarget(
+  target: string,
+  localBindings: ReadonlySet<string>,
+  resolution: CythonResolution,
+): SymbolRecord | undefined {
+  const segments = target.split(".");
+
+  if (segments.length === 1) {
+    const name = segments[0] as string;
+
+    if (localBindings.has(name)) {
+      return undefined;
+    }
+
+    const local = resolveUnambiguousTopLevel(name, resolution);
+
+    if (local !== undefined) {
+      return local;
+    }
+
+    return resolution.fromImportsByName.get(name);
+  }
+
+  if (segments.length === 2) {
+    const [receiver, member] = segments as [string, string];
+
+    if (localBindings.has(receiver)) {
+      return undefined;
+    }
+
+    const moduleIndex = resolution.moduleExportsByLocalName.get(receiver);
+
+    if (moduleIndex !== undefined) {
+      const exported = moduleIndex.namedSymbols.get(member);
+
+      if (exported !== undefined) {
+        return exported;
+      }
+    }
+
+    const receiverClass = resolveUnambiguousTopLevel(receiver, resolution);
+
+    if (receiverClass !== undefined && receiverClass.kind === SymbolKind.Class) {
+      return resolution.classMembersByClassName.get(receiver)?.get(member);
+    }
+
+    return undefined;
+  }
+
+  return undefined;
+}
+
+function resolveUnambiguousTopLevel(
+  name: string,
+  resolution: CythonResolution,
+): SymbolRecord | undefined {
+  if (resolution.ambiguousNames.has(name)) {
+    return undefined;
+  }
+
+  return resolution.topLevelByName.get(name);
+}
+
+function isCythonCallableKind(kind: SymbolKind): boolean {
+  return (
+    kind === SymbolKind.Function
+    || kind === SymbolKind.Class
+    || kind === SymbolKind.Method
+  );
 }
 
 function hashContent(content: string): string {

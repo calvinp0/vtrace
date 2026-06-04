@@ -89,13 +89,36 @@ test("top-level cpdef functions are extracted conservatively when the declaratio
   );
 });
 
-test("unsupported class-like constructs and nested defs are skipped conservatively", async () => {
+test("cdef classes and their methods are indexed while nested defs stay skipped", async () => {
   const result = await parseCoreFixture("src/pkg/module.pyx", MODULE_FIXTURE_URL);
 
-  assert.equal(result.symbols.some((symbol) => symbol.localName === "Solver"), false);
-  assert.equal(result.symbols.some((symbol) => symbol.localName === "method"), false);
+  const solver = result.symbols.find(
+    (symbol) => symbol.localName === "Solver" && symbol.kind === SymbolKind.Class,
+  );
+  const method = result.symbols.find(
+    (symbol) => symbol.localName === "method" && symbol.kind === SymbolKind.Method,
+  );
+
+  assert.notEqual(solver, undefined);
+  assert.notEqual(method, undefined);
+  assert.equal(method?.parentSymbolId, solver?.id);
+
+  // A def nested inside a function body is still not indexed as a symbol.
   assert.equal(result.symbols.some((symbol) => symbol.localName === "inner"), false);
-  assert.deepEqual(importEdges(result), []);
+
+  // The class-to-method relationship surfaces as a contains edge.
+  assert.deepEqual(
+    result.edges.filter((edge) => edge.edgeType === EdgeType.Contains),
+    [
+      {
+        id: result.edges.find((edge) => edge.edgeType === EdgeType.Contains)?.id,
+        srcSymbolId: solver?.id,
+        dstSymbolId: method?.id,
+        edgeType: EdgeType.Contains,
+        confidence: 1,
+      },
+    ],
+  );
 });
 
 test("Cython fqNames keep the path-based shared model shape", async () => {
@@ -107,6 +130,8 @@ test("Cython fqNames keep the path-based shared model shape", async () => {
       "src/pkg/module.pyx::integrate",
       "src/pkg/module.pyx::solve_system",
       "src/pkg/module.pyx::clamp",
+      "src/pkg/module.pyx::Solver",
+      "src/pkg/module.pyx::Solver.method",
       "src/pkg/module.pyx::outer",
     ],
   );
@@ -291,7 +316,7 @@ test("repeated parses produce identical Cython import and include edges and orde
   assert.deepEqual(importEdges(first), importEdges(second));
 });
 
-test("existing Cython core symbol extraction remains unchanged after adding import and include support", async () => {
+test("Cython core symbol extraction includes top-level functions, classes, and methods", async () => {
   const result = await parseCoreFixture("src/pkg/module.pyx", MODULE_FIXTURE_URL);
 
   assert.deepEqual(
@@ -300,11 +325,265 @@ test("existing Cython core symbol extraction remains unchanged after adding impo
       ["integrate", SymbolKind.Function],
       ["solve_system", SymbolKind.Function],
       ["clamp", SymbolKind.Function],
+      ["Solver", SymbolKind.Class],
+      ["method", SymbolKind.Method],
       ["outer", SymbolKind.Function],
     ],
   );
   assert.equal(importEdges(result).length, 0);
 });
+
+test("a cdef class creates a class symbol with method symbols and contains edges", async () => {
+  const result = await parseCythonSource(
+    [
+      "cdef class Matrix:",
+      "    def __init__(self, int n):",
+      "        self.n = n",
+      "    cpdef int size(self):",
+      "        return self.n",
+      "",
+    ].join("\n"),
+  );
+
+  const matrix = findSymbolOfKind(result.symbols, "Matrix", SymbolKind.Class);
+  const init = findSymbolOfKind(result.symbols, "__init__", SymbolKind.Method);
+  const size = findSymbolOfKind(result.symbols, "size", SymbolKind.Method);
+
+  assert.equal(init.parentSymbolId, matrix.id);
+  assert.equal(size.parentSymbolId, matrix.id);
+  assert.equal(init.fqName, "src/sample.pyx::Matrix.__init__");
+
+  const contains = callEdgesOf(result, EdgeType.Contains);
+  assert.equal(contains.length, 2);
+  assert.equal(contains.every((edge) => edge.srcSymbolId === matrix.id), true);
+  assert.deepEqual(
+    contains.map((edge) => edge.dstSymbolId).sort(),
+    [init.id, size.id].sort(),
+  );
+});
+
+test("a top-level Cython function call creates a calls edge", async () => {
+  const result = await parseCythonSource(
+    [
+      "def helper(int x):",
+      "    return x",
+      "",
+      "def main(int y):",
+      "    return helper(y)",
+      "",
+    ].join("\n"),
+  );
+
+  const helper = findTopLevelFunction(result.symbols, "helper");
+  const main = findTopLevelFunction(result.symbols, "main");
+  const calls = callEdgesOf(result, EdgeType.Calls);
+
+  assert.deepEqual(calls, [
+    {
+      id: calls[0]?.id,
+      srcSymbolId: main.id,
+      dstSymbolId: helper.id,
+      edgeType: EdgeType.Calls,
+      confidence: 1,
+    },
+  ]);
+});
+
+test("method-to-method and method-to-function calls resolve when exact", async () => {
+  const result = await parseCythonSource(
+    [
+      "def helper(int x):",
+      "    return x",
+      "",
+      "cdef class Engine:",
+      "    cpdef int run(self, int v):",
+      "        return self.step(v)",
+      "    cdef int step(self, int v):",
+      "        return helper(v)",
+      "",
+    ].join("\n"),
+  );
+
+  const helper = findTopLevelFunction(result.symbols, "helper");
+  const run = findSymbolOfKind(result.symbols, "run", SymbolKind.Method);
+  const step = findSymbolOfKind(result.symbols, "step", SymbolKind.Method);
+  const callPairs = callEdgesOf(result, EdgeType.Calls).map((edge) => [
+    edge.srcSymbolId,
+    edge.dstSymbolId,
+  ]);
+
+  // self.step() resolves to the enclosing class method (method-to-method).
+  assert.equal(callPairs.some(([src, dst]) => src === run.id && dst === step.id), true);
+  // helper() resolves to the same-file top-level function (method-to-function).
+  assert.equal(callPairs.some(([src, dst]) => src === step.id && dst === helper.id), true);
+});
+
+test("an imported Cython function call resolves to the exact import target", async () => {
+  const targetContent = "cpdef int build(int x):\n    return x\n";
+  const parser = createCythonParser({
+    knownFiles: [{ path: "lib.pyx", content: targetContent }],
+  });
+  const result = await parser.parse({
+    path: "main.pyx",
+    language: Language.Cython,
+    content: "from lib import build\n\ndef top(int a):\n    return build(a)\n",
+  });
+  const target = await parser.parse({
+    path: "lib.pyx",
+    language: Language.Cython,
+    content: targetContent,
+  });
+
+  const top = findTopLevelFunction(result.symbols, "top");
+  const build = findTopLevelFunction(target.symbols, "build");
+  const calls = result.edges.filter((edge) => edge.edgeType === EdgeType.Calls);
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0]?.srcSymbolId, top.id);
+  assert.equal(calls[0]?.dstSymbolId, build.id);
+});
+
+test("a cimported function call resolves to the exact .pxd declaration", async () => {
+  const headerContent = "cdef int declared(int x)\n";
+  const parser = createCythonParser({
+    knownFiles: [{ path: "header.pxd", content: headerContent }],
+  });
+  const result = await parser.parse({
+    path: "main.pyx",
+    language: Language.Cython,
+    content: "from header cimport declared\n\ndef top(int a):\n    return declared(a)\n",
+  });
+  const target = await parser.parse({
+    path: "header.pxd",
+    language: Language.Cython,
+    content: headerContent,
+  });
+
+  const top = findTopLevelFunction(result.symbols, "top");
+  const declared = findTopLevelFunction(target.symbols, "declared");
+  const calls = result.edges.filter((edge) => edge.edgeType === EdgeType.Calls);
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0]?.srcSymbolId, top.id);
+  assert.equal(calls[0]?.dstSymbolId, declared.id);
+});
+
+test("a base class reference creates a references edge when the base resolves exactly", async () => {
+  const result = await parseCythonSource(
+    [
+      "cdef class Base:",
+      "    pass",
+      "",
+      "cdef class Derived(Base):",
+      "    pass",
+      "",
+    ].join("\n"),
+  );
+
+  const base = findSymbolOfKind(result.symbols, "Base", SymbolKind.Class);
+  const derived = findSymbolOfKind(result.symbols, "Derived", SymbolKind.Class);
+  const references = callEdgesOf(result, EdgeType.References);
+
+  assert.deepEqual(references, [
+    {
+      id: references[0]?.id,
+      srcSymbolId: derived.id,
+      dstSymbolId: base.id,
+      edgeType: EdgeType.References,
+      confidence: 1,
+    },
+  ]);
+});
+
+test("an ambiguous receiver method call is skipped conservatively", async () => {
+  const result = await parseCythonSource(
+    ["def run(obj):", "    return obj.compute()", ""].join("\n"),
+  );
+
+  assert.deepEqual(callEdgesOf(result, EdgeType.Calls), []);
+});
+
+test("unsupported Cython constructs are skipped without crashing", async () => {
+  const result = await parseCythonSource(
+    [
+      'cdef extern from "math.h":',
+      "    double sin(double value)",
+      "",
+      "ctypedef int myint",
+      "",
+      "cdef packed struct Point:",
+      "    int x",
+      "    int y",
+      "",
+      "def usable(int v):",
+      "    return v",
+      "",
+    ].join("\n"),
+  );
+
+  assert.equal(
+    result.symbols.some((symbol) => symbol.localName === "usable" && symbol.kind === SymbolKind.Function),
+    true,
+  );
+  assert.equal(result.symbols.some((symbol) => symbol.localName === "Point"), false);
+  assert.equal(result.symbols.some((symbol) => symbol.localName === "myint"), false);
+  assert.deepEqual(result.diagnostics, []);
+});
+
+test("Cython class, call, and reference extraction is deterministic across repeated parses", async () => {
+  const source = [
+    "def helper(int x):",
+    "    return x",
+    "",
+    "cdef class Base:",
+    "    pass",
+    "",
+    "cdef class Engine(Base):",
+    "    cpdef int run(self, int v):",
+    "        return helper(self.step(v))",
+    "    cdef int step(self, int v):",
+    "        return v",
+    "",
+  ].join("\n");
+
+  const first = await parseCythonSource(source);
+  const second = await parseCythonSource(source);
+
+  assert.deepEqual(
+    first.symbols.map((symbol) => ({ id: symbol.id, fqName: symbol.fqName, kind: symbol.kind })),
+    second.symbols.map((symbol) => ({ id: symbol.id, fqName: symbol.fqName, kind: symbol.kind })),
+  );
+  assert.deepEqual(first.edges, second.edges);
+});
+
+async function parseCythonSource(content: string) {
+  return cythonParser.parse({
+    path: "src/sample.pyx",
+    language: Language.Cython,
+    content,
+  });
+}
+
+function callEdgesOf(
+  result: Awaited<ReturnType<typeof parseCoreFixture>>,
+  edgeType: EdgeType,
+) {
+  return result.edges.filter((edge) => edge.edgeType === edgeType);
+}
+
+function findSymbolOfKind(
+  symbols: readonly SymbolRecord[],
+  localName: string,
+  kind: SymbolKind,
+): SymbolRecord {
+  const symbol = symbols.find(
+    (candidate) => candidate.localName === localName && candidate.kind === kind,
+  );
+
+  assert.notEqual(symbol, undefined);
+
+  return symbol as SymbolRecord;
+}
 
 async function parseCoreFixture(filePath: string, fileUrl: URL) {
   return cythonParser.parse(await fixtureInput(filePath, fileUrl));

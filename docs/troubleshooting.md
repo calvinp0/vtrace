@@ -80,7 +80,7 @@ Check these cases:
 
 - `get_impact_graph` works best with exact symbol FQNs
 - `search_logic_flow` requires exact `start` and `end` FQNs
-- `search_logic_flow` traverses `contains`, `imports`, and statically resolved `calls` edges; `calls` edges are extracted for Python and TypeScript in this milestone
+- `search_logic_flow` traverses `contains`, `imports`, and statically resolved `calls` edges; `calls` edges are extracted for Python, TypeScript, and Cython in this milestone
 - `search_logic_flow` is static structural evidence, not semantic or runtime; check `coverage.callFlowEvidenceAvailable` to see whether call-flow edges existed for the repo
 - if the index is stale, rebuild it before trusting the result
 

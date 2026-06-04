@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 export const MIXED_PY_CYTHON_FIXTURE_FILE_COUNT = 11;
 export const MIXED_PY_CYTHON_FIXTURE_SYMBOL_COUNT = 13;
-export const MIXED_PY_CYTHON_FIXTURE_EDGE_COUNT = 18;
+export const MIXED_PY_CYTHON_FIXTURE_EDGE_COUNT = 22;
 export const MIXED_PY_CYTHON_BACKGROUND_FILE_PATH = "src/spectra_lab/analysis/background.py";
 export const MIXED_PY_CYTHON_KERNEL_FILE_PATH = "src/spectra_lab/kernels/diffusion_kernels.pyx";
 export const MIXED_PY_CYTHON_CONTROLLED_CHANGE_SYMBOL_FQ_NAME =

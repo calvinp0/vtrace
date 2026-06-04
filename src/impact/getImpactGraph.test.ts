@@ -277,6 +277,37 @@ test("TypeScript caller edges surface callers through get_impact_graph for a cal
   });
 });
 
+test("Cython caller edges surface callers through get_impact_graph for a called function", async () => {
+  await withCythonCallerFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = requireImpactGraph(db, {
+        symbolFqn: "src/kernel.pyx::compute",
+        depth: 1,
+        format: "list",
+      });
+
+      const directCallers = result.nodes
+        .filter((node) => node.distance === 1)
+        .map((node) => node.fqName)
+        .sort();
+
+      assert.deepEqual(directCallers, [
+        "src/kernel.pyx::Engine.run",
+        "src/kernel.pyx::entry",
+      ]);
+      assert.ok(
+        result.coverage.observedEdgeTypes.includes("calls"),
+        `expected calls in observedEdgeTypes, got ${JSON.stringify(result.coverage.observedEdgeTypes)}`,
+      );
+    } finally {
+      db.close();
+    }
+  });
+});
+
 test("Impact Graph coverage reports supported edge types and honest conservatism notes", async () => {
   await withPythonCallerFixture(async (repoRoot) => {
     const db = openIndexerDatabase();
@@ -300,7 +331,7 @@ test("Impact Graph coverage reports supported edge types and honest conservatism
       );
       assert.ok(
         result.coverage.notes.includes(
-          "Caller/reference edges are statically extracted for Python and TypeScript in this milestone; other languages contribute contains/imports evidence only.",
+          "Caller/reference edges are statically extracted for Python, TypeScript, and Cython in this milestone; other languages contribute contains/imports evidence only.",
         ),
       );
       assert.ok(
@@ -821,6 +852,35 @@ async function withPythonCallerFixture(
         "",
         "def entry():",
         "    return do_work(1)",
+        "",
+      ].join("\n"),
+    );
+    await run(repoRoot);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+async function withCythonCallerFixture(
+  run: (repoRoot: string) => Promise<void>,
+): Promise<void> {
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-impact-cy-"));
+  const repoRoot = path.join(root, "repo");
+
+  try {
+    await mkdir(path.join(repoRoot, "src"), { recursive: true });
+    await writeFile(
+      path.join(repoRoot, "src", "kernel.pyx"),
+      [
+        "cpdef int compute(int v):",
+        "    return v + 1",
+        "",
+        "cdef class Engine:",
+        "    cpdef int run(self, int v):",
+        "        return compute(v)",
+        "",
+        "def entry(int n):",
+        "    return compute(n)",
         "",
       ].join("\n"),
     );

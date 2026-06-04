@@ -213,6 +213,33 @@ test("a direct A -> B call path is found through a statically resolved calls edg
   });
 });
 
+test("a Cython call path is found through a statically resolved calls edge", async () => {
+  await withCythonCallFlowFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = requireLogicFlow(db, {
+        start: "src/kernel.pyx::entry",
+        end: "src/kernel.pyx::target",
+        maxPaths: 3,
+      });
+
+      assert.equal(result.summary.reachable, true);
+      assert.equal(result.summary.shortestPathEdgeCount, 1);
+      assert.deepEqual(
+        result.paths[0]?.steps.map((step) => [step.edgeType, step.fromFqName, step.toFqName]),
+        [["calls", "src/kernel.pyx::entry", "src/kernel.pyx::target"]],
+      );
+      assert.equal(result.coverage.callFlowEvidenceAvailable, true);
+      assert.equal(result.coverage.callFlowEvidenceUsed, true);
+      assert.equal(result.coverage.observedEdgeTypes.includes("calls"), true);
+    } finally {
+      db.close();
+    }
+  });
+});
+
 test("a mixed imports + calls path is found when both edge types are available", async () => {
   await withPythonMixedFlowFixture(async (repoRoot) => {
     const db = openIndexerDatabase();
@@ -317,6 +344,31 @@ async function withLogicFlowFixture(
   try {
     await mkdir(path.join(repoRoot, "src"), { recursive: true });
     await writeLogicFlowFixtureRepo(repoRoot);
+    await run(repoRoot);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+async function withCythonCallFlowFixture(
+  run: (repoRoot: string) => Promise<void>,
+): Promise<void> {
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-logic-flow-cy-"));
+  const repoRoot = path.join(root, "repo");
+
+  try {
+    await mkdir(path.join(repoRoot, "src"), { recursive: true });
+    await writeFile(
+      path.join(repoRoot, "src", "kernel.pyx"),
+      [
+        "cpdef int target(int v):",
+        "    return v + 1",
+        "",
+        "def entry(int n):",
+        "    return target(n)",
+        "",
+      ].join("\n"),
+    );
     await run(repoRoot);
   } finally {
     await rm(root, { recursive: true, force: true });
