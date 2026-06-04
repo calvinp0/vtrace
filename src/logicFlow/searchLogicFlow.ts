@@ -465,14 +465,14 @@ function buildCoverageNotes(
   const notes = [
     "Directed structural path search built from indexed contains, imports, and statically resolved calls edges.",
     "Exact FQN resolution is required; no fuzzy symbol matching is applied.",
-    "Calls edges are static, conservative call-target resolution (Python only in this milestone); ambiguous or dynamic-dispatch targets are skipped rather than guessed.",
+    "Calls edges are static, conservative call-target resolution (Python and TypeScript in this milestone); ambiguous or dynamic-dispatch targets are skipped rather than guessed.",
     "This does not represent runtime execution flow, semantic reachability, or dataflow; even paths that traverse calls edges are static evidence, not proof a call executes.",
     "This first version only returns shortest structural paths; longer alternative paths are not enumerated once the minimum distance is found.",
   ];
 
   if (!callFlowEvidenceAvailable) {
     notes.push(
-      "No statically resolved calls edges were available for the indexed repo (e.g. a TypeScript-only repo, or a language/file set with no extracted call edges); this result is structural containment/import traversal only and does not trace call flow.",
+      "No statically resolved calls edges were available for the indexed repo (e.g. a Cython-only repo, or a language/file set with no extracted call edges); this result is structural containment/import traversal only and does not trace call flow.",
     );
   } else if (callFlowEvidenceUsed) {
     notes.push(

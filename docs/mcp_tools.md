@@ -30,19 +30,19 @@ Most of those are directly useful today. `expand_vexp_ref` is the advanced excep
 
 Structural tools (`get_skeleton`, `get_impact_graph`, `search_logic_flow`, retrieval, and capsule shaping) only see what the per-language parser extracts. Coverage is deliberately uneven and conservative:
 
-| Language   | Extensions             | Parser         | Indexed graph evidence                                                                                                                                                     | Status                                                                                                                         |
-| ---------- | ---------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Python     | `.py`                  | Registered     | Symbols + `contains`, `imports`, statically resolved `calls` and `references`; conservative member (`self.x`, `cls.x`, `ClassName.x`) and inheritance/`super()` resolution | Strongest. The only language with call/reference, member, and inheritance evidence.                                            |
-| TypeScript | `.ts`, `.tsx`          | Registered     | Symbols + `contains`, `imports` (structural)                                                                                                                               | Structural only. No `calls`/`references` edges yet, so call-flow evidence is unavailable.                                      |
-| Cython     | `.pyx`, `.pxd`, `.pxi` | Registered     | Symbols + conservative `imports` edges only                                                                                                                                | Narrow/conservative. No `contains`, `calls`, `references`, member, or inheritance graph.                                       |
-| JavaScript | `.js`, `.jsx`          | Not registered | None                                                                                                                                                                       | Detected by extension but has no registered parser, so files are scanned and skipped as `unregistered_language` (not indexed). |
-| Go         | `.go`                  | None           | None                                                                                                                                                                       | Not currently implemented; not detected as an indexable source file.                                                           |
-| Rust       | `.rs`                  | None           | None                                                                                                                                                                       | Not currently implemented; not detected as an indexable source file.                                                           |
+| Language   | Extensions             | Parser         | Indexed graph evidence                                                                                                                                                                                                       | Status                                                                                                                         |
+| ---------- | ---------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Python     | `.py`                  | Registered     | Symbols + `contains`, `imports`, statically resolved `calls` and `references`; conservative member (`self.x`, `cls.x`, `ClassName.x`) and inheritance/`super()` resolution                                                   | Strongest. Broadest call/reference, member, and inheritance evidence.                                                          |
+| TypeScript | `.ts`, `.tsx`          | Registered     | Symbols + `contains`, `imports`, and conservative statically resolved `calls` and `references` (same-file/imported functions, `this.method`/`ClassName.method`, type annotations, `extends`/`implements`, `new`, decorators) | Call/reference extraction is conservative static evidence; ambiguous receivers and dynamic dispatch are skipped.               |
+| Cython     | `.pyx`, `.pxd`, `.pxi` | Registered     | Symbols + conservative `imports` edges only                                                                                                                                                                                  | Narrow/conservative. No `contains`, `calls`, `references`, member, or inheritance graph.                                       |
+| JavaScript | `.js`, `.jsx`          | Not registered | None                                                                                                                                                                                                                         | Detected by extension but has no registered parser, so files are scanned and skipped as `unregistered_language` (not indexed). |
+| Go         | `.go`                  | None           | None                                                                                                                                                                                                                         | Not currently implemented; not detected as an indexable source file.                                                           |
+| Rust       | `.rs`                  | None           | None                                                                                                                                                                                                                         | Not currently implemented; not detected as an indexable source file.                                                           |
 
 Notes:
 
 - "Statically resolved" means exact, conservative resolution; ambiguous targets, dynamic dispatch, and unresolved references are skipped rather than guessed.
-- A repo with only TypeScript, Cython, JavaScript, Go, or Rust sources will report `callFlowEvidenceAvailable: false` from `search_logic_flow` because `calls` edges are Python-only in this milestone.
+- Python and TypeScript both contribute statically resolved `calls`/`references` edges in this milestone; a repo with only Cython, JavaScript, Go, or Rust sources will report `callFlowEvidenceAvailable: false` from `search_logic_flow` because those languages have no extracted `calls` edges.
 - This matrix reflects current behavior, not a roadmap commitment.
 
 ## Passive Tool-Call Observations
@@ -260,7 +260,7 @@ Important limits:
 
 - exact FQN resolution only
 - bounded deterministic paths only
-- `calls` edges are static, conservative call-target resolution (Python only in this milestone); ambiguous or dynamic-dispatch targets are skipped, never guessed
+- `calls` edges are static, conservative call-target resolution (Python and TypeScript in this milestone); ambiguous or dynamic-dispatch targets are skipped, never guessed
 - static evidence only — a traversed `calls` edge is not proof a call executes; this is not runtime tracing
 - not semantic dataflow
 
@@ -268,7 +268,7 @@ Coverage is explicit. Each result reports:
 
 - `supportedEdgeTypes` — the edge types traversal may use (`contains`, `imports`, `calls`)
 - `observedEdgeTypes` — the edge types actually present in the returned paths
-- `callFlowEvidenceAvailable` — whether any statically resolved `calls` edge existed in the indexed graph for the repo. When `false` (for example, a TypeScript-only repo), the result is honest structural containment/import traversal only and does not trace call flow
+- `callFlowEvidenceAvailable` — whether any statically resolved `calls` edge existed in the indexed graph for the repo. When `false` (for example, a Cython-only repo), the result is honest structural containment/import traversal only and does not trace call flow
 - `callFlowEvidenceUsed` — whether a returned path actually traverses a `calls` edge
 
 Prefer this specialist tool over `run_pipeline` when you already know the exact start and end FQNs.

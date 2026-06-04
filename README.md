@@ -190,7 +190,7 @@ The README uses the project artwork from [docs/assets/brand](./docs/assets/brand
 `vtrace` is conservative by design:
 
 - structural outputs are based on indexed repository data
-- `search_logic_flow` requires exact start and end FQNs and traverses `contains`, `imports`, and statically resolved `calls` edges; `calls` edges are Python-only in this milestone, so repos without extracted call edges report `callFlowEvidenceAvailable: false` rather than implying call flow was traced
+- `search_logic_flow` requires exact start and end FQNs and traverses `contains`, `imports`, and statically resolved `calls` edges; `calls` edges are extracted for Python and TypeScript in this milestone, so repos without extracted call edges report `callFlowEvidenceAvailable: false` rather than implying call flow was traced
 - impact and flow tools are not runtime execution proofs
 - watcher freshness is mark-stale-only by default; `watch --auto-reindex` is explicit opt-in and keeps failures visible
 - V-REF expansion is exact stored-payload lookup with bounded repo-local retention, not fuzzy reconstruction

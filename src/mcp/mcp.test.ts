@@ -1425,12 +1425,12 @@ test("run_pipeline includes compact impact section for refactor tasks with a cle
     assert.equal(impact.selectionSource, "top_pivot_task_mention");
     assert.equal(impact.focalSymbol?.fqName, "src/session.ts::SessionManager.createSession");
     assert.deepEqual(impact.summary, {
-      dependentSymbolCount: 2,
+      dependentSymbolCount: 4,
       dependentFileCount: 2,
       maxDepth: 2,
       maxObservedDistance: 2,
     });
-    assert.equal(impact.topDependents?.length, 2);
+    assert.equal(impact.topDependents?.length, 4);
     assert.equal(impact.impactRef, "vexp:impact:src/session.ts::SessionManager.createSession");
     // impact section must not leak the full graph contract.
     assert.equal("nodes" in impact, false);
@@ -2692,6 +2692,8 @@ test("get_impact_graph returns a real bounded structural impact view for an exac
         [0, "src/session.ts::SessionManager.createSession"],
         [1, "src/session.ts::SessionManager"],
         [2, "src/controller.ts::SessionController"],
+        [2, "src/controller.ts::SessionController.constructor"],
+        [2, "src/session.ts::readSession"],
       ],
     );
     assert.deepEqual(response.result.output.dependentFiles, [
@@ -2702,6 +2704,8 @@ test("get_impact_graph returns a real bounded structural impact view for an exac
       "d0 src/session.ts::SessionManager.createSession (method)",
       "  d1 src/session.ts::SessionManager (class) contains src/session.ts::SessionManager.createSession",
       "    d2 src/controller.ts::SessionController (class) imports src/session.ts::SessionManager",
+      "    d2 src/controller.ts::SessionController.constructor (method) references src/session.ts::SessionManager",
+      "    d2 src/session.ts::readSession (function) references src/session.ts::SessionManager",
     ]);
     assert.equal(
       response.result.output.coverage.notes.includes(
@@ -2989,7 +2993,7 @@ test("visible structural MCP tools auto-capture compact deterministic tool-call 
       assert.equal(impact?.kind, "tool_call");
       assert.equal(impact?.source, "mcp_auto");
       assert.equal(impact?.queryText, "src/session.ts::SessionManager.createSession");
-      assert.equal(impact?.summary.includes("with 2 dependents"), true);
+      assert.equal(impact?.summary.includes("with 4 dependents"), true);
       assert.deepEqual(impact?.linkedFilePaths, ["src/session.ts", "src/controller.ts"]);
       assert.equal(impact?.linkedFqNames.includes("src/session.ts::SessionManager.createSession"), true);
       assert.equal(impact?.body.includes("view.lines"), false);

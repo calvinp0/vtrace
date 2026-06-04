@@ -7537,7 +7537,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
     metadata: {
       toolId: McpToolId.SearchLogicFlow,
       displayName: "Search Logic Flow",
-      description: "Return bounded directed paths between two exact indexed symbol FQNs over indexed contains, imports, and statically resolved calls edges. Static structural evidence only — calls edges are conservative (Python only in this milestone) and this is not runtime execution flow; coverage reports whether call-flow evidence was available.",
+      description: "Return bounded directed paths between two exact indexed symbol FQNs over indexed contains, imports, and statically resolved calls edges. Static structural evidence only — calls edges are conservative (Python and TypeScript in this milestone) and this is not runtime execution flow; coverage reports whether call-flow evidence was available.",
       inputSchema: objectSchema(
         "Logic-flow request.",
         {

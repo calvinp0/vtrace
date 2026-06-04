@@ -52,7 +52,7 @@ Rules use template summaries, exact file/FQN/term/tool/intent links, determinist
 - `get_impact_graph`: use when the user asks what breaks, blast radius, dependents, callers, references, or impact of changing a known symbol.
 - `get_skeleton`: use when the relevant file path is already known and you need structural overview.
 - `search_symbols`: use for exact symbol lookup or when the context result is weak.
-- `search_logic_flow`: use when you know both exact endpoint FQNs and need a conservative static path between them over `contains`, `imports`, and statically resolved `calls` edges. Check `coverage.callFlowEvidenceAvailable`/`callFlowEvidenceUsed` to see whether call-flow edges contributed (false for repos with no extracted call edges, e.g. TypeScript-only).
+- `search_logic_flow`: use when you know both exact endpoint FQNs and need a conservative static path between them over `contains`, `imports`, and statically resolved `calls` edges. Check `coverage.callFlowEvidenceAvailable`/`callFlowEvidenceUsed` to see whether call-flow edges contributed (false for repos with no extracted call edges, e.g. Cython-only).
 - `index_status`: use when you need readiness, freshness, and index health.
 - `workspace_setup`: use when MCP needs to inspect or apply repo setup instead of using the shell CLI.
 - `search_memory`: use when you need saved observations relevant to the current work.

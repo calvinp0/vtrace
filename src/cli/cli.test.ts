@@ -1246,8 +1246,13 @@ test("inspect-file prints persisted data for a known file", async () => {
       ]),
       [["readUser", SymbolKind.Function]],
     );
-    assert.equal(output.edges.length, 1);
-    assert.equal(output.edges[0].edgeType, EdgeType.Imports);
+    // readUser imports User and also uses it as a return type, so the file now
+    // carries both an imports edge and a references edge for the same pair.
+    assert.equal(output.edges.length, 2);
+    assert.deepEqual(
+      output.edges.map((edge: { edgeType: string }) => edge.edgeType).sort(),
+      [EdgeType.Imports, EdgeType.References],
+    );
   });
 });
 
@@ -1269,8 +1274,11 @@ test("inspect-symbol prints persisted data for a known symbol", async () => {
       const output = JSON.parse(result.stdout);
       assert.equal(output.symbol.id, symbol!.id);
       assert.equal(output.symbol.localName, "readUser");
-      assert.equal(output.edges.length, 1);
-      assert.equal(output.edges[0].srcSymbolId, symbol!.id);
+      assert.equal(output.edges.length, 2);
+      assert.equal(
+        output.edges.every((edge: { srcSymbolId: string }) => edge.srcSymbolId === symbol!.id),
+        true,
+      );
     } finally {
       db.close();
     }

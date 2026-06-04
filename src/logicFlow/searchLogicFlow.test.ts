@@ -109,8 +109,8 @@ test("reachable symbols return bounded deterministic shortest paths", async () =
       assert.deepEqual(
         result.paths[0]?.steps.map((step) => [step.edgeType, step.fromFqName, step.toFqName]),
         [
-          ["imports", "src/beta.ts::beta", "src/alpha.ts::alpha"],
-          ["imports", "src/alpha.ts::alpha", "src/base.ts::base"],
+          ["calls", "src/beta.ts::beta", "src/alpha.ts::alpha"],
+          ["calls", "src/alpha.ts::alpha", "src/base.ts::base"],
         ],
       );
     } finally {
@@ -148,7 +148,7 @@ test("unreachable symbols return an explicit no-path result", async () => {
   });
 });
 
-test("a TypeScript-only repo reports call-flow evidence as unavailable with an honest note", async () => {
+test("a TypeScript repo traverses statically resolved call edges through search_logic_flow", async () => {
   await withLogicFlowFixture(async (repoRoot) => {
     const db = openIndexerDatabase();
 
@@ -161,12 +161,16 @@ test("a TypeScript-only repo reports call-flow evidence as unavailable with an h
       });
 
       assert.equal(result.coverage.supportedEdgeTypes.includes("calls"), true);
-      assert.equal(result.coverage.observedEdgeTypes.includes("calls"), false);
-      assert.equal(result.coverage.callFlowEvidenceAvailable, false);
-      assert.equal(result.coverage.callFlowEvidenceUsed, false);
+      assert.equal(result.coverage.observedEdgeTypes.includes("calls"), true);
+      assert.equal(result.coverage.callFlowEvidenceAvailable, true);
+      assert.equal(result.coverage.callFlowEvidenceUsed, true);
+      const usesCallEdge = result.paths.some((path) =>
+        path.steps.some((step) => step.edgeType === "calls")
+      );
+      assert.equal(usesCallEdge, true);
       assert.equal(
         result.coverage.notes.some((note) =>
-          note.includes("No statically resolved calls edges were available")
+          note.includes("traverses a statically resolved calls edge")
         ),
         true,
       );
@@ -276,18 +280,25 @@ test("shortest-path ordering is deterministic across repeated calls", async () =
       });
 
       assert.deepEqual(second, first);
+      // beta -> alpha -> base is now reachable through both `imports` and the
+      // newly extracted `calls` edges, so the bounded shortest-path set is the
+      // deterministic combination of those edge types over the same node chain.
       assert.deepEqual(
-        first.paths.map((path) => path.nodes.map((node) => node.fqName)),
+        first.paths.map((path) =>
+          path.steps.map((step) => [step.edgeType, step.fromFqName, step.toFqName]),
+        ),
         [
           [
-            "src/beta.ts::beta",
-            "src/alpha.ts::alpha",
-            "src/base.ts::base",
+            ["calls", "src/beta.ts::beta", "src/alpha.ts::alpha"],
+            ["calls", "src/alpha.ts::alpha", "src/base.ts::base"],
           ],
           [
-            "src/beta.ts::beta",
-            "src/zeta.ts::zeta",
-            "src/base.ts::base",
+            ["calls", "src/beta.ts::beta", "src/alpha.ts::alpha"],
+            ["imports", "src/alpha.ts::alpha", "src/base.ts::base"],
+          ],
+          [
+            ["imports", "src/beta.ts::beta", "src/alpha.ts::alpha"],
+            ["calls", "src/alpha.ts::alpha", "src/base.ts::base"],
           ],
         ],
       );

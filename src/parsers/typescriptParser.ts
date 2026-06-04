@@ -84,6 +84,12 @@ function parseTypeScriptWithContext(
     sourceSymbols: extracted.symbols,
     context,
   });
+  const callReferenceEdges = extractCallAndReferenceEdges({
+    filePath: input.path,
+    rootNode: tree.rootNode,
+    sourceSymbols: extracted.symbols,
+    context,
+  });
 
   return {
     file: {
@@ -94,7 +100,7 @@ function parseTypeScriptWithContext(
       sizeBytes: Buffer.byteLength(input.content),
     },
     symbols: extracted.symbols,
-    edges: [...extracted.edges, ...importEdges],
+    edges: [...extracted.edges, ...importEdges, ...callReferenceEdges],
     diagnostics: collectDiagnostics(tree.rootNode),
   };
 }
@@ -623,6 +629,787 @@ function makeImportEdge(srcSymbolId: string, dstSymbolId: string): EdgeRecord {
     edgeType: EdgeType.Imports,
     confidence: 1,
   };
+}
+
+function makeCallsEdge(srcSymbolId: string, dstSymbolId: string): EdgeRecord {
+  return {
+    id: hashParts([srcSymbolId, dstSymbolId, EdgeType.Calls]),
+    srcSymbolId,
+    dstSymbolId,
+    edgeType: EdgeType.Calls,
+    confidence: 1,
+  };
+}
+
+function makeReferencesEdge(srcSymbolId: string, dstSymbolId: string): EdgeRecord {
+  return {
+    id: hashParts([srcSymbolId, dstSymbolId, EdgeType.References]),
+    srcSymbolId,
+    dstSymbolId,
+    edgeType: EdgeType.References,
+    confidence: 1,
+  };
+}
+
+function edgePairKey(srcSymbolId: string, dstSymbolId: string): string {
+  return `${srcSymbolId}\x00${dstSymbolId}`;
+}
+
+interface ExtractCallReferenceInput {
+  filePath: string;
+  rootNode: SyntaxNode;
+  sourceSymbols: readonly SymbolRecord[];
+  context: TypeScriptParserContext;
+}
+
+// Resolution context for conservative TypeScript call/reference extraction. All
+// lookups are exact and static: same-file top-level symbols, same-class methods,
+// and exactly-resolved imported symbols. Ambiguous (duplicated) top-level names
+// are recorded so they can be skipped rather than guessed.
+interface CallReferenceResolution {
+  topLevelByName: ReadonlyMap<string, SymbolRecord>;
+  ambiguousNames: ReadonlySet<string>;
+  classMembersByClassName: ReadonlyMap<string, ReadonlyMap<string, SymbolRecord>>;
+  importedByLocalName: ReadonlyMap<string, SymbolRecord>;
+}
+
+interface ReferencePair {
+  src: string;
+  dst: string;
+}
+
+/**
+ * Conservative static extraction of TypeScript `calls` and `references` edges.
+ *
+ * Calls are emitted only when the target resolves exactly: a same-file top-level
+ * function, an imported function whose import target resolves exactly, a
+ * `this.method()` whose method exists on the enclosing class, or a
+ * `ClassName.method()` static call on a same-file class. Arbitrary object
+ * receivers and dynamic dispatch are skipped rather than guessed.
+ *
+ * References cover exact type usage: type annotations, `extends`/`implements`
+ * clauses, type-alias bodies, `new ClassName()` instantiation, and class/method
+ * decorators. `calls` and `references` are kept distinct — when a pair already
+ * has a calls edge the reference is dropped.
+ */
+function extractCallAndReferenceEdges(input: ExtractCallReferenceInput): EdgeRecord[] {
+  if (input.rootNode.hasError) {
+    return [];
+  }
+
+  const resolution = buildCallReferenceResolution(input);
+  const symbolByStartByte = new Map<number, SymbolRecord>();
+
+  for (const symbol of input.sourceSymbols) {
+    symbolByStartByte.set(symbol.startByte, symbol);
+  }
+
+  const callEdges = new Map<string, EdgeRecord>();
+  const referencePairs: ReferencePair[] = [];
+
+  for (const child of input.rootNode.namedChildren) {
+    const declaration = unwrapExportStatement(child);
+
+    if (declaration === undefined) {
+      continue;
+    }
+
+    collectDeclarationEdges(
+      declaration,
+      symbolByStartByte,
+      resolution,
+      callEdges,
+      referencePairs,
+    );
+  }
+
+  const callPairs = new Set<string>();
+
+  for (const edge of callEdges.values()) {
+    callPairs.add(edgePairKey(edge.srcSymbolId, edge.dstSymbolId));
+  }
+
+  const referenceEdges = new Map<string, EdgeRecord>();
+
+  for (const pair of referencePairs) {
+    if (pair.src === pair.dst) {
+      continue;
+    }
+
+    // Keep calls and references distinct: a pair that is already a call is not
+    // also recorded as a reference.
+    if (callPairs.has(edgePairKey(pair.src, pair.dst))) {
+      continue;
+    }
+
+    const edge = makeReferencesEdge(pair.src, pair.dst);
+    referenceEdges.set(edge.id, edge);
+  }
+
+  const calls = [...callEdges.values()].sort((left, right) => left.id.localeCompare(right.id));
+  const references = [...referenceEdges.values()].sort((left, right) =>
+    left.id.localeCompare(right.id),
+  );
+
+  return [...calls, ...references];
+}
+
+function buildCallReferenceResolution(
+  input: ExtractCallReferenceInput,
+): CallReferenceResolution {
+  const topLevelByName = new Map<string, SymbolRecord>();
+  const ambiguousNames = new Set<string>();
+
+  for (const symbol of input.sourceSymbols) {
+    if (symbol.parentSymbolId !== undefined) {
+      continue;
+    }
+
+    if (topLevelByName.has(symbol.localName)) {
+      ambiguousNames.add(symbol.localName);
+      continue;
+    }
+
+    topLevelByName.set(symbol.localName, symbol);
+  }
+
+  const classMembersByClassName = new Map<string, Map<string, SymbolRecord>>();
+
+  for (const symbol of input.sourceSymbols) {
+    if (
+      symbol.parentSymbolId !== undefined
+      || symbol.kind !== SymbolKind.Class
+      || ambiguousNames.has(symbol.localName)
+    ) {
+      continue;
+    }
+
+    const members = new Map<string, SymbolRecord>();
+
+    for (const member of input.sourceSymbols) {
+      if (
+        member.parentSymbolId === symbol.id
+        && member.kind === SymbolKind.Method
+        && !members.has(member.localName)
+      ) {
+        members.set(member.localName, member);
+      }
+    }
+
+    classMembersByClassName.set(symbol.localName, members);
+  }
+
+  const importedByLocalName = buildImportedSymbolIndex(
+    input.filePath,
+    input.rootNode,
+    input.context,
+  );
+
+  return { topLevelByName, ambiguousNames, classMembersByClassName, importedByLocalName };
+}
+
+// Maps each imported local binding name to the exact target symbol it resolves
+// to (same as the imports-edge resolver, but keyed by local name and including
+// aliased named imports). Namespace imports and unresolved targets are omitted.
+function buildImportedSymbolIndex(
+  filePath: string,
+  rootNode: SyntaxNode,
+  context: TypeScriptParserContext,
+): Map<string, SymbolRecord> {
+  const resolved = new Map<string, SymbolRecord>();
+  const ambiguous = new Set<string>();
+
+  const record = (localName: string | undefined, target: SymbolRecord | undefined): void => {
+    if (localName === undefined || localName.length === 0 || target === undefined) {
+      return;
+    }
+
+    if (resolved.has(localName)) {
+      ambiguous.add(localName);
+      return;
+    }
+
+    resolved.set(localName, target);
+  };
+
+  for (const child of rootNode.namedChildren) {
+    if (child.type !== "import_statement") {
+      continue;
+    }
+
+    const moduleSpecifier = getImportModuleSpecifier(child);
+
+    if (moduleSpecifier === undefined) {
+      continue;
+    }
+
+    const targetPath = resolveRelativeImportPath(
+      filePath,
+      moduleSpecifier,
+      context.knownFilesByPath,
+    );
+
+    if (targetPath === undefined) {
+      continue;
+    }
+
+    const targetContent = context.knownFilesByPath.get(targetPath);
+
+    if (targetContent === undefined) {
+      continue;
+    }
+
+    const targetExports = getExportIndex(targetPath, targetContent);
+    const importClause = child.namedChildren.find((node) => node.type === "import_clause");
+
+    if (importClause === undefined) {
+      continue;
+    }
+
+    for (const node of importClause.namedChildren) {
+      if (node.type === "identifier") {
+        record(node.text, targetExports.defaultExport);
+        continue;
+      }
+
+      if (node.type !== "named_imports") {
+        continue;
+      }
+
+      for (const specifier of node.namedChildren) {
+        if (specifier.type !== "import_specifier") {
+          continue;
+        }
+
+        const importedName = specifier.childForFieldName("name")?.text;
+
+        if (importedName === undefined) {
+          continue;
+        }
+
+        const localName = specifier.childForFieldName("alias")?.text ?? importedName;
+        record(localName, targetExports.namedExports.get(importedName));
+      }
+    }
+  }
+
+  for (const name of ambiguous) {
+    resolved.delete(name);
+  }
+
+  return resolved;
+}
+
+function collectDeclarationEdges(
+  declaration: SyntaxNode,
+  symbolByStartByte: ReadonlyMap<number, SymbolRecord>,
+  resolution: CallReferenceResolution,
+  callEdges: Map<string, EdgeRecord>,
+  referencePairs: ReferencePair[],
+): void {
+  switch (declaration.type) {
+    case "function_declaration":
+    case "generator_function_declaration": {
+      const source = symbolByStartByte.get(declaration.startIndex);
+
+      if (source === undefined) {
+        return;
+      }
+
+      const boundNames = collectBoundNames(declaration);
+      collectScopeEdges(declaration, source, null, boundNames, resolution, callEdges, referencePairs);
+      return;
+    }
+    case "class_declaration": {
+      collectClassDeclarationEdges(
+        declaration,
+        symbolByStartByte,
+        resolution,
+        callEdges,
+        referencePairs,
+      );
+      return;
+    }
+    case "interface_declaration": {
+      const source = symbolByStartByte.get(declaration.startIndex);
+
+      if (source === undefined) {
+        return;
+      }
+
+      // Walking the whole interface picks up `extends` types and member type
+      // annotations; the interface's own name resolves to itself and is dropped
+      // as a self-edge.
+      collectScopeEdges(declaration, source, null, new Set(), resolution, callEdges, referencePairs);
+      return;
+    }
+    case "type_alias_declaration": {
+      const source = symbolByStartByte.get(declaration.startIndex);
+      const value = declaration.childForFieldName("value");
+
+      if (source === undefined || value === null) {
+        return;
+      }
+
+      collectScopeEdges(value, source, null, new Set(), resolution, callEdges, referencePairs);
+      return;
+    }
+    default:
+      return;
+  }
+}
+
+function collectClassDeclarationEdges(
+  declaration: SyntaxNode,
+  symbolByStartByte: ReadonlyMap<number, SymbolRecord>,
+  resolution: CallReferenceResolution,
+  callEdges: Map<string, EdgeRecord>,
+  referencePairs: ReferencePair[],
+): void {
+  const classSymbol = symbolByStartByte.get(declaration.startIndex);
+
+  if (classSymbol !== undefined) {
+    collectClassHeritageReferences(declaration, classSymbol, resolution, callEdges, referencePairs);
+    collectDecoratorReferences(declaration, classSymbol, resolution, referencePairs);
+  }
+
+  const className = getNamedDeclarationName(declaration);
+  const body = declaration.childForFieldName("body");
+
+  if (body === null) {
+    return;
+  }
+
+  let pendingDecorators: SyntaxNode[] = [];
+
+  for (const member of body.namedChildren) {
+    if (member.type === "decorator") {
+      pendingDecorators.push(member);
+      continue;
+    }
+
+    if (member.type === "method_definition") {
+      const methodSymbol = symbolByStartByte.get(member.startIndex);
+
+      if (methodSymbol !== undefined) {
+        const boundNames = collectBoundNames(member);
+        collectScopeEdges(
+          member,
+          methodSymbol,
+          className ?? null,
+          boundNames,
+          resolution,
+          callEdges,
+          referencePairs,
+        );
+
+        for (const decorator of pendingDecorators) {
+          collectDecoratorNodeReference(decorator, methodSymbol, resolution, referencePairs);
+        }
+      }
+
+      pendingDecorators = [];
+      continue;
+    }
+
+    if (member.type === "public_field_definition") {
+      if (classSymbol !== undefined) {
+        const boundNames = collectBoundNames(member);
+        collectScopeEdges(
+          member,
+          classSymbol,
+          className ?? null,
+          boundNames,
+          resolution,
+          callEdges,
+          referencePairs,
+        );
+        collectDecoratorReferences(member, classSymbol, resolution, referencePairs);
+
+        for (const decorator of pendingDecorators) {
+          collectDecoratorNodeReference(decorator, classSymbol, resolution, referencePairs);
+        }
+      }
+
+      pendingDecorators = [];
+      continue;
+    }
+
+    pendingDecorators = [];
+  }
+}
+
+// Class `extends`/`implements` references. `extends` exposes its base as a value
+// `identifier`; `implements` (and any generic type arguments) expose types that
+// the generic type-identifier walk resolves.
+function collectClassHeritageReferences(
+  declaration: SyntaxNode,
+  classSymbol: SymbolRecord,
+  resolution: CallReferenceResolution,
+  callEdges: Map<string, EdgeRecord>,
+  referencePairs: ReferencePair[],
+): void {
+  const heritage = declaration.namedChildren.find((node) => node.type === "class_heritage");
+
+  if (heritage === undefined) {
+    return;
+  }
+
+  for (const clause of heritage.namedChildren) {
+    if (clause.type !== "extends_clause") {
+      continue;
+    }
+
+    const value = clause.childForFieldName("value");
+
+    if (value !== null && value.type === "identifier") {
+      const target = resolveTypeName(value.text, resolution);
+
+      if (target !== undefined && target.id !== classSymbol.id) {
+        referencePairs.push({ src: classSymbol.id, dst: target.id });
+      }
+    }
+  }
+
+  collectScopeEdges(heritage, classSymbol, null, new Set(), resolution, callEdges, referencePairs);
+}
+
+function collectDecoratorReferences(
+  node: SyntaxNode,
+  source: SymbolRecord,
+  resolution: CallReferenceResolution,
+  referencePairs: ReferencePair[],
+): void {
+  for (const child of node.namedChildren) {
+    if (child.type !== "decorator") {
+      continue;
+    }
+
+    collectDecoratorNodeReference(child, source, resolution, referencePairs);
+  }
+}
+
+function collectDecoratorNodeReference(
+  decorator: SyntaxNode,
+  source: SymbolRecord,
+  resolution: CallReferenceResolution,
+  referencePairs: ReferencePair[],
+): void {
+  const expression = decorator.namedChildren[0];
+
+  if (expression === undefined) {
+    return;
+  }
+
+  let nameNode: SyntaxNode | undefined;
+
+  if (expression.type === "identifier") {
+    nameNode = expression;
+  } else if (expression.type === "call_expression") {
+    const callee = expression.childForFieldName("function");
+
+    if (callee !== null && callee.type === "identifier") {
+      nameNode = callee;
+    }
+  }
+
+  if (nameNode === undefined) {
+    return;
+  }
+
+  const target = resolveDecoratorTarget(nameNode.text, resolution);
+
+  if (target !== undefined && target.id !== source.id) {
+    referencePairs.push({ src: source.id, dst: target.id });
+  }
+}
+
+// Walks a single source scope (a function body, method, class field, or type
+// node), emitting call edges and collecting reference pairs. Nested scopes that
+// rebind `this` (nested functions/classes) are not descended into, so resolved
+// `this.method` targets always belong to the enclosing class; arrow functions
+// share lexical `this` and are traversed. Decorators are handled separately.
+function collectScopeEdges(
+  scope: SyntaxNode,
+  source: SymbolRecord,
+  enclosingClassName: string | null,
+  boundNames: ReadonlySet<string>,
+  resolution: CallReferenceResolution,
+  callEdges: Map<string, EdgeRecord>,
+  referencePairs: ReferencePair[],
+): void {
+  const walk = (node: SyntaxNode): void => {
+    if (node !== scope && isThisRebindingScope(node)) {
+      return;
+    }
+
+    switch (node.type) {
+      case "decorator":
+        return;
+      case "call_expression": {
+        const callee = node.childForFieldName("function");
+        const target = resolveCallTarget(callee, enclosingClassName, boundNames, resolution);
+
+        if (target !== undefined && target.id !== source.id) {
+          const edge = makeCallsEdge(source.id, target.id);
+          callEdges.set(edge.id, edge);
+        }
+
+        break;
+      }
+      case "new_expression": {
+        const constructor = node.childForFieldName("constructor");
+
+        if (
+          constructor !== null
+          && constructor.type === "identifier"
+          && !boundNames.has(constructor.text)
+        ) {
+          const target = resolveTypeName(constructor.text, resolution);
+
+          if (
+            target !== undefined
+            && target.kind === SymbolKind.Class
+            && target.id !== source.id
+          ) {
+            referencePairs.push({ src: source.id, dst: target.id });
+          }
+        }
+
+        break;
+      }
+      case "type_identifier": {
+        // The tail of a qualified type (`Module.Type`) is skipped conservatively.
+        if (node.parent?.type !== "nested_type_identifier") {
+          const target = resolveTypeName(node.text, resolution);
+
+          if (target !== undefined && target.id !== source.id) {
+            referencePairs.push({ src: source.id, dst: target.id });
+          }
+        }
+
+        break;
+      }
+      default:
+        break;
+    }
+
+    for (const child of node.namedChildren) {
+      walk(child);
+    }
+  };
+
+  walk(scope);
+}
+
+function isThisRebindingScope(node: SyntaxNode): boolean {
+  return (
+    node.type === "function_declaration"
+    || node.type === "function_expression"
+    || node.type === "generator_function_declaration"
+    || node.type === "generator_function"
+    || node.type === "method_definition"
+    || node.type === "class_declaration"
+    || node.type === "class_expression"
+  );
+}
+
+function resolveCallTarget(
+  callee: SyntaxNode | null,
+  enclosingClassName: string | null,
+  boundNames: ReadonlySet<string>,
+  resolution: CallReferenceResolution,
+): SymbolRecord | undefined {
+  if (callee === null) {
+    return undefined;
+  }
+
+  if (callee.type === "identifier") {
+    const name = callee.text;
+
+    if (boundNames.has(name)) {
+      return undefined;
+    }
+
+    const local = resolveUnambiguousTopLevel(name, resolution);
+
+    if (local !== undefined && local.kind === SymbolKind.Function) {
+      return local;
+    }
+
+    const imported = resolution.importedByLocalName.get(name);
+
+    if (imported !== undefined && imported.kind === SymbolKind.Function) {
+      return imported;
+    }
+
+    return undefined;
+  }
+
+  if (callee.type === "member_expression") {
+    const object = callee.childForFieldName("object");
+    const property = callee.childForFieldName("property");
+
+    if (object === null || property === null || property.type !== "property_identifier") {
+      return undefined;
+    }
+
+    const methodName = property.text;
+
+    if (object.type === "this") {
+      if (enclosingClassName === null) {
+        return undefined;
+      }
+
+      return resolution.classMembersByClassName.get(enclosingClassName)?.get(methodName);
+    }
+
+    if (object.type === "identifier") {
+      const objectName = object.text;
+
+      if (boundNames.has(objectName)) {
+        return undefined;
+      }
+
+      const classSymbol = resolveUnambiguousTopLevel(objectName, resolution);
+
+      if (classSymbol !== undefined && classSymbol.kind === SymbolKind.Class) {
+        return resolution.classMembersByClassName.get(objectName)?.get(methodName);
+      }
+    }
+
+    return undefined;
+  }
+
+  return undefined;
+}
+
+function resolveTypeName(
+  name: string,
+  resolution: CallReferenceResolution,
+): SymbolRecord | undefined {
+  const local = resolveUnambiguousTopLevel(name, resolution);
+
+  if (local !== undefined && isTypeSymbolKind(local.kind)) {
+    return local;
+  }
+
+  const imported = resolution.importedByLocalName.get(name);
+
+  if (imported !== undefined && isTypeSymbolKind(imported.kind)) {
+    return imported;
+  }
+
+  return undefined;
+}
+
+function resolveDecoratorTarget(
+  name: string,
+  resolution: CallReferenceResolution,
+): SymbolRecord | undefined {
+  const local = resolveUnambiguousTopLevel(name, resolution);
+
+  if (local !== undefined && isDecoratorSymbolKind(local.kind)) {
+    return local;
+  }
+
+  const imported = resolution.importedByLocalName.get(name);
+
+  if (imported !== undefined && isDecoratorSymbolKind(imported.kind)) {
+    return imported;
+  }
+
+  return undefined;
+}
+
+function resolveUnambiguousTopLevel(
+  name: string,
+  resolution: CallReferenceResolution,
+): SymbolRecord | undefined {
+  if (resolution.ambiguousNames.has(name)) {
+    return undefined;
+  }
+
+  return resolution.topLevelByName.get(name);
+}
+
+function isTypeSymbolKind(kind: SymbolKind): boolean {
+  return (
+    kind === SymbolKind.Class
+    || kind === SymbolKind.Interface
+    || kind === SymbolKind.TypeAlias
+  );
+}
+
+function isDecoratorSymbolKind(kind: SymbolKind): boolean {
+  return kind === SymbolKind.Class || kind === SymbolKind.Function;
+}
+
+// Collects value binding names introduced inside a scope (parameters, local
+// variable declarators, and nested function/class names) so that calls and
+// instantiations targeting a shadowed name are skipped rather than resolved to
+// an unrelated top-level symbol. Type positions are not bindings and are
+// ignored.
+function collectBoundNames(scope: SyntaxNode): Set<string> {
+  const names = new Set<string>();
+
+  const walk = (node: SyntaxNode): void => {
+    if (node.type === "type_annotation") {
+      return;
+    }
+
+    if (node.type === "required_parameter" || node.type === "optional_parameter") {
+      const pattern = node.childForFieldName("pattern");
+
+      if (pattern !== null) {
+        collectPatternNames(pattern, names);
+      }
+    } else if (node.type === "variable_declarator") {
+      const name = node.childForFieldName("name");
+
+      if (name !== null) {
+        collectPatternNames(name, names);
+      }
+    } else if (
+      node.type === "function_declaration"
+      || node.type === "generator_function_declaration"
+      || node.type === "class_declaration"
+    ) {
+      const name = node.childForFieldName("name");
+
+      if (name !== null) {
+        names.add(name.text);
+      }
+    }
+
+    for (const child of node.namedChildren) {
+      walk(child);
+    }
+  };
+
+  for (const child of scope.namedChildren) {
+    walk(child);
+  }
+
+  return names;
+}
+
+function collectPatternNames(pattern: SyntaxNode, names: Set<string>): void {
+  if (
+    pattern.type === "identifier"
+    || pattern.type === "shorthand_property_identifier_pattern"
+  ) {
+    names.add(pattern.text);
+    return;
+  }
+
+  for (const child of pattern.namedChildren) {
+    if (child.type === "type_annotation") {
+      continue;
+    }
+
+    collectPatternNames(child, names);
+  }
 }
 
 function collectDiagnostics(rootNode: SyntaxNode): ParseDiagnostic[] {

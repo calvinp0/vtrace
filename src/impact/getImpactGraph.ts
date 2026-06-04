@@ -389,9 +389,10 @@ function buildCoverageNotes(
   const notes = [
     "Structural-only reverse impact view built from indexed contains, imports, calls, and references edges.",
     "Exact FQN resolution is required; no fuzzy symbol matching is applied.",
-    "Caller/reference edges are statically extracted for Python only in this milestone; other languages contribute contains/imports evidence only.",
+    "Caller/reference edges are statically extracted for Python and TypeScript in this milestone; other languages contribute contains/imports evidence only.",
     "Call/reference edges are emitted only when the target resolves exactly via same-file, imported-name, module-qualified, or same-class self.method lookup. Ambiguous targets are skipped conservatively.",
     "Non-call references cover conservative Python cases: inheritance bases, decorators, type annotations, exception classes in raise/except, alias assignments, and other exact imported-name or module-qualified uses. Ambiguous or dynamic references are skipped.",
+    "TypeScript call/reference extraction is conservative static evidence: calls resolve to same-file functions, exactly-imported functions, same-class this.method, and same-file ClassName.method; references cover type annotations, extends/implements, type-alias targets, new ClassName(), and class/method decorators. Arbitrary object receivers and dynamic dispatch are skipped.",
     "Member/attribute resolution is enabled for self.x (in methods whose first parameter is self), cls.x (in methods whose first parameter is cls), and ClassName.x (same-file or imported class). Calls resolve only to methods; references resolve to methods and class-level attributes. Arbitrary obj.x, runtime instance-type inference, and dynamic dispatch are never attempted.",
     "Inherited-member and super() resolution is conservative and exact-first: super().x, self.x, cls.x, and ClassName.x may fall back to a direct base-class member when exactly one resolved direct base exposes that member. Bases must resolve exactly (same-file class or imported class). Multi-base ambiguity, unresolved bases, and transitive grandparent chains are skipped.",
     "This does not represent runtime execution flow, semantic reachability, dataflow, or dynamic dispatch truth.",

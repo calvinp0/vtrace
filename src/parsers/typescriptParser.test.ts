@@ -260,6 +260,244 @@ export function readUserId(): UserId { throw new Error("not implemented"); }
   );
 });
 
+test("a direct same-file function call creates a calls edge", async () => {
+  const result = await parseFixture(`
+function helper(x: number): number { return x + 1; }
+function main(): number { return helper(1); }
+`);
+
+  const helper = findSymbol(result.symbols, "helper");
+  const main = findSymbol(result.symbols, "main");
+  const calls = edgesOfType(result, EdgeType.Calls);
+
+  assert.deepEqual(calls, [
+    {
+      id: calls[0]?.id,
+      srcSymbolId: main.id,
+      dstSymbolId: helper.id,
+      edgeType: EdgeType.Calls,
+      confidence: 1,
+    },
+  ]);
+  assert.equal(calls[0]?.id.length, 64);
+});
+
+test("an imported function call creates a calls edge to the exact import target", async () => {
+  const targetContent = "export function build(): number { return 1; }\n";
+  const parser = createTypeScriptParser({
+    knownFiles: [{ path: "src/factory.ts", content: targetContent }],
+  });
+  const result = await parser.parse({
+    path: "src/service.ts",
+    language: Language.TypeScript,
+    content: `
+import { build } from "./factory";
+export function make(): number { return build(); }
+`,
+  });
+  const target = await typescriptParser.parse({
+    path: "src/factory.ts",
+    language: Language.TypeScript,
+    content: targetContent,
+  });
+  const make = findSymbol(result.symbols, "make");
+  const build = findSymbol(target.symbols, "build");
+  const calls = edgesOfType(result, EdgeType.Calls);
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0]?.srcSymbolId, make.id);
+  assert.equal(calls[0]?.dstSymbolId, build.id);
+});
+
+test("a this.method() call resolves to the enclosing class method", async () => {
+  const result = await parseFixture(`
+class Worker {
+  helper(): void {}
+  run(): void { this.helper(); }
+}
+`);
+
+  const helper = findSymbolOfKind(result.symbols, "helper", SymbolKind.Method);
+  const run = findSymbolOfKind(result.symbols, "run", SymbolKind.Method);
+  const calls = edgesOfType(result, EdgeType.Calls);
+
+  assert.deepEqual(calls, [
+    {
+      id: calls[0]?.id,
+      srcSymbolId: run.id,
+      dstSymbolId: helper.id,
+      edgeType: EdgeType.Calls,
+      confidence: 1,
+    },
+  ]);
+});
+
+test("a static ClassName.method() call resolves on a same-file class", async () => {
+  const result = await parseFixture(`
+class Factory {
+  static make(): void {}
+}
+function build(): void { Factory.make(); }
+`);
+
+  const make = findSymbolOfKind(result.symbols, "make", SymbolKind.Method);
+  const build = findSymbol(result.symbols, "build");
+  const calls = edgesOfType(result, EdgeType.Calls);
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0]?.srcSymbolId, build.id);
+  assert.equal(calls[0]?.dstSymbolId, make.id);
+});
+
+test("an ambiguous object receiver call is skipped conservatively", async () => {
+  const result = await parseFixture(`
+function run(obj: Worker): void { obj.helper(); }
+`);
+
+  assert.deepEqual(edgesOfType(result, EdgeType.Calls), []);
+});
+
+test("a shadowing local binding suppresses a same-name calls edge", async () => {
+  const result = await parseFixture(`
+function helper(): void {}
+function outer(): void {
+  const helper = () => {};
+  helper();
+}
+`);
+
+  assert.deepEqual(edgesOfType(result, EdgeType.Calls), []);
+});
+
+test("a type annotation creates a references edge to an exact same-file type", async () => {
+  const result = await parseFixture(`
+interface Account {}
+function load(id: string): Account { throw new Error("not implemented"); }
+`);
+
+  const account = findSymbolOfKind(result.symbols, "Account", SymbolKind.Interface);
+  const load = findSymbol(result.symbols, "load");
+  const references = edgesOfType(result, EdgeType.References);
+
+  assert.deepEqual(references, [
+    {
+      id: references[0]?.id,
+      srcSymbolId: load.id,
+      dstSymbolId: account.id,
+      edgeType: EdgeType.References,
+      confidence: 1,
+    },
+  ]);
+});
+
+test("extends and implements clauses create references edges", async () => {
+  const result = await parseFixture(`
+interface Walker {}
+class Animal {}
+class Dog extends Animal implements Walker {}
+`);
+
+  const animal = findSymbolOfKind(result.symbols, "Animal", SymbolKind.Class);
+  const walker = findSymbolOfKind(result.symbols, "Walker", SymbolKind.Interface);
+  const dog = findSymbolOfKind(result.symbols, "Dog", SymbolKind.Class);
+  const referencePairs = edgesOfType(result, EdgeType.References).map((edge) => [
+    edge.srcSymbolId,
+    edge.dstSymbolId,
+  ]);
+
+  assert.equal(referencePairs.some(([src, dst]) => src === dog.id && dst === animal.id), true);
+  assert.equal(referencePairs.some(([src, dst]) => src === dog.id && dst === walker.id), true);
+});
+
+test("an interface extends clause creates a references edge", async () => {
+  const result = await parseFixture(`
+interface Base {}
+interface Admin extends Base { level: number; }
+`);
+
+  const base = findSymbolOfKind(result.symbols, "Base", SymbolKind.Interface);
+  const admin = findSymbolOfKind(result.symbols, "Admin", SymbolKind.Interface);
+  const references = edgesOfType(result, EdgeType.References);
+
+  assert.equal(references.length, 1);
+  assert.equal(references[0]?.srcSymbolId, admin.id);
+  assert.equal(references[0]?.dstSymbolId, base.id);
+});
+
+test("a class decorator creates a references edge to an exact decorator symbol", async () => {
+  const result = await parseFixture(`
+function Injectable() { return (target: unknown) => target; }
+@Injectable()
+class Service {}
+`);
+
+  const injectable = findSymbol(result.symbols, "Injectable");
+  const service = findSymbolOfKind(result.symbols, "Service", SymbolKind.Class);
+  const references = edgesOfType(result, EdgeType.References);
+
+  assert.equal(references.length, 1);
+  assert.equal(references[0]?.srcSymbolId, service.id);
+  assert.equal(references[0]?.dstSymbolId, injectable.id);
+});
+
+test("calls and references are kept distinct with no spurious overlap", async () => {
+  const result = await parseFixture(`
+class Account {}
+function build(): Account { return new Account(); }
+`);
+
+  // `new Account()` is a class reference, not a call; build references Account
+  // exactly once and produces no calls edge.
+  assert.deepEqual(edgesOfType(result, EdgeType.Calls), []);
+  assert.equal(edgesOfType(result, EdgeType.References).length, 1);
+});
+
+test("call and reference extraction does not regress contains or imports edges", async () => {
+  const targetContent = "export interface User { id: string }\n";
+  const parser = createTypeScriptParser({
+    knownFiles: [{ path: "src/models.ts", content: targetContent }],
+  });
+  const result = await parser.parse({
+    path: "src/service.ts",
+    language: Language.TypeScript,
+    content: `
+import { User } from "./models";
+export class Repo {
+  read(): User { throw new Error("not implemented"); }
+}
+`,
+  });
+  const target = await typescriptParser.parse({
+    path: "src/models.ts",
+    language: Language.TypeScript,
+    content: targetContent,
+  });
+  const repo = findSymbolOfKind(result.symbols, "Repo", SymbolKind.Class);
+  const read = findSymbolOfKind(result.symbols, "read", SymbolKind.Method);
+  const user = findSymbol(target.symbols, "User");
+
+  const contains = edgesOfType(result, EdgeType.Contains);
+  assert.deepEqual(contains, [
+    {
+      id: contains[0]?.id,
+      srcSymbolId: repo.id,
+      dstSymbolId: read.id,
+      edgeType: EdgeType.Contains,
+      confidence: 1,
+    },
+  ]);
+
+  const imports = edgesOfType(result, EdgeType.Imports);
+  assert.equal(imports.length, 1);
+  assert.equal(imports[0]?.dstSymbolId, user.id);
+
+  // The return type still resolves to a references edge alongside the import.
+  const references = edgesOfType(result, EdgeType.References);
+  assert.equal(references.length, 1);
+  assert.equal(references[0]?.srcSymbolId, read.id);
+  assert.equal(references[0]?.dstSymbolId, user.id);
+});
+
 async function parseFixture(content: string) {
   const input: ParseFileInput = {
     path: "src/example.ts",
@@ -268,6 +506,24 @@ async function parseFixture(content: string) {
   };
 
   return typescriptParser.parse(input);
+}
+
+function edgesOfType(result: { edges: readonly { edgeType: EdgeType }[] }, edgeType: EdgeType) {
+  return result.edges.filter((edge) => edge.edgeType === edgeType);
+}
+
+function findSymbolOfKind(
+  symbols: readonly SymbolRecord[],
+  localName: string,
+  kind: SymbolKind,
+): SymbolRecord {
+  const symbol = symbols.find(
+    (candidate) => candidate.localName === localName && candidate.kind === kind,
+  );
+
+  assert.notEqual(symbol, undefined);
+
+  return symbol as SymbolRecord;
 }
 
 function onlySymbolOfKind(symbols: readonly SymbolRecord[], kind: SymbolKind): SymbolRecord {

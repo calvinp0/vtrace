@@ -125,9 +125,9 @@ test("list output ordering is stable across repeated calls", async () => {
       assert.deepEqual(second, first);
       assert.deepEqual(first.view.lines, [
         "d0 src/base.ts::base (function)",
-        "d1 src/alpha.ts::alpha (function) imports src/base.ts::base",
-        "d1 src/zeta.ts::zeta (function) imports src/base.ts::base",
-        "d2 src/beta.ts::beta (function) imports src/alpha.ts::alpha",
+        "d1 src/alpha.ts::alpha (function) calls src/base.ts::base",
+        "d1 src/zeta.ts::zeta (function) calls src/base.ts::base",
+        "d2 src/beta.ts::beta (function) calls src/alpha.ts::alpha",
       ]);
     } finally {
       db.close();
@@ -154,13 +154,13 @@ test("tree and mermaid formats are rendered from the same bounded structural gra
 
       assert.deepEqual(tree.view.lines, [
         "d0 src/base.ts::base (function)",
-        "  d1 src/alpha.ts::alpha (function) imports src/base.ts::base",
-        "    d2 src/beta.ts::beta (function) imports src/alpha.ts::alpha",
-        "  d1 src/zeta.ts::zeta (function) imports src/base.ts::base",
+        "  d1 src/alpha.ts::alpha (function) calls src/base.ts::base",
+        "    d2 src/beta.ts::beta (function) calls src/alpha.ts::alpha",
+        "  d1 src/zeta.ts::zeta (function) calls src/base.ts::base",
       ]);
       assert.equal(mermaid.view.lines[0], "flowchart TD");
       assert.equal(
-        mermaid.view.lines.some((line) => line.includes("-->|imports|")),
+        mermaid.view.lines.some((line) => line.includes("-->|calls|")),
         true,
       );
     } finally {
@@ -176,7 +176,7 @@ test("limited coverage stays honest when no indexed reverse dependents exist", a
     try {
       await indexProject({ repoRoot, db });
       const result = requireImpactGraph(db, {
-        symbolFqn: "src/session.ts::Session",
+        symbolFqn: "src/beta.ts::beta",
         depth: 3,
         format: "list",
       });
@@ -184,7 +184,7 @@ test("limited coverage stays honest when no indexed reverse dependents exist", a
       assert.equal(result.summary.dependentSymbolCount, 0);
       assert.deepEqual(result.dependentFiles, []);
       assert.deepEqual(result.view.lines, [
-        "d0 src/session.ts::Session (type_alias)",
+        "d0 src/beta.ts::beta (function)",
       ]);
       assert.equal(
         result.coverage.notes.includes(
@@ -249,6 +249,34 @@ test("Python caller edges surface callers through get_impact_graph for a called 
   });
 });
 
+test("TypeScript caller edges surface callers through get_impact_graph for a called function", async () => {
+  await withImpactFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = requireImpactGraph(db, {
+        symbolFqn: "src/base.ts::base",
+        depth: 1,
+        format: "list",
+      });
+
+      const directCallers = result.nodes
+        .filter((node) => node.distance === 1)
+        .map((node) => node.fqName)
+        .sort();
+
+      assert.deepEqual(directCallers, ["src/alpha.ts::alpha", "src/zeta.ts::zeta"]);
+      assert.ok(
+        result.coverage.observedEdgeTypes.includes("calls"),
+        `expected calls in observedEdgeTypes, got ${JSON.stringify(result.coverage.observedEdgeTypes)}`,
+      );
+    } finally {
+      db.close();
+    }
+  });
+});
+
 test("Impact Graph coverage reports supported edge types and honest conservatism notes", async () => {
   await withPythonCallerFixture(async (repoRoot) => {
     const db = openIndexerDatabase();
@@ -272,7 +300,7 @@ test("Impact Graph coverage reports supported edge types and honest conservatism
       );
       assert.ok(
         result.coverage.notes.includes(
-          "Caller/reference edges are statically extracted for Python only in this milestone; other languages contribute contains/imports evidence only.",
+          "Caller/reference edges are statically extracted for Python and TypeScript in this milestone; other languages contribute contains/imports evidence only.",
         ),
       );
       assert.ok(
@@ -298,25 +326,26 @@ test("contains/imports-only fixtures surface the explicit no-caller-evidence not
     try {
       await indexProject({ repoRoot, db });
       const result = requireImpactGraph(db, {
-        symbolFqn: "src/base.ts::base",
+        symbolFqn: "src/session.ts::SessionManager.createSession",
         depth: 2,
         format: "list",
       });
 
       assert.equal(result.coverage.observedEdgeTypes.includes("calls"), false);
+      assert.equal(result.coverage.observedEdgeTypes.includes("references"), false);
       assert.ok(
         result.coverage.notes.includes(
           "No caller/reference evidence was observed for this symbol; result relies on contains/imports edges only.",
         ),
       );
-      // Existing contains/imports behavior is preserved.
+      // A method whose only reverse dependent is its containing class still
+      // surfaces contains-only evidence after TypeScript call/reference edges
+      // were added.
       assert.deepEqual(
         result.nodes.map((node) => [node.distance, node.fqName]),
         [
-          [0, "src/base.ts::base"],
-          [1, "src/alpha.ts::alpha"],
-          [1, "src/zeta.ts::zeta"],
-          [2, "src/beta.ts::beta"],
+          [0, "src/session.ts::SessionManager.createSession"],
+          [1, "src/session.ts::SessionManager"],
         ],
       );
     } finally {
