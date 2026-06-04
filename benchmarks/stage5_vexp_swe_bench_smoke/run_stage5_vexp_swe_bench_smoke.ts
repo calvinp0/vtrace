@@ -10,6 +10,12 @@ import {
   type RecommendedCapsuleMode as RecommendedCapsuleModeT,
 } from "../../src/capsule/recommendMode";
 import { shapeSweQuery } from "../../src/capsule/sweQueryShaping";
+import {
+  contextMentionsFile,
+  contextMentionsSymbol,
+  primaryEditedFile,
+  primaryEditedSymbol,
+} from "../../src/capsule/finalEditDiagnostics";
 
 // Stage 5 is a SMOKE integration harness around the external `vexp-swe-bench`
 // benchmark. It proves the baseline-vs-vtrace measurement workflow on a tiny
@@ -137,7 +143,27 @@ export interface EvaluationFields {
   readonly evaluationError: string | null;
 }
 
-export interface Stage5Row extends IndexedContextFields, EvaluationFields {
+// Capsule-sizing diagnostics, per vtrace row. recommended/actual mode + the
+// reason explain WHAT context vtrace decided to inject; final_edited_* (parsed
+// from the model patch) + contains_* explain whether that context actually
+// pointed at what the model ended up editing. All null on baseline rows and
+// whenever the source data (dataset / patch / context) is unavailable — never
+// coerced to a value, so a missing input reads as "unknown", not "no".
+export interface CapsuleDiagnosticFields {
+  readonly recommendedMode: string | null;
+  readonly actualCapsuleMode: string | null;
+  readonly targetConfidence: string | null;
+  readonly retrievalReason: string | null;
+  readonly topLikelyFile: string | null;
+  readonly topLikelySymbol: string | null;
+  readonly likelyTargetsCount: number | null;
+  readonly finalEditedFile: string | null;
+  readonly finalEditedSymbol: string | null;
+  readonly containsFinalEditedFile: boolean | null;
+  readonly containsFinalEditedSymbol: boolean | null;
+}
+
+export interface Stage5Row extends IndexedContextFields, EvaluationFields, CapsuleDiagnosticFields {
   readonly instanceId: string;
   readonly condition: Stage5Condition;
   readonly resolved: Unknownable<boolean>;
@@ -327,6 +353,19 @@ const CSV_COLUMNS = [
   "vtrace_injection_observed",
   "vtrace_indexed_context",
   "vtrace_treatment_valid",
+  "recommended_mode",
+  "actual_capsule_mode",
+  "target_confidence",
+  "retrieval_reason",
+  "top_likely_file",
+  "top_likely_symbol",
+  "likely_targets_count",
+  "final_edited_file",
+  "final_edited_symbol",
+  "contains_final_edited_file",
+  "contains_final_edited_symbol",
+  "context_chars",
+  "context_items",
   "error",
   "raw_result_path",
   "parser_kind",
@@ -678,6 +717,11 @@ export function extractRow(
   const patchLines: Unknownable<number> = patchIsString
     ? patchValue.replace(/\n$/, "").split(/\r?\n/).length
     : "unknown";
+  // Parse the file/symbol the model actually edited straight from the patch. The
+  // recommendation + containment diagnostics are filled later (post-merge), where
+  // the dataset and injected context are available.
+  const finalEditedFile = patchIsString ? primaryEditedFile(patchValue) : null;
+  const finalEditedSymbol = patchIsString ? primaryEditedSymbol(patchValue) : null;
 
   const errorValue = pick(record, FIELD_ALIASES.error!);
   const modelValue = pick(record, FIELD_ALIASES.model!);
@@ -715,6 +759,9 @@ export function extractRow(
     vtraceTreatmentValid: null,
     ...nullIndexedContextFields(),
     ...nullEvaluationFields(),
+    ...nullCapsuleDiagnosticFields(),
+    finalEditedFile,
+    finalEditedSymbol,
     error: isString(errorValue) ? errorValue : null,
     rawResultPath,
     parserKind,
@@ -1683,7 +1730,8 @@ export async function runIngest(config: CliConfig, deps: RunDeps = {}): Promise<
   const evidence = await collectRunEvidence(config.out, config.runLabel);
   const evaluations = await collectEvaluationEvidence(config.out, config.runLabel);
   const stamped = stampEvaluationRows(stampVtraceRows(merged, evidence), evaluations);
-  const artifact = buildArtifact(stamped, evidence, evaluations);
+  const withDiagnostics = await stampCapsuleDiagnostics(stamped, config);
+  const artifact = buildArtifact(withDiagnostics, evidence, evaluations);
   await writeFile(path.join(config.out, NORMALIZED_FILENAME), `${JSON.stringify(artifact, null, 2)}\n`);
   await writeReports(config, artifact);
   return artifact;
@@ -1716,6 +1764,116 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtraceContextError: evidence.vtraceContextError,
         },
   );
+}
+
+// Enrich vtrace rows with capsule-sizing diagnostics: the recommended/actual
+// mode + reason (from the instance), and whether the injected context mentioned
+// the file/symbol the model actually edited. Best-effort — a missing dataset,
+// instructions file, or patch leaves the affected fields null rather than
+// failing ingest or fabricating a value.
+export async function stampCapsuleDiagnostics(
+  rows: readonly Stage5Row[],
+  config: CliConfig,
+): Promise<Stage5Row[]> {
+  const recordsById = await loadDatasetById(config);
+  if (recordsById.size === 0) return [...rows];
+
+  const contextCache = new Map<string, string | null>();
+  const out: Stage5Row[] = [];
+  for (const row of rows) {
+    const record = row.condition === "vtrace" ? recordsById.get(row.instanceId) : undefined;
+    if (record === undefined) {
+      out.push(row);
+      continue;
+    }
+    let instance: SweBenchInstance;
+    try {
+      instance = toSweBenchInstance(record);
+    } catch {
+      out.push(row);
+      continue;
+    }
+
+    const shaped = shapeSweQuery(instance);
+    const recommendation = recommendCapsuleMode(deriveModeSignals(instance, shaped));
+    const context = await readInstanceContext(row, contextCache);
+    const haveContext = context !== null && context.trim().length > 0;
+
+    out.push({
+      ...row,
+      recommendedMode: recommendation.recommendedMode,
+      actualCapsuleMode: capsuleModeForInstance(instance),
+      targetConfidence: recommendation.targetConfidence,
+      retrievalReason: recommendation.retrievalReason,
+      topLikelyFile: shaped.likelyFiles[0] ?? null,
+      topLikelySymbol: shaped.likelySymbols[0] ?? null,
+      likelyTargetsCount: shaped.likelyFiles.length,
+      containsFinalEditedFile:
+        row.finalEditedFile !== null && haveContext ? contextMentionsFile(context, row.finalEditedFile) : null,
+      containsFinalEditedSymbol:
+        row.finalEditedSymbol !== null && haveContext
+          ? contextMentionsSymbol(context, row.finalEditedSymbol)
+          : null,
+    });
+  }
+  return out;
+}
+
+// Best-effort dataset load keyed by instance id. Returns an empty map (not an
+// error) when the dataset path is not configured, so diagnostics simply stay
+// null on report-only runs that lack --vexp-swe-bench-dir / --swe-bench-data.
+async function loadDatasetById(config: CliConfig): Promise<Map<string, Record<string, unknown>>> {
+  const byId = new Map<string, Record<string, unknown>>();
+  try {
+    for (const record of await loadSweBenchData(sweBenchDataPath(config))) {
+      const id = record.instance_id ?? record.instanceId;
+      if (typeof id === "string") byId.set(id, record);
+    }
+  } catch {
+    return byId;
+  }
+  return byId;
+}
+
+// Read the injected context for this row's instance from its instructions file
+// (cached per file), extracting the per-instance section when present.
+async function readInstanceContext(
+  row: Stage5Row,
+  cache: Map<string, string | null>,
+): Promise<string | null> {
+  const file = row.vtraceInstructionsFile;
+  if (file === null) return null;
+  if (!cache.has(file)) {
+    cache.set(file, await readFile(file, "utf8").catch(() => null));
+  }
+  const markdown = cache.get(file) ?? null;
+  if (markdown === null) return null;
+  return extractInstanceContextSection(markdown, row.instanceId) ?? markdown;
+}
+
+// Pull one instance's "## vtrace context" block out of the assembled
+// _vtrace_instructions.md (see buildVtraceContextMarkdown). Returns null when the
+// instance marker or context heading is absent.
+export function extractInstanceContextSection(markdown: string, instanceId: string): string | null {
+  const lines = markdown.split(/\r?\n/);
+  const markerAt = lines.findIndex((line) => line.trim() === `- instance_id: ${instanceId}`);
+  if (markerAt === -1) return null;
+  let start = -1;
+  for (let i = markerAt; i < lines.length; i += 1) {
+    if (lines[i]?.trim() === "## vtrace context") {
+      start = i + 1;
+      break;
+    }
+  }
+  if (start === -1) return null;
+  let end = lines.length;
+  for (let i = start; i < lines.length; i += 1) {
+    if (lines[i]?.startsWith("## ")) {
+      end = i;
+      break;
+    }
+  }
+  return lines.slice(start, end).join("\n").trim();
 }
 
 export async function runReport(config: CliConfig, deps: RunDeps = {}): Promise<NormalizedArtifact> {
@@ -1774,7 +1932,10 @@ export async function runAggregateRuns(config: CliConfig, deps: RunDeps = {}): P
     }
     const evidence = await collectRunEvidence(config.out, label);
     const evaluations = await collectEvaluationEvidence(config.out, label);
-    const stamped = stampEvaluationRows(stampVtraceRows(mergeRows(rows), evidence), evaluations);
+    const stamped = await stampCapsuleDiagnostics(
+      stampEvaluationRows(stampVtraceRows(mergeRows(rows), evidence), evaluations),
+      config,
+    );
 
     for (const row of stamped) {
       const prior = instanceOwner.get(row.instanceId);
@@ -2056,6 +2217,8 @@ function mergeRow(base: Stage5Row, next: Stage5Row): Stage5Row {
     model: base.model ?? next.model,
     agent: base.agent ?? next.agent,
     repo: base.repo ?? next.repo,
+    finalEditedFile: base.finalEditedFile ?? next.finalEditedFile,
+    finalEditedSymbol: base.finalEditedSymbol ?? next.finalEditedSymbol,
     error: base.error ?? next.error,
     parserKind: base.parserKind === "unknown" ? next.parserKind : base.parserKind,
     notes: [...new Set([...base.notes, ...next.notes])],
@@ -2137,6 +2300,22 @@ function nullEvaluationFields(): EvaluationFields {
     testStatus: null,
     dockerUsed: null,
     evaluationError: null,
+  };
+}
+
+function nullCapsuleDiagnosticFields(): CapsuleDiagnosticFields {
+  return {
+    recommendedMode: null,
+    actualCapsuleMode: null,
+    targetConfidence: null,
+    retrievalReason: null,
+    topLikelyFile: null,
+    topLikelySymbol: null,
+    likelyTargetsCount: null,
+    finalEditedFile: null,
+    finalEditedSymbol: null,
+    containsFinalEditedFile: null,
+    containsFinalEditedSymbol: null,
   };
 }
 
@@ -2385,6 +2564,19 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         row.vtraceInjectionObserved === null ? "" : String(row.vtraceInjectionObserved),
         row.vtraceIndexedContext === null ? "" : String(row.vtraceIndexedContext),
         row.vtraceTreatmentValid === null ? "" : String(row.vtraceTreatmentValid),
+        row.recommendedMode ?? "",
+        row.actualCapsuleMode ?? "",
+        row.targetConfidence ?? "",
+        row.retrievalReason ?? "",
+        row.topLikelyFile ?? "",
+        row.topLikelySymbol ?? "",
+        row.likelyTargetsCount === null ? "" : String(row.likelyTargetsCount),
+        row.finalEditedFile ?? "",
+        row.finalEditedSymbol ?? "",
+        row.containsFinalEditedFile === null ? "" : String(row.containsFinalEditedFile),
+        row.containsFinalEditedSymbol === null ? "" : String(row.containsFinalEditedSymbol),
+        row.vtraceContextChars === null ? "" : String(row.vtraceContextChars),
+        row.vtraceContextItems === null ? "" : String(row.vtraceContextItems),
         row.error ?? "",
         row.rawResultPath,
         row.parserKind,

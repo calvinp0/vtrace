@@ -81,12 +81,24 @@ export function shapeSweQuery(
   const failingTests = dedupeNonEmpty((record.failToPass ?? []).map((id) => id.trim()));
   const testParts = failingTests.flatMap(parseTestNodeId);
 
+  // URLs are pure noise for the file/path signal: their path tails (e.g.
+  // `.../django/django/pull/7920`, google-groups `.../searchin/django-users/...`)
+  // otherwise match REPO_PATH_LIKE and masquerade as edit targets. Strip them
+  // before path extraction. Symbol extraction keeps the full prose.
+  const prosePaths = stripUrls(prose);
+
   const likelyFiles = capped(
-    dedupeNonEmpty([
-      ...testParts.flatMap((part) => (part.file ? [part.file] : [])),
-      ...matchAll(prose, FILE_LIKE),
-      ...matchAll(prose, REPO_PATH_LIKE).filter(looksLikeRepoPath),
-    ]),
+    dedupeNonEmpty(
+      [
+        ...testParts.flatMap((part) => (part.file ? [part.file] : [])),
+        ...matchAll(prosePaths, FILE_LIKE),
+        ...matchAll(prosePaths, REPO_PATH_LIKE).filter(looksLikeRepoPath),
+      ]
+        // Diff headers surface the same file twice as `a/<path>` and `b/<path>`;
+        // normalise the prefix away so both collapse to the real path (and so the
+        // file count is not inflated, which would wrongly flip crossModule).
+        .map(stripDiffPrefix),
+    ),
     config.maxFiles,
   );
 
@@ -208,6 +220,18 @@ function looksLikeRepoPath(value: string): boolean {
   // Require at least one segment that looks like a directory name, and avoid
   // URLs / version strings.
   return !value.includes("://") && value.split("/").every((segment) => segment.length > 0);
+}
+
+// Remove http/https URLs so their path tails do not leak into the file signal.
+// We blank them (not delete) so adjacent words keep their boundaries.
+function stripUrls(text: string): string {
+  return text.replace(/\bhttps?:\/\/\S+/gi, " ");
+}
+
+// Diff hunks reference files as `a/<path>` (old) and `b/<path>` (new); both name
+// the same file. Strip a single leading `a/` or `b/` so they normalise together.
+export function stripDiffPrefix(value: string): string {
+  return value.replace(/^[ab]\//, "");
 }
 
 function stripCallSuffix(value: string): string {

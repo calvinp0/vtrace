@@ -89,7 +89,11 @@ export const SWE_10880: SweIssueRecord = {
 };
 
 // django__django-11095 — add a get_inlines() hook to ModelAdmin: a single new
-// method on one admin options file.
+// method on one admin options file. The hints body is deliberately long and
+// quotes a PR URL: this reproduces the real-world regression where a small/local
+// task was mis-sized to `standard` because the combined problem+hints length
+// crossed the micro threshold, and where the PR URL's path tail leaked into
+// likelyFiles. Both must be neutralised — it should still recommend `micro`.
 export const SWE_11095: SweIssueRecord = {
   repo: "django/django",
   instanceId: "django__django-11095",
@@ -97,7 +101,16 @@ export const SWE_11095: SweIssueRecord = {
     "Add ModelAdmin.get_inlines() hook to allow setting inlines based on the request or model "
     + "instance. Currently get_inline_instances() iterates self.inlines directly; introduce a "
     + "get_inlines(request, obj) method in django/contrib/admin/options.py that it calls.",
-  hintsText: null,
+  hintsText:
+    "This has come up a few times on the mailing list and there is a stalled patch at "
+    + "https://github.com/django/django/pull/7920 that adds the hook but never landed. "
+    + "The motivation: people repeatedly subclass get_inline_instances() just to vary the inline "
+    + "set per request or per object, which forces them to copy the permission-checking boilerplate "
+    + "from the base implementation. A dedicated get_inlines(request, obj=None) hook that returns "
+    + "self.inlines by default keeps get_inline_instances() responsible only for instantiating and "
+    + "permission-filtering, so overriding which inlines appear no longer means duplicating the "
+    + "instance construction. See the earlier discussion thread for the bikeshedding on the method "
+    + "name (get_inlines vs get_inline_classes) before it settled on get_inlines.",
   failToPass: [
     "tests.admin_inlines.tests.TestInline.test_get_inlines_override",
   ],

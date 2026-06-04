@@ -36,6 +36,12 @@ export interface ModeRecommendationSignals {
   failingTestCount: number;
   /** Combined problem statement + hints length, in characters. */
   problemLength: number;
+  /**
+   * Problem statement length ONLY (hints excluded), in characters. The micro
+   * gate keys off this: a long hints body describing background/repro should not
+   * make a small, local edit look medium-sized.
+   */
+  problemStatementLength: number;
   likelyFileCount: number;
   likelySymbolCount: number;
   /** Touches migrations/compiler/parser/autodetector/query internals. */
@@ -76,7 +82,11 @@ const CROSS_MODULE_PHRASES = /cross[- ]module|across modules|dependency behaviou
 export function recommendCapsuleMode(
   signals: ModeRecommendationSignals,
 ): ModeRecommendation {
-  const longIssue = signals.problemLength >= LONG_ISSUE_CHARS;
+  // Length-based escalation keys off the PROBLEM STATEMENT, not the combined
+  // body: a long hints section (repro logs, tracebacks, mailing-list quotes) is
+  // not itself a sign of a navigation-heavy task, and must not push a small local
+  // edit toward `full` any more than it should push it out of `micro`.
+  const longIssue = signals.problemStatementLength >= LONG_ISSUE_CHARS;
   const manyTargets =
     signals.likelyFileCount >= MANY_FILES || signals.likelySymbolCount >= MANY_SYMBOLS;
 
@@ -92,7 +102,7 @@ export function recommendCapsuleMode(
     signals.hasExplicitTargets
     && signals.failingTestCount <= 1
     && signals.likelyFileCount <= 1
-    && signals.problemLength < SHORT_ISSUE_CHARS;
+    && signals.problemStatementLength < SHORT_ISSUE_CHARS;
 
   if (explicitSingleTarget) {
     return {
@@ -166,6 +176,7 @@ export function deriveModeSignals(
   return {
     failingTestCount: shaped.failingTests.length,
     problemLength: prose.trim().length,
+    problemStatementLength: (record.problemStatement ?? "").trim().length,
     likelyFileCount: shaped.likelyFiles.length,
     likelySymbolCount: shaped.likelySymbols.length,
     touchesComplexInternals: COMPLEX_INTERNALS_PATTERNS.some((pattern) => pattern.test(haystack)),

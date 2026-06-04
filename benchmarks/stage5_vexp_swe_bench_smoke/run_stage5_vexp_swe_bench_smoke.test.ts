@@ -26,6 +26,7 @@ import {
   comparePairs,
   evaluateCondition,
   extractCapsuleContext,
+  extractInstanceContextSection,
   extractRow,
   findCanonicalResultsFile,
   findSweBenchRecord,
@@ -39,7 +40,9 @@ import {
   prepareIndexedContext,
   rawConditionDir,
   reductionPct,
+  renderCsv,
   renderMarkdown,
+  stampCapsuleDiagnostics,
   runEvaluate,
   runAggregateRuns,
   runIngest,
@@ -856,6 +859,148 @@ test("capsuleModeForInstance picks full for a migrations/autodetector issue", ()
     }),
   );
   assert.equal(mode, "full");
+});
+
+const SAMPLE_PATCH = [
+  "--- a/django/contrib/admin/options.py",
+  "+++ b/django/contrib/admin/options.py",
+  "@@ -580,6 +580,9 @@ class ModelAdmin(BaseModelAdmin):",
+  "+    def get_inlines(self, request, obj=None):",
+  "+        return self.inlines",
+  "--- a/tests/admin_inlines/tests.py",
+  "+++ b/tests/admin_inlines/tests.py",
+  "@@ -1,0 +2,1 @@",
+  "+    def test_get_inlines_override(self): pass",
+].join("\n");
+
+test("extractRow parses the final edited file/symbol from the model patch", () => {
+  const row = extractRow(
+    { instance_id: "django__django-11095", modelPatch: SAMPLE_PATCH },
+    "vtrace",
+    "raw/vtrace/r.json",
+  )!;
+  // Prefers the non-test source file and the added definition.
+  assert.equal(row.finalEditedFile, "django/contrib/admin/options.py");
+  assert.equal(row.finalEditedSymbol, "get_inlines");
+});
+
+test("extractInstanceContextSection pulls one instance's vtrace context block", () => {
+  const md = buildVtraceContextMarkdown(
+    [{ instance: sampleInstance(), rawContext: "file: admindocs/utils.py\nsymbol: replace_named_groups", error: null }],
+    { maxChars: 12000, maxItems: 8 },
+  ).markdown;
+  const section = extractInstanceContextSection(md, "django__django-11728");
+  assert.ok(section !== null);
+  assert.match(section!, /replace_named_groups/);
+  // Only the context block — not the Instruction footer or the Instance header.
+  assert.doesNotMatch(section!, /Use the vtrace context above/);
+  assert.doesNotMatch(section!, /instance_id:/);
+  assert.equal(extractInstanceContextSection(md, "django__django-99999"), null);
+});
+
+test("stampCapsuleDiagnostics records mode + containment for a vtrace row", async () => {
+  const out = await tmpDir("diag");
+  const dataFile = path.join(out, "swe.jsonl");
+  await writeFile(
+    dataFile,
+    `${JSON.stringify({
+      repo: "django/django",
+      instance_id: "django__django-11095",
+      base_commit: "abc",
+      problem_statement:
+        "Add ModelAdmin.get_inlines() hook in django/contrib/admin/options.py that "
+        + "get_inline_instances() calls instead of iterating self.inlines directly.",
+      hints_text: "Long discussion; see https://github.com/django/django/pull/7920 for the stalled patch. "
+        + "x".repeat(700),
+      FAIL_TO_PASS: '["tests.admin_inlines.tests.TestInline.test_get_inlines_override"]',
+    })}\n`,
+  );
+  const instructions = path.join(out, "_vtrace_instructions.md");
+  await writeFile(
+    instructions,
+    [
+      "## Instance",
+      "",
+      "- instance_id: django__django-11095",
+      "",
+      "## vtrace context",
+      "",
+      "likely edit targets: django/contrib/admin/options.py — ModelAdmin.get_inlines",
+      "",
+      "## Instruction",
+      "",
+    ].join("\n"),
+  );
+
+  const baseRow = extractRow(
+    { instance_id: "django__django-11095", modelPatch: SAMPLE_PATCH },
+    "vtrace",
+    "raw/vtrace/r.json",
+  )!;
+  const row: Stage5Row = { ...baseRow, vtraceInstructionsFile: instructions };
+
+  const [stamped] = await stampCapsuleDiagnostics([row], baseConfig({ out, sweBenchDataFile: dataFile }));
+
+  assert.equal(stamped!.recommendedMode, "micro"); // long hints + URL must not escalate it
+  assert.equal(stamped!.actualCapsuleMode, "micro");
+  assert.equal(stamped!.targetConfidence, "high"); // explicit file + symbols + a failing test
+  assert.equal(stamped!.topLikelyFile, "django/contrib/admin/options.py");
+  // The injected context named the file and symbol the model edited.
+  assert.equal(stamped!.containsFinalEditedFile, true);
+  assert.equal(stamped!.containsFinalEditedSymbol, true);
+});
+
+test("stampCapsuleDiagnostics leaves rows untouched when the dataset is unavailable", async () => {
+  const row = extractRow(
+    { instance_id: "django__django-11095", modelPatch: SAMPLE_PATCH },
+    "vtrace",
+    "raw/vtrace/r.json",
+  )!;
+  // No dataset path configured -> recommendation fields stay null (not fabricated).
+  const [stamped] = await stampCapsuleDiagnostics([row], baseConfig({ sweBenchDataFile: null, vexpSweBenchDir: null }));
+  assert.equal(stamped!.recommendedMode, null);
+  assert.equal(stamped!.containsFinalEditedFile, null);
+  // The patch-derived field still survives from extractRow.
+  assert.equal(stamped!.finalEditedFile, "django/contrib/admin/options.py");
+});
+
+test("renderCsv includes the capsule diagnostic columns and values", () => {
+  const row = extractRow(
+    { instance_id: "django__django-11095", modelPatch: SAMPLE_PATCH },
+    "vtrace",
+    "raw/vtrace/r.json",
+  )!;
+  const stamped: Stage5Row = {
+    ...row,
+    recommendedMode: "micro",
+    actualCapsuleMode: "micro",
+    targetConfidence: "medium",
+    retrievalReason: "Small/local task",
+    topLikelyFile: "django/contrib/admin/options.py",
+    topLikelySymbol: "get_inlines",
+    likelyTargetsCount: 1,
+    containsFinalEditedFile: true,
+    containsFinalEditedSymbol: true,
+    vtraceContextChars: 154,
+    vtraceContextItems: 3,
+  };
+  const csv = renderCsv([stamped]);
+  const [header, dataRow] = csv.trim().split("\n");
+  for (const col of [
+    "recommended_mode",
+    "actual_capsule_mode",
+    "target_confidence",
+    "top_likely_file",
+    "final_edited_file",
+    "contains_final_edited_file",
+    "context_chars",
+    "context_items",
+  ]) {
+    assert.ok(header!.includes(col), `header missing ${col}`);
+  }
+  assert.ok(dataRow!.includes("django/contrib/admin/options.py"));
+  assert.ok(dataRow!.includes("get_inlines"));
+  assert.ok(dataRow!.includes("true"));
 });
 
 test("extractCapsuleContext reads the context field from --json output and tolerates raw text", () => {
