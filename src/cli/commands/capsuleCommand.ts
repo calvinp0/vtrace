@@ -36,6 +36,12 @@ import {
   type CapsuleItem,
   type CapsuleSupportingCandidate,
 } from "../../capsule/types";
+import { buildCapsuleV2 } from "../../capsuleV2/buildCapsuleV2";
+import { renderCapsuleV2Human } from "../../capsuleV2/renderHuman";
+import {
+  CapsuleIntent,
+  parseCapsuleIntent,
+} from "../../capsuleV2/types";
 import { prepareCapsuleAssembly } from "../../capsuleProfiles/orchestrator";
 import { hasIndexedFiles } from "../../db/repositories/filesRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
@@ -53,7 +59,12 @@ import {
 } from "./helpers";
 
 const CAPSULE_USAGE =
-  "Usage: capsule <repo> <query> [--mode <micro|standard|full>] [--max-items <n>] [--max-chars <n>] [--json]";
+  "Usage: capsule <repo> <query> [--intent <auto|debug|refactor|impact|test-failure>] [--budget <tokens>]"
+  + " [--mode <micro|standard|full>] [--max-items <n>] [--max-chars <n>] [--json]";
+
+// The Capsule v2 product surface (`--intent`/`--budget`) defaults to an 8,000
+// token budget — generous enough for a couple of pivots plus a ring of support.
+const CAPSULE_V2_DEFAULT_BUDGET = 8_000;
 
 // Retained for callers (e.g. handoff) that build capsules without the capsule
 // command's mode plumbing. Unchanged from the original capsule defaults so
@@ -104,6 +115,19 @@ export async function runCapsuleCommand(
     try {
       if (!hasIndexedFiles(db)) {
         return failure(`Repo not indexed: ${repoRoot}`);
+      }
+
+      // Capsule v2 product surface: selected by `--intent` or `--budget`. The
+      // legacy `--mode` path below is left untouched for existing callers.
+      if (parsed.intent !== undefined || parsed.budget !== undefined) {
+        const result = buildCapsuleV2({
+          db,
+          repoRoot,
+          task: query,
+          intent: parsed.intent ?? CapsuleIntent.Auto,
+          maxTokens: parsed.budget ?? CAPSULE_V2_DEFAULT_BUDGET,
+        });
+        return success(json ? formatJson(result) : renderCapsuleV2Human(result));
       }
 
       const routedQuery = routeQuery(db, query, { maxResults: limits.maxItems });
@@ -510,6 +534,10 @@ interface ParsedCapsuleArgs {
   maxItems?: number;
   maxChars?: number;
   json: boolean;
+  /** Capsule v2 intent; presence of `--intent` or `--budget` selects v2. */
+  intent?: CapsuleIntent;
+  /** Capsule v2 token budget. */
+  budget?: number;
 }
 
 function parseCapsuleArgs(
@@ -518,6 +546,8 @@ function parseCapsuleArgs(
   let mode: CapsuleMode = DEFAULT_CAPSULE_MODE;
   let maxItems: number | undefined;
   let maxChars: number | undefined;
+  let intent: CapsuleIntent | undefined;
+  let budget: number | undefined;
   let json = false;
   const positional: string[] = [];
 
@@ -526,6 +556,28 @@ function parseCapsuleArgs(
 
     if (argument === "--json") {
       json = true;
+      continue;
+    }
+
+    if (argument === "--intent") {
+      const next = args[index + 1];
+      const resolved = typeof next === "string" ? parseCapsuleIntent(next) : undefined;
+      if (resolved === undefined) {
+        return { error: `--intent requires one of auto|debug|refactor|impact|test-failure. ${CAPSULE_USAGE}` };
+      }
+      intent = resolved;
+      index += 1;
+      continue;
+    }
+
+    if (argument === "--budget") {
+      const next = args[index + 1];
+      const value = typeof next === "string" ? Number(next) : NaN;
+      if (!Number.isInteger(value) || value <= 0) {
+        return { error: `--budget requires a positive integer token count. ${CAPSULE_USAGE}` };
+      }
+      budget = value;
+      index += 1;
       continue;
     }
 
@@ -577,6 +629,8 @@ function parseCapsuleArgs(
     mode,
     ...(maxItems === undefined ? {} : { maxItems }),
     ...(maxChars === undefined ? {} : { maxChars }),
+    ...(intent === undefined ? {} : { intent }),
+    ...(budget === undefined ? {} : { budget }),
     json,
   };
 }
