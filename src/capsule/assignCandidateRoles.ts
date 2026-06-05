@@ -81,6 +81,32 @@ export function assignCandidateRoles(
   });
 }
 
+// Two pivots are "close" when the runner-up's final score is at least this
+// fraction of the leader's: close enough that a single-pivot (micro) capsule
+// cannot decisively pick one over the other.
+export const PIVOT_AMBIGUITY_RATIO = 0.85;
+
+// True when two or more candidates independently clear the pivot bar with
+// comparable final scores (Requirement 2): the capsule cannot point at ONE
+// decisive edit target, so the caller should widen the mode or skip rather than
+// render two equally-likely micro targets. Run this on the UNCAPPED roles (no
+// `maxPivots`), so a runner-up demoted purely by the single-pivot cap still
+// counts toward ambiguity.
+export function detectPivotAmbiguity(uncappedRoled: readonly RoledCandidate[]): boolean {
+  const pivotScores = uncappedRoled
+    .filter((entry) => entry.role === CandidateRole.Pivot)
+    .map((entry) => entry.candidate.scores.final)
+    .sort((a, b) => b - a);
+  if (pivotScores.length < 2) {
+    return false;
+  }
+  const [top, second] = pivotScores;
+  if (top === undefined || second === undefined || top <= 0) {
+    return false;
+  }
+  return second / top >= PIVOT_AMBIGUITY_RATIO;
+}
+
 // Convenience: the pivots, in rank order.
 export function pivotsOf(roled: readonly RoledCandidate[]): HybridCandidate[] {
   return roled.filter((r) => r.role === CandidateRole.Pivot).map((r) => r.candidate);

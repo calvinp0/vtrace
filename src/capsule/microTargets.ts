@@ -27,6 +27,7 @@ import type { GraphExpansionOptions } from "../retrieval/graphExpansion";
 import {
   assignCandidateRoles,
   CandidateRole,
+  detectPivotAmbiguity,
   pivotsOf,
   supportOf,
   type RoledCandidate,
@@ -49,6 +50,12 @@ export interface MicroCapsuleRecovery {
   pivots: HybridCandidate[];
   /** Support context related to the pivots, in rank order. */
   support: HybridCandidate[];
+  /**
+   * True when two or more candidates clear the pivot bar with comparable scores
+   * (Requirement 2): a single-pivot micro capsule cannot decisively pick one, so
+   * the caller should recommend standard mode rather than render a coin-flip.
+   */
+  ambiguous: boolean;
 }
 
 // Micro is single-pivot by policy: one high-confidence edit target, or skip.
@@ -67,7 +74,7 @@ export function recoverMicroCapsule(
 ): MicroCapsuleRecovery {
   const maxTargets = options.maxTargets ?? DEFAULT_MAX_TARGETS;
   if (maxTargets <= 0) {
-    return { roled: [], pivots: [], support: [] };
+    return { roled: [], pivots: [], support: [], ambiguous: false };
   }
 
   const { candidates } = hybridRetrieve(db, {
@@ -77,6 +84,11 @@ export function recoverMicroCapsule(
     maxResults: options.poolSize ?? DEFAULT_POOL_SIZE,
     ...(options.expansion ? { expansion: options.expansion } : {}),
   });
+
+  // Ambiguity is judged on the UNCAPPED roles: a runner-up that would itself be a
+  // pivot (and is only demoted by the single-pivot cap) still makes the choice
+  // ambiguous, so it must be measured before the cap is applied.
+  const ambiguous = detectPivotAmbiguity(assignCandidateRoles(candidates));
 
   const assigned = assignCandidateRoles(candidates, { micro: true, maxPivots: maxTargets });
   // A micro capsule is tiny and high-precision: its support must be LOCALLY
@@ -90,7 +102,7 @@ export function recoverMicroCapsule(
       entry.role === CandidateRole.Pivot
       || (entry.role === CandidateRole.Support && entry.candidate.scores.localEvidence > 0),
   );
-  return { roled, pivots: pivotsOf(roled), support: supportOf(roled) };
+  return { roled, pivots: pivotsOf(roled), support: supportOf(roled), ambiguous };
 }
 
 // Back-compat thin wrapper: the recovered micro PIVOTS only.

@@ -162,6 +162,10 @@ export interface CapsuleDiagnosticFields {
   readonly actualCapsuleMode: string | null;
   readonly targetConfidence: string | null;
   readonly retrievalReason: string | null;
+  // How hard the agent should search before trusting the capsule (Requirement 5),
+  // captured verbatim from the capsule diagnostics. null on baseline rows.
+  readonly searchBudget: string | null;
+  readonly searchBudgetReason: string | null;
   readonly topLikelyFile: string | null;
   readonly topLikelySymbol: string | null;
   readonly likelyTargetsCount: number | null;
@@ -171,7 +175,22 @@ export interface CapsuleDiagnosticFields {
   readonly containsFinalEditedSymbol: boolean | null;
 }
 
-export interface Stage5Row extends IndexedContextFields, EvaluationFields, CapsuleDiagnosticFields {
+// Agent-compliance diagnostics (Requirement 6): did the agent actually follow the
+// capsule's "edit here first" directive? Derived from the agent's ORDERED tool
+// calls when the raw result carries them. SWE-bench result records usually report
+// only AGGREGATE tool counts (no ordering), so these honestly record "unknown"
+// rather than guess — the parser activates only when an ordered list is present.
+export interface AgentComplianceFields {
+  /** The capsule's lead pivot file the directive pointed at; null if unknown. */
+  readonly pivotFile: string | null;
+  readonly firstReadFile: string | "unknown" | null;
+  readonly firstEditFile: string | "unknown" | null;
+  readonly didReadPivotBeforeSearch: Unknownable<boolean> | null;
+  readonly didEditPivot: Unknownable<boolean> | null;
+  readonly searchCallsBeforePivot: Unknownable<number> | null;
+}
+
+export interface Stage5Row extends IndexedContextFields, EvaluationFields, CapsuleDiagnosticFields, AgentComplianceFields {
   readonly instanceId: string;
   readonly condition: Stage5Condition;
   readonly resolved: Unknownable<boolean>;
@@ -374,6 +393,8 @@ const CSV_COLUMNS = [
   "actual_capsule_mode",
   "target_confidence",
   "retrieval_reason",
+  "search_budget",
+  "search_budget_reason",
   "top_likely_file",
   "top_likely_symbol",
   "likely_targets_count",
@@ -381,6 +402,12 @@ const CSV_COLUMNS = [
   "final_edited_symbol",
   "contains_final_edited_file",
   "contains_final_edited_symbol",
+  "pivot_file",
+  "first_read_file",
+  "first_edit_file",
+  "did_read_pivot_before_search",
+  "did_edit_pivot",
+  "search_calls_before_pivot",
   "context_chars",
   "context_items",
   "error",
@@ -711,6 +738,93 @@ function accountToolCalls(value: unknown): { total: Unknownable<number>; breakdo
   return { total: counts.reduce((sum, count) => sum + count, 0), breakdown: JSON.stringify(value) };
 }
 
+// Tool-name classification for agent-compliance parsing (Requirement 6).
+const READ_TOOLS = new Set(["read", "view", "open", "cat", "readfile"]);
+const EDIT_TOOLS = new Set(["edit", "write", "str_replace", "str_replace_editor", "notebookedit", "apply_patch", "multiedit"]);
+const SEARCH_TOOLS = new Set(["grep", "glob", "search", "find", "ripgrep", "rg", "codebase_search", "ls"]);
+
+interface OrderedToolCall {
+  readonly tool: string;
+  readonly target: string | null;
+}
+
+// Pull an ORDERED tool-call sequence out of a result record, if one is present.
+// SWE-bench records usually carry only aggregate counts (an object), so this
+// returns null in that common case — the caller then records "unknown".
+function readOrderedToolCalls(record: Record<string, unknown>): OrderedToolCall[] | null {
+  const raw = pick(record, ["tool_calls", "toolCalls", "tool_uses", "toolUses", "tool_call_log", "actions"]);
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+
+  const calls: OrderedToolCall[] = [];
+  for (const entry of raw) {
+    if (!isRecord(entry)) continue;
+    const name = pick(entry, ["name", "tool", "tool_name", "type", "function"]);
+    if (!isString(name)) continue;
+    const input = pick(entry, ["input", "args", "arguments", "parameters", "params"]);
+    const target = isRecord(input)
+      ? (pick(input, ["file_path", "filePath", "path", "file", "filename", "notebook_path"]) as unknown)
+      : null;
+    calls.push({ tool: name.toLowerCase().trim(), target: isString(target) ? target : null });
+  }
+  return calls.length > 0 ? calls : null;
+}
+
+// True when `target` names the pivot file (exact, or by path-suffix so a relative
+// vs absolute mismatch still matches).
+function targetsFile(target: string | null, file: string): boolean {
+  if (target === null) return false;
+  return target === file || target.endsWith(`/${file}`) || file.endsWith(`/${target}`);
+}
+
+// Build the agent-compliance diagnostics for one result record (Requirement 6).
+// When the record carries an ordered tool-call list we report whether the agent
+// followed the capsule's "edit here first" directive; otherwise every signal is
+// "unknown" — we never guess from aggregate counts.
+export function buildAgentCompliance(
+  record: Record<string, unknown>,
+  pivotFile: string | null,
+): AgentComplianceFields {
+  const calls = readOrderedToolCalls(record);
+  if (calls === null) {
+    return { ...nullAgentComplianceFields(), pivotFile };
+  }
+
+  const firstReadFile = calls.find((call) => READ_TOOLS.has(call.tool) && call.target !== null)?.target ?? "unknown";
+  const firstEditFile = calls.find((call) => EDIT_TOOLS.has(call.tool) && call.target !== null)?.target ?? "unknown";
+
+  // Pivot-relative signals require knowing which file the directive pointed at.
+  if (pivotFile === null) {
+    return {
+      pivotFile: null,
+      firstReadFile,
+      firstEditFile,
+      didReadPivotBeforeSearch: "unknown",
+      didEditPivot: "unknown",
+      searchCallsBeforePivot: "unknown",
+    };
+  }
+
+  const firstSearchIdx = calls.findIndex((call) => SEARCH_TOOLS.has(call.tool));
+  const firstPivotTouchIdx = calls.findIndex(
+    (call) => (READ_TOOLS.has(call.tool) || EDIT_TOOLS.has(call.tool)) && targetsFile(call.target, pivotFile),
+  );
+  const didEditPivot = calls.some((call) => EDIT_TOOLS.has(call.tool) && targetsFile(call.target, pivotFile));
+  const didReadPivotBeforeSearch =
+    firstPivotTouchIdx !== -1 && (firstSearchIdx === -1 || firstPivotTouchIdx < firstSearchIdx);
+  const searchCallsBeforePivot = calls
+    .slice(0, firstPivotTouchIdx === -1 ? calls.length : firstPivotTouchIdx)
+    .filter((call) => SEARCH_TOOLS.has(call.tool)).length;
+
+  return {
+    pivotFile,
+    firstReadFile,
+    firstEditFile,
+    didReadPivotBeforeSearch,
+    didEditPivot,
+    searchCallsBeforePivot,
+  };
+}
+
 export function extractRow(
   record: Record<string, unknown>,
   condition: Stage5Condition,
@@ -789,6 +903,9 @@ export function extractRow(
     ...nullIndexedContextFields(),
     ...nullEvaluationFields(),
     ...nullCapsuleDiagnosticFields(),
+    // Agent-compliance: parsed from the record's ordered tool calls when present
+    // (pivot-relative fields are re-stamped once the pivot file is known).
+    ...buildAgentCompliance(record, null),
     finalEditedFile,
     finalEditedSymbol,
     error: isString(errorValue) ? errorValue : null,
@@ -1489,6 +1606,10 @@ export interface CapsuleClassification {
   readonly actualCapsuleMode: string | null;
   readonly pivotCount: number | null;
   readonly supportCount: number | null;
+  // How hard the agent should search before trusting the capsule (Requirement 5),
+  // captured verbatim from the capsule diagnostics. null when not reported.
+  readonly searchBudget: string | null;
+  readonly searchBudgetReason: string | null;
   /** Set only when policyAction === "error" (genuinely unusable output). */
   readonly error: string | null;
 }
@@ -1526,33 +1647,53 @@ export function classifyCapsuleOutput(stdout: string): CapsuleClassification {
   const pivotCount = isNumber(diagnostics.pivot_count) ? diagnostics.pivot_count : null;
   const supportCount = isNumber(diagnostics.support_count) ? diagnostics.support_count : null;
   const reason = isString(diagnostics.retrieval_reason) ? diagnostics.retrieval_reason : null;
+  const searchBudget = isString(diagnostics.search_budget) ? diagnostics.search_budget : null;
+  const searchBudgetReason = isString(diagnostics.search_budget_reason) ? diagnostics.search_budget_reason : null;
 
-  // Real context present → inject it, regardless of mode labels.
-  if (context.length > 0) {
-    return injectClassification(context, recommendedMode, actualMode, pivotCount, supportCount);
+  // A `skip` mode is AUTHORITATIVE, even when the CLI emitted a human-facing
+  // directive ("No high-confidence edit target recovered…") as the context body:
+  // a skip injects no oriented context. Checked before the context test so the
+  // skip directive is never mistaken for a real treatment.
+  if (recommendedMode === "skip" || actualMode === "skip") {
+    return skipClassification(reason, recommendedMode, actualMode, pivotCount, supportCount, searchBudget, searchBudgetReason);
   }
 
-  // Empty context: a deliberate skip iff the diagnostics say so.
-  const isSkip =
-    recommendedMode === "skip"
-    || actualMode === "skip"
-    || (pivotCount === 0 && reason !== null);
-  if (isSkip) {
-    return {
-      policyAction: "skip",
-      contextInjected: false,
-      context: "",
-      skipReason: reason ?? "no high-confidence actionable target recovered",
-      recommendedMode,
-      actualCapsuleMode: actualMode ?? "skip",
-      pivotCount: pivotCount ?? 0,
-      supportCount: supportCount ?? 0,
-      error: null,
-    };
+  // Real context present → inject it.
+  if (context.length > 0) {
+    return injectClassification(context, recommendedMode, actualMode, pivotCount, supportCount, searchBudget, searchBudgetReason);
+  }
+
+  // Empty context with no skip mode: a deliberate skip iff pivot_count 0 + reason.
+  if (pivotCount === 0 && reason !== null) {
+    return skipClassification(reason, recommendedMode, actualMode, pivotCount, supportCount, searchBudget, searchBudgetReason);
   }
 
   // Empty context with no skip signal: a genuine failure — fail fast.
   return errorClassification("vtrace query returned empty context.");
+}
+
+function skipClassification(
+  reason: string | null,
+  recommendedMode: string | null,
+  actualMode: string | null,
+  pivotCount: number | null,
+  supportCount: number | null,
+  searchBudget: string | null = "high",
+  searchBudgetReason: string | null = null,
+): CapsuleClassification {
+  return {
+    policyAction: "skip",
+    contextInjected: false,
+    context: "",
+    skipReason: reason ?? "no high-confidence actionable target recovered",
+    recommendedMode,
+    actualCapsuleMode: actualMode ?? "skip",
+    pivotCount: pivotCount ?? 0,
+    supportCount: supportCount ?? 0,
+    searchBudget,
+    searchBudgetReason,
+    error: null,
+  };
 }
 
 function injectClassification(
@@ -1561,6 +1702,8 @@ function injectClassification(
   actualMode: string | null,
   pivotCount: number | null,
   supportCount: number | null,
+  searchBudget: string | null = null,
+  searchBudgetReason: string | null = null,
 ): CapsuleClassification {
   return {
     policyAction: "inject",
@@ -1571,6 +1714,8 @@ function injectClassification(
     actualCapsuleMode: actualMode,
     pivotCount,
     supportCount,
+    searchBudget,
+    searchBudgetReason,
     error: null,
   };
 }
@@ -1585,6 +1730,8 @@ function errorClassification(message: string): CapsuleClassification {
     actualCapsuleMode: null,
     pivotCount: null,
     supportCount: null,
+    searchBudget: null,
+    searchBudgetReason: null,
     error: message,
   };
 }
@@ -2020,7 +2167,12 @@ export async function stampCapsuleDiagnostics(
     const skipped = row.condition === "vtrace" && row.vtracePolicyAction === "skip";
     const record = row.condition === "vtrace" ? recordsById.get(row.instanceId) : undefined;
     if (record === undefined) {
-      out.push(skipped ? { ...row, actualCapsuleMode: "skip", recommendedMode: row.recommendedMode ?? "skip" } : row);
+      // A skip is always a high search budget (no target to trust).
+      out.push(
+        skipped
+          ? { ...row, actualCapsuleMode: "skip", recommendedMode: row.recommendedMode ?? "skip", searchBudget: row.searchBudget ?? "high" }
+          : row,
+      );
       continue;
     }
     let instance: SweBenchInstance;
@@ -2038,12 +2190,17 @@ export async function stampCapsuleDiagnostics(
 
     // When vtrace exercised its valid no-context policy, the ACTUAL capsule mode
     // is skip — not the micro envelope the recommendation degrades to.
+    // The likely target the capsule directive would point at; also the pivot file
+    // for agent-compliance (Requirement 6). A skip points at nothing.
+    const pivotFile = skipped ? null : (shaped.likelyFiles[0] ?? null);
     out.push({
       ...row,
       recommendedMode: recommendation.recommendedMode,
       actualCapsuleMode: skipped ? "skip" : capsuleModeForInstance(instance),
       targetConfidence: recommendation.targetConfidence,
       retrievalReason: recommendation.retrievalReason,
+      ...(skipped ? { searchBudget: row.searchBudget ?? "high" } : {}),
+      pivotFile,
       topLikelyFile: shaped.likelyFiles[0] ?? null,
       topLikelySymbol: shaped.likelySymbols[0] ?? null,
       likelyTargetsCount: shaped.likelyFiles.length,
@@ -2458,6 +2615,14 @@ function mergeRow(base: Stage5Row, next: Stage5Row): Stage5Row {
     repo: base.repo ?? next.repo,
     finalEditedFile: base.finalEditedFile ?? next.finalEditedFile,
     finalEditedSymbol: base.finalEditedSymbol ?? next.finalEditedSymbol,
+    searchBudget: base.searchBudget ?? next.searchBudget,
+    searchBudgetReason: base.searchBudgetReason ?? next.searchBudgetReason,
+    pivotFile: base.pivotFile ?? next.pivotFile,
+    firstReadFile: base.firstReadFile === "unknown" ? next.firstReadFile : base.firstReadFile,
+    firstEditFile: base.firstEditFile === "unknown" ? next.firstEditFile : base.firstEditFile,
+    didReadPivotBeforeSearch: fill(base.didReadPivotBeforeSearch ?? "unknown", next.didReadPivotBeforeSearch ?? "unknown"),
+    didEditPivot: fill(base.didEditPivot ?? "unknown", next.didEditPivot ?? "unknown"),
+    searchCallsBeforePivot: fill(base.searchCallsBeforePivot ?? "unknown", next.searchCallsBeforePivot ?? "unknown"),
     error: base.error ?? next.error,
     parserKind: base.parserKind === "unknown" ? next.parserKind : base.parserKind,
     notes: [...new Set([...base.notes, ...next.notes])],
@@ -2553,6 +2718,8 @@ function nullCapsuleDiagnosticFields(): CapsuleDiagnosticFields {
     actualCapsuleMode: null,
     targetConfidence: null,
     retrievalReason: null,
+    searchBudget: null,
+    searchBudgetReason: null,
     topLikelyFile: null,
     topLikelySymbol: null,
     likelyTargetsCount: null,
@@ -2560,6 +2727,19 @@ function nullCapsuleDiagnosticFields(): CapsuleDiagnosticFields {
     finalEditedSymbol: null,
     containsFinalEditedFile: null,
     containsFinalEditedSymbol: null,
+  };
+}
+
+// Agent-compliance fields default to "unknown" (or null for the pivot/file fields)
+// — the honest state when the result record carries no ORDERED tool-call list.
+function nullAgentComplianceFields(): AgentComplianceFields {
+  return {
+    pivotFile: null,
+    firstReadFile: "unknown",
+    firstEditFile: "unknown",
+    didReadPivotBeforeSearch: "unknown",
+    didEditPivot: "unknown",
+    searchCallsBeforePivot: "unknown",
   };
 }
 
@@ -2841,6 +3021,8 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         row.actualCapsuleMode ?? "",
         row.targetConfidence ?? "",
         row.retrievalReason ?? "",
+        row.searchBudget ?? "",
+        row.searchBudgetReason ?? "",
         row.topLikelyFile ?? "",
         row.topLikelySymbol ?? "",
         row.likelyTargetsCount === null ? "" : String(row.likelyTargetsCount),
@@ -2848,6 +3030,12 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         row.finalEditedSymbol ?? "",
         row.containsFinalEditedFile === null ? "" : String(row.containsFinalEditedFile),
         row.containsFinalEditedSymbol === null ? "" : String(row.containsFinalEditedSymbol),
+        row.pivotFile ?? "",
+        row.firstReadFile === null ? "" : String(row.firstReadFile),
+        row.firstEditFile === null ? "" : String(row.firstEditFile),
+        row.didReadPivotBeforeSearch === null ? "" : String(row.didReadPivotBeforeSearch),
+        row.didEditPivot === null ? "" : String(row.didEditPivot),
+        row.searchCallsBeforePivot === null ? "" : String(row.searchCallsBeforePivot),
         row.vtraceContextChars === null ? "" : String(row.vtraceContextChars),
         row.vtraceContextItems === null ? "" : String(row.vtraceContextItems),
         row.error ?? "",

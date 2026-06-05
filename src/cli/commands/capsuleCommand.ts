@@ -14,6 +14,7 @@ import {
 } from "../../capsule/capsuleModes";
 import { recoverMicroCapsule, type MicroCapsuleRecovery } from "../../capsule/microTargets";
 import { CandidateRole, type RoledCandidate } from "../../capsule/assignCandidateRoles";
+import { composeCapsuleDirective } from "../../capsule/capsuleDirective";
 import {
   deriveModeSignals,
   recommendCapsuleMode,
@@ -53,6 +54,10 @@ export const CAPSULE_COMMAND_DEFAULTS = Object.freeze({
   maxBudgetCharacters: 2_000,
   maxResults: 6,
 });
+
+// Micro mode carries at most one support item (one pivot + one support): a tiny
+// capsule must be decisive, not a second "maybe edit here" (Requirement 2).
+const MICRO_MAX_SUPPORT = 1;
 
 export async function runCapsuleCommand(
   args: readonly string[],
@@ -111,14 +116,16 @@ export async function runCapsuleCommand(
       }
 
       // Micro: pivots are the recovered edit targets; support is the related
-      // context (rendered skeleton-only), filling the remaining item budget.
-      // Other modes keep the routed candidates (pivot + structural support).
+      // context (rendered skeleton-only). Micro is one-pivot / one-support by
+      // policy (Requirement 2) so the tiny capsule names a single decisive edit
+      // site, never two equally-likely targets. Other modes keep the routed
+      // candidates (pivot + structural support).
       const pivotCandidates: readonly GraphSearchResult[] = recovery !== undefined
         ? recovery.pivots.map(hybridCandidateToGraphResult)
         : routedQuery.rerankedResults;
       const supportingCandidates: readonly CapsuleSupportingCandidate[] = recovery !== undefined
         ? recovery.support
-          .slice(0, Math.max(0, limits.maxItems - pivotCandidates.length))
+          .slice(0, Math.max(0, Math.min(MICRO_MAX_SUPPORT, limits.maxItems - pivotCandidates.length)))
           .map(hybridCandidateToSupportingCandidate)
         : pivotCandidates.map(makeSupportingCandidateFromGraphResult);
 
@@ -142,6 +149,8 @@ export async function runCapsuleCommand(
         const compact = renderCompactCapsule(capsule, {
           maxChars: limits.maxChars,
           reason: diagnostics.retrieval_reason,
+          actionHeader: diagnostics.action_header,
+          searchBudget: diagnostics.search_budget,
         });
         // Diagnostics carry the actually-emitted context size.
         const emitted: CapsuleDiagnostics = {
@@ -179,7 +188,7 @@ function computeDiagnostics(
   shaped: ShapedSweQuery,
   recovery: MicroCapsuleRecovery | undefined,
 ): CapsuleDiagnostics {
-  const recommendation = recommendCapsuleMode(deriveModeSignals({ problemStatement: query }, shaped));
+  let recommendation = recommendCapsuleMode(deriveModeSignals({ problemStatement: query }, shaped));
 
   const pivots = recovery?.pivots ?? [];
   const recoveredFiles = pivots.map((target) => target.filePath);
@@ -194,6 +203,32 @@ function computeDiagnostics(
     ? selectionFromRoledCandidates(recovery.roled)
     : selectionFromCapsule(capsule);
 
+  // Compose the decisive action header + search budget from the capsule's lead
+  // pivot (what the agent actually sees) and the task's confidence/ambiguity. An
+  // ambiguous micro recovery downgrades the recommendation to standard rather
+  // than presenting a single coin-flip target (Requirement 1/2/4/5).
+  const leadPivotItem = capsule.pivots[0];
+  const leadSelection = selection.find((entry) => entry.role === "pivot");
+  const directive = composeCapsuleDirective({
+    shaped,
+    ...(leadPivotItem !== undefined
+      ? {
+          pivot: {
+            filePath: leadPivotItem.filePath,
+            localName: leadPivotItem.localName,
+            evidence: leadSelection?.evidence ?? [],
+            directEvidence: hasDirectEvidence(leadSelection),
+          },
+        }
+      : {}),
+    confidence: recommendation.targetConfidence,
+    ambiguous: recovery?.ambiguous ?? false,
+  });
+
+  if (directive.recommendedModeOverride !== undefined) {
+    recommendation = { ...recommendation, recommendedMode: directive.recommendedModeOverride };
+  }
+
   return buildCapsuleDiagnostics({
     mode,
     capsule,
@@ -202,7 +237,22 @@ function computeDiagnostics(
     ...(likelyFiles.length > 0 ? { likelyFiles } : {}),
     ...(likelySymbols.length > 0 ? { likelySymbols } : {}),
     ...(selection.length > 0 ? { selection } : {}),
+    searchBudget: directive.searchBudget,
+    searchBudgetReason: directive.searchBudgetReason,
+    actionHeader: directive.actionHeader,
   });
+}
+
+// A pivot has DIRECT evidence when a concrete pointer (failing-test reach,
+// symbol-name match, or likely-file match) fired — as opposed to graph/domain
+// reach alone. Drives the low search budget (Requirement 5). Non-micro capsule
+// items carry no scorecard, so they report no direct evidence here.
+function hasDirectEvidence(selection: CapsuleSelectionDiagnostic | undefined): boolean {
+  if (selection === undefined) {
+    return false;
+  }
+  const scores = selection.scores;
+  return scores.testToImpl > 0 || scores.symbol > 0 || scores.path > 0;
 }
 
 // Micro mode found no implementation target. Emit a skip recommendation with no
@@ -212,6 +262,17 @@ function emitMicroSkip(json: boolean): CommandResult {
   const reason =
     "no high-confidence actionable target recovered — recommending skip rather than "
     + "emitting vague support-only or misdirecting context.";
+  // The skip is still a decisive directive: tell the agent, in the capsule body,
+  // NOT to inject context for this task (Requirement 1). The benchmark treats a
+  // `skip` actual_mode as authoritative, so this directive is never mistaken for
+  // injected oriented context.
+  const context = [
+    "# vtrace context",
+    "",
+    "## Recommended first action",
+    "",
+    "No high-confidence edit target recovered. Do not inject context for this task.",
+  ].join("\n");
   const diagnostics: CapsuleDiagnostics = {
     mode: CapsuleMode.Micro,
     context_chars: 0,
@@ -224,10 +285,19 @@ function emitMicroSkip(json: boolean): CommandResult {
     likely_files: [],
     likely_symbols: [],
     retrieval_reason: reason,
+    search_budget: "high",
+    search_budget_reason: "No high-confidence pivot recovered; broad search or skip.",
+    action_header: {
+      has_target: false,
+      pivot_file: null,
+      pivot_symbol: null,
+      why: [],
+      edit_intent_hint: null,
+    },
   };
 
   if (json) {
-    return success(formatJson({ diagnostics, context: "" }));
+    return success(formatJson({ diagnostics, context }));
   }
   return success(`micro: skip — ${reason}`);
 }

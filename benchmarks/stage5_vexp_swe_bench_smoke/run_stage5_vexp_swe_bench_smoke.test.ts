@@ -20,6 +20,7 @@ import {
   buildVtracePatchBlock,
   buildVtraceQueryCommand,
   buildVtraceCommand,
+  buildAgentCompliance,
   capsuleModeForInstance,
   classifyCapsuleOutput,
   classifyOutcome,
@@ -1666,6 +1667,77 @@ test("classifyCapsuleOutput treats a no-context skip payload as a valid skip, no
   const err = classifyCapsuleOutput(JSON.stringify({ diagnostics: { mode: "micro" }, context: "" }));
   assert.equal(err.policyAction, "error");
   assert.match(err.error ?? "", /empty context/);
+});
+
+test("classifyCapsuleOutput treats a skip directive body as skip, not injected context", () => {
+  // The capsule CLI now emits a human-facing "do not inject" directive as context
+  // on a skip. The `skip` mode must remain authoritative so the directive is not
+  // mistaken for an injected treatment.
+  const skip = classifyCapsuleOutput(
+    JSON.stringify({
+      diagnostics: { recommended_mode: "skip", actual_mode: "skip", pivot_count: 0, search_budget: "high" },
+      context: "# vtrace context\n\n## Recommended first action\n\nNo high-confidence edit target recovered. Do not inject context for this task.",
+    }),
+  );
+  assert.equal(skip.policyAction, "skip");
+  assert.equal(skip.contextInjected, false);
+  assert.equal(skip.context, "");
+  assert.equal(skip.searchBudget, "high");
+});
+
+test("classifyCapsuleOutput captures the search budget from the diagnostics", () => {
+  const inject = classifyCapsuleOutput(
+    JSON.stringify({
+      diagnostics: { recommended_mode: "micro", pivot_count: 1, search_budget: "low", search_budget_reason: "direct evidence" },
+      context: "# vtrace context\nfoo",
+    }),
+  );
+  assert.equal(inject.policyAction, "inject");
+  assert.equal(inject.searchBudget, "low");
+  assert.equal(inject.searchBudgetReason, "direct evidence");
+});
+
+// ----- Stage 5: agent-compliance diagnostics (Requirement 6) -----
+
+test("buildAgentCompliance records unknown when the record has no ordered tool calls", () => {
+  // SWE-bench records usually carry only aggregate counts — never guess from those.
+  const fields = buildAgentCompliance({ tool_calls: { Read: 3, Edit: 1, Grep: 5 } }, "django/db/models/aggregates.py");
+  assert.equal(fields.pivotFile, "django/db/models/aggregates.py");
+  assert.equal(fields.firstReadFile, "unknown");
+  assert.equal(fields.didReadPivotBeforeSearch, "unknown");
+  assert.equal(fields.didEditPivot, "unknown");
+  assert.equal(fields.searchCallsBeforePivot, "unknown");
+});
+
+test("buildAgentCompliance derives the compliance signals from an ordered tool-call list", () => {
+  const record = {
+    tool_calls: [
+      { name: "Read", input: { file_path: "django/db/models/aggregates.py" } },
+      { name: "Grep", input: { pattern: "distinct" } },
+      { name: "Edit", input: { file_path: "django/db/models/aggregates.py" } },
+    ],
+  };
+  const fields = buildAgentCompliance(record, "django/db/models/aggregates.py");
+  assert.equal(fields.firstReadFile, "django/db/models/aggregates.py");
+  assert.equal(fields.firstEditFile, "django/db/models/aggregates.py");
+  // The pivot was read FIRST, before any search — the directive was followed.
+  assert.equal(fields.didReadPivotBeforeSearch, true);
+  assert.equal(fields.didEditPivot, true);
+  assert.equal(fields.searchCallsBeforePivot, 0);
+});
+
+test("buildAgentCompliance counts searches that preceded the pivot when the directive was ignored", () => {
+  const record = {
+    toolCalls: [
+      { tool: "grep", args: { pattern: "Count" } },
+      { tool: "glob", args: { pattern: "**/*.py" } },
+      { tool: "read", args: { file_path: "django/db/models/aggregates.py" } },
+    ],
+  };
+  const fields = buildAgentCompliance(record, "django/db/models/aggregates.py");
+  assert.equal(fields.didReadPivotBeforeSearch, false);
+  assert.equal(fields.searchCallsBeforePivot, 2);
+  assert.equal(fields.didEditPivot, false);
 });
 
 test("prepareIndexedContext records a capsule skip as a valid policy (not an error)", async () => {

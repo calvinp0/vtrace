@@ -1149,6 +1149,57 @@ test("init followed by capsule succeeds on the same repo and resolution remains 
   });
 });
 
+test("capsule --mode micro --json returns a skip directive (not empty context) when no pivot is recovered", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["init", repoRoot]);
+
+    const result = await runCli(["capsule", repoRoot, "zzqq nonexistent xyzzy gibberish", "--mode", "micro", "--json"]);
+    assert.equal(result.exitCode, 0);
+
+    const output = JSON.parse(result.stdout);
+    // A no-pivot micro task is a VALID skip decision, surfaced via the diagnostics.
+    assert.equal(output.diagnostics.actual_mode, "skip");
+    assert.equal(output.diagnostics.recommended_mode, "skip");
+    assert.equal(output.diagnostics.pivot_count, 0);
+    assert.equal(output.diagnostics.search_budget, "high");
+    assert.equal(output.diagnostics.action_header.has_target, false);
+    // The body carries a decisive "do not inject context" directive rather than an
+    // empty/misdirecting capsule (Requirement 1).
+    assert.match(output.context, /## Recommended first action/);
+    assert.match(output.context, /Do not inject context for this task\./);
+  });
+});
+
+test("capsule --mode micro --json leads with a decisive action header when a pivot is recovered", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["init", repoRoot]);
+
+    const result = await runCli(["capsule", repoRoot, "SessionManager createSession", "--mode", "micro", "--json"]);
+    assert.equal(result.exitCode, 0);
+    const output = JSON.parse(result.stdout);
+
+    // Either a decisive injected target or an honest skip — never a vague capsule.
+    if (output.diagnostics.actual_mode === "skip") {
+      assert.equal(output.diagnostics.action_header.has_target, false);
+      return;
+    }
+    assert.equal(output.diagnostics.action_header.has_target, true);
+    assert.ok(output.diagnostics.action_header.pivot_file.length > 0);
+    assert.ok(output.diagnostics.action_header.pivot_symbol.length > 0);
+    // Micro is one-pivot / one-support by policy (Requirement 2).
+    assert.equal(output.diagnostics.pivot_count, 1);
+    assert.ok(output.diagnostics.support_count <= 1);
+    assert.match(output.context, /## Recommended first action/);
+    assert.match(output.context, /Open\/edit `.+::.+` first\./);
+    // The support section, when present, is explicitly not an edit target.
+    if (output.context.includes("## Support context")) {
+      assert.match(output.context, /## Support context — do not edit first/);
+    }
+  });
+});
+
 test("init followed by handoff succeeds on the same repo", async () => {
   await withFixture(async ({ repoRoot }) => {
     await writeCapsuleFixtureRepo(repoRoot);
@@ -1620,7 +1671,14 @@ test("capsule --mode micro recommends skip rather than emitting an empty capsule
     assert.equal(out.diagnostics.recommended_mode, "skip");
     assert.equal(out.diagnostics.context_items, 0);
     assert.deepEqual(out.diagnostics.likely_files, []);
-    assert.equal(out.context, "");
+    // No oriented context is injected — context_items is 0 and the action header
+    // has no target — but the body carries a decisive "do not inject" directive
+    // rather than being silently empty (Requirement 1). The benchmark keys the
+    // skip off `actual_mode`, not emptiness, so this is still a valid no-context
+    // policy.
+    assert.equal(out.diagnostics.actual_mode, "skip");
+    assert.equal(out.diagnostics.action_header.has_target, false);
+    assert.match(out.context, /Do not inject context for this task\./);
   });
 });
 
