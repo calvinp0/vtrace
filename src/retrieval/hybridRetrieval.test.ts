@@ -12,11 +12,14 @@ const SCORE_KEYS = [
   "tfidf",
   "symbol",
   "path",
+  "domain",
   "graph",
   "centrality",
+  "actionability",
   "inDegree",
   "localEvidence",
   "hubPenalty",
+  "actionabilityPenalty",
   "final",
 ] as const;
 
@@ -164,6 +167,71 @@ test("a high-centrality hub with no local evidence is penalized and outranked", 
     const modelIndex = candidates.findIndex((c) => c.symbolId === ids.model);
     assert.ok(aggregateIndex !== -1 && aggregateIndex < modelIndex,
       `aggregates.py (#${aggregateIndex}) should rank before base.py::Model (#${modelIndex})`);
+  } finally {
+    db.close();
+  }
+});
+
+test("candidates are sorted strictly by final score", () => {
+  const db = openIndexerDatabase();
+  try {
+    seedHybridDjangoFixture(db);
+    const shaped = shapeSweQuery({
+      problemStatement: "Count annotation distinct aggregation produces wrong SQL",
+      failToPass: [
+        "tests/aggregation/tests.py::AggregateTestCase::test_count_distinct_expression",
+      ],
+    });
+
+    const { candidates } = hybridRetrieve(db, { query: shaped.query, shaped, maxResults: 20 });
+    for (let index = 1; index < candidates.length; index += 1) {
+      assert.ok(
+        candidates[index - 1]!.scores.final >= candidates[index]!.scores.final,
+        `candidate #${index - 1} final must be >= #${index}`,
+      );
+    }
+  } finally {
+    db.close();
+  }
+});
+
+test("a low-actionability module variable ranks below the actionable aggregate target", () => {
+  const db = openIndexerDatabase();
+  try {
+    const ids = seedHybridDjangoFixture(db);
+    // 10880-style: a SQL-flavoured aggregate task. The sql/subqueries.py
+    // `compiler` module variable matches on the "sql" path segment and is
+    // graph-reachable, but it is a string constant, not an edit target.
+    const shaped = shapeSweQuery({
+      problemStatement: "Count annotation with distinct=True produces wrong SQL in aggregates",
+      failToPass: [
+        "tests/aggregation/tests.py::AggregateTestCase::test_count_distinct_expression",
+      ],
+    });
+
+    const { candidates } = hybridRetrieve(db, { query: shaped.query, shaped, maxResults: 20 });
+    const compiler = candidates.find((c) => c.symbolId === ids.compilerVar);
+    assert.ok(compiler, "expected the compiler module variable to enter the pool");
+
+    // It is flagged low-actionability and penalized.
+    assert.equal(compiler?.scores.actionability, 0);
+    assert.ok((compiler?.scores.actionabilityPenalty ?? 0) > 0, "module var should be penalized");
+    assert.ok(
+      compiler?.evidence.some((line) => /low-actionability/.test(line)),
+      "penalty should be explained in evidence",
+    );
+
+    // An actionable aggregate symbol (method/class) ranks above it.
+    const aggregateIndex = candidates.findIndex(
+      (c) => c.filePath.includes("aggregates.py") && c.scores.actionability === 1,
+    );
+    const compilerIndex = candidates.findIndex((c) => c.symbolId === ids.compilerVar);
+    assert.ok(aggregateIndex !== -1 && aggregateIndex < compilerIndex,
+      `an aggregate target (#${aggregateIndex}) must rank before compiler (#${compilerIndex})`);
+    assert.ok(
+      (candidates[aggregateIndex]?.scores.final ?? 0) > (compiler?.scores.final ?? 0),
+      "the aggregate target must have a higher final score",
+    );
   } finally {
     db.close();
   }

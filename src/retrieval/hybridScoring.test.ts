@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "bun:test";
 
+import { SymbolKind } from "../domain/types";
 import {
   blendLexical,
   combineFinalScore,
   computeBm25Scores,
+  computeDomainRaw,
+  evaluateActionability,
   normalizeAgainst,
   tokenize,
 } from "./hybridScoring";
@@ -52,7 +55,58 @@ test("normalizeAgainst maps to [0, 1] and guards a zero max", () => {
 
 test("final score is a plain weighted sum that excludes the raw lexical sub-signals", () => {
   const lexical = blendLexical(1, 0); // 0.65
-  const final = combineFinalScore({ lexical, symbol: 1, path: 0, graph: 0, centrality: 0 });
+  const final = combineFinalScore({ lexical, symbol: 1, path: 0, domain: 0, graph: 0, centrality: 0 });
   // default weights: lexical 1.0, symbol 1.2 -> 0.65 + 1.2 = 1.85
   assert.ok(Math.abs(final - (0.65 + 1.2)) < 1e-9);
+});
+
+test("domain relevance stem-matches query terms against path and name tokens", () => {
+  const aggregate = {
+    localName: "Aggregate",
+    fqName: "django/db/models/aggregates.py::Aggregate",
+    filePath: "django/db/models/aggregates.py",
+  };
+  // "aggregation"/"aggregate" stem-match the path token "aggregates".
+  assert.ok(computeDomainRaw("Count annotation aggregation distinct", aggregate) > 0);
+  // An unrelated query has no domain overlap.
+  assert.equal(computeDomainRaw("serialize json template widget", aggregate), 0);
+  // Structural query labels ("failing tests:", "issue:") are stopworded out.
+  assert.equal(computeDomainRaw("failing tests issue files symbols", aggregate), 0);
+});
+
+test("module variables are low actionability and penalized without strong evidence", () => {
+  const stripped = { graphContribution: 1.0, domainContribution: 0.9 };
+
+  // A module variable riding graph/domain with weak lexical, no symbol/path.
+  const weak = evaluateActionability({
+    kind: SymbolKind.ModuleVariable,
+    lexical: 0.2,
+    symbol: 0,
+    path: 0,
+    ...stripped,
+  });
+  assert.equal(weak.actionability, 0);
+  assert.ok(weak.penalty > 0, "low-actionability symbol without strong evidence is penalized");
+  assert.ok(Math.abs(weak.penalty - (1.0 + 0.9)) < 1e-9, "penalty strips graph + domain");
+
+  // A function is actionable and never penalized.
+  const method = evaluateActionability({
+    kind: SymbolKind.Method,
+    lexical: 0,
+    symbol: 0,
+    path: 0,
+    ...stripped,
+  });
+  assert.equal(method.actionability, 1);
+  assert.equal(method.penalty, 0);
+
+  // A module variable WITH strong direct evidence (a symbol-name match) is spared.
+  const strong = evaluateActionability({
+    kind: SymbolKind.ModuleVariable,
+    lexical: 0,
+    symbol: 1,
+    path: 0,
+    ...stripped,
+  });
+  assert.equal(strong.penalty, 0);
 });

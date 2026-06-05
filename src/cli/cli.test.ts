@@ -1504,6 +1504,52 @@ test("capsule --mode micro ranks the aggregate target above the central Model hu
   });
 });
 
+test("capsule --mode micro ranks aggregates.py above the sql/subqueries module variable (django-10880)", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeMicroTargetFixtureRepo(repoRoot);
+    await runCli(["index", repoRoot]);
+
+    const query = [
+      "failing tests: test_aggregation_subquery_annotation_multiline (aggregation.tests.AggregateTestCase)",
+      "issue: Count annotation containing a Case condition and distinct=True produces wrong SQL",
+    ].join("\n");
+    // Room for the module variable to surface so the ordering is observable.
+    const result = await runCli(["capsule", repoRoot, query, "--mode", "micro", "--max-items", "5", "--json"]);
+    assert.equal(result.exitCode, 0);
+    const out = JSON.parse(result.stdout);
+
+    // aggregates.py is the first likely edit-target file; the sql/subqueries
+    // module variable is never ranked ahead of it.
+    const aggIndex = out.diagnostics.likely_files.findIndex((file: string) => file.includes("aggregates.py"));
+    const subIndex = out.diagnostics.likely_files.findIndex((file: string) => file.includes("subqueries.py"));
+    assert.ok(aggIndex !== -1, `expected aggregates.py, got ${JSON.stringify(out.diagnostics.likely_files)}`);
+    assert.ok(subIndex === -1 || aggIndex < subIndex,
+      `aggregates (#${aggIndex}) must rank before subqueries (#${subIndex})`);
+
+    // Selection is sorted by final score (Requirement 1).
+    const selection: Array<Record<string, any>> = out.diagnostics.selection ?? [];
+    assert.ok(selection.length > 0);
+    for (let index = 1; index < selection.length; index += 1) {
+      assert.ok(selection[index - 1]!.scores.final >= selection[index]!.scores.final,
+        "selection must be sorted by final score");
+    }
+    // Diagnostics expose the new fields.
+    const top = selection[0]!;
+    for (const key of ["final", "local_evidence_score", "hub_penalty", "actionability", "actionability_penalty", "domain"]) {
+      assert.ok(key in top.scores, `selection scores must include ${key}`);
+    }
+    assert.equal(top.scores.actionability, 1, "the top micro target must be actionable");
+
+    // If the module variable surfaced as trailing support, it is flagged low
+    // actionability and penalized.
+    const compilerSel = selection.find((item) => item.path.includes("subqueries.py"));
+    if (compilerSel) {
+      assert.equal(compilerSel.scores.actionability, 0);
+      assert.ok(compilerSel.scores.actionability_penalty > 0);
+    }
+  });
+});
+
 test("capsule --mode standard is not damaged by the micro hub penalty", async () => {
   await withFixture(async ({ repoRoot }) => {
     await writeMicroTargetFixtureRepo(repoRoot);
@@ -2406,7 +2452,7 @@ export class SessionController {
 // file for each of the two micro fixtures, so target recovery can walk from a
 // failing test / issue symbol to the implementation to edit.
 async function writeMicroTargetFixtureRepo(repoRoot: string): Promise<void> {
-  await mkdir(path.join(repoRoot, "django", "db", "models"), { recursive: true });
+  await mkdir(path.join(repoRoot, "django", "db", "models", "sql"), { recursive: true });
   await mkdir(path.join(repoRoot, "django", "contrib", "admin"), { recursive: true });
   await mkdir(path.join(repoRoot, "django", "contrib", "auth"), { recursive: true });
   await mkdir(path.join(repoRoot, "django", "contrib", "sessions"), { recursive: true });
@@ -2440,6 +2486,15 @@ class Count(Aggregate):
     """Count aggregate with optional distinct."""
     def __init__(self, expression, distinct=False):
         self.distinct = distinct
+`,
+  );
+
+  // A module-level config variable in the SQL package. For an aggregate task it
+  // matches on the "sql" path segment, but a string constant is not a plausible
+  // micro edit target — it must rank below the actionable aggregate symbols.
+  await writeFile(
+    path.join(repoRoot, "django", "db", "models", "sql", "subqueries.py"),
+    `compiler = "SQLAggregateCompiler"
 `,
   );
 

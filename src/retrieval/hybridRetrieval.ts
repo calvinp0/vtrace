@@ -33,6 +33,8 @@ import {
   blendLexical,
   combineFinalScore,
   computeBm25Scores,
+  computeDomainRaw,
+  evaluateActionability,
   evaluateHub,
   HYBRID_SCORE_WEIGHTS,
   normalizeAgainst,
@@ -228,19 +230,22 @@ function assemble(
   );
   const centrality = computeInDegreeCentrality(db, entries.map((entry) => entry.symbol.id));
 
-  // Compute the remaining raw signals (symbol/path) that apply to EVERY
+  // Compute the remaining raw signals (symbol/path/domain) that apply to EVERY
   // candidate regardless of which source first surfaced it.
   const symbolRaw = new Map<SymbolId, number>();
   const pathRaw = new Map<SymbolId, number>();
+  const domainRaw = new Map<SymbolId, number>();
   for (const entry of entries) {
     symbolRaw.set(entry.symbol.id, symbolMatchRaw(entry.symbol.localName, input.shaped.likelySymbols));
     pathRaw.set(entry.symbol.id, pathMatchRaw(entry.symbol.filePath, input.shaped.likelyFiles));
+    domainRaw.set(entry.symbol.id, computeDomainRaw(input.query, entry.symbol));
   }
 
   const maxFts = maxOf(entries, (entry) => entry.fts);
   const maxTfidf = maxOf(entries, (entry) => bm25.get(entry.symbol.id) ?? 0);
   const maxSymbol = maxMapValue(symbolRaw);
   const maxPath = maxMapValue(pathRaw);
+  const maxDomain = maxMapValue(domainRaw);
   const maxGraph = maxOf(entries, (entry) => entry.graph);
   const maxCentrality = maxMapValue(centrality);
 
@@ -249,6 +254,7 @@ function assemble(
     const tfidf = round(normalizeAgainst(bm25.get(entry.symbol.id) ?? 0, maxTfidf));
     const symbol = round(normalizeAgainst(symbolRaw.get(entry.symbol.id) ?? 0, maxSymbol));
     const path = round(normalizeAgainst(pathRaw.get(entry.symbol.id) ?? 0, maxPath));
+    const domain = round(normalizeAgainst(domainRaw.get(entry.symbol.id) ?? 0, maxDomain));
     const graph = round(normalizeAgainst(entry.graph, maxGraph));
     const centralityScore = round(
       normalizeAgainst(centrality.get(entry.symbol.id) ?? 0, maxCentrality),
@@ -256,9 +262,12 @@ function assemble(
     const lexical = round(blendLexical(fts, tfidf));
     const weights = input.weights ?? HYBRID_SCORE_WEIGHTS;
     const rawFinal = combineFinalScore(
-      { lexical, symbol, path, graph, centrality: centralityScore },
+      { lexical, symbol, path, domain, graph, centrality: centralityScore },
       weights,
     );
+
+    const graphContribution = weights.graph * graph;
+    const domainContribution = weights.domain * domain;
 
     // Strip the graph + centrality boost from a generic high-centrality hub that
     // has no local evidence, so it cannot outrank a locally-relevant target.
@@ -269,12 +278,26 @@ function assemble(
       lexical,
       symbol,
       path,
+      domain,
       hasTestEvidence,
-      graphContribution: weights.graph * graph,
+      graphContribution,
       centralityContribution: weights.centrality * centralityScore,
     });
+
+    // Strip the soft graph + domain boost from a low-actionability module-level
+    // symbol (a `compiler = '…'` config var) that lacks strong direct evidence.
+    const action = evaluateActionability({
+      kind: entry.symbol.kind,
+      lexical,
+      symbol,
+      path,
+      graphContribution,
+      domainContribution,
+    });
+
     const hubPenalty = round(hub.penalty);
-    const final = round(Math.max(0, rawFinal - hub.penalty));
+    const actionabilityPenalty = round(action.penalty);
+    const final = round(Math.max(0, rawFinal - hub.penalty - action.penalty));
 
     const evidence = [...entry.evidence];
     if (inDegree > 0) {
@@ -285,6 +308,11 @@ function assemble(
         `downranked: generic hub (${inDegree} dependents) lacks local lexical/symbol/path/test evidence`,
       );
     }
+    if (actionabilityPenalty > 0) {
+      evidence.push(
+        `downranked: ${entry.symbol.kind} is a low-actionability edit target without strong direct evidence`,
+      );
+    }
 
     const scores: HybridScoreComponents = {
       lexical,
@@ -292,11 +320,14 @@ function assemble(
       tfidf,
       symbol,
       path,
+      domain,
       graph,
       centrality: centralityScore,
+      actionability: action.actionability,
       inDegree,
       localEvidence: round(hub.localEvidence),
       hubPenalty,
+      actionabilityPenalty,
       final,
     };
 

@@ -33,6 +33,7 @@ export interface FixtureSymbolIds {
   countInit: string;
   querySet: string;
   model: string;
+  compilerVar: string;
   modelAdmin: string;
   getInlineInstances: string;
   aggregateTestCase: string;
@@ -86,6 +87,14 @@ export function seedHybridDjangoFixture(db: Database): FixtureSymbolIds {
   ids.modelAdmin = options.ModelAdmin!;
   ids.getInlineInstances = options.get_inline_instances!;
 
+  // A module-level config variable in the SQL package: low-actionability. It
+  // matches an aggregate task on the "sql" path segment but is never the edit
+  // target — only a string constant.
+  const subqueries = seedFile(db, "django/db/models/sql/subqueries.py", [
+    { localName: "compiler", kind: SymbolKind.ModuleVariable, startByte: 0, endByte: 40, signature: "compiler = 'SQLAggregateCompiler'" },
+  ]);
+  ids.compilerVar = subqueries.compiler!;
+
   const aggTests = seedFile(db, "tests/aggregation/tests.py", [
     { localName: "AggregateTestCase", kind: SymbolKind.Class, startByte: 0, endByte: 80, docstring: "Regression tests for aggregate expressions." },
     { localName: "test_count_distinct_expression", kind: SymbolKind.Method, startByte: 81, endByte: 160, parentLocalName: "AggregateTestCase" },
@@ -129,6 +138,11 @@ export function seedHybridDjangoFixture(db: Database): FixtureSymbolIds {
     edge(typed.modelAdmin, typed.model, EdgeType.References),
     edge(typed.aggregateAsSql, typed.model, EdgeType.References),
     edge(typed.getInlineInstances, typed.model, EdgeType.References),
+    // The aggregate classes reference the SQL compiler config variable, so it is
+    // graph-reachable from an aggregate seed and enters the pool — where its low
+    // actionability must keep it below the real aggregate edit targets.
+    edge(typed.aggregate, typed.compilerVar, EdgeType.Calls),
+    edge(typed.count, typed.compilerVar, EdgeType.Calls),
   ]);
 
   return typed;
