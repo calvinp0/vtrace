@@ -262,6 +262,62 @@ bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
 # To include the vexp condition, add --allow-vexp to steps 1-2.
 ```
 
+### Robust per-instance loop (handles infra failures and skips)
+
+A naive `for` loop that pipes every instance straight through `evaluate` → `ingest`
+hides the *reason* a row is empty: a Claude/API `529 overloaded` error, a valid
+vtrace `skip` policy (no context injected), and a `run-protocol` that died before
+producing JSONL all collapsed into the same vague "No condition results found".
+Stage 5 now classifies each run instead. Every `run-protocol` prints a one-line
+status block (`completed_patch | completed_no_patch | policy_skip | infra_failed |
+agent_failed`), and `evaluate`/`ingest` report `infra_failed` rows separately —
+they are **excluded** from `resolved_rate` and the token/cost/duration means.
+
+There is no dedicated `summarize-run` mode; the equivalent guard is to run
+`evaluate` (which prints an artifact-aware per-condition diagnosis and refuses to
+evaluate an infra-failure JSONL) and to check the JSONL for an `api_error_status`
+before spending Docker time on it:
+
+```bash
+ROOT=benchmarks/stage5_vexp_swe_bench_smoke
+VEXP=/home/calvin/code/vexp-swe-bench
+
+for id in django__django-11728 django__django-11740 django__django-11490; do
+  label="eval-diagnostic-${id#django__django-}"
+
+  # 1. Run the protocol. The terminal status block tells you immediately whether
+  #    this was completed_patch, policy_skip, or infra_failed (API 529, etc.).
+  bun "$ROOT/run_stage5_vexp_swe_bench_smoke.ts" \
+    --mode run-protocol --protocol all \
+    --vexp-swe-bench-dir "$VEXP" --instances "$id" \
+    --run-label "$label" --out "$ROOT/results"
+
+  # 2. Guard: only evaluate if a real JSONL exists AND it is not an infra failure.
+  #    (The grep is the lightweight equivalent of a summarize-run check.)
+  jsonl=$(ls "$ROOT/results/runs/$label/raw/baseline/"swebench-*.jsonl 2>/dev/null | tail -n1)
+  if [ -z "$jsonl" ]; then
+    echo "skip evaluate: no JSONL for $label (run-protocol produced no result)"
+  elif grep -q '"api_error_status"' "$jsonl"; then
+    echo "skip evaluate: $label hit an API/infra error (e.g. 529 overloaded); rerun this label"
+  else
+    # evaluate prints a per-condition diagnosis and skips infra-failure JSONL itself.
+    bun "$ROOT/run_stage5_vexp_swe_bench_smoke.ts" \
+      --mode evaluate --eval-mode docker \
+      --vexp-swe-bench-dir "$VEXP" \
+      --run-label "$label" --out "$ROOT/results"
+  fi
+
+  # 3. Ingest always runs: the report's "Run status" section records infra_failed,
+  #    policy_skip, agent_failed, missing_result, and rerun_recommended counts.
+  bun "$ROOT/run_stage5_vexp_swe_bench_smoke.ts" \
+    --mode ingest --run-label "$label" --out "$ROOT/results"
+done
+```
+
+Rerun only the labels whose status block (or the report's `rerun_recommended`
+count) flagged an infra failure — a `529 overloaded` is an infrastructure problem,
+not a vtrace treatment or model-solving failure, and must never be read as a loss.
+
 ### Combining several isolated runs (`aggregate-runs`)
 
 When each instance is run under its own `--run-label` (the recommended way to keep
@@ -293,6 +349,7 @@ per-condition aggregate's `valid_treatments`/`invalid_treatments`.
 - **Per-condition aggregate** (`condition`, `instances`, `resolved_count`, `resolved_rate`, `mean_cost`, `mean_duration`, `mean_total_tokens`, `mean_tokens_for_resolved`, `mean_cost_for_resolved`, `valid_treatments`, `invalid_treatments`). `resolved_rate` divides resolved by **evaluated** instances (`resolved !== unknown`) only — an unevaluated patch counts as neither a pass nor a fail. Invalid vtrace treatments (injection skipped) are counted in `invalid_treatments` and excluded from vtrace performance.
 - **Per-instance comparison** (`baseline_resolved`, `vtrace_resolved`, `vexp_resolved`, `baseline_tokens`, `vtrace_tokens`, `vexp_tokens`, `vtrace_token_reduction_vs_baseline`, `vexp_token_reduction_vs_baseline`, `patch_diff_available`).
 - **Evaluation evidence** per condition (`evaluation_ran`, `evaluation_method`, `docker_used`, `instances_evaluated`, `resolved`, `evaluation_error`).
+- **Run status** (`infra_failed`, `agent_failed`, `policy_skip`, `completed_patch`, `completed_no_patch`, `missing_condition_result`, `rerun_recommended`) with a per-row table carrying `run_status`, `should_rerun`, `infra_error_status`, `infra_error_kind`, `vtrace_policy_action`, and `vtrace_skip_reason`. `infra_failed` rows (e.g. Claude API 529 overloaded) are **excluded** from `resolved_rate` and every token/cost/duration mean — an infrastructure failure is not a vtrace treatment or model-solving result. The same columns are added to the CSV.
 
 ### Stage 5C smoke ladder
 

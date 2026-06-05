@@ -23,10 +23,14 @@ import {
   buildAgentCompliance,
   capsuleModeForInstance,
   classifyCapsuleOutput,
+  classifyInfraFailure,
   classifyOutcome,
   combineRunEvidence,
   comparePairs,
+  deriveRunStatus,
+  diagnoseConditionEvaluability,
   evaluateCondition,
+  formatRunStatusBlock,
   extractCapsuleContext,
   extractInstanceContextSection,
   extractRow,
@@ -1915,4 +1919,215 @@ test("skip aggregates and rows appear in the summary, CSV, JSON, and Markdown", 
     md,
     /VTRACE selected no-context policy for this task\. This is a valid policy decision, not an indexed-context treatment\./,
   );
+});
+
+// ----- Run-status / infra-failure reporting (Requirement 1–8) ------------------
+
+test("a JSONL row with api_error_status 529 is classified as infra_failed", () => {
+  const infra = classifyInfraFailure({
+    instance_id: "x__1",
+    api_error_status: 529,
+    error: "overloaded",
+    total_cost_usd: 0,
+    input_tokens: 0,
+    output_tokens: 0,
+  });
+  assert.ok(infra !== null);
+  assert.equal(infra?.infraErrorStatus, 529);
+  assert.equal(infra?.infraErrorKind, "api_overloaded");
+
+  // A clean completed run is NOT an infra failure.
+  assert.equal(
+    classifyInfraFailure({ instance_id: "x__2", cost_usd: 2, input_tokens: 100, modelPatch: "diff" }),
+    null,
+  );
+
+  const row = extractRow({ instanceId: "x__1", api_error_status: 529, error: "overloaded" }, "vtrace", "/p");
+  assert.equal(row?.runStatus, "infra_failed");
+  assert.equal(row?.shouldRerun, true);
+  assert.equal(row?.infraErrorStatus, 529);
+  assert.equal(row?.infraErrorKind, "api_overloaded");
+});
+
+test("deriveRunStatus puts infra first, then policy skip, then patch presence", () => {
+  const infra = { infraErrorStatus: 529, infraErrorKind: "api_overloaded", infraErrorMessage: "overloaded" };
+  assert.equal(deriveRunStatus({ infra, error: null, patchAvailable: true, policyAction: "skip" }).runStatus, "infra_failed");
+  assert.equal(deriveRunStatus({ infra: null, error: null, patchAvailable: true, policyAction: "skip" }).runStatus, "policy_skip");
+  assert.equal(deriveRunStatus({ infra: null, error: "boom", patchAvailable: false, policyAction: null }).runStatus, "agent_failed");
+  assert.equal(deriveRunStatus({ infra: null, error: null, patchAvailable: true, policyAction: null }).runStatus, "completed_patch");
+  assert.equal(deriveRunStatus({ infra: null, error: null, patchAvailable: false, policyAction: null }).runStatus, "completed_no_patch");
+});
+
+test("a zero-token API-error row is excluded from per-condition metrics", () => {
+  const infraRow = extractRow(
+    { instanceId: "a__1", api_error_status: 529, error: "overloaded", total_cost_usd: 0, input_tokens: 0, output_tokens: 0 },
+    "baseline",
+    "/p",
+  )!;
+  const okRow = extractRow(
+    { instanceId: "a__2", cost_usd: 2, input_tokens: 100, output_tokens: 0, modelPatch: "diff --git a/x b/x\n+p\n" },
+    "baseline",
+    "/p",
+  )!;
+  assert.equal(infraRow.runStatus, "infra_failed");
+
+  const summaries = buildConditionSummaries([infraRow, okRow]);
+  const baseline = summaries.find((summary) => summary.condition === "baseline");
+  // Only the real (ok) row counts; the infra row never deflates the means.
+  assert.equal(baseline?.instances, 1);
+  assert.equal(baseline?.meanCost, 2);
+  assert.equal(baseline?.meanTotalTokens, 100);
+});
+
+test("diagnoseConditionEvaluability reports API overload when JSONL has an infra failure", async () => {
+  const out = path.join(await tmpDir("diag-infra"), "results");
+  const dir = path.join(out, "raw", "baseline");
+  await mkdir(dir, { recursive: true });
+  await writeFile(
+    path.join(dir, "swebench-2026-06-03.jsonl"),
+    JSON.stringify({ instanceId: "a__1", api_error_status: 529, error: "overloaded", total_cost_usd: 0, input_tokens: 0, output_tokens: 0 }),
+  );
+  const diag = await diagnoseConditionEvaluability(dir);
+  assert.equal(diag.evaluable, false);
+  assert.ok(diag.infra !== null);
+  assert.match(diag.message, /API 529 overloaded\. Rerun this label\./);
+});
+
+test("evaluate does not evaluate an infra-failure JSONL and surfaces the overload reason", async () => {
+  const out = path.join(await tmpDir("eval-infra"), "results");
+  const vexpDir = await fakeVexpCliDir();
+  const dir = path.join(out, "raw", "baseline");
+  await mkdir(dir, { recursive: true });
+  await writeFile(
+    path.join(dir, "swebench-2026-06-03.jsonl"),
+    JSON.stringify({ instanceId: "a__1", api_error_status: 529, error: "overloaded", total_cost_usd: 0, input_tokens: 0, output_tokens: 0 }),
+  );
+  let evaluatorRan = false;
+  const runProcess = async (): Promise<ProcessResult> => {
+    evaluatorRan = true;
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  await assert.rejects(
+    () => runEvaluate(baseConfig({ vexpSweBenchDir: vexpDir, out }), { runProcess }),
+    /529 overloaded/,
+  );
+  assert.equal(evaluatorRan, false);
+});
+
+test("a missing JSONL with a run meta yields an artifact-aware diagnosis (not the vague message)", async () => {
+  const out = path.join(await tmpDir("diag-missing"), "results");
+  const dir = path.join(out, "raw", "baseline");
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, "_run.meta.json"), JSON.stringify({ condition: "baseline", exitCode: 1 }));
+  const diag = await diagnoseConditionEvaluability(dir);
+  assert.equal(diag.hasArtifacts, true);
+  assert.equal(diag.hasResultsFile, false);
+  assert.match(diag.message, /failed before spawn/);
+
+  // A skip-policy meta is explained as a skip, not a spawn failure.
+  await writeFile(path.join(dir, "_run.meta.json"), JSON.stringify({ condition: "baseline", vtracePolicyAction: "skip" }));
+  const skipDiag = await diagnoseConditionEvaluability(dir);
+  assert.match(skipDiag.message, /vtrace policy selected skip/);
+
+  // Truly empty dir falls back to the vague message only when no artifacts exist.
+  const empty = path.join(out, "raw", "vexp");
+  await mkdir(empty, { recursive: true });
+  const emptyDiag = await diagnoseConditionEvaluability(empty);
+  assert.equal(emptyDiag.hasArtifacts, false);
+  assert.match(emptyDiag.message, /No condition results found to evaluate/);
+});
+
+test("a valid policy skip is reported as policy_skip, not a missing condition", async () => {
+  const out = path.join(await tmpDir("skip-valid"), "results");
+  await seedCondition(out, "baseline", { resolved: null, instanceId: "a__1" });
+  await seedCondition(out, "vtrace", {
+    resolved: null,
+    instanceId: "a__1",
+    vtraceMethod: "indexed-context",
+    metaExtra: {
+      vtracePolicyAction: "skip",
+      vtraceContextInjected: false,
+      vtraceSkipReason: "small local task",
+      vtraceIndexedContext: false,
+    },
+  });
+  const artifact = await runIngest(baseConfig({ out }));
+  const vtraceRow = artifact.rows.find((row) => row.condition === "vtrace");
+  assert.equal(vtraceRow?.runStatus, "policy_skip");
+  assert.equal(artifact.summary.policySkipCount, 1);
+  assert.equal(artifact.summary.missingResultCount, 0);
+  assert.ok(!artifact.missingResults.some((entry) => entry.condition === "vtrace"));
+});
+
+test("run-protocol prints a run-status summary block", async () => {
+  const out = path.join(await tmpDir("proto-status"), "results");
+  const vexpDir = await fakeVexpCliDir();
+  const runProcess = async (): Promise<ProcessResult> => {
+    // Emulate the external benchmark producing a real result for the instance.
+    const dir = path.join(out, "raw", "baseline");
+    await mkdir(dir, { recursive: true });
+    await writeFile(
+      path.join(dir, "swebench-2026-06-03.jsonl"),
+      JSON.stringify({ instanceId: "a__1", inputTokens: 100, outputTokens: 50, modelPatch: "diff --git a/x b/x\n+p\n", resolved: null }),
+    );
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+
+  const writes: string[] = [];
+  const original = process.stdout.write.bind(process.stdout);
+  (process.stdout as unknown as { write: (chunk: unknown) => boolean }).write = (chunk: unknown) => {
+    writes.push(String(chunk));
+    return true;
+  };
+  try {
+    await runProtocol(baseConfig({ vexpSweBenchDir: vexpDir, out, instances: ["a__1"], protocol: "baseline" }), { runProcess });
+  } finally {
+    (process.stdout as unknown as { write: typeof original }).write = original;
+  }
+  const printed = writes.join("");
+  assert.match(printed, /Stage5 run status: completed_patch/);
+  assert.match(printed, /Instance: a__1/);
+  assert.match(printed, /Patch: yes/);
+  assert.match(printed, /Rerun recommended: no/);
+});
+
+test("the aggregate report includes infra-failure and rerun counts", async () => {
+  const out = path.join(await tmpDir("infra-report"), "results");
+  const dir = path.join(out, "raw", "baseline");
+  await mkdir(dir, { recursive: true });
+  await writeFile(
+    path.join(dir, "swebench-2026-06-03.jsonl"),
+    JSON.stringify({ instanceId: "a__1", api_error_status: 529, error: "overloaded", total_cost_usd: 0, input_tokens: 0, output_tokens: 0 }),
+  );
+  const artifact = await runIngest(baseConfig({ out }));
+  assert.equal(artifact.summary.infraFailedCount, 1);
+  assert.equal(artifact.summary.rerunRecommendedCount, 1);
+  const baselineRow = artifact.rows.find((row) => row.condition === "baseline");
+  assert.equal(baselineRow?.runStatus, "infra_failed");
+  // An infra-only condition contributes no benchmark aggregate row.
+  assert.equal(artifact.conditionSummaries.find((summary) => summary.condition === "baseline"), undefined);
+
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /infra_failed \| 1/);
+  assert.match(md, /rerun_recommended \| 1/);
+  assert.match(md, /Infrastructure failures detected/);
+});
+
+test("formatRunStatusBlock renders an infra failure with a rerun action line", () => {
+  const block = formatRunStatusBlock({
+    runStatus: "infra_failed",
+    label: "eval-diagnostic-11728",
+    instance: "django__django-11728",
+    condition: "vtrace",
+    patch: false,
+    tokens: 0,
+    cost: 0,
+    treatmentValid: false,
+    shouldRerun: true,
+    reason: "Claude API 529 overloaded; no tokens spent and no patch generated.",
+  });
+  assert.match(block, /Stage5 run status: infra_failed/);
+  assert.match(block, /Label: eval-diagnostic-11728/);
+  assert.match(block, /Rerun recommended: yes/);
+  assert.match(block, /Action: rerun this label\./);
 });

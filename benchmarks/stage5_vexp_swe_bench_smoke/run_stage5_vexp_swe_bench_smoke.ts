@@ -56,6 +56,25 @@ export type Outcome =
   | "unpaired"
   | "unknown";
 
+// Per-row run classification. This separates the THREE distinct situations that
+// were previously collapsed into a vague "no condition results" message:
+//   infra_failed           — Claude/API infrastructure error (e.g. 529 overloaded);
+//                            not a vtrace treatment or model-solving failure.
+//   agent_failed           — the agent run errored (non-infra), no patch produced.
+//   policy_skip            — vtrace deliberately injected no context (valid policy).
+//   completed_patch        — a real run that produced a model patch.
+//   completed_no_patch     — a real run that completed but produced no patch.
+//   missing_condition_result — no result row was written (run failed before/at spawn).
+// infra_failed rows are excluded from every benchmark metric; they appear only in
+// the failure/rerun diagnostics so an overloaded API never reads as a vtrace loss.
+export type RunStatus =
+  | "infra_failed"
+  | "agent_failed"
+  | "policy_skip"
+  | "completed_patch"
+  | "completed_no_patch"
+  | "missing_condition_result";
+
 // Most numeric/boolean fields can be genuinely absent in benchmark output. We
 // never guess a value; an absent field is recorded as the literal "unknown".
 export type Unknownable<T> = T | "unknown";
@@ -190,7 +209,19 @@ export interface AgentComplianceFields {
   readonly searchCallsBeforePivot: Unknownable<number> | null;
 }
 
-export interface Stage5Row extends IndexedContextFields, EvaluationFields, CapsuleDiagnosticFields, AgentComplianceFields {
+// Per-row run-status diagnostics (Requirements 1–6). runStatus is the single
+// authoritative classification; the infra_* fields carry the API-failure detail
+// when runStatus === "infra_failed". All default to null on freshly parsed rows
+// and are (re)derived once vtrace policy + evaluation fields are stamped.
+export interface RunStatusFields {
+  readonly runStatus: RunStatus | null;
+  readonly shouldRerun: boolean | null;
+  readonly infraErrorStatus: number | null;
+  readonly infraErrorKind: string | null;
+  readonly infraErrorMessage: string | null;
+}
+
+export interface Stage5Row extends IndexedContextFields, EvaluationFields, CapsuleDiagnosticFields, AgentComplianceFields, RunStatusFields {
   readonly instanceId: string;
   readonly condition: Stage5Condition;
   readonly resolved: Unknownable<boolean>;
@@ -302,6 +333,24 @@ export interface Stage5Summary {
   readonly skipCount: number;
   readonly contextInjectedCount: number;
   readonly invalidTreatmentCount: number;
+  // Run-status / failure aggregates (Requirement 5), over ALL rows plus the
+  // missing-result detector. infra_failed rows are excluded from every metric
+  // above and surface only through these counts and the failure diagnostics.
+  readonly infraFailedCount: number;
+  readonly policySkipCount: number;
+  readonly agentFailedCount: number;
+  readonly completedPatchCount: number;
+  readonly completedNoPatchCount: number;
+  readonly missingResultCount: number;
+  readonly rerunRecommendedCount: number;
+}
+
+// A condition that has run artifacts (meta / stdout / stderr) but produced no
+// usable result row, with an artifact-aware reason. Surfaced in the report so a
+// missing JSONL is never silently dropped.
+export interface MissingConditionResult {
+  readonly condition: Stage5Condition;
+  readonly reason: string;
 }
 
 // Run-level evidence reconstructed from the captured raw artifacts (run meta +
@@ -334,6 +383,8 @@ export interface NormalizedArtifact {
   // Stage 5C aggregate report fields.
   readonly conditionSummaries: readonly ConditionSummary[];
   readonly evaluations: readonly EvaluationEvidence[];
+  // Conditions that ran but produced no usable result row (artifact-aware).
+  readonly missingResults: readonly MissingConditionResult[];
 }
 
 const DEFAULT_CONFIG: CliConfig = {
@@ -410,6 +461,11 @@ const CSV_COLUMNS = [
   "search_calls_before_pivot",
   "context_chars",
   "context_items",
+  "run_status",
+  "should_rerun",
+  "infra_error_status",
+  "infra_error_kind",
+  "infra_error_message",
   "error",
   "raw_result_path",
   "parser_kind",
@@ -825,6 +881,102 @@ export function buildAgentCompliance(
   };
 }
 
+// Detail about a Claude/API infrastructure failure detected in a raw result.
+// Distinct from an agent failure (the model ran but did not solve) and from a
+// vtrace treatment failure — an infra failure means no real attempt happened.
+export interface InfraFailure {
+  // The HTTP-ish status when one was reported (e.g. 529), else null.
+  readonly infraErrorStatus: number | null;
+  // Coarse machine-readable kind: "api_overloaded" | "api_error" | "zero_cost_no_output".
+  readonly infraErrorKind: string;
+  readonly infraErrorMessage: string;
+}
+
+// Classify a raw vexp/Claude result record as an infrastructure failure when ANY
+// of the documented signals are present (Requirement 1):
+//   - api_error_status is present
+//   - the error text contains "API Error"
+//   - the error text contains "overloaded"
+//   - error_status is 529
+//   - total_cost_usd == 0 AND all token counts are 0 AND the patch is empty/null
+// Returns null when none match (i.e. this is a real run, however it turned out).
+export function classifyInfraFailure(record: Record<string, unknown>): InfraFailure | null {
+  const apiErrorStatus = toNumberOrNull(record.api_error_status ?? record.apiErrorStatus);
+  const errorStatus = toNumberOrNull(record.error_status ?? record.errorStatus);
+  const status = apiErrorStatus ?? errorStatus;
+
+  const errorValue = pick(record, FIELD_ALIASES.error!);
+  const errorText = isString(errorValue) ? errorValue : null;
+  const errorLower = (errorText ?? "").toLowerCase();
+
+  const overloaded = errorLower.includes("overloaded") || status === 529;
+  const apiError = apiErrorStatus !== null || errorLower.includes("api error");
+
+  // Zero-cost / zero-token / no-patch: the run produced nothing chargeable, which
+  // in practice means the API rejected the request before any real work happened.
+  const cost = asUnknownableNumber(pick(record, FIELD_ALIASES.costUsd!));
+  const inputTokens = asUnknownableNumber(pick(record, FIELD_ALIASES.inputTokens!));
+  const outputTokens = asUnknownableNumber(pick(record, FIELD_ALIASES.outputTokens!));
+  const patchValue = pick(record, FIELD_ALIASES.patch!);
+  const patchEmpty =
+    patchValue === undefined ||
+    patchValue === null ||
+    patchValue === false ||
+    (isString(patchValue) && patchValue.trim().length === 0);
+  const zeroCostNoOutput = cost === 0 && inputTokens === 0 && outputTokens === 0 && patchEmpty;
+
+  if (!overloaded && !apiError && !zeroCostNoOutput && status === null) return null;
+
+  const kind = overloaded ? "api_overloaded" : apiError ? "api_error" : "zero_cost_no_output";
+  const message =
+    errorText ??
+    (apiErrorStatus !== null
+      ? `api_error_status ${apiErrorStatus}`
+      : status !== null
+        ? `error_status ${status}`
+        : "no tokens spent and no patch generated");
+  return { infraErrorStatus: status, infraErrorKind: kind, infraErrorMessage: message };
+}
+
+// Number coercion that, unlike asUnknownableNumber, returns null (not "unknown")
+// for absent/invalid values — used for the optional infra status fields.
+function toNumberOrNull(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+// Derive the authoritative run status from the classification inputs. Precedence:
+// infra failure first (never let an API error read as a model result), then a
+// valid vtrace skip policy, then a non-infra agent error, then patch presence.
+// Only infra failures recommend a rerun — an agent failure or a no-patch run is
+// a real (if unsuccessful) attempt, not a transient infrastructure problem.
+export function deriveRunStatus(opts: {
+  infra: InfraFailure | null;
+  error: string | null;
+  patchAvailable: Unknownable<boolean>;
+  policyAction: VtracePolicyAction | "unknown" | null;
+}): { runStatus: RunStatus; shouldRerun: boolean } {
+  if (opts.infra !== null) return { runStatus: "infra_failed", shouldRerun: true };
+  if (opts.policyAction === "skip") return { runStatus: "policy_skip", shouldRerun: false };
+  if (opts.error !== null) return { runStatus: "agent_failed", shouldRerun: false };
+  if (opts.patchAvailable === true) return { runStatus: "completed_patch", shouldRerun: false };
+  return { runStatus: "completed_no_patch", shouldRerun: false };
+}
+
+function nullRunStatusFields(): RunStatusFields {
+  return {
+    runStatus: null,
+    shouldRerun: null,
+    infraErrorStatus: null,
+    infraErrorKind: null,
+    infraErrorMessage: null,
+  };
+}
+
 export function extractRow(
   record: Record<string, unknown>,
   condition: Stage5Condition,
@@ -871,6 +1023,17 @@ export function extractRow(
   const agentValue = pick(record, FIELD_ALIASES.agent!);
   const repoValue = pick(record, FIELD_ALIASES.repo!);
 
+  // Detect API/infra failures straight from the raw record. The vtrace policy
+  // action is unknown at parse time (it is stamped during ingest), so runStatus
+  // is provisional here and re-derived once the policy is known.
+  const infra = classifyInfraFailure(record);
+  const provisionalStatus = deriveRunStatus({
+    infra,
+    error: isString(errorValue) ? errorValue : null,
+    patchAvailable,
+    policyAction: null,
+  });
+
   const row: Stage5Row = {
     instanceId: instanceRaw,
     condition,
@@ -906,6 +1069,11 @@ export function extractRow(
     // Agent-compliance: parsed from the record's ordered tool calls when present
     // (pivot-relative fields are re-stamped once the pivot file is known).
     ...buildAgentCompliance(record, null),
+    runStatus: provisionalStatus.runStatus,
+    shouldRerun: provisionalStatus.shouldRerun,
+    infraErrorStatus: infra?.infraErrorStatus ?? null,
+    infraErrorKind: infra?.infraErrorKind ?? null,
+    infraErrorMessage: infra?.infraErrorMessage ?? null,
     finalEditedFile,
     finalEditedSymbol,
     error: isString(errorValue) ? errorValue : null,
@@ -1307,8 +1475,94 @@ export async function evaluateCondition(
   };
 }
 
+// The vague-but-only-honest-when-truly-empty fallback. Kept as a named constant
+// so evaluate prints it ONLY when no artifacts of any kind exist for a condition.
+const NO_ARTIFACTS_MESSAGE =
+  "No condition results found to evaluate. Run a protocol/condition first, then --mode evaluate.";
+
+// Artifact-aware diagnosis of why a condition can or cannot be evaluated
+// (Requirement 3). Inspects the canonical JSONL plus the `_run.*` artifacts so
+// the report distinguishes "ran but API-overloaded", "ran but no patch",
+// "skipped by policy", "failed before spawn", and "never run".
+export interface ConditionEvalDiagnosis {
+  readonly hasArtifacts: boolean;
+  readonly hasResultsFile: boolean;
+  readonly infra: InfraFailure | null;
+  // True only when a non-infra JSONL with at least one patch row is present.
+  readonly evaluable: boolean;
+  readonly message: string;
+}
+
+export async function diagnoseConditionEvaluability(dir: string): Promise<ConditionEvalDiagnosis> {
+  const resultsFile = await findCanonicalResultsFile(dir);
+  const meta = await readJsonIfExists(path.join(dir, "_run.meta.json"));
+  const stderr = await readFile(path.join(dir, "_run.stderr.txt"), "utf8").catch(() => null);
+  const stdout = await readFile(path.join(dir, "_run.stdout.txt"), "utf8").catch(() => null);
+  const hasArtifacts = resultsFile !== null || meta !== null || stderr !== null || stdout !== null;
+
+  if (resultsFile !== null) {
+    const content = await readFile(resultsFile, "utf8").catch(() => "");
+    const records = parseJsonlRecords(content);
+    const infra = records.map((record) => classifyInfraFailure(record)).find((value): value is InfraFailure => value !== null) ?? null;
+    if (infra !== null) {
+      const statusText = infra.infraErrorStatus !== null ? `API ${infra.infraErrorStatus}` : "API error";
+      const kindText = infra.infraErrorKind === "api_overloaded" ? "overloaded" : infra.infraErrorKind;
+      return {
+        hasArtifacts: true,
+        hasResultsFile: true,
+        infra,
+        evaluable: false,
+        message: `JSONL found but contains infra failure: ${statusText} ${kindText}. Rerun this label.`,
+      };
+    }
+    const hasPatch = records.some((record) => {
+      const patch = pick(record, FIELD_ALIASES.patch!);
+      return isString(patch) ? patch.trim().length > 0 : Boolean(patch);
+    });
+    if (!hasPatch) {
+      return {
+        hasArtifacts: true,
+        hasResultsFile: true,
+        infra: null,
+        evaluable: false,
+        message: "JSONL found but contains no patch/model output.",
+      };
+    }
+    return {
+      hasArtifacts: true,
+      hasResultsFile: true,
+      infra: null,
+      evaluable: true,
+      message: "JSONL found with patch/model output; ready to evaluate.",
+    };
+  }
+
+  // No canonical results file — decide why from the surrounding artifacts.
+  if (!hasArtifacts) {
+    return { hasArtifacts: false, hasResultsFile: false, infra: null, evaluable: false, message: NO_ARTIFACTS_MESSAGE };
+  }
+  if (isRecord(meta) && meta.vtracePolicyAction === "skip") {
+    return {
+      hasArtifacts: true,
+      hasResultsFile: false,
+      infra: null,
+      evaluable: false,
+      message: "No JSONL found because vtrace policy selected skip and no execution was requested.",
+    };
+  }
+  return {
+    hasArtifacts: true,
+    hasResultsFile: false,
+    infra: null,
+    evaluable: false,
+    message: "No JSONL found because run-protocol failed before spawn.",
+  };
+}
+
 // Stage 5C evaluate mode: run the external evaluator for every condition that has
-// results, writing per-condition `_eval.meta.json`. Returns the collected evidence.
+// an evaluable result file, writing per-condition `_eval.meta.json`. Conditions
+// that cannot be evaluated get an artifact-aware explanation on stderr instead of
+// a single vague message (Requirement 3). Returns the collected evidence.
 export async function runEvaluate(config: CliConfig, deps: RunDeps = {}): Promise<EvaluationEvidence[]> {
   if (config.vexpSweBenchDir === null) throw new Error("--mode evaluate requires --vexp-swe-bench-dir.");
   const cliPath = path.join(config.vexpSweBenchDir, config.cliEntry);
@@ -1317,16 +1571,30 @@ export async function runEvaluate(config: CliConfig, deps: RunDeps = {}): Promis
   }
   await ensureOutputTree(config.out);
   const evaluations: EvaluationEvidence[] = [];
+  const diagnoses: Array<{ condition: Stage5Condition; diagnosis: ConditionEvalDiagnosis }> = [];
   for (const condition of STAGE5_CONDITIONS) {
     const dir = rawConditionDir(config.out, condition, config.runLabel);
+    const diagnosis = await diagnoseConditionEvaluability(dir);
+    diagnoses.push({ condition, diagnosis });
+    // Explain every condition that has artifacts but is not evaluable, so an
+    // API-overloaded or no-patch run is never silently skipped.
+    if (!diagnosis.evaluable) {
+      if (diagnosis.hasArtifacts) process.stderr.write(`Stage5 evaluate [${condition}]: ${diagnosis.message}\n`);
+      continue;
+    }
     const resultsFile = await findCanonicalResultsFile(dir);
-    if (resultsFile === null) continue; // condition not run; nothing to evaluate
+    if (resultsFile === null) continue; // defensive: evaluable implies a file exists
     const evidence = await evaluateCondition(config, condition, resultsFile, deps);
     await writeFile(path.join(dir, EVAL_META_FILENAME), `${JSON.stringify(evidence, null, 2)}\n`);
     evaluations.push(evidence);
   }
   if (evaluations.length === 0) {
-    throw new Error("No condition results found to evaluate. Run a protocol/condition first, then --mode evaluate.");
+    // Only fall back to the vague message when there are truly no artifacts for
+    // any condition; otherwise surface the artifact-aware reasons we collected.
+    const withArtifacts = diagnoses.filter((entry) => entry.diagnosis.hasArtifacts);
+    if (withArtifacts.length === 0) throw new Error(NO_ARTIFACTS_MESSAGE);
+    const detail = withArtifacts.map((entry) => `  ${entry.condition}: ${entry.diagnosis.message}`).join("\n");
+    throw new Error(`No condition results were evaluable. Per-condition diagnosis:\n${detail}`);
   }
   return evaluations;
 }
@@ -2027,6 +2295,134 @@ async function ensureWorkspaceCheckout(
   }
 }
 
+interface RunStatusBlockInput {
+  readonly runStatus: RunStatus;
+  readonly label: string | null;
+  readonly instance: string | null;
+  readonly condition: Stage5Condition;
+  readonly patch: Unknownable<boolean> | null;
+  readonly tokens: Unknownable<number> | null;
+  readonly cost: Unknownable<number> | null;
+  readonly treatmentValid: unknown;
+  readonly shouldRerun: boolean;
+  readonly reason: string;
+}
+
+// Render the per-instance run-status block printed after each run-protocol /
+// condition run (Requirement 4). Infra failures additionally print an explicit
+// rerun action line so the operator knows the label needs re-running.
+export function formatRunStatusBlock(input: RunStatusBlockInput): string {
+  const yesNo = (value: Unknownable<boolean> | null): string =>
+    value === true ? "yes" : value === false ? "no" : "unknown";
+  const numText = (value: Unknownable<number> | null): string =>
+    typeof value === "number" ? String(value) : "unknown";
+  const costText = typeof input.cost === "number" ? `$${input.cost}` : "unknown";
+  const treatmentText =
+    input.treatmentValid === null || input.treatmentValid === undefined ? "n/a" : String(input.treatmentValid);
+  const lines = [
+    `Stage5 run status: ${input.runStatus}`,
+    `Label: ${input.label ?? "(none)"}`,
+    `Instance: ${input.instance ?? "(none)"}`,
+    `Condition: ${input.condition}`,
+    `Patch: ${yesNo(input.patch)}`,
+    `Tokens: ${numText(input.tokens)}`,
+    `Cost: ${costText}`,
+    `Treatment valid: ${treatmentText}`,
+    `Rerun recommended: ${input.shouldRerun ? "yes" : "no"}`,
+    `Reason: ${input.reason}`,
+  ];
+  if (input.runStatus === "infra_failed") lines.push("Action: rerun this label.");
+  return lines.join("\n");
+}
+
+// A human-readable reason for a given run status, used in the terminal summary.
+function runStatusReason(
+  status: RunStatus,
+  row: Stage5Row,
+  infra: InfraFailure | null,
+  skipReason: string | null,
+): string {
+  switch (status) {
+    case "infra_failed": {
+      const detail =
+        infra !== null && infra.infraErrorStatus !== null
+          ? `Claude API ${infra.infraErrorStatus} ${infra.infraErrorKind === "api_overloaded" ? "overloaded" : infra.infraErrorKind}`
+          : "Claude/API infrastructure error";
+      return `${detail}; no tokens spent and no patch generated.`;
+    }
+    case "policy_skip":
+      return skipReason ?? "vtrace selected no-context policy (valid skip).";
+    case "agent_failed":
+      return row.error ?? "agent run failed without producing a patch.";
+    case "completed_patch":
+      return "Run completed and produced a model patch.";
+    case "completed_no_patch":
+      return "Run completed but produced no patch.";
+    case "missing_condition_result":
+      return "No result row was written.";
+  }
+}
+
+// Build the one-block-per-instance run-status summary for a just-completed
+// condition run. When no result row was produced it reports
+// missing_condition_result with the artifact-aware reason (Requirement 4).
+async function formatRunStatusSummary(
+  config: CliConfig,
+  condition: Stage5Condition,
+  dir: string,
+  vtraceMeta: Record<string, unknown>,
+): Promise<string> {
+  const policyAction = isVtracePolicyAction(vtraceMeta.vtracePolicyAction) ? vtraceMeta.vtracePolicyAction : null;
+  const treatmentValid = "vtraceTreatmentValid" in vtraceMeta ? vtraceMeta.vtraceTreatmentValid : null;
+  const skipReason = isString(vtraceMeta.vtraceSkipReason) ? vtraceMeta.vtraceSkipReason : null;
+  const resultsFile = await findCanonicalResultsFile(dir);
+  const records = resultsFile === null ? [] : parseJsonlRecords(await readFile(resultsFile, "utf8").catch(() => ""));
+
+  if (records.length === 0) {
+    const diagnosis = await diagnoseConditionEvaluability(dir);
+    return formatRunStatusBlock({
+      runStatus: "missing_condition_result",
+      label: config.runLabel,
+      instance: null,
+      condition,
+      patch: null,
+      tokens: null,
+      cost: null,
+      treatmentValid,
+      shouldRerun: true,
+      reason: diagnosis.message,
+    });
+  }
+
+  const blocks: string[] = [];
+  for (const record of records) {
+    const row = extractRow(record, condition, resultsFile ?? "(none)");
+    if (row === null) continue;
+    const infra = classifyInfraFailure(record);
+    const { runStatus, shouldRerun } = deriveRunStatus({
+      infra,
+      error: row.error,
+      patchAvailable: row.patchAvailable,
+      policyAction,
+    });
+    blocks.push(
+      formatRunStatusBlock({
+        runStatus,
+        label: config.runLabel,
+        instance: row.instanceId,
+        condition,
+        patch: row.patchAvailable,
+        tokens: row.totalTokens,
+        cost: row.costUsd,
+        treatmentValid,
+        shouldRerun,
+        reason: runStatusReason(runStatus, row, infra, skipReason),
+      }),
+    );
+  }
+  return blocks.join("\n\n");
+}
+
 async function runCondition(
   config: CliConfig,
   condition: Stage5Condition,
@@ -2089,6 +2485,10 @@ async function runCondition(
   await writeFile(path.join(dir, "_run.stdout.txt"), result.stdout);
   await writeFile(path.join(dir, "_run.stderr.txt"), result.stderr);
   await writeFile(path.join(dir, "_run.meta.json"), `${JSON.stringify(meta, null, 2)}\n`);
+  // Always print the run-status summary BEFORE the exit-code check so an infra
+  // failure (which may still exit 0) or a non-zero exit both get classified and
+  // explained, not just swallowed by the thrown error (Requirement 4).
+  process.stdout.write(`${await formatRunStatusSummary(config, condition, dir, vtraceMeta)}\n`);
   if (result.exitCode !== 0) {
     throw new Error(`run-${condition} exited ${result.exitCode}: ${result.stderr.trim() || "(no stderr)"}`);
   }
@@ -2106,7 +2506,8 @@ export async function runIngest(config: CliConfig, deps: RunDeps = {}): Promise<
   const evaluations = await collectEvaluationEvidence(config.out, config.runLabel);
   const stamped = stampEvaluationRows(stampVtraceRows(merged, evidence), evaluations);
   const withDiagnostics = await stampCapsuleDiagnostics(stamped, config);
-  const artifact = buildArtifact(withDiagnostics, evidence, evaluations);
+  const missingResults = await detectMissingResults(config.out, config.runLabel, withDiagnostics);
+  const artifact = buildArtifact(withDiagnostics, evidence, evaluations, missingResults);
   await writeFile(path.join(config.out, NORMALIZED_FILENAME), `${JSON.stringify(artifact, null, 2)}\n`);
   await writeReports(config, artifact);
   return artifact;
@@ -2578,6 +2979,24 @@ async function parseConditionDir(dir: string, condition: Stage5Condition): Promi
   return rows;
 }
 
+// Detect conditions that ran (have artifacts) but produced no usable result row,
+// attaching the artifact-aware reason (Requirement 3/5). A condition with no
+// artifacts at all is simply "not run" and is NOT reported as missing.
+async function detectMissingResults(
+  outDir: string,
+  runLabel: string | null,
+  rows: readonly Stage5Row[],
+): Promise<MissingConditionResult[]> {
+  const missing: MissingConditionResult[] = [];
+  for (const condition of STAGE5_CONDITIONS) {
+    if (rows.some((row) => row.condition === condition)) continue;
+    const diagnosis = await diagnoseConditionEvaluability(rawConditionDir(outDir, condition, runLabel));
+    if (!diagnosis.hasArtifacts) continue;
+    missing.push({ condition, reason: diagnosis.message });
+  }
+  return missing;
+}
+
 // Merge duplicate (instance, condition) records, filling "unknown" fields from
 // later records so partial outputs across files combine into one row.
 function mergeRows(rows: readonly Stage5Row[]): Stage5Row[] {
@@ -2624,6 +3043,11 @@ function mergeRow(base: Stage5Row, next: Stage5Row): Stage5Row {
     didEditPivot: fill(base.didEditPivot ?? "unknown", next.didEditPivot ?? "unknown"),
     searchCallsBeforePivot: fill(base.searchCallsBeforePivot ?? "unknown", next.searchCallsBeforePivot ?? "unknown"),
     error: base.error ?? next.error,
+    // Infra-failure detail is preserved from whichever fragment observed it;
+    // runStatus/shouldRerun are re-derived in buildArtifact after stamping.
+    infraErrorStatus: base.infraErrorStatus ?? next.infraErrorStatus,
+    infraErrorKind: base.infraErrorKind ?? next.infraErrorKind,
+    infraErrorMessage: base.infraErrorMessage ?? next.infraErrorMessage,
     parserKind: base.parserKind === "unknown" ? next.parserKind : base.parserKind,
     notes: [...new Set([...base.notes, ...next.notes])],
   };
@@ -2634,16 +3058,42 @@ function buildArtifact(
   rows: readonly Stage5Row[],
   evidence: Stage5RunEvidence,
   evaluations: readonly EvaluationEvidence[] = [],
+  missingResults: readonly MissingConditionResult[] = [],
 ): NormalizedArtifact {
-  const pairs = comparePairs(rows);
+  // Re-derive run status now that vtrace policy + patch fields are stamped, so a
+  // valid skip reads as policy_skip rather than its provisional parse-time value.
+  const statusedRows = rows.map(deriveRowRunStatus);
+  const pairs = comparePairs(statusedRows);
   return {
-    rows: [...rows],
+    rows: [...statusedRows],
     pairs,
-    summary: summarize(rows, pairs),
+    summary: summarize(statusedRows, pairs, missingResults),
     evidence,
-    conditionSummaries: buildConditionSummaries(rows),
+    conditionSummaries: buildConditionSummaries(statusedRows),
     evaluations: [...evaluations],
+    missingResults: [...missingResults],
   };
+}
+
+// Recompute a row's runStatus/shouldRerun from its now-complete fields. The infra
+// detail captured at parse time is authoritative; the vtrace policy action is the
+// only thing that can change between parse and ingest.
+function deriveRowRunStatus(row: Stage5Row): Stage5Row {
+  const infra: InfraFailure | null =
+    row.infraErrorKind !== null
+      ? {
+          infraErrorStatus: row.infraErrorStatus,
+          infraErrorKind: row.infraErrorKind,
+          infraErrorMessage: row.infraErrorMessage ?? "",
+        }
+      : null;
+  const derived = deriveRunStatus({
+    infra,
+    error: row.error,
+    patchAvailable: row.patchAvailable,
+    policyAction: row.vtracePolicyAction,
+  });
+  return { ...row, runStatus: derived.runStatus, shouldRerun: derived.shouldRerun };
 }
 
 // Stage 5C per-condition aggregate. resolvedRate divides resolved by EVALUATED
@@ -2652,7 +3102,12 @@ function buildArtifact(
 export function buildConditionSummaries(rows: readonly Stage5Row[]): ConditionSummary[] {
   const summaries: ConditionSummary[] = [];
   for (const condition of STAGE5_CONDITIONS) {
-    const conditionRows = rows.filter((row) => row.condition === condition);
+    // Infra failures (e.g. API 529) are not real attempts; exclude them from
+    // every aggregate so their zero cost/tokens never deflate the means and a
+    // never-attempted instance never counts as resolved/unresolved (Requirement 6).
+    const conditionRows = rows.filter(
+      (row) => row.condition === condition && row.runStatus !== "infra_failed",
+    );
     if (conditionRows.length === 0) continue;
     const evaluated = conditionRows.filter((row) => row.resolved !== "unknown");
     const resolved = conditionRows.filter((row) => row.resolved === true);
@@ -2954,9 +3409,16 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
   };
 }
 
-function summarize(rows: readonly Stage5Row[], pairs: readonly PairComparison[]): Stage5Summary {
+function summarize(
+  rows: readonly Stage5Row[],
+  pairs: readonly PairComparison[],
+  missingResults: readonly MissingConditionResult[] = [],
+): Stage5Summary {
   const bothResolved = pairs.filter((pair) => pair.outcome === "both_resolved");
   const vtraceRows = rows.filter((row) => row.condition === "vtrace");
+  const countStatus = (status: RunStatus): number => rows.filter((row) => row.runStatus === status).length;
+  const infraFailedCount = countStatus("infra_failed");
+  const missingResultCount = missingResults.length;
   return {
     instanceCount: new Set(rows.map((row) => row.instanceId)).size,
     baselineRuns: rows.filter((row) => row.condition === "baseline").length,
@@ -2974,6 +3436,15 @@ function summarize(rows: readonly Stage5Row[], pairs: readonly PairComparison[])
     skipCount: vtraceRows.filter((row) => row.vtracePolicyAction === "skip").length,
     contextInjectedCount: vtraceRows.filter((row) => row.vtraceContextInjected === true).length,
     invalidTreatmentCount: vtraceRows.filter((row) => row.vtraceTreatmentValid === false).length,
+    infraFailedCount,
+    policySkipCount: countStatus("policy_skip"),
+    agentFailedCount: countStatus("agent_failed"),
+    completedPatchCount: countStatus("completed_patch"),
+    completedNoPatchCount: countStatus("completed_no_patch"),
+    missingResultCount,
+    // A rerun is warranted for every infra failure and every missing result; a
+    // completed/agent/skip row is a real attempt and is not re-run automatically.
+    rerunRecommendedCount: infraFailedCount + missingResultCount,
   };
 }
 
@@ -3038,6 +3509,11 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         row.searchCallsBeforePivot === null ? "" : String(row.searchCallsBeforePivot),
         row.vtraceContextChars === null ? "" : String(row.vtraceContextChars),
         row.vtraceContextItems === null ? "" : String(row.vtraceContextItems),
+        row.runStatus ?? "",
+        row.shouldRerun === null ? "" : String(row.shouldRerun),
+        row.infraErrorStatus === null ? "" : String(row.infraErrorStatus),
+        row.infraErrorKind ?? "",
+        row.infraErrorMessage ?? "",
         row.error ?? "",
         row.rawResultPath,
         row.parserKind,
@@ -3129,6 +3605,7 @@ export function renderMarkdown(artifact: NormalizedArtifact, config: CliConfig):
     "",
     renderUnknownFields(rows),
     "",
+    ...renderRunStatusSection(artifact),
     "## Failures/errors",
     "",
     renderFailures(rows),
@@ -3351,6 +3828,62 @@ function unknownFieldsOf(row: Stage5Row): string[] {
     ["patch_available", row.patchAvailable],
   ];
   return fields.filter(([, value]) => value === "unknown").map(([name]) => name);
+}
+
+// Run-status / failures-and-errors section (Requirement 5): aggregate counts plus
+// a per-row table for everything that needs attention (infra/agent failures and
+// policy skips) and the artifact-aware list of missing condition results.
+function renderRunStatusSection(artifact: NormalizedArtifact): string[] {
+  const { summary, rows } = artifact;
+  const missingResults = artifact.missingResults ?? [];
+  const lines: string[] = [
+    "## Run status",
+    "",
+    "| Status | Count |",
+    "| --- | ---: |",
+    `| infra_failed | ${summary.infraFailedCount} |`,
+    `| agent_failed | ${summary.agentFailedCount} |`,
+    `| policy_skip | ${summary.policySkipCount} |`,
+    `| completed_patch | ${summary.completedPatchCount} |`,
+    `| completed_no_patch | ${summary.completedNoPatchCount} |`,
+    `| missing_condition_result | ${summary.missingResultCount} |`,
+    `| rerun_recommended | ${summary.rerunRecommendedCount} |`,
+    "",
+  ];
+  if (summary.infraFailedCount > 0) {
+    lines.push(
+      "> ⚠️ Infrastructure failures detected (e.g. Claude API 529 overloaded). These rows are EXCLUDED from " +
+        "resolved-rate, token/cost/duration reductions, and per-condition means — an API failure is not a vtrace " +
+        "treatment or model-solving result. Rerun the affected labels.",
+      "",
+    );
+  }
+  const attention = rows.filter(
+    (row) => row.runStatus === "infra_failed" || row.runStatus === "agent_failed" || row.runStatus === "policy_skip",
+  );
+  if (attention.length > 0) {
+    lines.push(
+      "| instance | condition | run_status | should_rerun | infra_error_status | infra_error_kind | vtrace_policy_action | vtrace_skip_reason |",
+      "| --- | --- | --- | --- | --- | --- | --- | --- |",
+      ...attention.map(
+        (row) =>
+          `| ${row.instanceId} | ${row.condition} | ${row.runStatus} | ${row.shouldRerun === null ? "unknown" : String(row.shouldRerun)} | ${row.infraErrorStatus ?? "(n/a)"} | ${row.infraErrorKind ?? "(n/a)"} | ${row.vtracePolicyAction ?? "(n/a)"} | ${row.vtraceSkipReason ?? "(none)"} |`,
+      ),
+      "",
+    );
+  }
+  if (missingResults.length > 0) {
+    lines.push(
+      "Missing condition results (artifacts present but no usable result row):",
+      "",
+      ...missingResults.map((entry) => `- ${entry.condition}: ${entry.reason}`),
+      "",
+    );
+  }
+  if (attention.length === 0 && missingResults.length === 0 && summary.infraFailedCount === 0) {
+    lines.push("All ingested rows completed without infra/agent failures or policy skips.", "");
+  }
+  return lines;
 }
 
 function renderFailures(rows: readonly Stage5Row[]): string {
