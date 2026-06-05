@@ -27,6 +27,8 @@ import {
   classifyOutcome,
   combineRunEvidence,
   comparePairs,
+  decideContextPolicy,
+  deriveContextPolicySignals,
   deriveRunStatus,
   diagnoseConditionEvaluability,
   evaluateCondition,
@@ -64,6 +66,7 @@ import {
   verifyVtracePatch,
   vtraceInstructionsFilePath,
   workspacePathFor,
+  type CapsulePolicyDiagnostics,
   type CliConfig,
   type ProcessResult,
   type SweBenchInstance,
@@ -757,6 +760,37 @@ function sampleInstance(): SweBenchInstance {
   return toSweBenchInstance(SAMPLE_RECORD);
 }
 
+// A navigation-heavy instance (composed queries / SQL compiler): the cost-aware
+// gate injects context for these when the capsule has strong pivot evidence.
+const NAV_RECORD = {
+  repo: "django/django",
+  instance_id: "django__django-11490",
+  base_commit: "abc123def456",
+  problem_statement:
+    "Composed queries cannot change the list of columns with values()/values_list(). The combinator "
+    + "querysets in django/db/models/sql/compiler.py reuse the first query's columns.",
+  hints_text: "See django/db/models/query.py and the SQL compiler for composed queries.",
+  FAIL_TO_PASS: '["tests.queries.test_qs_combinators.QuerySetSetOperationTests.test_union_values_list"]',
+};
+
+// A capsule --json inject payload for a navigation-heavy task: real context plus
+// strong pivot evidence, so the gate injects it.
+function injectCapsuleJson(context: string, pivotCount = 3, supportCount = 4): string {
+  return JSON.stringify({
+    diagnostics: { recommended_mode: "full", actual_mode: "full", pivot_count: pivotCount, support_count: supportCount },
+    context,
+  });
+}
+
+// A capsule --json inject payload for a small/local task: real micro context but
+// the cost-aware gate should still decline to inject it (net overhead).
+function microCapsuleJson(context: string): string {
+  return JSON.stringify({
+    diagnostics: { recommended_mode: "micro", actual_mode: "micro", pivot_count: 1, support_count: 0 },
+    context,
+  });
+}
+
 async function writeSweBenchData(dir: string, records: object[]): Promise<string> {
   const file = path.join(dir, "swe-bench-100.jsonl");
   await writeFile(file, records.map((r) => JSON.stringify(r)).join("\n") + "\n");
@@ -1070,19 +1104,22 @@ function scriptedRunner(script: Array<{ match: string; result: Partial<ProcessRe
 test("prepareIndexedContext clones, indexes, queries, and writes a real context file", async () => {
   const out = path.join(await tmpDir("idx-ok"), "results");
   const dataDir = await tmpDir("idx-data");
-  const dataFile = await writeSweBenchData(dataDir, [SAMPLE_RECORD]);
+  // A navigation-heavy instance with strong pivot evidence: the gate injects.
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
   const { run, calls } = scriptedRunner([
-    { match: "capsule", result: { stdout: "symbol: replace_named_groups\nfile: admindocs/utils.py\n" } },
+    { match: "capsule", result: { stdout: injectCapsuleJson("symbol: get_combinator_sql\nfile: django/db/models/sql/compiler.py") } },
   ]);
   const config = baseConfig({
     out,
-    instances: ["django__django-11728"],
+    instances: ["django__django-11490"],
     sweBenchDataFile: dataFile,
     vtraceMethod: "indexed-context",
   });
   const result = await prepareIndexedContext(config, { runProcess: run });
 
   assert.equal(result.indexedContext, true);
+  assert.equal(result.policyAction, "inject");
+  assert.equal(result.contextPolicyAction, "inject");
   assert.ok(result.contextChars > 0);
   assert.ok(result.contextItems > 0);
   assert.match(result.indexCommand ?? "", /index/);
@@ -1094,7 +1131,7 @@ test("prepareIndexedContext clones, indexes, queries, and writes a real context 
   // The context file holds the real retrieval output, not generic instructions.
   const context = await readFile(vtraceInstructionsFilePath(out), "utf8");
   assert.match(context, /# vtrace indexed context/);
-  assert.match(context, /symbol: replace_named_groups/);
+  assert.match(context, /symbol: get_combinator_sql/);
 });
 
 test("prepareIndexedContext reports failure when the vtrace query fails", async () => {
@@ -1919,6 +1956,211 @@ test("skip aggregates and rows appear in the summary, CSV, JSON, and Markdown", 
     md,
     /VTRACE selected no-context policy for this task\. This is a valid policy decision, not an indexed-context treatment\./,
   );
+});
+
+// ----- Stage 5: cost-aware context-injection gate (decideContextPolicy) -----
+
+// Records used by the gate classification tests. The signals are derived the
+// same way the production path derives them (shapeSweQuery + recommendMode).
+const POLICY_RECORDS = {
+  "django__django-10880": {
+    repo: "django/django", instance_id: "django__django-10880", base_commit: "abc",
+    problem_statement: "Add an encoder parameter to django.utils.html.json_script(). It hardcodes DjangoJSONEncoder.",
+    hints_text: null,
+    FAIL_TO_PASS: '["tests.utils_tests.test_html.TestUtilsHtml.test_json_script_custom_encoder"]',
+  },
+  "django__django-11095": {
+    repo: "django/django", instance_id: "django__django-11095", base_commit: "abc",
+    problem_statement:
+      "Add ModelAdmin.get_inlines() hook to allow setting inlines based on the request or model instance. "
+      + "Currently you must override get_inline_instances.",
+    hints_text: null,
+    FAIL_TO_PASS: '["tests.admin_inlines.tests.TestInline.test_get_inlines_hook"]',
+  },
+  "django__django-11490": NAV_RECORD,
+  "django__django-11728": {
+    repo: "django/django", instance_id: "django__django-11728", base_commit: "abc",
+    problem_statement:
+      "replace_named_groups fails to parse trailing regex groups in the admindocs URL pattern parser. "
+      + "The regex parsing loop in django/contrib/admindocs/utils.py stops early.",
+    hints_text: "look at the admindocs utils regex parser",
+    FAIL_TO_PASS: '["tests.admin_docs.test_utils.TestUtils.test_replace_named_groups"]',
+  },
+  "django__django-11740": {
+    repo: "django/django", instance_id: "django__django-11740", base_commit: "abc",
+    problem_statement:
+      "Change uuid field to FK does not create dependency. The migrations autodetector in "
+      + "django/db/migrations/autodetector.py builds AlterField without a dependency.",
+    hints_text: "generate_altered_fields() should add dependencies for new FK targets.",
+    FAIL_TO_PASS: '["tests.migrations.test_autodetector.AutodetectorTests.test_alter_field_to_fk_dependency"]',
+  },
+} as const;
+
+function policySignals(id: keyof typeof POLICY_RECORDS) {
+  return deriveContextPolicySignals(toSweBenchInstance(POLICY_RECORDS[id]));
+}
+
+// A capsule that retrieved a focused micro pivot (still a cheap/local task).
+const MICRO_DIAG: CapsulePolicyDiagnostics = {
+  capsuleAction: "inject", hasContext: true, pivotCount: 1, supportCount: 0, actualMode: "micro",
+};
+// A capsule with strong, multi-pivot evidence (navigation-heavy task).
+const STRONG_DIAG: CapsulePolicyDiagnostics = {
+  capsuleAction: "inject", hasContext: true, pivotCount: 3, supportCount: 4, actualMode: "full",
+};
+
+test("decideContextPolicy chooses no_context for cheap/local tasks (10880, 11095)", () => {
+  // 10880: one failing test, short problem, micro capsule — a small/local edit
+  // where even a focused micro pivot is net overhead.
+  const d10880 = decideContextPolicy(policySignals("django__django-10880"), MICRO_DIAG);
+  assert.equal(d10880.action, "no_context");
+  assert.equal(d10880.expectedContextValue, "low");
+  assert.equal(d10880.expectedOverheadRisk, "high");
+  assert.match(d10880.reason, /Cheap\/local/);
+
+  // 11095: another small/local hook addition — no_context (the "one-line target
+  // only" alternative collapses to no_context here).
+  assert.equal(decideContextPolicy(policySignals("django__django-11095"), MICRO_DIAG).action, "no_context");
+});
+
+test("decideContextPolicy chooses inject for navigation-heavy tasks with strong pivots (11490, 11728)", () => {
+  const d11490 = decideContextPolicy(policySignals("django__django-11490"), STRONG_DIAG);
+  assert.equal(d11490.action, "inject");
+  assert.equal(d11490.expectedContextValue, "high");
+  assert.equal(d11490.expectedOverheadRisk, "low");
+
+  assert.equal(decideContextPolicy(policySignals("django__django-11728"), STRONG_DIAG).action, "inject");
+});
+
+test("decideContextPolicy is conservative on 11740: inject only with strong pivot evidence", () => {
+  const signals = policySignals("django__django-11740");
+  // Weak pivot evidence on a navigation-heavy task → stay no_context.
+  const weak = decideContextPolicy(signals, { capsuleAction: "inject", hasContext: true, pivotCount: 0, supportCount: 0, actualMode: "full" });
+  assert.equal(weak.action, "no_context");
+  assert.equal(weak.expectedOverheadRisk, "medium");
+  // Strong pivot evidence → inject.
+  assert.equal(decideContextPolicy(signals, STRONG_DIAG).action, "inject");
+});
+
+test("decideContextPolicy chooses no_context when the capsule recovered nothing", () => {
+  const d = decideContextPolicy(policySignals("django__django-11490"), {
+    capsuleAction: "skip", hasContext: false, pivotCount: 0, supportCount: 0, actualMode: "skip",
+  });
+  assert.equal(d.action, "no_context");
+  assert.match(d.reason, /no high-confidence target/);
+});
+
+test("prepareIndexedContext gates a cheap/local task to no_context even with real micro context", async () => {
+  const out = path.join(await tmpDir("gate-nc"), "results");
+  const dataDir = await tmpDir("gate-nc-data");
+  const dataFile = await writeSweBenchData(dataDir, [POLICY_RECORDS["django__django-10880"]]);
+  // The capsule DID retrieve real micro context, but the cost-aware gate declines.
+  const { run } = scriptedRunner([
+    { match: "capsule", result: { stdout: microCapsuleJson("symbol: json_script\nfile: django/utils/html.py") } },
+  ]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-10880"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  // Valid no-context policy, recorded via the legacy skip mechanism plus the gate
+  // vocabulary + rationale.
+  assert.equal(result.policyAction, "skip");
+  assert.equal(result.contextPolicyAction, "no_context");
+  assert.equal(result.contextInjected, false);
+  assert.equal(result.indexedContext, false);
+  assert.equal(result.expectedContextValue, "low");
+  assert.equal(result.expectedOverheadRisk, "high");
+  assert.match(result.policyReason ?? "", /Cheap\/local/);
+  // A no-context decision is NOT a hard error.
+  assert.equal(result.contextError, null);
+});
+
+test("run-vtrace no_context gate runs WITHOUT VTRACE_AGENT_INSTRUCTIONS_FILE and is treatment-valid", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("gate-run"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("gate-run-data");
+  const dataFile = await writeSweBenchData(dataDir, [POLICY_RECORDS["django__django-10880"]]);
+
+  let vexpSpawned = false;
+  let vexpEnv: Record<string, string> | undefined;
+  let vexpArgs: readonly string[] = [];
+  const run = async (
+    command: string,
+    args: readonly string[],
+    options?: { env?: Record<string, string> },
+  ): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes("dist/cli.js")) {
+      vexpSpawned = true;
+      vexpEnv = options?.env;
+      vexpArgs = args;
+    }
+    // The capsule retrieved real micro context; the gate still declines it.
+    if (line.includes("capsule")) {
+      return { exitCode: 0, stdout: microCapsuleJson("symbol: json_script\nfile: django/utils/html.py"), stderr: "" };
+    }
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["django__django-10880"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+  });
+  await runVtrace(config, { runProcess: run });
+
+  // Requirement 3: the no-context run STILL executes (--no-vexp), but without the
+  // instructions-file env, so nothing is injected.
+  assert.equal(vexpSpawned, true);
+  assert.ok(vexpArgs.includes("--no-vexp"));
+  assert.ok(vexpEnv !== undefined);
+  assert.equal(vexpEnv?.VTRACE_AGENT_INSTRUCTIONS_FILE, undefined);
+  assert.equal(vexpEnv?.VTRACE_METHOD, "indexed-context");
+
+  const meta = JSON.parse(await readFile(path.join(rawConditionDir(out, "vtrace"), "_run.meta.json"), "utf8"));
+  assert.equal(meta.vtracePolicyAction, "skip");
+  assert.equal(meta.vtraceContextPolicyAction, "no_context");
+  assert.equal(meta.vtraceContextInjected, false);
+  // Requirement 3: a no-context policy run IS a valid vtrace treatment.
+  assert.equal(meta.vtraceTreatmentValid, true);
+});
+
+test("the report separates injected_context_count and no_context_count", async () => {
+  const out = path.join(await tmpDir("gate-report"), "results");
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", {
+    resolved: null,
+    vtraceMethod: "indexed-context",
+    stderr: "Stage5 vtrace policy: no_context (no context injected)\n",
+    indexedContext: false,
+    metaExtra: {
+      vtracePolicyAction: "skip",
+      vtraceContextPolicyAction: "no_context",
+      vtraceContextInjected: false,
+      vtracePolicyReason: "Cheap/local task: injected context is likely net overhead.",
+      expectedContextValue: "low",
+      expectedOverheadRisk: "high",
+    },
+  });
+  const artifact = await runIngest(baseConfig({ out }));
+
+  // A no-context row is counted as no_context, NOT as an injected-context win.
+  assert.equal(artifact.summary.noContextCount, 1);
+  assert.equal(artifact.summary.injectedContextCount, 0);
+
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /No-context rows \| 1/);
+  assert.match(md, /Injected-context rows \| 0/);
+  // The gate's vocabulary + rationale are surfaced in the evidence table.
+  assert.match(md, /\| vtrace_context_policy_action \| no_context \|/);
+  assert.match(md, /\| expected_overhead_risk \| high \|/);
 });
 
 // ----- Run-status / infra-failure reporting (Requirement 1–8) ------------------

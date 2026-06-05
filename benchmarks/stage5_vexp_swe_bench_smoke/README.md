@@ -186,6 +186,16 @@ The report gains a `## Vtrace indexed context evidence` table (`vtrace_method`, 
 
 > **Per-run overwrite.** The `raw/baseline` and `raw/vtrace` output dirs and `results/_vtrace_instructions.md` are overwritten on each run. That is fine for single-instance smoke. Use `--run-label <label>` to isolate the reproduced workspaces (`results/workspaces/<label>/<instance_id>/`) across multiple instance runs.
 
+### Cost-aware injection gate (`decideContextPolicy`)
+
+Stage 5C showed vtrace helps large/navigation-heavy tasks but **hurts small/local tasks**: even action-oriented micro context can be net overhead when baseline Claude already solves the task cheaply. So before the agent prompt is modified, `decideContextPolicy(signals, capsuleDiagnostics)` chooses **`inject`** or **`no_context`** by weighing expected context value against overhead risk. A context engine should not inject context when its expected value is below its overhead — this is product behaviour, not benchmark gaming.
+
+It chooses `no_context` when the capsule recovered nothing actionable, or for a **cheap/local** task — one failing test, short problem statement, low cross-module signal, a micro capsule, no high-confidence direct test→implementation edge, and low likely baseline search/edit cost. It chooses `inject` for **navigation-heavy** tasks, but conservatively — only when the capsule produced strong pivot evidence. (Seed expectations: `10880`/`11095` → `no_context`; `11490`/`11728` → `inject`; `11740` → inject only with strong pivot evidence.)
+
+A `no_context` decision is a **valid vtrace policy run**, not a failed treatment: Stage 5 still runs `vexp-swe-bench` with `--no-vexp` but **without** `VTRACE_AGENT_INSTRUCTIONS_FILE`, so it measures a real `resolved`/cost/tokens row while recording that nothing was injected (`vtrace_context_injected = false`, `vtrace_treatment_valid = true`, `actual_capsule_mode = skip/no_context`). The run records `vtrace_context_policy_action` (`inject`|`no_context`), `vtrace_policy_reason`, `expected_context_value`, and `expected_overhead_risk`.
+
+Because a no-context row injected nothing, the report counts it **separately** from injected-context rows (`injected_context_count` vs `no_context_count`). Token/cost comparisons for a no-context row measure the policy runner, not retrieval context, and must not be advertised as an injected-context win.
+
 ## Stage 5B indexed-context result
 
 The first indexed-context smoke result is documented in [STAGE5B_INDEXED_CONTEXT_RESULTS.md](./STAGE5B_INDEXED_CONTEXT_RESULTS.md).

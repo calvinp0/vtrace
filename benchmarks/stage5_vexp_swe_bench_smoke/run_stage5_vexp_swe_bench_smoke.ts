@@ -5,9 +5,11 @@ import path from "node:path";
 import { CapsuleMode, type CapsuleMode as CapsuleModeT } from "../../src/capsule/capsuleModes";
 import {
   RecommendedCapsuleMode,
+  TargetConfidence,
   deriveModeSignals,
   recommendCapsuleMode,
   type RecommendedCapsuleMode as RecommendedCapsuleModeT,
+  type TargetConfidence as TargetConfidenceT,
 } from "../../src/capsule/recommendMode";
 import { shapeSweQuery } from "../../src/capsule/sweQueryShaping";
 import {
@@ -154,6 +156,15 @@ export interface IndexedContextFields {
   readonly vtraceSkipReason: string | null;
   readonly vtracePivotCount: number | null;
   readonly vtraceSupportCount: number | null;
+  // Cost-aware injection gate (decideContextPolicy). `vtraceContextPolicyAction`
+  // is the gate's decision in its own vocabulary (`inject`|`no_context`); a
+  // `no_context` decision is RECORDED via the existing `skip` mechanism above
+  // (vtracePolicyAction === "skip"), so the two never disagree. The remaining
+  // fields explain WHY the gate chose as it did. All null on baseline rows.
+  readonly vtraceContextPolicyAction: ContextPolicyAction | "unknown" | null;
+  readonly vtracePolicyReason: string | null;
+  readonly expectedContextValue: ExpectedLevel | null;
+  readonly expectedOverheadRisk: ExpectedLevel | null;
 }
 
 // Stage 5C evaluation evidence, normalized per instance. resolved itself stays
@@ -332,6 +343,14 @@ export interface Stage5Summary {
   // Stage 5 vtrace policy aggregates (over vtrace rows).
   readonly skipCount: number;
   readonly contextInjectedCount: number;
+  // Cost-aware gate aggregates (Requirement 4): injected-context rows and
+  // no-context rows are counted SEPARATELY so a no-context policy run is never
+  // tallied as an injected-context win. `noContextCount` is the count of valid
+  // no-context policy rows (recorded via the `skip` mechanism);
+  // `injectedContextCount` mirrors `contextInjectedCount` under the gate's
+  // vocabulary.
+  readonly injectedContextCount: number;
+  readonly noContextCount: number;
   readonly invalidTreatmentCount: number;
   // Run-status / failure aggregates (Requirement 5), over ALL rows plus the
   // missing-result detector. infra_failed rows are excluded from every metric
@@ -436,6 +455,10 @@ const CSV_COLUMNS = [
   "vtrace_indexed_context",
   "vtrace_treatment_valid",
   "vtrace_policy_action",
+  "vtrace_context_policy_action",
+  "vtrace_policy_reason",
+  "expected_context_value",
+  "expected_overhead_risk",
   "vtrace_context_injected",
   "vtrace_skip_reason",
   "pivot_count",
@@ -1319,13 +1342,16 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
     const indexed = await prepareIndexedContext(config, deps);
     extraVtraceMeta = indexedContextMetaFields(indexed);
     if (indexed.policyAction === "skip") {
-      // VALID no-context policy: vtrace recovered no high-confidence target for a
-      // small/local task. Run the external benchmark with --no-vexp and NO
-      // instructions file, so we still measure a real resolved/cost/tokens row
-      // for the vtrace-policy condition while recording that nothing was injected.
+      // VALID no-context policy (cost-aware gate, decideContextPolicy): the
+      // expected value of injected context did not exceed its overhead — either
+      // vtrace recovered no high-confidence target, or the task is cheap/local
+      // enough that even action-oriented context is net overhead. Run the
+      // external benchmark with --no-vexp and NO instructions file, so we still
+      // measure a real resolved/cost/tokens row for the vtrace-policy condition
+      // while recording that nothing was injected.
       injectContext = false;
       process.stderr.write(
-        `Stage5 vtrace policy: skip (no context injected) — ${indexed.skipReason ?? "no high-confidence actionable target recovered"}\n`,
+        `Stage5 vtrace policy: no_context (no context injected) — ${indexed.policyReason ?? indexed.skipReason ?? "no high-confidence actionable target recovered"}\n`,
       );
     } else if (!indexed.indexedContext) {
       throw new Error(
@@ -1740,6 +1766,11 @@ export interface IndexedContextResult {
   readonly pivotCount: number | null;
   readonly supportCount: number | null;
   readonly actualCapsuleMode: string | null;
+  // Cost-aware gate decision + its rationale (see decideContextPolicy).
+  readonly contextPolicyAction: ContextPolicyAction;
+  readonly policyReason: string | null;
+  readonly expectedContextValue: ExpectedLevel | null;
+  readonly expectedOverheadRisk: ExpectedLevel | null;
 }
 
 // Resolve the bundled vexp-swe-bench dataset path (overridable via --swe-bench-data).
@@ -2029,6 +2060,170 @@ export function capsuleModeForInstance(instance: SweBenchInstance): CapsuleModeT
   return recommended === RecommendedCapsuleMode.Skip ? CapsuleMode.Micro : recommended;
 }
 
+// ---------------------------------------------------------------------------
+// Cost-aware context-injection gate
+// ---------------------------------------------------------------------------
+//
+// Stage 5C showed that vtrace helps large/navigation-heavy tasks but HURTS
+// small/local tasks: even action-oriented micro context is net overhead when
+// baseline Claude already solves the task cheaply. The gate below decides,
+// BEFORE the agent prompt is modified, whether the expected value of injected
+// context exceeds its overhead. When it does not, vtrace deliberately injects
+// nothing (a valid no-context policy), instead of paying for context that does
+// not earn its keep. This is product behaviour, not benchmark gaming.
+export type ContextPolicyAction = "inject" | "no_context";
+export type ExpectedLevel = "low" | "medium" | "high";
+
+// Task-shape signals derived from the SWE instance (independent of what the
+// capsule retrieved). These describe how "cheap/local" vs "navigation-heavy"
+// the task looks before any context is produced.
+export interface ContextPolicySignals {
+  readonly failingTestCount: number;
+  readonly problemStatementLength: number;
+  readonly crossModule: boolean;
+  readonly touchesComplexInternals: boolean;
+  readonly likelyFileCount: number;
+  readonly likelySymbolCount: number;
+  readonly hasExplicitTargets: boolean;
+  readonly recommendedMode: RecommendedCapsuleModeT;
+  readonly targetConfidence: TargetConfidenceT;
+}
+
+// What the capsule actually retrieved — the evidence side of the trade-off. A
+// strong pivot count is what turns a navigation-heavy task from "speculative"
+// into "worth the overhead".
+export interface CapsulePolicyDiagnostics {
+  readonly capsuleAction: VtracePolicyAction;
+  readonly hasContext: boolean;
+  readonly pivotCount: number | null;
+  readonly supportCount: number | null;
+  readonly actualMode: string | null;
+}
+
+export interface ContextPolicyDecision {
+  readonly action: ContextPolicyAction;
+  readonly reason: string;
+  readonly expectedContextValue: ExpectedLevel;
+  readonly expectedOverheadRisk: ExpectedLevel;
+}
+
+// A short problem statement is one cheap/local signal (mirrors the capsule
+// recommender's SHORT_ISSUE_CHARS threshold).
+const SHORT_PROBLEM_CHARS = 600;
+
+// Derive the gate's task-shape signals from an instance, reusing the same
+// shaping + mode recommendation the capsule itself runs on, so the gate and the
+// capsule never disagree about what the task looks like.
+export function deriveContextPolicySignals(instance: SweBenchInstance): ContextPolicySignals {
+  const shaped = shapeSweQuery(instance);
+  const signals = deriveModeSignals(instance, shaped);
+  const recommendation = recommendCapsuleMode(signals);
+  return {
+    failingTestCount: signals.failingTestCount,
+    problemStatementLength: signals.problemStatementLength,
+    crossModule: signals.crossModule,
+    touchesComplexInternals: signals.touchesComplexInternals,
+    likelyFileCount: signals.likelyFileCount,
+    likelySymbolCount: signals.likelySymbolCount,
+    hasExplicitTargets: signals.hasExplicitTargets,
+    recommendedMode: recommendation.recommendedMode,
+    targetConfidence: recommendation.targetConfidence,
+  };
+}
+
+// The cost-aware injection gate. Returns `inject` only when the expected value
+// of oriented context plausibly exceeds the overhead of injecting it.
+//
+//  - no_context when the capsule recovered nothing actionable (low value).
+//  - no_context for cheap/local tasks (one failing test, short problem, no
+//    cross-module signal, micro capsule, no high-confidence test→impl edge):
+//    baseline solves these cheaply, so context is pure overhead.
+//  - inject for navigation-heavy tasks, but CONSERVATIVELY — only when the
+//    capsule produced real pivot evidence; weak evidence on a big task is not
+//    worth the overhead.
+//  - inject for moderate tasks that retrieved real context.
+export function decideContextPolicy(
+  signals: ContextPolicySignals,
+  capsule: CapsulePolicyDiagnostics,
+): ContextPolicyDecision {
+  // 1. The capsule itself recovered no high-confidence target → nothing to inject.
+  if (capsule.capsuleAction === "skip" || !capsule.hasContext) {
+    return {
+      action: "no_context",
+      reason: "Capsule recovered no high-confidence target; nothing actionable to inject.",
+      expectedContextValue: "low",
+      expectedOverheadRisk: "low",
+    };
+  }
+
+  const strongPivot = (capsule.pivotCount ?? 0) >= 1;
+  const microCapsule =
+    signals.recommendedMode === RecommendedCapsuleMode.Micro
+    || signals.recommendedMode === RecommendedCapsuleMode.Skip;
+  const navigationHeavy =
+    signals.recommendedMode === RecommendedCapsuleMode.Full
+    || signals.touchesComplexInternals
+    || signals.crossModule
+    || signals.likelyFileCount >= 2;
+  // A high-confidence DIRECT test→implementation edge: the capsule pinned a
+  // confident pivot ON A TASK THAT ACTUALLY SPANS IMPLEMENTATION STRUCTURE.
+  // Crucially this is NOT the recommender's issue-text `targetConfidence` alone
+  // (a short issue naming three symbols reads "high" but is still a local edit);
+  // it requires the task to be navigation-heavy AND the capsule to back it with
+  // a real pivot. Cheap/local micro tasks never have one.
+  const highConfidenceDirectEdge =
+    navigationHeavy && strongPivot && signals.targetConfidence === TargetConfidence.High;
+
+  // 2. Cheap/local task: one failing test, short problem statement, low
+  //    cross-module signal, the capsule would be micro, and there is no
+  //    high-confidence direct test→implementation edge — so likely baseline
+  //    search/edit cost is low and injected context is net overhead.
+  const cheapLocal =
+    signals.failingTestCount <= 1
+    && signals.problemStatementLength < SHORT_PROBLEM_CHARS
+    && !signals.crossModule
+    && !signals.touchesComplexInternals
+    && microCapsule
+    && !highConfidenceDirectEdge;
+  if (cheapLocal) {
+    return {
+      action: "no_context",
+      reason:
+        "Cheap/local task: one failing test, short problem statement, low cross-module signal, micro capsule, "
+        + "and no high-confidence test-to-implementation edge — injected context is likely net overhead.",
+      expectedContextValue: "low",
+      expectedOverheadRisk: "high",
+    };
+  }
+
+  // 3. Navigation-heavy task: inject only with strong pivot evidence; otherwise
+  //    stay conservative (the Stage 5 11740 lesson).
+  if (navigationHeavy) {
+    return strongPivot
+      ? {
+          action: "inject",
+          reason: "Navigation-heavy task with strong pivot evidence; oriented context is expected to pay off.",
+          expectedContextValue: "high",
+          expectedOverheadRisk: "low",
+        }
+      : {
+          action: "no_context",
+          reason:
+            "Navigation-heavy task but capsule pivot evidence is weak; injecting risks overhead without payoff.",
+          expectedContextValue: "low",
+          expectedOverheadRisk: "medium",
+        };
+  }
+
+  // 4. Moderate task that retrieved real context → worth a standard injection.
+  return {
+    action: "inject",
+    reason: "Moderate task with retrieved context and no strong cheap/local signal; a standard capsule is worthwhile.",
+    expectedContextValue: "medium",
+    expectedOverheadRisk: "medium",
+  };
+}
+
 // Truncate one instance's raw vtrace context by item count (non-empty lines) then
 // by character budget, appending a clear marker when the char budget bites.
 export function truncateContext(
@@ -2139,6 +2334,10 @@ function indexedContextMetaFields(result: IndexedContextResult): IndexedContextF
     vtraceSkipReason: result.skipReason,
     vtracePivotCount: result.pivotCount,
     vtraceSupportCount: result.supportCount,
+    vtraceContextPolicyAction: result.contextPolicyAction,
+    vtracePolicyReason: result.policyReason,
+    expectedContextValue: result.expectedContextValue,
+    expectedOverheadRisk: result.expectedOverheadRisk,
   };
 }
 
@@ -2208,27 +2407,59 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     sections.push({ instance, rawContext, error: sectionError, classification });
   }
 
-  const assembled = buildVtraceContextMarkdown(sections, {
+  // Apply the cost-aware injection gate per section. Even REAL retrieved context
+  // is dropped when the gate decides `no_context` (cheap/local task), so the
+  // benchmark spends nothing on context that would be net overhead. A section
+  // with a hard error has no classification and is left untouched (its error
+  // still drives the abort/skip aggregation below).
+  const decisions = new Map<string, ContextPolicyDecision>();
+  const gatedSections: VtraceContextSection[] = sections.map((section) => {
+    if (section.classification === null) return section;
+    const decision = decideContextPolicy(deriveContextPolicySignals(section.instance), {
+      capsuleAction: section.classification.policyAction,
+      hasContext: section.rawContext.trim().length > 0,
+      pivotCount: section.classification.pivotCount,
+      supportCount: section.classification.supportCount,
+      actualMode: section.classification.actualCapsuleMode,
+    });
+    decisions.set(section.instance.instanceId, decision);
+    // Drop the context body when the gate declines to inject it.
+    return decision.action === "inject" ? section : { ...section, rawContext: "" };
+  });
+
+  const assembled = buildVtraceContextMarkdown(gatedSections, {
     maxChars: config.vtraceContextMaxChars,
     maxItems: config.vtraceContextMaxItems,
   });
   await writeFile(contextFile, assembled.markdown);
 
-  const indexedContext = sections.some((section) => section.error === null && section.rawContext.trim().length > 0);
-  const skipSections = sections.filter((section) => section.classification?.policyAction === "skip");
+  const indexedContext = gatedSections.some((section) => section.error === null && section.rawContext.trim().length > 0);
   const hardErrors = sections.filter((section) => section.error !== null);
-  // The run is a valid SKIP policy only when nothing was injected, at least one
-  // instance intentionally skipped, and there was no hard error to fail on.
-  const policyAction: VtracePolicyAction = indexedContext
-    ? "inject"
-    : skipSections.length > 0 && hardErrors.length === 0
-      ? "skip"
-      : "inject";
+  const noContextSections = sections.filter(
+    (section) => section.error === null && decisions.get(section.instance.instanceId)?.action === "no_context",
+  );
+  // The run is a valid no-context policy only when nothing was injected, at
+  // least one instance was gated to no_context, and there was no hard error to
+  // fail on. A no-context decision is recorded via the existing `skip` action so
+  // the run-status / treatment-validity machinery treats it as a valid policy.
+  const noContext = !indexedContext && noContextSections.length > 0 && hardErrors.length === 0;
+  const policyAction: VtracePolicyAction = noContext ? "skip" : "inject";
+  const contextPolicyAction: ContextPolicyAction = noContext ? "no_context" : "inject";
   const pivotCount = sumClassification(sections, (c) => c.pivotCount);
   const supportCount = sumClassification(sections, (c) => c.supportCount);
-  const actualCapsuleMode = policyAction === "skip"
+  // The section/decision that explains the run-level policy: the first
+  // no_context section when we declined, else the first inject decision.
+  const repSection = noContext ? (noContextSections[0] ?? null) : null;
+  const repDecision = noContext
+    ? (repSection ? decisions.get(repSection.instance.instanceId) ?? null : null)
+    : [...decisions.values()].find((d) => d.action === "inject") ?? null;
+  // Recorded as the legacy `skip` mode for a no-context policy (the gate's
+  // `no_context` decision is carried separately by contextPolicyAction).
+  const actualCapsuleMode = noContext
     ? "skip"
-    : (sections.find((s) => s.classification?.actualCapsuleMode != null)?.classification?.actualCapsuleMode ?? null);
+    : (gatedSections.find((s) => s.rawContext.trim().length > 0)
+        ? (sections.find((s) => s.classification?.actualCapsuleMode != null)?.classification?.actualCapsuleMode ?? null)
+        : null);
 
   return {
     indexedContext,
@@ -2242,10 +2473,18 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     contextError: errors.length > 0 ? errors.join("; ") : null,
     policyAction,
     contextInjected: indexedContext,
-    skipReason: policyAction === "skip" ? (skipSections[0]?.classification?.skipReason ?? null) : null,
+    // Capsule-level reason when a capsule skip drove the no-context decision;
+    // otherwise the gate's own rationale (cheap/local / weak-pivot).
+    skipReason: noContext
+      ? (repSection?.classification?.skipReason ?? repDecision?.reason ?? "no high-confidence actionable target recovered")
+      : null,
     pivotCount,
     supportCount,
     actualCapsuleMode,
+    contextPolicyAction,
+    policyReason: repDecision?.reason ?? null,
+    expectedContextValue: repDecision?.expectedContextValue ?? null,
+    expectedOverheadRisk: repDecision?.expectedOverheadRisk ?? null,
   };
 }
 
@@ -2538,12 +2777,16 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtraceContextItems: evidence.vtraceContextItems,
           vtraceContextTruncated: evidence.vtraceContextTruncated,
           vtraceContextError: evidence.vtraceContextError,
-          // Stage 5 vtrace policy fields (skip support).
+          // Stage 5 vtrace policy fields (skip support + cost-aware gate).
           vtracePolicyAction: evidence.vtracePolicyAction,
           vtraceContextInjected: evidence.vtraceContextInjected,
           vtraceSkipReason: evidence.vtraceSkipReason,
           vtracePivotCount: evidence.vtracePivotCount,
           vtraceSupportCount: evidence.vtraceSupportCount,
+          vtraceContextPolicyAction: evidence.vtraceContextPolicyAction,
+          vtracePolicyReason: evidence.vtracePolicyReason,
+          expectedContextValue: evidence.expectedContextValue,
+          expectedOverheadRisk: evidence.expectedOverheadRisk,
         },
   );
 }
@@ -2791,6 +3034,17 @@ export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5
     vtraceContextItems: null,
     vtraceContextTruncated: null,
     vtraceContextError: firstError((e) => e.vtraceContextError),
+    // Policy facts are per-instance, not aggregatable, so they collapse to null
+    // here; the authoritative per-instance policy lives on each row.
+    vtracePolicyAction: null,
+    vtraceContextInjected: null,
+    vtraceSkipReason: null,
+    vtracePivotCount: null,
+    vtraceSupportCount: null,
+    vtraceContextPolicyAction: null,
+    vtracePolicyReason: null,
+    expectedContextValue: null,
+    expectedOverheadRisk: null,
     notes: perRun.flatMap((e) => e.notes),
   };
 }
@@ -3152,6 +3406,10 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtraceSkipReason: null,
     vtracePivotCount: null,
     vtraceSupportCount: null,
+    vtraceContextPolicyAction: null,
+    vtracePolicyReason: null,
+    expectedContextValue: null,
+    expectedOverheadRisk: null,
   };
 }
 
@@ -3391,6 +3649,12 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     value === "inject" || value === "skip" || value === "error" || value === "unknown"
       ? (value as VtracePolicyAction | "unknown")
       : null;
+  const contextPolicy = (value: unknown): ContextPolicyAction | "unknown" | null =>
+    value === "inject" || value === "no_context" || value === "unknown"
+      ? (value as ContextPolicyAction | "unknown")
+      : null;
+  const level = (value: unknown): ExpectedLevel | null =>
+    value === "low" || value === "medium" || value === "high" ? (value as ExpectedLevel) : null;
   return {
     vtraceIndexedContext: bool(meta.vtraceIndexedContext),
     vtraceIndexCommand: str(meta.vtraceIndexCommand),
@@ -3406,6 +3670,10 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtraceSkipReason: str(meta.vtraceSkipReason),
     vtracePivotCount: num(meta.vtracePivotCount),
     vtraceSupportCount: num(meta.vtraceSupportCount),
+    vtraceContextPolicyAction: contextPolicy(meta.vtraceContextPolicyAction),
+    vtracePolicyReason: str(meta.vtracePolicyReason),
+    expectedContextValue: level(meta.expectedContextValue),
+    expectedOverheadRisk: level(meta.expectedOverheadRisk),
   };
 }
 
@@ -3435,6 +3703,14 @@ function summarize(
     vtraceConditionRun: rows.some((row) => row.condition === "vtrace"),
     skipCount: vtraceRows.filter((row) => row.vtracePolicyAction === "skip").length,
     contextInjectedCount: vtraceRows.filter((row) => row.vtraceContextInjected === true).length,
+    // A no-context row is a valid policy run that injected nothing — count it
+    // SEPARATELY from injected-context rows so its efficiency deltas are never
+    // advertised as a retrieval/injection win (Requirement 4). A row is
+    // no_context when the gate said so OR the legacy skip mechanism recorded it.
+    injectedContextCount: vtraceRows.filter((row) => row.vtraceContextInjected === true).length,
+    noContextCount: vtraceRows.filter(
+      (row) => row.vtraceContextPolicyAction === "no_context" || row.vtracePolicyAction === "skip",
+    ).length,
     invalidTreatmentCount: vtraceRows.filter((row) => row.vtraceTreatmentValid === false).length,
     infraFailedCount,
     policySkipCount: countStatus("policy_skip"),
@@ -3484,6 +3760,10 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         row.vtraceIndexedContext === null ? "" : String(row.vtraceIndexedContext),
         row.vtraceTreatmentValid === null ? "" : String(row.vtraceTreatmentValid),
         row.vtracePolicyAction ?? "",
+        row.vtraceContextPolicyAction ?? "",
+        row.vtracePolicyReason ?? "",
+        row.expectedContextValue ?? "",
+        row.expectedOverheadRisk ?? "",
         row.vtraceContextInjected === null ? "" : String(row.vtraceContextInjected),
         row.vtraceSkipReason ?? "",
         row.vtracePivotCount === null ? "" : String(row.vtracePivotCount),
@@ -3571,6 +3851,8 @@ export function renderMarkdown(artifact: NormalizedArtifact, config: CliConfig):
     `| Vtrace runs | ${summary.vtraceRuns} |`,
     `| Vtrace context injected | ${summary.contextInjectedCount} |`,
     `| Vtrace skip policy | ${summary.skipCount} |`,
+    `| Injected-context rows | ${summary.injectedContextCount} |`,
+    `| No-context rows | ${summary.noContextCount} |`,
     `| Invalid treatments | ${summary.invalidTreatmentCount} |`,
     `| Both resolved | ${summary.bothResolved} |`,
     `| Vtrace only resolved | ${summary.vtraceOnlyResolved} |`,
@@ -3665,6 +3947,12 @@ function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
     "| --- | --- |",
     `| vtrace_method | ${evidence.vtraceMethod} |`,
     `| vtrace_policy_action | ${evidence.vtracePolicyAction ?? "(n/a)"} |`,
+    // The cost-aware gate's decision in its own vocabulary (`inject`|`no_context`);
+    // a recorded `skip` policy is reported here as `no_context`.
+    `| vtrace_context_policy_action | ${evidence.vtraceContextPolicyAction ?? (evidence.vtracePolicyAction === "skip" ? "no_context" : evidence.vtracePolicyAction) ?? "(n/a)"} |`,
+    `| vtrace_policy_reason | ${evidence.vtracePolicyReason ?? evidence.vtraceSkipReason ?? "(none)"} |`,
+    `| expected_context_value | ${evidence.expectedContextValue ?? "(n/a)"} |`,
+    `| expected_overhead_risk | ${evidence.expectedOverheadRisk ?? "(n/a)"} |`,
     `| vtrace_context_injected | ${evidence.vtraceContextInjected === null ? "(n/a)" : String(evidence.vtraceContextInjected)} |`,
     `| vtrace_indexed_context | ${String(evidence.vtraceIndexedContext)} |`,
     `| vtrace_skip_reason | ${evidence.vtraceSkipReason ?? "(none)"} |`,
