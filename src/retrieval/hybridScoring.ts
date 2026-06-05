@@ -25,10 +25,23 @@ export interface HybridScoreComponents {
   fts: number;
   /** Normalised BM25/TF-IDF score over the candidate-pool corpus. */
   tfidf: number;
+  /**
+   * Alias of `tfidf`, exposed under the scorecard vocabulary name (Requirement
+   * 2). Same value; kept distinct so callers can read either name.
+   */
+  bm25: number;
   /** Normalised symbol-name match strength (exact/prefix on a likely symbol). */
   symbol: number;
   /** Normalised path/file match strength (candidate lives in a likely file). */
   path: number;
+  /**
+   * Normalised test-to-implementation strength: how strongly a FAILING TEST
+   * reaches this candidate (imported by the test file, or called/asserted by the
+   * test method). A first-class precision signal — not folded into `graph` —
+   * because for a SWE task "the failing test exercises it" is the single best
+   * predictor of the edit target. Counts toward local evidence.
+   */
+  testToImpl: number;
   /**
    * Normalised domain relevance: query terms (aggregate/Count/distinct/…) that
    * stem-match this candidate's path or name tokens. This is what ties an
@@ -38,6 +51,12 @@ export interface HybridScoreComponents {
   domain: number;
   /** Normalised graph score (expansion depth + connection evidence). */
   graph: number;
+  /**
+   * Alias of `graph`, exposed under the scorecard vocabulary name (Requirement
+   * 2): graph PROXIMITY to the working set, distinct from `centrality` (global
+   * in-degree). Same value as `graph`.
+   */
+  graphProximity: number;
   /** Normalised graph centrality (in-degree within the working set). */
   centrality: number;
   /**
@@ -76,19 +95,24 @@ export interface HybridScoreWeights {
   readonly symbol: number;
   readonly path: number;
   readonly domain: number;
+  readonly testToImpl: number;
   readonly graph: number;
   readonly centrality: number;
 }
 
 // Weights are POLICY, kept named and out of the combine math. The defaults lean
-// on symbol and lexical evidence (the strongest precision signals for an exact
-// edit target) while letting path/domain/graph/centrality break ties and rescue
-// candidates the lexical matcher missed.
+// on test-to-implementation, symbol, and lexical evidence (the strongest
+// precision signals for an exact SWE edit target) while letting path/domain/graph
+// break ties and rescue candidates the lexical matcher missed. `centrality` is
+// deliberately the WEAKEST: a generic framework hub must never win on reach
+// alone (Requirement 2 — "centrality is weak and cannot win alone").
 export const HYBRID_SCORE_WEIGHTS: HybridScoreWeights = Object.freeze({
   lexical: 1.0,
   symbol: 1.2,
   path: 0.8,
   domain: 0.9,
+  // The failing test points STRAIGHT at the implementation; weight it highest.
+  testToImpl: 1.3,
   graph: 1.0,
   centrality: 0.5,
 });
@@ -111,6 +135,7 @@ export interface FinalScoreComponents {
   symbol: number;
   path: number;
   domain: number;
+  testToImpl: number;
   graph: number;
   centrality: number;
 }
@@ -125,6 +150,7 @@ export function combineFinalScore(
     + weights.symbol * components.symbol
     + weights.path * components.path
     + weights.domain * components.domain
+    + weights.testToImpl * components.testToImpl
     + weights.graph * components.graph
     + weights.centrality * components.centrality
   );
@@ -151,8 +177,6 @@ export const HUB_IN_DEGREE_THRESHOLD = 5;
 // Below this normalised lexical score, lexical match is too weak to count as
 // local evidence (django's `Model` scored 0.0329 against the aggregate query).
 export const HUB_WEAK_LEXICAL_MAX = 0.1;
-// How much a test-to-implementation edge counts toward local evidence.
-const TEST_LOCAL_EVIDENCE = 0.8;
 
 export interface HubEvaluationInput {
   /** Global in-degree (dependent count) of the candidate. */
@@ -162,6 +186,8 @@ export interface HubEvaluationInput {
   symbol: number;
   path: number;
   domain: number;
+  /** Normalised test-to-implementation strength (0 when no failing test reaches it). */
+  testToImpl: number;
   /** Whether a failing test imports/calls/references this candidate. */
   hasTestEvidence: boolean;
   /** Already-weighted graph and centrality contributions to strip on penalty. */
@@ -177,14 +203,15 @@ export interface HubEvaluation {
 
 export function evaluateHub(input: HubEvaluationInput): HubEvaluation {
   const lexicalLocal = input.lexical >= HUB_WEAK_LEXICAL_MAX ? input.lexical : 0;
-  // Local evidence is everything that ties a candidate to THIS task — including
-  // issue-derived domain relevance — but NOT generic graph reach or centrality.
+  // Local evidence is everything that ties a candidate to THIS task — lexical,
+  // symbol-name, path, issue-derived domain relevance, and being reached by a
+  // FAILING TEST — but NOT generic graph reach or centrality.
   const localEvidence =
     lexicalLocal
     + input.symbol
     + input.path
     + input.domain
-    + (input.hasTestEvidence ? TEST_LOCAL_EVIDENCE : 0);
+    + input.testToImpl;
 
   // The hub penalty stays STRICT: domain relevance alone does not exempt a
   // 1600-dependent framework hub. It must have direct lexical/symbol/path/test

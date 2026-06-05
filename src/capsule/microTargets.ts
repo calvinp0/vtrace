@@ -19,34 +19,55 @@
 
 import type { Database } from "bun:sqlite";
 
-import { isLikelyTestCandidate } from "../retrieval/searchSymbolsShared";
 import {
   hybridRetrieve,
   type HybridCandidate,
 } from "../retrieval/hybridRetrieval";
 import type { GraphExpansionOptions } from "../retrieval/graphExpansion";
+import {
+  assignCandidateRoles,
+  CandidateRole,
+  pivotsOf,
+  supportOf,
+  type RoledCandidate,
+} from "./assignCandidateRoles";
 import type { ShapedSweQuery } from "./sweQueryShaping";
 
 export interface RecoverMicroTargetsOptions {
-  /** Hard cap on recovered targets (defaults to the micro item budget, 2). */
+  /** Hard cap on micro PIVOTS (defaults to a single high-confidence pivot). */
   maxTargets?: number;
-  /** Candidate pool the hybrid pipeline ranks before filtering. */
+  /** Candidate pool the hybrid pipeline ranks before role assignment. */
   poolSize?: number;
   /** Graph-expansion bounds forwarded to the hybrid pipeline. */
   expansion?: GraphExpansionOptions;
 }
 
-const DEFAULT_MAX_TARGETS = 2;
+export interface MicroCapsuleRecovery {
+  /** Every ranked candidate with its assigned role + why (for diagnostics). */
+  roled: RoledCandidate[];
+  /** The recovered pivots, in rank order (micro: at most `maxTargets`). */
+  pivots: HybridCandidate[];
+  /** Support context related to the pivots, in rank order. */
+  support: HybridCandidate[];
+}
+
+// Micro is single-pivot by policy: one high-confidence edit target, or skip.
+const DEFAULT_MAX_TARGETS = 1;
 const DEFAULT_POOL_SIZE = 12;
 
-export function recoverMicroTargets(
+// Recover the micro capsule: run hybrid graph-expanded retrieval, then assign
+// pivot/support/discard roles under the STRICT micro policy (a pivot needs a
+// concrete failing-test/symbol/path pointer and an actionable kind; a generic
+// hub or module variable is support at most). The caller emits the pivot — or,
+// when none survives, recommends skip rather than vague support-only context.
+export function recoverMicroCapsule(
   db: Database,
   shaped: ShapedSweQuery,
   options: RecoverMicroTargetsOptions = {},
-): HybridCandidate[] {
+): MicroCapsuleRecovery {
   const maxTargets = options.maxTargets ?? DEFAULT_MAX_TARGETS;
   if (maxTargets <= 0) {
-    return [];
+    return { roled: [], pivots: [], support: [] };
   }
 
   const { candidates } = hybridRetrieve(db, {
@@ -57,43 +78,28 @@ export function recoverMicroTargets(
     ...(options.expansion ? { expansion: options.expansion } : {}),
   });
 
-  // A micro capsule's targets must be locally relevant — never a generic,
-  // high-centrality framework hub (django's `Model`) nor a low-actionability
-  // module variable that floated up on graph reach alone. Keep only eligible
-  // candidates, then order them STRICTLY by final score (which already reflects
-  // every boost and penalty). The previous local-vs-support partition is gone:
-  // it could rank a weaker-but-locally-evidenced candidate above a stronger one.
-  const eligible = candidates.filter(isEligibleMicroTarget);
-  if (eligible.length === 0) {
-    // Nothing locally relevant recovered: do not anchor the micro capsule on a
-    // hub. Returning empty makes the caller recommend skip.
-    return [];
-  }
-
-  return [...eligible].sort(byFinalScoreDescending).slice(0, maxTargets);
-}
-
-// A micro candidate eligible to appear at all: implementation (not a test), not
-// a penalised generic hub, and carrying at least one LOCAL signal that ties it
-// to this task — strong-enough lexical, a symbol-name/path match, issue-derived
-// domain relevance, or a test-to-implementation edge. `localEvidence` encodes
-// exactly that. A low-actionability module variable can still be eligible (and
-// appear as trailing support), but its actionability penalty pushes its final
-// score — and therefore its rank — below any real edit target.
-function isEligibleMicroTarget(candidate: HybridCandidate): boolean {
-  if (isLikelyTestCandidate(candidate)) {
-    return false;
-  }
-  return candidate.scores.hubPenalty === 0 && candidate.scores.localEvidence > 0;
-}
-
-// Order by final score descending. The only tie-breaker is symbol id, so the
-// ordering is total and deterministic.
-function byFinalScoreDescending(left: HybridCandidate, right: HybridCandidate): number {
-  return (
-    right.scores.final - left.scores.final
-    || left.symbolId.localeCompare(right.symbolId)
+  const assigned = assignCandidateRoles(candidates, { micro: true, maxPivots: maxTargets });
+  // A micro capsule is tiny and high-precision: its support must be LOCALLY
+  // relevant context (lexical/symbol/path/domain/test evidence), never a
+  // zero-local-evidence graph neighbour (a base `Model` reached only by
+  // inheritance) — that is exactly the "vague support" Requirement 5 forbids. A
+  // demoted support entry leaves the emitted set entirely (becomes a discard),
+  // so the diagnostics' selection mirrors what the capsule actually carries.
+  const roled = assigned.filter(
+    (entry) =>
+      entry.role === CandidateRole.Pivot
+      || (entry.role === CandidateRole.Support && entry.candidate.scores.localEvidence > 0),
   );
+  return { roled, pivots: pivotsOf(roled), support: supportOf(roled) };
+}
+
+// Back-compat thin wrapper: the recovered micro PIVOTS only.
+export function recoverMicroTargets(
+  db: Database,
+  shaped: ShapedSweQuery,
+  options: RecoverMicroTargetsOptions = {},
+): HybridCandidate[] {
+  return recoverMicroCapsule(db, shaped, options).pivots;
 }
 
 // The symbols worth resolving to an implementation, in priority order:

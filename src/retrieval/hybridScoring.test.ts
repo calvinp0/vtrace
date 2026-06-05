@@ -55,7 +55,7 @@ test("normalizeAgainst maps to [0, 1] and guards a zero max", () => {
 
 test("final score is a plain weighted sum that excludes the raw lexical sub-signals", () => {
   const lexical = blendLexical(1, 0); // 0.65
-  const final = combineFinalScore({ lexical, symbol: 1, path: 0, domain: 0, graph: 0, centrality: 0 });
+  const final = combineFinalScore({ lexical, symbol: 1, path: 0, domain: 0, testToImpl: 0, graph: 0, centrality: 0 });
   // default weights: lexical 1.0, symbol 1.2 -> 0.65 + 1.2 = 1.85
   assert.ok(Math.abs(final - (0.65 + 1.2)) < 1e-9);
 });

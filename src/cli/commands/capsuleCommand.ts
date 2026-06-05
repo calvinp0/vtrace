@@ -12,7 +12,8 @@ import {
   parseCapsuleMode,
   resolveCapsuleModeLimits,
 } from "../../capsule/capsuleModes";
-import { recoverMicroTargets } from "../../capsule/microTargets";
+import { recoverMicroCapsule, type MicroCapsuleRecovery } from "../../capsule/microTargets";
+import { CandidateRole, type RoledCandidate } from "../../capsule/assignCandidateRoles";
 import {
   deriveModeSignals,
   recommendCapsuleMode,
@@ -99,26 +100,34 @@ export async function runCapsuleCommand(
       // points at the code to change rather than the test (or nothing). Other
       // modes keep the routed candidates.
       const shaped = shapeSweQuery({ problemStatement: query });
-      const microTargets = mode === CapsuleMode.Micro
-        ? recoverMicroTargets(db, shaped, { maxTargets: limits.maxItems })
-        : [];
+      const recovery: MicroCapsuleRecovery | undefined = mode === CapsuleMode.Micro
+        ? recoverMicroCapsule(db, shaped, { maxTargets: 1, poolSize: Math.max(limits.maxItems * 6, 12) })
+        : undefined;
 
-      // A micro capsule must point at a real target. If recovery found none, do
-      // NOT emit an empty/misdirecting tiny capsule — recommend skip instead.
-      if (mode === CapsuleMode.Micro && microTargets.length === 0) {
+      // A micro capsule must point at a real target. If role assignment found no
+      // high-confidence pivot, do NOT emit empty/misdirecting context — skip.
+      if (recovery !== undefined && recovery.pivots.length === 0) {
         return emitMicroSkip(json);
       }
 
-      const pivotCandidates: readonly GraphSearchResult[] = microTargets.length > 0
-        ? microTargets.map(hybridCandidateToGraphResult)
+      // Micro: pivots are the recovered edit targets; support is the related
+      // context (rendered skeleton-only), filling the remaining item budget.
+      // Other modes keep the routed candidates (pivot + structural support).
+      const pivotCandidates: readonly GraphSearchResult[] = recovery !== undefined
+        ? recovery.pivots.map(hybridCandidateToGraphResult)
         : routedQuery.rerankedResults;
+      const supportingCandidates: readonly CapsuleSupportingCandidate[] = recovery !== undefined
+        ? recovery.support
+          .slice(0, Math.max(0, limits.maxItems - pivotCandidates.length))
+          .map(hybridCandidateToSupportingCandidate)
+        : pivotCandidates.map(makeSupportingCandidateFromGraphResult);
 
       const preparedAssembly = prepareCapsuleAssembly({
         classification: routedQuery.classification,
         builderInput: {
           query,
           rerankedCandidates: pivotCandidates,
-          supportingCandidates: pivotCandidates.map(makeSupportingCandidateFromGraphResult),
+          supportingCandidates,
           maxBudget: createCharacterBudget(limits.maxChars),
         },
       });
@@ -127,7 +136,7 @@ export async function runCapsuleCommand(
         preparedAssembly.builderInput,
       );
 
-      const diagnostics = computeDiagnostics(query, mode, capsule, shaped, microTargets);
+      const diagnostics = computeDiagnostics(query, mode, capsule, shaped, recovery);
 
       if (json) {
         const compact = renderCompactCapsule(capsule, {
@@ -168,26 +177,28 @@ function computeDiagnostics(
   mode: CapsuleMode,
   capsule: Capsule,
   shaped: ShapedSweQuery,
-  microTargets: readonly HybridCandidate[],
+  recovery: MicroCapsuleRecovery | undefined,
 ): CapsuleDiagnostics {
   const recommendation = recommendCapsuleMode(deriveModeSignals({ problemStatement: query }, shaped));
 
-  const recoveredFiles = microTargets.map((target) => target.filePath);
-  const recoveredSymbols = microTargets.map((target) => target.localName);
+  const pivots = recovery?.pivots ?? [];
+  const recoveredFiles = pivots.map((target) => target.filePath);
+  const recoveredSymbols = pivots.map((target) => target.localName);
   const likelyFiles = recoveredFiles.length > 0 ? recoveredFiles : shaped.likelyFiles;
   const likelySymbols = recoveredSymbols.length > 0 ? recoveredSymbols : shaped.likelySymbols;
 
-  // Per-item score breakdown + evidence. Prefer the hybrid targets' full
-  // breakdown (micro); otherwise derive it from the assembled capsule items so
-  // the diagnostics are present and uniformly shaped in every mode.
-  const selection = microTargets.length > 0
-    ? selectionFromHybridTargets(microTargets)
+  // Per-item role + score breakdown + evidence. Prefer the role-assigned hybrid
+  // candidates' full breakdown (micro); otherwise derive it from the assembled
+  // capsule items so the diagnostics are present and uniformly shaped everywhere.
+  const selection = recovery !== undefined
+    ? selectionFromRoledCandidates(recovery.roled)
     : selectionFromCapsule(capsule);
 
   return buildCapsuleDiagnostics({
     mode,
     capsule,
     recommendation,
+    actualMode: mode,
     ...(likelyFiles.length > 0 ? { likelyFiles } : {}),
     ...(likelySymbols.length > 0 ? { likelySymbols } : {}),
     ...(selection.length > 0 ? { selection } : {}),
@@ -199,14 +210,17 @@ function computeDiagnostics(
 // likely_files/context here is honest precisely BECAUSE recommended_mode=skip.
 function emitMicroSkip(json: boolean): CommandResult {
   const reason =
-    "Micro mode could not recover an implementation target from the failing test(s)/issue; "
-    + "recommending skip rather than emitting empty or misdirecting context.";
+    "no high-confidence actionable target recovered — recommending skip rather than "
+    + "emitting vague support-only or misdirecting context.";
   const diagnostics: CapsuleDiagnostics = {
     mode: CapsuleMode.Micro,
     context_chars: 0,
     context_items: 0,
     recommended_mode: RecommendedCapsuleMode.Skip,
+    actual_mode: RecommendedCapsuleMode.Skip,
     target_confidence: TargetConfidence.Low,
+    pivot_count: 0,
+    support_count: 0,
     likely_files: [],
     likely_symbols: [],
     retrieval_reason: reason,
@@ -216,6 +230,27 @@ function emitMicroSkip(json: boolean): CommandResult {
     return success(formatJson({ diagnostics, context: "" }));
   }
   return success(`micro: skip — ${reason}`);
+}
+
+function hybridCandidateToSupportingCandidate(
+  candidate: HybridCandidate,
+): CapsuleSupportingCandidate {
+  return {
+    symbolId: candidate.symbolId,
+    filePath: candidate.filePath,
+    fqName: candidate.fqName,
+    localName: candidate.localName,
+    kind: candidate.kind,
+    lexicalScore: candidate.scores.lexical,
+    graphScore: candidate.scores.graph,
+    finalScore: candidate.scores.final,
+    inclusionReasons: [
+      {
+        kind: CapsuleInclusionReasonKind.QueryCoverage,
+        note: candidate.evidence[0] ?? "related context",
+      },
+    ],
+  };
 }
 
 function hybridCandidateToGraphResult(candidate: HybridCandidate): GraphSearchResult {
@@ -233,44 +268,69 @@ function hybridCandidateToGraphResult(candidate: HybridCandidate): GraphSearchRe
   };
 }
 
-function selectionFromHybridTargets(
-  targets: readonly HybridCandidate[],
+// Role-assigned candidates (micro): emit each with its pivot/support role,
+// the full scorecard (including the new bm25/testToImpl/graphProximity aliases),
+// and the role's "why" as the leading evidence line so the report shows WHY a
+// candidate is a pivot. Discards are omitted from the emitted selection.
+function selectionFromRoledCandidates(
+  roled: readonly RoledCandidate[],
 ): CapsuleSelectionDiagnostic[] {
-  return targets.map((target) => ({
-    path: target.filePath,
-    symbol: target.localName,
-    scores: {
-      lexical: target.scores.lexical,
-      path: target.scores.path,
-      symbol: target.scores.symbol,
-      domain: target.scores.domain,
-      graph: target.scores.graph,
-      centrality: target.scores.centrality,
-      actionability: target.scores.actionability,
-      local_evidence_score: target.scores.localEvidence,
-      in_degree_or_dependent_count: target.scores.inDegree,
-      hub_penalty: target.scores.hubPenalty,
-      actionability_penalty: target.scores.actionabilityPenalty,
-      final: target.scores.final,
-    },
-    evidence: target.evidence,
-  }));
+  return roled
+    .filter((entry) => entry.role !== CandidateRole.Discard)
+    .map((entry) => {
+      const target = entry.candidate;
+      return {
+        role: entry.role === CandidateRole.Pivot ? "pivot" as const : "support" as const,
+        path: target.filePath,
+        symbol: target.localName,
+        scores: {
+          lexical: target.scores.lexical,
+          bm25: target.scores.bm25,
+          path: target.scores.path,
+          symbol: target.scores.symbol,
+          testToImpl: target.scores.testToImpl,
+          domain: target.scores.domain,
+          graph: target.scores.graph,
+          graphProximity: target.scores.graphProximity,
+          centrality: target.scores.centrality,
+          actionability: target.scores.actionability,
+          local_evidence_score: target.scores.localEvidence,
+          in_degree_or_dependent_count: target.scores.inDegree,
+          hub_penalty: target.scores.hubPenalty,
+          actionability_penalty: target.scores.actionabilityPenalty,
+          final: target.scores.final,
+        },
+        evidence: [entry.why, ...target.evidence],
+      };
+    });
 }
 
 // Build a uniform selection breakdown from the assembled capsule items when no
-// hybrid breakdown is available (non-micro modes). The capsule carries lexical /
-// graph / final scores; the unmodelled components default to 0.
+// hybrid breakdown is available (non-micro modes). Role comes from the item's
+// own role; the capsule carries lexical / graph / final, others default to 0.
 function selectionFromCapsule(capsule: Capsule): CapsuleSelectionDiagnostic[] {
-  const items: CapsuleItem[] = [...capsule.pivots, ...capsule.supportingItems];
-  return items.map((item) => ({
+  const pivots = capsule.pivots.map((item) => roledSelectionItem(item, "pivot"));
+  const support = capsule.supportingItems.map((item) => roledSelectionItem(item, "support"));
+  return [...pivots, ...support];
+}
+
+function roledSelectionItem(
+  item: CapsuleItem,
+  role: "pivot" | "support",
+): CapsuleSelectionDiagnostic {
+  return {
+    role,
     path: item.filePath,
     symbol: item.localName,
     scores: {
       lexical: item.lexicalScore ?? 0,
+      bm25: 0,
       path: 0,
       symbol: 0,
+      testToImpl: 0,
       domain: 0,
       graph: item.graphScore ?? 0,
+      graphProximity: item.graphScore ?? 0,
       centrality: 0,
       actionability: 0,
       local_evidence_score: 0,
@@ -280,7 +340,7 @@ function selectionFromCapsule(capsule: Capsule): CapsuleSelectionDiagnostic[] {
       final: item.finalScore ?? 0,
     },
     evidence: inclusionReasonsToEvidence(item.inclusionReasons),
-  }));
+  };
 }
 
 function inclusionReasonsToEvidence(

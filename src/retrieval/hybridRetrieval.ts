@@ -51,8 +51,13 @@ export enum HybridCandidateSource {
   Lexical = "lexical",
   Symbol = "symbol",
   Path = "path",
-  Test = "test",
+  /** Reached because a failing TEST METHOD (test_*) calls/asserts it. */
+  FailingTest = "failing_test",
+  /** Reached because a failing test FILE imports it (test -> implementation). */
+  TestToImpl = "test_to_impl",
   Graph = "graph",
+  /** A same-package sibling of an in-pool symbol (no edge required). */
+  SameModule = "same_module",
 }
 
 export interface HybridCandidate {
@@ -100,6 +105,8 @@ interface RawCandidate {
   fts: number;
   matches: SymbolSearchMatch[];
   graph: number;
+  /** Raw test-to-implementation strength (failing-test routing). */
+  testToImpl: number;
   sources: Set<HybridCandidateSource>;
   evidence: Set<string>;
 }
@@ -120,10 +127,38 @@ export function hybridRetrieve(
 
   const raw = new Map<SymbolId, RawCandidate>();
 
-  // 1. Lexical candidates from the shaped query (FTS5 + heuristic ranking).
+  // Retrieval is a UNION of independent candidate generators. Each emits the
+  // SAME structured candidate (file/symbol identity + source + evidence) and a
+  // candidate surfaced by several generators merges, accumulating every source
+  // and evidence line. The first four seed the pool from the query; the last two
+  // expand it to neighbours the query alone could never have named.
+  lexicalCandidates(db, input, lexicalPoolSize, raw);
+  symbolPathCandidates(db, input, raw);
+  failingTestCandidates(db, input, raw);
+  // Graph + same-module expansion run over EVERYTHING the query-side generators
+  // surfaced, so they can pull in a target lexical search missed.
+  const seeds = [...raw.keys()];
+  graphExpandedCandidates(db, input, seeds, raw);
+
+  return { candidates: assemble(db, raw, input, maxResults) };
+}
+
+// --- candidate generators -----------------------------------------------------
+//
+// Each generator MUTATES the shared raw-candidate pool (merging by symbol id) so
+// a symbol reached by several routes keeps every source and evidence line. They
+// are split out so the union is legible and individually testable.
+
+// Lexical candidates from the shaped query (FTS5 + heuristic ranking).
+function lexicalCandidates(
+  db: Database,
+  input: HybridRetrievalInput,
+  poolSize: number,
+  raw: Map<SymbolId, RawCandidate>,
+): void {
   for (const result of searchSymbols(db, {
     query: input.query,
-    maxResults: lexicalPoolSize,
+    maxResults: poolSize,
     enableTestAwareDownweighting: true,
   })) {
     const entry = ensureCandidate(db, raw, result.symbolId);
@@ -139,10 +174,16 @@ export function hybridRetrieve(
       );
     }
   }
+}
 
-  // 2. Symbol candidates: each likely symbol (plus any caller-supplied seeds)
-  //    resolved against the index. These seed the pool even when the prose-level
-  //    query under-ranked them.
+// Symbol candidates (each likely symbol / caller seed resolved against the index)
+// and path candidates (every symbol in a likely edit file). Both seed the pool
+// directly so a target enters even when the prose-level query under-ranked it.
+function symbolPathCandidates(
+  db: Database,
+  input: HybridRetrievalInput,
+  raw: Map<SymbolId, RawCandidate>,
+): void {
   const symbolQueries = dedupeNonEmpty([
     ...(input.symbolSeeds ?? []),
     ...input.shaped.likelySymbols,
@@ -165,8 +206,6 @@ export function hybridRetrieve(
     }
   }
 
-  // 3. Path candidates: every symbol that lives in a likely edit file enters the
-  //    pool directly, so the target file is present even with no lexical hit.
   for (const file of input.shaped.likelyFiles) {
     for (const symbol of listSymbolsForFile(db, file)) {
       const entry = ensureCandidate(db, raw, symbol.id, symbol);
@@ -177,36 +216,73 @@ export function hybridRetrieve(
       entry.evidence.add(`declared in likely edit file ${file}`);
     }
   }
+}
 
-  // 4. Failing-test -> implementation candidates (import/call/reference edges).
-  for (const testImpl of expandTestsToImplementation(db, input.shaped)) {
+// Failing-test -> implementation candidates. The routing distinguishes two
+// routes (Requirement 6): a module-level import from the test FILE
+// (`test_to_impl`) and a call/reference from the test METHOD (`failing_test`).
+// Both feed the dedicated `testToImpl` ranking signal — never `graph` — so a
+// failing test's pull on the edit target is reported and weighted on its own.
+function failingTestCandidates(
+  db: Database,
+  input: HybridRetrievalInput,
+  raw: Map<SymbolId, RawCandidate>,
+): void {
+  const issueSymbols = dedupeNonEmpty([
+    ...input.shaped.likelySymbols,
+    ...input.shaped.identifiers,
+  ]);
+  for (const testImpl of expandTestsToImplementation(db, input.shaped, { issueSymbols })) {
     const entry = ensureCandidate(db, raw, testImpl.symbol.id, testImpl.symbol);
     if (entry === undefined) {
       continue;
     }
-    entry.sources.add(HybridCandidateSource.Test);
-    entry.graph += testGraphRaw(testImpl.relations.length, testImpl.viaTestFiles.length);
+    if (testImpl.importedByTestFile) {
+      entry.sources.add(HybridCandidateSource.TestToImpl);
+    }
+    if (testImpl.usedByTestMethod) {
+      entry.sources.add(HybridCandidateSource.FailingTest);
+    }
+    // Default to the broad route when neither flag is set (older edge shapes).
+    if (!testImpl.importedByTestFile && !testImpl.usedByTestMethod) {
+      entry.sources.add(HybridCandidateSource.TestToImpl);
+    }
+    entry.testToImpl += testToImplRaw(testImpl.relations.length, testImpl.viaTestFiles.length, testImpl.usedByTestMethod);
     for (const line of testImpl.evidence) {
       entry.evidence.add(line);
     }
   }
+}
 
-  // 5. Graph-expanded neighbours of everything found so far. THIS is what lets a
-  //    target lexical search missed enter the pool.
-  const seeds = [...raw.keys()];
+// Graph-expanded neighbours of the seed pool. Edge-based neighbours carry the
+// `graph` source; same-package siblings (no edge) carry `same_module`. Both feed
+// the `graph` proximity score — distinct from centrality (global in-degree).
+function graphExpandedCandidates(
+  db: Database,
+  input: HybridRetrievalInput,
+  seeds: readonly SymbolId[],
+  raw: Map<SymbolId, RawCandidate>,
+): void {
   for (const expanded of expandGraphCandidates(db, seeds, input.expansion)) {
     const entry = ensureCandidate(db, raw, expanded.symbol.id, expanded.symbol);
     if (entry === undefined) {
       continue;
     }
-    entry.sources.add(HybridCandidateSource.Graph);
+    const relations = new Set(expanded.evidence.map((item) => item.relation));
+    const onlySameModule =
+      relations.size === 1 && relations.has(ExpansionRelation.SameModule);
+    entry.sources.add(
+      onlySameModule ? HybridCandidateSource.SameModule : HybridCandidateSource.Graph,
+    );
+    // A neighbour reached BOTH by an edge and as a same-module sibling earns both.
+    if (!onlySameModule && relations.has(ExpansionRelation.SameModule)) {
+      entry.sources.add(HybridCandidateSource.SameModule);
+    }
     entry.graph += expansionGraphRaw(expanded);
     for (const line of expansionEvidence(db, expanded)) {
       entry.evidence.add(line);
     }
   }
-
-  return { candidates: assemble(db, raw, input, maxResults) };
 }
 
 // ----- assembly: raw signals -> normalised components -> ranked candidates ----
@@ -246,6 +322,7 @@ function assemble(
   const maxSymbol = maxMapValue(symbolRaw);
   const maxPath = maxMapValue(pathRaw);
   const maxDomain = maxMapValue(domainRaw);
+  const maxTestToImpl = maxOf(entries, (entry) => entry.testToImpl);
   const maxGraph = maxOf(entries, (entry) => entry.graph);
   const maxCentrality = maxMapValue(centrality);
 
@@ -255,6 +332,7 @@ function assemble(
     const symbol = round(normalizeAgainst(symbolRaw.get(entry.symbol.id) ?? 0, maxSymbol));
     const path = round(normalizeAgainst(pathRaw.get(entry.symbol.id) ?? 0, maxPath));
     const domain = round(normalizeAgainst(domainRaw.get(entry.symbol.id) ?? 0, maxDomain));
+    const testToImpl = round(normalizeAgainst(entry.testToImpl, maxTestToImpl));
     const graph = round(normalizeAgainst(entry.graph, maxGraph));
     const centralityScore = round(
       normalizeAgainst(centrality.get(entry.symbol.id) ?? 0, maxCentrality),
@@ -262,7 +340,7 @@ function assemble(
     const lexical = round(blendLexical(fts, tfidf));
     const weights = input.weights ?? HYBRID_SCORE_WEIGHTS;
     const rawFinal = combineFinalScore(
-      { lexical, symbol, path, domain, graph, centrality: centralityScore },
+      { lexical, symbol, path, domain, testToImpl, graph, centrality: centralityScore },
       weights,
     );
 
@@ -272,13 +350,16 @@ function assemble(
     // Strip the graph + centrality boost from a generic high-centrality hub that
     // has no local evidence, so it cannot outrank a locally-relevant target.
     const inDegree = centrality.get(entry.symbol.id) ?? 0;
-    const hasTestEvidence = entry.sources.has(HybridCandidateSource.Test);
+    const hasTestEvidence =
+      entry.sources.has(HybridCandidateSource.TestToImpl)
+      || entry.sources.has(HybridCandidateSource.FailingTest);
     const hub = evaluateHub({
       inDegree,
       lexical,
       symbol,
       path,
       domain,
+      testToImpl,
       hasTestEvidence,
       graphContribution,
       centralityContribution: weights.centrality * centralityScore,
@@ -318,10 +399,13 @@ function assemble(
       lexical,
       fts,
       tfidf,
+      bm25: tfidf,
       symbol,
       path,
+      testToImpl,
       domain,
       graph,
+      graphProximity: graph,
       centrality: centralityScore,
       actionability: action.actionability,
       inDegree,
@@ -375,6 +459,7 @@ function ensureCandidate(
     fts: 0,
     matches: [],
     graph: 0,
+    testToImpl: 0,
     sources: new Set(),
     evidence: new Set(),
   };
@@ -462,9 +547,21 @@ function expansionGraphRaw(expanded: ExpandedCandidate): number {
 const TEST_BASE = 2.0;
 const TEST_PER_RELATION = 0.8;
 const TEST_PER_FILE = 0.4;
+// A candidate the test BODY exercises (method-level call/reference) is a sharper
+// edit-target signal than one the test file merely imports.
+const TEST_METHOD_USE_BONUS = 0.8;
 
-function testGraphRaw(relationCount: number, testFileCount: number): number {
-  return TEST_BASE + TEST_PER_RELATION * relationCount + TEST_PER_FILE * Math.min(testFileCount, 3);
+function testToImplRaw(
+  relationCount: number,
+  testFileCount: number,
+  usedByTestMethod: boolean,
+): number {
+  return (
+    TEST_BASE
+    + TEST_PER_RELATION * relationCount
+    + TEST_PER_FILE * Math.min(testFileCount, 3)
+    + (usedByTestMethod ? TEST_METHOD_USE_BONUS : 0)
+  );
 }
 
 function expansionEvidence(db: Database, expanded: ExpandedCandidate): string[] {

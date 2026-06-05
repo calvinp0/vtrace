@@ -31,19 +31,25 @@ test("diagnostics expose the required machine-readable shape", () => {
   });
 
   assert.deepEqual(Object.keys(diagnostics).sort(), [
+    "actual_mode",
     "context_chars",
     "context_items",
     "likely_files",
     "likely_symbols",
     "mode",
+    "pivot_count",
     "recommended_mode",
     "retrieval_reason",
+    "support_count",
     "target_confidence",
   ]);
   assert.equal(diagnostics.mode, "full");
   assert.equal(diagnostics.recommended_mode, "full");
+  assert.equal(diagnostics.actual_mode, "full");
   assert.equal(diagnostics.target_confidence, "high");
   assert.equal(diagnostics.context_items, 2);
+  assert.equal(diagnostics.pivot_count, 1);
+  assert.equal(diagnostics.support_count, 1);
   assert.ok(diagnostics.context_chars > 0);
 });
 

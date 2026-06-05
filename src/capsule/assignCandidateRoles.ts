@@ -1,0 +1,210 @@
+// Pivot / support / discard role assignment.
+//
+// Ranking answers "how relevant is this candidate, numerically?". It does NOT
+// answer the categorical question a capsule actually needs: is this candidate an
+// EDIT TARGET (a pivot — show full/focused source), supporting CONTEXT (a
+// support — show signature/skeleton only), or noise (discard)? This module turns
+// a ranked, fully-scored candidate list into that decision, transparently and
+// from the scorecard alone — no per-instance lookup, no hardcoded files.
+//
+// The policy encodes Requirement 2/3 directly:
+//   * a pivot needs STRONG, DIRECT local evidence (the failing test reaches it, a
+//     symbol-name match, a likely-file match, or a strong lexical hit) AND an
+//     actionable symbol kind (function/method/class — not a module variable);
+//   * centrality is weak: a candidate that wins on graph reach / in-degree ALONE
+//     is support at most, never a pivot;
+//   * a generic high-degree framework root (django's `Model`) is support at most;
+//   * a candidate with no local evidence cannot be a micro pivot;
+//   * tests, and candidates with no relevance signal at all, are discarded.
+
+import { isLikelyTestCandidate } from "../retrieval/searchSymbolsShared";
+import type { HybridCandidate } from "../retrieval/hybridRetrieval";
+import {
+  HUB_IN_DEGREE_THRESHOLD,
+  STRONG_DIRECT_LEXICAL,
+} from "../retrieval/hybridScoring";
+
+export enum CandidateRole {
+  /** A likely implementation/edit target. Rendered as full/focused source. */
+  Pivot = "pivot",
+  /** Related context useful for understanding. Rendered as signature/skeleton. */
+  Support = "support",
+  /** Not relevant enough to spend capsule budget on. */
+  Discard = "discard",
+}
+
+export interface RoledCandidate {
+  candidate: HybridCandidate;
+  role: CandidateRole;
+  /** Human-readable justification for the role — the report's "why a pivot". */
+  why: string;
+}
+
+export interface AssignRolesOptions {
+  /**
+   * Marks micro-mode selection. The classification BAR is identical across modes
+   * (a pivot always needs actionable kind + strong direct evidence + no hub);
+   * micro's extra strictness is expressed by the caller as `maxPivots: 1` plus a
+   * skip-on-empty policy, not by a different threshold. Kept for call-site intent.
+   */
+  micro?: boolean;
+  /** Cap on pivots; extras (lower-ranked) demote to support. Default: no cap. */
+  maxPivots?: number;
+}
+
+// Minimum combined local evidence for a pivot. Local evidence is the sum of the
+// normalised signals that tie a candidate to THIS task (lexical floor + symbol +
+// path + domain + test-to-impl); a real edit target clears this comfortably.
+const PIVOT_LOCAL_EVIDENCE_MIN = 0.3;
+
+// Assign a role to every candidate, preserving the input (final-score) order.
+export function assignCandidateRoles(
+  candidates: readonly HybridCandidate[],
+  options: AssignRolesOptions = {},
+): RoledCandidate[] {
+  const maxPivots = options.maxPivots ?? Number.POSITIVE_INFINITY;
+
+  let pivotsSoFar = 0;
+  return candidates.map((candidate) => {
+    let { role, why } = classify(candidate);
+    // Enforce the pivot cap (micro emits a single pivot): a would-be pivot beyond
+    // the cap is still strong context, so it demotes to support rather than away.
+    if (role === CandidateRole.Pivot) {
+      if (pivotsSoFar >= maxPivots) {
+        role = CandidateRole.Support;
+        why = `support: strong target but beyond the pivot budget — ${why}`;
+      } else {
+        pivotsSoFar += 1;
+      }
+    }
+    return { candidate, role, why };
+  });
+}
+
+// Convenience: the pivots, in rank order.
+export function pivotsOf(roled: readonly RoledCandidate[]): HybridCandidate[] {
+  return roled.filter((r) => r.role === CandidateRole.Pivot).map((r) => r.candidate);
+}
+
+// Convenience: the support candidates, in rank order.
+export function supportOf(roled: readonly RoledCandidate[]): HybridCandidate[] {
+  return roled.filter((r) => r.role === CandidateRole.Support).map((r) => r.candidate);
+}
+
+function classify(
+  candidate: HybridCandidate,
+): { role: CandidateRole; why: string } {
+  const s = candidate.scores;
+
+  // A test is never an edit target — the implementation it exercises is.
+  if (isLikelyTestCandidate(candidate)) {
+    return { role: CandidateRole.Discard, why: "discard: a test symbol, not an edit target" };
+  }
+
+  // DIRECT edit-target evidence: a concrete pointer at this exact symbol, as
+  // opposed to soft graph reach, centrality, or issue-domain flavour.
+  const concretePointer = s.symbol > 0 || s.path > 0 || s.testToImpl > 0;
+  const directEvidence = concretePointer || s.lexical >= STRONG_DIRECT_LEXICAL;
+  const anyProximity = s.graph > 0 || s.domain > 0;
+  const isGenericHub = s.inDegree >= HUB_IN_DEGREE_THRESHOLD && !directEvidence;
+
+  // Nothing ties it to the task except (at most) centrality / graph reach.
+  if (s.localEvidence <= 0 && !anyProximity) {
+    return {
+      role: CandidateRole.Discard,
+      why: isGenericHub
+        ? `discard: generic framework hub (${s.inDegree} dependents) with no task relevance — centrality cannot win alone`
+        : "discard: no lexical/symbol/path/test/graph relevance to the task",
+    };
+  }
+
+  // A penalised generic hub with nothing else useful is noise, not context.
+  if (s.hubPenalty > 0 && !anyProximity) {
+    return {
+      role: CandidateRole.Discard,
+      why: `discard: down-ranked framework hub (${s.inDegree} dependents) lacking local evidence`,
+    };
+  }
+
+  const reasons = describeSignals(candidate);
+
+  // A pivot needs an ACTIONABLE kind, STRONG DIRECT evidence (a concrete
+  // failing-test/symbol/path pointer OR a strong lexical hit — never graph,
+  // domain, or centrality alone), enough total local evidence, and it must not
+  // be a (penalised) generic framework hub. Micro applies the same bar; its
+  // extra strictness is the single-pivot cap and the skip-on-empty policy, so a
+  // strong lexical edit target the shaping never promoted to a likely-symbol can
+  // still anchor a micro capsule rather than forcing a needless skip.
+  const meetsPivotBar =
+    s.actionability === 1
+    && directEvidence
+    && s.localEvidence >= PIVOT_LOCAL_EVIDENCE_MIN
+    && s.hubPenalty === 0
+    && !isGenericHub;
+
+  if (meetsPivotBar) {
+    return {
+      role: CandidateRole.Pivot,
+      why: `pivot: actionable ${candidate.kind} — ${reasons.join("; ")}`,
+    };
+  }
+
+  // Why it is support and NOT a pivot — the most useful single reason.
+  const blocker = pivotBlocker(candidate, { directEvidence, isGenericHub });
+  return {
+    role: CandidateRole.Support,
+    why: `support: ${reasons.join("; ") || "related context"}${blocker ? ` (not a pivot: ${blocker})` : ""}`,
+  };
+}
+
+// The single most informative reason a near-miss is support rather than a pivot.
+function pivotBlocker(
+  candidate: HybridCandidate,
+  flags: { directEvidence: boolean; isGenericHub: boolean },
+): string | undefined {
+  const s = candidate.scores;
+  if (s.actionability !== 1) {
+    return `${candidate.kind} is a low-actionability edit target`;
+  }
+  if (flags.isGenericHub || s.hubPenalty > 0) {
+    return `high-degree framework root — support at most`;
+  }
+  if (!flags.directEvidence) {
+    return "no direct evidence (graph/domain reach only)";
+  }
+  if (s.localEvidence < PIVOT_LOCAL_EVIDENCE_MIN) {
+    return "local evidence below the pivot bar";
+  }
+  return undefined;
+}
+
+// Render the positive signals behind a candidate as short, ordered phrases — the
+// raw material for the capsule's "why" lines.
+function describeSignals(candidate: HybridCandidate): string[] {
+  const s = candidate.scores;
+  const reasons: string[] = [];
+  if (s.testToImpl > 0) {
+    reasons.push("exercised by a failing test");
+  }
+  if (s.symbol > 0) {
+    reasons.push("symbol-name match");
+  }
+  if (s.path > 0) {
+    reasons.push("in a likely edit file");
+  }
+  if (s.lexical >= STRONG_DIRECT_LEXICAL) {
+    reasons.push("strong lexical match");
+  } else if (s.lexical > 0) {
+    reasons.push("lexical match");
+  }
+  if (s.domain > 0) {
+    reasons.push("issue-domain relevance");
+  }
+  if (s.graph > 0) {
+    reasons.push("graph/import neighbour");
+  }
+  if (s.hubPenalty === 0 && s.inDegree >= HUB_IN_DEGREE_THRESHOLD) {
+    reasons.push(`${s.inDegree} dependents`);
+  }
+  return reasons;
+}

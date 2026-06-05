@@ -10,10 +10,13 @@ const SCORE_KEYS = [
   "lexical",
   "fts",
   "tfidf",
+  "bm25",
   "symbol",
   "path",
+  "testToImpl",
   "domain",
   "graph",
+  "graphProximity",
   "centrality",
   "actionability",
   "inDegree",
@@ -45,8 +48,10 @@ test("recovers the aggregate implementation target from a failing test (10880-st
 
     const impl = firstImplementation("aggregates.py", candidates);
     assert.ok(impl, `expected an aggregates.py target, got ${JSON.stringify(candidates.map((c) => c.filePath))}`);
-    // It was reached via the failing test's import edge.
-    assert.ok(impl?.sources.includes(HybridCandidateSource.Test));
+    // It was reached via the failing test's import edge (test_to_impl route),
+    // and that pull is recorded on the dedicated testToImpl signal, not graph.
+    assert.ok(impl?.sources.includes(HybridCandidateSource.TestToImpl));
+    assert.ok((impl?.scores.testToImpl ?? 0) > 0);
     assert.ok(impl?.evidence.some((line) => /test file .*imports/.test(line)));
   } finally {
     db.close();

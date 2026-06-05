@@ -31,6 +31,18 @@ export interface TestImplCandidate {
   evidence: string[];
   /** The test file(s) that pointed at this implementation. */
   viaTestFiles: string[];
+  /**
+   * The candidate is imported at module level by a failing test file. This is
+   * the broad "the test file pulls in this implementation" route — surfaced as
+   * the `test_to_impl` candidate source.
+   */
+  importedByTestFile: boolean;
+  /**
+   * The candidate is called/referenced by a failing test METHOD (test_*). This
+   * is the sharper "the test body actually exercises this" route — surfaced as
+   * the `failing_test` candidate source.
+   */
+  usedByTestMethod: boolean;
 }
 
 export interface TestToImplementationOptions {
@@ -38,6 +50,12 @@ export interface TestToImplementationOptions {
   maxCandidates?: number;
   /** Pool size when locating a test symbol by name. Default 6. */
   anchorPoolSize?: number;
+  /**
+   * Class/symbol names the issue prose surfaced. When an implementation is a
+   * member of one of these (e.g. a method on `ModelAdmin`), it earns extra
+   * "contained in class mentioned by issue" evidence.
+   */
+  issueSymbols?: readonly string[];
 }
 
 const DEFAULTS = Object.freeze({ maxCandidates: 8, anchorPoolSize: 6 });
@@ -70,12 +88,21 @@ export function expandTestsToImplementation(
 
   const testSideIds = new Set(testSideSymbols.keys());
 
-  // 2. Follow outgoing imports/calls/references edges to non-test symbols.
+  const issueSymbols = new Set(
+    (options.issueSymbols ?? []).map((name) => name.toLowerCase()),
+  );
+
+  // 2. Follow outgoing imports/calls/references edges to non-test symbols. We
+  //    distinguish the ROUTE: a module-level import from the test FILE is the
+  //    broad `test_to_impl` route; a call/reference from a test METHOD (test_*)
+  //    is the sharper `failing_test` route — the test body exercises it directly.
   type Accumulated = {
     symbol: SymbolRecord;
     relations: Set<ExpansionRelation>;
     evidence: Set<string>;
     viaTestFiles: Set<string>;
+    importedByTestFile: boolean;
+    usedByTestMethod: boolean;
   };
   const accumulated = new Map<SymbolId, Accumulated>();
 
@@ -99,25 +126,51 @@ export function expandTestsToImplementation(
       relations: new Set<ExpansionRelation>(),
       evidence: new Set<string>(),
       viaTestFiles: new Set<string>(),
+      importedByTestFile: false,
+      usedByTestMethod: false,
     };
     entry.relations.add(relation);
     entry.viaTestFiles.add(testSide.filePath);
+    // Keep the legacy evidence line (callers/tests match on it).
     entry.evidence.add(`test file ${testSide.filePath} ${relationVerb(relation)} ${impl.localName}`);
+
+    if (relation === ExpansionRelation.Imports) {
+      entry.importedByTestFile = true;
+      entry.evidence.add(`candidate imported by failing test file ${testSide.filePath}`);
+    }
+    if (isTestMethodSymbol(testSide)) {
+      entry.usedByTestMethod = true;
+      entry.evidence.add(
+        `candidate's ${implKindNoun(impl)} ${impl.localName} used by failing test method ${testSide.localName}`,
+      );
+    }
     accumulated.set(impl.id, entry);
   }
 
-  const candidates = [...accumulated.values()].map((entry) => ({
-    symbol: entry.symbol,
-    relations: [...entry.relations].sort(),
-    evidence: [...entry.evidence].sort(),
-    viaTestFiles: [...entry.viaTestFiles].sort(),
-  }));
+  const candidates = [...accumulated.values()].map((entry) => {
+    const evidence = new Set(entry.evidence);
+    // "contained in class mentioned by issue": the impl is a member of a class
+    // whose name the issue prose surfaced (e.g. ModelAdmin.get_inlines).
+    const containingClass = containingClassName(db, entry.symbol);
+    if (containingClass !== undefined && issueSymbols.has(containingClass.toLowerCase())) {
+      evidence.add(`candidate is contained in class ${containingClass} mentioned by issue`);
+    }
+    return {
+      symbol: entry.symbol,
+      relations: [...entry.relations].sort(),
+      evidence: [...evidence].sort(),
+      viaTestFiles: [...entry.viaTestFiles].sort(),
+      importedByTestFile: entry.importedByTestFile,
+      usedByTestMethod: entry.usedByTestMethod,
+    };
+  });
 
-  // Prefer implementation symbols reached by the most relations / tests; break
-  // ties deterministically by symbol id.
+  // Prefer implementation symbols the test body uses directly, then the most
+  // relations / tests; break ties deterministically by symbol id.
   candidates.sort(
     (left, right) =>
-      right.relations.length - left.relations.length
+      Number(right.usedByTestMethod) - Number(left.usedByTestMethod)
+      || right.relations.length - left.relations.length
       || right.viaTestFiles.length - left.viaTestFiles.length
       || left.symbol.id.localeCompare(right.symbol.id),
   );
@@ -181,6 +234,27 @@ function findTestSymbolByName(
       }),
   );
   return match === undefined ? undefined : getSymbolById(db, match.symbolId);
+}
+
+// A test METHOD symbol: a method/function whose name starts with `test`. Used to
+// tell "the test file imports X" (file-level) from "the test body exercises X"
+// (method-level), which drives the failing_test vs test_to_impl source split.
+function isTestMethodSymbol(symbol: SymbolRecord): boolean {
+  return /^test[_A-Za-z0-9]*$/.test(symbol.localName);
+}
+
+// The local name of the class that directly contains `symbol`, if any.
+function containingClassName(db: Database, symbol: SymbolRecord): string | undefined {
+  if (symbol.parentSymbolId === undefined) {
+    return undefined;
+  }
+  const parent = getSymbolById(db, symbol.parentSymbolId);
+  return parent?.localName;
+}
+
+// A human noun for the implementation kind, for evidence prose ("class"/"function").
+function implKindNoun(symbol: SymbolRecord): string {
+  return symbol.kind.toString().includes("class") ? "class" : "function";
 }
 
 function relationVerb(relation: ExpansionRelation): string {

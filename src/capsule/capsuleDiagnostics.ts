@@ -16,11 +16,17 @@ import type { ModeRecommendation, RecommendedCapsuleMode, TargetConfidence } fro
 // keys mirror the hybrid retrieval scorer (Requirement 5).
 export interface CapsuleItemScores {
   lexical: number;
+  /** Alias of the BM25/TF-IDF lexical sub-signal (scorecard vocabulary). */
+  bm25: number;
   path: number;
   symbol: number;
+  /** Test-to-implementation strength: how strongly a failing test reaches this. */
+  testToImpl: number;
   /** Issue-derived domain relevance (query terms matching path/name tokens). */
   domain: number;
   graph: number;
+  /** Alias of `graph`: graph proximity to the working set (scorecard vocabulary). */
+  graphProximity: number;
   centrality: number;
   /** Edit-target actionability: 1 for function/method/class, 0 for module vars. */
   actionability: number;
@@ -35,7 +41,12 @@ export interface CapsuleItemScores {
   final: number;
 }
 
+/** The role a candidate was assigned during selection (Requirement 3). */
+export type CapsuleSelectionRole = "pivot" | "support";
+
 export interface CapsuleSelectionDiagnostic {
+  /** pivot = likely edit target (full source); support = context (skeleton). */
+  role: CapsuleSelectionRole;
   path: string;
   symbol: string;
   scores: CapsuleItemScores;
@@ -47,11 +58,17 @@ export interface CapsuleDiagnostics {
   context_chars: number;
   context_items: number;
   recommended_mode: RecommendedCapsuleMode;
+  /** The mode actually emitted (may be `skip` when no pivot was recovered). */
+  actual_mode: RecommendedCapsuleMode;
   target_confidence: TargetConfidence;
+  /** Number of pivot (likely edit target) items in the emitted capsule. */
+  pivot_count: number;
+  /** Number of support (context) items in the emitted capsule. */
+  support_count: number;
   likely_files: string[];
   likely_symbols: string[];
   retrieval_reason: string;
-  /** Per-item score breakdown + evidence; omitted when no breakdown is known. */
+  /** Per-item role + score breakdown + evidence; omitted when none is known. */
   selection?: CapsuleSelectionDiagnostic[];
 }
 
@@ -59,6 +76,8 @@ export interface BuildCapsuleDiagnosticsInput {
   mode: CapsuleMode;
   capsule: Capsule;
   recommendation: ModeRecommendation;
+  /** The mode actually emitted; defaults to `mode` (use `skip` for empty). */
+  actualMode?: RecommendedCapsuleMode;
   /** Likely files from SWE shaping; falls back to capsule pivot files. */
   likelyFiles?: readonly string[];
   /** Likely symbols from SWE shaping; falls back to capsule pivot symbols. */
@@ -66,7 +85,7 @@ export interface BuildCapsuleDiagnosticsInput {
   /** Char/item counts of the emitted context; falls back to capsule metrics. */
   contextChars?: number;
   contextItems?: number;
-  /** Per-item score breakdown + evidence; attached verbatim when provided. */
+  /** Per-item role + score breakdown + evidence; attached verbatim when provided. */
   selection?: readonly CapsuleSelectionDiagnostic[];
 }
 
@@ -80,7 +99,10 @@ export function buildCapsuleDiagnostics(
     context_chars: input.contextChars ?? input.capsule.budget.usedCharacters,
     context_items: input.contextItems ?? items.length,
     recommended_mode: input.recommendation.recommendedMode,
+    actual_mode: input.actualMode ?? input.mode,
     target_confidence: input.recommendation.targetConfidence,
+    pivot_count: input.capsule.pivots.length,
+    support_count: input.capsule.supportingItems.length,
     likely_files: dedupe(
       input.likelyFiles ?? items.map((item) => item.filePath),
     ),

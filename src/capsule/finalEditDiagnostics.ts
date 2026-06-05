@@ -82,6 +82,77 @@ export function contextMentionsSymbol(context: string, symbol: string): boolean 
   return new RegExp(`\\b${escapeRegExp(symbol)}\\b`).test(context);
 }
 
+// ----- final-edited-file role (Stage 5 post-hoc) ------------------------------
+//
+// Containment was previously a yes/no: did the injected context mention the file
+// the model ended up editing? That is too coarse — context that surfaced the
+// edit target as a PIVOT (full source, top of the capsule) is a far stronger
+// result than one that buried it as a skeleton-only SUPPORT item. These helpers
+// upgrade the post-hoc signal to which ROLE the final edited file held, so the
+// benchmark can reward "we pivoted on the right file", not merely "we mentioned
+// it somewhere". Kept role-shape-only so there is no capsule import cycle.
+
+export type FinalEditedFileRole = "pivot" | "support" | "missing";
+
+export interface RoledSelectionEntry {
+  role: "pivot" | "support";
+  path: string;
+}
+
+export interface FinalEditedFileContainment {
+  final_edited_file: string | null;
+  contains_final_edited_file: boolean;
+  final_edited_file_role: FinalEditedFileRole;
+}
+
+// The role under which `finalEditedFile` appeared in the selection, or "missing"
+// if it was never selected. A file selected as BOTH (a pivot symbol and a support
+// symbol from the same file) reports "pivot" — the stronger role wins.
+export function finalEditedFileRole(
+  selection: readonly RoledSelectionEntry[],
+  finalEditedFile: string | null,
+): FinalEditedFileRole {
+  if (finalEditedFile === null || finalEditedFile.length === 0) {
+    return "missing";
+  }
+  let sawSupport = false;
+  for (const entry of selection) {
+    if (!samePath(entry.path, finalEditedFile)) {
+      continue;
+    }
+    if (entry.role === "pivot") {
+      return "pivot";
+    }
+    sawSupport = true;
+  }
+  return sawSupport ? "support" : "missing";
+}
+
+// Build the Stage 5 post-hoc containment object from a roled selection.
+export function buildFinalEditedFileContainment(
+  selection: readonly RoledSelectionEntry[],
+  finalEditedFile: string | null,
+): FinalEditedFileContainment {
+  const role = finalEditedFileRole(selection, finalEditedFile);
+  return {
+    final_edited_file: finalEditedFile,
+    contains_final_edited_file: role !== "missing",
+    final_edited_file_role: role,
+  };
+}
+
+// Lenient path match: exact, one a path-suffix of the other, or equal basenames
+// (a selection may carry only the repo-relative path or just the leaf).
+function samePath(selectionPath: string, editedFile: string): boolean {
+  if (selectionPath === editedFile) return true;
+  if (selectionPath.endsWith(`/${editedFile}`) || editedFile.endsWith(`/${selectionPath}`)) {
+    return true;
+  }
+  const a = selectionPath.split("/").pop() ?? selectionPath;
+  const b = editedFile.split("/").pop() ?? editedFile;
+  return a.length > 0 && a === b;
+}
+
 function dedupe(values: readonly string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
