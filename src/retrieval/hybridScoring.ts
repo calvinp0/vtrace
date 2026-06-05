@@ -31,7 +31,20 @@ export interface HybridScoreComponents {
   graph: number;
   /** Normalised graph centrality (in-degree within the working set). */
   centrality: number;
-  /** Weighted sum of the components above; the ranking key. */
+  /** Raw count of indexed symbols that depend on this one (global in-degree). */
+  inDegree: number;
+  /**
+   * Combined LOCAL relevance: the signals that tie a candidate to THIS task
+   * (lexical above a floor, symbol-name, path, test-to-impl) — deliberately
+   * excluding centrality and generic graph reach, which a hub has in abundance.
+   */
+  localEvidence: number;
+  /**
+   * Score subtracted from `final` when a generic high-centrality hub lacks local
+   * evidence. 0 for everything else. Makes a downrank inspectable.
+   */
+  hubPenalty: number;
+  /** Weighted sum of the components above, minus `hubPenalty`; the ranking key. */
   final: number;
 }
 
@@ -88,6 +101,73 @@ export function combineFinalScore(
     + weights.graph * components.graph
     + weights.centrality * components.centrality
   );
+}
+
+// ----- hub penalty ------------------------------------------------------------
+//
+// A globally-central framework hub (django's `Model`, with ~1600 dependents) is
+// almost never the edit target for a small/local task. Yet because centrality is
+// normalised against the pool, such a hub pins centrality at 1.0 and can outrank
+// a locally-relevant implementation that has real lexical/symbol/path evidence.
+//
+// The penalty fires ONLY when a candidate is a high-in-degree hub AND has no
+// local evidence: weak lexical, no symbol-name match, no path match, and it was
+// not surfaced by a failing test. In that case we strip exactly the graph +
+// centrality contribution it was riding on, so it falls back to its (tiny) local
+// score and sits below any genuinely-relevant target. Anything with local
+// evidence — including the actual edit target, however central — is untouched.
+
+// A candidate is a "hub" once this many indexed symbols depend on it. Modest on
+// purpose: it only ever matters in combination with the no-local-evidence gate,
+// and a real edit target at this in-degree still carries local evidence.
+export const HUB_IN_DEGREE_THRESHOLD = 5;
+// Below this normalised lexical score, lexical match is too weak to count as
+// local evidence (django's `Model` scored 0.0329 against the aggregate query).
+export const HUB_WEAK_LEXICAL_MAX = 0.1;
+// How much a test-to-implementation edge counts toward local evidence.
+const TEST_LOCAL_EVIDENCE = 0.8;
+
+export interface HubEvaluationInput {
+  /** Global in-degree (dependent count) of the candidate. */
+  inDegree: number;
+  /** Normalised lexical, symbol, path components. */
+  lexical: number;
+  symbol: number;
+  path: number;
+  /** Whether a failing test imports/calls/references this candidate. */
+  hasTestEvidence: boolean;
+  /** Already-weighted graph and centrality contributions to strip on penalty. */
+  graphContribution: number;
+  centralityContribution: number;
+}
+
+export interface HubEvaluation {
+  isHub: boolean;
+  localEvidence: number;
+  penalty: number;
+}
+
+export function evaluateHub(input: HubEvaluationInput): HubEvaluation {
+  const lexicalLocal = input.lexical >= HUB_WEAK_LEXICAL_MAX ? input.lexical : 0;
+  const localEvidence =
+    lexicalLocal
+    + input.symbol
+    + input.path
+    + (input.hasTestEvidence ? TEST_LOCAL_EVIDENCE : 0);
+
+  const isHub = input.inDegree >= HUB_IN_DEGREE_THRESHOLD;
+  const lacksLocalEvidence =
+    input.lexical < HUB_WEAK_LEXICAL_MAX
+    && input.symbol <= 0
+    && input.path <= 0
+    && !input.hasTestEvidence;
+
+  const penalty =
+    isHub && lacksLocalEvidence
+      ? input.graphContribution + input.centralityContribution
+      : 0;
+
+  return { isHub, localEvidence, penalty };
 }
 
 // Normalise a raw value against the pool maximum so every component lands in

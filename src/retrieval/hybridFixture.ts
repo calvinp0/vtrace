@@ -32,6 +32,7 @@ export interface FixtureSymbolIds {
   count: string;
   countInit: string;
   querySet: string;
+  model: string;
   modelAdmin: string;
   getInlineInstances: string;
   aggregateTestCase: string;
@@ -69,6 +70,14 @@ export function seedHybridDjangoFixture(db: Database): FixtureSymbolIds {
     { localName: "QuerySet", kind: SymbolKind.Class, startByte: 0, endByte: 80, docstring: "Represent a lazy database lookup for a set of objects." },
   ]);
   ids.querySet = query.QuerySet!;
+
+  // A generic framework hub: the base Model class that most of the ORM depends
+  // on. It shares the aggregates package directory (same module) but is NOT the
+  // edit target for an aggregate-specific task — it only wins on centrality.
+  const base = seedFile(db, "django/db/models/base.py", [
+    { localName: "Model", kind: SymbolKind.Class, startByte: 0, endByte: 80, docstring: "Base class for all models in the ORM." },
+  ]);
+  ids.model = base.Model!;
 
   const options = seedFile(db, "django/contrib/admin/options.py", [
     { localName: "ModelAdmin", kind: SymbolKind.Class, startByte: 0, endByte: 80, docstring: "Encapsulate all admin options for a given model." },
@@ -110,6 +119,16 @@ export function seedHybridDjangoFixture(db: Database): FixtureSymbolIds {
     edge(typed.aggregateTestCase, typed.count, EdgeType.Imports),
     edge(typed.aggregateTestCase, typed.aggregate, EdgeType.Imports),
     edge(typed.inlineAdminTest, typed.modelAdmin, EdgeType.Imports),
+    // Model is a hub: most of the ORM references it. Aggregate inheriting Model
+    // both makes Model reachable from the aggregate seed (so it enters the pool)
+    // and contributes to its high in-degree. The other references pump in-degree
+    // past the hub threshold WITHOUT giving Model any local relevance.
+    edge(typed.aggregate, typed.model, EdgeType.References),
+    edge(typed.count, typed.model, EdgeType.References),
+    edge(typed.querySet, typed.model, EdgeType.References),
+    edge(typed.modelAdmin, typed.model, EdgeType.References),
+    edge(typed.aggregateAsSql, typed.model, EdgeType.References),
+    edge(typed.getInlineInstances, typed.model, EdgeType.References),
   ]);
 
   return typed;

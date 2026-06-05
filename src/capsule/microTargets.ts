@@ -58,37 +58,52 @@ export function recoverMicroTargets(
     ...(options.expansion ? { expansion: options.expansion } : {}),
   });
 
-  const targets: HybridCandidate[] = [];
-  for (const candidate of candidates) {
-    if (targets.length >= maxTargets) {
-      break;
-    }
-    if (!isViableTarget(candidate)) {
-      continue;
-    }
-    targets.push(candidate);
+  // A micro capsule's TOP targets must be locally relevant — never a generic,
+  // high-centrality framework hub (django's `Model`) that floated up on
+  // dependent count alone. Partition: locally-evidenced implementation first,
+  // then non-test hubs/support only to fill any remaining budget. Candidates are
+  // already ranked by penalised final score, so locals precede hubs naturally.
+  const local = candidates.filter(isLocalTarget);
+  if (local.length === 0) {
+    // Nothing locally relevant recovered: do not anchor the micro capsule on a
+    // hub. Returning empty makes the caller recommend skip.
+    return [];
   }
+  const support = candidates.filter(
+    (candidate) => !isLocalTarget(candidate) && isSupportCandidate(candidate),
+  );
 
-  return targets;
+  return [...local, ...support].slice(0, maxTargets);
 }
 
-// A micro edit target must be implementation, not a test, and must carry at
-// least one POSITIVE target signal: a symbol/path match, or graph/test edge
-// evidence. A candidate that only floated up on diffuse lexical similarity is
-// not a confident enough target to spend the micro budget on.
-function isViableTarget(candidate: HybridCandidate): boolean {
+// A locally-relevant micro edit target: implementation (not a test), not a
+// penalised generic hub, and carrying at least one LOCAL signal that ties it to
+// this task (strong-enough lexical, a symbol-name/path match, or a
+// test-to-implementation edge). `localEvidence` already encodes exactly that.
+function isLocalTarget(candidate: HybridCandidate): boolean {
+  if (isLikelyTestCandidate(candidate)) {
+    return false;
+  }
+  return candidate.scores.hubPenalty === 0 && candidate.scores.localEvidence > 0;
+}
+
+// A non-test candidate eligible as SUPPORT context (including a downranked hub):
+// it carries some signal, but is not strong enough — or too generic — to be a
+// top edit target. Surfaced only when micro budget remains after local targets.
+function isSupportCandidate(candidate: HybridCandidate): boolean {
   if (isLikelyTestCandidate(candidate)) {
     return false;
   }
   const { symbol, path, graph } = candidate.scores;
-  const hasTargetSignal =
+  return (
     symbol > 0
     || path > 0
     || graph > 0
     || candidate.sources.includes(HybridCandidateSource.Test)
     || candidate.sources.includes(HybridCandidateSource.Symbol)
-    || candidate.sources.includes(HybridCandidateSource.Path);
-  return hasTargetSignal;
+    || candidate.sources.includes(HybridCandidateSource.Path)
+    || candidate.sources.includes(HybridCandidateSource.Graph)
+  );
 }
 
 // The symbols worth resolving to an implementation, in priority order:

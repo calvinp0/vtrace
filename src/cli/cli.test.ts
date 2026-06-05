@@ -1466,6 +1466,64 @@ test("capsule --mode micro recovers an aggregate implementation target (django-1
   });
 });
 
+test("capsule --mode micro ranks the aggregate target above the central Model hub (django-10880)", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeMicroTargetFixtureRepo(repoRoot);
+    await runCli(["index", repoRoot]);
+
+    const query = [
+      "failing tests: test_aggregation_subquery_annotation_multiline (aggregation.tests.AggregateTestCase)",
+      "issue: Count annotation containing a Case condition and distinct=True produces wrong SQL",
+    ].join("\n");
+    // Allow room for the hub to appear as trailing support so the penalty is
+    // visible in diagnostics — it must still rank below the aggregate target.
+    const result = await runCli(["capsule", repoRoot, query, "--mode", "micro", "--max-items", "3", "--json"]);
+    assert.equal(result.exitCode, 0);
+
+    const out = JSON.parse(result.stdout);
+
+    const aggIndex = out.diagnostics.likely_files.findIndex((file: string) => file.includes("aggregates.py"));
+    const baseIndex = out.diagnostics.likely_files.findIndex((file: string) => file.includes("base.py"));
+    assert.ok(aggIndex !== -1, `expected aggregates.py, got ${JSON.stringify(out.diagnostics.likely_files)}`);
+    // aggregates ranks before base.py::Model (or the hub is excluded entirely).
+    assert.ok(baseIndex === -1 || aggIndex < baseIndex,
+      `aggregates (#${aggIndex}) must rank before base (#${baseIndex})`);
+
+    // When the hub is surfaced, the diagnostics explain the downrank.
+    const selection: Array<Record<string, any>> = out.diagnostics.selection ?? [];
+    const modelSel = selection.find((item) => item.path.includes("base.py"));
+    if (modelSel) {
+      assert.ok(modelSel.scores.hub_penalty > 0, "Model selection must carry a hub penalty");
+      assert.ok(modelSel.scores.in_degree_or_dependent_count >= 5);
+      assert.equal(modelSel.scores.local_evidence_score, 0);
+      assert.ok(modelSel.evidence.some((line: string) => /downranked: generic hub/.test(line)));
+    }
+    const aggSel = selection.find((item) => item.path.includes("aggregates.py"));
+    assert.ok(aggSel, "aggregate target must be in the selection diagnostics");
+    assert.equal(aggSel?.scores.hub_penalty, 0, "the real target must not be penalized");
+  });
+});
+
+test("capsule --mode standard is not damaged by the micro hub penalty", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeMicroTargetFixtureRepo(repoRoot);
+    await runCli(["index", repoRoot]);
+
+    // Standard mode does not go through micro hub-penalised recovery (it uses
+    // routeQuery directly); it must still assemble a non-empty capsule and may
+    // freely include the central Model hub as support context.
+    const result = await runCli(["capsule", repoRoot, "Aggregate Count as_sql", "--mode", "standard", "--json"]);
+    assert.equal(result.exitCode, 0);
+    const out = JSON.parse(result.stdout);
+    assert.equal(out.diagnostics.mode, "standard");
+    assert.ok(out.diagnostics.context_items > 0, "standard mode must still emit context");
+    assert.ok(
+      out.diagnostics.likely_files.some((file: string) => file.includes("aggregates.py")),
+      `standard should still surface the aggregate target, got ${JSON.stringify(out.diagnostics.likely_files)}`,
+    );
+  });
+});
+
 test("capsule --mode micro recovers ModelAdmin options target (django-11095)", async () => {
   await withFixture(async ({ repoRoot }) => {
     await writeMicroTargetFixtureRepo(repoRoot);
@@ -2350,12 +2408,29 @@ export class SessionController {
 async function writeMicroTargetFixtureRepo(repoRoot: string): Promise<void> {
   await mkdir(path.join(repoRoot, "django", "db", "models"), { recursive: true });
   await mkdir(path.join(repoRoot, "django", "contrib", "admin"), { recursive: true });
+  await mkdir(path.join(repoRoot, "django", "contrib", "auth"), { recursive: true });
+  await mkdir(path.join(repoRoot, "django", "contrib", "sessions"), { recursive: true });
+  await mkdir(path.join(repoRoot, "django", "contrib", "contenttypes"), { recursive: true });
   await mkdir(path.join(repoRoot, "tests", "aggregation"), { recursive: true });
   await mkdir(path.join(repoRoot, "tests", "admin_inlines"), { recursive: true });
 
+  // The base Model class: a generic framework hub that most of the ORM depends
+  // on. It shares the aggregates package directory, so for an aggregate task it
+  // looks "nearby", but it is never the edit target — it only wins on centrality.
+  await writeFile(
+    path.join(repoRoot, "django", "db", "models", "base.py"),
+    `class Model:
+    """Base class for all models in the ORM."""
+    pk = None
+`,
+  );
+
   await writeFile(
     path.join(repoRoot, "django", "db", "models", "aggregates.py"),
-    `class Aggregate:
+    `from django.db.models.base import Model
+
+
+class Aggregate(Model):
     """Base class for aggregate expressions."""
     def as_sql(self, compiler, connection):
         return "", []
@@ -2365,6 +2440,44 @@ class Count(Aggregate):
     """Count aggregate with optional distinct."""
     def __init__(self, expression, distinct=False):
         self.distinct = distinct
+`,
+  );
+
+  // Many ORM models subclass Model, pushing its in-degree well past the hub
+  // threshold WITHOUT giving it any aggregate-specific relevance.
+  await writeFile(
+    path.join(repoRoot, "django", "contrib", "auth", "models.py"),
+    `from django.db.models.base import Model
+
+
+class User(Model):
+    """An authenticated user."""
+
+
+class Group(Model):
+    """A named group of permissions."""
+
+
+class Permission(Model):
+    """A single permission."""
+`,
+  );
+  await writeFile(
+    path.join(repoRoot, "django", "contrib", "sessions", "models.py"),
+    `from django.db.models.base import Model
+
+
+class Session(Model):
+    """A stored session."""
+`,
+  );
+  await writeFile(
+    path.join(repoRoot, "django", "contrib", "contenttypes", "models.py"),
+    `from django.db.models.base import Model
+
+
+class ContentType(Model):
+    """A type of content."""
 `,
   );
   await writeFile(

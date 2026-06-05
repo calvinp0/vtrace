@@ -20,6 +20,12 @@ export interface CapsuleItemScores {
   symbol: number;
   graph: number;
   centrality: number;
+  /** Combined local relevance (lexical/symbol/path/test) used by the hub gate. */
+  local_evidence_score: number;
+  /** Global dependent count (in-degree); high values flag a generic hub. */
+  in_degree_or_dependent_count: number;
+  /** Graph+centrality boost stripped from a generic hub; 0 for normal items. */
+  hub_penalty: number;
   final: number;
 }
 

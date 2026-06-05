@@ -14,6 +14,9 @@ const SCORE_KEYS = [
   "path",
   "graph",
   "centrality",
+  "inDegree",
+  "localEvidence",
+  "hubPenalty",
   "final",
 ] as const;
 
@@ -125,6 +128,42 @@ test("graph expansion lets a non-lexical neighbour enter the ranked pool", () =>
     assert.ok(querySet, "expected QuerySet to enter the pool via graph expansion");
     assert.ok(querySet?.sources.includes(HybridCandidateSource.Graph));
     assert.ok(querySet ? querySet.scores.graph > 0 : false);
+  } finally {
+    db.close();
+  }
+});
+
+test("a high-centrality hub with no local evidence is penalized and outranked", () => {
+  const db = openIndexerDatabase();
+  try {
+    const ids = seedHybridDjangoFixture(db);
+    // 10880-style: the failing test exercises the aggregate implementation; the
+    // base Model class is only a central hub reachable through inheritance.
+    const shaped = shapeSweQuery({
+      problemStatement: "Count annotation with distinct=True produces wrong SQL in aggregates",
+      failToPass: [
+        "tests/aggregation/tests.py::AggregateTestCase::test_count_distinct_expression",
+      ],
+    });
+
+    const { candidates } = hybridRetrieve(db, { query: shaped.query, shaped, maxResults: 20 });
+    const model = candidates.find((candidate) => candidate.symbolId === ids.model);
+
+    // The hub is in the pool, flagged as a hub, and penalized.
+    assert.ok(model, "expected Model hub to enter the pool");
+    assert.ok((model?.scores.inDegree ?? 0) >= 5, "Model should have high in-degree");
+    assert.equal(model?.scores.localEvidence ?? -1, 0, "Model should have no local evidence");
+    assert.ok((model?.scores.hubPenalty ?? 0) > 0, "Model should be penalized");
+    assert.ok(
+      model?.evidence.some((line) => /downranked: generic hub/.test(line)),
+      "penalty should be explained in evidence",
+    );
+
+    // The locally-relevant aggregate target outranks the hub.
+    const aggregateIndex = candidates.findIndex((c) => c.filePath.includes("aggregates.py"));
+    const modelIndex = candidates.findIndex((c) => c.symbolId === ids.model);
+    assert.ok(aggregateIndex !== -1 && aggregateIndex < modelIndex,
+      `aggregates.py (#${aggregateIndex}) should rank before base.py::Model (#${modelIndex})`);
   } finally {
     db.close();
   }

@@ -33,6 +33,8 @@ import {
   blendLexical,
   combineFinalScore,
   computeBm25Scores,
+  evaluateHub,
+  HYBRID_SCORE_WEIGHTS,
   normalizeAgainst,
   tokenize,
   type Bm25Document,
@@ -252,17 +254,36 @@ function assemble(
       normalizeAgainst(centrality.get(entry.symbol.id) ?? 0, maxCentrality),
     );
     const lexical = round(blendLexical(fts, tfidf));
-    const final = round(
-      combineFinalScore(
-        { lexical, symbol, path, graph, centrality: centralityScore },
-        input.weights,
-      ),
+    const weights = input.weights ?? HYBRID_SCORE_WEIGHTS;
+    const rawFinal = combineFinalScore(
+      { lexical, symbol, path, graph, centrality: centralityScore },
+      weights,
     );
 
+    // Strip the graph + centrality boost from a generic high-centrality hub that
+    // has no local evidence, so it cannot outrank a locally-relevant target.
+    const inDegree = centrality.get(entry.symbol.id) ?? 0;
+    const hasTestEvidence = entry.sources.has(HybridCandidateSource.Test);
+    const hub = evaluateHub({
+      inDegree,
+      lexical,
+      symbol,
+      path,
+      hasTestEvidence,
+      graphContribution: weights.graph * graph,
+      centralityContribution: weights.centrality * centralityScore,
+    });
+    const hubPenalty = round(hub.penalty);
+    const final = round(Math.max(0, rawFinal - hub.penalty));
+
     const evidence = [...entry.evidence];
-    const centralityCount = centrality.get(entry.symbol.id) ?? 0;
-    if (centralityCount > 0) {
-      evidence.push(`${centralityCount} indexed symbol(s) depend on this`);
+    if (inDegree > 0) {
+      evidence.push(`${inDegree} indexed symbol(s) depend on this`);
+    }
+    if (hubPenalty > 0) {
+      evidence.push(
+        `downranked: generic hub (${inDegree} dependents) lacks local lexical/symbol/path/test evidence`,
+      );
     }
 
     const scores: HybridScoreComponents = {
@@ -273,6 +294,9 @@ function assemble(
       path,
       graph,
       centrality: centralityScore,
+      inDegree,
+      localEvidence: round(hub.localEvidence),
+      hubPenalty,
       final,
     };
 
