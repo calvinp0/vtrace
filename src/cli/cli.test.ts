@@ -1433,6 +1433,70 @@ test("capsule --mode micro keeps the context within the micro char budget", asyn
   });
 });
 
+test("capsule --mode micro recovers an aggregate implementation target (django-10880)", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeMicroTargetFixtureRepo(repoRoot);
+    await runCli(["index", repoRoot]);
+
+    // Mirrors django__django-10880: a subquery test name + a bare "SQL" mention.
+    // Neither should force a full capsule, and micro must point at the aggregate
+    // implementation rather than the test or nothing.
+    const query = [
+      "failing tests: test_aggregation_subquery_annotation_multiline (aggregation.tests.AggregateTestCase)",
+      "issue: Count annotation containing a Case condition and distinct=True produces wrong SQL",
+    ].join("\n");
+    const result = await runCli(["capsule", repoRoot, query, "--mode", "micro", "--json"]);
+    assert.equal(result.exitCode, 0);
+
+    const out = JSON.parse(result.stdout);
+    // A bare "SQL" / "subquery" must not escalate to full.
+    assert.notEqual(out.diagnostics.recommended_mode, "full");
+    // The implementation target is recovered, not the test.
+    assert.ok(
+      out.diagnostics.likely_files.some((file: string) => file.includes("aggregates.py")),
+      `expected an aggregate implementation file, got ${JSON.stringify(out.diagnostics.likely_files)}`,
+    );
+    assert.ok(out.diagnostics.likely_files.length > 0);
+    assert.ok(out.diagnostics.likely_files.every((file: string) => !/test/i.test(file)));
+    assert.ok(out.diagnostics.context_items > 0);
+    // Stays within the micro budget.
+    assert.equal(out.diagnostics.mode, "micro");
+    assert.ok(out.diagnostics.context_chars <= 1_500 + 40);
+    assert.ok(out.diagnostics.context_items <= 2);
+  });
+});
+
+test("capsule --mode micro recovers ModelAdmin options target (django-11095)", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeMicroTargetFixtureRepo(repoRoot);
+    await runCli(["index", repoRoot]);
+
+    // Mirrors django__django-11095: surface the admin options implementation
+    // (ModelAdmin / get_inline_instances), not the failing test.
+    const query = [
+      "failing tests: test_get_inline_instances_override_get_inlines (admin_inlines.tests.GenericInlineModelAdminTest)",
+      "issue: add ModelAdmin.get_inlines() hook to set inlines based on the request or model instance",
+    ].join("\n");
+    const result = await runCli(["capsule", repoRoot, query, "--mode", "micro", "--json"]);
+    assert.equal(result.exitCode, 0);
+
+    const out = JSON.parse(result.stdout);
+    assert.notEqual(out.diagnostics.recommended_mode, "full");
+    assert.ok(
+      out.diagnostics.likely_files.some((file: string) => file.includes("options.py"))
+        || out.diagnostics.likely_symbols.some((symbol: string) =>
+          /ModelAdmin|get_inline/.test(symbol)),
+      `expected options.py / ModelAdmin target, got ${JSON.stringify(out.diagnostics)}`,
+    );
+    assert.ok(out.diagnostics.likely_files.length > 0);
+    assert.ok(out.diagnostics.likely_files.every((file: string) => !/test/i.test(file)));
+    assert.ok(out.diagnostics.context_items > 0);
+    assert.equal(out.diagnostics.mode, "micro");
+    assert.ok(out.diagnostics.context_chars <= 1_500 + 40);
+    assert.ok(out.diagnostics.context_items <= 2);
+  });
+});
+
 test("capsule rejects an unknown mode and bad numeric flags", async () => {
   await withFixture(async ({ repoRoot }) => {
     await writeCapsuleFixtureRepo(repoRoot);
@@ -2253,6 +2317,62 @@ import { SessionManager } from "./session";
 export class SessionController {
   constructor(private readonly manager: SessionManager) {}
 }
+`,
+  );
+}
+
+// A miniature django-shaped repo: an implementation file and a matching test
+// file for each of the two micro fixtures, so target recovery can walk from a
+// failing test / issue symbol to the implementation to edit.
+async function writeMicroTargetFixtureRepo(repoRoot: string): Promise<void> {
+  await mkdir(path.join(repoRoot, "django", "db", "models"), { recursive: true });
+  await mkdir(path.join(repoRoot, "django", "contrib", "admin"), { recursive: true });
+  await mkdir(path.join(repoRoot, "tests", "aggregation"), { recursive: true });
+  await mkdir(path.join(repoRoot, "tests", "admin_inlines"), { recursive: true });
+
+  await writeFile(
+    path.join(repoRoot, "django", "db", "models", "aggregates.py"),
+    `class Aggregate:
+    """Base class for aggregate expressions."""
+    def as_sql(self, compiler, connection):
+        return "", []
+
+
+class Count(Aggregate):
+    """Count aggregate with optional distinct."""
+    def __init__(self, expression, distinct=False):
+        self.distinct = distinct
+`,
+  );
+  await writeFile(
+    path.join(repoRoot, "tests", "aggregation", "tests.py"),
+    `from django.db.models.aggregates import Count
+
+
+class AggregateTestCase:
+    def test_count_distinct_expression(self):
+        assert Count("field", distinct=True) is not None
+`,
+  );
+
+  await writeFile(
+    path.join(repoRoot, "django", "contrib", "admin", "options.py"),
+    `class ModelAdmin:
+    """Encapsulate all admin options for a given model."""
+    inlines = []
+
+    def get_inline_instances(self, request, obj=None):
+        return [inline(self.model, self.admin_site) for inline in self.inlines]
+`,
+  );
+  await writeFile(
+    path.join(repoRoot, "tests", "admin_inlines", "tests.py"),
+    `from django.contrib.admin.options import ModelAdmin
+
+
+class GenericInlineModelAdminTest:
+    def test_get_inline_instances_override_get_inlines(self):
+        assert ModelAdmin().get_inline_instances(None) == []
 `,
   );
 }

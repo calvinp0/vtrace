@@ -67,14 +67,33 @@ const MANY_SYMBOLS = 6;
 
 // Matched against the combined prose + likely file paths. Curated to the
 // internals the Stage 5 brief calls out.
+//
+// These must be PRECISE: a bare "SQL" or a "query" substring inside a test name
+// (e.g. test_aggregation_subquery_annotation_multiline) is NOT evidence of a
+// navigation-heavy task — it leaks in from prose and method names of plenty of
+// small, local edits. We therefore key off two precise signals only:
+//   1. real subsystem path/module names (django/db/models/sql/, compiler.py,
+//      query.py, autodetector.py, the migrations package);
+//   2. named multi-word subsystem phrases (SQL compiler, composed queries) or
+//      the QuerySet/combinator/regex/parser machinery.
+// A standalone "SQL", "query", or "subquery" deliberately does NOT match.
 const COMPLEX_INTERNALS_PATTERNS: readonly RegExp[] = [
-  /migrat/i,
-  /autodetector/i,
-  /compil/i,
-  /\bpars(?:e|er|ed|ing)\b/i,
-  /combinator/i,
+  // Migrations / autodetector internals.
+  /\bmigrat/i,
+  /\bautodetector\b/i,
+  // SQL compiler / query-construction subsystem — by module/path or named
+  // phrase, never a bare "SQL"/"query" mention.
+  /\bcompil/i,
+  /\bquery\.py\b/i,
+  /\bdb\/models\/sql\b/i,
+  /\bsql\/[a-z]/i,
+  /\bsql compiler\b/i,
+  /\bcomposed quer/i,
+  /\bquerysets?\b/i,
+  /\bcombinator/i,
+  // Regex / pattern parsing subsystem.
   /\bregex/i,
-  /\bsql\b/i,
+  /\bpars(?:e|er|ed|ing)\b/i,
 ];
 
 const CROSS_MODULE_PHRASES = /cross[- ]module|across modules|dependency behaviour|dependencies for|dependency on/i;

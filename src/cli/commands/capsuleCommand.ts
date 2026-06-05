@@ -10,10 +10,10 @@ import {
   DEFAULT_CAPSULE_MODE,
   parseCapsuleMode,
   resolveCapsuleModeLimits,
-  type CapsuleModeLimits,
 } from "../../capsule/capsuleModes";
+import { recoverMicroTargets } from "../../capsule/microTargets";
 import { deriveModeSignals, recommendCapsuleMode } from "../../capsule/recommendMode";
-import { shapeSweQuery } from "../../capsule/sweQueryShaping";
+import { shapeSweQuery, type ShapedSweQuery } from "../../capsule/sweQueryShaping";
 import {
   CapsuleInclusionReasonKind,
   type CapsuleInclusionReason,
@@ -84,12 +84,24 @@ export async function runCapsuleCommand(
       }
 
       const routedQuery = routeQuery(db, query, { maxResults: limits.maxItems });
+
+      // Micro mode recovers the implementation edit target from the failing
+      // test's symbols so the tiny capsule points at the code to change rather
+      // than the test (or nothing). Other modes keep the routed candidates.
+      const shaped = shapeSweQuery({ problemStatement: query });
+      const microTargets = mode === CapsuleMode.Micro
+        ? recoverMicroTargets(db, shaped, { maxTargets: limits.maxItems })
+        : [];
+      const pivotCandidates = microTargets.length > 0
+        ? microTargets
+        : routedQuery.rerankedResults;
+
       const preparedAssembly = prepareCapsuleAssembly({
         classification: routedQuery.classification,
         builderInput: {
           query,
-          rerankedCandidates: routedQuery.rerankedResults,
-          supportingCandidates: routedQuery.rerankedResults.map(makeSupportingCandidateFromGraphResult),
+          rerankedCandidates: pivotCandidates,
+          supportingCandidates: pivotCandidates.map(makeSupportingCandidateFromGraphResult),
           maxBudget: createCharacterBudget(limits.maxChars),
         },
       });
@@ -98,7 +110,7 @@ export async function runCapsuleCommand(
         preparedAssembly.builderInput,
       );
 
-      const diagnostics = computeDiagnostics(query, mode, capsule, limits);
+      const diagnostics = computeDiagnostics(query, mode, capsule, shaped, microTargets);
 
       if (json) {
         const compact = renderCompactCapsule(capsule, {
@@ -130,21 +142,30 @@ export async function runCapsuleCommand(
 
 // Derive a recommendation by shaping the query as if it were an issue body. This
 // is diagnostic only — the actual sizing follows the requested/default mode.
+//
+// When micro mode recovered concrete implementation targets, they take priority
+// for likely_files/likely_symbols: a recovered impl file (e.g. aggregates.py) is
+// a far better edit-target signal than the test file the shaping surfaced.
 function computeDiagnostics(
   query: string,
   mode: CapsuleMode,
   capsule: Parameters<typeof buildCapsuleDiagnostics>[0]["capsule"],
-  _limits: CapsuleModeLimits,
+  shaped: ShapedSweQuery,
+  microTargets: readonly GraphSearchResult[],
 ): CapsuleDiagnostics {
-  const shaped = shapeSweQuery({ problemStatement: query });
   const recommendation = recommendCapsuleMode(deriveModeSignals({ problemStatement: query }, shaped));
+
+  const recoveredFiles = microTargets.map((target) => target.filePath);
+  const recoveredSymbols = microTargets.map((target) => target.localName);
+  const likelyFiles = recoveredFiles.length > 0 ? recoveredFiles : shaped.likelyFiles;
+  const likelySymbols = recoveredSymbols.length > 0 ? recoveredSymbols : shaped.likelySymbols;
 
   return buildCapsuleDiagnostics({
     mode,
     capsule,
     recommendation,
-    ...(shaped.likelyFiles.length > 0 ? { likelyFiles: shaped.likelyFiles } : {}),
-    ...(shaped.likelySymbols.length > 0 ? { likelySymbols: shaped.likelySymbols } : {}),
+    ...(likelyFiles.length > 0 ? { likelyFiles } : {}),
+    ...(likelySymbols.length > 0 ? { likelySymbols } : {}),
   });
 }
 

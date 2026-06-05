@@ -77,6 +77,46 @@ test("11095 stays micro despite a long hints body with a PR URL (regression)", (
   assert.equal(recommendCapsuleMode(signals).recommendedMode, RecommendedCapsuleMode.Micro);
 });
 
+test("a bare SQL/subquery mention does not force full (django-10880 regression)", () => {
+  // Mirrors django__django-10880: a single failing test whose name contains
+  // "subquery" plus a bare "SQL" mention in the issue. Neither is evidence of a
+  // navigation-heavy task — the edit target is a single aggregate function — so
+  // it must NOT be recommended `full`.
+  const record = {
+    repo: "django/django",
+    instanceId: "django__django-10880",
+    problemStatement:
+      "Count annotation containing both a Case condition and distinct=True produces wrong SQL.",
+    failToPass: [
+      "tests.aggregation.tests.AggregateTestCase.test_aggregation_subquery_annotation_multiline",
+    ],
+  };
+  const rec = recommendFor(record);
+  assert.notEqual(
+    rec.recommendedMode,
+    RecommendedCapsuleMode.Full,
+    `bare SQL/subquery must not force full, got ${rec.retrievalReason}`,
+  );
+});
+
+test("a named SQL-compiler/QuerySet subsystem still escalates to full", () => {
+  // The precision fix must not lose recall: a real subsystem phrase or module
+  // path is still navigation-heavy.
+  const signals = deriveModeSignals(
+    {
+      problemStatement:
+        "Composed queries reuse the SQL compiler in django/db/models/sql/query.py "
+        + "so values() on a QuerySet union is ignored.",
+    },
+    shapeSweQuery({
+      problemStatement:
+        "Composed queries reuse the SQL compiler in django/db/models/sql/query.py "
+        + "so values() on a QuerySet union is ignored.",
+    }),
+  );
+  assert.equal(signals.touchesComplexInternals, true);
+});
+
 test("complex internals alone force full even with one file", () => {
   const signals: ModeRecommendationSignals = {
     failingTestCount: 1,
