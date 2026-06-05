@@ -4,6 +4,7 @@ import {
   buildCapsuleDiagnostics,
   renderCompactCapsule,
   type CapsuleDiagnostics,
+  type CapsuleSelectionDiagnostic,
 } from "../../capsule/capsuleDiagnostics";
 import {
   CapsuleMode,
@@ -12,18 +13,26 @@ import {
   resolveCapsuleModeLimits,
 } from "../../capsule/capsuleModes";
 import { recoverMicroTargets } from "../../capsule/microTargets";
-import { deriveModeSignals, recommendCapsuleMode } from "../../capsule/recommendMode";
+import {
+  deriveModeSignals,
+  recommendCapsuleMode,
+  RecommendedCapsuleMode,
+  TargetConfidence,
+} from "../../capsule/recommendMode";
 import { shapeSweQuery, type ShapedSweQuery } from "../../capsule/sweQueryShaping";
 import {
   CapsuleInclusionReasonKind,
+  type Capsule,
   type CapsuleInclusionReason,
+  type CapsuleItem,
   type CapsuleSupportingCandidate,
 } from "../../capsule/types";
 import { prepareCapsuleAssembly } from "../../capsuleProfiles/orchestrator";
 import { hasIndexedFiles } from "../../db/repositories/filesRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
 import { routeQuery } from "../../intent/routeQuery";
-import type { GraphSearchResult } from "../../retrieval/types";
+import type { HybridCandidate } from "../../retrieval/hybridRetrieval";
+import { GraphScoreSignal, type GraphSearchResult } from "../../retrieval/types";
 import { formatCapsuleInspection, formatJson } from "../formatters";
 import type { CliOptions, CommandResult } from "../types";
 import {
@@ -86,14 +95,22 @@ export async function runCapsuleCommand(
       const routedQuery = routeQuery(db, query, { maxResults: limits.maxItems });
 
       // Micro mode recovers the implementation edit target from the failing
-      // test's symbols so the tiny capsule points at the code to change rather
-      // than the test (or nothing). Other modes keep the routed candidates.
+      // test's symbols (via hybrid graph-expanded retrieval) so the tiny capsule
+      // points at the code to change rather than the test (or nothing). Other
+      // modes keep the routed candidates.
       const shaped = shapeSweQuery({ problemStatement: query });
       const microTargets = mode === CapsuleMode.Micro
         ? recoverMicroTargets(db, shaped, { maxTargets: limits.maxItems })
         : [];
-      const pivotCandidates = microTargets.length > 0
-        ? microTargets
+
+      // A micro capsule must point at a real target. If recovery found none, do
+      // NOT emit an empty/misdirecting tiny capsule — recommend skip instead.
+      if (mode === CapsuleMode.Micro && microTargets.length === 0) {
+        return emitMicroSkip(json);
+      }
+
+      const pivotCandidates: readonly GraphSearchResult[] = microTargets.length > 0
+        ? microTargets.map(hybridCandidateToGraphResult)
         : routedQuery.rerankedResults;
 
       const preparedAssembly = prepareCapsuleAssembly({
@@ -149,9 +166,9 @@ export async function runCapsuleCommand(
 function computeDiagnostics(
   query: string,
   mode: CapsuleMode,
-  capsule: Parameters<typeof buildCapsuleDiagnostics>[0]["capsule"],
+  capsule: Capsule,
   shaped: ShapedSweQuery,
-  microTargets: readonly GraphSearchResult[],
+  microTargets: readonly HybridCandidate[],
 ): CapsuleDiagnostics {
   const recommendation = recommendCapsuleMode(deriveModeSignals({ problemStatement: query }, shaped));
 
@@ -160,13 +177,131 @@ function computeDiagnostics(
   const likelyFiles = recoveredFiles.length > 0 ? recoveredFiles : shaped.likelyFiles;
   const likelySymbols = recoveredSymbols.length > 0 ? recoveredSymbols : shaped.likelySymbols;
 
+  // Per-item score breakdown + evidence. Prefer the hybrid targets' full
+  // breakdown (micro); otherwise derive it from the assembled capsule items so
+  // the diagnostics are present and uniformly shaped in every mode.
+  const selection = microTargets.length > 0
+    ? selectionFromHybridTargets(microTargets)
+    : selectionFromCapsule(capsule);
+
   return buildCapsuleDiagnostics({
     mode,
     capsule,
     recommendation,
     ...(likelyFiles.length > 0 ? { likelyFiles } : {}),
     ...(likelySymbols.length > 0 ? { likelySymbols } : {}),
+    ...(selection.length > 0 ? { selection } : {}),
   });
+}
+
+// Micro mode found no implementation target. Emit a skip recommendation with no
+// context rather than a misleading empty capsule (Requirement 6). An empty
+// likely_files/context here is honest precisely BECAUSE recommended_mode=skip.
+function emitMicroSkip(json: boolean): CommandResult {
+  const reason =
+    "Micro mode could not recover an implementation target from the failing test(s)/issue; "
+    + "recommending skip rather than emitting empty or misdirecting context.";
+  const diagnostics: CapsuleDiagnostics = {
+    mode: CapsuleMode.Micro,
+    context_chars: 0,
+    context_items: 0,
+    recommended_mode: RecommendedCapsuleMode.Skip,
+    target_confidence: TargetConfidence.Low,
+    likely_files: [],
+    likely_symbols: [],
+    retrieval_reason: reason,
+  };
+
+  if (json) {
+    return success(formatJson({ diagnostics, context: "" }));
+  }
+  return success(`micro: skip — ${reason}`);
+}
+
+function hybridCandidateToGraphResult(candidate: HybridCandidate): GraphSearchResult {
+  return {
+    symbolId: candidate.symbolId,
+    filePath: candidate.filePath,
+    fqName: candidate.fqName,
+    localName: candidate.localName,
+    kind: candidate.kind,
+    matches: candidate.matches,
+    lexicalScore: candidate.scores.lexical,
+    graphScore: candidate.scores.graph,
+    finalScore: candidate.scores.final,
+    graphContributions: [],
+  };
+}
+
+function selectionFromHybridTargets(
+  targets: readonly HybridCandidate[],
+): CapsuleSelectionDiagnostic[] {
+  return targets.map((target) => ({
+    path: target.filePath,
+    symbol: target.localName,
+    scores: {
+      lexical: target.scores.lexical,
+      path: target.scores.path,
+      symbol: target.scores.symbol,
+      graph: target.scores.graph,
+      centrality: target.scores.centrality,
+      final: target.scores.final,
+    },
+    evidence: target.evidence,
+  }));
+}
+
+// Build a uniform selection breakdown from the assembled capsule items when no
+// hybrid breakdown is available (non-micro modes). The capsule carries lexical /
+// graph / final scores; the unmodelled components default to 0.
+function selectionFromCapsule(capsule: Capsule): CapsuleSelectionDiagnostic[] {
+  const items: CapsuleItem[] = [...capsule.pivots, ...capsule.supportingItems];
+  return items.map((item) => ({
+    path: item.filePath,
+    symbol: item.localName,
+    scores: {
+      lexical: item.lexicalScore ?? 0,
+      path: 0,
+      symbol: 0,
+      graph: item.graphScore ?? 0,
+      centrality: 0,
+      final: item.finalScore ?? 0,
+    },
+    evidence: inclusionReasonsToEvidence(item.inclusionReasons),
+  }));
+}
+
+function inclusionReasonsToEvidence(
+  reasons: readonly CapsuleInclusionReason[],
+): string[] {
+  const evidence: string[] = [];
+  for (const reason of reasons) {
+    switch (reason.kind) {
+      case CapsuleInclusionReasonKind.LexicalMatch:
+        if (reason.matchedFields.length > 0) {
+          evidence.push(`lexical match on ${reason.matchedFields.join(", ")}`);
+        }
+        break;
+      case CapsuleInclusionReasonKind.GraphConnection:
+        evidence.push(
+          `graph connection: ${reason.graphSignals.map(graphSignalLabel).join(", ")}`,
+        );
+        break;
+      case CapsuleInclusionReasonKind.StructuralSupport:
+        evidence.push(`structural ${reason.edgeType} support`);
+        break;
+      case CapsuleInclusionReasonKind.QueryCoverage:
+        evidence.push(reason.note);
+        break;
+      case CapsuleInclusionReasonKind.BudgetCompression:
+        break;
+    }
+  }
+  return evidence;
+}
+
+function graphSignalLabel(signal: GraphScoreSignal): string {
+  return signal.replace(/_/g, " ");
 }
 
 interface ParsedCapsuleArgs {

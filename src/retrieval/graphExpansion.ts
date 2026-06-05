@@ -1,0 +1,306 @@
+// Bounded graph expansion + centrality.
+//
+// Lexical retrieval answers "which symbols look like the query?". It cannot
+// answer "which symbols sit next to the ones that look like the query?" — yet
+// the actual edit target is frequently a graph neighbour of a lexical hit (the
+// function a matched test imports; the implementation a matched class contains;
+// a central module everything in the area depends on).
+//
+// This module takes SEED symbols (the lexical/symbol/path hits) and walks the
+// relationship graph outward to surface those neighbours as NEW candidates —
+// the thing the audit says the existing intra-pool rerank cannot do. The walk is
+// deliberately bounded (shallow depth, hard candidate cap) so a hub symbol does
+// not detonate the pool.
+
+import type { Database } from "bun:sqlite";
+
+import { listEdgesForSymbols } from "../db/repositories/edgesRepository";
+import {
+  getSymbolById,
+  listSymbolsUnderDirectory,
+} from "../db/repositories/symbolsRepository";
+import { EdgeType, type SymbolId, type SymbolRecord } from "../domain/types";
+
+export enum ExpansionRelation {
+  Imports = "imports",
+  Calls = "calls",
+  References = "references",
+  Contains = "contains",
+  SameModule = "same_module",
+}
+
+export interface ExpansionEvidence {
+  relation: ExpansionRelation;
+  /** The already-in-pool symbol we expanded FROM to reach this candidate. */
+  viaSymbolId: SymbolId;
+  /** Edge direction relative to `viaSymbolId` (n/a for same-module neighbours). */
+  direction: "outgoing" | "incoming" | "sibling";
+}
+
+export interface ExpandedCandidate {
+  symbol: SymbolRecord;
+  /** Hops from the nearest seed (1..maxDepth); same-module neighbours are 1. */
+  depth: number;
+  evidence: ExpansionEvidence[];
+  /** Seeds from which this candidate was reached, sorted. */
+  seedSymbolIds: SymbolId[];
+}
+
+export interface GraphExpansionOptions {
+  /** Hops to walk; clamped to [1, 2]. Default 1. */
+  maxDepth?: number;
+  /** Hard cap on returned candidates. Default 24. */
+  maxExpandedCandidates?: number;
+  /** Also surface same-directory (same package) siblings. Default true. */
+  includeSameModule?: boolean;
+  /** Per-seed cap on same-module siblings. Default 6. */
+  sameModuleLimit?: number;
+}
+
+const DEFAULTS = Object.freeze({
+  maxDepth: 1,
+  maxExpandedCandidates: 24,
+  includeSameModule: true,
+  sameModuleLimit: 6,
+});
+
+const RELATION_BY_EDGE_TYPE: Readonly<Record<EdgeType, ExpansionRelation>> = Object.freeze({
+  [EdgeType.Imports]: ExpansionRelation.Imports,
+  [EdgeType.Calls]: ExpansionRelation.Calls,
+  [EdgeType.References]: ExpansionRelation.References,
+  [EdgeType.Contains]: ExpansionRelation.Contains,
+});
+
+interface PendingCandidate {
+  depth: number;
+  evidence: ExpansionEvidence[];
+  seedSymbolIds: Set<SymbolId>;
+}
+
+// Expand outward from `seedSymbolIds` and return the neighbours that are NOT
+// themselves seeds, deepest-first-bounded and capped. Deterministic: seeds are
+// processed in sorted order, edges arrive id-ordered, and the result is sorted
+// by (depth, symbolId).
+export function expandGraphCandidates(
+  db: Database,
+  seedSymbolIds: readonly SymbolId[],
+  options: GraphExpansionOptions = {},
+): ExpandedCandidate[] {
+  const maxDepth = clamp(options.maxDepth ?? DEFAULTS.maxDepth, 1, 2);
+  const maxCandidates = Math.max(0, options.maxExpandedCandidates ?? DEFAULTS.maxExpandedCandidates);
+  const includeSameModule = options.includeSameModule ?? DEFAULTS.includeSameModule;
+  const sameModuleLimit = Math.max(0, options.sameModuleLimit ?? DEFAULTS.sameModuleLimit);
+
+  const seeds = [...new Set(seedSymbolIds)].sort();
+  if (seeds.length === 0 || maxCandidates === 0) {
+    return [];
+  }
+
+  const seedSet = new Set(seeds);
+  const pending = new Map<SymbolId, PendingCandidate>();
+  // Track which seed a frontier symbol traces back to, so multi-hop evidence
+  // still attributes a candidate to its originating seed(s).
+  const frontierSeeds = new Map<SymbolId, Set<SymbolId>>();
+  for (const seed of seeds) {
+    frontierSeeds.set(seed, new Set([seed]));
+  }
+
+  let frontier = [...seeds];
+
+  for (let depth = 1; depth <= maxDepth; depth += 1) {
+    if (frontier.length === 0) {
+      break;
+    }
+    const edges = listEdgesForSymbols(db, frontier);
+    const nextFrontier = new Set<SymbolId>();
+
+    const considerNeighbour = (
+      from: SymbolId,
+      to: SymbolId,
+      direction: "outgoing" | "incoming",
+      relation: ExpansionRelation,
+    ): void => {
+      const originSeeds = frontierSeeds.get(from);
+      if (originSeeds === undefined) {
+        // `from` was not on the current frontier (it is the OTHER endpoint).
+        return;
+      }
+      if (seedSet.has(to)) {
+        return; // Already a seed; not a new candidate.
+      }
+      const existing = pending.get(to);
+      const evidence: ExpansionEvidence = { relation, viaSymbolId: from, direction };
+      if (existing === undefined) {
+        pending.set(to, {
+          depth,
+          evidence: [evidence],
+          seedSymbolIds: new Set(originSeeds),
+        });
+      } else {
+        existing.evidence.push(evidence);
+        for (const seed of originSeeds) {
+          existing.seedSymbolIds.add(seed);
+        }
+      }
+      const carried = frontierSeeds.get(to) ?? new Set<SymbolId>();
+      for (const seed of originSeeds) {
+        carried.add(seed);
+      }
+      frontierSeeds.set(to, carried);
+      nextFrontier.add(to);
+    };
+
+    for (const edge of edges) {
+      const relation = RELATION_BY_EDGE_TYPE[edge.edgeType];
+      if (relation === undefined) {
+        continue;
+      }
+      considerNeighbour(edge.srcSymbolId, edge.dstSymbolId, "outgoing", relation);
+      considerNeighbour(edge.dstSymbolId, edge.srcSymbolId, "incoming", relation);
+    }
+
+    frontier = [...nextFrontier].sort();
+  }
+
+  if (includeSameModule && sameModuleLimit > 0) {
+    addSameModuleNeighbours(db, seeds, seedSet, pending, sameModuleLimit);
+  }
+
+  return materialize(db, pending, maxCandidates);
+}
+
+// Surface same-directory siblings of each seed as depth-1 candidates. This is
+// how an important nearby implementation file enters the pool even when no edge
+// (TS/Cython emit few) connects it to a seed — Requirement 3's "centrality /
+// neighbour expansion so important nearby files can enter the pool".
+function addSameModuleNeighbours(
+  db: Database,
+  seeds: readonly SymbolId[],
+  seedSet: ReadonlySet<SymbolId>,
+  pending: Map<SymbolId, PendingCandidate>,
+  perSeedLimit: number,
+): void {
+  const seenDirectories = new Set<string>();
+  for (const seedId of seeds) {
+    const seed = getSymbolById(db, seedId);
+    if (seed === undefined) {
+      continue;
+    }
+    const directory = directoryOf(seed.filePath);
+    if (seenDirectories.has(`${seedId}\0${directory}`)) {
+      continue;
+    }
+    seenDirectories.add(`${seedId}\0${directory}`);
+
+    let added = 0;
+    for (const sibling of listSymbolsUnderDirectory(db, directory)) {
+      if (added >= perSeedLimit) {
+        break;
+      }
+      if (seedSet.has(sibling.id) || sibling.filePath === seed.filePath) {
+        continue; // Skip seeds and same-file symbols (covered by contains edges).
+      }
+      const evidence: ExpansionEvidence = {
+        relation: ExpansionRelation.SameModule,
+        viaSymbolId: seedId,
+        direction: "sibling",
+      };
+      const existing = pending.get(sibling.id);
+      if (existing === undefined) {
+        pending.set(sibling.id, {
+          depth: 1,
+          evidence: [evidence],
+          seedSymbolIds: new Set([seedId]),
+        });
+      } else {
+        existing.evidence.push(evidence);
+        existing.seedSymbolIds.add(seedId);
+      }
+      added += 1;
+    }
+  }
+}
+
+function materialize(
+  db: Database,
+  pending: ReadonlyMap<SymbolId, PendingCandidate>,
+  maxCandidates: number,
+): ExpandedCandidate[] {
+  const candidates: ExpandedCandidate[] = [];
+  for (const [symbolId, info] of pending) {
+    const symbol = getSymbolById(db, symbolId);
+    if (symbol === undefined) {
+      continue;
+    }
+    candidates.push({
+      symbol,
+      depth: info.depth,
+      evidence: dedupeEvidence(info.evidence),
+      seedSymbolIds: [...info.seedSymbolIds].sort(),
+    });
+  }
+  candidates.sort(
+    (left, right) => left.depth - right.depth || left.symbol.id.localeCompare(right.symbol.id),
+  );
+  return candidates.slice(0, maxCandidates);
+}
+
+// ----- centrality -------------------------------------------------------------
+
+// Global in-degree per symbol: how many edges point AT it across the whole
+// graph. A high in-degree means many things depend on the symbol, so among
+// otherwise-similar candidates it is the more likely shared implementation
+// target. Returned as raw counts; the hybrid scorer normalises against the pool.
+export function computeInDegreeCentrality(
+  db: Database,
+  symbolIds: readonly SymbolId[],
+): Map<SymbolId, number> {
+  const ids = [...new Set(symbolIds)];
+  const centrality = new Map<SymbolId, number>();
+  for (const id of ids) {
+    centrality.set(id, 0);
+  }
+  if (ids.length === 0) {
+    return centrality;
+  }
+  const idSet = new Set(ids);
+  for (const edge of listEdgesForSymbols(db, ids)) {
+    if (idSet.has(edge.dstSymbolId)) {
+      centrality.set(edge.dstSymbolId, (centrality.get(edge.dstSymbolId) ?? 0) + 1);
+    }
+  }
+  return centrality;
+}
+
+// ----- helpers ----------------------------------------------------------------
+
+function directoryOf(filePath: string): string {
+  const index = filePath.lastIndexOf("/");
+  return index === -1 ? "" : filePath.slice(0, index);
+}
+
+function dedupeEvidence(evidence: readonly ExpansionEvidence[]): ExpansionEvidence[] {
+  const seen = new Set<string>();
+  const out: ExpansionEvidence[] = [];
+  for (const item of evidence) {
+    const key = `${item.relation}\0${item.viaSymbolId}\0${item.direction}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    out.push(item);
+  }
+  return out.sort(
+    (left, right) =>
+      left.relation.localeCompare(right.relation)
+      || left.viaSymbolId.localeCompare(right.viaSymbolId)
+      || left.direction.localeCompare(right.direction),
+  );
+}
+
+function clamp(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+  return Math.min(max, Math.max(min, Math.trunc(value)));
+}

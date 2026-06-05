@@ -11,6 +11,25 @@ import { CapsuleContentMode, type Capsule, type CapsuleItem } from "./types";
 import type { CapsuleMode } from "./capsuleModes";
 import type { ModeRecommendation, RecommendedCapsuleMode, TargetConfidence } from "./recommendMode";
 
+// Per-item score breakdown reported alongside each selected capsule item, so a
+// caller can see WHY it was chosen rather than just THAT it was. The component
+// keys mirror the hybrid retrieval scorer (Requirement 5).
+export interface CapsuleItemScores {
+  lexical: number;
+  path: number;
+  symbol: number;
+  graph: number;
+  centrality: number;
+  final: number;
+}
+
+export interface CapsuleSelectionDiagnostic {
+  path: string;
+  symbol: string;
+  scores: CapsuleItemScores;
+  evidence: string[];
+}
+
 export interface CapsuleDiagnostics {
   mode: CapsuleMode;
   context_chars: number;
@@ -20,6 +39,8 @@ export interface CapsuleDiagnostics {
   likely_files: string[];
   likely_symbols: string[];
   retrieval_reason: string;
+  /** Per-item score breakdown + evidence; omitted when no breakdown is known. */
+  selection?: CapsuleSelectionDiagnostic[];
 }
 
 export interface BuildCapsuleDiagnosticsInput {
@@ -33,6 +54,8 @@ export interface BuildCapsuleDiagnosticsInput {
   /** Char/item counts of the emitted context; falls back to capsule metrics. */
   contextChars?: number;
   contextItems?: number;
+  /** Per-item score breakdown + evidence; attached verbatim when provided. */
+  selection?: readonly CapsuleSelectionDiagnostic[];
 }
 
 export function buildCapsuleDiagnostics(
@@ -53,6 +76,9 @@ export function buildCapsuleDiagnostics(
       input.likelySymbols ?? items.map((item) => item.localName),
     ),
     retrieval_reason: input.recommendation.retrievalReason,
+    ...(input.selection && input.selection.length > 0
+      ? { selection: [...input.selection] }
+      : {}),
   };
 }
 

@@ -6,83 +6,89 @@
 // so it must spend its budget on that implementation — not on the test file,
 // and not on nothing.
 //
-// Recovery walks: failing test + issue text -> candidate implementation symbols
-// (dropping the test's own method/class names) -> look each up in the index ->
-// keep the best NON-test definition. The result feeds both the capsule pivots
-// and the diagnostics' likely_files/likely_symbols, so a micro capsule points
-// at the code to change.
+// Recovery runs the hybrid graph-expanded retrieval pipeline over the shaped
+// query (lexical + symbol/path + failing-test + graph-expanded candidates with
+// centrality rerank) and keeps the best NON-test targets. Because graph
+// expansion and test-to-implementation expansion are CANDIDATE SOURCES — not
+// just rerankers — a target that lexical search alone missed (e.g. the impl a
+// failing test imports) can still be recovered. The result feeds both the
+// capsule pivots and the diagnostics' likely_files/likely_symbols, with a full
+// per-target score breakdown and evidence trail.
 //
 // This is purely index-driven: it never hardcodes instance ids or file paths.
 
 import type { Database } from "bun:sqlite";
 
-import { searchSymbolsGraph } from "../retrieval/searchSymbolsGraph";
 import { isLikelyTestCandidate } from "../retrieval/searchSymbolsShared";
-import { SymbolSearchMatchField, type GraphSearchResult } from "../retrieval/types";
+import {
+  hybridRetrieve,
+  HybridCandidateSource,
+  type HybridCandidate,
+} from "../retrieval/hybridRetrieval";
+import type { GraphExpansionOptions } from "../retrieval/graphExpansion";
 import type { ShapedSweQuery } from "./sweQueryShaping";
 
 export interface RecoverMicroTargetsOptions {
   /** Hard cap on recovered targets (defaults to the micro item budget, 2). */
   maxTargets?: number;
-  /** How many candidates to consider per symbol before filtering tests. */
-  perSymbolPoolSize?: number;
+  /** Candidate pool the hybrid pipeline ranks before filtering. */
+  poolSize?: number;
+  /** Graph-expansion bounds forwarded to the hybrid pipeline. */
+  expansion?: GraphExpansionOptions;
 }
 
 const DEFAULT_MAX_TARGETS = 2;
-const DEFAULT_PER_SYMBOL_POOL = 6;
-
-// Fields that mean the candidate matched on its NAME (not merely a docstring or
-// path coincidence). We require one so recovery stays precise.
-const NAME_MATCH_FIELDS: ReadonlySet<SymbolSearchMatchField> = new Set([
-  SymbolSearchMatchField.LocalName,
-  SymbolSearchMatchField.FQName,
-]);
+const DEFAULT_POOL_SIZE = 12;
 
 export function recoverMicroTargets(
   db: Database,
   shaped: ShapedSweQuery,
   options: RecoverMicroTargetsOptions = {},
-): GraphSearchResult[] {
+): HybridCandidate[] {
   const maxTargets = options.maxTargets ?? DEFAULT_MAX_TARGETS;
   if (maxTargets <= 0) {
     return [];
   }
 
-  const candidateSymbols = selectImplementationSymbols(shaped);
-  if (candidateSymbols.length === 0) {
-    return [];
-  }
+  const { candidates } = hybridRetrieve(db, {
+    query: shaped.query,
+    shaped,
+    symbolSeeds: selectImplementationSymbols(shaped),
+    maxResults: options.poolSize ?? DEFAULT_POOL_SIZE,
+    ...(options.expansion ? { expansion: options.expansion } : {}),
+  });
 
-  const poolSize = options.perSymbolPoolSize ?? DEFAULT_PER_SYMBOL_POOL;
-  const seenSymbolIds = new Set<string>();
-  const recovered: GraphSearchResult[] = [];
-
-  for (const symbol of candidateSymbols) {
-    if (recovered.length >= maxTargets) {
+  const targets: HybridCandidate[] = [];
+  for (const candidate of candidates) {
+    if (targets.length >= maxTargets) {
       break;
     }
-
-    const candidates = searchSymbolsGraph(db, {
-      query: symbol,
-      maxResults: poolSize,
-      // Push the test that names the symbol below the implementation it covers.
-      enableTestAwareDownweighting: true,
-    });
-
-    const best = candidates.find(
-      (candidate) =>
-        !seenSymbolIds.has(candidate.symbolId)
-        && matchedOnName(candidate)
-        && !isLikelyTestCandidate(candidate),
-    );
-
-    if (best !== undefined) {
-      seenSymbolIds.add(best.symbolId);
-      recovered.push(best);
+    if (!isViableTarget(candidate)) {
+      continue;
     }
+    targets.push(candidate);
   }
 
-  return recovered;
+  return targets;
+}
+
+// A micro edit target must be implementation, not a test, and must carry at
+// least one POSITIVE target signal: a symbol/path match, or graph/test edge
+// evidence. A candidate that only floated up on diffuse lexical similarity is
+// not a confident enough target to spend the micro budget on.
+function isViableTarget(candidate: HybridCandidate): boolean {
+  if (isLikelyTestCandidate(candidate)) {
+    return false;
+  }
+  const { symbol, path, graph } = candidate.scores;
+  const hasTargetSignal =
+    symbol > 0
+    || path > 0
+    || graph > 0
+    || candidate.sources.includes(HybridCandidateSource.Test)
+    || candidate.sources.includes(HybridCandidateSource.Symbol)
+    || candidate.sources.includes(HybridCandidateSource.Path);
+  return hasTargetSignal;
 }
 
 // The symbols worth resolving to an implementation, in priority order:
@@ -92,6 +98,8 @@ export function recoverMicroTargets(
 //   2. the SUBJECT of each test class — the class name with its Test/TestCase
 //      affix stripped (AggregateTestCase -> Aggregate, FooTest -> Foo), which is
 //      the thing under test and usually names the implementation directly.
+// These feed the hybrid pipeline's symbol-candidate step so a target named only
+// by the failing test class still enters the pool.
 function selectImplementationSymbols(shaped: ShapedSweQuery): string[] {
   const explicit = shaped.identifiers.filter((symbol) => !isTestSymbol(symbol));
   const subjects = shaped.identifiers
@@ -121,10 +129,6 @@ function testClassSubject(className: string): string {
   return className
     .replace(/^Test(?=[A-Z])/, "")
     .replace(/(?:TestCase|Tests|Test)$/, "");
-}
-
-function matchedOnName(candidate: GraphSearchResult): boolean {
-  return candidate.matches.some((match) => NAME_MATCH_FIELDS.has(match.field));
 }
 
 function dedupe(values: readonly string[]): string[] {

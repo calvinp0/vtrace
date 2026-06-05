@@ -134,6 +134,47 @@ export function listAllSymbols(db: Database): SymbolRecord[] {
   return rows.map(symbolRowToRecord);
 }
 
+// Symbols whose file lives directly under `directory` (same package/module
+// folder), e.g. directory "django/db/models" returns aggregates.py + query.py
+// symbols but NOT django/db/models/sql/compiler.py symbols. A trailing slash is
+// normalised on; an empty directory matches repo-root files. Used by graph
+// expansion to surface same-module neighbours that no edge connects.
+export function listSymbolsUnderDirectory(
+  db: Database,
+  directory: string,
+): SymbolRecord[] {
+  const normalized = directory.replace(/\/+$/, "");
+  const prefix = normalized.length === 0 ? "" : `${normalized}/`;
+  const rows = db.query(`
+    SELECT
+      symbols.id,
+      files.path AS file_path,
+      symbols.fq_name,
+      symbols.local_name,
+      symbols.kind,
+      symbols.signature,
+      symbols.start_line,
+      symbols.end_line,
+      symbols.start_byte,
+      symbols.end_byte,
+      symbols.parent_symbol_id,
+      symbols.exported,
+      symbols.docstring,
+      symbols.decorators
+    FROM symbols
+    INNER JOIN files ON files.id = symbols.file_id
+    WHERE files.path LIKE ? ESCAPE '\\'
+      AND instr(substr(files.path, ?), '/') = 0
+    ORDER BY files.path ASC, symbols.start_byte ASC, symbols.id ASC
+  `).all(`${escapeLike(prefix)}%`, prefix.length + 1) as SymbolRow[];
+
+  return rows.map(symbolRowToRecord);
+}
+
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, (match) => `\\${match}`);
+}
+
 export function getSymbolById(
   db: Database,
   symbolId: string,

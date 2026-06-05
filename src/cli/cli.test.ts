@@ -1497,6 +1497,29 @@ test("capsule --mode micro recovers ModelAdmin options target (django-11095)", a
   });
 });
 
+test("capsule --mode micro recommends skip rather than emitting an empty capsule", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeMicroTargetFixtureRepo(repoRoot);
+    await runCli(["index", repoRoot]);
+
+    // A failing test + issue that name nothing in the index: micro must NOT
+    // recover a target. It must then recommend skip — never emit a tiny,
+    // misdirecting capsule with context_items: 0 / likely_files: [].
+    const query = [
+      "failing tests: test_frobnicate_widget (frobnicator.tests.WidgetGlyphTestCase)",
+      "issue: adjust the frobnicator widget glyph spacing in the theme",
+    ].join("\n");
+    const result = await runCli(["capsule", repoRoot, query, "--mode", "micro", "--json"]);
+    assert.equal(result.exitCode, 0);
+
+    const out = JSON.parse(result.stdout);
+    assert.equal(out.diagnostics.recommended_mode, "skip");
+    assert.equal(out.diagnostics.context_items, 0);
+    assert.deepEqual(out.diagnostics.likely_files, []);
+    assert.equal(out.context, "");
+  });
+});
+
 test("capsule rejects an unknown mode and bad numeric flags", async () => {
   await withFixture(async ({ repoRoot }) => {
     await writeCapsuleFixtureRepo(repoRoot);
