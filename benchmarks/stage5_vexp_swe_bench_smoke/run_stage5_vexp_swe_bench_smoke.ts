@@ -127,6 +127,14 @@ export interface IndexedContextFields {
   readonly vtraceContextItems: number | null;
   readonly vtraceContextTruncated: boolean | null;
   readonly vtraceContextError: string | null;
+  // Stage 5 vtrace policy fields. `skip` is a first-class, VALID policy decision
+  // (vtrace recovered no high-confidence target for a small/local task), distinct
+  // from an indexed-context treatment. null on baseline / non-indexed rows.
+  readonly vtracePolicyAction: VtracePolicyAction | "unknown" | null;
+  readonly vtraceContextInjected: boolean | null;
+  readonly vtraceSkipReason: string | null;
+  readonly vtracePivotCount: number | null;
+  readonly vtraceSupportCount: number | null;
 }
 
 // Stage 5C evaluation evidence, normalized per instance. resolved itself stays
@@ -271,6 +279,10 @@ export interface Stage5Summary {
   readonly meanCostReductionBothResolved: number | null;
   readonly meanDurationReductionBothResolved: number | null;
   readonly vtraceConditionRun: boolean;
+  // Stage 5 vtrace policy aggregates (over vtrace rows).
+  readonly skipCount: number;
+  readonly contextInjectedCount: number;
+  readonly invalidTreatmentCount: number;
 }
 
 // Run-level evidence reconstructed from the captured raw artifacts (run meta +
@@ -353,6 +365,11 @@ const CSV_COLUMNS = [
   "vtrace_injection_observed",
   "vtrace_indexed_context",
   "vtrace_treatment_valid",
+  "vtrace_policy_action",
+  "vtrace_context_injected",
+  "vtrace_skip_reason",
+  "pivot_count",
+  "support_count",
   "recommended_mode",
   "actual_capsule_mode",
   "target_confidence",
@@ -479,15 +496,18 @@ export function buildBaselineCommand(
 export function buildVtraceCommand(
   config: CliConfig,
   instances: readonly string[],
+  injectContext = true,
 ): { command: string; args: string[]; cwd: string | null; env: Record<string, string> } {
   // The vtrace condition uses the IDENTICAL benchmark command as baseline
   // (still --no-vexp, same model/agent/budget). vtrace is injected out-of-band
   // via environment so vexp is never enabled and command parity is preserved.
+  // A SKIP-policy run (injectContext=false) omits the instructions-file env, so
+  // the benchmark runs WITHOUT any injected context — a real vtrace-policy row.
   return {
     command: config.nodeCommand,
     args: buildRunArgs(config, instances, rawConditionDir(config.out, "vtrace", config.runLabel), false),
     cwd: config.vexpSweBenchDir,
-    env: vtraceEnv(config),
+    env: vtraceEnv(config, injectContext),
   };
 }
 
@@ -515,12 +535,21 @@ export function vtraceInstructionsFilePath(outDir: string): string {
   return path.join(outDir, "_vtrace_instructions.md");
 }
 
-function vtraceEnv(config: CliConfig): Record<string, string> {
-  return {
+function vtraceEnv(config: CliConfig, injectContext = true): Record<string, string> {
+  const env: Record<string, string> = {
     VTRACE_SMOKE: "1",
     VTRACE_METHOD: config.vtraceMethod,
-    VTRACE_AGENT_INSTRUCTIONS_FILE: vtraceInstructionsFilePath(config.out),
   };
+  // Only point the adapter at the instructions file when we actually inject. A
+  // skip-policy run leaves it unset so nothing is injected.
+  if (injectContext) {
+    env.VTRACE_AGENT_INSTRUCTIONS_FILE = vtraceInstructionsFilePath(config.out);
+  }
+  return env;
+}
+
+function isVtracePolicyAction(value: unknown): value is VtracePolicyAction {
+  return value === "inject" || value === "skip" || value === "error";
 }
 
 export function vtraceInstructionsText(): string {
@@ -990,23 +1019,37 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
   // --output wipe) so the patched adapter can read it at runtime.
   const instructionsPath = vtraceInstructionsFilePath(config.out);
   let extraVtraceMeta: Record<string, unknown> = {};
+  // Whether to inject vtrace context into the spawned run. A valid SKIP policy
+  // runs the benchmark WITHOUT injection (no instructions file env) — a real
+  // vtrace-policy row, not an indexed-context treatment.
+  let injectContext = true;
 
   if (config.vtraceMethod === "indexed-context") {
     // Stage 5B: real vtrace indexing + query produces the injected context. The
     // local prompt patch is the injection mechanism, so require it first. Then
     // build the context; if it cannot be generated, abort BEFORE spawning vexp —
     // never silently fall back to generic instructions or spend tokens on a
-    // non-treatment run.
+    // non-treatment run — UNLESS vtrace deliberately skipped (a valid policy).
     await assertVtracePatchInstalled(config);
     const indexed = await prepareIndexedContext(config, deps);
     extraVtraceMeta = indexedContextMetaFields(indexed);
-    if (!indexed.indexedContext) {
+    if (indexed.policyAction === "skip") {
+      // VALID no-context policy: vtrace recovered no high-confidence target for a
+      // small/local task. Run the external benchmark with --no-vexp and NO
+      // instructions file, so we still measure a real resolved/cost/tokens row
+      // for the vtrace-policy condition while recording that nothing was injected.
+      injectContext = false;
+      process.stderr.write(
+        `Stage5 vtrace policy: skip (no context injected) — ${indexed.skipReason ?? "no high-confidence actionable target recovered"}\n`,
+      );
+    } else if (!indexed.indexedContext) {
       throw new Error(
         `indexed-context preparation produced no vtrace context (${indexed.contextError ?? "unknown error"}); ` +
           "aborting before spawn so no tokens are spent on a non-treatment run.",
       );
+    } else {
+      await assertVtraceInstructionsFileValid(instructionsPath);
     }
-    await assertVtraceInstructionsFileValid(instructionsPath);
   } else {
     // Generic instructions-file / local-patch: write the generic instructions.
     await writeFile(instructionsPath, `${vtraceInstructionsText()}\n`);
@@ -1015,7 +1058,7 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
       await assertVtracePatchInstalled(config);
     }
   }
-  await runCondition(config, "vtrace", deps, extraVtraceMeta);
+  await runCondition(config, "vtrace", deps, extraVtraceMeta, injectContext);
 }
 
 // Stage 5C: run the EXTERNAL benchmark with vexp ENABLED. This is the only
@@ -1303,6 +1346,15 @@ export interface IndexedContextResult {
   readonly contextItems: number;
   readonly contextTruncated: boolean;
   readonly contextError: string | null;
+  // Run-level vtrace policy: "inject" when any real context was produced, "skip"
+  // when none was AND every empty result was an intentional capsule skip (no hard
+  // error), "error" when an empty result was a genuine failure.
+  readonly policyAction: VtracePolicyAction;
+  readonly contextInjected: boolean;
+  readonly skipReason: string | null;
+  readonly pivotCount: number | null;
+  readonly supportCount: number | null;
+  readonly actualCapsuleMode: string | null;
 }
 
 // Resolve the bundled vexp-swe-bench dataset path (overridable via --swe-bench-data).
@@ -1421,6 +1473,122 @@ export function extractCapsuleContext(stdout: string): string {
   }
 }
 
+// The vtrace POLICY a capsule query expressed for one instance:
+//  - inject: real retrieved context was produced → inject it (the treatment).
+//  - skip:   vtrace deliberately recovered no high-confidence target → a VALID
+//            no-context policy decision (small/local task), not an error.
+//  - error:  empty/unusable output that is NOT an intentional skip → fail fast.
+export type VtracePolicyAction = "inject" | "skip" | "error";
+
+export interface CapsuleClassification {
+  readonly policyAction: VtracePolicyAction;
+  readonly contextInjected: boolean;
+  readonly context: string;
+  readonly skipReason: string | null;
+  readonly recommendedMode: string | null;
+  readonly actualCapsuleMode: string | null;
+  readonly pivotCount: number | null;
+  readonly supportCount: number | null;
+  /** Set only when policyAction === "error" (genuinely unusable output). */
+  readonly error: string | null;
+}
+
+// Classify a capsule `--json` (or raw) query output into a vtrace policy action.
+// A capsule SKIP is recorded honestly as a valid policy, never thrown as fatal:
+// it is detected from empty context paired with skip diagnostics — an explicit
+// `recommended_mode`/`actual_mode` of `skip`, or `pivot_count === 0` accompanied
+// by a retrieval reason. Empty context WITHOUT any of those signals is a real
+// error (e.g. a broken index) and still fails fast.
+export function classifyCapsuleOutput(stdout: string): CapsuleClassification {
+  const trimmed = stdout.trim();
+
+  // Non-JSON (legacy raw text): context iff non-empty, else an error.
+  if (!trimmed.startsWith("{")) {
+    return trimmed.length > 0
+      ? injectClassification(trimmed, null, null, null, null)
+      : errorClassification("vtrace query returned empty context.");
+  }
+
+  let parsed: { context?: unknown; diagnostics?: Record<string, unknown> };
+  try {
+    parsed = JSON.parse(trimmed) as typeof parsed;
+  } catch {
+    // Malformed JSON we cannot reason about: treat as injectable raw text if any.
+    return trimmed.length > 0
+      ? injectClassification(trimmed, null, null, null, null)
+      : errorClassification("vtrace query returned empty context.");
+  }
+
+  const diagnostics = isRecord(parsed.diagnostics) ? parsed.diagnostics : {};
+  const context = typeof parsed.context === "string" ? parsed.context.trim() : "";
+  const recommendedMode = isString(diagnostics.recommended_mode) ? diagnostics.recommended_mode : null;
+  const actualMode = isString(diagnostics.actual_mode) ? diagnostics.actual_mode : null;
+  const pivotCount = isNumber(diagnostics.pivot_count) ? diagnostics.pivot_count : null;
+  const supportCount = isNumber(diagnostics.support_count) ? diagnostics.support_count : null;
+  const reason = isString(diagnostics.retrieval_reason) ? diagnostics.retrieval_reason : null;
+
+  // Real context present → inject it, regardless of mode labels.
+  if (context.length > 0) {
+    return injectClassification(context, recommendedMode, actualMode, pivotCount, supportCount);
+  }
+
+  // Empty context: a deliberate skip iff the diagnostics say so.
+  const isSkip =
+    recommendedMode === "skip"
+    || actualMode === "skip"
+    || (pivotCount === 0 && reason !== null);
+  if (isSkip) {
+    return {
+      policyAction: "skip",
+      contextInjected: false,
+      context: "",
+      skipReason: reason ?? "no high-confidence actionable target recovered",
+      recommendedMode,
+      actualCapsuleMode: actualMode ?? "skip",
+      pivotCount: pivotCount ?? 0,
+      supportCount: supportCount ?? 0,
+      error: null,
+    };
+  }
+
+  // Empty context with no skip signal: a genuine failure — fail fast.
+  return errorClassification("vtrace query returned empty context.");
+}
+
+function injectClassification(
+  context: string,
+  recommendedMode: string | null,
+  actualMode: string | null,
+  pivotCount: number | null,
+  supportCount: number | null,
+): CapsuleClassification {
+  return {
+    policyAction: "inject",
+    contextInjected: true,
+    context,
+    skipReason: null,
+    recommendedMode,
+    actualCapsuleMode: actualMode,
+    pivotCount,
+    supportCount,
+    error: null,
+  };
+}
+
+function errorClassification(message: string): CapsuleClassification {
+  return {
+    policyAction: "error",
+    contextInjected: false,
+    context: "",
+    skipReason: null,
+    recommendedMode: null,
+    actualCapsuleMode: null,
+    pivotCount: null,
+    supportCount: null,
+    error: message,
+  };
+}
+
 // Build the vtrace query string from an instance. Rather than dumping the whole
 // problem statement, shape it into a compact, signal-first query (failing tests,
 // explicit files/symbols, a short issue lead) via the shared shaping helper. The
@@ -1485,6 +1653,8 @@ export interface VtraceContextSection {
   readonly instance: SweBenchInstance;
   readonly rawContext: string;
   readonly error: string | null;
+  /** The capsule policy classification for this instance (null on a hard error). */
+  readonly classification: CapsuleClassification | null;
 }
 
 // Assemble the full _vtrace_instructions.md content (one section per instance)
@@ -1549,6 +1719,11 @@ function indexedContextMetaFields(result: IndexedContextResult): IndexedContextF
     vtraceContextItems: result.contextItems,
     vtraceContextTruncated: result.contextTruncated,
     vtraceContextError: result.contextError,
+    vtracePolicyAction: result.policyAction,
+    vtraceContextInjected: result.contextInjected,
+    vtraceSkipReason: result.skipReason,
+    vtracePivotCount: result.pivotCount,
+    vtraceSupportCount: result.supportCount,
   };
 }
 
@@ -1584,6 +1759,7 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
 
     let rawContext = "";
     let sectionError: string | null = null;
+    let classification: CapsuleClassification | null = null;
     try {
       await ensureWorkspaceCheckout(instance, workspace, runProc);
       const indexSpec = buildVtraceIndexCommand(config, workspace);
@@ -1601,13 +1777,20 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
       if (queryResult.exitCode !== 0) {
         throw new Error(`vtrace query failed (exit ${queryResult.exitCode}): ${queryResult.stderr.trim() || "(no stderr)"}`);
       }
-      rawContext = extractCapsuleContext(queryResult.stdout);
-      if (rawContext.length === 0) throw new Error("vtrace query returned empty context.");
+      // Classify the policy. A SKIP (no high-confidence target) is recorded as a
+      // valid policy decision, not an error — only a genuinely unusable output
+      // (empty WITHOUT skip diagnostics) throws and fails the section.
+      classification = classifyCapsuleOutput(queryResult.stdout);
+      if (classification.policyAction === "error") {
+        throw new Error(classification.error ?? "vtrace query returned empty context.");
+      }
+      rawContext = classification.context;
     } catch (error) {
       sectionError = error instanceof Error ? error.message : String(error);
       errors.push(`${instance.instanceId}: ${sectionError}`);
+      classification = null;
     }
-    sections.push({ instance, rawContext, error: sectionError });
+    sections.push({ instance, rawContext, error: sectionError, classification });
   }
 
   const assembled = buildVtraceContextMarkdown(sections, {
@@ -1617,6 +1800,21 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
   await writeFile(contextFile, assembled.markdown);
 
   const indexedContext = sections.some((section) => section.error === null && section.rawContext.trim().length > 0);
+  const skipSections = sections.filter((section) => section.classification?.policyAction === "skip");
+  const hardErrors = sections.filter((section) => section.error !== null);
+  // The run is a valid SKIP policy only when nothing was injected, at least one
+  // instance intentionally skipped, and there was no hard error to fail on.
+  const policyAction: VtracePolicyAction = indexedContext
+    ? "inject"
+    : skipSections.length > 0 && hardErrors.length === 0
+      ? "skip"
+      : "inject";
+  const pivotCount = sumClassification(sections, (c) => c.pivotCount);
+  const supportCount = sumClassification(sections, (c) => c.supportCount);
+  const actualCapsuleMode = policyAction === "skip"
+    ? "skip"
+    : (sections.find((s) => s.classification?.actualCapsuleMode != null)?.classification?.actualCapsuleMode ?? null);
+
   return {
     indexedContext,
     indexCommand,
@@ -1627,7 +1825,31 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     contextItems: assembled.items,
     contextTruncated: assembled.truncated,
     contextError: errors.length > 0 ? errors.join("; ") : null,
+    policyAction,
+    contextInjected: indexedContext,
+    skipReason: policyAction === "skip" ? (skipSections[0]?.classification?.skipReason ?? null) : null,
+    pivotCount,
+    supportCount,
+    actualCapsuleMode,
   };
+}
+
+// Sum a per-section classification number (pivot/support counts), returning null
+// only when no section reported the value at all.
+function sumClassification(
+  sections: readonly VtraceContextSection[],
+  pick: (c: CapsuleClassification) => number | null,
+): number | null {
+  let total = 0;
+  let seen = false;
+  for (const section of sections) {
+    const value = section.classification === null ? null : pick(section.classification);
+    if (value !== null) {
+      total += value;
+      seen = true;
+    }
+  }
+  return seen ? total : null;
 }
 
 // Reproduce the instance checkout (Approach B): clone if absent, then checkout
@@ -1663,6 +1885,7 @@ async function runCondition(
   condition: Stage5Condition,
   deps: RunDeps,
   extraVtraceMeta: Record<string, unknown> = {},
+  injectContext = true,
 ): Promise<void> {
   if (config.vexpSweBenchDir === null) throw new Error(`--mode run-${condition} requires --vexp-swe-bench-dir.`);
   const cliPath = path.join(config.vexpSweBenchDir, config.cliEntry);
@@ -1683,7 +1906,7 @@ async function runCondition(
       ? buildBaselineCommand(config, instances)
       : condition === "vexp"
         ? buildVexpCommand(config, instances)
-        : buildVtraceCommand(config, instances);
+        : buildVtraceCommand(config, instances, injectContext);
   const env = condition === "vtrace" ? (spec as { env: Record<string, string> }).env : {};
   const startedMs = Date.now();
   const result = await (deps.runProcess ?? runProcess)(spec.command, spec.args, {
@@ -1692,12 +1915,17 @@ async function runCondition(
   });
   // For the vtrace condition, record the instruction-file state and the runtime
   // injection status parsed from this run's stderr, so the raw meta is itself
-  // sufficient evidence of whether the treatment actually applied.
+  // sufficient evidence of whether the treatment actually applied. A SKIP policy
+  // run injects nothing on purpose, so its validity does not require an observed
+  // injection (a no-context policy is a valid treatment).
   const indexedFlag =
     typeof extraVtraceMeta.vtraceIndexedContext === "boolean" ? extraVtraceMeta.vtraceIndexedContext : null;
+  const policyAction = isVtracePolicyAction(extraVtraceMeta.vtracePolicyAction)
+    ? extraVtraceMeta.vtracePolicyAction
+    : null;
   const vtraceMeta =
     condition === "vtrace"
-      ? { ...(await vtraceRunMetaFields(config, result.stderr, indexedFlag)), ...extraVtraceMeta }
+      ? { ...(await vtraceRunMetaFields(config, result.stderr, indexedFlag, policyAction)), ...extraVtraceMeta }
       : {};
   const meta = {
     condition,
@@ -1762,6 +1990,12 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtraceContextItems: evidence.vtraceContextItems,
           vtraceContextTruncated: evidence.vtraceContextTruncated,
           vtraceContextError: evidence.vtraceContextError,
+          // Stage 5 vtrace policy fields (skip support).
+          vtracePolicyAction: evidence.vtracePolicyAction,
+          vtraceContextInjected: evidence.vtraceContextInjected,
+          vtraceSkipReason: evidence.vtraceSkipReason,
+          vtracePivotCount: evidence.vtracePivotCount,
+          vtraceSupportCount: evidence.vtraceSupportCount,
         },
   );
 }
@@ -1776,14 +2010,17 @@ export async function stampCapsuleDiagnostics(
   config: CliConfig,
 ): Promise<Stage5Row[]> {
   const recordsById = await loadDatasetById(config);
-  if (recordsById.size === 0) return [...rows];
 
   const contextCache = new Map<string, string | null>();
   const out: Stage5Row[] = [];
   for (const row of rows) {
+    // A valid skip policy is recorded directly on the row, so reflect the ACTUAL
+    // capsule mode (`skip`) even when the dataset is unavailable for the richer
+    // recommendation/containment diagnostics.
+    const skipped = row.condition === "vtrace" && row.vtracePolicyAction === "skip";
     const record = row.condition === "vtrace" ? recordsById.get(row.instanceId) : undefined;
     if (record === undefined) {
-      out.push(row);
+      out.push(skipped ? { ...row, actualCapsuleMode: "skip", recommendedMode: row.recommendedMode ?? "skip" } : row);
       continue;
     }
     let instance: SweBenchInstance;
@@ -1799,10 +2036,12 @@ export async function stampCapsuleDiagnostics(
     const context = await readInstanceContext(row, contextCache);
     const haveContext = context !== null && context.trim().length > 0;
 
+    // When vtrace exercised its valid no-context policy, the ACTUAL capsule mode
+    // is skip — not the micro envelope the recommendation degrades to.
     out.push({
       ...row,
       recommendedMode: recommendation.recommendedMode,
-      actualCapsuleMode: capsuleModeForInstance(instance),
+      actualCapsuleMode: skipped ? "skip" : capsuleModeForInstance(instance),
       targetConfidence: recommendation.targetConfidence,
       retrievalReason: recommendation.retrievalReason,
       topLikelyFile: shaped.likelyFiles[0] ?? null,
@@ -2288,6 +2527,11 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtraceContextItems: null,
     vtraceContextTruncated: null,
     vtraceContextError: null,
+    vtracePolicyAction: null,
+    vtraceContextInjected: null,
+    vtraceSkipReason: null,
+    vtracePivotCount: null,
+    vtraceSupportCount: null,
   };
 }
 
@@ -2354,7 +2598,11 @@ function computeTreatmentValid(opts: {
   instructionsFileExists?: boolean;
   instructionsFileSize?: number | null;
   indexedContext?: boolean | "unknown" | null;
+  policyAction?: VtracePolicyAction | "unknown" | null;
 }): boolean | "unknown" {
+  // A SKIP policy is a VALID treatment by construction: vtrace deliberately
+  // injected no context, so its validity does NOT require an observed injection.
+  if (opts.policyAction === "skip") return true;
   if (opts.injectionObserved === "unknown") return "unknown";
   if (opts.method === "local-patch") return opts.injectionObserved === true;
   if (opts.method === "indexed-context") {
@@ -2374,6 +2622,7 @@ async function vtraceRunMetaFields(
   config: CliConfig,
   stderr: string | null,
   indexedContext: boolean | null = null,
+  policyAction: VtracePolicyAction | "unknown" | null = null,
 ): Promise<{
   vtraceInstructionsFile: string;
   vtraceInstructionsFileExists: boolean;
@@ -2399,6 +2648,7 @@ async function vtraceRunMetaFields(
       instructionsFileExists: exists,
       instructionsFileSize: size,
       indexedContext,
+      policyAction,
     }),
   };
 }
@@ -2464,11 +2714,16 @@ async function collectRunEvidence(outDir: string, runLabel: string | null = null
     instructionsFileExists: vtraceInstructionsFileExists,
     instructionsFileSize: vtraceInstructionsFileSize,
     indexedContext: typeof indexed.vtraceIndexedContext === "boolean" ? indexed.vtraceIndexedContext : null,
+    policyAction: indexed.vtracePolicyAction,
   });
-  if (vtraceMethod === "local-patch" && vtraceTreatmentValid === false) {
+  if (indexed.vtracePolicyAction === "skip") {
+    notes.push(
+      "VTRACE selected no-context policy for this task. This is a valid policy decision, not an indexed-context "
+      + "treatment. Token/cost comparison for this row measures the vtrace policy runner, not injected context.",
+    );
+  } else if (vtraceMethod === "local-patch" && vtraceTreatmentValid === false) {
     notes.push("Vtrace injection was skipped; this run is not a valid vtrace treatment.");
-  }
-  if (vtraceMethod === "indexed-context" && vtraceTreatmentValid === false) {
+  } else if (vtraceMethod === "indexed-context" && vtraceTreatmentValid === false) {
     notes.push(
       indexed.vtraceIndexedContext === true
         ? "Vtrace injection was skipped; this run is not a valid indexed-context treatment."
@@ -2497,6 +2752,10 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
   const bool = (value: unknown): boolean | null => (typeof value === "boolean" ? value : null);
   const str = (value: unknown): string | null => (isString(value) ? value : null);
   const num = (value: unknown): number | null => (isNumber(value) ? value : null);
+  const policy = (value: unknown): VtracePolicyAction | "unknown" | null =>
+    value === "inject" || value === "skip" || value === "error" || value === "unknown"
+      ? (value as VtracePolicyAction | "unknown")
+      : null;
   return {
     vtraceIndexedContext: bool(meta.vtraceIndexedContext),
     vtraceIndexCommand: str(meta.vtraceIndexCommand),
@@ -2507,11 +2766,17 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtraceContextItems: num(meta.vtraceContextItems),
     vtraceContextTruncated: bool(meta.vtraceContextTruncated),
     vtraceContextError: str(meta.vtraceContextError),
+    vtracePolicyAction: policy(meta.vtracePolicyAction),
+    vtraceContextInjected: bool(meta.vtraceContextInjected),
+    vtraceSkipReason: str(meta.vtraceSkipReason),
+    vtracePivotCount: num(meta.vtracePivotCount),
+    vtraceSupportCount: num(meta.vtraceSupportCount),
   };
 }
 
 function summarize(rows: readonly Stage5Row[], pairs: readonly PairComparison[]): Stage5Summary {
   const bothResolved = pairs.filter((pair) => pair.outcome === "both_resolved");
+  const vtraceRows = rows.filter((row) => row.condition === "vtrace");
   return {
     instanceCount: new Set(rows.map((row) => row.instanceId)).size,
     baselineRuns: rows.filter((row) => row.condition === "baseline").length,
@@ -2526,6 +2791,9 @@ function summarize(rows: readonly Stage5Row[], pairs: readonly PairComparison[])
     meanCostReductionBothResolved: mean(bothResolved.map((pair) => pair.costReductionPct).filter(isNumber)),
     meanDurationReductionBothResolved: mean(bothResolved.map((pair) => pair.durationReductionPct).filter(isNumber)),
     vtraceConditionRun: rows.some((row) => row.condition === "vtrace"),
+    skipCount: vtraceRows.filter((row) => row.vtracePolicyAction === "skip").length,
+    contextInjectedCount: vtraceRows.filter((row) => row.vtraceContextInjected === true).length,
+    invalidTreatmentCount: vtraceRows.filter((row) => row.vtraceTreatmentValid === false).length,
   };
 }
 
@@ -2564,6 +2832,11 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         row.vtraceInjectionObserved === null ? "" : String(row.vtraceInjectionObserved),
         row.vtraceIndexedContext === null ? "" : String(row.vtraceIndexedContext),
         row.vtraceTreatmentValid === null ? "" : String(row.vtraceTreatmentValid),
+        row.vtracePolicyAction ?? "",
+        row.vtraceContextInjected === null ? "" : String(row.vtraceContextInjected),
+        row.vtraceSkipReason ?? "",
+        row.vtracePivotCount === null ? "" : String(row.vtracePivotCount),
+        row.vtraceSupportCount === null ? "" : String(row.vtraceSupportCount),
         row.recommendedMode ?? "",
         row.actualCapsuleMode ?? "",
         row.targetConfidence ?? "",
@@ -2632,6 +2905,9 @@ export function renderMarkdown(artifact: NormalizedArtifact, config: CliConfig):
     `| Instances | ${summary.instanceCount} |`,
     `| Baseline runs | ${summary.baselineRuns} |`,
     `| Vtrace runs | ${summary.vtraceRuns} |`,
+    `| Vtrace context injected | ${summary.contextInjectedCount} |`,
+    `| Vtrace skip policy | ${summary.skipCount} |`,
+    `| Invalid treatments | ${summary.invalidTreatmentCount} |`,
     `| Both resolved | ${summary.bothResolved} |`,
     `| Vtrace only resolved | ${summary.vtraceOnlyResolved} |`,
     `| Baseline only resolved | ${summary.baselineOnlyResolved} |`,
@@ -2723,7 +2999,12 @@ function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
     "| Field | Value |",
     "| --- | --- |",
     `| vtrace_method | ${evidence.vtraceMethod} |`,
+    `| vtrace_policy_action | ${evidence.vtracePolicyAction ?? "(n/a)"} |`,
+    `| vtrace_context_injected | ${evidence.vtraceContextInjected === null ? "(n/a)" : String(evidence.vtraceContextInjected)} |`,
     `| vtrace_indexed_context | ${String(evidence.vtraceIndexedContext)} |`,
+    `| vtrace_skip_reason | ${evidence.vtraceSkipReason ?? "(none)"} |`,
+    `| pivot_count | ${evidence.vtracePivotCount ?? "(n/a)"} |`,
+    `| support_count | ${evidence.vtraceSupportCount ?? "(n/a)"} |`,
     `| vtrace_index_command | ${evidence.vtraceIndexCommand ?? "(none)"} |`,
     `| vtrace_query_command | ${evidence.vtraceQueryCommand ?? "(none)"} |`,
     `| vtrace_workspace_path | ${evidence.vtraceWorkspacePath ?? "(none)"} |`,
@@ -2735,7 +3016,19 @@ function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
     `| vtrace_treatment_valid | ${String(evidence.vtraceTreatmentValid)} |`,
     "",
   ];
-  if (evidence.vtraceMethod === "indexed-context" && evidence.vtraceTreatmentValid !== true) {
+  // A SKIP policy is a valid, intentional no-context decision — explain it
+  // honestly rather than warning, so the row is not mistaken for a failed
+  // treatment or read as injected-context performance.
+  if (evidence.vtracePolicyAction === "skip") {
+    lines.push(
+      "> VTRACE selected no-context policy for this task. This is a valid policy decision, not an indexed-context "
+        + "treatment. Token/cost comparison for this row measures the vtrace policy runner, not injected context.",
+      "",
+    );
+    if (evidence.vtraceSkipReason !== null) {
+      lines.push(`> Skip reason: \`${evidence.vtraceSkipReason}\``, "");
+    }
+  } else if (evidence.vtraceMethod === "indexed-context" && evidence.vtraceTreatmentValid !== true) {
     lines.push(
       evidence.vtraceIndexedContext === true
         ? "> ⚠️ Warning: Vtrace injection was skipped; this run is not a valid indexed-context treatment. The " +

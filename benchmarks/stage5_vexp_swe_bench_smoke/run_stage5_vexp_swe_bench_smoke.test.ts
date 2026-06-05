@@ -21,6 +21,7 @@ import {
   buildVtraceQueryCommand,
   buildVtraceCommand,
   capsuleModeForInstance,
+  classifyCapsuleOutput,
   classifyOutcome,
   combineRunEvidence,
   comparePairs,
@@ -1617,4 +1618,229 @@ test("combineRunEvidence reports a fact only when all runs agree", () => {
   const mixed = combineRunEvidence([valid, { ...valid, vtraceMethod: "local-patch", vtraceTreatmentValid: false }]);
   assert.equal(mixed.vtraceMethod, "mixed");
   assert.equal(mixed.vtraceTreatmentValid, "unknown");
+});
+
+// ----- Stage 5: valid no-context (skip) policy -----
+
+// A capsule --json skip payload: empty context + skip diagnostics, as emitted by
+// `capsule --mode micro` when no high-confidence pivot is recovered.
+function skipCapsuleJson(reason = "no high-confidence actionable target recovered"): string {
+  return JSON.stringify({
+    diagnostics: {
+      mode: "micro",
+      recommended_mode: "skip",
+      actual_mode: "skip",
+      pivot_count: 0,
+      support_count: 0,
+      context_items: 0,
+      retrieval_reason: reason,
+    },
+    context: "",
+  });
+}
+
+test("classifyCapsuleOutput treats a no-context skip payload as a valid skip, not fatal", () => {
+  const skip = classifyCapsuleOutput(skipCapsuleJson("nothing actionable here"));
+  assert.equal(skip.policyAction, "skip");
+  assert.equal(skip.contextInjected, false);
+  assert.equal(skip.skipReason, "nothing actionable here");
+  assert.equal(skip.actualCapsuleMode, "skip");
+  assert.equal(skip.pivotCount, 0);
+  assert.equal(skip.error, null);
+
+  // pivot_count 0 + a reason alone also classifies as skip (no explicit mode).
+  const byPivot = classifyCapsuleOutput(
+    JSON.stringify({ diagnostics: { pivot_count: 0, retrieval_reason: "none" }, context: "" }),
+  );
+  assert.equal(byPivot.policyAction, "skip");
+
+  // Real context injects regardless of mode labels.
+  const inject = classifyCapsuleOutput(
+    JSON.stringify({ diagnostics: { recommended_mode: "micro", pivot_count: 1 }, context: "# vtrace context\nfoo" }),
+  );
+  assert.equal(inject.policyAction, "inject");
+  assert.equal(inject.contextInjected, true);
+  assert.equal(inject.context, "# vtrace context\nfoo");
+
+  // Empty context with NO skip signal is a genuine error (fails fast downstream).
+  const err = classifyCapsuleOutput(JSON.stringify({ diagnostics: { mode: "micro" }, context: "" }));
+  assert.equal(err.policyAction, "error");
+  assert.match(err.error ?? "", /empty context/);
+});
+
+test("prepareIndexedContext records a capsule skip as a valid policy (not an error)", async () => {
+  const out = path.join(await tmpDir("idx-skip"), "results");
+  const dataDir = await tmpDir("idx-skip-data");
+  const dataFile = await writeSweBenchData(dataDir, [SAMPLE_RECORD]);
+  const { run } = scriptedRunner([{ match: "capsule", result: { stdout: skipCapsuleJson() } }]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-11728"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  assert.equal(result.policyAction, "skip");
+  assert.equal(result.indexedContext, false);
+  assert.equal(result.contextInjected, false);
+  assert.equal(result.actualCapsuleMode, "skip");
+  assert.equal(result.pivotCount, 0);
+  assert.match(result.skipReason ?? "", /no high-confidence actionable target/);
+  // A skip is not a hard error.
+  assert.equal(result.contextError, null);
+});
+
+test("run-vtrace skip policy spawns the benchmark WITHOUT VTRACE_AGENT_INSTRUCTIONS_FILE", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("idx-skip-run"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("idx-skip-run-data");
+  const dataFile = await writeSweBenchData(dataDir, [SAMPLE_RECORD]);
+
+  let vexpSpawned = false;
+  let vexpEnv: Record<string, string> | undefined;
+  let vexpArgs: readonly string[] = [];
+  const run = async (
+    command: string,
+    args: readonly string[],
+    options?: { env?: Record<string, string> },
+  ): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes("dist/cli.js")) {
+      vexpSpawned = true;
+      vexpEnv = options?.env;
+      vexpArgs = args;
+    }
+    if (line.includes("capsule")) return { exitCode: 0, stdout: skipCapsuleJson(), stderr: "" };
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["django__django-11728"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+  });
+  // Skip must NOT abort before spawn — it runs the policy condition.
+  await runVtrace(config, { runProcess: run });
+  assert.equal(vexpSpawned, true, "skip policy still runs the external benchmark");
+  assert.ok(vexpArgs.includes("--no-vexp"));
+  // No injected context: the instructions-file env is omitted entirely.
+  assert.ok(vexpEnv !== undefined);
+  assert.equal(vexpEnv?.VTRACE_AGENT_INSTRUCTIONS_FILE, undefined);
+  assert.equal(vexpEnv?.VTRACE_METHOD, "indexed-context");
+
+  // The recorded meta marks the run as a valid skip policy.
+  const meta = JSON.parse(
+    await readFile(path.join(rawConditionDir(out, "vtrace"), "_run.meta.json"), "utf8"),
+  );
+  assert.equal(meta.vtracePolicyAction, "skip");
+  assert.equal(meta.vtraceContextInjected, false);
+});
+
+test("non-skip empty context (no skip diagnostics) still fails fast before spawn", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("idx-empty-err"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("idx-empty-err-data");
+  const dataFile = await writeSweBenchData(dataDir, [SAMPLE_RECORD]);
+
+  let vexpSpawned = false;
+  const run = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes("dist/cli.js")) vexpSpawned = true;
+    // Empty context with NO skip diagnostics = a real failure, not a skip.
+    if (line.includes("capsule")) {
+      return { exitCode: 0, stdout: JSON.stringify({ diagnostics: { mode: "micro" }, context: "" }), stderr: "" };
+    }
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["django__django-11728"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+  });
+  await assert.rejects(() => runVtrace(config, { runProcess: run }), /produced no vtrace context/);
+  assert.equal(vexpSpawned, false);
+});
+
+test("a skip-policy vtrace row is a valid treatment without an observed injection", async () => {
+  const out = path.join(await tmpDir("skip-valid"), "results");
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", {
+    resolved: null,
+    vtraceMethod: "indexed-context",
+    // No injection log in stderr — a skip run injects nothing on purpose.
+    stderr: "Stage5 vtrace policy: skip (no context injected)\n",
+    indexedContext: false,
+    metaExtra: {
+      vtracePolicyAction: "skip",
+      vtraceContextInjected: false,
+      vtraceSkipReason: "no high-confidence actionable target recovered",
+      vtracePivotCount: 0,
+      vtraceSupportCount: 0,
+    },
+  });
+  const artifact = await runIngest(baseConfig({ out }));
+  assert.equal(artifact.evidence.vtracePolicyAction, "skip");
+  assert.equal(artifact.evidence.vtraceTreatmentValid, true);
+  assert.equal(artifact.evidence.vtraceContextInjected, false);
+
+  const vtraceRow = artifact.rows.find((row) => row.condition === "vtrace");
+  assert.ok(vtraceRow);
+  assert.equal(vtraceRow?.vtracePolicyAction, "skip");
+  assert.equal(vtraceRow?.vtraceTreatmentValid, true);
+  assert.equal(vtraceRow?.actualCapsuleMode, "skip");
+});
+
+test("skip aggregates and rows appear in the summary, CSV, JSON, and Markdown", async () => {
+  const out = path.join(await tmpDir("skip-report"), "results");
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", {
+    resolved: null,
+    vtraceMethod: "indexed-context",
+    stderr: "Stage5 vtrace policy: skip\n",
+    indexedContext: false,
+    metaExtra: {
+      vtracePolicyAction: "skip",
+      vtraceContextInjected: false,
+      vtraceSkipReason: "no high-confidence actionable target recovered",
+      vtracePivotCount: 0,
+      vtraceSupportCount: 0,
+    },
+  });
+  const artifact = await runIngest(baseConfig({ out }));
+
+  // Aggregate skip_count is correct.
+  assert.equal(artifact.summary.skipCount, 1);
+  assert.equal(artifact.summary.contextInjectedCount, 0);
+  assert.equal(artifact.summary.invalidTreatmentCount, 0);
+
+  // CSV carries the new policy columns and a skip row.
+  const csv = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.csv"), "utf8");
+  const header = csv.split("\n")[0]!;
+  for (const col of ["vtrace_policy_action", "vtrace_context_injected", "vtrace_skip_reason", "pivot_count", "support_count"]) {
+    assert.ok(header.includes(col), `CSV header missing ${col}`);
+  }
+  assert.match(csv, /,skip,/);
+
+  // JSON normalized artifact carries the policy fields on the vtrace row.
+  const json = JSON.parse(await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.json"), "utf8"));
+  const jsonVtrace = json.rows.find((row: { condition: string }) => row.condition === "vtrace");
+  assert.equal(jsonVtrace.vtracePolicyAction, "skip");
+  assert.equal(json.summary.skipCount, 1);
+
+  // Markdown explains the valid no-context policy in the documented wording.
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /\| vtrace_policy_action \| skip \|/);
+  assert.match(md, /Vtrace skip policy \| 1/);
+  assert.match(
+    md,
+    /VTRACE selected no-context policy for this task\. This is a valid policy decision, not an indexed-context treatment\./,
+  );
 });
