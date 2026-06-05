@@ -81,6 +81,26 @@ export interface CapsuleSelectionDiagnostic {
   evidence: string[];
 }
 
+/**
+ * A candidate that was recovered but NOT carried in the capsule — neither a
+ * pivot nor an emitted support item (Requirement 1). The diagnostic answers the
+ * question "useful candidates were generated; were any discarded, and why?" so a
+ * caller can tell an over-strict pivot gate from a genuinely empty recovery. The
+ * `discard_reason` is the role-assignment "why" (e.g. "discard: a test symbol",
+ * "support: … (not a pivot: no direct evidence)").
+ */
+export interface DiscardedCandidateDiagnostic {
+  path: string;
+  symbol: string;
+  kind: string;
+  scores: CapsuleItemScores;
+  evidence: string[];
+  discard_reason: string;
+}
+
+/** Hard cap on `top_discarded_candidates` — the most relevant rejects only. */
+export const MAX_TOP_DISCARDED_CANDIDATES = 5;
+
 export interface CapsuleDiagnostics {
   mode: CapsuleMode;
   context_chars: number;
@@ -93,6 +113,25 @@ export interface CapsuleDiagnostics {
   pivot_count: number;
   /** Number of support (context) items in the emitted capsule. */
   support_count: number;
+  /**
+   * Candidates the retrieval pipeline produced BEFORE role assignment — the size
+   * of the pool the pivot/support/discard gate ran over (Requirement 1). When
+   * this is > 0 but `pivot_count` is 0, useful candidates were generated and then
+   * discarded — distinguishing an over-strict gate from an empty recovery.
+   */
+  candidate_count_before_roles: number;
+  /** Candidates that cleared the pivot bar (became likely edit targets). */
+  pivot_candidate_count: number;
+  /** Candidates assigned the support (context) role. */
+  support_candidate_count: number;
+  /** Candidates carried in NEITHER role — rejected (test/hub/low-evidence). */
+  discarded_candidate_count: number;
+  /**
+   * The most relevant discarded candidates (≤ {@link MAX_TOP_DISCARDED_CANDIDATES}),
+   * each with its score breakdown, evidence, and the reason it was rejected, so a
+   * caller can see whether the pivot gate threw away a real edit target.
+   */
+  top_discarded_candidates: DiscardedCandidateDiagnostic[];
   likely_files: string[];
   likely_symbols: string[];
   retrieval_reason: string;
@@ -126,6 +165,16 @@ export interface BuildCapsuleDiagnosticsInput {
   actionHeader?: CapsuleActionHeader;
   /** Per-item role + score breakdown + evidence; attached verbatim when provided. */
   selection?: readonly CapsuleSelectionDiagnostic[];
+  /** Size of the candidate pool before roles; defaults from the role counts. */
+  candidateCountBeforeRoles?: number;
+  /** Pivot-role candidate count; defaults to the capsule's pivot count. */
+  pivotCandidateCount?: number;
+  /** Support-role candidate count; defaults to the capsule's support count. */
+  supportCandidateCount?: number;
+  /** Discarded (rejected) candidate count; defaults to 0. */
+  discardedCandidateCount?: number;
+  /** Top rejected candidates; capped to {@link MAX_TOP_DISCARDED_CANDIDATES}. */
+  topDiscardedCandidates?: readonly DiscardedCandidateDiagnostic[];
 }
 
 export function buildCapsuleDiagnostics(
@@ -152,6 +201,22 @@ export function buildCapsuleDiagnostics(
   const searchBudgetReason =
     input.searchBudgetReason ?? defaultSearchBudgetReason(hasTarget, searchBudget);
 
+  // Rejected-candidate accounting (Requirement 1). When the orchestrator supplies
+  // the recovery's role tallies (micro), use them verbatim; otherwise fall back to
+  // the assembled capsule's own counts so the fields are always present and the
+  // pool size reconciles with pivot + support + discarded.
+  const pivotCandidateCount = input.pivotCandidateCount ?? input.capsule.pivots.length;
+  const supportCandidateCount =
+    input.supportCandidateCount ?? input.capsule.supportingItems.length;
+  const discardedCandidateCount = input.discardedCandidateCount ?? 0;
+  const candidateCountBeforeRoles =
+    input.candidateCountBeforeRoles
+    ?? pivotCandidateCount + supportCandidateCount + discardedCandidateCount;
+  const topDiscardedCandidates = (input.topDiscardedCandidates ?? []).slice(
+    0,
+    MAX_TOP_DISCARDED_CANDIDATES,
+  );
+
   return {
     mode: input.mode,
     context_chars: input.contextChars ?? input.capsule.budget.usedCharacters,
@@ -161,6 +226,11 @@ export function buildCapsuleDiagnostics(
     target_confidence: input.recommendation.targetConfidence,
     pivot_count: input.capsule.pivots.length,
     support_count: input.capsule.supportingItems.length,
+    candidate_count_before_roles: candidateCountBeforeRoles,
+    pivot_candidate_count: pivotCandidateCount,
+    support_candidate_count: supportCandidateCount,
+    discarded_candidate_count: discardedCandidateCount,
+    top_discarded_candidates: [...topDiscardedCandidates],
     likely_files: dedupe(
       input.likelyFiles ?? items.map((item) => item.filePath),
     ),

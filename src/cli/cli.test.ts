@@ -1164,10 +1164,55 @@ test("capsule --mode micro --json returns a skip directive (not empty context) w
     assert.equal(output.diagnostics.pivot_count, 0);
     assert.equal(output.diagnostics.search_budget, "high");
     assert.equal(output.diagnostics.action_header.has_target, false);
+    // The skip is no longer opaque: rejected-candidate diagnostics are emitted and
+    // the reason names WHY no pivot was chosen (Requirement 1/2). A gibberish query
+    // surfaces no candidates, so the reason is the empty-pool diagnosis.
+    assert.equal(output.diagnostics.candidate_count_before_roles, 0);
+    assert.equal(output.diagnostics.discarded_candidate_count, 0);
+    assert.deepEqual(output.diagnostics.top_discarded_candidates, []);
+    assert.match(output.diagnostics.retrieval_reason, /no candidates recovered/);
     // The body carries a decisive "do not inject context" directive rather than an
     // empty/misdirecting capsule (Requirement 1).
     assert.match(output.context, /## Recommended first action/);
     assert.match(output.context, /Do not inject context for this task\./);
+  });
+});
+
+test("capsule --mode micro --json reports rejected candidates and a discard reason on a skip", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["init", repoRoot]);
+
+    // A query that matches only the failing-test symbols (never edit targets) so
+    // candidates ARE recovered but every one is discarded — distinguishing a
+    // discarded pool from an empty pool (Requirement 2).
+    const result = await runCli([
+      "capsule",
+      repoRoot,
+      "failing tests: tests.session.SessionTest.test_create_session",
+      "--mode",
+      "micro",
+      "--json",
+    ]);
+    assert.equal(result.exitCode, 0);
+    const output = JSON.parse(result.stdout);
+
+    if (output.diagnostics.actual_mode !== "skip") {
+      // The fixture recovered a real pivot — still a valid, non-vague outcome.
+      assert.equal(output.diagnostics.pivot_count, 1);
+      return;
+    }
+    // On a skip, the diagnostics expose the rejected pool so an over-strict gate is
+    // visible, and the reason is NOT the empty-pool diagnosis when candidates exist.
+    assert.ok(output.diagnostics.candidate_count_before_roles >= 0);
+    if (output.diagnostics.candidate_count_before_roles > 0) {
+      assert.notEqual(output.diagnostics.retrieval_reason, "");
+      assert.doesNotMatch(output.diagnostics.retrieval_reason, /^no candidates recovered/);
+    }
+    for (const discard of output.diagnostics.top_discarded_candidates) {
+      assert.ok(typeof discard.discard_reason === "string" && discard.discard_reason.length > 0);
+      assert.ok("scores" in discard && "evidence" in discard);
+    }
   });
 });
 

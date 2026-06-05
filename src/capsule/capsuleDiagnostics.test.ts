@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "bun:test";
 
 import { computeCapsuleBudgetUsage, computeCapsuleItemCost, createCharacterBudget } from "./budget";
-import { buildCapsuleDiagnostics, renderCompactCapsule } from "./capsuleDiagnostics";
+import {
+  buildCapsuleDiagnostics,
+  renderCompactCapsule,
+  type CapsuleItemScores,
+} from "./capsuleDiagnostics";
 import { CapsuleMode } from "./capsuleModes";
 import { RecommendedCapsuleMode, TargetConfidence, type ModeRecommendation } from "./recommendMode";
 import {
@@ -33,18 +37,23 @@ test("diagnostics expose the required machine-readable shape", () => {
   assert.deepEqual(Object.keys(diagnostics).sort(), [
     "action_header",
     "actual_mode",
+    "candidate_count_before_roles",
     "context_chars",
     "context_items",
+    "discarded_candidate_count",
     "likely_files",
     "likely_symbols",
     "mode",
+    "pivot_candidate_count",
     "pivot_count",
     "recommended_mode",
     "retrieval_reason",
     "search_budget",
     "search_budget_reason",
+    "support_candidate_count",
     "support_count",
     "target_confidence",
+    "top_discarded_candidates",
   ]);
   // The action header + search budget are always present (Requirement 8); their
   // defaults derive from the capsule's lead pivot when no orchestrator supplies
@@ -72,6 +81,47 @@ test("diagnostics fall back to capsule files/symbols when shaping is absent", ()
   });
   assert.deepEqual(diagnostics.likely_files, ["src/session/service.ts"]);
   assert.deepEqual(diagnostics.likely_symbols, ["SessionManager", "createSession"]);
+});
+
+test("rejected-candidate counts default from the capsule when no recovery is supplied", () => {
+  const diagnostics = buildCapsuleDiagnostics({
+    mode: CapsuleMode.Standard,
+    capsule: makeCapsule(),
+    recommendation: RECOMMENDATION,
+  });
+  // One pivot + one support, no discards: the pool reconciles and there are no
+  // rejected candidates to report.
+  assert.equal(diagnostics.pivot_candidate_count, 1);
+  assert.equal(diagnostics.support_candidate_count, 1);
+  assert.equal(diagnostics.discarded_candidate_count, 0);
+  assert.equal(diagnostics.candidate_count_before_roles, 2);
+  assert.deepEqual(diagnostics.top_discarded_candidates, []);
+});
+
+test("rejected-candidate diagnostics pass through and cap the top discards at five", () => {
+  const discards = Array.from({ length: 8 }, (_, index) => ({
+    path: `pkg/file${index}.py`,
+    symbol: `sym${index}`,
+    kind: "function",
+    scores: makeZeroScores(),
+    evidence: [`evidence ${index}`],
+    discard_reason: index === 0 ? "discard: a test symbol, not an edit target" : "support: graph-only",
+  }));
+  const diagnostics = buildCapsuleDiagnostics({
+    mode: CapsuleMode.Micro,
+    capsule: makeCapsule(),
+    recommendation: { ...RECOMMENDATION, recommendedMode: RecommendedCapsuleMode.Micro },
+    candidateCountBeforeRoles: 12,
+    pivotCandidateCount: 1,
+    supportCandidateCount: 3,
+    discardedCandidateCount: 8,
+    topDiscardedCandidates: discards,
+  });
+  assert.equal(diagnostics.candidate_count_before_roles, 12);
+  assert.equal(diagnostics.discarded_candidate_count, 8);
+  // Never more than five rejects, no matter how many were discarded.
+  assert.equal(diagnostics.top_discarded_candidates.length, 5);
+  assert.equal(diagnostics.top_discarded_candidates[0]!.discard_reason, "discard: a test symbol, not an edit target");
 });
 
 test("diagnostics prefer shaping-provided files/symbols and explicit metrics", () => {
@@ -156,6 +206,26 @@ test("compact capsule respects the char cap with a marker", () => {
   assert.ok(result.chars <= 80 + "\n[truncated to 80 chars]".length);
   assert.match(result.text, /\[truncated to 80 chars\]/);
 });
+
+function makeZeroScores(): CapsuleItemScores {
+  return {
+    lexical: 0,
+    bm25: 0,
+    path: 0,
+    symbol: 0,
+    testToImpl: 0,
+    domain: 0,
+    graph: 0,
+    graphProximity: 0,
+    centrality: 0,
+    actionability: 0,
+    local_evidence_score: 0,
+    in_degree_or_dependent_count: 0,
+    hub_penalty: 0,
+    actionability_penalty: 0,
+    final: 0,
+  };
+}
 
 function makeCapsule(): Capsule {
   const pivots = [makePivotItem()];

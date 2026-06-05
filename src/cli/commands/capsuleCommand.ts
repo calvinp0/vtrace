@@ -2,9 +2,12 @@ import { buildCapsule, createSourceBackedCapsuleBuilder } from "../../capsule/bu
 import { createCharacterBudget } from "../../capsule/budget";
 import {
   buildCapsuleDiagnostics,
+  MAX_TOP_DISCARDED_CANDIDATES,
   renderCompactCapsule,
   type CapsuleDiagnostics,
+  type CapsuleItemScores,
   type CapsuleSelectionDiagnostic,
+  type DiscardedCandidateDiagnostic,
 } from "../../capsule/capsuleDiagnostics";
 import {
   CapsuleMode,
@@ -12,7 +15,11 @@ import {
   parseCapsuleMode,
   resolveCapsuleModeLimits,
 } from "../../capsule/capsuleModes";
-import { recoverMicroCapsule, type MicroCapsuleRecovery } from "../../capsule/microTargets";
+import {
+  classifyMicroSkipReason,
+  recoverMicroCapsule,
+  type MicroCapsuleRecovery,
+} from "../../capsule/microTargets";
 import { CandidateRole, type RoledCandidate } from "../../capsule/assignCandidateRoles";
 import { composeCapsuleDirective } from "../../capsule/capsuleDirective";
 import {
@@ -34,6 +41,7 @@ import { hasIndexedFiles } from "../../db/repositories/filesRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
 import { routeQuery } from "../../intent/routeQuery";
 import type { HybridCandidate } from "../../retrieval/hybridRetrieval";
+import type { HybridScoreComponents } from "../../retrieval/hybridScoring";
 import { GraphScoreSignal, type GraphSearchResult } from "../../retrieval/types";
 import { formatCapsuleInspection, formatJson } from "../formatters";
 import type { CliOptions, CommandResult } from "../types";
@@ -112,7 +120,7 @@ export async function runCapsuleCommand(
       // A micro capsule must point at a real target. If role assignment found no
       // high-confidence pivot, do NOT emit empty/misdirecting context — skip.
       if (recovery !== undefined && recovery.pivots.length === 0) {
-        return emitMicroSkip(json);
+        return emitMicroSkip(json, recovery);
       }
 
       // Micro: pivots are the recovered edit targets; support is the related
@@ -237,10 +245,64 @@ function computeDiagnostics(
     ...(likelyFiles.length > 0 ? { likelyFiles } : {}),
     ...(likelySymbols.length > 0 ? { likelySymbols } : {}),
     ...(selection.length > 0 ? { selection } : {}),
+    // Rejected-candidate accounting (Requirement 1): when micro recovery ran, the
+    // pool size, role tallies, and top discards come straight from it so a caller
+    // can see whether useful candidates were generated and then thrown away.
+    ...(recovery !== undefined
+      ? {
+          candidateCountBeforeRoles: recovery.candidateCount,
+          pivotCandidateCount: recovery.pivots.length,
+          supportCandidateCount: recovery.support.length,
+          discardedCandidateCount: recovery.discarded.length,
+          topDiscardedCandidates: topDiscardedFromRecovery(recovery),
+        }
+      : {}),
     searchBudget: directive.searchBudget,
     searchBudgetReason: directive.searchBudgetReason,
     actionHeader: directive.actionHeader,
   });
+}
+
+// The most relevant rejected candidates (Requirement 1), ranked by final score so
+// the cap keeps the discards an over-strict gate would most regret. The role
+// "why" becomes the rejection reason; the raw evidence trail rides alongside.
+function topDiscardedFromRecovery(
+  recovery: MicroCapsuleRecovery,
+): DiscardedCandidateDiagnostic[] {
+  return [...recovery.discarded]
+    .sort((left, right) => right.candidate.scores.final - left.candidate.scores.final)
+    .slice(0, MAX_TOP_DISCARDED_CANDIDATES)
+    .map((entry) => ({
+      path: entry.candidate.filePath,
+      symbol: entry.candidate.localName,
+      kind: entry.candidate.kind,
+      scores: hybridScoresToItemScores(entry.candidate.scores),
+      evidence: [...entry.candidate.evidence],
+      discard_reason: entry.why,
+    }));
+}
+
+// Project a hybrid candidate's full component breakdown onto the diagnostics'
+// scorecard vocabulary. Shared by the selection and rejected-candidate views so
+// both report identical, comparable score shapes.
+function hybridScoresToItemScores(scores: HybridScoreComponents): CapsuleItemScores {
+  return {
+    lexical: scores.lexical,
+    bm25: scores.bm25,
+    path: scores.path,
+    symbol: scores.symbol,
+    testToImpl: scores.testToImpl,
+    domain: scores.domain,
+    graph: scores.graph,
+    graphProximity: scores.graphProximity,
+    centrality: scores.centrality,
+    actionability: scores.actionability,
+    local_evidence_score: scores.localEvidence,
+    in_degree_or_dependent_count: scores.inDegree,
+    hub_penalty: scores.hubPenalty,
+    actionability_penalty: scores.actionabilityPenalty,
+    final: scores.final,
+  };
 }
 
 // A pivot has DIRECT evidence when a concrete pointer (failing-test reach,
@@ -258,10 +320,16 @@ function hasDirectEvidence(selection: CapsuleSelectionDiagnostic | undefined): b
 // Micro mode found no implementation target. Emit a skip recommendation with no
 // context rather than a misleading empty capsule (Requirement 6). An empty
 // likely_files/context here is honest precisely BECAUSE recommended_mode=skip.
-function emitMicroSkip(json: boolean): CommandResult {
-  const reason =
-    "no high-confidence actionable target recovered — recommending skip rather than "
-    + "emitting vague support-only or misdirecting context.";
+//
+// The skip is no longer opaque: the recovery's candidate pool is reported as
+// rejected-candidate diagnostics (counts + top discards) and the retrieval reason
+// is a precise diagnosis — distinguishing "nothing was recovered" from "useful
+// candidates were recovered and then discarded by the pivot gate" (Requirement
+// 1/2). That is the signal for deciding whether the gate is over-strict.
+function emitMicroSkip(json: boolean, recovery: MicroCapsuleRecovery): CommandResult {
+  const classification = classifyMicroSkipReason(recovery);
+  const reason = `${classification} — recommending skip rather than emitting vague `
+    + "support-only or misdirecting context.";
   // The skip is still a decisive directive: tell the agent, in the capsule body,
   // NOT to inject context for this task (Requirement 1). The benchmark treats a
   // `skip` actual_mode as authoritative, so this directive is never mistaken for
@@ -282,6 +350,11 @@ function emitMicroSkip(json: boolean): CommandResult {
     target_confidence: TargetConfidence.Low,
     pivot_count: 0,
     support_count: 0,
+    candidate_count_before_roles: recovery.candidateCount,
+    pivot_candidate_count: 0,
+    support_candidate_count: recovery.support.length,
+    discarded_candidate_count: recovery.discarded.length,
+    top_discarded_candidates: topDiscardedFromRecovery(recovery),
     likely_files: [],
     likely_symbols: [],
     retrieval_reason: reason,
@@ -353,23 +426,7 @@ function selectionFromRoledCandidates(
         role: entry.role === CandidateRole.Pivot ? "pivot" as const : "support" as const,
         path: target.filePath,
         symbol: target.localName,
-        scores: {
-          lexical: target.scores.lexical,
-          bm25: target.scores.bm25,
-          path: target.scores.path,
-          symbol: target.scores.symbol,
-          testToImpl: target.scores.testToImpl,
-          domain: target.scores.domain,
-          graph: target.scores.graph,
-          graphProximity: target.scores.graphProximity,
-          centrality: target.scores.centrality,
-          actionability: target.scores.actionability,
-          local_evidence_score: target.scores.localEvidence,
-          in_degree_or_dependent_count: target.scores.inDegree,
-          hub_penalty: target.scores.hubPenalty,
-          actionability_penalty: target.scores.actionabilityPenalty,
-          final: target.scores.final,
-        },
+        scores: hybridScoresToItemScores(target.scores),
         evidence: [entry.why, ...target.evidence],
       };
     });

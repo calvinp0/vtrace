@@ -24,6 +24,8 @@ import {
   type HybridCandidate,
 } from "../retrieval/hybridRetrieval";
 import type { GraphExpansionOptions } from "../retrieval/graphExpansion";
+import { isLikelyTestCandidate } from "../retrieval/searchSymbolsShared";
+import { STRONG_DIRECT_LEXICAL } from "../retrieval/hybridScoring";
 import {
   assignCandidateRoles,
   CandidateRole,
@@ -44,12 +46,25 @@ export interface RecoverMicroTargetsOptions {
 }
 
 export interface MicroCapsuleRecovery {
-  /** Every ranked candidate with its assigned role + why (for diagnostics). */
+  /** Every EMITTED candidate with its assigned role + why (pivot/support). */
   roled: RoledCandidate[];
   /** The recovered pivots, in rank order (micro: at most `maxTargets`). */
   pivots: HybridCandidate[];
   /** Support context related to the pivots, in rank order. */
   support: HybridCandidate[];
+  /**
+   * Size of the candidate pool BEFORE role assignment — what the pivot gate ran
+   * over. `candidateCount > 0` with no pivots means candidates were generated and
+   * then discarded, not that retrieval came up empty (Requirement 1).
+   */
+  candidateCount: number;
+  /**
+   * Candidates that were rejected — neither emitted as a pivot nor as a locally-
+   * relevant support item (a discarded test/hub, or a zero-local-evidence support
+   * neighbour the micro capsule drops). In rank order, with the role-assignment
+   * "why" preserved as the rejection reason (Requirement 1).
+   */
+  discarded: RoledCandidate[];
   /**
    * True when two or more candidates clear the pivot bar with comparable scores
    * (Requirement 2): a single-pivot micro capsule cannot decisively pick one, so
@@ -57,6 +72,17 @@ export interface MicroCapsuleRecovery {
    */
   ambiguous: boolean;
 }
+
+/**
+ * Why a micro recovery yielded no pivot — a precise, mutually-exclusive diagnosis
+ * the skip directive reports instead of a vague "no actionable target" (Req 2).
+ */
+export type MicroSkipReason =
+  | "no candidates recovered"
+  | "candidates recovered but all were low-actionability"
+  | "candidates recovered but only support-role"
+  | "candidates recovered but ambiguous micro pivot"
+  | "candidates recovered but below pivot confidence threshold";
 
 // Micro is single-pivot by policy: one high-confidence edit target, or skip.
 const DEFAULT_MAX_TARGETS = 1;
@@ -74,7 +100,7 @@ export function recoverMicroCapsule(
 ): MicroCapsuleRecovery {
   const maxTargets = options.maxTargets ?? DEFAULT_MAX_TARGETS;
   if (maxTargets <= 0) {
-    return { roled: [], pivots: [], support: [], ambiguous: false };
+    return { roled: [], pivots: [], support: [], candidateCount: 0, discarded: [], ambiguous: false };
   }
 
   const { candidates } = hybridRetrieve(db, {
@@ -97,12 +123,68 @@ export function recoverMicroCapsule(
   // inheritance) — that is exactly the "vague support" Requirement 5 forbids. A
   // demoted support entry leaves the emitted set entirely (becomes a discard),
   // so the diagnostics' selection mirrors what the capsule actually carries.
-  const roled = assigned.filter(
-    (entry) =>
-      entry.role === CandidateRole.Pivot
-      || (entry.role === CandidateRole.Support && entry.candidate.scores.localEvidence > 0),
-  );
-  return { roled, pivots: pivotsOf(roled), support: supportOf(roled), ambiguous };
+  const isEmitted = (entry: RoledCandidate): boolean =>
+    entry.role === CandidateRole.Pivot
+    || (entry.role === CandidateRole.Support && entry.candidate.scores.localEvidence > 0);
+  const roled = assigned.filter(isEmitted);
+  // Everything the gate produced but did NOT carry: discards proper plus the
+  // zero-local-evidence support neighbours dropped above. These feed the
+  // rejected-candidate diagnostics so an over-strict gate is visible (Req 1).
+  const discarded = assigned.filter((entry) => !isEmitted(entry));
+  return {
+    roled,
+    pivots: pivotsOf(roled),
+    support: supportOf(roled),
+    candidateCount: candidates.length,
+    discarded,
+    ambiguous,
+  };
+}
+
+// Classify WHY a micro recovery produced no pivot, as a precise diagnosis the
+// skip directive can report (Requirement 2). The checks are ordered most- to
+// least-decisive so each skip maps to exactly one reason:
+//   1. nothing entered the pool at all                       -> no candidates
+//   2. two near-pivots tied                                  -> ambiguous
+//   3. every non-test candidate is a low-actionability kind  -> low-actionability
+//   4. the actionable ones have no DIRECT pointer (graph/    -> only support-role
+//      domain reach or a generic hub only)
+//   5. an actionable, directly-pointed candidate fell just   -> below threshold
+//      short of the local-evidence bar
+export function classifyMicroSkipReason(recovery: MicroCapsuleRecovery): MicroSkipReason {
+  if (recovery.candidateCount === 0) {
+    return "no candidates recovered";
+  }
+  if (recovery.ambiguous) {
+    return "candidates recovered but ambiguous micro pivot";
+  }
+  // Every non-pivot candidate the recovery produced (skip => pivots is empty):
+  // the emitted support plus the discarded pool, minus the failing tests (never
+  // edit targets, so they never explain a missing pivot).
+  const considered = [
+    ...recovery.support,
+    ...recovery.discarded.map((entry) => entry.candidate),
+  ].filter((candidate) => !isLikelyTestCandidate(candidate));
+
+  if (considered.length === 0) {
+    return "no candidates recovered";
+  }
+  const actionable = considered.filter((candidate) => candidate.scores.actionability === 1);
+  if (actionable.length === 0) {
+    return "candidates recovered but all were low-actionability";
+  }
+  if (!actionable.some(hasDirectEvidence)) {
+    return "candidates recovered but only support-role";
+  }
+  return "candidates recovered but below pivot confidence threshold";
+}
+
+// A candidate has DIRECT edit-target evidence when a concrete pointer fired (a
+// symbol-name/path/failing-test match or a strong lexical hit) — never graph or
+// domain reach alone. Mirrors the pivot gate in `assignCandidateRoles`.
+function hasDirectEvidence(candidate: HybridCandidate): boolean {
+  const s = candidate.scores;
+  return s.symbol > 0 || s.path > 0 || s.testToImpl > 0 || s.lexical >= STRONG_DIRECT_LEXICAL;
 }
 
 // Back-compat thin wrapper: the recovered micro PIVOTS only.
