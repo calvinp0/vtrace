@@ -537,6 +537,18 @@ const CSV_COLUMNS = [
   "vtrace_capsule_engine",
   "vtrace_capsule_intent",
   "vtrace_capsule_budget",
+  // Capsule v2 selected-item audit (same names the Markdown report and the
+  // camelCase _run.meta.json expose): the realised mode, token estimate, lead
+  // pivot file/symbol, and the compact pivots/support lists.
+  "vtrace_capsule_actual_mode",
+  "vtrace_capsule_estimated_tokens",
+  "vtrace_capsule_top_pivot_file",
+  "vtrace_capsule_top_pivot_symbol",
+  "vtrace_capsule_pivots",
+  "vtrace_capsule_support",
+  // The immutable injected-instructions snapshot: path + content hash.
+  "vtrace_instructions_snapshot_file",
+  "vtrace_instructions_sha256",
   "vtrace_policy_reason",
   "expected_context_value",
   "expected_overhead_risk",
@@ -4295,6 +4307,14 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         row.vtraceCapsuleEngine ?? "",
         row.vtraceCapsuleIntent ?? "",
         row.vtraceCapsuleBudget === null ? "" : String(row.vtraceCapsuleBudget),
+        row.vtraceCapsuleActualMode ?? "",
+        row.vtraceCapsuleEstimatedTokens === null ? "" : String(row.vtraceCapsuleEstimatedTokens),
+        row.vtraceCapsuleTopPivotFile ?? "",
+        row.vtraceCapsuleTopPivotSymbol ?? "",
+        formatCapsuleItemsCsv(row.vtraceCapsulePivots),
+        formatCapsuleItemsCsv(row.vtraceCapsuleSupport),
+        row.vtraceInstructionsSnapshotFile ?? "",
+        row.vtraceInstructionsSha256 ?? "",
         row.vtracePolicyReason ?? "",
         row.expectedContextValue ?? "",
         row.expectedOverheadRisk ?? "",
@@ -4485,6 +4505,14 @@ function formatTopPivot(evidence: Stage5RunEvidence): string {
   return `${file ?? "(unknown file)"}::${symbol ?? "(unknown symbol)"}`;
 }
 
+// Compact CSV serialisation of a Capsule v2 selected-item list: each item as
+// `path::symbol`, joined by "; " (csvEscape quotes the cell). Empty off the v2
+// engine / on baseline rows, so a single-cell column stays diff-friendly.
+function formatCapsuleItemsCsv(items: readonly CapsuleAuditItem[] | null): string {
+  if (items === null || items.length === 0) return "";
+  return items.map((item) => `${item.path}::${item.symbol}`).join("; ");
+}
+
 // The distinct support file paths (deduped, order-preserving) for the audit table.
 function formatSupportFiles(support: readonly CapsuleAuditItem[] | null): string {
   if (support === null || support.length === 0) return "(none)";
@@ -4533,6 +4561,8 @@ function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
     `| vtrace_capsule_actual_mode | ${evidence.vtraceCapsuleActualMode ?? "(n/a)"} |`,
     `| vtrace_capsule_estimated_tokens | ${evidence.vtraceCapsuleEstimatedTokens ?? "(n/a)"} |`,
     `| vtrace_capsule_top_pivot | ${formatTopPivot(evidence)} |`,
+    `| vtrace_capsule_top_pivot_file | ${evidence.vtraceCapsuleTopPivotFile ?? evidence.vtraceCapsulePivots?.[0]?.path ?? "(none)"} |`,
+    `| vtrace_capsule_top_pivot_symbol | ${evidence.vtraceCapsuleTopPivotSymbol ?? evidence.vtraceCapsulePivots?.[0]?.symbol ?? "(none)"} |`,
     `| vtrace_capsule_top_support_files | ${formatSupportFiles(evidence.vtraceCapsuleSupport)} |`,
     // Snapshot path + content hash, so the audit table names the exact immutable
     // record of what was injected (the active file may be overwritten by a later run).

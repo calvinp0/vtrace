@@ -1250,6 +1250,23 @@ test("renderCsv includes the capsule diagnostic columns and values", () => {
     containsFinalEditedSymbol: true,
     vtraceContextChars: 154,
     vtraceContextItems: 3,
+    // Capsule v2 audit + snapshot fields (Requirement 2): the CSV must expose
+    // them under the same snake_case names the Markdown and meta-reader use.
+    vtraceCapsuleEngine: "v2",
+    vtraceCapsuleIntent: "debug",
+    vtraceCapsuleBudget: 8000,
+    vtraceCapsuleActualMode: "standard",
+    vtraceCapsuleEstimatedTokens: 1685,
+    vtraceCapsuleTopPivotFile: "django/db/models/sql/compiler.py",
+    vtraceCapsuleTopPivotSymbol: "get_combinator_sql",
+    vtraceCapsulePivots: [
+      { path: "django/db/models/sql/compiler.py", symbol: "get_combinator_sql", roleReason: "anchor", estimatedTokens: 600 },
+    ],
+    vtraceCapsuleSupport: [
+      { path: "django/db/models/query.py", symbol: "values_list", roleReason: "entry point", estimatedTokens: 200 },
+    ],
+    vtraceInstructionsSnapshotFile: "/out/runs/r/_vtrace_instructions.snapshot.md",
+    vtraceInstructionsSha256: "c27777c51f763f4573b1b2ee356c155e0adfe614f7e10b74ddd95c6fdd55388b",
   };
   const csv = renderCsv([stamped]);
   const [header, dataRow] = csv.trim().split("\n");
@@ -1262,12 +1279,27 @@ test("renderCsv includes the capsule diagnostic columns and values", () => {
     "contains_final_edited_file",
     "context_chars",
     "context_items",
+    "vtrace_capsule_actual_mode",
+    "vtrace_capsule_estimated_tokens",
+    "vtrace_capsule_top_pivot_file",
+    "vtrace_capsule_top_pivot_symbol",
+    "vtrace_capsule_pivots",
+    "vtrace_capsule_support",
+    "vtrace_instructions_snapshot_file",
+    "vtrace_instructions_sha256",
   ]) {
     assert.ok(header!.includes(col), `header missing ${col}`);
   }
   assert.ok(dataRow!.includes("django/contrib/admin/options.py"));
   assert.ok(dataRow!.includes("get_inlines"));
   assert.ok(dataRow!.includes("true"));
+  // The capsule audit values land in the row, including the compact item list
+  // and the snapshot hash.
+  assert.ok(dataRow!.includes("get_combinator_sql"));
+  assert.ok(dataRow!.includes("1685"));
+  assert.ok(dataRow!.includes("django/db/models/sql/compiler.py::get_combinator_sql"));
+  assert.ok(dataRow!.includes("django/db/models/query.py::values_list"));
+  assert.ok(dataRow!.includes("c27777c51f763f4573b1b2ee356c155e0adfe614f7e10b74ddd95c6fdd55388b"));
 });
 
 test("extractCapsuleContext reads the context field from --json output and tolerates raw text", () => {
@@ -3220,4 +3252,81 @@ test("a full v2 runVtrace + ingest surfaces the snapshot path and sha in the rep
   assert.ok(md.includes(`| vtrace_instructions_snapshot_file | ${meta.vtraceInstructionsSnapshotFile} |`));
   assert.ok(md.includes(`| vtrace_instructions_sha256 | ${meta.vtraceInstructionsSha256} |`));
   assert.match(md, /\| vtrace_capsule_engine \| v2 \|/);
+});
+
+// Requirement: writer (_run.meta.json), reader (normalized row), and report
+// (CSV + Markdown) must agree on the SAME audit fields. The meta is camelCase by
+// the harness convention; CSV/MD expose the matching snake_case names. This test
+// pins both sides of every mapping at once, end to end, so a field added to one
+// layer but not the others (or a casing drift) fails loudly.
+test("writer, reader, and report agree on the capsule v2 audit + snapshot fields", async () => {
+  // (camelCase meta/row name, snake_case report name) for each audit field.
+  const SCALAR_FIELDS: ReadonlyArray<readonly [string, string]> = [
+    ["vtraceCapsuleEngine", "vtrace_capsule_engine"],
+    ["vtraceCapsuleIntent", "vtrace_capsule_intent"],
+    ["vtraceCapsuleBudget", "vtrace_capsule_budget"],
+    ["vtraceCapsuleActualMode", "vtrace_capsule_actual_mode"],
+    ["vtraceCapsuleEstimatedTokens", "vtrace_capsule_estimated_tokens"],
+    ["vtraceCapsuleTopPivotFile", "vtrace_capsule_top_pivot_file"],
+    ["vtraceCapsuleTopPivotSymbol", "vtrace_capsule_top_pivot_symbol"],
+    ["vtraceInstructionsSnapshotFile", "vtrace_instructions_snapshot_file"],
+    ["vtraceInstructionsSha256", "vtrace_instructions_sha256"],
+  ];
+  const LIST_FIELDS: ReadonlyArray<readonly [string, string]> = [
+    ["vtraceCapsulePivots", "vtrace_capsule_pivots"],
+    ["vtraceCapsuleSupport", "vtrace_capsule_support"],
+  ];
+
+  const out = path.join(await tmpDir("v2-field-consistency"), "results");
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", {
+    resolved: null,
+    vtraceMethod: "indexed-context",
+    indexedContext: true,
+    metaExtra: {
+      vtracePolicyAction: "inject",
+      vtraceContextInjected: true,
+      vtraceCapsuleEngine: "v2",
+      vtraceCapsuleIntent: "debug",
+      vtraceCapsuleBudget: 8000,
+      vtraceCapsuleActualMode: "standard",
+      vtraceCapsuleEstimatedTokens: 1685,
+      vtraceCapsuleTopPivotFile: "django/db/models/sql/compiler.py",
+      vtraceCapsuleTopPivotSymbol: "get_combinator_sql",
+      vtraceCapsulePivots: [
+        { path: "django/db/models/sql/compiler.py", symbol: "get_combinator_sql", roleReason: "anchor", estimatedTokens: 600 },
+      ],
+      vtraceCapsuleSupport: [
+        { path: "django/db/models/query.py", symbol: "values_list", roleReason: "entry point", estimatedTokens: 200 },
+      ],
+      // The snapshot fields carry through meta → evidence → row even when the
+      // snapshot file is absent at ingest (a drift note is added, not a null).
+      vtraceInstructionsSnapshotFile: "/out/runs/r/_vtrace_instructions.snapshot.md",
+      vtraceInstructionsSha256: "c27777c51f763f4573b1b2ee356c155e0adfe614f7e10b74ddd95c6fdd55388b",
+    },
+  });
+  const artifact = await runIngest(baseConfig({ out }));
+
+  const meta = JSON.parse(await readFile(path.join(rawConditionDir(out, "vtrace"), "_run.meta.json"), "utf8"));
+  const vtraceRow = artifact.rows.find((row) => row.condition === "vtrace")! as unknown as Record<string, unknown>;
+  const csvHeader = renderCsv(artifact.rows).split("\n")[0]!;
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+
+  for (const [camel, snake] of [...SCALAR_FIELDS, ...LIST_FIELDS]) {
+    // Writer: camelCase key present in _run.meta.json; snake_case NOT (convention).
+    assert.ok(camel in meta, `_run.meta.json missing camelCase ${camel}`);
+    assert.ok(!(snake in meta), `_run.meta.json must not carry snake_case ${snake}`);
+    // Reader: the normalized row carries the same camelCase key, defined.
+    assert.notEqual(vtraceRow[camel], undefined, `normalized row missing ${camel}`);
+    // Report (CSV): the snake_case column exists.
+    assert.ok(csvHeader.includes(snake), `CSV header missing ${snake}`);
+  }
+  // Report (Markdown): scalar fields appear as table rows under their snake name.
+  for (const [, snake] of SCALAR_FIELDS) {
+    assert.match(md, new RegExp(`\\| ${snake} \\|`), `Markdown missing row for ${snake}`);
+  }
+  // The pivots/support lists are rendered as the "Capsule v2 selected items"
+  // block (the structured presentation), keyed by the same data the columns carry.
+  assert.match(md, /Capsule v2 selected items/);
+  assert.ok(md.includes("get_combinator_sql"), "the injected pivot must appear in the selected items");
 });
