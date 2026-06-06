@@ -21,9 +21,12 @@ import {
   buildVtracePatchBlock,
   buildVtraceQueryCommand,
   buildVtraceCommand,
+  buildCapsuleV2Task,
   buildAgentCompliance,
   capsuleModeForInstance,
+  capsuleQueryTextFor,
   classifyCapsuleOutput,
+  classifyCapsuleV2Output,
   classifyInfraFailure,
   classifyOutcome,
   combineRunEvidence,
@@ -119,6 +122,9 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     showVtraceIndexLog: false,
     vtraceContextMaxChars: 12000,
     vtraceContextMaxItems: 8,
+    capsuleEngine: "legacy",
+    capsuleIntent: "auto",
+    capsuleBudget: 8000,
     contextPolicyOverride: "auto",
     sweBenchDataFile: null,
     runLabel: null,
@@ -795,6 +801,56 @@ function microCapsuleJson(context: string): string {
   });
 }
 
+// A Capsule v2 `--json` payload (the CapsuleV2Result shape): a top-level
+// pivots/support array + actual_mode and NO rendered `context` string — so the
+// runner must render the injectable context from the result itself. A
+// "no_context" actual_mode models the v2 no-pivot skip.
+function capsuleV2Json(
+  opts: { actualMode?: string; pivotSymbol?: string; pivotPath?: string; pivotCount?: number; reason?: string } = {},
+): string {
+  const actualMode = opts.actualMode ?? "full";
+  const base = {
+    intent: "debug",
+    budget: { max_tokens: 8000, estimated_tokens: actualMode === "no_context" ? 0 : 1200, used_percent: 15 },
+    discarded: [],
+  };
+  if (actualMode === "no_context") {
+    return JSON.stringify({
+      ...base,
+      actual_mode: "no_context",
+      reason: opts.reason ?? "no high-confidence edit target recovered",
+      pivots: [],
+      support: [],
+      diagnostics: {
+        intent_confidence: "low", intent_reason: [], strategy: { role_policy: "debug_refinement" },
+        candidate_count: 3, pivot_count: 0, support_count: 0, discarded_count: 3, tier: "no_context",
+        weights: {}, likely_files: [], likely_symbols: [], failing_tests: [],
+      },
+    });
+  }
+  const pivotPath = opts.pivotPath ?? "django/db/models/sql/compiler.py";
+  const pivotSymbol = opts.pivotSymbol ?? "get_combinator_sql";
+  return JSON.stringify({
+    ...base,
+    actual_mode: actualMode,
+    pivots: [
+      {
+        role: "pivot", role_reason: "sql rendering implementation", path: pivotPath,
+        fq_name: `SQLCompiler.${pivotSymbol}`, symbol: pivotSymbol, kind: "method",
+        content_mode: "signature", signature: `def ${pivotSymbol}(self, combinator, all)`,
+        evidence: ["named in the issue", "on the failing test's call path"], scorecard: {}, estimated_tokens: 1200,
+      },
+    ],
+    support: [],
+    diagnostics: {
+      intent_confidence: "high", intent_reason: ["failing test names a compiler symbol"],
+      strategy: { role_policy: "debug_refinement" }, candidate_count: 5,
+      pivot_count: opts.pivotCount ?? 1, support_count: 0, discarded_count: 4, tier: actualMode,
+      weights: {}, likely_files: [pivotPath], likely_symbols: [pivotSymbol], failing_tests: [],
+    },
+  });
+}
+
 async function writeSweBenchData(dir: string, records: object[]): Promise<string> {
   const file = path.join(dir, "swe-bench-100.jsonl");
   await writeFile(file, records.map((r) => JSON.stringify(r)).join("\n") + "\n");
@@ -871,6 +927,171 @@ test("buildVtraceQueryCommand requests a compact JSON capsule when a mode is giv
   assert.deepEqual(query.args, [
     "src/cli/index.ts", "capsule", "/ws", "fix the bug", "--mode", "micro", "--json",
   ]);
+});
+
+// ----- Stage 5: --capsule-engine (Capsule v2 wiring) -----
+
+test("--capsule-engine legacy builds a capsule command with --mode (no v2 flags)", () => {
+  const config = baseConfig({ vtraceCommand: "bun src/cli/index.ts", vtraceQueryArgs: "", capsuleEngine: "legacy" });
+  const query = buildVtraceQueryCommand(config, "/ws", "fix the bug", "full");
+  assert.deepEqual(query.args, [
+    "src/cli/index.ts", "capsule", "/ws", "fix the bug", "--mode", "full", "--json",
+  ]);
+  assert.ok(!query.args.includes("--intent"));
+  assert.ok(!query.args.includes("--budget"));
+});
+
+test("--capsule-engine v2 builds a capsule command with --intent and --budget", () => {
+  const config = baseConfig({
+    vtraceCommand: "bun src/cli/index.ts", vtraceQueryArgs: "",
+    capsuleEngine: "v2", capsuleIntent: "auto", capsuleBudget: 8000,
+  });
+  // The legacy `mode` argument is supplied but MUST be ignored under v2.
+  const query = buildVtraceQueryCommand(config, "/ws", "fix the bug", "full");
+  assert.deepEqual(query.args, [
+    "src/cli/index.ts", "capsule", "/ws", "fix the bug", "--intent", "auto", "--budget", "8000", "--json",
+  ]);
+});
+
+test("--capsule-engine v2 never passes a legacy --mode flag", () => {
+  const config = baseConfig({ capsuleEngine: "v2", capsuleIntent: "debug", capsuleBudget: 12000 });
+  const query = buildVtraceQueryCommand(config, "/ws", "task", "micro");
+  assert.ok(!query.args.includes("--mode"));
+  assert.ok(query.args.includes("--intent"));
+  assert.ok(query.args.includes("debug"));
+  assert.ok(query.args.includes("--budget"));
+  assert.ok(query.args.includes("12000"));
+});
+
+test("--capsule-engine and capsule v2 knobs parse and reject bad values", () => {
+  assert.equal(parseArgs(["--mode", "prepare"]).capsuleEngine, "legacy");
+  const cfg = parseArgs(["--capsule-engine", "v2", "--capsule-intent", "debug", "--capsule-budget", "6000"]);
+  assert.equal(cfg.capsuleEngine, "v2");
+  assert.equal(cfg.capsuleIntent, "debug");
+  assert.equal(cfg.capsuleBudget, 6000);
+  assert.throws(() => parseArgs(["--capsule-engine", "bogus"]), /Invalid --capsule-engine/);
+  assert.throws(() => parseArgs(["--capsule-intent", "bogus"]), /Invalid --capsule-intent/);
+  assert.throws(() => parseArgs(["--capsule-budget", "0"]), /--capsule-budget requires a positive integer/);
+});
+
+test("capsuleQueryTextFor returns a clean task for v2 and the packed query for legacy", () => {
+  const instance = sampleInstance();
+  const v2Task = capsuleQueryTextFor(baseConfig({ capsuleEngine: "v2" }), instance);
+  assert.equal(v2Task, buildCapsuleV2Task(instance));
+  assert.match(v2Task, /instance: django__django-11728/);
+  assert.match(v2Task, /repo: django\/django/);
+  assert.match(v2Task, /replace_named_groups does not handle trailing groups/);
+  assert.match(v2Task, /failing tests:/);
+  // No evaluation labels leak into the task text.
+  assert.doesNotMatch(v2Task, /resolved|gold|FAIL_TO_PASS|condition/);
+
+  const legacy = capsuleQueryTextFor(baseConfig({ capsuleEngine: "legacy" }), instance);
+  assert.equal(legacy, buildInstanceQuery(instance));
+});
+
+test("classifyCapsuleV2Output injects rendered context for a pivot and skips no_context", () => {
+  const inject = classifyCapsuleV2Output(JSON.parse(capsuleV2Json()));
+  assert.equal(inject.policyAction, "inject");
+  assert.equal(inject.contextInjected, true);
+  assert.equal(inject.pivotCount, 1);
+  assert.equal(inject.actualCapsuleMode, "full");
+  // The injectable text is the v2 human render (pivot path::symbol + signature).
+  assert.match(inject.context, /get_combinator_sql/);
+  assert.match(inject.context, /compiler\.py/);
+
+  const skip = classifyCapsuleV2Output(JSON.parse(capsuleV2Json({ actualMode: "no_context", reason: "no pivot" })));
+  assert.equal(skip.policyAction, "skip");
+  assert.equal(skip.contextInjected, false);
+  assert.equal(skip.actualCapsuleMode, "no_context");
+  assert.match(skip.skipReason ?? "", /no pivot/);
+});
+
+test("classifyCapsuleOutput routes a Capsule v2 payload to the v2 classifier", () => {
+  const classified = classifyCapsuleOutput(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
+  assert.equal(classified.policyAction, "inject");
+  assert.match(classified.context, /get_combinator_sql/);
+});
+
+test("prepareIndexedContext with v2 issues a v2 query and records the engine metadata", async () => {
+  const out = path.join(await tmpDir("v2-meta"), "results");
+  const dataDir = await tmpDir("v2-meta-data");
+  // A navigation-heavy instance whose v2 capsule recovers a strong pivot → inject.
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+  const { run, calls } = scriptedRunner([
+    { match: "capsule", result: { stdout: capsuleV2Json({ pivotSymbol: "get_combinator_sql" }) } },
+  ]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-11490"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+    capsuleEngine: "v2",
+    capsuleIntent: "debug",
+    capsuleBudget: 8000,
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  // The capsule was queried via the v2 surface, not --mode.
+  const capsuleCall = calls.find((line) => line.includes("capsule"))!;
+  assert.match(capsuleCall, /--intent debug/);
+  assert.match(capsuleCall, /--budget 8000/);
+  assert.doesNotMatch(capsuleCall, /--mode/);
+
+  assert.equal(result.indexedContext, true);
+  assert.equal(result.capsuleEngine, "v2");
+  assert.equal(result.capsuleIntent, "debug");
+  assert.equal(result.capsuleBudget, 8000);
+  assert.match(result.queryCommand ?? "", /--intent debug --budget 8000 --json/);
+
+  // The metadata + report carry the engine.
+  const written = await readFile(result.contextFile, "utf8");
+  assert.match(written, /get_combinator_sql/);
+});
+
+test("legacy engine records capsule_engine legacy with null intent/budget", async () => {
+  const out = path.join(await tmpDir("legacy-meta"), "results");
+  const dataDir = await tmpDir("legacy-meta-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+  const { run } = scriptedRunner([
+    { match: "capsule", result: { stdout: injectCapsuleJson("symbol: get_combinator_sql") } },
+  ]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-11490"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+  assert.equal(result.capsuleEngine, "legacy");
+  assert.equal(result.capsuleIntent, null);
+  assert.equal(result.capsuleBudget, null);
+});
+
+test("force-inject works with the v2 engine: a cheap/local task still injects v2 context", async () => {
+  const out = path.join(await tmpDir("v2-force"), "results");
+  const dataDir = await tmpDir("v2-force-data");
+  // 10880 is cheap/local: the auto gate declines even real context. Combined with
+  // the v2 engine + force-inject, the v2-rendered context must still be injected.
+  const dataFile = await writeSweBenchData(dataDir, [POLICY_RECORDS["django__django-10880"]]);
+  const { run } = scriptedRunner([
+    { match: "capsule", result: { stdout: capsuleV2Json({ pivotPath: "django/utils/html.py", pivotSymbol: "json_script" }) } },
+  ]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-10880"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+    capsuleEngine: "v2",
+    contextPolicyOverride: "force-inject",
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  assert.equal(result.contextPolicyAction, "inject");
+  assert.equal(result.contextInjected, true);
+  assert.equal(result.capsuleEngine, "v2");
+  assert.match(result.policyReason ?? "", /forced to inject for validation/);
+  const written = await readFile(result.contextFile, "utf8");
+  assert.match(written, /json_script/);
 });
 
 test("capsuleModeForInstance picks micro for a small/local single-test issue", () => {

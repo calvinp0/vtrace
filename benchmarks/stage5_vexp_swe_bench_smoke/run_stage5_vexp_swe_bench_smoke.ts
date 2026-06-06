@@ -18,6 +18,8 @@ import {
   primaryEditedFile,
   primaryEditedSymbol,
 } from "../../src/capsule/finalEditDiagnostics";
+import { renderCapsuleV2Human } from "../../src/capsuleV2/renderHuman";
+import { CapsuleV2Mode, type CapsuleV2Result } from "../../src/capsuleV2/types";
 
 // Stage 5 is a SMOKE integration harness around the external `vexp-swe-bench`
 // benchmark. It proves the baseline-vs-vtrace measurement workflow on a tiny
@@ -38,6 +40,13 @@ export type Stage5Mode =
   | "verify-vtrace-patch";
 export type Stage5Condition = "baseline" | "vtrace" | "vexp";
 export type VtraceMethod = "instructions-file" | "mcp" | "local-patch" | "indexed-context";
+// Which capsule retrieval engine the indexed-context query uses. `legacy` is the
+// original `--mode <micro|standard|full>` path; `v2` is the Capsule v2 product
+// surface (`--intent <i> --budget <n>`), so live Stage 5 runs actually validate
+// Capsule v2 retrieval. The legacy `--mode` flags are NEVER passed to v2.
+export type CapsuleEngine = "legacy" | "v2";
+// Capsule v2 intents, matching the `capsule --intent` CLI surface.
+export type CapsuleV2Intent = "auto" | "debug" | "refactor" | "impact" | "test-failure";
 // Stage 5C named protocols. A protocol selects which condition(s) to run and how:
 //   baseline       -> `run --no-vexp`
 //   vtrace-indexed -> `run --no-vexp` + vtrace indexed-context injection
@@ -132,6 +141,12 @@ export interface CliConfig {
   readonly showVtraceIndexLog: boolean;
   readonly vtraceContextMaxChars: number;
   readonly vtraceContextMaxItems: number;
+  // Capsule retrieval engine for the indexed-context query (--capsule-engine).
+  // `legacy` keeps the original `--mode` path; `v2` exercises Capsule v2 via
+  // `--intent`/`--budget`. capsuleIntent/capsuleBudget only apply to `v2`.
+  readonly capsuleEngine: CapsuleEngine;
+  readonly capsuleIntent: CapsuleV2Intent;
+  readonly capsuleBudget: number;
   // Operator override for the cost-aware context-injection gate (--context-policy).
   // "auto" (default) keeps decideContextPolicy in charge; the force-* values are
   // for Capsule v2 live validation. See ContextPolicyOverride.
@@ -190,6 +205,11 @@ export interface IndexedContextFields {
   readonly vtracePolicyReason: string | null;
   readonly expectedContextValue: ExpectedLevel | null;
   readonly expectedOverheadRisk: ExpectedLevel | null;
+  // Capsule engine that produced the query (--capsule-engine). intent/budget are
+  // null on baseline rows and on the legacy engine. null engine on baseline rows.
+  readonly vtraceCapsuleEngine: CapsuleEngine | "unknown" | null;
+  readonly vtraceCapsuleIntent: string | null;
+  readonly vtraceCapsuleBudget: number | null;
 }
 
 // Stage 5C evaluation evidence, normalized per instance. resolved itself stays
@@ -431,6 +451,10 @@ export interface NormalizedArtifact {
   readonly missingResults: readonly MissingConditionResult[];
 }
 
+// Capsule v2's default token budget — matches the CLI's CAPSULE_V2_DEFAULT_BUDGET
+// (capsuleCommand.ts). Generous enough for a couple of pivots plus support.
+const CAPSULE_V2_DEFAULT_BUDGET = 8000;
+
 const DEFAULT_CONFIG: CliConfig = {
   mode: "prepare",
   vexpSweBenchDir: null,
@@ -451,6 +475,11 @@ const DEFAULT_CONFIG: CliConfig = {
   showVtraceIndexLog: false,
   vtraceContextMaxChars: 12000,
   vtraceContextMaxItems: 8,
+  // Default to the legacy engine to preserve existing Stage 5 behaviour; pass
+  // --capsule-engine v2 to validate Capsule v2 retrieval live.
+  capsuleEngine: "legacy",
+  capsuleIntent: "auto",
+  capsuleBudget: CAPSULE_V2_DEFAULT_BUDGET,
   contextPolicyOverride: "auto",
   sweBenchDataFile: null,
   runLabel: null,
@@ -485,6 +514,9 @@ const CSV_COLUMNS = [
   "vtrace_policy_action",
   "vtrace_context_policy_action",
   "vtrace_context_policy_override",
+  "vtrace_capsule_engine",
+  "vtrace_capsule_intent",
+  "vtrace_capsule_budget",
   "vtrace_policy_reason",
   "expected_context_value",
   "expected_overhead_risk",
@@ -1809,6 +1841,11 @@ export interface IndexedContextResult {
   readonly policyReason: string | null;
   readonly expectedContextValue: ExpectedLevel | null;
   readonly expectedOverheadRisk: ExpectedLevel | null;
+  // Which capsule engine produced the query. intent/budget are null on the legacy
+  // engine (they are v2-only knobs).
+  readonly capsuleEngine: CapsuleEngine;
+  readonly capsuleIntent: CapsuleV2Intent | null;
+  readonly capsuleBudget: number | null;
 }
 
 // Resolve the bundled vexp-swe-bench dataset path (overridable via --swe-bench-data).
@@ -1910,12 +1947,20 @@ export function buildVtraceQueryCommand(
 ): { command: string; args: string[] } {
   const [command, ...base] = splitArgs(config.vtraceCommand);
   if (command === undefined) throw new Error("--vtrace-command is empty; cannot build the vtrace query command.");
-  // When a mode is chosen, request the compact JSON capsule (`--mode <m> --json`)
-  // so retrieved context — not a copy of the issue — is what gets injected.
-  const modeArgs = mode === undefined ? [] : ["--mode", mode, "--json"];
+  // Capsule v2 product surface: `--intent <i> --budget <n> --json`. The legacy
+  // `--mode` flags are NEVER passed here — v2 selects its sizing from the budget,
+  // and passing --mode would route the CLI back to the legacy path.
+  const engineArgs =
+    config.capsuleEngine === "v2"
+      ? ["--intent", config.capsuleIntent, "--budget", String(config.capsuleBudget), "--json"]
+      // Legacy: when a mode is chosen, request the compact JSON capsule
+      // (`--mode <m> --json`) so retrieved context — not the issue — is injected.
+      : mode === undefined
+        ? []
+        : ["--mode", mode, "--json"];
   return {
     command,
-    args: [...base, "capsule", workspace, query, ...modeArgs, ...splitArgs(config.vtraceQueryArgs)],
+    args: [...base, "capsule", workspace, query, ...engineArgs, ...splitArgs(config.vtraceQueryArgs)],
   };
 }
 
@@ -1972,7 +2017,7 @@ export function classifyCapsuleOutput(stdout: string): CapsuleClassification {
       : errorClassification("vtrace query returned empty context.");
   }
 
-  let parsed: { context?: unknown; diagnostics?: Record<string, unknown> };
+  let parsed: { context?: unknown; diagnostics?: Record<string, unknown>; pivots?: unknown; actual_mode?: unknown };
   try {
     parsed = JSON.parse(trimmed) as typeof parsed;
   } catch {
@@ -1980,6 +2025,13 @@ export function classifyCapsuleOutput(stdout: string): CapsuleClassification {
     return trimmed.length > 0
       ? injectClassification(trimmed, null, null, null, null)
       : errorClassification("vtrace query returned empty context.");
+  }
+
+  // Capsule v2 output has a different shape than the legacy capsule: a top-level
+  // `pivots` array + `actual_mode` and NO rendered `context` string. Detect and
+  // classify it separately (rendering the injectable context from the result).
+  if (Array.isArray(parsed.pivots) && isString(parsed.actual_mode)) {
+    return classifyCapsuleV2Output(parsed as unknown as CapsuleV2Result);
   }
 
   const diagnostics = isRecord(parsed.diagnostics) ? parsed.diagnostics : {};
@@ -2078,6 +2130,31 @@ function errorClassification(message: string): CapsuleClassification {
   };
 }
 
+// Classify a Capsule v2 result. v2 carries no rendered `context` string — the
+// injectable text is produced from the result via the product's human renderer,
+// so the agent sees exactly the Capsule v2 the CLI would print. A `no_context`
+// actual_mode is a valid SKIP policy (the cost-aware gate's no_context analogue),
+// never an error. Pivot/support counts come from the v2 diagnostics.
+export function classifyCapsuleV2Output(result: CapsuleV2Result): CapsuleClassification {
+  const diagnostics = isRecord(result.diagnostics) ? result.diagnostics : {};
+  const pivotCount = isNumber(diagnostics.pivot_count) ? diagnostics.pivot_count : (result.pivots?.length ?? null);
+  const supportCount = isNumber(diagnostics.support_count) ? diagnostics.support_count : (result.support?.length ?? null);
+  const actualMode = isString(result.actual_mode) ? result.actual_mode : null;
+
+  // No pivot recovered → a valid no-context skip (recorded as actual_mode
+  // "no_context", surfaced through the same skip machinery as the legacy path).
+  if (result.actual_mode === CapsuleV2Mode.NoContext) {
+    // v2 does not emit a search_budget; leave it unset rather than guessing.
+    return skipClassification(result.reason ?? null, null, actualMode, pivotCount, supportCount, null, null);
+  }
+
+  const context = renderCapsuleV2Human(result).trim();
+  if (context.length === 0) {
+    return errorClassification("Capsule v2 returned no renderable context.");
+  }
+  return injectClassification(context, null, actualMode, pivotCount, supportCount, null, null);
+}
+
 // Build the vtrace query string from an instance. Rather than dumping the whole
 // problem statement, shape it into a compact, signal-first query (failing tests,
 // explicit files/symbols, a short issue lead) via the shared shaping helper. The
@@ -2087,6 +2164,28 @@ export function buildInstanceQuery(instance: SweBenchInstance): string {
   const header = `instance: ${instance.instanceId}`;
   const query = shaped.query.length > 0 ? `${header}\n${shaped.query}` : header;
   return query.length > MAX_VTRACE_QUERY_CHARS ? query.slice(0, MAX_VTRACE_QUERY_CHARS) : query;
+}
+
+// Capsule v2 reads the raw task, not a packed retrieval query. Build a clean,
+// human task description from the instance fields the planner uses: the issue
+// text plus the repo / failing tests / hints that help intent detection. We do
+// NOT include any evaluation labels (resolved/gold patch/condition) — only what
+// a developer reading the issue would have.
+export function buildCapsuleV2Task(instance: SweBenchInstance): string {
+  const parts: string[] = [`instance: ${instance.instanceId}`, `repo: ${instance.repo}`];
+  const problem = instance.problemStatement.trim();
+  if (problem.length > 0) parts.push("", problem);
+  if (instance.failToPass.length > 0) parts.push("", `failing tests: ${instance.failToPass.join(", ")}`);
+  const hints = instance.hintsText?.trim() ?? "";
+  if (hints.length > 0) parts.push("", `hints: ${hints}`);
+  const task = parts.join("\n");
+  return task.length > MAX_VTRACE_QUERY_CHARS ? task.slice(0, MAX_VTRACE_QUERY_CHARS) : task;
+}
+
+// The task/query text for the configured capsule engine: v2 gets the clean task,
+// legacy gets the packed retrieval query.
+export function capsuleQueryTextFor(config: CliConfig, instance: SweBenchInstance): string {
+  return config.capsuleEngine === "v2" ? buildCapsuleV2Task(instance) : buildInstanceQuery(instance);
 }
 
 // Recommend a capsule mode for an instance from its shaped signals. Diagnostic
@@ -2446,6 +2545,9 @@ function indexedContextMetaFields(result: IndexedContextResult): IndexedContextF
     vtracePolicyReason: result.policyReason,
     expectedContextValue: result.expectedContextValue,
     expectedOverheadRisk: result.expectedOverheadRisk,
+    vtraceCapsuleEngine: result.capsuleEngine,
+    vtraceCapsuleIntent: result.capsuleIntent,
+    vtraceCapsuleBudget: result.capsuleBudget,
   };
 }
 
@@ -2521,8 +2623,10 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
           throw new Error(`vtrace index failed (exit ${indexResult.exitCode}): ${indexResult.stderr.trim() || "(no stderr)"}`);
         }
       }
+      // v2 ignores `mode` (it sizes from --budget); legacy uses it. The task/query
+      // text also differs per engine (clean task for v2, packed query for legacy).
       const mode = capsuleModeForInstance(instance);
-      const querySpec = buildVtraceQueryCommand(config, workspace, buildInstanceQuery(instance), mode);
+      const querySpec = buildVtraceQueryCommand(config, workspace, capsuleQueryTextFor(config, instance), mode);
       queryCommand = renderCommand(querySpec);
       const queryResult = await runProc(querySpec.command, querySpec.args);
       if (queryResult.exitCode !== 0) {
@@ -2637,6 +2741,9 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     policyReason: repDecision?.reason ?? null,
     expectedContextValue: repDecision?.expectedContextValue ?? null,
     expectedOverheadRisk: repDecision?.expectedOverheadRisk ?? null,
+    capsuleEngine: config.capsuleEngine,
+    capsuleIntent: config.capsuleEngine === "v2" ? config.capsuleIntent : null,
+    capsuleBudget: config.capsuleEngine === "v2" ? config.capsuleBudget : null,
   };
 }
 
@@ -2957,6 +3064,9 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtracePolicyReason: evidence.vtracePolicyReason,
           expectedContextValue: evidence.expectedContextValue,
           expectedOverheadRisk: evidence.expectedOverheadRisk,
+          vtraceCapsuleEngine: evidence.vtraceCapsuleEngine,
+          vtraceCapsuleIntent: evidence.vtraceCapsuleIntent,
+          vtraceCapsuleBudget: evidence.vtraceCapsuleBudget,
         },
   );
 }
@@ -3216,6 +3326,11 @@ export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5
     vtracePolicyReason: null,
     expectedContextValue: null,
     expectedOverheadRisk: null,
+    // The capsule engine IS unanimous across a run's instances, so it survives
+    // aggregation; intent/budget are run-level too. Counts stay per-row (null).
+    vtraceCapsuleEngine: unanimous((e) => e.vtraceCapsuleEngine, null),
+    vtraceCapsuleIntent: unanimous((e) => e.vtraceCapsuleIntent, null),
+    vtraceCapsuleBudget: unanimous((e) => e.vtraceCapsuleBudget, null),
     notes: perRun.flatMap((e) => e.notes),
   };
 }
@@ -3582,6 +3697,9 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtracePolicyReason: null,
     expectedContextValue: null,
     expectedOverheadRisk: null,
+    vtraceCapsuleEngine: null,
+    vtraceCapsuleIntent: null,
+    vtraceCapsuleBudget: null,
   };
 }
 
@@ -3829,6 +3947,8 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     value === "auto" || value === "force-inject" || value === "force-no-context" || value === "unknown"
       ? (value as ContextPolicyOverride | "unknown")
       : null;
+  const capsuleEngine = (value: unknown): CapsuleEngine | "unknown" | null =>
+    value === "legacy" || value === "v2" || value === "unknown" ? (value as CapsuleEngine | "unknown") : null;
   const level = (value: unknown): ExpectedLevel | null =>
     value === "low" || value === "medium" || value === "high" ? (value as ExpectedLevel) : null;
   return {
@@ -3851,6 +3971,9 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtracePolicyReason: str(meta.vtracePolicyReason),
     expectedContextValue: level(meta.expectedContextValue),
     expectedOverheadRisk: level(meta.expectedOverheadRisk),
+    vtraceCapsuleEngine: capsuleEngine(meta.vtraceCapsuleEngine),
+    vtraceCapsuleIntent: str(meta.vtraceCapsuleIntent),
+    vtraceCapsuleBudget: num(meta.vtraceCapsuleBudget),
   };
 }
 
@@ -3939,6 +4062,9 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         row.vtracePolicyAction ?? "",
         row.vtraceContextPolicyAction ?? "",
         row.vtraceContextPolicyOverride ?? "",
+        row.vtraceCapsuleEngine ?? "",
+        row.vtraceCapsuleIntent ?? "",
+        row.vtraceCapsuleBudget === null ? "" : String(row.vtraceCapsuleBudget),
         row.vtracePolicyReason ?? "",
         row.expectedContextValue ?? "",
         row.expectedOverheadRisk ?? "",
@@ -4129,6 +4255,9 @@ function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
     // a recorded `skip` policy is reported here as `no_context`.
     `| vtrace_context_policy_action | ${evidence.vtraceContextPolicyAction ?? (evidence.vtracePolicyAction === "skip" ? "no_context" : evidence.vtracePolicyAction) ?? "(n/a)"} |`,
     `| vtrace_context_policy_override | ${evidence.vtraceContextPolicyOverride ?? "(n/a)"} |`,
+    `| vtrace_capsule_engine | ${evidence.vtraceCapsuleEngine ?? "(n/a)"} |`,
+    `| vtrace_capsule_intent | ${evidence.vtraceCapsuleIntent ?? "(n/a)"} |`,
+    `| vtrace_capsule_budget | ${evidence.vtraceCapsuleBudget ?? "(n/a)"} |`,
     `| vtrace_policy_reason | ${evidence.vtracePolicyReason ?? evidence.vtraceSkipReason ?? "(none)"} |`,
     `| expected_context_value | ${evidence.expectedContextValue ?? "(n/a)"} |`,
     `| expected_overhead_risk | ${evidence.expectedOverheadRisk ?? "(n/a)"} |`,
@@ -4546,6 +4675,21 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         config.contextPolicyOverride = value as ContextPolicyOverride;
         break;
       }
+      case "--capsule-engine": {
+        const value = requireValue(argv, ++index, arg);
+        if (!["legacy", "v2"].includes(value)) throw new Error("Invalid --capsule-engine.");
+        config.capsuleEngine = value as CapsuleEngine;
+        break;
+      }
+      case "--capsule-intent": {
+        const value = requireValue(argv, ++index, arg);
+        if (!["auto", "debug", "refactor", "impact", "test-failure"].includes(value)) {
+          throw new Error("Invalid --capsule-intent.");
+        }
+        config.capsuleIntent = value as CapsuleV2Intent;
+        break;
+      }
+      case "--capsule-budget": config.capsuleBudget = requirePositiveInt(argv, ++index, arg); break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
       case "--run-labels":
@@ -4598,6 +4742,9 @@ function printUsageAndExit(exitCode: number): never {
       "  --reuse-workspace                             reuse an existing labeled workspace + index (default: recreate fresh)",
       "  --show-vtrace-index-log                       print the vtrace index log to the terminal (drops --quiet)",
       "  --context-policy auto|force-inject|force-no-context   override the cost-aware context gate (default: auto)",
+      "  --capsule-engine legacy|v2                    capsule retrieval engine for indexed-context (default: legacy)",
+      "  --capsule-intent auto|debug|refactor|impact|test-failure   Capsule v2 intent (default: auto; v2 only)",
+      "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),
