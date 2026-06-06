@@ -41,7 +41,7 @@ import {
   computeClassMethodExpansion,
   isTestDominatedPool,
 } from "./productionBackfill";
-import { resolveIntent, weightsForIntent } from "./intent";
+import { planIntent, type IntentPlan } from "./intent";
 import { itemBlockText } from "./renderItem";
 import { estimateTokens, roundPercent } from "./tokens";
 import {
@@ -80,8 +80,14 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     problemStatement: input.task,
     failToPass: extractFailingTests(input.task),
   });
-  const { intent, reason: intentReason } = resolveIntent(input.intent, input.task, shaped);
-  const weights = weightsForIntent(intent);
+  // Intent planner: detect intent + select the strategy (generators, role policy,
+  // budget). The strategy's `role_policy` is the real lever — `debug_refinement`
+  // runs the caller/helper/infra refinement + production backfill; the others use
+  // the base role gate. test-failure shares the debug strategy.
+  const plan = planIntent(input.intent, input.task, shaped);
+  const intent = plan.intent;
+  const weights = plan.weights;
+  const debugRefinement = plan.strategy.role_policy === "debug_refinement";
   // A plain numeric record for the diagnostics surface (HybridScoreWeights has
   // fixed keys, so it is not directly a Record<string, number>).
   const weightsRecord: Record<string, number> = Object.fromEntries(Object.entries(weights));
@@ -105,7 +111,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // Class.method expansion targets (containing class + recovered methods), used to
   // promote the actionable method edit-sites over the broad class in role refinement.
   let classMethodExpansion: ClassMethodExpansion | undefined;
-  if (intent === CapsuleIntent.Debug) {
+  if (debugRefinement) {
     if (isTestDominatedPool(candidates)) {
       const backfill = backfillProductionCandidates({
         db: input.db,
@@ -137,7 +143,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   let refined: RefinedRoledCandidate[];
   let subsystemRoot: string | undefined;
   let sourceBodyCallFallbackUsed = false;
-  if (intent === CapsuleIntent.Debug) {
+  if (debugRefinement) {
     const result = refineDebugRoles(
       input.db,
       assignCandidateRoles(candidates),
@@ -158,7 +164,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // Debug-intent recovery diagnostics, surfaced on both the success and
   // no-context paths so the production-target recovery is always auditable.
   const debugDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
-    intent === CapsuleIntent.Debug
+    debugRefinement
       ? {
           production_backfill_used: productionBackfillUsed,
           class_method_expansion_used: classMethodExpansionUsed,
@@ -177,7 +183,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   if (pivotCandidates.length === 0) {
     return noContextResult({
       intent,
-      intentReason,
+      plan,
       maxTokens: input.maxTokens,
       candidateCount: candidates.length,
       supportCount: supportCandidates.length,
@@ -268,7 +274,9 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     support,
     discarded,
     diagnostics: {
-      intent_reason: intentReason,
+      intent_reason: plan.intent_reason,
+      intent_confidence: plan.intent_confidence,
+      strategy: plan.strategy,
       candidate_count: candidates.length,
       pivot_count: pivots.length,
       support_count: support.length,
@@ -511,7 +519,7 @@ function toDiscarded(entry: RefinedRoledCandidate, reason: string): CapsuleV2Dis
 
 interface NoContextInput {
   intent: ResolvedCapsuleIntent;
-  intentReason: string;
+  plan: IntentPlan;
   maxTokens: number;
   candidateCount: number;
   supportCount: number;
@@ -532,7 +540,9 @@ function noContextResult(input: NoContextInput): CapsuleV2Result {
     support: [],
     discarded: input.discarded,
     diagnostics: {
-      intent_reason: input.intentReason,
+      intent_reason: input.plan.intent_reason,
+      intent_confidence: input.plan.intent_confidence,
+      strategy: input.plan.strategy,
       candidate_count: input.candidateCount,
       pivot_count: 0,
       support_count: 0,

@@ -14,7 +14,11 @@ import {
 
 export function renderCapsuleV2Human(result: CapsuleV2Result): string {
   const lines: string[] = [];
-  lines.push(`intent: ${result.intent}`);
+  lines.push(`intent: ${result.intent} (${result.diagnostics.intent_confidence} confidence)`);
+  if (result.diagnostics.intent_reason.length > 0) {
+    lines.push(`intent_reason: ${result.diagnostics.intent_reason.join("; ")}`);
+  }
+  lines.push(`strategy: ${result.diagnostics.strategy.role_policy}`);
   lines.push(
     `budget: ${formatThousands(result.budget.estimated_tokens)} / `
     + `${formatThousands(result.budget.max_tokens)} tokens used`,

@@ -22,6 +22,8 @@ export enum CapsuleIntent {
   Auto = "auto",
   Debug = "debug",
   Refactor = "refactor",
+  Modify = "modify",
+  Explain = "explain",
   Impact = "impact",
   TestFailure = "test-failure",
 }
@@ -30,6 +32,8 @@ export enum CapsuleIntent {
 export type ResolvedCapsuleIntent =
   | CapsuleIntent.Debug
   | CapsuleIntent.Refactor
+  | CapsuleIntent.Modify
+  | CapsuleIntent.Explain
   | CapsuleIntent.Impact
   | CapsuleIntent.TestFailure;
 
@@ -165,9 +169,37 @@ export enum CapsuleV2Mode {
   NoContext = "no_context",
 }
 
+/** How confident the intent planner is in the detected intent. */
+export type IntentConfidence = "high" | "medium" | "low";
+
+/**
+ * The role-assignment strategy an intent selects. This is the MECHANISM the
+ * planner controls (not just a label): `debug_refinement` runs the caller/helper/
+ * infra refinement + production backfill; the others keep the base role gate.
+ */
+export type RolePolicy =
+  | "debug_refinement"
+  | "caller_oriented"
+  | "sibling_oriented"
+  | "entry_point_oriented";
+
+/** The strategy an intent maps to: what to generate, how to role, how to budget. */
+export interface IntentStrategy {
+  /** Candidate generators / ranking emphasis this strategy prioritises. */
+  candidate_generators: string[];
+  /** The role-assignment policy (the planner's real behavioural lever). */
+  role_policy: RolePolicy;
+  /** Human-readable budget/rendering policy for this strategy. */
+  budget_policy: string;
+}
+
 export interface CapsuleV2Diagnostics {
-  /** How `auto` resolved (or that the intent was explicit), in prose. */
-  intent_reason: string;
+  /** Ordered, human-readable signals behind the intent decision. */
+  intent_reason: string[];
+  /** Planner confidence in the detected intent. */
+  intent_confidence: IntentConfidence;
+  /** The strategy the detected intent selected (generators / role / budget). */
+  strategy: IntentStrategy;
   /** Total candidates the role gate ran over (post-retrieval, pre-roles). */
   candidate_count: number;
   pivot_count: number;

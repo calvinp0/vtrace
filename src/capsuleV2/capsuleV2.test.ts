@@ -210,7 +210,7 @@ test("human output resembles the product example", () => {
   const result = buildInlines(8_000);
   const human = renderCapsuleV2Human(result);
 
-  assert.match(human, /^intent: test-failure$/m);
+  assert.match(human, /^intent: test-failure \((high|medium|low) confidence\)$/m);
   assert.match(human, /^budget: [\d,]+ \/ 8,000 tokens used$/m);
   assert.match(human, /^● pivot pkg\/options\.py::get_inline_instances$/m);
   assert.match(human, /^ {2}reason:$/m);
@@ -240,7 +240,7 @@ test("no_context human output states the actual_mode and reason", () => {
 test("an explicit intent overrides auto-detection and reweights retrieval", () => {
   const refactor = buildInlines(8_000, CapsuleIntent.Refactor);
   assert.equal(refactor.intent, CapsuleIntent.Refactor);
-  assert.match(refactor.diagnostics.intent_reason, /explicitly/);
+  assert.ok(refactor.diagnostics.intent_reason.some((r) => /explicitly/.test(r)));
   // Refactor leans on symbol identity.
   assert.equal(refactor.diagnostics.weights.symbol, 1.4);
 });
