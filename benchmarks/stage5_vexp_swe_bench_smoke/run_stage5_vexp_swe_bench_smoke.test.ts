@@ -1211,6 +1211,39 @@ test("prepareIndexedContext --reuse-workspace reuses the existing checkout + ind
   assert.equal(result.vtraceIndexDurationMs, null);
 });
 
+test("--show-vtrace-index-log streams the index (drops --quiet, forces VTRACE_PROGRESS_STREAM, tees output)", async () => {
+  const out = path.join(await tmpDir("idx-log"), "results");
+  const dataDir = await tmpDir("idx-log-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+  let indexArgs: readonly string[] = [];
+  let indexOpts: { env?: Record<string, string>; streamOutput?: boolean } | undefined;
+  const run = async (
+    command: string,
+    args: readonly string[],
+    options?: { env?: Record<string, string>; streamOutput?: boolean },
+  ): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes(" index ")) {
+      indexArgs = args;
+      indexOpts = options;
+    }
+    if (line.includes("capsule")) return { exitCode: 0, stdout: injectCapsuleJson("symbol: x"), stderr: "" };
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({
+    out,
+    instances: ["django__django-11490"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+    showVtraceIndexLog: true,
+  });
+  await prepareIndexedContext(config, { runProcess: run });
+
+  assert.ok(!indexArgs.includes("--quiet"), "--quiet must be dropped so the indexer emits progress");
+  assert.equal(indexOpts?.streamOutput, true, "the index output must be teed to the terminal");
+  assert.equal(indexOpts?.env?.VTRACE_PROGRESS_STREAM, "1", "progress must be forced on over the non-TTY pipe");
+});
+
 test("prepareIndexedContext reports failure when the vtrace query fails", async () => {
   const out = path.join(await tmpDir("idx-fail"), "results");
   const dataDir = await tmpDir("idx-fail-data");

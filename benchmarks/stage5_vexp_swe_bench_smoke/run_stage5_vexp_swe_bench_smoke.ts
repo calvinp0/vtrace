@@ -90,7 +90,14 @@ export interface ProcessResult {
 export type ProcessRunner = (
   command: string,
   args: readonly string[],
-  options?: { readonly cwd?: string; readonly env?: Record<string, string> },
+  options?: {
+    readonly cwd?: string;
+    readonly env?: Record<string, string>;
+    // Tee the child's stdout/stderr to this process's terminal AS IT ARRIVES
+    // (still captured for the result). Used so --show-vtrace-index-log streams
+    // the index parse/load progress live instead of buffering it out of sight.
+    readonly streamOutput?: boolean;
+  },
 ) => Promise<ProcessResult>;
 
 export interface RunDeps {
@@ -117,9 +124,10 @@ export interface CliConfig {
   // evaluates against a stale index or leftover untracked state. --reuse-workspace
   // opts out: the existing checkout and index are reused as-is.
   readonly reuseWorkspace: boolean;
-  // When true, the vtrace `index` command keeps its normal output (the runner
-  // drops --quiet) so indexing progress/logs print to the terminal. Absent, the
-  // index runs quietly as before.
+  // When true, stream the vtrace `index` per-file parse/load progress to the
+  // terminal: the runner drops --quiet, sets VTRACE_PROGRESS_STREAM=1 (the index
+  // progress reporter self-disables on a non-TTY pipe otherwise), and tees the
+  // child's stderr live. Absent, the index runs quietly as before.
   readonly showVtraceIndexLog: boolean;
   readonly vtraceContextMaxChars: number;
   readonly vtraceContextMaxItems: number;
@@ -2428,9 +2436,19 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
       const indexPresent = await pathExists(path.join(workspace, ".vtrace", "index.sqlite"));
       const reuseIndex = (config.reuseWorkspace || config.skipVtraceIndexIfPresent) && indexPresent;
       if (!reuseIndex) {
+        if (config.showVtraceIndexLog) {
+          process.stderr.write(`\n[stage5] indexing ${workspace} (live log) …\n`);
+        }
         const startMs = Date.now();
         indexStartedAt = new Date(startMs).toISOString();
-        const indexResult = await runProc(indexSpec.command, indexSpec.args);
+        // Drop --quiet (above) is not enough: the index progress reporter also
+        // self-disables on a non-TTY pipe, so force it on with
+        // VTRACE_PROGRESS_STREAM=1 and tee the child's stderr (where the per-file
+        // `[parse] N/total path` lines are written) to our terminal.
+        const indexResult = await runProc(indexSpec.command, indexSpec.args, {
+          streamOutput: config.showVtraceIndexLog,
+          ...(config.showVtraceIndexLog ? { env: { VTRACE_PROGRESS_STREAM: "1" } } : {}),
+        });
         const endMs = Date.now();
         indexFinishedAt = new Date(endMs).toISOString();
         indexDurationMs = endMs - startMs;
@@ -4308,7 +4326,7 @@ async function readJsonIfExists(filePath: string): Promise<unknown | null> {
 async function runProcess(
   command: string,
   args: readonly string[],
-  options: { readonly cwd?: string; readonly env?: Record<string, string> } = {},
+  options: { readonly cwd?: string; readonly env?: Record<string, string>; readonly streamOutput?: boolean } = {},
 ): Promise<ProcessResult> {
   return await new Promise((resolve) => {
     const proc = spawn(command, [...args], {
@@ -4318,8 +4336,16 @@ async function runProcess(
     });
     const stdoutChunks: Buffer[] = [];
     const stderrChunks: Buffer[] = [];
-    proc.stdout.on("data", (chunk: Buffer) => stdoutChunks.push(chunk));
-    proc.stderr.on("data", (chunk: Buffer) => stderrChunks.push(chunk));
+    // When streaming, tee each chunk to the terminal as it arrives so the user
+    // sees live progress; the buffers are still collected for the result/error.
+    proc.stdout.on("data", (chunk: Buffer) => {
+      stdoutChunks.push(chunk);
+      if (options.streamOutput) process.stdout.write(chunk);
+    });
+    proc.stderr.on("data", (chunk: Buffer) => {
+      stderrChunks.push(chunk);
+      if (options.streamOutput) process.stderr.write(chunk);
+    });
     proc.on("error", (error) =>
       resolve({ exitCode: 1, stdout: Buffer.concat(stdoutChunks).toString("utf8"), stderr: `${Buffer.concat(stderrChunks).toString("utf8")}${error.message}` }),
     );
