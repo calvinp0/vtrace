@@ -2,36 +2,60 @@
   {
     "instance_id": "django__django-10880",
     "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-fixed-10880/django__django-10880",
+    "task": "fix Count with a Case expression and distinct=True producing COUNT(DISTINCTCASE WHEN ...) with a missing space in the aggregate sql",
+    "intent": "debug",
+    "budget": 8000,
     "expected_files": ["django/db/models/aggregates.py"],
     "expected_symbols": ["as_sql", "get_group_by_cols"],
-    "note": "Count(Case, distinct=True) emits COUNT(DISTINCTCASE WHEN ...) — a missing space. Gold patch edits Aggregate.as_sql ('DISTINCT' -> 'DISTINCT '). This is the REAL 10880; it is the aggregates task, NOT a json_script/utils/html.py task (that task is absent from the dataset)."
+    "notes": "Real 10880 is the aggregates task: Count(Case, distinct=True) emits COUNT(DISTINCTCASE WHEN ...). The gold patch edits Aggregate.as_sql ('DISTINCT' -> 'DISTINCT '). NOT a json_script/utils/html.py task — that was an earlier mistaken assumption. Expected labels are evaluation-only and never used by production retrieval."
   },
   {
     "instance_id": "django__django-11095",
     "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/manual-capsule-v2/django__django-11095",
+    "task": "fix ModelAdmin.get_inlines hook for generic inline admin failing test",
+    "intent": "debug",
+    "budget": 8000,
     "expected_files": ["django/contrib/admin/options.py"],
-    "expected_symbols": ["get_inlines", "get_inline_instances"],
-    "note": "Add ModelAdmin.get_inlines() hook; gold patch adds get_inlines and rewires get_inline_instances to call it."
+    "expected_symbols": [
+      "ModelAdmin.get_inlines",
+      "ModelAdmin.get_inline_instances",
+      "ModelAdmin.get_formsets_with_inlines"
+    ],
+    "notes": "Gold patch adds ModelAdmin.get_inlines and rewires get_inline_instances to call it. get_inlines may not exist in the base repo, so existing nearby methods (get_inline_instances, get_formsets_with_inlines) are acceptable recovered edit sites. Expected labels are evaluation-only."
   },
   {
     "instance_id": "django__django-11490",
     "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-fixed-11490/django__django-11490",
+    "task": "fix composed queries where a second values() or values_list() call cannot change the selected column list in the combined query sql",
+    "intent": "debug",
+    "budget": 8000,
     "expected_files": ["django/db/models/sql/compiler.py"],
     "expected_symbols": ["get_combinator_sql"],
-    "note": "Composed queries cannot change the column list across repeated values()/values_list(); gold patch edits SQLCompiler.get_combinator_sql."
+    "notes": "Composed queries cannot change the column list across repeated values()/values_list(); gold patch edits SQLCompiler.get_combinator_sql in django/db/models/sql/compiler.py (confirmed against the evaluated modelPatch artifacts). Expected labels are evaluation-only."
   },
   {
     "instance_id": "django__django-11728",
     "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/manual-capsule-v2/django__django-11728",
+    "task": "fix simplify_regexp trailing named groups in admindocs regex helpers",
+    "intent": "debug",
+    "budget": 8000,
     "expected_files": ["django/contrib/admindocs/utils.py"],
     "expected_symbols": ["replace_named_groups", "replace_unnamed_groups"],
-    "note": "simplify_regexp() drops a trailing group when the urlpattern lacks a trailing '/'; gold patch edits replace_named_groups and replace_unnamed_groups."
+    "notes": "simplify_regex() drops a trailing group when the urlpattern lacks a trailing '/'; gold patch edits replace_named_groups and replace_unnamed_groups in django/contrib/admindocs/utils.py. Expected labels are evaluation-only."
   },
   {
     "instance_id": "django__django-11740",
     "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-fixed-11740/django__django-11740",
+    "task": "fix changing a UUIDField to a ForeignKey not creating a cross-app migration dependency in the autodetector",
+    "intent": "debug",
+    "budget": 8000,
     "expected_files": ["django/db/migrations/autodetector.py"],
     "expected_symbols": ["generate_altered_fields"],
-    "note": "Changing a UUID field to an FK does not create a cross-app migration dependency; gold patch edits MigrationAutodetector.generate_altered_fields."
+    "notes": "Changing a UUID field to an FK does not create a cross-app migration dependency; gold patch edits MigrationAutodetector.generate_altered_fields in django/db/migrations/autodetector.py (confirmed against the evaluated modelPatch artifacts). Expected labels are evaluation-only."
   }
 ]

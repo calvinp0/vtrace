@@ -1,232 +1,187 @@
-// Stage 5R — deterministic retrieval-quality evaluation.
+// Stage 5R — deterministic Capsule v2 retrieval-quality evaluation.
 //
 // WHY THIS EXISTS
 // ----------------
-// Stage 5's LIVE token/cost benchmark is noisy: Claude overloads produce
-// zero-token rows, cache/session variance moves token counts, and small/local
-// tasks are cheap enough that any context is net overhead. Tuning policy gates
-// against that signal is benchmark whack-a-mole. Stage 5R measures the thing
-// vtrace actually controls — RETRIEVAL QUALITY — with NO Claude, NO Docker, and
-// NO vexp agent run. It is deterministic: given an indexed workspace and a fixed
-// fixture of known-edited files (from real evaluated gold patches), it asks one
-// question per instance — did vtrace surface the expected edit target, and as a
-// pivot, a support item, or not at all?
+// The LIVE Stage 5 token/cost benchmark is noisy and expensive: Claude
+// overloads, cache variance, Docker, and agent-execution cost. Before paying for
+// that, Stage 5R measures the thing vtrace actually controls — RETRIEVAL QUALITY —
+// with NO Claude, NO Docker, NO vexp agent run, NO API calls. It is deterministic:
+// given an indexed workspace and a fixed fixture of known-edited files/symbols
+// (from real evaluated gold patches), it asks one question per instance:
+//
+//   Does Capsule v2 put the known edited file/symbol in the top-1 pivot, the
+//   top-3 selected items, support, discarded, or nowhere (missing)?
 //
 // PRODUCT FRAMING
 // ----------------
-// vtrace is a local code-intelligence layer that gives agents evidence-ranked
-// edit targets and dependency-aware context. Token reduction is an OUTCOME, not
-// the design principle. So this stage scores: where should the agent look first
-// (top-1 pivot), is the real target in the top-3, is it pivot vs support, how
-// confident is the recommendation, and should context be injected at all (gate).
+//   pivot    = likely edit site
+//   support  = useful context, not the first edit target
+//   discard  = test/generic/noisy/over-budget candidate
+//   missing  = not surfaced at all
 //
-// KEY RULE: never use live token/cost results to tune this stage. Retrieval
-// quality only. Expected files live ONLY in the fixture, never hardcoded in src.
+// CRITICAL RULE: the expected_files / expected_symbols are EVALUATION LABELS only.
+// They are read from the fixture to SCORE the capsule; they are NEVER passed into
+// Capsule v2 retrieval. Production retrieval sees only (task, intent, budget).
 
-import { spawn } from "node:child_process";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { CapsuleMode, type CapsuleMode as CapsuleModeT } from "../../src/capsule/capsuleModes";
+import { openIndexerDatabase } from "../../src/db/sqlite";
+import { buildCapsuleV2 } from "../../src/capsuleV2/buildCapsuleV2";
 import {
-  buildInstanceQuery,
-  capsuleModeForInstance,
-  classifyCapsuleOutput,
-  decideContextPolicy,
-  deriveContextPolicySignals,
-  findSweBenchRecord,
-  loadSweBenchData,
-  recommendedCapsuleModeFor,
-  toSweBenchInstance,
-  type CapsuleClassification,
-  type ContextPolicyAction,
-  type ContextPolicyDecision,
-  type ProcessResult,
-  type ProcessRunner,
-  type SweBenchInstance,
-} from "./run_stage5_vexp_swe_bench_smoke";
+  CapsuleIntent,
+  parseCapsuleIntent,
+  type CapsuleV2Result,
+} from "../../src/capsuleV2/types";
 
 // ---------------------------------------------------------------------------
 // Fixture
 // ---------------------------------------------------------------------------
 
-// One evaluation target. The fixture carries ONLY the evaluation ground truth —
-// the known-edited files/symbols taken from real gold patches. The problem
-// statement, hints, and failing tests are loaded from the SWE-bench dataset by
-// instance_id (so they are never duplicated/fabricated), unless overridden here.
 export interface RetrievalEvalFixtureEntry {
   readonly instance_id: string;
   readonly repo: string;
+  /** Repo-relative or absolute path to the indexed workspace (contains .vtrace). */
+  readonly workspace: string;
+  /** The task/problem prose handed to Capsule v2 — never the expected labels. */
+  readonly task: string;
+  readonly intent: string;
+  readonly budget: number;
+  /** Evaluation labels (gold-patch edited files). Scoring only. */
   readonly expected_files: readonly string[];
-  readonly expected_symbols?: readonly string[];
-  /** Optional explicit workspace path (else resolved from results/workspaces). */
-  readonly workspace?: string;
-  /** Optional overrides so the fixture can run without the SWE-bench dataset. */
-  readonly problem_statement?: string;
-  readonly hints_text?: string | null;
-  readonly fail_to_pass?: readonly string[];
-  /** Human note explaining the gold patch; ignored by scoring. */
-  readonly note?: string;
+  /** Evaluation labels (gold-patch edited symbols, optionally `Class.method`). */
+  readonly expected_symbols: readonly string[];
+  readonly notes?: string;
 }
 
-// Load a JSON-array or JSONL fixture of evaluation targets. Required fields are
-// validated with a clear error — we never fabricate an expected file.
+// Load + validate a JSON-array fixture. A malformed row is a hard error: we never
+// fabricate an expected label or silently drop a target.
 export async function loadRetrievalFixture(filePath: string): Promise<RetrievalEvalFixtureEntry[]> {
   const content = await readFile(filePath, "utf8").catch(() => null);
-  if (content === null) throw new Error(`Retrieval fixture not found at ${filePath}.`);
-  const trimmed = content.trim();
-  const raw: unknown[] = trimmed.startsWith("[")
-    ? (JSON.parse(trimmed) as unknown[])
-    : trimmed
-        .split(/\r?\n/)
-        .filter((line) => line.trim().length > 0)
-        .map((line) => JSON.parse(line) as unknown);
-  return raw.map((value, index) => validateFixtureEntry(value, index));
+  if (content === null) {
+    throw new Error(`Retrieval fixture not found at ${filePath}.`);
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch (error) {
+    throw new Error(`Retrieval fixture ${filePath} is not valid JSON: ${String(error)}`);
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error(`Retrieval fixture ${filePath} must be a JSON array.`);
+  }
+  return parsed.map((value, index) => validateFixtureEntry(value, index));
 }
 
-function validateFixtureEntry(value: unknown, index: number): RetrievalEvalFixtureEntry {
-  if (!isRecord(value)) throw new Error(`Fixture entry ${index} is not an object.`);
-  const instanceId = value.instance_id;
-  const repo = value.repo;
-  const expectedFiles = value.expected_files;
-  if (!isString(instanceId)) throw new Error(`Fixture entry ${index} is missing instance_id.`);
-  if (!isString(repo)) throw new Error(`Fixture entry ${instanceId} is missing repo.`);
-  if (!Array.isArray(expectedFiles) || expectedFiles.filter(isString).length === 0) {
-    throw new Error(`Fixture entry ${instanceId} must list at least one expected_files entry.`);
+export function validateFixtureEntry(value: unknown, index: number): RetrievalEvalFixtureEntry {
+  if (!isRecord(value)) {
+    throw new Error(`Fixture entry ${index} is not an object.`);
+  }
+  const id = value.instance_id;
+  if (!isString(id)) {
+    throw new Error(`Fixture entry ${index} is missing instance_id.`);
+  }
+  if (!isString(value.repo)) {
+    throw new Error(`Fixture entry ${id} is missing repo.`);
+  }
+  if (!isString(value.workspace)) {
+    throw new Error(`Fixture entry ${id} is missing workspace.`);
+  }
+  if (!isString(value.task)) {
+    throw new Error(`Fixture entry ${id} is missing task.`);
+  }
+  const expectedFiles = Array.isArray(value.expected_files) ? value.expected_files.filter(isString) : [];
+  if (expectedFiles.length === 0) {
+    throw new Error(`Fixture entry ${id} must list at least one expected_files entry.`);
   }
   return {
-    instance_id: instanceId,
-    repo,
-    expected_files: expectedFiles.filter(isString),
-    ...(Array.isArray(value.expected_symbols)
-      ? { expected_symbols: value.expected_symbols.filter(isString) }
-      : {}),
-    ...(isString(value.workspace) ? { workspace: value.workspace } : {}),
-    ...(isString(value.problem_statement) ? { problem_statement: value.problem_statement } : {}),
-    ...(typeof value.hints_text === "string" || value.hints_text === null
-      ? { hints_text: value.hints_text as string | null }
-      : {}),
-    ...(Array.isArray(value.fail_to_pass) ? { fail_to_pass: value.fail_to_pass.filter(isString) } : {}),
-    ...(isString(value.note) ? { note: value.note } : {}),
+    instance_id: id,
+    repo: value.repo,
+    workspace: value.workspace,
+    task: value.task,
+    intent: isString(value.intent) ? value.intent : "auto",
+    budget: isNumber(value.budget) ? value.budget : 8000,
+    expected_files: expectedFiles,
+    expected_symbols: Array.isArray(value.expected_symbols) ? value.expected_symbols.filter(isString) : [],
+    ...(isString(value.notes) ? { notes: value.notes } : {}),
   };
 }
 
 // ---------------------------------------------------------------------------
-// Capsule diagnostics parsing (the score-ordered, role-tagged selection)
+// Capsule summary (the role-ordered selection scoring works over)
 // ---------------------------------------------------------------------------
 
-export interface ParsedSelectionItem {
+export interface SelectedItem {
   readonly role: "pivot" | "support";
   readonly path: string;
   readonly symbol: string;
-  readonly finalScore: number;
+  readonly fqName: string;
+  readonly final: number;
 }
 
-export interface ParsedDiscardedItem {
+export interface DiscardedItem {
   readonly path: string;
   readonly symbol: string;
+  readonly fqName: string;
   readonly reason: string;
 }
 
-export interface ParsedCapsuleDiagnostics {
-  readonly recommendedMode: string | null;
-  readonly actualMode: string | null;
-  readonly targetConfidence: string | null;
-  readonly pivotCount: number | null;
-  readonly supportCount: number | null;
-  /**
-   * Size of the candidate pool BEFORE role assignment. The decisive "why missing"
-   * signal: 0 means retrieval surfaced nothing (a routing miss); > 0 with a
-   * missing expected file means candidates were found but none matched / were
-   * discarded (an over-strict gate). Distinguishing the two is the whole point.
-   */
-  readonly candidateCountBeforeRoles: number | null;
-  readonly contextChars: number | null;
-  readonly likelyFiles: readonly string[];
-  readonly likelySymbols: readonly string[];
-  /** Pivots first, then support; each in descending final score (Requirement). */
-  readonly selection: readonly ParsedSelectionItem[];
-  readonly discarded: readonly ParsedDiscardedItem[];
+export interface CapsuleSummary {
+  readonly intent: string;
+  readonly actualMode: string;
+  readonly budgetTokens: number;
+  readonly estimatedTokens: number;
+  readonly usedPercent: number;
+  /** Pivots first, then support — the order the agent would read top-down. */
+  readonly pivots: readonly SelectedItem[];
+  readonly support: readonly SelectedItem[];
+  readonly discarded: readonly DiscardedItem[];
+  readonly candidateCount: number | null;
 }
 
-// Parse the capsule `--json` diagnostics block into the fields retrieval scoring
-// needs. Returns null when the output is not the expected JSON envelope (a hard
-// error or legacy raw text) — the caller records that honestly rather than
-// guessing a ranking from prose.
-export function parseCapsuleDiagnostics(stdout: string): ParsedCapsuleDiagnostics | null {
-  const trimmed = stdout.trim();
-  if (!trimmed.startsWith("{")) return null;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(trimmed);
-  } catch {
-    return null;
-  }
-  if (!isRecord(parsed) || !isRecord(parsed.diagnostics)) return null;
-  const d = parsed.diagnostics;
-
-  const selection: ParsedSelectionItem[] = Array.isArray(d.selection)
-    ? d.selection.flatMap((entry) => {
-        if (!isRecord(entry)) return [];
-        const role = entry.role;
-        if (role !== "pivot" && role !== "support") return [];
-        if (!isString(entry.path)) return [];
-        const scores = isRecord(entry.scores) ? entry.scores : {};
-        return [
-          {
-            role,
-            path: entry.path,
-            symbol: isString(entry.symbol) ? entry.symbol : "",
-            finalScore: isNumber(scores.final) ? scores.final : 0,
-          },
-        ];
-      })
-    : [];
-
-  const discarded: ParsedDiscardedItem[] = Array.isArray(d.top_discarded_candidates)
-    ? d.top_discarded_candidates.flatMap((entry) => {
-        if (!isRecord(entry) || !isString(entry.path)) return [];
-        return [
-          {
-            path: entry.path,
-            symbol: isString(entry.symbol) ? entry.symbol : "",
-            reason: isString(entry.discard_reason) ? entry.discard_reason : "",
-          },
-        ];
-      })
-    : [];
-
+// Project a Capsule v2 result onto the summary the scorer needs. Works on the
+// typed builder result (live path) — the same shape the `--json` surface emits.
+export function summarizeCapsule(result: CapsuleV2Result): CapsuleSummary {
+  const toSelected = (role: "pivot" | "support") =>
+    (item: CapsuleV2Result["pivots"][number]): SelectedItem => ({
+      role,
+      path: item.path,
+      symbol: item.symbol,
+      fqName: item.fq_name,
+      final: item.scorecard.final,
+    });
   return {
-    recommendedMode: isString(d.recommended_mode) ? d.recommended_mode : null,
-    actualMode: isString(d.actual_mode) ? d.actual_mode : null,
-    targetConfidence: isString(d.target_confidence) ? d.target_confidence : null,
-    pivotCount: isNumber(d.pivot_count) ? d.pivot_count : null,
-    supportCount: isNumber(d.support_count) ? d.support_count : null,
-    candidateCountBeforeRoles: isNumber(d.candidate_count_before_roles) ? d.candidate_count_before_roles : null,
-    contextChars: isNumber(d.context_chars) ? d.context_chars : null,
-    likelyFiles: Array.isArray(d.likely_files) ? d.likely_files.filter(isString) : [],
-    likelySymbols: Array.isArray(d.likely_symbols) ? d.likely_symbols.filter(isString) : [],
-    selection,
-    discarded,
+    intent: result.intent,
+    actualMode: result.actual_mode,
+    budgetTokens: result.budget.max_tokens,
+    estimatedTokens: result.budget.estimated_tokens,
+    usedPercent: result.budget.used_percent,
+    pivots: result.pivots.map(toSelected("pivot")),
+    support: result.support.map(toSelected("support")),
+    discarded: result.discarded.map((item) => ({
+      path: item.path,
+      symbol: item.symbol,
+      // CapsuleV2Discarded carries no fq_name; the bare symbol name is enough for
+      // discarded-symbol matching.
+      fqName: "",
+      reason: item.discard_reason,
+    })),
+    candidateCount: result.diagnostics.candidate_count,
   };
 }
 
 // ---------------------------------------------------------------------------
-// Retrieval-quality scoring (pure)
+// Scoring (pure)
 // ---------------------------------------------------------------------------
 
-// Normalize a repo-relative path for comparison: forward slashes, no leading
-// "./", trimmed. Capsule paths and gold-patch paths are both repo-relative, so
-// after this they compare directly.
 export function normalizeFilePath(value: string): string {
   return value.trim().replace(/\\/g, "/").replace(/^\.\//, "").replace(/^\/+/, "");
 }
 
-// Does a capsule candidate path satisfy an expected (gold-patch) file? Exact
-// repo-relative equality after normalization, with a path-boundary suffix
-// fallback so a workspace-prefixed candidate still matches the gold path. The
-// fallback is boundary-aware ("/utils.py" must not match "admindocs_utils.py").
-export function expectedFileMatches(expected: string, candidate: string): boolean {
+// Boundary-aware repo-relative file match (so "/utils.py" does not match
+// "admindocs_utils.py", but a workspace-prefixed candidate still matches the
+// gold path).
+export function fileMatches(expected: string, candidate: string): boolean {
   const exp = normalizeFilePath(expected);
   const cand = normalizeFilePath(candidate);
   if (exp.length === 0 || cand.length === 0) return false;
@@ -234,12 +189,26 @@ export function expectedFileMatches(expected: string, candidate: string): boolea
   return cand.endsWith(`/${exp}`) || exp.endsWith(`/${cand}`);
 }
 
-// The score-ordered, de-duplicated file ranking the agent would read top-down:
-// pivots first (already ordered by final score in `selection`), then support.
-export function rankedFilesFromSelection(selection: readonly ParsedSelectionItem[]): string[] {
+// Match an expected (possibly `Class.method`) symbol to a capsule item. Accepts
+// the bare method name (capsule items carry local names), the exact name, or an
+// fq-name suffix — so "ModelAdmin.get_inline_instances" matches a
+// "get_inline_instances" method item.
+export function symbolMatches(expected: string, item: { symbol: string; fqName: string }): boolean {
+  const exp = expected.trim();
+  if (exp.length === 0) return false;
+  const last = exp.split(".").pop() ?? exp;
+  if (item.symbol === exp || item.symbol === last) return true;
+  const fq = (item.fqName ?? "").replace(/::/g, ".");
+  if (fq.length === 0) return false;
+  return fq === exp || fq.endsWith(`.${exp}`) || fq.endsWith(`.${last}`);
+}
+
+// De-duplicated file ranking: pivots first (already final-score ordered), then
+// support — exactly the order an agent reads the capsule top-down.
+export function rankedFiles(summary: CapsuleSummary): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const item of selection) {
+  for (const item of [...summary.pivots, ...summary.support]) {
     const file = normalizeFilePath(item.path);
     if (file.length === 0 || seen.has(file)) continue;
     seen.add(file);
@@ -248,168 +217,227 @@ export function rankedFilesFromSelection(selection: readonly ParsedSelectionItem
   return out;
 }
 
-export type ExpectedFileRole = "pivot" | "support" | "missing";
+export type ExpectedFileRole = "pivot" | "support" | "discarded" | "missing";
 
 export interface ExpectedFileEvaluation {
-  /** 1-based rank of the best-matching expected file in the file ranking; null if absent. */
   readonly rank: number | null;
   readonly role: ExpectedFileRole;
-  readonly containsTop1: boolean;
-  readonly containsTop3: boolean;
-  /** Which expected file matched (the best-ranked one); null when missing. */
   readonly matchedFile: string | null;
-  /** True when the expected file was recovered but discarded (a too-strict gate). */
-  readonly discarded: boolean;
 }
 
-// Evaluate where the expected edit target landed in the capsule. The role is the
-// strongest occurrence: pivot beats support (pivots always sort ahead). "missing"
-// means the file is in NEITHER role — though it may still have been recovered and
-// discarded, which the `discarded` flag surfaces (an over-strict pivot gate, not
-// an empty recovery).
 export function evaluateExpectedFile(
   expectedFiles: readonly string[],
-  selection: readonly ParsedSelectionItem[],
-  discarded: readonly ParsedDiscardedItem[],
+  summary: CapsuleSummary,
 ): ExpectedFileEvaluation {
-  const ranked = rankedFilesFromSelection(selection);
-
+  const ranked = rankedFiles(summary);
   let bestRank: number | null = null;
   let matchedFile: string | null = null;
   for (const expected of expectedFiles) {
-    const idx = ranked.findIndex((file) => expectedFileMatches(expected, file));
+    const idx = ranked.findIndex((file) => fileMatches(expected, file));
     if (idx >= 0 && (bestRank === null || idx + 1 < bestRank)) {
       bestRank = idx + 1;
       matchedFile = ranked[idx] ?? null;
     }
   }
-
   if (bestRank !== null && matchedFile !== null) {
-    // Role = the strongest role among selection items at the matched file. Pivots
-    // sort first, so the first matching selection item carries the strongest role.
+    // Pivots sort first, so the first selected item at the matched file carries
+    // the strongest role.
     const role: ExpectedFileRole =
-      selection.find((item) => expectedFileMatches(matchedFile as string, item.path))?.role ?? "support";
-    return {
-      rank: bestRank,
-      role,
-      containsTop1: bestRank === 1,
-      containsTop3: bestRank <= 3,
-      matchedFile,
-      discarded: false,
-    };
+      [...summary.pivots, ...summary.support].find((item) => fileMatches(matchedFile as string, item.path))?.role
+      ?? "support";
+    return { rank: bestRank, role, matchedFile };
   }
-
-  const wasDiscarded = expectedFiles.some((expected) =>
-    discarded.some((item) => expectedFileMatches(expected, item.path)),
+  const discardedHit = expectedFiles.some((expected) =>
+    summary.discarded.some((item) => fileMatches(expected, item.path)),
   );
-  return { rank: null, role: "missing", containsTop1: false, containsTop3: false, matchedFile: null, discarded: wasDiscarded };
+  return { rank: null, role: discardedHit ? "discarded" : "missing", matchedFile: null };
 }
 
-// Did the capsule surface any expected (gold-patch) symbol — as a selected item
-// or in likely_symbols? Exact, case-sensitive name match (symbol names are
-// case-significant in Python).
-export function containsExpectedSymbol(
+export interface ExpectedSymbolEvaluation {
+  readonly rank: number | null;
+  readonly role: ExpectedFileRole;
+}
+
+export function evaluateExpectedSymbol(
   expectedSymbols: readonly string[],
-  selection: readonly ParsedSelectionItem[],
-  likelySymbols: readonly string[],
-): boolean {
-  if (expectedSymbols.length === 0) return false;
-  const found = new Set<string>([
-    ...selection.map((item) => item.symbol),
-    ...likelySymbols,
-  ]);
-  return expectedSymbols.some((symbol) => found.has(symbol));
+  summary: CapsuleSummary,
+): ExpectedSymbolEvaluation {
+  if (expectedSymbols.length === 0) {
+    return { rank: null, role: "missing" };
+  }
+  const selected = [...summary.pivots, ...summary.support];
+  for (let i = 0; i < selected.length; i += 1) {
+    const item = selected[i]!;
+    if (expectedSymbols.some((sym) => symbolMatches(sym, item))) {
+      return { rank: i + 1, role: item.role };
+    }
+  }
+  const discardedHit = summary.discarded.some((item) =>
+    expectedSymbols.some((sym) => symbolMatches(sym, item)),
+  );
+  return { rank: null, role: discardedHit ? "discarded" : "missing" };
 }
 
 // ---------------------------------------------------------------------------
 // Per-instance row
 // ---------------------------------------------------------------------------
 
-export type InstanceStatus = "evaluated" | "no_workspace" | "error";
+export type RetrievalResult =
+  | "hit_top1_pivot"
+  | "hit_top3"
+  | "hit_support"
+  | "hit_discarded"
+  | "missing"
+  | "skipped_no_context"
+  | "fixture_error"
+  | "workspace_error";
 
 export interface RetrievalEvalRow {
   readonly instance_id: string;
-  readonly repo: string;
-  readonly status: InstanceStatus;
-  readonly status_detail: string | null;
-  readonly recommended_mode: string | null;
+  readonly intent: string;
   readonly actual_mode: string | null;
-  readonly context_policy_action: ContextPolicyAction | null;
-  readonly pivot_count: number | null;
-  readonly support_count: number | null;
-  readonly candidate_count_before_roles: number | null;
-  readonly top_1_pivot_file: string | null;
-  readonly top_3_files: readonly string[];
-  readonly expected_file_rank: number | null;
-  readonly expected_file_role: ExpectedFileRole;
-  readonly contains_expected_file_top1: boolean;
-  readonly contains_expected_file_top3: boolean;
-  readonly contains_expected_symbol: boolean;
-  readonly confidence: string | null;
-  readonly capsule_chars: number | null;
-  readonly discard_reasons: readonly string[];
+  readonly budget_tokens: number;
+  readonly estimated_tokens: number | null;
+  readonly used_percent: number | null;
+
   readonly expected_files: readonly string[];
   readonly expected_symbols: readonly string[];
-  readonly workspace: string | null;
+
+  readonly top_1_pivot_file: string | null;
+  readonly top_1_pivot_symbol: string | null;
+  readonly top_3_files: readonly string[];
+
+  readonly expected_file_best_rank: number | null;
+  readonly expected_file_role: ExpectedFileRole;
+  readonly expected_symbol_best_rank: number | null;
+  readonly expected_symbol_role: ExpectedFileRole;
+
+  readonly contains_expected_file_top1: boolean;
+  readonly contains_expected_file_top3: boolean;
+  readonly contains_expected_file_anywhere: boolean;
+  readonly contains_expected_symbol_anywhere: boolean;
+
+  readonly pivot_count: number;
+  readonly support_count: number;
+  readonly discarded_count: number;
+
+  readonly result: RetrievalResult;
+  readonly failure_reason: string | null;
 }
 
-export interface EvaluateInstanceInput {
-  readonly entry: RetrievalEvalFixtureEntry;
-  /** Mode recommended from the instance's own shaping (fallback for non-evaluated rows). */
-  readonly recommendedMode: string | null;
-  readonly classification: CapsuleClassification | null;
-  readonly diagnostics: ParsedCapsuleDiagnostics | null;
-  readonly policy: ContextPolicyDecision | null;
-  readonly status: InstanceStatus;
-  readonly statusDetail: string | null;
-  readonly workspace: string | null;
-}
+export type RowError =
+  | { readonly kind: "workspace_error"; readonly detail: string }
+  | { readonly kind: "fixture_error"; readonly detail: string };
 
-// Build one evaluation row from the parsed capsule outputs. Pure: the same logic
-// runs in the live report and in tests (with injected diagnostics).
-export function evaluateInstance(input: EvaluateInstanceInput): RetrievalEvalRow {
-  const { entry, diagnostics, classification, policy } = input;
-  const selection = diagnostics?.selection ?? [];
-  const discarded = diagnostics?.discarded ?? [];
-  const expectedFiles = entry.expected_files;
-  const expectedSymbols = entry.expected_symbols ?? [];
-
-  const fileEval = evaluateExpectedFile(expectedFiles, selection, discarded);
-  const top1Pivot = selection.find((item) => item.role === "pivot")?.path ?? null;
-  const top3 = rankedFilesFromSelection(selection).slice(0, 3);
-
-  // Surface WHY a recovered expected file was thrown away (honesty: an over-strict
-  // pivot gate is a different failure from an empty recovery).
-  const discardReasons: string[] = [...discarded.map((item) => `${item.path} :: ${item.symbol} — ${item.reason}`)];
-  if (fileEval.discarded) {
-    const hit = discarded.find((item) => expectedFiles.some((f) => expectedFileMatches(f, item.path)));
-    if (hit) discardReasons.unshift(`EXPECTED FILE DISCARDED: ${hit.path} — ${hit.reason}`);
+// Build one evaluation row. Pure: the live path passes a real CapsuleSummary;
+// tests inject one (or an error) directly — no DB required.
+export function evaluateInstance(
+  entry: RetrievalEvalFixtureEntry,
+  summary: CapsuleSummary | null,
+  error?: RowError,
+): RetrievalEvalRow {
+  if (error || summary === null) {
+    const kind = error?.kind ?? "workspace_error";
+    return {
+      instance_id: entry.instance_id,
+      intent: entry.intent,
+      actual_mode: null,
+      budget_tokens: entry.budget,
+      estimated_tokens: null,
+      used_percent: null,
+      expected_files: entry.expected_files,
+      expected_symbols: entry.expected_symbols,
+      top_1_pivot_file: null,
+      top_1_pivot_symbol: null,
+      top_3_files: [],
+      expected_file_best_rank: null,
+      expected_file_role: "missing",
+      expected_symbol_best_rank: null,
+      expected_symbol_role: "missing",
+      contains_expected_file_top1: false,
+      contains_expected_file_top3: false,
+      contains_expected_file_anywhere: false,
+      contains_expected_symbol_anywhere: false,
+      pivot_count: 0,
+      support_count: 0,
+      discarded_count: 0,
+      result: kind,
+      failure_reason: error?.detail ?? "workspace not available",
+    };
   }
+
+  const fileEval = evaluateExpectedFile(entry.expected_files, summary);
+  const symbolEval = evaluateExpectedSymbol(entry.expected_symbols, summary);
+  const top1Pivot = summary.pivots[0] ?? null;
+  const top3 = rankedFiles(summary).slice(0, 3);
+
+  const containsTop1 = fileEval.rank === 1 && fileEval.role === "pivot";
+  const containsTop3 = fileEval.rank !== null && fileEval.rank <= 3;
+  const containsAnywhere = fileEval.role === "pivot" || fileEval.role === "support" || fileEval.role === "discarded";
+  const symbolAnywhere = symbolEval.role !== "missing";
+
+  const { result, failureReason } = classifyResult(summary, fileEval, entry);
 
   return {
     instance_id: entry.instance_id,
-    repo: entry.repo,
-    status: input.status,
-    status_detail: input.statusDetail,
-    recommended_mode: diagnostics?.recommendedMode ?? input.recommendedMode,
-    actual_mode: diagnostics?.actualMode ?? classification?.actualCapsuleMode ?? null,
-    context_policy_action: policy?.action ?? null,
-    pivot_count: diagnostics?.pivotCount ?? classification?.pivotCount ?? null,
-    support_count: diagnostics?.supportCount ?? classification?.supportCount ?? null,
-    candidate_count_before_roles: diagnostics?.candidateCountBeforeRoles ?? null,
-    top_1_pivot_file: top1Pivot === null ? null : normalizeFilePath(top1Pivot),
+    intent: summary.intent,
+    actual_mode: summary.actualMode,
+    budget_tokens: entry.budget,
+    estimated_tokens: summary.estimatedTokens,
+    used_percent: summary.usedPercent,
+    expected_files: entry.expected_files,
+    expected_symbols: entry.expected_symbols,
+    top_1_pivot_file: top1Pivot ? normalizeFilePath(top1Pivot.path) : null,
+    top_1_pivot_symbol: top1Pivot ? top1Pivot.symbol : null,
     top_3_files: top3,
-    expected_file_rank: fileEval.rank,
+    expected_file_best_rank: fileEval.rank,
     expected_file_role: fileEval.role,
-    contains_expected_file_top1: fileEval.containsTop1,
-    contains_expected_file_top3: fileEval.containsTop3,
-    contains_expected_symbol: containsExpectedSymbol(expectedSymbols, selection, diagnostics?.likelySymbols ?? []),
-    confidence: diagnostics?.targetConfidence ?? null,
-    capsule_chars: diagnostics?.contextChars ?? null,
-    discard_reasons: discardReasons,
-    expected_files: expectedFiles,
-    expected_symbols: expectedSymbols,
-    workspace: input.workspace,
+    expected_symbol_best_rank: symbolEval.rank,
+    expected_symbol_role: symbolEval.role,
+    contains_expected_file_top1: containsTop1,
+    contains_expected_file_top3: containsTop3,
+    contains_expected_file_anywhere: containsAnywhere,
+    contains_expected_symbol_anywhere: symbolAnywhere,
+    pivot_count: summary.pivots.length,
+    support_count: summary.support.length,
+    discarded_count: summary.discarded.length,
+    result,
+    failure_reason: failureReason,
+  };
+}
+
+function classifyResult(
+  summary: CapsuleSummary,
+  fileEval: ExpectedFileEvaluation,
+  entry: RetrievalEvalFixtureEntry,
+): { result: RetrievalResult; failureReason: string | null } {
+  if (summary.actualMode === "no_context") {
+    return {
+      result: "skipped_no_context",
+      failureReason: "capsule returned no_context (no high-confidence edit target)",
+    };
+  }
+  if (fileEval.role === "pivot" && fileEval.rank === 1) {
+    return { result: "hit_top1_pivot", failureReason: null };
+  }
+  if (fileEval.rank !== null && fileEval.rank <= 3) {
+    return { result: "hit_top3", failureReason: null };
+  }
+  if (fileEval.rank !== null) {
+    return { result: "hit_support", failureReason: null };
+  }
+  if (fileEval.role === "discarded") {
+    const hit = summary.discarded.find((item) =>
+      entry.expected_files.some((f) => fileMatches(f, item.path)),
+    );
+    return {
+      result: "hit_discarded",
+      failureReason: `expected file recovered but discarded: ${hit?.path ?? "?"} — ${hit?.reason ?? "?"}`,
+    };
+  }
+  return {
+    result: "missing",
+    failureReason: `expected file not surfaced (candidate_count=${summary.candidateCount ?? "?"})`,
   };
 }
 
@@ -419,52 +447,59 @@ export function evaluateInstance(input: EvaluateInstanceInput): RetrievalEvalRow
 
 export interface RetrievalEvalAggregate {
   readonly instances_total: number;
-  /** Rows where retrieval actually ran — the denominator for every rate below. */
   readonly instances_evaluated: number;
-  readonly instances_no_workspace: number;
-  readonly instances_error: number;
+  readonly workspace_error_count: number;
+  readonly no_context_count: number;
+
   readonly top_1_file_accuracy: number;
   readonly top_3_file_recall: number;
   readonly expected_file_as_pivot_rate: number;
   readonly expected_file_as_support_rate: number;
   readonly expected_file_missing_rate: number;
-  readonly contains_expected_symbol_rate: number;
-  readonly mean_capsule_chars: number;
-  readonly skip_count: number;
-  readonly inject_count: number;
-  readonly low_confidence_count: number;
+  readonly expected_file_discarded_rate: number;
+
+  readonly expected_symbol_hit_rate: number;
+  readonly expected_symbol_as_pivot_rate: number;
+
+  readonly mean_capsule_tokens: number;
+  readonly mean_pivot_count: number;
+  readonly mean_support_count: number;
 }
 
 export function aggregate(rows: readonly RetrievalEvalRow[]): RetrievalEvalAggregate {
-  const evaluated = rows.filter((row) => row.status === "evaluated");
+  const evaluated = rows.filter((row) => row.result !== "workspace_error" && row.result !== "fixture_error");
   const n = evaluated.length;
-  const rate = (count: number): number => (n === 0 ? 0 : count / n);
-  const charsValues = evaluated.map((row) => row.capsule_chars).filter((value): value is number => value !== null);
+  const rate = (count: number): number => (n === 0 ? 0 : round(count / n));
+  const mean = (values: readonly number[]): number =>
+    values.length === 0 ? 0 : round(values.reduce((a, b) => a + b, 0) / values.length);
 
   return {
     instances_total: rows.length,
     instances_evaluated: n,
-    instances_no_workspace: rows.filter((row) => row.status === "no_workspace").length,
-    instances_error: rows.filter((row) => row.status === "error").length,
+    workspace_error_count: rows.filter((row) => row.result === "workspace_error").length,
+    no_context_count: rows.filter((row) => row.result === "skipped_no_context").length,
+
     top_1_file_accuracy: rate(evaluated.filter((row) => row.contains_expected_file_top1).length),
     top_3_file_recall: rate(evaluated.filter((row) => row.contains_expected_file_top3).length),
     expected_file_as_pivot_rate: rate(evaluated.filter((row) => row.expected_file_role === "pivot").length),
     expected_file_as_support_rate: rate(evaluated.filter((row) => row.expected_file_role === "support").length),
     expected_file_missing_rate: rate(evaluated.filter((row) => row.expected_file_role === "missing").length),
-    contains_expected_symbol_rate: rate(evaluated.filter((row) => row.contains_expected_symbol).length),
-    mean_capsule_chars: charsValues.length === 0 ? 0 : charsValues.reduce((a, b) => a + b, 0) / charsValues.length,
-    skip_count: evaluated.filter((row) => row.context_policy_action === "no_context").length,
-    inject_count: evaluated.filter((row) => row.context_policy_action === "inject").length,
-    low_confidence_count: evaluated.filter((row) => row.confidence === "low").length,
+    expected_file_discarded_rate: rate(evaluated.filter((row) => row.expected_file_role === "discarded").length),
+
+    expected_symbol_hit_rate: rate(evaluated.filter((row) => row.contains_expected_symbol_anywhere).length),
+    expected_symbol_as_pivot_rate: rate(evaluated.filter((row) => row.expected_symbol_role === "pivot").length),
+
+    mean_capsule_tokens: mean(evaluated.map((row) => row.estimated_tokens ?? 0)),
+    mean_pivot_count: mean(evaluated.map((row) => row.pivot_count)),
+    mean_support_count: mean(evaluated.map((row) => row.support_count)),
   };
 }
 
 export interface RetrievalEvalArtifact {
   readonly generatedFrom: {
     readonly fixture: string;
-    readonly sweBenchData: string | null;
     readonly resultsDir: string;
-    readonly vtraceCommand: string;
+    readonly builder: string;
   };
   readonly rows: readonly RetrievalEvalRow[];
   readonly aggregate: RetrievalEvalAggregate;
@@ -476,127 +511,124 @@ export interface RetrievalEvalArtifact {
 
 const CSV_COLUMNS: readonly (keyof RetrievalEvalRow)[] = [
   "instance_id",
-  "repo",
-  "status",
-  "recommended_mode",
+  "intent",
   "actual_mode",
-  "context_policy_action",
-  "pivot_count",
-  "support_count",
-  "candidate_count_before_roles",
+  "budget_tokens",
+  "estimated_tokens",
+  "used_percent",
   "top_1_pivot_file",
-  "top_3_files",
-  "expected_file_rank",
+  "top_1_pivot_symbol",
+  "expected_file_best_rank",
   "expected_file_role",
+  "expected_symbol_best_rank",
+  "expected_symbol_role",
   "contains_expected_file_top1",
   "contains_expected_file_top3",
-  "contains_expected_symbol",
-  "confidence",
-  "capsule_chars",
-  "expected_files",
-  "expected_symbols",
-  "discard_reasons",
-  "status_detail",
-  "workspace",
+  "contains_expected_file_anywhere",
+  "contains_expected_symbol_anywhere",
+  "pivot_count",
+  "support_count",
+  "discarded_count",
+  "result",
+  "failure_reason",
 ];
 
 export function renderCsv(rows: readonly RetrievalEvalRow[]): string {
   const header = CSV_COLUMNS.join(",");
-  const lines = rows.map((row) =>
-    CSV_COLUMNS.map((column) => csvEscape(formatCsvCell(row[column]))).join(","),
-  );
+  const lines = rows.map((row) => CSV_COLUMNS.map((col) => csvCell(row[col])).join(","));
   return [header, ...lines].join("\n") + "\n";
 }
 
-function formatCsvCell(value: RetrievalEvalRow[keyof RetrievalEvalRow]): string {
-  if (Array.isArray(value)) return value.join(" ; ");
+function csvCell(value: RetrievalEvalRow[keyof RetrievalEvalRow]): string {
   if (value === null || value === undefined) return "";
-  return String(value);
+  if (Array.isArray(value)) return csvEscape(value.join(" | "));
+  return csvEscape(String(value));
 }
 
 export function renderMarkdown(artifact: RetrievalEvalArtifact): string {
-  const { rows, aggregate: agg } = artifact;
+  const a = artifact.aggregate;
   const lines: string[] = [];
-  lines.push("# Stage 5R — deterministic retrieval-quality evaluation", "");
+  lines.push("# Stage 5R — Capsule v2 Retrieval-Quality Evaluation", "");
+
+  lines.push("## Scope", "");
   lines.push(
-    "Measures whether vtrace surfaces the real edit target for each instance — as a pivot, a support",
-    "item, or not at all. No Claude, no Docker, no vexp agent run; no token/cost signal is used here.",
+    "Deterministic, offline evaluation of Capsule v2 retrieval quality on a fixed",
+    "fixture of Django SWE-bench instances with known gold-patch edit targets.",
+    "No Claude, no Docker, no vexp agent execution, no API calls.",
     "",
   );
-  lines.push("## How this was generated", "");
-  lines.push(`- fixture: \`${artifact.generatedFrom.fixture}\``);
-  lines.push(`- swe-bench data: \`${artifact.generatedFrom.sweBenchData ?? "(fixture-inlined)"}\``);
-  lines.push(`- workspaces: \`${artifact.generatedFrom.resultsDir}/workspaces\``);
-  lines.push(`- vtrace command: \`${artifact.generatedFrom.vtraceCommand}\``);
+
+  lines.push("## Methodology", "");
+  lines.push(
+    "For each instance the indexed workspace is opened and Capsule v2 is built from",
+    "`(task, intent, budget)` ALONE via `buildCapsuleV2`. The resulting pivots /",
+    "support / discarded are compared against the fixture's `expected_files` and",
+    "`expected_symbols` (evaluation labels from known patches). File rank is the",
+    "1-based position in the de-duplicated pivots-then-support file ranking.",
+    "",
+    "- **pivot** = likely edit site · **support** = useful context ·",
+    "**discard** = test/generic/over-budget · **missing** = not surfaced.",
+    "",
+  );
+
+  lines.push("## Aggregate metrics", "");
+  lines.push("| metric | value |", "| --- | --- |");
+  lines.push(`| instances_total | ${a.instances_total} |`);
+  lines.push(`| instances_evaluated | ${a.instances_evaluated} |`);
+  lines.push(`| workspace_error_count | ${a.workspace_error_count} |`);
+  lines.push(`| no_context_count | ${a.no_context_count} |`);
+  lines.push(`| top_1_file_accuracy | ${pct(a.top_1_file_accuracy)} |`);
+  lines.push(`| top_3_file_recall | ${pct(a.top_3_file_recall)} |`);
+  lines.push(`| expected_file_as_pivot_rate | ${pct(a.expected_file_as_pivot_rate)} |`);
+  lines.push(`| expected_file_as_support_rate | ${pct(a.expected_file_as_support_rate)} |`);
+  lines.push(`| expected_file_discarded_rate | ${pct(a.expected_file_discarded_rate)} |`);
+  lines.push(`| expected_file_missing_rate | ${pct(a.expected_file_missing_rate)} |`);
+  lines.push(`| expected_symbol_hit_rate | ${pct(a.expected_symbol_hit_rate)} |`);
+  lines.push(`| expected_symbol_as_pivot_rate | ${pct(a.expected_symbol_as_pivot_rate)} |`);
+  lines.push(`| mean_capsule_tokens | ${a.mean_capsule_tokens.toFixed(1)} |`);
+  lines.push(`| mean_pivot_count | ${a.mean_pivot_count.toFixed(2)} |`);
+  lines.push(`| mean_support_count | ${a.mean_support_count.toFixed(2)} |`);
   lines.push("");
 
-  lines.push("## Aggregate", "");
+  lines.push("## Per-instance results", "");
   lines.push(
-    `- instances: ${agg.instances_total} total — ${agg.instances_evaluated} evaluated, ` +
-      `${agg.instances_no_workspace} no-workspace, ${agg.instances_error} error`,
+    "| instance | expected file | top pivot | expected role | top-1? | top-3? | result |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
   );
-  lines.push(`- top-1 file accuracy: ${pct(agg.top_1_file_accuracy)} (expected file is the lead ranked file)`);
-  lines.push(`- top-3 file recall: ${pct(agg.top_3_file_recall)}`);
-  lines.push(
-    `- expected-file role: pivot ${pct(agg.expected_file_as_pivot_rate)}, ` +
-      `support ${pct(agg.expected_file_as_support_rate)}, missing ${pct(agg.expected_file_missing_rate)}`,
-  );
-  lines.push(`- contains expected symbol: ${pct(agg.contains_expected_symbol_rate)}`);
-  lines.push(`- mean capsule chars: ${Math.round(agg.mean_capsule_chars)}`);
-  lines.push(
-    `- gate: inject ${agg.inject_count}, no_context ${agg.skip_count}; low-confidence ${agg.low_confidence_count}`,
-  );
-  lines.push("");
-
-  lines.push("## Per-instance", "");
-  lines.push(
-    "| instance | status | rec→act mode | policy | conf | top-1 pivot | exp rank | role | top1 | top3 | sym |",
-  );
-  lines.push("|---|---|---|---|---|---|---|---|---|---|---|");
-  for (const row of rows) {
+  for (const row of artifact.rows) {
+    const topPivot =
+      row.top_1_pivot_file === null
+        ? "—"
+        : `${row.top_1_pivot_file}::${row.top_1_pivot_symbol ?? "?"}`;
     lines.push(
-      `| ${row.instance_id} | ${row.status} | ${row.recommended_mode ?? "-"}→${row.actual_mode ?? "-"} ` +
-        `| ${row.context_policy_action ?? "-"} | ${row.confidence ?? "-"} | ${row.top_1_pivot_file ?? "—"} ` +
-        `| ${row.expected_file_rank ?? "—"} | ${row.expected_file_role} | ${mark(row.contains_expected_file_top1)} ` +
-        `| ${mark(row.contains_expected_file_top3)} | ${mark(row.contains_expected_symbol)} |`,
+      `| ${row.instance_id} | ${row.expected_files[0] ?? "—"} | ${topPivot} | ${row.expected_file_role} | `
+      + `${mark(row.contains_expected_file_top1)} | ${mark(row.contains_expected_file_top3)} | ${row.result} |`,
     );
   }
   lines.push("");
 
-  lines.push("## Why each instance succeeded or failed", "");
-  for (const row of rows) {
-    lines.push(`### ${row.instance_id}`, "");
-    lines.push(`- expected file(s): ${row.expected_files.join(", ")}`);
-    if (row.status !== "evaluated") {
-      lines.push(`- NOT EVALUATED (${row.status}): ${row.status_detail ?? "no detail"}`, "");
-      continue;
-    }
-    lines.push(`- top-1 pivot: ${row.top_1_pivot_file ?? "none recovered"}`);
-    lines.push(`- top-3 files: ${row.top_3_files.length > 0 ? row.top_3_files.join(", ") : "none"}`);
-    if (row.expected_file_role === "missing") {
-      const why =
-        row.candidate_count_before_roles === 0
-          ? " — retrieval returned 0 candidates (a routing miss, NOT an over-strict gate)"
-          : row.discard_reasons.some((reason) => reason.startsWith("EXPECTED FILE DISCARDED"))
-            ? " — it was recovered then discarded (an over-strict gate)"
-            : row.candidate_count_before_roles !== null
-              ? ` — ${row.candidate_count_before_roles} candidates retrieved but none matched the expected file`
-              : "";
-      lines.push(`- VERDICT: expected file MISSING from the capsule${why}.`);
-    } else {
-      lines.push(
-        `- VERDICT: expected file present as **${row.expected_file_role}** at rank ${row.expected_file_rank}.`,
-      );
-    }
-    if (row.context_policy_action === "no_context") {
-      lines.push("- gate: no_context — vtrace would inject nothing for this task.");
-    }
-    if (row.discard_reasons.length > 0) {
-      lines.push("- discarded candidates:");
-      for (const reason of row.discard_reasons.slice(0, 5)) lines.push(`  - ${reason}`);
+  const misses = artifact.rows.filter((row) => !row.result.startsWith("hit_"));
+  lines.push("## Misses / failures", "");
+  if (misses.length === 0) {
+    lines.push("None — every evaluated instance surfaced its expected edit target.", "");
+  } else {
+    for (const row of misses) {
+      lines.push(`- **${row.instance_id}** (${row.result}): ${row.failure_reason ?? "—"}`);
     }
     lines.push("");
   }
+
+  lines.push("## Notes", "");
+  lines.push(
+    "- `expected_files` / `expected_symbols` are EVALUATION LABELS only. They are",
+    "  read from the fixture to score the capsule and are NEVER passed into Capsule",
+    "  v2 retrieval — production retrieval receives only `(task, intent, budget)`.",
+    "- No instance IDs or expected paths are hardcoded in production Capsule v2 logic.",
+    "- This stage measures retrieval quality only; it runs no Claude, Docker, or",
+    "  vexp agent execution and makes no API calls.",
+    "",
+  );
+
   return lines.join("\n");
 }
 
@@ -605,74 +637,139 @@ function pct(value: number): string {
 }
 
 function mark(value: boolean): string {
-  return value ? "✅" : "❌";
+  return value ? "yes" : "no";
 }
 
 // ---------------------------------------------------------------------------
-// Workspace resolution + capsule invocation (impure)
+// Expected-label extraction helper (best-effort, for building fixtures)
+// ---------------------------------------------------------------------------
+
+export interface ExtractedLabels {
+  readonly instance_id: string;
+  readonly changed_files: string[];
+  readonly changed_symbols_guess: string[];
+}
+
+// Extract changed files (and a best-effort symbol guess) from the `modelPatch`
+// fields in evaluated swebench JSONL artifacts. For building/auditing fixtures
+// only — never used by production retrieval.
+export function extractExpectedLabelsFromJsonl(content: string): ExtractedLabels[] {
+  const byInstance = new Map<string, { files: Set<string>; symbols: Set<string> }>();
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (trimmed.length === 0) continue;
+    let record: unknown;
+    try {
+      record = JSON.parse(trimmed);
+    } catch {
+      continue;
+    }
+    if (!isRecord(record) || !isString(record.instanceId)) continue;
+    const patch = isString(record.modelPatch) ? record.modelPatch : "";
+    if (patch.length === 0) continue;
+    const bucket = byInstance.get(record.instanceId) ?? { files: new Set<string>(), symbols: new Set<string>() };
+    for (const { file, symbols } of extractChangedFromDiff(patch)) {
+      bucket.files.add(file);
+      for (const sym of symbols) bucket.symbols.add(sym);
+    }
+    byInstance.set(record.instanceId, bucket);
+  }
+  return [...byInstance.entries()].map(([instance_id, { files, symbols }]) => ({
+    instance_id,
+    changed_files: [...files].sort(),
+    changed_symbols_guess: [...symbols].sort(),
+  }));
+}
+
+// Parse a unified diff into changed files and a best-effort set of changed
+// def/class names (the symbol "guess" — diff hunks name the enclosing or edited
+// def/class often enough to seed a fixture).
+export function extractChangedFromDiff(patch: string): Array<{ file: string; symbols: string[] }> {
+  const out: Array<{ file: string; symbols: string[] }> = [];
+  let current: { file: string; symbols: Set<string> } | null = null;
+  const pushCurrent = (): void => {
+    if (current) out.push({ file: current.file, symbols: [...current.symbols].sort() });
+  };
+  for (const line of patch.split(/\r?\n/)) {
+    const fileMatch = /^\+\+\+ b\/(.+)$/.exec(line);
+    if (fileMatch) {
+      pushCurrent();
+      current = { file: normalizeFilePath(fileMatch[1]!), symbols: new Set<string>() };
+      continue;
+    }
+    if (current === null) continue;
+    // `@@ ... @@ def foo(...)` hunk headers name the enclosing symbol.
+    const hunk = /@@.*@@\s*(?:async\s+)?(?:def|class)\s+([A-Za-z_]\w*)/.exec(line);
+    if (hunk) current.symbols.add(hunk[1]!);
+    // Added/removed def/class lines name an edited symbol.
+    const edited = /^[+-]\s*(?:async\s+)?(?:def|class)\s+([A-Za-z_]\w*)/.exec(line);
+    if (edited) current.symbols.add(edited[1]!);
+  }
+  pushCurrent();
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Live evaluation (opens the indexed workspace, builds the capsule)
 // ---------------------------------------------------------------------------
 
 const INDEX_RELPATH = path.join(".vtrace", "index.sqlite");
 
-// Find an already-indexed checkout for an instance. The fixture may pin a
-// workspace; otherwise we search results/workspaces for any directory named
-// <instance_id> (directly or one run-label deep) that carries a vtrace index.
-// Returns null when none is indexed — recorded honestly as no_workspace, never
-// fabricated.
-export async function resolveIndexedWorkspace(
-  resultsDir: string,
-  instanceId: string,
-  override?: string,
-): Promise<string | null> {
-  if (override !== undefined) {
-    return (await pathExists(path.join(override, INDEX_RELPATH))) ? override : null;
-  }
-  const workspacesDir = path.join(resultsDir, "workspaces");
-  const candidates: string[] = [path.join(workspacesDir, instanceId)];
-  for (const label of await listDirs(workspacesDir)) {
-    candidates.push(path.join(workspacesDir, label, instanceId));
-  }
-  const indexed: string[] = [];
-  for (const candidate of candidates) {
-    if (await pathExists(path.join(candidate, INDEX_RELPATH))) indexed.push(candidate);
-  }
-  indexed.sort();
-  return indexed[0] ?? null;
+export interface RunRetrievalEvalDeps {
+  /** Build a capsule summary for an entry, or throw a RowError-shaped error. */
+  readonly evaluateEntry?: (entry: RetrievalEvalFixtureEntry) => Promise<CapsuleSummary>;
 }
 
-export function buildCapsuleQueryCommand(
-  vtraceCommand: string,
-  workspace: string,
-  query: string,
-  mode: CapsuleModeT,
-): { command: string; args: string[] } {
-  const [command, ...base] = vtraceCommand.split(/\s+/).filter((part) => part.length > 0);
-  if (command === undefined) throw new Error("vtrace command is empty.");
-  return { command, args: [...base, "capsule", workspace, query, "--mode", mode, "--json"] };
+// Default live evaluator: resolve the workspace + index, open it, and run Capsule
+// v2 from (task, intent, budget) alone — never the expected labels.
+export async function evaluateEntryLive(entry: RetrievalEvalFixtureEntry): Promise<CapsuleSummary> {
+  const workspace = path.resolve(entry.workspace);
+  if (!(await pathExists(workspace))) {
+    throw rowError("workspace_error", `workspace not found: ${entry.workspace}`);
+  }
+  const dbPath = path.join(workspace, INDEX_RELPATH);
+  if (!(await pathExists(dbPath))) {
+    throw rowError("workspace_error", `workspace not indexed (no ${INDEX_RELPATH}): ${entry.workspace}`);
+  }
+  const intent = parseCapsuleIntent(entry.intent) ?? CapsuleIntent.Auto;
+  const db = openIndexerDatabase(dbPath);
+  try {
+    const result = buildCapsuleV2({
+      db,
+      repoRoot: workspace,
+      task: entry.task,
+      intent,
+      maxTokens: entry.budget,
+    });
+    return summarizeCapsule(result);
+  } finally {
+    db.close();
+  }
 }
 
-export interface RetrievalRunDeps {
-  readonly runProcess?: ProcessRunner;
-}
-
-// Run vtrace's deterministic capsule pipeline against one indexed workspace and
-// return the classification + parsed diagnostics. No Claude/Docker/agent run.
-export async function runCapsuleForInstance(
-  vtraceCommand: string,
-  workspace: string,
-  instance: SweBenchInstance,
-  deps: RetrievalRunDeps = {},
-): Promise<{ classification: CapsuleClassification; diagnostics: ParsedCapsuleDiagnostics | null; queryCommand: string }> {
-  const runProc = deps.runProcess ?? defaultRunProcess;
-  const query = buildInstanceQuery(instance);
-  const mode = capsuleModeForInstance(instance);
-  const { command, args } = buildCapsuleQueryCommand(vtraceCommand, workspace, query, mode);
-  const result = await runProc(command, args);
-  const stdout = result.stdout.trim().length > 0 ? result.stdout : result.stderr;
+export async function runRetrievalEval(
+  config: RetrievalEvalConfig,
+  deps: RunRetrievalEvalDeps = {},
+): Promise<RetrievalEvalArtifact> {
+  const entries = await loadRetrievalFixture(config.fixture);
+  const evaluate = deps.evaluateEntry ?? evaluateEntryLive;
+  const rows: RetrievalEvalRow[] = [];
+  for (const entry of entries) {
+    try {
+      const summary = await evaluate(entry);
+      rows.push(evaluateInstance(entry, summary));
+    } catch (error) {
+      rows.push(evaluateInstance(entry, null, toRowError(error)));
+    }
+  }
   return {
-    classification: classifyCapsuleOutput(stdout),
-    diagnostics: parseCapsuleDiagnostics(stdout),
-    queryCommand: `${command} ${args.slice(0, -1).join(" ")} <query> --mode ${mode} --json`,
+    generatedFrom: {
+      fixture: config.fixture,
+      resultsDir: config.out,
+      builder: "buildCapsuleV2 (in-process, --json equivalent)",
+    },
+    rows,
+    aggregate: aggregate(rows),
   };
 }
 
@@ -683,260 +780,94 @@ export async function runCapsuleForInstance(
 export interface RetrievalEvalConfig {
   readonly fixture: string;
   readonly out: string;
-  readonly resultsDir: string;
-  readonly sweBenchData: string | null;
-  readonly vtraceCommand: string;
 }
 
 const DEFAULT_OUT = path.join("benchmarks", "stage5_vexp_swe_bench_smoke", "results");
-const DEFAULT_FIXTURE = path.join(
-  "benchmarks",
-  "stage5_vexp_swe_bench_smoke",
-  "retrieval_eval.django.json",
-);
+const DEFAULT_FIXTURE = path.join("benchmarks", "stage5_vexp_swe_bench_smoke", "retrieval_eval.django.json");
 
 export const DEFAULT_RETRIEVAL_EVAL_CONFIG: RetrievalEvalConfig = {
   fixture: DEFAULT_FIXTURE,
   out: DEFAULT_OUT,
-  resultsDir: DEFAULT_OUT,
-  sweBenchData: null,
-  vtraceCommand: "bun src/cli/index.ts",
 };
 
 export function parseArgs(argv: readonly string[]): RetrievalEvalConfig {
-  let config = { ...DEFAULT_RETRIEVAL_EVAL_CONFIG };
-  for (let index = 0; index < argv.length; index += 1) {
-    const arg = argv[index];
-    switch (arg) {
-      case "--fixture":
-      case "--retrieval-fixture":
-        config = { ...config, fixture: requireValue(argv, ++index, arg) };
-        break;
-      case "--out":
-        config = { ...config, out: requireValue(argv, ++index, arg) };
-        break;
-      case "--results-dir":
-        config = { ...config, resultsDir: requireValue(argv, ++index, arg) };
-        break;
-      case "--swe-bench-data":
-        config = { ...config, sweBenchData: requireValue(argv, ++index, arg) };
-        break;
-      case "--vtrace-command":
-        config = { ...config, vtraceCommand: requireValue(argv, ++index, arg) };
-        break;
-      case "--mode":
-        // Accepted for parity with the live runner; this script is retrieval-eval only.
-        requireValue(argv, ++index, arg);
-        break;
-      default:
-        throw new Error(`Unknown argument: ${arg ?? "(empty)"}`);
+  let fixture = DEFAULT_FIXTURE;
+  let out = DEFAULT_OUT;
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i]!;
+    if (arg === "--retrieval-fixture" || arg === "--fixture") {
+      fixture = requireValue(argv, (i += 1), arg);
+    } else if (arg === "--out") {
+      out = requireValue(argv, (i += 1), arg);
+    } else if (arg === "--mode") {
+      // Accept "--mode retrieval-eval" for parity with the live runner invocation.
+      const value = requireValue(argv, (i += 1), arg);
+      if (value !== "retrieval-eval") {
+        throw new Error(`Unsupported --mode "${value}" for the retrieval eval (expected "retrieval-eval").`);
+      }
+    } else {
+      throw new Error(`Unknown argument: ${arg}`);
     }
   }
-  return config;
+  return { fixture, out };
 }
 
 function requireValue(argv: readonly string[], index: number, flag: string): string {
   const value = argv[index];
-  if (value === undefined) throw new Error(`Missing value for ${flag}.`);
+  if (value === undefined) throw new Error(`Flag ${flag} requires a value.`);
   return value;
-}
-
-// Resolve a SweBenchInstance for the entry: prefer fixture-inlined fields (so the
-// fixture can run standalone), else look it up in the SWE-bench dataset by id.
-async function resolveInstance(
-  entry: RetrievalEvalFixtureEntry,
-  records: readonly Record<string, unknown>[] | null,
-): Promise<SweBenchInstance> {
-  if (entry.problem_statement !== undefined) {
-    return toSweBenchInstance({
-      repo: entry.repo,
-      instance_id: entry.instance_id,
-      base_commit: "fixture",
-      problem_statement: entry.problem_statement,
-      hints_text: entry.hints_text ?? null,
-      fail_to_pass: entry.fail_to_pass ?? [],
-    });
-  }
-  if (records === null) {
-    throw new Error(
-      `Instance ${entry.instance_id} has no inlined problem_statement; pass --swe-bench-data to load it.`,
-    );
-  }
-  const record = findSweBenchRecord(records, entry.instance_id);
-  if (record === null) throw new Error(`Instance ${entry.instance_id} not found in the SWE-bench dataset.`);
-  return toSweBenchInstance(record);
-}
-
-export async function runRetrievalEval(
-  config: RetrievalEvalConfig,
-  deps: RetrievalRunDeps = {},
-): Promise<RetrievalEvalArtifact> {
-  const fixture = await loadRetrievalFixture(config.fixture);
-  const records = config.sweBenchData === null ? null : await loadSweBenchData(config.sweBenchData);
-
-  const rows: RetrievalEvalRow[] = [];
-  for (const entry of fixture) {
-    let instance: SweBenchInstance;
-    try {
-      instance = await resolveInstance(entry, records);
-    } catch (error) {
-      rows.push(
-        evaluateInstance({
-          entry,
-          recommendedMode: null,
-          classification: null,
-          diagnostics: null,
-          policy: null,
-          status: "error",
-          statusDetail: error instanceof Error ? error.message : String(error),
-          workspace: null,
-        }),
-      );
-      continue;
-    }
-
-    const recommendedMode = recommendedCapsuleModeFor(instance);
-    const workspace = await resolveIndexedWorkspace(config.resultsDir, entry.instance_id, entry.workspace);
-    if (workspace === null) {
-      rows.push(
-        evaluateInstance({
-          entry,
-          recommendedMode,
-          classification: null,
-          diagnostics: null,
-          policy: null,
-          status: "no_workspace",
-          statusDetail: `No indexed workspace found under ${config.resultsDir}/workspaces.`,
-          workspace: null,
-        }),
-      );
-      continue;
-    }
-
-    try {
-      const { classification, diagnostics } = await runCapsuleForInstance(
-        config.vtraceCommand,
-        workspace,
-        instance,
-        deps,
-      );
-      const policy = decideContextPolicy(deriveContextPolicySignals(instance), {
-        capsuleAction: classification.policyAction,
-        hasContext: classification.contextInjected,
-        pivotCount: classification.pivotCount,
-        supportCount: classification.supportCount,
-        actualMode: classification.actualCapsuleMode,
-      });
-      const status: InstanceStatus = classification.policyAction === "error" ? "error" : "evaluated";
-      rows.push(
-        evaluateInstance({
-          entry,
-          recommendedMode,
-          classification,
-          diagnostics,
-          policy,
-          status,
-          statusDetail: classification.error,
-          workspace,
-        }),
-      );
-    } catch (error) {
-      rows.push(
-        evaluateInstance({
-          entry,
-          recommendedMode,
-          classification: null,
-          diagnostics: null,
-          policy: null,
-          status: "error",
-          statusDetail: error instanceof Error ? error.message : String(error),
-          workspace,
-        }),
-      );
-    }
-  }
-
-  return {
-    generatedFrom: {
-      fixture: config.fixture,
-      sweBenchData: config.sweBenchData,
-      resultsDir: config.resultsDir,
-      vtraceCommand: config.vtraceCommand,
-    },
-    rows,
-    aggregate: aggregate(rows),
-  };
 }
 
 export async function writeReports(config: RetrievalEvalConfig, artifact: RetrievalEvalArtifact): Promise<void> {
   await mkdir(config.out, { recursive: true });
-  await writeFile(path.join(config.out, "stage5_retrieval_eval.csv"), renderCsv(artifact.rows));
   await writeFile(
     path.join(config.out, "stage5_retrieval_eval.json"),
-    `${JSON.stringify(artifact, null, 2)}\n`,
+    JSON.stringify(artifact, null, 2) + "\n",
+    "utf8",
   );
-  await writeFile(path.join(config.out, "stage5_retrieval_eval.md"), renderMarkdown(artifact));
+  await writeFile(path.join(config.out, "stage5_retrieval_eval.csv"), renderCsv(artifact.rows), "utf8");
+  await writeFile(path.join(config.out, "stage5_retrieval_eval.md"), renderMarkdown(artifact), "utf8");
 }
 
 async function main(config: RetrievalEvalConfig): Promise<void> {
   const artifact = await runRetrievalEval(config);
   await writeReports(config, artifact);
-  const agg = artifact.aggregate;
+  const a = artifact.aggregate;
   process.stdout.write(
-    `Stage 5R: ${agg.instances_evaluated}/${agg.instances_total} evaluated — ` +
-      `top-1 ${pct(agg.top_1_file_accuracy)}, top-3 ${pct(agg.top_3_file_recall)}, ` +
-      `pivot ${pct(agg.expected_file_as_pivot_rate)} / support ${pct(agg.expected_file_as_support_rate)} / ` +
-      `missing ${pct(agg.expected_file_missing_rate)}. Reports in ${config.out}\n`,
+    `Stage 5R retrieval eval: ${a.instances_evaluated}/${a.instances_total} evaluated · `
+    + `top-1 ${pct(a.top_1_file_accuracy)} · top-3 ${pct(a.top_3_file_recall)} · `
+    + `pivot ${pct(a.expected_file_as_pivot_rate)} · missing ${pct(a.expected_file_missing_rate)}\n`,
   );
+  process.stdout.write(`Reports written to ${config.out}/stage5_retrieval_eval.{json,csv,md}\n`);
 }
 
 // ---------------------------------------------------------------------------
-// Small helpers
+// Small utilities
 // ---------------------------------------------------------------------------
 
-function defaultRunProcess(
-  command: string,
-  args: readonly string[],
-  options: { readonly cwd?: string; readonly env?: Record<string, string> } = {},
-): Promise<ProcessResult> {
-  return new Promise((resolve) => {
-    const proc = spawn(command, [...args], {
-      cwd: options.cwd,
-      env: { ...process.env, ...(options.env ?? {}) },
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    const stdoutChunks: Buffer[] = [];
-    const stderrChunks: Buffer[] = [];
-    proc.stdout.on("data", (chunk: Buffer) => stdoutChunks.push(chunk));
-    proc.stderr.on("data", (chunk: Buffer) => stderrChunks.push(chunk));
-    proc.on("error", (error) =>
-      resolve({
-        exitCode: 1,
-        stdout: Buffer.concat(stdoutChunks).toString("utf8"),
-        stderr: `${Buffer.concat(stderrChunks).toString("utf8")}${error.message}`,
-      }),
-    );
-    proc.on("close", (code) =>
-      resolve({
-        exitCode: code ?? 1,
-        stdout: Buffer.concat(stdoutChunks).toString("utf8"),
-        stderr: Buffer.concat(stderrChunks).toString("utf8"),
-      }),
-    );
-  });
+function round(value: number): number {
+  return Math.round(value * 1e4) / 1e4;
+}
+
+function rowError(kind: RowError["kind"], detail: string): Error & { rowError: RowError } {
+  const error = new Error(detail) as Error & { rowError: RowError };
+  error.rowError = { kind, detail };
+  return error;
+}
+
+function toRowError(error: unknown): RowError {
+  if (error instanceof Error && "rowError" in error) {
+    return (error as Error & { rowError: RowError }).rowError;
+  }
+  return { kind: "workspace_error", detail: error instanceof Error ? error.message : String(error) };
 }
 
 async function pathExists(target: string): Promise<boolean> {
-  return (await stat(target).then(() => true).catch(() => false));
-}
-
-async function listDirs(dir: string): Promise<string[]> {
-  const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
-  return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+  return stat(target).then(() => true).catch(() => false);
 }
 
 function csvEscape(value: string): string {
-  return /[",\n\r]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
+  return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -944,18 +875,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isString(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0;
+  return typeof value === "string";
 }
 
 function isNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+// `readdir` re-export kept for optional workspace discovery by callers.
+export { readdir };
+
 if (import.meta.main) {
-  try {
-    await main(parseArgs(process.argv.slice(2)));
-  } catch (error) {
+  main(parseArgs(process.argv.slice(2))).catch((error) => {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
     process.exit(1);
-  }
+  });
 }
