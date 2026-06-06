@@ -15,7 +15,6 @@ import type { Database } from "bun:sqlite";
 import {
   assignCandidateRoles,
   CandidateRole,
-  type RoledCandidate,
 } from "../capsule/assignCandidateRoles";
 import {
   extractFullSymbolSource,
@@ -28,6 +27,12 @@ import {
   type HybridCandidate,
 } from "../retrieval/hybridRetrieval";
 import { allocateBudget } from "./budgetAllocator";
+import {
+  buildNoContextExplanations,
+  passthroughRoles,
+  refineDebugRoles,
+  type RefinedRoledCandidate,
+} from "./debugRoles";
 import { retrieveDocSections, type DocSection } from "./docRetrieval";
 import { resolveIntent, weightsForIntent } from "./intent";
 import { itemBlockText } from "./renderItem";
@@ -40,6 +45,7 @@ import {
   type CapsuleV2Discarded,
   type CapsuleV2Item,
   type CapsuleV2Result,
+  type NoContextExplanation,
   type ResolvedCapsuleIntent,
 } from "./types";
 
@@ -82,17 +88,21 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     maxResults: CANDIDATE_POOL_SIZE,
   });
 
-  // Role assignment caps pivots to the tier; extras demote to support. The bar
-  // is the same across tiers (actionable kind + strong direct evidence + no
-  // generic hub) — centrality alone never produces a pivot.
-  const roled = assignCandidateRoles(candidates, { maxPivots: allocation.maxPivots });
-  const pivotCandidates = roled.filter((r) => r.role === CandidateRole.Pivot);
-  const supportCandidates = roled.filter((r) => r.role === CandidateRole.Support);
-  const roleDiscards = roled.filter((r) => r.role === CandidateRole.Discard);
+  // Role assignment. The base gate scores each candidate in isolation; for debug
+  // intent we then refine roles with call-graph structure (caller vs helper,
+  // local vs generic infrastructure) before capping pivots to the tier. Other
+  // intents keep the base gate's own cap. Centrality never produces a pivot.
+  const refined = intent === CapsuleIntent.Debug
+    ? refineDebugRoles(input.db, assignCandidateRoles(candidates), shaped, allocation.maxPivots)
+    : passthroughRoles(assignCandidateRoles(candidates, { maxPivots: allocation.maxPivots }));
+
+  const pivotCandidates = refined.filter((r) => r.role === CandidateRole.Pivot);
+  const supportCandidates = refined.filter((r) => r.role === CandidateRole.Support);
+  const roleDiscards = refined.filter((r) => r.role === CandidateRole.Discard);
 
   // No high-confidence edit target: emit an intentionally empty capsule rather
-  // than a vague support-only pile. The discards still report what was generated
-  // and why nothing cleared the pivot bar.
+  // than a vague support-only pile. The discards still report what was generated,
+  // and the no-context explanations say precisely why nothing cleared the gate.
   if (pivotCandidates.length === 0) {
     return noContextResult({
       intent,
@@ -102,10 +112,11 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       supportCount: supportCandidates.length,
       discarded: [
         ...supportCandidates.map((r) => toDiscarded(r, "support-only: no actionable edit target")),
-        ...roleDiscards.map((r) => toDiscarded(r, r.why)),
+        ...roleDiscards.map((r) => toDiscarded(r, r.roleReason)),
       ],
       weights: weightsRecord,
       shaped,
+      explanations: buildNoContextExplanations(refined, shaped),
     });
   }
 
@@ -129,7 +140,18 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     pivots.push(item);
   });
 
-  for (const entry of supportCandidates) {
+  // Order support so the most edit-relevant context wins scarce support slots:
+  // cap-demoted implementation helpers first, then ordinary local support, and
+  // generic infrastructure last — a generic parser class must never outrank a
+  // local helper (Problem B). Within a tier, higher final score wins. For
+  // non-debug intents every signal is false, so this reduces to final order.
+  const orderedSupport = [...supportCandidates].sort(
+    (left, right) =>
+      supportTier(left) - supportTier(right)
+      || right.candidate.scores.final - left.candidate.scores.final,
+  );
+
+  for (const entry of orderedSupport) {
     if (support.length >= allocation.maxSupport) {
       discarded.push(toDiscarded(entry, `beyond ${allocation.tier} support budget (max ${allocation.maxSupport})`));
       continue;
@@ -159,7 +181,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   }
 
   for (const entry of roleDiscards) {
-    discarded.push(toDiscarded(entry, entry.why));
+    discarded.push(toDiscarded(entry, entry.roleReason));
   }
 
   return {
@@ -188,6 +210,19 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   };
 }
 
+// Support ordering tier: implementation helpers (edit sites that only missed the
+// pivot budget) rank above ordinary support, which ranks above generic
+// infrastructure. Lower number = higher priority.
+function supportTier(entry: RefinedRoledCandidate): number {
+  if (entry.signals.is_implementation_helper) {
+    return 0;
+  }
+  if (entry.signals.is_generic_infrastructure) {
+    return 2;
+  }
+  return 1;
+}
+
 // --- pivot/support rendering --------------------------------------------------
 
 // Render a pivot, laddering content full -> signature -> skeleton until it fits
@@ -196,7 +231,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
 function renderPivot(
   db: Database,
   repoRoot: string,
-  entry: RoledCandidate,
+  entry: RefinedRoledCandidate,
   remainingTokens: number,
   forced: boolean,
 ): CapsuleV2Item | undefined {
@@ -214,7 +249,7 @@ function renderPivot(
   }
   ladder.push({ mode: CapsuleV2ContentMode.Skeleton });
 
-  return firstFitting(candidate, "pivot", evidence, ladder, remainingTokens, forced);
+  return firstFitting(entry, "pivot", evidence, ladder, remainingTokens, forced);
 }
 
 // Render a support item as a signature (or a skeleton when none is indexed).
@@ -223,7 +258,7 @@ function renderPivot(
 function renderSupport(
   db: Database,
   repoRoot: string,
-  entry: RoledCandidate,
+  entry: RefinedRoledCandidate,
   remainingTokens: number,
 ): CapsuleV2Item | undefined {
   const candidate = entry.candidate;
@@ -236,14 +271,14 @@ function renderSupport(
   }
   ladder.push({ mode: CapsuleV2ContentMode.Skeleton });
 
-  return firstFitting(candidate, "support", evidence, ladder, remainingTokens, false);
+  return firstFitting(entry, "support", evidence, ladder, remainingTokens, false);
 }
 
 // Pick the richest ladder rung whose rendered block fits the remaining budget.
 // When `forced`, fall back to the cheapest rung even if it overflows, so a lead
 // pivot is always emitted.
 function firstFitting(
-  candidate: HybridCandidate,
+  entry: RefinedRoledCandidate,
   role: "pivot" | "support",
   evidence: string[],
   ladder: Array<{ mode: CapsuleV2ContentMode; source?: string; signature?: string }>,
@@ -252,7 +287,7 @@ function firstFitting(
 ): CapsuleV2Item | undefined {
   let cheapest: CapsuleV2Item | undefined;
   for (const rung of ladder) {
-    const item = composeItem(candidate, role, evidence, rung);
+    const item = composeItem(entry, role, evidence, rung);
     if (item.estimated_tokens <= remainingTokens) {
       return item;
     }
@@ -262,13 +297,18 @@ function firstFitting(
 }
 
 function composeItem(
-  candidate: HybridCandidate,
+  entry: RefinedRoledCandidate,
   role: "pivot" | "support",
   evidence: string[],
   rung: { mode: CapsuleV2ContentMode; source?: string; signature?: string },
 ): CapsuleV2Item {
+  const candidate = entry.candidate;
   const item: CapsuleV2Item = {
     role,
+    role_reason: entry.roleReason,
+    is_entry_point: entry.signals.is_entry_point,
+    is_implementation_helper: entry.signals.is_implementation_helper,
+    is_generic_infrastructure: entry.signals.is_generic_infrastructure,
     path: candidate.filePath,
     fq_name: candidate.fqName,
     symbol: candidate.localName,
@@ -293,6 +333,10 @@ const MARKDOWN_SECTION_KIND = "markdown_section";
 function composeDocItem(doc: DocSection): CapsuleV2Item {
   const item: CapsuleV2Item = {
     role: "support",
+    role_reason: "relevant documentation section",
+    is_entry_point: false,
+    is_implementation_helper: false,
+    is_generic_infrastructure: false,
     path: doc.filePath,
     fq_name: `${doc.filePath}#${doc.heading}`,
     symbol: doc.heading,
@@ -332,30 +376,27 @@ function loadSignature(db: Database, repoRoot: string, candidate: HybridCandidat
 
 // --- evidence shaping ---------------------------------------------------------
 
-// A pivot leads with the role "why" (the decisive reason it is an edit target),
-// then the candidate's own evidence lines, deduped and capped.
-function pivotEvidence(entry: RoledCandidate): string[] {
-  const why = stripRolePrefix(entry.why);
-  return dedupe([why, ...entry.candidate.evidence]).slice(0, MAX_PIVOT_EVIDENCE);
+// A pivot leads with the role reason (the decisive reason it is an edit target —
+// for debug intent this is the caller-vs-helper-vs-infra decision), then the
+// candidate's own evidence lines, deduped and capped.
+function pivotEvidence(entry: RefinedRoledCandidate): string[] {
+  return dedupe([entry.roleReason, ...entry.candidate.evidence]).slice(0, MAX_PIVOT_EVIDENCE);
 }
 
-function supportEvidence(entry: RoledCandidate): string[] {
-  return dedupe([stripRolePrefix(entry.why), ...entry.candidate.evidence]).slice(0, MAX_PIVOT_EVIDENCE);
-}
-
-// Drop the leading "pivot: " / "support: " label the role assignment prepends —
-// the bullet already conveys the role, so the reason line need not repeat it.
-function stripRolePrefix(why: string): string {
-  return why.replace(/^(pivot|support|discard):\s*/i, "");
+function supportEvidence(entry: RefinedRoledCandidate): string[] {
+  return dedupe([entry.roleReason, ...entry.candidate.evidence]).slice(0, MAX_PIVOT_EVIDENCE);
 }
 
 // --- helpers ------------------------------------------------------------------
 
-function toDiscarded(entry: RoledCandidate, reason: string): CapsuleV2Discarded {
+function toDiscarded(entry: RefinedRoledCandidate, reason: string): CapsuleV2Discarded {
   return {
     path: entry.candidate.filePath,
     symbol: entry.candidate.localName,
     kind: entry.candidate.kind,
+    is_entry_point: entry.signals.is_entry_point,
+    is_implementation_helper: entry.signals.is_implementation_helper,
+    is_generic_infrastructure: entry.signals.is_generic_infrastructure,
     scorecard: toScorecard(entry.candidate.scores),
     evidence: [...entry.candidate.evidence],
     discard_reason: reason,
@@ -371,6 +412,7 @@ interface NoContextInput {
   discarded: CapsuleV2Discarded[];
   weights: Record<string, number>;
   shaped: ShapedSweQuery;
+  explanations: NoContextExplanation[];
 }
 
 function noContextResult(input: NoContextInput): CapsuleV2Result {
@@ -393,6 +435,7 @@ function noContextResult(input: NoContextInput): CapsuleV2Result {
       likely_files: input.shaped.likelyFiles,
       likely_symbols: input.shaped.likelySymbols,
       failing_tests: input.shaped.failingTests,
+      ...(input.explanations.length > 0 ? { no_context_explanations: input.explanations } : {}),
     },
   };
 }

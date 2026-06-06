@@ -91,9 +91,29 @@ export enum CapsuleV2ContentMode {
   Skeleton = "skeleton",
 }
 
+/**
+ * Structural role signals computed by the debug role refinement. They explain
+ * WHY a candidate landed in its role beyond the raw scorecard: whether it is an
+ * entry-point/caller (delegates to a helper), an implementation helper (does the
+ * issue's actual work), or generic external infrastructure (support at most).
+ */
+export interface DebugRoleSignals {
+  is_entry_point: boolean;
+  is_implementation_helper: boolean;
+  is_generic_infrastructure: boolean;
+}
+
+export const NO_DEBUG_ROLE_SIGNALS: DebugRoleSignals = Object.freeze({
+  is_entry_point: false,
+  is_implementation_helper: false,
+  is_generic_infrastructure: false,
+});
+
 /** A selected pivot or support item, fully rendered and accounted for. */
-export interface CapsuleV2Item {
+export interface CapsuleV2Item extends DebugRoleSignals {
   role: "pivot" | "support";
+  /** The decisive justification for THIS role (caller vs helper vs infra). */
+  role_reason: string;
   path: string;
   fq_name: string;
   symbol: string;
@@ -110,7 +130,7 @@ export interface CapsuleV2Item {
 }
 
 /** A candidate that did not make the capsule, with the reason it was dropped. */
-export interface CapsuleV2Discarded {
+export interface CapsuleV2Discarded extends DebugRoleSignals {
   path: string;
   symbol: string;
   kind: string;
@@ -151,6 +171,20 @@ export interface CapsuleV2Diagnostics {
   likely_files: string[];
   likely_symbols: string[];
   failing_tests: string[];
+  /**
+   * Present only when `actual_mode === no_context`. For the strongest near-miss
+   * candidates, the precise reason each failed the pivot gate — so a conservative
+   * no-context decision is never opaque (was it weak parsing, a missing failing
+   * test, an over-strict gate, or a candidate generated and then discarded?).
+   */
+  no_context_explanations?: NoContextExplanation[];
+}
+
+export interface NoContextExplanation {
+  path: string;
+  symbol: string;
+  /** Why this candidate did not clear the pivot bar. */
+  why_not_pivot: string;
 }
 
 /** The complete Capsule v2 result — the value the CLI/JSON surface emits. */
