@@ -28,6 +28,7 @@ import {
   capsuleQueryTextFor,
   classifyCapsuleOutput,
   classifyCapsuleV2Output,
+  classifyPivotSource,
   classifyInfraFailure,
   classifyOutcome,
   combineRunEvidence,
@@ -808,7 +809,18 @@ function microCapsuleJson(context: string): string {
 // runner must render the injectable context from the result itself. A
 // "no_context" actual_mode models the v2 no-pivot skip.
 function capsuleV2Json(
-  opts: { actualMode?: string; pivotSymbol?: string; pivotPath?: string; pivotCount?: number; reason?: string } = {},
+  opts: {
+    actualMode?: string;
+    pivotSymbol?: string;
+    pivotPath?: string;
+    pivotCount?: number;
+    reason?: string;
+    // When set, the pivot renders its FOCUSED SOURCE BODY (content_mode "full")
+    // instead of a signature — the case the Stage 5 injection must preserve.
+    pivotSource?: string;
+    // Optional support items, always rendered signature-only (never a body).
+    support?: ReadonlyArray<{ path?: string; symbol?: string; signature?: string }>;
+  } = {},
 ): string {
   const actualMode = opts.actualMode ?? "full";
   const base = {
@@ -832,22 +844,42 @@ function capsuleV2Json(
   }
   const pivotPath = opts.pivotPath ?? "django/db/models/sql/compiler.py";
   const pivotSymbol = opts.pivotSymbol ?? "get_combinator_sql";
-  return JSON.stringify({
-    ...base,
-    actual_mode: actualMode,
-    pivots: [
-      {
+  // With a source body → render in "full" content mode (carries `source`);
+  // otherwise the legacy default of a signature-only pivot (no body).
+  const pivot = opts.pivotSource !== undefined
+    ? {
+        role: "pivot", role_reason: "sql rendering implementation", path: pivotPath,
+        fq_name: `SQLCompiler.${pivotSymbol}`, symbol: pivotSymbol, kind: "method",
+        content_mode: "full", source: opts.pivotSource,
+        signature: `def ${pivotSymbol}(self, combinator, all)`,
+        evidence: ["named in the issue", "on the failing test's call path"], scorecard: {}, estimated_tokens: 1200,
+      }
+    : {
         role: "pivot", role_reason: "sql rendering implementation", path: pivotPath,
         fq_name: `SQLCompiler.${pivotSymbol}`, symbol: pivotSymbol, kind: "method",
         content_mode: "signature", signature: `def ${pivotSymbol}(self, combinator, all)`,
         evidence: ["named in the issue", "on the failing test's call path"], scorecard: {}, estimated_tokens: 1200,
-      },
-    ],
-    support: [],
+      };
+  const support = (opts.support ?? []).map((item) => ({
+    role: "support",
+    role_reason: "query-construction API entry point",
+    path: item.path ?? "django/db/models/query.py",
+    fq_name: `QuerySet.${item.symbol ?? "values_list"}`,
+    symbol: item.symbol ?? "values_list",
+    kind: "method",
+    content_mode: "signature",
+    signature: item.signature ?? `def ${item.symbol ?? "values_list"}(self, *fields)`,
+    evidence: ["query construction entry point"], scorecard: {}, estimated_tokens: 120,
+  }));
+  return JSON.stringify({
+    ...base,
+    actual_mode: actualMode,
+    pivots: [pivot],
+    support,
     diagnostics: {
       intent_confidence: "high", intent_reason: ["failing test names a compiler symbol"],
       strategy: { role_policy: "debug_refinement" }, candidate_count: 5,
-      pivot_count: opts.pivotCount ?? 1, support_count: 0, discarded_count: 4, tier: actualMode,
+      pivot_count: opts.pivotCount ?? 1, support_count: support.length, discarded_count: 4, tier: actualMode,
       weights: {}, likely_files: [pivotPath], likely_symbols: [pivotSymbol], failing_tests: [],
     },
   });
@@ -1012,6 +1044,159 @@ test("classifyCapsuleOutput routes a Capsule v2 payload to the v2 classifier", (
   const classified = classifyCapsuleOutput(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
   assert.equal(classified.policyAction, "inject");
   assert.match(classified.context, /get_combinator_sql/);
+});
+
+// A multi-line focused body (>maxItems non-blank lines) — the exact shape the
+// per-item line truncation used to decapitate. Includes the mutation site from
+// django-11490 so the test reads as the real failure it guards.
+const PIVOT_BODY = [
+  "def get_combinator_sql(self, combinator, all):",
+  "    features = self.connection.features",
+  "    compilers = [q.get_compiler(self.using) for q in self.query.combined_queries]",
+  "    parts = []",
+  "    for compiler in compilers:",
+  "        if not compiler.query.values_select and self.query.values_select:",
+  "            compiler.query.set_values(self.query.values_select)",
+  "        part_sql, part_args = compiler.as_sql()",
+  "        parts.append(part_sql)",
+  "    return parts",
+].join("\n");
+
+test("classifyPivotSource records a full body, a missing signature-only pivot, and no pivot", () => {
+  const full = classifyPivotSource({ content_mode: "full", source: PIVOT_BODY });
+  assert.equal(full.hasSource, true);
+  assert.equal(full.mode, "full");
+  assert.equal(full.chars, PIVOT_BODY.length);
+
+  // A signature-only pivot carries no body → missing (never pretends).
+  const sig = classifyPivotSource({ content_mode: "signature", signature: "def f()" });
+  assert.equal(sig.hasSource, false);
+  assert.equal(sig.mode, "missing");
+  assert.equal(sig.chars, null);
+
+  // A non-"full" content mode that still carries a body → "focused" (forward-compat).
+  const partial = classifyPivotSource({ content_mode: "excerpt", source: "x = 1" });
+  assert.equal(partial.mode, "focused");
+  assert.equal(partial.hasSource, true);
+
+  assert.deepEqual(classifyPivotSource(undefined), { hasSource: false, chars: null, mode: "missing" });
+});
+
+test("classifyCapsuleV2Output captures the top-pivot focused-source audit", () => {
+  const withSource = classifyCapsuleV2Output(JSON.parse(capsuleV2Json({ pivotSource: PIVOT_BODY })));
+  assert.equal(withSource.capsuleTopPivotHasSource, true);
+  assert.equal(withSource.capsuleTopPivotSourceMode, "full");
+  assert.equal(withSource.capsuleTopPivotSourceChars, PIVOT_BODY.length);
+
+  // A signature-only pivot → missing, not silently pretending a body exists.
+  const noSource = classifyCapsuleV2Output(JSON.parse(capsuleV2Json()));
+  assert.equal(noSource.capsuleTopPivotHasSource, false);
+  assert.equal(noSource.capsuleTopPivotSourceMode, "missing");
+  assert.equal(noSource.capsuleTopPivotSourceChars, null);
+});
+
+test("buildVtraceContextMarkdown keeps a multi-line body when the section is preformatted", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: PIVOT_BODY,
+    error: null,
+    classification: null,
+  };
+  // Preformatted (Capsule v2): the body survives intact — no per-item line cap.
+  const pre = buildVtraceContextMarkdown([{ ...section, preformatted: true }], { maxChars: 12000, maxItems: 8 });
+  assert.ok(pre.markdown.includes("def get_combinator_sql(self, combinator, all):"));
+  assert.ok(pre.markdown.includes("compiler.query.set_values(self.query.values_select)"));
+  assert.ok(pre.markdown.includes("return parts"));
+  assert.equal(pre.truncated, false);
+
+  // Legacy (line-item truncated): the tail of the body is chopped at maxItems.
+  const post = buildVtraceContextMarkdown([{ ...section, preformatted: false }], { maxChars: 12000, maxItems: 8 });
+  assert.ok(post.markdown.includes("def get_combinator_sql(self, combinator, all):"));
+  assert.ok(!post.markdown.includes("return parts"), "the legacy line cap must chop the body tail");
+  assert.equal(post.truncated, true);
+
+  // The char-budget safety net still applies to preformatted context.
+  const capped = buildVtraceContextMarkdown([{ ...section, preformatted: true }], { maxChars: 60, maxItems: 8 });
+  assert.equal(capped.truncated, true);
+  assert.match(capped.markdown, /\[truncated to 60 chars\]/);
+});
+
+async function v2InjectionResult(
+  capsuleStdout: string,
+  overrides: Record<string, unknown> = {},
+): Promise<{ result: Awaited<ReturnType<typeof prepareIndexedContext>>; out: string }> {
+  const out = path.join(await tmpDir("v2-pivot-source"), "results");
+  const dataDir = await tmpDir("v2-pivot-source-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+  const { run } = scriptedRunner([{ match: "capsule", result: { stdout: capsuleStdout } }]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-11490"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+    capsuleEngine: "v2",
+    capsuleIntent: "debug",
+    capsuleBudget: 8000,
+    contextPolicyOverride: "force-inject",
+    ...overrides,
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+  return { result, out };
+}
+
+test("v2 injection snapshot contains the top pivot's focused source body + metadata", async () => {
+  const { result, out } = await v2InjectionResult(
+    capsuleV2Json({ pivotSymbol: "get_combinator_sql", pivotSource: PIVOT_BODY }),
+  );
+
+  // The metadata is self-describing about the injected body.
+  assert.equal(result.capsuleTopPivotHasSource, true);
+  assert.equal(result.capsuleTopPivotSourceMode, "full");
+  assert.equal(result.capsuleTopPivotSourceChars, PIVOT_BODY.length);
+  assert.equal(result.capsuleTopPivotFile, "django/db/models/sql/compiler.py");
+  assert.equal(result.capsuleTopPivotSymbol, "get_combinator_sql");
+
+  // The written instructions snapshot carries the WHOLE body — including the deep
+  // line the old 8-item line cap chopped — not just the path/symbol/reason.
+  const ctx = await readFile(vtraceInstructionsFilePath(out), "utf8");
+  assert.ok(ctx.includes("def get_combinator_sql(self, combinator, all):"));
+  assert.ok(ctx.includes("compiler.query.set_values(self.query.values_select)"));
+  assert.ok(ctx.includes("return parts"));
+});
+
+test("v2 injection keeps support signature-only (no source body) while the pivot has one", async () => {
+  const { out } = await v2InjectionResult(
+    capsuleV2Json({ pivotSource: PIVOT_BODY, support: [{ symbol: "values_list" }] }),
+  );
+  const ctx = await readFile(vtraceInstructionsFilePath(out), "utf8");
+
+  // Support appears, as a signature, never as a source body.
+  assert.ok(ctx.includes("○ support django/db/models/query.py::values_list"));
+  assert.ok(ctx.includes("def values_list(self, *fields)"));
+  // Exactly one focused-source block — the pivot's. Support is never given a body.
+  assert.equal((ctx.match(/\n {2}source:/g) ?? []).length, 1);
+});
+
+test("v2 injection preserves budget accounting: body fits the char budget, sizes are reported", async () => {
+  const { result } = await v2InjectionResult(
+    capsuleV2Json({ pivotSource: PIVOT_BODY }),
+  );
+  // The capsule already budget-shaped the render, so at the default char budget
+  // the body is present and not char-truncated; the size metadata is still recorded.
+  assert.equal(result.contextTruncated, false);
+  assert.ok(result.contextChars > PIVOT_BODY.length, "the assembled context must include the focused body");
+  assert.ok(result.contextItems > 8, "preformatted context is not capped at the per-item line limit");
+});
+
+test("v2 injection with a signature-only pivot records missing source, not a pretend body", async () => {
+  const { result, out } = await v2InjectionResult(capsuleV2Json());
+  assert.equal(result.capsuleTopPivotHasSource, false);
+  assert.equal(result.capsuleTopPivotSourceMode, "missing");
+  assert.equal(result.capsuleTopPivotSourceChars, null);
+  // The signature is still injected (it is what the capsule produced) but no body.
+  const ctx = await readFile(vtraceInstructionsFilePath(out), "utf8");
+  assert.ok(ctx.includes("get_combinator_sql"));
+  assert.equal((ctx.match(/\n {2}source:/g) ?? []).length, 0);
 });
 
 test("prepareIndexedContext with v2 issues a v2 query and records the engine metadata", async () => {

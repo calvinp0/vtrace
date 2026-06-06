@@ -220,6 +220,13 @@ export interface IndexedContextFields {
   readonly vtraceCapsuleTopPivotSymbol: string | null;
   readonly vtraceCapsuleActualMode: string | null;
   readonly vtraceCapsuleEstimatedTokens: number | null;
+  // Lead-pivot focused-source audit (Requirement: pivots must inject focused
+  // source bodies). Proves the snapshot carried the top pivot's body, not just
+  // its path/symbol/reason. `hasSource` false + mode "missing" when none was
+  // injected — never silently pretending a body was present. v2-only.
+  readonly vtraceCapsuleTopPivotHasSource: boolean | null;
+  readonly vtraceCapsulePivotSourceChars: number | null;
+  readonly vtraceCapsulePivotSourceMode: CapsulePivotSourceMode | null;
 }
 
 // Stage 5C evaluation evidence, normalized per instance. resolved itself stays
@@ -544,6 +551,11 @@ const CSV_COLUMNS = [
   "vtrace_capsule_estimated_tokens",
   "vtrace_capsule_top_pivot_file",
   "vtrace_capsule_top_pivot_symbol",
+  // Lead-pivot focused-source audit: whether the snapshot carried the body, its
+  // size, and the mode (focused/full/missing).
+  "vtrace_capsule_top_pivot_has_source",
+  "vtrace_capsule_pivot_source_chars",
+  "vtrace_capsule_pivot_source_mode",
   "vtrace_capsule_pivots",
   "vtrace_capsule_support",
   // The immutable injected-instructions snapshot: path + content hash.
@@ -1930,6 +1942,12 @@ export interface IndexedContextResult {
   readonly capsuleTopPivotSymbol: string | null;
   readonly capsuleActualMode: string | null;
   readonly capsuleEstimatedTokens: number | null;
+  // Lead-pivot focused-source audit (v2): whether the injected snapshot carried
+  // the top pivot's source body, its size in chars, and the mode. "missing" off
+  // the v2 engine and whenever no body was injected.
+  readonly capsuleTopPivotHasSource: boolean;
+  readonly capsuleTopPivotSourceChars: number | null;
+  readonly capsuleTopPivotSourceMode: CapsulePivotSourceMode;
 }
 
 // Resolve the bundled vexp-swe-bench dataset path (overridable via --swe-bench-data).
@@ -2079,6 +2097,38 @@ export interface CapsuleAuditItem {
   readonly estimatedTokens: number | null;
 }
 
+// How a Capsule v2 pivot's focused source reached the injected snapshot:
+//   * "full"    — the pivot's complete focused body was injected (the capsule's
+//                 own `full` content mode; what the agent edits against);
+//   * "focused" — a non-empty but budget-compressed/partial body was injected
+//                 (reserved: the current v2 ladder only emits a body in `full`
+//                 mode, so this guards a future partial-body content mode);
+//   * "missing" — no source body was injected (a signature/skeleton pivot, or no
+//                 pivot at all). Recorded honestly so a body-less run never reads
+//                 as if it had source.
+export type CapsulePivotSourceMode = "focused" | "full" | "missing";
+
+// The top pivot's source audit: whether a focused body was injected, its size in
+// chars, and the mode above. Derived from the capsule JSON, never inferred.
+interface PivotSourceInfo {
+  readonly hasSource: boolean;
+  readonly chars: number | null;
+  readonly mode: CapsulePivotSourceMode;
+}
+
+const MISSING_PIVOT_SOURCE: PivotSourceInfo = { hasSource: false, chars: null, mode: "missing" };
+
+// Classify a Capsule v2 pivot's focused source. A pivot carries a `source` body
+// only in `full` content mode; signature/skeleton pivots carry none. Tolerates
+// partial JSON (a non-string source/content_mode degrades to "missing").
+export function classifyPivotSource(pivot: unknown): PivotSourceInfo {
+  if (!isRecord(pivot)) return MISSING_PIVOT_SOURCE;
+  const source = isString(pivot.source) ? pivot.source : null;
+  if (source === null || source.length === 0) return MISSING_PIVOT_SOURCE;
+  const contentMode = isString(pivot.content_mode) ? pivot.content_mode : null;
+  return { hasSource: true, chars: source.length, mode: contentMode === "full" ? "full" : "focused" };
+}
+
 export interface CapsuleClassification {
   readonly policyAction: VtracePolicyAction;
   readonly contextInjected: boolean;
@@ -2097,6 +2147,12 @@ export interface CapsuleClassification {
   readonly capsulePivots: readonly CapsuleAuditItem[] | null;
   readonly capsuleSupport: readonly CapsuleAuditItem[] | null;
   readonly capsuleEstimatedTokens: number | null;
+  // Top-pivot focused-source audit: whether the lead pivot carried a body, its
+  // size, and the mode. Always present (defaults to "missing") so a body-less
+  // capsule is recorded as missing rather than silently omitted.
+  readonly capsuleTopPivotHasSource: boolean;
+  readonly capsuleTopPivotSourceChars: number | null;
+  readonly capsuleTopPivotSourceMode: CapsulePivotSourceMode;
   /** Set only when policyAction === "error" (genuinely unusable output). */
   readonly error: string | null;
 }
@@ -2106,6 +2162,7 @@ interface CapsuleV2Audit {
   readonly pivots: readonly CapsuleAuditItem[];
   readonly support: readonly CapsuleAuditItem[];
   readonly estimatedTokens: number | null;
+  readonly topPivotSource: PivotSourceInfo;
 }
 
 // Classify a capsule `--json` (or raw) query output into a vtrace policy action.
@@ -2197,6 +2254,9 @@ function skipClassification(
     capsulePivots: v2?.pivots ?? null,
     capsuleSupport: v2?.support ?? null,
     capsuleEstimatedTokens: v2?.estimatedTokens ?? null,
+    capsuleTopPivotHasSource: v2?.topPivotSource.hasSource ?? false,
+    capsuleTopPivotSourceChars: v2?.topPivotSource.chars ?? null,
+    capsuleTopPivotSourceMode: v2?.topPivotSource.mode ?? "missing",
     error: null,
   };
 }
@@ -2225,6 +2285,9 @@ function injectClassification(
     capsulePivots: v2?.pivots ?? null,
     capsuleSupport: v2?.support ?? null,
     capsuleEstimatedTokens: v2?.estimatedTokens ?? null,
+    capsuleTopPivotHasSource: v2?.topPivotSource.hasSource ?? false,
+    capsuleTopPivotSourceChars: v2?.topPivotSource.chars ?? null,
+    capsuleTopPivotSourceMode: v2?.topPivotSource.mode ?? "missing",
     error: null,
   };
 }
@@ -2244,6 +2307,9 @@ function errorClassification(message: string): CapsuleClassification {
     capsulePivots: null,
     capsuleSupport: null,
     capsuleEstimatedTokens: null,
+    capsuleTopPivotHasSource: false,
+    capsuleTopPivotSourceChars: null,
+    capsuleTopPivotSourceMode: "missing",
     error: message,
   };
 }
@@ -2262,7 +2328,11 @@ export function classifyCapsuleV2Output(result: CapsuleV2Result): CapsuleClassif
   const actualMode = isString(result.actual_mode) ? result.actual_mode : null;
   const estimatedTokens =
     isRecord(result.budget) && isNumber(result.budget.estimated_tokens) ? result.budget.estimated_tokens : null;
-  const v2: CapsuleV2Audit = { pivots, support, estimatedTokens };
+  // The lead pivot's focused source body (when the capsule rendered one). This is
+  // the audit that proves the agent received enough to reason about the edit, not
+  // just the pivot's path/symbol/reason.
+  const topPivotSource = classifyPivotSource(Array.isArray(result.pivots) ? result.pivots[0] : undefined);
+  const v2: CapsuleV2Audit = { pivots, support, estimatedTokens, topPivotSource };
 
   // No pivot recovered → a valid no-context skip (recorded as actual_mode
   // "no_context", surfaced through the same skip machinery as the legacy path).
@@ -2594,6 +2664,11 @@ export interface VtraceContextSection {
   readonly error: string | null;
   /** The capsule policy classification for this instance (null on a hard error). */
   readonly classification: CapsuleClassification | null;
+  // True when the context is already budget-shaped by the producer (Capsule v2
+  // sizes its render to --budget). Such context is NOT line-item truncated — the
+  // per-item line cap would decapitate a multi-line focused source body — only a
+  // char-cap safety net applies. Legacy/undefined sections keep line truncation.
+  readonly preformatted?: boolean;
 }
 
 // Assemble the full _vtrace_instructions.md content (one section per instance)
@@ -2630,7 +2705,11 @@ export function buildVtraceContextMarkdown(
     if (section.error !== null || section.rawContext.trim().length === 0) {
       lines.push(`(vtrace context unavailable: ${section.error ?? "empty output"})`, "");
     } else {
-      const truncatedContext = truncateContext(section.rawContext, limits.maxChars, limits.maxItems);
+      // Capsule v2 context is already budget-shaped: skip the per-item line cap
+      // (which would chop a multi-line focused source body off the snapshot) and
+      // apply only the char-budget safety net.
+      const maxItems = section.preformatted ? Number.POSITIVE_INFINITY : limits.maxItems;
+      const truncatedContext = truncateContext(section.rawContext, limits.maxChars, maxItems);
       lines.push(truncatedContext.text, "");
       totalChars += truncatedContext.chars;
       totalItems += truncatedContext.items;
@@ -2692,6 +2771,9 @@ function indexedContextMetaFields(result: IndexedContextResult): IndexedContextF
     vtraceCapsuleTopPivotSymbol: result.capsuleTopPivotSymbol,
     vtraceCapsuleActualMode: result.capsuleActualMode,
     vtraceCapsuleEstimatedTokens: result.capsuleEstimatedTokens,
+    vtraceCapsuleTopPivotHasSource: result.capsuleTopPivotHasSource,
+    vtraceCapsulePivotSourceChars: result.capsuleTopPivotSourceChars,
+    vtraceCapsulePivotSourceMode: result.capsuleTopPivotSourceMode,
   };
 }
 
@@ -2789,7 +2871,15 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
       errors.push(`${instance.instanceId}: ${sectionError}`);
       classification = null;
     }
-    sections.push({ instance, rawContext, error: sectionError, classification });
+    sections.push({
+      instance,
+      rawContext,
+      error: sectionError,
+      classification,
+      // Capsule v2 renders are budget-shaped already; keep their focused source
+      // bodies intact through assembly (no per-item line truncation).
+      preformatted: config.capsuleEngine === "v2",
+    });
   }
 
   // Apply the cost-aware injection gate per section. Even REAL retrieved context
@@ -2868,6 +2958,13 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     null,
   );
   const topPivot = capsulePivots[0] ?? null;
+  // The classification whose lead pivot IS the run's top pivot (the first injected
+  // section with pivots). Its source audit describes the body actually injected
+  // for `topPivot`, so the metadata never disagrees with the selected pivot.
+  const topClassification = injectedClassifications.find((c) => (c.capsulePivots?.length ?? 0) > 0) ?? null;
+  const capsuleTopPivotHasSource = topClassification?.capsuleTopPivotHasSource ?? false;
+  const capsuleTopPivotSourceChars = topClassification?.capsuleTopPivotSourceChars ?? null;
+  const capsuleTopPivotSourceMode: CapsulePivotSourceMode = topClassification?.capsuleTopPivotSourceMode ?? "missing";
   // The capsule's genuine realised mode (v2: micro/standard/full/no_context),
   // distinct from the legacy-coerced `actualCapsuleMode`. v2-only.
   const capsuleActualMode =
@@ -2914,6 +3011,9 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     capsuleTopPivotSymbol: topPivot?.symbol ?? null,
     capsuleActualMode,
     capsuleEstimatedTokens,
+    capsuleTopPivotHasSource,
+    capsuleTopPivotSourceChars,
+    capsuleTopPivotSourceMode,
   };
 }
 
@@ -3246,6 +3346,9 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtraceCapsuleTopPivotSymbol: evidence.vtraceCapsuleTopPivotSymbol,
           vtraceCapsuleActualMode: evidence.vtraceCapsuleActualMode,
           vtraceCapsuleEstimatedTokens: evidence.vtraceCapsuleEstimatedTokens,
+          vtraceCapsuleTopPivotHasSource: evidence.vtraceCapsuleTopPivotHasSource,
+          vtraceCapsulePivotSourceChars: evidence.vtraceCapsulePivotSourceChars,
+          vtraceCapsulePivotSourceMode: evidence.vtraceCapsulePivotSourceMode,
         },
   );
 }
@@ -3898,6 +4001,9 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtraceCapsuleTopPivotSymbol: null,
     vtraceCapsuleActualMode: null,
     vtraceCapsuleEstimatedTokens: null,
+    vtraceCapsuleTopPivotHasSource: null,
+    vtraceCapsulePivotSourceChars: null,
+    vtraceCapsulePivotSourceMode: null,
   };
 }
 
@@ -4173,6 +4279,8 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     value === "legacy" || value === "v2" || value === "unknown" ? (value as CapsuleEngine | "unknown") : null;
   const level = (value: unknown): ExpectedLevel | null =>
     value === "low" || value === "medium" || value === "high" ? (value as ExpectedLevel) : null;
+  const pivotSourceMode = (value: unknown): CapsulePivotSourceMode | null =>
+    value === "focused" || value === "full" || value === "missing" ? (value as CapsulePivotSourceMode) : null;
   // Parse the recorded Capsule v2 selected items back into audit items, tolerating
   // partial/legacy meta (a non-array reads as null, a malformed item degrades).
   const auditItems = (value: unknown): CapsuleAuditItem[] | null => {
@@ -4216,6 +4324,9 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtraceCapsuleTopPivotSymbol: str(meta.vtraceCapsuleTopPivotSymbol),
     vtraceCapsuleActualMode: str(meta.vtraceCapsuleActualMode),
     vtraceCapsuleEstimatedTokens: num(meta.vtraceCapsuleEstimatedTokens),
+    vtraceCapsuleTopPivotHasSource: bool(meta.vtraceCapsuleTopPivotHasSource),
+    vtraceCapsulePivotSourceChars: num(meta.vtraceCapsulePivotSourceChars),
+    vtraceCapsulePivotSourceMode: pivotSourceMode(meta.vtraceCapsulePivotSourceMode),
   };
 }
 
@@ -4311,6 +4422,9 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         row.vtraceCapsuleEstimatedTokens === null ? "" : String(row.vtraceCapsuleEstimatedTokens),
         row.vtraceCapsuleTopPivotFile ?? "",
         row.vtraceCapsuleTopPivotSymbol ?? "",
+        row.vtraceCapsuleTopPivotHasSource === null ? "" : String(row.vtraceCapsuleTopPivotHasSource),
+        row.vtraceCapsulePivotSourceChars === null ? "" : String(row.vtraceCapsulePivotSourceChars),
+        row.vtraceCapsulePivotSourceMode ?? "",
         formatCapsuleItemsCsv(row.vtraceCapsulePivots),
         formatCapsuleItemsCsv(row.vtraceCapsuleSupport),
         row.vtraceInstructionsSnapshotFile ?? "",
@@ -4563,6 +4677,9 @@ function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
     `| vtrace_capsule_top_pivot | ${formatTopPivot(evidence)} |`,
     `| vtrace_capsule_top_pivot_file | ${evidence.vtraceCapsuleTopPivotFile ?? evidence.vtraceCapsulePivots?.[0]?.path ?? "(none)"} |`,
     `| vtrace_capsule_top_pivot_symbol | ${evidence.vtraceCapsuleTopPivotSymbol ?? evidence.vtraceCapsulePivots?.[0]?.symbol ?? "(none)"} |`,
+    `| vtrace_capsule_top_pivot_has_source | ${evidence.vtraceCapsuleTopPivotHasSource === null ? "(n/a)" : String(evidence.vtraceCapsuleTopPivotHasSource)} |`,
+    `| vtrace_capsule_pivot_source_chars | ${evidence.vtraceCapsulePivotSourceChars ?? "(n/a)"} |`,
+    `| vtrace_capsule_pivot_source_mode | ${evidence.vtraceCapsulePivotSourceMode ?? "(n/a)"} |`,
     `| vtrace_capsule_top_support_files | ${formatSupportFiles(evidence.vtraceCapsuleSupport)} |`,
     // Snapshot path + content hash, so the audit table names the exact immutable
     // record of what was injected (the active file may be overwritten by a later run).
