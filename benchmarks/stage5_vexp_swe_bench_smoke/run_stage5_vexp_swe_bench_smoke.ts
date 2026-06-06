@@ -132,6 +132,10 @@ export interface CliConfig {
   readonly showVtraceIndexLog: boolean;
   readonly vtraceContextMaxChars: number;
   readonly vtraceContextMaxItems: number;
+  // Operator override for the cost-aware context-injection gate (--context-policy).
+  // "auto" (default) keeps decideContextPolicy in charge; the force-* values are
+  // for Capsule v2 live validation. See ContextPolicyOverride.
+  readonly contextPolicyOverride: ContextPolicyOverride;
   readonly sweBenchDataFile: string | null;
   readonly runLabel: string | null;
   // Stage 5C aggregate-runs: the set of run-labels to combine into one report.
@@ -180,6 +184,9 @@ export interface IndexedContextFields {
   // (vtracePolicyAction === "skip"), so the two never disagree. The remaining
   // fields explain WHY the gate chose as it did. All null on baseline rows.
   readonly vtraceContextPolicyAction: ContextPolicyAction | "unknown" | null;
+  // The operator override in effect for this run (--context-policy). "auto" on a
+  // normal cost-aware run; null on baseline / non-indexed rows.
+  readonly vtraceContextPolicyOverride: ContextPolicyOverride | "unknown" | null;
   readonly vtracePolicyReason: string | null;
   readonly expectedContextValue: ExpectedLevel | null;
   readonly expectedOverheadRisk: ExpectedLevel | null;
@@ -444,6 +451,7 @@ const DEFAULT_CONFIG: CliConfig = {
   showVtraceIndexLog: false,
   vtraceContextMaxChars: 12000,
   vtraceContextMaxItems: 8,
+  contextPolicyOverride: "auto",
   sweBenchDataFile: null,
   runLabel: null,
   runLabels: null,
@@ -476,6 +484,7 @@ const CSV_COLUMNS = [
   "vtrace_treatment_valid",
   "vtrace_policy_action",
   "vtrace_context_policy_action",
+  "vtrace_context_policy_override",
   "vtrace_policy_reason",
   "expected_context_value",
   "expected_overhead_risk",
@@ -1794,6 +1803,9 @@ export interface IndexedContextResult {
   readonly actualCapsuleMode: string | null;
   // Cost-aware gate decision + its rationale (see decideContextPolicy).
   readonly contextPolicyAction: ContextPolicyAction;
+  // The operator override that was in effect (--context-policy); "auto" when the
+  // cost-aware gate decided on its own.
+  readonly contextPolicyOverride: ContextPolicyOverride;
   readonly policyReason: string | null;
   readonly expectedContextValue: ExpectedLevel | null;
   readonly expectedOverheadRisk: ExpectedLevel | null;
@@ -2105,6 +2117,19 @@ export function capsuleModeForInstance(instance: SweBenchInstance): CapsuleModeT
 export type ContextPolicyAction = "inject" | "no_context";
 export type ExpectedLevel = "low" | "medium" | "high";
 
+// Operator override for the cost-aware gate, set via --context-policy. `auto`
+// (the default) runs decideContextPolicy unchanged. `force-inject` and
+// `force-no-context` exist for Capsule v2 live validation: they let a run
+// exercise the actual capsule retrieval instead of letting the cost-aware gate
+// silently choose no_context (or, conversely, force a no-context baseline).
+export type ContextPolicyOverride = "auto" | "force-inject" | "force-no-context";
+
+// Recorded as vtrace_policy_reason when an override (not the cost-aware gate)
+// determined the action, so the report says plainly why context was/ wasn't
+// injected.
+const FORCE_INJECT_REASON = "context policy forced to inject for validation";
+const FORCE_NO_CONTEXT_REASON = "context policy forced to no_context for validation";
+
 // Task-shape signals derived from the SWE instance (independent of what the
 // capsule retrieved). These describe how "cheap/local" vs "navigation-heavy"
 // the task looks before any context is produced.
@@ -2255,6 +2280,42 @@ export function decideContextPolicy(
   };
 }
 
+// Apply the operator's --context-policy override to a per-section gate decision.
+//
+//  - auto: the cost-aware gate's decision stands.
+//  - force-inject: inject the generated context regardless of the gate, so a run
+//    actually exercises Capsule v2 retrieval. With NO context to inject the gate
+//    decision is left untouched — there is nothing to force, and the run-level
+//    logic still treats the absence of context as a failure (never a valid skip).
+//  - force-no-context: always run no-context, regardless of what was retrieved.
+//
+// The expected value/overhead levels are preserved from the gate so the report
+// still shows what the cost-aware model thought, alongside the override.
+export function applyContextPolicyOverride(
+  decision: ContextPolicyDecision,
+  override: ContextPolicyOverride,
+  hasContext: boolean,
+): ContextPolicyDecision {
+  if (override === "force-inject") {
+    if (!hasContext) return decision;
+    return {
+      action: "inject",
+      reason: FORCE_INJECT_REASON,
+      expectedContextValue: decision.expectedContextValue,
+      expectedOverheadRisk: decision.expectedOverheadRisk,
+    };
+  }
+  if (override === "force-no-context") {
+    return {
+      action: "no_context",
+      reason: FORCE_NO_CONTEXT_REASON,
+      expectedContextValue: decision.expectedContextValue,
+      expectedOverheadRisk: decision.expectedOverheadRisk,
+    };
+  }
+  return decision;
+}
+
 // Truncate one instance's raw vtrace context by item count (non-empty lines) then
 // by character budget, appending a clear marker when the char budget bites.
 export function truncateContext(
@@ -2381,6 +2442,7 @@ function indexedContextMetaFields(result: IndexedContextResult): IndexedContextF
     vtracePivotCount: result.pivotCount,
     vtraceSupportCount: result.supportCount,
     vtraceContextPolicyAction: result.contextPolicyAction,
+    vtraceContextPolicyOverride: result.contextPolicyOverride,
     vtracePolicyReason: result.policyReason,
     expectedContextValue: result.expectedContextValue,
     expectedOverheadRisk: result.expectedOverheadRisk,
@@ -2490,13 +2552,17 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
   const decisions = new Map<string, ContextPolicyDecision>();
   const gatedSections: VtraceContextSection[] = sections.map((section) => {
     if (section.classification === null) return section;
-    const decision = decideContextPolicy(deriveContextPolicySignals(section.instance), {
+    const hasContext = section.rawContext.trim().length > 0;
+    const autoDecision = decideContextPolicy(deriveContextPolicySignals(section.instance), {
       capsuleAction: section.classification.policyAction,
-      hasContext: section.rawContext.trim().length > 0,
+      hasContext,
       pivotCount: section.classification.pivotCount,
       supportCount: section.classification.supportCount,
       actualMode: section.classification.actualCapsuleMode,
     });
+    // The operator override (--context-policy) can force the action either way
+    // for Capsule v2 validation; `auto` leaves the cost-aware decision intact.
+    const decision = applyContextPolicyOverride(autoDecision, config.contextPolicyOverride, hasContext);
     decisions.set(section.instance.instanceId, decision);
     // Drop the context body when the gate declines to inject it.
     return decision.action === "inject" ? section : { ...section, rawContext: "" };
@@ -2517,7 +2583,12 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
   // least one instance was gated to no_context, and there was no hard error to
   // fail on. A no-context decision is recorded via the existing `skip` action so
   // the run-status / treatment-validity machinery treats it as a valid policy.
-  const noContext = !indexedContext && noContextSections.length > 0 && hardErrors.length === 0;
+  // --context-policy force-inject NEVER degrades to a valid skip: if no context
+  // was generated it must surface as a failure (indexedContext === false drives
+  // the abort in runVtrace), not as an intentional no-context policy.
+  const forceInject = config.contextPolicyOverride === "force-inject";
+  const noContext =
+    !forceInject && !indexedContext && noContextSections.length > 0 && hardErrors.length === 0;
   const policyAction: VtracePolicyAction = noContext ? "skip" : "inject";
   const contextPolicyAction: ContextPolicyAction = noContext ? "no_context" : "inject";
   const pivotCount = sumClassification(sections, (c) => c.pivotCount);
@@ -2562,6 +2633,7 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     supportCount,
     actualCapsuleMode,
     contextPolicyAction,
+    contextPolicyOverride: config.contextPolicyOverride,
     policyReason: repDecision?.reason ?? null,
     expectedContextValue: repDecision?.expectedContextValue ?? null,
     expectedOverheadRisk: repDecision?.expectedOverheadRisk ?? null,
@@ -2881,6 +2953,7 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtracePivotCount: evidence.vtracePivotCount,
           vtraceSupportCount: evidence.vtraceSupportCount,
           vtraceContextPolicyAction: evidence.vtraceContextPolicyAction,
+          vtraceContextPolicyOverride: evidence.vtraceContextPolicyOverride,
           vtracePolicyReason: evidence.vtracePolicyReason,
           expectedContextValue: evidence.expectedContextValue,
           expectedOverheadRisk: evidence.expectedOverheadRisk,
@@ -3139,6 +3212,7 @@ export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5
     vtracePivotCount: null,
     vtraceSupportCount: null,
     vtraceContextPolicyAction: null,
+    vtraceContextPolicyOverride: null,
     vtracePolicyReason: null,
     expectedContextValue: null,
     expectedOverheadRisk: null,
@@ -3504,6 +3578,7 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtracePivotCount: null,
     vtraceSupportCount: null,
     vtraceContextPolicyAction: null,
+    vtraceContextPolicyOverride: null,
     vtracePolicyReason: null,
     expectedContextValue: null,
     expectedOverheadRisk: null,
@@ -3750,6 +3825,10 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     value === "inject" || value === "no_context" || value === "unknown"
       ? (value as ContextPolicyAction | "unknown")
       : null;
+  const contextPolicyOverride = (value: unknown): ContextPolicyOverride | "unknown" | null =>
+    value === "auto" || value === "force-inject" || value === "force-no-context" || value === "unknown"
+      ? (value as ContextPolicyOverride | "unknown")
+      : null;
   const level = (value: unknown): ExpectedLevel | null =>
     value === "low" || value === "medium" || value === "high" ? (value as ExpectedLevel) : null;
   return {
@@ -3768,6 +3847,7 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtracePivotCount: num(meta.vtracePivotCount),
     vtraceSupportCount: num(meta.vtraceSupportCount),
     vtraceContextPolicyAction: contextPolicy(meta.vtraceContextPolicyAction),
+    vtraceContextPolicyOverride: contextPolicyOverride(meta.vtraceContextPolicyOverride),
     vtracePolicyReason: str(meta.vtracePolicyReason),
     expectedContextValue: level(meta.expectedContextValue),
     expectedOverheadRisk: level(meta.expectedOverheadRisk),
@@ -3858,6 +3938,7 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         row.vtraceTreatmentValid === null ? "" : String(row.vtraceTreatmentValid),
         row.vtracePolicyAction ?? "",
         row.vtraceContextPolicyAction ?? "",
+        row.vtraceContextPolicyOverride ?? "",
         row.vtracePolicyReason ?? "",
         row.expectedContextValue ?? "",
         row.expectedOverheadRisk ?? "",
@@ -4047,6 +4128,7 @@ function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
     // The cost-aware gate's decision in its own vocabulary (`inject`|`no_context`);
     // a recorded `skip` policy is reported here as `no_context`.
     `| vtrace_context_policy_action | ${evidence.vtraceContextPolicyAction ?? (evidence.vtracePolicyAction === "skip" ? "no_context" : evidence.vtracePolicyAction) ?? "(n/a)"} |`,
+    `| vtrace_context_policy_override | ${evidence.vtraceContextPolicyOverride ?? "(n/a)"} |`,
     `| vtrace_policy_reason | ${evidence.vtracePolicyReason ?? evidence.vtraceSkipReason ?? "(none)"} |`,
     `| expected_context_value | ${evidence.expectedContextValue ?? "(n/a)"} |`,
     `| expected_overhead_risk | ${evidence.expectedOverheadRisk ?? "(n/a)"} |`,
@@ -4458,6 +4540,12 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--show-vtrace-index-log": config.showVtraceIndexLog = true; break;
       case "--vtrace-context-max-chars": config.vtraceContextMaxChars = requirePositiveInt(argv, ++index, arg); break;
       case "--vtrace-context-max-items": config.vtraceContextMaxItems = requirePositiveInt(argv, ++index, arg); break;
+      case "--context-policy": {
+        const value = requireValue(argv, ++index, arg);
+        if (!["auto", "force-inject", "force-no-context"].includes(value)) throw new Error("Invalid --context-policy.");
+        config.contextPolicyOverride = value as ContextPolicyOverride;
+        break;
+      }
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
       case "--run-labels":
@@ -4509,6 +4597,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --run-label <label>                           isolate runs under results/runs/<label>/",
       "  --reuse-workspace                             reuse an existing labeled workspace + index (default: recreate fresh)",
       "  --show-vtrace-index-log                       print the vtrace index log to the terminal (drops --quiet)",
+      "  --context-policy auto|force-inject|force-no-context   override the cost-aware context gate (default: auto)",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),

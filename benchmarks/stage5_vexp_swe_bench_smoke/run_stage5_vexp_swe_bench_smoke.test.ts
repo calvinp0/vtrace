@@ -5,6 +5,7 @@ import path from "node:path";
 import { test } from "bun:test";
 
 import {
+  applyContextPolicyOverride,
   applyVtracePatch,
   assertVexpAllowed,
   assertVtraceInstructionsFileValid,
@@ -118,6 +119,7 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     showVtraceIndexLog: false,
     vtraceContextMaxChars: 12000,
     vtraceContextMaxItems: 8,
+    contextPolicyOverride: "auto",
     sweBenchDataFile: null,
     runLabel: null,
     runLabels: null,
@@ -2302,6 +2304,205 @@ test("the report separates injected_context_count and no_context_count", async (
   // The gate's vocabulary + rationale are surfaced in the evidence table.
   assert.match(md, /\| vtrace_context_policy_action \| no_context \|/);
   assert.match(md, /\| expected_overhead_risk \| high \|/);
+});
+
+// ----- Stage 5: --context-policy override (Capsule v2 live validation) -----
+
+// A representative cost-aware decision the gate would otherwise return. The
+// override layer rewrites the action but preserves the expected value/risk.
+const NO_CONTEXT_DECISION = {
+  action: "no_context" as const,
+  reason: "Cheap/local task: injected context is likely net overhead.",
+  expectedContextValue: "low" as const,
+  expectedOverheadRisk: "high" as const,
+};
+
+test("--context-policy parses to the override (default auto) and rejects invalid values", () => {
+  assert.equal(parseArgs(["--mode", "prepare"]).contextPolicyOverride, "auto");
+  assert.equal(parseArgs(["--context-policy", "force-inject"]).contextPolicyOverride, "force-inject");
+  assert.equal(parseArgs(["--context-policy", "force-no-context"]).contextPolicyOverride, "force-no-context");
+  assert.throws(() => parseArgs(["--context-policy", "bogus"]), /Invalid --context-policy/);
+});
+
+test("applyContextPolicyOverride forces inject/no_context but auto is a passthrough", () => {
+  // auto: the cost-aware decision stands.
+  assert.deepEqual(applyContextPolicyOverride(NO_CONTEXT_DECISION, "auto", true), NO_CONTEXT_DECISION);
+
+  // force-inject WITH context: action flips to inject with the validation reason,
+  // preserving the gate's expected value/risk levels.
+  const forced = applyContextPolicyOverride(NO_CONTEXT_DECISION, "force-inject", true);
+  assert.equal(forced.action, "inject");
+  assert.match(forced.reason, /forced to inject for validation/);
+  assert.equal(forced.expectedContextValue, "low");
+  assert.equal(forced.expectedOverheadRisk, "high");
+
+  // force-inject WITHOUT context: nothing to force, so the decision is unchanged
+  // (the absence of context is surfaced as a failure at the run level, not here).
+  assert.deepEqual(applyContextPolicyOverride(NO_CONTEXT_DECISION, "force-inject", false), NO_CONTEXT_DECISION);
+
+  // force-no-context: always no_context with the validation reason.
+  const suppressed = applyContextPolicyOverride(
+    { action: "inject", reason: "...", expectedContextValue: "high", expectedOverheadRisk: "low" },
+    "force-no-context",
+    true,
+  );
+  assert.equal(suppressed.action, "no_context");
+  assert.match(suppressed.reason, /forced to no_context for validation/);
+});
+
+test("force-inject injects generated context even when auto would choose no_context", async () => {
+  const out = path.join(await tmpDir("force-inject"), "results");
+  const dataDir = await tmpDir("force-inject-data");
+  // 10880 is a cheap/local task: with real micro context the auto gate declines
+  // (see the auto test above). force-inject must inject it anyway.
+  const dataFile = await writeSweBenchData(dataDir, [POLICY_RECORDS["django__django-10880"]]);
+  const { run } = scriptedRunner([
+    { match: "capsule", result: { stdout: microCapsuleJson("symbol: json_script\nfile: django/utils/html.py") } },
+  ]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-10880"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+    contextPolicyOverride: "force-inject",
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  assert.equal(result.contextPolicyAction, "inject");
+  assert.equal(result.contextInjected, true);
+  assert.equal(result.indexedContext, true);
+  assert.equal(result.policyAction, "inject");
+  assert.equal(result.contextPolicyOverride, "force-inject");
+  assert.match(result.policyReason ?? "", /forced to inject for validation/);
+  // The generated context body actually made it into the assembled file.
+  const written = await readFile(result.contextFile, "utf8");
+  assert.match(written, /json_script/);
+});
+
+test("force-inject still fails if no context was generated (never a valid skip)", async () => {
+  const out = path.join(await tmpDir("force-inject-empty"), "results");
+  const dataDir = await tmpDir("force-inject-empty-data");
+  const dataFile = await writeSweBenchData(dataDir, [POLICY_RECORDS["django__django-10880"]]);
+  // The capsule recovered nothing actionable (a skip). Under auto this is a valid
+  // no-context policy, but force-inject must NOT degrade to a skip — there is no
+  // context to validate, so it is a failure.
+  const { run } = scriptedRunner([{ match: "capsule", result: { stdout: skipCapsuleJson() } }]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-10880"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+    contextPolicyOverride: "force-inject",
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  // Not a valid skip: indexedContext false + a non-skip policy → runVtrace aborts.
+  assert.equal(result.indexedContext, false);
+  assert.equal(result.contextInjected, false);
+  assert.notEqual(result.policyAction, "skip");
+  assert.equal(result.contextPolicyOverride, "force-inject");
+});
+
+test("force-inject aborts runVtrace before spawn when no context was generated", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("force-inject-abort"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("force-inject-abort-data");
+  const dataFile = await writeSweBenchData(dataDir, [POLICY_RECORDS["django__django-10880"]]);
+
+  let vexpSpawned = false;
+  const run = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes("dist/cli.js")) vexpSpawned = true;
+    if (line.includes("capsule")) return { exitCode: 0, stdout: skipCapsuleJson(), stderr: "" };
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["django__django-10880"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+    contextPolicyOverride: "force-inject",
+  });
+  await assert.rejects(() => runVtrace(config, { runProcess: run }), /produced no vtrace context/);
+  assert.equal(vexpSpawned, false);
+});
+
+test("force-no-context runs WITHOUT VTRACE_AGENT_INSTRUCTIONS_FILE and records the override", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("force-nc-run"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("force-nc-run-data");
+  // A navigation-heavy instance whose strong-pivot capsule auto would INJECT; the
+  // override forces no-context anyway.
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+
+  let vexpSpawned = false;
+  let vexpEnv: Record<string, string> | undefined;
+  let vexpArgs: readonly string[] = [];
+  const run = async (
+    command: string,
+    args: readonly string[],
+    options?: { env?: Record<string, string> },
+  ): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes("dist/cli.js")) {
+      vexpSpawned = true;
+      vexpEnv = options?.env;
+      vexpArgs = args;
+    }
+    if (line.includes("capsule")) {
+      return { exitCode: 0, stdout: injectCapsuleJson("symbol: get_combinator_sql"), stderr: "" };
+    }
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["django__django-11490"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+    contextPolicyOverride: "force-no-context",
+  });
+  await runVtrace(config, { runProcess: run });
+
+  // Still runs the benchmark with --no-vexp, but injects nothing.
+  assert.equal(vexpSpawned, true);
+  assert.ok(vexpArgs.includes("--no-vexp"));
+  assert.equal(vexpEnv?.VTRACE_AGENT_INSTRUCTIONS_FILE, undefined);
+
+  const meta = JSON.parse(await readFile(path.join(rawConditionDir(out, "vtrace"), "_run.meta.json"), "utf8"));
+  assert.equal(meta.vtraceContextPolicyAction, "no_context");
+  assert.equal(meta.vtraceContextPolicyOverride, "force-no-context");
+  assert.equal(meta.vtracePolicyAction, "skip");
+  assert.equal(meta.vtraceContextInjected, false);
+  assert.match(meta.vtracePolicyReason, /forced to no_context for validation/);
+});
+
+test("auto override is recorded in the metadata and CSV without changing behavior", async () => {
+  const out = path.join(await tmpDir("auto-override"), "results");
+  const dataDir = await tmpDir("auto-override-data");
+  const dataFile = await writeSweBenchData(dataDir, [POLICY_RECORDS["django__django-10880"]]);
+  const { run } = scriptedRunner([
+    { match: "capsule", result: { stdout: microCapsuleJson("symbol: json_script") } },
+  ]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-10880"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+  // Default auto: behavior unchanged (cheap/local task still gated to no_context).
+  assert.equal(result.contextPolicyAction, "no_context");
+  assert.equal(result.contextInjected, false);
+  assert.equal(result.contextPolicyOverride, "auto");
+
+  // The override column is present in the CSV header.
+  assert.match(renderCsv([]), /vtrace_context_policy_override/);
 });
 
 // ----- Run-status / infra-failure reporting (Requirement 1–8) ------------------
