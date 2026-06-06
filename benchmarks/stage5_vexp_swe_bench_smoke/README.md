@@ -182,9 +182,23 @@ bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \
 
 If indexing/query fails for every instance, the run **aborts before spawning vexp** (no tokens spent) — it never silently falls back to generic instructions. After the run, `ingest`/`report` recompute `vtrace_treatment_valid`, which is `true` only when: the local patch is installed, the context file exists and is non-empty, real vtrace context was generated (`vtrace_indexed_context = true`), and runtime injection was observed. Otherwise the report prints **"Vtrace indexed context was not generated; this run is not a valid indexed-context treatment."** (or the injection-skipped variant) and the per-instance efficiency deltas are marked `invalid`.
 
-The report gains a `## Vtrace indexed context evidence` table (`vtrace_method`, `vtrace_indexed_context`, `vtrace_index_command`, `vtrace_query_command`, `vtrace_workspace_path`, `vtrace_context_file`, `vtrace_context_chars`, `vtrace_context_items`, `vtrace_context_truncated`, `vtrace_treatment_valid`).
+The report gains a `## Vtrace indexed context evidence` table (`vtrace_method`, `vtrace_indexed_context`, `vtrace_index_command`, `vtrace_query_command`, `vtrace_workspace_path`, `vtrace_context_file`, `vtrace_context_chars`, `vtrace_context_items`, `vtrace_context_truncated`, `vtrace_treatment_valid`), plus the Capsule v2 audit fields (`vtrace_capsule_engine`, `vtrace_capsule_intent`, `vtrace_capsule_budget`, `vtrace_capsule_actual_mode`, `vtrace_capsule_estimated_tokens`, `vtrace_capsule_top_pivot`, `vtrace_capsule_top_support_files`) and the snapshot fields (`vtrace_instructions_snapshot_file`, `vtrace_instructions_sha256`) — see [Capsule engine](#capsule-engine---capsule-engine-legacyv2) below.
 
-> **Per-run overwrite.** The `raw/baseline` and `raw/vtrace` output dirs and `results/_vtrace_instructions.md` are overwritten on each run. That is fine for single-instance smoke. Use `--run-label <label>` to isolate the reproduced workspaces (`results/workspaces/<label>/<instance_id>/`) across multiple instance runs.
+> **Per-run overwrite.** The `raw/baseline` and `raw/vtrace` output dirs and `results/_vtrace_instructions.md` are overwritten on each run. That is fine for single-instance smoke. Use `--run-label <label>` to isolate the reproduced workspaces (`results/workspaces/<label>/<instance_id>/`) across multiple instance runs. The injected instructions are also snapshotted immutably per run to `results/runs/<label>/_vtrace_instructions.snapshot.md` (`vtraceInstructionsSnapshotFile` + `vtraceInstructionsSha256` in the meta), so a later run cannot clobber an earlier run's audit record.
+
+### Capsule engine (`--capsule-engine legacy|v2`)
+
+The indexed-context query can run against either capsule engine. `--capsule-engine legacy` (default) uses the original `vtrace capsule <workspace> <query> --mode <micro|standard|full> --json` path. `--capsule-engine v2` exercises **Capsule v2** so live runs validate the v2 retrieval product:
+
+```bash
+vtrace capsule <workspace> "<task>" --intent <auto|debug|…> --budget <tokens> --json
+```
+
+The `--mode` flags are **never** passed to v2 (it sizes from `--budget`). v2 also receives a clean task string (instance id, repo, problem statement, failing tests, hints) rather than the packed legacy query, and `--capsule-intent` (default `auto`) / `--capsule-budget` (default `8000`) select the intent and budget.
+
+**Capsule v2 audit metadata.** A v2 run records, in `_run.meta.json`, exactly which capsule was injected — not just counts: `vtraceCapsuleEngine`, `vtraceCapsuleIntent`, `vtraceCapsuleBudget`, `vtraceCapsuleActualMode`, `vtraceCapsuleEstimatedTokens`, `vtraceCapsuleTopPivotFile`/`vtraceCapsuleTopPivotSymbol`, and the full selected items `vtraceCapsulePivots` / `vtraceCapsuleSupport` (each `{ path, symbol, roleReason, estimatedTokens }`).
+
+> **Key casing.** `_run.meta.json` uses **camelCase** keys throughout (`vtraceCapsuleEngine`, not `vtrace_capsule_engine`) — the same path writes and reads them, so grep the camelCase name. The CSV columns and the markdown report expose the same facts under their **snake_case** display names (`vtrace_capsule_engine`, `vtrace_capsule_actual_mode`, `vtrace_capsule_top_pivot`, …); the report also lists the injected pivots/support under a **`### Capsule v2 selected items`** block.
 
 ### Cost-aware injection gate (`decideContextPolicy`)
 

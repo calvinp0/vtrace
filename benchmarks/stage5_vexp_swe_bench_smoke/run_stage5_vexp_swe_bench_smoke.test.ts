@@ -3080,3 +3080,144 @@ test("ingest/report prefer the snapshot for audit display", async () => {
   assert.ok(md.includes(`| vtrace_instructions_file | ${snapshotPath} |`));
   assert.ok(md.includes(`| vtrace_instructions_snapshot_file | ${snapshotPath} |`));
 });
+
+// ----- Stage 5: Capsule v2 audit metadata -----
+
+test("classifyCapsuleV2Output captures pivots, support, and estimated tokens", () => {
+  const classified = classifyCapsuleV2Output(JSON.parse(capsuleV2Json({ pivotPath: "a/b.py", pivotSymbol: "foo" })));
+  assert.equal(classified.capsulePivots?.length, 1);
+  assert.equal(classified.capsulePivots?.[0]?.path, "a/b.py");
+  assert.equal(classified.capsulePivots?.[0]?.symbol, "foo");
+  assert.equal(classified.capsulePivots?.[0]?.roleReason, "sql rendering implementation");
+  assert.equal(typeof classified.capsulePivots?.[0]?.estimatedTokens, "number");
+  assert.equal(classified.capsuleEstimatedTokens, 1200);
+
+  // A no-context v2 result records no injected items.
+  const skip = classifyCapsuleV2Output(JSON.parse(capsuleV2Json({ actualMode: "no_context" })));
+  assert.deepEqual(skip.capsulePivots, []);
+});
+
+test("a v2 runVtrace writes camelCase capsule engine/intent/budget + selected items to meta", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("v2-audit-meta"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("v2-audit-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+  const run = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes("capsule")) {
+      return {
+        exitCode: 0,
+        stdout: capsuleV2Json({ pivotPath: "django/db/models/sql/compiler.py", pivotSymbol: "_setup_joins" }),
+        stderr: "",
+      };
+    }
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  await runVtrace(
+    baseConfig({
+      vexpSweBenchDir: vexpDir, out, instances: ["django__django-11490"], sweBenchDataFile: dataFile,
+      vtraceMethod: "indexed-context", capsuleEngine: "v2", capsuleIntent: "debug", capsuleBudget: 8000,
+      runLabel: "labelV2",
+    }),
+    { runProcess: run },
+  );
+
+  const meta = JSON.parse(await readFile(path.join(rawConditionDir(out, "vtrace", "labelV2"), "_run.meta.json"), "utf8"));
+  // The _run.meta.json standard is camelCase; engine/intent/budget are recorded.
+  assert.equal(meta.vtraceCapsuleEngine, "v2");
+  assert.equal(meta.vtraceCapsuleIntent, "debug");
+  assert.equal(meta.vtraceCapsuleBudget, 8000);
+  assert.equal(meta.vtraceCapsuleActualMode, "full");
+  // Selected pivots/support recorded structurally (not just counts).
+  assert.equal(meta.vtraceCapsuleTopPivotFile, "django/db/models/sql/compiler.py");
+  assert.equal(meta.vtraceCapsuleTopPivotSymbol, "_setup_joins");
+  assert.equal(typeof meta.vtraceCapsuleEstimatedTokens, "number");
+  assert.ok(Array.isArray(meta.vtraceCapsulePivots));
+  assert.equal(meta.vtraceCapsulePivots[0].path, "django/db/models/sql/compiler.py");
+  assert.equal(meta.vtraceCapsulePivots[0].symbol, "_setup_joins");
+  assert.equal(meta.vtraceCapsulePivots[0].roleReason, "sql rendering implementation");
+  assert.equal(typeof meta.vtraceCapsulePivots[0].estimatedTokens, "number");
+  // The snake_case names a grep might look for are NOT what is written (camelCase
+  // is the standard); the report layer exposes snake_case separately.
+  assert.equal(meta.vtrace_capsule_engine, undefined);
+});
+
+test("ingest/report read the same camelCase capsule fields the run writes", async () => {
+  const out = path.join(await tmpDir("v2-roundtrip"), "results");
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", {
+    resolved: null,
+    vtraceMethod: "indexed-context",
+    indexedContext: true,
+    metaExtra: {
+      vtracePolicyAction: "inject",
+      vtraceContextInjected: true,
+      vtraceCapsuleEngine: "v2",
+      vtraceCapsuleIntent: "debug",
+      vtraceCapsuleBudget: 8000,
+      vtraceCapsuleActualMode: "standard",
+      vtraceCapsuleEstimatedTokens: 1234,
+      vtraceCapsuleTopPivotFile: "django/db/models/sql/compiler.py",
+      vtraceCapsuleTopPivotSymbol: "_setup_joins",
+      vtraceCapsulePivots: [
+        { path: "django/db/models/sql/compiler.py", symbol: "_setup_joins", roleReason: "impl helper", estimatedTokens: 600 },
+      ],
+      vtraceCapsuleSupport: [
+        { path: "django/db/models/query.py", symbol: "values_list", roleReason: "entry point", estimatedTokens: 200 },
+      ],
+    },
+  });
+  const artifact = await runIngest(baseConfig({ out }));
+
+  // Ingest read the camelCase names the run wrote, onto the normalized row.
+  const vtraceRow = artifact.rows.find((row) => row.condition === "vtrace")!;
+  assert.equal(vtraceRow.vtraceCapsuleEngine, "v2");
+  assert.equal(vtraceRow.vtraceCapsuleIntent, "debug");
+  assert.equal(vtraceRow.vtraceCapsuleBudget, 8000);
+  assert.equal(vtraceRow.vtraceCapsuleActualMode, "standard");
+  assert.equal(vtraceRow.vtraceCapsuleEstimatedTokens, 1234);
+  assert.equal(vtraceRow.vtraceCapsulePivots?.[0]?.symbol, "_setup_joins");
+  assert.equal(vtraceRow.vtraceCapsuleSupport?.[0]?.path, "django/db/models/query.py");
+
+  // The report surfaces the audit fields (snake_case display) + selected items.
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /\| vtrace_capsule_engine \| v2 \|/);
+  assert.match(md, /\| vtrace_capsule_intent \| debug \|/);
+  assert.match(md, /\| vtrace_capsule_budget \| 8000 \|/);
+  assert.match(md, /\| vtrace_capsule_actual_mode \| standard \|/);
+  assert.match(md, /\| vtrace_capsule_estimated_tokens \| 1234 \|/);
+  assert.ok(md.includes("| vtrace_capsule_top_pivot | django/db/models/sql/compiler.py::_setup_joins |"));
+  assert.match(md, /Capsule v2 selected items/);
+  assert.ok(md.includes("django/db/models/query.py::values_list"));
+  // top support files row lists the support path.
+  assert.ok(md.includes("| vtrace_capsule_top_support_files | django/db/models/query.py |"));
+});
+
+test("a full v2 runVtrace + ingest surfaces the snapshot path and sha in the report", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("v2-snap-report"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("v2-snap-report-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+  const run = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes("capsule")) return { exitCode: 0, stdout: capsuleV2Json({ pivotSymbol: "_setup_joins" }), stderr: "" };
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const cfg = baseConfig({
+    vexpSweBenchDir: vexpDir, out, instances: ["django__django-11490"], sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context", capsuleEngine: "v2", capsuleIntent: "debug",
+  });
+  await seedCondition(out, "baseline", { resolved: null });
+  await runVtrace(cfg, { runProcess: run });
+  await runIngest(cfg);
+
+  const meta = JSON.parse(await readFile(path.join(rawConditionDir(out, "vtrace"), "_run.meta.json"), "utf8"));
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.ok(md.includes(`| vtrace_instructions_snapshot_file | ${meta.vtraceInstructionsSnapshotFile} |`));
+  assert.ok(md.includes(`| vtrace_instructions_sha256 | ${meta.vtraceInstructionsSha256} |`));
+  assert.match(md, /\| vtrace_capsule_engine \| v2 \|/);
+});

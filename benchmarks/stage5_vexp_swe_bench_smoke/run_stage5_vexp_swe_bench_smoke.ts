@@ -211,6 +211,15 @@ export interface IndexedContextFields {
   readonly vtraceCapsuleEngine: CapsuleEngine | "unknown" | null;
   readonly vtraceCapsuleIntent: string | null;
   readonly vtraceCapsuleBudget: number | null;
+  // Capsule v2 selected-item audit (Requirement 2): the exact injected pivots /
+  // support, the lead pivot file/symbol, the realised actual_mode, and the
+  // capsule's token estimate. Empty/null off the v2 engine and on baseline rows.
+  readonly vtraceCapsulePivots: readonly CapsuleAuditItem[] | null;
+  readonly vtraceCapsuleSupport: readonly CapsuleAuditItem[] | null;
+  readonly vtraceCapsuleTopPivotFile: string | null;
+  readonly vtraceCapsuleTopPivotSymbol: string | null;
+  readonly vtraceCapsuleActualMode: string | null;
+  readonly vtraceCapsuleEstimatedTokens: number | null;
 }
 
 // Stage 5C evaluation evidence, normalized per instance. resolved itself stays
@@ -1900,6 +1909,15 @@ export interface IndexedContextResult {
   readonly capsuleEngine: CapsuleEngine;
   readonly capsuleIntent: CapsuleV2Intent | null;
   readonly capsuleBudget: number | null;
+  // Capsule v2 selected-item audit: the exact pivots/support injected, the lead
+  // pivot file/symbol, the realised actual_mode, and the capsule's token estimate.
+  // Empty/null on the legacy engine and on no-context runs.
+  readonly capsulePivots: readonly CapsuleAuditItem[];
+  readonly capsuleSupport: readonly CapsuleAuditItem[];
+  readonly capsuleTopPivotFile: string | null;
+  readonly capsuleTopPivotSymbol: string | null;
+  readonly capsuleActualMode: string | null;
+  readonly capsuleEstimatedTokens: number | null;
 }
 
 // Resolve the bundled vexp-swe-bench dataset path (overridable via --swe-bench-data).
@@ -2038,6 +2056,17 @@ export function extractCapsuleContext(stdout: string): string {
 //  - error:  empty/unusable output that is NOT an intentional skip → fail fast.
 export type VtracePolicyAction = "inject" | "skip" | "error";
 
+// One Capsule v2 selected item, reduced to the audit-relevant fields. Recorded
+// per-run so a live run is auditable down to EXACTLY which pivots/support were
+// injected (not just counts) — the snapshot shows the rendered text, this shows
+// the structured selection.
+export interface CapsuleAuditItem {
+  readonly path: string;
+  readonly symbol: string;
+  readonly roleReason: string | null;
+  readonly estimatedTokens: number | null;
+}
+
 export interface CapsuleClassification {
   readonly policyAction: VtracePolicyAction;
   readonly contextInjected: boolean;
@@ -2051,8 +2080,20 @@ export interface CapsuleClassification {
   // captured verbatim from the capsule diagnostics. null when not reported.
   readonly searchBudget: string | null;
   readonly searchBudgetReason: string | null;
+  // Capsule v2 selected-item audit (null on the legacy engine, which emits no
+  // structured items). estimatedTokens is the capsule's total token estimate.
+  readonly capsulePivots: readonly CapsuleAuditItem[] | null;
+  readonly capsuleSupport: readonly CapsuleAuditItem[] | null;
+  readonly capsuleEstimatedTokens: number | null;
   /** Set only when policyAction === "error" (genuinely unusable output). */
   readonly error: string | null;
+}
+
+// The Capsule v2 audit payload threaded into a classification (null on legacy).
+interface CapsuleV2Audit {
+  readonly pivots: readonly CapsuleAuditItem[];
+  readonly support: readonly CapsuleAuditItem[];
+  readonly estimatedTokens: number | null;
 }
 
 // Classify a capsule `--json` (or raw) query output into a vtrace policy action.
@@ -2128,6 +2169,7 @@ function skipClassification(
   supportCount: number | null,
   searchBudget: string | null = "high",
   searchBudgetReason: string | null = null,
+  v2: CapsuleV2Audit | null = null,
 ): CapsuleClassification {
   return {
     policyAction: "skip",
@@ -2140,6 +2182,9 @@ function skipClassification(
     supportCount: supportCount ?? 0,
     searchBudget,
     searchBudgetReason,
+    capsulePivots: v2?.pivots ?? null,
+    capsuleSupport: v2?.support ?? null,
+    capsuleEstimatedTokens: v2?.estimatedTokens ?? null,
     error: null,
   };
 }
@@ -2152,6 +2197,7 @@ function injectClassification(
   supportCount: number | null,
   searchBudget: string | null = null,
   searchBudgetReason: string | null = null,
+  v2: CapsuleV2Audit | null = null,
 ): CapsuleClassification {
   return {
     policyAction: "inject",
@@ -2164,6 +2210,9 @@ function injectClassification(
     supportCount,
     searchBudget,
     searchBudgetReason,
+    capsulePivots: v2?.pivots ?? null,
+    capsuleSupport: v2?.support ?? null,
+    capsuleEstimatedTokens: v2?.estimatedTokens ?? null,
     error: null,
   };
 }
@@ -2180,6 +2229,9 @@ function errorClassification(message: string): CapsuleClassification {
     supportCount: null,
     searchBudget: null,
     searchBudgetReason: null,
+    capsulePivots: null,
+    capsuleSupport: null,
+    capsuleEstimatedTokens: null,
     error: message,
   };
 }
@@ -2191,22 +2243,42 @@ function errorClassification(message: string): CapsuleClassification {
 // never an error. Pivot/support counts come from the v2 diagnostics.
 export function classifyCapsuleV2Output(result: CapsuleV2Result): CapsuleClassification {
   const diagnostics = isRecord(result.diagnostics) ? result.diagnostics : {};
-  const pivotCount = isNumber(diagnostics.pivot_count) ? diagnostics.pivot_count : (result.pivots?.length ?? null);
-  const supportCount = isNumber(diagnostics.support_count) ? diagnostics.support_count : (result.support?.length ?? null);
+  const pivots = toCapsuleAuditItems(result.pivots);
+  const support = toCapsuleAuditItems(result.support);
+  const pivotCount = isNumber(diagnostics.pivot_count) ? diagnostics.pivot_count : pivots.length;
+  const supportCount = isNumber(diagnostics.support_count) ? diagnostics.support_count : support.length;
   const actualMode = isString(result.actual_mode) ? result.actual_mode : null;
+  const estimatedTokens =
+    isRecord(result.budget) && isNumber(result.budget.estimated_tokens) ? result.budget.estimated_tokens : null;
+  const v2: CapsuleV2Audit = { pivots, support, estimatedTokens };
 
   // No pivot recovered → a valid no-context skip (recorded as actual_mode
   // "no_context", surfaced through the same skip machinery as the legacy path).
   if (result.actual_mode === CapsuleV2Mode.NoContext) {
     // v2 does not emit a search_budget; leave it unset rather than guessing.
-    return skipClassification(result.reason ?? null, null, actualMode, pivotCount, supportCount, null, null);
+    return skipClassification(result.reason ?? null, null, actualMode, pivotCount, supportCount, null, null, v2);
   }
 
   const context = renderCapsuleV2Human(result).trim();
   if (context.length === 0) {
     return errorClassification("Capsule v2 returned no renderable context.");
   }
-  return injectClassification(context, null, actualMode, pivotCount, supportCount, null, null);
+  return injectClassification(context, null, actualMode, pivotCount, supportCount, null, null, v2);
+}
+
+// Reduce Capsule v2 items to the audit-relevant fields, tolerating partially
+// shaped JSON (a missing path/symbol degrades to "" rather than throwing).
+function toCapsuleAuditItems(items: unknown): CapsuleAuditItem[] {
+  if (!Array.isArray(items)) return [];
+  return items.map((raw) => {
+    const item = isRecord(raw) ? raw : {};
+    return {
+      path: isString(item.path) ? item.path : "",
+      symbol: isString(item.symbol) ? item.symbol : "",
+      roleReason: isString(item.role_reason) ? item.role_reason : null,
+      estimatedTokens: isNumber(item.estimated_tokens) ? item.estimated_tokens : null,
+    };
+  });
 }
 
 // Build the vtrace query string from an instance. Rather than dumping the whole
@@ -2602,6 +2674,12 @@ function indexedContextMetaFields(result: IndexedContextResult): IndexedContextF
     vtraceCapsuleEngine: result.capsuleEngine,
     vtraceCapsuleIntent: result.capsuleIntent,
     vtraceCapsuleBudget: result.capsuleBudget,
+    vtraceCapsulePivots: result.capsulePivots,
+    vtraceCapsuleSupport: result.capsuleSupport,
+    vtraceCapsuleTopPivotFile: result.capsuleTopPivotFile,
+    vtraceCapsuleTopPivotSymbol: result.capsuleTopPivotSymbol,
+    vtraceCapsuleActualMode: result.capsuleActualMode,
+    vtraceCapsuleEstimatedTokens: result.capsuleEstimatedTokens,
   };
 }
 
@@ -2765,6 +2843,26 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
         ? (sections.find((s) => s.classification?.actualCapsuleMode != null)?.classification?.actualCapsuleMode ?? null)
         : null);
 
+  // Capsule v2 selected-item audit, aggregated across the INJECTED sections (the
+  // items that actually made it into the assembled context). Legacy classifications
+  // carry no items (null), so this is naturally empty off the v2 engine.
+  const injectedClassifications = gatedSections
+    .filter((section) => section.rawContext.trim().length > 0 && section.classification !== null)
+    .map((section) => section.classification!);
+  const capsulePivots = injectedClassifications.flatMap((c) => c.capsulePivots ?? []);
+  const capsuleSupport = injectedClassifications.flatMap((c) => c.capsuleSupport ?? []);
+  const capsuleEstimatedTokens = injectedClassifications.reduce<number | null>(
+    (sum, c) => (c.capsuleEstimatedTokens == null ? sum : (sum ?? 0) + c.capsuleEstimatedTokens),
+    null,
+  );
+  const topPivot = capsulePivots[0] ?? null;
+  // The capsule's genuine realised mode (v2: micro/standard/full/no_context),
+  // distinct from the legacy-coerced `actualCapsuleMode`. v2-only.
+  const capsuleActualMode =
+    config.capsuleEngine === "v2"
+      ? (sections.find((s) => s.classification?.actualCapsuleMode != null)?.classification?.actualCapsuleMode ?? null)
+      : null;
+
   return {
     indexedContext,
     indexCommand,
@@ -2798,6 +2896,12 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     capsuleEngine: config.capsuleEngine,
     capsuleIntent: config.capsuleEngine === "v2" ? config.capsuleIntent : null,
     capsuleBudget: config.capsuleEngine === "v2" ? config.capsuleBudget : null,
+    capsulePivots,
+    capsuleSupport,
+    capsuleTopPivotFile: topPivot?.path ?? null,
+    capsuleTopPivotSymbol: topPivot?.symbol ?? null,
+    capsuleActualMode,
+    capsuleEstimatedTokens,
   };
 }
 
@@ -3124,6 +3228,12 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtraceCapsuleEngine: evidence.vtraceCapsuleEngine,
           vtraceCapsuleIntent: evidence.vtraceCapsuleIntent,
           vtraceCapsuleBudget: evidence.vtraceCapsuleBudget,
+          vtraceCapsulePivots: evidence.vtraceCapsulePivots,
+          vtraceCapsuleSupport: evidence.vtraceCapsuleSupport,
+          vtraceCapsuleTopPivotFile: evidence.vtraceCapsuleTopPivotFile,
+          vtraceCapsuleTopPivotSymbol: evidence.vtraceCapsuleTopPivotSymbol,
+          vtraceCapsuleActualMode: evidence.vtraceCapsuleActualMode,
+          vtraceCapsuleEstimatedTokens: evidence.vtraceCapsuleEstimatedTokens,
         },
   );
 }
@@ -3393,6 +3503,14 @@ export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5
     vtraceCapsuleEngine: unanimous((e) => e.vtraceCapsuleEngine, null),
     vtraceCapsuleIntent: unanimous((e) => e.vtraceCapsuleIntent, null),
     vtraceCapsuleBudget: unanimous((e) => e.vtraceCapsuleBudget, null),
+    // Selected-item audit is per-instance, so it collapses to null/empty here;
+    // the authoritative per-instance items live on each row.
+    vtraceCapsulePivots: null,
+    vtraceCapsuleSupport: null,
+    vtraceCapsuleTopPivotFile: null,
+    vtraceCapsuleTopPivotSymbol: null,
+    vtraceCapsuleActualMode: null,
+    vtraceCapsuleEstimatedTokens: null,
     notes: perRun.flatMap((e) => e.notes),
   };
 }
@@ -3762,6 +3880,12 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtraceCapsuleEngine: null,
     vtraceCapsuleIntent: null,
     vtraceCapsuleBudget: null,
+    vtraceCapsulePivots: null,
+    vtraceCapsuleSupport: null,
+    vtraceCapsuleTopPivotFile: null,
+    vtraceCapsuleTopPivotSymbol: null,
+    vtraceCapsuleActualMode: null,
+    vtraceCapsuleEstimatedTokens: null,
   };
 }
 
@@ -4037,6 +4161,20 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     value === "legacy" || value === "v2" || value === "unknown" ? (value as CapsuleEngine | "unknown") : null;
   const level = (value: unknown): ExpectedLevel | null =>
     value === "low" || value === "medium" || value === "high" ? (value as ExpectedLevel) : null;
+  // Parse the recorded Capsule v2 selected items back into audit items, tolerating
+  // partial/legacy meta (a non-array reads as null, a malformed item degrades).
+  const auditItems = (value: unknown): CapsuleAuditItem[] | null => {
+    if (!Array.isArray(value)) return null;
+    return value.map((raw) => {
+      const item = isRecord(raw) ? raw : {};
+      return {
+        path: isString(item.path) ? item.path : "",
+        symbol: isString(item.symbol) ? item.symbol : "",
+        roleReason: isString(item.roleReason) ? item.roleReason : null,
+        estimatedTokens: isNumber(item.estimatedTokens) ? item.estimatedTokens : null,
+      };
+    });
+  };
   return {
     vtraceIndexedContext: bool(meta.vtraceIndexedContext),
     vtraceIndexCommand: str(meta.vtraceIndexCommand),
@@ -4060,6 +4198,12 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtraceCapsuleEngine: capsuleEngine(meta.vtraceCapsuleEngine),
     vtraceCapsuleIntent: str(meta.vtraceCapsuleIntent),
     vtraceCapsuleBudget: num(meta.vtraceCapsuleBudget),
+    vtraceCapsulePivots: auditItems(meta.vtraceCapsulePivots),
+    vtraceCapsuleSupport: auditItems(meta.vtraceCapsuleSupport),
+    vtraceCapsuleTopPivotFile: str(meta.vtraceCapsuleTopPivotFile),
+    vtraceCapsuleTopPivotSymbol: str(meta.vtraceCapsuleTopPivotSymbol),
+    vtraceCapsuleActualMode: str(meta.vtraceCapsuleActualMode),
+    vtraceCapsuleEstimatedTokens: num(meta.vtraceCapsuleEstimatedTokens),
   };
 }
 
@@ -4332,6 +4476,42 @@ function renderVtraceEvidence(evidence: Stage5RunEvidence): string[] {
   return lines;
 }
 
+// The lead Capsule v2 pivot as `path::symbol`, preferring the explicit top-pivot
+// fields and falling back to the first recorded pivot item.
+function formatTopPivot(evidence: Stage5RunEvidence): string {
+  const file = evidence.vtraceCapsuleTopPivotFile ?? evidence.vtraceCapsulePivots?.[0]?.path ?? null;
+  const symbol = evidence.vtraceCapsuleTopPivotSymbol ?? evidence.vtraceCapsulePivots?.[0]?.symbol ?? null;
+  if (file === null && symbol === null) return "(none)";
+  return `${file ?? "(unknown file)"}::${symbol ?? "(unknown symbol)"}`;
+}
+
+// The distinct support file paths (deduped, order-preserving) for the audit table.
+function formatSupportFiles(support: readonly CapsuleAuditItem[] | null): string {
+  if (support === null || support.length === 0) return "(none)";
+  const files = [...new Set(support.map((item) => item.path).filter((p) => p.length > 0))];
+  return files.length > 0 ? files.join(", ") : "(none)";
+}
+
+// Render the Capsule v2 selected items (pivots first, then support) as a compact
+// auditable list. Returns [] off the v2 engine / when nothing was selected.
+function renderCapsuleItemList(evidence: Stage5RunEvidence): string[] {
+  const pivots = evidence.vtraceCapsulePivots ?? [];
+  const support = evidence.vtraceCapsuleSupport ?? [];
+  if (pivots.length === 0 && support.length === 0) return [];
+  const line = (role: string, item: CapsuleAuditItem): string => {
+    const tokens = item.estimatedTokens === null ? "" : ` (~${item.estimatedTokens} tok)`;
+    const reason = item.roleReason === null ? "" : ` — ${item.roleReason}`;
+    return `- ${role}: \`${item.path}::${item.symbol}\`${tokens}${reason}`;
+  };
+  return [
+    "### Capsule v2 selected items",
+    "",
+    ...pivots.map((item) => line("pivot", item)),
+    ...support.map((item) => line("support", item)),
+    "",
+  ];
+}
+
 // Stage 5B evidence table. Only rendered when the run used (or recorded any)
 // indexed-context, so plain local-patch / instructions-file runs are unaffected.
 function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
@@ -4350,6 +4530,14 @@ function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
     `| vtrace_capsule_engine | ${evidence.vtraceCapsuleEngine ?? "(n/a)"} |`,
     `| vtrace_capsule_intent | ${evidence.vtraceCapsuleIntent ?? "(n/a)"} |`,
     `| vtrace_capsule_budget | ${evidence.vtraceCapsuleBudget ?? "(n/a)"} |`,
+    `| vtrace_capsule_actual_mode | ${evidence.vtraceCapsuleActualMode ?? "(n/a)"} |`,
+    `| vtrace_capsule_estimated_tokens | ${evidence.vtraceCapsuleEstimatedTokens ?? "(n/a)"} |`,
+    `| vtrace_capsule_top_pivot | ${formatTopPivot(evidence)} |`,
+    `| vtrace_capsule_top_support_files | ${formatSupportFiles(evidence.vtraceCapsuleSupport)} |`,
+    // Snapshot path + content hash, so the audit table names the exact immutable
+    // record of what was injected (the active file may be overwritten by a later run).
+    `| vtrace_instructions_snapshot_file | ${evidence.vtraceInstructionsSnapshotFile ?? "(none)"} |`,
+    `| vtrace_instructions_sha256 | ${evidence.vtraceInstructionsSha256 ?? "(n/a)"} |`,
     `| vtrace_policy_reason | ${evidence.vtracePolicyReason ?? evidence.vtraceSkipReason ?? "(none)"} |`,
     `| expected_context_value | ${evidence.expectedContextValue ?? "(n/a)"} |`,
     `| expected_overhead_risk | ${evidence.expectedOverheadRisk ?? "(n/a)"} |`,
@@ -4369,6 +4557,8 @@ function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
     `| vtrace_treatment_valid | ${String(evidence.vtraceTreatmentValid)} |`,
     "",
   ];
+  // The exact Capsule v2 pivots/support that were injected (v2 runs only).
+  lines.push(...renderCapsuleItemList(evidence));
   // A SKIP policy is a valid, intentional no-context decision — explain it
   // honestly rather than warning, so the row is not mistaken for a failed
   // treatment or read as injected-context performance.
