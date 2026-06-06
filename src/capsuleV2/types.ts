@@ -250,6 +250,26 @@ export interface CapsuleV2Diagnostics {
    * test, an over-strict gate, or a candidate generated and then discarded?).
    */
   no_context_explanations?: NoContextExplanation[];
+  /**
+   * True when the task prose carried a file-line anchor (e.g. `compiler.py#L428-L433`)
+   * that resolved to an indexed symbol, which was then promoted as a pivot. Makes
+   * the explicit source-anchor route auditable independently of intent.
+   */
+  line_anchor_resolution_used?: boolean;
+  /** The anchors that resolved to a symbol (present only when at least one did). */
+  line_anchor_candidates?: LineAnchorDiagnostic[];
+}
+
+/** One resolved file-line anchor, as the JSON/diagnostics surface reports it. */
+export interface LineAnchorDiagnostic {
+  /** The anchor exactly as it appeared in the task, e.g. `compiler.py#L428-L433`. */
+  anchor: string;
+  /** The indexed file the path hint resolved to. */
+  resolved_path: string;
+  /** The enclosing (or nearest) indexed symbol the line range mapped to. */
+  resolved_symbol: string;
+  /** `high` when a symbol span enclosed the range; `low` for a nearest-symbol fallback. */
+  confidence: "high" | "low";
 }
 
 export interface NoContextExplanation {

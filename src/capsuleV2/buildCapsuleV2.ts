@@ -37,6 +37,12 @@ import {
 } from "./debugRoles";
 import { retrieveDocSections, type DocSection } from "./docRetrieval";
 import {
+  buildLineAnchorCandidate,
+  parseLineAnchors,
+  resolveLineAnchors,
+  type LineAnchorResolution,
+} from "./lineAnchorResolution";
+import {
   backfillProductionCandidates,
   computeClassMethodExpansion,
   isTestDominatedPool,
@@ -106,6 +112,20 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     maxResults: CANDIDATE_POOL_SIZE,
   }).candidates;
 
+  // File-line anchor resolution. When the task prose cites a source anchor
+  // (`compiler.py#L428-L433`), resolve it against the index and map the line
+  // range to the enclosing symbol — the issue named the edit site outright, a
+  // signal lexical ranking cannot use. Resolved anchors are merged ahead of the
+  // pool below and promoted to pivots in debug role refinement. Resolution is
+  // intent-independent (the diagnostics surface it regardless); the forced-pivot
+  // role only applies under debug refinement.
+  const lineAnchorResolutions = resolveLineAnchors(
+    input.db,
+    parseLineAnchors(input.task),
+    shaped,
+  );
+  const anchorSymbolIds = new Set(lineAnchorResolutions.map((resolution) => resolution.symbolId));
+
   // Production-candidate backfill (debug intent). A pool of only test symbols
   // means lexical search ranked the failing tests above the implementation they
   // exercise, so the real edit target never entered the pool. Recover it with
@@ -165,6 +185,17 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     }
   }
 
+  // Merge the anchor-resolved targets AHEAD of everything else: an explicit source
+  // anchor is the strongest edit-site signal, so it must never be crowded out of
+  // the pool by the lexical ranking it was meant to correct.
+  if (lineAnchorResolutions.length > 0) {
+    candidates = mergeCandidatesPreferring(
+      lineAnchorResolutions.map((resolution) => buildLineAnchorCandidate(resolution)),
+      candidates,
+      CANDIDATE_POOL_SIZE,
+    );
+  }
+
   // Role assignment. The base gate scores each candidate in isolation; for debug
   // intent we then refine roles with call-graph structure (caller vs helper,
   // local vs generic infrastructure) before capping pivots to the tier. Other
@@ -184,6 +215,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         ...(sqlRenderingTrigger.active
           ? { sqlRendering: { compositionTerms: sqlRenderingTrigger.compositionTerms } }
           : {}),
+        ...(anchorSymbolIds.size > 0 ? { lineAnchor: { symbolIds: anchorSymbolIds } } : {}),
       },
     );
     refined = result.refined;
@@ -206,18 +238,42 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         }
       : {};
 
+  // File-line anchor diagnostics, surfaced regardless of intent so the explicit
+  // source-anchor route is always auditable: which anchor resolved to which
+  // file/symbol, and how confident the mapping was.
+  const lineAnchorDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
+    lineAnchorResolutions.length > 0
+      ? {
+          line_anchor_resolution_used: true,
+          line_anchor_candidates: lineAnchorResolutions.map((resolution) => ({
+            anchor: resolution.anchor,
+            resolved_path: resolution.resolvedPath,
+            resolved_symbol: resolution.resolvedSymbol,
+            confidence: resolution.confidence,
+          })),
+        }
+      : {};
+
   const pivotCandidates = refined.filter((r) => r.role === CandidateRole.Pivot);
   const supportCandidates = refined.filter((r) => r.role === CandidateRole.Support);
   const roleDiscards = refined.filter((r) => r.role === CandidateRole.Discard);
 
-  // For a composed-query SQL-output bug, lead with the renderer most on-topic to
-  // the composition (`get_combinator_sql` for a "combined" issue) ahead of a
-  // generic `as_sql`/`execute_sql`, so the capsule's first pivot is the edit site.
-  if (sqlRenderingTrigger.active) {
+  // Order the surviving pivots for rendering. A file-line anchor target leads of
+  // all (the issue named it outright). Then, for a composed-query SQL-output bug,
+  // the renderer most on-topic to the composition (`get_combinator_sql` for a
+  // "combined" issue) ahead of a generic `as_sql`/`execute_sql`, so the capsule's
+  // first pivot is the edit site.
+  if (anchorSymbolIds.size > 0 || sqlRenderingTrigger.active) {
+    const anchorRank = (entry: RefinedRoledCandidate): number =>
+      anchorSymbolIds.has(entry.candidate.symbolId) ? 1 : 0;
+    const renderingRank = (entry: RefinedRoledCandidate): number =>
+      sqlRenderingTrigger.active
+        ? sqlRenderingRelevance(entry.candidate.localName, sqlRenderingTrigger.compositionTerms)
+        : 0;
     pivotCandidates.sort(
       (left, right) =>
-        sqlRenderingRelevance(right.candidate.localName, sqlRenderingTrigger.compositionTerms)
-          - sqlRenderingRelevance(left.candidate.localName, sqlRenderingTrigger.compositionTerms)
+        anchorRank(right) - anchorRank(left)
+        || renderingRank(right) - renderingRank(left)
         || right.candidate.scores.final - left.candidate.scores.final
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
         || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
@@ -241,7 +297,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       weights: weightsRecord,
       shaped,
       explanations: buildNoContextExplanations(refined, shaped),
-      debugDiagnostics,
+      debugDiagnostics: { ...debugDiagnostics, ...lineAnchorDiagnostics },
     });
   }
 
@@ -334,6 +390,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       likely_symbols: shaped.likelySymbols,
       failing_tests: shaped.failingTests,
       ...debugDiagnostics,
+      ...lineAnchorDiagnostics,
     },
   };
 }

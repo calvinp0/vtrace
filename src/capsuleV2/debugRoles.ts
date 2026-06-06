@@ -85,6 +85,13 @@ export interface RefineDebugRolesOptions {
    * are the composition words found in the task, used to rank rendering pivots.
    */
   sqlRendering?: { compositionTerms: ReadonlySet<string> };
+  /**
+   * File-line anchor targets. When the task prose cited a source anchor (e.g.
+   * `compiler.py#L428-L433`) that resolved to an indexed symbol, its id is here:
+   * the symbol is promoted to pivot (unless it is a test or a low-actionability
+   * kind) and ranked first among pivots — the issue named the edit site outright.
+   */
+  lineAnchor?: { symbolIds: ReadonlySet<string> };
 }
 
 export interface RefineDebugResult {
@@ -282,6 +289,22 @@ export function refineDebugRoles(
       }
     }
 
+    // File-line anchor override (applied last, so it wins): the issue cited this
+    // exact symbol by file + line range. That is the most explicit edit-site
+    // signal there is, so it becomes the pivot — UNLESS it is a test symbol or a
+    // low-actionability kind (a module variable the line happened to fall on),
+    // which an anchor must not blindly promote into production context.
+    if (
+      options.lineAnchor?.symbolIds.has(candidate.symbolId)
+      && isAnchorActionableKind(candidate.kind)
+      && !isLikelyTestCandidate(candidate)
+    ) {
+      role = CandidateRole.Pivot;
+      roleReason = "source line anchor in the issue points at this symbol — explicit edit site";
+      implementationHelper = true;
+      entryPoint = false;
+    }
+
     return {
       candidate,
       role,
@@ -299,10 +322,22 @@ export function refineDebugRoles(
   });
 
   return {
-    refined: capPivots(refined, maxPivots, expansion, options.sqlRendering),
+    refined: capPivots(refined, maxPivots, expansion, options.sqlRendering, options.lineAnchor),
     ...(subsystemDir === undefined ? {} : { subsystemRoot: subsystemDir }),
     sourceBodyCallFallbackUsed,
   };
+}
+
+const ANCHOR_ACTIONABLE_KINDS: ReadonlySet<SymbolKind> = new Set([
+  SymbolKind.Function,
+  SymbolKind.Method,
+  SymbolKind.Class,
+]);
+
+// A file-line anchor edit can land on a function/method/class — but never a
+// module-level variable/alias the line happened to fall on (low-actionability).
+function isAnchorActionableKind(kind: SymbolKind): boolean {
+  return ANCHOR_ACTIONABLE_KINDS.has(kind);
 }
 
 /** Wrap base roles unchanged (non-debug intents): no structural signals. */
@@ -394,9 +429,10 @@ function whyNotPivot(entry: RefinedRoledCandidate, issueTokens: ReadonlySet<stri
 
 // --- helpers ------------------------------------------------------------------
 
-// Cap pivots to `maxPivots`; demote the rest to support. SQL-rendering edit sites
-// rank FIRST (by composition relevance, so `get_combinator_sql` leads a "combined"
-// bug ahead of a generic `as_sql`); then Class.method edit-site methods (by their
+// Cap pivots to `maxPivots`; demote the rest to support. A file-line anchor edit
+// site ranks FIRST of all (the issue named it outright); then SQL-rendering edit
+// sites (by composition relevance, so `get_combinator_sql` leads a "combined" bug
+// ahead of a generic `as_sql`); then Class.method edit-site methods (by their
 // expansion overlap score), so a recovered method claims a scarce pivot slot ahead
 // of a broad class or a generic candidate. Within a group, ties broken by final
 // score then fqName/symbolId for determinism.
@@ -405,7 +441,10 @@ function capPivots(
   maxPivots: number,
   expansion: ClassMethodExpansion | undefined,
   sqlRendering: { compositionTerms: ReadonlySet<string> } | undefined,
+  lineAnchor: { symbolIds: ReadonlySet<string> } | undefined,
 ): RefinedRoledCandidate[] {
+  const anchorScore = (entry: RefinedRoledCandidate): number =>
+    lineAnchor?.symbolIds.has(entry.candidate.symbolId) ? 1 : 0;
   const expansionScore = (entry: RefinedRoledCandidate): number =>
     entry.signals.is_class_method_expansion_target
       ? expansion?.methodScores.get(entry.candidate.symbolId) ?? 0
@@ -420,7 +459,8 @@ function capPivots(
     .filter((entry) => entry.role === CandidateRole.Pivot)
     .sort(
       (left, right) =>
-        renderingScore(right) - renderingScore(left)
+        anchorScore(right) - anchorScore(left)
+        || renderingScore(right) - renderingScore(left)
         || expansionScore(right) - expansionScore(left)
         || right.candidate.scores.final - left.candidate.scores.final
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
