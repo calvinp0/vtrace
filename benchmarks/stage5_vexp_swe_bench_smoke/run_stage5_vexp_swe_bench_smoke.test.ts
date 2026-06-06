@@ -1211,16 +1211,16 @@ test("prepareIndexedContext --reuse-workspace reuses the existing checkout + ind
   assert.equal(result.vtraceIndexDurationMs, null);
 });
 
-test("--show-vtrace-index-log streams the index (drops --quiet, forces VTRACE_PROGRESS_STREAM, tees output)", async () => {
+test("--show-vtrace-index-log shows the index bar (drops --quiet, inherits stdio, forces progress)", async () => {
   const out = path.join(await tmpDir("idx-log"), "results");
   const dataDir = await tmpDir("idx-log-data");
   const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
   let indexArgs: readonly string[] = [];
-  let indexOpts: { env?: Record<string, string>; streamOutput?: boolean } | undefined;
+  let indexOpts: { env?: Record<string, string>; inheritStdio?: boolean } | undefined;
   const run = async (
     command: string,
     args: readonly string[],
-    options?: { env?: Record<string, string>; streamOutput?: boolean },
+    options?: { env?: Record<string, string>; inheritStdio?: boolean },
   ): Promise<ProcessResult> => {
     const line = [command, ...args].join(" ");
     if (line.includes(" index ")) {
@@ -1240,8 +1240,39 @@ test("--show-vtrace-index-log streams the index (drops --quiet, forces VTRACE_PR
   await prepareIndexedContext(config, { runProcess: run });
 
   assert.ok(!indexArgs.includes("--quiet"), "--quiet must be dropped so the indexer emits progress");
-  assert.equal(indexOpts?.streamOutput, true, "the index output must be teed to the terminal");
-  assert.equal(indexOpts?.env?.VTRACE_PROGRESS_STREAM, "1", "progress must be forced on over the non-TTY pipe");
+  assert.equal(indexOpts?.inheritStdio, true, "the index must inherit our TTY to draw its native bar");
+  assert.equal(indexOpts?.env?.VTRACE_PROGRESS_STREAM, "1", "progress must be forced on for the non-TTY fallback");
+});
+
+test("without --show-vtrace-index-log the index is captured quietly (no stdio inherit)", async () => {
+  const out = path.join(await tmpDir("idx-quiet"), "results");
+  const dataDir = await tmpDir("idx-quiet-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+  let indexArgs: readonly string[] = [];
+  let indexOpts: { env?: Record<string, string>; inheritStdio?: boolean } | undefined;
+  const run = async (
+    command: string,
+    args: readonly string[],
+    options?: { env?: Record<string, string>; inheritStdio?: boolean },
+  ): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes(" index ")) {
+      indexArgs = args;
+      indexOpts = options;
+    }
+    if (line.includes("capsule")) return { exitCode: 0, stdout: injectCapsuleJson("symbol: x"), stderr: "" };
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({
+    out,
+    instances: ["django__django-11490"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+  });
+  await prepareIndexedContext(config, { runProcess: run });
+
+  assert.ok(indexArgs.includes("--quiet"), "the index stays quiet by default");
+  assert.notEqual(indexOpts?.inheritStdio, true, "default index must be captured, not inherited");
 });
 
 test("prepareIndexedContext reports failure when the vtrace query fails", async () => {

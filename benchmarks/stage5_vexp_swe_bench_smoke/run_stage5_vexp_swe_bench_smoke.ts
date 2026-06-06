@@ -93,10 +93,11 @@ export type ProcessRunner = (
   options?: {
     readonly cwd?: string;
     readonly env?: Record<string, string>;
-    // Tee the child's stdout/stderr to this process's terminal AS IT ARRIVES
-    // (still captured for the result). Used so --show-vtrace-index-log streams
-    // the index parse/load progress live instead of buffering it out of sight.
-    readonly streamOutput?: boolean;
+    // Inherit this process's stdio for the child instead of capturing it, so the
+    // child sees a real TTY and renders its native interactive output (the
+    // vtrace index progress BAR, not the plain per-file fallback). The captured
+    // stdout/stderr come back empty in this mode. Used by --show-vtrace-index-log.
+    readonly inheritStdio?: boolean;
   },
 ) => Promise<ProcessResult>;
 
@@ -124,10 +125,10 @@ export interface CliConfig {
   // evaluates against a stale index or leftover untracked state. --reuse-workspace
   // opts out: the existing checkout and index are reused as-is.
   readonly reuseWorkspace: boolean;
-  // When true, stream the vtrace `index` per-file parse/load progress to the
-  // terminal: the runner drops --quiet, sets VTRACE_PROGRESS_STREAM=1 (the index
-  // progress reporter self-disables on a non-TTY pipe otherwise), and tees the
-  // child's stderr live. Absent, the index runs quietly as before.
+  // When true, show the vtrace `index` progress in the terminal: the runner drops
+  // --quiet and inherits its stdio to the index child so it sees a real TTY and
+  // draws its native progress bar (with VTRACE_PROGRESS_STREAM=1 as the non-TTY
+  // fallback to a plain per-file stream). Absent, the index runs quietly as before.
   readonly showVtraceIndexLog: boolean;
   readonly vtraceContextMaxChars: number;
   readonly vtraceContextMaxItems: number;
@@ -2437,17 +2438,19 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
       const reuseIndex = (config.reuseWorkspace || config.skipVtraceIndexIfPresent) && indexPresent;
       if (!reuseIndex) {
         if (config.showVtraceIndexLog) {
-          process.stderr.write(`\n[stage5] indexing ${workspace} (live log) …\n`);
+          process.stderr.write(`\n[stage5] indexing ${workspace} …\n`);
         }
         const startMs = Date.now();
         indexStartedAt = new Date(startMs).toISOString();
-        // Drop --quiet (above) is not enough: the index progress reporter also
-        // self-disables on a non-TTY pipe, so force it on with
-        // VTRACE_PROGRESS_STREAM=1 and tee the child's stderr (where the per-file
-        // `[parse] N/total path` lines are written) to our terminal.
+        // --show-vtrace-index-log: drop --quiet (above) AND inherit our terminal,
+        // so the child sees a real TTY and draws its native index progress bar
+        // exactly as a direct `vtrace index` run does. VTRACE_PROGRESS_STREAM=1 is
+        // the fallback for when our OWN output is piped (non-TTY): it forces the
+        // plain per-file reporter on instead of the index going silent.
         const indexResult = await runProc(indexSpec.command, indexSpec.args, {
-          streamOutput: config.showVtraceIndexLog,
-          ...(config.showVtraceIndexLog ? { env: { VTRACE_PROGRESS_STREAM: "1" } } : {}),
+          ...(config.showVtraceIndexLog
+            ? { inheritStdio: true, env: { VTRACE_PROGRESS_STREAM: "1" } }
+            : {}),
         });
         const endMs = Date.now();
         indexFinishedAt = new Date(endMs).toISOString();
@@ -4326,26 +4329,22 @@ async function readJsonIfExists(filePath: string): Promise<unknown | null> {
 async function runProcess(
   command: string,
   args: readonly string[],
-  options: { readonly cwd?: string; readonly env?: Record<string, string>; readonly streamOutput?: boolean } = {},
+  options: { readonly cwd?: string; readonly env?: Record<string, string>; readonly inheritStdio?: boolean } = {},
 ): Promise<ProcessResult> {
   return await new Promise((resolve) => {
+    // Inherit mode hands the child our real terminal, so it renders interactive
+    // output (a TTY progress bar) directly; there are then no pipes to capture,
+    // and stdout/stderr come back empty. Otherwise capture both into buffers.
+    const inherit = options.inheritStdio === true;
     const proc = spawn(command, [...args], {
       cwd: options.cwd,
       env: { ...process.env, ...(options.env ?? {}) },
-      stdio: ["ignore", "pipe", "pipe"],
+      stdio: inherit ? ["ignore", "inherit", "inherit"] : ["ignore", "pipe", "pipe"],
     });
     const stdoutChunks: Buffer[] = [];
     const stderrChunks: Buffer[] = [];
-    // When streaming, tee each chunk to the terminal as it arrives so the user
-    // sees live progress; the buffers are still collected for the result/error.
-    proc.stdout.on("data", (chunk: Buffer) => {
-      stdoutChunks.push(chunk);
-      if (options.streamOutput) process.stdout.write(chunk);
-    });
-    proc.stderr.on("data", (chunk: Buffer) => {
-      stderrChunks.push(chunk);
-      if (options.streamOutput) process.stderr.write(chunk);
-    });
+    proc.stdout?.on("data", (chunk: Buffer) => stdoutChunks.push(chunk));
+    proc.stderr?.on("data", (chunk: Buffer) => stderrChunks.push(chunk));
     proc.on("error", (error) =>
       resolve({ exitCode: 1, stdout: Buffer.concat(stdoutChunks).toString("utf8"), stderr: `${Buffer.concat(stderrChunks).toString("utf8")}${error.message}` }),
     );
