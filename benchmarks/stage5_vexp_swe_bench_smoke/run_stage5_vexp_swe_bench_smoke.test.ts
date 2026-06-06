@@ -114,6 +114,8 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     vtraceIndexArgs: "--quiet",
     vtraceQueryArgs: "",
     skipVtraceIndexIfPresent: false,
+    reuseWorkspace: false,
+    showVtraceIndexLog: false,
     vtraceContextMaxChars: 12000,
     vtraceContextMaxItems: 8,
     sweBenchDataFile: null,
@@ -1132,6 +1134,81 @@ test("prepareIndexedContext clones, indexes, queries, and writes a real context 
   const context = await readFile(vtraceInstructionsFilePath(out), "utf8");
   assert.match(context, /# vtrace indexed context/);
   assert.match(context, /symbol: get_combinator_sql/);
+});
+
+test("parseArgs parses --reuse-workspace and --show-vtrace-index-log (default off)", () => {
+  const on = parseArgs(["--mode", "run-protocol", "--reuse-workspace", "--show-vtrace-index-log"]);
+  assert.equal(on.reuseWorkspace, true);
+  assert.equal(on.showVtraceIndexLog, true);
+  const off = parseArgs(["--mode", "run-protocol"]);
+  assert.equal(off.reuseWorkspace, false);
+  assert.equal(off.showVtraceIndexLog, false);
+});
+
+test("buildVtraceIndexCommand drops --quiet only when --show-vtrace-index-log is set", () => {
+  const quiet = buildVtraceIndexCommand(baseConfig({ vtraceIndexArgs: "--quiet" }), "/ws");
+  assert.deepEqual(quiet.args, ["src/cli/index.ts", "index", "/ws", "--quiet"]);
+  const loud = buildVtraceIndexCommand(baseConfig({ vtraceIndexArgs: "--quiet", showVtraceIndexLog: true }), "/ws");
+  assert.deepEqual(loud.args, ["src/cli/index.ts", "index", "/ws"]);
+});
+
+test("prepareIndexedContext recreates a fresh workspace by default (clean + recheckout + reindex)", async () => {
+  const out = path.join(await tmpDir("idx-fresh"), "results");
+  const dataDir = await tmpDir("idx-fresh-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+  // A pre-existing labeled workspace WITH a stale index present.
+  const ws = workspacePathFor(out, "django__django-11490");
+  await mkdir(path.join(ws, ".git"), { recursive: true });
+  await mkdir(path.join(ws, ".vtrace"), { recursive: true });
+  await writeFile(path.join(ws, ".vtrace", "index.sqlite"), "stale");
+  const { run, calls } = scriptedRunner([
+    { match: "capsule", result: { stdout: injectCapsuleJson("symbol: get_combinator_sql") } },
+  ]);
+  const config = baseConfig({ out, instances: ["django__django-11490"], sweBenchDataFile: dataFile, vtraceMethod: "indexed-context" });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  // The existing clone is scrubbed (clean -fdx) + re-checked-out, never re-cloned,
+  // and re-indexed despite the stale index being present.
+  assert.ok(calls.some((c) => c.includes("clean") && c.includes("-fdx")), "git clean -fdx must run");
+  assert.ok(calls.some((c) => c.includes("checkout")), "checkout must run");
+  assert.ok(calls.some((c) => c.includes(" index ")), "the index must be rebuilt");
+  assert.ok(!calls.some((c) => c.includes("clone")), "an existing clone must not be re-cloned");
+  // Meta records the fresh policy + the observed index timing.
+  assert.equal(result.freshWorkspace, true);
+  assert.equal(result.vtraceIndexQuiet, true);
+  assert.equal(typeof result.vtraceIndexDurationMs, "number");
+  assert.match(result.vtraceIndexStartedAt ?? "", /T.*Z$/);
+  assert.match(result.vtraceIndexFinishedAt ?? "", /T.*Z$/);
+});
+
+test("prepareIndexedContext --reuse-workspace reuses the existing checkout + index", async () => {
+  const out = path.join(await tmpDir("idx-reuse"), "results");
+  const dataDir = await tmpDir("idx-reuse-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+  const ws = workspacePathFor(out, "django__django-11490");
+  await mkdir(path.join(ws, ".git"), { recursive: true });
+  await mkdir(path.join(ws, ".vtrace"), { recursive: true });
+  await writeFile(path.join(ws, ".vtrace", "index.sqlite"), "existing");
+  const { run, calls } = scriptedRunner([
+    { match: "capsule", result: { stdout: injectCapsuleJson("symbol: get_combinator_sql") } },
+  ]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-11490"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+    reuseWorkspace: true,
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  // Reuse touches nothing: no clean, no checkout, no reindex — only the query runs.
+  assert.ok(!calls.some((c) => c.includes("clean")), "reuse must not git clean");
+  assert.ok(!calls.some((c) => c.includes("checkout")), "reuse must not re-checkout");
+  assert.ok(!calls.some((c) => c.includes(" index ")), "reuse must not reindex when index.sqlite is present");
+  assert.ok(calls.some((c) => c.includes("capsule")), "the query still runs");
+  assert.equal(result.freshWorkspace, false);
+  assert.equal(result.vtraceIndexStartedAt, null);
+  assert.equal(result.vtraceIndexDurationMs, null);
 });
 
 test("prepareIndexedContext reports failure when the vtrace query fails", async () => {

@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { CapsuleMode, type CapsuleMode as CapsuleModeT } from "../../src/capsule/capsuleModes";
@@ -112,6 +112,15 @@ export interface CliConfig {
   readonly vtraceIndexArgs: string;
   readonly vtraceQueryArgs: string;
   readonly skipVtraceIndexIfPresent: boolean;
+  // Workspace reuse policy. By default a labeled run RECREATES its workspace
+  // (git clean -fdx + recheckout to the base commit + reindex) so a re-run never
+  // evaluates against a stale index or leftover untracked state. --reuse-workspace
+  // opts out: the existing checkout and index are reused as-is.
+  readonly reuseWorkspace: boolean;
+  // When true, the vtrace `index` command keeps its normal output (the runner
+  // drops --quiet) so indexing progress/logs print to the terminal. Absent, the
+  // index runs quietly as before.
+  readonly showVtraceIndexLog: boolean;
   readonly vtraceContextMaxChars: number;
   readonly vtraceContextMaxItems: number;
   readonly sweBenchDataFile: string | null;
@@ -422,6 +431,8 @@ const DEFAULT_CONFIG: CliConfig = {
   vtraceIndexArgs: "--quiet",
   vtraceQueryArgs: "",
   skipVtraceIndexIfPresent: false,
+  reuseWorkspace: false,
+  showVtraceIndexLog: false,
   vtraceContextMaxChars: 12000,
   vtraceContextMaxItems: 8,
   sweBenchDataFile: null,
@@ -1340,7 +1351,7 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
     // non-treatment run — UNLESS vtrace deliberately skipped (a valid policy).
     await assertVtracePatchInstalled(config);
     const indexed = await prepareIndexedContext(config, deps);
-    extraVtraceMeta = indexedContextMetaFields(indexed);
+    extraVtraceMeta = { ...indexedContextMetaFields(indexed), ...indexRunMetaFields(indexed) };
     if (indexed.policyAction === "skip") {
       // VALID no-context policy (cost-aware gate, decideContextPolicy): the
       // expected value of injected context did not exceed its overhead — either
@@ -1752,6 +1763,12 @@ export interface IndexedContextResult {
   readonly indexCommand: string | null;
   readonly queryCommand: string | null;
   readonly workspacePath: string | null;
+  // Workspace/index run metadata, surfaced into the vtrace _run.meta.json.
+  readonly freshWorkspace: boolean;
+  readonly vtraceIndexQuiet: boolean;
+  readonly vtraceIndexStartedAt: string | null;
+  readonly vtraceIndexFinishedAt: string | null;
+  readonly vtraceIndexDurationMs: number | null;
   readonly contextFile: string;
   readonly contextChars: number;
   readonly contextItems: number;
@@ -1856,7 +1873,12 @@ function splitArgs(value: string): string[] {
 export function buildVtraceIndexCommand(config: CliConfig, workspace: string): { command: string; args: string[] } {
   const [command, ...base] = splitArgs(config.vtraceCommand);
   if (command === undefined) throw new Error("--vtrace-command is empty; cannot build the vtrace index command.");
-  return { command, args: [...base, "index", workspace, ...splitArgs(config.vtraceIndexArgs)] };
+  // --show-vtrace-index-log drops --quiet so the index command prints its log;
+  // absent the flag, the configured index args (which include --quiet) stand.
+  const indexArgs = splitArgs(config.vtraceIndexArgs).filter(
+    (arg) => !(config.showVtraceIndexLog && arg === "--quiet"),
+  );
+  return { command, args: [...base, "index", workspace, ...indexArgs] };
 }
 
 export function buildVtraceQueryCommand(
@@ -2317,6 +2339,21 @@ export function buildVtraceContextMarkdown(
   return { markdown: `${lines.join("\n")}\n`, chars: totalChars, items: totalItems, truncated: anyTruncated };
 }
 
+// Workspace/index-run metadata for the vtrace _run.meta.json (alongside the flat
+// IndexedContextFields). `vtraceIndexCommand` is already carried by
+// indexedContextMetaFields; these record the freshness/quiet policy and the
+// observed index timing (started/finished/duration are null when the index was
+// reused rather than re-run).
+function indexRunMetaFields(result: IndexedContextResult): Record<string, unknown> {
+  return {
+    freshWorkspace: result.freshWorkspace,
+    vtraceIndexQuiet: result.vtraceIndexQuiet,
+    vtraceIndexStartedAt: result.vtraceIndexStartedAt,
+    vtraceIndexFinishedAt: result.vtraceIndexFinishedAt,
+    vtraceIndexDurationMs: result.vtraceIndexDurationMs,
+  };
+}
+
 // Map the orchestration result onto the flat IndexedContextFields meta keys.
 function indexedContextMetaFields(result: IndexedContextResult): IndexedContextFields {
   return {
@@ -2361,6 +2398,12 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
   let indexCommand: string | null = null;
   let queryCommand: string | null = null;
   let workspacePath: string | null = null;
+  // Index-run metadata (last instance wins; smoke runs are single-instance). Null
+  // started/finished/duration means the index was reused, not re-run.
+  let indexQuiet = false;
+  let indexStartedAt: string | null = null;
+  let indexFinishedAt: string | null = null;
+  let indexDurationMs: number | null = null;
 
   for (const instanceId of instanceIds) {
     const record = findSweBenchRecord(records, instanceId);
@@ -2375,11 +2418,22 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     let sectionError: string | null = null;
     let classification: CapsuleClassification | null = null;
     try {
-      await ensureWorkspaceCheckout(instance, workspace, runProc);
+      await ensureWorkspaceCheckout(instance, workspace, runProc, config.reuseWorkspace);
       const indexSpec = buildVtraceIndexCommand(config, workspace);
       indexCommand = renderCommand(indexSpec);
-      if (!(config.skipVtraceIndexIfPresent && (await pathExists(path.join(workspace, ".vtrace"))))) {
+      indexQuiet = indexSpec.args.includes("--quiet");
+      // Reuse the index only when keeping the workspace (or the legacy skip flag)
+      // AND a real index.sqlite is present — never a half-built `.vtrace` dir. A
+      // fresh run cleaned `.vtrace` away above, so it always re-indexes.
+      const indexPresent = await pathExists(path.join(workspace, ".vtrace", "index.sqlite"));
+      const reuseIndex = (config.reuseWorkspace || config.skipVtraceIndexIfPresent) && indexPresent;
+      if (!reuseIndex) {
+        const startMs = Date.now();
+        indexStartedAt = new Date(startMs).toISOString();
         const indexResult = await runProc(indexSpec.command, indexSpec.args);
+        const endMs = Date.now();
+        indexFinishedAt = new Date(endMs).toISOString();
+        indexDurationMs = endMs - startMs;
         if (indexResult.exitCode !== 0) {
           throw new Error(`vtrace index failed (exit ${indexResult.exitCode}): ${indexResult.stderr.trim() || "(no stderr)"}`);
         }
@@ -2466,6 +2520,11 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     indexCommand,
     queryCommand,
     workspacePath,
+    freshWorkspace: !config.reuseWorkspace,
+    vtraceIndexQuiet: indexQuiet,
+    vtraceIndexStartedAt: indexStartedAt,
+    vtraceIndexFinishedAt: indexFinishedAt,
+    vtraceIndexDurationMs: indexDurationMs,
     contextFile,
     contextChars: assembled.chars,
     contextItems: assembled.items,
@@ -2508,10 +2567,17 @@ function sumClassification(
 
 // Reproduce the instance checkout (Approach B): clone if absent, then checkout
 // the base commit. Mirrors vexp-swe-bench's shallow-clone + fetch fallback.
+//
+// Workspace freshness: a re-run of an existing labeled workspace is, by default,
+// scrubbed back to a clean base-commit tree (`git clean -fdx` removes untracked
+// state — a stale `.vtrace` index, files a prior patch added — and the forced
+// checkout resets tracked files) before it is re-indexed. `reuseWorkspace` opts
+// out: an existing checkout is left exactly as-is (no clean, no checkout).
 async function ensureWorkspaceCheckout(
   instance: SweBenchInstance,
   workspace: string,
   runProc: ProcessRunner,
+  reuseWorkspace: boolean,
 ): Promise<void> {
   const alreadyCloned = await pathExists(path.join(workspace, ".git"));
   if (!alreadyCloned) {
@@ -2520,6 +2586,16 @@ async function ensureWorkspaceCheckout(
     const cloneResult = await runProc(clone.command, clone.args);
     if (cloneResult.exitCode !== 0) {
       throw new Error(`git clone of ${instance.repo} failed (exit ${cloneResult.exitCode}): ${cloneResult.stderr.trim() || "(no stderr)"}`);
+    }
+  } else if (reuseWorkspace) {
+    // --reuse-workspace: trust the existing checkout + index; touch nothing.
+    return;
+  } else {
+    // Fresh (default): scrub all untracked state so the re-checkout + re-index
+    // starts from a clean tree at the base commit (no stale index, no leftovers).
+    const clean = await runProc("git", ["-C", workspace, "clean", "-fdx"]);
+    if (clean.exitCode !== 0) {
+      throw new Error(`git clean of ${workspace} failed (exit ${clean.exitCode}): ${clean.stderr.trim() || "(no stderr)"}`);
     }
   }
   const checkout = buildCheckoutCommand(workspace, instance.baseCommit);
@@ -4353,6 +4429,8 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--vtrace-index-args": config.vtraceIndexArgs = requireValue(argv, ++index, arg); break;
       case "--vtrace-query-args": config.vtraceQueryArgs = requireValue(argv, ++index, arg); break;
       case "--skip-vtrace-index-if-present": config.skipVtraceIndexIfPresent = true; break;
+      case "--reuse-workspace": config.reuseWorkspace = true; break;
+      case "--show-vtrace-index-log": config.showVtraceIndexLog = true; break;
       case "--vtrace-context-max-chars": config.vtraceContextMaxChars = requirePositiveInt(argv, ++index, arg); break;
       case "--vtrace-context-max-items": config.vtraceContextMaxItems = requirePositiveInt(argv, ++index, arg); break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
@@ -4404,6 +4482,8 @@ function printUsageAndExit(exitCode: number): never {
       "  --eval-dataset <jsonl-or-hf-name>             full SWE-bench dataset for docker evaluation",
       "  --eval-timeout <seconds>                      per-instance evaluation timeout",
       "  --run-label <label>                           isolate runs under results/runs/<label>/",
+      "  --reuse-workspace                             reuse an existing labeled workspace + index (default: recreate fresh)",
+      "  --show-vtrace-index-log                       print the vtrace index log to the terminal (drops --quiet)",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),
