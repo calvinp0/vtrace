@@ -45,9 +45,28 @@ export interface RefinedRoledCandidate {
   signals: DebugRoleSignals;
 }
 
+export interface RefineDebugRolesOptions {
+  /**
+   * Resolve a candidate's focused source text by symbol id. When the static call
+   * graph lacks a `calls` edge for an in-pool dispatcher (the parser missed or
+   * could not resolve it), the refinement falls back to scanning the source body
+   * for direct calls to other in-pool candidate names. Optional: omitted, the
+   * fallback is simply skipped and only static edges are used.
+   */
+  sourceTextOf?: (symbolId: string) => string | undefined;
+}
+
+export interface RefineDebugResult {
+  refined: RefinedRoledCandidate[];
+  /** The issue subsystem directory the refinement inferred (if any). */
+  subsystemRoot?: string;
+  /** True when a dispatcher->helper call was recovered from source bodies. */
+  sourceBodyCallFallbackUsed: boolean;
+}
+
 // Boilerplate/structural tokens the shaped query injects, plus generic verbs that
 // carry no edit-target signal. Kept small and conservative.
-const STOPWORDS: ReadonlySet<string> = new Set([
+export const STOPWORDS: ReadonlySet<string> = new Set([
   "fix", "the", "for", "and", "with", "that", "this", "into", "from", "when",
   "does", "not", "should", "must", "will", "have", "has", "but", "all", "any",
   "failing", "test", "tests", "issue", "issues", "repo", "file", "files",
@@ -78,7 +97,8 @@ export function refineDebugRoles(
   base: readonly RoledCandidate[],
   shaped: ShapedSweQuery,
   maxPivots: number,
-): RefinedRoledCandidate[] {
+  options: RefineDebugRolesOptions = {},
+): RefineDebugResult {
   const ids = base.map((entry) => entry.candidate.symbolId);
   const idSet = new Set(ids);
   const byId = new Map(base.map((entry) => [entry.candidate.symbolId, entry] as const));
@@ -97,11 +117,18 @@ export function refineDebugRoles(
     addEdge(callsIn, edge.dstSymbolId, edge.srcSymbolId);
   }
 
+  // Source-body call fallback: when the static graph gave an actionable candidate
+  // no in-pool callees, inspect its source body for direct calls to other in-pool
+  // candidate names (e.g. `simplify_regex` calling `replace_named_groups(...)`).
+  // This recovers the dispatcher->helper split when the parser missed the edge,
+  // without hardcoding any instance.
+  const sourceBodyCallFallbackUsed = addSourceBodyCalls(base, callsOut, callsIn, options.sourceTextOf);
+
   const issueTokens = collectIssueTokens(shaped);
   const nameOverlap = (candidate: HybridCandidate): number =>
     nameTokens(candidate.localName).filter((token) => issueTokens.has(token)).length;
 
-  const subsystemDir = resolveLocalSubsystem(base, nameOverlap);
+  const subsystemDir = resolveLocalSubsystem(base, nameOverlap, issueTokens);
   const inLocalSubsystem = (candidate: HybridCandidate): boolean =>
     subsystemDir !== undefined && samePackage(dirname(candidate.filePath), subsystemDir);
 
@@ -177,7 +204,11 @@ export function refineDebugRoles(
     };
   });
 
-  return capPivots(refined, maxPivots);
+  return {
+    refined: capPivots(refined, maxPivots),
+    ...(subsystemDir === undefined ? {} : { subsystemRoot: subsystemDir }),
+    sourceBodyCallFallbackUsed,
+  };
 }
 
 /** Wrap base roles unchanged (non-debug intents): no structural signals. */
@@ -295,11 +326,19 @@ function capPivots(
   });
 }
 
-// The issue's local subsystem: the directory shared by the most issue-anchored,
-// non-test candidates. Ties broken lexicographically for determinism.
+// The issue's local subsystem: the directory the issue most clearly points at.
+//
+// Raw candidate COUNT alone is the wrong signal — generic infrastructure (a
+// `django/utils` regex pile) routinely outnumbers the real subsystem
+// (`django/contrib/admindocs`), so counting hands the subsystem to the infra and
+// the real edit sites fall "outside" it. The decisive signal is the issue text
+// itself: a directory whose own path segments appear in the issue ("admindocs",
+// "admin") is what the issue is ABOUT. We rank directories by (issue-path
+// overlap, then anchored-candidate count), ties broken lexicographically.
 function resolveLocalSubsystem(
   base: readonly RoledCandidate[],
   nameOverlap: (candidate: HybridCandidate) => number,
+  issueTokens: ReadonlySet<string>,
 ): string | undefined {
   const counts = new Map<string, number>();
   for (const entry of base) {
@@ -321,14 +360,102 @@ function resolveLocalSubsystem(
   }
 
   let best: string | undefined;
+  let bestPathOverlap = -1;
   let bestCount = 0;
   for (const [dir, count] of counts) {
-    if (count > bestCount || (count === bestCount && (best === undefined || dir < best))) {
+    const pathOverlap = pathSegmentOverlap(dir, issueTokens);
+    if (
+      pathOverlap > bestPathOverlap
+      || (pathOverlap === bestPathOverlap && count > bestCount)
+      || (pathOverlap === bestPathOverlap && count === bestCount && (best === undefined || dir < best))
+    ) {
       best = dir;
+      bestPathOverlap = pathOverlap;
       bestCount = count;
     }
   }
   return best;
+}
+
+// How many distinct path segments of `dir` (tokenised the same way symbol names
+// are) appear in the issue tokens. `django/contrib/admindocs` against an issue
+// mentioning "admindocs" scores 1; `django/utils` scores 0.
+function pathSegmentOverlap(dir: string, issueTokens: ReadonlySet<string>): number {
+  const segmentTokens = new Set(
+    dir
+      .split("/")
+      .flatMap((segment) => nameTokens(segment))
+      .filter((token) => issueTokens.has(token)),
+  );
+  return segmentTokens.size;
+}
+
+// Source-body call fallback. For each actionable candidate whose static in-pool
+// call set is empty, scan its source text for `name(` calls to OTHER in-pool
+// candidate names and add the recovered edges. Returns true when any edge was
+// added. Only fills gaps — a candidate the static graph already connected is
+// left untouched, so this never fabricates calls the parser did resolve.
+function addSourceBodyCalls(
+  base: readonly RoledCandidate[],
+  callsOut: Map<string, Set<string>>,
+  callsIn: Map<string, Set<string>>,
+  sourceTextOf: ((symbolId: string) => string | undefined) | undefined,
+): boolean {
+  if (sourceTextOf === undefined) {
+    return false;
+  }
+
+  // in-pool name -> the symbol ids that bear it (a name can be non-unique).
+  const idsByName = new Map<string, string[]>();
+  for (const entry of base) {
+    const name = entry.candidate.localName;
+    if (name.length === 0) {
+      continue;
+    }
+    const list = idsByName.get(name);
+    if (list === undefined) {
+      idsByName.set(name, [entry.candidate.symbolId]);
+    } else {
+      list.push(entry.candidate.symbolId);
+    }
+  }
+
+  let used = false;
+  for (const entry of base) {
+    const candidate = entry.candidate;
+    if (!ACTIONABLE_FUNCTION_KINDS.has(candidate.kind) || isLikelyTestCandidate(candidate)) {
+      continue;
+    }
+    if ((callsOut.get(candidate.symbolId)?.size ?? 0) > 0) {
+      continue; // static graph already resolved this caller's in-pool calls.
+    }
+    const source = sourceTextOf(candidate.symbolId);
+    if (source === undefined || source.length === 0) {
+      continue;
+    }
+    for (const [name, calleeIds] of idsByName) {
+      if (!callsLocalName(source, name)) {
+        continue;
+      }
+      for (const calleeId of calleeIds) {
+        if (calleeId === candidate.symbolId) {
+          continue;
+        }
+        addEdge(callsOut, candidate.symbolId, calleeId);
+        addEdge(callsIn, calleeId, candidate.symbolId);
+        used = true;
+      }
+    }
+  }
+  return used;
+}
+
+// True when `source` contains a direct call `name(` (allowing whitespace), with a
+// non-identifier char before `name` so `replace_named_groups` does not match a
+// call to `named_groups`.
+function callsLocalName(source: string, name: string): boolean {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(String.raw`(?<![A-Za-z0-9_.])${escaped}\s*\(`).test(source);
 }
 
 function hasLocalEvidence(candidate: HybridCandidate): boolean {
@@ -340,7 +467,7 @@ function nameTokens(localName: string): string[] {
   return tokenize(localName).filter((token) => token.length >= MIN_TOKEN_LENGTH);
 }
 
-function collectIssueTokens(shaped: ShapedSweQuery): Set<string> {
+export function collectIssueTokens(shaped: ShapedSweQuery): Set<string> {
   const tokens = new Set<string>();
   const sources = [
     ...tokenize(shaped.query),

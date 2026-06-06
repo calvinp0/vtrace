@@ -29,11 +29,16 @@ import {
 import { allocateBudget } from "./budgetAllocator";
 import {
   buildNoContextExplanations,
+  collectIssueTokens,
   passthroughRoles,
   refineDebugRoles,
   type RefinedRoledCandidate,
 } from "./debugRoles";
 import { retrieveDocSections, type DocSection } from "./docRetrieval";
+import {
+  backfillProductionCandidates,
+  isTestDominatedPool,
+} from "./productionBackfill";
 import { resolveIntent, weightsForIntent } from "./intent";
 import { itemBlockText } from "./renderItem";
 import { estimateTokens, roundPercent } from "./tokens";
@@ -80,21 +85,70 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const weightsRecord: Record<string, number> = Object.fromEntries(Object.entries(weights));
   const allocation = allocateBudget(input.maxTokens);
 
-  const { candidates } = hybridRetrieve(input.db, {
+  let candidates = hybridRetrieve(input.db, {
     query: shaped.query,
     shaped,
     weights,
     symbolSeeds: deriveSymbolSeeds(shaped),
     maxResults: CANDIDATE_POOL_SIZE,
-  });
+  }).candidates;
+
+  // Production-candidate backfill (debug intent). A pool of only test symbols
+  // means lexical search ranked the failing tests above the implementation they
+  // exercise, so the real edit target never entered the pool. Recover it with
+  // production-focused seeds (Class.method expansion + issue class/method names),
+  // excluding tests, and merge those candidates ahead of the original pool.
+  let productionBackfillUsed = false;
+  let classMethodExpansionUsed = false;
+  if (intent === CapsuleIntent.Debug && isTestDominatedPool(candidates)) {
+    const backfill = backfillProductionCandidates({
+      db: input.db,
+      shaped,
+      weights,
+      task: input.task,
+      issueTokens: collectIssueTokens(shaped),
+      poolSize: CANDIDATE_POOL_SIZE,
+    });
+    if (backfill.candidates.length > 0) {
+      productionBackfillUsed = true;
+      classMethodExpansionUsed = backfill.classMethodExpansionUsed;
+      candidates = mergeCandidatesPreferring(backfill.candidates, candidates, CANDIDATE_POOL_SIZE);
+    }
+  }
 
   // Role assignment. The base gate scores each candidate in isolation; for debug
   // intent we then refine roles with call-graph structure (caller vs helper,
   // local vs generic infrastructure) before capping pivots to the tier. Other
   // intents keep the base gate's own cap. Centrality never produces a pivot.
-  const refined = intent === CapsuleIntent.Debug
-    ? refineDebugRoles(input.db, assignCandidateRoles(candidates), shaped, allocation.maxPivots)
-    : passthroughRoles(assignCandidateRoles(candidates, { maxPivots: allocation.maxPivots }));
+  let refined: RefinedRoledCandidate[];
+  let subsystemRoot: string | undefined;
+  let sourceBodyCallFallbackUsed = false;
+  if (intent === CapsuleIntent.Debug) {
+    const result = refineDebugRoles(
+      input.db,
+      assignCandidateRoles(candidates),
+      shaped,
+      allocation.maxPivots,
+      { sourceTextOf: (symbolId) => loadFocusedSourceById(input.db, input.repoRoot, symbolId) },
+    );
+    refined = result.refined;
+    subsystemRoot = result.subsystemRoot;
+    sourceBodyCallFallbackUsed = result.sourceBodyCallFallbackUsed;
+  } else {
+    refined = passthroughRoles(assignCandidateRoles(candidates, { maxPivots: allocation.maxPivots }));
+  }
+
+  // Debug-intent recovery diagnostics, surfaced on both the success and
+  // no-context paths so the production-target recovery is always auditable.
+  const debugDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
+    intent === CapsuleIntent.Debug
+      ? {
+          production_backfill_used: productionBackfillUsed,
+          class_method_expansion_used: classMethodExpansionUsed,
+          source_body_call_fallback_used: sourceBodyCallFallbackUsed,
+          ...(subsystemRoot === undefined ? {} : { subsystem_root: subsystemRoot }),
+        }
+      : {};
 
   const pivotCandidates = refined.filter((r) => r.role === CandidateRole.Pivot);
   const supportCandidates = refined.filter((r) => r.role === CandidateRole.Support);
@@ -117,6 +171,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       weights: weightsRecord,
       shaped,
       explanations: buildNoContextExplanations(refined, shaped),
+      debugDiagnostics,
     });
   }
 
@@ -206,6 +261,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       likely_files: shaped.likelyFiles,
       likely_symbols: shaped.likelySymbols,
       failing_tests: shaped.failingTests,
+      ...debugDiagnostics,
     },
   };
 }
@@ -364,9 +420,36 @@ function composeDocItem(doc: DocSection): CapsuleV2Item {
 // --- source/signature loading -------------------------------------------------
 
 function loadFocusedSource(db: Database, repoRoot: string, candidate: HybridCandidate): string | undefined {
-  const result = loadSymbolSource(db, repoRoot, candidate.symbolId);
+  return loadFocusedSourceById(db, repoRoot, candidate.symbolId);
+}
+
+function loadFocusedSourceById(db: Database, repoRoot: string, symbolId: string): string | undefined {
+  const result = loadSymbolSource(db, repoRoot, symbolId);
   const extracted = extractFullSymbolSource(result);
   return extracted.status === ExtractSymbolSourceStatus.Extracted ? extracted.source : undefined;
+}
+
+// Merge backfilled production candidates AHEAD of the original pool, deduped by
+// symbol id and capped — so the recovered edit targets are never crowded out
+// again by the test symbols that dominated the first pass.
+function mergeCandidatesPreferring(
+  preferred: readonly HybridCandidate[],
+  rest: readonly HybridCandidate[],
+  limit: number,
+): HybridCandidate[] {
+  const out: HybridCandidate[] = [];
+  const seen = new Set<string>();
+  for (const candidate of [...preferred, ...rest]) {
+    if (seen.has(candidate.symbolId)) {
+      continue;
+    }
+    seen.add(candidate.symbolId);
+    out.push(candidate);
+    if (out.length >= limit) {
+      break;
+    }
+  }
+  return out;
 }
 
 function loadSignature(db: Database, repoRoot: string, candidate: HybridCandidate): string | undefined {
@@ -413,6 +496,7 @@ interface NoContextInput {
   weights: Record<string, number>;
   shaped: ShapedSweQuery;
   explanations: NoContextExplanation[];
+  debugDiagnostics: Partial<CapsuleV2Result["diagnostics"]>;
 }
 
 function noContextResult(input: NoContextInput): CapsuleV2Result {
@@ -435,6 +519,7 @@ function noContextResult(input: NoContextInput): CapsuleV2Result {
       likely_files: input.shaped.likelyFiles,
       likely_symbols: input.shaped.likelySymbols,
       failing_tests: input.shaped.failingTests,
+      ...input.debugDiagnostics,
       ...(input.explanations.length > 0 ? { no_context_explanations: input.explanations } : {}),
     },
   };

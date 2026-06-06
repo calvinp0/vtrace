@@ -172,6 +172,18 @@ export interface CapsuleV2Diagnostics {
   likely_symbols: string[];
   failing_tests: string[];
   /**
+   * Debug-intent recovery diagnostics (present only under debug intent). They make
+   * the production-target recovery auditable: whether the test-only candidate pool
+   * triggered a production backfill, the issue subsystem the role refinement
+   * inferred, whether a `Class.method` query expansion ran, and whether the
+   * dispatcher/helper split fell back to scanning pivot source bodies for calls
+   * because the static call graph was missing the edge.
+   */
+  production_backfill_used?: boolean;
+  subsystem_root?: string;
+  class_method_expansion_used?: boolean;
+  source_body_call_fallback_used?: boolean;
+  /**
    * Present only when `actual_mode === no_context`. For the strongest near-miss
    * candidates, the precise reason each failed the pivot gate — so a conservative
    * no-context decision is never opaque (was it weak parsing, a missing failing
