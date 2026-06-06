@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -69,6 +70,7 @@ import {
   truncateContext,
   verifyVtracePatch,
   vtraceInstructionsFilePath,
+  vtraceInstructionsSnapshotFilePath,
   workspacePathFor,
   type CapsulePolicyDiagnostics,
   type CliConfig,
@@ -2935,4 +2937,146 @@ test("formatRunStatusBlock renders an infra failure with a rerun action line", (
   assert.match(block, /Label: eval-diagnostic-11728/);
   assert.match(block, /Rerun recommended: yes/);
   assert.match(block, /Action: rerun this label\./);
+});
+
+// ----- Stage 5: per-run instructions snapshot -----
+
+// An injecting indexed-context runVtrace using a mocked process + a capsule that
+// renders the given pivot symbol into the (root) active instructions file.
+async function runVtraceInjecting(opts: {
+  out: string; vexpDir: string; dataFile: string; runLabel: string | null; pivotSymbol: string;
+}): Promise<void> {
+  const run = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes("capsule")) {
+      return { exitCode: 0, stdout: injectCapsuleJson(`symbol: ${opts.pivotSymbol}`), stderr: "" };
+    }
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({
+    vexpSweBenchDir: opts.vexpDir,
+    out: opts.out,
+    instances: ["django__django-11490"],
+    sweBenchDataFile: opts.dataFile,
+    vtraceMethod: "indexed-context",
+    runLabel: opts.runLabel,
+  });
+  await runVtrace(config, { runProcess: run });
+}
+
+test("vtraceInstructionsSnapshotFilePath is per-run-label (and root when unlabeled)", () => {
+  assert.equal(
+    vtraceInstructionsSnapshotFilePath("/out", "labelA"),
+    path.join("/out", "runs", "labelA", "_vtrace_instructions.snapshot.md"),
+  );
+  assert.equal(
+    vtraceInstructionsSnapshotFilePath("/out", null),
+    path.join("/out", "_vtrace_instructions.snapshot.md"),
+  );
+});
+
+test("runVtrace writes a per-run-label snapshot equal to the injected instructions", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("snap-eq"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("snap-eq-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+
+  await runVtraceInjecting({ out, vexpDir, dataFile, runLabel: "labelA", pivotSymbol: "get_combinator_sql" });
+
+  const snapshotPath = path.join(out, "runs", "labelA", "_vtrace_instructions.snapshot.md");
+  const snapshotContent = await readFile(snapshotPath, "utf8");
+  // Snapshot content equals the active instructions file at spawn time.
+  assert.equal(snapshotContent, await readFile(vtraceInstructionsFilePath(out), "utf8"));
+  assert.match(snapshotContent, /get_combinator_sql/);
+
+  // The meta records the snapshot path, existence, and content SHA-256.
+  const meta = JSON.parse(await readFile(path.join(rawConditionDir(out, "vtrace", "labelA"), "_run.meta.json"), "utf8"));
+  assert.equal(meta.vtraceInstructionsSnapshotFile, snapshotPath);
+  assert.equal(meta.vtraceInstructionsSnapshotExists, true);
+  assert.match(meta.vtraceInstructionsSha256, /^[0-9a-f]{64}$/);
+  assert.equal(meta.vtraceInstructionsSha256, createHash("sha256").update(snapshotContent).digest("hex"));
+});
+
+test("a later labeled run cannot overwrite an earlier run's snapshot", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("snap-immut"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("snap-immut-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+
+  await runVtraceInjecting({ out, vexpDir, dataFile, runLabel: "labelA", pivotSymbol: "alpha_pivot" });
+  // The second run overwrites the SHARED active file at the root, but must not
+  // touch labelA's per-run snapshot.
+  await runVtraceInjecting({ out, vexpDir, dataFile, runLabel: "labelB", pivotSymbol: "beta_pivot" });
+
+  const snapA = await readFile(path.join(out, "runs", "labelA", "_vtrace_instructions.snapshot.md"), "utf8");
+  const snapB = await readFile(path.join(out, "runs", "labelB", "_vtrace_instructions.snapshot.md"), "utf8");
+  assert.match(snapA, /alpha_pivot/);
+  assert.doesNotMatch(snapA, /beta_pivot/);
+  assert.match(snapB, /beta_pivot/);
+  // The shared active file was indeed clobbered by the later run (the very reason
+  // the snapshot exists).
+  assert.match(await readFile(vtraceInstructionsFilePath(out), "utf8"), /beta_pivot/);
+});
+
+test("a no-context policy run records no snapshot", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("snap-skip"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("snap-skip-data");
+  const dataFile = await writeSweBenchData(dataDir, [POLICY_RECORDS["django__django-10880"]]);
+  const run = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    // Real micro context, but the cost-aware gate declines (cheap/local) → skip.
+    if (line.includes("capsule")) return { exitCode: 0, stdout: microCapsuleJson("symbol: json_script"), stderr: "" };
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  await runVtrace(
+    baseConfig({
+      vexpSweBenchDir: vexpDir, out, instances: ["django__django-10880"],
+      sweBenchDataFile: dataFile, vtraceMethod: "indexed-context", runLabel: "labelS",
+    }),
+    { runProcess: run },
+  );
+
+  const snapshotPath = path.join(out, "runs", "labelS", "_vtrace_instructions.snapshot.md");
+  assert.equal(await readFile(snapshotPath, "utf8").catch(() => null), null);
+  const meta = JSON.parse(await readFile(path.join(rawConditionDir(out, "vtrace", "labelS"), "_run.meta.json"), "utf8"));
+  assert.equal(meta.vtracePolicyAction, "skip");
+  assert.equal(meta.vtraceInstructionsSnapshotFile, undefined);
+});
+
+test("ingest/report prefer the snapshot for audit display", async () => {
+  const out = path.join(await tmpDir("snap-report"), "results");
+  const content = "# vtrace indexed context\nsymbol: get_combinator_sql\n";
+  const sha = createHash("sha256").update(content).digest("hex");
+  const snapshotPath = path.join(out, "_vtrace_instructions.snapshot.md");
+  await mkdir(out, { recursive: true });
+  await writeFile(snapshotPath, content);
+
+  await seedCondition(out, "baseline", { resolved: null });
+  await seedCondition(out, "vtrace", {
+    resolved: null,
+    vtraceMethod: "indexed-context",
+    indexedContext: true,
+    instructionsFile: vtraceInstructionsFilePath(out),
+    contextFileContent: content,
+    metaExtra: {
+      vtraceInstructionsSnapshotFile: snapshotPath,
+      vtraceInstructionsSnapshotExists: true,
+      vtraceInstructionsSha256: sha,
+    },
+  });
+  await runIngest(baseConfig({ out }));
+
+  const md = await readFile(path.join(out, "stage5_vexp_swe_bench_smoke.md"), "utf8");
+  assert.match(md, /vtrace_instructions_snapshot_file/);
+  assert.ok(md.includes(`| vtrace_instructions_sha256 | ${sha} |`));
+  // The audit display prefers the snapshot path in the primary instructions row.
+  assert.ok(md.includes(`| vtrace_instructions_file | ${snapshotPath} |`));
+  assert.ok(md.includes(`| vtrace_instructions_snapshot_file | ${snapshotPath} |`));
 });

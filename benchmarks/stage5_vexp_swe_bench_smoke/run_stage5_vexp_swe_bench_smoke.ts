@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -303,6 +304,12 @@ export interface Stage5Row extends IndexedContextFields, EvaluationFields, Capsu
   readonly vtraceInstructionsFile: string | null;
   readonly vtraceInstructionsFileExists: boolean | null;
   readonly vtraceInstructionsFileSize: number | null;
+  // Immutable per-run snapshot of the injected instructions (audit-grade): the
+  // exact content + SHA-256 captured at spawn time, distinct from the shared
+  // active file which a later run can overwrite. null on baseline / no-context rows.
+  readonly vtraceInstructionsSnapshotFile: string | null;
+  readonly vtraceInstructionsSnapshotExists: boolean | null;
+  readonly vtraceInstructionsSha256: string | null;
   readonly vtraceInjectionObserved: boolean | "unknown" | null;
   readonly vtraceInjectionError: string | null;
   readonly vtraceTreatmentValid: boolean | "unknown" | null;
@@ -428,6 +435,10 @@ export interface Stage5RunEvidence extends IndexedContextFields {
   readonly vtraceInstructionsFile: string | null;
   readonly vtraceInstructionsFileExists: boolean;
   readonly vtraceInstructionsFileSize: number | null;
+  // Per-run immutable snapshot of the injected instructions (see Stage5Row).
+  readonly vtraceInstructionsSnapshotFile: string | null;
+  readonly vtraceInstructionsSnapshotExists: boolean;
+  readonly vtraceInstructionsSha256: string | null;
   // Whether "Stage5 vtrace instructions injected from ..." was seen in the
   // captured vtrace stderr. "unknown" if no vtrace run was captured.
   readonly vtraceInjectionObserved: boolean | "unknown";
@@ -700,6 +711,40 @@ export function buildVexpCommand(
 // passed to vexp as --output, so the file survives the run.
 export function vtraceInstructionsFilePath(outDir: string): string {
   return path.join(outDir, "_vtrace_instructions.md");
+}
+
+// The ACTIVE instructions file (above) is a single shared path at the results
+// root, so a later run overwrites it — making post-run auditing unreliable. The
+// snapshot is an immutable per-run-label copy of exactly what was injected: it
+// lives under the run-label directory (NOT raw/vtrace, which vexp wipes), so each
+// labeled run keeps its own evidence and later runs cannot clobber an earlier one.
+export function vtraceInstructionsSnapshotFilePath(outDir: string, runLabel: string | null): string {
+  const dir = runLabel === null ? outDir : path.join(outDir, "runs", runLabel);
+  return path.join(dir, "_vtrace_instructions.snapshot.md");
+}
+
+// Snapshot the active instructions file into the per-run-label snapshot path and
+// return the audit metadata (path, existence, content SHA-256). Called only when
+// context is actually injected, so a no-context policy run records no snapshot.
+async function snapshotVtraceInstructions(
+  config: CliConfig,
+): Promise<{
+  vtraceInstructionsSnapshotFile: string;
+  vtraceInstructionsSnapshotExists: boolean;
+  vtraceInstructionsSha256: string | null;
+}> {
+  const active = vtraceInstructionsFilePath(config.out);
+  const snapshot = vtraceInstructionsSnapshotFilePath(config.out, config.runLabel);
+  const content = await readFile(active, "utf8").catch(() => null);
+  if (content === null) {
+    // No active file to snapshot (should not happen on an injecting run); record
+    // the intended path honestly without fabricating a hash.
+    return { vtraceInstructionsSnapshotFile: snapshot, vtraceInstructionsSnapshotExists: false, vtraceInstructionsSha256: null };
+  }
+  await mkdir(path.dirname(snapshot), { recursive: true });
+  await writeFile(snapshot, content);
+  const sha256 = createHash("sha256").update(content).digest("hex");
+  return { vtraceInstructionsSnapshotFile: snapshot, vtraceInstructionsSnapshotExists: true, vtraceInstructionsSha256: sha256 };
 }
 
 function vtraceEnv(config: CliConfig, injectContext = true): Record<string, string> {
@@ -1144,6 +1189,9 @@ export function extractRow(
     vtraceInstructionsFile: null,
     vtraceInstructionsFileExists: null,
     vtraceInstructionsFileSize: null,
+    vtraceInstructionsSnapshotFile: null,
+    vtraceInstructionsSnapshotExists: null,
+    vtraceInstructionsSha256: null,
     vtraceInjectionObserved: null,
     vtraceInjectionError: null,
     vtraceTreatmentValid: null,
@@ -1429,6 +1477,12 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
       await assertVtraceInstructionsFileValid(instructionsPath);
       await assertVtracePatchInstalled(config);
     }
+  }
+  // Snapshot the exact injected instructions into an immutable per-run-label file
+  // BEFORE the spawn, while the active file holds precisely what the agent reads.
+  // A no-context policy run injects nothing, so it records no snapshot.
+  if (injectContext) {
+    extraVtraceMeta = { ...extraVtraceMeta, ...(await snapshotVtraceInstructions(config)) };
   }
   await runCondition(config, "vtrace", deps, extraVtraceMeta, injectContext);
 }
@@ -3040,6 +3094,9 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtraceInstructionsFile: evidence.vtraceInstructionsFile,
           vtraceInstructionsFileExists: evidence.vtraceInstructionsFileExists,
           vtraceInstructionsFileSize: evidence.vtraceInstructionsFileSize,
+          vtraceInstructionsSnapshotFile: evidence.vtraceInstructionsSnapshotFile,
+          vtraceInstructionsSnapshotExists: evidence.vtraceInstructionsSnapshotExists,
+          vtraceInstructionsSha256: evidence.vtraceInstructionsSha256,
           vtraceInjectionObserved: evidence.vtraceInjectionObserved,
           vtraceInjectionError: evidence.vtraceInjectionError,
           vtraceTreatmentValid: evidence.vtraceTreatmentValid,
@@ -3302,6 +3359,11 @@ export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5
     vtraceInstructionsFile: null,
     vtraceInstructionsFileExists: perRun.every((e) => e.vtraceInstructionsFileExists),
     vtraceInstructionsFileSize: null,
+    // Snapshot path/hash are per-run-label, so they do not aggregate; they stay
+    // on each per-run row. Existence collapses to "every run had one".
+    vtraceInstructionsSnapshotFile: null,
+    vtraceInstructionsSnapshotExists: perRun.every((e) => e.vtraceInstructionsSnapshotExists),
+    vtraceInstructionsSha256: null,
     vtraceInjectionObserved: unanimous((e) => e.vtraceInjectionObserved, "unknown"),
     vtraceInjectionError: firstError((e) => e.vtraceInjectionError),
     vtraceTreatmentValid: unanimous((e) => e.vtraceTreatmentValid, "unknown"),
@@ -3753,6 +3815,9 @@ function emptyEvidence(): Stage5RunEvidence {
     vtraceInstructionsFile: null,
     vtraceInstructionsFileExists: false,
     vtraceInstructionsFileSize: null,
+    vtraceInstructionsSnapshotFile: null,
+    vtraceInstructionsSnapshotExists: false,
+    vtraceInstructionsSha256: null,
     vtraceInjectionObserved: "unknown",
     vtraceInjectionError: null,
     vtraceTreatmentValid: "unknown",
@@ -3847,6 +3912,8 @@ async function collectRunEvidence(outDir: string, runLabel: string | null = null
   // and recover the instructions-file path the run actually used.
   const methods = new Set<VtraceMethod>();
   let instructionsFile: string | null = null;
+  let snapshotFile: string | null = null;
+  let snapshotSha256: string | null = null;
   let vtraceRunRecorded = false;
   let indexed: IndexedContextFields = nullIndexedContextFields();
   for (const condition of ["baseline", "vtrace"] as const) {
@@ -3860,6 +3927,8 @@ async function collectRunEvidence(outDir: string, runLabel: string | null = null
       else if (isRecord(meta.env) && isString(meta.env.VTRACE_AGENT_INSTRUCTIONS_FILE)) {
         instructionsFile = meta.env.VTRACE_AGENT_INSTRUCTIONS_FILE;
       }
+      if (isString(meta.vtraceInstructionsSnapshotFile)) snapshotFile = meta.vtraceInstructionsSnapshotFile;
+      if (isString(meta.vtraceInstructionsSha256)) snapshotSha256 = meta.vtraceInstructionsSha256;
       indexed = readIndexedContextFromMeta(meta);
     }
   }
@@ -3871,6 +3940,20 @@ async function collectRunEvidence(outDir: string, runLabel: string | null = null
   const stats = instructionsFile === null ? null : await stat(instructionsFile).catch(() => null);
   const vtraceInstructionsFileExists = stats !== null && stats.isFile();
   const vtraceInstructionsFileSize = vtraceInstructionsFileExists ? stats!.size : null;
+
+  // Snapshot existence verified at ingest time. The snapshot is the audit-grade
+  // record (the active file may have been overwritten by a later run), so we also
+  // re-hash it and flag any drift from the SHA recorded at spawn time.
+  const snapshotContent = snapshotFile === null ? null : await readFile(snapshotFile, "utf8").catch(() => null);
+  const vtraceInstructionsSnapshotExists = snapshotContent !== null;
+  if (snapshotContent !== null && snapshotSha256 !== null) {
+    const ingestSha = createHash("sha256").update(snapshotContent).digest("hex");
+    if (ingestSha !== snapshotSha256) {
+      notes.push("Vtrace instructions snapshot SHA-256 does not match the value recorded at spawn time.");
+    }
+  } else if (snapshotFile !== null && snapshotContent === null) {
+    notes.push("Vtrace instructions snapshot recorded in meta but missing on disk at ingest.");
+  }
 
   // Patch install state from the manifest (on-disk install, distinct from runtime injection).
   const manifest = await readJsonIfExists(path.join(outDir, VTRACE_PATCH_MANIFEST_FILENAME));
@@ -3920,6 +4003,9 @@ async function collectRunEvidence(outDir: string, runLabel: string | null = null
     vtraceInstructionsFile: instructionsFile,
     vtraceInstructionsFileExists,
     vtraceInstructionsFileSize,
+    vtraceInstructionsSnapshotFile: snapshotFile,
+    vtraceInstructionsSnapshotExists,
+    vtraceInstructionsSha256: snapshotSha256,
     vtraceInjectionObserved,
     vtraceInjectionError,
     vtraceTreatmentValid,
@@ -4216,9 +4302,15 @@ function renderVtraceEvidence(evidence: Stage5RunEvidence): string[] {
     "| --- | --- |",
     `| vtrace_method | ${evidence.vtraceMethod} |`,
     `| vtrace_patch_installed | ${String(evidence.vtracePatchInstalled)} |`,
-    `| vtrace_instructions_file | ${evidence.vtraceInstructionsFile ?? "(none)"} |`,
+    // Audit display PREFERS the immutable per-run snapshot over the shared active
+    // file (which a later run can overwrite), falling back to the active file when
+    // no snapshot was recorded.
+    `| vtrace_instructions_file | ${evidence.vtraceInstructionsSnapshotFile ?? evidence.vtraceInstructionsFile ?? "(none)"} |`,
     `| vtrace_instructions_file_exists | ${String(evidence.vtraceInstructionsFileExists)} |`,
     `| vtrace_instructions_file_size | ${evidence.vtraceInstructionsFileSize ?? "(n/a)"} |`,
+    `| vtrace_instructions_snapshot_file | ${evidence.vtraceInstructionsSnapshotFile ?? "(none)"} |`,
+    `| vtrace_instructions_snapshot_exists | ${String(evidence.vtraceInstructionsSnapshotExists)} |`,
+    `| vtrace_instructions_sha256 | ${evidence.vtraceInstructionsSha256 ?? "(n/a)"} |`,
     `| vtrace_injection_observed | ${String(evidence.vtraceInjectionObserved)} |`,
     `| vtrace_injection_error | ${evidence.vtraceInjectionError ?? "(none)"} |`,
     `| vtrace_treatment_valid | ${String(evidence.vtraceTreatmentValid)} |`,
