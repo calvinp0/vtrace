@@ -41,6 +41,11 @@ import {
   computeClassMethodExpansion,
   isTestDominatedPool,
 } from "./productionBackfill";
+import {
+  backfillSqlRenderingCandidates,
+  sqlRenderingRelevance,
+  wantsSqlRenderingBackfill,
+} from "./sqlRenderingBackfill";
 import { planIntent, type IntentPlan } from "./intent";
 import { itemBlockText } from "./renderItem";
 import { estimateTokens, roundPercent } from "./tokens";
@@ -136,6 +141,30 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     }
   }
 
+  // SQL-rendering production backfill (debug intent). When the issue describes
+  // query composition (combined/composed/union/...) together with SQL
+  // rendering/output behaviour (sql/render/columns/...), the lexical pool is
+  // dominated by the public query-builder API while the compiler method that
+  // actually renders the combined SQL never entered it. Recover the rendering
+  // implementation from general structural signals (a `*/compiler.py` path, a
+  // `get_*_sql`/`as_sql` method) and merge it ahead of the pool. No hardcoded ids.
+  let sqlRenderingBackfillUsed = false;
+  const sqlRenderingTrigger = debugRefinement
+    ? wantsSqlRenderingBackfill(input.task)
+    : { active: false, compositionTerms: new Set<string>() };
+  if (sqlRenderingTrigger.active) {
+    const sqlCandidates = backfillSqlRenderingCandidates({
+      db: input.db,
+      shaped,
+      weights,
+      poolSize: CANDIDATE_POOL_SIZE,
+    });
+    if (sqlCandidates.length > 0) {
+      sqlRenderingBackfillUsed = true;
+      candidates = mergeCandidatesPreferring(sqlCandidates, candidates, CANDIDATE_POOL_SIZE);
+    }
+  }
+
   // Role assignment. The base gate scores each candidate in isolation; for debug
   // intent we then refine roles with call-graph structure (caller vs helper,
   // local vs generic infrastructure) before capping pivots to the tier. Other
@@ -152,6 +181,9 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       {
         sourceTextOf: (symbolId) => loadFocusedSourceById(input.db, input.repoRoot, symbolId),
         ...(classMethodExpansion === undefined ? {} : { expansion: classMethodExpansion }),
+        ...(sqlRenderingTrigger.active
+          ? { sqlRendering: { compositionTerms: sqlRenderingTrigger.compositionTerms } }
+          : {}),
       },
     );
     refined = result.refined;
@@ -169,6 +201,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
           production_backfill_used: productionBackfillUsed,
           class_method_expansion_used: classMethodExpansionUsed,
           source_body_call_fallback_used: sourceBodyCallFallbackUsed,
+          sql_rendering_backfill_used: sqlRenderingBackfillUsed,
           ...(subsystemRoot === undefined ? {} : { subsystem_root: subsystemRoot }),
         }
       : {};
@@ -176,6 +209,20 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const pivotCandidates = refined.filter((r) => r.role === CandidateRole.Pivot);
   const supportCandidates = refined.filter((r) => r.role === CandidateRole.Support);
   const roleDiscards = refined.filter((r) => r.role === CandidateRole.Discard);
+
+  // For a composed-query SQL-output bug, lead with the renderer most on-topic to
+  // the composition (`get_combinator_sql` for a "combined" issue) ahead of a
+  // generic `as_sql`/`execute_sql`, so the capsule's first pivot is the edit site.
+  if (sqlRenderingTrigger.active) {
+    pivotCandidates.sort(
+      (left, right) =>
+        sqlRenderingRelevance(right.candidate.localName, sqlRenderingTrigger.compositionTerms)
+          - sqlRenderingRelevance(left.candidate.localName, sqlRenderingTrigger.compositionTerms)
+        || right.candidate.scores.final - left.candidate.scores.final
+        || left.candidate.fqName.localeCompare(right.candidate.fqName)
+        || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
+    );
+  }
 
   // No high-confidence edit target: emit an intentionally empty capsule rather
   // than a vague support-only pile. The discards still report what was generated,
@@ -392,6 +439,8 @@ function composeItem(
     is_generic_infrastructure: entry.signals.is_generic_infrastructure,
     is_class_method_expansion_target: entry.signals.is_class_method_expansion_target,
     is_containing_class_context: entry.signals.is_containing_class_context,
+    is_query_builder_entrypoint: entry.signals.is_query_builder_entrypoint,
+    is_sql_rendering_implementation: entry.signals.is_sql_rendering_implementation,
     path: candidate.filePath,
     fq_name: candidate.fqName,
     symbol: candidate.localName,
@@ -422,6 +471,8 @@ function composeDocItem(doc: DocSection): CapsuleV2Item {
     is_generic_infrastructure: false,
     is_class_method_expansion_target: false,
     is_containing_class_context: false,
+    is_query_builder_entrypoint: false,
+    is_sql_rendering_implementation: false,
     path: doc.filePath,
     fq_name: `${doc.filePath}#${doc.heading}`,
     symbol: doc.heading,
@@ -511,6 +562,8 @@ function toDiscarded(entry: RefinedRoledCandidate, reason: string): CapsuleV2Dis
     is_generic_infrastructure: entry.signals.is_generic_infrastructure,
     is_class_method_expansion_target: entry.signals.is_class_method_expansion_target,
     is_containing_class_context: entry.signals.is_containing_class_context,
+    is_query_builder_entrypoint: entry.signals.is_query_builder_entrypoint,
+    is_sql_rendering_implementation: entry.signals.is_sql_rendering_implementation,
     scorecard: toScorecard(entry.candidate.scores),
     evidence: [...entry.candidate.evidence],
     discard_reason: reason,

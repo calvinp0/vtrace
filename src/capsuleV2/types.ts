@@ -106,6 +106,13 @@ export enum CapsuleV2ContentMode {
  * methods under that class are the actionable edit sites
  * (`is_class_method_expansion_target`), and the broad containing class is context
  * for them (`is_containing_class_context`), never the primary edit site.
+ *
+ * The final pair captures the query-builder/SQL-renderer split: for a composed-
+ * query SQL-output bug, the public query-construction API
+ * (`is_query_builder_entrypoint`, e.g. `QuerySet.values_list`) is the entry point
+ * — support — while the compiler/rendering implementation
+ * (`is_sql_rendering_implementation`, e.g. `SQLCompiler.get_combinator_sql`) is
+ * the actual edit site — a pivot.
  */
 export interface DebugRoleSignals {
   is_entry_point: boolean;
@@ -113,6 +120,8 @@ export interface DebugRoleSignals {
   is_generic_infrastructure: boolean;
   is_class_method_expansion_target: boolean;
   is_containing_class_context: boolean;
+  is_query_builder_entrypoint: boolean;
+  is_sql_rendering_implementation: boolean;
 }
 
 export const NO_DEBUG_ROLE_SIGNALS: DebugRoleSignals = Object.freeze({
@@ -121,6 +130,8 @@ export const NO_DEBUG_ROLE_SIGNALS: DebugRoleSignals = Object.freeze({
   is_generic_infrastructure: false,
   is_class_method_expansion_target: false,
   is_containing_class_context: false,
+  is_query_builder_entrypoint: false,
+  is_sql_rendering_implementation: false,
 });
 
 /** A selected pivot or support item, fully rendered and accounted for. */
@@ -225,6 +236,13 @@ export interface CapsuleV2Diagnostics {
   subsystem_root?: string;
   class_method_expansion_used?: boolean;
   source_body_call_fallback_used?: boolean;
+  /**
+   * True when the issue described query composition together with SQL
+   * rendering/output behaviour, and a SQL-rendering production backfill recovered
+   * compiler/renderer candidates (e.g. `SQLCompiler.get_combinator_sql`) the
+   * lexical pass — dominated by the public query-builder API — had missed.
+   */
+  sql_rendering_backfill_used?: boolean;
   /**
    * Present only when `actual_mode === no_context`. For the strongest near-miss
    * candidates, the precise reason each failed the pivot gate — so a conservative

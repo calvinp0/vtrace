@@ -33,6 +33,11 @@ import { isLikelyTestCandidate } from "../retrieval/searchSymbolsShared";
 import { tokenize } from "../retrieval/hybridScoring";
 import type { HybridCandidate } from "../retrieval/hybridRetrieval";
 import {
+  isQueryBuilderEntrypointSymbol,
+  isSqlRenderingImplementationSymbol,
+  sqlRenderingRelevance,
+} from "./sqlRenderingBackfill";
+import {
   type DebugRoleSignals,
   type NoContextExplanation,
 } from "./types";
@@ -72,6 +77,14 @@ export interface RefineDebugRolesOptions {
    * promoted as edit-sites over their containing class. Optional.
    */
   expansion?: ClassMethodExpansion;
+  /**
+   * SQL-rendering bug context. Present when the issue describes query composition
+   * plus SQL rendering/output behaviour: the SQL rendering implementation (e.g.
+   * `SQLCompiler.get_combinator_sql`) is promoted to pivot and the query-builder
+   * public API (e.g. `QuerySet.values_list`) demoted to support. `compositionTerms`
+   * are the composition words found in the task, used to rank rendering pivots.
+   */
+  sqlRendering?: { compositionTerms: ReadonlySet<string> };
 }
 
 export interface RefineDebugResult {
@@ -243,6 +256,32 @@ export function refineDebugRoles(
       isContainingClassContext = true;
     }
 
+    // SQL query-builder / renderer split (applied last, so it wins for a composed-
+    // query SQL-output bug): the compiler/rendering implementation IN the issue
+    // subsystem is the actual edit site, while the public query-construction API is
+    // only the entry point. Centrality/lexical never reverse this for such a bug.
+    let isQueryBuilderEntrypoint = false;
+    let isSqlRenderingImplementation = false;
+    if (options.sqlRendering !== undefined && !isLikelyTestCandidate(candidate)) {
+      if (
+        isSqlRenderingImplementationSymbol(candidate.localName, candidate.filePath, candidate.kind)
+        && inLocalSubsystem(candidate)
+      ) {
+        role = CandidateRole.Pivot;
+        roleReason = "SQL rendering implementation for combined-query output bug";
+        isSqlRenderingImplementation = true;
+        implementationHelper = true;
+        entryPoint = false;
+      } else if (isQueryBuilderEntrypointSymbol(candidate.localName)) {
+        role = CandidateRole.Support;
+        roleReason =
+          "query-construction API entry point — the edit site is the SQL rendering implementation it composes";
+        isQueryBuilderEntrypoint = true;
+        entryPoint = true;
+        implementationHelper = false;
+      }
+    }
+
     return {
       candidate,
       role,
@@ -253,12 +292,14 @@ export function refineDebugRoles(
         is_generic_infrastructure: genericInfra,
         is_class_method_expansion_target: isClassMethodExpansionTarget,
         is_containing_class_context: isContainingClassContext,
+        is_query_builder_entrypoint: isQueryBuilderEntrypoint,
+        is_sql_rendering_implementation: isSqlRenderingImplementation,
       },
     };
   });
 
   return {
-    refined: capPivots(refined, maxPivots, expansion),
+    refined: capPivots(refined, maxPivots, expansion, options.sqlRendering),
     ...(subsystemDir === undefined ? {} : { subsystemRoot: subsystemDir }),
     sourceBodyCallFallbackUsed,
   };
@@ -276,6 +317,8 @@ export function passthroughRoles(base: readonly RoledCandidate[]): RefinedRoledC
       is_generic_infrastructure: false,
       is_class_method_expansion_target: false,
       is_containing_class_context: false,
+      is_query_builder_entrypoint: false,
+      is_sql_rendering_implementation: false,
     },
   }));
 }
@@ -351,25 +394,34 @@ function whyNotPivot(entry: RefinedRoledCandidate, issueTokens: ReadonlySet<stri
 
 // --- helpers ------------------------------------------------------------------
 
-// Cap pivots to `maxPivots`; demote the rest to support. Class.method edit-site
-// methods are kept FIRST (by their expansion overlap score, then final), so a
-// recovered method claims a scarce pivot slot ahead of a broad class or a generic
-// candidate. Within a group, ties broken by final score then fqName/symbolId for
-// determinism.
+// Cap pivots to `maxPivots`; demote the rest to support. SQL-rendering edit sites
+// rank FIRST (by composition relevance, so `get_combinator_sql` leads a "combined"
+// bug ahead of a generic `as_sql`); then Class.method edit-site methods (by their
+// expansion overlap score), so a recovered method claims a scarce pivot slot ahead
+// of a broad class or a generic candidate. Within a group, ties broken by final
+// score then fqName/symbolId for determinism.
 function capPivots(
   refined: RefinedRoledCandidate[],
   maxPivots: number,
   expansion: ClassMethodExpansion | undefined,
+  sqlRendering: { compositionTerms: ReadonlySet<string> } | undefined,
 ): RefinedRoledCandidate[] {
   const expansionScore = (entry: RefinedRoledCandidate): number =>
     entry.signals.is_class_method_expansion_target
       ? expansion?.methodScores.get(entry.candidate.symbolId) ?? 0
       : -1;
+  // Rendering relevance: -1 for non-renderers (so any renderer outranks them),
+  // else the candidate's composition-term overlap (the more on-topic renderer wins).
+  const renderingScore = (entry: RefinedRoledCandidate): number =>
+    entry.signals.is_sql_rendering_implementation && sqlRendering !== undefined
+      ? sqlRenderingRelevance(entry.candidate.localName, sqlRendering.compositionTerms)
+      : -1;
   const pivotIds = refined
     .filter((entry) => entry.role === CandidateRole.Pivot)
     .sort(
       (left, right) =>
-        expansionScore(right) - expansionScore(left)
+        renderingScore(right) - renderingScore(left)
+        || expansionScore(right) - expansionScore(left)
         || right.candidate.scores.final - left.candidate.scores.final
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
         || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
