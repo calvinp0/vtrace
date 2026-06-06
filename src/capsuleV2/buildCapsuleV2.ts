@@ -32,11 +32,13 @@ import {
   collectIssueTokens,
   passthroughRoles,
   refineDebugRoles,
+  type ClassMethodExpansion,
   type RefinedRoledCandidate,
 } from "./debugRoles";
 import { retrieveDocSections, type DocSection } from "./docRetrieval";
 import {
   backfillProductionCandidates,
+  computeClassMethodExpansion,
   isTestDominatedPool,
 } from "./productionBackfill";
 import { resolveIntent, weightsForIntent } from "./intent";
@@ -100,19 +102,31 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // excluding tests, and merge those candidates ahead of the original pool.
   let productionBackfillUsed = false;
   let classMethodExpansionUsed = false;
-  if (intent === CapsuleIntent.Debug && isTestDominatedPool(candidates)) {
-    const backfill = backfillProductionCandidates({
-      db: input.db,
-      shaped,
-      weights,
-      task: input.task,
-      issueTokens: collectIssueTokens(shaped),
-      poolSize: CANDIDATE_POOL_SIZE,
-    });
-    if (backfill.candidates.length > 0) {
-      productionBackfillUsed = true;
+  // Class.method expansion targets (containing class + recovered methods), used to
+  // promote the actionable method edit-sites over the broad class in role refinement.
+  let classMethodExpansion: ClassMethodExpansion | undefined;
+  if (intent === CapsuleIntent.Debug) {
+    if (isTestDominatedPool(candidates)) {
+      const backfill = backfillProductionCandidates({
+        db: input.db,
+        shaped,
+        weights,
+        task: input.task,
+        issueTokens: collectIssueTokens(shaped),
+        poolSize: CANDIDATE_POOL_SIZE,
+      });
       classMethodExpansionUsed = backfill.classMethodExpansionUsed;
-      candidates = mergeCandidatesPreferring(backfill.candidates, candidates, CANDIDATE_POOL_SIZE);
+      classMethodExpansion = backfill.expansion;
+      if (backfill.candidates.length > 0) {
+        productionBackfillUsed = true;
+        candidates = mergeCandidatesPreferring(backfill.candidates, candidates, CANDIDATE_POOL_SIZE);
+      }
+    } else {
+      // No backfill needed, but the class + methods may already be in the pool;
+      // compute the expansion so the method edit-sites still outrank the class.
+      const cme = computeClassMethodExpansion(input.db, input.task, collectIssueTokens(shaped));
+      classMethodExpansion = cme.expansion;
+      classMethodExpansionUsed = cme.used;
     }
   }
 
@@ -129,7 +143,10 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       assignCandidateRoles(candidates),
       shaped,
       allocation.maxPivots,
-      { sourceTextOf: (symbolId) => loadFocusedSourceById(input.db, input.repoRoot, symbolId) },
+      {
+        sourceTextOf: (symbolId) => loadFocusedSourceById(input.db, input.repoRoot, symbolId),
+        ...(classMethodExpansion === undefined ? {} : { expansion: classMethodExpansion }),
+      },
     );
     refined = result.refined;
     subsystemRoot = result.subsystemRoot;
@@ -365,6 +382,8 @@ function composeItem(
     is_entry_point: entry.signals.is_entry_point,
     is_implementation_helper: entry.signals.is_implementation_helper,
     is_generic_infrastructure: entry.signals.is_generic_infrastructure,
+    is_class_method_expansion_target: entry.signals.is_class_method_expansion_target,
+    is_containing_class_context: entry.signals.is_containing_class_context,
     path: candidate.filePath,
     fq_name: candidate.fqName,
     symbol: candidate.localName,
@@ -393,6 +412,8 @@ function composeDocItem(doc: DocSection): CapsuleV2Item {
     is_entry_point: false,
     is_implementation_helper: false,
     is_generic_infrastructure: false,
+    is_class_method_expansion_target: false,
+    is_containing_class_context: false,
     path: doc.filePath,
     fq_name: `${doc.filePath}#${doc.heading}`,
     symbol: doc.heading,
@@ -480,6 +501,8 @@ function toDiscarded(entry: RefinedRoledCandidate, reason: string): CapsuleV2Dis
     is_entry_point: entry.signals.is_entry_point,
     is_implementation_helper: entry.signals.is_implementation_helper,
     is_generic_infrastructure: entry.signals.is_generic_infrastructure,
+    is_class_method_expansion_target: entry.signals.is_class_method_expansion_target,
+    is_containing_class_context: entry.signals.is_containing_class_context,
     scorecard: toScorecard(entry.candidate.scores),
     evidence: [...entry.candidate.evidence],
     discard_reason: reason,

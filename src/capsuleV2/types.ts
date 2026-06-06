@@ -96,17 +96,27 @@ export enum CapsuleV2ContentMode {
  * WHY a candidate landed in its role beyond the raw scorecard: whether it is an
  * entry-point/caller (delegates to a helper), an implementation helper (does the
  * issue's actual work), or generic external infrastructure (support at most).
+ *
+ * The last two capture `Class.method` expansion: when the issue names a method
+ * that need not exist yet (`ModelAdmin.get_inlines`), the recovered EXISTING
+ * methods under that class are the actionable edit sites
+ * (`is_class_method_expansion_target`), and the broad containing class is context
+ * for them (`is_containing_class_context`), never the primary edit site.
  */
 export interface DebugRoleSignals {
   is_entry_point: boolean;
   is_implementation_helper: boolean;
   is_generic_infrastructure: boolean;
+  is_class_method_expansion_target: boolean;
+  is_containing_class_context: boolean;
 }
 
 export const NO_DEBUG_ROLE_SIGNALS: DebugRoleSignals = Object.freeze({
   is_entry_point: false,
   is_implementation_helper: false,
   is_generic_infrastructure: false,
+  is_class_method_expansion_target: false,
+  is_containing_class_context: false,
 });
 
 /** A selected pivot or support item, fully rendered and accounted for. */

@@ -45,6 +45,19 @@ export interface RefinedRoledCandidate {
   signals: DebugRoleSignals;
 }
 
+/**
+ * `Class.method` expansion result: the symbol ids of the containing class(es) an
+ * issue named (e.g. `ModelAdmin`) and of the EXISTING nearby methods recovered
+ * under them (e.g. `get_inline_instances`), with each method's overlap score with
+ * the requested method/issue. The role refinement uses this to prefer the
+ * actionable method edit-sites over the broad class.
+ */
+export interface ClassMethodExpansion {
+  classSymbolIds: ReadonlySet<string>;
+  methodSymbolIds: ReadonlySet<string>;
+  methodScores: ReadonlyMap<string, number>;
+}
+
 export interface RefineDebugRolesOptions {
   /**
    * Resolve a candidate's focused source text by symbol id. When the static call
@@ -54,6 +67,11 @@ export interface RefineDebugRolesOptions {
    * fallback is simply skipped and only static edges are used.
    */
   sourceTextOf?: (symbolId: string) => string | undefined;
+  /**
+   * `Class.method` expansion targets. When present, recovered existing methods are
+   * promoted as edit-sites over their containing class. Optional.
+   */
+  expansion?: ClassMethodExpansion;
 }
 
 export interface RefineDebugResult {
@@ -164,6 +182,15 @@ export function refineDebugRoles(
     return false;
   };
 
+  const expansion = options.expansion;
+  const isExpansionTarget = (symbolId: string): boolean =>
+    expansion?.methodSymbolIds.has(symbolId) ?? false;
+  const isContainingClass = (symbolId: string): boolean =>
+    expansion?.classSymbolIds.has(symbolId) ?? false;
+  // Only demote a containing class when at least one of its recovered methods is
+  // actually in the pool — otherwise the class is the best target we have.
+  const hasExpansionTargetInPool = base.some((entry) => isExpansionTarget(entry.candidate.symbolId));
+
   const refined: RefinedRoledCandidate[] = base.map((entry) => {
     const candidate = entry.candidate;
     const dispatcher = isDispatcher(entry);
@@ -192,20 +219,46 @@ export function refineDebugRoles(
       roleReason = "entry point/caller delegating to local helpers — the edit site is the helper it calls";
     }
 
+    // Class.method expansion overrides (applied last, so they win): a recovered
+    // EXISTING method is the actionable edit site — more specific than the broad
+    // containing class, which is demoted to context when such a method is present.
+    let isClassMethodExpansionTarget = false;
+    let isContainingClassContext = false;
+    let entryPoint = dispatcher;
+    let implementationHelper = helper;
+    if (
+      isExpansionTarget(candidate.symbolId)
+      && ACTIONABLE_FUNCTION_KINDS.has(candidate.kind)
+      && !isLikelyTestCandidate(candidate)
+    ) {
+      role = CandidateRole.Pivot;
+      roleReason =
+        "existing method recovered from Class.method expansion — more actionable than containing class";
+      isClassMethodExpansionTarget = true;
+      implementationHelper = true;
+      entryPoint = false;
+    } else if (isContainingClass(candidate.symbolId) && hasExpansionTargetInPool) {
+      role = CandidateRole.Support;
+      roleReason = "containing class for recovered edit-site methods";
+      isContainingClassContext = true;
+    }
+
     return {
       candidate,
       role,
       roleReason,
       signals: {
-        is_entry_point: dispatcher,
-        is_implementation_helper: helper,
+        is_entry_point: entryPoint,
+        is_implementation_helper: implementationHelper,
         is_generic_infrastructure: genericInfra,
+        is_class_method_expansion_target: isClassMethodExpansionTarget,
+        is_containing_class_context: isContainingClassContext,
       },
     };
   });
 
   return {
-    refined: capPivots(refined, maxPivots),
+    refined: capPivots(refined, maxPivots, expansion),
     ...(subsystemDir === undefined ? {} : { subsystemRoot: subsystemDir }),
     sourceBodyCallFallbackUsed,
   };
@@ -221,6 +274,8 @@ export function passthroughRoles(base: readonly RoledCandidate[]): RefinedRoledC
       is_entry_point: false,
       is_implementation_helper: false,
       is_generic_infrastructure: false,
+      is_class_method_expansion_target: false,
+      is_containing_class_context: false,
     },
   }));
 }
@@ -296,17 +351,26 @@ function whyNotPivot(entry: RefinedRoledCandidate, issueTokens: ReadonlySet<stri
 
 // --- helpers ------------------------------------------------------------------
 
-// Cap pivots to `maxPivots` by final score; demote the rest to support. Stable:
-// ties broken by fqName then symbolId so the kept set is deterministic.
+// Cap pivots to `maxPivots`; demote the rest to support. Class.method edit-site
+// methods are kept FIRST (by their expansion overlap score, then final), so a
+// recovered method claims a scarce pivot slot ahead of a broad class or a generic
+// candidate. Within a group, ties broken by final score then fqName/symbolId for
+// determinism.
 function capPivots(
   refined: RefinedRoledCandidate[],
   maxPivots: number,
+  expansion: ClassMethodExpansion | undefined,
 ): RefinedRoledCandidate[] {
+  const expansionScore = (entry: RefinedRoledCandidate): number =>
+    entry.signals.is_class_method_expansion_target
+      ? expansion?.methodScores.get(entry.candidate.symbolId) ?? 0
+      : -1;
   const pivotIds = refined
     .filter((entry) => entry.role === CandidateRole.Pivot)
     .sort(
       (left, right) =>
-        right.candidate.scores.final - left.candidate.scores.final
+        expansionScore(right) - expansionScore(left)
+        || right.candidate.scores.final - left.candidate.scores.final
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
         || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
     )

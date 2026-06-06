@@ -33,7 +33,7 @@ import {
 import { tokenize, type HybridScoreWeights } from "../retrieval/hybridScoring";
 import { searchSymbols } from "../retrieval/searchSymbols";
 import { isLikelyTestCandidate } from "../retrieval/searchSymbolsShared";
-import { STOPWORDS } from "./debugRoles";
+import { STOPWORDS, type ClassMethodExpansion } from "./debugRoles";
 
 // Kinds a debug edit can land on — the same set the role gate treats as
 // actionable. A pool with none of these (only tests / module variables) cannot
@@ -79,7 +79,23 @@ export interface ProductionBackfillResult {
   candidates: HybridCandidate[];
   /** True when a `Class.method` expansion contributed seeds. */
   classMethodExpansionUsed: boolean;
+  /** The class/method symbol ids the expansion recovered (for role promotion). */
+  expansion: ClassMethodExpansion;
 }
+
+export interface ClassMethodExpansionResult {
+  expansion: ClassMethodExpansion;
+  /** Symbol-name seeds (class names + recovered method names) for retrieval. */
+  seeds: string[];
+  /** True when at least one nearby existing method was recovered. */
+  used: boolean;
+}
+
+const EMPTY_EXPANSION: ClassMethodExpansion = {
+  classSymbolIds: new Set(),
+  methodSymbolIds: new Set(),
+  methodScores: new Map(),
+};
 
 /**
  * True when the candidate pool is (almost) all test symbols — the signal that the
@@ -106,14 +122,14 @@ export function isTestDominatedPool(candidates: readonly HybridCandidate[]): boo
 export function backfillProductionCandidates(
   input: ProductionBackfillInput,
 ): ProductionBackfillResult {
-  const { seeds, classMethodExpansionUsed } = buildProductionSeeds(
+  const { seeds, expansion, classMethodExpansionUsed } = buildProductionSeeds(
     input.db,
     input.task,
     input.shaped,
     input.issueTokens,
   );
   if (seeds.length === 0) {
-    return { candidates: [], classMethodExpansionUsed: false };
+    return { candidates: [], classMethodExpansionUsed: false, expansion: EMPTY_EXPANSION };
   }
 
   // Promote the production seeds to likely-symbols so they earn a real symbol
@@ -136,6 +152,46 @@ export function backfillProductionCandidates(
       .filter((candidate) => !isLikelyTestCandidate(candidate))
       .slice(0, input.poolSize),
     classMethodExpansionUsed,
+    expansion,
+  };
+}
+
+/**
+ * Resolve every `Class.method` mention in the task to the containing class and its
+ * nearby EXISTING methods, from the index alone. Exposed so debug-role refinement
+ * can promote the recovered methods over the class even when no backfill ran (the
+ * class + methods were already in the natural pool).
+ */
+export function computeClassMethodExpansion(
+  db: Database,
+  task: string,
+  issueTokens: ReadonlySet<string>,
+): ClassMethodExpansionResult {
+  const classSymbolIds = new Set<string>();
+  const methodSymbolIds = new Set<string>();
+  const methodScores = new Map<string, number>();
+  const seeds = new Set<string>();
+  let used = false;
+
+  for (const { className, methodName } of parseClassMethodPairs(task)) {
+    seeds.add(className);
+    seeds.add(methodName);
+    const targetTokens = new Set(meaningfulTokens(methodName));
+    for (const cls of findClasses(db, className)) {
+      classSymbolIds.add(cls.id);
+      for (const { symbol, score } of nearbyMethods(db, cls, targetTokens, issueTokens)) {
+        seeds.add(symbol.localName);
+        methodSymbolIds.add(symbol.id);
+        methodScores.set(symbol.id, Math.max(methodScores.get(symbol.id) ?? 0, score));
+        used = true;
+      }
+    }
+  }
+
+  return {
+    expansion: { classSymbolIds, methodSymbolIds, methodScores },
+    seeds: [...seeds].filter((seed) => seed.length > 0),
+    used,
   };
 }
 
@@ -143,6 +199,7 @@ export function backfillProductionCandidates(
 
 interface ProductionSeeds {
   seeds: string[];
+  expansion: ClassMethodExpansion;
   classMethodExpansionUsed: boolean;
 }
 
@@ -152,22 +209,10 @@ function buildProductionSeeds(
   shaped: ShapedSweQuery,
   issueTokens: ReadonlySet<string>,
 ): ProductionSeeds {
-  const seeds = new Set<string>();
-  let classMethodExpansionUsed = false;
-
   // 1) Class.method expansion: ModelAdmin.get_inlines -> ModelAdmin + nearby real
   // methods (get_inline_instances, get_formsets_with_inlines, ...).
-  for (const { className, methodName } of parseClassMethodPairs(task)) {
-    seeds.add(className);
-    seeds.add(methodName);
-    const targetTokens = new Set(meaningfulTokens(methodName));
-    for (const cls of findClasses(db, className)) {
-      for (const method of nearbyMethods(db, cls, targetTokens, issueTokens)) {
-        seeds.add(method);
-        classMethodExpansionUsed = true;
-      }
-    }
-  }
+  const cme = computeClassMethodExpansion(db, task, issueTokens);
+  const seeds = new Set<string>(cme.seeds);
 
   // 2) Class names (CamelCase) and method/snake identifiers from the issue prose:
   // production-focused terms that lexical search alone under-ranked.
@@ -177,7 +222,11 @@ function buildProductionSeeds(
     }
   }
 
-  return { seeds: [...seeds].filter((seed) => seed.length > 0), classMethodExpansionUsed };
+  return {
+    seeds: [...seeds].filter((seed) => seed.length > 0),
+    expansion: cme.expansion,
+    classMethodExpansionUsed: cme.used,
+  };
 }
 
 function parseClassMethodPairs(task: string): Array<{ className: string; methodName: string }> {
@@ -230,21 +279,20 @@ function nearbyMethods(
   cls: SymbolRecord,
   targetTokens: ReadonlySet<string>,
   issueTokens: ReadonlySet<string>,
-): string[] {
-  const scored: Array<{ name: string; score: number }> = [];
+): Array<{ symbol: SymbolRecord; score: number }> {
+  const scored: Array<{ symbol: SymbolRecord; score: number }> = [];
   for (const symbol of listSymbolsForFile(db, cls.filePath)) {
     if (symbol.parentSymbolId !== cls.id || !ACTIONABLE_KINDS.has(symbol.kind)) {
       continue;
     }
     const score = scoreMethod(symbol.localName, targetTokens, issueTokens);
     if (score > 0) {
-      scored.push({ name: symbol.localName, score });
+      scored.push({ symbol, score });
     }
   }
   return scored
-    .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name))
-    .slice(0, MAX_EXPANDED_METHODS)
-    .map((entry) => entry.name);
+    .sort((left, right) => right.score - left.score || left.symbol.localName.localeCompare(right.symbol.localName))
+    .slice(0, MAX_EXPANDED_METHODS);
 }
 
 function scoreMethod(
