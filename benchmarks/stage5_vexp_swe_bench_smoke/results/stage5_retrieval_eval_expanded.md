@@ -44,8 +44,8 @@ support / discarded are compared against the fixture's `expected_files` and
 | expected_file_missing_rate | 10.0% |
 | expected_symbol_hit_rate | 60.0% |
 | expected_symbol_as_pivot_rate | 45.0% |
-| mean_capsule_tokens | 870.0 |
-| mean_pivot_count | 1.95 |
+| mean_capsule_tokens | 908.5 |
+| mean_pivot_count | 1.85 |
 | mean_support_count | 4.00 |
 
 ## Aggregate metrics — by label source
@@ -66,8 +66,8 @@ support / discarded are compared against the fixture's `expected_files` and
 | expected_file_missing_rate | 13.3% |
 | expected_symbol_hit_rate | 60.0% |
 | expected_symbol_as_pivot_rate | 40.0% |
-| mean_capsule_tokens | 822.9 |
-| mean_pivot_count | 1.93 |
+| mean_capsule_tokens | 874.3 |
+| mean_pivot_count | 1.80 |
 | mean_support_count | 4.00 |
 
 ### manual_verified (hand-curated and checked)
@@ -118,7 +118,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | django__django-12050 | gold_patch | django/db/models/sql/query.py | db/models/sql/query.py::resolve_lookup_value | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12273 | gold_patch | django/db/models/base.py | forms/models.py::save | pivot | no | yes | hit_top3 | none |
 | django__django-12276 | gold_patch | django/forms/widgets.py | forms/widgets.py::use_required_attribute | pivot | yes | yes | hit_top1_pivot | none |
-| django__django-12325 | gold_patch | django/db/models/base.py | core/files/base.py::multiple_chunks | support | no | no | hit_support | present_but_support |
+| django__django-12325 | gold_patch | django/db/models/base.py | core/checks/model_checks.py::_check_lazy_references | support | no | no | hit_support | present_but_support |
 | django__django-12774 | gold_patch | django/db/models/query.py | db/models/query.py::in_bulk | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12858 | gold_patch | django/db/models/base.py | db/models/lookups.py::apply_bilateral_transforms | missing | no | no | missing | missing_from_candidates |
 | django__django-13012 | gold_patch | django/db/models/expressions.py | db/models/expressions.py::ExpressionWrapper | pivot | yes | yes | hit_top1_pivot | none |
@@ -150,9 +150,9 @@ support / discarded are compared against the fixture's `expected_files` and
 
 - expected: django/db/models/base.py, django/db/models/options.py
 - reason: —
+- down-weighted lexical tokens: multiple
 - top pivots:
-  - core/files/base.py::multiple_chunks — actionable method — strong lexical match; issue-domain relevance
-  - core/files/uploadedfile.py::multiple_chunks — actionable method — strong lexical match; issue-domain relevance
+  - core/checks/model_checks.py::_check_lazy_references — actionable function — strong lexical match; issue-domain relevance
 - top support:
   - db/models/fields/reverse_related.py::ManyToOneRel — generic infrastructure outside the issue's subsystem (class) — support only without direct failing-test or issue evidence
   - db/models/sql/query.py::setup_joins — generic infrastructure outside the issue's subsystem (method) — support only without direct failing-test or issue evidence

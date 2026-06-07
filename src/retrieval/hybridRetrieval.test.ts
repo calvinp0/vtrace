@@ -1,10 +1,62 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { test } from "bun:test";
 
+import type { Database } from "bun:sqlite";
+
 import { openIndexerDatabase } from "../db/sqlite";
+import { persistParseResult } from "../db/persistParseResult";
+import {
+  Language,
+  SymbolKind,
+  buildFQName,
+  computeFileId,
+  computeSymbolId,
+} from "../domain/types";
 import { shapeSweQuery } from "../capsule/sweQueryShaping";
 import { hybridRetrieve, HybridCandidateSource } from "./hybridRetrieval";
 import { seedHybridDjangoFixture } from "./hybridFixture";
+
+// Persist a single file's worth of top-level symbols, for a minimal hand-built
+// pool. Used by the generic-lexical down-weighting test below.
+function persistSymbolFile(
+  db: Database,
+  filePath: string,
+  specs: ReadonlyArray<{ localName: string; kind: SymbolKind; parent?: string; docstring?: string }>,
+): void {
+  const content = `# ${filePath}\n`;
+  persistParseResult(db, {
+    file: {
+      id: computeFileId(filePath),
+      path: filePath,
+      language: Language.Python,
+      contentHash: createHash("sha256").update(content).digest("hex"),
+      sizeBytes: Buffer.byteLength(content),
+    },
+    symbols: specs.map((spec, index) => {
+      const symbolPath = spec.parent ? [spec.parent, spec.localName] : [spec.localName];
+      const fqName = buildFQName({ filePath, symbolPath });
+      const startByte = index * 100;
+      const endByte = startByte + 60;
+      return {
+        id: computeSymbolId({ filePath, fqName, kind: spec.kind, startByte, endByte }),
+        filePath,
+        fqName,
+        localName: spec.localName,
+        kind: spec.kind,
+        signature: `${spec.kind} ${spec.localName}`,
+        ...(spec.docstring === undefined ? {} : { docstring: spec.docstring }),
+        startLine: index + 1,
+        endLine: index + 1,
+        startByte,
+        endByte,
+        exported: true,
+      };
+    }),
+    edges: [],
+    diagnostics: [],
+  });
+}
 
 const SCORE_KEYS = [
   "lexical",
@@ -195,6 +247,57 @@ test("candidates are sorted strictly by final score", () => {
         `candidate #${index - 1} final must be >= #${index}`,
       );
     }
+  } finally {
+    db.close();
+  }
+});
+
+test("'multiple OneToOne' does not let multiple_chunks outrank the OneToOne model target", () => {
+  const db = openIndexerDatabase();
+  try {
+    // A decoy whose NAME shares only the generic word "multiple" with the task,
+    // and the genuine field target the task is actually about.
+    persistSymbolFile(db, "django/core/files/base.py", [
+      {
+        localName: "multiple_chunks",
+        kind: SymbolKind.Method,
+        parent: "File",
+        // Rich docstring so it is admitted to the pool on shared terms — but its
+        // NAME ("multiple_chunks") still overlaps the task only on the generic
+        // "multiple", which is exactly the spurious pull the down-weighting targets.
+        docstring: "A model with multiple references to the same parent fails when reading chunks.",
+      },
+    ]);
+    persistSymbolFile(db, "django/db/models/fields/related.py", [
+      {
+        localName: "OneToOneField",
+        kind: SymbolKind.Class,
+        docstring: "A OneToOneField on a model, referencing a parent model.",
+      },
+    ]);
+
+    const shaped = shapeSweQuery({
+      problemStatement:
+        "A model with multiple OneToOneField references to the same parent fails.",
+    });
+    const { candidates } = hybridRetrieve(db, { query: shaped.query, shaped, maxResults: 20 });
+
+    const chunksIndex = candidates.findIndex((c) => c.localName === "multiple_chunks");
+    const oneToOneIndex = candidates.findIndex((c) => c.localName === "OneToOneField");
+    assert.ok(chunksIndex !== -1 && oneToOneIndex !== -1, "both candidates should be in the pool");
+
+    const chunks = candidates[chunksIndex]!;
+    // The decoy's lexical match is explained only by the generic "multiple": its
+    // blended lexical score is down-weighted, and the reason is inspectable.
+    assert.ok(
+      chunks.evidence.some((line) => /lexical down-weighted.*multiple/.test(line)),
+      `expected a down-weight evidence line, got ${JSON.stringify(chunks.evidence)}`,
+    );
+    // And it must not rank above the genuine OneToOne model target on "multiple" alone.
+    assert.ok(
+      oneToOneIndex < chunksIndex,
+      `OneToOneField (#${oneToOneIndex}) should rank above multiple_chunks (#${chunksIndex})`,
+    );
   } finally {
     db.close();
   }

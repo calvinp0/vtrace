@@ -275,6 +275,8 @@ export interface CapsuleSummary {
   readonly filteredGenericSymbols: readonly string[];
   /** Runner/entry scripts dropped from the likely-file signal. */
   readonly filteredRunnerFiles: readonly string[];
+  /** Generic query tokens whose lexical contribution was down-weighted in scoring. */
+  readonly downweightedLexicalTokens: readonly string[];
 }
 
 // Project a Capsule v2 result onto the summary the scorer needs. Works on the
@@ -312,6 +314,7 @@ export function summarizeCapsule(result: CapsuleV2Result): CapsuleSummary {
     lineAnchorResolutionUsed: result.diagnostics.line_anchor_resolution_used ?? false,
     filteredGenericSymbols: result.diagnostics.filtered_generic_symbols ?? [],
     filteredRunnerFiles: result.diagnostics.filtered_runner_files ?? [],
+    downweightedLexicalTokens: result.diagnostics.downweighted_lexical_tokens ?? [],
   };
 }
 
@@ -604,6 +607,8 @@ export interface RetrievalEvalRow {
   /** Generic lexical noise the query shaper filtered (for this instance). */
   readonly filtered_generic_symbols: readonly string[];
   readonly filtered_runner_files: readonly string[];
+  /** Generic query tokens down-weighted in lexical scoring (for this instance). */
+  readonly downweighted_lexical_tokens: readonly string[];
 
   /** Top-k pivots / support / discarded — makes a miss diagnosable offline. */
   readonly diagnostics: TopKDiagnostics;
@@ -651,6 +656,7 @@ export function evaluateInstance(
       failure_reason: error?.detail ?? "workspace not available",
       filtered_generic_symbols: [],
       filtered_runner_files: [],
+      downweighted_lexical_tokens: [],
       diagnostics: { top_pivots: [], top_support: [], top_discarded: [] },
     };
   }
@@ -704,6 +710,7 @@ export function evaluateInstance(
     failure_reason: failureReason,
     filtered_generic_symbols: summary.filteredGenericSymbols,
     filtered_runner_files: summary.filteredRunnerFiles,
+    downweighted_lexical_tokens: summary.downweightedLexicalTokens,
     diagnostics: topKDiagnostics(summary),
   };
 }
@@ -879,6 +886,7 @@ const CSV_COLUMNS: readonly (keyof RetrievalEvalRow)[] = [
   "failure_reason",
   "filtered_generic_symbols",
   "filtered_runner_files",
+  "downweighted_lexical_tokens",
 ];
 
 export function renderCsv(rows: readonly RetrievalEvalRow[]): string {
@@ -1022,6 +1030,9 @@ export function renderMarkdown(artifact: RetrievalEvalArtifact): string {
       }
       if (row.filtered_runner_files.length > 0) {
         lines.push(`- filtered runner files: ${row.filtered_runner_files.join(", ")}`);
+      }
+      if (row.downweighted_lexical_tokens.length > 0) {
+        lines.push(`- down-weighted lexical tokens: ${row.downweighted_lexical_tokens.join(", ")}`);
       }
       lines.push(...renderTopK("top pivots", row.diagnostics.top_pivots.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));
       lines.push(...renderTopK("top support", row.diagnostics.top_support.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));

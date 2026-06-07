@@ -234,6 +234,16 @@ export interface CapsuleV2Diagnostics {
   filtered_generic_symbols?: string[];
   filtered_runner_files?: string[];
   /**
+   * Generic-token lexical scoring decomposition of the retrieval query. Generic
+   * bug-report tokens present in the query have their lexical contribution
+   * down-weighted when they are the ONLY thing matching a candidate's name (so
+   * "multiple" cannot make `multiple_chunks` a pivot on its own). Present only when
+   * the query carried at least one generic token.
+   */
+  downweighted_lexical_tokens?: string[];
+  lexical_meaningful_token_count?: number;
+  lexical_generic_token_count?: number;
+  /**
    * Debug-intent recovery diagnostics (present only under debug intent). They make
    * the production-target recovery auditable: whether the test-only candidate pool
    * triggered a production backfill, the issue subsystem the role refinement

@@ -26,6 +26,7 @@ import {
   hybridRetrieve,
   type HybridCandidate,
 } from "../retrieval/hybridRetrieval";
+import { classifyLexicalQueryTokens } from "../retrieval/hybridScoring";
 import { allocateBudget } from "./budgetAllocator";
 import {
   buildNoContextExplanations,
@@ -401,6 +402,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       likely_symbols: shaped.likelySymbols,
       failing_tests: shaped.failingTests,
       ...filteredSignalDiagnostics(shaped),
+      ...lexicalScoringDiagnostics(shaped.query),
       ...debugDiagnostics,
       ...lineAnchorDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
@@ -676,6 +678,7 @@ function noContextResult(input: NoContextInput): CapsuleV2Result {
       likely_symbols: input.shaped.likelySymbols,
       failing_tests: input.shaped.failingTests,
       ...filteredSignalDiagnostics(input.shaped),
+      ...lexicalScoringDiagnostics(input.shaped.query),
       ...input.debugDiagnostics,
       ...(input.explanations.length > 0 ? { no_context_explanations: input.explanations } : {}),
     },
@@ -693,6 +696,21 @@ function filteredSignalDiagnostics(shaped: ShapedSweQuery): Partial<CapsuleV2Res
     ...(shaped.filteredRunnerFiles.length > 0
       ? { filtered_runner_files: shaped.filteredRunnerFiles }
       : {}),
+  };
+}
+
+// Generic-token lexical-scoring decomposition of the retrieval query, surfaced so
+// the down-weighting policy is auditable. Present only when the query carried a
+// generic token (otherwise nothing was eligible for down-weighting).
+function lexicalScoringDiagnostics(query: string): Partial<CapsuleV2Result["diagnostics"]> {
+  const tokens = classifyLexicalQueryTokens(query);
+  if (tokens.generic.size === 0) {
+    return {};
+  }
+  return {
+    downweighted_lexical_tokens: [...tokens.generic],
+    lexical_meaningful_token_count: tokens.meaningful.size,
+    lexical_generic_token_count: tokens.generic.size,
   };
 }
 

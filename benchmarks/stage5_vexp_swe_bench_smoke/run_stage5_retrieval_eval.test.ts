@@ -97,6 +97,7 @@ function summary(overrides: Partial<CapsuleSummary> = {}): CapsuleSummary {
     lineAnchorResolutionUsed: false,
     filteredGenericSymbols: [],
     filteredRunnerFiles: [],
+    downweightedLexicalTokens: [],
     ...overrides,
   };
 }
@@ -691,6 +692,19 @@ test("evaluateInstance carries filtered-noise diagnostics onto the row", () => {
   );
   assert.deepEqual(row.filtered_generic_symbols, ["command"]);
   assert.deepEqual(row.filtered_runner_files, ["manage.py"]);
+});
+
+test("down-weighted lexical tokens flow onto the row and into a miss report", () => {
+  const row = evaluateInstance(
+    entry({ instance_id: "lex_miss" }),
+    summary({
+      pivots: [selected("pivot", "pkg/other.py", "o", 1)],
+      downweightedLexicalTokens: ["multiple", "error"],
+    }),
+  );
+  assert.deepEqual(row.downweighted_lexical_tokens, ["multiple", "error"]);
+  const md = renderMarkdown(artifactOf([row]));
+  assert.match(md, /down-weighted lexical tokens: multiple, error/);
 });
 
 test("taskHasLineAnchor detects source coordinates", () => {

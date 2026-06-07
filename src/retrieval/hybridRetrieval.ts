@@ -30,7 +30,9 @@ import {
   type GraphExpansionOptions,
 } from "./graphExpansion";
 import {
+  analyzeLexicalGenericMatch,
   blendLexical,
+  classifyLexicalQueryTokens,
   combineFinalScore,
   computeBm25Scores,
   computeDomainRaw,
@@ -306,6 +308,11 @@ function assemble(
   );
   const centrality = computeInDegreeCentrality(db, entries.map((entry) => entry.symbol.id));
 
+  // Query token decomposition for generic-token lexical down-weighting: a candidate
+  // whose NAME is matched only by a generic word ("multiple") has its blended
+  // lexical score scaled down so the word cannot carry it to a pivot.
+  const lexicalQueryTokens = classifyLexicalQueryTokens(input.query);
+
   // Compute the remaining raw signals (symbol/path/domain) that apply to EVERY
   // candidate regardless of which source first surfaced it.
   const symbolRaw = new Map<SymbolId, number>();
@@ -337,7 +344,8 @@ function assemble(
     const centralityScore = round(
       normalizeAgainst(centrality.get(entry.symbol.id) ?? 0, maxCentrality),
     );
-    const lexical = round(blendLexical(fts, tfidf));
+    const lexicalMatch = analyzeLexicalGenericMatch(lexicalQueryTokens, entry.symbol);
+    const lexical = round(blendLexical(fts, tfidf) * lexicalMatch.factor);
     const weights = input.weights ?? HYBRID_SCORE_WEIGHTS;
     const rawFinal = combineFinalScore(
       { lexical, symbol, path, domain, testToImpl, graph, centrality: centralityScore },
@@ -392,6 +400,11 @@ function assemble(
     if (actionabilityPenalty > 0) {
       evidence.push(
         `downranked: ${entry.symbol.kind} is a low-actionability edit target without strong direct evidence`,
+      );
+    }
+    if (lexicalMatch.factor < 1) {
+      evidence.push(
+        `lexical down-weighted: name matched only by generic token(s) ${lexicalMatch.downweightedTokens.join(", ")}`,
       );
     }
 

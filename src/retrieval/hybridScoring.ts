@@ -14,6 +14,7 @@
 // plain weighted sum — never a magic additive blob.
 
 import { SymbolKind } from "../domain/types";
+import { GENERIC_TOKEN_STOPLIST } from "../capsule/sweQueryShaping";
 
 // The full component breakdown reported for every hybrid candidate. `fts` and
 // `tfidf` are the two lexical sub-signals; `lexical` is their blend and is the
@@ -350,6 +351,107 @@ function sharedPrefixLength(a: string, b: string): number {
     index += 1;
   }
   return index;
+}
+
+// ----- generic-token lexical down-weighting -----------------------------------
+//
+// Query shaping (P1) already keeps generic bug-report words ("multiple", "error")
+// out of `likely_symbols` and subsystem tokens, but — by design — leaves them in
+// the raw task text so BM25/FTS recall is preserved. The side effect: a candidate
+// whose NAME happens to contain a generic word (`FieldFile.multiple_chunks`) wins
+// the lexical race off that one word and can become a top pivot, even though the
+// word carries no edit-target signal (Stage 5R `django__django-12325`).
+//
+// This pass down-weights the BLENDED lexical score of a candidate whose name is
+// matched ONLY by generic query tokens. A candidate whose name ALSO matches a
+// MEANINGFUL query token (compound support, e.g. the query mentions "chunks") is
+// left at full strength — so compound identifiers are demoted by noise, not
+// destroyed. Matching is against the candidate's NAME identity (localName +
+// fqName) and NOT its directory path, so an incidental dir segment ("core" from
+// "django.core.exceptions") cannot masquerade as meaningful support.
+
+// Multiplier applied to the blended lexical score when a candidate's name is
+// explained ONLY by generic query tokens. Small but non-zero: the candidate can
+// still surface on other evidence, it just cannot ride a generic word to a pivot.
+export const GENERIC_ONLY_LEXICAL_FACTOR = 0.25;
+
+export interface LexicalQueryTokens {
+  /** Content tokens that carry edit-target signal. */
+  readonly meaningful: ReadonlySet<string>;
+  /** Generic bug-report tokens eligible for lexical down-weighting. */
+  readonly generic: ReadonlySet<string>;
+}
+
+// Split a query's content tokens into meaningful vs generic. Structural/boilerplate
+// tokens (DOMAIN_STOPWORDS) and sub-`DOMAIN_MIN_TOKEN_LENGTH` tokens are dropped
+// from both sets — they never carry signal and never trigger a down-weight.
+export function classifyLexicalQueryTokens(query: string): LexicalQueryTokens {
+  const meaningful = new Set<string>();
+  const generic = new Set<string>();
+  for (const token of tokenize(query)) {
+    if (token.length < DOMAIN_MIN_TOKEN_LENGTH || DOMAIN_STOPWORDS.has(token)) {
+      continue;
+    }
+    if (GENERIC_TOKEN_STOPLIST.has(token)) {
+      generic.add(token);
+    } else {
+      meaningful.add(token);
+    }
+  }
+  return { meaningful, generic };
+}
+
+export interface LexicalGenericMatch {
+  /** Generic query tokens that matched this candidate's name (the down-weighted ones). */
+  readonly downweightedTokens: string[];
+  /** Distinct meaningful query tokens that matched the candidate's name. */
+  readonly meaningfulMatchCount: number;
+  /** Distinct generic query tokens that matched the candidate's name. */
+  readonly genericMatchCount: number;
+  /** Multiplier in (0, 1] for the candidate's blended lexical score. */
+  readonly factor: number;
+}
+
+// Decide how much of a candidate's name match is generic-only. The factor is
+// `GENERIC_ONLY_LEXICAL_FACTOR` exactly when a generic query token matches the
+// name AND no meaningful query token does; otherwise it is 1 (untouched).
+export function analyzeLexicalGenericMatch(
+  queryTokens: LexicalQueryTokens,
+  symbol: { localName: string; fqName: string },
+): LexicalGenericMatch {
+  const nameTokens = new Set([
+    ...tokenize(symbol.localName),
+    ...tokenize(symbol.fqName),
+  ]);
+
+  let meaningfulMatchCount = 0;
+  for (const token of queryTokens.meaningful) {
+    if (matchesNameToken(token, nameTokens)) {
+      meaningfulMatchCount += 1;
+    }
+  }
+  const downweightedTokens: string[] = [];
+  for (const token of queryTokens.generic) {
+    if (matchesNameToken(token, nameTokens)) {
+      downweightedTokens.push(token);
+    }
+  }
+  const genericMatchCount = downweightedTokens.length;
+  const factor =
+    genericMatchCount > 0 && meaningfulMatchCount === 0 ? GENERIC_ONLY_LEXICAL_FACTOR : 1;
+  return { downweightedTokens, meaningfulMatchCount, genericMatchCount, factor };
+}
+
+function matchesNameToken(queryToken: string, nameTokens: ReadonlySet<string>): boolean {
+  if (nameTokens.has(queryToken)) {
+    return true;
+  }
+  for (const nameToken of nameTokens) {
+    if (stemMatch(queryToken, nameToken)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // Normalise a raw value against the pool maximum so every component lands in
