@@ -1,0 +1,35 @@
+{
+  "description": "Stage 5 label map: baseline vs Capsule v2 force-inject vs Capsule v2 auto-policy on five Django SWE-bench smoke instances. Baseline metrics are read from the `baseline` condition; force/auto from the `vtrace` condition.",
+  "instances": [
+    {
+      "instance_id": "django__django-10880",
+      "baseline_label": "eval-10880",
+      "force_label": "eval-capsulev2-risk5-10880",
+      "auto_label": "eval-capsulev2-auto-10880"
+    },
+    {
+      "instance_id": "django__django-11095",
+      "baseline_label": "eval-11095",
+      "force_label": "eval-capsulev2-risk5-11095",
+      "auto_label": "eval-capsulev2-auto-11095"
+    },
+    {
+      "instance_id": "django__django-11490",
+      "baseline_label": "eval-11490",
+      "force_label": "eval-capsulev2-risk5-11490",
+      "auto_label": "eval-capsulev2-auto-11490"
+    },
+    {
+      "instance_id": "django__django-11728",
+      "baseline_label": "eval-11728",
+      "force_label": "eval-capsulev2-risk5-11728",
+      "auto_label": "eval-capsulev2-auto-11728"
+    },
+    {
+      "instance_id": "django__django-11740",
+      "baseline_label": "eval-11740",
+      "force_label": "eval-capsulev2-risk5-11740",
+      "auto_label": "eval-capsulev2-auto-11740"
+    }
+  ]
+}
