@@ -21,6 +21,13 @@ import {
 } from "../../src/capsule/finalEditDiagnostics";
 import { renderCapsuleV2Human } from "../../src/capsuleV2/renderHuman";
 import { CapsuleV2Mode, type CapsuleV2Result } from "../../src/capsuleV2/types";
+import {
+  buildExpectedIndexMeta,
+  checkIndexFreshness,
+  resolveIndexMetaPath,
+  resolveVtraceDir,
+  type IndexFreshness,
+} from "../../src/indexer/indexMeta";
 
 // Stage 5 is a SMOKE integration harness around the external `vexp-swe-bench`
 // benchmark. It proves the baseline-vs-vtrace measurement workflow on a tiny
@@ -41,6 +48,13 @@ export type Stage5Mode =
   | "verify-vtrace-patch";
 export type Stage5Condition = "baseline" | "vtrace" | "vexp";
 export type VtraceMethod = "instructions-file" | "mcp" | "local-patch" | "indexed-context";
+// Index-reuse policy for the vtrace `index` step (--index-policy):
+//   auto   -> reuse an existing index when .vtrace/index.sqlite + index.meta.json
+//             exist AND the stored fingerprints match; otherwise rebuild.
+//   always -> delete .vtrace and rebuild the index even when it is fresh.
+//   reuse  -> reuse an existing index if present even if its metadata mismatches
+//             (warn loudly); rebuild only when no index is present at all.
+export type Stage5IndexPolicy = "auto" | "always" | "reuse";
 // Which capsule retrieval engine the indexed-context query uses. `legacy` is the
 // original `--mode <micro|standard|full>` path; `v2` is the Capsule v2 product
 // surface (`--intent <i> --budget <n>`), so live Stage 5 runs actually validate
@@ -135,6 +149,11 @@ export interface CliConfig {
   // evaluates against a stale index or leftover untracked state. --reuse-workspace
   // opts out: the existing checkout and index are reused as-is.
   readonly reuseWorkspace: boolean;
+  // Index-reuse policy for the vtrace `index` step (see Stage5IndexPolicy). The
+  // default `auto` reuses a fingerprint-fresh index and rebuilds a stale one, so
+  // a fresh-workspace run still resets source files to the base commit without
+  // forcing an unnecessary re-index when the stored index remains valid.
+  readonly indexPolicy: Stage5IndexPolicy;
   // When true, show the vtrace `index` progress in the terminal: the runner drops
   // --quiet and inherits its stdio to the index child so it sees a real TTY and
   // draws its native progress bar (with VTRACE_PROGRESS_STREAM=1 as the non-TTY
@@ -509,6 +528,7 @@ const DEFAULT_CONFIG: CliConfig = {
   vtraceQueryArgs: "",
   skipVtraceIndexIfPresent: false,
   reuseWorkspace: false,
+  indexPolicy: "auto",
   showVtraceIndexLog: false,
   vtraceContextMaxChars: 12000,
   vtraceContextMaxItems: 8,
@@ -1921,6 +1941,16 @@ export interface IndexedContextResult {
   readonly vtraceIndexStartedAt: string | null;
   readonly vtraceIndexFinishedAt: string | null;
   readonly vtraceIndexDurationMs: number | null;
+  // Index-reuse policy outcome (see Stage5IndexPolicy). `reused` is true when the
+  // pre-existing index was kept rather than rebuilt; `fresh` is the freshness
+  // verdict at decision time; `mismatches` lists the fields that disagreed (empty
+  // when fresh); `metaFile` is the path to .vtrace/index.meta.json.
+  readonly vtraceIndexPolicy: Stage5IndexPolicy;
+  readonly vtraceIndexReused: boolean;
+  readonly vtraceIndexFresh: boolean;
+  readonly vtraceIndexFreshnessReason: string;
+  readonly vtraceIndexMismatches: readonly string[];
+  readonly vtraceIndexMetaFile: string | null;
   readonly contextFile: string;
   readonly contextChars: number;
   readonly contextItems: number;
@@ -2061,6 +2091,48 @@ export function buildVtraceIndexCommand(config: CliConfig, workspace: string): {
     (arg) => !(config.showVtraceIndexLog && arg === "--quiet"),
   );
   return { command, args: [...base, "index", workspace, ...indexArgs] };
+}
+
+// The decision the index-reuse policy reaches for one workspace, before any
+// index work runs. `reuse` true means keep the existing index; false means
+// (re)build it. `fresh`/`reason`/`mismatches` describe the freshness verdict
+// that drove the decision.
+export interface IndexPolicyDecision {
+  readonly reuse: boolean;
+  readonly fresh: boolean;
+  readonly reason: string;
+  readonly mismatches: readonly string[];
+}
+
+// Resolve the index-reuse policy against the workspace's stored index metadata.
+//   always -> never reuse (caller deletes .vtrace and rebuilds).
+//   auto   -> reuse iff the stored index is fingerprint-fresh.
+//   reuse  -> reuse whenever an index database is present, even if stale; the
+//             caller warns loudly. Rebuild only when no index exists at all.
+export async function decideIndexPolicy(
+  policy: Stage5IndexPolicy,
+  workspace: string,
+): Promise<IndexPolicyDecision> {
+  if (policy === "always") {
+    return { reuse: false, fresh: false, reason: "index-policy always: forced rebuild", mismatches: [] };
+  }
+
+  const dbPresent = await pathExists(path.join(workspace, ".vtrace", "index.sqlite"));
+  if (!dbPresent) {
+    return { reuse: false, fresh: false, reason: "index database missing", mismatches: ["index_sqlite"] };
+  }
+
+  const expected = await buildExpectedIndexMeta(workspace);
+  const freshness: IndexFreshness = await checkIndexFreshness(workspace, expected);
+
+  if (policy === "reuse") {
+    // Reuse the present index regardless of freshness; the verdict is recorded so
+    // a stale-but-reused index is auditable in _run.meta.json.
+    return { reuse: true, fresh: freshness.fresh, reason: freshness.reason, mismatches: freshness.mismatches };
+  }
+
+  // auto: reuse only a fingerprint-fresh index, otherwise rebuild.
+  return { reuse: freshness.fresh, fresh: freshness.fresh, reason: freshness.reason, mismatches: freshness.mismatches };
 }
 
 export function buildVtraceQueryCommand(
@@ -2977,6 +3049,12 @@ function indexRunMetaFields(result: IndexedContextResult): Record<string, unknow
     vtraceIndexStartedAt: result.vtraceIndexStartedAt,
     vtraceIndexFinishedAt: result.vtraceIndexFinishedAt,
     vtraceIndexDurationMs: result.vtraceIndexDurationMs,
+    vtraceIndexPolicy: result.vtraceIndexPolicy,
+    vtraceIndexReused: result.vtraceIndexReused,
+    vtraceIndexFresh: result.vtraceIndexFresh,
+    vtraceIndexFreshnessReason: result.vtraceIndexFreshnessReason,
+    vtraceIndexMismatches: result.vtraceIndexMismatches,
+    vtraceIndexMetaFile: result.vtraceIndexMetaFile,
   };
 }
 
@@ -3047,6 +3125,12 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
   let indexStartedAt: string | null = null;
   let indexFinishedAt: string | null = null;
   let indexDurationMs: number | null = null;
+  // Index-reuse policy outcome (last instance wins; smoke runs are single-instance).
+  let indexReused = false;
+  let indexFresh = false;
+  let indexFreshnessReason = "";
+  let indexMismatches: readonly string[] = [];
+  let indexMetaFile: string | null = null;
 
   for (const instanceId of instanceIds) {
     const record = findSweBenchRecord(records, instanceId);
@@ -3065,12 +3149,48 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
       const indexSpec = buildVtraceIndexCommand(config, workspace);
       indexCommand = renderCommand(indexSpec);
       indexQuiet = indexSpec.args.includes("--quiet");
-      // Reuse the index only when keeping the workspace (or the legacy skip flag)
-      // AND a real index.sqlite is present — never a half-built `.vtrace` dir. A
-      // fresh run cleaned `.vtrace` away above, so it always re-indexes.
+      indexMetaFile = resolveIndexMetaPath(workspace);
+      // Resolve the index-reuse policy. The fresh-workspace checkout above
+      // preserves `.vtrace`, so a fingerprint-fresh index survives the source
+      // reset and `auto` can reuse it instead of paying for a rebuild.
+      let decision = await decideIndexPolicy(config.indexPolicy, workspace);
       const indexPresent = await pathExists(path.join(workspace, ".vtrace", "index.sqlite"));
-      const reuseIndex = (config.reuseWorkspace || config.skipVtraceIndexIfPresent) && indexPresent;
-      if (!reuseIndex) {
+      // Legacy --reuse-workspace / --skip-vtrace-index-if-present force reuse of a
+      // present index regardless of freshness — but never override an explicit
+      // --index-policy always, where a forced rebuild must win.
+      if (
+        config.indexPolicy !== "always"
+        && !decision.reuse
+        && indexPresent
+        && (config.reuseWorkspace || config.skipVtraceIndexIfPresent)
+      ) {
+        decision = {
+          reuse: true,
+          fresh: decision.fresh,
+          reason: config.reuseWorkspace
+            ? "reuse-workspace: reusing present index"
+            : "skip-vtrace-index-if-present: reusing present index",
+          mismatches: decision.mismatches,
+        };
+      }
+      // --index-policy reuse keeps a stale index but warns loudly so a run made
+      // against a mismatched index is never silently trusted.
+      if (config.indexPolicy === "reuse" && decision.reuse && !decision.fresh) {
+        process.stderr.write(
+          `\n[stage5] WARNING: --index-policy reuse kept a STALE index at ${resolveVtraceDir(workspace)} ` +
+            `(${decision.reason}; mismatches: ${decision.mismatches.join(", ") || "none"}).\n`,
+        );
+      }
+      indexReused = decision.reuse;
+      indexFresh = decision.fresh;
+      indexFreshnessReason = decision.reason;
+      indexMismatches = decision.mismatches;
+      if (!decision.reuse) {
+        // --index-policy always: remove `.vtrace` entirely so the rebuild starts
+        // from a clean slate with no stale rows or metadata surviving.
+        if (config.indexPolicy === "always") {
+          await rm(resolveVtraceDir(workspace), { recursive: true, force: true });
+        }
         if (config.showVtraceIndexLog) {
           process.stderr.write(`\n[stage5] indexing ${workspace} …\n`);
         }
@@ -3249,6 +3369,12 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     vtraceIndexStartedAt: indexStartedAt,
     vtraceIndexFinishedAt: indexFinishedAt,
     vtraceIndexDurationMs: indexDurationMs,
+    vtraceIndexPolicy: config.indexPolicy,
+    vtraceIndexReused: indexReused,
+    vtraceIndexFresh: indexFresh,
+    vtraceIndexFreshnessReason: indexFreshnessReason,
+    vtraceIndexMismatches: indexMismatches,
+    vtraceIndexMetaFile: indexMetaFile,
     contextFile,
     contextChars: assembled.chars,
     contextItems: assembled.items,
@@ -3332,9 +3458,11 @@ async function ensureWorkspaceCheckout(
     // --reuse-workspace: trust the existing checkout + index; touch nothing.
     return;
   } else {
-    // Fresh (default): scrub all untracked state so the re-checkout + re-index
-    // starts from a clean tree at the base commit (no stale index, no leftovers).
-    const clean = await runProc("git", ["-C", workspace, "clean", "-fdx"]);
+    // Fresh (default): scrub untracked state so the re-checkout starts from a
+    // clean tree at the base commit. `.vtrace` is preserved (`-e .vtrace`) so a
+    // fingerprint-fresh index survives the source reset and the index-reuse
+    // policy — not a blanket clean — decides whether to rebuild it.
+    const clean = await runProc("git", ["-C", workspace, "clean", "-fdx", "-e", ".vtrace"]);
     if (clean.exitCode !== 0) {
       throw new Error(`git clean of ${workspace} failed (exit ${clean.exitCode}): ${clean.stderr.trim() || "(no stderr)"}`);
     }
@@ -5390,6 +5518,12 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--vtrace-query-args": config.vtraceQueryArgs = requireValue(argv, ++index, arg); break;
       case "--skip-vtrace-index-if-present": config.skipVtraceIndexIfPresent = true; break;
       case "--reuse-workspace": config.reuseWorkspace = true; break;
+      case "--index-policy": {
+        const value = requireValue(argv, ++index, arg);
+        if (!["auto", "always", "reuse"].includes(value)) throw new Error("Invalid --index-policy (expected auto|always|reuse).");
+        config.indexPolicy = value as Stage5IndexPolicy;
+        break;
+      }
       case "--show-vtrace-index-log": config.showVtraceIndexLog = true; break;
       case "--vtrace-context-max-chars": config.vtraceContextMaxChars = requirePositiveInt(argv, ++index, arg); break;
       case "--vtrace-context-max-items": config.vtraceContextMaxItems = requirePositiveInt(argv, ++index, arg); break;
@@ -5464,6 +5598,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --eval-timeout <seconds>                      per-instance evaluation timeout",
       "  --run-label <label>                           isolate runs under results/runs/<label>/",
       "  --reuse-workspace                             reuse an existing labeled workspace + index (default: recreate fresh)",
+      "  --index-policy auto|always|reuse              reuse a fingerprint-fresh index (auto), force rebuild (always), or keep a stale index (reuse). default: auto",
       "  --show-vtrace-index-log                       print the vtrace index log to the terminal (drops --quiet)",
       "  --context-policy auto|force-inject|force-no-context   override the cost-aware context gate (default: auto)",
       "  --capsule-engine legacy|v2                    capsule retrieval engine for indexed-context (default: legacy)",

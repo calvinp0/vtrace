@@ -21,6 +21,7 @@ import {
   buildVtraceIndexCommand,
   buildVtracePatchBlock,
   buildVtraceQueryCommand,
+  decideIndexPolicy,
   buildVtraceCommand,
   buildCapsuleV2Task,
   buildAgentCompliance,
@@ -82,6 +83,12 @@ import {
   type Stage5Row,
   type Stage5RunEvidence,
 } from "./run_stage5_vexp_swe_bench_smoke";
+import {
+  buildIndexMeta,
+  readIndexMeta,
+  resolveIndexMetaPath,
+  writeIndexMeta,
+} from "../../src/indexer/indexMeta";
 
 // Minimal stand-in for the external vexp-swe-bench Claude Code adapter: it has
 // the anchor line and the `claude -p <prompt>` args array, so the patcher can
@@ -124,6 +131,7 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     vtraceQueryArgs: "",
     skipVtraceIndexIfPresent: false,
     reuseWorkspace: false,
+    indexPolicy: "auto",
     showVtraceIndexLog: false,
     vtraceContextMaxChars: 12000,
     vtraceContextMaxItems: 8,
@@ -1671,6 +1679,167 @@ test("prepareIndexedContext --reuse-workspace reuses the existing checkout + ind
   assert.equal(result.freshWorkspace, false);
   assert.equal(result.vtraceIndexStartedAt, null);
   assert.equal(result.vtraceIndexDurationMs, null);
+});
+
+// --- index-reuse policy --------------------------------------------------
+
+async function workspaceWithIndex(label: string, makeStale = false): Promise<string> {
+  const ws = path.join(await tmpDir(label), "ws");
+  await mkdir(path.join(ws, ".vtrace"), { recursive: true });
+  await writeFile(path.join(ws, ".vtrace", "index.sqlite"), "db");
+  const meta = await buildIndexMeta(ws);
+  await writeIndexMeta(ws, makeStale ? { ...meta, parser_fingerprint: "stale-fingerprint" } : meta);
+  return ws;
+}
+
+test("decideIndexPolicy auto reuses a fresh index", async () => {
+  const ws = await workspaceWithIndex("policy-auto-fresh");
+  const decision = await decideIndexPolicy("auto", ws);
+
+  assert.equal(decision.reuse, true);
+  assert.equal(decision.fresh, true);
+  assert.deepEqual(decision.mismatches, []);
+});
+
+test("decideIndexPolicy auto rebuilds a stale index", async () => {
+  const ws = await workspaceWithIndex("policy-auto-stale", true);
+  const decision = await decideIndexPolicy("auto", ws);
+
+  assert.equal(decision.reuse, false);
+  assert.equal(decision.fresh, false);
+  assert.deepEqual(decision.mismatches, ["parser_fingerprint"]);
+});
+
+test("decideIndexPolicy always rebuilds even a fresh index", async () => {
+  const ws = await workspaceWithIndex("policy-always-fresh");
+  const decision = await decideIndexPolicy("always", ws);
+
+  assert.equal(decision.reuse, false);
+  assert.match(decision.reason, /forced rebuild/);
+});
+
+test("decideIndexPolicy reuse keeps a stale index", async () => {
+  const ws = await workspaceWithIndex("policy-reuse-stale", true);
+  const decision = await decideIndexPolicy("reuse", ws);
+
+  assert.equal(decision.reuse, true);
+  assert.equal(decision.fresh, false);
+  assert.deepEqual(decision.mismatches, ["parser_fingerprint"]);
+});
+
+test("prepareIndexedContext --index-policy auto reuses a fresh index without reindexing", async () => {
+  const out = path.join(await tmpDir("idx-pol-auto"), "results");
+  const dataFile = await writeSweBenchData(await tmpDir("idx-pol-auto-data"), [NAV_RECORD]);
+  const ws = workspacePathFor(out, "django__django-11490");
+  await mkdir(path.join(ws, ".git"), { recursive: true });
+  await mkdir(path.join(ws, ".vtrace"), { recursive: true });
+  await writeFile(path.join(ws, ".vtrace", "index.sqlite"), "db");
+  await writeIndexMeta(ws, await buildIndexMeta(ws));
+  const { run, calls } = scriptedRunner([
+    { match: "capsule", result: { stdout: injectCapsuleJson("symbol: get_combinator_sql") } },
+  ]);
+  const result = await prepareIndexedContext(
+    baseConfig({ out, instances: ["django__django-11490"], sweBenchDataFile: dataFile, vtraceMethod: "indexed-context", indexPolicy: "auto" }),
+    { runProcess: run },
+  );
+
+  assert.ok(!calls.some((c) => c.includes(" index ")), "a fresh index must not be rebuilt under --index-policy auto");
+  assert.equal(result.vtraceIndexPolicy, "auto");
+  assert.equal(result.vtraceIndexReused, true);
+  assert.equal(result.vtraceIndexFresh, true);
+  assert.equal(result.vtraceIndexFreshnessReason, "index metadata matches");
+  assert.deepEqual(result.vtraceIndexMismatches, []);
+  assert.equal(result.vtraceIndexMetaFile, resolveIndexMetaPath(ws));
+});
+
+test("prepareIndexedContext --index-policy auto rebuilds a stale index", async () => {
+  const out = path.join(await tmpDir("idx-pol-stale"), "results");
+  const dataFile = await writeSweBenchData(await tmpDir("idx-pol-stale-data"), [NAV_RECORD]);
+  const ws = workspacePathFor(out, "django__django-11490");
+  await mkdir(path.join(ws, ".git"), { recursive: true });
+  await mkdir(path.join(ws, ".vtrace"), { recursive: true });
+  await writeFile(path.join(ws, ".vtrace", "index.sqlite"), "db");
+  const meta = await buildIndexMeta(ws);
+  await writeIndexMeta(ws, { ...meta, parser_fingerprint: "stale-fingerprint" });
+  const { run, calls } = scriptedRunner([
+    { match: "capsule", result: { stdout: injectCapsuleJson("symbol: get_combinator_sql") } },
+  ]);
+  const result = await prepareIndexedContext(
+    baseConfig({ out, instances: ["django__django-11490"], sweBenchDataFile: dataFile, vtraceMethod: "indexed-context", indexPolicy: "auto" }),
+    { runProcess: run },
+  );
+
+  assert.ok(calls.some((c) => c.includes(" index ")), "a stale index must be rebuilt under --index-policy auto");
+  assert.equal(result.vtraceIndexReused, false);
+  assert.equal(result.vtraceIndexFresh, false);
+  assert.deepEqual(result.vtraceIndexMismatches, ["parser_fingerprint"]);
+});
+
+test("prepareIndexedContext --index-policy always rebuilds and clears .vtrace even when fresh", async () => {
+  const out = path.join(await tmpDir("idx-pol-always"), "results");
+  const dataFile = await writeSweBenchData(await tmpDir("idx-pol-always-data"), [NAV_RECORD]);
+  const ws = workspacePathFor(out, "django__django-11490");
+  await mkdir(path.join(ws, ".git"), { recursive: true });
+  await mkdir(path.join(ws, ".vtrace"), { recursive: true });
+  await writeFile(path.join(ws, ".vtrace", "index.sqlite"), "db");
+  await writeIndexMeta(ws, await buildIndexMeta(ws));
+  const { run, calls } = scriptedRunner([
+    { match: "capsule", result: { stdout: injectCapsuleJson("symbol: get_combinator_sql") } },
+  ]);
+  const result = await prepareIndexedContext(
+    baseConfig({ out, instances: ["django__django-11490"], sweBenchDataFile: dataFile, vtraceMethod: "indexed-context", indexPolicy: "always" }),
+    { runProcess: run },
+  );
+
+  assert.ok(calls.some((c) => c.includes(" index ")), "--index-policy always must rebuild even a fresh index");
+  assert.equal(result.vtraceIndexReused, false);
+  // The pre-existing .vtrace was removed before the (scripted) rebuild.
+  assert.equal(await readIndexMeta(ws), undefined);
+});
+
+test("prepareIndexedContext --index-policy reuse keeps a stale index and warns loudly", async () => {
+  const out = path.join(await tmpDir("idx-pol-reuse"), "results");
+  const dataFile = await writeSweBenchData(await tmpDir("idx-pol-reuse-data"), [NAV_RECORD]);
+  const ws = workspacePathFor(out, "django__django-11490");
+  await mkdir(path.join(ws, ".git"), { recursive: true });
+  await mkdir(path.join(ws, ".vtrace"), { recursive: true });
+  await writeFile(path.join(ws, ".vtrace", "index.sqlite"), "db");
+  const meta = await buildIndexMeta(ws);
+  await writeIndexMeta(ws, { ...meta, parser_fingerprint: "stale-fingerprint" });
+  const { run, calls } = scriptedRunner([
+    { match: "capsule", result: { stdout: injectCapsuleJson("symbol: get_combinator_sql") } },
+  ]);
+
+  const warnings: string[] = [];
+  const originalWrite = process.stderr.write.bind(process.stderr);
+  process.stderr.write = ((chunk: unknown) => {
+    warnings.push(String(chunk));
+    return true;
+  }) as typeof process.stderr.write;
+  let result;
+  try {
+    result = await prepareIndexedContext(
+      baseConfig({ out, instances: ["django__django-11490"], sweBenchDataFile: dataFile, vtraceMethod: "indexed-context", indexPolicy: "reuse" }),
+      { runProcess: run },
+    );
+  } finally {
+    process.stderr.write = originalWrite;
+  }
+
+  assert.ok(!calls.some((c) => c.includes(" index ")), "--index-policy reuse must not reindex a present index");
+  assert.equal(result.vtraceIndexReused, true);
+  assert.equal(result.vtraceIndexFresh, false);
+  assert.ok(
+    warnings.some((line) => line.includes("WARNING") && line.includes("STALE")),
+    "a loud warning must be emitted when reusing a stale index",
+  );
+});
+
+test("parseArgs parses --index-policy (default auto)", () => {
+  assert.equal(parseArgs(["--mode", "run-protocol"]).indexPolicy, "auto");
+  assert.equal(parseArgs(["--mode", "run-protocol", "--index-policy", "always"]).indexPolicy, "always");
+  assert.equal(parseArgs(["--mode", "run-protocol", "--index-policy", "reuse"]).indexPolicy, "reuse");
+  assert.throws(() => parseArgs(["--mode", "run-protocol", "--index-policy", "bogus"]), /Invalid --index-policy/);
 });
 
 test("--show-vtrace-index-log shows the index bar (drops --quiet, inherits stdio, forces progress)", async () => {

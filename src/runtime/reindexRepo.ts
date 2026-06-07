@@ -2,6 +2,7 @@ import { getLatestIndexRun, getIndexRunSummary } from "../db/repositories/indexR
 import { openIndexerDatabase } from "../db/sqlite";
 import { readGitHead } from "../fs/git";
 import { indexProject } from "../indexer/indexProject";
+import { recordIndexMeta } from "../indexer/indexMeta";
 import { detectSymbolAddedThenRemovedAntiPatterns } from "../observations/antiPatterns";
 import {
   DEFAULT_REINDEX_SESSION_COMPRESSION_LIMIT,
@@ -73,6 +74,18 @@ export async function reindexRepoAndRefreshState(input: {
         repoRoot: input.repoRoot,
         runId: latestRun.id,
       });
+    }
+
+    // Stamp versioned index metadata next to the repo-local database so a later
+    // run can decide whether to reuse this index. Skipped only when the database
+    // lives at a custom path (the metadata's `.vtrace/index.meta.json` location
+    // would not describe it). Never fails the reindex.
+    if (!input.usesDbPathOverride) {
+      try {
+        await recordIndexMeta(input.repoRoot);
+      } catch {
+        // Metadata is an optimisation; a failure to write it is non-fatal.
+      }
     }
 
     const sessionCompression = runBoundedSessionCompressionSweep(db, input.repoRoot);

@@ -3,6 +3,7 @@ import path from "node:path";
 import { getLatestIndexRun, getIndexRunSummary } from "../db/repositories/indexRunsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
 import { readGitHead } from "../fs/git";
+import { recordIndexMeta } from "../indexer/indexMeta";
 import { indexProject } from "../indexer/indexProject";
 import {
   buildLastIndexSnapshot,
@@ -64,6 +65,14 @@ export async function initRepo(options: InitRepoOptions): Promise<InitRepoResult
     });
 
     await writeRepoLocalState(paths.statePath, state);
+
+    // Stamp versioned index metadata so later runs can reuse this index when the
+    // source checkout and indexer/parser versions still match. Non-fatal on error.
+    try {
+      await recordIndexMeta(detection.repoRoot);
+    } catch {
+      // Metadata is an optimisation; a failure to write it is non-fatal.
+    }
 
     return {
       requestedPath,
