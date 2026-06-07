@@ -204,6 +204,9 @@ export interface IndexedContextFields {
   // normal cost-aware run; null on baseline / non-indexed rows.
   readonly vtraceContextPolicyOverride: ContextPolicyOverride | "unknown" | null;
   readonly vtracePolicyReason: string | null;
+  // The named signals behind the gate's decision (e.g. "edit_risk_directive_present").
+  // null on baseline rows; empty list when the decider computed no named signals.
+  readonly vtraceContextPolicyDecisionSignals: readonly string[] | null;
   readonly expectedContextValue: ExpectedLevel | null;
   readonly expectedOverheadRisk: ExpectedLevel | null;
   // Capsule engine that produced the query (--capsule-engine). intent/budget are
@@ -227,6 +230,13 @@ export interface IndexedContextFields {
   readonly vtraceCapsuleTopPivotHasSource: boolean | null;
   readonly vtraceCapsulePivotSourceChars: number | null;
   readonly vtraceCapsulePivotSourceMode: CapsulePivotSourceMode | null;
+  // Capsule v2 policy-evidence diagnostics: the edit-risk directive count and
+  // whether the line-anchor / SQL-rendering recovery routes fired. These are the
+  // engine's own signals the v2 cost-aware gate reads. null on baseline rows;
+  // 0/false off the v2 engine.
+  readonly vtraceCapsuleEditRiskDirectivesCount: number | null;
+  readonly vtraceCapsuleLineAnchorResolutionUsed: boolean | null;
+  readonly vtraceCapsuleSqlRenderingBackfillUsed: boolean | null;
 }
 
 // Stage 5C evaluation evidence, normalized per instance. resolved itself stays
@@ -556,12 +566,17 @@ const CSV_COLUMNS = [
   "vtrace_capsule_top_pivot_has_source",
   "vtrace_capsule_pivot_source_chars",
   "vtrace_capsule_pivot_source_mode",
+  // Capsule v2 policy-evidence diagnostics the cost-aware v2 gate reads.
+  "vtrace_capsule_edit_risk_directives_count",
+  "vtrace_capsule_line_anchor_resolution_used",
+  "vtrace_capsule_sql_rendering_backfill_used",
   "vtrace_capsule_pivots",
   "vtrace_capsule_support",
   // The immutable injected-instructions snapshot: path + content hash.
   "vtrace_instructions_snapshot_file",
   "vtrace_instructions_sha256",
   "vtrace_policy_reason",
+  "vtrace_context_policy_decision_signals",
   "expected_context_value",
   "expected_overhead_risk",
   "vtrace_context_injected",
@@ -1926,6 +1941,9 @@ export interface IndexedContextResult {
   // cost-aware gate decided on its own.
   readonly contextPolicyOverride: ContextPolicyOverride;
   readonly policyReason: string | null;
+  // The named signals behind the gate's decision (decideCapsuleV2ContextPolicy on
+  // the v2 engine, decideContextPolicy on legacy). null on baseline / hard error.
+  readonly contextPolicyDecisionSignals: readonly string[] | null;
   readonly expectedContextValue: ExpectedLevel | null;
   readonly expectedOverheadRisk: ExpectedLevel | null;
   // Which capsule engine produced the query. intent/budget are null on the legacy
@@ -1948,6 +1966,10 @@ export interface IndexedContextResult {
   readonly capsuleTopPivotHasSource: boolean;
   readonly capsuleTopPivotSourceChars: number | null;
   readonly capsuleTopPivotSourceMode: CapsulePivotSourceMode;
+  // Policy-relevant v2 diagnostics surfaced to the report (0/false off v2).
+  readonly capsuleEditRiskDirectivesCount: number;
+  readonly capsuleLineAnchorResolutionUsed: boolean;
+  readonly capsuleSqlRenderingBackfillUsed: boolean;
 }
 
 // Resolve the bundled vexp-swe-bench dataset path (overridable via --swe-bench-data).
@@ -2153,6 +2175,12 @@ export interface CapsuleClassification {
   readonly capsuleTopPivotHasSource: boolean;
   readonly capsuleTopPivotSourceChars: number | null;
   readonly capsuleTopPivotSourceMode: CapsulePivotSourceMode;
+  // Capsule v2 policy-relevant diagnostics, captured from the result so the
+  // cost-aware v2 gate can read the engine's own edit-risk / anchor / SQL-backfill
+  // evidence. All default to 0/false off the v2 engine (legacy emits none).
+  readonly capsuleEditRiskDirectivesCount: number;
+  readonly capsuleLineAnchorResolutionUsed: boolean;
+  readonly capsuleSqlRenderingBackfillUsed: boolean;
   /** Set only when policyAction === "error" (genuinely unusable output). */
   readonly error: string | null;
 }
@@ -2163,6 +2191,9 @@ interface CapsuleV2Audit {
   readonly support: readonly CapsuleAuditItem[];
   readonly estimatedTokens: number | null;
   readonly topPivotSource: PivotSourceInfo;
+  readonly editRiskDirectivesCount: number;
+  readonly lineAnchorResolutionUsed: boolean;
+  readonly sqlRenderingBackfillUsed: boolean;
 }
 
 // Classify a capsule `--json` (or raw) query output into a vtrace policy action.
@@ -2257,6 +2288,9 @@ function skipClassification(
     capsuleTopPivotHasSource: v2?.topPivotSource.hasSource ?? false,
     capsuleTopPivotSourceChars: v2?.topPivotSource.chars ?? null,
     capsuleTopPivotSourceMode: v2?.topPivotSource.mode ?? "missing",
+    capsuleEditRiskDirectivesCount: v2?.editRiskDirectivesCount ?? 0,
+    capsuleLineAnchorResolutionUsed: v2?.lineAnchorResolutionUsed ?? false,
+    capsuleSqlRenderingBackfillUsed: v2?.sqlRenderingBackfillUsed ?? false,
     error: null,
   };
 }
@@ -2288,6 +2322,9 @@ function injectClassification(
     capsuleTopPivotHasSource: v2?.topPivotSource.hasSource ?? false,
     capsuleTopPivotSourceChars: v2?.topPivotSource.chars ?? null,
     capsuleTopPivotSourceMode: v2?.topPivotSource.mode ?? "missing",
+    capsuleEditRiskDirectivesCount: v2?.editRiskDirectivesCount ?? 0,
+    capsuleLineAnchorResolutionUsed: v2?.lineAnchorResolutionUsed ?? false,
+    capsuleSqlRenderingBackfillUsed: v2?.sqlRenderingBackfillUsed ?? false,
     error: null,
   };
 }
@@ -2310,6 +2347,9 @@ function errorClassification(message: string): CapsuleClassification {
     capsuleTopPivotHasSource: false,
     capsuleTopPivotSourceChars: null,
     capsuleTopPivotSourceMode: "missing",
+    capsuleEditRiskDirectivesCount: 0,
+    capsuleLineAnchorResolutionUsed: false,
+    capsuleSqlRenderingBackfillUsed: false,
     error: message,
   };
 }
@@ -2332,7 +2372,23 @@ export function classifyCapsuleV2Output(result: CapsuleV2Result): CapsuleClassif
   // the audit that proves the agent received enough to reason about the edit, not
   // just the pivot's path/symbol/reason.
   const topPivotSource = classifyPivotSource(Array.isArray(result.pivots) ? result.pivots[0] : undefined);
-  const v2: CapsuleV2Audit = { pivots, support, estimatedTokens, topPivotSource };
+  // Policy-relevant v2 diagnostics: the edit-risk directive count, and whether the
+  // line-anchor / SQL-rendering recovery routes fired. Read defensively from the
+  // raw diagnostics so partial JSON degrades to 0/false rather than throwing.
+  const editRiskDirectivesCount = Array.isArray(diagnostics.edit_risk_directives)
+    ? diagnostics.edit_risk_directives.length
+    : 0;
+  const lineAnchorResolutionUsed = diagnostics.line_anchor_resolution_used === true;
+  const sqlRenderingBackfillUsed = diagnostics.sql_rendering_backfill_used === true;
+  const v2: CapsuleV2Audit = {
+    pivots,
+    support,
+    estimatedTokens,
+    topPivotSource,
+    editRiskDirectivesCount,
+    lineAnchorResolutionUsed,
+    sqlRenderingBackfillUsed,
+  };
 
   // No pivot recovered → a valid no-context skip (recorded as actual_mode
   // "no_context", surfaced through the same skip machinery as the legacy path).
@@ -2468,6 +2524,11 @@ export interface ContextPolicyDecision {
   readonly reason: string;
   readonly expectedContextValue: ExpectedLevel;
   readonly expectedOverheadRisk: ExpectedLevel;
+  // The named signals that fired for this decision (e.g. "edit_risk_directive_present",
+  // "internal_subsystem_navigation", "micro_capsule"). Recorded so a decision is
+  // auditable down to the exact evidence — never just an opaque action+reason.
+  // Empty when the decider computed no named signals (the legacy gate).
+  readonly decisionSignals: readonly string[];
 }
 
 // A short problem statement is one cheap/local signal (mirrors the capsule
@@ -2516,6 +2577,7 @@ export function decideContextPolicy(
       reason: "Capsule recovered no high-confidence target; nothing actionable to inject.",
       expectedContextValue: "low",
       expectedOverheadRisk: "low",
+      decisionSignals: ["capsule_no_context"],
     };
   }
 
@@ -2556,6 +2618,7 @@ export function decideContextPolicy(
         + "and no high-confidence test-to-implementation edge — injected context is likely net overhead.",
       expectedContextValue: "low",
       expectedOverheadRisk: "high",
+      decisionSignals: ["cheap_local", "micro_capsule"],
     };
   }
 
@@ -2568,6 +2631,7 @@ export function decideContextPolicy(
           reason: "Navigation-heavy task with strong pivot evidence; oriented context is expected to pay off.",
           expectedContextValue: "high",
           expectedOverheadRisk: "low",
+          decisionSignals: ["navigation_heavy", "strong_pivot"],
         }
       : {
           action: "no_context",
@@ -2575,6 +2639,7 @@ export function decideContextPolicy(
             "Navigation-heavy task but capsule pivot evidence is weak; injecting risks overhead without payoff.",
           expectedContextValue: "low",
           expectedOverheadRisk: "medium",
+          decisionSignals: ["navigation_heavy", "weak_pivot"],
         };
   }
 
@@ -2584,6 +2649,179 @@ export function decideContextPolicy(
     reason: "Moderate task with retrieved context and no strong cheap/local signal; a standard capsule is worthwhile.",
     expectedContextValue: "medium",
     expectedOverheadRisk: "medium",
+    decisionSignals: ["moderate_task", "retrieved_context"],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Capsule v2 cost-aware context policy
+// ---------------------------------------------------------------------------
+//
+// Capsule v2 emits richer diagnostics than the legacy capsule: it reports WHY
+// the pivot is risky to edit blind (an edit-risk directive), whether an explicit
+// source anchor or SQL-rendering backfill recovered the true edit site, and how
+// much focused source it injected. The Stage 5 five-task force-inject validation
+// gave us per-task ground truth on whether injection actually paid off:
+//
+//   * 11490 (compiler.get_combinator_sql): edit-risk directive + line-anchor +
+//     SQL-rendering backfill, +76.6% tokens — context prevents a wrong local edit.
+//   * 11728 (admindocs regex parser), 11740 (migrations autodetector): internal-
+//     subsystem navigation with a real focused pivot body, +47% / +70.8% tokens.
+//   * 11095 (ModelAdmin.get_inlines hook): a small/local additive API hook,
+//     -20.7% tokens — injection was pure overhead.
+//   * 10880 (aggregation Count+distinct): micro/local, only +10.9% tokens — within
+//     noise, not worth guaranteed injection overhead across the cheap/local class.
+//
+// The policy below generalises that ground truth into SIGNALS (never instance
+// ids): inject when the capsule's own evidence says context prevents a wrong edit
+// or the task is internal-subsystem navigation with a real pivot body; prefer
+// no_context when the task is a small/local edit a baseline agent solves cheaply.
+
+// Capsule v2 evidence side of the decision — the diagnostics the v2 engine
+// produces beyond pivot/support counts. Built from the per-section classification.
+export interface CapsuleV2PolicyDiagnostics {
+  readonly capsuleAction: VtracePolicyAction;
+  readonly hasContext: boolean;
+  /** Realised sizing tier: micro | standard | full | no_context. */
+  readonly actualMode: string | null;
+  readonly pivotCount: number | null;
+  readonly supportCount: number | null;
+  /** The lead pivot carried a focused source body (the agent's edit target). */
+  readonly topPivotHasSource: boolean;
+  readonly topPivotSourceChars: number | null;
+  /** How many edit-risk / patch-planning directives fired (guarded mutation, etc.). */
+  readonly editRiskDirectiveCount: number;
+  /** A task source anchor (file#Lx-Ly) resolved to a symbol that became a pivot. */
+  readonly lineAnchorResolutionUsed: boolean;
+  /** A SQL-rendering backfill recovered compiler/renderer candidates. */
+  readonly sqlRenderingBackfillUsed: boolean;
+}
+
+// A focused source body of at least this many chars is "meaningful" — enough that
+// re-deriving it via blind agent search is real cost the capsule can save. 10880's
+// 410-char pivot sits below this; the injecting tasks all clear it comfortably.
+const MEANINGFUL_PIVOT_SOURCE_CHARS = 800;
+
+// Decide the context policy for a Capsule v2 section. Same shape as
+// decideContextPolicy, but driven by Capsule v2's richer evidence. Returns the
+// named signals that fired so the decision is fully auditable.
+export function decideCapsuleV2ContextPolicy(
+  signals: ContextPolicySignals,
+  capsule: CapsuleV2PolicyDiagnostics,
+): ContextPolicyDecision {
+  // 1. The capsule recovered nothing actionable (no pivot / no_context mode) →
+  //    there is no context to inject; declining is free.
+  if (capsule.capsuleAction === "skip" || !capsule.hasContext || capsule.actualMode === "no_context") {
+    return {
+      action: "no_context",
+      reason: "Capsule v2 recovered no high-confidence pivot; nothing actionable to inject.",
+      expectedContextValue: "low",
+      expectedOverheadRisk: "low",
+      decisionSignals: ["capsule_no_context"],
+    };
+  }
+
+  // The inject-positive evidence. `navigationHeavy` reuses the same task-shape
+  // signals the capsule itself sizes from, so the gate and capsule never disagree.
+  const editRisk = capsule.editRiskDirectiveCount > 0;
+  const lineAnchorWithSource = capsule.lineAnchorResolutionUsed && capsule.topPivotHasSource;
+  const sqlBackfill = capsule.sqlRenderingBackfillUsed;
+  const navigationHeavy =
+    signals.recommendedMode === RecommendedCapsuleMode.Full
+    || signals.touchesComplexInternals
+    || signals.crossModule
+    || signals.likelyFileCount >= 2;
+  const meaningfulSource =
+    capsule.topPivotHasSource && (capsule.topPivotSourceChars ?? 0) >= MEANINGFUL_PIVOT_SOURCE_CHARS;
+  // Internal-subsystem navigation WITH a real focused pivot body: a
+  // compiler/parser/migrations/SQL/autodetector task where the capsule pinned the
+  // implementation site and injected its source — re-deriving that by blind search
+  // is exactly the cost vtrace removes (the 11728 / 11740 lesson).
+  const internalSubsystemNav = signals.touchesComplexInternals && navigationHeavy && capsule.topPivotHasSource;
+  // A broader navigation-heavy task that still carries a meaningful pivot body.
+  const navHeavyWithSource = navigationHeavy && meaningfulSource;
+
+  const fired: string[] = [];
+  if (editRisk) fired.push("edit_risk_directive_present");
+  if (capsule.lineAnchorResolutionUsed) fired.push("line_anchor_resolution_used");
+  if (lineAnchorWithSource) fired.push("line_anchor_with_pivot_source");
+  if (sqlBackfill) fired.push("sql_rendering_backfill_used");
+  if (signals.touchesComplexInternals) fired.push("internal_subsystem_task");
+  if (navigationHeavy) fired.push("navigation_heavy");
+  if (internalSubsystemNav) fired.push("internal_subsystem_navigation");
+  if (capsule.topPivotHasSource) fired.push("top_pivot_has_source");
+  if (meaningfulSource) fired.push("meaningful_pivot_source");
+  if ((capsule.supportCount ?? 0) > 0) fired.push("support_present");
+
+  // 2. Strong inject evidence: the capsule's own diagnostics say context prevents
+  //    a wrong edit (edit-risk / line-anchor / SQL backfill), OR the task is
+  //    internal-subsystem navigation / navigation-heavy with a real pivot body.
+  if (editRisk || lineAnchorWithSource || sqlBackfill || internalSubsystemNav || navHeavyWithSource) {
+    const drivers = [
+      editRisk ? "edit-risk directive" : null,
+      lineAnchorWithSource ? "line-anchor resolution" : null,
+      sqlBackfill ? "SQL-rendering backfill" : null,
+      internalSubsystemNav ? "internal-subsystem navigation" : null,
+      navHeavyWithSource && !internalSubsystemNav ? "navigation-heavy task" : null,
+    ].filter((d): d is string => d !== null);
+    return {
+      action: "inject",
+      reason:
+        `High-value context: ${drivers.join(" + ")} with a focused pivot source; `
+        + "injecting orients the agent and prevents a wrong local edit.",
+      expectedContextValue: "high",
+      expectedOverheadRisk: "low",
+      decisionSignals: fired,
+    };
+  }
+
+  // 3. Cheap/local task: a micro capsule on a non-internal, non-cross-module task
+  //    with no edit-risk / line-anchor / SQL evidence and no navigation-heavy
+  //    shape — a small/local edit (e.g. a narrow additive API hook) a baseline
+  //    agent solves cheaply, where injected context is likely net overhead. The
+  //    force-inject evidence (11095 −20.7%, 10880 +10.9% ≈ noise) backs declining.
+  const microCapsule =
+    signals.recommendedMode === RecommendedCapsuleMode.Micro
+    || signals.recommendedMode === RecommendedCapsuleMode.Skip;
+  const cheapLocal =
+    microCapsule
+    && !signals.touchesComplexInternals
+    && !signals.crossModule
+    && signals.likelyFileCount < 2
+    && !editRisk
+    && !capsule.lineAnchorResolutionUsed
+    && !sqlBackfill
+    && !navigationHeavy;
+  if (cheapLocal) {
+    fired.push(
+      "micro_capsule",
+      "not_internal_subsystem",
+      "no_edit_risk_directive",
+      "no_line_anchor",
+      "no_sql_rendering_backfill",
+    );
+    return {
+      action: "no_context",
+      reason:
+        "Small/local task with an obvious narrow target (micro capsule, not an internal subsystem, no "
+        + "edit-risk / line-anchor / SQL-rendering evidence); a baseline agent solves it cheaply, so injected "
+        + "context is likely net overhead — caution outweighs the marginal force-inject benefit.",
+      expectedContextValue: "low",
+      expectedOverheadRisk: "high",
+      decisionSignals: fired,
+    };
+  }
+
+  // 4. Moderate task that retrieved real context but lacks both strong inject
+  //    evidence and a clear cheap/local shape → a standard injection is worthwhile.
+  fired.push("moderate_task", "retrieved_context");
+  return {
+    action: "inject",
+    reason:
+      "Moderate task with retrieved context and no strong cheap/local signal; a standard Capsule v2 is worthwhile.",
+    expectedContextValue: "medium",
+    expectedOverheadRisk: "medium",
+    decisionSignals: fired,
   };
 }
 
@@ -2610,6 +2848,7 @@ export function applyContextPolicyOverride(
       reason: FORCE_INJECT_REASON,
       expectedContextValue: decision.expectedContextValue,
       expectedOverheadRisk: decision.expectedOverheadRisk,
+      decisionSignals: decision.decisionSignals,
     };
   }
   if (override === "force-no-context") {
@@ -2618,6 +2857,7 @@ export function applyContextPolicyOverride(
       reason: FORCE_NO_CONTEXT_REASON,
       expectedContextValue: decision.expectedContextValue,
       expectedOverheadRisk: decision.expectedOverheadRisk,
+      decisionSignals: decision.decisionSignals,
     };
   }
   return decision;
@@ -2760,6 +3000,7 @@ function indexedContextMetaFields(result: IndexedContextResult): IndexedContextF
     vtraceContextPolicyAction: result.contextPolicyAction,
     vtraceContextPolicyOverride: result.contextPolicyOverride,
     vtracePolicyReason: result.policyReason,
+    vtraceContextPolicyDecisionSignals: result.contextPolicyDecisionSignals,
     expectedContextValue: result.expectedContextValue,
     expectedOverheadRisk: result.expectedOverheadRisk,
     vtraceCapsuleEngine: result.capsuleEngine,
@@ -2774,6 +3015,9 @@ function indexedContextMetaFields(result: IndexedContextResult): IndexedContextF
     vtraceCapsuleTopPivotHasSource: result.capsuleTopPivotHasSource,
     vtraceCapsulePivotSourceChars: result.capsuleTopPivotSourceChars,
     vtraceCapsulePivotSourceMode: result.capsuleTopPivotSourceMode,
+    vtraceCapsuleEditRiskDirectivesCount: result.capsuleEditRiskDirectivesCount,
+    vtraceCapsuleLineAnchorResolutionUsed: result.capsuleLineAnchorResolutionUsed,
+    vtraceCapsuleSqlRenderingBackfillUsed: result.capsuleSqlRenderingBackfillUsed,
   };
 }
 
@@ -2891,13 +3135,30 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
   const gatedSections: VtraceContextSection[] = sections.map((section) => {
     if (section.classification === null) return section;
     const hasContext = section.rawContext.trim().length > 0;
-    const autoDecision = decideContextPolicy(deriveContextPolicySignals(section.instance), {
-      capsuleAction: section.classification.policyAction,
-      hasContext,
-      pivotCount: section.classification.pivotCount,
-      supportCount: section.classification.supportCount,
-      actualMode: section.classification.actualCapsuleMode,
-    });
+    const policySignals = deriveContextPolicySignals(section.instance);
+    // Capsule v2 carries richer edit-risk / anchor / SQL-backfill evidence, so it
+    // uses the v2-specific cost-aware gate; the legacy engine keeps the original.
+    const autoDecision =
+      config.capsuleEngine === "v2"
+        ? decideCapsuleV2ContextPolicy(policySignals, {
+            capsuleAction: section.classification.policyAction,
+            hasContext,
+            actualMode: section.classification.actualCapsuleMode,
+            pivotCount: section.classification.pivotCount,
+            supportCount: section.classification.supportCount,
+            topPivotHasSource: section.classification.capsuleTopPivotHasSource,
+            topPivotSourceChars: section.classification.capsuleTopPivotSourceChars,
+            editRiskDirectiveCount: section.classification.capsuleEditRiskDirectivesCount,
+            lineAnchorResolutionUsed: section.classification.capsuleLineAnchorResolutionUsed,
+            sqlRenderingBackfillUsed: section.classification.capsuleSqlRenderingBackfillUsed,
+          })
+        : decideContextPolicy(policySignals, {
+            capsuleAction: section.classification.policyAction,
+            hasContext,
+            pivotCount: section.classification.pivotCount,
+            supportCount: section.classification.supportCount,
+            actualMode: section.classification.actualCapsuleMode,
+          });
     // The operator override (--context-policy) can force the action either way
     // for Capsule v2 validation; `auto` leaves the cost-aware decision intact.
     const decision = applyContextPolicyOverride(autoDecision, config.contextPolicyOverride, hasContext);
@@ -2965,6 +3226,12 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
   const capsuleTopPivotHasSource = topClassification?.capsuleTopPivotHasSource ?? false;
   const capsuleTopPivotSourceChars = topClassification?.capsuleTopPivotSourceChars ?? null;
   const capsuleTopPivotSourceMode: CapsulePivotSourceMode = topClassification?.capsuleTopPivotSourceMode ?? "missing";
+  // Policy-relevant v2 diagnostics for the run, taken from the section whose lead
+  // pivot is the run's top pivot (its evidence describes what actually drove the
+  // decision). 0/false off the v2 engine and when nothing was injected.
+  const capsuleEditRiskDirectivesCount = topClassification?.capsuleEditRiskDirectivesCount ?? 0;
+  const capsuleLineAnchorResolutionUsed = topClassification?.capsuleLineAnchorResolutionUsed ?? false;
+  const capsuleSqlRenderingBackfillUsed = topClassification?.capsuleSqlRenderingBackfillUsed ?? false;
   // The capsule's genuine realised mode (v2: micro/standard/full/no_context),
   // distinct from the legacy-coerced `actualCapsuleMode`. v2-only.
   const capsuleActualMode =
@@ -3000,6 +3267,7 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     contextPolicyAction,
     contextPolicyOverride: config.contextPolicyOverride,
     policyReason: repDecision?.reason ?? null,
+    contextPolicyDecisionSignals: repDecision?.decisionSignals ?? null,
     expectedContextValue: repDecision?.expectedContextValue ?? null,
     expectedOverheadRisk: repDecision?.expectedOverheadRisk ?? null,
     capsuleEngine: config.capsuleEngine,
@@ -3014,6 +3282,9 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     capsuleTopPivotHasSource,
     capsuleTopPivotSourceChars,
     capsuleTopPivotSourceMode,
+    capsuleEditRiskDirectivesCount,
+    capsuleLineAnchorResolutionUsed,
+    capsuleSqlRenderingBackfillUsed,
   };
 }
 
@@ -3335,6 +3606,7 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtraceContextPolicyAction: evidence.vtraceContextPolicyAction,
           vtraceContextPolicyOverride: evidence.vtraceContextPolicyOverride,
           vtracePolicyReason: evidence.vtracePolicyReason,
+          vtraceContextPolicyDecisionSignals: evidence.vtraceContextPolicyDecisionSignals,
           expectedContextValue: evidence.expectedContextValue,
           expectedOverheadRisk: evidence.expectedOverheadRisk,
           vtraceCapsuleEngine: evidence.vtraceCapsuleEngine,
@@ -3349,6 +3621,9 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtraceCapsuleTopPivotHasSource: evidence.vtraceCapsuleTopPivotHasSource,
           vtraceCapsulePivotSourceChars: evidence.vtraceCapsulePivotSourceChars,
           vtraceCapsulePivotSourceMode: evidence.vtraceCapsulePivotSourceMode,
+          vtraceCapsuleEditRiskDirectivesCount: evidence.vtraceCapsuleEditRiskDirectivesCount,
+          vtraceCapsuleLineAnchorResolutionUsed: evidence.vtraceCapsuleLineAnchorResolutionUsed,
+          vtraceCapsuleSqlRenderingBackfillUsed: evidence.vtraceCapsuleSqlRenderingBackfillUsed,
         },
   );
 }
@@ -3990,6 +4265,7 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtraceContextPolicyAction: null,
     vtraceContextPolicyOverride: null,
     vtracePolicyReason: null,
+    vtraceContextPolicyDecisionSignals: null,
     expectedContextValue: null,
     expectedOverheadRisk: null,
     vtraceCapsuleEngine: null,
@@ -4004,6 +4280,9 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtraceCapsuleTopPivotHasSource: null,
     vtraceCapsulePivotSourceChars: null,
     vtraceCapsulePivotSourceMode: null,
+    vtraceCapsuleEditRiskDirectivesCount: null,
+    vtraceCapsuleLineAnchorResolutionUsed: null,
+    vtraceCapsuleSqlRenderingBackfillUsed: null,
   };
 }
 
@@ -4281,6 +4560,10 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     value === "low" || value === "medium" || value === "high" ? (value as ExpectedLevel) : null;
   const pivotSourceMode = (value: unknown): CapsulePivotSourceMode | null =>
     value === "focused" || value === "full" || value === "missing" ? (value as CapsulePivotSourceMode) : null;
+  // A list of decision-signal strings, tolerating partial/legacy meta (non-array
+  // reads as null; non-string entries are dropped).
+  const strList = (value: unknown): string[] | null =>
+    Array.isArray(value) ? value.filter((v): v is string => isString(v)) : null;
   // Parse the recorded Capsule v2 selected items back into audit items, tolerating
   // partial/legacy meta (a non-array reads as null, a malformed item degrades).
   const auditItems = (value: unknown): CapsuleAuditItem[] | null => {
@@ -4313,6 +4596,7 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtraceContextPolicyAction: contextPolicy(meta.vtraceContextPolicyAction),
     vtraceContextPolicyOverride: contextPolicyOverride(meta.vtraceContextPolicyOverride),
     vtracePolicyReason: str(meta.vtracePolicyReason),
+    vtraceContextPolicyDecisionSignals: strList(meta.vtraceContextPolicyDecisionSignals),
     expectedContextValue: level(meta.expectedContextValue),
     expectedOverheadRisk: level(meta.expectedOverheadRisk),
     vtraceCapsuleEngine: capsuleEngine(meta.vtraceCapsuleEngine),
@@ -4327,6 +4611,9 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtraceCapsuleTopPivotHasSource: bool(meta.vtraceCapsuleTopPivotHasSource),
     vtraceCapsulePivotSourceChars: num(meta.vtraceCapsulePivotSourceChars),
     vtraceCapsulePivotSourceMode: pivotSourceMode(meta.vtraceCapsulePivotSourceMode),
+    vtraceCapsuleEditRiskDirectivesCount: num(meta.vtraceCapsuleEditRiskDirectivesCount),
+    vtraceCapsuleLineAnchorResolutionUsed: bool(meta.vtraceCapsuleLineAnchorResolutionUsed),
+    vtraceCapsuleSqlRenderingBackfillUsed: bool(meta.vtraceCapsuleSqlRenderingBackfillUsed),
   };
 }
 
@@ -4425,11 +4712,15 @@ export function renderCsv(rows: readonly Stage5Row[]): string {
         row.vtraceCapsuleTopPivotHasSource === null ? "" : String(row.vtraceCapsuleTopPivotHasSource),
         row.vtraceCapsulePivotSourceChars === null ? "" : String(row.vtraceCapsulePivotSourceChars),
         row.vtraceCapsulePivotSourceMode ?? "",
+        row.vtraceCapsuleEditRiskDirectivesCount === null ? "" : String(row.vtraceCapsuleEditRiskDirectivesCount),
+        row.vtraceCapsuleLineAnchorResolutionUsed === null ? "" : String(row.vtraceCapsuleLineAnchorResolutionUsed),
+        row.vtraceCapsuleSqlRenderingBackfillUsed === null ? "" : String(row.vtraceCapsuleSqlRenderingBackfillUsed),
         formatCapsuleItemsCsv(row.vtraceCapsulePivots),
         formatCapsuleItemsCsv(row.vtraceCapsuleSupport),
         row.vtraceInstructionsSnapshotFile ?? "",
         row.vtraceInstructionsSha256 ?? "",
         row.vtracePolicyReason ?? "",
+        (row.vtraceContextPolicyDecisionSignals ?? []).join("; "),
         row.expectedContextValue ?? "",
         row.expectedOverheadRisk ?? "",
         row.vtraceContextInjected === null ? "" : String(row.vtraceContextInjected),
@@ -4680,12 +4971,16 @@ function renderIndexedContextEvidence(evidence: Stage5RunEvidence): string[] {
     `| vtrace_capsule_top_pivot_has_source | ${evidence.vtraceCapsuleTopPivotHasSource === null ? "(n/a)" : String(evidence.vtraceCapsuleTopPivotHasSource)} |`,
     `| vtrace_capsule_pivot_source_chars | ${evidence.vtraceCapsulePivotSourceChars ?? "(n/a)"} |`,
     `| vtrace_capsule_pivot_source_mode | ${evidence.vtraceCapsulePivotSourceMode ?? "(n/a)"} |`,
+    `| vtrace_capsule_edit_risk_directives_count | ${evidence.vtraceCapsuleEditRiskDirectivesCount ?? "(n/a)"} |`,
+    `| vtrace_capsule_line_anchor_resolution_used | ${evidence.vtraceCapsuleLineAnchorResolutionUsed === null ? "(n/a)" : String(evidence.vtraceCapsuleLineAnchorResolutionUsed)} |`,
+    `| vtrace_capsule_sql_rendering_backfill_used | ${evidence.vtraceCapsuleSqlRenderingBackfillUsed === null ? "(n/a)" : String(evidence.vtraceCapsuleSqlRenderingBackfillUsed)} |`,
     `| vtrace_capsule_top_support_files | ${formatSupportFiles(evidence.vtraceCapsuleSupport)} |`,
     // Snapshot path + content hash, so the audit table names the exact immutable
     // record of what was injected (the active file may be overwritten by a later run).
     `| vtrace_instructions_snapshot_file | ${evidence.vtraceInstructionsSnapshotFile ?? "(none)"} |`,
     `| vtrace_instructions_sha256 | ${evidence.vtraceInstructionsSha256 ?? "(n/a)"} |`,
     `| vtrace_policy_reason | ${evidence.vtracePolicyReason ?? evidence.vtraceSkipReason ?? "(none)"} |`,
+    `| vtrace_context_policy_decision_signals | ${(evidence.vtraceContextPolicyDecisionSignals ?? []).join(", ") || "(none)"} |`,
     `| expected_context_value | ${evidence.expectedContextValue ?? "(n/a)"} |`,
     `| expected_overhead_risk | ${evidence.expectedOverheadRisk ?? "(n/a)"} |`,
     `| vtrace_context_injected | ${evidence.vtraceContextInjected === null ? "(n/a)" : String(evidence.vtraceContextInjected)} |`,

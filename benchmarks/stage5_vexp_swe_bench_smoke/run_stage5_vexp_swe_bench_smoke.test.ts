@@ -34,6 +34,7 @@ import {
   combineRunEvidence,
   comparePairs,
   decideContextPolicy,
+  decideCapsuleV2ContextPolicy,
   deriveContextPolicySignals,
   deriveRunStatus,
   diagnoseConditionEvaluability,
@@ -74,6 +75,7 @@ import {
   vtraceInstructionsSnapshotFilePath,
   workspacePathFor,
   type CapsulePolicyDiagnostics,
+  type CapsuleV2PolicyDiagnostics,
   type CliConfig,
   type ProcessResult,
   type SweBenchInstance,
@@ -820,9 +822,26 @@ function capsuleV2Json(
     pivotSource?: string;
     // Optional support items, always rendered signature-only (never a body).
     support?: ReadonlyArray<{ path?: string; symbol?: string; signature?: string }>;
+    // Policy-evidence diagnostics: how many edit-risk directives fired, and whether
+    // the line-anchor / SQL-rendering recovery routes ran. Default 0/false.
+    editRiskDirectives?: number;
+    lineAnchorResolutionUsed?: boolean;
+    sqlRenderingBackfillUsed?: boolean;
   } = {},
 ): string {
   const actualMode = opts.actualMode ?? "full";
+  // Build the optional policy-evidence diagnostics block, present only when set so
+  // the default fixture stays minimal (and exercises the "absent → 0/false" path).
+  const editRiskCount = opts.editRiskDirectives ?? 0;
+  const policyDiagnostics: Record<string, unknown> = {};
+  if (editRiskCount > 0) {
+    policyDiagnostics.edit_risk_directives = Array.from({ length: editRiskCount }, () => ({
+      kind: "guarded_shared_state_mutation", confidence: "high",
+      reason: "pivot mutates shared state under a guard", directive: "clone before mutating",
+    }));
+  }
+  if (opts.lineAnchorResolutionUsed) policyDiagnostics.line_anchor_resolution_used = true;
+  if (opts.sqlRenderingBackfillUsed) policyDiagnostics.sql_rendering_backfill_used = true;
   const base = {
     intent: "debug",
     budget: { max_tokens: 8000, estimated_tokens: actualMode === "no_context" ? 0 : 1200, used_percent: 15 },
@@ -881,6 +900,7 @@ function capsuleV2Json(
       strategy: { role_policy: "debug_refinement" }, candidate_count: 5,
       pivot_count: opts.pivotCount ?? 1, support_count: support.length, discarded_count: 4, tier: actualMode,
       weights: {}, likely_files: [pivotPath], likely_symbols: [pivotSymbol], failing_tests: [],
+      ...policyDiagnostics,
     },
   });
 }
@@ -2633,6 +2653,202 @@ test("decideContextPolicy chooses no_context when the capsule recovered nothing"
   assert.match(d.reason, /no high-confidence target/);
 });
 
+test("decideContextPolicy decisions carry named decision signals", () => {
+  // The legacy gate now also records its signals (audit parity with v2), without
+  // changing any action/value/risk — legacy behaviour is otherwise unchanged.
+  const cheap = decideContextPolicy(policySignals("django__django-10880"), MICRO_DIAG);
+  assert.equal(cheap.action, "no_context");
+  assert.deepEqual(cheap.decisionSignals, ["cheap_local", "micro_capsule"]);
+  const nav = decideContextPolicy(policySignals("django__django-11490"), STRONG_DIAG);
+  assert.equal(nav.action, "inject");
+  assert.ok(nav.decisionSignals.includes("strong_pivot"));
+});
+
+// ----- Stage 5: Capsule v2 cost-aware context policy (decideCapsuleV2ContextPolicy) -----
+
+// Capsule v2 evidence shapes drawn from the five-task force-inject validation.
+// 11490: edit-risk directive + line-anchor + SQL-rendering backfill, big focused body.
+const RISK_DIAG_V2: CapsuleV2PolicyDiagnostics = {
+  capsuleAction: "inject", hasContext: true, actualMode: "standard", pivotCount: 2, supportCount: 4,
+  topPivotHasSource: true, topPivotSourceChars: 2849, editRiskDirectiveCount: 1,
+  lineAnchorResolutionUsed: true, sqlRenderingBackfillUsed: true,
+};
+// 11728 / 11740: internal-subsystem navigation with a real focused pivot body and
+// no special recovery routes — the inject case that rests purely on task shape + source.
+const INTERNAL_NAV_DIAG_V2: CapsuleV2PolicyDiagnostics = {
+  capsuleAction: "inject", hasContext: true, actualMode: "standard", pivotCount: 2, supportCount: 4,
+  topPivotHasSource: true, topPivotSourceChars: 1563, editRiskDirectiveCount: 0,
+  lineAnchorResolutionUsed: false, sqlRenderingBackfillUsed: false,
+};
+// 10880 / 11095: a small/local task — micro capsule, focused body present but no
+// edit-risk / anchor / SQL evidence. The cheap/local no_context case.
+const LOCAL_DIAG_V2: CapsuleV2PolicyDiagnostics = {
+  capsuleAction: "inject", hasContext: true, actualMode: "standard", pivotCount: 2, supportCount: 4,
+  topPivotHasSource: true, topPivotSourceChars: 1160, editRiskDirectiveCount: 0,
+  lineAnchorResolutionUsed: false, sqlRenderingBackfillUsed: false,
+};
+
+test("decideCapsuleV2ContextPolicy injects an 11490-like edit-risk + line-anchor + SQL task", () => {
+  const d = decideCapsuleV2ContextPolicy(policySignals("django__django-11490"), RISK_DIAG_V2);
+  assert.equal(d.action, "inject");
+  assert.equal(d.expectedContextValue, "high");
+  assert.equal(d.expectedOverheadRisk, "low");
+  // The decision is backed by the capsule's own edit-risk / anchor / SQL evidence.
+  assert.ok(d.decisionSignals.includes("edit_risk_directive_present"));
+  assert.ok(d.decisionSignals.includes("line_anchor_resolution_used"));
+  assert.ok(d.decisionSignals.includes("sql_rendering_backfill_used"));
+  assert.match(d.reason, /edit-risk directive/);
+});
+
+test("decideCapsuleV2ContextPolicy injects an 11728-like regex-helper internal-subsystem bug", () => {
+  const d = decideCapsuleV2ContextPolicy(policySignals("django__django-11728"), INTERNAL_NAV_DIAG_V2);
+  assert.equal(d.action, "inject");
+  assert.equal(d.expectedContextValue, "high");
+  // Inject rests on internal-subsystem navigation with a real focused pivot body,
+  // not on any edit-risk / anchor / SQL signal (those did not fire here).
+  assert.ok(d.decisionSignals.includes("internal_subsystem_navigation"));
+  assert.ok(d.decisionSignals.includes("top_pivot_has_source"));
+  assert.ok(!d.decisionSignals.includes("edit_risk_directive_present"));
+});
+
+test("decideCapsuleV2ContextPolicy injects an 11740-like migrations/autodetector bug", () => {
+  // Long problem statement + migrations/autodetector internals + focused body.
+  const diag: CapsuleV2PolicyDiagnostics = { ...INTERNAL_NAV_DIAG_V2, topPivotSourceChars: 879 };
+  const d = decideCapsuleV2ContextPolicy(policySignals("django__django-11740"), diag);
+  assert.equal(d.action, "inject");
+  assert.equal(d.expectedContextValue, "high");
+  assert.ok(d.decisionSignals.includes("internal_subsystem_navigation"));
+});
+
+test("decideCapsuleV2ContextPolicy chooses no_context for an 11095-like small/local API hook", () => {
+  const d = decideCapsuleV2ContextPolicy(policySignals("django__django-11095"), LOCAL_DIAG_V2);
+  assert.equal(d.action, "no_context");
+  assert.equal(d.expectedContextValue, "low");
+  assert.equal(d.expectedOverheadRisk, "high");
+  // Pinned rationale: a narrow target with no edit-risk / anchor / SQL evidence.
+  assert.ok(d.decisionSignals.includes("micro_capsule"));
+  assert.ok(d.decisionSignals.includes("not_internal_subsystem"));
+  assert.ok(d.decisionSignals.includes("no_edit_risk_directive"));
+  assert.match(d.reason, /net overhead/);
+});
+
+test("decideCapsuleV2ContextPolicy chooses no_context for a 10880-like small aggregation bug", () => {
+  // 10880 may go either way per the spec; the policy chooses no_context, and the
+  // rationale is PINNED here: micro/local with no edit-risk / anchor / SQL evidence,
+  // a 410-char body below the meaningful-source bar, and overhead caution that
+  // outweighs the marginal (+10.85% token) force-inject benefit.
+  const diag: CapsuleV2PolicyDiagnostics = { ...LOCAL_DIAG_V2, topPivotSourceChars: 410 };
+  const d = decideCapsuleV2ContextPolicy(policySignals("django__django-10880"), diag);
+  assert.equal(d.action, "no_context");
+  assert.equal(d.expectedOverheadRisk, "high");
+  assert.ok(d.decisionSignals.includes("micro_capsule"));
+  // Below the meaningful-source bar, so the source body is not an inject driver.
+  assert.ok(!d.decisionSignals.includes("meaningful_pivot_source"));
+  assert.match(d.reason, /overhead/);
+});
+
+test("decideCapsuleV2ContextPolicy chooses no_context when the capsule recovered nothing", () => {
+  const d = decideCapsuleV2ContextPolicy(policySignals("django__django-11490"), {
+    capsuleAction: "skip", hasContext: false, actualMode: "no_context", pivotCount: 0, supportCount: 0,
+    topPivotHasSource: false, topPivotSourceChars: null, editRiskDirectiveCount: 0,
+    lineAnchorResolutionUsed: false, sqlRenderingBackfillUsed: false,
+  });
+  assert.equal(d.action, "no_context");
+  assert.deepEqual(d.decisionSignals, ["capsule_no_context"]);
+});
+
+test("force-inject / force-no-context still override the Capsule v2 auto decision", () => {
+  // auto → no_context on a small/local task...
+  const auto = decideCapsuleV2ContextPolicy(policySignals("django__django-11095"), LOCAL_DIAG_V2);
+  assert.equal(auto.action, "no_context");
+  // ...but force-inject flips it (preserving the gate's expected value/risk + signals)...
+  const forcedInject = applyContextPolicyOverride(auto, "force-inject", true);
+  assert.equal(forcedInject.action, "inject");
+  assert.match(forcedInject.reason, /forced to inject for validation/);
+  assert.deepEqual(forcedInject.decisionSignals, auto.decisionSignals);
+  // ...and force-no-context overrides an inject decision the other way.
+  const inject = decideCapsuleV2ContextPolicy(policySignals("django__django-11490"), RISK_DIAG_V2);
+  assert.equal(inject.action, "inject");
+  const forcedNo = applyContextPolicyOverride(inject, "force-no-context", true);
+  assert.equal(forcedNo.action, "no_context");
+  assert.match(forcedNo.reason, /forced to no_context for validation/);
+});
+
+test("classifyCapsuleV2Output captures the policy-evidence diagnostics", () => {
+  // edit-risk + line-anchor + SQL backfill present → all captured.
+  const rich = classifyCapsuleV2Output(
+    JSON.parse(capsuleV2Json({ editRiskDirectives: 1, lineAnchorResolutionUsed: true, sqlRenderingBackfillUsed: true })),
+  );
+  assert.equal(rich.capsuleEditRiskDirectivesCount, 1);
+  assert.equal(rich.capsuleLineAnchorResolutionUsed, true);
+  assert.equal(rich.capsuleSqlRenderingBackfillUsed, true);
+  // Absent in the diagnostics → 0/false, never undefined.
+  const plain = classifyCapsuleV2Output(JSON.parse(capsuleV2Json()));
+  assert.equal(plain.capsuleEditRiskDirectivesCount, 0);
+  assert.equal(plain.capsuleLineAnchorResolutionUsed, false);
+  assert.equal(plain.capsuleSqlRenderingBackfillUsed, false);
+});
+
+test("prepareIndexedContext (auto + v2) injects a navigation-heavy edit-risk task", async () => {
+  const out = path.join(await tmpDir("v2-auto-inject"), "results");
+  const dataDir = await tmpDir("v2-auto-inject-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+  // A v2 capsule with a focused body + an edit-risk directive — high-value context.
+  const { run } = scriptedRunner([
+    {
+      match: "capsule",
+      result: {
+        stdout: capsuleV2Json({
+          pivotSymbol: "get_combinator_sql", pivotSource: PIVOT_BODY,
+          editRiskDirectives: 1, lineAnchorResolutionUsed: true, sqlRenderingBackfillUsed: true,
+        }),
+      },
+    },
+  ]);
+  const config = baseConfig({
+    out, instances: ["django__django-11490"], sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context", capsuleEngine: "v2", capsuleIntent: "debug", capsuleBudget: 8000,
+    contextPolicyOverride: "auto",
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  // The v2 cost-aware gate (NOT force-inject) decided to inject on its own evidence.
+  assert.equal(result.contextPolicyAction, "inject");
+  assert.equal(result.contextInjected, true);
+  assert.equal(result.expectedContextValue, "high");
+  assert.equal(result.expectedOverheadRisk, "low");
+  assert.equal(result.capsuleEditRiskDirectivesCount, 1);
+  assert.equal(result.capsuleLineAnchorResolutionUsed, true);
+  assert.equal(result.capsuleSqlRenderingBackfillUsed, true);
+  assert.ok((result.contextPolicyDecisionSignals ?? []).includes("edit_risk_directive_present"));
+});
+
+test("prepareIndexedContext (auto + v2) declines a small/local hook task to no_context", async () => {
+  const out = path.join(await tmpDir("v2-auto-nc"), "results");
+  const dataDir = await tmpDir("v2-auto-nc-data");
+  // An 11095-like small/local additive hook: micro capsule, not an internal subsystem.
+  const dataFile = await writeSweBenchData(dataDir, [POLICY_RECORDS["django__django-11095"]]);
+  // The capsule retrieved a real v2 pivot, but with no edit-risk / anchor / SQL signal.
+  const { run } = scriptedRunner([
+    { match: "capsule", result: { stdout: capsuleV2Json({ pivotPath: "django/contrib/admin/options.py", pivotSymbol: "get_inline_formsets", pivotSource: PIVOT_BODY }) } },
+  ]);
+  const config = baseConfig({
+    out, instances: ["django__django-11095"], sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context", capsuleEngine: "v2", capsuleIntent: "debug", capsuleBudget: 8000,
+    contextPolicyOverride: "auto",
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  // The v2 gate declined: a valid no-context policy, recorded via the skip machinery.
+  assert.equal(result.contextPolicyAction, "no_context");
+  assert.equal(result.policyAction, "skip");
+  assert.equal(result.contextInjected, false);
+  assert.equal(result.indexedContext, false);
+  assert.equal(result.expectedOverheadRisk, "high");
+  assert.match(result.policyReason ?? "", /net overhead/);
+  assert.equal(result.contextError, null);
+});
+
 test("prepareIndexedContext gates a cheap/local task to no_context even with real micro context", async () => {
   const out = path.join(await tmpDir("gate-nc"), "results");
   const dataDir = await tmpDir("gate-nc-data");
@@ -2755,6 +2971,7 @@ const NO_CONTEXT_DECISION = {
   reason: "Cheap/local task: injected context is likely net overhead.",
   expectedContextValue: "low" as const,
   expectedOverheadRisk: "high" as const,
+  decisionSignals: ["cheap_local", "micro_capsule"] as const,
 };
 
 test("--context-policy parses to the override (default auto) and rejects invalid values", () => {
