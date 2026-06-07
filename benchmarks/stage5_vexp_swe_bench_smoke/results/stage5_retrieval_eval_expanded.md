@@ -1,0 +1,214 @@
+# Stage 5R — Capsule v2 Retrieval-Quality Evaluation
+
+## Scope
+
+**This is deterministic retrieval-quality evaluation only.**
+
+- It does **not** run Claude.
+- It does **not** run Docker.
+- It does **not** run any vexp agent execution and makes **no API calls**.
+- It does **not** measure token / cost / duration (those are the LIVE Stage 5
+  benchmark, reported separately).
+- Expected labels (`expected_files` / `expected_symbols`) are **evaluation-only**
+  and are **never** passed into Capsule v2 retrieval.
+
+It evaluates Capsule v2 retrieval quality on a fixed fixture of SWE-bench
+instances with known edit targets, asking one question per instance: does the
+capsule put the known edited file/symbol in the top-1 pivot, top-3, support,
+discarded, or nowhere?
+
+## Methodology
+
+For each instance the indexed workspace is opened and Capsule v2 is built from
+`(task, intent, budget)` ALONE via `buildCapsuleV2`. The resulting pivots /
+support / discarded are compared against the fixture's `expected_files` and
+`expected_symbols` (evaluation labels from known patches). File rank is the
+1-based position in the de-duplicated pivots-then-support file ranking.
+
+- **pivot** = likely edit site · **support** = useful context ·
+**discard** = test/generic/over-budget · **missing** = not surfaced.
+
+## Aggregate metrics — all instances
+
+| metric | value |
+| --- | --- |
+| instances_total | 20 |
+| instances_evaluated | 20 |
+| workspace_error_count | 0 |
+| no_context_count | 0 |
+| top_1_file_accuracy | 65.0% |
+| top_3_file_recall | 80.0% |
+| expected_file_as_pivot_rate | 70.0% |
+| expected_file_as_support_rate | 15.0% |
+| expected_file_discarded_rate | 0.0% |
+| expected_file_missing_rate | 15.0% |
+| expected_symbol_hit_rate | 60.0% |
+| expected_symbol_as_pivot_rate | 45.0% |
+| mean_capsule_tokens | 864.4 |
+| mean_pivot_count | 1.95 |
+| mean_support_count | 4.00 |
+
+## Aggregate metrics — by label source
+
+### gold_patch (preferred — SWE-bench reference patch)
+
+| metric | value |
+| --- | --- |
+| instances_total | 15 |
+| instances_evaluated | 15 |
+| workspace_error_count | 0 |
+| no_context_count | 0 |
+| top_1_file_accuracy | 53.3% |
+| top_3_file_recall | 73.3% |
+| expected_file_as_pivot_rate | 60.0% |
+| expected_file_as_support_rate | 20.0% |
+| expected_file_discarded_rate | 0.0% |
+| expected_file_missing_rate | 20.0% |
+| expected_symbol_hit_rate | 60.0% |
+| expected_symbol_as_pivot_rate | 40.0% |
+| mean_capsule_tokens | 815.5 |
+| mean_pivot_count | 1.93 |
+| mean_support_count | 4.00 |
+
+### manual_verified (hand-curated and checked)
+
+| metric | value |
+| --- | --- |
+| instances_total | 5 |
+| instances_evaluated | 5 |
+| workspace_error_count | 0 |
+| no_context_count | 0 |
+| top_1_file_accuracy | 100.0% |
+| top_3_file_recall | 100.0% |
+| expected_file_as_pivot_rate | 100.0% |
+| expected_file_as_support_rate | 0.0% |
+| expected_file_discarded_rate | 0.0% |
+| expected_file_missing_rate | 0.0% |
+| expected_symbol_hit_rate | 60.0% |
+| expected_symbol_as_pivot_rate | 60.0% |
+| mean_capsule_tokens | 1011.0 |
+| mean_pivot_count | 2.00 |
+| mean_support_count | 4.00 |
+
+## Miss taxonomy
+
+| category | count |
+| --- | --- |
+| none | 16 |
+| missing_from_candidates | 1 |
+| present_but_support | 1 |
+| wrong_subsystem | 2 |
+
+## Per-instance results
+
+| instance | label | expected file | top pivot | role | top-1? | top-3? | result | miss category |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| django__django-10880 | manual_verified | django/db/models/aggregates.py | django/db/models/aggregates.py::Count | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-11095 | manual_verified | django/contrib/admin/options.py | django/contrib/admin/options.py::get_inline_instances | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-11490 | manual_verified | django/db/models/sql/compiler.py | django/db/models/sql/compiler.py::get_combinator_sql | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-11728 | manual_verified | django/contrib/admindocs/utils.py | django/contrib/admindocs/utils.py::replace_named_groups | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-11740 | manual_verified | django/db/migrations/autodetector.py | django/db/migrations/autodetector.py::_get_dependencies_for_foreign_key | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-10973 | gold_patch | django/db/backends/postgresql/client.py | contrib/postgres/fields/array.py::run_validators | support | no | yes | hit_top3 | none |
+| django__django-11133 | gold_patch | django/http/response.py | http/response.py::write | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-11206 | gold_patch | django/utils/numberformat.py | utils/formats.py::number_format | support | no | yes | hit_top3 | none |
+| django__django-11749 | gold_patch | django/core/management/__init__.py | core/management/__init__.py::call_command | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-11815 | gold_patch | django/db/migrations/serializer.py | db/migrations/serializer.py::EnumSerializer | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-11820 | gold_patch | django/db/models/base.py | db/models/fields/related_lookups.py::RelatedLookupMixin | missing | no | no | missing | wrong_subsystem |
+| django__django-12050 | gold_patch | django/db/models/sql/query.py | db/models/sql/query.py::resolve_lookup_value | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-12273 | gold_patch | django/db/models/base.py | forms/models.py::save | pivot | no | yes | hit_top3 | none |
+| django__django-12276 | gold_patch | django/forms/widgets.py | forms/widgets.py::use_required_attribute | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-12325 | gold_patch | django/db/models/base.py | core/files/base.py::multiple_chunks | support | no | no | hit_support | present_but_support |
+| django__django-12774 | gold_patch | django/db/models/query.py | db/models/query.py::in_bulk | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-12858 | gold_patch | django/db/models/base.py | db/models/lookups.py::apply_bilateral_transforms | missing | no | no | missing | missing_from_candidates |
+| django__django-13012 | gold_patch | django/db/models/expressions.py | db/models/expressions.py::ExpressionWrapper | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-13112 | gold_patch | django/db/models/fields/related.py | core/management/base.py::error | missing | no | no | missing | wrong_subsystem |
+| django__django-13195 | gold_patch | django/contrib/messages/storage/cookie.py | http/response.py::delete_cookie | pivot | yes | yes | hit_top1_pivot | none |
+
+## Misses / failures — top-k diagnostics
+
+### django__django-11820 — missing / wrong_subsystem
+
+- expected: django/db/models/base.py
+- reason: expected file not surfaced (candidate_count=25)
+- top pivots:
+  - db/models/fields/related_lookups.py::RelatedLookupMixin — actionable class — strong lexical match; issue-domain relevance; 6 dependents
+  - db/models/fields/reverse_related.py::ForeignObjectRel — actionable class — strong lexical match; issue-domain relevance
+- top support:
+  - db/models/fields/related_lookups.py::contains_aggregate — strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)
+  - db/models/fields/related.py::ForeignObject — lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))
+  - db/models/fields/reverse_related.py::get_path_info — lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))
+  - db/models/fields/related.py::lazy_related_operation — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance
+- top discarded:
+  - db/models/fields/reverse_related.py::ManyToOneRel — beyond standard support budget (max 4)
+  - db/models/fields/proxy.py::OrderWrt — beyond standard support budget (max 4)
+  - db/models/fields/__init__.py::AutoFieldMeta — beyond standard support budget (max 4)
+  - db/models/fields/related.py::ForeignKey — beyond standard support budget (max 4)
+  - db/models/fields/related.py::related_fields — beyond standard support budget (max 4)
+
+### django__django-12325 — hit_support / present_but_support
+
+- expected: django/db/models/base.py, django/db/models/options.py
+- reason: —
+- top pivots:
+  - core/files/base.py::multiple_chunks — actionable method — strong lexical match; issue-domain relevance
+  - core/files/uploadedfile.py::multiple_chunks — actionable method — strong lexical match; issue-domain relevance
+- top support:
+  - db/models/fields/reverse_related.py::ManyToOneRel — generic infrastructure outside the issue's subsystem (class) — support only without direct failing-test or issue evidence
+  - db/models/sql/query.py::setup_joins — generic infrastructure outside the issue's subsystem (method) — support only without direct failing-test or issue evidence
+  - db/backends/ddl_references.py::TableColumns — generic infrastructure outside the issue's subsystem (class) — support only without direct failing-test or issue evidence
+  - db/models/options.py::setup_pk — generic infrastructure outside the issue's subsystem (method) — support only without direct failing-test or issue evidence
+- top discarded:
+  - db/backends/ddl_references.py::Columns — beyond standard support budget (max 4)
+  - db/models/fields/related_descriptors.py::ReverseManyToOneDescriptor — beyond standard support budget (max 4)
+  - db/models/sql/compiler.py::pre_sql_setup — beyond standard support budget (max 4)
+  - db/backends/sqlite3/schema.py::_is_referenced_by_fk_constraint — beyond standard support budget (max 4)
+  - conf/__init__.py::_setup — beyond standard support budget (max 4)
+
+### django__django-12858 — missing / missing_from_candidates
+
+- expected: django/db/models/base.py
+- reason: expected file not surfaced (candidate_count=25)
+- top pivots:
+  - db/models/lookups.py::apply_bilateral_transforms — actionable method — strong lexical match; issue-domain relevance
+  - db/models/lookups.py::get_bilateral_transforms — actionable method — strong lexical match; issue-domain relevance
+- top support:
+  - db/models/lookups.py::Transform — strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance
+  - db/models/sql/query.py::add_ordering — strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance
+  - db/models/lookups.py::UUIDTextMixin — strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance; 7 dependents
+  - db/models/sql/query.py::build_lookup — strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance
+- top discarded:
+  - db/models/lookups.py::as_sql — beyond standard support budget (max 4)
+  - db/models/sql/query.py::clear_ordering — beyond standard support budget (max 4)
+  - db/models/fields/proxy.py::OrderWrt — beyond standard support budget (max 4)
+  - db/models/sql/compiler.py::find_ordering_name — beyond standard support budget (max 4)
+  - db/models/lookups.py::as_oracle — beyond standard support budget (max 4)
+
+### django__django-13112 — missing / wrong_subsystem
+
+- expected: django/db/models/fields/related.py
+- reason: expected file not surfaced (candidate_count=25)
+- top pivots:
+  - core/management/base.py::error — actionable method — symbol-name match; lexical match; issue-domain relevance
+  - contrib/admin/utils.py::FieldIsAForeignKeyColumnName — actionable class — strong lexical match; issue-domain relevance
+- top support:
+  - core/management/commands/makemigrations.py::write_migration_files — strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site
+  - core/management/commands/makemigrations.py::handle_merge — strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site
+  - contrib/admin/forms.py::error_messages — symbol-name match; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)
+  - contrib/auth/forms.py::error_messages — symbol-name match; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)
+- top discarded:
+  - core/checks/messages.py::Error — beyond standard support budget (max 4)
+  - template/base.py::error — beyond standard support budget (max 4)
+  - db/backends/ddl_references.py::ForeignKeyName — beyond standard support budget (max 4)
+  - core/checks/messages.py::ERROR — beyond standard support budget (max 4)
+  - contrib/messages/api.py::error — beyond standard support budget (max 4)
+
+## Notes
+
+- `expected_files` / `expected_symbols` are EVALUATION LABELS only. They are
+  read from the fixture to score the capsule and are NEVER passed into Capsule
+  v2 retrieval — production retrieval receives only `(task, intent, budget)`.
+- No instance IDs or expected paths are hardcoded in production Capsule v2 logic.
+- This stage measures retrieval quality only; it runs no Claude, Docker, or
+  vexp agent execution and makes no API calls.
+- `passing_model_patch` labels are reported separately: a miss against one may
+  reflect a valid ALTERNATIVE fix site rather than a retrieval failure.

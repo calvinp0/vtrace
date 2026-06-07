@@ -6,6 +6,7 @@
     "task": "fix Count with a Case expression and distinct=True producing COUNT(DISTINCTCASE WHEN ...) with a missing space in the aggregate sql",
     "intent": "debug",
     "budget": 8000,
+    "label_source": "manual_verified",
     "expected_files": ["django/db/models/aggregates.py"],
     "expected_symbols": ["as_sql", "get_group_by_cols"],
     "notes": "Real 10880 is the aggregates task: Count(Case, distinct=True) emits COUNT(DISTINCTCASE WHEN ...). The gold patch edits Aggregate.as_sql ('DISTINCT' -> 'DISTINCT '). NOT a json_script/utils/html.py task — that was an earlier mistaken assumption. Expected labels are evaluation-only and never used by production retrieval."
@@ -17,6 +18,7 @@
     "task": "fix ModelAdmin.get_inlines hook for generic inline admin failing test",
     "intent": "debug",
     "budget": 8000,
+    "label_source": "manual_verified",
     "expected_files": ["django/contrib/admin/options.py"],
     "expected_symbols": [
       "ModelAdmin.get_inlines",
@@ -32,6 +34,7 @@
     "task": "fix composed queries where a second values() or values_list() call cannot change the selected column list in the combined query sql",
     "intent": "debug",
     "budget": 8000,
+    "label_source": "manual_verified",
     "expected_files": ["django/db/models/sql/compiler.py"],
     "expected_symbols": ["get_combinator_sql"],
     "notes": "Composed queries cannot change the column list across repeated values()/values_list(); gold patch edits SQLCompiler.get_combinator_sql in django/db/models/sql/compiler.py (confirmed against the evaluated modelPatch artifacts). Expected labels are evaluation-only."
@@ -43,6 +46,7 @@
     "task": "fix simplify_regexp trailing named groups in admindocs regex helpers",
     "intent": "debug",
     "budget": 8000,
+    "label_source": "manual_verified",
     "expected_files": ["django/contrib/admindocs/utils.py"],
     "expected_symbols": ["replace_named_groups", "replace_unnamed_groups"],
     "notes": "simplify_regex() drops a trailing group when the urlpattern lacks a trailing '/'; gold patch edits replace_named_groups and replace_unnamed_groups in django/contrib/admindocs/utils.py. Expected labels are evaluation-only."
@@ -54,6 +58,7 @@
     "task": "fix changing a UUIDField to a ForeignKey not creating a cross-app migration dependency in the autodetector",
     "intent": "debug",
     "budget": 8000,
+    "label_source": "manual_verified",
     "expected_files": ["django/db/migrations/autodetector.py"],
     "expected_symbols": ["generate_altered_fields"],
     "notes": "Changing a UUID field to an FK does not create a cross-app migration dependency; gold patch edits MigrationAutodetector.generate_altered_fields in django/db/migrations/autodetector.py (confirmed against the evaluated modelPatch artifacts). Expected labels are evaluation-only."

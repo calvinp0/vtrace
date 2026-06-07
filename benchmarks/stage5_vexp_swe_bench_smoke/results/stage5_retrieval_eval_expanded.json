@@ -1,0 +1,2094 @@
+{
+  "generatedFrom": {
+    "fixture": "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.django.expanded.json",
+    "resultsDir": "benchmarks/stage5_vexp_swe_bench_smoke/results",
+    "builder": "buildCapsuleV2 (in-process, --json equivalent)"
+  },
+  "rows": [
+    {
+      "instance_id": "django__django-10880",
+      "label_source": "manual_verified",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 472,
+      "used_percent": 5.9,
+      "expected_files": [
+        "django/db/models/aggregates.py"
+      ],
+      "expected_symbols": [
+        "as_sql",
+        "get_group_by_cols"
+      ],
+      "top_1_pivot_file": "django/db/models/aggregates.py",
+      "top_1_pivot_symbol": "Count",
+      "top_3_files": [
+        "django/db/models/aggregates.py",
+        "django/db/models/sql/query.py",
+        "django/db/models/expressions.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "django/db/models/aggregates.py",
+            "symbol": "Count",
+            "role_reason": "actionable class — symbol-name match; strong lexical match; issue-domain relevance; 6 dependents"
+          },
+          {
+            "path": "django/db/models/sql/query.py",
+            "symbol": "count_active_tables",
+            "role_reason": "actionable method — symbol-name match; strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "django/db/models/expressions.py",
+            "symbol": "Case",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance; 96 dependents"
+          },
+          {
+            "path": "django/db/models/query.py",
+            "symbol": "count",
+            "role_reason": "strong target beyond the pivot budget — actionable method — symbol-name match; lexical match; issue-domain relevance"
+          },
+          {
+            "path": "django/core/paginator.py",
+            "symbol": "count",
+            "role_reason": "strong target beyond the pivot budget — actionable method — symbol-name match; lexical match; issue-domain relevance"
+          },
+          {
+            "path": "django/db/models/aggregates.py",
+            "symbol": "allow_distinct",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "django/contrib/gis/geos/mutable_list.py",
+            "symbol": "count",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/contrib/postgres/aggregates/statistics.py",
+            "symbol": "RegrCount",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/db/models/expressions.py",
+            "symbol": "When",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/contrib/postgres/aggregates/general.py",
+            "symbol": "allow_distinct",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/contrib/postgres/aggregates/general.py",
+            "symbol": "allow_distinct",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-11095",
+      "label_source": "manual_verified",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 493,
+      "used_percent": 6.16,
+      "expected_files": [
+        "django/contrib/admin/options.py"
+      ],
+      "expected_symbols": [
+        "ModelAdmin.get_inlines",
+        "ModelAdmin.get_inline_instances",
+        "ModelAdmin.get_formsets_with_inlines"
+      ],
+      "top_1_pivot_file": "django/contrib/admin/options.py",
+      "top_1_pivot_symbol": "get_inline_instances",
+      "top_3_files": [
+        "django/contrib/admin/options.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_inline_instances",
+            "role_reason": "existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_formsets_with_inlines",
+            "role_reason": "existing method recovered from Class.method expansion — more actionable than containing class"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_inline_formsets",
+            "role_reason": "strong target beyond the pivot budget — existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_model_perms",
+            "role_reason": "strong target beyond the pivot budget — existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "save_model",
+            "role_reason": "strong target beyond the pivot budget — existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "delete_model",
+            "role_reason": "strong target beyond the pivot budget — existing method recovered from Class.method expansion — more actionable than containing class"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "ModelAdmin",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/contrib/contenttypes/admin.py",
+            "symbol": "GenericInlineModelAdmin",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/contrib/contenttypes/admin.py",
+            "symbol": "GenericInlineModelAdminChecks",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "InlineModelAdmin",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/contrib/admin/checks.py",
+            "symbol": "InlineModelAdminChecks",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-11490",
+      "label_source": "manual_verified",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 1685,
+      "used_percent": 21.06,
+      "expected_files": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "expected_symbols": [
+        "get_combinator_sql"
+      ],
+      "top_1_pivot_file": "django/db/models/sql/compiler.py",
+      "top_1_pivot_symbol": "get_combinator_sql",
+      "top_3_files": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "get_combinator_sql",
+            "role_reason": "SQL rendering implementation for combined-query output bug"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "execute_sql",
+            "role_reason": "SQL rendering implementation for combined-query output bug"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "role_reason": "strong target beyond the pivot budget — SQL rendering implementation for combined-query output bug"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "role_reason": "strong target beyond the pivot budget — SQL rendering implementation for combined-query output bug"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "role_reason": "strong target beyond the pivot budget — SQL rendering implementation for combined-query output bug"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "role_reason": "strong target beyond the pivot budget — SQL rendering implementation for combined-query output bug"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_subquery_condition",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "execute_sql",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "_setup_joins",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-11728",
+      "label_source": "manual_verified",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 1218,
+      "used_percent": 15.23,
+      "expected_files": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "expected_symbols": [
+        "replace_named_groups",
+        "replace_unnamed_groups"
+      ],
+      "top_1_pivot_file": "django/contrib/admindocs/utils.py",
+      "top_1_pivot_symbol": "replace_named_groups",
+      "top_3_files": [
+        "django/contrib/admindocs/utils.py",
+        "django/contrib/admindocs/views.py",
+        "django/contrib/admindocs/apps.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "django/contrib/admindocs/utils.py",
+            "symbol": "replace_named_groups",
+            "role_reason": "local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "django/contrib/admindocs/utils.py",
+            "symbol": "replace_unnamed_groups",
+            "role_reason": "local implementation helper invoked by the entry point — likely edit site"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "django/contrib/admindocs/views.py",
+            "symbol": "simplify_regex",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+          },
+          {
+            "path": "django/contrib/admindocs/utils.py",
+            "symbol": "named_group_matcher",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "django/contrib/admindocs/apps.py",
+            "symbol": "AdminDocsConfig",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "django/contrib/admindocs/utils.py",
+            "symbol": "unnamed_group_matcher",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "django/utils/regex_helper.py",
+            "symbol": "Group",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/utils/regex_helper.py",
+            "symbol": "NonCapture",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/utils/regex_helper.py",
+            "symbol": "normalize",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/utils/regex_helper.py",
+            "symbol": "walk_to_end",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/utils/regex_helper.py",
+            "symbol": "Choice",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-11740",
+      "label_source": "manual_verified",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 1187,
+      "used_percent": 14.84,
+      "expected_files": [
+        "django/db/migrations/autodetector.py"
+      ],
+      "expected_symbols": [
+        "generate_altered_fields"
+      ],
+      "top_1_pivot_file": "django/db/migrations/autodetector.py",
+      "top_1_pivot_symbol": "_get_dependencies_for_foreign_key",
+      "top_3_files": [
+        "django/db/migrations/autodetector.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "_get_dependencies_for_foreign_key",
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "generate_renamed_fields",
+            "role_reason": "local implementation helper invoked by the entry point — likely edit site"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "generate_altered_unique_together",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "arrange_for_graph",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "_trim_to_apps",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "generate_created_models",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "_detect_changes",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "_resolve_dependency",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "MigrationAutodetector",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "changes",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "swappable_first_key",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-10973",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 359,
+      "used_percent": 4.49,
+      "expected_files": [
+        "django/db/backends/postgresql/client.py"
+      ],
+      "expected_symbols": [
+        "DatabaseClient",
+        "_escape_pgpass",
+        "runshell",
+        "runshell_db"
+      ],
+      "top_1_pivot_file": "contrib/postgres/fields/array.py",
+      "top_1_pivot_symbol": "run_validators",
+      "top_3_files": [
+        "contrib/postgres/fields/array.py",
+        "contrib/postgres/fields/ranges.py",
+        "db/backends/postgresql/client.py"
+      ],
+      "expected_file_best_rank": 3,
+      "expected_file_role": "support",
+      "expected_symbol_best_rank": 3,
+      "expected_symbol_role": "support",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 1,
+      "support_count": 4,
+      "discarded_count": 20,
+      "result": "hit_top3",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "contrib/postgres/fields/array.py",
+            "symbol": "run_validators",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "contrib/postgres/fields/ranges.py",
+            "symbol": "system_check_deprecated_details",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "db/backends/postgresql/client.py",
+            "symbol": "_escape_pgpass",
+            "role_reason": "generic infrastructure outside the issue's subsystem (function) — support only without direct failing-test or issue evidence"
+          },
+          {
+            "path": "db/backends/postgresql/client.py",
+            "symbol": "runshell_db",
+            "role_reason": "generic infrastructure outside the issue's subsystem (method) — support only without direct failing-test or issue evidence"
+          },
+          {
+            "path": "db/backends/postgresql/client.py",
+            "symbol": "DatabaseClient",
+            "role_reason": "generic infrastructure outside the issue's subsystem (class) — support only without direct failing-test or issue evidence"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "db/backends/postgresql/base.py",
+            "symbol": "client_class",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/backends/postgresql/client.py",
+            "symbol": "runshell",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/backends/postgresql/client.py",
+            "symbol": "executable_name",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "contrib/gis/db/backends/postgis/operations.py",
+            "symbol": "postgis_lib_version",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/backends/postgresql/base.py",
+            "symbol": "pg_version",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-11133",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 279,
+      "used_percent": 3.49,
+      "expected_files": [
+        "django/http/response.py"
+      ],
+      "expected_symbols": [
+        "make_bytes"
+      ],
+      "top_1_pivot_file": "http/response.py",
+      "top_1_pivot_symbol": "write",
+      "top_3_files": [
+        "http/response.py",
+        "http/multipartparser.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "discarded",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "http/response.py",
+            "symbol": "write",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "write",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "http/response.py",
+            "symbol": "HttpResponseBase",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "writelines",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "writelines",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "http/multipartparser.py",
+            "symbol": "handle_file_complete",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "http/response.py",
+            "symbol": "JsonResponse",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "delete_cookie",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "core/serializers/pyyaml.py",
+            "symbol": "handle_field",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "http/multipartparser.py",
+            "symbol": "parse",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/backends/oracle/creation.py",
+            "symbol": "_handle_objects_preventing_db_destruction",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-11206",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 613,
+      "used_percent": 7.66,
+      "expected_files": [
+        "django/utils/numberformat.py"
+      ],
+      "expected_symbols": [
+        "format"
+      ],
+      "top_1_pivot_file": "utils/formats.py",
+      "top_1_pivot_symbol": "number_format",
+      "top_3_files": [
+        "utils/formats.py",
+        "db/backends/utils.py",
+        "utils/numberformat.py"
+      ],
+      "expected_file_best_rank": 3,
+      "expected_file_role": "support",
+      "expected_symbol_best_rank": 3,
+      "expected_symbol_role": "support",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top3",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "utils/formats.py",
+            "symbol": "number_format",
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "db/backends/utils.py",
+            "symbol": "format_number",
+            "role_reason": "actionable function — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "utils/numberformat.py",
+            "symbol": "format",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+          },
+          {
+            "path": "utils/html.py",
+            "symbol": "format_html",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "utils/_os.py",
+            "symbol": "symlinks_supported",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "utils/cache.py",
+            "symbol": "patch_response_headers",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "utils/html.py",
+            "symbol": "json_script",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "utils/formats.py",
+            "symbol": "get_format",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "utils/translation/trans_real.py",
+            "symbol": "get_language_from_request",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "utils/archive.py",
+            "symbol": "_archive_cls",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "utils/archive.py",
+            "symbol": "extract",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-11749",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 1397,
+      "used_percent": 17.46,
+      "expected_files": [
+        "django/core/management/__init__.py"
+      ],
+      "expected_symbols": [
+        "get_actions"
+      ],
+      "top_1_pivot_file": "core/management/__init__.py",
+      "top_1_pivot_symbol": "call_command",
+      "top_3_files": [
+        "core/management/__init__.py",
+        "core/management/base.py",
+        "core/management/commands/check.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "core/management/__init__.py",
+            "symbol": "call_command",
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "core/management/base.py",
+            "symbol": "CommandParser",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "core/management/base.py",
+            "symbol": "add_arguments",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "core/management/commands/check.py",
+            "symbol": "add_arguments",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "core/management/commands/check.py",
+            "symbol": "requires_system_checks",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "core/management/commands/compilemessages.py",
+            "symbol": "requires_system_checks",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "core/management/commands/createcachetable.py",
+            "symbol": "requires_system_checks",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "core/management/commands/dbshell.py",
+            "symbol": "requires_system_checks",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "core/management/commands/diffsettings.py",
+            "symbol": "requires_system_checks",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "core/management/commands/inspectdb.py",
+            "symbol": "requires_system_checks",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "core/management/commands/makemessages.py",
+            "symbol": "requires_system_checks",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-11815",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 775,
+      "used_percent": 9.69,
+      "expected_files": [
+        "django/db/migrations/serializer.py"
+      ],
+      "expected_symbols": [
+        "EnumSerializer",
+        "EnumSerializer.serialize",
+        "FloatSerializer",
+        "serialize"
+      ],
+      "top_1_pivot_file": "db/migrations/serializer.py",
+      "top_1_pivot_symbol": "EnumSerializer",
+      "top_3_files": [
+        "db/migrations/serializer.py",
+        "db/migrations/autodetector.py",
+        "db/migrations/operations/fields.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "db/migrations/serializer.py",
+            "symbol": "EnumSerializer",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "db/migrations/autodetector.py",
+            "symbol": "deep_deconstruct",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "db/migrations/operations/fields.py",
+            "symbol": "model_name_lower",
+            "role_reason": "lexical match; issue-domain relevance; 9 dependents (not a pivot: high-degree framework root — support at most)"
+          },
+          {
+            "path": "db/migrations/operations/models.py",
+            "symbol": "name_lower",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+          },
+          {
+            "path": "db/migrations/autodetector.py",
+            "symbol": "__init__",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "db/migrations/operations/fields.py",
+            "symbol": "new_name_lower",
+            "role_reason": "lexical match; issue-domain relevance (not a pivot: no direct evidence (graph/domain reach only))"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "db/migrations/autodetector.py",
+            "symbol": "suggest_name",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/migrations/operations/fields.py",
+            "symbol": "name_lower",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/migrations/autodetector.py",
+            "symbol": "generate_removed_constraints",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/migrations/questioner.py",
+            "symbol": "NonInteractiveMigrationQuestioner",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/migrations/operations/fields.py",
+            "symbol": "old_name_lower",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-11820",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 2187,
+      "used_percent": 27.34,
+      "expected_files": [
+        "django/db/models/base.py"
+      ],
+      "expected_symbols": [
+        "_check_ordering"
+      ],
+      "top_1_pivot_file": "db/models/fields/related_lookups.py",
+      "top_1_pivot_symbol": "RelatedLookupMixin",
+      "top_3_files": [
+        "db/models/fields/related_lookups.py",
+        "db/models/fields/reverse_related.py",
+        "db/models/fields/related.py"
+      ],
+      "expected_file_best_rank": null,
+      "expected_file_role": "missing",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": false,
+      "contains_expected_file_anywhere": false,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "missing",
+      "miss_category": "wrong_subsystem",
+      "failure_reason": "expected file not surfaced (candidate_count=25)",
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "db/models/fields/related_lookups.py",
+            "symbol": "RelatedLookupMixin",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance; 6 dependents"
+          },
+          {
+            "path": "db/models/fields/reverse_related.py",
+            "symbol": "ForeignObjectRel",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "db/models/fields/related_lookups.py",
+            "symbol": "contains_aggregate",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "db/models/fields/related.py",
+            "symbol": "ForeignObject",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "db/models/fields/reverse_related.py",
+            "symbol": "get_path_info",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "db/models/fields/related.py",
+            "symbol": "lazy_related_operation",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "db/models/fields/reverse_related.py",
+            "symbol": "ManyToOneRel",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/fields/proxy.py",
+            "symbol": "OrderWrt",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/fields/__init__.py",
+            "symbol": "AutoFieldMeta",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/fields/related.py",
+            "symbol": "ForeignKey",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/fields/related.py",
+            "symbol": "related_fields",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-12050",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 831,
+      "used_percent": 10.39,
+      "expected_files": [
+        "django/db/models/sql/query.py"
+      ],
+      "expected_symbols": [
+        "resolve_lookup_value",
+        "solve_lookup_type"
+      ],
+      "top_1_pivot_file": "db/models/sql/query.py",
+      "top_1_pivot_symbol": "resolve_lookup_value",
+      "top_3_files": [
+        "db/models/sql/query.py",
+        "db/models/query.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "resolve_lookup_value",
+            "role_reason": "existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "solve_lookup_type",
+            "role_reason": "existing method recovered from Class.method expansion — more actionable than containing class"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "build_lookup",
+            "role_reason": "strong target beyond the pivot budget — existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "check_query_object_type",
+            "role_reason": "strong target beyond the pivot budget — existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "resolve_expression",
+            "role_reason": "strong target beyond the pivot budget — existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "db/models/query.py",
+            "symbol": "ValuesListIterable",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "db/models/query.py",
+            "symbol": "NamedValuesListIterable",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "add_fields",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/query.py",
+            "symbol": "values_list",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "Exact",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "set_extra_mask",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-12273",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 1484,
+      "used_percent": 18.55,
+      "expected_files": [
+        "django/db/models/base.py"
+      ],
+      "expected_symbols": [
+        "_get_pk_val",
+        "_set_pk_val"
+      ],
+      "top_1_pivot_file": "forms/models.py",
+      "top_1_pivot_symbol": "save",
+      "top_3_files": [
+        "forms/models.py",
+        "db/models/base.py",
+        "db/models/fields/files.py"
+      ],
+      "expected_file_best_rank": 2,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top3",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "forms/models.py",
+            "symbol": "save",
+            "role_reason": "actionable method — symbol-name match; strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "save",
+            "role_reason": "local implementation helper invoked by the entry point — likely edit site"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "db/models/fields/files.py",
+            "symbol": "save",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "_check_single_primary_key",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "db/models/fields/files.py",
+            "symbol": "_check_primary_key",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "db/models/fields/__init__.py",
+            "symbol": "_check_primary_key",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "forms/models.py",
+            "symbol": "save",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "contrib/auth/models.py",
+            "symbol": "save",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "contrib/gis/utils/layermapping.py",
+            "symbol": "save",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "forms/models.py",
+            "symbol": "save_new",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "forms/models.py",
+            "symbol": "save_existing",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-12276",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 773,
+      "used_percent": 9.66,
+      "expected_files": [
+        "django/forms/widgets.py"
+      ],
+      "expected_symbols": [
+        "use_required_attribute",
+        "value_from_datadict",
+        "value_omitted_from_data"
+      ],
+      "top_1_pivot_file": "forms/widgets.py",
+      "top_1_pivot_symbol": "use_required_attribute",
+      "top_3_files": [
+        "forms/widgets.py",
+        "forms/fields.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "forms/widgets.py",
+            "symbol": "use_required_attribute",
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "forms/widgets.py",
+            "symbol": "is_initial",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "forms/widgets.py",
+            "symbol": "value_omitted_from_data",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "forms/widgets.py",
+            "symbol": "initial_text",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "forms/widgets.py",
+            "symbol": "value_omitted_from_data",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+          },
+          {
+            "path": "forms/fields.py",
+            "symbol": "__init__",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; 8 dependents"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "forms/widgets.py",
+            "symbol": "value_omitted_from_data",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "forms/forms.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "forms/models.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "core/files/storage.py",
+            "symbol": "exists",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "core/files/uploadhandler.py",
+            "symbol": "handle_raw_input",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-12325",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 372,
+      "used_percent": 4.65,
+      "expected_files": [
+        "django/db/models/base.py",
+        "django/db/models/options.py"
+      ],
+      "expected_symbols": [
+        "__new__",
+        "_prepare"
+      ],
+      "top_1_pivot_file": "core/files/base.py",
+      "top_1_pivot_symbol": "multiple_chunks",
+      "top_3_files": [
+        "core/files/base.py",
+        "core/files/uploadedfile.py",
+        "db/models/fields/reverse_related.py"
+      ],
+      "expected_file_best_rank": 6,
+      "expected_file_role": "support",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": false,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_support",
+      "miss_category": "present_but_support",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "core/files/base.py",
+            "symbol": "multiple_chunks",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "core/files/uploadedfile.py",
+            "symbol": "multiple_chunks",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "db/models/fields/reverse_related.py",
+            "symbol": "ManyToOneRel",
+            "role_reason": "generic infrastructure outside the issue's subsystem (class) — support only without direct failing-test or issue evidence"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "setup_joins",
+            "role_reason": "generic infrastructure outside the issue's subsystem (method) — support only without direct failing-test or issue evidence"
+          },
+          {
+            "path": "db/backends/ddl_references.py",
+            "symbol": "TableColumns",
+            "role_reason": "generic infrastructure outside the issue's subsystem (class) — support only without direct failing-test or issue evidence"
+          },
+          {
+            "path": "db/models/options.py",
+            "symbol": "setup_pk",
+            "role_reason": "generic infrastructure outside the issue's subsystem (method) — support only without direct failing-test or issue evidence"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "db/backends/ddl_references.py",
+            "symbol": "Columns",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/fields/related_descriptors.py",
+            "symbol": "ReverseManyToOneDescriptor",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/sql/compiler.py",
+            "symbol": "pre_sql_setup",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/backends/sqlite3/schema.py",
+            "symbol": "_is_referenced_by_fk_constraint",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "conf/__init__.py",
+            "symbol": "_setup",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-12774",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 1269,
+      "used_percent": 15.86,
+      "expected_files": [
+        "django/db/models/query.py"
+      ],
+      "expected_symbols": [
+        "in_bulk"
+      ],
+      "top_1_pivot_file": "db/models/query.py",
+      "top_1_pivot_symbol": "in_bulk",
+      "top_3_files": [
+        "db/models/query.py",
+        "db/models/options.py",
+        "db/models/fields/related_descriptors.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "db/models/query.py",
+            "symbol": "in_bulk",
+            "role_reason": "existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "db/models/query.py",
+            "symbol": "bulk_update",
+            "role_reason": "existing method recovered from Class.method expansion — more actionable than containing class"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "db/models/options.py",
+            "symbol": "total_unique_constraints",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "db/models/query.py",
+            "symbol": "bulk_create",
+            "role_reason": "strong target beyond the pivot budget — existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "db/models/fields/related_descriptors.py",
+            "symbol": "get_prefetch_queryset",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "db/models/fields/related_descriptors.py",
+            "symbol": "get_prefetch_queryset",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "db/backends/oracle/features.py",
+            "symbol": "allows_multiple_constraints_on_same_fields",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/backends/base/features.py",
+            "symbol": "allows_multiple_constraints_on_same_fields",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/fields/related_descriptors.py",
+            "symbol": "ReverseOneToOneDescriptor",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/query.py",
+            "symbol": "model_fields",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/constraints.py",
+            "symbol": "UniqueConstraint",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-12858",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 364,
+      "used_percent": 4.55,
+      "expected_files": [
+        "django/db/models/base.py"
+      ],
+      "expected_symbols": [
+        "_check_ordering"
+      ],
+      "top_1_pivot_file": "db/models/lookups.py",
+      "top_1_pivot_symbol": "apply_bilateral_transforms",
+      "top_3_files": [
+        "db/models/lookups.py",
+        "db/models/sql/query.py"
+      ],
+      "expected_file_best_rank": null,
+      "expected_file_role": "missing",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": false,
+      "contains_expected_file_anywhere": false,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "missing",
+      "miss_category": "missing_from_candidates",
+      "failure_reason": "expected file not surfaced (candidate_count=25)",
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "apply_bilateral_transforms",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "get_bilateral_transforms",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "Transform",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "add_ordering",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "UUIDTextMixin",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance; 7 dependents"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "build_lookup",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "as_sql",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "clear_ordering",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/fields/proxy.py",
+            "symbol": "OrderWrt",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/sql/compiler.py",
+            "symbol": "find_ordering_name",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "as_oracle",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-13012",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 553,
+      "used_percent": 6.91,
+      "expected_files": [
+        "django/db/models/expressions.py"
+      ],
+      "expected_symbols": [
+        "as_sql",
+        "get_group_by_cols",
+        "get_source_expressions",
+        "set_source_expressions"
+      ],
+      "top_1_pivot_file": "db/models/expressions.py",
+      "top_1_pivot_symbol": "ExpressionWrapper",
+      "top_3_files": [
+        "db/models/expressions.py",
+        "contrib/postgres/aggregates/mixins.py",
+        "db/models/query.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 2,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "ExpressionWrapper",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "contrib/postgres/aggregates/mixins.py",
+            "symbol": "set_source_expressions",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "db/models/query.py",
+            "symbol": "_validate_values_are_expressions",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "Expression",
+            "role_reason": "generic infrastructure outside the issue's subsystem (class) — support only without direct failing-test or issue evidence"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "get_group_by_cols",
+            "role_reason": "generic infrastructure outside the issue's subsystem (method) — support only without direct failing-test or issue evidence"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "get_group_by_cols",
+            "role_reason": "generic infrastructure outside the issue's subsystem (method) — support only without direct failing-test or issue evidence"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "db/models/query_utils.py",
+            "symbol": "resolve_expression",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "function",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "get_group_by_cols",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "get_group_by_cols",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/query_utils.py",
+            "symbol": "refs_expression",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-13112",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 430,
+      "used_percent": 5.38,
+      "expected_files": [
+        "django/db/models/fields/related.py"
+      ],
+      "expected_symbols": [
+        "deconstruct"
+      ],
+      "top_1_pivot_file": "core/management/base.py",
+      "top_1_pivot_symbol": "error",
+      "top_3_files": [
+        "core/management/base.py",
+        "contrib/admin/utils.py",
+        "core/management/commands/makemigrations.py"
+      ],
+      "expected_file_best_rank": null,
+      "expected_file_role": "missing",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": false,
+      "contains_expected_file_anywhere": false,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "missing",
+      "miss_category": "wrong_subsystem",
+      "failure_reason": "expected file not surfaced (candidate_count=25)",
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "core/management/base.py",
+            "symbol": "error",
+            "role_reason": "actionable method — symbol-name match; lexical match; issue-domain relevance"
+          },
+          {
+            "path": "contrib/admin/utils.py",
+            "symbol": "FieldIsAForeignKeyColumnName",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "core/management/commands/makemigrations.py",
+            "symbol": "write_migration_files",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "core/management/commands/makemigrations.py",
+            "symbol": "handle_merge",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "contrib/admin/forms.py",
+            "symbol": "error_messages",
+            "role_reason": "symbol-name match; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "contrib/auth/forms.py",
+            "symbol": "error_messages",
+            "role_reason": "symbol-name match; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "core/checks/messages.py",
+            "symbol": "Error",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "template/base.py",
+            "symbol": "error",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/backends/ddl_references.py",
+            "symbol": "ForeignKeyName",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "core/checks/messages.py",
+            "symbol": "ERROR",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "contrib/messages/api.py",
+            "symbol": "error",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "django__django-13195",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 547,
+      "used_percent": 6.84,
+      "expected_files": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "expected_symbols": [
+        "_store",
+        "_update_cookie",
+        "delete_cookie",
+        "process_response",
+        "set_signed_cookie"
+      ],
+      "top_1_pivot_file": "http/response.py",
+      "top_1_pivot_symbol": "delete_cookie",
+      "top_3_files": [
+        "http/response.py",
+        "contrib/sessions/backends/signed_cookies.py",
+        "core/cache/backends/memcached.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "http/response.py",
+            "symbol": "delete_cookie",
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "contrib/sessions/backends/signed_cookies.py",
+            "symbol": "delete",
+            "role_reason": "actionable method — symbol-name match; strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "http/response.py",
+            "symbol": "__init__",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "__init__",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "core/cache/backends/memcached.py",
+            "symbol": "delete",
+            "role_reason": "strong target beyond the pivot budget — actionable method — symbol-name match; strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "set_cookie",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "http/response.py",
+            "symbol": "set_signed_cookie",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "HttpResponse",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "contrib/sessions/backends/base.py",
+            "symbol": "delete_test_cookie",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "HttpResponseBase",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "contrib/admin/options.py",
+            "symbol": "response_delete",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "instances_total": 20,
+    "instances_evaluated": 20,
+    "workspace_error_count": 0,
+    "no_context_count": 0,
+    "top_1_file_accuracy": 0.65,
+    "top_3_file_recall": 0.8,
+    "expected_file_as_pivot_rate": 0.7,
+    "expected_file_as_support_rate": 0.15,
+    "expected_file_missing_rate": 0.15,
+    "expected_file_discarded_rate": 0,
+    "expected_symbol_hit_rate": 0.6,
+    "expected_symbol_as_pivot_rate": 0.45,
+    "mean_capsule_tokens": 864.4,
+    "mean_pivot_count": 1.95,
+    "mean_support_count": 4,
+    "miss_taxonomy": {
+      "none": 16,
+      "missing_from_candidates": 1,
+      "present_but_support": 1,
+      "present_but_discarded": 0,
+      "wrong_subsystem": 2,
+      "wrong_entry_point": 0,
+      "generic_infrastructure_ranked_above_target": 0,
+      "line_anchor_not_resolved": 0,
+      "test_symbol_pollution": 0,
+      "workspace_error": 0,
+      "fixture_label_error": 0,
+      "unknown": 0
+    }
+  },
+  "byLabelSource": {
+    "gold_patch": {
+      "instances_total": 15,
+      "instances_evaluated": 15,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 0.5333,
+      "top_3_file_recall": 0.7333,
+      "expected_file_as_pivot_rate": 0.6,
+      "expected_file_as_support_rate": 0.2,
+      "expected_file_missing_rate": 0.2,
+      "expected_file_discarded_rate": 0,
+      "expected_symbol_hit_rate": 0.6,
+      "expected_symbol_as_pivot_rate": 0.4,
+      "mean_capsule_tokens": 815.5333,
+      "mean_pivot_count": 1.9333,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 11,
+        "missing_from_candidates": 1,
+        "present_but_support": 1,
+        "present_but_discarded": 0,
+        "wrong_subsystem": 2,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "test_symbol_pollution": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    },
+    "manual_verified": {
+      "instances_total": 5,
+      "instances_evaluated": 5,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 1,
+      "top_3_file_recall": 1,
+      "expected_file_as_pivot_rate": 1,
+      "expected_file_as_support_rate": 0,
+      "expected_file_missing_rate": 0,
+      "expected_file_discarded_rate": 0,
+      "expected_symbol_hit_rate": 0.6,
+      "expected_symbol_as_pivot_rate": 0.6,
+      "mean_capsule_tokens": 1011,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 5,
+        "missing_from_candidates": 0,
+        "present_but_support": 0,
+        "present_but_discarded": 0,
+        "wrong_subsystem": 0,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "test_symbol_pollution": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    }
+  }
+}

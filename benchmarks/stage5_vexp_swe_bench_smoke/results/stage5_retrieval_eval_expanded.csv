@@ -1,0 +1,21 @@
+instance_id,label_source,intent,actual_mode,budget_tokens,estimated_tokens,used_percent,top_1_pivot_file,top_1_pivot_symbol,expected_file_best_rank,expected_file_role,expected_symbol_best_rank,expected_symbol_role,contains_expected_file_top1,contains_expected_file_top3,contains_expected_file_anywhere,contains_expected_symbol_anywhere,pivot_count,support_count,discarded_count,result,miss_category,failure_reason
+django__django-10880,manual_verified,debug,standard,8000,472,5.9,django/db/models/aggregates.py,Count,1,pivot,,missing,true,true,true,false,2,4,19,hit_top1_pivot,none,
+django__django-11095,manual_verified,debug,standard,8000,493,6.16,django/contrib/admin/options.py,get_inline_instances,1,pivot,1,pivot,true,true,true,true,2,4,19,hit_top1_pivot,none,
+django__django-11490,manual_verified,debug,standard,8000,1685,21.06,django/db/models/sql/compiler.py,get_combinator_sql,1,pivot,1,pivot,true,true,true,true,2,4,19,hit_top1_pivot,none,
+django__django-11728,manual_verified,debug,standard,8000,1218,15.23,django/contrib/admindocs/utils.py,replace_named_groups,1,pivot,1,pivot,true,true,true,true,2,4,19,hit_top1_pivot,none,
+django__django-11740,manual_verified,debug,standard,8000,1187,14.84,django/db/migrations/autodetector.py,_get_dependencies_for_foreign_key,1,pivot,,missing,true,true,true,false,2,4,19,hit_top1_pivot,none,
+django__django-10973,gold_patch,debug,standard,8000,359,4.49,contrib/postgres/fields/array.py,run_validators,3,support,3,support,false,true,true,true,1,4,20,hit_top3,none,
+django__django-11133,gold_patch,debug,standard,8000,279,3.49,http/response.py,write,1,pivot,,discarded,true,true,true,true,2,4,19,hit_top1_pivot,none,
+django__django-11206,gold_patch,debug,standard,8000,613,7.66,utils/formats.py,number_format,3,support,3,support,false,true,true,true,2,4,19,hit_top3,none,
+django__django-11749,gold_patch,debug,standard,8000,1397,17.46,core/management/__init__.py,call_command,1,pivot,,missing,true,true,true,false,2,4,19,hit_top1_pivot,none,
+django__django-11815,gold_patch,debug,standard,8000,775,9.69,db/migrations/serializer.py,EnumSerializer,1,pivot,1,pivot,true,true,true,true,2,4,19,hit_top1_pivot,none,
+django__django-11820,gold_patch,debug,standard,8000,2187,27.34,db/models/fields/related_lookups.py,RelatedLookupMixin,,missing,,missing,false,false,false,false,2,4,19,missing,wrong_subsystem,expected file not surfaced (candidate_count=25)
+django__django-12050,gold_patch,debug,standard,8000,831,10.39,db/models/sql/query.py,resolve_lookup_value,1,pivot,1,pivot,true,true,true,true,2,4,19,hit_top1_pivot,none,
+django__django-12273,gold_patch,debug,standard,8000,1484,18.55,forms/models.py,save,2,pivot,,missing,false,true,true,false,2,4,19,hit_top3,none,
+django__django-12276,gold_patch,debug,standard,8000,773,9.66,forms/widgets.py,use_required_attribute,1,pivot,1,pivot,true,true,true,true,2,4,19,hit_top1_pivot,none,
+django__django-12325,gold_patch,debug,standard,8000,372,4.65,core/files/base.py,multiple_chunks,6,support,,missing,false,false,true,false,2,4,19,hit_support,present_but_support,
+django__django-12774,gold_patch,debug,standard,8000,1269,15.86,db/models/query.py,in_bulk,1,pivot,1,pivot,true,true,true,true,2,4,19,hit_top1_pivot,none,
+django__django-12858,gold_patch,debug,standard,8000,364,4.55,db/models/lookups.py,apply_bilateral_transforms,,missing,,missing,false,false,false,false,2,4,19,missing,missing_from_candidates,expected file not surfaced (candidate_count=25)
+django__django-13012,gold_patch,debug,standard,8000,553,6.91,db/models/expressions.py,ExpressionWrapper,1,pivot,2,pivot,true,true,true,true,2,4,19,hit_top1_pivot,none,
+django__django-13112,gold_patch,debug,standard,8000,430,5.38,core/management/base.py,error,,missing,,missing,false,false,false,false,2,4,19,missing,wrong_subsystem,expected file not surfaced (candidate_count=25)
+django__django-13195,gold_patch,debug,standard,8000,547,6.84,http/response.py,delete_cookie,1,pivot,1,pivot,true,true,true,true,2,4,19,hit_top1_pivot,none,

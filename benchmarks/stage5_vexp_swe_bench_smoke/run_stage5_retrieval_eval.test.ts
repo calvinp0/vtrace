@@ -7,7 +7,7 @@
 // and (b) a missing workspace is reported as workspace_error, not a crash.
 
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "bun:test";
@@ -16,6 +16,9 @@ import { openIndexerDatabase } from "../../src/db/sqlite";
 import { indexProject } from "../../src/indexer/indexProject";
 import {
   aggregate,
+  aggregateByLabelSource,
+  assertNoUnexpectedDuplicates,
+  classifyMiss,
   evaluateEntryLive,
   evaluateExpectedFile,
   evaluateExpectedSymbol,
@@ -23,14 +26,20 @@ import {
   extractChangedFromDiff,
   extractExpectedLabelsFromJsonl,
   fileMatches,
+  isLabelSource,
   loadRetrievalFixture,
+  parseArgs,
   rankedFiles,
   renderCsv,
   renderMarkdown,
   runRetrievalEval,
   summarizeCapsule,
   symbolMatches,
+  taskHasLineAnchor,
+  topKDiagnostics,
   validateFixtureEntry,
+  validateFixtureOnDisk,
+  writeReports,
   type CapsuleSummary,
   type RetrievalEvalArtifact,
   type RetrievalEvalFixtureEntry,
@@ -47,14 +56,30 @@ function entry(overrides: Partial<RetrievalEvalFixtureEntry> = {}): RetrievalEva
     task: "fix the thing",
     intent: "debug",
     budget: 8000,
+    label_source: "gold_patch",
     expected_files: ["pkg/target.py"],
     expected_symbols: ["do_thing"],
     ...overrides,
   };
 }
 
-function selected(role: "pivot" | "support", file: string, symbol: string, final = 1): SelectedItem {
-  return { role, path: file, symbol, fqName: `${file}::${symbol}`, final };
+function selected(
+  role: "pivot" | "support",
+  file: string,
+  symbol: string,
+  final = 1,
+  signals: Partial<Pick<SelectedItem, "roleReason" | "isEntryPoint" | "isGenericInfrastructure">> = {},
+): SelectedItem {
+  return {
+    role,
+    path: file,
+    symbol,
+    fqName: `${file}::${symbol}`,
+    final,
+    roleReason: signals.roleReason ?? `${role} by score`,
+    isEntryPoint: signals.isEntryPoint ?? false,
+    isGenericInfrastructure: signals.isGenericInfrastructure ?? false,
+  };
 }
 
 function summary(overrides: Partial<CapsuleSummary> = {}): CapsuleSummary {
@@ -68,6 +93,8 @@ function summary(overrides: Partial<CapsuleSummary> = {}): CapsuleSummary {
     support: [],
     discarded: [],
     candidateCount: 10,
+    subsystemRoot: null,
+    lineAnchorResolutionUsed: false,
     ...overrides,
   };
 }
@@ -256,6 +283,7 @@ function artifactOf(rows: RetrievalEvalArtifact["rows"]): RetrievalEvalArtifact 
     generatedFrom: { fixture: "f.json", resultsDir: "out", builder: "buildCapsuleV2" },
     rows,
     aggregate: aggregate(rows),
+    byLabelSource: aggregateByLabelSource(rows),
   };
 }
 
@@ -264,8 +292,8 @@ test("renderCsv emits a header row and one row per instance", () => {
   const csv = renderCsv(rows);
   const lines = csv.trim().split("\n");
   assert.equal(lines.length, 2);
-  assert.match(lines[0]!, /^instance_id,intent,actual_mode/);
-  assert.match(lines[1]!, /^a,debug,standard/);
+  assert.match(lines[0]!, /^instance_id,label_source,intent,actual_mode/);
+  assert.match(lines[1]!, /^a,gold_patch,debug,standard/);
 });
 
 test("renderMarkdown includes scope, metrics, per-instance table, and the label-only note", () => {
@@ -388,4 +416,314 @@ test("summarizeCapsule produces a usable summary shape from a live build", async
   assert.ok(typeof s.actualMode === "string");
   assert.ok(Array.isArray(s.pivots) && Array.isArray(s.support) && Array.isArray(s.discarded));
   void summarizeCapsule;
+});
+
+// --- label source ------------------------------------------------------------
+
+test("isLabelSource accepts the three sources and rejects others", () => {
+  assert.ok(isLabelSource("gold_patch"));
+  assert.ok(isLabelSource("passing_model_patch"));
+  assert.ok(isLabelSource("manual_verified"));
+  assert.ok(!isLabelSource("guess"));
+  assert.ok(!isLabelSource(undefined));
+});
+
+test("validateFixtureEntry defaults a missing label_source to manual_verified", () => {
+  const e = validateFixtureEntry(
+    { instance_id: "a", repo: "r", workspace: "w", task: "t", expected_files: ["f"] },
+    0,
+  );
+  assert.equal(e.label_source, "manual_verified");
+});
+
+test("validateFixtureEntry rejects an invalid label_source", () => {
+  assert.throws(
+    () => validateFixtureEntry(
+      { instance_id: "a", repo: "r", workspace: "w", task: "t", expected_files: ["f"], label_source: "bogus" },
+      0,
+    ),
+    /invalid label_source/,
+  );
+});
+
+test("validateFixtureEntry preserves a declared gold_patch source", () => {
+  const e = validateFixtureEntry(
+    { instance_id: "a", repo: "r", workspace: "w", task: "t", expected_files: ["f"], label_source: "gold_patch" },
+    0,
+  );
+  assert.equal(e.label_source, "gold_patch");
+});
+
+// --- duplicate instance handling ---------------------------------------------
+
+test("assertNoUnexpectedDuplicates throws on a repeated id without allow_duplicate", () => {
+  assert.throws(
+    () => assertNoUnexpectedDuplicates([entry({ instance_id: "dup" }), entry({ instance_id: "dup" })]),
+    /Duplicate instance_id dup/,
+  );
+});
+
+test("assertNoUnexpectedDuplicates allows a repeat that opts in via allow_duplicate", () => {
+  assert.doesNotThrow(() =>
+    assertNoUnexpectedDuplicates([
+      entry({ instance_id: "dup", label_source: "gold_patch" }),
+      entry({ instance_id: "dup", label_source: "passing_model_patch", allow_duplicate: true }),
+    ]),
+  );
+});
+
+test("loadRetrievalFixture rejects a fixture with an un-opted duplicate id", async () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "vtrace-r5r-dup-"));
+  const fixturePath = path.join(dir, "dup.json");
+  writeFileSync(
+    fixturePath,
+    JSON.stringify([
+      { instance_id: "d", repo: "r", workspace: "w", task: "t", label_source: "gold_patch", expected_files: ["f"] },
+      { instance_id: "d", repo: "r", workspace: "w", task: "t", label_source: "gold_patch", expected_files: ["g"] },
+    ]),
+  );
+  await assert.rejects(() => loadRetrievalFixture(fixturePath), /Duplicate instance_id/);
+});
+
+// --- expected file / workspace validation ------------------------------------
+
+test("validateFixtureOnDisk flags a missing workspace, absolute paths, and escapes", async () => {
+  const entries: RetrievalEvalFixtureEntry[] = [
+    entry({ instance_id: "ws", workspace: "/nope/does-not-exist", expected_files: ["pkg/a.py"] }),
+    entry({ instance_id: "abs", workspace: "/nope/does-not-exist", expected_files: ["/etc/passwd"] }),
+    entry({ instance_id: "esc", workspace: "/nope/does-not-exist", expected_files: ["../escape.py"] }),
+    entry({ instance_id: "empty", workspace: "/nope/does-not-exist", task: "  ", expected_files: ["pkg/a.py"] }),
+  ];
+  const issues = await validateFixtureOnDisk(entries, new Set(["ws", "abs", "esc", "empty"]));
+  const checks = issues.map((i) => i.check);
+  assert.ok(checks.includes("workspace_missing"));
+  assert.ok(checks.includes("expected_file_absolute"));
+  assert.ok(checks.includes("expected_file_escapes_repo"));
+  assert.ok(checks.includes("task_empty"));
+});
+
+test("validateFixtureOnDisk warns when a row had no declared label_source", async () => {
+  const issues = await validateFixtureOnDisk(
+    [entry({ instance_id: "nolabel", workspace: "/nope" })],
+    new Set<string>(), // raw object declared no label_source
+  );
+  assert.ok(issues.some((i) => i.check === "label_source_missing" && i.severity === "warning"));
+});
+
+test("validateFixtureOnDisk passes a real indexed workspace with an existing expected file", async () => {
+  const workspace = await indexedWorkspace("vtrace-r5r-val-", PARSER_FILES);
+  const issues = await validateFixtureOnDisk(
+    [entry({ instance_id: "ok", workspace, expected_files: ["pkg/widget.py"] })],
+    new Set(["ok"]),
+  );
+  assert.equal(issues.filter((i) => i.severity === "error").length, 0);
+});
+
+test("validateFixtureOnDisk flags an expected file that is not in the workspace", async () => {
+  const workspace = await indexedWorkspace("vtrace-r5r-valmiss-", PARSER_FILES);
+  const issues = await validateFixtureOnDisk(
+    [entry({ instance_id: "miss", workspace, expected_files: ["pkg/ghost.py"] })],
+    new Set(["miss"]),
+  );
+  assert.ok(issues.some((i) => i.check === "expected_file_not_in_workspace"));
+});
+
+// --- gold vs passing_model_patch aggregation ---------------------------------
+
+test("aggregateByLabelSource splits metrics by source", () => {
+  const rows = [
+    evaluateInstance(
+      entry({ instance_id: "g1", label_source: "gold_patch" }),
+      summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] }),
+    ),
+    evaluateInstance(
+      entry({ instance_id: "g2", label_source: "gold_patch" }),
+      summary({ pivots: [selected("pivot", "pkg/other.py", "other")] }),
+    ),
+    evaluateInstance(
+      entry({ instance_id: "m1", label_source: "passing_model_patch" }),
+      summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] }),
+    ),
+  ];
+  const bySource = aggregateByLabelSource(rows);
+  assert.ok(bySource.gold_patch && bySource.passing_model_patch);
+  assert.equal(bySource.gold_patch!.instances_total, 2);
+  assert.equal(bySource.gold_patch!.top_1_file_accuracy, 0.5);
+  assert.equal(bySource.passing_model_patch!.instances_total, 1);
+  assert.equal(bySource.passing_model_patch!.top_1_file_accuracy, 1);
+  assert.equal(bySource.manual_verified, undefined); // no rows of that source
+});
+
+// --- miss taxonomy -----------------------------------------------------------
+
+test("classifyMiss returns none for a top-3 hit", () => {
+  const row = evaluateInstance(entry(), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] }));
+  assert.equal(row.miss_category, "none");
+});
+
+test("classifyMiss: present_but_support when the expected file is only support", () => {
+  const s = summary({
+    pivots: [selected("pivot", "a.py", "a"), selected("pivot", "b.py", "b"), selected("pivot", "c.py", "c")],
+    support: [selected("support", "pkg/target.py", "do_thing")],
+  });
+  const row = evaluateInstance(entry(), s);
+  assert.equal(row.expected_file_role, "support");
+  assert.equal(row.contains_expected_file_top3, false);
+  assert.equal(row.miss_category, "present_but_support");
+});
+
+test("classifyMiss: test_symbol_pollution when expected file is discarded as a test", () => {
+  const s = summary({
+    pivots: [selected("pivot", "pkg/other.py", "other")],
+    discarded: [{ path: "pkg/target.py", symbol: "do_thing", fqName: "", reason: "test symbol excluded" }],
+  });
+  const row = evaluateInstance(entry(), s);
+  assert.equal(row.miss_category, "test_symbol_pollution");
+});
+
+test("classifyMiss: generic_infrastructure when the top pivot is generic infra", () => {
+  const s = summary({
+    pivots: [selected("pivot", "pkg/other.py", "other", 1, { isGenericInfrastructure: true })],
+  });
+  const cat = classifyMiss(
+    { result: "missing", expected_file_role: "missing", contains_expected_file_top3: false, expected_files: ["pkg/target.py"] },
+    s,
+    "fix the thing",
+  );
+  assert.equal(cat, "generic_infrastructure_ranked_above_target");
+});
+
+test("classifyMiss: wrong_entry_point when the top pivot is an entry point", () => {
+  const s = summary({ pivots: [selected("pivot", "pkg/other.py", "other", 1, { isEntryPoint: true })] });
+  const cat = classifyMiss(
+    { result: "missing", expected_file_role: "missing", contains_expected_file_top3: false, expected_files: ["pkg/target.py"] },
+    s,
+    "fix the thing",
+  );
+  assert.equal(cat, "wrong_entry_point");
+});
+
+test("classifyMiss: line_anchor_not_resolved when the task cites an anchor that did not resolve", () => {
+  const s = summary({ pivots: [selected("pivot", "pkg/other.py", "other")], lineAnchorResolutionUsed: false });
+  const cat = classifyMiss(
+    { result: "missing", expected_file_role: "missing", contains_expected_file_top3: false, expected_files: ["pkg/target.py"] },
+    s,
+    "see compiler.py#L428-L433 for the bug",
+  );
+  assert.equal(cat, "line_anchor_not_resolved");
+});
+
+test("classifyMiss: workspace_error and fixture_label_error from the result", () => {
+  const wsRow = { result: "workspace_error" as const, expected_file_role: "missing" as const, contains_expected_file_top3: false, expected_files: ["x"] };
+  assert.equal(classifyMiss(wsRow, null, "t"), "workspace_error");
+  const fxRow = { result: "fixture_error" as const, expected_file_role: "missing" as const, contains_expected_file_top3: false, expected_files: ["x"] };
+  assert.equal(classifyMiss(fxRow, null, "t"), "fixture_label_error");
+});
+
+test("aggregate tallies the miss taxonomy across rows", () => {
+  const rows = [
+    evaluateInstance(entry({ instance_id: "hit" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] })),
+    evaluateInstance(entry({ instance_id: "miss" }), summary({ pivots: [selected("pivot", "pkg/other.py", "o")] })),
+  ];
+  const a = aggregate(rows);
+  assert.equal(a.miss_taxonomy.none, 1);
+  assert.equal(a.miss_taxonomy.missing_from_candidates, 1);
+});
+
+// --- top-k diagnostics -------------------------------------------------------
+
+test("topKDiagnostics returns role-reasoned pivots/support and discard reasons", () => {
+  const s = summary({
+    pivots: [selected("pivot", "a.py", "a", 1, { roleReason: "actual edit site" })],
+    support: [selected("support", "b.py", "b", 1, { roleReason: "caller context" })],
+    discarded: [{ path: "t.py", symbol: "test_x", fqName: "", reason: "test symbol" }],
+  });
+  const d = topKDiagnostics(s);
+  assert.equal(d.top_pivots[0]!.path, "a.py");
+  assert.equal(d.top_pivots[0]!.role_reason, "actual edit site");
+  assert.equal(d.top_support[0]!.role_reason, "caller context");
+  assert.equal(d.top_discarded[0]!.discard_reason, "test symbol");
+});
+
+test("renderMarkdown includes by-source, taxonomy, and top-k diagnostics for a miss", () => {
+  const rows = [
+    evaluateInstance(
+      entry({ instance_id: "g_hit", label_source: "gold_patch" }),
+      summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] }),
+    ),
+    evaluateInstance(
+      entry({ instance_id: "m_miss", label_source: "passing_model_patch" }),
+      summary({ pivots: [selected("pivot", "pkg/other.py", "o", 1, { roleReason: "ranked first" })] }),
+    ),
+  ];
+  const md = renderMarkdown(artifactOf(rows));
+  assert.match(md, /## Aggregate metrics — by label source/);
+  assert.match(md, /## Miss taxonomy/);
+  assert.match(md, /This is deterministic retrieval-quality evaluation only/);
+  assert.match(md, /does \*\*not\*\* run Claude/);
+  assert.match(md, /top-k diagnostics/);
+  assert.match(md, /m_miss/);
+  assert.match(md, /ranked first/); // role_reason surfaced in the miss diagnostics
+});
+
+test("taskHasLineAnchor detects source coordinates", () => {
+  assert.ok(taskHasLineAnchor("bug in compiler.py#L10"));
+  assert.ok(taskHasLineAnchor("see utils.py:42-50"));
+  assert.ok(!taskHasLineAnchor("just prose with no anchor"));
+});
+
+// --- report-name output routing ----------------------------------------------
+
+test("parseArgs routes a custom --report-name and rejects path separators", () => {
+  const cfg = parseArgs(["--report-name", "stage5_retrieval_eval_expanded"]);
+  assert.equal(cfg.reportName, "stage5_retrieval_eval_expanded");
+  assert.equal(parseArgs(["--report-name", "x.md"]).reportName, "x"); // extension stripped
+  assert.throws(() => parseArgs(["--report-name", "../escape"]), /Invalid --report-name/);
+  assert.throws(() => parseArgs(["--report-name", "sub/dir"]), /Invalid --report-name/);
+});
+
+test("writeReports writes {json,csv,md} under the configured report name", async () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "vtrace-r5r-name-"));
+  const rows = [evaluateInstance(entry(), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] }))];
+  await writeReports(
+    { fixture: "f.json", out: dir, reportName: "stage5_retrieval_eval_expanded" },
+    artifactOf(rows),
+  );
+  assert.ok(existsSync(path.join(dir, "stage5_retrieval_eval_expanded.json")));
+  assert.ok(existsSync(path.join(dir, "stage5_retrieval_eval_expanded.csv")));
+  assert.ok(existsSync(path.join(dir, "stage5_retrieval_eval_expanded.md")));
+  // The default-named reports must NOT be written when a custom name is set.
+  assert.ok(!existsSync(path.join(dir, "stage5_retrieval_eval.json")));
+  const csv = readFileSync(path.join(dir, "stage5_retrieval_eval_expanded.csv"), "utf8");
+  assert.match(csv.split("\n")[0]!, /^instance_id,label_source,intent/);
+});
+
+// --- improved symbol extraction ----------------------------------------------
+
+test("extractChangedFromDiff emits Class.method from class hunk context", () => {
+  const patch = [
+    "--- a/django/contrib/admin/options.py",
+    "+++ b/django/contrib/admin/options.py",
+    "@@ -100,6 +100,10 @@ class ModelAdmin(BaseModelAdmin):",
+    "+    def get_inlines(self, request, obj=None):",
+    "+        return self.inlines",
+    "",
+  ].join("\n");
+  const changed = extractChangedFromDiff(patch);
+  assert.equal(changed[0]!.file, "django/contrib/admin/options.py");
+  assert.ok(changed[0]!.symbols.includes("get_inlines"));
+  assert.ok(changed[0]!.symbols.includes("ModelAdmin.get_inlines"));
+});
+
+test("extractChangedFromDiff captures a module-level assignment name", () => {
+  const patch = [
+    "--- a/pkg/settings.py",
+    "+++ b/pkg/settings.py",
+    "@@ -1,3 +1,3 @@",
+    "-DEFAULT_TIMEOUT = 30",
+    "+DEFAULT_TIMEOUT = 60",
+    "",
+  ].join("\n");
+  const changed = extractChangedFromDiff(patch);
+  assert.ok(changed[0]!.symbols.includes("DEFAULT_TIMEOUT"));
 });

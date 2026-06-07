@@ -1,0 +1,347 @@
+[
+  {
+    "instance_id": "django__django-10880",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-fixed-10880/django__django-10880",
+    "task": "fix Count with a Case expression and distinct=True producing COUNT(DISTINCTCASE WHEN ...) with a missing space in the aggregate sql",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "manual_verified",
+    "expected_files": [
+      "django/db/models/aggregates.py"
+    ],
+    "expected_symbols": [
+      "as_sql",
+      "get_group_by_cols"
+    ],
+    "notes": "Real 10880 is the aggregates task: Count(Case, distinct=True) emits COUNT(DISTINCTCASE WHEN ...). The gold patch edits Aggregate.as_sql ('DISTINCT' -> 'DISTINCT '). NOT a json_script/utils/html.py task — that was an earlier mistaken assumption. Expected labels are evaluation-only and never used by production retrieval."
+  },
+  {
+    "instance_id": "django__django-11095",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/manual-capsule-v2/django__django-11095",
+    "task": "fix ModelAdmin.get_inlines hook for generic inline admin failing test",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "manual_verified",
+    "expected_files": [
+      "django/contrib/admin/options.py"
+    ],
+    "expected_symbols": [
+      "ModelAdmin.get_inlines",
+      "ModelAdmin.get_inline_instances",
+      "ModelAdmin.get_formsets_with_inlines"
+    ],
+    "notes": "Gold patch adds ModelAdmin.get_inlines and rewires get_inline_instances to call it. get_inlines may not exist in the base repo, so existing nearby methods (get_inline_instances, get_formsets_with_inlines) are acceptable recovered edit sites. Expected labels are evaluation-only."
+  },
+  {
+    "instance_id": "django__django-11490",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-fixed-11490/django__django-11490",
+    "task": "fix composed queries where a second values() or values_list() call cannot change the selected column list in the combined query sql",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "manual_verified",
+    "expected_files": [
+      "django/db/models/sql/compiler.py"
+    ],
+    "expected_symbols": [
+      "get_combinator_sql"
+    ],
+    "notes": "Composed queries cannot change the column list across repeated values()/values_list(); gold patch edits SQLCompiler.get_combinator_sql in django/db/models/sql/compiler.py (confirmed against the evaluated modelPatch artifacts). Expected labels are evaluation-only."
+  },
+  {
+    "instance_id": "django__django-11728",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/manual-capsule-v2/django__django-11728",
+    "task": "fix simplify_regexp trailing named groups in admindocs regex helpers",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "manual_verified",
+    "expected_files": [
+      "django/contrib/admindocs/utils.py"
+    ],
+    "expected_symbols": [
+      "replace_named_groups",
+      "replace_unnamed_groups"
+    ],
+    "notes": "simplify_regex() drops a trailing group when the urlpattern lacks a trailing '/'; gold patch edits replace_named_groups and replace_unnamed_groups in django/contrib/admindocs/utils.py. Expected labels are evaluation-only."
+  },
+  {
+    "instance_id": "django__django-11740",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-fixed-11740/django__django-11740",
+    "task": "fix changing a UUIDField to a ForeignKey not creating a cross-app migration dependency in the autodetector",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "manual_verified",
+    "expected_files": [
+      "django/db/migrations/autodetector.py"
+    ],
+    "expected_symbols": [
+      "generate_altered_fields"
+    ],
+    "notes": "Changing a UUID field to an FK does not create a cross-app migration dependency; gold patch edits MigrationAutodetector.generate_altered_fields in django/db/migrations/autodetector.py (confirmed against the evaluated modelPatch artifacts). Expected labels are evaluation-only."
+  },
+  {
+    "instance_id": "django__django-10973",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-10973",
+    "task": "Use subprocess.run and PGPASSWORD for client in postgres backend — subprocess.run was added in python 3.5 (which is the minimum version since Django 2.1).",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/backends/postgresql/client.py"
+    ],
+    "expected_symbols": [
+      "DatabaseClient",
+      "_escape_pgpass",
+      "runshell",
+      "runshell_db"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11133",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11133",
+    "task": "HttpResponse doesn't handle memoryview objects — I am trying to write a BinaryField retrieved from the database into a HttpResponse.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/http/response.py"
+    ],
+    "expected_symbols": [
+      "make_bytes"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11206",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11206",
+    "task": "utils.numberformat.format renders small decimals in exponential notation. — When using utils.number_format with decimal_pos, extremely small numbers get displayed using exponential notation.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/utils/numberformat.py"
+    ],
+    "expected_symbols": [
+      "format"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11749",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11749",
+    "task": "call_command fails when argument of required mutually exclusive group is passed in kwargs. — django.core.management.base.CommandError: Error: one of the arguments --shop-id --shop is required",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/core/management/__init__.py"
+    ],
+    "expected_symbols": [
+      "get_actions"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11815",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11815",
+    "task": "Migrations uses value of enum object instead of its name. — (last modified by oasl)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/migrations/serializer.py"
+    ],
+    "expected_symbols": [
+      "EnumSerializer",
+      "EnumSerializer.serialize",
+      "FloatSerializer",
+      "serialize"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11820",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11820",
+    "task": "models.E015 is raised when Meta.ordering contains \"pk\" of a related field. — models.E015 is raised when Meta.ordering contains __pk of a related field, e.g.:",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/base.py"
+    ],
+    "expected_symbols": [
+      "_check_ordering"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12050",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12050",
+    "task": "Query.resolve_lookup_value coerces value of type list to tuple — Changes introduced in #30687 cause an input value list to be coerced to tuple breaking exact value queries.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/sql/query.py"
+    ],
+    "expected_symbols": [
+      "resolve_lookup_value",
+      "solve_lookup_type"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12273",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12273",
+    "task": "Resetting primary key for a child model doesn't work. — In the attached example code setting the primary key to None does not work (so that the existing object is overwritten on save()).",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/base.py"
+    ],
+    "expected_symbols": [
+      "_get_pk_val",
+      "_set_pk_val"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12276",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12276",
+    "task": "FileInput shouldn't display required attribute when initial data exists. — (last modified by thenewguy)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/forms/widgets.py"
+    ],
+    "expected_symbols": [
+      "use_required_attribute",
+      "value_from_datadict",
+      "value_omitted_from_data"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12325",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12325",
+    "task": "pk setup for MTI to parent get confused by multiple OneToOne references. — produces django.core.exceptions.ImproperlyConfigured: Add parent_link=True to appname.Picking.origin.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/base.py",
+      "django/db/models/options.py"
+    ],
+    "expected_symbols": [
+      "__new__",
+      "_prepare"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12774",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12774",
+    "task": "Allow QuerySet.in_bulk() for fields with total UniqueConstraints. — If a field is unique by UniqueConstraint instead of unique=True running in_bulk() on that field will fail.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/query.py"
+    ],
+    "expected_symbols": [
+      "in_bulk"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12858",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12858",
+    "task": "models.E015 is raised when ordering uses lookups that are not transforms. — SystemCheckError: System check identified some issues:",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/base.py"
+    ],
+    "expected_symbols": [
+      "_check_ordering"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13012",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13012",
+    "task": "Constant expressions of an ExpressionWrapper object are incorrectly placed at the GROUP BY clause — I have a function that expects an arbitrary Query expression and constructs a query on a Postgres db",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/expressions.py"
+    ],
+    "expected_symbols": [
+      "as_sql",
+      "get_group_by_cols",
+      "get_source_expressions",
+      "set_source_expressions"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13112",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13112",
+    "task": "makemigrations crashes for ForeignKey with mixed-case app name. — When i run \"python3 manage.py migrate\" on Django 3.1b1 shows me that error (Please, note that the code works well in 3.0)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/fields/related.py"
+    ],
+    "expected_symbols": [
+      "deconstruct"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13195",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13195",
+    "task": "HttpResponse.delete_cookie() should preserve cookie's samesite. — We noticed we were getting this warning message from Firefox:",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/contrib/messages/storage/cookie.py",
+      "django/contrib/sessions/middleware.py",
+      "django/http/response.py"
+    ],
+    "expected_symbols": [
+      "_store",
+      "_update_cookie",
+      "delete_cookie",
+      "process_response",
+      "set_signed_cookie"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  }
+]
