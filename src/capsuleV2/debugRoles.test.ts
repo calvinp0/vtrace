@@ -25,7 +25,9 @@ import {
   computeFileId,
   computeSymbolId,
 } from "../domain/types";
+import { shapeSweQuery } from "../capsule/sweQueryShaping";
 import { buildCapsuleV2 } from "./buildCapsuleV2";
+import { collectIssueTokens } from "./debugRoles";
 import { renderCapsuleV2Human } from "./renderHuman";
 import { CapsuleIntent, CapsuleV2Mode, type CapsuleV2Result } from "./types";
 import {
@@ -202,4 +204,23 @@ test("Problem A: a genuine no_context explains why each candidate failed the gat
   } finally {
     db.close();
   }
+});
+
+test("generic bug-report tokens do not reach the subsystem issue-token set", () => {
+  // "multiple" / "command" are generic noise; only meaningful tokens may steer
+  // subsystem selection (which keys entirely off collectIssueTokens).
+  const shaped = shapeSweQuery({
+    repo: "django/django",
+    problemStatement:
+      "Running the command produces multiple errors. The bug is in the "
+      + "OneToOneField deconstruct() path.",
+    failToPass: [],
+  });
+  const tokens = collectIssueTokens(shaped);
+
+  assert.ok(!tokens.has("multiple"), "generic 'multiple' must not be an issue token");
+  assert.ok(!tokens.has("command"), "generic 'command' must not be an issue token");
+  assert.ok(!tokens.has("error") && !tokens.has("errors"));
+  // A meaningful identifier still survives to drive subsystem selection.
+  assert.ok(tokens.has("deconstruct") || tokens.has("onetoonefield"));
 });

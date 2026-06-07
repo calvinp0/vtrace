@@ -29,7 +29,7 @@ import {
 
 test("deriveEditIntentHint maps subsystem vocabulary to a generic action cue", () => {
   const hint = (text: string): string | undefined =>
-    deriveEditIntentHint({ query: text, failingTests: [], likelyFiles: [], likelySymbols: [], identifiers: [] });
+    deriveEditIntentHint({ query: text, failingTests: [], likelyFiles: [], likelySymbols: [], identifiers: [], filteredGenericSymbols: [], filteredRunnerFiles: [] });
 
   assert.match(hint("add a ModelAdmin.get_inlines() hook") ?? "", /inline selection methods/);
   assert.match(hint("Count annotation with distinct=True produces wrong SQL") ?? "", /aggregate SQL rendering/);
@@ -45,6 +45,8 @@ test("deriveEditIntentHint falls back to the pivot symbol when no rule matches",
     likelyFiles: [],
     likelySymbols: [],
     identifiers: [],
+    filteredGenericSymbols: [],
+    filteredRunnerFiles: [],
   };
   assert.equal(deriveEditIntentHint(shaped), undefined);
   assert.match(deriveEditIntentHint(shaped, "doStuff") ?? "", /inspect `doStuff` and the methods it calls/);
@@ -81,7 +83,7 @@ test("classifySearchBudget is low only for a high-confidence pivot with direct e
 // ---- composeCapsuleDirective (Requirements 1/2) ----
 
 test("composeCapsuleDirective downgrades an ambiguous, non-high-confidence pick to standard", () => {
-  const shaped: ShapedSweQuery = { query: "x", failingTests: [], likelyFiles: [], likelySymbols: [], identifiers: [] };
+  const shaped: ShapedSweQuery = { query: "x", failingTests: [], likelyFiles: [], likelySymbols: [], identifiers: [], filteredGenericSymbols: [], filteredRunnerFiles: [] };
   const ambiguousMedium = composeCapsuleDirective({
     shaped,
     pivot: { filePath: "a.py", localName: "foo", evidence: ["symbol-name match"], directEvidence: true },
@@ -104,7 +106,7 @@ test("composeCapsuleDirective downgrades an ambiguous, non-high-confidence pick 
 
 test("composeCapsuleDirective emits a no-target header when no pivot was recovered", () => {
   const directive = composeCapsuleDirective({
-    shaped: { query: "x", failingTests: [], likelyFiles: [], likelySymbols: [], identifiers: [] },
+    shaped: { query: "x", failingTests: [], likelyFiles: [], likelySymbols: [], identifiers: [], filteredGenericSymbols: [], filteredRunnerFiles: [] },
     confidence: TargetConfidence.Low,
     ambiguous: false,
   });

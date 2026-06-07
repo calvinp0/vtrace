@@ -95,6 +95,8 @@ function summary(overrides: Partial<CapsuleSummary> = {}): CapsuleSummary {
     candidateCount: 10,
     subsystemRoot: null,
     lineAnchorResolutionUsed: false,
+    filteredGenericSymbols: [],
+    filteredRunnerFiles: [],
     ...overrides,
   };
 }
@@ -664,6 +666,31 @@ test("renderMarkdown includes by-source, taxonomy, and top-k diagnostics for a m
   assert.match(md, /top-k diagnostics/);
   assert.match(md, /m_miss/);
   assert.match(md, /ranked first/); // role_reason surfaced in the miss diagnostics
+});
+
+test("renderMarkdown surfaces filtered generic/runner noise on a miss row", () => {
+  const rows = [
+    evaluateInstance(
+      entry({ instance_id: "noisy_miss" }),
+      summary({
+        pivots: [selected("pivot", "pkg/other.py", "o", 1)],
+        filteredGenericSymbols: ["error", "multiple"],
+        filteredRunnerFiles: ["manage.py"],
+      }),
+    ),
+  ];
+  const md = renderMarkdown(artifactOf(rows));
+  assert.match(md, /filtered generic symbols: error, multiple/);
+  assert.match(md, /filtered runner files: manage\.py/);
+});
+
+test("evaluateInstance carries filtered-noise diagnostics onto the row", () => {
+  const row = evaluateInstance(
+    entry(),
+    summary({ filteredGenericSymbols: ["command"], filteredRunnerFiles: ["manage.py"] }),
+  );
+  assert.deepEqual(row.filtered_generic_symbols, ["command"]);
+  assert.deepEqual(row.filtered_runner_files, ["manage.py"]);
 });
 
 test("taskHasLineAnchor detects source coordinates", () => {

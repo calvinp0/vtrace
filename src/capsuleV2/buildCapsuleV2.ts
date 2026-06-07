@@ -400,6 +400,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       likely_files: shaped.likelyFiles,
       likely_symbols: shaped.likelySymbols,
       failing_tests: shaped.failingTests,
+      ...filteredSignalDiagnostics(shaped),
       ...debugDiagnostics,
       ...lineAnchorDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
@@ -674,9 +675,24 @@ function noContextResult(input: NoContextInput): CapsuleV2Result {
       likely_files: input.shaped.likelyFiles,
       likely_symbols: input.shaped.likelySymbols,
       failing_tests: input.shaped.failingTests,
+      ...filteredSignalDiagnostics(input.shaped),
       ...input.debugDiagnostics,
       ...(input.explanations.length > 0 ? { no_context_explanations: input.explanations } : {}),
     },
+  };
+}
+
+// Noise the query shaper dropped from the high-confidence signals, surfaced as
+// diagnostics so a filtered generic token / runner script is auditable. Present
+// only when something was filtered (keeps the diagnostics surface quiet otherwise).
+function filteredSignalDiagnostics(shaped: ShapedSweQuery): Partial<CapsuleV2Result["diagnostics"]> {
+  return {
+    ...(shaped.filteredGenericSymbols.length > 0
+      ? { filtered_generic_symbols: shaped.filteredGenericSymbols }
+      : {}),
+    ...(shaped.filteredRunnerFiles.length > 0
+      ? { filtered_runner_files: shaped.filteredRunnerFiles }
+      : {}),
   };
 }
 

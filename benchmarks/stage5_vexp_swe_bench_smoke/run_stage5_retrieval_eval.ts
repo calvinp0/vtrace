@@ -271,6 +271,10 @@ export interface CapsuleSummary {
   readonly subsystemRoot: string | null;
   /** Whether a task file-line anchor resolved to a symbol (for anchor misses). */
   readonly lineAnchorResolutionUsed: boolean;
+  /** Generic bug-report tokens dropped from the high-confidence symbol signal. */
+  readonly filteredGenericSymbols: readonly string[];
+  /** Runner/entry scripts dropped from the likely-file signal. */
+  readonly filteredRunnerFiles: readonly string[];
 }
 
 // Project a Capsule v2 result onto the summary the scorer needs. Works on the
@@ -306,6 +310,8 @@ export function summarizeCapsule(result: CapsuleV2Result): CapsuleSummary {
     candidateCount: result.diagnostics.candidate_count,
     subsystemRoot: result.diagnostics.subsystem_root ?? null,
     lineAnchorResolutionUsed: result.diagnostics.line_anchor_resolution_used ?? false,
+    filteredGenericSymbols: result.diagnostics.filtered_generic_symbols ?? [],
+    filteredRunnerFiles: result.diagnostics.filtered_runner_files ?? [],
   };
 }
 
@@ -595,6 +601,10 @@ export interface RetrievalEvalRow {
   readonly miss_category: MissCategory;
   readonly failure_reason: string | null;
 
+  /** Generic lexical noise the query shaper filtered (for this instance). */
+  readonly filtered_generic_symbols: readonly string[];
+  readonly filtered_runner_files: readonly string[];
+
   /** Top-k pivots / support / discarded — makes a miss diagnosable offline. */
   readonly diagnostics: TopKDiagnostics;
 }
@@ -639,6 +649,8 @@ export function evaluateInstance(
       result: kind,
       miss_category: kind === "fixture_error" ? "fixture_label_error" : "workspace_error",
       failure_reason: error?.detail ?? "workspace not available",
+      filtered_generic_symbols: [],
+      filtered_runner_files: [],
       diagnostics: { top_pivots: [], top_support: [], top_discarded: [] },
     };
   }
@@ -690,6 +702,8 @@ export function evaluateInstance(
     result,
     miss_category: missCategory,
     failure_reason: failureReason,
+    filtered_generic_symbols: summary.filteredGenericSymbols,
+    filtered_runner_files: summary.filteredRunnerFiles,
     diagnostics: topKDiagnostics(summary),
   };
 }
@@ -863,6 +877,8 @@ const CSV_COLUMNS: readonly (keyof RetrievalEvalRow)[] = [
   "result",
   "miss_category",
   "failure_reason",
+  "filtered_generic_symbols",
+  "filtered_runner_files",
 ];
 
 export function renderCsv(rows: readonly RetrievalEvalRow[]): string {
@@ -1001,6 +1017,12 @@ export function renderMarkdown(artifact: RetrievalEvalArtifact): string {
         `- expected: ${row.expected_files.join(", ") || "—"}`,
         `- reason: ${row.failure_reason ?? "—"}`,
       );
+      if (row.filtered_generic_symbols.length > 0) {
+        lines.push(`- filtered generic symbols: ${row.filtered_generic_symbols.join(", ")}`);
+      }
+      if (row.filtered_runner_files.length > 0) {
+        lines.push(`- filtered runner files: ${row.filtered_runner_files.join(", ")}`);
+      }
       lines.push(...renderTopK("top pivots", row.diagnostics.top_pivots.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));
       lines.push(...renderTopK("top support", row.diagnostics.top_support.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));
       lines.push(...renderTopK("top discarded", row.diagnostics.top_discarded.map((p) => `${p.path}::${p.symbol} — ${p.discard_reason}`)));

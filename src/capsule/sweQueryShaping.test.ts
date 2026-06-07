@@ -115,5 +115,80 @@ test("shaping tolerates an empty record", () => {
     likelyFiles: [],
     likelySymbols: [],
     identifiers: [],
+    filteredGenericSymbols: [],
+    filteredRunnerFiles: [],
   });
+});
+
+// ---- generic lexical-noise filtering ----
+
+test("generic words captured by a symbol regex do not become likely symbols", () => {
+  const shaped = shapeSweQuery({
+    repo: "django/django",
+    problemStatement:
+      // Backtick-quoted generics (`error`, `multiple`) are exactly what the
+      // symbol regexes greedily capture and what then steered retrieval wrongly.
+      "A model with multiple OneToOneField relations fails: `error` is raised for "
+      + "`multiple` related fields. The real fix is in deconstruct().",
+    failToPass: ["tests.model_fields.test_field.FieldTests.test_multiple_one_to_one"],
+  });
+
+  // The generic words were captured but dropped from the high-confidence signal.
+  assert.ok(!shaped.likelySymbols.includes("multiple"));
+  assert.ok(!shaped.likelySymbols.includes("error"));
+  assert.ok(shaped.filteredGenericSymbols.includes("error"));
+  assert.ok(shaped.filteredGenericSymbols.includes("multiple"));
+  // Meaningful symbols are preserved: deconstruct() (a call) is a likely symbol;
+  // the bare CamelCase OneToOneField survives in the broader identifier set.
+  assert.ok(shaped.likelySymbols.includes("deconstruct"));
+  assert.ok(shaped.identifiers.includes("OneToOneField"));
+});
+
+test("compound names containing a generic word survive (only whole-token matches drop)", () => {
+  const shaped = shapeSweQuery({
+    repo: "django/django",
+    problemStatement: "The `multiple_chunks` helper and `create_model` are involved.",
+    failToPass: [],
+  });
+  assert.ok(shaped.likelySymbols.includes("multiple_chunks"));
+  assert.ok(shaped.likelySymbols.includes("create_model"));
+  assert.deepEqual(shaped.filteredGenericSymbols, []);
+});
+
+test("a 'python manage.py' command invocation does not make manage.py a likely file", () => {
+  const shaped = shapeSweQuery({
+    repo: "django/django",
+    problemStatement:
+      "Running `python manage.py check` raises an exception. The real fix is in "
+      + "django/core/checks/registry.py.",
+    failToPass: [],
+  });
+
+  assert.ok(!shaped.likelyFiles.includes("manage.py"));
+  assert.ok(shaped.filteredRunnerFiles.includes("manage.py"));
+  // The genuine production path is kept.
+  assert.ok(shaped.likelyFiles.includes("django/core/checks/registry.py"));
+});
+
+test("an explicit runner path (with a directory) is kept, not treated as noise", () => {
+  const shaped = shapeSweQuery({
+    repo: "django/django",
+    problemStatement: "The change belongs in tests/runtests.py near the option parsing.",
+    failToPass: [],
+  });
+  assert.ok(shaped.likelyFiles.includes("tests/runtests.py"));
+  assert.ok(!shaped.filteredRunnerFiles.includes("tests/runtests.py"));
+});
+
+test("generic tokens stay in the raw query text but are not promoted to symbols", () => {
+  const shaped = shapeSweQuery({
+    repo: "django/django",
+    problemStatement: "Multiple aggregates produce the wrong error message.",
+    failToPass: [],
+  });
+  // Still present in the raw prose lead for BM25/full-text recall.
+  assert.ok(/multiple/i.test(shaped.query));
+  // But never a high-confidence symbol.
+  assert.ok(!shaped.likelySymbols.some((s) => s.toLowerCase() === "multiple"));
+  assert.ok(!shaped.identifiers.some((s) => s.toLowerCase() === "multiple"));
 });

@@ -225,6 +225,15 @@ export interface CapsuleV2Diagnostics {
   likely_symbols: string[];
   failing_tests: string[];
   /**
+   * Noise dropped from the high-confidence shaped signals. `filtered_generic_symbols`
+   * are generic bug-report words (`error`, `multiple`) that matched a symbol regex
+   * but were not allowed to become likely symbols; `filtered_runner_files` are
+   * runner/entry scripts (`manage.py`) mentioned only as a command invocation.
+   * Present only when something was filtered.
+   */
+  filtered_generic_symbols?: string[];
+  filtered_runner_files?: string[];
+  /**
    * Debug-intent recovery diagnostics (present only under debug intent). They make
    * the production-target recovery auditable: whether the test-only candidate pool
    * triggered a production backfill, the issue subsystem the role refinement

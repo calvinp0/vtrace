@@ -40,11 +40,11 @@ support / discarded are compared against the fixture's `expected_files` and
 | top_3_file_recall | 80.0% |
 | expected_file_as_pivot_rate | 70.0% |
 | expected_file_as_support_rate | 15.0% |
-| expected_file_discarded_rate | 0.0% |
-| expected_file_missing_rate | 15.0% |
+| expected_file_discarded_rate | 5.0% |
+| expected_file_missing_rate | 10.0% |
 | expected_symbol_hit_rate | 60.0% |
 | expected_symbol_as_pivot_rate | 45.0% |
-| mean_capsule_tokens | 864.4 |
+| mean_capsule_tokens | 870.0 |
 | mean_pivot_count | 1.95 |
 | mean_support_count | 4.00 |
 
@@ -62,11 +62,11 @@ support / discarded are compared against the fixture's `expected_files` and
 | top_3_file_recall | 73.3% |
 | expected_file_as_pivot_rate | 60.0% |
 | expected_file_as_support_rate | 20.0% |
-| expected_file_discarded_rate | 0.0% |
-| expected_file_missing_rate | 20.0% |
+| expected_file_discarded_rate | 6.7% |
+| expected_file_missing_rate | 13.3% |
 | expected_symbol_hit_rate | 60.0% |
 | expected_symbol_as_pivot_rate | 40.0% |
-| mean_capsule_tokens | 815.5 |
+| mean_capsule_tokens | 822.9 |
 | mean_pivot_count | 1.93 |
 | mean_support_count | 4.00 |
 
@@ -97,7 +97,8 @@ support / discarded are compared against the fixture's `expected_files` and
 | none | 16 |
 | missing_from_candidates | 1 |
 | present_but_support | 1 |
-| wrong_subsystem | 2 |
+| present_but_discarded | 1 |
+| wrong_subsystem | 1 |
 
 ## Per-instance results
 
@@ -121,7 +122,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | django__django-12774 | gold_patch | django/db/models/query.py | db/models/query.py::in_bulk | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12858 | gold_patch | django/db/models/base.py | db/models/lookups.py::apply_bilateral_transforms | missing | no | no | missing | missing_from_candidates |
 | django__django-13012 | gold_patch | django/db/models/expressions.py | db/models/expressions.py::ExpressionWrapper | pivot | yes | yes | hit_top1_pivot | none |
-| django__django-13112 | gold_patch | django/db/models/fields/related.py | core/management/base.py::error | missing | no | no | missing | wrong_subsystem |
+| django__django-13112 | gold_patch | django/db/models/fields/related.py | contrib/admin/utils.py::FieldIsAForeignKeyColumnName | discarded | no | no | hit_discarded | present_but_discarded |
 | django__django-13195 | gold_patch | django/contrib/messages/storage/cookie.py | http/response.py::delete_cookie | pivot | yes | yes | hit_top1_pivot | none |
 
 ## Misses / failures — top-k diagnostics
@@ -183,24 +184,26 @@ support / discarded are compared against the fixture's `expected_files` and
   - db/models/sql/compiler.py::find_ordering_name — beyond standard support budget (max 4)
   - db/models/lookups.py::as_oracle — beyond standard support budget (max 4)
 
-### django__django-13112 — missing / wrong_subsystem
+### django__django-13112 — hit_discarded / present_but_discarded
 
 - expected: django/db/models/fields/related.py
-- reason: expected file not surfaced (candidate_count=25)
+- reason: expected file recovered but discarded: db/models/fields/related.py — beyond standard support budget (max 4)
+- filtered generic symbols: error
+- filtered runner files: manage.py
 - top pivots:
-  - core/management/base.py::error — actionable method — symbol-name match; lexical match; issue-domain relevance
   - contrib/admin/utils.py::FieldIsAForeignKeyColumnName — actionable class — strong lexical match; issue-domain relevance
+  - db/migrations/autodetector.py::_get_dependencies_for_foreign_key — actionable method — strong lexical match; issue-domain relevance; 6 dependents
 - top support:
-  - core/management/commands/makemigrations.py::write_migration_files — strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site
-  - core/management/commands/makemigrations.py::handle_merge — strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site
-  - contrib/admin/forms.py::error_messages — symbol-name match; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)
-  - contrib/auth/forms.py::error_messages — symbol-name match; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)
+  - db/backends/ddl_references.py::ForeignKeyName — strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance
+  - db/backends/oracle/operations.py::__foreign_key_constraints — strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance
+  - db/backends/sqlite3/introspection.py::_get_foreign_key_constraints — strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance
+  - forms/models.py::_get_foreign_key — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance
 - top discarded:
-  - core/checks/messages.py::Error — beyond standard support budget (max 4)
-  - template/base.py::error — beyond standard support budget (max 4)
-  - db/backends/ddl_references.py::ForeignKeyName — beyond standard support budget (max 4)
-  - core/checks/messages.py::ERROR — beyond standard support budget (max 4)
-  - contrib/messages/api.py::error — beyond standard support budget (max 4)
+  - contrib/gis/utils/layermapping.py::MissingForeignKey — beyond standard support budget (max 4)
+  - contrib/contenttypes/fields.py::GenericForeignKey — beyond standard support budget (max 4)
+  - db/models/fields/json.py::KeyTransformIEndsWith — beyond standard support budget (max 4)
+  - db/models/fields/json.py::KeyTransformIStartsWith — beyond standard support budget (max 4)
+  - db/models/fields/reverse_related.py::get_accessor_name — beyond standard support budget (max 4)
 
 ## Notes
 

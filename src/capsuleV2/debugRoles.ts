@@ -28,7 +28,7 @@ import {
 } from "../capsule/assignCandidateRoles";
 import { listEdgesForSymbols } from "../db/repositories/edgesRepository";
 import { EdgeType, SymbolKind } from "../domain/types";
-import type { ShapedSweQuery } from "../capsule/sweQueryShaping";
+import { GENERIC_TOKEN_STOPLIST, type ShapedSweQuery } from "../capsule/sweQueryShaping";
 import { isLikelyTestCandidate } from "../retrieval/searchSymbolsShared";
 import { tokenize } from "../retrieval/hybridScoring";
 import type { HybridCandidate } from "../retrieval/hybridRetrieval";
@@ -631,7 +631,10 @@ export function collectIssueTokens(shaped: ShapedSweQuery): Set<string> {
     ...shaped.likelySymbols.flatMap(tokenize),
   ];
   for (const token of sources) {
-    if (token.length >= MIN_TOKEN_LENGTH && !STOPWORDS.has(token)) {
+    // Generic bug-report words (`multiple`, `command`, ...) survive in the raw
+    // query lead, so exclude them here too — otherwise a directory that merely
+    // shares the word (`.../commands`) could win subsystem selection on noise.
+    if (token.length >= MIN_TOKEN_LENGTH && !STOPWORDS.has(token) && !GENERIC_TOKEN_STOPLIST.has(token)) {
       tokens.add(token);
     }
   }

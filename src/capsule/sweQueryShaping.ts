@@ -32,6 +32,18 @@ export interface ShapedSweQuery {
   likelySymbols: string[];
   /** Broader identifier set surfaced from the prose. */
   identifiers: string[];
+  /**
+   * Generic bug-report tokens (e.g. `error`, `multiple`) that matched a symbol
+   * regex but were dropped from `likelySymbols` because they carry no edit-target
+   * signal on their own. Surfaced for diagnostics, not used by retrieval.
+   */
+  filteredGenericSymbols: string[];
+  /**
+   * Runner / entry scripts (e.g. `manage.py`) mentioned only as a command
+   * invocation, dropped from `likelyFiles` so they do not masquerade as edit
+   * targets. Surfaced for diagnostics, not used by retrieval.
+   */
+  filteredRunnerFiles: string[];
 }
 
 export interface ShapeSweQueryOptions {
@@ -69,6 +81,58 @@ const SNAKE_CASE = /\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b/g;
 const CAMEL_CASE = /\b[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)+\b/g;
 const DOTTED_PATH = /\b[a-z_][\w]*(?:\.[a-z_][\w]*){2,}\b/gi;
 
+// Generic bug-report vocabulary. These words routinely appear in issue prose and
+// the symbol regexes above happily capture them (`error(`, "multiple", backticks),
+// but on their own they steer retrieval toward whatever code happens to share the
+// word (`error` -> error handlers, `multiple` -> `multiple_chunks`) rather than the
+// real edit target. We drop them as HIGH-CONFIDENCE signals only: they stay in the
+// raw prose lead (so BM25/full-text scoring still sees them), but they never become
+// likely symbols, seed symbol search, drive subsystem selection, or produce a
+// path/symbol boost on their own. Matching is exact (whole token), so compound
+// names like `multiple_chunks` or `create_model` are untouched.
+export const GENERIC_TOKEN_STOPLIST: ReadonlySet<string> = new Set([
+  "error", "errors", "exception", "exceptions", "failed", "failure", "failures",
+  "multiple", "single", "same", "different", "issue", "issues", "bug", "bugs",
+  "problem", "problems", "change", "changes", "support", "create", "created",
+  "update", "updated", "delete", "deleted", "run", "runs", "running",
+  "command", "commands",
+]);
+
+// Runner / entry scripts. A bug report that merely shows `python manage.py check`
+// is naming a command invocation, not a production edit target. We drop such bare
+// script mentions from `likelyFiles`. An EXPLICIT repo-relative path (one carrying
+// a directory, e.g. `tests/runtests.py`) is a deliberate pointer and is kept.
+export const RUNNER_SCRIPTS: ReadonlySet<string> = new Set([
+  "manage.py", "setup.py", "runtests.py", "pytest.ini", "tox.ini", "setup.cfg",
+]);
+
+function isGenericSymbol(symbol: string): boolean {
+  return GENERIC_TOKEN_STOPLIST.has(symbol.toLowerCase());
+}
+
+function isRunnerScriptNoise(file: string): boolean {
+  // Only a bare basename mention (no directory) is command-invocation noise; an
+  // explicit path with a directory component strongly points at the file.
+  if (file.includes("/")) {
+    return false;
+  }
+  return RUNNER_SCRIPTS.has(file.toLowerCase());
+}
+
+interface Partitioned {
+  kept: string[];
+  filtered: string[];
+}
+
+function partition(values: readonly string[], isNoise: (value: string) => boolean): Partitioned {
+  const kept: string[] = [];
+  const filtered: string[] = [];
+  for (const value of values) {
+    (isNoise(value) ? filtered : kept).push(value);
+  }
+  return { kept, filtered };
+}
+
 export function shapeSweQuery(
   record: SweIssueRecord,
   options: ShapeSweQueryOptions = {},
@@ -87,30 +151,34 @@ export function shapeSweQuery(
   // before path extraction. Symbol extraction keeps the full prose.
   const prosePaths = stripUrls(prose);
 
-  const likelyFiles = capped(
-    dedupeNonEmpty(
-      [
-        ...testParts.flatMap((part) => (part.file ? [part.file] : [])),
-        ...matchAll(prosePaths, FILE_LIKE),
-        ...matchAll(prosePaths, REPO_PATH_LIKE).filter(looksLikeRepoPath),
-      ]
-        // Diff headers surface the same file twice as `a/<path>` and `b/<path>`;
-        // normalise the prefix away so both collapse to the real path (and so the
-        // file count is not inflated, which would wrongly flip crossModule).
-        .map(stripDiffPrefix),
-    ),
-    config.maxFiles,
+  const rawFiles = dedupeNonEmpty(
+    [
+      ...testParts.flatMap((part) => (part.file ? [part.file] : [])),
+      ...matchAll(prosePaths, FILE_LIKE),
+      ...matchAll(prosePaths, REPO_PATH_LIKE).filter(looksLikeRepoPath),
+    ]
+      // Diff headers surface the same file twice as `a/<path>` and `b/<path>`;
+      // normalise the prefix away so both collapse to the real path (and so the
+      // file count is not inflated, which would wrongly flip crossModule).
+      .map(stripDiffPrefix),
   );
+  // Drop bare runner/entry-script mentions (a command invocation, not an edit
+  // target) before capping; record them for diagnostics.
+  const fileParts = partition(rawFiles, isRunnerScriptNoise);
+  const likelyFiles = capped(fileParts.kept, config.maxFiles);
+  const filteredRunnerFiles = fileParts.filtered;
 
-  const likelySymbols = capped(
-    dedupeNonEmpty([
-      ...testParts.flatMap((part) => part.symbols),
-      ...matchAllCaptured(prose, DEF_CLASS),
-      ...matchAllCaptured(prose, BACKTICK_IDENT).map(stripCallSuffix),
-      ...matchAllCaptured(prose, FUNC_CALL),
-    ]),
-    config.maxSymbols,
-  );
+  const rawSymbols = dedupeNonEmpty([
+    ...testParts.flatMap((part) => part.symbols),
+    ...matchAllCaptured(prose, DEF_CLASS),
+    ...matchAllCaptured(prose, BACKTICK_IDENT).map(stripCallSuffix),
+    ...matchAllCaptured(prose, FUNC_CALL),
+  ]);
+  // Drop generic bug-report words before capping so a real symbol is never
+  // crowded out of the cap by noise; record the dropped tokens for diagnostics.
+  const symbolParts = partition(rawSymbols, isGenericSymbol);
+  const likelySymbols = capped(symbolParts.kept, config.maxSymbols);
+  const filteredGenericSymbols = symbolParts.filtered;
 
   const identifiers = capped(
     dedupeNonEmpty([
@@ -128,6 +196,8 @@ export function shapeSweQuery(
     likelyFiles,
     likelySymbols,
     identifiers,
+    filteredGenericSymbols,
+    filteredRunnerFiles,
   };
 }
 

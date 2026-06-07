@@ -41,6 +41,8 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -140,6 +142,8 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -237,6 +241,8 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -337,6 +343,8 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -434,6 +442,8 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -536,6 +546,8 @@
       "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -629,6 +641,8 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -728,6 +742,8 @@
       "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -798,8 +814,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 1397,
-      "used_percent": 17.46,
+      "estimated_tokens": 1395,
+      "used_percent": 17.44,
       "expected_files": [
         "django/core/management/__init__.py"
       ],
@@ -827,12 +843,14 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
             "path": "core/management/__init__.py",
             "symbol": "call_command",
-            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+            "role_reason": "actionable function — strong lexical match; issue-domain relevance"
           },
           {
             "path": "core/management/base.py",
@@ -929,6 +947,8 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1028,6 +1048,8 @@
       "result": "missing",
       "miss_category": "wrong_subsystem",
       "failure_reason": "expected file not surfaced (candidate_count=25)",
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1127,6 +1149,8 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1227,6 +1251,8 @@
       "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1327,6 +1353,8 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1428,6 +1456,8 @@
       "result": "hit_support",
       "miss_category": "present_but_support",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1527,6 +1557,8 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1625,6 +1657,8 @@
       "result": "missing",
       "miss_category": "missing_from_candidates",
       "failure_reason": "expected file not surfaced (candidate_count=25)",
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1727,6 +1761,8 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1797,94 +1833,100 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 430,
-      "used_percent": 5.38,
+      "estimated_tokens": 541,
+      "used_percent": 6.76,
       "expected_files": [
         "django/db/models/fields/related.py"
       ],
       "expected_symbols": [
         "deconstruct"
       ],
-      "top_1_pivot_file": "core/management/base.py",
-      "top_1_pivot_symbol": "error",
+      "top_1_pivot_file": "contrib/admin/utils.py",
+      "top_1_pivot_symbol": "FieldIsAForeignKeyColumnName",
       "top_3_files": [
-        "core/management/base.py",
         "contrib/admin/utils.py",
-        "core/management/commands/makemigrations.py"
+        "db/migrations/autodetector.py",
+        "db/backends/ddl_references.py"
       ],
       "expected_file_best_rank": null,
-      "expected_file_role": "missing",
+      "expected_file_role": "discarded",
       "expected_symbol_best_rank": null,
       "expected_symbol_role": "missing",
       "contains_expected_file_top1": false,
       "contains_expected_file_top3": false,
-      "contains_expected_file_anywhere": false,
+      "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
       "discarded_count": 19,
-      "result": "missing",
-      "miss_category": "wrong_subsystem",
-      "failure_reason": "expected file not surfaced (candidate_count=25)",
+      "result": "hit_discarded",
+      "miss_category": "present_but_discarded",
+      "failure_reason": "expected file recovered but discarded: db/models/fields/related.py — beyond standard support budget (max 4)",
+      "filtered_generic_symbols": [
+        "error"
+      ],
+      "filtered_runner_files": [
+        "manage.py"
+      ],
       "diagnostics": {
         "top_pivots": [
-          {
-            "path": "core/management/base.py",
-            "symbol": "error",
-            "role_reason": "actionable method — symbol-name match; lexical match; issue-domain relevance"
-          },
           {
             "path": "contrib/admin/utils.py",
             "symbol": "FieldIsAForeignKeyColumnName",
             "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "db/migrations/autodetector.py",
+            "symbol": "_get_dependencies_for_foreign_key",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance; 6 dependents"
           }
         ],
         "top_support": [
           {
-            "path": "core/management/commands/makemigrations.py",
-            "symbol": "write_migration_files",
-            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+            "path": "db/backends/ddl_references.py",
+            "symbol": "ForeignKeyName",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
           },
           {
-            "path": "core/management/commands/makemigrations.py",
-            "symbol": "handle_merge",
-            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+            "path": "db/backends/oracle/operations.py",
+            "symbol": "__foreign_key_constraints",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
           },
           {
-            "path": "contrib/admin/forms.py",
-            "symbol": "error_messages",
-            "role_reason": "symbol-name match; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+            "path": "db/backends/sqlite3/introspection.py",
+            "symbol": "_get_foreign_key_constraints",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
           },
           {
-            "path": "contrib/auth/forms.py",
-            "symbol": "error_messages",
-            "role_reason": "symbol-name match; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+            "path": "forms/models.py",
+            "symbol": "_get_foreign_key",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
           }
         ],
         "top_discarded": [
           {
-            "path": "core/checks/messages.py",
-            "symbol": "Error",
+            "path": "contrib/gis/utils/layermapping.py",
+            "symbol": "MissingForeignKey",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "template/base.py",
-            "symbol": "error",
+            "path": "contrib/contenttypes/fields.py",
+            "symbol": "GenericForeignKey",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "db/backends/ddl_references.py",
-            "symbol": "ForeignKeyName",
+            "path": "db/models/fields/json.py",
+            "symbol": "KeyTransformIEndsWith",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "core/checks/messages.py",
-            "symbol": "ERROR",
+            "path": "db/models/fields/json.py",
+            "symbol": "KeyTransformIStartsWith",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "contrib/messages/api.py",
-            "symbol": "error",
+            "path": "db/models/fields/reverse_related.py",
+            "symbol": "get_accessor_name",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -1896,8 +1938,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 547,
-      "used_percent": 6.84,
+      "estimated_tokens": 549,
+      "used_percent": 6.86,
       "expected_files": [
         "django/contrib/messages/storage/cookie.py",
         "django/contrib/sessions/middleware.py",
@@ -1931,12 +1973,14 @@
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
       "diagnostics": {
         "top_pivots": [
           {
             "path": "http/response.py",
             "symbol": "delete_cookie",
-            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+            "role_reason": "actionable method — symbol-name match; strong lexical match; issue-domain relevance"
           },
           {
             "path": "contrib/sessions/backends/signed_cookies.py",
@@ -1988,8 +2032,8 @@
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "contrib/admin/options.py",
-            "symbol": "response_delete",
+            "path": "http/response.py",
+            "symbol": "StreamingHttpResponse",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -2005,19 +2049,19 @@
     "top_3_file_recall": 0.8,
     "expected_file_as_pivot_rate": 0.7,
     "expected_file_as_support_rate": 0.15,
-    "expected_file_missing_rate": 0.15,
-    "expected_file_discarded_rate": 0,
+    "expected_file_missing_rate": 0.1,
+    "expected_file_discarded_rate": 0.05,
     "expected_symbol_hit_rate": 0.6,
     "expected_symbol_as_pivot_rate": 0.45,
-    "mean_capsule_tokens": 864.4,
+    "mean_capsule_tokens": 869.95,
     "mean_pivot_count": 1.95,
     "mean_support_count": 4,
     "miss_taxonomy": {
       "none": 16,
       "missing_from_candidates": 1,
       "present_but_support": 1,
-      "present_but_discarded": 0,
-      "wrong_subsystem": 2,
+      "present_but_discarded": 1,
+      "wrong_subsystem": 1,
       "wrong_entry_point": 0,
       "generic_infrastructure_ranked_above_target": 0,
       "line_anchor_not_resolved": 0,
@@ -2037,19 +2081,19 @@
       "top_3_file_recall": 0.7333,
       "expected_file_as_pivot_rate": 0.6,
       "expected_file_as_support_rate": 0.2,
-      "expected_file_missing_rate": 0.2,
-      "expected_file_discarded_rate": 0,
+      "expected_file_missing_rate": 0.1333,
+      "expected_file_discarded_rate": 0.0667,
       "expected_symbol_hit_rate": 0.6,
       "expected_symbol_as_pivot_rate": 0.4,
-      "mean_capsule_tokens": 815.5333,
+      "mean_capsule_tokens": 822.9333,
       "mean_pivot_count": 1.9333,
       "mean_support_count": 4,
       "miss_taxonomy": {
         "none": 11,
         "missing_from_candidates": 1,
         "present_but_support": 1,
-        "present_but_discarded": 0,
-        "wrong_subsystem": 2,
+        "present_but_discarded": 1,
+        "wrong_subsystem": 1,
         "wrong_entry_point": 0,
         "generic_infrastructure_ranked_above_target": 0,
         "line_anchor_not_resolved": 0,
