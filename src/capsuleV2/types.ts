@@ -268,8 +268,16 @@ export interface CapsuleV2Diagnostics {
   edit_risk_directives?: EditRiskDirective[];
 }
 
-/** The class of edit risk a directive warns about. */
-export type EditRiskKind = "shared_state_mutation";
+/**
+ * The class of edit risk a directive warns about.
+ *
+ * `guarded_shared_state_mutation` is the more specific (and higher-precedence)
+ * diagnosis: the pivot mutates shared state UNDER A GUARD (`if not X and Y: …
+ * X.mutating_call(…)`), so the tempting wrong fix is relaxing the guard rather
+ * than cloning before mutation. `shared_state_mutation` is the bare-mutation
+ * fallback when no guard is detectable.
+ */
+export type EditRiskKind = "shared_state_mutation" | "guarded_shared_state_mutation";
 
 /** How strongly the trigger signals support the directive. */
 export type EditRiskConfidence = "high" | "medium" | "low";

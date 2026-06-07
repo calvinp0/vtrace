@@ -1,11 +1,13 @@
 // Capsule v2 — edit-risk directive tests.
 //
 // The directive is a deterministic patch-planning hint that fires on the SHAPE of
-// the pivot source + task prose (shared-state mutation while a combined query is
-// rendered), never on a framework/file/symbol/instance id. These tests pin: the
-// trigger conjunction, that the directive reaches both the human output and the
-// Stage 5 injected context, that benign getter/setter code does NOT trigger it,
-// and that the emitted text stays generic.
+// the pivot source + task prose, never on a framework/file/symbol/instance id.
+// Two diagnoses with precedence: a GUARDED shared-state mutation (`if not X and
+// Y:` then `X.mutating_call(...)` — the `django-11490` regression shape) takes
+// priority over a bare shared-state mutation. These tests pin the trigger
+// conjunctions, that the directive reaches both the human output and the Stage 5
+// injected context, that benign / guard-only code does NOT trigger it, and that
+// the emitted text stays generic.
 
 import assert from "node:assert/strict";
 import { test } from "bun:test";
@@ -22,9 +24,9 @@ import {
   type EditRiskDirective,
 } from "./types";
 
-// A composed-query bug: the pivot mutates an aliased compiler.query in place while
-// rendering a combined query, behind a relaxable `if not X and Y:` guard.
-const MUTATING_SOURCE = [
+// A composed-query bug, get_combinator_sql shape: the pivot mutates an aliased
+// compiler.query in place UNDER a relaxable `if not X and Y:` guard.
+const GUARDED_SOURCE = [
   "def get_combinator_sql(self, combinator, all):",
   "    compilers = [q.get_compiler(self.using) for q in self.query.combined_queries]",
   "    for compiler in compilers:",
@@ -34,8 +36,25 @@ const MUTATING_SOURCE = [
   "    return combined_sql, combined_args",
 ].join("\n");
 
+// The same shared-state mutation, but with NO guard around it — the bare-mutation
+// fallback diagnosis, not the guarded one.
+const UNGUARDED_SOURCE = [
+  "def set_combined_columns(self, compiler):",
+  "    compiler.query.set_values((*self.query.extra_select, *self.query.values_select))",
+  "    return compiler.as_sql()",
+].join("\n");
+
+// A guard with a BENIGN body — no shared-state mutation. Unrelated guarded code
+// must not trigger the directive even under a composed-query task.
+const GUARD_ONLY_SOURCE = [
+  "def should_render(self, compiler):",
+  "    if not compiler.is_ready and self.is_ready:",
+  "        return False",
+  "    return True",
+].join("\n");
+
 // A benign getter/setter pair: assigns an instance attribute, no shared query
-// state, no combined-query rendering.
+// state, no guard.
 const BENIGN_SOURCE = [
   "def get_name(self):",
   "    return self._name",
@@ -44,13 +63,14 @@ const BENIGN_SOURCE = [
   "    self._name = value",
 ].join("\n");
 
-// A task that describes composed/combined query output.
+// A task that describes composed/combined query output and the mutation-leak
+// symptom ("cannot change", "same columns").
 const COMPOSED_QUERY_TASK = [
   "instance: acme__widgets-4242",
   "repo: acme/widgets",
   "",
-  "Composing a combined query via union() drops the selected columns: the",
-  "combined query renders without the values_select the parts declared.",
+  "Composed queries cannot change the same columns: composing a combined query",
+  "via union() leaks the wrong values across the combined query parts.",
 ].join("\n");
 
 function pivotItem(source: string): CapsuleV2Item {
@@ -107,30 +127,28 @@ function resultWith(pivots: CapsuleV2Item[], directives: EditRiskDirective[]): C
   };
 }
 
-test("a mutating pivot + composed-query task emits a shared_state_mutation directive", () => {
-  const directives = detectEditRiskDirectives({
-    task: COMPOSED_QUERY_TASK,
-    pivots: [pivotItem(MUTATING_SOURCE)],
-    debugRefinement: true,
-  });
+function detectFor(source: string, task = COMPOSED_QUERY_TASK, debugRefinement = true): EditRiskDirective[] {
+  return detectEditRiskDirectives({ task, pivots: [pivotItem(source)], debugRefinement });
+}
+
+test("a guarded compiler.query.set_values + composed task emits guarded_shared_state_mutation", () => {
+  const directives = detectFor(GUARDED_SOURCE);
 
   assert.equal(directives.length, 1);
   const directive = directives[0]!;
-  assert.equal(directive.kind, "shared_state_mutation");
+  assert.equal(directive.kind, "guarded_shared_state_mutation");
   assert.equal(directive.confidence, "medium");
-  assert.match(directive.reason, /mutates compiler\/query state/);
+  assert.match(directive.reason, /mutates shared\/query state under a guard/);
   assert.match(directive.reason, /composed\/combined query/);
 });
 
-test("the directive appears in the rendered human output, near the pivot", () => {
-  const directives = detectEditRiskDirectives({
-    task: COMPOSED_QUERY_TASK,
-    pivots: [pivotItem(MUTATING_SOURCE)],
-    debugRefinement: true,
-  });
-  const human = renderCapsuleV2Human(resultWith([pivotItem(MUTATING_SOURCE)], directives));
+test("the guarded directive appears in the rendered human output, near the pivot", () => {
+  const directives = detectFor(GUARDED_SOURCE);
+  const human = renderCapsuleV2Human(resultWith([pivotItem(GUARDED_SOURCE)], directives));
 
   assert.match(human, /^## Edit risk \/ patch hint$/m);
+  assert.match(human, /mutates shared state under a guard/);
+  assert.match(human, /preserving guard semantics/);
   assert.match(human, /clone\/copy state before calling mutating helpers/);
   // It sits after the pivot it concerns.
   assert.ok(
@@ -139,58 +157,49 @@ test("the directive appears in the rendered human output, near the pivot", () =>
   );
 });
 
-test("the directive appears in the Stage 5 injected snapshot", () => {
-  const directives = detectEditRiskDirectives({
-    task: COMPOSED_QUERY_TASK,
-    pivots: [pivotItem(MUTATING_SOURCE)],
-    debugRefinement: true,
-  });
+test("the guarded directive appears in the Stage 5 injected snapshot", () => {
+  const directives = detectFor(GUARDED_SOURCE);
   // Stage 5 re-renders the v2 result through renderCapsuleV2Human and injects the
   // returned `context`. Exercise that exact path.
-  const classification = classifyCapsuleV2Output(resultWith([pivotItem(MUTATING_SOURCE)], directives));
+  const classification = classifyCapsuleV2Output(resultWith([pivotItem(GUARDED_SOURCE)], directives));
 
   assert.equal(classification.policyAction, "inject");
   assert.match(classification.context, /## Edit risk \/ patch hint/);
+  assert.match(classification.context, /relaxing\/removing the guard/);
   assert.match(classification.context, /clone\/copy state before calling mutating helpers/);
 });
 
-test("benign getter/setter code emits no directive, even under a composed-query task", () => {
-  const directives = detectEditRiskDirectives({
-    task: COMPOSED_QUERY_TASK,
-    pivots: [pivotItem(BENIGN_SOURCE)],
-    debugRefinement: true,
-  });
+test("unrelated guarded code (guard with a benign body) emits no directive", () => {
+  const directives = detectFor(GUARD_ONLY_SOURCE);
   assert.equal(directives.length, 0);
 
-  const human = renderCapsuleV2Human(resultWith([pivotItem(BENIGN_SOURCE)], directives));
+  const human = renderCapsuleV2Human(resultWith([pivotItem(GUARD_ONLY_SOURCE)], directives));
   assert.doesNotMatch(human, /Edit risk \/ patch hint/);
 });
 
+test("an unguarded shared-state mutation still emits the bare shared_state_mutation directive", () => {
+  const directives = detectFor(UNGUARDED_SOURCE);
+  assert.equal(directives.length, 1);
+  assert.equal(directives[0]!.kind, "shared_state_mutation");
+});
+
+test("benign getter/setter code emits no directive, even under a composed-query task", () => {
+  const directives = detectFor(BENIGN_SOURCE);
+  assert.equal(directives.length, 0);
+});
+
 test("a non-debug intent does not emit the directive", () => {
-  const directives = detectEditRiskDirectives({
-    task: COMPOSED_QUERY_TASK,
-    pivots: [pivotItem(MUTATING_SOURCE)],
-    debugRefinement: false,
-  });
+  const directives = detectFor(GUARDED_SOURCE, COMPOSED_QUERY_TASK, false);
   assert.equal(directives.length, 0);
 });
 
-test("a task without composed-query signals does not emit the directive", () => {
-  const directives = detectEditRiskDirectives({
-    task: "instance: acme__widgets-1\nrepo: acme/widgets\n\nFix a typo in the docstring.",
-    pivots: [pivotItem(MUTATING_SOURCE)],
-    debugRefinement: true,
-  });
+test("a task without composed-query / leak signals does not emit the directive", () => {
+  const directives = detectFor(GUARDED_SOURCE, "instance: acme__widgets-1\n\nFix a typo in the docstring.");
   assert.equal(directives.length, 0);
 });
 
-test("the directive text is generic — no instance ids or hardcoded framework paths", () => {
-  const directives = detectEditRiskDirectives({
-    task: COMPOSED_QUERY_TASK,
-    pivots: [pivotItem(MUTATING_SOURCE)],
-    debugRefinement: true,
-  });
-  const directive = directives[0]!;
+test("the guarded directive text is generic — no instance ids or hardcoded framework paths", () => {
+  const directive = detectFor(GUARDED_SOURCE)[0]!;
   const corpus = `${directive.directive}\n${directive.reason}`.toLowerCase();
 
   for (const banned of [
