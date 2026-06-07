@@ -36,6 +36,7 @@ import {
   type RefinedRoledCandidate,
 } from "./debugRoles";
 import { retrieveDocSections, type DocSection } from "./docRetrieval";
+import { detectEditRiskDirectives } from "./editRiskDirectives";
 import {
   buildLineAnchorCandidate,
   parseLineAnchors,
@@ -365,6 +366,16 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     discarded.push(toDiscarded(entry, entry.roleReason));
   }
 
+  // Edit-risk directives: deterministic patch-planning hints derived from the
+  // SHAPE of the selected pivots (shared-state mutation while a combined query is
+  // rendered) and the task prose. Computed from the assembled pivots so the hint
+  // reflects exactly the source the agent will read. Gated on the debug strategy.
+  const editRiskDirectives = detectEditRiskDirectives({
+    task: input.task,
+    pivots,
+    debugRefinement,
+  });
+
   return {
     intent,
     actual_mode: allocation.tier,
@@ -391,6 +402,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       failing_tests: shaped.failingTests,
       ...debugDiagnostics,
       ...lineAnchorDiagnostics,
+      ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
     },
   };
 }

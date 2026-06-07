@@ -35,6 +35,16 @@ export function renderCapsuleV2Human(result: CapsuleV2Result): string {
     lines.push("");
     lines.push(itemBlockText(pivot));
   }
+
+  // Edit-risk directives sit immediately after the pivots they concern: the agent
+  // reads the focused source, then the warning about how NOT to edit it.
+  for (const directive of result.diagnostics.edit_risk_directives ?? []) {
+    lines.push("");
+    lines.push("## Edit risk / patch hint");
+    lines.push("");
+    lines.push(directive.directive);
+  }
+
   for (const item of result.support) {
     lines.push("");
     lines.push(itemBlockText(item));

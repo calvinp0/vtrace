@@ -258,6 +258,38 @@ export interface CapsuleV2Diagnostics {
   line_anchor_resolution_used?: boolean;
   /** The anchors that resolved to a symbol (present only when at least one did). */
   line_anchor_candidates?: LineAnchorDiagnostic[];
+  /**
+   * Edit-risk / patch-planning hints. Emitted when a selected pivot mutates
+   * shared or cloned state (e.g. a query/compiler object) while the task
+   * describes composed/combined output — the bug class where simply relaxing an
+   * existing guard, rather than cloning before mutation, leaks state across the
+   * combined query. Present only when at least one directive fired.
+   */
+  edit_risk_directives?: EditRiskDirective[];
+}
+
+/** The class of edit risk a directive warns about. */
+export type EditRiskKind = "shared_state_mutation";
+
+/** How strongly the trigger signals support the directive. */
+export type EditRiskConfidence = "high" | "medium" | "low";
+
+/**
+ * A deterministic patch-planning hint. It is emitted when the SHAPE of the
+ * selected pivot — not its identity — suggests the bug concerns mutation of
+ * shared/aliased state (a query/compiler object mutated in place while a
+ * composed/combined result is rendered). The danger is a destructive local edit
+ * (relaxing or deleting an existing guard) instead of the correct fix (cloning /
+ * copying state before calling a mutating helper). The directive is generic: it
+ * names no framework, file, symbol, or patch.
+ */
+export interface EditRiskDirective {
+  kind: EditRiskKind;
+  confidence: EditRiskConfidence;
+  /** Why this directive fired, in the product's audit vocabulary. */
+  reason: string;
+  /** The human-readable hint, rendered verbatim near the pivot. */
+  directive: string;
 }
 
 /** One resolved file-line anchor, as the JSON/diagnostics surface reports it. */
