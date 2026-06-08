@@ -41,6 +41,7 @@ import {
   type DebugRoleSignals,
   type NoContextExplanation,
 } from "./types";
+import type { NonSourceExampleClassification } from "./nonSourceExample";
 
 export interface RefinedRoledCandidate {
   candidate: HybridCandidate;
@@ -48,6 +49,12 @@ export interface RefinedRoledCandidate {
   /** Clean, role-decisive justification (no `pivot:`/`support:` prefix). */
   roleReason: string;
   signals: DebugRoleSignals;
+  /**
+   * Set when this candidate is a non-source example / doc-data file (docs,
+   * examples, sample `bad.py`/`good.py`). buildCapsuleV2 tags it and, unless the
+   * task explicitly points at docs/examples, down-ranks it out of the pivot role.
+   */
+  nonSourceExample?: NonSourceExampleClassification;
 }
 
 /**

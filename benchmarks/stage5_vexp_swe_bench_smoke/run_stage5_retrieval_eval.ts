@@ -281,6 +281,8 @@ export interface CapsuleSummary {
   readonly deanchoredExceptionTokens: readonly string[];
   /** Body-literal recoveries: "literal -> symbol" for each task literal found in a body. */
   readonly bodyLiteralMatches: readonly string[];
+  /** Non-source example/doc-data candidates down-ranked out of pivot ("path — reason"). */
+  readonly nonSourceDownranked: readonly string[];
 }
 
 // Project a Capsule v2 result onto the summary the scorer needs. Works on the
@@ -322,6 +324,9 @@ export function summarizeCapsule(result: CapsuleV2Result): CapsuleSummary {
     deanchoredExceptionTokens: result.diagnostics.deanchored_exception_tokens ?? [],
     bodyLiteralMatches: (result.diagnostics.body_literal_matches ?? []).map(
       (match) => `${match.literal} -> ${match.symbol}`,
+    ),
+    nonSourceDownranked: (result.diagnostics.non_source_candidates_downranked ?? []).map(
+      (entry) => `${entry.path} — ${entry.reason}`,
     ),
   };
 }
@@ -683,6 +688,8 @@ export interface RetrievalEvalRow {
   readonly deanchored_exception_tokens: readonly string[];
   /** Body-literal recoveries ("literal -> symbol") for this instance. */
   readonly body_literal_matches: readonly string[];
+  /** Non-source example/doc-data candidates down-ranked out of pivot ("path — reason"). */
+  readonly non_source_downranked: readonly string[];
 
   /** Top-k pivots / support / discarded — makes a miss diagnosable offline. */
   readonly diagnostics: TopKDiagnostics;
@@ -734,6 +741,7 @@ export function evaluateInstance(
       downweighted_lexical_tokens: [],
       deanchored_exception_tokens: [],
       body_literal_matches: [],
+      non_source_downranked: [],
       diagnostics: { top_pivots: [], top_support: [], top_discarded: [] },
     };
   }
@@ -791,6 +799,7 @@ export function evaluateInstance(
     downweighted_lexical_tokens: summary.downweightedLexicalTokens,
     deanchored_exception_tokens: summary.deanchoredExceptionTokens,
     body_literal_matches: summary.bodyLiteralMatches,
+    non_source_downranked: summary.nonSourceDownranked,
     diagnostics: topKDiagnostics(summary),
   };
 }
@@ -995,6 +1004,7 @@ const CSV_COLUMNS: readonly (keyof RetrievalEvalRow)[] = [
   "downweighted_lexical_tokens",
   "deanchored_exception_tokens",
   "body_literal_matches",
+  "non_source_downranked",
 ];
 
 export function renderCsv(rows: readonly RetrievalEvalRow[]): string {
@@ -1282,6 +1292,9 @@ export function renderMarkdown(
       }
       if (row.body_literal_matches.length > 0) {
         lines.push(`- body-literal matches: ${row.body_literal_matches.join(", ")}`);
+      }
+      if (row.non_source_downranked.length > 0) {
+        lines.push(`- non-source candidates down-ranked: ${row.non_source_downranked.join("; ")}`);
       }
       lines.push(...renderTopK("top pivots", row.diagnostics.top_pivots.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));
       lines.push(...renderTopK("top support", row.diagnostics.top_support.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));

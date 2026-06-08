@@ -35,7 +35,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | instances_total | 30 |
 | instances_evaluated | 30 |
 | workspace_error_count | 0 |
-| no_context_count | 1 |
+| no_context_count | 2 |
 | top_1_file_accuracy | 56.7% |
 | top_3_file_recall | 70.0% |
 | expected_file_as_pivot_rate | 66.7% |
@@ -44,9 +44,9 @@ support / discarded are compared against the fixture's `expected_files` and
 | expected_file_missing_rate | 20.0% |
 | expected_symbol_hit_rate | 46.7% |
 | expected_symbol_as_pivot_rate | 16.7% |
-| mean_capsule_tokens | 1909.5 |
-| mean_pivot_count | 1.93 |
-| mean_support_count | 3.87 |
+| mean_capsule_tokens | 1900.3 |
+| mean_pivot_count | 1.87 |
+| mean_support_count | 3.73 |
 
 ## Comparison vs prior cross-repo baseline
 
@@ -77,15 +77,15 @@ All 30 instances share one label source (gold_patch); see the table above.
 | scikit-learn/scikit-learn | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 3379.0 | 2.00 | 4.00 |
 | mwaskom/seaborn | 1/1 | 100.0% | 100.0% | 100.0% | 0.0% | 1506.0 | 2.00 | 4.00 |
 | pallets/flask | 1/1 | 100.0% | 100.0% | 100.0% | 0.0% | 5594.0 | 2.00 | 4.00 |
-| pylint-dev/pylint | 1/1 | 0.0% | 0.0% | 0.0% | 100.0% | 275.0 | 2.00 | 4.00 |
+| pylint-dev/pylint | 1/1 | 0.0% | 0.0% | 0.0% | 100.0% | 0.0 | 0.00 | 0.00 |
 
 ## Miss summary (compact)
 
 - non-top-3 cases: 9
-- missing (not surfaced): 1
+- missing (not surfaced): 2
 - present-but-support: 1
 - present-but-discarded: 2
-- wrong-subsystem: 5
+- wrong-subsystem: 4
 - body-literal misses: 0
 - parser/language gaps: 0
 
@@ -94,10 +94,10 @@ All 30 instances share one label source (gold_patch); see the table above.
 | category | count |
 | --- | --- |
 | none | 21 |
-| missing_from_candidates | 1 |
+| missing_from_candidates | 2 |
 | present_but_support | 1 |
 | present_but_discarded | 2 |
-| wrong_subsystem | 5 |
+| wrong_subsystem | 4 |
 
 ## Per-instance results
 
@@ -127,7 +127,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 | psf__requests-5414 | gold_patch | requests/models.py | requests/models.py::prepare_url | pivot | yes | yes | hit_top1_pivot | none |
 | pydata__xarray-2905 | gold_patch | xarray/core/variable.py | xarray/core/variable.py::__setitem__ | pivot | yes | yes | hit_top1_pivot | none |
 | pydata__xarray-3677 | gold_patch | xarray/core/dataset.py | xarray/core/dataset.py::merge | pivot | yes | yes | hit_top1_pivot | none |
-| pylint-dev__pylint-8898 | gold_patch | pylint/config/argument.py | doc/data/messages/b/bad-dunder-name/bad.py::__hello__ | missing | no | no | missing | wrong_subsystem |
+| pylint-dev__pylint-8898 | gold_patch | pylint/config/argument.py | — | missing | no | no | skipped_no_context | missing_from_candidates |
 | pytest-dev__pytest-7432 | gold_patch | src/_pytest/skipping.py | src/_pytest/skipping.py::Skip | pivot | yes | yes | hit_top1_pivot | none |
 | sphinx-doc__sphinx-7910 | gold_patch | sphinx/ext/napoleon/__init__.py | sphinx/ext/autodoc/__init__.py::DecoratorDocumenter | missing | no | no | missing | wrong_subsystem |
 | sphinx-doc__sphinx-9230 | gold_patch | sphinx/util/docfields.py | sphinx/util/__init__.py::FilenameUniqDict | missing | no | no | missing | wrong_subsystem |
@@ -230,25 +230,20 @@ All 30 instances share one label source (gold_patch); see the table above.
   - galleries/examples/subplots_axes_and_figures/subfigures.py::subfigs — support-only: no actionable edit target
   - galleries/examples/subplots_axes_and_figures/subfigures.py::example_plot — support-only: no actionable edit target
 
-### pylint-dev__pylint-8898 — missing / wrong_subsystem
+### pylint-dev__pylint-8898 — skipped_no_context / missing_from_candidates
 
 - expected: pylint/config/argument.py, pylint/utils/__init__.py, pylint/utils/utils.py
-- reason: expected file not surfaced (candidate_count=25)
+- reason: capsule returned no_context (no high-confidence edit target)
 - down-weighted lexical tokens: bug
-- top pivots:
-  - doc/data/messages/b/bad-dunder-name/bad.py::__hello__ — actionable method — strong lexical match; issue-domain relevance
-  - doc/data/messages/b/bad-dunder-name/bad.py::_init_ — actionable method — strong lexical match; issue-domain relevance
-- top support:
-  - pylint/checkers/base/name_checker/checker.py::_BadNamesTuple — strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)
-  - doc/data/messages/b/bad-dunder-name/good.py::__init__ — strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance
-  - doc/data/messages/b/bad-dunder-name/good.py::hello — strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance
-  - doc/data/messages/b/bad-dunder-name/bad.py::Apples — strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance
+- non-source candidates down-ranked: doc/data/messages/b/bad-dunder-name/bad.py — path under doc/data; doc/data/messages/b/bad-dunder-name/bad.py — path under doc/data
+- top pivots: (none)
+- top support: (none)
 - top discarded:
-  - doc/data/messages/t/too-many-boolean-expressions/bad.py::can_be_divided_by_two_and_are_not_zero — beyond standard support budget (max 4)
-  - doc/data/messages/s/simplifiable-if-expression/bad.py::FLYING_THINGS — beyond standard support budget (max 4)
-  - doc/data/messages/t/trailing-comma-tuple/bad.py::COMPASS — beyond standard support budget (max 4)
-  - doc/data/messages/s/simplify-boolean-expression/bad.py::has_oranges — beyond standard support budget (max 4)
-  - doc/data/messages/s/simplifiable-if-expression/bad.py::is_flying_thing — beyond standard support budget (max 4)
+  - pylint/checkers/base/name_checker/checker.py::_BadNamesTuple — support-only: no actionable edit target
+  - doc/data/messages/t/too-many-boolean-expressions/bad.py::can_be_divided_by_two_and_are_not_zero — support-only: no actionable edit target
+  - doc/data/messages/s/simplifiable-if-expression/bad.py::FLYING_THINGS — support-only: no actionable edit target
+  - doc/data/messages/t/trailing-comma-tuple/bad.py::COMPASS — support-only: no actionable edit target
+  - doc/data/messages/s/simplify-boolean-expression/bad.py::has_oranges — support-only: no actionable edit target
 
 ### sphinx-doc__sphinx-7910 — missing / wrong_subsystem
 

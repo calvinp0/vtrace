@@ -155,6 +155,15 @@ export interface CapsuleV2Item extends DebugRoleSignals {
   evidence: string[];
   scorecard: CapsuleV2Scorecard;
   estimated_tokens: number;
+  /**
+   * True when this item is a non-source example / doc-data / fixture file (docs,
+   * examples, sample `bad.py`/`good.py`, etc.). Such a file is never a pivot by
+   * default — it is support at most unless the task explicitly points at those
+   * areas. Present only when the candidate was classified non-source.
+   */
+  is_non_source_example?: boolean;
+  /** Why the path was treated as non-source (e.g. "path under doc/data"). */
+  non_source_reason?: string;
 }
 
 /** A candidate that did not make the capsule, with the reason it was dropped. */
@@ -165,6 +174,9 @@ export interface CapsuleV2Discarded extends DebugRoleSignals {
   scorecard: CapsuleV2Scorecard;
   evidence: string[];
   discard_reason: string;
+  /** See `CapsuleV2Item.is_non_source_example`. Present only when classified. */
+  is_non_source_example?: boolean;
+  non_source_reason?: string;
 }
 
 /** Token-budget accounting for the assembled capsule. */
@@ -307,6 +319,21 @@ export interface CapsuleV2Diagnostics {
    * combined query. Present only when at least one directive fired.
    */
   edit_risk_directives?: EditRiskDirective[];
+  /**
+   * Non-source example / doc-data candidates that were down-ranked OUT of the
+   * pivot role (docs/examples/sample files a coincidental lexical hit would
+   * otherwise have made an edit target). A production context provider prefers
+   * real source; these can be support but not pivots unless the task explicitly
+   * points at docs/examples. Present only when at least one was down-ranked.
+   */
+  non_source_candidates_downranked?: NonSourceDownrankDiagnostic[];
+}
+
+/** One non-source candidate down-ranked from pivot to support. */
+export interface NonSourceDownrankDiagnostic {
+  path: string;
+  /** Why it was treated as non-source (e.g. "path under doc/data"). */
+  reason: string;
 }
 
 /**

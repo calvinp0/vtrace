@@ -50,6 +50,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -158,6 +159,7 @@
         "value"
       ],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -270,6 +272,7 @@
         "local"
       ],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -380,6 +383,7 @@
         "runtime"
       ],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -485,6 +489,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -593,6 +598,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -698,6 +704,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -807,6 +814,7 @@
       "body_literal_matches": [
         "READ SERR 1 2 -> _write_table_qdp"
       ],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -916,6 +924,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1025,6 +1034,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1130,6 +1140,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1242,6 +1253,7 @@
         "index"
       ],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1351,6 +1363,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1458,6 +1471,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1568,6 +1582,7 @@
         "decode"
       ],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1673,6 +1688,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1778,6 +1794,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1886,6 +1903,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1991,6 +2009,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2094,6 +2113,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [],
         "top_support": [],
@@ -2171,6 +2191,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2281,6 +2302,7 @@
         "unicode"
       ],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2384,6 +2406,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2491,6 +2514,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2560,10 +2584,10 @@
       "repo": "pylint-dev/pylint",
       "label_source": "gold_patch",
       "intent": "debug",
-      "actual_mode": "standard",
+      "actual_mode": "no_context",
       "budget_tokens": 8000,
-      "estimated_tokens": 275,
-      "used_percent": 3.44,
+      "estimated_tokens": 0,
+      "used_percent": 0,
       "expected_files": [
         "pylint/config/argument.py",
         "pylint/utils/__init__.py",
@@ -2576,13 +2600,9 @@
         "_regex_transformer",
         "_regexp_csv_transfomer"
       ],
-      "top_1_pivot_file": "doc/data/messages/b/bad-dunder-name/bad.py",
-      "top_1_pivot_symbol": "__hello__",
-      "top_3_files": [
-        "doc/data/messages/b/bad-dunder-name/bad.py",
-        "pylint/checkers/base/name_checker/checker.py",
-        "doc/data/messages/b/bad-dunder-name/good.py"
-      ],
+      "top_1_pivot_file": null,
+      "top_1_pivot_symbol": null,
+      "top_3_files": [],
       "expected_file_best_rank": null,
       "expected_file_role": "missing",
       "expected_symbol_best_rank": null,
@@ -2591,12 +2611,12 @@
       "contains_expected_file_top3": false,
       "contains_expected_file_anywhere": false,
       "contains_expected_symbol_anywhere": false,
-      "pivot_count": 2,
-      "support_count": 4,
-      "discarded_count": 19,
-      "result": "missing",
-      "miss_category": "wrong_subsystem",
-      "failure_reason": "expected file not surfaced (candidate_count=25)",
+      "pivot_count": 0,
+      "support_count": 0,
+      "discarded_count": 25,
+      "result": "skipped_no_context",
+      "miss_category": "missing_from_candidates",
+      "failure_reason": "capsule returned no_context (no high-confidence edit target)",
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [
@@ -2604,66 +2624,38 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [
+        "doc/data/messages/b/bad-dunder-name/bad.py — path under doc/data",
+        "doc/data/messages/b/bad-dunder-name/bad.py — path under doc/data"
+      ],
       "diagnostics": {
-        "top_pivots": [
-          {
-            "path": "doc/data/messages/b/bad-dunder-name/bad.py",
-            "symbol": "__hello__",
-            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
-          },
-          {
-            "path": "doc/data/messages/b/bad-dunder-name/bad.py",
-            "symbol": "_init_",
-            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
-          }
-        ],
-        "top_support": [
+        "top_pivots": [],
+        "top_support": [],
+        "top_discarded": [
           {
             "path": "pylint/checkers/base/name_checker/checker.py",
             "symbol": "_BadNamesTuple",
-            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+            "discard_reason": "support-only: no actionable edit target"
           },
-          {
-            "path": "doc/data/messages/b/bad-dunder-name/good.py",
-            "symbol": "__init__",
-            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
-          },
-          {
-            "path": "doc/data/messages/b/bad-dunder-name/good.py",
-            "symbol": "hello",
-            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
-          },
-          {
-            "path": "doc/data/messages/b/bad-dunder-name/bad.py",
-            "symbol": "Apples",
-            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
-          }
-        ],
-        "top_discarded": [
           {
             "path": "doc/data/messages/t/too-many-boolean-expressions/bad.py",
             "symbol": "can_be_divided_by_two_and_are_not_zero",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "support-only: no actionable edit target"
           },
           {
             "path": "doc/data/messages/s/simplifiable-if-expression/bad.py",
             "symbol": "FLYING_THINGS",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "support-only: no actionable edit target"
           },
           {
             "path": "doc/data/messages/t/trailing-comma-tuple/bad.py",
             "symbol": "COMPASS",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "support-only: no actionable edit target"
           },
           {
             "path": "doc/data/messages/s/simplify-boolean-expression/bad.py",
             "symbol": "has_oranges",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "doc/data/messages/s/simplifiable-if-expression/bad.py",
-            "symbol": "is_flying_thing",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "support-only: no actionable edit target"
           }
         ]
       }
@@ -2709,6 +2701,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2813,6 +2806,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2920,6 +2914,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -3027,6 +3022,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -3135,6 +3131,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -3204,7 +3201,7 @@
     "instances_total": 30,
     "instances_evaluated": 30,
     "workspace_error_count": 0,
-    "no_context_count": 1,
+    "no_context_count": 2,
     "top_1_file_accuracy": 0.5667,
     "top_3_file_recall": 0.7,
     "expected_file_as_pivot_rate": 0.6667,
@@ -3213,15 +3210,15 @@
     "expected_file_discarded_rate": 0.0667,
     "expected_symbol_hit_rate": 0.4667,
     "expected_symbol_as_pivot_rate": 0.1667,
-    "mean_capsule_tokens": 1909.5,
-    "mean_pivot_count": 1.9333,
-    "mean_support_count": 3.8667,
+    "mean_capsule_tokens": 1900.3333,
+    "mean_pivot_count": 1.8667,
+    "mean_support_count": 3.7333,
     "miss_taxonomy": {
       "none": 21,
-      "missing_from_candidates": 1,
+      "missing_from_candidates": 2,
       "present_but_support": 1,
       "present_but_discarded": 2,
-      "wrong_subsystem": 5,
+      "wrong_subsystem": 4,
       "wrong_entry_point": 0,
       "generic_infrastructure_ranked_above_target": 0,
       "line_anchor_not_resolved": 0,
@@ -3238,7 +3235,7 @@
       "instances_total": 30,
       "instances_evaluated": 30,
       "workspace_error_count": 0,
-      "no_context_count": 1,
+      "no_context_count": 2,
       "top_1_file_accuracy": 0.5667,
       "top_3_file_recall": 0.7,
       "expected_file_as_pivot_rate": 0.6667,
@@ -3247,15 +3244,15 @@
       "expected_file_discarded_rate": 0.0667,
       "expected_symbol_hit_rate": 0.4667,
       "expected_symbol_as_pivot_rate": 0.1667,
-      "mean_capsule_tokens": 1909.5,
-      "mean_pivot_count": 1.9333,
-      "mean_support_count": 3.8667,
+      "mean_capsule_tokens": 1900.3333,
+      "mean_pivot_count": 1.8667,
+      "mean_support_count": 3.7333,
       "miss_taxonomy": {
         "none": 21,
-        "missing_from_candidates": 1,
+        "missing_from_candidates": 2,
         "present_but_support": 1,
         "present_but_discarded": 2,
-        "wrong_subsystem": 5,
+        "wrong_subsystem": 4,
         "wrong_entry_point": 0,
         "generic_infrastructure_ranked_above_target": 0,
         "line_anchor_not_resolved": 0,
@@ -3614,7 +3611,7 @@
       "instances_total": 1,
       "instances_evaluated": 1,
       "workspace_error_count": 0,
-      "no_context_count": 0,
+      "no_context_count": 1,
       "top_1_file_accuracy": 0,
       "top_3_file_recall": 0,
       "expected_file_as_pivot_rate": 0,
@@ -3623,15 +3620,15 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0,
       "expected_symbol_as_pivot_rate": 0,
-      "mean_capsule_tokens": 275,
-      "mean_pivot_count": 2,
-      "mean_support_count": 4,
+      "mean_capsule_tokens": 0,
+      "mean_pivot_count": 0,
+      "mean_support_count": 0,
       "miss_taxonomy": {
         "none": 0,
-        "missing_from_candidates": 0,
+        "missing_from_candidates": 1,
         "present_but_support": 0,
         "present_but_discarded": 0,
-        "wrong_subsystem": 1,
+        "wrong_subsystem": 0,
         "wrong_entry_point": 0,
         "generic_infrastructure_ranked_above_target": 0,
         "line_anchor_not_resolved": 0,

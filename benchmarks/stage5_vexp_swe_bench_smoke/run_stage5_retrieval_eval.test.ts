@@ -108,6 +108,7 @@ function summary(overrides: Partial<CapsuleSummary> = {}): CapsuleSummary {
     downweightedLexicalTokens: [],
     deanchoredExceptionTokens: [],
     bodyLiteralMatches: [],
+    nonSourceDownranked: [],
     ...overrides,
   };
 }

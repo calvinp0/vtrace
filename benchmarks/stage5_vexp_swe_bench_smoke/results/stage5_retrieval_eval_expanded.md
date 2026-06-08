@@ -96,6 +96,16 @@ support / discarded are compared against the fixture's `expected_files` and
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | django/django | 20/20 | 75.0% | 90.0% | 80.0% | 0.0% | 900.8 | 1.85 | 4.00 |
 
+## Miss summary (compact)
+
+- non-top-3 cases: 2
+- missing (not surfaced): 0
+- present-but-support: 1
+- present-but-discarded: 1
+- wrong-subsystem: 0
+- body-literal misses: 0
+- parser/language gaps: 0
+
 ## Miss taxonomy
 
 | category | count |

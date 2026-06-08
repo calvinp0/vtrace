@@ -32,7 +32,7 @@ import {
   type SymbolRecord,
 } from "../../domain/types";
 
-interface SymbolSpec {
+export interface SymbolSpec {
   localName: string;
   kind: SymbolKind;
   /** The exact source text for this symbol (its focused body). */
@@ -164,7 +164,21 @@ export function seedCapsuleV2Fixture(): CapsuleV2Fixture {
   return { db, repoRoot };
 }
 
-function seedFile(
+// Materialise an ad-hoc repo (on disk + indexed) from a list of files. Used by
+// tests that need a custom candidate layout (e.g. a production source file vs a
+// doc-data sample file) without the full inlines scenario. Caller closes `db`.
+export function seedCustomFixture(
+  files: ReadonlyArray<{ relPath: string; specs: readonly SymbolSpec[] }>,
+): CapsuleV2Fixture {
+  const repoRoot = mkdtempSync(path.join(tmpdir(), "vtrace-capsulev2-custom-"));
+  const db = openIndexerDatabase();
+  for (const file of files) {
+    seedFile(db, repoRoot, file.relPath, file.specs);
+  }
+  return { db, repoRoot };
+}
+
+export function seedFile(
   db: Database,
   repoRoot: string,
   relPath: string,

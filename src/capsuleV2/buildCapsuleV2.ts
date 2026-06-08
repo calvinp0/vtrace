@@ -56,6 +56,11 @@ import {
   wantsSqlRenderingBackfill,
 } from "./sqlRenderingBackfill";
 import { planIntent, type IntentPlan } from "./intent";
+import {
+  nonSourcePivotDemotion,
+  taskMentionsNonSource,
+  type NonSourceDownrank,
+} from "./nonSourceExample";
 import { itemBlockText } from "./renderItem";
 import { estimateTokens, roundPercent } from "./tokens";
 import {
@@ -233,6 +238,33 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     refined = passthroughRoles(assignCandidateRoles(candidates, { maxPivots: allocation.maxPivots }));
   }
 
+  // Non-source example / doc-data down-rank (general, repo-agnostic). A production
+  // context provider prefers real source over docs/examples/sample/fixture files,
+  // so a candidate under such a path is tagged and — unless the task explicitly
+  // points at docs/examples, or an explicit line anchor named it — demoted out of
+  // the pivot role into support. It is never silently dropped: the demotion is
+  // recorded in `non_source_candidates_downranked`, and if the gold edit really
+  // lives in docs/examples the task predicate keeps it eligible. This runs for
+  // every intent (both the debug-refined and passthrough role paths).
+  const taskAllowsNonSource = taskMentionsNonSource(input.task);
+  const nonSourceDownranked: NonSourceDownrank[] = [];
+  for (const entry of refined) {
+    const { classification, demote } = nonSourcePivotDemotion(entry.candidate.filePath, {
+      isPivot: entry.role === CandidateRole.Pivot,
+      taskAllowsNonSource,
+      isAnchored: anchorSymbolIds.has(entry.candidate.symbolId),
+    });
+    if (!classification.isNonSourceExample) continue;
+    entry.nonSourceExample = classification;
+    if (demote) {
+      entry.role = CandidateRole.Support;
+      entry.roleReason = `non-source example (${classification.reason}) — support, not an edit target`;
+      nonSourceDownranked.push({ path: entry.candidate.filePath, reason: classification.reason ?? "non-source" });
+    }
+  }
+  const nonSourceDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
+    nonSourceDownranked.length > 0 ? { non_source_candidates_downranked: nonSourceDownranked } : {};
+
   // Debug-intent recovery diagnostics, surfaced on both the success and
   // no-context paths so the production-target recovery is always auditable.
   const debugDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
@@ -309,6 +341,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         ...debugDiagnostics,
         ...lineAnchorDiagnostics,
         ...bodyLiteralDiagnostics(bodyLiteralMatches),
+        ...nonSourceDiagnostics,
       },
     });
   }
@@ -416,6 +449,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...bodyLiteralDiagnostics(bodyLiteralMatches),
       ...debugDiagnostics,
       ...lineAnchorDiagnostics,
+      ...nonSourceDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
     },
   };
@@ -534,9 +568,22 @@ function composeItem(
     evidence,
     scorecard: toScorecard(candidate.scores),
     estimated_tokens: 0,
+    ...nonSourceFields(entry),
   };
   item.estimated_tokens = estimateTokens(itemBlockText(item));
   return item;
+}
+
+// The non-source example signal fields, present only when the candidate was
+// classified as a docs/examples/sample/fixture file. Shared by items + discards.
+function nonSourceFields(
+  entry: RefinedRoledCandidate,
+): { is_non_source_example?: true; non_source_reason?: string } {
+  if (!entry.nonSourceExample?.isNonSourceExample) return {};
+  return {
+    is_non_source_example: true,
+    ...(entry.nonSourceExample.reason === undefined ? {} : { non_source_reason: entry.nonSourceExample.reason }),
+  };
 }
 
 // Kind label for a retrieved documentation section (not a code symbol kind).
@@ -651,6 +698,7 @@ function toDiscarded(entry: RefinedRoledCandidate, reason: string): CapsuleV2Dis
     scorecard: toScorecard(entry.candidate.scores),
     evidence: [...entry.candidate.evidence],
     discard_reason: reason,
+    ...nonSourceFields(entry),
   };
 }
 

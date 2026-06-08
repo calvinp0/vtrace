@@ -47,6 +47,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -152,6 +153,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -257,6 +259,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -363,6 +366,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -466,6 +470,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -576,6 +581,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -675,6 +681,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -780,6 +787,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -887,6 +895,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -990,6 +999,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1098,6 +1108,7 @@
         "models.E015 -> Model",
         "models.E015 -> _check_ordering"
       ],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1205,6 +1216,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1311,6 +1323,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1417,6 +1430,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1526,6 +1540,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1626,6 +1641,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1734,6 +1750,7 @@
         "models.E015 -> Model",
         "models.E015 -> _check_ordering"
       ],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1842,6 +1859,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1951,6 +1969,7 @@
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2063,6 +2082,7 @@
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
+      "non_source_downranked": [],
       "diagnostics": {
         "top_pivots": [
           {
