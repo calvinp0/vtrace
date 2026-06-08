@@ -211,6 +211,16 @@ export function refineDebugRoles(
   // actually in the pool — otherwise the class is the best target we have.
   const hasExpansionTargetInPool = base.some((entry) => isExpansionTarget(entry.candidate.symbolId));
 
+  // A body-literal hit on a function/method is the most specific edit site; when one
+  // exists, the containing CLASS that also carries the literal (its body encloses the
+  // method) is context, not the target.
+  const hasBodyLiteralMethodInPool = base.some(
+    (entry) =>
+      entry.candidate.scores.bodyLiteral > 0
+      && ACTIONABLE_FUNCTION_KINDS.has(entry.candidate.kind)
+      && !isLikelyTestCandidate(entry.candidate),
+  );
+
   const refined: RefinedRoledCandidate[] = base.map((entry) => {
     const candidate = entry.candidate;
     const dispatcher = isDispatcher(entry);
@@ -286,6 +296,34 @@ export function refineDebugRoles(
         isQueryBuilderEntrypoint = true;
         entryPoint = true;
         implementationHelper = false;
+      }
+    }
+
+    // Body-literal override (applied last, so it wins): the issue cited a
+    // distinctive literal — a diagnostic/error code or a quoted message — that
+    // appears in THIS symbol's source body. Like a line anchor, that is an explicit
+    // edit-site signal (the bug names exactly what this code emits). A function/
+    // method match becomes the pivot; a containing class is demoted to context when
+    // such a method is in the pool, else it is itself the target. Test symbols and
+    // low-actionability kinds are never promoted.
+    if (
+      candidate.scores.bodyLiteral > 0
+      && !isLikelyTestCandidate(candidate)
+    ) {
+      if (ACTIONABLE_FUNCTION_KINDS.has(candidate.kind)) {
+        role = CandidateRole.Pivot;
+        roleReason = "task diagnostic literal appears in this symbol's body — explicit edit site";
+        implementationHelper = true;
+        entryPoint = false;
+      } else if (candidate.kind === SymbolKind.Class && hasBodyLiteralMethodInPool) {
+        role = CandidateRole.Support;
+        roleReason = "containing class for the body-literal edit-site method";
+        isContainingClassContext = true;
+      } else if (isAnchorActionableKind(candidate.kind)) {
+        role = CandidateRole.Pivot;
+        roleReason = "task diagnostic literal appears in this symbol's body — explicit edit site";
+        implementationHelper = true;
+        entryPoint = false;
       }
     }
 

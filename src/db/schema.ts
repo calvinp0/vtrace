@@ -338,6 +338,13 @@ export function initializeSchema(db: Database): void {
       file_path,
       tokenize = 'unicode61'
     );
+
+    CREATE VIRTUAL TABLE IF NOT EXISTS symbol_body_literals_fts USING fts5(
+      symbol_id UNINDEXED,
+      file_path_raw UNINDEXED,
+      literals,
+      tokenize = 'unicode61'
+    );
   `);
 
   ensureColumnExists(db, "symbols", "decorators", "TEXT");

@@ -277,6 +277,8 @@ export interface CapsuleSummary {
   readonly filteredRunnerFiles: readonly string[];
   /** Generic query tokens whose lexical contribution was down-weighted in scoring. */
   readonly downweightedLexicalTokens: readonly string[];
+  /** Body-literal recoveries: "literal -> symbol" for each task literal found in a body. */
+  readonly bodyLiteralMatches: readonly string[];
 }
 
 // Project a Capsule v2 result onto the summary the scorer needs. Works on the
@@ -315,6 +317,9 @@ export function summarizeCapsule(result: CapsuleV2Result): CapsuleSummary {
     filteredGenericSymbols: result.diagnostics.filtered_generic_symbols ?? [],
     filteredRunnerFiles: result.diagnostics.filtered_runner_files ?? [],
     downweightedLexicalTokens: result.diagnostics.downweighted_lexical_tokens ?? [],
+    bodyLiteralMatches: (result.diagnostics.body_literal_matches ?? []).map(
+      (match) => `${match.literal} -> ${match.symbol}`,
+    ),
   };
 }
 
@@ -609,6 +614,8 @@ export interface RetrievalEvalRow {
   readonly filtered_runner_files: readonly string[];
   /** Generic query tokens down-weighted in lexical scoring (for this instance). */
   readonly downweighted_lexical_tokens: readonly string[];
+  /** Body-literal recoveries ("literal -> symbol") for this instance. */
+  readonly body_literal_matches: readonly string[];
 
   /** Top-k pivots / support / discarded — makes a miss diagnosable offline. */
   readonly diagnostics: TopKDiagnostics;
@@ -657,6 +664,7 @@ export function evaluateInstance(
       filtered_generic_symbols: [],
       filtered_runner_files: [],
       downweighted_lexical_tokens: [],
+      body_literal_matches: [],
       diagnostics: { top_pivots: [], top_support: [], top_discarded: [] },
     };
   }
@@ -711,6 +719,7 @@ export function evaluateInstance(
     filtered_generic_symbols: summary.filteredGenericSymbols,
     filtered_runner_files: summary.filteredRunnerFiles,
     downweighted_lexical_tokens: summary.downweightedLexicalTokens,
+    body_literal_matches: summary.bodyLiteralMatches,
     diagnostics: topKDiagnostics(summary),
   };
 }
@@ -887,6 +896,7 @@ const CSV_COLUMNS: readonly (keyof RetrievalEvalRow)[] = [
   "filtered_generic_symbols",
   "filtered_runner_files",
   "downweighted_lexical_tokens",
+  "body_literal_matches",
 ];
 
 export function renderCsv(rows: readonly RetrievalEvalRow[]): string {
@@ -1033,6 +1043,9 @@ export function renderMarkdown(artifact: RetrievalEvalArtifact): string {
       }
       if (row.downweighted_lexical_tokens.length > 0) {
         lines.push(`- down-weighted lexical tokens: ${row.downweighted_lexical_tokens.join(", ")}`);
+      }
+      if (row.body_literal_matches.length > 0) {
+        lines.push(`- body-literal matches: ${row.body_literal_matches.join(", ")}`);
       }
       lines.push(...renderTopK("top pivots", row.diagnostics.top_pivots.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));
       lines.push(...renderTopK("top support", row.diagnostics.top_support.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));

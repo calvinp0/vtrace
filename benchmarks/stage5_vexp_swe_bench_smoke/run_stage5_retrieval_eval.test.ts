@@ -98,6 +98,7 @@ function summary(overrides: Partial<CapsuleSummary> = {}): CapsuleSummary {
     filteredGenericSymbols: [],
     filteredRunnerFiles: [],
     downweightedLexicalTokens: [],
+    bodyLiteralMatches: [],
     ...overrides,
   };
 }
@@ -705,6 +706,19 @@ test("down-weighted lexical tokens flow onto the row and into a miss report", ()
   assert.deepEqual(row.downweighted_lexical_tokens, ["multiple", "error"]);
   const md = renderMarkdown(artifactOf([row]));
   assert.match(md, /down-weighted lexical tokens: multiple, error/);
+});
+
+test("body-literal matches flow onto the row and into a miss report", () => {
+  const row = evaluateInstance(
+    entry({ instance_id: "lit_miss" }),
+    summary({
+      pivots: [selected("pivot", "pkg/other.py", "o", 1)],
+      bodyLiteralMatches: ["models.E015 -> _check_ordering"],
+    }),
+  );
+  assert.deepEqual(row.body_literal_matches, ["models.E015 -> _check_ordering"]);
+  const md = renderMarkdown(artifactOf([row]));
+  assert.match(md, /body-literal matches: models\.E015 -> _check_ordering/);
 });
 
 test("taskHasLineAnchor detects source coordinates", () => {

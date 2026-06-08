@@ -44,6 +44,14 @@ export interface HybridScoreComponents {
    */
   testToImpl: number;
   /**
+   * Normalised body-literal strength: a distinctive literal cited in the task — a
+   * diagnostic/error code (`models.E015`), or a quoted message — was found in this
+   * symbol's SOURCE BODY. The body is otherwise invisible to retrieval, so this is
+   * the only signal that recovers a symbol named purely by the code it emits. Strong
+   * direct evidence; counts toward local evidence.
+   */
+  bodyLiteral: number;
+  /**
    * Normalised domain relevance: query terms (aggregate/Count/distinct/…) that
    * stem-match this candidate's path or name tokens. This is what ties an
    * aggregate-task query to `aggregates.py` even when no explicit likely-file was
@@ -139,7 +147,16 @@ export interface FinalScoreComponents {
   testToImpl: number;
   graph: number;
   centrality: number;
+  /** Optional so existing callers/tests need not supply it; defaults to 0. */
+  bodyLiteral?: number;
 }
+
+// Weight for the body-literal signal. It is NOT part of the per-intent
+// `HybridScoreWeights` (those presets stay focused on the lexical/symbol/graph mix)
+// — a body-literal match is intent-independent and among the strongest direct
+// signals available (the bug names the exact diagnostic this symbol emits), so it
+// is applied as a fixed weight just above `testToImpl`.
+export const BODY_LITERAL_WEIGHT = 1.4;
 
 // Fold the (already normalised) components into the final ranking score.
 export function combineFinalScore(
@@ -154,6 +171,7 @@ export function combineFinalScore(
     + weights.testToImpl * components.testToImpl
     + weights.graph * components.graph
     + weights.centrality * components.centrality
+    + BODY_LITERAL_WEIGHT * (components.bodyLiteral ?? 0)
   );
 }
 
@@ -189,6 +207,8 @@ export interface HubEvaluationInput {
   domain: number;
   /** Normalised test-to-implementation strength (0 when no failing test reaches it). */
   testToImpl: number;
+  /** Normalised body-literal strength (0 when no task literal hit this body). */
+  bodyLiteral: number;
   /** Whether a failing test imports/calls/references this candidate. */
   hasTestEvidence: boolean;
   /** Already-weighted graph and centrality contributions to strip on penalty. */
@@ -212,16 +232,18 @@ export function evaluateHub(input: HubEvaluationInput): HubEvaluation {
     + input.symbol
     + input.path
     + input.domain
-    + input.testToImpl;
+    + input.testToImpl
+    + input.bodyLiteral;
 
   // The hub penalty stays STRICT: domain relevance alone does not exempt a
   // 1600-dependent framework hub. It must have direct lexical/symbol/path/test
-  // evidence to escape the penalty.
+  // evidence — or a body-literal hit — to escape the penalty.
   const isHub = input.inDegree >= HUB_IN_DEGREE_THRESHOLD;
   const lacksLocalEvidence =
     input.lexical < HUB_WEAK_LEXICAL_MAX
     && input.symbol <= 0
     && input.path <= 0
+    && input.bodyLiteral <= 0
     && !input.hasTestEvidence;
 
   const penalty =
@@ -257,6 +279,8 @@ export interface ActionabilityEvaluationInput {
   lexical: number;
   symbol: number;
   path: number;
+  /** Normalised body-literal strength; a hit is strong direct evidence. */
+  bodyLiteral: number;
   /** Already-weighted graph + domain contributions to strip on penalty. */
   graphContribution: number;
   domainContribution: number;
@@ -274,7 +298,10 @@ export function evaluateActionability(
   const lowActionability = LOW_ACTIONABILITY_KINDS.has(input.kind);
   const actionability = lowActionability ? 0 : 1;
   const hasStrongDirectEvidence =
-    input.symbol > 0 || input.path > 0 || input.lexical >= STRONG_DIRECT_LEXICAL;
+    input.symbol > 0
+    || input.path > 0
+    || input.bodyLiteral > 0
+    || input.lexical >= STRONG_DIRECT_LEXICAL;
   const penalty =
     lowActionability && !hasStrongDirectEvidence
       ? input.graphContribution + input.domainContribution

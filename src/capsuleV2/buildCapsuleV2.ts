@@ -24,6 +24,7 @@ import { loadSymbolSource } from "../capsule/loadSymbolSource";
 import { shapeSweQuery, type ShapedSweQuery } from "../capsule/sweQueryShaping";
 import {
   hybridRetrieve,
+  type BodyLiteralMatch,
   type HybridCandidate,
 } from "../retrieval/hybridRetrieval";
 import { classifyLexicalQueryTokens } from "../retrieval/hybridScoring";
@@ -106,13 +107,18 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const weightsRecord: Record<string, number> = Object.fromEntries(Object.entries(weights));
   const allocation = allocateBudget(input.maxTokens);
 
-  let candidates = hybridRetrieve(input.db, {
+  const retrieval = hybridRetrieve(input.db, {
     query: shaped.query,
     shaped,
+    // Raw task prose for body-literal extraction: the shaped query may drop a
+    // diagnostic literal that the body-literal search needs.
+    taskText: input.task,
     weights,
     symbolSeeds: deriveSymbolSeeds(shaped),
     maxResults: CANDIDATE_POOL_SIZE,
-  }).candidates;
+  });
+  let candidates = retrieval.candidates;
+  const bodyLiteralMatches = retrieval.bodyLiteralMatches;
 
   // File-line anchor resolution. When the task prose cites a source anchor
   // (`compiler.py#L428-L433`), resolve it against the index and map the line
@@ -299,7 +305,11 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       weights: weightsRecord,
       shaped,
       explanations: buildNoContextExplanations(refined, shaped),
-      debugDiagnostics: { ...debugDiagnostics, ...lineAnchorDiagnostics },
+      debugDiagnostics: {
+        ...debugDiagnostics,
+        ...lineAnchorDiagnostics,
+        ...bodyLiteralDiagnostics(bodyLiteralMatches),
+      },
     });
   }
 
@@ -403,6 +413,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       failing_tests: shaped.failingTests,
       ...filteredSignalDiagnostics(shaped),
       ...lexicalScoringDiagnostics(shaped.query),
+      ...bodyLiteralDiagnostics(bodyLiteralMatches),
       ...debugDiagnostics,
       ...lineAnchorDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
@@ -557,6 +568,7 @@ function composeDocItem(doc: DocSection): CapsuleV2Item {
       symbol: 0,
       path: 0,
       test_to_impl: 0,
+      body_literal: 0,
       graph_proximity: 0,
       centrality: 0,
       actionability: 0,
@@ -696,6 +708,25 @@ function filteredSignalDiagnostics(shaped: ShapedSweQuery): Partial<CapsuleV2Res
     ...(shaped.filteredRunnerFiles.length > 0
       ? { filtered_runner_files: shaped.filteredRunnerFiles }
       : {}),
+  };
+}
+
+// Body-literal recovery diagnostics: which distinctive task literals (diagnostic
+// codes / messages) were found in a symbol's source body and pulled it into the
+// pool. Present only when at least one literal matched.
+function bodyLiteralDiagnostics(
+  matches: readonly BodyLiteralMatch[],
+): Partial<CapsuleV2Result["diagnostics"]> {
+  if (matches.length === 0) {
+    return {};
+  }
+  return {
+    body_literal_search_used: true,
+    body_literal_matches: matches.map((match) => ({
+      literal: match.literal,
+      path: match.path,
+      symbol: match.symbol,
+    })),
   };
 }
 

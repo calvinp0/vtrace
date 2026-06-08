@@ -15,7 +15,9 @@ import { insertFileRunStates } from "../db/repositories/fileRunStatesRepository"
 import { createIndexRun } from "../db/repositories/indexRunsRepository";
 import { insertSymbolRunStates } from "../db/repositories/symbolRunStatesRepository";
 import { deleteSymbolSearchIndexForFile } from "../db/repositories/symbolSearchFtsRepository";
+import { deleteBodyLiteralsForFile } from "../db/repositories/bodyLiteralsRepository";
 import { persistParseResult } from "../db/persistParseResult";
+import { buildSymbolBodyLiterals } from "./extractBodyLiterals";
 import {
   ParserError,
   ParserErrorCode,
@@ -123,6 +125,10 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   progress.report({ kind: "phase_end", phase: "parse" });
 
   const persistedResults: ParseResult[] = [];
+  // Raw file content by path, so the persist loop can extract body literals
+  // (symbols carry byte ranges, not text). The full content set is already held
+  // in memory by `readableFiles` for the whole run.
+  const contentByPath = new Map(readableFiles.map((rf) => [rf.file.path, rf.content]));
 
   progress.report({
     kind: "phase_begin",
@@ -138,7 +144,11 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     };
 
     try {
-      persistParseResult(options.db, fileLocalResult);
+      const bodyLiterals = buildSymbolBodyLiterals(
+        fileLocalResult.symbols,
+        contentByPath.get(parseResult.file.path) ?? "",
+      );
+      persistParseResult(options.db, fileLocalResult, { bodyLiterals });
       persistedResults.push(parseResult);
     } catch (error) {
       summariesByPath.set(parseResult.file.path, {
@@ -345,6 +355,7 @@ function pruneRemovedFiles(
   const transaction = db.transaction(() => {
     for (const filePath of removedPaths) {
       deleteSymbolSearchIndexForFile(db, { path: filePath });
+      deleteBodyLiteralsForFile(db, { path: filePath });
       deleteFileByPath(db, filePath);
     }
   });

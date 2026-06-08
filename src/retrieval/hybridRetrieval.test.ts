@@ -14,48 +14,73 @@ import {
   computeSymbolId,
 } from "../domain/types";
 import { shapeSweQuery } from "../capsule/sweQueryShaping";
+import { extractBodyLiterals, bodyLiteralsSearchText } from "../indexer/extractBodyLiterals";
 import { hybridRetrieve, HybridCandidateSource } from "./hybridRetrieval";
 import { seedHybridDjangoFixture } from "./hybridFixture";
 
+interface SymbolSpec {
+  localName: string;
+  kind: SymbolKind;
+  parent?: string;
+  docstring?: string;
+  /** Source body text — its distinctive literals are indexed for body search. */
+  body?: string;
+}
+
 // Persist a single file's worth of top-level symbols, for a minimal hand-built
-// pool. Used by the generic-lexical down-weighting test below.
+// pool. A spec's `body` is run through the body-literal extractor and indexed, so
+// body-literal retrieval can be exercised without a real on-disk file.
 function persistSymbolFile(
   db: Database,
   filePath: string,
-  specs: ReadonlyArray<{ localName: string; kind: SymbolKind; parent?: string; docstring?: string }>,
+  specs: ReadonlyArray<SymbolSpec>,
 ): void {
   const content = `# ${filePath}\n`;
-  persistParseResult(db, {
-    file: {
-      id: computeFileId(filePath),
-      path: filePath,
-      language: Language.Python,
-      contentHash: createHash("sha256").update(content).digest("hex"),
-      sizeBytes: Buffer.byteLength(content),
-    },
-    symbols: specs.map((spec, index) => {
-      const symbolPath = spec.parent ? [spec.parent, spec.localName] : [spec.localName];
-      const fqName = buildFQName({ filePath, symbolPath });
-      const startByte = index * 100;
-      const endByte = startByte + 60;
-      return {
-        id: computeSymbolId({ filePath, fqName, kind: spec.kind, startByte, endByte }),
-        filePath,
-        fqName,
-        localName: spec.localName,
-        kind: spec.kind,
-        signature: `${spec.kind} ${spec.localName}`,
-        ...(spec.docstring === undefined ? {} : { docstring: spec.docstring }),
-        startLine: index + 1,
-        endLine: index + 1,
-        startByte,
-        endByte,
-        exported: true,
-      };
-    }),
-    edges: [],
-    diagnostics: [],
+  const symbols = specs.map((spec, index) => {
+    const symbolPath = spec.parent ? [spec.parent, spec.localName] : [spec.localName];
+    const fqName = buildFQName({ filePath, symbolPath });
+    const startByte = index * 100;
+    const endByte = startByte + 60;
+    return {
+      id: computeSymbolId({ filePath, fqName, kind: spec.kind, startByte, endByte }),
+      filePath,
+      fqName,
+      localName: spec.localName,
+      kind: spec.kind,
+      signature: `${spec.kind} ${spec.localName}`,
+      ...(spec.docstring === undefined ? {} : { docstring: spec.docstring }),
+      startLine: index + 1,
+      endLine: index + 1,
+      startByte,
+      endByte,
+      exported: true,
+    };
   });
+  const bodyLiterals = symbols
+    .map((symbol, index) => ({ symbol, body: specs[index]!.body ?? "" }))
+    .filter(({ body }) => body.length > 0)
+    .map(({ symbol, body }) => ({
+      symbolId: symbol.id,
+      literalsText: bodyLiteralsSearchText(extractBodyLiterals(body)),
+    }))
+    .filter((entry) => entry.literalsText.length > 0);
+
+  persistParseResult(
+    db,
+    {
+      file: {
+        id: computeFileId(filePath),
+        path: filePath,
+        language: Language.Python,
+        contentHash: createHash("sha256").update(content).digest("hex"),
+        sizeBytes: Buffer.byteLength(content),
+      },
+      symbols,
+      edges: [],
+      diagnostics: [],
+    },
+    { bodyLiterals },
+  );
 }
 
 const SCORE_KEYS = [
@@ -340,6 +365,152 @@ test("a low-actionability module variable ranks below the actionable aggregate t
       (candidates[aggregateIndex]?.scores.final ?? 0) > (compiler?.scores.final ?? 0),
       "the aggregate target must have a higher final score",
     );
+  } finally {
+    db.close();
+  }
+});
+
+// ----- body-literal retrieval -------------------------------------------------
+
+test("a diagnostic code in the task recovers the symbol that emits it from its body", () => {
+  const db = openIndexerDatabase();
+  try {
+    // The emitting method's NAME and signature say nothing about the code; only
+    // its body carries `models.E015`.
+    persistSymbolFile(db, "django/db/models/base.py", [
+      {
+        localName: "_check_ordering",
+        kind: SymbolKind.Method,
+        parent: "Model",
+        body: "def _check_ordering(cls):\n    return [Error('bad ordering', id='models.E015')]\n",
+      },
+    ]);
+    // An unrelated lexical decoy that shares the prose word "ordering".
+    persistSymbolFile(db, "django/db/models/sql/compiler.py", [
+      { localName: "find_ordering_name", kind: SymbolKind.Method, parent: "SQLCompiler" },
+    ]);
+
+    const shaped = shapeSweQuery({
+      problemStatement: "models.E015 is raised when Meta.ordering contains a related field.",
+    });
+    const { candidates, bodyLiteralMatches } = hybridRetrieve(db, {
+      query: shaped.query,
+      shaped,
+      taskText: "models.E015 is raised when Meta.ordering contains a related field.",
+      maxResults: 20,
+    });
+
+    const emitter = candidates.find((c) => c.localName === "_check_ordering");
+    assert.ok(emitter, "the body-literal emitter must be recovered into the pool");
+    assert.ok(emitter!.sources.includes(HybridCandidateSource.BodyLiteral));
+    assert.ok(emitter!.scores.bodyLiteral > 0, "body-literal signal is set");
+    assert.ok(
+      emitter!.evidence.some((line) => /task literal `models\.E015` appears in symbol body/.test(line)),
+      `expected body-literal evidence, got ${JSON.stringify(emitter!.evidence)}`,
+    );
+    assert.ok(
+      bodyLiteralMatches.some((m) => m.literal === "models.E015" && m.symbol === "_check_ordering"),
+      "the match is surfaced for diagnostics",
+    );
+  } finally {
+    db.close();
+  }
+});
+
+test("an exact diagnostic-code body match outranks an unrelated lexical candidate", () => {
+  const db = openIndexerDatabase();
+  try {
+    persistSymbolFile(db, "django/db/models/base.py", [
+      {
+        localName: "_check_ordering",
+        kind: SymbolKind.Method,
+        parent: "Model",
+        body: "def _check_ordering(cls):\n    return [Error('msg', id='models.E015')]\n",
+      },
+    ]);
+    // Decoys that match the prose lexically ("ordering", "field") but emit no code.
+    persistSymbolFile(db, "django/db/models/sql/compiler.py", [
+      { localName: "find_ordering_name", kind: SymbolKind.Method, parent: "SQLCompiler", docstring: "ordering field ordering field name" },
+      { localName: "get_ordering", kind: SymbolKind.Method, parent: "Query", docstring: "ordering field ordering field clause" },
+    ]);
+
+    const task = "models.E015 is raised when Meta.ordering contains a related field.";
+    const shaped = shapeSweQuery({ problemStatement: task });
+    const { candidates } = hybridRetrieve(db, { query: shaped.query, shaped, taskText: task, maxResults: 20 });
+
+    const emitterIdx = candidates.findIndex((c) => c.localName === "_check_ordering");
+    assert.ok(emitterIdx !== -1, "emitter is in the pool");
+    // It outranks every lexical-only decoy.
+    const decoyIdxs = candidates
+      .map((c, i) => ({ c, i }))
+      .filter(({ c }) => c.localName !== "_check_ordering")
+      .map(({ i }) => i);
+    for (const idx of decoyIdxs) {
+      assert.ok(emitterIdx < idx, `emitter (#${emitterIdx}) must outrank decoy #${idx}`);
+    }
+  } finally {
+    db.close();
+  }
+});
+
+test("a quoted distinctive message in the task recovers the symbol that raises it", () => {
+  const db = openIndexerDatabase();
+  try {
+    persistSymbolFile(db, "django/db/models/sql/query.py", [
+      {
+        localName: "names_to_path",
+        kind: SymbolKind.Method,
+        parent: "Query",
+        body: "def names_to_path(self):\n    raise FieldError('Cannot resolve keyword %r into field')\n",
+      },
+    ]);
+
+    const task = 'A query fails with "Cannot resolve keyword" when the field is missing.';
+    const shaped = shapeSweQuery({ problemStatement: task });
+    const { candidates, bodyLiteralMatches } = hybridRetrieve(db, {
+      query: shaped.query,
+      shaped,
+      taskText: task,
+      maxResults: 20,
+    });
+
+    const emitter = candidates.find((c) => c.localName === "names_to_path");
+    assert.ok(emitter, "the message-emitting symbol is recovered");
+    assert.ok(emitter!.sources.includes(HybridCandidateSource.BodyLiteral));
+    assert.ok(bodyLiteralMatches.some((m) => /Cannot resolve keyword/.test(m.literal)));
+  } finally {
+    db.close();
+  }
+});
+
+test("generic body words never create a body-literal candidate", () => {
+  const db = openIndexerDatabase();
+  try {
+    // A body full of generic words but no distinctive literal.
+    persistSymbolFile(db, "django/core/handlers/base.py", [
+      {
+        localName: "handle_error",
+        kind: SymbolKind.Method,
+        parent: "BaseHandler",
+        body: "def handle_error(self):\n    error = 'multiple failed'\n    return error\n",
+      },
+    ]);
+
+    const task = "An error occurred: multiple requests failed during the change.";
+    const shaped = shapeSweQuery({ problemStatement: task });
+    const { candidates, bodyLiteralMatches } = hybridRetrieve(db, {
+      query: shaped.query,
+      shaped,
+      taskText: task,
+      maxResults: 20,
+    });
+
+    assert.deepEqual(bodyLiteralMatches, [], "generic words must not produce body-literal matches");
+    const symbol = candidates.find((c) => c.localName === "handle_error");
+    if (symbol) {
+      assert.ok(!symbol.sources.includes(HybridCandidateSource.BodyLiteral));
+      assert.equal(symbol.scores.bodyLiteral, 0);
+    }
   } finally {
     db.close();
   }

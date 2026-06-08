@@ -5,6 +5,7 @@ import { SymbolKind } from "../domain/types";
 import {
   analyzeLexicalGenericMatch,
   blendLexical,
+  BODY_LITERAL_WEIGHT,
   classifyLexicalQueryTokens,
   combineFinalScore,
   computeBm25Scores,
@@ -78,7 +79,7 @@ test("domain relevance stem-matches query terms against path and name tokens", (
 });
 
 test("module variables are low actionability and penalized without strong evidence", () => {
-  const stripped = { graphContribution: 1.0, domainContribution: 0.9 };
+  const stripped = { graphContribution: 1.0, domainContribution: 0.9, bodyLiteral: 0 };
 
   // A module variable riding graph/domain with weak lexical, no symbol/path.
   const weak = evaluateActionability({
@@ -112,6 +113,27 @@ test("module variables are low actionability and penalized without strong eviden
     ...stripped,
   });
   assert.equal(strong.penalty, 0);
+
+  // A body-literal hit is also strong direct evidence — a module-level constant
+  // that emits the cited diagnostic code is spared the penalty.
+  const literalBacked = evaluateActionability({
+    kind: SymbolKind.ModuleConstant,
+    lexical: 0,
+    symbol: 0,
+    path: 0,
+    bodyLiteral: 1,
+    graphContribution: 1.0,
+    domainContribution: 0.9,
+  });
+  assert.equal(literalBacked.penalty, 0);
+});
+
+test("combineFinalScore adds the body-literal contribution at a fixed weight", () => {
+  const base = { lexical: 0, symbol: 0, path: 0, domain: 0, testToImpl: 0, graph: 0, centrality: 0 };
+  // No bodyLiteral -> unchanged (optional, defaults to 0).
+  assert.equal(combineFinalScore(base), 0);
+  // A full body-literal match contributes BODY_LITERAL_WEIGHT.
+  assert.ok(Math.abs(combineFinalScore({ ...base, bodyLiteral: 1 }) - BODY_LITERAL_WEIGHT) < 1e-9);
 });
 
 // ----- generic-token lexical down-weighting -----------------------------------

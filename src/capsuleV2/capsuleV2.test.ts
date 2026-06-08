@@ -31,6 +31,7 @@ const SCORECARD_KEYS = [
   "symbol",
   "path",
   "test_to_impl",
+  "body_literal",
   "graph_proximity",
   "centrality",
   "actionability",

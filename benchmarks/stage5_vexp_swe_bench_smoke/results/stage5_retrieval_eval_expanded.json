@@ -44,6 +44,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -146,6 +147,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -248,6 +250,7 @@
       "downweighted_lexical_tokens": [
         "change"
       ],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -351,6 +354,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -451,6 +455,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -558,6 +563,7 @@
       "downweighted_lexical_tokens": [
         "run"
       ],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -654,6 +660,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -756,6 +763,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -860,6 +868,7 @@
       "downweighted_lexical_tokens": [
         "command"
       ],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -960,6 +969,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1030,48 +1040,52 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 2187,
-      "used_percent": 27.34,
+      "estimated_tokens": 1188,
+      "used_percent": 14.85,
       "expected_files": [
         "django/db/models/base.py"
       ],
       "expected_symbols": [
         "_check_ordering"
       ],
-      "top_1_pivot_file": "db/models/fields/related_lookups.py",
-      "top_1_pivot_symbol": "RelatedLookupMixin",
+      "top_1_pivot_file": "db/models/base.py",
+      "top_1_pivot_symbol": "_check_ordering",
       "top_3_files": [
-        "db/models/fields/related_lookups.py",
-        "db/models/fields/reverse_related.py",
-        "db/models/fields/related.py"
+        "db/models/base.py",
+        "db/models/fields/proxy.py",
+        "db/models/fields/related_lookups.py"
       ],
-      "expected_file_best_rank": null,
-      "expected_file_role": "missing",
-      "expected_symbol_best_rank": null,
-      "expected_symbol_role": "missing",
-      "contains_expected_file_top1": false,
-      "contains_expected_file_top3": false,
-      "contains_expected_file_anywhere": false,
-      "contains_expected_symbol_anywhere": false,
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
       "discarded_count": 19,
-      "result": "missing",
-      "miss_category": "wrong_subsystem",
-      "failure_reason": "expected file not surfaced (candidate_count=25)",
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [
+        "models.E015 -> Model",
+        "models.E015 -> _check_ordering"
+      ],
       "diagnostics": {
         "top_pivots": [
           {
-            "path": "db/models/fields/related_lookups.py",
-            "symbol": "RelatedLookupMixin",
-            "role_reason": "actionable class — strong lexical match; issue-domain relevance; 6 dependents"
+            "path": "db/models/base.py",
+            "symbol": "_check_ordering",
+            "role_reason": "task diagnostic literal appears in this symbol's body — explicit edit site"
           },
           {
-            "path": "db/models/fields/reverse_related.py",
-            "symbol": "ForeignObjectRel",
+            "path": "db/models/fields/proxy.py",
+            "symbol": "OrderWrt",
             "role_reason": "actionable class — strong lexical match; issue-domain relevance"
           }
         ],
@@ -1087,40 +1101,40 @@
             "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
           },
           {
+            "path": "db/models/fields/__init__.py",
+            "symbol": "AutoFieldMeta",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
             "path": "db/models/fields/reverse_related.py",
             "symbol": "get_path_info",
             "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
-          },
-          {
-            "path": "db/models/fields/related.py",
-            "symbol": "lazy_related_operation",
-            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
           }
         ],
         "top_discarded": [
           {
+            "path": "db/models/base.py",
+            "symbol": "Model",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/fields/related.py",
+            "symbol": "contribute_to_class",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/fields/reverse_related.py",
+            "symbol": "ForeignObjectRel",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/fields/related.py",
+            "symbol": "lazy_related_operation",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
             "path": "db/models/fields/reverse_related.py",
             "symbol": "ManyToOneRel",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "db/models/fields/proxy.py",
-            "symbol": "OrderWrt",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "db/models/fields/__init__.py",
-            "symbol": "AutoFieldMeta",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "db/models/fields/related.py",
-            "symbol": "ForeignKey",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "db/models/fields/related.py",
-            "symbol": "related_fields",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -1166,6 +1180,7 @@
       "downweighted_lexical_tokens": [
         "changes"
       ],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1269,6 +1284,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1372,6 +1388,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1478,6 +1495,7 @@
       "downweighted_lexical_tokens": [
         "multiple"
       ],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1575,6 +1593,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1645,96 +1664,101 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 364,
-      "used_percent": 4.55,
+      "estimated_tokens": 1209,
+      "used_percent": 15.11,
       "expected_files": [
         "django/db/models/base.py"
       ],
       "expected_symbols": [
         "_check_ordering"
       ],
-      "top_1_pivot_file": "db/models/lookups.py",
-      "top_1_pivot_symbol": "apply_bilateral_transforms",
+      "top_1_pivot_file": "db/models/base.py",
+      "top_1_pivot_symbol": "_check_ordering",
       "top_3_files": [
+        "db/models/base.py",
         "db/models/lookups.py",
         "db/models/sql/query.py"
       ],
-      "expected_file_best_rank": null,
-      "expected_file_role": "missing",
-      "expected_symbol_best_rank": null,
-      "expected_symbol_role": "missing",
-      "contains_expected_file_top1": false,
-      "contains_expected_file_top3": false,
-      "contains_expected_file_anywhere": false,
-      "contains_expected_symbol_anywhere": false,
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
       "discarded_count": 19,
-      "result": "missing",
-      "miss_category": "missing_from_candidates",
-      "failure_reason": "expected file not surfaced (candidate_count=25)",
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [
+        "models.E015 -> Model",
+        "models.E015 -> _check_ordering"
+      ],
       "diagnostics": {
         "top_pivots": [
           {
-            "path": "db/models/lookups.py",
-            "symbol": "apply_bilateral_transforms",
-            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+            "path": "db/models/base.py",
+            "symbol": "_check_ordering",
+            "role_reason": "task diagnostic literal appears in this symbol's body — explicit edit site"
           },
           {
             "path": "db/models/lookups.py",
-            "symbol": "get_bilateral_transforms",
+            "symbol": "apply_bilateral_transforms",
             "role_reason": "actionable method — strong lexical match; issue-domain relevance"
           }
         ],
         "top_support": [
           {
             "path": "db/models/lookups.py",
-            "symbol": "Transform",
-            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
-          },
-          {
-            "path": "db/models/sql/query.py",
-            "symbol": "add_ordering",
+            "symbol": "get_bilateral_transforms",
             "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
           },
           {
             "path": "db/models/lookups.py",
-            "symbol": "UUIDTextMixin",
-            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance; 7 dependents"
+            "symbol": "Transform",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "Model",
+            "role_reason": "containing class for the body-literal edit-site method"
           },
           {
             "path": "db/models/sql/query.py",
-            "symbol": "build_lookup",
+            "symbol": "add_ordering",
             "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
           }
         ],
         "top_discarded": [
           {
             "path": "db/models/lookups.py",
-            "symbol": "as_sql",
+            "symbol": "UUIDTextMixin",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
             "path": "db/models/sql/query.py",
-            "symbol": "clear_ordering",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "db/models/fields/proxy.py",
-            "symbol": "OrderWrt",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "db/models/sql/compiler.py",
-            "symbol": "find_ordering_name",
+            "symbol": "build_lookup",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
             "path": "db/models/lookups.py",
-            "symbol": "as_oracle",
+            "symbol": "as_sql",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "is_summary",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "PatternLookup",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -1781,6 +1805,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1887,6 +1912,7 @@
         "manage.py"
       ],
       "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1996,6 +2022,7 @@
       "downweighted_lexical_tokens": [
         "delete"
       ],
+      "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2066,23 +2093,23 @@
     "instances_evaluated": 20,
     "workspace_error_count": 0,
     "no_context_count": 0,
-    "top_1_file_accuracy": 0.65,
-    "top_3_file_recall": 0.8,
-    "expected_file_as_pivot_rate": 0.7,
+    "top_1_file_accuracy": 0.75,
+    "top_3_file_recall": 0.9,
+    "expected_file_as_pivot_rate": 0.8,
     "expected_file_as_support_rate": 0.15,
-    "expected_file_missing_rate": 0.1,
+    "expected_file_missing_rate": 0,
     "expected_file_discarded_rate": 0.05,
-    "expected_symbol_hit_rate": 0.6,
-    "expected_symbol_as_pivot_rate": 0.45,
-    "mean_capsule_tokens": 908.45,
+    "expected_symbol_hit_rate": 0.7,
+    "expected_symbol_as_pivot_rate": 0.55,
+    "mean_capsule_tokens": 900.75,
     "mean_pivot_count": 1.85,
     "mean_support_count": 4,
     "miss_taxonomy": {
-      "none": 16,
-      "missing_from_candidates": 1,
+      "none": 18,
+      "missing_from_candidates": 0,
       "present_but_support": 1,
       "present_but_discarded": 1,
-      "wrong_subsystem": 1,
+      "wrong_subsystem": 0,
       "wrong_entry_point": 0,
       "generic_infrastructure_ranked_above_target": 0,
       "line_anchor_not_resolved": 0,
@@ -2098,23 +2125,23 @@
       "instances_evaluated": 15,
       "workspace_error_count": 0,
       "no_context_count": 0,
-      "top_1_file_accuracy": 0.5333,
-      "top_3_file_recall": 0.7333,
-      "expected_file_as_pivot_rate": 0.6,
+      "top_1_file_accuracy": 0.6667,
+      "top_3_file_recall": 0.8667,
+      "expected_file_as_pivot_rate": 0.7333,
       "expected_file_as_support_rate": 0.2,
-      "expected_file_missing_rate": 0.1333,
+      "expected_file_missing_rate": 0,
       "expected_file_discarded_rate": 0.0667,
-      "expected_symbol_hit_rate": 0.6,
-      "expected_symbol_as_pivot_rate": 0.4,
-      "mean_capsule_tokens": 874.2667,
+      "expected_symbol_hit_rate": 0.7333,
+      "expected_symbol_as_pivot_rate": 0.5333,
+      "mean_capsule_tokens": 864,
       "mean_pivot_count": 1.8,
       "mean_support_count": 4,
       "miss_taxonomy": {
-        "none": 11,
-        "missing_from_candidates": 1,
+        "none": 13,
+        "missing_from_candidates": 0,
         "present_but_support": 1,
         "present_but_discarded": 1,
-        "wrong_subsystem": 1,
+        "wrong_subsystem": 0,
         "wrong_entry_point": 0,
         "generic_infrastructure_ranked_above_target": 0,
         "line_anchor_not_resolved": 0,

@@ -48,6 +48,9 @@ import {
 import { searchSymbols } from "./searchSymbols";
 import { normalizeMaxResults } from "./searchSymbolsShared";
 import type { SymbolSearchMatch } from "./types";
+import { searchBodyLiterals } from "../db/repositories/bodyLiteralsRepository";
+import { extractBodyLiterals, type BodyLiteral } from "../indexer/extractBodyLiterals";
+import { GENERIC_TOKEN_STOPLIST } from "../capsule/sweQueryShaping";
 
 export enum HybridCandidateSource {
   Lexical = "lexical",
@@ -60,6 +63,8 @@ export enum HybridCandidateSource {
   Graph = "graph",
   /** A same-package sibling of an in-pool symbol (no edge required). */
   SameModule = "same_module",
+  /** Reached because a distinctive literal in the task appears in this symbol's body. */
+  BodyLiteral = "body_literal",
 }
 
 export interface HybridCandidate {
@@ -88,10 +93,27 @@ export interface HybridRetrievalInput {
   lexicalPoolSize?: number;
   expansion?: GraphExpansionOptions;
   weights?: HybridScoreWeights;
+  /**
+   * Full task prose for body-literal extraction. The shaped `query` is a compact
+   * signal-first string that may drop a diagnostic literal the body-literal search
+   * relies on; when the raw task is supplied it is used for literal extraction.
+   * Falls back to `query` when absent.
+   */
+  taskText?: string;
+}
+
+// A distinctive task literal that recovered a symbol from its source body.
+export interface BodyLiteralMatch {
+  /** The literal as it appeared in the task (e.g. "models.E015"). */
+  readonly literal: string;
+  readonly path: string;
+  readonly symbol: string;
 }
 
 export interface HybridRetrievalResult {
   candidates: HybridCandidate[];
+  /** Body-literal recoveries this run made, for diagnostics. */
+  bodyLiteralMatches: BodyLiteralMatch[];
 }
 
 const DEFAULTS = Object.freeze({
@@ -109,6 +131,8 @@ interface RawCandidate {
   graph: number;
   /** Raw test-to-implementation strength (failing-test routing). */
   testToImpl: number;
+  /** Raw body-literal strength (distinctive task literal found in this body). */
+  bodyLiteral: number;
   sources: Set<HybridCandidateSource>;
   evidence: Set<string>;
 }
@@ -122,7 +146,7 @@ export function hybridRetrieve(
 ): HybridRetrievalResult {
   const maxResults = normalizeMaxResults(input.maxResults ?? DEFAULTS.maxResults);
   if (maxResults === 0) {
-    return { candidates: [] };
+    return { candidates: [], bodyLiteralMatches: [] };
   }
   const lexicalPoolSize = input.lexicalPoolSize
     ?? Math.max(DEFAULTS.lexicalPoolMinimum, maxResults * DEFAULTS.lexicalPoolMultiplier);
@@ -137,12 +161,16 @@ export function hybridRetrieve(
   lexicalCandidates(db, input, lexicalPoolSize, raw);
   symbolPathCandidates(db, input, raw);
   failingTestCandidates(db, input, raw);
+  // Body-literal recovery: a distinctive literal cited in the task (a diagnostic
+  // code, a quoted message) found in a symbol's SOURCE BODY — the one signal that
+  // reaches a symbol named purely by what it emits, invisible to name/path search.
+  const bodyLiteralMatches = bodyLiteralCandidates(db, input, raw);
   // Graph + same-module expansion run over EVERYTHING the query-side generators
   // surfaced, so they can pull in a target lexical search missed.
   const seeds = [...raw.keys()];
   graphExpandedCandidates(db, input, seeds, raw);
 
-  return { candidates: assemble(db, raw, input, maxResults) };
+  return { candidates: assemble(db, raw, input, maxResults), bodyLiteralMatches };
 }
 
 // --- candidate generators -----------------------------------------------------
@@ -256,6 +284,108 @@ function failingTestCandidates(
   }
 }
 
+// Raw body-literal strength per match. A code is the most precise (the bug names
+// the exact diagnostic the symbol emits); a quoted message is medium/high.
+const BODY_LITERAL_CODE_RAW = 1.0;
+const BODY_LITERAL_MESSAGE_RAW = 0.7;
+// A distinctive literal should resolve to very few symbols; cap defensively.
+const BODY_LITERAL_POOL_SIZE = 10;
+
+// Body-literal recovery. Extract the DISTINCTIVE literals from the task (diagnostic
+// codes, quoted messages), search symbol bodies for each, and add the emitting
+// symbol as a candidate. This is the only generator that reaches a symbol named
+// purely by a literal it contains — invisible to name/signature/path search.
+function bodyLiteralCandidates(
+  db: Database,
+  input: HybridRetrievalInput,
+  raw: Map<SymbolId, RawCandidate>,
+): BodyLiteralMatch[] {
+  const literals = effectiveTaskLiterals(extractBodyLiterals(input.taskText ?? input.query));
+  const matches: BodyLiteralMatch[] = [];
+  const seen = new Set<string>();
+
+  for (const literal of literals) {
+    // Ordered candidate expressions: most precise first, a looser fallback next.
+    // We use the FIRST expression that returns any hit, so a qualified code
+    // (`models` AND `e015`) is preferred over the bare digit token (`e015`),
+    // which alone would conflate `models.E015` with `admin.E015`.
+    const exprs = bodyLiteralMatchExprs(literal);
+    let rows: ReturnType<typeof searchBodyLiterals> = [];
+    for (const expr of exprs) {
+      try {
+        rows = searchBodyLiterals(db, expr, BODY_LITERAL_POOL_SIZE);
+      } catch {
+        // A malformed FTS expression must never abort retrieval; try the next.
+        rows = [];
+      }
+      if (rows.length > 0) {
+        break;
+      }
+    }
+    const rawStrength =
+      literal.kind === "code" ? BODY_LITERAL_CODE_RAW : BODY_LITERAL_MESSAGE_RAW;
+    for (const row of rows) {
+      const entry = ensureCandidate(db, raw, row.symbol_id);
+      if (entry === undefined) {
+        continue;
+      }
+      entry.sources.add(HybridCandidateSource.BodyLiteral);
+      entry.bodyLiteral += rawStrength;
+      entry.evidence.add(`task literal \`${literal.text}\` appears in symbol body`);
+      const key = `${row.symbol_id}::${literal.text.toLowerCase()}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        matches.push({ literal: literal.text, path: row.file_path, symbol: row.local_name });
+      }
+    }
+  }
+  return matches;
+}
+
+// Drop a bare code that is merely the last segment of a qualified one we also
+// extracted (`E015` when `models.E015` is present), so the precise qualified form
+// drives the search instead of the ambiguous bare token.
+function effectiveTaskLiterals(literals: readonly BodyLiteral[]): BodyLiteral[] {
+  const qualified = literals.filter((l) => l.kind === "code" && l.text.includes("."));
+  return literals.filter((literal) => {
+    if (literal.kind !== "code" || literal.text.includes(".")) {
+      return true;
+    }
+    const bare = literal.text.toLowerCase();
+    return !qualified.some((q) => q.text.toLowerCase().endsWith(`.${bare}`));
+  });
+}
+
+// FTS5 MATCH expressions for a literal, MOST PRECISE first. Generic words never
+// drive a search (filtered out), so a single common word can never match alone.
+function bodyLiteralMatchExprs(literal: BodyLiteral): string[] {
+  const terms = literal.text.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length > 0);
+  if (literal.kind === "code") {
+    const distinctive = terms.filter((t) => t.length >= 2 && !GENERIC_TOKEN_STOPLIST.has(t));
+    if (distinctive.length === 0) {
+      return [];
+    }
+    const exprs: string[] = [];
+    // Precise: require ALL tokens (`"models" AND "e015"`) — disambiguates codes that
+    // share a number across namespaces (models.E015 vs admin.E015).
+    if (distinctive.length >= 2) {
+      exprs.push(distinctive.map((t) => `"${t}"`).join(" AND "));
+    }
+    // Fallback: the single digit-bearing token, for a body that emits the code
+    // unqualified. Less precise, only used when the precise form found nothing.
+    const digitTerm = distinctive.find((t) => /[0-9]/.test(t) && t.length >= 3);
+    if (digitTerm !== undefined) {
+      exprs.push(`"${digitTerm}"`);
+    } else if (distinctive.length === 1) {
+      exprs.push(`"${distinctive[0]}"`);
+    }
+    return exprs;
+  }
+  const words = terms.filter((t) => t.length >= 3 && !GENERIC_TOKEN_STOPLIST.has(t));
+  // A message needs at least two distinctive words so no single generic word matches.
+  return words.length >= 2 ? [words.map((t) => `"${t}"`).join(" AND ")] : [];
+}
+
 // Graph-expanded neighbours of the seed pool. Edge-based neighbours carry the
 // `graph` source; same-package siblings (no edge) carry `same_module`. Both feed
 // the `graph` proximity score — distinct from centrality (global in-degree).
@@ -330,6 +460,7 @@ function assemble(
   const maxPath = maxMapValue(pathRaw);
   const maxDomain = maxMapValue(domainRaw);
   const maxTestToImpl = maxOf(entries, (entry) => entry.testToImpl);
+  const maxBodyLiteral = maxOf(entries, (entry) => entry.bodyLiteral);
   const maxGraph = maxOf(entries, (entry) => entry.graph);
   const maxCentrality = maxMapValue(centrality);
 
@@ -340,6 +471,7 @@ function assemble(
     const path = round(normalizeAgainst(pathRaw.get(entry.symbol.id) ?? 0, maxPath));
     const domain = round(normalizeAgainst(domainRaw.get(entry.symbol.id) ?? 0, maxDomain));
     const testToImpl = round(normalizeAgainst(entry.testToImpl, maxTestToImpl));
+    const bodyLiteral = round(normalizeAgainst(entry.bodyLiteral, maxBodyLiteral));
     const graph = round(normalizeAgainst(entry.graph, maxGraph));
     const centralityScore = round(
       normalizeAgainst(centrality.get(entry.symbol.id) ?? 0, maxCentrality),
@@ -348,7 +480,7 @@ function assemble(
     const lexical = round(blendLexical(fts, tfidf) * lexicalMatch.factor);
     const weights = input.weights ?? HYBRID_SCORE_WEIGHTS;
     const rawFinal = combineFinalScore(
-      { lexical, symbol, path, domain, testToImpl, graph, centrality: centralityScore },
+      { lexical, symbol, path, domain, testToImpl, bodyLiteral, graph, centrality: centralityScore },
       weights,
     );
 
@@ -368,6 +500,7 @@ function assemble(
       path,
       domain,
       testToImpl,
+      bodyLiteral,
       hasTestEvidence,
       graphContribution,
       centralityContribution: weights.centrality * centralityScore,
@@ -380,6 +513,7 @@ function assemble(
       lexical,
       symbol,
       path,
+      bodyLiteral,
       graphContribution,
       domainContribution,
     });
@@ -416,6 +550,7 @@ function assemble(
       symbol,
       path,
       testToImpl,
+      bodyLiteral,
       domain,
       graph,
       graphProximity: graph,
@@ -473,6 +608,7 @@ function ensureCandidate(
     matches: [],
     graph: 0,
     testToImpl: 0,
+    bodyLiteral: 0,
     sources: new Set(),
     evidence: new Set(),
   };

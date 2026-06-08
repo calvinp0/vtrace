@@ -63,6 +63,8 @@ export interface CapsuleV2Scorecard {
   symbol: number;
   path: number;
   test_to_impl: number;
+  /** Body-literal strength: a task diagnostic code/message found in this symbol's body. */
+  body_literal: number;
   graph_proximity: number;
   centrality: number;
   actionability: number;
@@ -77,6 +79,7 @@ export function toScorecard(scores: HybridScoreComponents): CapsuleV2Scorecard {
     symbol: scores.symbol,
     path: scores.path,
     test_to_impl: scores.testToImpl,
+    body_literal: scores.bodyLiteral,
     graph_proximity: scores.graphProximity,
     centrality: scores.centrality,
     actionability: scores.actionability,
@@ -244,6 +247,14 @@ export interface CapsuleV2Diagnostics {
   lexical_meaningful_token_count?: number;
   lexical_generic_token_count?: number;
   /**
+   * Body-literal recovery. When a distinctive literal cited in the task (a
+   * diagnostic/error code, a quoted message) was found in a symbol's SOURCE BODY,
+   * that symbol is pulled into the pool — the one signal that reaches a symbol named
+   * purely by what it emits. Present only when at least one literal matched.
+   */
+  body_literal_search_used?: boolean;
+  body_literal_matches?: BodyLiteralMatchDiagnostic[];
+  /**
    * Debug-intent recovery diagnostics (present only under debug intent). They make
    * the production-target recovery auditable: whether the test-only candidate pool
    * triggered a production backfill, the issue subsystem the role refinement
@@ -329,6 +340,15 @@ export interface LineAnchorDiagnostic {
   resolved_symbol: string;
   /** `high` when a symbol span enclosed the range; `low` for a nearest-symbol fallback. */
   confidence: "high" | "low";
+}
+
+export interface BodyLiteralMatchDiagnostic {
+  /** The distinctive literal cited in the task, e.g. `models.E015`. */
+  literal: string;
+  /** The file whose symbol body contained the literal. */
+  path: string;
+  /** The symbol (local name) that emits the literal. */
+  symbol: string;
 }
 
 export interface NoContextExplanation {

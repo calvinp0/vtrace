@@ -194,6 +194,7 @@ export function buildLineAnchorCandidate(resolution: LineAnchorResolution): Hybr
       symbol: 1,
       path: 1,
       testToImpl: 0,
+      bodyLiteral: 0,
       domain: 0,
       graph: 0,
       graphProximity: 0,
