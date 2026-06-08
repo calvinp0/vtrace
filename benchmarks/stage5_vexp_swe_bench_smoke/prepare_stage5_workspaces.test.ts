@@ -12,6 +12,8 @@ import path from "node:path";
 import { test } from "bun:test";
 
 import {
+  CROSS_REPO_30_INSTANCES,
+  CROSS_REPO_EXPANSION_INSTANCES,
   CROSS_REPO_INSTANCES,
   benchRepoDir,
   ensureBenchRepo,
@@ -27,6 +29,33 @@ test("CROSS_REPO_INSTANCES is a 10–20 instance, entirely non-Django set", () =
   // Spans multiple repos (the whole point).
   const repos = new Set(CROSS_REPO_INSTANCES.map((id) => id.split("-").slice(0, -1).join("-")));
   assert.ok(repos.size >= 5, `expected >=5 distinct repos, got ${repos.size}`);
+});
+
+test("CROSS_REPO_30_INSTANCES is the 16-instance set plus a non-Django expansion, no dups", () => {
+  // The 30-set is a superset of the 16-set and stays entirely non-Django.
+  assert.ok(CROSS_REPO_30_INSTANCES.length >= 28 && CROSS_REPO_30_INSTANCES.length <= 32);
+  assert.ok(CROSS_REPO_30_INSTANCES.every((id) => !id.startsWith("django__")));
+  // No duplicate instance IDs anywhere in the combined set.
+  assert.equal(new Set(CROSS_REPO_30_INSTANCES).size, CROSS_REPO_30_INSTANCES.length);
+  // Every original-16 instance is carried forward.
+  for (const id of CROSS_REPO_INSTANCES) assert.ok(CROSS_REPO_30_INSTANCES.includes(id));
+  // The expansion adds NEW ids only (none already in the 16-set).
+  assert.ok(CROSS_REPO_EXPANSION_INSTANCES.every((id) => !CROSS_REPO_INSTANCES.includes(id)));
+  // Repo diversity grows: the 30-set spans more distinct repos than the 16-set,
+  // including brand-new ones (xarray / seaborn / pylint).
+  const repos = new Set(CROSS_REPO_30_INSTANCES.map((id) => id.replace(/-\d+$/, "")));
+  assert.ok(repos.size >= 10, `expected >=10 distinct repos, got ${repos.size}`);
+  assert.ok(CROSS_REPO_30_INSTANCES.some((id) => id.startsWith("pydata__xarray-")));
+  assert.ok(CROSS_REPO_30_INSTANCES.some((id) => id.startsWith("mwaskom__seaborn-")));
+  assert.ok(CROSS_REPO_30_INSTANCES.some((id) => id.startsWith("pylint-dev__pylint-")));
+});
+
+test("parsePrepareArgs --cross-repo-30 targets the 30-set on the cross_repo root", () => {
+  const cfg = parsePrepareArgs(["--cross-repo-30"]);
+  assert.equal(cfg.crossRepo, true);
+  assert.deepEqual([...cfg.instances], [...CROSS_REPO_30_INSTANCES]);
+  // Same cross_repo workspace root as the 16-set, so the indexed 16 are reused.
+  assert.match(cfg.outRoot, /workspaces[\\/]cross_repo$/);
 });
 
 test("repoToGitUrl maps an owner/name slug to its GitHub URL", () => {

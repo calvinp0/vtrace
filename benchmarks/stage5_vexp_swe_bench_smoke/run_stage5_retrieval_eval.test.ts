@@ -20,6 +20,10 @@ import {
   aggregateByRepo,
   assertNoUnexpectedDuplicates,
   classifyMiss,
+  comparisonBaselineFor,
+  renderComparison,
+  renderMissSummary,
+  CROSS_REPO_16_BASELINE,
   expectedFilesAreUnparsedLanguage,
   evaluateEntryLive,
   evaluateExpectedFile,
@@ -900,6 +904,98 @@ test("report-name routing still works for the cross-repo report name", async () 
   assert.ok(existsSync(path.join(dir, "stage5_retrieval_eval_cross_repo.md")));
   assert.ok(existsSync(path.join(dir, "stage5_retrieval_eval_cross_repo.csv")));
   assert.ok(existsSync(path.join(dir, "stage5_retrieval_eval_cross_repo.json")));
+});
+
+// --- 30-instance cross-repo expansion: comparison + compact miss summary -----
+
+test("comparisonBaselineFor routes ONLY the 30-instance report name to the 16-instance baseline", () => {
+  assert.equal(comparisonBaselineFor("stage5_retrieval_eval_cross_repo_30"), CROSS_REPO_16_BASELINE);
+  // The plain cross-repo / Django reports carry no baseline → no comparison section.
+  assert.equal(comparisonBaselineFor("stage5_retrieval_eval_cross_repo"), null);
+  assert.equal(comparisonBaselineFor("stage5_retrieval_eval"), null);
+});
+
+test("CROSS_REPO_16_BASELINE holds the published prior numbers", () => {
+  assert.equal(CROSS_REPO_16_BASELINE.instances, 16);
+  assert.equal(CROSS_REPO_16_BASELINE.top_1_file_accuracy, 0.625);
+  assert.equal(CROSS_REPO_16_BASELINE.top_3_file_recall, 0.875);
+  assert.equal(CROSS_REPO_16_BASELINE.expected_file_as_pivot_rate, 0.8125);
+  assert.equal(CROSS_REPO_16_BASELINE.expected_file_missing_rate, 0.0625);
+});
+
+test("renderComparison emits prior, current, and signed percentage-point deltas", () => {
+  // Two of three hit top-1; the third recovers its file only as support (present,
+  // not top-1, not missing) — gives non-trivial top-1 + zero-missing deltas.
+  const rows = [
+    evaluateInstance(entry({ instance_id: "a", repo: "sympy/sympy" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] })),
+    evaluateInstance(entry({ instance_id: "b", repo: "psf/requests" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] })),
+    evaluateInstance(
+      entry({ instance_id: "c", repo: "psf/requests" }),
+      summary({ pivots: [selected("pivot", "pkg/other.py", "other")], support: [selected("support", "pkg/target.py", "do_thing")] }),
+    ),
+  ];
+  const table = renderComparison(CROSS_REPO_16_BASELINE, aggregate(rows)).join("\n");
+  assert.match(table, /previous 16-instance cross-repo/);
+  assert.match(table, /new 3-instance cross-repo/);
+  assert.match(table, /top-1 file accuracy \| 62\.5% \| 66\.7% \| \+4\.2 pp ▲/);
+  // missing fell (improved) here → lower-is-better arrow is ▲ on a negative delta.
+  assert.match(table, /expected file missing \| 6\.3% \| 0\.0% \| -6\.3 pp ▲/);
+});
+
+test("renderMarkdown includes the comparison section only when a baseline is passed", () => {
+  const rows = [evaluateInstance(entry({ repo: "sympy/sympy" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] }))];
+  const withBaseline = renderMarkdown(artifactOf(rows), CROSS_REPO_16_BASELINE);
+  assert.match(withBaseline, /## Comparison vs prior cross-repo baseline/);
+  assert.match(withBaseline, /16 to 1 non-Django instances/);
+  const without = renderMarkdown(artifactOf(rows));
+  assert.ok(!without.includes("## Comparison vs prior cross-repo baseline"));
+});
+
+test("renderMissSummary lists every requested bucket, always (even at zero)", () => {
+  const rows = [
+    // a clean top-1 hit (no miss)
+    evaluateInstance(entry({ instance_id: "hit" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] })),
+    // expected file present only as support → non-top-3 + present-but-support
+    evaluateInstance(
+      entry({ instance_id: "sup", expected_files: ["pkg/target.py"] }),
+      summary({
+        pivots: [selected("pivot", "pkg/a.py", "a"), selected("pivot", "pkg/b.py", "b"), selected("pivot", "pkg/c.py", "c")],
+        support: [selected("support", "pkg/target.py", "do_thing")],
+      }),
+    ),
+  ];
+  const text = renderMissSummary(rows).join("\n");
+  assert.match(text, /non-top-3 cases: 1/);
+  assert.match(text, /present-but-support: 1/);
+  assert.match(text, /missing \(not surfaced\): 0/);
+  assert.match(text, /wrong-subsystem: 0/);
+  assert.match(text, /body-literal misses: 0/);
+  assert.match(text, /parser\/language gaps: 0/);
+});
+
+test("writeReports for the 30-instance report name renders the comparison section", async () => {
+  const cfg = parseArgs(["--retrieval-fixture", "f.json", "--report-name", "stage5_retrieval_eval_cross_repo_30", "--out", "o"]);
+  assert.equal(cfg.reportName, "stage5_retrieval_eval_cross_repo_30");
+  const dir = mkdtempSync(path.join(tmpdir(), "vtrace-r5r-xrepo30-"));
+  const rows = [evaluateInstance(entry({ repo: "sympy/sympy" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] }))];
+  await writeReports({ fixture: "f.json", out: dir, reportName: "stage5_retrieval_eval_cross_repo_30" }, artifactOf(rows));
+  const md = readFileSync(path.join(dir, "stage5_retrieval_eval_cross_repo_30.md"), "utf8");
+  assert.match(md, /## Comparison vs prior cross-repo baseline/);
+  assert.match(md, /previous 16-instance cross-repo/);
+  assert.match(md, /## Miss summary \(compact\)/);
+});
+
+test("the committed cross_repo.30 fixture (if present) is non-Django, dup-free, multi-repo", async () => {
+  const fixture = path.join("benchmarks", "stage5_vexp_swe_bench_smoke", "retrieval_eval.cross_repo.30.json");
+  if (!existsSync(fixture)) return; // built by the prepare/build step; skip if absent
+  const entries = await loadRetrievalFixture(fixture); // throws on a duplicate instance_id
+  assert.ok(entries.length >= 28, `expected >=28 instances, got ${entries.length}`);
+  assert.ok(entries.every((e) => e.repo !== "django/django"));
+  assert.ok(entries.every((e) => e.expected_files.length > 0));
+  assert.ok(entries.every((e) => e.label_source === "gold_patch"));
+  // Genuine cross-repo coverage: many distinct repos, including the new ones.
+  const repos = new Set(entries.map((e) => e.repo));
+  assert.ok(repos.size >= 10, `expected >=10 repos, got ${repos.size}`);
 });
 
 // --- new miss categories -----------------------------------------------------

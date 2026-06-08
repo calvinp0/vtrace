@@ -32,7 +32,11 @@ import {
   type LabelSource,
   type RetrievalEvalFixtureEntry,
 } from "./run_stage5_retrieval_eval";
-import { CROSS_REPO_INSTANCES, DEFAULT_EXPANSION_INSTANCES } from "./prepare_stage5_workspaces";
+import {
+  CROSS_REPO_30_INSTANCES,
+  CROSS_REPO_INSTANCES,
+  DEFAULT_EXPANSION_INSTANCES,
+} from "./prepare_stage5_workspaces";
 
 // ---------------------------------------------------------------------------
 // Task prose derivation (deterministic, from the problem statement)
@@ -230,6 +234,11 @@ const CROSS_REPO_OUT = path.join(
   "stage5_vexp_swe_bench_smoke",
   "retrieval_eval.cross_repo.json",
 );
+const CROSS_REPO_30_OUT = path.join(
+  "benchmarks",
+  "stage5_vexp_swe_bench_smoke",
+  "retrieval_eval.cross_repo.30.json",
+);
 
 export function parseBuildArgs(argv: readonly string[]): BuildFixtureConfig {
   let sweBenchData = DEFAULT_DATA;
@@ -237,6 +246,7 @@ export function parseBuildArgs(argv: readonly string[]): BuildFixtureConfig {
   let out: string | null = null;
   let instances: string[] | null = null;
   let crossRepo = false;
+  let crossRepo30 = false;
   let labelSource: LabelSource = "gold_patch";
   let budget = 8000;
   let baseFixture: string | null = null;
@@ -253,7 +263,11 @@ export function parseBuildArgs(argv: readonly string[]): BuildFixtureConfig {
     else if (arg === "--instances") instances = value().split(",").map((s) => s.trim()).filter(Boolean);
     // Cross-repo mode flips the defaults to the non-Django instance set + output.
     else if (arg === "--cross-repo") crossRepo = true;
-    else if (arg === "--label-source") {
+    // The ~30-instance superset: the 30-instance set + its own output fixture.
+    else if (arg === "--cross-repo-30") {
+      crossRepo = true;
+      crossRepo30 = true;
+    } else if (arg === "--label-source") {
       const v = value();
       if (!(LABEL_SOURCES as readonly string[]).includes(v)) {
         throw new Error(`Invalid --label-source "${v}" (expected ${LABEL_SOURCES.join(", ")}).`);
@@ -263,11 +277,17 @@ export function parseBuildArgs(argv: readonly string[]): BuildFixtureConfig {
     else if (arg === "--base-fixture") baseFixture = value();
     else throw new Error(`Unknown argument: ${arg}`);
   }
+  const defaultOut = crossRepo30 ? CROSS_REPO_30_OUT : crossRepo ? CROSS_REPO_OUT : DEFAULT_OUT;
+  const defaultInstances = crossRepo30
+    ? [...CROSS_REPO_30_INSTANCES]
+    : crossRepo
+      ? [...CROSS_REPO_INSTANCES]
+      : [...DEFAULT_EXPANSION_INSTANCES];
   return {
     sweBenchData,
     resultsRoot,
-    out: out ?? (crossRepo ? CROSS_REPO_OUT : DEFAULT_OUT),
-    instances: instances ?? (crossRepo ? [...CROSS_REPO_INSTANCES] : [...DEFAULT_EXPANSION_INSTANCES]),
+    out: out ?? defaultOut,
+    instances: instances ?? defaultInstances,
     labelSource,
     budget,
     baseFixture,

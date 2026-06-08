@@ -1054,7 +1054,98 @@ const LABEL_SOURCE_TITLES: Record<LabelSource, string> = {
   manual_verified: "manual_verified (hand-curated and checked)",
 };
 
-export function renderMarkdown(artifact: RetrievalEvalArtifact): string {
+// ---------------------------------------------------------------------------
+// Comparison baselines (prior runs to diff the headline metrics against)
+// ---------------------------------------------------------------------------
+
+// A frozen snapshot of a prior eval's headline file-recovery metrics. Held as
+// literal constants (not re-derived from a report on disk) so the comparison is
+// reproducible and a regression can't be masked by a moved/rebuilt baseline file.
+export interface ComparisonBaseline {
+  readonly label: string;
+  readonly instances: number;
+  readonly top_1_file_accuracy: number;
+  readonly top_3_file_recall: number;
+  readonly expected_file_as_pivot_rate: number;
+  readonly expected_file_missing_rate: number;
+}
+
+// The first cross-repo (non-Django) Stage 5R baseline: 16 instances across 8
+// repos. These are the published numbers the 30-instance expansion is measured
+// against — does Capsule v2 retrieval stay stable as cross-repo coverage grows?
+export const CROSS_REPO_16_BASELINE: ComparisonBaseline = {
+  label: "previous 16-instance cross-repo",
+  instances: 16,
+  top_1_file_accuracy: 0.625,
+  top_3_file_recall: 0.875,
+  expected_file_as_pivot_rate: 0.8125,
+  expected_file_missing_rate: 0.0625,
+};
+
+// Report-name -> the baseline its markdown should diff against. Keyed by the
+// `--report-name` stem so the comparison section is opt-in per report (the plain
+// Django / cross-repo reports carry no baseline and render no comparison).
+export const COMPARISON_BASELINES: Readonly<Record<string, ComparisonBaseline>> = {
+  stage5_retrieval_eval_cross_repo_30: CROSS_REPO_16_BASELINE,
+};
+
+export function comparisonBaselineFor(reportName: string): ComparisonBaseline | null {
+  return COMPARISON_BASELINES[reportName] ?? null;
+}
+
+// Render the comparison-vs-baseline section: prior numbers, the current run's
+// numbers, and the delta in percentage points. `missing` improves when it FALLS,
+// so its delta arrow is inverted relative to the recovery metrics.
+export function renderComparison(
+  baseline: ComparisonBaseline,
+  current: RetrievalEvalAggregate,
+): string[] {
+  const currentLabel = `new ${current.instances_evaluated}-instance cross-repo`;
+  // Delta in percentage points; `lowerIsBetter` flips the ✓/✗ direction marker.
+  const deltaCell = (base: number, cur: number, lowerIsBetter = false): string => {
+    const pp = (cur - base) * 100;
+    const sign = pp > 0 ? "+" : pp < 0 ? "" : "±";
+    const improved = lowerIsBetter ? pp < 0 : pp > 0;
+    const marker = pp === 0 ? "—" : improved ? "▲" : "▼";
+    return `${sign}${pp.toFixed(1)} pp ${marker}`;
+  };
+  return [
+    `| metric | ${baseline.label} | ${currentLabel} | delta |`,
+    "| --- | --- | --- | --- |",
+    `| top-1 file accuracy | ${pct(baseline.top_1_file_accuracy)} | ${pct(current.top_1_file_accuracy)} | `
+    + `${deltaCell(baseline.top_1_file_accuracy, current.top_1_file_accuracy)} |`,
+    `| top-3 file recall | ${pct(baseline.top_3_file_recall)} | ${pct(current.top_3_file_recall)} | `
+    + `${deltaCell(baseline.top_3_file_recall, current.top_3_file_recall)} |`,
+    `| expected file as pivot | ${pct(baseline.expected_file_as_pivot_rate)} | ${pct(current.expected_file_as_pivot_rate)} | `
+    + `${deltaCell(baseline.expected_file_as_pivot_rate, current.expected_file_as_pivot_rate)} |`,
+    `| expected file missing | ${pct(baseline.expected_file_missing_rate)} | ${pct(current.expected_file_missing_rate)} | `
+    + `${deltaCell(baseline.expected_file_missing_rate, current.expected_file_missing_rate, true)} |`,
+  ];
+}
+
+// A compact miss summary (requirement 7): one count per requested bucket, ALWAYS
+// rendered (even at zero) so the reader sees the full shape of the misses without
+// scrolling the per-instance diagnostics. Counts are over evaluated rows.
+export function renderMissSummary(rows: readonly RetrievalEvalRow[]): string[] {
+  const evaluated = rows.filter((r) => r.result !== "workspace_error" && r.result !== "fixture_error");
+  const missCount = (category: MissCategory): number =>
+    evaluated.filter((r) => r.miss_category === category).length;
+  const nonTop3 = evaluated.filter((r) => !r.contains_expected_file_top3).length;
+  return [
+    `- non-top-3 cases: ${nonTop3}`,
+    `- missing (not surfaced): ${missCount("missing_from_candidates")}`,
+    `- present-but-support: ${missCount("present_but_support")}`,
+    `- present-but-discarded: ${missCount("present_but_discarded")}`,
+    `- wrong-subsystem: ${missCount("wrong_subsystem")}`,
+    `- body-literal misses: ${missCount("body_literal_not_resolved")}`,
+    `- parser/language gaps: ${missCount("language_parser_gap")}`,
+  ];
+}
+
+export function renderMarkdown(
+  artifact: RetrievalEvalArtifact,
+  baseline: ComparisonBaseline | null = null,
+): string {
   const a = artifact.aggregate;
   const lines: string[] = [];
   lines.push("# Stage 5R — Capsule v2 Retrieval-Quality Evaluation", "");
@@ -1095,6 +1186,21 @@ export function renderMarkdown(artifact: RetrievalEvalArtifact): string {
   lines.push(...metricsTable(a));
   lines.push("");
 
+  // Comparison vs a prior baseline (requirement 6) — rendered only when the
+  // report name routes to a known baseline (e.g. the 30-instance cross-repo report
+  // diffs against the published 16-instance numbers).
+  if (baseline !== null) {
+    lines.push("## Comparison vs prior cross-repo baseline", "");
+    lines.push(
+      `Does Capsule v2 retrieval stay stable as cross-repo coverage grows from `
+      + `${baseline.instances} to ${a.instances_evaluated} non-Django instances? `
+      + `Delta is in percentage points; for **missing**, lower is better.`,
+      "",
+    );
+    lines.push(...renderComparison(baseline, a));
+    lines.push("");
+  }
+
   // Per-label-source breakdown (only sources actually present are emitted).
   lines.push("## Aggregate metrics — by label source", "");
   const present = LABEL_SOURCES.filter((s) => artifact.byLabelSource[s] !== undefined);
@@ -1117,6 +1223,12 @@ export function renderMarkdown(artifact: RetrievalEvalArtifact): string {
   // single Django row for a Django-only fixture) so the section is never missing.
   lines.push("## Metrics by repo", "");
   lines.push(...renderByRepoTable(artifact.byRepo));
+  lines.push("");
+
+  // Compact miss summary (requirement 7) — the requested buckets at a glance,
+  // ahead of the full taxonomy table and per-instance diagnostics.
+  lines.push("## Miss summary (compact)", "");
+  lines.push(...renderMissSummary(artifact.rows));
   lines.push("");
 
   lines.push("## Miss taxonomy", "");
@@ -1437,9 +1549,11 @@ function requireValue(argv: readonly string[], index: number, flag: string): str
 export async function writeReports(config: RetrievalEvalConfig, artifact: RetrievalEvalArtifact): Promise<void> {
   await mkdir(config.out, { recursive: true });
   const base = path.join(config.out, config.reportName);
+  // A known report name routes in its comparison baseline (requirement 6).
+  const baseline = comparisonBaselineFor(config.reportName);
   await writeFile(`${base}.json`, JSON.stringify(artifact, null, 2) + "\n", "utf8");
   await writeFile(`${base}.csv`, renderCsv(artifact.rows), "utf8");
-  await writeFile(`${base}.md`, renderMarkdown(artifact), "utf8");
+  await writeFile(`${base}.md`, renderMarkdown(artifact, baseline), "utf8");
 }
 
 async function main(config: RetrievalEvalConfig): Promise<void> {

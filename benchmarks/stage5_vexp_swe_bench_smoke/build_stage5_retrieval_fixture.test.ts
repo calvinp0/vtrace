@@ -14,9 +14,11 @@ import {
   deriveTaskFromProblemStatement,
   extractLabelsFromPatch,
   loadSweBench,
+  parseBuildArgs,
   resolveWorkspace,
   type SweBenchInstance,
 } from "./build_stage5_retrieval_fixture";
+import { CROSS_REPO_30_INSTANCES } from "./prepare_stage5_workspaces";
 
 // --- task derivation ---------------------------------------------------------
 
@@ -135,6 +137,21 @@ test("buildGoldRow skips an instance whose patch changes no files", () => {
   const { row, skipped } = buildGoldRow({ ...INSTANCE, patch: "no diff here" }, "/ws/path");
   assert.equal(row, null);
   assert.match(skipped ?? "", /no files/);
+});
+
+// --- CLI defaulting ----------------------------------------------------------
+
+test("parseBuildArgs --cross-repo-30 routes the 30-set to the cross_repo.30 fixture", () => {
+  const cfg = parseBuildArgs(["--cross-repo-30"]);
+  assert.deepEqual([...cfg.instances], [...CROSS_REPO_30_INSTANCES]);
+  assert.match(cfg.out, /retrieval_eval\.cross_repo\.30\.json$/);
+  assert.equal(cfg.labelSource, "gold_patch");
+});
+
+test("parseBuildArgs --cross-repo (16-set) keeps the original cross_repo fixture", () => {
+  const cfg = parseBuildArgs(["--cross-repo"]);
+  assert.match(cfg.out, /retrieval_eval\.cross_repo\.json$/);
+  assert.ok(cfg.instances.every((id) => !id.startsWith("django__")));
 });
 
 // --- swe-bench loading --------------------------------------------------------

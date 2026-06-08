@@ -87,6 +87,41 @@ export const CROSS_REPO_INSTANCES: readonly string[] = [
   "pallets__flask-5014",
 ];
 
+// The 14 NON-Django instances that grow the cross-repo set from 16 to 30. Picked
+// for repo + issue-type diversity, NOT for being easy: three brand-new repos
+// (pydata/xarray, mwaskom/seaborn, pylint-dev/pylint) join, and the issue mix
+// spans parser/printing (sphinx docfields, sympy pycode), validation/error
+// (pytest skipping, requests models), IO/encoding (astropy fits card + diff),
+// plotting/rendering (matplotlib colors + figure, seaborn scales), config/options
+// (pylint config), docs/build (sphinx napoleon), and core data structures
+// (xarray variable + dataset, sympy mod). Every one has a gold patch that edits
+// extractable Python source files. Multi-file patches (seaborn, pylint) are kept
+// rather than filtered to easy single-file cases.
+export const CROSS_REPO_EXPANSION_INSTANCES: readonly string[] = [
+  "astropy__astropy-14539",
+  "astropy__astropy-14598",
+  "matplotlib__matplotlib-24970",
+  "matplotlib__matplotlib-25960",
+  "mwaskom__seaborn-3187",
+  "psf__requests-5414",
+  "pydata__xarray-2905",
+  "pydata__xarray-3677",
+  "pylint-dev__pylint-8898",
+  "pytest-dev__pytest-7432",
+  "sphinx-doc__sphinx-7910",
+  "sphinx-doc__sphinx-9230",
+  "sympy__sympy-15599",
+  "sympy__sympy-16766",
+];
+
+// The full ~30-instance cross-repo set: the original 16 plus the 14 expansion
+// instances. Shares the same `cross_repo` workspace root, so the already-indexed
+// 16 are idempotently skipped on prep — only the 14 new ones are materialized.
+export const CROSS_REPO_30_INSTANCES: readonly string[] = [
+  ...CROSS_REPO_INSTANCES,
+  ...CROSS_REPO_EXPANSION_INSTANCES,
+];
+
 export interface PrepareConfig {
   readonly benchRepo: string;
   readonly sweBenchData: string;
@@ -277,6 +312,7 @@ export function parsePrepareArgs(argv: readonly string[]): PrepareConfig {
   let benchReposRoot = DEFAULT_BENCH_REPOS_ROOT;
   let sweBenchData = DEFAULT_SWE_BENCH_DATA;
   let crossRepo = false;
+  let crossRepo30 = false;
   let outRoot: string | null = null;
   let instances: string[] | null = null;
   for (let i = 0; i < argv.length; i += 1) {
@@ -294,15 +330,25 @@ export function parsePrepareArgs(argv: readonly string[]): PrepareConfig {
     // Cross-repo mode flips the defaults: the cross-repo instance set, the
     // cross_repo workspace root, and per-instance bench-clone resolution.
     else if (arg === "--cross-repo") crossRepo = true;
-    else throw new Error(`Unknown argument: ${arg}`);
+    // The ~30-instance superset (16 + 14 expansion). Same cross_repo root + per-repo
+    // clones — the indexed 16 are skipped, only the 14 new ones are materialized.
+    else if (arg === "--cross-repo-30") {
+      crossRepo = true;
+      crossRepo30 = true;
+    } else throw new Error(`Unknown argument: ${arg}`);
   }
+  const defaultInstances = crossRepo30
+    ? [...CROSS_REPO_30_INSTANCES]
+    : crossRepo
+      ? [...CROSS_REPO_INSTANCES]
+      : [...DEFAULT_EXPANSION_INSTANCES];
   return {
     benchRepo,
     benchReposRoot,
     sweBenchData,
     crossRepo,
     outRoot: outRoot ?? (crossRepo ? DEFAULT_CROSS_REPO_OUT_ROOT : DEFAULT_OUT_ROOT),
-    instances: instances ?? (crossRepo ? [...CROSS_REPO_INSTANCES] : [...DEFAULT_EXPANSION_INSTANCES]),
+    instances: instances ?? defaultInstances,
   };
 }
 

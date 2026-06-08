@@ -1,0 +1,520 @@
+[
+  {
+    "instance_id": "sympy__sympy-12419",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-12419",
+    "task": "Sum of the elements of an identity matrix is zero — I think this is a bug.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/matrices/expressions/matexpr.py"
+    ],
+    "expected_symbols": [
+      "_entry",
+      "_eval_derivative",
+      "_eval_determinant",
+      "conjugate"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-12481",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-12481",
+    "task": "`Permutation` constructor fails with non-disjoint cycles — Calling `Permutation([[0,1],[0,1]])` raises a `ValueError` instead of constructing the identity permutation.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/combinatorics/permutations.py"
+    ],
+    "expected_symbols": [
+      "__new__"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-13372",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-13372",
+    "task": "UnboundLocalError in evalf — During handling of the above exception, another exception occurred:",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/core/evalf.py"
+    ],
+    "expected_symbols": [
+      "evalf"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-10844",
+    "repo": "scikit-learn/scikit-learn",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/scikit-learn__scikit-learn-10844",
+    "task": "fowlkes_mallows_score returns RuntimeWarning when variables get too big — If your issue is a usage question, submit it here instead:",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sklearn/metrics/cluster/supervised.py"
+    ],
+    "expected_symbols": [
+      "entropy",
+      "fowlkes_mallows_score"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-11578",
+    "repo": "scikit-learn/scikit-learn",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/scikit-learn__scikit-learn-11578",
+    "task": "For probabilistic scorers, LogisticRegressionCV(multi_class='multinomial') uses OvR to calculate scores — For scorers such as `neg_log_loss` that use `.predict_proba()` to get probability estimates out of a classifier, the predictions used to generate the scores for `LogisticReg…",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sklearn/linear_model/logistic.py"
+    ],
+    "expected_symbols": [
+      "_log_reg_scoring_path"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "matplotlib__matplotlib-22719",
+    "repo": "matplotlib/matplotlib",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-22719",
+    "task": "[Bug]: Confusing deprecation warning when empty data passed to axis with category units — ### Bug summary",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "lib/matplotlib/category.py"
+    ],
+    "expected_symbols": [
+      "convert",
+      "update"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "matplotlib__matplotlib-24627",
+    "repo": "matplotlib/matplotlib",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-24627",
+    "task": "cla(), clf() should unset the `.axes` and `.figure` attributes of deparented artists — mpl2.0b3: Removing an artist from its axes unsets its `.axes` attribute, but clearing the axes does not do so.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "lib/matplotlib/axes/_base.py"
+    ],
+    "expected_symbols": [
+      "__clear"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "astropy__astropy-14365",
+    "repo": "astropy/astropy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14365",
+    "task": "ascii.qdp Table format assumes QDP commands are upper case — ascii.qdp assumes that commands in a QDP file are upper case, for example, for errors they must be \"READ SERR 1 2\" whereas QDP itself is not case sensitive and case use \"read serr 1 2\".",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "astropy/io/ascii/qdp.py"
+    ],
+    "expected_symbols": [
+      "_get_tables_from_qdp_file",
+      "_line_type"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "astropy__astropy-14369",
+    "repo": "astropy/astropy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14369",
+    "task": "Incorrect units read from MRT (CDS format) files with astropy.table — When reading MRT files (formatted according to the CDS standard which is also the format recommended by AAS/ApJ) with `format='ascii.cds'`, astropy.table incorrectly parses composite units.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "astropy/units/format/cds.py",
+      "astropy/units/format/cds_parsetab.py"
+    ],
+    "expected_symbols": [
+      "_lr_action_items",
+      "_lr_goto_items",
+      "_lr_signature",
+      "_make_parser",
+      "p_division_of_units",
+      "p_product_of_units"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pytest-dev__pytest-10051",
+    "repo": "pytest-dev/pytest",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-10051",
+    "task": "caplog.get_records and caplog.clear conflict — `caplog.get_records()` gets decoupled from actual caplog records when `caplog.clear()` is called.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "src/_pytest/logging.py"
+    ],
+    "expected_symbols": [
+      "clear",
+      "handleError",
+      "messages",
+      "reset",
+      "set_level"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pytest-dev__pytest-5262",
+    "repo": "pytest-dev/pytest",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-5262",
+    "task": "_pytest.capture.EncodedFile mode should not include `b` (binary) — Thanks for submitting an issue!",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "src/_pytest/capture.py"
+    ],
+    "expected_symbols": [
+      "__getattr__",
+      "mode",
+      "name"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sphinx-doc__sphinx-7462",
+    "repo": "sphinx-doc/sphinx",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-7462",
+    "task": "`IndexError: pop from empty list` for empty tuple type annotation — **Describe the bug**",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sphinx/domains/python.py",
+      "sphinx/pycode/ast.py"
+    ],
+    "expected_symbols": [
+      "unparse"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sphinx-doc__sphinx-7748",
+    "repo": "sphinx-doc/sphinx",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-7748",
+    "task": "autodoc_docstring_signature with overloaded methods — When using swig to wrap C++ classes for python, if they have overloaded methods, I believe the convention is to place the signatures for each of the overloaded C++ methods at the start of the docstring.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sphinx/ext/autodoc/__init__.py"
+    ],
+    "expected_symbols": [
+      "DocstringSignatureMixin",
+      "DocstringSignatureMixin._find_signature",
+      "DocstringSignatureMixin.get_doc",
+      "DocstringStripSignatureMixin",
+      "_find_signature",
+      "format_signature",
+      "get_doc"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "psf__requests-1142",
+    "repo": "psf/requests",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-1142",
+    "task": "requests.get is ALWAYS sending content length — It seems like that request.get always adds 'content-length' header to the request.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "requests/models.py"
+    ],
+    "expected_symbols": [
+      "prepare_auth",
+      "prepare_body",
+      "prepare_content_length"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "psf__requests-1724",
+    "repo": "psf/requests",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-1724",
+    "task": "Unicode method names cause UnicodeDecodeError for some requests in Python 2.7.2 — The following example works fine:",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "requests/sessions.py"
+    ],
+    "expected_symbols": [
+      "request"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pallets__flask-5014",
+    "repo": "pallets/flask",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pallets__flask-5014",
+    "task": "Require a non-empty name for Blueprints — Things do not work correctly if a Blueprint is given an empty name (e.g.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "src/flask/blueprints.py"
+    ],
+    "expected_symbols": [
+      "__init__"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "astropy__astropy-14539",
+    "repo": "astropy/astropy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14539",
+    "task": "`io.fits.FITSDiff` may sometimes report differences between identical files — In some scenarios, `io.fits.FITSDiff` may report differences between identical files, even when comparing the same file to itself.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "astropy/io/fits/diff.py"
+    ],
+    "expected_symbols": [
+      "_diff"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "astropy__astropy-14598",
+    "repo": "astropy/astropy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14598",
+    "task": "Inconsistency in double single-quote ('') management in FITS Card — The management of single-quotes in FITS cards seem correct, except *sometimes* when dealing with null strings, i.e.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "astropy/io/fits/card.py"
+    ],
+    "expected_symbols": [
+      "Card",
+      "_split"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "matplotlib__matplotlib-24970",
+    "repo": "matplotlib/matplotlib",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-24970",
+    "task": "[Bug]: NumPy 1.24 deprecation warnings — ### Bug summary",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "lib/matplotlib/colors.py"
+    ],
+    "expected_symbols": [
+      "__call__"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "matplotlib__matplotlib-25960",
+    "repo": "matplotlib/matplotlib",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-25960",
+    "task": "[Bug]: wspace and hspace in subfigures not working — ### Bug summary",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "lib/matplotlib/figure.py"
+    ],
+    "expected_symbols": [
+      "subfigures"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "mwaskom__seaborn-3187",
+    "repo": "mwaskom/seaborn",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/mwaskom__seaborn-3187",
+    "task": "Wrong legend values of large ranges — As of 0.12.1, legends describing large numbers that were created using `ScalarFormatter` with an offset are formatted without their multiplicative offset value.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "seaborn/_core/scales.py",
+      "seaborn/utils.py"
+    ],
+    "expected_symbols": [
+      "get_view_interval",
+      "spacer"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "psf__requests-5414",
+    "repo": "psf/requests",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-5414",
+    "task": "Getting http://.example.com raises UnicodeError — Attempting to get e.g.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "requests/models.py"
+    ],
+    "expected_symbols": [
+      "prepare_url"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pydata__xarray-2905",
+    "repo": "pydata/xarray",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pydata__xarray-2905",
+    "task": "Variable.__setitem__ coercing types on objects with a values property — #### Minimal example",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "xarray/core/variable.py"
+    ],
+    "expected_symbols": [
+      "as_compatible_data"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pydata__xarray-3677",
+    "repo": "pydata/xarray",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pydata__xarray-3677",
+    "task": "Merging dataArray into dataset using dataset method fails — While it's possible to merge a dataset and a dataarray object using the top-level `merge()` function, if you try the same thing with the `ds.merge()` method it fails.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "xarray/core/dataset.py"
+    ],
+    "expected_symbols": [
+      "merge"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pylint-dev__pylint-8898",
+    "repo": "pylint-dev/pylint",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pylint-dev__pylint-8898",
+    "task": "bad-names-rgxs mangles regular expressions with commas — ### Bug description",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "pylint/config/argument.py",
+      "pylint/utils/__init__.py",
+      "pylint/utils/utils.py"
+    ],
+    "expected_symbols": [
+      "_check_csv",
+      "_check_regexp_csv",
+      "_comment",
+      "_regex_transformer",
+      "_regexp_csv_transfomer"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pytest-dev__pytest-7432",
+    "repo": "pytest-dev/pytest",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-7432",
+    "task": "skipping: --runxfail breaks pytest.mark.skip location reporting — pytest versions: 5.4.x, current master",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "src/_pytest/skipping.py"
+    ],
+    "expected_symbols": [
+      "pytest_runtest_makereport"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sphinx-doc__sphinx-7910",
+    "repo": "sphinx-doc/sphinx",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-7910",
+    "task": "Decorated __init__ doesn't show up in docs — Subject: Decorated __init__ won't be documented.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sphinx/ext/napoleon/__init__.py"
+    ],
+    "expected_symbols": [
+      "Config",
+      "_skip_member"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sphinx-doc__sphinx-9230",
+    "repo": "sphinx-doc/sphinx",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-9230",
+    "task": "Doc rendering is incorrect when :param has datatype dict(str,str) — **Describe the bug**",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sphinx/util/docfields.py"
+    ],
+    "expected_symbols": [
+      "transform"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-15599",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-15599",
+    "task": "Mod(3*i, 2) unchanged — `Mod(3*i, 2)` should reduce to `Mod(i, 2)` (as reported in [this post](https://stackoverflow.com/questions/53302669/sympify-does-not-simplify-remainder-as-expected)) and will do so with a change something like this:",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/core/mod.py"
+    ],
+    "expected_symbols": [
+      "doit"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-16766",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-16766",
+    "task": "PythonCodePrinter doesn't support Indexed — I use `lambdify()` to generate some functions and save the code for further use.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/printing/pycode.py"
+    ],
+    "expected_symbols": [
+      "_print_Indexed",
+      "_print_Not"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  }
+]
