@@ -29,12 +29,23 @@
 // traversal state — and stops traversal if the resolved target is not relational,
 // so later segments still fail correctly. The directive tells the agent that.
 //
+// TRAVERSAL STATE-MACHINE INVARIANT — the structural companion to the alias
+// diagnosis. Resolving the alias is only half the fix: the loop maintains a
+// MUTABLE TRAVERSAL CURSOR (`if X.is_relation: cursor = next_target`), and every
+// segment must update that cursor for the next segment — and terminate it when
+// traversal cannot continue. Live agent runs showed the alias directive alone
+// pushes the agent to resolve the alias but still leaves a stale cursor (the
+// missing terminal `else` branch), so this directive states the invariant
+// explicitly. It fires on the cursor-update shape and can render ALONGSIDE the
+// alias directive (appended after it, deterministically).
+//
 // The detector is DETERMINISTIC and GENERIC. It fires on the SHAPE of the pivot
 // source and the task prose, never on a framework, file, symbol, or instance id.
 // At most one directive per bug class is emitted (the most specific that matched)
 // — it is a hint about the bug class, not a per-line annotation. When more than
 // one class applies, directives are returned in a deterministic order
-// (shared-state mutation before traversal), with no near-duplicate hints.
+// (shared-state mutation, then alias traversal, then state-machine invariant),
+// with no near-duplicate hints.
 
 import type {
   CapsuleV2Item,
@@ -281,6 +292,68 @@ function taskMentionsAliasToken(task: string): boolean {
   return ALIAS_TASK_PATTERNS.some((pattern) => pattern.test(lower));
 }
 
+// ---------------------------------------------------------------------------
+// Traversal state-machine invariant.
+// ---------------------------------------------------------------------------
+
+// The mutable traversal-cursor variable names a path walk advances through. A
+// generic vocabulary (`current`/`cursor`/`target`/`node`/`field`/`model`/`state`/
+// `ctx`) plus the spellings real validators use (`_cls`, `opts`), not framework
+// symbols.
+const TRAVERSAL_CURSOR_NAMES =
+  "current|cursor|target|node|field|model|state|ctx|_cls|opts";
+
+// A branch-controlled update of the traversal cursor: an `if ...:` guard whose
+// body reassigns a cursor variable. This is the state-transition half of the loop
+// — the part a partial fix forgets to terminate when traversal cannot continue.
+// Matches both `if X: cursor = ... else: cursor = ...` and the buggy
+// `if X.is_relation: cursor = ...` (no terminal else) shape. `(?!=)` keeps it an
+// assignment, not an equality test.
+const BRANCH_CONTROLLED_CURSOR_UPDATE = new RegExp(
+  `\\bif\\b[^\\n]*:\\s*\\n\\s+(?:${TRAVERSAL_CURSOR_NAMES})\\b[\\w.]*\\s*=(?!=)`,
+);
+
+// Task terms — beyond the traversal vocabulary the alias directive already uses —
+// that still signal path/lookup validation work.
+const STATE_MACHINE_EXTRA_TASK_TERMS: readonly string[] = ["validation", "diagnostic"];
+
+// The directive text. Generic by construction: it names the state-machine
+// invariant and the safe edit shape, never a framework, file, symbol, cursor
+// spelling, or patch.
+const TRAVERSAL_STATE_MACHINE_DIRECTIVE = [
+  "This pivot walks a chained lookup/path using mutable traversal state.",
+  "For each segment, preserve both parts of the state transition:",
+  "1. resolve the current segment to a concrete field/target",
+  "2. update the traversal cursor for the next segment",
+  "",
+  "If the resolved target is not traversable/relational, explicitly clear or "
+    + "terminate the traversal cursor so later segments fail correctly.",
+  "Avoid fixes that only skip, break, or handle the alias locally while leaving "
+    + "stale traversal state alive.",
+].join("\n");
+
+/**
+ * True when the source walks split path segments AND updates a mutable traversal
+ * cursor under a branch — the state-machine shape. A plain loop over strings with
+ * no cursor reassignment does not match.
+ */
+function sourceWalksWithTraversalCursor(source: string): boolean {
+  return sourceLoopsSplitSegments(source) && BRANCH_CONTROLLED_CURSOR_UPDATE.test(source);
+}
+
+/**
+ * True when the task describes lookup/path/relation traversal OR path/lookup
+ * validation. Broader than the alias predicate (adds validation/diagnostic) so
+ * the structural invariant hint can fire on validation-framed tasks too.
+ */
+function taskMentionsTraversalValidation(task: string): boolean {
+  if (taskMentionsTraversal(task)) {
+    return true;
+  }
+  const lower = task.toLowerCase();
+  return STATE_MACHINE_EXTRA_TASK_TERMS.some((term) => lower.includes(term));
+}
+
 /**
  * Detect deterministic edit-risk directives for the assembled capsule. Returns
  * an empty array when no risk shape is present (the common case) or when the
@@ -342,6 +415,21 @@ export function detectEditRiskDirectives(input: EditRiskInput): EditRiskDirectiv
         : "task mentions alias/lookup traversal and pivot source validates chained "
           + "path segments",
       directive: CHAINED_LOOKUP_ALIAS_TRAVERSAL_DIRECTIVE,
+    });
+  }
+
+  // Traversal state-machine invariant — the structural companion. Appended AFTER
+  // the alias directive so, when both fire, they render in deterministic order
+  // (alias first: resolve the segment; state-machine second: maintain the cursor).
+  const statePivot = pivotsWithSource.find((pivot) => sourceWalksWithTraversalCursor(pivot.source));
+  if (statePivot !== undefined && taskMentionsTraversalValidation(input.task)) {
+    directives.push({
+      kind: "traversal_state_machine_invariant",
+      confidence: "medium",
+      reason:
+        "pivot source walks path segments with mutable traversal state and task "
+        + "describes lookup/alias validation",
+      directive: TRAVERSAL_STATE_MACHINE_DIRECTIVE,
     });
   }
 

@@ -251,7 +251,8 @@ test("the guarded directive text is generic — no instance ids or hardcoded fra
 test("a split-segment loop that resolves fields + a traversal task emits chained_lookup_alias_traversal", () => {
   const directives = detectFor(TRAVERSAL_SOURCE, TRAVERSAL_TASK);
 
-  assert.equal(directives.length, 1);
+  // The alias directive is emitted first (the cursor-update shape also emits the
+  // state-machine companion — see the deterministic-order test).
   const directive = directives[0]!;
   assert.equal(directive.kind, "chained_lookup_alias_traversal");
   // The task names a `pk` alias token next to a split-segment loop — the strong
@@ -317,6 +318,97 @@ test("the traversal directive text is generic — no instance ids or gold-patch 
     "acme",
     "widgets",
     "continue",
+  ]) {
+    assert.ok(!corpus.includes(banned), `directive text must not mention "${banned}"`);
+  }
+});
+
+// --- Traversal state-machine invariant -------------------------------------
+
+function stateMachineDirective(directives: EditRiskDirective[]): EditRiskDirective | undefined {
+  return directives.find((d) => d.kind === "traversal_state_machine_invariant");
+}
+
+test("a split-segment loop with a cursor updated through relation traversal emits traversal_state_machine_invariant", () => {
+  const directive = stateMachineDirective(detectFor(TRAVERSAL_SOURCE, TRAVERSAL_TASK));
+
+  assert.ok(directive, "state-machine invariant directive must be emitted");
+  assert.equal(directive!.kind, "traversal_state_machine_invariant");
+  assert.equal(directive!.confidence, "medium");
+  assert.match(directive!.reason, /mutable traversal state/);
+  assert.match(directive!.reason, /lookup\/alias validation/);
+});
+
+test("the state-machine directive renders under its own heading in the human output", () => {
+  const directives = detectFor(TRAVERSAL_SOURCE, TRAVERSAL_TASK);
+  const human = renderCapsuleV2Human(resultWith([pivotItem(TRAVERSAL_SOURCE)], directives));
+
+  assert.match(human, /^## Edit risk \/ state-machine invariant$/m);
+  assert.match(human, /resolve the current segment/);
+  assert.match(human, /update the traversal cursor/);
+  assert.match(human, /clear or terminate the traversal cursor/);
+  assert.match(human, /stale traversal state/);
+});
+
+test("the state-machine directive appears in the Stage 5 injected snapshot", () => {
+  const directives = detectFor(TRAVERSAL_SOURCE, TRAVERSAL_TASK);
+  const classification = classifyCapsuleV2Output(resultWith([pivotItem(TRAVERSAL_SOURCE)], directives));
+
+  assert.equal(classification.policyAction, "inject");
+  assert.match(classification.context, /## Edit risk \/ state-machine invariant/);
+  assert.match(classification.context, /resolve the current segment/);
+  assert.match(classification.context, /update the traversal cursor/);
+  assert.match(classification.context, /clear or terminate the traversal cursor/);
+  assert.match(classification.context, /stale traversal state/);
+});
+
+test("a plain loop over strings without a mutable traversal cursor emits no state-machine directive", () => {
+  const directives = detectFor(PLAIN_SPLIT_LOOP_SOURCE, TRAVERSAL_TASK);
+  assert.equal(stateMachineDirective(directives), undefined);
+});
+
+test("a task mentioning pk/lookup without a traversal-shaped source emits no state-machine directive", () => {
+  const pkTask = "instance: acme__widgets-9\n\nThe pk lookup is wrong somewhere.";
+  const directives = detectFor(BENIGN_SOURCE, pkTask);
+  assert.equal(stateMachineDirective(directives), undefined);
+});
+
+test("the guarded shared-state directive still works and does not also emit a state-machine directive", () => {
+  const directives = detectFor(GUARDED_SOURCE);
+  assert.equal(directives.length, 1);
+  assert.equal(directives[0]!.kind, "guarded_shared_state_mutation");
+});
+
+test("when both alias and state-machine apply, they render in deterministic order (alias first)", () => {
+  const directives = detectFor(TRAVERSAL_SOURCE, TRAVERSAL_TASK);
+  // Both fire; the alias directive precedes the state-machine invariant.
+  assert.equal(directives[0]!.kind, "chained_lookup_alias_traversal");
+  assert.equal(directives[1]!.kind, "traversal_state_machine_invariant");
+
+  const human = renderCapsuleV2Human(resultWith([pivotItem(TRAVERSAL_SOURCE)], directives));
+  assert.ok(
+    human.indexOf("## Edit risk / patch hint") < human.indexOf("## Edit risk / state-machine invariant"),
+    "the alias patch hint must render before the state-machine invariant",
+  );
+});
+
+test("the state-machine directive text is generic — no instance ids or gold-patch tokens", () => {
+  const directive = stateMachineDirective(detectFor(TRAVERSAL_SOURCE, TRAVERSAL_TASK))!;
+  const corpus = directive.directive.toLowerCase();
+
+  for (const banned of [
+    "django",
+    "11820",
+    "models.e015",
+    "_check_ordering",
+    "to_opts.model",
+    "get_path_info",
+    "_meta.pk",
+    "_cls",
+    "pk",
+    "aggregates",
+    "acme",
+    "widgets",
   ]) {
     assert.ok(!corpus.includes(banned), `directive text must not mention "${banned}"`);
   }

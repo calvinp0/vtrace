@@ -312,11 +312,20 @@ export interface CapsuleV2Diagnostics {
  * each segment to a concrete field/target), and the tempting wrong fix is to
  * `continue` past an alias segment (e.g. `pk`) instead of resolving it to its
  * concrete target and updating traversal state.
+ *
+ * `traversal_state_machine_invariant` is the structural companion to the alias
+ * diagnosis: the pivot walks a chained path using a MUTABLE TRAVERSAL CURSOR
+ * (`if X.is_relation: cursor = next_target`). Resolving the alias is not enough —
+ * every segment must update the cursor for the next segment, and the cursor must
+ * be terminated when traversal cannot continue, or later segments validate against
+ * stale state. It can render alongside `chained_lookup_alias_traversal` (appended
+ * after it for deterministic ordering).
  */
 export type EditRiskKind =
   | "shared_state_mutation"
   | "guarded_shared_state_mutation"
-  | "chained_lookup_alias_traversal";
+  | "chained_lookup_alias_traversal"
+  | "traversal_state_machine_invariant";
 
 /** How strongly the trigger signals support the directive. */
 export type EditRiskConfidence = "high" | "medium" | "low";

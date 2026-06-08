@@ -10,7 +10,17 @@ import { itemBlockText } from "./renderItem";
 import {
   CapsuleV2Mode,
   type CapsuleV2Result,
+  type EditRiskKind,
 } from "./types";
+
+// Section heading for an edit-risk directive. Most directives are patch hints; the
+// traversal state-machine invariant is a structural hint, so it gets its own
+// heading. Heading is a rendering concern (kept off the JSON directive shape).
+function editRiskHeading(kind: EditRiskKind): string {
+  return kind === "traversal_state_machine_invariant"
+    ? "## Edit risk / state-machine invariant"
+    : "## Edit risk / patch hint";
+}
 
 export function renderCapsuleV2Human(result: CapsuleV2Result): string {
   const lines: string[] = [];
@@ -40,7 +50,7 @@ export function renderCapsuleV2Human(result: CapsuleV2Result): string {
   // reads the focused source, then the warning about how NOT to edit it.
   for (const directive of result.diagnostics.edit_risk_directives ?? []) {
     lines.push("");
-    lines.push("## Edit risk / patch hint");
+    lines.push(editRiskHeading(directive.kind));
     lines.push("");
     lines.push(directive.directive);
   }
