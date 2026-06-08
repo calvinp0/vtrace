@@ -73,6 +73,38 @@ const COMPOSED_QUERY_TASK = [
   "via union() leaks the wrong values across the combined query parts.",
 ].join("\n");
 
+// A chained lookup/path traversal: the pivot loops over split path segments and
+// resolves each to a concrete field, following relations to the next hop. The
+// `pk` alias segment is the trap — the tempting wrong fix is `continue`.
+const TRAVERSAL_SOURCE = [
+  "def _check_ordering(cls):",
+  "    for part in field.split(LOOKUP_SEP):",
+  "        fld = _cls._meta.get_field(part)",
+  "        if fld.is_relation:",
+  "            _cls = fld.get_path_info()[-1].to_opts.model",
+  "    return errors",
+].join("\n");
+
+// A plain loop over split strings: a segment loop with NO field-resolution helper.
+// It must NOT trigger the traversal directive even under a traversal task.
+const PLAIN_SPLIT_LOOP_SOURCE = [
+  "def join_words(text):",
+  "    result = []",
+  "    for word in text.split(' '):",
+  "        result.append(word.strip())",
+  "    return ' '.join(result)",
+].join("\n");
+
+// A task describing a chained lookup over a related-field path with a `pk` alias
+// segment and the `__` lookup separator the issue prose uses.
+const TRAVERSAL_TASK = [
+  "instance: acme__widgets-7777",
+  "repo: acme/widgets",
+  "",
+  "Ordering by a related field path like author__profile__pk raises on the",
+  "nonexistent field because the lookup traversal mishandles the pk segment.",
+].join("\n");
+
 function pivotItem(source: string): CapsuleV2Item {
   return {
     role: "pivot",
@@ -211,6 +243,80 @@ test("the guarded directive text is generic — no instance ids or hardcoded fra
     "acme",
     "widgets",
     "values_select",
+  ]) {
+    assert.ok(!corpus.includes(banned), `directive text must not mention "${banned}"`);
+  }
+});
+
+test("a split-segment loop that resolves fields + a traversal task emits chained_lookup_alias_traversal", () => {
+  const directives = detectFor(TRAVERSAL_SOURCE, TRAVERSAL_TASK);
+
+  assert.equal(directives.length, 1);
+  const directive = directives[0]!;
+  assert.equal(directive.kind, "chained_lookup_alias_traversal");
+  // The task names a `pk` alias token next to a split-segment loop — the strong
+  // trigger.
+  assert.equal(directive.confidence, "high");
+  assert.match(directive.reason, /alias/);
+  assert.match(directive.reason, /split path segments/);
+});
+
+test("the traversal directive appears in the rendered human output, near the pivot", () => {
+  const directives = detectFor(TRAVERSAL_SOURCE, TRAVERSAL_TASK);
+  const human = renderCapsuleV2Human(resultWith([pivotItem(TRAVERSAL_SOURCE)], directives));
+
+  assert.match(human, /^## Edit risk \/ patch hint$/m);
+  assert.match(human, /chained lookup\/path traversal/);
+  assert.match(human, /do not skip alias segments outright/);
+  assert.match(human, /Resolve aliases to their concrete field\/target/);
+  assert.match(human, /clear the traversal cursor/);
+  assert.match(human, /later path segments still fail correctly/);
+  assert.ok(
+    human.indexOf("## Edit risk / patch hint") > human.indexOf("_check_ordering"),
+    "the directive must render after the pivot source it warns about",
+  );
+});
+
+test("the traversal directive appears in the Stage 5 injected snapshot", () => {
+  const directives = detectFor(TRAVERSAL_SOURCE, TRAVERSAL_TASK);
+  const classification = classifyCapsuleV2Output(resultWith([pivotItem(TRAVERSAL_SOURCE)], directives));
+
+  assert.equal(classification.policyAction, "inject");
+  assert.match(classification.context, /## Edit risk \/ patch hint/);
+  assert.match(classification.context, /chained lookup\/path traversal/);
+  assert.match(classification.context, /do not skip alias segments outright/);
+  assert.match(classification.context, /Resolve aliases to their concrete field\/target/);
+});
+
+test("a plain loop over split strings (no field resolution) emits no traversal directive", () => {
+  const directives = detectFor(PLAIN_SPLIT_LOOP_SOURCE, TRAVERSAL_TASK);
+  assert.equal(directives.length, 0);
+});
+
+test("a task mentioning pk without a traversal source emits no traversal directive", () => {
+  // BENIGN_SOURCE has no split-segment loop or resolution helper, so even a task
+  // that names `pk` must not trigger the traversal directive.
+  const pkTask = "instance: acme__widgets-9\n\nThe pk of the model is wrong somewhere.";
+  const directives = detectFor(BENIGN_SOURCE, pkTask);
+  assert.equal(directives.length, 0);
+});
+
+test("the traversal directive text is generic — no instance ids or gold-patch tokens", () => {
+  const directive = detectFor(TRAVERSAL_SOURCE, TRAVERSAL_TASK)[0]!;
+  const corpus = directive.directive.toLowerCase();
+
+  for (const banned of [
+    "django",
+    "11820",
+    "models.e015",
+    "_check_ordering",
+    "to_opts.model",
+    "get_path_info",
+    "_meta.pk",
+    "aggregates",
+    "acme",
+    "widgets",
+    "continue",
   ]) {
     assert.ok(!corpus.includes(banned), `directive text must not mention "${banned}"`);
   }

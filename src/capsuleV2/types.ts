@@ -306,8 +306,17 @@ export interface CapsuleV2Diagnostics {
  * X.mutating_call(…)`), so the tempting wrong fix is relaxing the guard rather
  * than cloning before mutation. `shared_state_mutation` is the bare-mutation
  * fallback when no guard is detectable.
+ *
+ * `chained_lookup_alias_traversal` is a distinct bug class: the pivot validates a
+ * chained lookup/path traversal (a loop over split path segments that resolves
+ * each segment to a concrete field/target), and the tempting wrong fix is to
+ * `continue` past an alias segment (e.g. `pk`) instead of resolving it to its
+ * concrete target and updating traversal state.
  */
-export type EditRiskKind = "shared_state_mutation" | "guarded_shared_state_mutation";
+export type EditRiskKind =
+  | "shared_state_mutation"
+  | "guarded_shared_state_mutation"
+  | "chained_lookup_alias_traversal";
 
 /** How strongly the trigger signals support the directive. */
 export type EditRiskConfidence = "high" | "medium" | "low";
