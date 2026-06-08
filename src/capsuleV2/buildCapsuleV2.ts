@@ -65,6 +65,7 @@ import {
   type NonSourceDownrank,
 } from "./nonSourceExample";
 import { anchorTitleSymbols, type TitleSymbolResult } from "./titleSymbolAnchoring";
+import { anchorLiterals, type LiteralAnchorResult } from "./literalAnchoring";
 import {
   classifyGenericLexicalDecoy,
   collectQueryTokens,
@@ -238,6 +239,31 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       }
     : {};
 
+  // High-signal literal / option / acronym anchoring. Complements title-symbol
+  // anchoring for the misses whose strongest term is NOT a normal symbol shape — an
+  // ALL-CAPS format/acronym (`FITS`, `CDS`), a dunder (`__array_function__`), a CLI/
+  // config option (`--ignore-paths`), or a backticked config name. Resolves each to
+  // indexed symbols by name / path segment / body literal / config constant, and
+  // seeds them into the pool at the SAME strength tier as title-symbol matches. Like
+  // title-symbol, only symbols not already present are injected (a synthesized anchor
+  // candidate is thin and must not replace a richer existing one).
+  const literalAnchors: LiteralAnchorResult = anchorLiterals({ db: input.db, task: input.task });
+  if (literalAnchors.candidates.length > 0) {
+    const poolIds = new Set(candidates.map((c) => c.symbolId));
+    const fresh = literalAnchors.candidates.filter((c) => !poolIds.has(c.symbolId));
+    if (fresh.length > 0) {
+      candidates = mergeCandidatesPreferring(fresh, candidates, CANDIDATE_POOL_SIZE);
+    }
+  }
+  const literalAnchorIds = new Set(literalAnchors.matches.map((m) => m.symbolId));
+  const literalAnchorDiagnostics: Partial<CapsuleV2Result["diagnostics"]> = literalAnchors.used
+    ? {
+        literal_anchor_search_used: true,
+        literal_anchor_terms: literalAnchors.terms,
+        literal_anchor_matches: literalAnchors.matches.map((m) => ({ term: m.term, path: m.path, symbol: m.symbol })),
+      }
+    : {};
+
   // Merge the anchor-resolved targets AHEAD of everything else: an explicit source
   // anchor is the strongest edit-site signal, so it must never be crowded out of
   // the pool by the lexical ranking it was meant to correct.
@@ -400,17 +426,24 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // names the exact string this symbol emits) ranks ahead of a title-symbol match,
   // which in turn ranks ahead of ordinary lexical/graph candidates — exactly the
   // priority line-anchor/body-literal > title-symbol > normal.
-  if (anchorSymbolIds.size > 0 || sqlRenderingTrigger.active || titleSymbolIds.size > 0) {
+  if (
+    anchorSymbolIds.size > 0
+    || sqlRenderingTrigger.active
+    || titleSymbolIds.size > 0
+    || literalAnchorIds.size > 0
+  ) {
     const anchorRank = (entry: RefinedRoledCandidate): number =>
       anchorSymbolIds.has(entry.candidate.symbolId) ? 1 : 0;
     const renderingRank = (entry: RefinedRoledCandidate): number =>
       sqlRenderingTrigger.active
         ? sqlRenderingRelevance(entry.candidate.localName, sqlRenderingTrigger.compositionTerms)
         : 0;
-    // Direct-evidence tier: body-literal (3) > title-symbol (2) > normal (1).
+    // Direct-evidence tier: body-literal (3) > title-symbol / high-signal literal
+    // anchor (2) > normal (1). Title-symbol and literal anchors share tier 2 — an
+    // exact title-name and an exact high-signal-literal hit are comparable evidence.
     const evidenceTier = (entry: RefinedRoledCandidate): number => {
       if (entry.candidate.scores.bodyLiteral > 0) return 3;
-      if (titleSymbolIds.has(entry.candidate.symbolId)) return 2;
+      if (titleSymbolIds.has(entry.candidate.symbolId) || literalAnchorIds.has(entry.candidate.symbolId)) return 2;
       return 1;
     };
     pivotCandidates.sort(
@@ -447,6 +480,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         ...bodyLiteralDiagnostics(bodyLiteralMatches),
         ...nonSourceDiagnostics,
         ...titleSymbolDiagnostics,
+        ...literalAnchorDiagnostics,
         ...genericLexicalDecoyDiagnostics,
       },
     });
@@ -557,6 +591,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...lineAnchorDiagnostics,
       ...nonSourceDiagnostics,
       ...titleSymbolDiagnostics,
+      ...literalAnchorDiagnostics,
       ...genericLexicalDecoyDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
     },

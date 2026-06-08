@@ -50,6 +50,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -165,6 +167,8 @@
       "title_symbol_matches": [
         "ModelAdmin -> django/contrib/admin/options.py::ModelAdmin"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -278,6 +282,8 @@
       "title_symbol_matches": [
         "values_list -> django/db/models/query.py::values_list"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -388,6 +394,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -499,6 +507,8 @@
       "title_symbol_matches": [
         "ForeignKey -> django/db/models/fields/related.py::ForeignKey"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -613,6 +623,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -719,6 +731,8 @@
       "title_symbol_matches": [
         "HttpResponse -> http/response.py::HttpResponse"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -828,6 +842,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [
         "utils -> db/backends/utils.py"
       ],
@@ -945,6 +961,8 @@
       "title_symbol_matches": [
         "call_command -> core/management/__init__.py::call_command"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1052,6 +1070,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1164,6 +1184,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1280,6 +1302,8 @@
       "title_symbol_matches": [
         "Query.resolve_lookup_value -> db/models/sql/query.py::resolve_lookup_value"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1390,6 +1414,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1503,6 +1529,8 @@
       "title_symbol_matches": [
         "FileInput -> forms/widgets.py::FileInput"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1616,6 +1644,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1730,6 +1760,8 @@
         "QuerySet -> contrib/admin/filters.py::queryset",
         "QuerySet.in_bulk -> db/models/query.py::in_bulk"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1842,6 +1874,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1958,6 +1992,8 @@
       "title_symbol_matches": [
         "ExpressionWrapper -> db/models/expressions.py::ExpressionWrapper"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2075,6 +2111,8 @@
       "title_symbol_matches": [
         "ForeignKey -> db/models/fields/related.py::ForeignKey"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2198,6 +2236,8 @@
         "HttpResponse -> http/response.py::HttpResponse",
         "delete_cookie -> http/response.py::delete_cookie"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [

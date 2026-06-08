@@ -287,6 +287,10 @@ export interface CapsuleSummary {
   readonly titleSymbolTerms: readonly string[];
   /** Title-symbol resolutions ("term -> path::symbol"). */
   readonly titleSymbolMatches: readonly string[];
+  /** High-signal literal/option/acronym terms extracted from the task. */
+  readonly literalAnchorTerms: readonly string[];
+  /** Literal-anchor resolutions ("term -> path::symbol"). */
+  readonly literalAnchorMatches: readonly string[];
   /** Generic-infrastructure lexical decoys suppressed ("token -> path"). */
   readonly genericLexicalDecoysSuppressed: readonly string[];
 }
@@ -336,6 +340,10 @@ export function summarizeCapsule(result: CapsuleV2Result): CapsuleSummary {
     ),
     titleSymbolTerms: result.diagnostics.title_symbol_terms ?? [],
     titleSymbolMatches: (result.diagnostics.title_symbol_matches ?? []).map(
+      (m) => `${m.term} -> ${m.path}::${m.symbol}`,
+    ),
+    literalAnchorTerms: result.diagnostics.literal_anchor_terms ?? [],
+    literalAnchorMatches: (result.diagnostics.literal_anchor_matches ?? []).map(
       (m) => `${m.term} -> ${m.path}::${m.symbol}`,
     ),
     genericLexicalDecoysSuppressed: (result.diagnostics.generic_lexical_decoys_suppressed ?? []).map(
@@ -707,6 +715,10 @@ export interface RetrievalEvalRow {
   readonly title_symbol_terms: readonly string[];
   /** Title-symbol resolutions ("term -> path::symbol") for this instance. */
   readonly title_symbol_matches: readonly string[];
+  /** High-signal literal/option/acronym terms extracted (literal anchoring). */
+  readonly literal_anchor_terms: readonly string[];
+  /** Literal-anchor resolutions ("term -> path::symbol") for this instance. */
+  readonly literal_anchor_matches: readonly string[];
   /** Generic-infrastructure lexical decoys suppressed ("token -> path") for this instance. */
   readonly generic_lexical_decoys_suppressed: readonly string[];
 
@@ -763,6 +775,9 @@ export function evaluateInstance(
       non_source_downranked: [],
       title_symbol_terms: [],
       title_symbol_matches: [],
+      literal_anchor_terms: [],
+      literal_anchor_matches: [],
+      generic_lexical_decoys_suppressed: [],
       diagnostics: { top_pivots: [], top_support: [], top_discarded: [] },
     };
   }
@@ -823,6 +838,8 @@ export function evaluateInstance(
     non_source_downranked: summary.nonSourceDownranked,
     title_symbol_terms: summary.titleSymbolTerms,
     title_symbol_matches: summary.titleSymbolMatches,
+    literal_anchor_terms: summary.literalAnchorTerms,
+    literal_anchor_matches: summary.literalAnchorMatches,
     generic_lexical_decoys_suppressed: summary.genericLexicalDecoysSuppressed,
     diagnostics: topKDiagnostics(summary),
   };
@@ -1031,6 +1048,8 @@ const CSV_COLUMNS: readonly (keyof RetrievalEvalRow)[] = [
   "non_source_downranked",
   "title_symbol_terms",
   "title_symbol_matches",
+  "literal_anchor_terms",
+  "literal_anchor_matches",
   "generic_lexical_decoys_suppressed",
 ];
 
@@ -1328,6 +1347,12 @@ export function renderMarkdown(
       }
       if (row.title_symbol_matches.length > 0) {
         lines.push(`- title-symbol matches: ${row.title_symbol_matches.join("; ")}`);
+      }
+      if (row.literal_anchor_terms.length > 0) {
+        lines.push(`- literal-anchor terms: ${row.literal_anchor_terms.join(", ")}`);
+      }
+      if (row.literal_anchor_matches.length > 0) {
+        lines.push(`- literal-anchor matches: ${row.literal_anchor_matches.join("; ")}`);
       }
       if (row.generic_lexical_decoys_suppressed.length > 0) {
         lines.push(`- generic lexical decoys suppressed: ${row.generic_lexical_decoys_suppressed.join("; ")}`);

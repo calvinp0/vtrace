@@ -37,14 +37,14 @@ support / discarded are compared against the fixture's `expected_files` and
 | workspace_error_count | 0 |
 | no_context_count | 2 |
 | top_1_file_accuracy | 60.0% |
-| top_3_file_recall | 73.3% |
-| expected_file_as_pivot_rate | 70.0% |
+| top_3_file_recall | 76.7% |
+| expected_file_as_pivot_rate | 73.3% |
 | expected_file_as_support_rate | 6.7% |
 | expected_file_discarded_rate | 6.7% |
-| expected_file_missing_rate | 16.7% |
-| expected_symbol_hit_rate | 46.7% |
+| expected_file_missing_rate | 13.3% |
+| expected_symbol_hit_rate | 50.0% |
 | expected_symbol_as_pivot_rate | 16.7% |
-| mean_capsule_tokens | 1872.9 |
+| mean_capsule_tokens | 1981.4 |
 | mean_pivot_count | 1.87 |
 | mean_support_count | 3.73 |
 
@@ -55,9 +55,9 @@ Does Capsule v2 retrieval stay stable as cross-repo coverage grows from 16 to 30
 | metric | previous 16-instance cross-repo | new 30-instance cross-repo | delta |
 | --- | --- | --- | --- |
 | top-1 file accuracy | 62.5% | 60.0% | -2.5 pp ▼ |
-| top-3 file recall | 87.5% | 73.3% | -14.2 pp ▼ |
-| expected file as pivot | 81.3% | 70.0% | -11.3 pp ▼ |
-| expected file missing | 6.3% | 16.7% | +10.4 pp ▼ |
+| top-3 file recall | 87.5% | 76.7% | -10.8 pp ▼ |
+| expected file as pivot | 81.3% | 73.3% | -7.9 pp ▼ |
+| expected file missing | 6.3% | 13.3% | +7.1 pp ▼ |
 
 ## Aggregate metrics — by label source
 
@@ -68,12 +68,12 @@ All 30 instances share one label source (gold_patch); see the table above.
 | repo | instances | top-1 file | top-3 file | as pivot | missing | mean tokens | mean pivots | mean support |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | sympy/sympy | 5/5 | 80.0% | 100.0% | 100.0% | 0.0% | 3162.4 | 2.00 | 4.00 |
-| astropy/astropy | 4/4 | 50.0% | 50.0% | 50.0% | 25.0% | 1497.3 | 2.00 | 4.00 |
+| astropy/astropy | 4/4 | 50.0% | 75.0% | 75.0% | 0.0% | 2321.8 | 2.00 | 4.00 |
 | matplotlib/matplotlib | 4/4 | 0.0% | 50.0% | 25.0% | 25.0% | 299.5 | 1.50 | 3.00 |
 | sphinx-doc/sphinx | 4/4 | 25.0% | 50.0% | 50.0% | 50.0% | 2799.0 | 2.00 | 4.00 |
 | psf/requests | 3/3 | 66.7% | 66.7% | 66.7% | 0.0% | 685.0 | 2.00 | 4.00 |
 | pytest-dev/pytest | 3/3 | 100.0% | 100.0% | 100.0% | 0.0% | 753.0 | 2.00 | 4.00 |
-| pydata/xarray | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 1910.0 | 2.00 | 4.00 |
+| pydata/xarray | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 1888.0 | 2.00 | 4.00 |
 | scikit-learn/scikit-learn | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 3379.0 | 2.00 | 4.00 |
 | mwaskom/seaborn | 1/1 | 100.0% | 100.0% | 100.0% | 0.0% | 1506.0 | 2.00 | 4.00 |
 | pallets/flask | 1/1 | 100.0% | 100.0% | 100.0% | 0.0% | 5594.0 | 2.00 | 4.00 |
@@ -81,11 +81,11 @@ All 30 instances share one label source (gold_patch); see the table above.
 
 ## Miss summary (compact)
 
-- non-top-3 cases: 8
+- non-top-3 cases: 7
 - missing (not surfaced): 1
 - present-but-support: 1
 - present-but-discarded: 2
-- wrong-subsystem: 4
+- wrong-subsystem: 3
 - body-literal misses: 0
 - parser/language gaps: 0
 
@@ -93,11 +93,11 @@ All 30 instances share one label source (gold_patch); see the table above.
 
 | category | count |
 | --- | --- |
-| none | 22 |
+| none | 23 |
 | missing_from_candidates | 1 |
 | present_but_support | 1 |
 | present_but_discarded | 2 |
-| wrong_subsystem | 4 |
+| wrong_subsystem | 3 |
 
 ## Per-instance results
 
@@ -111,7 +111,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 | matplotlib__matplotlib-22719 | gold_patch | lib/matplotlib/category.py | lib/matplotlib/_api/deprecation.py::MatplotlibDeprecationWarning | support | no | yes | hit_top3 | none |
 | matplotlib__matplotlib-24627 | gold_patch | lib/matplotlib/axes/_base.py | lib/matplotlib/figure.py::clf | pivot | no | yes | hit_top3 | none |
 | astropy__astropy-14365 | gold_patch | astropy/io/ascii/qdp.py | astropy/io/ascii/qdp.py::_write_table_qdp | pivot | yes | yes | hit_top1_pivot | none |
-| astropy__astropy-14369 | gold_patch | astropy/units/format/cds.py | astropy/io/ascii/mrt.py::Mrt | missing | no | no | missing | wrong_subsystem |
+| astropy__astropy-14369 | gold_patch | astropy/units/format/cds.py | astropy/io/ascii/cds.py::Cds | pivot | no | yes | hit_top3 | none |
 | pytest-dev__pytest-10051 | gold_patch | src/_pytest/logging.py | src/_pytest/logging.py::get_records | pivot | yes | yes | hit_top1_pivot | none |
 | pytest-dev__pytest-5262 | gold_patch | src/_pytest/capture.py | src/_pytest/capture.py::EncodedFile | pivot | yes | yes | hit_top1_pivot | none |
 | sphinx-doc__sphinx-7462 | gold_patch | sphinx/domains/python.py | sphinx/application.py::add_object_type | pivot | no | yes | hit_top3 | none |
@@ -120,7 +120,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 | psf__requests-1724 | gold_patch | requests/sessions.py | requests/utils.py::stream_decode_response_unicode | discarded | no | no | hit_discarded | present_but_discarded |
 | pallets__flask-5014 | gold_patch | src/flask/blueprints.py | src/flask/blueprints.py::Blueprint | pivot | yes | yes | hit_top1_pivot | none |
 | astropy__astropy-14539 | gold_patch | astropy/io/fits/diff.py | astropy/io/fits/diff.py::identical | pivot | yes | yes | hit_top1_pivot | none |
-| astropy__astropy-14598 | gold_patch | astropy/io/fits/card.py | astropy/extern/configobj/configobj.py::_quote | support | no | no | hit_support | present_but_support |
+| astropy__astropy-14598 | gold_patch | astropy/io/fits/card.py | astropy/io/fits/diff.py::FITSDiff | support | no | no | hit_support | present_but_support |
 | matplotlib__matplotlib-24970 | gold_patch | lib/matplotlib/colors.py | lib/matplotlib/_api/deprecation.py::MatplotlibDeprecationWarning | missing | no | no | missing | wrong_subsystem |
 | matplotlib__matplotlib-25960 | gold_patch | lib/matplotlib/figure.py | — | discarded | no | no | skipped_no_context | present_but_discarded |
 | mwaskom__seaborn-3187 | gold_patch | seaborn/_core/scales.py | seaborn/utils.py::move_legend | pivot | yes | yes | hit_top1_pivot | none |
@@ -135,25 +135,6 @@ All 30 instances share one label source (gold_patch); see the table above.
 | sympy__sympy-16766 | gold_patch | sympy/printing/pycode.py | sympy/printing/pycode.py::PythonCodePrinter | pivot | yes | yes | hit_top1_pivot | none |
 
 ## Misses / failures — top-k diagnostics
-
-### astropy__astropy-14369 — missing / wrong_subsystem
-
-- expected: astropy/units/format/cds.py, astropy/units/format/cds_parsetab.py
-- reason: expected file not surfaced (candidate_count=25)
-- top pivots:
-  - astropy/io/ascii/mrt.py::Mrt — actionable class — symbol-name match; lexical match; issue-domain relevance
-  - astropy/io/ascii/mrt.py::MrtSplitter — actionable class — symbol-name match; lexical match; issue-domain relevance
-- top support:
-  - astropy/io/ascii/mrt.py::MrtData — strong target beyond the pivot budget — actionable class — symbol-name match; lexical match; issue-domain relevance
-  - astropy/io/ascii/mrt.py::MrtHeader — strong target beyond the pivot budget — actionable class — symbol-name match; lexical match; issue-domain relevance
-  - astropy/io/ascii/mrt.py::MRT_TEMPLATE — symbol-name match; lexical match; issue-domain relevance (not a pivot: module_constant is a low-actionability edit target)
-  - astropy/io/ascii/mrt.py::write — lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))
-- top discarded:
-  - astropy/io/ascii/cds.py::CdsData — beyond standard support budget (max 4)
-  - astropy/io/ascii/mrt.py::_set_column_val_limits — beyond standard support budget (max 4)
-  - astropy/io/ascii/cparser.pyx::FileString — beyond standard support budget (max 4)
-  - astropy/io/ascii/cparser.pyx::__dealloc__ — beyond standard support budget (max 4)
-  - astropy/io/ascii/cparser.pyx::__getitem__ — beyond standard support budget (max 4)
 
 ### psf__requests-1724 — hit_discarded / present_but_discarded
 
@@ -181,20 +162,22 @@ All 30 instances share one label source (gold_patch); see the table above.
 - expected: astropy/io/fits/card.py
 - reason: —
 - down-weighted lexical tokens: single
+- literal-anchor terms: FITS
+- literal-anchor matches: FITS -> astropy/units/format/fits.py::Fits; FITS -> astropy/io/fits/diff.py::FITSDiff; FITS -> astropy/io/fits/fitsrec.py::FITS_rec
 - top pivots:
-  - astropy/extern/configobj/configobj.py::_quote — actionable method — symbol-name match; lexical match; issue-domain relevance
-  - astropy/io/fits/hdu/hdulist.py::fitsopen — actionable function — strong lexical match; issue-domain relevance; 357 dependents
+  - astropy/io/fits/diff.py::FITSDiff — actionable class — symbol-name match; strong lexical match
+  - astropy/io/fits/fitsrec.py::FITS_rec — actionable class — symbol-name match; strong lexical match
 - top support:
+  - astropy/units/format/fits.py::Fits — strong target beyond the pivot budget — actionable class — symbol-name match; strong lexical match
   - astropy/io/fits/hdu/table.py::quotechar — symbol-name match; lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)
   - astropy/io/ascii/core.py::quotechar — symbol-name match; issue-domain relevance; 5 dependents (not a pivot: module_variable is a low-actionability edit target)
   - astropy/io/fits/card.py::_value_FSC_RE — strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)
-  - astropy/io/fits/header.py::__repr__ — lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))
 - top discarded:
+  - astropy/extern/configobj/configobj.py::_quote — beyond standard support budget (max 4)
+  - astropy/io/fits/hdu/hdulist.py::fitsopen — beyond standard support budget (max 4)
+  - astropy/io/fits/header.py::__repr__ — beyond standard support budget (max 4)
   - astropy/io/ascii/tests/test_c_reader.py::test_doubled_quotes_segv — a test symbol, not an edit target
   - astropy/io/ascii/tests/test_c_reader.py::test_doubled_quotes — a test symbol, not an edit target
-  - astropy/io/fits/tests/test_header.py::test_invalid_keyword_cards — a test symbol, not an edit target
-  - astropy/io/fits/tests/test_header.py::test_floating_point_string_representation_card — a test symbol, not an edit target
-  - astropy/io/ascii/tests/test_c_reader.py::test_empty_quotes — a test symbol, not an edit target
 
 ### matplotlib__matplotlib-24970 — missing / wrong_subsystem
 

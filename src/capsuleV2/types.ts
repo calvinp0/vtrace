@@ -340,6 +340,20 @@ export interface CapsuleV2Diagnostics {
   /** The production symbols those title terms resolved to. */
   title_symbol_matches?: TitleSymbolMatchDiagnostic[];
   /**
+   * High-signal literal / option / acronym anchoring. Complements title-symbol
+   * anchoring for misses whose strongest term is not a normal symbol shape — an
+   * ALL-CAPS format/acronym (`FITS`, `CDS`), a dunder (`__array_function__`), a
+   * CLI/config option (`--ignore-paths`), or a backticked config name. Those terms
+   * are resolved to indexed symbols by name / path segment / body literal / config
+   * constant and seeded into the pool at title-symbol strength. Present only when at
+   * least one high-signal term resolved to an indexed production symbol.
+   */
+  literal_anchor_search_used?: boolean;
+  /** The high-signal terms extracted from the task (present when search ran). */
+  literal_anchor_terms?: string[];
+  /** The production symbols those literal terms resolved to. */
+  literal_anchor_matches?: LiteralAnchorMatchDiagnostic[];
+  /**
    * Generic-infrastructure lexical-decoy suppression. A generic bug-report word
    * ("deprecation", "dict", "utils") over-anchors retrieval to an
    * infrastructure/helper module NAMED after that word (`deprecation.py`, a
@@ -366,6 +380,14 @@ export interface GenericLexicalDecoyDiagnostic {
 /** One title term resolved to an indexed production symbol. */
 export interface TitleSymbolMatchDiagnostic {
   /** The title term that matched (e.g. "PythonCodePrinter"). */
+  term: string;
+  path: string;
+  symbol: string;
+}
+
+/** One high-signal literal/option/acronym resolved to an indexed production symbol. */
+export interface LiteralAnchorMatchDiagnostic {
+  /** The high-signal term that matched (e.g. "FITS", "--ignore-paths"). */
   term: string;
   path: string;
   symbol: string;

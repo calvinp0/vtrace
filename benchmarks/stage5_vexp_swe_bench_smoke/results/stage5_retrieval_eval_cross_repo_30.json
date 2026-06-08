@@ -53,6 +53,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -168,6 +170,14 @@
       ],
       "title_symbol_matches": [
         "Permutation -> sympy/combinatorics/permutations.py::Permutation"
+      ],
+      "literal_anchor_terms": [
+        "Permutation"
+      ],
+      "literal_anchor_matches": [
+        "Permutation -> sympy/combinatorics/permutations.py::Permutation",
+        "Permutation -> sympy/combinatorics/perm_groups.py::PermutationGroup",
+        "Permutation -> sympy/combinatorics/permutations.py::__new__"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -285,6 +295,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -403,6 +415,8 @@
       "title_symbol_matches": [
         "fowlkes_mallows_score -> sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -493,11 +507,11 @@
       "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
       "expected_symbol_best_rank": null,
-      "expected_symbol_role": "missing",
+      "expected_symbol_role": "discarded",
       "contains_expected_file_top1": true,
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
-      "contains_expected_symbol_anywhere": false,
+      "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
       "discarded_count": 19,
@@ -512,6 +526,15 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [
+        "multinomial",
+        "neg_log_loss"
+      ],
+      "literal_anchor_matches": [
+        "multinomial -> examples/applications/plot_out_of_core_classification.py::partial_fit_classifiers",
+        "multinomial -> sklearn/linear_model/logistic.py::_check_solver_option",
+        "multinomial -> sklearn/linear_model/logistic.py::_log_reg_scoring_path"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -560,18 +583,18 @@
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "sklearn/tree/tree.py",
-            "symbol": "predict_proba",
+            "path": "examples/applications/plot_out_of_core_classification.py",
+            "symbol": "partial_fit_classifiers",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "sklearn/ensemble/bagging.py",
-            "symbol": "predict_proba",
+            "path": "sklearn/linear_model/logistic.py",
+            "symbol": "_check_solver_option",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "sklearn/calibration.py",
-            "symbol": "predict_proba",
+            "path": "sklearn/linear_model/logistic.py",
+            "symbol": "_log_reg_scoring_path",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -624,6 +647,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [
         "deprecation -> lib/matplotlib/_api/deprecation.py"
       ],
@@ -735,6 +760,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -807,8 +834,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 1155,
-      "used_percent": 14.44,
+      "estimated_tokens": 878,
+      "used_percent": 10.98,
       "expected_files": [
         "astropy/io/ascii/qdp.py"
       ],
@@ -823,8 +850,8 @@
       ],
       "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
-      "expected_symbol_best_rank": 6,
-      "expected_symbol_role": "support",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "discarded",
       "contains_expected_file_top1": true,
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
@@ -848,6 +875,16 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [
+        "QDP",
+        "READ",
+        "SERR"
+      ],
+      "literal_anchor_matches": [
+        "QDP -> astropy/io/ascii/qdp.py::QDP",
+        "QDP -> astropy/io/ascii/qdp.py::QDPHeader",
+        "QDP -> astropy/io/ascii/qdp.py::QDPSplitter"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -858,11 +895,16 @@
           },
           {
             "path": "astropy/io/ascii/qdp.py",
-            "symbol": "_read_table_qdp",
-            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+            "symbol": "QDPHeader",
+            "role_reason": "actionable class — symbol-name match; strong lexical match"
           }
         ],
         "top_support": [
+          {
+            "path": "astropy/io/ascii/qdp.py",
+            "symbol": "_read_table_qdp",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+          },
           {
             "path": "astropy/io/ascii/qdp.py",
             "symbol": "_interpret_err_lines",
@@ -875,16 +917,21 @@
           },
           {
             "path": "astropy/io/ascii/qdp.py",
+            "symbol": "QDPSplitter",
+            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; strong lexical match"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "astropy/io/ascii/qdp.py",
             "symbol": "QDP",
-            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+            "discard_reason": "beyond standard support budget (max 4)"
           },
           {
             "path": "astropy/io/ascii/qdp.py",
             "symbol": "_get_tables_from_qdp_file",
-            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
-          }
-        ],
-        "top_discarded": [
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
           {
             "path": "astropy/io/ascii/docs.py",
             "symbol": "READ_DOCSTRING",
@@ -899,16 +946,6 @@
             "path": "astropy/io/ascii/qdp.py",
             "symbol": "read",
             "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "astropy/io/fits/column.py",
-            "symbol": "_AsciiColumnFormat",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "astropy/io/ascii/qdp.py",
-            "symbol": "_line_type",
-            "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
       }
@@ -920,8 +957,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 736,
-      "used_percent": 9.2,
+      "estimated_tokens": 4447,
+      "used_percent": 55.59,
       "expected_files": [
         "astropy/units/format/cds.py",
         "astropy/units/format/cds_parsetab.py"
@@ -934,25 +971,27 @@
         "p_division_of_units",
         "p_product_of_units"
       ],
-      "top_1_pivot_file": "astropy/io/ascii/mrt.py",
-      "top_1_pivot_symbol": "Mrt",
+      "top_1_pivot_file": "astropy/io/ascii/cds.py",
+      "top_1_pivot_symbol": "Cds",
       "top_3_files": [
+        "astropy/io/ascii/cds.py",
+        "astropy/units/format/cds.py",
         "astropy/io/ascii/mrt.py"
       ],
-      "expected_file_best_rank": null,
-      "expected_file_role": "missing",
+      "expected_file_best_rank": 2,
+      "expected_file_role": "pivot",
       "expected_symbol_best_rank": null,
       "expected_symbol_role": "missing",
       "contains_expected_file_top1": false,
-      "contains_expected_file_top3": false,
-      "contains_expected_file_anywhere": false,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
       "discarded_count": 19,
-      "result": "missing",
-      "miss_category": "wrong_subsystem",
-      "failure_reason": "expected file not surfaced (candidate_count=25)",
+      "result": "hit_top3",
+      "miss_category": "none",
+      "failure_reason": null,
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
@@ -961,21 +1000,44 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [
+        "MRT",
+        "CDS",
+        "AAS"
+      ],
+      "literal_anchor_matches": [
+        "MRT -> astropy/io/ascii/mrt.py::Mrt",
+        "MRT -> astropy/io/ascii/mrt.py::MrtData",
+        "MRT -> astropy/io/ascii/mrt.py::MrtSplitter",
+        "CDS -> astropy/io/ascii/cds.py::Cds",
+        "CDS -> astropy/units/format/cds.py::CDS",
+        "CDS -> astropy/io/ascii/cds.py::CdsData"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
+            "path": "astropy/io/ascii/cds.py",
+            "symbol": "Cds",
+            "role_reason": "actionable class — symbol-name match; strong lexical match"
+          },
+          {
+            "path": "astropy/units/format/cds.py",
+            "symbol": "CDS",
+            "role_reason": "actionable class — symbol-name match; strong lexical match"
+          }
+        ],
+        "top_support": [
+          {
             "path": "astropy/io/ascii/mrt.py",
             "symbol": "Mrt",
-            "role_reason": "actionable class — symbol-name match; lexical match; issue-domain relevance"
+            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; lexical match; issue-domain relevance"
           },
           {
             "path": "astropy/io/ascii/mrt.py",
             "symbol": "MrtSplitter",
-            "role_reason": "actionable class — symbol-name match; lexical match; issue-domain relevance"
-          }
-        ],
-        "top_support": [
+            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; lexical match; issue-domain relevance"
+          },
           {
             "path": "astropy/io/ascii/mrt.py",
             "symbol": "MrtData",
@@ -985,27 +1047,12 @@
             "path": "astropy/io/ascii/mrt.py",
             "symbol": "MrtHeader",
             "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; lexical match; issue-domain relevance"
-          },
-          {
-            "path": "astropy/io/ascii/mrt.py",
-            "symbol": "MRT_TEMPLATE",
-            "role_reason": "symbol-name match; lexical match; issue-domain relevance (not a pivot: module_constant is a low-actionability edit target)"
-          },
-          {
-            "path": "astropy/io/ascii/mrt.py",
-            "symbol": "write",
-            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
           }
         ],
         "top_discarded": [
           {
-            "path": "astropy/io/ascii/cds.py",
-            "symbol": "CdsData",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
             "path": "astropy/io/ascii/mrt.py",
-            "symbol": "_set_column_val_limits",
+            "symbol": "MRT_TEMPLATE",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
@@ -1014,13 +1061,18 @@
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "astropy/io/ascii/cparser.pyx",
-            "symbol": "__dealloc__",
+            "path": "astropy/utils/data.py",
+            "symbol": "get_pkg_data_filename",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "astropy/io/ascii/cparser.pyx",
-            "symbol": "__getitem__",
+            "path": "astropy/io/ascii/mrt.py",
+            "symbol": "write",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "astropy/io/ascii/cds.py",
+            "symbol": "CdsData",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -1078,6 +1130,8 @@
       "title_symbol_matches": [
         "get_records -> src/_pytest/logging.py::get_records"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1191,6 +1245,8 @@
       "title_symbol_matches": [
         "EncodedFile -> src/_pytest/capture.py::EncodedFile"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1307,6 +1363,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1420,6 +1478,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1531,6 +1591,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1645,6 +1707,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1754,6 +1818,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1863,6 +1929,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1935,8 +2003,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 3184,
-      "used_percent": 39.8,
+      "estimated_tokens": 3048,
+      "used_percent": 38.1,
       "expected_files": [
         "astropy/io/fits/card.py"
       ],
@@ -1944,14 +2012,14 @@
         "Card",
         "_split"
       ],
-      "top_1_pivot_file": "astropy/extern/configobj/configobj.py",
-      "top_1_pivot_symbol": "_quote",
+      "top_1_pivot_file": "astropy/io/fits/diff.py",
+      "top_1_pivot_symbol": "FITSDiff",
       "top_3_files": [
-        "astropy/extern/configobj/configobj.py",
-        "astropy/io/fits/hdu/hdulist.py",
-        "astropy/io/fits/hdu/table.py"
+        "astropy/io/fits/diff.py",
+        "astropy/io/fits/fitsrec.py",
+        "astropy/units/format/fits.py"
       ],
-      "expected_file_best_rank": 5,
+      "expected_file_best_rank": 6,
       "expected_file_role": "support",
       "expected_symbol_best_rank": null,
       "expected_symbol_role": "missing",
@@ -1975,21 +2043,34 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [
+        "FITS"
+      ],
+      "literal_anchor_matches": [
+        "FITS -> astropy/units/format/fits.py::Fits",
+        "FITS -> astropy/io/fits/diff.py::FITSDiff",
+        "FITS -> astropy/io/fits/fitsrec.py::FITS_rec"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
-            "path": "astropy/extern/configobj/configobj.py",
-            "symbol": "_quote",
-            "role_reason": "actionable method — symbol-name match; lexical match; issue-domain relevance"
+            "path": "astropy/io/fits/diff.py",
+            "symbol": "FITSDiff",
+            "role_reason": "actionable class — symbol-name match; strong lexical match"
           },
           {
-            "path": "astropy/io/fits/hdu/hdulist.py",
-            "symbol": "fitsopen",
-            "role_reason": "actionable function — strong lexical match; issue-domain relevance; 357 dependents"
+            "path": "astropy/io/fits/fitsrec.py",
+            "symbol": "FITS_rec",
+            "role_reason": "actionable class — symbol-name match; strong lexical match"
           }
         ],
         "top_support": [
+          {
+            "path": "astropy/units/format/fits.py",
+            "symbol": "Fits",
+            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; strong lexical match"
+          },
           {
             "path": "astropy/io/fits/hdu/table.py",
             "symbol": "quotechar",
@@ -2004,14 +2085,24 @@
             "path": "astropy/io/fits/card.py",
             "symbol": "_value_FSC_RE",
             "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "astropy/extern/configobj/configobj.py",
+            "symbol": "_quote",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "astropy/io/fits/hdu/hdulist.py",
+            "symbol": "fitsopen",
+            "discard_reason": "beyond standard support budget (max 4)"
           },
           {
             "path": "astropy/io/fits/header.py",
             "symbol": "__repr__",
-            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
-          }
-        ],
-        "top_discarded": [
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
           {
             "path": "astropy/io/ascii/tests/test_c_reader.py",
             "symbol": "test_doubled_quotes_segv",
@@ -2020,21 +2111,6 @@
           {
             "path": "astropy/io/ascii/tests/test_c_reader.py",
             "symbol": "test_doubled_quotes",
-            "discard_reason": "a test symbol, not an edit target"
-          },
-          {
-            "path": "astropy/io/fits/tests/test_header.py",
-            "symbol": "test_invalid_keyword_cards",
-            "discard_reason": "a test symbol, not an edit target"
-          },
-          {
-            "path": "astropy/io/fits/tests/test_header.py",
-            "symbol": "test_floating_point_string_representation_card",
-            "discard_reason": "a test symbol, not an edit target"
-          },
-          {
-            "path": "astropy/io/ascii/tests/test_c_reader.py",
-            "symbol": "test_empty_quotes",
             "discard_reason": "a test symbol, not an edit target"
           }
         ]
@@ -2084,6 +2160,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [
         "deprecation -> lib/matplotlib/_api/deprecation.py"
       ],
@@ -2193,6 +2271,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [],
@@ -2274,6 +2354,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2388,6 +2470,12 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [
+        "InvalidUrl"
+      ],
+      "literal_anchor_matches": [
+        "InvalidUrl -> requests/exceptions.py::InvalidURL"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2460,8 +2548,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 632,
-      "used_percent": 7.9,
+      "estimated_tokens": 588,
+      "used_percent": 7.35,
       "expected_files": [
         "xarray/core/variable.py"
       ],
@@ -2471,7 +2559,9 @@
       "top_1_pivot_file": "xarray/core/variable.py",
       "top_1_pivot_symbol": "__setitem__",
       "top_3_files": [
-        "xarray/core/variable.py"
+        "xarray/core/variable.py",
+        "xarray/backends/lru_cache.py",
+        "xarray/backends/netCDF4_.py"
       ],
       "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
@@ -2499,6 +2589,14 @@
       "title_symbol_matches": [
         "Variable.__setitem__ -> xarray/core/variable.py::__setitem__"
       ],
+      "literal_anchor_terms": [
+        "__setitem__"
+      ],
+      "literal_anchor_matches": [
+        "__setitem__ -> xarray/core/variable.py::__setitem__",
+        "__setitem__ -> xarray/backends/lru_cache.py::__setitem__",
+        "__setitem__ -> xarray/backends/netCDF4_.py::__setitem__"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2521,21 +2619,26 @@
           },
           {
             "path": "xarray/core/variable.py",
-            "symbol": "isel",
-            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
-          },
-          {
-            "path": "xarray/core/variable.py",
             "symbol": "_as_array_or_item",
             "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
           },
           {
-            "path": "xarray/core/variable.py",
-            "symbol": "Variable",
-            "role_reason": "containing class for recovered edit-site methods"
+            "path": "xarray/backends/lru_cache.py",
+            "symbol": "__setitem__",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+          },
+          {
+            "path": "xarray/backends/netCDF4_.py",
+            "symbol": "__setitem__",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
           }
         ],
         "top_discarded": [
+          {
+            "path": "xarray/core/variable.py",
+            "symbol": "Variable",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
           {
             "path": "xarray/core/variable.py",
             "symbol": "__setitem__",
@@ -2554,11 +2657,6 @@
           {
             "path": "xarray/core/variable.py",
             "symbol": "__getitem__",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "xarray/core/dataarray.py",
-            "symbol": "DataArray",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -2610,6 +2708,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2726,6 +2826,8 @@
       ],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [],
@@ -2803,6 +2905,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2911,6 +3015,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -3022,6 +3128,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -3133,6 +3241,8 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -3249,6 +3359,8 @@
       "title_symbol_matches": [
         "PythonCodePrinter -> sympy/printing/pycode.py::PythonCodePrinter"
       ],
+      "literal_anchor_terms": [],
+      "literal_anchor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -3321,22 +3433,22 @@
     "workspace_error_count": 0,
     "no_context_count": 2,
     "top_1_file_accuracy": 0.6,
-    "top_3_file_recall": 0.7333,
-    "expected_file_as_pivot_rate": 0.7,
+    "top_3_file_recall": 0.7667,
+    "expected_file_as_pivot_rate": 0.7333,
     "expected_file_as_support_rate": 0.0667,
-    "expected_file_missing_rate": 0.1667,
+    "expected_file_missing_rate": 0.1333,
     "expected_file_discarded_rate": 0.0667,
-    "expected_symbol_hit_rate": 0.4667,
+    "expected_symbol_hit_rate": 0.5,
     "expected_symbol_as_pivot_rate": 0.1667,
-    "mean_capsule_tokens": 1872.9,
+    "mean_capsule_tokens": 1981.3667,
     "mean_pivot_count": 1.8667,
     "mean_support_count": 3.7333,
     "miss_taxonomy": {
-      "none": 22,
+      "none": 23,
       "missing_from_candidates": 1,
       "present_but_support": 1,
       "present_but_discarded": 2,
-      "wrong_subsystem": 4,
+      "wrong_subsystem": 3,
       "wrong_entry_point": 0,
       "generic_infrastructure_ranked_above_target": 0,
       "line_anchor_not_resolved": 0,
@@ -3355,22 +3467,22 @@
       "workspace_error_count": 0,
       "no_context_count": 2,
       "top_1_file_accuracy": 0.6,
-      "top_3_file_recall": 0.7333,
-      "expected_file_as_pivot_rate": 0.7,
+      "top_3_file_recall": 0.7667,
+      "expected_file_as_pivot_rate": 0.7333,
       "expected_file_as_support_rate": 0.0667,
-      "expected_file_missing_rate": 0.1667,
+      "expected_file_missing_rate": 0.1333,
       "expected_file_discarded_rate": 0.0667,
-      "expected_symbol_hit_rate": 0.4667,
+      "expected_symbol_hit_rate": 0.5,
       "expected_symbol_as_pivot_rate": 0.1667,
-      "mean_capsule_tokens": 1872.9,
+      "mean_capsule_tokens": 1981.3667,
       "mean_pivot_count": 1.8667,
       "mean_support_count": 3.7333,
       "miss_taxonomy": {
-        "none": 22,
+        "none": 23,
         "missing_from_candidates": 1,
         "present_but_support": 1,
         "present_but_discarded": 2,
-        "wrong_subsystem": 4,
+        "wrong_subsystem": 3,
         "wrong_entry_point": 0,
         "generic_infrastructure_ranked_above_target": 0,
         "line_anchor_not_resolved": 0,
@@ -3425,22 +3537,22 @@
       "workspace_error_count": 0,
       "no_context_count": 0,
       "top_1_file_accuracy": 0.5,
-      "top_3_file_recall": 0.5,
-      "expected_file_as_pivot_rate": 0.5,
+      "top_3_file_recall": 0.75,
+      "expected_file_as_pivot_rate": 0.75,
       "expected_file_as_support_rate": 0.25,
-      "expected_file_missing_rate": 0.25,
+      "expected_file_missing_rate": 0,
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.25,
       "expected_symbol_as_pivot_rate": 0,
-      "mean_capsule_tokens": 1497.25,
+      "mean_capsule_tokens": 2321.75,
       "mean_pivot_count": 2,
       "mean_support_count": 4,
       "miss_taxonomy": {
-        "none": 2,
+        "none": 3,
         "missing_from_candidates": 0,
         "present_but_support": 1,
         "present_but_discarded": 0,
-        "wrong_subsystem": 1,
+        "wrong_subsystem": 0,
         "wrong_entry_point": 0,
         "generic_infrastructure_ranked_above_target": 0,
         "line_anchor_not_resolved": 0,
@@ -3602,7 +3714,7 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.5,
       "expected_symbol_as_pivot_rate": 0.5,
-      "mean_capsule_tokens": 1910,
+      "mean_capsule_tokens": 1888,
       "mean_pivot_count": 2,
       "mean_support_count": 4,
       "miss_taxonomy": {
@@ -3634,7 +3746,7 @@
       "expected_file_as_support_rate": 0,
       "expected_file_missing_rate": 0,
       "expected_file_discarded_rate": 0,
-      "expected_symbol_hit_rate": 0.5,
+      "expected_symbol_hit_rate": 1,
       "expected_symbol_as_pivot_rate": 0.5,
       "mean_capsule_tokens": 3379,
       "mean_pivot_count": 2,
