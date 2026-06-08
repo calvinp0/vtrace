@@ -560,6 +560,83 @@ function matchesNameToken(queryToken: string, nameTokens: ReadonlySet<string>): 
   return false;
 }
 
+// ----- lexical-contribution weakening -----------------------------------------
+//
+// A consumer (Capsule v2's generic-infrastructure lexical-decoy suppression) may
+// decide AFTER scoring — once title-symbol / line-anchor evidence is known — that
+// a candidate's high rank came only from a generic word in its path/name, not real
+// evidence. To honour that without re-running the whole pipeline, this re-derives
+// every score that depends on the blended lexical value (localEvidence, the
+// hub/actionability penalties, and the `final` ranking key) from a new, lower
+// lexical, using the SAME math `assemble()` applied up front — so the candidate
+// ranks exactly as if the lower lexical had been computed originally. Pure: returns
+// a NEW components object and never mutates its input. Only the lexical-derived
+// fields change; the raw fts/tfidf/symbol/path/domain/graph/centrality signals are
+// preserved (so the diagnostics still show why it was a decoy).
+
+const SCORE_ROUND = 1e4;
+const roundScore = (value: number): number => Math.round(value * SCORE_ROUND) / SCORE_ROUND;
+
+export function recomputeWithWeakenedLexical(
+  scores: HybridScoreComponents,
+  weights: HybridScoreWeights,
+  weakenedLexical: number,
+): HybridScoreComponents {
+  const lexical = roundScore(weakenedLexical);
+  const graphContribution = weights.graph * scores.graph;
+  const centralityContribution = weights.centrality * scores.centrality;
+
+  // localEvidence + hub penalty: identical inputs to assemble()'s evaluateHub call,
+  // with the lower lexical. `hasTestEvidence` is reconstructed from testToImpl (the
+  // only test signal carried on the scorecard); a decoy has none, so this is exact.
+  const hub = evaluateHub({
+    inDegree: scores.inDegree,
+    lexical,
+    symbol: scores.symbol,
+    path: scores.path,
+    domain: scores.domain,
+    testToImpl: scores.testToImpl,
+    bodyLiteral: scores.bodyLiteral,
+    hasTestEvidence: scores.testToImpl > 0,
+    graphContribution,
+    centralityContribution,
+  });
+
+  // Actionability penalty: a low-actionability symbol (actionability === 0) without
+  // strong direct evidence loses its soft graph + domain boost — the same rule as
+  // evaluateActionability, recomputed from the known actionability flag (the kind
+  // is not on the scorecard, but the flag it produced is).
+  const lowActionability = scores.actionability === 0;
+  const hasStrongDirectEvidence =
+    scores.symbol > 0 || scores.path > 0 || scores.bodyLiteral > 0 || lexical >= STRONG_DIRECT_LEXICAL;
+  const actionabilityPenalty =
+    lowActionability && !hasStrongDirectEvidence ? graphContribution + weights.domain * scores.domain : 0;
+
+  const rawFinal = combineFinalScore(
+    {
+      lexical,
+      symbol: scores.symbol,
+      path: scores.path,
+      domain: scores.domain,
+      testToImpl: scores.testToImpl,
+      bodyLiteral: scores.bodyLiteral,
+      graph: scores.graph,
+      centrality: scores.centrality,
+    },
+    weights,
+  );
+  const final = Math.max(0, rawFinal - hub.penalty - actionabilityPenalty);
+
+  return {
+    ...scores,
+    lexical,
+    localEvidence: roundScore(hub.localEvidence),
+    hubPenalty: roundScore(hub.penalty),
+    actionabilityPenalty: roundScore(actionabilityPenalty),
+    final: roundScore(final),
+  };
+}
+
 // Normalise a raw value against the pool maximum so every component lands in
 // [0, 1]. A non-positive max (no signal anywhere in the pool) maps to 0, which
 // keeps the component honest rather than dividing by zero.

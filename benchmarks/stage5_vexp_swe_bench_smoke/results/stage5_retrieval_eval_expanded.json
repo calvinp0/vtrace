@@ -50,6 +50,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -164,6 +165,7 @@
       "title_symbol_matches": [
         "ModelAdmin -> django/contrib/admin/options.py::ModelAdmin"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -276,6 +278,7 @@
       "title_symbol_matches": [
         "values_list -> django/db/models/query.py::values_list"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -385,6 +388,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -495,6 +499,7 @@
       "title_symbol_matches": [
         "ForeignKey -> django/db/models/fields/related.py::ForeignKey"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -608,6 +613,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -713,6 +719,7 @@
       "title_symbol_matches": [
         "HttpResponse -> http/response.py::HttpResponse"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -784,8 +791,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 613,
-      "used_percent": 7.66,
+      "estimated_tokens": 591,
+      "used_percent": 7.39,
       "expected_files": [
         "django/utils/numberformat.py"
       ],
@@ -796,7 +803,7 @@
       "top_1_pivot_symbol": "number_format",
       "top_3_files": [
         "utils/formats.py",
-        "db/backends/utils.py",
+        "utils/html.py",
         "utils/numberformat.py"
       ],
       "expected_file_best_rank": 3,
@@ -821,6 +828,9 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [
+        "utils -> db/backends/utils.py"
+      ],
       "diagnostics": {
         "top_pivots": [
           {
@@ -829,8 +839,8 @@
             "role_reason": "local implementation helper whose name matches the issue — likely edit site"
           },
           {
-            "path": "db/backends/utils.py",
-            "symbol": "format_number",
+            "path": "utils/html.py",
+            "symbol": "format_html",
             "role_reason": "actionable function — strong lexical match; issue-domain relevance"
           }
         ],
@@ -841,11 +851,6 @@
             "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
           },
           {
-            "path": "utils/html.py",
-            "symbol": "format_html",
-            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
-          },
-          {
             "path": "utils/_os.py",
             "symbol": "symlinks_supported",
             "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
@@ -854,14 +859,14 @@
             "path": "utils/cache.py",
             "symbol": "patch_response_headers",
             "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
-          }
-        ],
-        "top_discarded": [
+          },
           {
             "path": "utils/html.py",
             "symbol": "json_script",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          }
+        ],
+        "top_discarded": [
           {
             "path": "utils/formats.py",
             "symbol": "get_format",
@@ -880,6 +885,11 @@
           {
             "path": "utils/archive.py",
             "symbol": "extract",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "utils/formats.py",
+            "symbol": "FORMAT_SETTINGS",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -935,6 +945,7 @@
       "title_symbol_matches": [
         "call_command -> core/management/__init__.py::call_command"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1041,6 +1052,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1152,6 +1164,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1267,6 +1280,7 @@
       "title_symbol_matches": [
         "Query.resolve_lookup_value -> db/models/sql/query.py::resolve_lookup_value"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1376,6 +1390,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1488,6 +1503,7 @@
       "title_symbol_matches": [
         "FileInput -> forms/widgets.py::FileInput"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1600,6 +1616,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1713,6 +1730,7 @@
         "QuerySet -> contrib/admin/filters.py::queryset",
         "QuerySet.in_bulk -> db/models/query.py::in_bulk"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1824,6 +1842,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1939,6 +1958,7 @@
       "title_symbol_matches": [
         "ExpressionWrapper -> db/models/expressions.py::ExpressionWrapper"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2055,6 +2075,7 @@
       "title_symbol_matches": [
         "ForeignKey -> db/models/fields/related.py::ForeignKey"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2177,6 +2198,7 @@
         "HttpResponse -> http/response.py::HttpResponse",
         "delete_cookie -> http/response.py::delete_cookie"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2255,7 +2277,7 @@
     "expected_file_discarded_rate": 0,
     "expected_symbol_hit_rate": 0.7,
     "expected_symbol_as_pivot_rate": 0.55,
-    "mean_capsule_tokens": 1018.8,
+    "mean_capsule_tokens": 1017.7,
     "mean_pivot_count": 1.85,
     "mean_support_count": 4,
     "miss_taxonomy": {
@@ -2289,7 +2311,7 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.7333,
       "expected_symbol_as_pivot_rate": 0.5333,
-      "mean_capsule_tokens": 1021.4,
+      "mean_capsule_tokens": 1019.9333,
       "mean_pivot_count": 1.8,
       "mean_support_count": 4,
       "miss_taxonomy": {
@@ -2358,7 +2380,7 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.7,
       "expected_symbol_as_pivot_rate": 0.55,
-      "mean_capsule_tokens": 1018.8,
+      "mean_capsule_tokens": 1017.7,
       "mean_pivot_count": 1.85,
       "mean_support_count": 4,
       "miss_taxonomy": {

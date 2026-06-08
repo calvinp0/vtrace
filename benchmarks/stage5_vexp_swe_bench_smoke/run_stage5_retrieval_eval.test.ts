@@ -111,6 +111,7 @@ function summary(overrides: Partial<CapsuleSummary> = {}): CapsuleSummary {
     nonSourceDownranked: [],
     titleSymbolTerms: [],
     titleSymbolMatches: [],
+    genericLexicalDecoysSuppressed: [],
     ...overrides,
   };
 }

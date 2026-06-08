@@ -44,7 +44,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | expected_file_missing_rate | 0.0% |
 | expected_symbol_hit_rate | 70.0% |
 | expected_symbol_as_pivot_rate | 55.0% |
-| mean_capsule_tokens | 1018.8 |
+| mean_capsule_tokens | 1017.7 |
 | mean_pivot_count | 1.85 |
 | mean_support_count | 4.00 |
 
@@ -66,7 +66,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | expected_file_missing_rate | 0.0% |
 | expected_symbol_hit_rate | 73.3% |
 | expected_symbol_as_pivot_rate | 53.3% |
-| mean_capsule_tokens | 1021.4 |
+| mean_capsule_tokens | 1019.9 |
 | mean_pivot_count | 1.80 |
 | mean_support_count | 4.00 |
 
@@ -94,7 +94,7 @@ support / discarded are compared against the fixture's `expected_files` and
 
 | repo | instances | top-1 file | top-3 file | as pivot | missing | mean tokens | mean pivots | mean support |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| django/django | 20/20 | 80.0% | 95.0% | 85.0% | 0.0% | 1018.8 | 1.85 | 4.00 |
+| django/django | 20/20 | 80.0% | 95.0% | 85.0% | 0.0% | 1017.7 | 1.85 | 4.00 |
 
 ## Miss summary (compact)
 

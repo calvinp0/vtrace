@@ -339,6 +339,28 @@ export interface CapsuleV2Diagnostics {
   title_symbol_terms?: string[];
   /** The production symbols those title terms resolved to. */
   title_symbol_matches?: TitleSymbolMatchDiagnostic[];
+  /**
+   * Generic-infrastructure lexical-decoy suppression. A generic bug-report word
+   * ("deprecation", "dict", "utils") over-anchors retrieval to an
+   * infrastructure/helper module NAMED after that word (`deprecation.py`, a
+   * `*Dict*` helper) even when the bug is elsewhere. When such a candidate's whole
+   * IDENTITY is a generic infra token, that token is in the query, and it carries
+   * no stronger direct evidence (symbol/path/test/body-literal pointer, line
+   * anchor, title-symbol match, or strong graph reach) and the task does not name
+   * its path, its lexical contribution is weakened so it cannot ride the generic
+   * word to a pivot. It is never removed. Present only when at least one candidate
+   * was suppressed.
+   */
+  generic_lexical_decoys_suppressed?: GenericLexicalDecoyDiagnostic[];
+}
+
+/** One candidate whose generic-infrastructure lexical match was weakened. */
+export interface GenericLexicalDecoyDiagnostic {
+  /** The generic infra token responsible (e.g. "deprecation"). */
+  token: string;
+  path: string;
+  /** Why it was treated as a decoy. */
+  reason: string;
 }
 
 /** One title term resolved to an indexed production symbol. */

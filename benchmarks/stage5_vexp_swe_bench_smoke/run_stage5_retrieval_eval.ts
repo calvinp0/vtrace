@@ -287,6 +287,8 @@ export interface CapsuleSummary {
   readonly titleSymbolTerms: readonly string[];
   /** Title-symbol resolutions ("term -> path::symbol"). */
   readonly titleSymbolMatches: readonly string[];
+  /** Generic-infrastructure lexical decoys suppressed ("token -> path"). */
+  readonly genericLexicalDecoysSuppressed: readonly string[];
 }
 
 // Project a Capsule v2 result onto the summary the scorer needs. Works on the
@@ -335,6 +337,9 @@ export function summarizeCapsule(result: CapsuleV2Result): CapsuleSummary {
     titleSymbolTerms: result.diagnostics.title_symbol_terms ?? [],
     titleSymbolMatches: (result.diagnostics.title_symbol_matches ?? []).map(
       (m) => `${m.term} -> ${m.path}::${m.symbol}`,
+    ),
+    genericLexicalDecoysSuppressed: (result.diagnostics.generic_lexical_decoys_suppressed ?? []).map(
+      (d) => `${d.token} -> ${d.path}`,
     ),
   };
 }
@@ -702,6 +707,8 @@ export interface RetrievalEvalRow {
   readonly title_symbol_terms: readonly string[];
   /** Title-symbol resolutions ("term -> path::symbol") for this instance. */
   readonly title_symbol_matches: readonly string[];
+  /** Generic-infrastructure lexical decoys suppressed ("token -> path") for this instance. */
+  readonly generic_lexical_decoys_suppressed: readonly string[];
 
   /** Top-k pivots / support / discarded — makes a miss diagnosable offline. */
   readonly diagnostics: TopKDiagnostics;
@@ -816,6 +823,7 @@ export function evaluateInstance(
     non_source_downranked: summary.nonSourceDownranked,
     title_symbol_terms: summary.titleSymbolTerms,
     title_symbol_matches: summary.titleSymbolMatches,
+    generic_lexical_decoys_suppressed: summary.genericLexicalDecoysSuppressed,
     diagnostics: topKDiagnostics(summary),
   };
 }
@@ -1023,6 +1031,7 @@ const CSV_COLUMNS: readonly (keyof RetrievalEvalRow)[] = [
   "non_source_downranked",
   "title_symbol_terms",
   "title_symbol_matches",
+  "generic_lexical_decoys_suppressed",
 ];
 
 export function renderCsv(rows: readonly RetrievalEvalRow[]): string {
@@ -1319,6 +1328,9 @@ export function renderMarkdown(
       }
       if (row.title_symbol_matches.length > 0) {
         lines.push(`- title-symbol matches: ${row.title_symbol_matches.join("; ")}`);
+      }
+      if (row.generic_lexical_decoys_suppressed.length > 0) {
+        lines.push(`- generic lexical decoys suppressed: ${row.generic_lexical_decoys_suppressed.join("; ")}`);
       }
       lines.push(...renderTopK("top pivots", row.diagnostics.top_pivots.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));
       lines.push(...renderTopK("top support", row.diagnostics.top_support.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));

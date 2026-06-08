@@ -53,6 +53,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -168,6 +169,7 @@
       "title_symbol_matches": [
         "Permutation -> sympy/combinatorics/permutations.py::Permutation"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -283,6 +285,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -400,6 +403,7 @@
       "title_symbol_matches": [
         "fowlkes_mallows_score -> sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -508,6 +512,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -619,6 +624,9 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [
+        "deprecation -> lib/matplotlib/_api/deprecation.py"
+      ],
       "diagnostics": {
         "top_pivots": [
           {
@@ -634,14 +642,14 @@
         ],
         "top_support": [
           {
-            "path": "lib/matplotlib/_api/deprecation.py",
-            "symbol": "_generate_deprecation_warning",
-            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
-          },
-          {
             "path": "examples/units/units_scatter.py",
             "symbol": "data",
             "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "lib/matplotlib/_api/deprecation.py",
+            "symbol": "_generate_deprecation_warning",
+            "role_reason": "lexical match; issue-domain relevance (not a pivot: no direct evidence (graph/domain reach only))"
           },
           {
             "path": "lib/matplotlib/category.py",
@@ -661,11 +669,6 @@
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "lib/matplotlib/_api/deprecation.py",
-            "symbol": "deprecate_method_override",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
             "path": "lib/matplotlib/axis.py",
             "symbol": "update_units",
             "discard_reason": "beyond standard support budget (max 4)"
@@ -678,6 +681,11 @@
           {
             "path": "lib/matplotlib/category.py",
             "symbol": "axisinfo",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/matplotlib/units.py",
+            "symbol": "AxisInfo",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -727,6 +735,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -839,6 +848,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -951,6 +961,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1067,6 +1078,7 @@
       "title_symbol_matches": [
         "get_records -> src/_pytest/logging.py::get_records"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1179,6 +1191,7 @@
       "title_symbol_matches": [
         "EncodedFile -> src/_pytest/capture.py::EncodedFile"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1294,6 +1307,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1406,6 +1420,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1516,6 +1531,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1629,6 +1645,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1737,6 +1754,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1845,6 +1863,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1956,6 +1975,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2027,8 +2047,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 435,
-      "used_percent": 5.44,
+      "estimated_tokens": 406,
+      "used_percent": 5.08,
       "expected_files": [
         "lib/matplotlib/colors.py"
       ],
@@ -2064,6 +2084,9 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [
+        "deprecation -> lib/matplotlib/_api/deprecation.py"
+      ],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2080,11 +2103,6 @@
         "top_support": [
           {
             "path": "lib/matplotlib/_api/deprecation.py",
-            "symbol": "_generate_deprecation_warning",
-            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
-          },
-          {
-            "path": "lib/matplotlib/_api/deprecation.py",
             "symbol": "deprecated",
             "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 116 dependents"
           },
@@ -2097,24 +2115,14 @@
             "path": "lib/matplotlib/_api/deprecation.py",
             "symbol": "delete_parameter",
             "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 11 dependents"
-          }
-        ],
-        "top_discarded": [
+          },
           {
             "path": "lib/matplotlib/_api/deprecation.py",
             "symbol": "rename_parameter",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "lib/matplotlib/_api/deprecation.py",
-            "symbol": "deprecate_method_override",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "lib/matplotlib/_api/deprecation.py",
-            "symbol": "deprecate_privatize_attribute",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 8 dependents"
+          }
+        ],
+        "top_discarded": [
           {
             "path": "lib/matplotlib/_api/deprecation.py",
             "symbol": "make_keyword_only",
@@ -2123,6 +2131,21 @@
           {
             "path": "lib/matplotlib/path.py",
             "symbol": "NUM_VERTICES_FOR_CODE",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/matplotlib/transforms.py",
+            "symbol": "Bbox",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/matplotlib/_api/deprecation.py",
+            "symbol": "_generate_deprecation_warning",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/matplotlib/_mathtext.py",
+            "symbol": "NUM_SIZE_LEVELS",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -2170,6 +2193,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [],
         "top_support": [],
@@ -2250,6 +2274,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2363,6 +2388,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2473,6 +2499,7 @@
       "title_symbol_matches": [
         "Variable.__setitem__ -> xarray/core/variable.py::__setitem__"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2583,6 +2610,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2698,6 +2726,7 @@
       ],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [],
         "top_support": [],
@@ -2774,6 +2803,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2881,6 +2911,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2991,6 +3022,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -3101,6 +3133,7 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -3216,6 +3249,7 @@
       "title_symbol_matches": [
         "PythonCodePrinter -> sympy/printing/pycode.py::PythonCodePrinter"
       ],
+      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
@@ -3294,7 +3328,7 @@
     "expected_file_discarded_rate": 0.0667,
     "expected_symbol_hit_rate": 0.4667,
     "expected_symbol_as_pivot_rate": 0.1667,
-    "mean_capsule_tokens": 1873.8667,
+    "mean_capsule_tokens": 1872.9,
     "mean_pivot_count": 1.8667,
     "mean_support_count": 3.7333,
     "miss_taxonomy": {
@@ -3328,7 +3362,7 @@
       "expected_file_discarded_rate": 0.0667,
       "expected_symbol_hit_rate": 0.4667,
       "expected_symbol_as_pivot_rate": 0.1667,
-      "mean_capsule_tokens": 1873.8667,
+      "mean_capsule_tokens": 1872.9,
       "mean_pivot_count": 1.8667,
       "mean_support_count": 3.7333,
       "miss_taxonomy": {
@@ -3432,7 +3466,7 @@
       "expected_file_discarded_rate": 0.25,
       "expected_symbol_hit_rate": 0.5,
       "expected_symbol_as_pivot_rate": 0,
-      "mean_capsule_tokens": 306.75,
+      "mean_capsule_tokens": 299.5,
       "mean_pivot_count": 1.5,
       "mean_support_count": 3,
       "miss_taxonomy": {

@@ -44,7 +44,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | expected_file_missing_rate | 16.7% |
 | expected_symbol_hit_rate | 46.7% |
 | expected_symbol_as_pivot_rate | 16.7% |
-| mean_capsule_tokens | 1873.9 |
+| mean_capsule_tokens | 1872.9 |
 | mean_pivot_count | 1.87 |
 | mean_support_count | 3.73 |
 
@@ -69,7 +69,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | sympy/sympy | 5/5 | 80.0% | 100.0% | 100.0% | 0.0% | 3162.4 | 2.00 | 4.00 |
 | astropy/astropy | 4/4 | 50.0% | 50.0% | 50.0% | 25.0% | 1497.3 | 2.00 | 4.00 |
-| matplotlib/matplotlib | 4/4 | 0.0% | 50.0% | 25.0% | 25.0% | 306.8 | 1.50 | 3.00 |
+| matplotlib/matplotlib | 4/4 | 0.0% | 50.0% | 25.0% | 25.0% | 299.5 | 1.50 | 3.00 |
 | sphinx-doc/sphinx | 4/4 | 25.0% | 50.0% | 50.0% | 50.0% | 2799.0 | 2.00 | 4.00 |
 | psf/requests | 3/3 | 66.7% | 66.7% | 66.7% | 0.0% | 685.0 | 2.00 | 4.00 |
 | pytest-dev/pytest | 3/3 | 100.0% | 100.0% | 100.0% | 0.0% | 753.0 | 2.00 | 4.00 |
@@ -201,20 +201,21 @@ All 30 instances share one label source (gold_patch); see the table above.
 - expected: lib/matplotlib/colors.py
 - reason: expected file not surfaced (candidate_count=25)
 - down-weighted lexical tokens: bug
+- generic lexical decoys suppressed: deprecation -> lib/matplotlib/_api/deprecation.py
 - top pivots:
   - lib/matplotlib/_api/deprecation.py::MatplotlibDeprecationWarning — actionable class — strong lexical match; issue-domain relevance; 23 dependents
   - lib/matplotlib/_api/deprecation.py::suppress_matplotlib_deprecation_warning — actionable function — strong lexical match; issue-domain relevance; 16 dependents
 - top support:
-  - lib/matplotlib/_api/deprecation.py::_generate_deprecation_warning — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance
   - lib/matplotlib/_api/deprecation.py::deprecated — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 116 dependents
   - lib/matplotlib/_api/deprecation.py::warn_deprecated — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 28 dependents
   - lib/matplotlib/_api/deprecation.py::delete_parameter — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 11 dependents
+  - lib/matplotlib/_api/deprecation.py::rename_parameter — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 8 dependents
 - top discarded:
-  - lib/matplotlib/_api/deprecation.py::rename_parameter — beyond standard support budget (max 4)
-  - lib/matplotlib/_api/deprecation.py::deprecate_method_override — beyond standard support budget (max 4)
-  - lib/matplotlib/_api/deprecation.py::deprecate_privatize_attribute — beyond standard support budget (max 4)
   - lib/matplotlib/_api/deprecation.py::make_keyword_only — beyond standard support budget (max 4)
   - lib/matplotlib/path.py::NUM_VERTICES_FOR_CODE — beyond standard support budget (max 4)
+  - lib/matplotlib/transforms.py::Bbox — beyond standard support budget (max 4)
+  - lib/matplotlib/_api/deprecation.py::_generate_deprecation_warning — beyond standard support budget (max 4)
+  - lib/matplotlib/_mathtext.py::NUM_SIZE_LEVELS — beyond standard support budget (max 4)
 
 ### matplotlib__matplotlib-25960 — skipped_no_context / present_but_discarded
 

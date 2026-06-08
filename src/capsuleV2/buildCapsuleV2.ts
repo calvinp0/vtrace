@@ -27,7 +27,10 @@ import {
   type BodyLiteralMatch,
   type HybridCandidate,
 } from "../retrieval/hybridRetrieval";
-import { classifyLexicalQueryTokens } from "../retrieval/hybridScoring";
+import {
+  classifyLexicalQueryTokens,
+  recomputeWithWeakenedLexical,
+} from "../retrieval/hybridScoring";
 import { allocateBudget } from "./budgetAllocator";
 import {
   buildNoContextExplanations,
@@ -62,6 +65,13 @@ import {
   type NonSourceDownrank,
 } from "./nonSourceExample";
 import { anchorTitleSymbols, type TitleSymbolResult } from "./titleSymbolAnchoring";
+import {
+  classifyGenericLexicalDecoy,
+  collectQueryTokens,
+  taskNamesCandidatePath,
+  GENERIC_LEXICAL_DECOY_FACTOR,
+  type GenericLexicalDecoy,
+} from "./genericLexicalDecoy";
 import { itemBlockText } from "./renderItem";
 import { estimateTokens, roundPercent } from "./tokens";
 import {
@@ -239,6 +249,60 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     );
   }
 
+  // Generic-infrastructure lexical-decoy suppression (general, repo-agnostic). A
+  // generic bug-report word ("deprecation", "dict") over-anchors retrieval to an
+  // infrastructure/helper module NAMED after that word (`deprecation.py`, a
+  // `*Dict*` helper) even when the bug is elsewhere. When a candidate's whole
+  // IDENTITY is a generic infra token, that token is in the query, and it carries
+  // no stronger direct evidence (symbol/path/test/body-literal pointer, line
+  // anchor, title-symbol match, strong graph reach) and the task does not name its
+  // path, its blended lexical score is WEAKENED — so the generic word cannot carry
+  // it to a pivot. Runs BEFORE role assignment, so the role gate re-decides on the
+  // weakened score (a weakened decoy falls below the strong-direct-lexical bar and
+  // demotes itself to support); the candidate is never removed. Title-symbol and
+  // line-anchor candidates are doubly protected — they carry symbol/path evidence
+  // AND are excluded by their id sets. Mirrors the exception-symptom de-anchoring.
+  const decoyQueryTokens = collectQueryTokens(input.task);
+  const genericLexicalDecoys: GenericLexicalDecoy[] = [];
+  // A generic infra FILE (deprecation.py) holds many symbols, each a separate
+  // suppressed candidate; the diagnostic surface reports one entry per (token, path)
+  // so the miss-analysis line stays readable.
+  const reportedDecoys = new Set<string>();
+  for (const candidate of candidates) {
+    const decision = classifyGenericLexicalDecoy({
+      filePath: candidate.filePath,
+      localName: candidate.localName,
+      queryTokens: decoyQueryTokens,
+      scores: candidate.scores,
+      hasLineAnchor: anchorSymbolIds.has(candidate.symbolId),
+      hasTitleSymbol: titleSymbolIds.has(candidate.symbolId),
+      taskNamesPath: taskNamesCandidatePath(input.task, candidate.filePath),
+    });
+    if (!decision.isDecoy) continue;
+    candidate.scores = recomputeWithWeakenedLexical(
+      candidate.scores,
+      weights,
+      candidate.scores.lexical * GENERIC_LEXICAL_DECOY_FACTOR,
+    );
+    candidate.evidence = [
+      ...candidate.evidence,
+      `lexical down-weighted: generic infrastructure decoy (token \`${decision.token}\`) with weak direct evidence`,
+    ].sort();
+    const key = `${decision.token ?? ""}|${candidate.filePath}`;
+    if (!reportedDecoys.has(key)) {
+      reportedDecoys.add(key);
+      genericLexicalDecoys.push({
+        token: decision.token ?? "",
+        path: candidate.filePath,
+        reason: decision.reason ?? "generic infrastructure lexical decoy",
+      });
+    }
+  }
+  const genericLexicalDecoyDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
+    genericLexicalDecoys.length > 0
+      ? { generic_lexical_decoys_suppressed: genericLexicalDecoys }
+      : {};
+
   // Role assignment. The base gate scores each candidate in isolation; for debug
   // intent we then refine roles with call-graph structure (caller vs helper,
   // local vs generic infrastructure) before capping pivots to the tier. Other
@@ -383,6 +447,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         ...bodyLiteralDiagnostics(bodyLiteralMatches),
         ...nonSourceDiagnostics,
         ...titleSymbolDiagnostics,
+        ...genericLexicalDecoyDiagnostics,
       },
     });
   }
@@ -492,6 +557,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...lineAnchorDiagnostics,
       ...nonSourceDiagnostics,
       ...titleSymbolDiagnostics,
+      ...genericLexicalDecoyDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
     },
   };
