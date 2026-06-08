@@ -61,6 +61,7 @@ import {
   taskMentionsNonSource,
   type NonSourceDownrank,
 } from "./nonSourceExample";
+import { anchorTitleSymbols, type TitleSymbolResult } from "./titleSymbolAnchoring";
 import { itemBlockText } from "./renderItem";
 import { estimateTokens, roundPercent } from "./tokens";
 import {
@@ -198,6 +199,35 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     }
   }
 
+  // Title-symbol candidate anchoring. The problem TITLE often names the important
+  // class/type/symbol (e.g. `PythonCodePrinter`) while a body word or a generic
+  // decoy dominates lexical ranking, so the real edit site never enters the pool.
+  // Seed the indexed symbols bearing those title names into the pool with direct
+  // "title mentions `X`" evidence. Merged ahead of the lexical pool (and the
+  // test-to-impl backfill) but BEHIND the line-anchor merge below — a title name is
+  // strong, but an explicit source anchor or a body-literal diagnostic keeps
+  // priority. Non-source title matches are still demoted by the role pass later.
+  const titleSymbols: TitleSymbolResult = anchorTitleSymbols({ db: input.db, task: input.task });
+  // Inject ONLY the title symbols not already in the pool — a synthesized
+  // title-symbol candidate is thin (no test-to-impl/graph evidence), so it must
+  // never replace a richer existing candidate for the same symbol. Symbols already
+  // present keep their candidate and merely gain title precedence below.
+  if (titleSymbols.candidates.length > 0) {
+    const poolIds = new Set(candidates.map((c) => c.symbolId));
+    const fresh = titleSymbols.candidates.filter((c) => !poolIds.has(c.symbolId));
+    if (fresh.length > 0) {
+      candidates = mergeCandidatesPreferring(fresh, candidates, CANDIDATE_POOL_SIZE);
+    }
+  }
+  const titleSymbolIds = new Set(titleSymbols.matches.map((m) => m.symbolId));
+  const titleSymbolDiagnostics: Partial<CapsuleV2Result["diagnostics"]> = titleSymbols.used
+    ? {
+        title_symbol_search_used: true,
+        title_symbol_terms: titleSymbols.terms,
+        title_symbol_matches: titleSymbols.matches.map((m) => ({ term: m.term, path: m.path, symbol: m.symbol })),
+      }
+    : {};
+
   // Merge the anchor-resolved targets AHEAD of everything else: an explicit source
   // anchor is the strongest edit-site signal, so it must never be crowded out of
   // the pool by the lexical ranking it was meant to correct.
@@ -301,19 +331,29 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // Order the surviving pivots for rendering. A file-line anchor target leads of
   // all (the issue named it outright). Then, for a composed-query SQL-output bug,
   // the renderer most on-topic to the composition (`get_combinator_sql` for a
-  // "combined" issue) ahead of a generic `as_sql`/`execute_sql`, so the capsule's
-  // first pivot is the edit site.
-  if (anchorSymbolIds.size > 0 || sqlRenderingTrigger.active) {
+  // "combined" issue) ahead of a generic `as_sql`/`execute_sql`. Finally a
+  // direct-evidence precedence tier: a body-literal diagnostic match (the bug
+  // names the exact string this symbol emits) ranks ahead of a title-symbol match,
+  // which in turn ranks ahead of ordinary lexical/graph candidates — exactly the
+  // priority line-anchor/body-literal > title-symbol > normal.
+  if (anchorSymbolIds.size > 0 || sqlRenderingTrigger.active || titleSymbolIds.size > 0) {
     const anchorRank = (entry: RefinedRoledCandidate): number =>
       anchorSymbolIds.has(entry.candidate.symbolId) ? 1 : 0;
     const renderingRank = (entry: RefinedRoledCandidate): number =>
       sqlRenderingTrigger.active
         ? sqlRenderingRelevance(entry.candidate.localName, sqlRenderingTrigger.compositionTerms)
         : 0;
+    // Direct-evidence tier: body-literal (3) > title-symbol (2) > normal (1).
+    const evidenceTier = (entry: RefinedRoledCandidate): number => {
+      if (entry.candidate.scores.bodyLiteral > 0) return 3;
+      if (titleSymbolIds.has(entry.candidate.symbolId)) return 2;
+      return 1;
+    };
     pivotCandidates.sort(
       (left, right) =>
         anchorRank(right) - anchorRank(left)
         || renderingRank(right) - renderingRank(left)
+        || evidenceTier(right) - evidenceTier(left)
         || right.candidate.scores.final - left.candidate.scores.final
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
         || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
@@ -342,6 +382,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         ...lineAnchorDiagnostics,
         ...bodyLiteralDiagnostics(bodyLiteralMatches),
         ...nonSourceDiagnostics,
+        ...titleSymbolDiagnostics,
       },
     });
   }
@@ -450,6 +491,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...debugDiagnostics,
       ...lineAnchorDiagnostics,
       ...nonSourceDiagnostics,
+      ...titleSymbolDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
     },
   };

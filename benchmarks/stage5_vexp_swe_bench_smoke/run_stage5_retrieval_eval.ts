@@ -283,6 +283,10 @@ export interface CapsuleSummary {
   readonly bodyLiteralMatches: readonly string[];
   /** Non-source example/doc-data candidates down-ranked out of pivot ("path — reason"). */
   readonly nonSourceDownranked: readonly string[];
+  /** Symbol-shaped terms extracted from the task title for title-symbol anchoring. */
+  readonly titleSymbolTerms: readonly string[];
+  /** Title-symbol resolutions ("term -> path::symbol"). */
+  readonly titleSymbolMatches: readonly string[];
 }
 
 // Project a Capsule v2 result onto the summary the scorer needs. Works on the
@@ -327,6 +331,10 @@ export function summarizeCapsule(result: CapsuleV2Result): CapsuleSummary {
     ),
     nonSourceDownranked: (result.diagnostics.non_source_candidates_downranked ?? []).map(
       (entry) => `${entry.path} — ${entry.reason}`,
+    ),
+    titleSymbolTerms: result.diagnostics.title_symbol_terms ?? [],
+    titleSymbolMatches: (result.diagnostics.title_symbol_matches ?? []).map(
+      (m) => `${m.term} -> ${m.path}::${m.symbol}`,
     ),
   };
 }
@@ -690,6 +698,10 @@ export interface RetrievalEvalRow {
   readonly body_literal_matches: readonly string[];
   /** Non-source example/doc-data candidates down-ranked out of pivot ("path — reason"). */
   readonly non_source_downranked: readonly string[];
+  /** Symbol-shaped terms extracted from the task title (title-symbol anchoring). */
+  readonly title_symbol_terms: readonly string[];
+  /** Title-symbol resolutions ("term -> path::symbol") for this instance. */
+  readonly title_symbol_matches: readonly string[];
 
   /** Top-k pivots / support / discarded — makes a miss diagnosable offline. */
   readonly diagnostics: TopKDiagnostics;
@@ -742,6 +754,8 @@ export function evaluateInstance(
       deanchored_exception_tokens: [],
       body_literal_matches: [],
       non_source_downranked: [],
+      title_symbol_terms: [],
+      title_symbol_matches: [],
       diagnostics: { top_pivots: [], top_support: [], top_discarded: [] },
     };
   }
@@ -800,6 +814,8 @@ export function evaluateInstance(
     deanchored_exception_tokens: summary.deanchoredExceptionTokens,
     body_literal_matches: summary.bodyLiteralMatches,
     non_source_downranked: summary.nonSourceDownranked,
+    title_symbol_terms: summary.titleSymbolTerms,
+    title_symbol_matches: summary.titleSymbolMatches,
     diagnostics: topKDiagnostics(summary),
   };
 }
@@ -1005,6 +1021,8 @@ const CSV_COLUMNS: readonly (keyof RetrievalEvalRow)[] = [
   "deanchored_exception_tokens",
   "body_literal_matches",
   "non_source_downranked",
+  "title_symbol_terms",
+  "title_symbol_matches",
 ];
 
 export function renderCsv(rows: readonly RetrievalEvalRow[]): string {
@@ -1295,6 +1313,12 @@ export function renderMarkdown(
       }
       if (row.non_source_downranked.length > 0) {
         lines.push(`- non-source candidates down-ranked: ${row.non_source_downranked.join("; ")}`);
+      }
+      if (row.title_symbol_terms.length > 0) {
+        lines.push(`- title-symbol terms: ${row.title_symbol_terms.join(", ")}`);
+      }
+      if (row.title_symbol_matches.length > 0) {
+        lines.push(`- title-symbol matches: ${row.title_symbol_matches.join("; ")}`);
       }
       lines.push(...renderTopK("top pivots", row.diagnostics.top_pivots.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));
       lines.push(...renderTopK("top support", row.diagnostics.top_support.map((p) => `${p.path}::${p.symbol} — ${p.role_reason}`)));

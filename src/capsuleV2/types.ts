@@ -327,6 +327,26 @@ export interface CapsuleV2Diagnostics {
    * points at docs/examples. Present only when at least one was down-ranked.
    */
   non_source_candidates_downranked?: NonSourceDownrankDiagnostic[];
+  /**
+   * Title-symbol candidate anchoring. The problem TITLE often names the important
+   * class/type/symbol while the body lexical decoys dominate ranking; this seeds
+   * the index symbols bearing those title names into the candidate pool with
+   * direct "title mentions `X`" evidence. Present only when at least one title
+   * term resolved to an indexed production symbol.
+   */
+  title_symbol_search_used?: boolean;
+  /** The symbol-shaped terms extracted from the title (present when search ran). */
+  title_symbol_terms?: string[];
+  /** The production symbols those title terms resolved to. */
+  title_symbol_matches?: TitleSymbolMatchDiagnostic[];
+}
+
+/** One title term resolved to an indexed production symbol. */
+export interface TitleSymbolMatchDiagnostic {
+  /** The title term that matched (e.g. "PythonCodePrinter"). */
+  term: string;
+  path: string;
+  symbol: string;
 }
 
 /** One non-source candidate down-ranked from pivot to support. */

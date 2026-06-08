@@ -36,15 +36,15 @@ support / discarded are compared against the fixture's `expected_files` and
 | instances_evaluated | 20 |
 | workspace_error_count | 0 |
 | no_context_count | 0 |
-| top_1_file_accuracy | 75.0% |
-| top_3_file_recall | 90.0% |
-| expected_file_as_pivot_rate | 80.0% |
+| top_1_file_accuracy | 80.0% |
+| top_3_file_recall | 95.0% |
+| expected_file_as_pivot_rate | 85.0% |
 | expected_file_as_support_rate | 15.0% |
-| expected_file_discarded_rate | 5.0% |
+| expected_file_discarded_rate | 0.0% |
 | expected_file_missing_rate | 0.0% |
 | expected_symbol_hit_rate | 70.0% |
 | expected_symbol_as_pivot_rate | 55.0% |
-| mean_capsule_tokens | 900.8 |
+| mean_capsule_tokens | 1018.8 |
 | mean_pivot_count | 1.85 |
 | mean_support_count | 4.00 |
 
@@ -58,15 +58,15 @@ support / discarded are compared against the fixture's `expected_files` and
 | instances_evaluated | 15 |
 | workspace_error_count | 0 |
 | no_context_count | 0 |
-| top_1_file_accuracy | 66.7% |
-| top_3_file_recall | 86.7% |
-| expected_file_as_pivot_rate | 73.3% |
+| top_1_file_accuracy | 73.3% |
+| top_3_file_recall | 93.3% |
+| expected_file_as_pivot_rate | 80.0% |
 | expected_file_as_support_rate | 20.0% |
-| expected_file_discarded_rate | 6.7% |
+| expected_file_discarded_rate | 0.0% |
 | expected_file_missing_rate | 0.0% |
 | expected_symbol_hit_rate | 73.3% |
 | expected_symbol_as_pivot_rate | 53.3% |
-| mean_capsule_tokens | 864.0 |
+| mean_capsule_tokens | 1021.4 |
 | mean_pivot_count | 1.80 |
 | mean_support_count | 4.00 |
 
@@ -94,14 +94,14 @@ support / discarded are compared against the fixture's `expected_files` and
 
 | repo | instances | top-1 file | top-3 file | as pivot | missing | mean tokens | mean pivots | mean support |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| django/django | 20/20 | 75.0% | 90.0% | 80.0% | 0.0% | 900.8 | 1.85 | 4.00 |
+| django/django | 20/20 | 80.0% | 95.0% | 85.0% | 0.0% | 1018.8 | 1.85 | 4.00 |
 
 ## Miss summary (compact)
 
-- non-top-3 cases: 2
+- non-top-3 cases: 1
 - missing (not surfaced): 0
 - present-but-support: 1
-- present-but-discarded: 1
+- present-but-discarded: 0
 - wrong-subsystem: 0
 - body-literal misses: 0
 - parser/language gaps: 0
@@ -110,9 +110,8 @@ support / discarded are compared against the fixture's `expected_files` and
 
 | category | count |
 | --- | --- |
-| none | 18 |
+| none | 19 |
 | present_but_support | 1 |
-| present_but_discarded | 1 |
 
 ## Per-instance results
 
@@ -124,19 +123,19 @@ support / discarded are compared against the fixture's `expected_files` and
 | django__django-11728 | manual_verified | django/contrib/admindocs/utils.py | django/contrib/admindocs/utils.py::replace_named_groups | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11740 | manual_verified | django/db/migrations/autodetector.py | django/db/migrations/autodetector.py::_get_dependencies_for_foreign_key | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-10973 | gold_patch | django/db/backends/postgresql/client.py | contrib/postgres/fields/array.py::run_validators | support | no | yes | hit_top3 | none |
-| django__django-11133 | gold_patch | django/http/response.py | http/response.py::write | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-11133 | gold_patch | django/http/response.py | http/response.py::HttpResponse | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11206 | gold_patch | django/utils/numberformat.py | utils/formats.py::number_format | support | no | yes | hit_top3 | none |
 | django__django-11749 | gold_patch | django/core/management/__init__.py | core/management/__init__.py::call_command | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11815 | gold_patch | django/db/migrations/serializer.py | db/migrations/serializer.py::EnumSerializer | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11820 | gold_patch | django/db/models/base.py | db/models/base.py::_check_ordering | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12050 | gold_patch | django/db/models/sql/query.py | db/models/sql/query.py::resolve_lookup_value | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12273 | gold_patch | django/db/models/base.py | forms/models.py::save | pivot | no | yes | hit_top3 | none |
-| django__django-12276 | gold_patch | django/forms/widgets.py | forms/widgets.py::use_required_attribute | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-12276 | gold_patch | django/forms/widgets.py | forms/widgets.py::FileInput | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12325 | gold_patch | django/db/models/base.py | core/checks/model_checks.py::_check_lazy_references | support | no | no | hit_support | present_but_support |
 | django__django-12774 | gold_patch | django/db/models/query.py | db/models/query.py::in_bulk | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12858 | gold_patch | django/db/models/base.py | db/models/base.py::_check_ordering | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-13012 | gold_patch | django/db/models/expressions.py | db/models/expressions.py::ExpressionWrapper | pivot | yes | yes | hit_top1_pivot | none |
-| django__django-13112 | gold_patch | django/db/models/fields/related.py | contrib/admin/utils.py::FieldIsAForeignKeyColumnName | discarded | no | no | hit_discarded | present_but_discarded |
+| django__django-13112 | gold_patch | django/db/models/fields/related.py | db/models/fields/related.py::ForeignKey | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-13195 | gold_patch | django/contrib/messages/storage/cookie.py | http/response.py::delete_cookie | pivot | yes | yes | hit_top1_pivot | none |
 
 ## Misses / failures — top-k diagnostics
@@ -159,27 +158,6 @@ support / discarded are compared against the fixture's `expected_files` and
   - db/models/sql/compiler.py::pre_sql_setup — beyond standard support budget (max 4)
   - db/backends/sqlite3/schema.py::_is_referenced_by_fk_constraint — beyond standard support budget (max 4)
   - conf/__init__.py::_setup — beyond standard support budget (max 4)
-
-### django__django-13112 — hit_discarded / present_but_discarded
-
-- expected: django/db/models/fields/related.py
-- reason: expected file recovered but discarded: db/models/fields/related.py — beyond standard support budget (max 4)
-- filtered generic symbols: error
-- filtered runner files: manage.py
-- top pivots:
-  - contrib/admin/utils.py::FieldIsAForeignKeyColumnName — actionable class — strong lexical match; issue-domain relevance
-  - db/migrations/autodetector.py::_get_dependencies_for_foreign_key — actionable method — strong lexical match; issue-domain relevance; 6 dependents
-- top support:
-  - db/backends/ddl_references.py::ForeignKeyName — strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance
-  - db/backends/oracle/operations.py::__foreign_key_constraints — strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance
-  - db/backends/sqlite3/introspection.py::_get_foreign_key_constraints — strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance
-  - forms/models.py::_get_foreign_key — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance
-- top discarded:
-  - contrib/gis/utils/layermapping.py::MissingForeignKey — beyond standard support budget (max 4)
-  - contrib/contenttypes/fields.py::GenericForeignKey — beyond standard support budget (max 4)
-  - db/models/fields/json.py::KeyTransformIEndsWith — beyond standard support budget (max 4)
-  - db/models/fields/json.py::KeyTransformIStartsWith — beyond standard support budget (max 4)
-  - db/models/fields/reverse_related.py::get_accessor_name — beyond standard support budget (max 4)
 
 ## Notes
 

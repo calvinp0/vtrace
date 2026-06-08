@@ -36,15 +36,15 @@ support / discarded are compared against the fixture's `expected_files` and
 | instances_evaluated | 30 |
 | workspace_error_count | 0 |
 | no_context_count | 2 |
-| top_1_file_accuracy | 56.7% |
-| top_3_file_recall | 70.0% |
-| expected_file_as_pivot_rate | 66.7% |
+| top_1_file_accuracy | 60.0% |
+| top_3_file_recall | 73.3% |
+| expected_file_as_pivot_rate | 70.0% |
 | expected_file_as_support_rate | 6.7% |
 | expected_file_discarded_rate | 6.7% |
-| expected_file_missing_rate | 20.0% |
+| expected_file_missing_rate | 16.7% |
 | expected_symbol_hit_rate | 46.7% |
 | expected_symbol_as_pivot_rate | 16.7% |
-| mean_capsule_tokens | 1900.3 |
+| mean_capsule_tokens | 1873.9 |
 | mean_pivot_count | 1.87 |
 | mean_support_count | 3.73 |
 
@@ -54,10 +54,10 @@ Does Capsule v2 retrieval stay stable as cross-repo coverage grows from 16 to 30
 
 | metric | previous 16-instance cross-repo | new 30-instance cross-repo | delta |
 | --- | --- | --- | --- |
-| top-1 file accuracy | 62.5% | 56.7% | -5.8 pp ▼ |
-| top-3 file recall | 87.5% | 70.0% | -17.5 pp ▼ |
-| expected file as pivot | 81.3% | 66.7% | -14.6 pp ▼ |
-| expected file missing | 6.3% | 20.0% | +13.8 pp ▼ |
+| top-1 file accuracy | 62.5% | 60.0% | -2.5 pp ▼ |
+| top-3 file recall | 87.5% | 73.3% | -14.2 pp ▼ |
+| expected file as pivot | 81.3% | 70.0% | -11.3 pp ▼ |
+| expected file missing | 6.3% | 16.7% | +10.4 pp ▼ |
 
 ## Aggregate metrics — by label source
 
@@ -67,7 +67,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 
 | repo | instances | top-1 file | top-3 file | as pivot | missing | mean tokens | mean pivots | mean support |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| sympy/sympy | 5/5 | 60.0% | 80.0% | 80.0% | 20.0% | 3321.2 | 2.00 | 4.00 |
+| sympy/sympy | 5/5 | 80.0% | 100.0% | 100.0% | 0.0% | 3162.4 | 2.00 | 4.00 |
 | astropy/astropy | 4/4 | 50.0% | 50.0% | 50.0% | 25.0% | 1497.3 | 2.00 | 4.00 |
 | matplotlib/matplotlib | 4/4 | 0.0% | 50.0% | 25.0% | 25.0% | 306.8 | 1.50 | 3.00 |
 | sphinx-doc/sphinx | 4/4 | 25.0% | 50.0% | 50.0% | 50.0% | 2799.0 | 2.00 | 4.00 |
@@ -81,8 +81,8 @@ All 30 instances share one label source (gold_patch); see the table above.
 
 ## Miss summary (compact)
 
-- non-top-3 cases: 9
-- missing (not surfaced): 2
+- non-top-3 cases: 8
+- missing (not surfaced): 1
 - present-but-support: 1
 - present-but-discarded: 2
 - wrong-subsystem: 4
@@ -93,8 +93,8 @@ All 30 instances share one label source (gold_patch); see the table above.
 
 | category | count |
 | --- | --- |
-| none | 21 |
-| missing_from_candidates | 2 |
+| none | 22 |
+| missing_from_candidates | 1 |
 | present_but_support | 1 |
 | present_but_discarded | 2 |
 | wrong_subsystem | 4 |
@@ -132,7 +132,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 | sphinx-doc__sphinx-7910 | gold_patch | sphinx/ext/napoleon/__init__.py | sphinx/ext/autodoc/__init__.py::DecoratorDocumenter | missing | no | no | missing | wrong_subsystem |
 | sphinx-doc__sphinx-9230 | gold_patch | sphinx/util/docfields.py | sphinx/util/__init__.py::FilenameUniqDict | missing | no | no | missing | wrong_subsystem |
 | sympy__sympy-15599 | gold_patch | sympy/core/mod.py | sympy/core/mod.py::Mod | pivot | yes | yes | hit_top1_pivot | none |
-| sympy__sympy-16766 | gold_patch | sympy/printing/pycode.py | sympy/utilities/lambdify.py::lambdify | missing | no | no | missing | missing_from_candidates |
+| sympy__sympy-16766 | gold_patch | sympy/printing/pycode.py | sympy/printing/pycode.py::PythonCodePrinter | pivot | yes | yes | hit_top1_pivot | none |
 
 ## Misses / failures — top-k diagnostics
 
@@ -283,26 +283,6 @@ All 30 instances share one label source (gold_patch); see the table above.
   - doc/usage/extensions/example_numpy.py::__init__ — beyond standard support budget (max 4)
   - doc/usage/extensions/example_google.py::ExampleClass — beyond standard support budget (max 4)
   - sphinx/builders/epub3.py::build_navigation_doc — beyond standard support budget (max 4)
-
-### sympy__sympy-16766 — missing / missing_from_candidates
-
-- expected: sympy/printing/pycode.py
-- reason: expected file not surfaced (candidate_count=25)
-- down-weighted lexical tokens: support
-- top pivots:
-  - sympy/utilities/lambdify.py::lambdify — actionable function — symbol-name match; strong lexical match; issue-domain relevance; 11 dependents
-  - sympy/plotting/experimental_lambdify.py::lambdify — actionable class — symbol-name match; strong lexical match; issue-domain relevance
-- top support:
-  - sympy/printing/glsl.py::glsl_code — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance
-  - sympy/printing/julia.py::julia_code — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance
-  - sympy/printing/octave.py::octave_code — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance
-  - sympy/printing/rust.py::rust_code — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance
-- top discarded:
-  - sympy/plotting/experimental_lambdify.py::vectorized_lambdify — beyond standard support budget (max 4)
-  - sympy/printing/python.py::_print_Function — beyond standard support budget (max 4)
-  - sympy/printing/latex.py::latex — beyond standard support budget (max 4)
-  - sympy/printing/theanocode.py::theano_function — beyond standard support budget (max 4)
-  - sympy/printing/ccode.py::ccode — beyond standard support budget (max 4)
 
 ## Notes
 

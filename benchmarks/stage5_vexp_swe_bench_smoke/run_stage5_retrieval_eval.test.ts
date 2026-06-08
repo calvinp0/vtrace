@@ -109,6 +109,8 @@ function summary(overrides: Partial<CapsuleSummary> = {}): CapsuleSummary {
     deanchoredExceptionTokens: [],
     bodyLiteralMatches: [],
     nonSourceDownranked: [],
+    titleSymbolTerms: [],
+    titleSymbolMatches: [],
     ...overrides,
   };
 }
@@ -301,6 +303,22 @@ function artifactOf(rows: RetrievalEvalArtifact["rows"]): RetrievalEvalArtifact 
     byRepo: aggregateByRepo(rows),
   };
 }
+
+test("Stage 5R rows + CSV surface title-symbol diagnostics from the capsule summary", () => {
+  const row = evaluateInstance(
+    entry({ instance_id: "ts1" }),
+    summary({
+      pivots: [selected("pivot", "pkg/pycode.py", "PythonCodePrinter")],
+      titleSymbolTerms: ["PythonCodePrinter"],
+      titleSymbolMatches: ["PythonCodePrinter -> pkg/pycode.py::PythonCodePrinter"],
+    }),
+  );
+  assert.deepEqual(row.title_symbol_terms, ["PythonCodePrinter"]);
+  assert.deepEqual(row.title_symbol_matches, ["PythonCodePrinter -> pkg/pycode.py::PythonCodePrinter"]);
+  const csv = renderCsv([row]);
+  assert.match(csv.split("\n")[0]!, /title_symbol_terms,title_symbol_matches/);
+  assert.match(csv.split("\n")[1]!, /PythonCodePrinter -> pkg\/pycode\.py::PythonCodePrinter/);
+});
 
 test("renderCsv emits a header row and one row per instance", () => {
   const rows = [evaluateInstance(entry({ instance_id: "a" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] }))];

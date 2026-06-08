@@ -19,6 +19,7 @@ import type { Database } from "bun:sqlite";
 import { openIndexerDatabase } from "../../db/sqlite";
 import { persistParseResult } from "../../db/persistParseResult";
 import { insertEdges } from "../../db/repositories/edgesRepository";
+import { bodyLiteralsSearchText, extractBodyLiterals } from "../../indexer/extractBodyLiterals";
 import {
   EdgeType,
   Language,
@@ -234,8 +235,17 @@ export function seedFile(
     return symbol;
   });
 
+  // Index distinctive body literals (diagnostic codes / quoted messages) so the
+  // body-literal retrieval route can be exercised from a seeded fixture.
+  const bodyLiterals = symbols
+    .map((symbol, index) => ({
+      symbolId: symbol.id,
+      literalsText: bodyLiteralsSearchText(extractBodyLiterals(specs[index]!.body)),
+    }))
+    .filter((entry) => entry.literalsText.length > 0);
+
   const parseResult: ParseResult = { file, symbols, edges: [], diagnostics: [] };
-  persistParseResult(db, parseResult);
+  persistParseResult(db, parseResult, bodyLiterals.length > 0 ? { bodyLiterals } : undefined);
   return idsByLocalName;
 }
 
