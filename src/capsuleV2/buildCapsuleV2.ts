@@ -742,6 +742,11 @@ function lexicalScoringDiagnostics(query: string): Partial<CapsuleV2Result["diag
     downweighted_lexical_tokens: [...tokens.generic],
     lexical_meaningful_token_count: tokens.meaningful.size,
     lexical_generic_token_count: tokens.generic.size,
+    // Exception-symptom nouns de-anchored from meaningful ranking (G1). Present
+    // only when at least one exception name contributed a de-anchored noun.
+    ...(tokens.deanchored.size > 0
+      ? { deanchored_exception_tokens: [...tokens.deanchored] }
+      : {}),
   };
 }
 

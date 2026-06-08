@@ -277,6 +277,8 @@ export interface CapsuleSummary {
   readonly filteredRunnerFiles: readonly string[];
   /** Generic query tokens whose lexical contribution was down-weighted in scoring. */
   readonly downweightedLexicalTokens: readonly string[];
+  /** Exception-symptom nouns de-anchored from meaningful lexical ranking (G1). */
+  readonly deanchoredExceptionTokens: readonly string[];
   /** Body-literal recoveries: "literal -> symbol" for each task literal found in a body. */
   readonly bodyLiteralMatches: readonly string[];
 }
@@ -317,6 +319,7 @@ export function summarizeCapsule(result: CapsuleV2Result): CapsuleSummary {
     filteredGenericSymbols: result.diagnostics.filtered_generic_symbols ?? [],
     filteredRunnerFiles: result.diagnostics.filtered_runner_files ?? [],
     downweightedLexicalTokens: result.diagnostics.downweighted_lexical_tokens ?? [],
+    deanchoredExceptionTokens: result.diagnostics.deanchored_exception_tokens ?? [],
     bodyLiteralMatches: (result.diagnostics.body_literal_matches ?? []).map(
       (match) => `${match.literal} -> ${match.symbol}`,
     ),
@@ -497,16 +500,32 @@ export function taskHasLineAnchor(task: string): boolean {
   return /#L\d+/.test(task) || /\.\w+:\d+/.test(task);
 }
 
-// A task carries a body literal when it quotes a substantive string/identifier
-// (e.g. an error message, a config key, a token the fix hinges on) — the signal
-// Capsule v2's body-literal search is meant to recover. Used to tell a
-// body-literal miss (quoted clue present, none resolved) from a plain miss.
+// A bare dotted/slashed identifier — a module path, format key, attribute access,
+// or file path (e.g. `ascii.cds`, `a/b/c`, `self.method`). These are resolved by
+// symbol/import/path matching, NOT by body-literal search, so they are not the
+// kind of distinctive body literal whose absence indicates a literal-search miss.
+function isModulePathLike(value: string): boolean {
+  return /^[\w-]+(?:[./][\w-]+)+$/.test(value);
+}
+
+// A task carries a (relevant) body literal when it quotes a distinctive
+// string/code clue (an error message fragment, a quoted call, a token the fix
+// hinges on) — the signal Capsule v2's body-literal search is meant to recover.
+// A quoted MODULE/FORMAT identifier (`ascii.cds`) does NOT count: it is resolved
+// by symbol/import matching, so a miss on it is a candidate-generation gap, not a
+// body-literal failure. Used to tell a body-literal miss from a plain miss.
 export function taskHasBodyLiteral(task: string): boolean {
   for (const match of task.matchAll(/['"`]([^'"`\n]{4,})['"`]/g)) {
     const inner = (match[1] ?? "").trim();
-    // Require at least one identifier-ish or symbol-ish token, not just prose in
-    // quotes, so a quoted plain sentence does not masquerade as a code literal.
-    if (/[A-Za-z_]\w{2,}/.test(inner) && /[_./(=:]|[a-z][A-Z]/.test(inner)) return true;
+    // Require at least one identifier-ish token, not just prose in quotes.
+    if (!/[A-Za-z_]\w{2,}/.test(inner)) continue;
+    // Skip bare module/format/path identifiers — not body-literal-class clues.
+    if (isModulePathLike(inner)) continue;
+    // A symbol-ish/code-ish shape (snake_case, a call, a colon, or interior
+    // camelCase) marks a distinctive literal worth body-searching. A bare `word=`
+    // assignment FRAGMENT (e.g. the `format=` captured from `format='ascii.cds'`)
+    // is excluded — `=` is not on its own evidence of a body literal.
+    if (/[_/(:]|[a-z][A-Z]/.test(inner)) return true;
   }
   return false;
 }
@@ -561,11 +580,11 @@ export function classifyMiss(
   if (taskHasLineAnchor(task) && !summary.lineAnchorResolutionUsed) {
     return "line_anchor_not_resolved";
   }
-  // A quoted code literal in the task that body-literal search failed to resolve
-  // to a symbol is a distinct, diagnosable cause from a generic ranking miss.
-  if (taskHasBodyLiteral(task) && summary.bodyLiteralMatches.length === 0) {
-    return "body_literal_not_resolved";
-  }
+  // G2 precedence: STRUCTURAL candidate-generation causes are attributed before a
+  // body-literal explanation. When the expected file never entered candidates
+  // because retrieval anchored on the wrong subsystem / a generic hub / an entry
+  // point, that is the real cause — a body-literal "miss" on an unrelated quoted
+  // token (e.g. a format key like `ascii.cds`) would be a misattribution.
   if (topPivot?.isGenericInfrastructure) return "generic_infrastructure_ranked_above_target";
   if (
     summary.subsystemRoot &&
@@ -584,6 +603,12 @@ export function classifyMiss(
     return "wrong_subsystem";
   }
   if (topPivot?.isEntryPoint) return "wrong_entry_point";
+  // Only NOW, with no structural cause, is an unresolved RELEVANT body literal the
+  // explanation: a distinctive quoted clue the task hinges on (not a module/format
+  // identifier) that body-literal search should have matched but did not.
+  if (taskHasBodyLiteral(task) && summary.bodyLiteralMatches.length === 0) {
+    return "body_literal_not_resolved";
+  }
   if (summary.candidateCount !== null && summary.candidateCount > 0) {
     // Candidates existed but the expected file was not among the surfaced ones.
     return "missing_from_candidates";
@@ -654,6 +679,8 @@ export interface RetrievalEvalRow {
   readonly filtered_runner_files: readonly string[];
   /** Generic query tokens down-weighted in lexical scoring (for this instance). */
   readonly downweighted_lexical_tokens: readonly string[];
+  /** Exception-symptom nouns de-anchored from meaningful ranking (for this instance). */
+  readonly deanchored_exception_tokens: readonly string[];
   /** Body-literal recoveries ("literal -> symbol") for this instance. */
   readonly body_literal_matches: readonly string[];
 
@@ -705,6 +732,7 @@ export function evaluateInstance(
       filtered_generic_symbols: [],
       filtered_runner_files: [],
       downweighted_lexical_tokens: [],
+      deanchored_exception_tokens: [],
       body_literal_matches: [],
       diagnostics: { top_pivots: [], top_support: [], top_discarded: [] },
     };
@@ -761,6 +789,7 @@ export function evaluateInstance(
     filtered_generic_symbols: summary.filteredGenericSymbols,
     filtered_runner_files: summary.filteredRunnerFiles,
     downweighted_lexical_tokens: summary.downweightedLexicalTokens,
+    deanchored_exception_tokens: summary.deanchoredExceptionTokens,
     body_literal_matches: summary.bodyLiteralMatches,
     diagnostics: topKDiagnostics(summary),
   };
@@ -964,6 +993,7 @@ const CSV_COLUMNS: readonly (keyof RetrievalEvalRow)[] = [
   "filtered_generic_symbols",
   "filtered_runner_files",
   "downweighted_lexical_tokens",
+  "deanchored_exception_tokens",
   "body_literal_matches",
 ];
 
@@ -1134,6 +1164,9 @@ export function renderMarkdown(artifact: RetrievalEvalArtifact): string {
       }
       if (row.downweighted_lexical_tokens.length > 0) {
         lines.push(`- down-weighted lexical tokens: ${row.downweighted_lexical_tokens.join(", ")}`);
+      }
+      if (row.deanchored_exception_tokens.length > 0) {
+        lines.push(`- de-anchored exception tokens: ${row.deanchored_exception_tokens.join(", ")}`);
       }
       if (row.body_literal_matches.length > 0) {
         lines.push(`- body-literal matches: ${row.body_literal_matches.join(", ")}`);

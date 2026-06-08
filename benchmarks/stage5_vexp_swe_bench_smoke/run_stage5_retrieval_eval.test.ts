@@ -102,6 +102,7 @@ function summary(overrides: Partial<CapsuleSummary> = {}): CapsuleSummary {
     filteredGenericSymbols: [],
     filteredRunnerFiles: [],
     downweightedLexicalTokens: [],
+    deanchoredExceptionTokens: [],
     bodyLiteralMatches: [],
     ...overrides,
   };
@@ -910,6 +911,15 @@ test("taskHasBodyLiteral detects a quoted code literal but not quoted prose", ()
   assert.ok(!taskHasBodyLiteral("no quotes at all in this task"));
 });
 
+// G2: a quoted MODULE / FORMAT / PATH identifier is not a body-literal-class clue
+// (it is resolved by symbol/import/path matching), so it must not count.
+test("taskHasBodyLiteral excludes module/format/path identifiers", () => {
+  assert.ok(!taskHasBodyLiteral("read with `format='ascii.cds'` incorrectly")); // dotted format key
+  assert.ok(!taskHasBodyLiteral("import 'astropy.units.format' fails"));         // dotted module path
+  assert.ok(!taskHasBodyLiteral("the call 'self.method' is wrong"));             // attribute access
+  assert.ok(!taskHasBodyLiteral("see 'a/b/c.py' for the path"));                 // file path
+});
+
 test("classifyMiss: body_literal_not_resolved when a quoted literal resolved to nothing", () => {
   const s = summary({ pivots: [selected("pivot", "pkg/other.py", "other")], bodyLiteralMatches: [] });
   const cat = classifyMiss(
@@ -936,4 +946,87 @@ test("classifyMiss: language_parser_gap when the only edit site is a non-Python 
     "fix the cython splitter",
   );
   assert.equal(cat, "language_parser_gap");
+});
+
+// --- G2: miss-taxonomy precedence + irrelevant-literal gate -------------------
+
+test("G2: an irrelevant quoted module/format literal is NOT body_literal_not_resolved", () => {
+  // astropy-14369 shape: the task quotes a FORMAT key (`format='ascii.cds'`), the
+  // expected units parser never enters candidates. This is a candidate-generation
+  // gap, not a literal-search failure — must not be labelled body_literal_*.
+  const s = summary({
+    pivots: [selected("pivot", "astropy/io/ascii/mrt.py", "Mrt")],
+    bodyLiteralMatches: [],
+    candidateCount: 25,
+    subsystemRoot: null,
+  });
+  const cat = classifyMiss(
+    {
+      result: "missing",
+      expected_file_role: "missing",
+      contains_expected_file_top3: false,
+      expected_files: ["astropy/units/format/cds.py"],
+    },
+    s,
+    "Incorrect units read with `format='ascii.cds'`, astropy.table mis-parses composite units",
+  );
+  assert.equal(cat, "missing_from_candidates");
+});
+
+test("G2: wrong_subsystem takes precedence over a body literal when the subsystem mismatches", () => {
+  // Even with a relevant quoted literal, a structural wrong-subsystem signal is the
+  // real cause and wins (precedence reorder).
+  const s = summary({
+    pivots: [selected("pivot", "astropy/io/ascii/mrt.py", "Mrt")],
+    bodyLiteralMatches: [],
+    candidateCount: 25,
+    subsystemRoot: "astropy/io/ascii",
+  });
+  const cat = classifyMiss(
+    {
+      result: "missing",
+      expected_file_role: "missing",
+      contains_expected_file_top3: false,
+      expected_files: ["astropy/units/format/cds.py"],
+    },
+    s,
+    'parser drops the "p_product_of_units" rule',
+  );
+  assert.equal(cat, "wrong_subsystem");
+});
+
+test("G2: a relevant body literal is still classified when no structural cause applies", () => {
+  // Regression: the genuine body-literal case (distinctive quoted clue, no
+  // subsystem/infra/entry signal) still resolves to body_literal_not_resolved.
+  const s = summary({
+    pivots: [selected("pivot", "pkg/other.py", "other")],
+    bodyLiteralMatches: [],
+    candidateCount: 10,
+    subsystemRoot: null,
+  });
+  const cat = classifyMiss(
+    { result: "missing", expected_file_role: "missing", contains_expected_file_top3: false, expected_files: ["pkg/target.py"] },
+    s,
+    'the emitted message "could not parse value" is wrong',
+  );
+  // "could not parse value" is prose without code shape -> not a body literal;
+  // a code-shaped clue does trigger it:
+  const cat2 = classifyMiss(
+    { result: "missing", expected_file_role: "missing", contains_expected_file_top3: false, expected_files: ["pkg/target.py"] },
+    s,
+    'the helper "get_group_by_cols" emits the wrong sql',
+  );
+  assert.equal(cat, "missing_from_candidates");
+  assert.equal(cat2, "body_literal_not_resolved");
+});
+
+test("G2: deanchored exception tokens flow from summary onto the row", () => {
+  const row = evaluateInstance(
+    entry({ repo: "sphinx-doc/sphinx" }),
+    summary({
+      pivots: [selected("pivot", "pkg/target.py", "do_thing")],
+      deanchoredExceptionTokens: ["index"],
+    }),
+  );
+  assert.deepEqual(row.deanchored_exception_tokens, ["index"]);
 });

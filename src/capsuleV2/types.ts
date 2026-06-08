@@ -247,6 +247,17 @@ export interface CapsuleV2Diagnostics {
   lexical_meaningful_token_count?: number;
   lexical_generic_token_count?: number;
   /**
+   * Exception-symptom de-anchoring. A CamelCase exception named in the task
+   * (`IndexError`, `UnicodeDecodeError`) tokenises into its symptom nouns
+   * (`index`, `unicode`, `decode`); on their own those latch retrieval onto
+   * symptom-named symbols instead of the cause. When such a noun occurs ONLY
+   * inside an exception name (never standalone in the task) it is de-anchored —
+   * treated like a generic token for lexical scoring. The full exception name
+   * stays in the raw query text, so recall is preserved. Present only when at
+   * least one token was de-anchored.
+   */
+  deanchored_exception_tokens?: string[];
+  /**
    * Body-literal recovery. When a distinctive literal cited in the task (a
    * diagnostic/error code, a quoted message) was found in a symbol's SOURCE BODY,
    * that symbol is pulled into the pool — the one signal that reaches a symbol named

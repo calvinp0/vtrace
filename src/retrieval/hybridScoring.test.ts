@@ -211,3 +211,68 @@ test("meaningful domain symbols retain full lexical weight against a noisy query
     assert.equal(a.factor, 1, `${name} must keep full lexical weight`);
   }
 });
+
+// --- G1: exception-symptom de-anchoring ---------------------------------------
+
+test("IndexError de-anchors 'index' so an index-named symbol is not a strong anchor", () => {
+  const tokens = classifyLexicalQueryTokens("IndexError: pop from empty list for empty tuple annotation");
+  // 'index' came ONLY from IndexError -> de-anchored (folded into generic).
+  assert.ok(tokens.deanchored.has("index"), "index should be de-anchored");
+  assert.ok(tokens.generic.has("index"), "de-anchored token is treated as generic");
+  assert.ok(!tokens.meaningful.has("index"), "index must not be a meaningful anchor");
+  // The category suffix 'error' is generic but not reported as a symptom noun.
+  assert.ok(!tokens.deanchored.has("error"));
+
+  // An index-named symbol matched ONLY by the de-anchored token is down-weighted.
+  const indexSym = analyzeLexicalGenericMatch(tokens, { localName: "index", fqName: "addnodes.index" });
+  assert.equal(indexSym.factor, GENERIC_ONLY_LEXICAL_FACTOR);
+  assert.deepEqual(indexSym.downweightedTokens, ["index"]);
+});
+
+test("UnicodeDecodeError de-anchors 'unicode' and 'decode'", () => {
+  const tokens = classifyLexicalQueryTokens("Unicode method names cause UnicodeDecodeError for some requests");
+  // 'decode' came ONLY from the exception name -> de-anchored.
+  assert.ok(tokens.deanchored.has("decode"), "decode should be de-anchored");
+  assert.ok(tokens.generic.has("decode"));
+  assert.ok(!tokens.meaningful.has("decode"));
+  // 'unicode' appears standalone ("Unicode method names") AND in the exception, so
+  // it is a genuine domain term and must stay meaningful (domain terms preserved).
+  assert.ok(tokens.meaningful.has("unicode"), "standalone 'unicode' stays meaningful");
+  assert.ok(!tokens.deanchored.has("unicode"));
+
+  const decodeSym = analyzeLexicalGenericMatch(tokens, {
+    localName: "stream_decode_response_unicode",
+    fqName: "requests.utils.stream_decode_response_unicode",
+  });
+  // 'unicode' is meaningful and matches the name, so the candidate is spared the
+  // penalty — but it no longer rides 'decode' alone to a pivot.
+  assert.equal(decodeSym.meaningfulMatchCount >= 1, true);
+  assert.deepEqual(decodeSym.downweightedTokens, ["decode"]);
+});
+
+test("a symptom noun that occurs ONLY standalone (no exception) stays meaningful", () => {
+  const tokens = classifyLexicalQueryTokens("the index of the column is computed wrong");
+  assert.ok(tokens.meaningful.has("index"));
+  assert.ok(!tokens.deanchored.has("index"));
+  assert.equal(tokens.deanchored.size, 0);
+});
+
+test("the full exception name is preserved in the query (recall) — de-anchoring is scoring-only", () => {
+  const query = "IndexError: pop from empty list";
+  // classify does not mutate the query; recall text still contains the full name.
+  assert.ok(query.includes("IndexError"));
+  const tokens = classifyLexicalQueryTokens(query);
+  // A symbol whose name genuinely matches the full exception still scores via the
+  // tokenized 'indexerror' parts; de-anchoring only removes the standalone 'index'
+  // anchor, it does not erase the name from the query.
+  assert.ok(tokens.generic.has("index"));
+});
+
+test("suffix-less builtin exceptions (StopIteration) de-anchor their symptom nouns", () => {
+  const tokens = classifyLexicalQueryTokens("StopIteration leaks out of the generator unexpectedly");
+  // 'iteration' came only from StopIteration -> de-anchored; 'stop' is sub-handled
+  // (>=3 chars) and also de-anchored. 'generator' is a real standalone term.
+  assert.ok(tokens.deanchored.has("iteration"));
+  assert.ok(!tokens.meaningful.has("iteration"));
+  assert.ok(tokens.meaningful.has("generator"));
+});

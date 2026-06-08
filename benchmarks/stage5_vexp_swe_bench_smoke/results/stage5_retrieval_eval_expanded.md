@@ -90,6 +90,12 @@ support / discarded are compared against the fixture's `expected_files` and
 | mean_pivot_count | 2.00 |
 | mean_support_count | 4.00 |
 
+## Metrics by repo
+
+| repo | instances | top-1 file | top-3 file | as pivot | missing | mean tokens | mean pivots | mean support |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| django/django | 20/20 | 75.0% | 90.0% | 80.0% | 0.0% | 900.8 | 1.85 | 4.00 |
+
 ## Miss taxonomy
 
 | category | count |

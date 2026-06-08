@@ -407,25 +407,104 @@ export interface LexicalQueryTokens {
   readonly meaningful: ReadonlySet<string>;
   /** Generic bug-report tokens eligible for lexical down-weighting. */
   readonly generic: ReadonlySet<string>;
+  /**
+   * Exception-symptom nouns that were de-anchored: they occur ONLY inside a
+   * CamelCase exception name in the query (never standalone), so they are folded
+   * into `generic` for scoring. Surfaced separately for diagnostics.
+   */
+  readonly deanchored: ReadonlySet<string>;
+}
+
+// A CamelCase exception type named in prose, e.g. `IndexError`,
+// `UnicodeDecodeError`, `ValidationWarning`. The suffix is the language-level
+// convention for exception/warning classes, so this needs no per-repo knowledge.
+const EXCEPTION_NAME = /\b[A-Z][A-Za-z0-9]*(?:Error|Exception|Warning)\b/g;
+
+// Common builtin exceptions that do NOT carry the Error/Exception/Warning suffix.
+// Language-level (not repo-specific); kept small and limited to standard builtins.
+const SUFFIXLESS_BUILTIN_EXCEPTIONS: ReadonlySet<string> = new Set([
+  "StopIteration", "StopAsyncIteration", "KeyboardInterrupt", "SystemExit",
+  "GeneratorExit",
+]);
+
+// The suffix words that name the failure CATEGORY, not the symptom — already
+// inert as anchors, so they are never reported as de-anchored symptom nouns.
+const EXCEPTION_SUFFIX_TOKENS: ReadonlySet<string> = new Set(["error", "exception", "warning"]);
+
+// Find the exception names mentioned in the query (suffix rule + builtin set).
+function findExceptionNames(query: string): string[] {
+  const names = new Set(matchAllZero(query, EXCEPTION_NAME));
+  for (const builtin of SUFFIXLESS_BUILTIN_EXCEPTIONS) {
+    if (new RegExp(`\\b${builtin}\\b`).test(query)) {
+      names.add(builtin);
+    }
+  }
+  return [...names];
+}
+
+function matchAllZero(text: string, pattern: RegExp): string[] {
+  return Array.from(text.matchAll(new RegExp(pattern.source, pattern.flags)), (m) => m[0]);
 }
 
 // Split a query's content tokens into meaningful vs generic. Structural/boilerplate
 // tokens (DOMAIN_STOPWORDS) and sub-`DOMAIN_MIN_TOKEN_LENGTH` tokens are dropped
 // from both sets — they never carry signal and never trigger a down-weight.
+//
+// Exception-symptom de-anchoring (G1): a CamelCase exception name tokenises into
+// its symptom nouns (`IndexError` -> `index`, `UnicodeDecodeError` -> `unicode`,
+// `decode`). On their own those nouns latch retrieval onto symptom-named symbols
+// (`addnodes.index`, `stream_decode_response_unicode`) rather than the cause. A
+// symptom noun that occurs ONLY inside an exception name (never standalone in the
+// task) is de-anchored: folded into `generic` so it cannot ride to a pivot, while
+// the full exception name stays in the raw query text for recall. A noun that ALSO
+// appears standalone (a genuine domain term) is left meaningful — domain terms are
+// never removed.
 export function classifyLexicalQueryTokens(query: string): LexicalQueryTokens {
+  const exceptionNames = findExceptionNames(query);
+  // Symptom nouns contributed by exception names (minus the category suffix).
+  const symptomTokens = new Set<string>();
+  for (const name of exceptionNames) {
+    for (const token of tokenize(name)) {
+      if (
+        token.length >= DOMAIN_MIN_TOKEN_LENGTH &&
+        !DOMAIN_STOPWORDS.has(token) &&
+        !EXCEPTION_SUFFIX_TOKENS.has(token) &&
+        !GENERIC_TOKEN_STOPLIST.has(token)
+      ) {
+        symptomTokens.add(token);
+      }
+    }
+  }
+  // Tokens that appear in the query OUTSIDE any exception name. A symptom noun
+  // present here is a genuine standalone domain term and must stay meaningful.
+  let standalone: Set<string> = new Set();
+  if (symptomTokens.size > 0) {
+    let withoutExceptions = query;
+    for (const name of exceptionNames) {
+      withoutExceptions = withoutExceptions.split(name).join(" ");
+    }
+    standalone = new Set(tokenize(withoutExceptions));
+  }
+  const deanchored = new Set<string>();
+  for (const token of symptomTokens) {
+    if (!standalone.has(token)) {
+      deanchored.add(token);
+    }
+  }
+
   const meaningful = new Set<string>();
   const generic = new Set<string>();
   for (const token of tokenize(query)) {
     if (token.length < DOMAIN_MIN_TOKEN_LENGTH || DOMAIN_STOPWORDS.has(token)) {
       continue;
     }
-    if (GENERIC_TOKEN_STOPLIST.has(token)) {
+    if (GENERIC_TOKEN_STOPLIST.has(token) || deanchored.has(token)) {
       generic.add(token);
     } else {
       meaningful.add(token);
     }
   }
-  return { meaningful, generic };
+  return { meaningful, generic, deanchored };
 }
 
 export interface LexicalGenericMatch {

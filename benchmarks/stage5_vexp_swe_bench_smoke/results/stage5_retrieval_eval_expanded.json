@@ -7,6 +7,7 @@
   "rows": [
     {
       "instance_id": "django__django-10880",
+      "repo": "django/django",
       "label_source": "manual_verified",
       "intent": "debug",
       "actual_mode": "standard",
@@ -44,6 +45,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -111,6 +113,7 @@
     },
     {
       "instance_id": "django__django-11095",
+      "repo": "django/django",
       "label_source": "manual_verified",
       "intent": "debug",
       "actual_mode": "standard",
@@ -147,6 +150,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -214,6 +218,7 @@
     },
     {
       "instance_id": "django__django-11490",
+      "repo": "django/django",
       "label_source": "manual_verified",
       "intent": "debug",
       "actual_mode": "standard",
@@ -250,6 +255,7 @@
       "downweighted_lexical_tokens": [
         "change"
       ],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -317,6 +323,7 @@
     },
     {
       "instance_id": "django__django-11728",
+      "repo": "django/django",
       "label_source": "manual_verified",
       "intent": "debug",
       "actual_mode": "standard",
@@ -354,6 +361,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -421,6 +429,7 @@
     },
     {
       "instance_id": "django__django-11740",
+      "repo": "django/django",
       "label_source": "manual_verified",
       "intent": "debug",
       "actual_mode": "standard",
@@ -455,6 +464,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -522,6 +532,7 @@
     },
     {
       "instance_id": "django__django-10973",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -563,6 +574,7 @@
       "downweighted_lexical_tokens": [
         "run"
       ],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -625,6 +637,7 @@
     },
     {
       "instance_id": "django__django-11133",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -660,6 +673,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -727,6 +741,7 @@
     },
     {
       "instance_id": "django__django-11206",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -763,6 +778,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -830,6 +846,7 @@
     },
     {
       "instance_id": "django__django-11749",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -868,6 +885,7 @@
       "downweighted_lexical_tokens": [
         "command"
       ],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -930,6 +948,7 @@
     },
     {
       "instance_id": "django__django-11815",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -969,6 +988,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -1036,6 +1056,7 @@
     },
     {
       "instance_id": "django__django-11820",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -1072,6 +1093,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [
         "models.E015 -> Model",
         "models.E015 -> _check_ordering"
@@ -1142,6 +1164,7 @@
     },
     {
       "instance_id": "django__django-12050",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -1180,6 +1203,7 @@
       "downweighted_lexical_tokens": [
         "changes"
       ],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -1247,6 +1271,7 @@
     },
     {
       "instance_id": "django__django-12273",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -1284,6 +1309,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -1351,6 +1377,7 @@
     },
     {
       "instance_id": "django__django-12276",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -1388,6 +1415,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -1455,6 +1483,7 @@
     },
     {
       "instance_id": "django__django-12325",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -1495,6 +1524,7 @@
       "downweighted_lexical_tokens": [
         "multiple"
       ],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -1557,6 +1587,7 @@
     },
     {
       "instance_id": "django__django-12774",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -1593,6 +1624,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -1660,6 +1692,7 @@
     },
     {
       "instance_id": "django__django-12858",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -1696,6 +1729,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [
         "models.E015 -> Model",
         "models.E015 -> _check_ordering"
@@ -1766,6 +1800,7 @@
     },
     {
       "instance_id": "django__django-13012",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -1805,6 +1840,7 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -1872,6 +1908,7 @@
     },
     {
       "instance_id": "django__django-13112",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -1912,6 +1949,7 @@
         "manage.py"
       ],
       "downweighted_lexical_tokens": [],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -1979,6 +2017,7 @@
     },
     {
       "instance_id": "django__django-13195",
+      "repo": "django/django",
       "label_source": "gold_patch",
       "intent": "debug",
       "actual_mode": "standard",
@@ -2022,6 +2061,7 @@
       "downweighted_lexical_tokens": [
         "delete"
       ],
+      "deanchored_exception_tokens": [],
       "body_literal_matches": [],
       "diagnostics": {
         "top_pivots": [
@@ -2113,7 +2153,9 @@
       "wrong_entry_point": 0,
       "generic_infrastructure_ranked_above_target": 0,
       "line_anchor_not_resolved": 0,
+      "body_literal_not_resolved": 0,
       "test_symbol_pollution": 0,
+      "language_parser_gap": 0,
       "workspace_error": 0,
       "fixture_label_error": 0,
       "unknown": 0
@@ -2145,7 +2187,9 @@
         "wrong_entry_point": 0,
         "generic_infrastructure_ranked_above_target": 0,
         "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 0,
         "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
         "workspace_error": 0,
         "fixture_label_error": 0,
         "unknown": 0
@@ -2176,11 +2220,49 @@
         "wrong_entry_point": 0,
         "generic_infrastructure_ranked_above_target": 0,
         "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 0,
         "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
         "workspace_error": 0,
         "fixture_label_error": 0,
         "unknown": 0
       }
     }
-  }
+  },
+  "byRepo": [
+    {
+      "repo": "django/django",
+      "instances_total": 20,
+      "instances_evaluated": 20,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 0.75,
+      "top_3_file_recall": 0.9,
+      "expected_file_as_pivot_rate": 0.8,
+      "expected_file_as_support_rate": 0.15,
+      "expected_file_missing_rate": 0,
+      "expected_file_discarded_rate": 0.05,
+      "expected_symbol_hit_rate": 0.7,
+      "expected_symbol_as_pivot_rate": 0.55,
+      "mean_capsule_tokens": 900.75,
+      "mean_pivot_count": 1.85,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 18,
+        "missing_from_candidates": 0,
+        "present_but_support": 1,
+        "present_but_discarded": 1,
+        "wrong_subsystem": 0,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 0,
+        "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    }
+  ]
 }

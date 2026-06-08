@@ -37,14 +37,14 @@ support / discarded are compared against the fixture's `expected_files` and
 | workspace_error_count | 0 |
 | no_context_count | 0 |
 | top_1_file_accuracy | 62.5% |
-| top_3_file_recall | 81.3% |
-| expected_file_as_pivot_rate | 75.0% |
-| expected_file_as_support_rate | 12.5% |
+| top_3_file_recall | 87.5% |
+| expected_file_as_pivot_rate | 81.3% |
+| expected_file_as_support_rate | 6.3% |
 | expected_file_discarded_rate | 6.3% |
 | expected_file_missing_rate | 6.3% |
 | expected_symbol_hit_rate | 68.8% |
 | expected_symbol_as_pivot_rate | 18.8% |
-| mean_capsule_tokens | 1692.9 |
+| mean_capsule_tokens | 1722.6 |
 | mean_pivot_count | 2.00 |
 | mean_support_count | 4.00 |
 
@@ -62,17 +62,16 @@ All 16 instances share one label source (gold_patch); see the table above.
 | psf/requests | 2/2 | 50.0% | 50.0% | 50.0% | 0.0% | 478.0 | 2.00 | 4.00 |
 | pytest-dev/pytest | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 860.0 | 2.00 | 4.00 |
 | scikit-learn/scikit-learn | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 3719.5 | 2.00 | 4.00 |
-| sphinx-doc/sphinx | 2/2 | 50.0% | 50.0% | 50.0% | 0.0% | 1195.5 | 2.00 | 4.00 |
+| sphinx-doc/sphinx | 2/2 | 50.0% | 100.0% | 100.0% | 0.0% | 1433.0 | 2.00 | 4.00 |
 | pallets/flask | 1/1 | 100.0% | 100.0% | 100.0% | 0.0% | 5594.0 | 2.00 | 4.00 |
 
 ## Miss taxonomy
 
 | category | count |
 | --- | --- |
-| none | 13 |
-| present_but_support | 1 |
+| none | 14 |
 | present_but_discarded | 1 |
-| body_literal_not_resolved | 1 |
+| wrong_subsystem | 1 |
 
 ## Per-instance results
 
@@ -86,10 +85,10 @@ All 16 instances share one label source (gold_patch); see the table above.
 | matplotlib__matplotlib-22719 | gold_patch | lib/matplotlib/category.py | lib/matplotlib/_api/deprecation.py::MatplotlibDeprecationWarning | support | no | yes | hit_top3 | none |
 | matplotlib__matplotlib-24627 | gold_patch | lib/matplotlib/axes/_base.py | lib/matplotlib/figure.py::clf | pivot | no | yes | hit_top3 | none |
 | astropy__astropy-14365 | gold_patch | astropy/io/ascii/qdp.py | astropy/io/ascii/qdp.py::_write_table_qdp | pivot | yes | yes | hit_top1_pivot | none |
-| astropy__astropy-14369 | gold_patch | astropy/units/format/cds.py | astropy/io/ascii/mrt.py::Mrt | missing | no | no | missing | body_literal_not_resolved |
+| astropy__astropy-14369 | gold_patch | astropy/units/format/cds.py | astropy/io/ascii/mrt.py::Mrt | missing | no | no | missing | wrong_subsystem |
 | pytest-dev__pytest-10051 | gold_patch | src/_pytest/logging.py | src/_pytest/logging.py::get_records | pivot | yes | yes | hit_top1_pivot | none |
 | pytest-dev__pytest-5262 | gold_patch | src/_pytest/capture.py | src/_pytest/capture.py::EncodedFile | pivot | yes | yes | hit_top1_pivot | none |
-| sphinx-doc__sphinx-7462 | gold_patch | sphinx/domains/python.py | sphinx/addnodes.py::index | support | no | no | hit_support | present_but_support |
+| sphinx-doc__sphinx-7462 | gold_patch | sphinx/domains/python.py | sphinx/application.py::add_object_type | pivot | no | yes | hit_top3 | none |
 | sphinx-doc__sphinx-7748 | gold_patch | sphinx/ext/autodoc/__init__.py | sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin | pivot | yes | yes | hit_top1_pivot | none |
 | psf__requests-1142 | gold_patch | requests/models.py | requests/models.py::prepare_content_length | pivot | yes | yes | hit_top1_pivot | none |
 | psf__requests-1724 | gold_patch | requests/sessions.py | requests/utils.py::stream_decode_response_unicode | discarded | no | no | hit_discarded | present_but_discarded |
@@ -97,7 +96,7 @@ All 16 instances share one label source (gold_patch); see the table above.
 
 ## Misses / failures — top-k diagnostics
 
-### astropy__astropy-14369 — missing / body_literal_not_resolved
+### astropy__astropy-14369 — missing / wrong_subsystem
 
 - expected: astropy/units/format/cds.py, astropy/units/format/cds_parsetab.py
 - reason: expected file not surfaced (candidate_count=25)
@@ -116,31 +115,12 @@ All 16 instances share one label source (gold_patch); see the table above.
   - astropy/io/ascii/cparser.pyx::__dealloc__ — beyond standard support budget (max 4)
   - astropy/io/ascii/cparser.pyx::__getitem__ — beyond standard support budget (max 4)
 
-### sphinx-doc__sphinx-7462 — hit_support / present_but_support
-
-- expected: sphinx/domains/python.py, sphinx/pycode/ast.py
-- reason: —
-- down-weighted lexical tokens: error, bug
-- top pivots:
-  - sphinx/addnodes.py::index — actionable class — strong lexical match; issue-domain relevance; 56 dependents
-  - sphinx/application.py::add_object_type — actionable method — strong lexical match; issue-domain relevance
-- top support:
-  - sphinx/domains/__init__.py::Index — strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance
-  - sphinx/domains/index.py::entries — strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance
-  - sphinx/domains/index.py::run — strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance
-  - sphinx/domains/python.py::_parse_annotation — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance
-- top discarded:
-  - sphinx/domains/__init__.py::IndexEntry — beyond standard support budget (max 4)
-  - sphinx/roles.py::indexmarkup_role — beyond standard support budget (max 4)
-  - sphinx/roles.py::Index — beyond standard support budget (max 4)
-  - sphinx/application.py::add_crossref_type — beyond standard support budget (max 4)
-  - sphinx/roles.py::index_role — beyond standard support budget (max 4)
-
 ### psf__requests-1724 — hit_discarded / present_but_discarded
 
 - expected: requests/sessions.py
 - reason: expected file recovered but discarded: requests/sessions.py — beyond standard support budget (max 4)
-- down-weighted lexical tokens: error
+- down-weighted lexical tokens: decode, error
+- de-anchored exception tokens: decode
 - top pivots:
   - requests/utils.py::stream_decode_response_unicode — local implementation helper whose name matches the issue — likely edit site
   - requests/packages/urllib3/exceptions.py::DecodeError — actionable class — strong lexical match; issue-domain relevance
