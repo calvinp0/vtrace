@@ -451,8 +451,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 6058,
-      "used_percent": 75.72,
+      "estimated_tokens": 5377,
+      "used_percent": 67.21,
       "expected_files": [
         "sklearn/linear_model/logistic.py"
       ],
@@ -460,7 +460,7 @@
         "_log_reg_scoring_path"
       ],
       "top_1_pivot_file": "sklearn/linear_model/logistic.py",
-      "top_1_pivot_symbol": "predict_proba",
+      "top_1_pivot_symbol": "LogisticRegression",
       "top_3_files": [
         "sklearn/linear_model/logistic.py",
         "sklearn/linear_model/base.py",
@@ -468,12 +468,12 @@
       ],
       "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
-      "expected_symbol_best_rank": 5,
-      "expected_symbol_role": "support",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
       "contains_expected_file_top1": true,
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
-      "contains_expected_symbol_anywhere": true,
+      "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
       "discarded_count": 19,
@@ -489,13 +489,13 @@
         "top_pivots": [
           {
             "path": "sklearn/linear_model/logistic.py",
-            "symbol": "predict_proba",
-            "role_reason": "local implementation helper invoked by the entry point — likely edit site"
+            "symbol": "LogisticRegression",
+            "role_reason": "actionable class — symbol-name match; strong lexical match; issue-domain relevance; 97 dependents"
           },
           {
             "path": "sklearn/linear_model/logistic.py",
-            "symbol": "LogisticRegressionCV",
-            "role_reason": "actionable class — symbol-name match; strong lexical match; issue-domain relevance; 15 dependents"
+            "symbol": "predict_proba",
+            "role_reason": "local implementation helper invoked by the entry point — likely edit site"
           }
         ],
         "top_support": [
@@ -511,7 +511,7 @@
           },
           {
             "path": "sklearn/linear_model/logistic.py",
-            "symbol": "_log_reg_scoring_path",
+            "symbol": "logistic_regression_path",
             "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
           },
           {
@@ -523,21 +523,21 @@
         "top_discarded": [
           {
             "path": "sklearn/linear_model/logistic.py",
-            "symbol": "LogisticRegression",
+            "symbol": "LogisticRegressionCV",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sklearn/linear_model/stochastic_gradient.py",
+            "symbol": "predict_proba",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sklearn/tree/tree.py",
+            "symbol": "predict_proba",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
             "path": "sklearn/ensemble/bagging.py",
-            "symbol": "predict_proba",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "sklearn/calibration.py",
-            "symbol": "predict_proba",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "sklearn/model_selection/_search.py",
             "symbol": "predict_proba",
             "discard_reason": "beyond standard support budget (max 4)"
           },
@@ -1849,8 +1849,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 3185,
-      "used_percent": 39.81,
+      "estimated_tokens": 3184,
+      "used_percent": 39.8,
       "expected_files": [
         "astropy/io/fits/card.py"
       ],
@@ -1917,20 +1917,20 @@
           },
           {
             "path": "astropy/io/fits/header.py",
-            "symbol": "_block_size",
+            "symbol": "__repr__",
             "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
           }
         ],
         "top_discarded": [
           {
-            "path": "astropy/io/fits/header.py",
-            "symbol": "__repr__",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "path": "astropy/io/ascii/tests/test_c_reader.py",
+            "symbol": "test_doubled_quotes_segv",
+            "discard_reason": "a test symbol, not an edit target"
           },
           {
-            "path": "astropy/io/fits/scripts/fitsheader.py",
-            "symbol": "_get_cards",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "path": "astropy/io/ascii/tests/test_c_reader.py",
+            "symbol": "test_doubled_quotes",
+            "discard_reason": "a test symbol, not an edit target"
           },
           {
             "path": "astropy/io/fits/tests/test_header.py",
@@ -1943,8 +1943,8 @@
             "discard_reason": "a test symbol, not an edit target"
           },
           {
-            "path": "astropy/io/fits/tests/test_hdulist.py",
-            "symbol": "test_proper_error_raised_on_non_fits_file_with_unicode",
+            "path": "astropy/io/ascii/tests/test_c_reader.py",
+            "symbol": "test_empty_quotes",
             "discard_reason": "a test symbol, not an edit target"
           }
         ]
@@ -2240,33 +2240,37 @@
       "repo": "psf/requests",
       "label_source": "gold_patch",
       "intent": "debug",
-      "actual_mode": "no_context",
+      "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 0,
-      "used_percent": 0,
+      "estimated_tokens": 1099,
+      "used_percent": 13.74,
       "expected_files": [
         "requests/models.py"
       ],
       "expected_symbols": [
         "prepare_url"
       ],
-      "top_1_pivot_file": null,
-      "top_1_pivot_symbol": null,
-      "top_3_files": [],
-      "expected_file_best_rank": null,
-      "expected_file_role": "missing",
-      "expected_symbol_best_rank": null,
-      "expected_symbol_role": "missing",
-      "contains_expected_file_top1": false,
-      "contains_expected_file_top3": false,
-      "contains_expected_file_anywhere": false,
-      "contains_expected_symbol_anywhere": false,
-      "pivot_count": 0,
-      "support_count": 0,
-      "discarded_count": 0,
-      "result": "skipped_no_context",
-      "miss_category": "unknown",
-      "failure_reason": "capsule returned no_context (no high-confidence edit target)",
+      "top_1_pivot_file": "requests/models.py",
+      "top_1_pivot_symbol": "prepare_url",
+      "top_3_files": [
+        "requests/models.py",
+        "requests/exceptions.py",
+        "requests/adapters.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 9,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [
@@ -2278,9 +2282,67 @@
       ],
       "body_literal_matches": [],
       "diagnostics": {
-        "top_pivots": [],
-        "top_support": [],
-        "top_discarded": []
+        "top_pivots": [
+          {
+            "path": "requests/models.py",
+            "symbol": "prepare_url",
+            "role_reason": "source line anchor in the issue points at this symbol — explicit edit site"
+          },
+          {
+            "path": "requests/exceptions.py",
+            "symbol": "InvalidURL",
+            "role_reason": "actionable class — symbol-name match; lexical match; issue-domain relevance; 5 dependents"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "requests/exceptions.py",
+            "symbol": "InvalidProxyURL",
+            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; lexical match; issue-domain relevance"
+          },
+          {
+            "path": "requests/adapters.py",
+            "symbol": "get_connection",
+            "role_reason": "lexical match; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "requests/adapters.py",
+            "symbol": "send",
+            "role_reason": "lexical match; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "requests/utils.py",
+            "symbol": "requote_uri",
+            "role_reason": "lexical match; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "requests/utils.py",
+            "symbol": "unquote_unreserved",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/__init__.py",
+            "symbol": "_check_cryptography",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/__init__.py",
+            "symbol": "check_compatibility",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/__version__.py",
+            "symbol": "__version__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/__version__.py",
+            "symbol": "__url__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
       }
     },
     {
@@ -3142,20 +3204,20 @@
     "instances_total": 30,
     "instances_evaluated": 30,
     "workspace_error_count": 0,
-    "no_context_count": 2,
-    "top_1_file_accuracy": 0.5333,
-    "top_3_file_recall": 0.6667,
-    "expected_file_as_pivot_rate": 0.6333,
+    "no_context_count": 1,
+    "top_1_file_accuracy": 0.5667,
+    "top_3_file_recall": 0.7,
+    "expected_file_as_pivot_rate": 0.6667,
     "expected_file_as_support_rate": 0.0667,
-    "expected_file_missing_rate": 0.2333,
+    "expected_file_missing_rate": 0.2,
     "expected_file_discarded_rate": 0.0667,
     "expected_symbol_hit_rate": 0.4667,
-    "expected_symbol_as_pivot_rate": 0.1333,
-    "mean_capsule_tokens": 1895.6,
-    "mean_pivot_count": 1.8667,
-    "mean_support_count": 3.7333,
+    "expected_symbol_as_pivot_rate": 0.1667,
+    "mean_capsule_tokens": 1909.5,
+    "mean_pivot_count": 1.9333,
+    "mean_support_count": 3.8667,
     "miss_taxonomy": {
-      "none": 20,
+      "none": 21,
       "missing_from_candidates": 1,
       "present_but_support": 1,
       "present_but_discarded": 2,
@@ -3168,7 +3230,7 @@
       "language_parser_gap": 0,
       "workspace_error": 0,
       "fixture_label_error": 0,
-      "unknown": 1
+      "unknown": 0
     }
   },
   "byLabelSource": {
@@ -3176,20 +3238,20 @@
       "instances_total": 30,
       "instances_evaluated": 30,
       "workspace_error_count": 0,
-      "no_context_count": 2,
-      "top_1_file_accuracy": 0.5333,
-      "top_3_file_recall": 0.6667,
-      "expected_file_as_pivot_rate": 0.6333,
+      "no_context_count": 1,
+      "top_1_file_accuracy": 0.5667,
+      "top_3_file_recall": 0.7,
+      "expected_file_as_pivot_rate": 0.6667,
       "expected_file_as_support_rate": 0.0667,
-      "expected_file_missing_rate": 0.2333,
+      "expected_file_missing_rate": 0.2,
       "expected_file_discarded_rate": 0.0667,
       "expected_symbol_hit_rate": 0.4667,
-      "expected_symbol_as_pivot_rate": 0.1333,
-      "mean_capsule_tokens": 1895.6,
-      "mean_pivot_count": 1.8667,
-      "mean_support_count": 3.7333,
+      "expected_symbol_as_pivot_rate": 0.1667,
+      "mean_capsule_tokens": 1909.5,
+      "mean_pivot_count": 1.9333,
+      "mean_support_count": 3.8667,
       "miss_taxonomy": {
-        "none": 20,
+        "none": 21,
         "missing_from_candidates": 1,
         "present_but_support": 1,
         "present_but_discarded": 2,
@@ -3202,7 +3264,7 @@
         "language_parser_gap": 0,
         "workspace_error": 0,
         "fixture_label_error": 0,
-        "unknown": 1
+        "unknown": 0
       }
     }
   },
@@ -3255,7 +3317,7 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.25,
       "expected_symbol_as_pivot_rate": 0,
-      "mean_capsule_tokens": 1497.5,
+      "mean_capsule_tokens": 1497.25,
       "mean_pivot_count": 2,
       "mean_support_count": 4,
       "miss_taxonomy": {
@@ -3348,20 +3410,20 @@
       "instances_total": 3,
       "instances_evaluated": 3,
       "workspace_error_count": 0,
-      "no_context_count": 1,
-      "top_1_file_accuracy": 0.3333,
-      "top_3_file_recall": 0.3333,
-      "expected_file_as_pivot_rate": 0.3333,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 0.6667,
+      "top_3_file_recall": 0.6667,
+      "expected_file_as_pivot_rate": 0.6667,
       "expected_file_as_support_rate": 0,
-      "expected_file_missing_rate": 0.3333,
+      "expected_file_missing_rate": 0,
       "expected_file_discarded_rate": 0.3333,
-      "expected_symbol_hit_rate": 0.6667,
-      "expected_symbol_as_pivot_rate": 0.3333,
-      "mean_capsule_tokens": 318.6667,
-      "mean_pivot_count": 1.3333,
-      "mean_support_count": 2.6667,
+      "expected_symbol_hit_rate": 1,
+      "expected_symbol_as_pivot_rate": 0.6667,
+      "mean_capsule_tokens": 685,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
       "miss_taxonomy": {
-        "none": 1,
+        "none": 2,
         "missing_from_candidates": 0,
         "present_but_support": 0,
         "present_but_discarded": 1,
@@ -3374,7 +3436,7 @@
         "language_parser_gap": 0,
         "workspace_error": 0,
         "fixture_label_error": 0,
-        "unknown": 1
+        "unknown": 0
       }
     },
     {
@@ -3457,9 +3519,9 @@
       "expected_file_as_support_rate": 0,
       "expected_file_missing_rate": 0,
       "expected_file_discarded_rate": 0,
-      "expected_symbol_hit_rate": 1,
+      "expected_symbol_hit_rate": 0.5,
       "expected_symbol_as_pivot_rate": 0.5,
-      "mean_capsule_tokens": 3719.5,
+      "mean_capsule_tokens": 3379,
       "mean_pivot_count": 2,
       "mean_support_count": 4,
       "miss_taxonomy": {

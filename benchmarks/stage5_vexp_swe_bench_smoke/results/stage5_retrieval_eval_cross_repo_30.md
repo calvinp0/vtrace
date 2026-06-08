@@ -35,18 +35,18 @@ support / discarded are compared against the fixture's `expected_files` and
 | instances_total | 30 |
 | instances_evaluated | 30 |
 | workspace_error_count | 0 |
-| no_context_count | 2 |
-| top_1_file_accuracy | 53.3% |
-| top_3_file_recall | 66.7% |
-| expected_file_as_pivot_rate | 63.3% |
+| no_context_count | 1 |
+| top_1_file_accuracy | 56.7% |
+| top_3_file_recall | 70.0% |
+| expected_file_as_pivot_rate | 66.7% |
 | expected_file_as_support_rate | 6.7% |
 | expected_file_discarded_rate | 6.7% |
-| expected_file_missing_rate | 23.3% |
+| expected_file_missing_rate | 20.0% |
 | expected_symbol_hit_rate | 46.7% |
-| expected_symbol_as_pivot_rate | 13.3% |
-| mean_capsule_tokens | 1895.6 |
-| mean_pivot_count | 1.87 |
-| mean_support_count | 3.73 |
+| expected_symbol_as_pivot_rate | 16.7% |
+| mean_capsule_tokens | 1909.5 |
+| mean_pivot_count | 1.93 |
+| mean_support_count | 3.87 |
 
 ## Comparison vs prior cross-repo baseline
 
@@ -54,10 +54,10 @@ Does Capsule v2 retrieval stay stable as cross-repo coverage grows from 16 to 30
 
 | metric | previous 16-instance cross-repo | new 30-instance cross-repo | delta |
 | --- | --- | --- | --- |
-| top-1 file accuracy | 62.5% | 53.3% | -9.2 pp ▼ |
-| top-3 file recall | 87.5% | 66.7% | -20.8 pp ▼ |
-| expected file as pivot | 81.3% | 63.3% | -17.9 pp ▼ |
-| expected file missing | 6.3% | 23.3% | +17.1 pp ▼ |
+| top-1 file accuracy | 62.5% | 56.7% | -5.8 pp ▼ |
+| top-3 file recall | 87.5% | 70.0% | -17.5 pp ▼ |
+| expected file as pivot | 81.3% | 66.7% | -14.6 pp ▼ |
+| expected file missing | 6.3% | 20.0% | +13.8 pp ▼ |
 
 ## Aggregate metrics — by label source
 
@@ -68,20 +68,20 @@ All 30 instances share one label source (gold_patch); see the table above.
 | repo | instances | top-1 file | top-3 file | as pivot | missing | mean tokens | mean pivots | mean support |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | sympy/sympy | 5/5 | 60.0% | 80.0% | 80.0% | 20.0% | 3321.2 | 2.00 | 4.00 |
-| astropy/astropy | 4/4 | 50.0% | 50.0% | 50.0% | 25.0% | 1497.5 | 2.00 | 4.00 |
+| astropy/astropy | 4/4 | 50.0% | 50.0% | 50.0% | 25.0% | 1497.3 | 2.00 | 4.00 |
 | matplotlib/matplotlib | 4/4 | 0.0% | 50.0% | 25.0% | 25.0% | 306.8 | 1.50 | 3.00 |
 | sphinx-doc/sphinx | 4/4 | 25.0% | 50.0% | 50.0% | 50.0% | 2799.0 | 2.00 | 4.00 |
-| psf/requests | 3/3 | 33.3% | 33.3% | 33.3% | 33.3% | 318.7 | 1.33 | 2.67 |
+| psf/requests | 3/3 | 66.7% | 66.7% | 66.7% | 0.0% | 685.0 | 2.00 | 4.00 |
 | pytest-dev/pytest | 3/3 | 100.0% | 100.0% | 100.0% | 0.0% | 753.0 | 2.00 | 4.00 |
 | pydata/xarray | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 1910.0 | 2.00 | 4.00 |
-| scikit-learn/scikit-learn | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 3719.5 | 2.00 | 4.00 |
+| scikit-learn/scikit-learn | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 3379.0 | 2.00 | 4.00 |
 | mwaskom/seaborn | 1/1 | 100.0% | 100.0% | 100.0% | 0.0% | 1506.0 | 2.00 | 4.00 |
 | pallets/flask | 1/1 | 100.0% | 100.0% | 100.0% | 0.0% | 5594.0 | 2.00 | 4.00 |
 | pylint-dev/pylint | 1/1 | 0.0% | 0.0% | 0.0% | 100.0% | 275.0 | 2.00 | 4.00 |
 
 ## Miss summary (compact)
 
-- non-top-3 cases: 10
+- non-top-3 cases: 9
 - missing (not surfaced): 1
 - present-but-support: 1
 - present-but-discarded: 2
@@ -93,12 +93,11 @@ All 30 instances share one label source (gold_patch); see the table above.
 
 | category | count |
 | --- | --- |
-| none | 20 |
+| none | 21 |
 | missing_from_candidates | 1 |
 | present_but_support | 1 |
 | present_but_discarded | 2 |
 | wrong_subsystem | 5 |
-| unknown | 1 |
 
 ## Per-instance results
 
@@ -108,7 +107,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 | sympy__sympy-12481 | gold_patch | sympy/combinatorics/permutations.py | sympy/combinatorics/permutations.py::Permutation | pivot | yes | yes | hit_top1_pivot | none |
 | sympy__sympy-13372 | gold_patch | sympy/core/evalf.py | sympy/core/sympify.py::sympify | pivot | no | yes | hit_top3 | none |
 | scikit-learn__scikit-learn-10844 | gold_patch | sklearn/metrics/cluster/supervised.py | sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score | pivot | yes | yes | hit_top1_pivot | none |
-| scikit-learn__scikit-learn-11578 | gold_patch | sklearn/linear_model/logistic.py | sklearn/linear_model/logistic.py::predict_proba | pivot | yes | yes | hit_top1_pivot | none |
+| scikit-learn__scikit-learn-11578 | gold_patch | sklearn/linear_model/logistic.py | sklearn/linear_model/logistic.py::LogisticRegression | pivot | yes | yes | hit_top1_pivot | none |
 | matplotlib__matplotlib-22719 | gold_patch | lib/matplotlib/category.py | lib/matplotlib/_api/deprecation.py::MatplotlibDeprecationWarning | support | no | yes | hit_top3 | none |
 | matplotlib__matplotlib-24627 | gold_patch | lib/matplotlib/axes/_base.py | lib/matplotlib/figure.py::clf | pivot | no | yes | hit_top3 | none |
 | astropy__astropy-14365 | gold_patch | astropy/io/ascii/qdp.py | astropy/io/ascii/qdp.py::_write_table_qdp | pivot | yes | yes | hit_top1_pivot | none |
@@ -125,7 +124,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 | matplotlib__matplotlib-24970 | gold_patch | lib/matplotlib/colors.py | lib/matplotlib/_api/deprecation.py::MatplotlibDeprecationWarning | missing | no | no | missing | wrong_subsystem |
 | matplotlib__matplotlib-25960 | gold_patch | lib/matplotlib/figure.py | — | discarded | no | no | skipped_no_context | present_but_discarded |
 | mwaskom__seaborn-3187 | gold_patch | seaborn/_core/scales.py | seaborn/utils.py::move_legend | pivot | yes | yes | hit_top1_pivot | none |
-| psf__requests-5414 | gold_patch | requests/models.py | — | missing | no | no | skipped_no_context | unknown |
+| psf__requests-5414 | gold_patch | requests/models.py | requests/models.py::prepare_url | pivot | yes | yes | hit_top1_pivot | none |
 | pydata__xarray-2905 | gold_patch | xarray/core/variable.py | xarray/core/variable.py::__setitem__ | pivot | yes | yes | hit_top1_pivot | none |
 | pydata__xarray-3677 | gold_patch | xarray/core/dataset.py | xarray/core/dataset.py::merge | pivot | yes | yes | hit_top1_pivot | none |
 | pylint-dev__pylint-8898 | gold_patch | pylint/config/argument.py | doc/data/messages/b/bad-dunder-name/bad.py::__hello__ | missing | no | no | missing | wrong_subsystem |
@@ -189,13 +188,13 @@ All 30 instances share one label source (gold_patch); see the table above.
   - astropy/io/fits/hdu/table.py::quotechar — symbol-name match; lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)
   - astropy/io/ascii/core.py::quotechar — symbol-name match; issue-domain relevance; 5 dependents (not a pivot: module_variable is a low-actionability edit target)
   - astropy/io/fits/card.py::_value_FSC_RE — strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)
-  - astropy/io/fits/header.py::_block_size — lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))
+  - astropy/io/fits/header.py::__repr__ — lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))
 - top discarded:
-  - astropy/io/fits/header.py::__repr__ — beyond standard support budget (max 4)
-  - astropy/io/fits/scripts/fitsheader.py::_get_cards — beyond standard support budget (max 4)
+  - astropy/io/ascii/tests/test_c_reader.py::test_doubled_quotes_segv — a test symbol, not an edit target
+  - astropy/io/ascii/tests/test_c_reader.py::test_doubled_quotes — a test symbol, not an edit target
   - astropy/io/fits/tests/test_header.py::test_invalid_keyword_cards — a test symbol, not an edit target
   - astropy/io/fits/tests/test_header.py::test_floating_point_string_representation_card — a test symbol, not an edit target
-  - astropy/io/fits/tests/test_hdulist.py::test_proper_error_raised_on_non_fits_file_with_unicode — a test symbol, not an edit target
+  - astropy/io/ascii/tests/test_c_reader.py::test_empty_quotes — a test symbol, not an edit target
 
 ### matplotlib__matplotlib-24970 — missing / wrong_subsystem
 
@@ -230,16 +229,6 @@ All 30 instances share one label source (gold_patch); see the table above.
   - galleries/examples/subplots_axes_and_figures/subfigures.py::subfigs — support-only: no actionable edit target
   - galleries/examples/subplots_axes_and_figures/subfigures.py::subfigs — support-only: no actionable edit target
   - galleries/examples/subplots_axes_and_figures/subfigures.py::example_plot — support-only: no actionable edit target
-
-### psf__requests-5414 — skipped_no_context / unknown
-
-- expected: requests/models.py
-- reason: capsule returned no_context (no high-confidence edit target)
-- down-weighted lexical tokens: unicode, error
-- de-anchored exception tokens: unicode
-- top pivots: (none)
-- top support: (none)
-- top discarded: (none)
 
 ### pylint-dev__pylint-8898 — missing / wrong_subsystem
 

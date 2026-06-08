@@ -42,11 +42,63 @@ import {
 // Task prose derivation (deterministic, from the problem statement)
 // ---------------------------------------------------------------------------
 
+// Common abbreviations whose internal/trailing period is NOT a sentence end. A
+// naive `.`-then-space split truncates "Attempting to get e.g. http://…" right
+// after "e.g." and throws away the rest of the problem statement (and any source
+// anchor it carries). Matched case-insensitively against the dotted token.
+const SENTENCE_ABBREVIATIONS: ReadonlySet<string> = new Set([
+  "e.g.",
+  "i.e.",
+  "etc.",
+  "vs.",
+  "mr.",
+  "mrs.",
+  "dr.",
+  "prof.",
+]);
+
+// An explicit source anchor: a file path carrying a line reference, e.g.
+// `requests/models.py#L401`, `file.py#L10-L20`, `path/to/file.py:123`. These are
+// high-signal retrieval clues, so task derivation must keep them intact rather
+// than splitting/truncating through them.
+const SOURCE_ANCHOR_RE = /[\w./-]+\.[A-Za-z]\w*(?:#L\d+(?:-L?\d+)?|:\d+(?:-\d+)?)/;
+
+// Is the `.` at `dotIdx` the tail of a known abbreviation (so NOT a sentence end)?
+// Walks back over the run of letters/dots ending at the period and matches the
+// dotted token (e.g. "e.g.", "etc.") case-insensitively.
+function endsWithAbbreviation(text: string, dotIdx: number): boolean {
+  let start = dotIdx;
+  while (start > 0 && /[A-Za-z.]/.test(text[start - 1]!)) start -= 1;
+  return SENTENCE_ABBREVIATIONS.has(text.slice(start, dotIdx + 1).toLowerCase());
+}
+
+// Split prose into sentences on `.!?` followed by whitespace/end — but NOT after a
+// known abbreviation, and NOT on a period that is not followed by whitespace (the
+// dots inside `models.py#L401` or a URL are never boundaries). Deterministic.
+export function splitSentencesSafe(text: string): string[] {
+  const out: string[] = [];
+  let start = 0;
+  const boundary = /[.!?](?=\s|$)/g;
+  let match: RegExpExecArray | null;
+  while ((match = boundary.exec(text)) !== null) {
+    const idx = match.index;
+    if (text[idx] === "." && endsWithAbbreviation(text, idx)) continue;
+    const sentence = text.slice(start, idx + 1).trim();
+    if (sentence.length > 0) out.push(sentence);
+    start = idx + 1;
+  }
+  const tail = text.slice(start).trim();
+  if (tail.length > 0) out.push(tail);
+  return out;
+}
+
 // Derive the `task` prose from a SWE-bench problem_statement: the title line plus
-// the first substantive sentence of the description. Deterministic and NOT tuned
+// the first substantive sentence of the description (extended through a later
+// sentence when it carries an explicit source anchor). Deterministic and NOT tuned
 // to the answer — it never reads the patch. Zero-width and control chars are
-// stripped; the result is capped so the capsule gets a focused signal.
-export function deriveTaskFromProblemStatement(problemStatement: string, maxLen = 280): string {
+// stripped; the result is capped (word-safe, so anchors are never cut mid-token)
+// so the capsule gets a focused signal.
+export function deriveTaskFromProblemStatement(problemStatement: string, maxLen = 360): string {
   const cleaned = problemStatement.replace(/[​‌‍﻿]/g, "").replace(/\r/g, "");
   const lines = cleaned.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
   if (lines.length === 0) return "";
@@ -68,9 +120,21 @@ export function deriveTaskFromProblemStatement(problemStatement: string, maxLen 
     body = line;
     break;
   }
-  const firstSentence = body.split(/(?<=[.!?])\s/)[0] ?? body;
-  const combined = firstSentence && !title.endsWith(firstSentence) ? `${title} — ${firstSentence}` : title;
-  return combined.length > maxLen ? `${combined.slice(0, maxLen - 1).trimEnd()}…` : combined;
+  // First substantive sentence (abbreviation-aware), extended through the first
+  // later sentence that carries an explicit source anchor so that high-signal
+  // anchor (e.g. `requests/models.py#L401`) survives instead of being dropped.
+  const sentences = splitSentencesSafe(body);
+  let excerpt = sentences[0] ?? body;
+  const anchorIdx = sentences.findIndex((s) => SOURCE_ANCHOR_RE.test(s));
+  if (anchorIdx > 0) excerpt = sentences.slice(0, anchorIdx + 1).join(" ");
+  const combined = excerpt && !title.endsWith(excerpt) ? `${title} — ${excerpt}` : title;
+  if (combined.length <= maxLen) return combined;
+  // Word-safe truncation: cut at the last space in the tail region so an anchor /
+  // URL token is kept whole or dropped, never sliced through.
+  const hard = combined.slice(0, maxLen - 1);
+  const lastSpace = hard.lastIndexOf(" ");
+  const safe = lastSpace > Math.floor(maxLen * 0.6) ? hard.slice(0, lastSpace) : hard;
+  return `${safe.trimEnd()}…`;
 }
 
 // ---------------------------------------------------------------------------

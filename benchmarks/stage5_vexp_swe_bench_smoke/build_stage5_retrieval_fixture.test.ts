@@ -16,6 +16,7 @@ import {
   loadSweBench,
   parseBuildArgs,
   resolveWorkspace,
+  splitSentencesSafe,
   type SweBenchInstance,
 } from "./build_stage5_retrieval_fixture";
 import { CROSS_REPO_30_INSTANCES } from "./prepare_stage5_workspaces";
@@ -50,8 +51,50 @@ test("deriveTaskFromProblemStatement strips zero-width chars and skips code line
 test("deriveTaskFromProblemStatement falls back to the title alone and caps length", () => {
   assert.equal(deriveTaskFromProblemStatement("Just a title"), "Just a title");
   assert.equal(deriveTaskFromProblemStatement(""), "");
-  const long = "T".repeat(400);
-  assert.ok(deriveTaskFromProblemStatement(long).length <= 280);
+  const long = "T".repeat(500);
+  assert.ok(deriveTaskFromProblemStatement(long).length <= 360);
+});
+
+test("deriveTaskFromProblemStatement does not truncate on abbreviations and keeps source anchors", () => {
+  // Regression for psf__requests-5414: the naive `.`-then-space splitter cut the
+  // task at "Attempting to get e.g." and dropped the rest (including the anchor).
+  const ps = [
+    "Some title line here",
+    "Attempting to get e.g. https://example.com should not truncate here. See requests/models.py#L401.",
+  ].join("\n");
+  const task = deriveTaskFromProblemStatement(ps);
+  // Not truncated at the abbreviation — the real first sentence survives intact.
+  assert.ok(!/e\.g\.$/.test(task), `task must not end at an abbreviation: ${task}`);
+  assert.ok(task.includes("should not truncate here"));
+  // The explicit source anchor (in a later sentence) is preserved verbatim.
+  assert.ok(task.includes("requests/models.py#L401"), `anchor must remain: ${task}`);
+});
+
+test("splitSentencesSafe keeps abbreviations and source anchors inside one sentence", () => {
+  // e.g. / i.e. / etc. / vs. do not end a sentence; anchor dots are never boundaries.
+  assert.deepEqual(
+    splitSentencesSafe("Use foo e.g. bar and baz i.e. qux here. Next one."),
+    ["Use foo e.g. bar and baz i.e. qux here.", "Next one."],
+  );
+  assert.deepEqual(
+    splitSentencesSafe("See requests/models.py#L401 for the fix. Done."),
+    ["See requests/models.py#L401 for the fix.", "Done."],
+  );
+  // Titles (Mr./Mrs./Dr./Prof.) and trailing etc./vs. likewise do not split.
+  assert.deepEqual(splitSentencesSafe("Ask Dr. Smith vs. Mr. Jones."), ["Ask Dr. Smith vs. Mr. Jones."]);
+});
+
+test("deriveTaskFromProblemStatement still takes only the first sentence when there is no anchor", () => {
+  // Contract preserved: a plain multi-sentence body is NOT expanded past sentence 1.
+  const ps = [
+    "HttpResponse mishandles memoryview",
+    "Description",
+    "I write a BinaryField into a HttpResponse. It fails on Sqlite. Third sentence here.",
+  ].join("\n");
+  const task = deriveTaskFromProblemStatement(ps);
+  assert.match(task, /I write a BinaryField into a HttpResponse\.$/);
+  assert.ok(!task.includes("It fails on Sqlite"));
+  assert.ok(!task.includes("Third sentence"));
 });
 
 // --- gold-patch label extraction ---------------------------------------------
