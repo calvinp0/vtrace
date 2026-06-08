@@ -1,0 +1,2049 @@
+{
+  "generatedFrom": {
+    "fixture": "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.cross_repo.json",
+    "resultsDir": "benchmarks/stage5_vexp_swe_bench_smoke/results",
+    "builder": "buildCapsuleV2 (in-process, --json equivalent)"
+  },
+  "rows": [
+    {
+      "instance_id": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 605,
+      "used_percent": 7.56,
+      "expected_files": [
+        "sympy/matrices/expressions/matexpr.py"
+      ],
+      "expected_symbols": [
+        "_entry",
+        "_eval_derivative",
+        "_eval_determinant",
+        "conjugate"
+      ],
+      "top_1_pivot_file": "sympy/matrices/expressions/matexpr.py",
+      "top_1_pivot_symbol": "ZeroMatrix",
+      "top_3_files": [
+        "sympy/matrices/expressions/matexpr.py",
+        "sympy/assumptions/handlers/matrices.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [
+        "bug"
+      ],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "sympy/matrices/expressions/matexpr.py",
+            "symbol": "ZeroMatrix",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance; 25 dependents"
+          },
+          {
+            "path": "sympy/assumptions/handlers/matrices.py",
+            "symbol": "ZeroMatrix",
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "sympy/assumptions/handlers/matrices.py",
+            "symbol": "ZeroMatrix",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "sympy/assumptions/handlers/matrices.py",
+            "symbol": "ZeroMatrix",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "sympy/assumptions/handlers/matrices.py",
+            "symbol": "ZeroMatrix",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "sympy/assumptions/handlers/matrices.py",
+            "symbol": "ZeroMatrix",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "sympy/assumptions/handlers/matrices.py",
+            "symbol": "ZeroMatrix",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/assumptions/handlers/order.py",
+            "symbol": "MatrixElement",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/assumptions/handlers/sets.py",
+            "symbol": "MatrixElement",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/assumptions/handlers/sets.py",
+            "symbol": "MatrixElement",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/assumptions/handlers/sets.py",
+            "symbol": "MatrixElement",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 2055,
+      "used_percent": 25.69,
+      "expected_files": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "expected_symbols": [
+        "__new__"
+      ],
+      "top_1_pivot_file": "sympy/combinatorics/permutations.py",
+      "top_1_pivot_symbol": "Permutation",
+      "top_3_files": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 5,
+      "expected_symbol_role": "support",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [
+        "error"
+      ],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "sympy/combinatorics/permutations.py",
+            "symbol": "Permutation",
+            "role_reason": "actionable class — symbol-name match; strong lexical match; issue-domain relevance; 94 dependents"
+          },
+          {
+            "path": "sympy/combinatorics/permutations.py",
+            "symbol": "Cycle",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance; 11 dependents"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "sympy/combinatorics/permutations.py",
+            "symbol": "cycle_structure",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "sympy/combinatorics/permutations.py",
+            "symbol": "cycles",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "sympy/combinatorics/permutations.py",
+            "symbol": "__new__",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "sympy/combinatorics/permutations.py",
+            "symbol": "mul_inv",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "sympy/integrals/meijerint.py",
+            "symbol": "_CoeffExpValueError",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/combinatorics/perm_groups.py",
+            "symbol": "PermutationGroup",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/combinatorics/permutations.py",
+            "symbol": "__mul__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/physics/mechanics/linearize.py",
+            "symbol": "permutation_matrix",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/combinatorics/permutations.py",
+            "symbol": "__invert__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 3644,
+      "used_percent": 45.55,
+      "expected_files": [
+        "sympy/core/evalf.py"
+      ],
+      "expected_symbols": [
+        "evalf"
+      ],
+      "top_1_pivot_file": "sympy/core/sympify.py",
+      "top_1_pivot_symbol": "sympify",
+      "top_3_files": [
+        "sympy/core/sympify.py",
+        "sympy/core/evalf.py"
+      ],
+      "expected_file_best_rank": 2,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top3",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [
+        "error",
+        "exception"
+      ],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "sympy/core/sympify.py",
+            "symbol": "sympify",
+            "role_reason": "actionable function — strong lexical match; 409 dependents"
+          },
+          {
+            "path": "sympy/core/evalf.py",
+            "symbol": "add_terms",
+            "role_reason": "actionable function — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "sympy/core/evalf.py",
+            "symbol": "complex_accuracy",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 5 dependents"
+          },
+          {
+            "path": "sympy/core/evalf.py",
+            "symbol": "as_mpmath",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "sympy/core/evalf.py",
+            "symbol": "evalf_trig",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "sympy/core/evalf.py",
+            "symbol": "PrecisionExhausted",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance; 5 dependents"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "sympy/core/evalf.py",
+            "symbol": "get_integer_part",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/functions/special/error_functions.py",
+            "symbol": "_eval_evalf",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/functions/special/error_functions.py",
+            "symbol": "_eval_evalf",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/functions/special/error_functions.py",
+            "symbol": "eval",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sympy/functions/special/error_functions.py",
+            "symbol": "_eval_rewrite_as_li",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 1381,
+      "used_percent": 17.26,
+      "expected_files": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "expected_symbols": [
+        "entropy",
+        "fowlkes_mallows_score"
+      ],
+      "top_1_pivot_file": "sklearn/metrics/cluster/supervised.py",
+      "top_1_pivot_symbol": "fowlkes_mallows_score",
+      "top_3_files": [
+        "sklearn/metrics/cluster/supervised.py",
+        "sklearn/exceptions.py",
+        "sklearn/metrics/regression.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "sklearn/metrics/cluster/supervised.py",
+            "symbol": "fowlkes_mallows_score",
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "sklearn/exceptions.py",
+            "symbol": "FitFailedWarning",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance; 5 dependents"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "sklearn/metrics/regression.py",
+            "symbol": "r2_score",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "sklearn/grid_search.py",
+            "symbol": "score",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "sklearn/cross_validation.py",
+            "symbol": "cross_val_score",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "sklearn/metrics/ranking.py",
+            "symbol": "average_precision_score",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 8 dependents"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "sklearn/cross_validation.py",
+            "symbol": "permutation_test_score",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sklearn/metrics/cluster/unsupervised.py",
+            "symbol": "silhouette_score",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sklearn/cross_validation.py",
+            "symbol": "_fit_and_score",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sklearn/multioutput.py",
+            "symbol": "score",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sklearn/metrics/cluster/bicluster.py",
+            "symbol": "_check_rows_and_columns",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-11578",
+      "repo": "scikit-learn/scikit-learn",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 6058,
+      "used_percent": 75.72,
+      "expected_files": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "expected_symbols": [
+        "_log_reg_scoring_path"
+      ],
+      "top_1_pivot_file": "sklearn/linear_model/logistic.py",
+      "top_1_pivot_symbol": "predict_proba",
+      "top_3_files": [
+        "sklearn/linear_model/logistic.py",
+        "sklearn/linear_model/base.py",
+        "sklearn/multioutput.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 5,
+      "expected_symbol_role": "support",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "sklearn/linear_model/logistic.py",
+            "symbol": "predict_proba",
+            "role_reason": "local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "sklearn/linear_model/logistic.py",
+            "symbol": "LogisticRegressionCV",
+            "role_reason": "actionable class — symbol-name match; strong lexical match; issue-domain relevance; 15 dependents"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "sklearn/linear_model/logistic.py",
+            "symbol": "predict_log_proba",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "sklearn/linear_model/base.py",
+            "symbol": "_predict_proba_lr",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "sklearn/linear_model/logistic.py",
+            "symbol": "_log_reg_scoring_path",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "sklearn/multioutput.py",
+            "symbol": "predict_proba",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "sklearn/linear_model/logistic.py",
+            "symbol": "LogisticRegression",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sklearn/ensemble/bagging.py",
+            "symbol": "predict_proba",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sklearn/calibration.py",
+            "symbol": "predict_proba",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sklearn/model_selection/_search.py",
+            "symbol": "predict_proba",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sklearn/calibration.py",
+            "symbol": "predict_proba",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 394,
+      "used_percent": 4.93,
+      "expected_files": [
+        "lib/matplotlib/category.py"
+      ],
+      "expected_symbols": [
+        "convert",
+        "update"
+      ],
+      "top_1_pivot_file": "lib/matplotlib/_api/deprecation.py",
+      "top_1_pivot_symbol": "MatplotlibDeprecationWarning",
+      "top_3_files": [
+        "lib/matplotlib/_api/deprecation.py",
+        "examples/units/units_scatter.py",
+        "lib/matplotlib/category.py"
+      ],
+      "expected_file_best_rank": 3,
+      "expected_file_role": "support",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "discarded",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top3",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [
+        "bug"
+      ],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "lib/matplotlib/_api/deprecation.py",
+            "symbol": "MatplotlibDeprecationWarning",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance; 28 dependents"
+          },
+          {
+            "path": "lib/matplotlib/_api/deprecation.py",
+            "symbol": "suppress_matplotlib_deprecation_warning",
+            "role_reason": "actionable function — strong lexical match; issue-domain relevance; 18 dependents"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "lib/matplotlib/_api/deprecation.py",
+            "symbol": "_generate_deprecation_warning",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "examples/units/units_scatter.py",
+            "symbol": "data",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "lib/matplotlib/category.py",
+            "symbol": "default_units",
+            "role_reason": "generic infrastructure outside the issue's subsystem (method) — support only without direct failing-test or issue evidence"
+          },
+          {
+            "path": "lib/matplotlib/_api/deprecation.py",
+            "symbol": "warn_deprecated",
+            "role_reason": "generic infrastructure outside the issue's subsystem (function) — support only without direct failing-test or issue evidence"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "lib/matplotlib/category.py",
+            "symbol": "UnitData",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/matplotlib/_api/deprecation.py",
+            "symbol": "deprecate_method_override",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/matplotlib/axis.py",
+            "symbol": "update_units",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/matplotlib/pyplot.py",
+            "symbol": "subplots",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/matplotlib/category.py",
+            "symbol": "axisinfo",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24627",
+      "repo": "matplotlib/matplotlib",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 398,
+      "used_percent": 4.98,
+      "expected_files": [
+        "lib/matplotlib/axes/_base.py"
+      ],
+      "expected_symbols": [
+        "__clear"
+      ],
+      "top_1_pivot_file": "lib/matplotlib/figure.py",
+      "top_1_pivot_symbol": "clf",
+      "top_3_files": [
+        "lib/matplotlib/figure.py",
+        "lib/matplotlib/axes/_base.py",
+        "lib/mpl_toolkits/axes_grid1/axes_grid.py"
+      ],
+      "expected_file_best_rank": 2,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top3",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "lib/matplotlib/figure.py",
+            "symbol": "clf",
+            "role_reason": "actionable method — symbol-name match; lexical match; issue-domain relevance"
+          },
+          {
+            "path": "lib/matplotlib/axes/_base.py",
+            "symbol": "cla",
+            "role_reason": "actionable method — symbol-name match; lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "lib/mpl_toolkits/axes_grid1/axes_grid.py",
+            "symbol": "cla",
+            "role_reason": "strong target beyond the pivot budget — actionable method — symbol-name match; lexical match; issue-domain relevance"
+          },
+          {
+            "path": "lib/mpl_toolkits/axisartist/axis_artist.py",
+            "symbol": "get_attribute_from_ref_artist",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance; 5 dependents"
+          },
+          {
+            "path": "lib/matplotlib/pyplot.py",
+            "symbol": "clf",
+            "role_reason": "strong target beyond the pivot budget — actionable function — symbol-name match; lexical match; issue-domain relevance"
+          },
+          {
+            "path": "lib/matplotlib/pyplot.py",
+            "symbol": "cla",
+            "role_reason": "strong target beyond the pivot budget — actionable function — symbol-name match; lexical match; issue-domain relevance"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "lib/mpl_toolkits/axes_grid1/anchored_artists.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/mpl_toolkits/axes_grid1/anchored_artists.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/mpl_toolkits/axes_grid1/anchored_artists.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/mpl_toolkits/axes_grid1/anchored_artists.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "lib/mpl_toolkits/axes_grid1/anchored_artists.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 1155,
+      "used_percent": 14.44,
+      "expected_files": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "expected_symbols": [
+        "_get_tables_from_qdp_file",
+        "_line_type"
+      ],
+      "top_1_pivot_file": "astropy/io/ascii/qdp.py",
+      "top_1_pivot_symbol": "_write_table_qdp",
+      "top_3_files": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 6,
+      "expected_symbol_role": "support",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [
+        "commands",
+        "errors"
+      ],
+      "body_literal_matches": [
+        "READ SERR 1 2 -> _write_table_qdp"
+      ],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "astropy/io/ascii/qdp.py",
+            "symbol": "_write_table_qdp",
+            "role_reason": "task diagnostic literal appears in this symbol's body — explicit edit site"
+          },
+          {
+            "path": "astropy/io/ascii/qdp.py",
+            "symbol": "_read_table_qdp",
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "astropy/io/ascii/qdp.py",
+            "symbol": "_interpret_err_lines",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "astropy/io/ascii/qdp.py",
+            "symbol": "_get_type_from_list_of_lines",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "astropy/io/ascii/qdp.py",
+            "symbol": "QDP",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "astropy/io/ascii/qdp.py",
+            "symbol": "_get_tables_from_qdp_file",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "astropy/io/ascii/docs.py",
+            "symbol": "READ_DOCSTRING",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "astropy/io/ascii/core.py",
+            "symbol": "OptionalTableImportError",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "astropy/io/ascii/qdp.py",
+            "symbol": "read",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "astropy/io/fits/column.py",
+            "symbol": "_AsciiColumnFormat",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "astropy/io/ascii/qdp.py",
+            "symbol": "_line_type",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 736,
+      "used_percent": 9.2,
+      "expected_files": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/cds_parsetab.py"
+      ],
+      "expected_symbols": [
+        "_lr_action_items",
+        "_lr_goto_items",
+        "_lr_signature",
+        "_make_parser",
+        "p_division_of_units",
+        "p_product_of_units"
+      ],
+      "top_1_pivot_file": "astropy/io/ascii/mrt.py",
+      "top_1_pivot_symbol": "Mrt",
+      "top_3_files": [
+        "astropy/io/ascii/mrt.py"
+      ],
+      "expected_file_best_rank": null,
+      "expected_file_role": "missing",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": false,
+      "contains_expected_file_anywhere": false,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "missing",
+      "miss_category": "body_literal_not_resolved",
+      "failure_reason": "expected file not surfaced (candidate_count=25)",
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "astropy/io/ascii/mrt.py",
+            "symbol": "Mrt",
+            "role_reason": "actionable class — symbol-name match; lexical match; issue-domain relevance"
+          },
+          {
+            "path": "astropy/io/ascii/mrt.py",
+            "symbol": "MrtSplitter",
+            "role_reason": "actionable class — symbol-name match; lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "astropy/io/ascii/mrt.py",
+            "symbol": "MrtData",
+            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; lexical match; issue-domain relevance"
+          },
+          {
+            "path": "astropy/io/ascii/mrt.py",
+            "symbol": "MrtHeader",
+            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; lexical match; issue-domain relevance"
+          },
+          {
+            "path": "astropy/io/ascii/mrt.py",
+            "symbol": "MRT_TEMPLATE",
+            "role_reason": "symbol-name match; lexical match; issue-domain relevance (not a pivot: module_constant is a low-actionability edit target)"
+          },
+          {
+            "path": "astropy/io/ascii/mrt.py",
+            "symbol": "write",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "astropy/io/ascii/cds.py",
+            "symbol": "CdsData",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "astropy/io/ascii/mrt.py",
+            "symbol": "_set_column_val_limits",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "astropy/io/ascii/cparser.pyx",
+            "symbol": "FileString",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "astropy/io/ascii/cparser.pyx",
+            "symbol": "__dealloc__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "astropy/io/ascii/cparser.pyx",
+            "symbol": "__getitem__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 548,
+      "used_percent": 6.85,
+      "expected_files": [
+        "src/_pytest/logging.py"
+      ],
+      "expected_symbols": [
+        "clear",
+        "handleError",
+        "messages",
+        "reset",
+        "set_level"
+      ],
+      "top_1_pivot_file": "src/_pytest/logging.py",
+      "top_1_pivot_symbol": "get_records",
+      "top_3_files": [
+        "src/_pytest/logging.py",
+        "src/_pytest/recwarn.py",
+        "src/_pytest/pytester.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 3,
+      "expected_symbol_role": "support",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "src/_pytest/logging.py",
+            "symbol": "get_records",
+            "role_reason": "actionable method — symbol-name match; strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "src/_pytest/logging.py",
+            "symbol": "caplog",
+            "role_reason": "actionable function — symbol-name match; strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "src/_pytest/logging.py",
+            "symbol": "clear",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+          },
+          {
+            "path": "src/_pytest/recwarn.py",
+            "symbol": "clear",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+          },
+          {
+            "path": "src/_pytest/pytester.py",
+            "symbol": "clear",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+          },
+          {
+            "path": "src/_pytest/logging.py",
+            "symbol": "caplog_records_key",
+            "role_reason": "strong lexical match; issue-domain relevance; 5 dependents (not a pivot: module_variable is a low-actionability edit target)"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "src/_pytest/cacheprovider.py",
+            "symbol": "clear_cache",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/junitxml.py",
+            "symbol": "record_testsuite_property",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/fixtures.py",
+            "symbol": "wrap_function_to_error_out_if_called_directly",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/pytester.py",
+            "symbol": "RecordedHookCall",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/skipping.py",
+            "symbol": "pytest_runtest_setup",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5262",
+      "repo": "pytest-dev/pytest",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 1172,
+      "used_percent": 14.65,
+      "expected_files": [
+        "src/_pytest/capture.py"
+      ],
+      "expected_symbols": [
+        "__getattr__",
+        "mode",
+        "name"
+      ],
+      "top_1_pivot_file": "src/_pytest/capture.py",
+      "top_1_pivot_symbol": "EncodedFile",
+      "top_3_files": [
+        "src/_pytest/capture.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "discarded",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "EncodedFile",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "FDCaptureBinary",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "SysCaptureBinary",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "safe_text_dupfile",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "encoding",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "errors",
+            "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "name",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "write",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "__getattr__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "writelines",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 1168,
+      "used_percent": 14.6,
+      "expected_files": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "expected_symbols": [
+        "unparse"
+      ],
+      "top_1_pivot_file": "sphinx/addnodes.py",
+      "top_1_pivot_symbol": "index",
+      "top_3_files": [
+        "sphinx/addnodes.py",
+        "sphinx/application.py",
+        "sphinx/domains/__init__.py"
+      ],
+      "expected_file_best_rank": 5,
+      "expected_file_role": "support",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "missing",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": false,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": false,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_support",
+      "miss_category": "present_but_support",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [
+        "error",
+        "bug"
+      ],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "sphinx/addnodes.py",
+            "symbol": "index",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance; 56 dependents"
+          },
+          {
+            "path": "sphinx/application.py",
+            "symbol": "add_object_type",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "sphinx/domains/__init__.py",
+            "symbol": "Index",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "sphinx/domains/index.py",
+            "symbol": "entries",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "sphinx/domains/index.py",
+            "symbol": "run",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "sphinx/domains/python.py",
+            "symbol": "_parse_annotation",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "sphinx/domains/__init__.py",
+            "symbol": "IndexEntry",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sphinx/roles.py",
+            "symbol": "indexmarkup_role",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sphinx/roles.py",
+            "symbol": "Index",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sphinx/application.py",
+            "symbol": "add_crossref_type",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sphinx/roles.py",
+            "symbol": "index_role",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 1223,
+      "used_percent": 15.29,
+      "expected_files": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "expected_symbols": [
+        "DocstringSignatureMixin",
+        "DocstringSignatureMixin._find_signature",
+        "DocstringSignatureMixin.get_doc",
+        "DocstringStripSignatureMixin",
+        "_find_signature",
+        "format_signature",
+        "get_doc"
+      ],
+      "top_1_pivot_file": "sphinx/ext/autodoc/__init__.py",
+      "top_1_pivot_symbol": "DocstringSignatureMixin",
+      "top_3_files": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "sphinx/ext/autodoc/__init__.py",
+            "symbol": "DocstringSignatureMixin",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "sphinx/ext/autodoc/__init__.py",
+            "symbol": "DocstringStripSignatureMixin",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "sphinx/ext/autodoc/__init__.py",
+            "symbol": "format_signature",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "sphinx/ext/autodoc/__init__.py",
+            "symbol": "_find_signature",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "sphinx/ext/autodoc/__init__.py",
+            "symbol": "format_signature",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "sphinx/ext/autodoc/__init__.py",
+            "symbol": "format_signature",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "sphinx/ext/autodoc/type_comment.py",
+            "symbol": "signature_from_ast",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sphinx/ext/autodoc/__init__.py",
+            "symbol": "document_members",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sphinx/ext/autodoc/__init__.py",
+            "symbol": "MethodDocumenter",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sphinx/ext/autodoc/__init__.py",
+            "symbol": "ClassDocumenter",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sphinx/ext/autodoc/__init__.py",
+            "symbol": "format_signature",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "psf__requests-1142",
+      "repo": "psf/requests",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 557,
+      "used_percent": 6.96,
+      "expected_files": [
+        "requests/models.py"
+      ],
+      "expected_symbols": [
+        "prepare_auth",
+        "prepare_body",
+        "prepare_content_length"
+      ],
+      "top_1_pivot_file": "requests/models.py",
+      "top_1_pivot_symbol": "prepare_content_length",
+      "top_3_files": [
+        "requests/models.py",
+        "requests/cookies.py",
+        "requests/api.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "requests/models.py",
+            "symbol": "prepare_content_length",
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "requests/models.py",
+            "symbol": "iter_content",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "requests/cookies.py",
+            "symbol": "MockRequest",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "requests/models.py",
+            "symbol": "prepare_headers",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "requests/api.py",
+            "symbol": "request",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 7 dependents"
+          },
+          {
+            "path": "requests/api.py",
+            "symbol": "get",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 14 dependents"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "requests/packages/urllib3/request.py",
+            "symbol": "urlopen",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/utils.py",
+            "symbol": "parse_list_header",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/cookies.py",
+            "symbol": "add_header",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/packages/urllib3/response.py",
+            "symbol": "read",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/cookies.py",
+            "symbol": "get_cookie_header",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "psf__requests-1724",
+      "repo": "psf/requests",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 399,
+      "used_percent": 4.99,
+      "expected_files": [
+        "requests/sessions.py"
+      ],
+      "expected_symbols": [
+        "request"
+      ],
+      "top_1_pivot_file": "requests/utils.py",
+      "top_1_pivot_symbol": "stream_decode_response_unicode",
+      "top_3_files": [
+        "requests/utils.py",
+        "requests/packages/urllib3/exceptions.py",
+        "requests/structures.py"
+      ],
+      "expected_file_best_rank": null,
+      "expected_file_role": "discarded",
+      "expected_symbol_best_rank": 6,
+      "expected_symbol_role": "support",
+      "contains_expected_file_top1": false,
+      "contains_expected_file_top3": false,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_discarded",
+      "miss_category": "present_but_discarded",
+      "failure_reason": "expected file recovered but discarded: requests/sessions.py — beyond standard support budget (max 4)",
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [
+        "error"
+      ],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "requests/utils.py",
+            "symbol": "stream_decode_response_unicode",
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+          },
+          {
+            "path": "requests/packages/urllib3/exceptions.py",
+            "symbol": "DecodeError",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "requests/structures.py",
+            "symbol": "CaseInsensitiveDict",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance; 25 dependents"
+          },
+          {
+            "path": "requests/packages/urllib3/exceptions.py",
+            "symbol": "PoolError",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "requests/packages/urllib3/connectionpool.py",
+            "symbol": "HTTPConnectionPool",
+            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "requests/api.py",
+            "symbol": "request",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 7 dependents"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "requests/models.py",
+            "symbol": "Request",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/packages/urllib3/exceptions.py",
+            "symbol": "HTTPError",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/packages/urllib3/connectionpool.py",
+            "symbol": "_get_timeout",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/packages/urllib3/request.py",
+            "symbol": "RequestMethods",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/packages/urllib3/util.py",
+            "symbol": "Timeout",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    },
+    {
+      "instance_id": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "label_source": "gold_patch",
+      "intent": "debug",
+      "actual_mode": "standard",
+      "budget_tokens": 8000,
+      "estimated_tokens": 5594,
+      "used_percent": 69.93,
+      "expected_files": [
+        "src/flask/blueprints.py"
+      ],
+      "expected_symbols": [
+        "__init__"
+      ],
+      "top_1_pivot_file": "src/flask/blueprints.py",
+      "top_1_pivot_symbol": "Blueprint",
+      "top_3_files": [
+        "src/flask/blueprints.py",
+        "src/flask/app.py",
+        "src/flask/scaffold.py"
+      ],
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": null,
+      "expected_symbol_role": "discarded",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
+      "contains_expected_file_anywhere": true,
+      "contains_expected_symbol_anywhere": true,
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 19,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
+      "filtered_generic_symbols": [],
+      "filtered_runner_files": [],
+      "downweighted_lexical_tokens": [],
+      "body_literal_matches": [],
+      "diagnostics": {
+        "top_pivots": [
+          {
+            "path": "src/flask/blueprints.py",
+            "symbol": "Blueprint",
+            "role_reason": "actionable class — strong lexical match; issue-domain relevance; 53 dependents"
+          },
+          {
+            "path": "src/flask/app.py",
+            "symbol": "name",
+            "role_reason": "actionable method — symbol-name match; lexical match; issue-domain relevance"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "src/flask/scaffold.py",
+            "symbol": "name",
+            "role_reason": "symbol-name match; lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "src/flask/cli.py",
+            "symbol": "name",
+            "role_reason": "symbol-name match; lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "src/flask/blueprints.py",
+            "symbol": "register",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "src/flask/wrappers.py",
+            "symbol": "blueprint",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "src/flask/wrappers.py",
+            "symbol": "blueprints",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/flask/blueprints.py",
+            "symbol": "record_once",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/flask/blueprints.py",
+            "symbol": "register_blueprint",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/flask/blueprints.py",
+            "symbol": "add_url_rule",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/flask/blueprints.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          }
+        ]
+      }
+    }
+  ],
+  "aggregate": {
+    "instances_total": 16,
+    "instances_evaluated": 16,
+    "workspace_error_count": 0,
+    "no_context_count": 0,
+    "top_1_file_accuracy": 0.625,
+    "top_3_file_recall": 0.8125,
+    "expected_file_as_pivot_rate": 0.75,
+    "expected_file_as_support_rate": 0.125,
+    "expected_file_missing_rate": 0.0625,
+    "expected_file_discarded_rate": 0.0625,
+    "expected_symbol_hit_rate": 0.6875,
+    "expected_symbol_as_pivot_rate": 0.1875,
+    "mean_capsule_tokens": 1692.9375,
+    "mean_pivot_count": 2,
+    "mean_support_count": 4,
+    "miss_taxonomy": {
+      "none": 13,
+      "missing_from_candidates": 0,
+      "present_but_support": 1,
+      "present_but_discarded": 1,
+      "wrong_subsystem": 0,
+      "wrong_entry_point": 0,
+      "generic_infrastructure_ranked_above_target": 0,
+      "line_anchor_not_resolved": 0,
+      "body_literal_not_resolved": 1,
+      "test_symbol_pollution": 0,
+      "language_parser_gap": 0,
+      "workspace_error": 0,
+      "fixture_label_error": 0,
+      "unknown": 0
+    }
+  },
+  "byLabelSource": {
+    "gold_patch": {
+      "instances_total": 16,
+      "instances_evaluated": 16,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 0.625,
+      "top_3_file_recall": 0.8125,
+      "expected_file_as_pivot_rate": 0.75,
+      "expected_file_as_support_rate": 0.125,
+      "expected_file_missing_rate": 0.0625,
+      "expected_file_discarded_rate": 0.0625,
+      "expected_symbol_hit_rate": 0.6875,
+      "expected_symbol_as_pivot_rate": 0.1875,
+      "mean_capsule_tokens": 1692.9375,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 13,
+        "missing_from_candidates": 0,
+        "present_but_support": 1,
+        "present_but_discarded": 1,
+        "wrong_subsystem": 0,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 1,
+        "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    }
+  },
+  "byRepo": [
+    {
+      "repo": "sympy/sympy",
+      "instances_total": 3,
+      "instances_evaluated": 3,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 0.6667,
+      "top_3_file_recall": 1,
+      "expected_file_as_pivot_rate": 1,
+      "expected_file_as_support_rate": 0,
+      "expected_file_missing_rate": 0,
+      "expected_file_discarded_rate": 0,
+      "expected_symbol_hit_rate": 0.3333,
+      "expected_symbol_as_pivot_rate": 0,
+      "mean_capsule_tokens": 2101.3333,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 3,
+        "missing_from_candidates": 0,
+        "present_but_support": 0,
+        "present_but_discarded": 0,
+        "wrong_subsystem": 0,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 0,
+        "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    },
+    {
+      "repo": "astropy/astropy",
+      "instances_total": 2,
+      "instances_evaluated": 2,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 0.5,
+      "top_3_file_recall": 0.5,
+      "expected_file_as_pivot_rate": 0.5,
+      "expected_file_as_support_rate": 0,
+      "expected_file_missing_rate": 0.5,
+      "expected_file_discarded_rate": 0,
+      "expected_symbol_hit_rate": 0.5,
+      "expected_symbol_as_pivot_rate": 0,
+      "mean_capsule_tokens": 945.5,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 1,
+        "missing_from_candidates": 0,
+        "present_but_support": 0,
+        "present_but_discarded": 0,
+        "wrong_subsystem": 0,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 1,
+        "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    },
+    {
+      "repo": "matplotlib/matplotlib",
+      "instances_total": 2,
+      "instances_evaluated": 2,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 0,
+      "top_3_file_recall": 1,
+      "expected_file_as_pivot_rate": 0.5,
+      "expected_file_as_support_rate": 0.5,
+      "expected_file_missing_rate": 0,
+      "expected_file_discarded_rate": 0,
+      "expected_symbol_hit_rate": 0.5,
+      "expected_symbol_as_pivot_rate": 0,
+      "mean_capsule_tokens": 396,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 2,
+        "missing_from_candidates": 0,
+        "present_but_support": 0,
+        "present_but_discarded": 0,
+        "wrong_subsystem": 0,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 0,
+        "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    },
+    {
+      "repo": "psf/requests",
+      "instances_total": 2,
+      "instances_evaluated": 2,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 0.5,
+      "top_3_file_recall": 0.5,
+      "expected_file_as_pivot_rate": 0.5,
+      "expected_file_as_support_rate": 0,
+      "expected_file_missing_rate": 0,
+      "expected_file_discarded_rate": 0.5,
+      "expected_symbol_hit_rate": 1,
+      "expected_symbol_as_pivot_rate": 0.5,
+      "mean_capsule_tokens": 478,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 1,
+        "missing_from_candidates": 0,
+        "present_but_support": 0,
+        "present_but_discarded": 1,
+        "wrong_subsystem": 0,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 0,
+        "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    },
+    {
+      "repo": "pytest-dev/pytest",
+      "instances_total": 2,
+      "instances_evaluated": 2,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 1,
+      "top_3_file_recall": 1,
+      "expected_file_as_pivot_rate": 1,
+      "expected_file_as_support_rate": 0,
+      "expected_file_missing_rate": 0,
+      "expected_file_discarded_rate": 0,
+      "expected_symbol_hit_rate": 1,
+      "expected_symbol_as_pivot_rate": 0,
+      "mean_capsule_tokens": 860,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 2,
+        "missing_from_candidates": 0,
+        "present_but_support": 0,
+        "present_but_discarded": 0,
+        "wrong_subsystem": 0,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 0,
+        "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    },
+    {
+      "repo": "scikit-learn/scikit-learn",
+      "instances_total": 2,
+      "instances_evaluated": 2,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 1,
+      "top_3_file_recall": 1,
+      "expected_file_as_pivot_rate": 1,
+      "expected_file_as_support_rate": 0,
+      "expected_file_missing_rate": 0,
+      "expected_file_discarded_rate": 0,
+      "expected_symbol_hit_rate": 1,
+      "expected_symbol_as_pivot_rate": 0.5,
+      "mean_capsule_tokens": 3719.5,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 2,
+        "missing_from_candidates": 0,
+        "present_but_support": 0,
+        "present_but_discarded": 0,
+        "wrong_subsystem": 0,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 0,
+        "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    },
+    {
+      "repo": "sphinx-doc/sphinx",
+      "instances_total": 2,
+      "instances_evaluated": 2,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 0.5,
+      "top_3_file_recall": 0.5,
+      "expected_file_as_pivot_rate": 0.5,
+      "expected_file_as_support_rate": 0.5,
+      "expected_file_missing_rate": 0,
+      "expected_file_discarded_rate": 0,
+      "expected_symbol_hit_rate": 0.5,
+      "expected_symbol_as_pivot_rate": 0.5,
+      "mean_capsule_tokens": 1195.5,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 1,
+        "missing_from_candidates": 0,
+        "present_but_support": 1,
+        "present_but_discarded": 0,
+        "wrong_subsystem": 0,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 0,
+        "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    },
+    {
+      "repo": "pallets/flask",
+      "instances_total": 1,
+      "instances_evaluated": 1,
+      "workspace_error_count": 0,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 1,
+      "top_3_file_recall": 1,
+      "expected_file_as_pivot_rate": 1,
+      "expected_file_as_support_rate": 0,
+      "expected_file_missing_rate": 0,
+      "expected_file_discarded_rate": 0,
+      "expected_symbol_hit_rate": 1,
+      "expected_symbol_as_pivot_rate": 0,
+      "mean_capsule_tokens": 5594,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
+      "miss_taxonomy": {
+        "none": 1,
+        "missing_from_candidates": 0,
+        "present_but_support": 0,
+        "present_but_discarded": 0,
+        "wrong_subsystem": 0,
+        "wrong_entry_point": 0,
+        "generic_infrastructure_ranked_above_target": 0,
+        "line_anchor_not_resolved": 0,
+        "body_literal_not_resolved": 0,
+        "test_symbol_pollution": 0,
+        "language_parser_gap": 0,
+        "workspace_error": 0,
+        "fixture_label_error": 0,
+        "unknown": 0
+      }
+    }
+  ]
+}

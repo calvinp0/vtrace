@@ -447,7 +447,9 @@ export type MissCategory =
   | "wrong_entry_point"
   | "generic_infrastructure_ranked_above_target"
   | "line_anchor_not_resolved"
+  | "body_literal_not_resolved"
   | "test_symbol_pollution"
+  | "language_parser_gap"
   | "workspace_error"
   | "fixture_label_error"
   | "unknown";
@@ -495,6 +497,34 @@ export function taskHasLineAnchor(task: string): boolean {
   return /#L\d+/.test(task) || /\.\w+:\d+/.test(task);
 }
 
+// A task carries a body literal when it quotes a substantive string/identifier
+// (e.g. an error message, a config key, a token the fix hinges on) — the signal
+// Capsule v2's body-literal search is meant to recover. Used to tell a
+// body-literal miss (quoted clue present, none resolved) from a plain miss.
+export function taskHasBodyLiteral(task: string): boolean {
+  for (const match of task.matchAll(/['"`]([^'"`\n]{4,})['"`]/g)) {
+    const inner = (match[1] ?? "").trim();
+    // Require at least one identifier-ish or symbol-ish token, not just prose in
+    // quotes, so a quoted plain sentence does not masquerade as a code literal.
+    if (/[A-Za-z_]\w{2,}/.test(inner) && /[_./(=:]|[a-z][A-Z]/.test(inner)) return true;
+  }
+  return false;
+}
+
+// Source extensions vtrace's Python-centric indexer parses for symbols. An
+// expected file outside this set (a Cython `.pyx`/`.pxd`, a C/C++ extension, a
+// generated stub, docs) can be a real edit site the parser cannot surface as a
+// symbol candidate — a `language_parser_gap`, distinct from a ranking miss.
+const PARSED_SOURCE_EXTENSIONS: readonly string[] = [".py", ".pyi"];
+
+export function expectedFilesAreUnparsedLanguage(expectedFiles: readonly string[]): boolean {
+  if (expectedFiles.length === 0) return false;
+  return expectedFiles.every((file) => {
+    const ext = path.extname(normalizeFilePath(file)).toLowerCase();
+    return ext.length > 0 && !PARSED_SOURCE_EXTENSIONS.includes(ext);
+  });
+}
+
 // Classify a miss from the row + capsule signals. Deterministic, best-effort, and
 // CONSERVATIVE: it only names a specific cause when a signal supports it, falling
 // back to `missing_from_candidates` (the expected file never surfaced) or
@@ -525,8 +555,16 @@ export function classifyMiss(
   // role === "missing": the expected file is nowhere in the selection. Use the
   // capsule's own debug signals to attribute the miss.
   const topPivot = summary.pivots[0] ?? null;
+  // A non-Python edit site can never be surfaced as a symbol candidate, so attribute
+  // it to the parser before any ranking-based cause.
+  if (expectedFilesAreUnparsedLanguage(row.expected_files)) return "language_parser_gap";
   if (taskHasLineAnchor(task) && !summary.lineAnchorResolutionUsed) {
     return "line_anchor_not_resolved";
+  }
+  // A quoted code literal in the task that body-literal search failed to resolve
+  // to a symbol is a distinct, diagnosable cause from a generic ranking miss.
+  if (taskHasBodyLiteral(task) && summary.bodyLiteralMatches.length === 0) {
+    return "body_literal_not_resolved";
   }
   if (topPivot?.isGenericInfrastructure) return "generic_infrastructure_ranked_above_target";
   if (
@@ -577,6 +615,8 @@ export type RetrievalResult =
 
 export interface RetrievalEvalRow {
   readonly instance_id: string;
+  /** Repo slug (`owner/name`) — the key the per-repo aggregation splits on. */
+  readonly repo: string;
   readonly label_source: LabelSource;
   readonly intent: string;
   readonly actual_mode: string | null;
@@ -636,6 +676,7 @@ export function evaluateInstance(
     const kind = error?.kind ?? "workspace_error";
     return {
       instance_id: entry.instance_id,
+      repo: entry.repo,
       label_source: entry.label_source,
       intent: entry.intent,
       actual_mode: null,
@@ -691,6 +732,7 @@ export function evaluateInstance(
 
   return {
     instance_id: entry.instance_id,
+    repo: entry.repo,
     label_source: entry.label_source,
     intent: summary.intent,
     actual_mode: summary.actualMode,
@@ -796,7 +838,9 @@ const MISS_CATEGORIES: readonly MissCategory[] = [
   "wrong_entry_point",
   "generic_infrastructure_ranked_above_target",
   "line_anchor_not_resolved",
+  "body_literal_not_resolved",
   "test_symbol_pollution",
+  "language_parser_gap",
   "workspace_error",
   "fixture_label_error",
   "unknown",
@@ -820,6 +864,27 @@ export function aggregateByLabelSource(
     if (subset.length > 0) out[source] = aggregate(subset);
   }
   return out;
+}
+
+export interface RepoAggregate extends RetrievalEvalAggregate {
+  readonly repo: string;
+}
+
+// Aggregate split by repo slug, sorted by instance count (desc) then repo name —
+// the cross-repo headline: does Capsule v2 retrieval generalize beyond Django, or
+// is recovery uneven across codebases? Every repo present gets a row, including
+// those whose instances all errored (so a repo can't silently vanish from the
+// report).
+export function aggregateByRepo(rows: readonly RetrievalEvalRow[]): RepoAggregate[] {
+  const byRepo = new Map<string, RetrievalEvalRow[]>();
+  for (const row of rows) {
+    const bucket = byRepo.get(row.repo) ?? [];
+    bucket.push(row);
+    byRepo.set(row.repo, bucket);
+  }
+  return [...byRepo.entries()]
+    .map(([repo, subset]) => ({ repo, ...aggregate(subset) }))
+    .sort((a, b) => b.instances_total - a.instances_total || a.repo.localeCompare(b.repo));
 }
 
 export function aggregate(rows: readonly RetrievalEvalRow[]): RetrievalEvalAggregate {
@@ -863,6 +928,8 @@ export interface RetrievalEvalArtifact {
   readonly aggregate: RetrievalEvalAggregate;
   /** Aggregate split by label source (gold_patch / passing_model_patch / manual_verified). */
   readonly byLabelSource: Partial<Record<LabelSource, RetrievalEvalAggregate>>;
+  /** Aggregate split by repo (the cross-repo generalization view). */
+  readonly byRepo: readonly RepoAggregate[];
 }
 
 // ---------------------------------------------------------------------------
@@ -871,6 +938,7 @@ export interface RetrievalEvalArtifact {
 
 const CSV_COLUMNS: readonly (keyof RetrievalEvalRow)[] = [
   "instance_id",
+  "repo",
   "label_source",
   "intent",
   "actual_mode",
@@ -931,6 +999,23 @@ function metricsTable(a: RetrievalEvalAggregate): string[] {
     `| mean_pivot_count | ${a.mean_pivot_count.toFixed(2)} |`,
     `| mean_support_count | ${a.mean_support_count.toFixed(2)} |`,
   ];
+}
+
+// Per-repo metrics table (requirement 5): one row per repo plus an OVERALL row.
+// Columns mirror the headline file/symbol recovery + capsule shape metrics so a
+// reader can spot a repo where retrieval degrades at a glance.
+export function renderByRepoTable(byRepo: readonly RepoAggregate[]): string[] {
+  const header = [
+    "| repo | instances | top-1 file | top-3 file | as pivot | missing | mean tokens | mean pivots | mean support |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+  ];
+  const repoRow = (label: string, a: RetrievalEvalAggregate): string =>
+    `| ${label} | ${a.instances_evaluated}/${a.instances_total} | ${pct(a.top_1_file_accuracy)} | `
+    + `${pct(a.top_3_file_recall)} | ${pct(a.expected_file_as_pivot_rate)} | `
+    + `${pct(a.expected_file_missing_rate)} | ${a.mean_capsule_tokens.toFixed(1)} | `
+    + `${a.mean_pivot_count.toFixed(2)} | ${a.mean_support_count.toFixed(2)} |`;
+  if (byRepo.length === 0) return [...header, "| (no repos) | 0/0 | — | — | — | — | — | — | — |"];
+  return [...header, ...byRepo.map((a) => repoRow(a.repo, a))];
 }
 
 const LABEL_SOURCE_TITLES: Record<LabelSource, string> = {
@@ -997,6 +1082,12 @@ export function renderMarkdown(artifact: RetrievalEvalArtifact): string {
       lines.push("");
     }
   }
+
+  // Per-repo split — the cross-repo generalization view. Always rendered (with a
+  // single Django row for a Django-only fixture) so the section is never missing.
+  lines.push("## Metrics by repo", "");
+  lines.push(...renderByRepoTable(artifact.byRepo));
+  lines.push("");
 
   lines.push("## Miss taxonomy", "");
   lines.push("| category | count |", "| --- | --- |");
@@ -1245,6 +1336,7 @@ export async function runRetrievalEval(
     rows,
     aggregate: aggregate(rows),
     byLabelSource: aggregateByLabelSource(rows),
+    byRepo: aggregateByRepo(rows),
   };
 }
 

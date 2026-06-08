@@ -2320,3 +2320,51 @@ function findMethod(symbols: readonly SymbolRecord[], localName: string): Symbol
 
   return symbol as SymbolRecord;
 }
+
+// --- run-level export-index cache (re-parse regression) ----------------------
+
+// Build an export index spawns a CPython subprocess; without a run-level cache an
+// imported target is re-parsed once per importer (and once per import/call/
+// reference pass), making a whole-repo index effectively O(n²) in spawns. This
+// routes parsing through a wrapper interpreter that records the file path of every
+// spawn, then asserts a single shared target is parsed once across many importers
+// — while the cross-file edge it resolves is still produced (cache is behaviour-
+// preserving).
+test("a shared imported module is parsed once across many importers (run-level cache)", async () => {
+  const { mkdtempSync, writeFileSync, readFileSync, chmodSync, existsSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const dir = mkdtempSync(path.join(tmpdir(), "vtrace-pyparse-cache-"));
+  const counter = path.join(dir, "spawns.log");
+  // Wrapper interpreter: log argv after `-c <script>` (the file path the parser
+  // passes through), then exec the real python so AST output is unchanged.
+  const wrapper = path.join(dir, "py-wrapper.sh");
+  writeFileSync(wrapper, `#!/usr/bin/env bash\nprintf '%s\\n' "$3" >> '${counter}'\nexec python3 "$@"\n`);
+  chmodSync(wrapper, 0o755);
+
+  const target = { path: "target.py", content: "def foo():\n    return 1\n" };
+  const importers = ["a", "b", "c", "d"].map((name) => ({
+    path: `${name}.py`,
+    content: "from target import foo\n\n\ndef use():\n    return foo()\n",
+  }));
+  const knownFiles = [target, ...importers];
+  const parser = createPythonParser({ knownFiles, interpreterCandidates: [wrapper] });
+
+  for (const importer of importers) {
+    const result = await parser.parse({ path: importer.path, content: importer.content, language: Language.Python });
+    // Behaviour preserved: the importer has no local `foo`, so an `imports` edge
+    // only exists if the cross-file target (target.py::foo) was resolved — which
+    // means the export index was consulted (cache hit or build), not skipped.
+    assert.ok(
+      result.edges.some((edge) => edge.edgeType === EdgeType.Imports),
+      `expected a resolved import edge from ${importer.path}`,
+    );
+  }
+
+  assert.ok(existsSync(counter), "wrapper interpreter was not invoked");
+  const spawns = readFileSync(counter, "utf8").split("\n").filter(Boolean);
+  const targetSpawns = spawns.filter((line) => line.endsWith("target.py")).length;
+  // With the cache: target.py is parsed exactly once for its export index, reused
+  // by every importer and every resolution pass. Without it this would grow with
+  // the importer count (×3 passes). Allow a tiny constant, but it must NOT scale.
+  assert.ok(targetSpawns <= 1, `target.py was parsed ${targetSpawns} times; expected <= 1 (cache not effective)`);
+});

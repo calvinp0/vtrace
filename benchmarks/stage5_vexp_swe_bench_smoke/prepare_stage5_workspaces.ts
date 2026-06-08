@@ -22,6 +22,7 @@ import { mkdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 const DEFAULT_BENCH_REPO = "/home/calvin/code/vexp-swe-bench/.bench-repos/django__django/django";
+const DEFAULT_BENCH_REPOS_ROOT = "/home/calvin/code/vexp-swe-bench/.bench-repos";
 const DEFAULT_SWE_BENCH_DATA = "/home/calvin/code/vexp-swe-bench/data/swe-bench-100.jsonl";
 const DEFAULT_OUT_ROOT = path.join(
   "benchmarks",
@@ -29,6 +30,15 @@ const DEFAULT_OUT_ROOT = path.join(
   "results",
   "workspaces",
   "expanded",
+);
+// Cross-repo (non-Django) workspaces live in their own sibling root so the Django
+// expansion set and the cross-repo set never collide on disk.
+const DEFAULT_CROSS_REPO_OUT_ROOT = path.join(
+  "benchmarks",
+  "stage5_vexp_swe_bench_smoke",
+  "results",
+  "workspaces",
+  "cross_repo",
 );
 const VTRACE_BIN = path.join("bin", "vtrace");
 const INDEX_RELPATH = path.join(".vtrace", "index.sqlite");
@@ -54,11 +64,71 @@ export const DEFAULT_EXPANSION_INSTANCES: readonly string[] = [
   "django__django-13195",
 ];
 
+// The first cross-repo (non-Django) retrieval set: a deterministic slice of the
+// non-Django Python repos present in swe-bench-100. Selection rule: for each
+// preferred repo, the first N instance_ids in sorted order — fixed and
+// reproducible, not cherry-picked to the answer. Eight repos × 1–3 each = 16.
+export const CROSS_REPO_INSTANCES: readonly string[] = [
+  "sympy__sympy-12419",
+  "sympy__sympy-12481",
+  "sympy__sympy-13372",
+  "scikit-learn__scikit-learn-10844",
+  "scikit-learn__scikit-learn-11578",
+  "matplotlib__matplotlib-22719",
+  "matplotlib__matplotlib-24627",
+  "astropy__astropy-14365",
+  "astropy__astropy-14369",
+  "pytest-dev__pytest-10051",
+  "pytest-dev__pytest-5262",
+  "sphinx-doc__sphinx-7462",
+  "sphinx-doc__sphinx-7748",
+  "psf__requests-1142",
+  "psf__requests-1724",
+  "pallets__flask-5014",
+];
+
 export interface PrepareConfig {
   readonly benchRepo: string;
   readonly sweBenchData: string;
   readonly outRoot: string;
   readonly instances: readonly string[];
+  // Cross-repo mode: resolve a per-repo bench clone under `benchReposRoot` from
+  // each instance's `repo` field (lazily `git init`+remote), instead of using the
+  // single fixed `benchRepo`. Lets non-Django repos be materialized.
+  readonly crossRepo: boolean;
+  readonly benchReposRoot: string;
+}
+
+// `owner/name` -> the canonical GitHub clone URL. SWE-bench repo slugs are exactly
+// the GitHub `owner/name`, so this is a direct mapping (no per-repo special cases).
+export function repoToGitUrl(repo: string): string {
+  return `https://github.com/${repo}.git`;
+}
+
+// `owner/name` -> the on-disk bench-clone directory (`<root>/owner__name`), the
+// same `owner__name` convention SWE-bench uses for instance IDs.
+export function benchRepoDir(benchReposRoot: string, repo: string): string {
+  return path.join(benchReposRoot, repo.replace("/", "__"));
+}
+
+// Ensure a (possibly empty) bench clone exists for `repo` with `origin` pointing
+// at GitHub, WITHOUT cloning history: a fresh `git init` + remote is enough — the
+// per-instance `git fetch --depth 1 origin <commit>` pulls only the one needed
+// commit. Idempotent: an existing clone just has its `origin` URL re-asserted.
+export async function ensureBenchRepo(benchReposRoot: string, repo: string): Promise<string> {
+  const dir = benchRepoDir(benchReposRoot, repo);
+  const url = repoToGitUrl(repo);
+  if (await pathExists(path.join(dir, ".git"))) {
+    // Re-assert origin so a stale/missing remote can't break the fetch.
+    await run("git", ["remote", "set-url", "origin", url], dir);
+    return dir;
+  }
+  await mkdir(dir, { recursive: true });
+  const init = await run("git", ["init", "-q"], dir);
+  if (init.code !== 0) throw new Error(`git init failed for ${repo}: ${init.stderr.trim()}`);
+  const remote = await run("git", ["remote", "add", "origin", url], dir);
+  if (remote.code !== 0) throw new Error(`git remote add failed for ${repo}: ${remote.stderr.trim()}`);
+  return dir;
 }
 
 interface SweBenchRecord {
@@ -175,9 +245,14 @@ export async function prepareWorkspaces(config: PrepareConfig): Promise<PrepareR
     }
     try {
       await mkdir(workspace, { recursive: true });
-      const fetch = await run("git", ["fetch", "--depth", "1", "origin", record.base_commit], config.benchRepo);
+      // In cross-repo mode the bench clone is resolved (and lazily created) per
+      // instance from its repo slug; otherwise the single fixed Django clone.
+      const benchRepo = config.crossRepo
+        ? await ensureBenchRepo(config.benchReposRoot, record.repo)
+        : config.benchRepo;
+      const fetch = await run("git", ["fetch", "--depth", "1", "origin", record.base_commit], benchRepo);
       if (fetch.code !== 0) throw new Error(`git fetch failed: ${fetch.stderr.trim()}`);
-      await archiveExtract(config.benchRepo, record.base_commit, workspace);
+      await archiveExtract(benchRepo, record.base_commit, workspace);
       // `git init` plants a repo-root marker so `vtrace index` stops project-root
       // detection AT the workspace. Without it, a workspace nested inside the
       // vtrace repo resolves the root up to vtrace itself (wrong index, and a lock
@@ -199,9 +274,11 @@ export async function prepareWorkspaces(config: PrepareConfig): Promise<PrepareR
 
 export function parsePrepareArgs(argv: readonly string[]): PrepareConfig {
   let benchRepo = DEFAULT_BENCH_REPO;
+  let benchReposRoot = DEFAULT_BENCH_REPOS_ROOT;
   let sweBenchData = DEFAULT_SWE_BENCH_DATA;
-  let outRoot = DEFAULT_OUT_ROOT;
-  let instances = [...DEFAULT_EXPANSION_INSTANCES];
+  let crossRepo = false;
+  let outRoot: string | null = null;
+  let instances: string[] | null = null;
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
     const value = (): string => {
@@ -210,12 +287,23 @@ export function parsePrepareArgs(argv: readonly string[]): PrepareConfig {
       return v;
     };
     if (arg === "--bench-repo") benchRepo = value();
+    else if (arg === "--bench-repos-root") benchReposRoot = value();
     else if (arg === "--swe-bench-data") sweBenchData = value();
     else if (arg === "--out-root") outRoot = value();
     else if (arg === "--instances") instances = value().split(",").map((s) => s.trim()).filter(Boolean);
+    // Cross-repo mode flips the defaults: the cross-repo instance set, the
+    // cross_repo workspace root, and per-instance bench-clone resolution.
+    else if (arg === "--cross-repo") crossRepo = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
-  return { benchRepo, sweBenchData, outRoot, instances };
+  return {
+    benchRepo,
+    benchReposRoot,
+    sweBenchData,
+    crossRepo,
+    outRoot: outRoot ?? (crossRepo ? DEFAULT_CROSS_REPO_OUT_ROOT : DEFAULT_OUT_ROOT),
+    instances: instances ?? (crossRepo ? [...CROSS_REPO_INSTANCES] : [...DEFAULT_EXPANSION_INSTANCES]),
+  };
 }
 
 if (import.meta.main) {

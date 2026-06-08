@@ -37,6 +37,17 @@ interface PythonParserContext {
    * Shared by reference across `withKnownFile` copies.
    */
   cythonExportIndexCache: Map<string, CrossLanguageExportIndex>;
+  /**
+   * Parser-instance-wide cache of Python module export indexes, keyed by
+   * `path\0content`. Building an export index spawns a CPython `ast` subprocess
+   * and walks the module, so without this every source file re-parses each of
+   * its imported targets — three times over (import/call/reference passes) — with
+   * no cross-file reuse, making a whole-repo index effectively O(n²) in spawns.
+   * Keying by content (not just path) keeps it behaviour-identical to the
+   * un-cached path when `withKnownFile` overrides a file's content. Shared by
+   * reference across `withKnownFile` copies.
+   */
+  pythonExportIndexCache: Map<string, PythonExportIndex>;
 }
 
 interface PythonAstRoot {
@@ -2252,6 +2263,7 @@ function makeParserContext(options: PythonParserOptions): PythonParserContext {
     moduleNameByFilePath,
     modulePathsByName,
     cythonExportIndexCache: new Map(),
+    pythonExportIndexCache: new Map(),
   };
 }
 
@@ -2277,6 +2289,7 @@ function withKnownFile(
     moduleNameByFilePath,
     modulePathsByName,
     cythonExportIndexCache: context.cythonExportIndexCache,
+    pythonExportIndexCache: context.pythonExportIndexCache,
   };
 }
 
@@ -2548,6 +2561,17 @@ function getPythonExportIndex(
     return exportIndex;
   }
 
+  // Run-level memo: the same target module is imported by many source files, so
+  // without this it would be re-parsed (a subprocess spawn) once per importer.
+  // Keyed by path+content so it is behaviour-identical to the un-cached path even
+  // when `withKnownFile` overrides a file's content for the current parse.
+  const cacheKey = `${filePath}\0${hashContent(content)}`;
+  const cached = context.pythonExportIndexCache.get(cacheKey);
+  if (cached !== undefined) {
+    exportIndexByPath.set(filePath, cached);
+    return cached;
+  }
+
   try {
     const root = parsePythonAst(filePath, content, context);
     const extracted = extractTopLevelSymbols(filePath, content, root.items);
@@ -2596,10 +2620,12 @@ function getPythonExportIndex(
     };
 
     exportIndexByPath.set(filePath, exportIndex);
+    context.pythonExportIndexCache.set(cacheKey, exportIndex);
     return exportIndex;
   } catch {
     const exportIndex: PythonExportIndex = { namedSymbols: new Map() };
     exportIndexByPath.set(filePath, exportIndex);
+    context.pythonExportIndexCache.set(cacheKey, exportIndex);
     return exportIndex;
   }
 }

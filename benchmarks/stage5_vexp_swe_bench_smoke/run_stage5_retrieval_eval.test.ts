@@ -17,8 +17,10 @@ import { indexProject } from "../../src/indexer/indexProject";
 import {
   aggregate,
   aggregateByLabelSource,
+  aggregateByRepo,
   assertNoUnexpectedDuplicates,
   classifyMiss,
+  expectedFilesAreUnparsedLanguage,
   evaluateEntryLive,
   evaluateExpectedFile,
   evaluateExpectedSymbol,
@@ -30,9 +32,11 @@ import {
   loadRetrievalFixture,
   parseArgs,
   rankedFiles,
+  renderByRepoTable,
   renderCsv,
   renderMarkdown,
   runRetrievalEval,
+  taskHasBodyLiteral,
   summarizeCapsule,
   symbolMatches,
   taskHasLineAnchor,
@@ -288,6 +292,7 @@ function artifactOf(rows: RetrievalEvalArtifact["rows"]): RetrievalEvalArtifact 
     rows,
     aggregate: aggregate(rows),
     byLabelSource: aggregateByLabelSource(rows),
+    byRepo: aggregateByRepo(rows),
   };
 }
 
@@ -296,8 +301,8 @@ test("renderCsv emits a header row and one row per instance", () => {
   const csv = renderCsv(rows);
   const lines = csv.trim().split("\n");
   assert.equal(lines.length, 2);
-  assert.match(lines[0]!, /^instance_id,label_source,intent,actual_mode/);
-  assert.match(lines[1]!, /^a,gold_patch,debug,standard/);
+  assert.match(lines[0]!, /^instance_id,repo,label_source,intent,actual_mode/);
+  assert.match(lines[1]!, /^a,x\/y,gold_patch,debug,standard/);
 });
 
 test("renderMarkdown includes scope, metrics, per-instance table, and the label-only note", () => {
@@ -750,7 +755,7 @@ test("writeReports writes {json,csv,md} under the configured report name", async
   // The default-named reports must NOT be written when a custom name is set.
   assert.ok(!existsSync(path.join(dir, "stage5_retrieval_eval.json")));
   const csv = readFileSync(path.join(dir, "stage5_retrieval_eval_expanded.csv"), "utf8");
-  assert.match(csv.split("\n")[0]!, /^instance_id,label_source,intent/);
+  assert.match(csv.split("\n")[0]!, /^instance_id,repo,label_source,intent/);
 });
 
 // --- improved symbol extraction ----------------------------------------------
@@ -781,4 +786,154 @@ test("extractChangedFromDiff captures a module-level assignment name", () => {
   ].join("\n");
   const changed = extractChangedFromDiff(patch);
   assert.ok(changed[0]!.symbols.includes("DEFAULT_TIMEOUT"));
+});
+
+// --- cross-repo expansion ----------------------------------------------------
+
+test("cross-repo fixture loading: a multi-repo fixture loads with its repo slugs", async () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "vtrace-r5r-xrepo-"));
+  const fixturePath = path.join(dir, "cross_repo.json");
+  writeFileSync(
+    fixturePath,
+    JSON.stringify([
+      { instance_id: "sympy__sympy-1", repo: "sympy/sympy", workspace: "/ws/a", task: "fix simplify", intent: "debug", budget: 8000, label_source: "gold_patch", expected_files: ["sympy/core/expr.py"], expected_symbols: ["simplify"] },
+      { instance_id: "psf__requests-1", repo: "psf/requests", workspace: "/ws/b", task: "fix session", intent: "debug", budget: 8000, label_source: "gold_patch", expected_files: ["requests/sessions.py"], expected_symbols: ["Session"] },
+    ]),
+  );
+  const entries = await loadRetrievalFixture(fixturePath);
+  assert.equal(entries.length, 2);
+  assert.deepEqual(entries.map((e) => e.repo).sort(), ["psf/requests", "sympy/sympy"]);
+  // Not one Django row — this is the whole point of the cross-repo set.
+  assert.ok(entries.every((e) => e.repo !== "django/django"));
+});
+
+test("the committed cross_repo fixture (if present) is entirely non-Django", async () => {
+  const fixture = path.join("benchmarks", "stage5_vexp_swe_bench_smoke", "retrieval_eval.cross_repo.json");
+  if (!existsSync(fixture)) return; // built by the prepare/build step; skip if absent
+  const entries = await loadRetrievalFixture(fixture);
+  assert.ok(entries.length >= 10, `expected >=10 cross-repo instances, got ${entries.length}`);
+  assert.ok(entries.every((e) => e.repo !== "django/django"));
+  // Gold-patch labels, and every row names at least one expected file.
+  assert.ok(entries.every((e) => e.expected_files.length > 0));
+});
+
+test("repo split aggregation: aggregateByRepo splits metrics per repo, sorted by size", () => {
+  const rows = [
+    evaluateInstance(entry({ instance_id: "s1", repo: "sympy/sympy" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] })),
+    evaluateInstance(entry({ instance_id: "s2", repo: "sympy/sympy" }), summary({ pivots: [selected("pivot", "pkg/other.py", "other")] })),
+    evaluateInstance(entry({ instance_id: "r1", repo: "psf/requests" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] })),
+  ];
+  const byRepo = aggregateByRepo(rows);
+  assert.equal(byRepo.length, 2);
+  // sympy (2 instances) sorts before requests (1 instance).
+  assert.equal(byRepo[0]!.repo, "sympy/sympy");
+  assert.equal(byRepo[0]!.instances_total, 2);
+  assert.equal(byRepo[0]!.top_1_file_accuracy, 0.5); // one of two hit
+  assert.equal(byRepo[1]!.repo, "psf/requests");
+  assert.equal(byRepo[1]!.top_1_file_accuracy, 1);
+});
+
+test("report rendering by repo: renderByRepoTable + renderMarkdown emit a per-repo section", () => {
+  const rows = [
+    evaluateInstance(entry({ instance_id: "s1", repo: "sympy/sympy" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] })),
+    evaluateInstance(entry({ instance_id: "r1", repo: "psf/requests" }), summary({ pivots: [selected("pivot", "pkg/other.py", "o")] })),
+  ];
+  const table = renderByRepoTable(aggregateByRepo(rows)).join("\n");
+  assert.match(table, /\| repo \| instances \| top-1 file \|/);
+  assert.match(table, /sympy\/sympy/);
+  assert.match(table, /psf\/requests/);
+  const md = renderMarkdown(artifactOf(rows));
+  assert.match(md, /## Metrics by repo/);
+  assert.match(md, /sympy\/sympy/);
+});
+
+test("report rendering by repo: a Django-only fixture still renders a single-repo table", () => {
+  const rows = [evaluateInstance(entry({ instance_id: "d1", repo: "django/django" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] }))];
+  const md = renderMarkdown(artifactOf(rows));
+  assert.match(md, /## Metrics by repo/);
+  assert.match(md, /django\/django/);
+});
+
+test("non-Django workspace validation: validateFixtureOnDisk passes a real non-Django indexed workspace", async () => {
+  const workspace = await indexedWorkspace("vtrace-r5r-xrepo-ws-", {
+    "requests/sessions.py": "class Session:\n    def request(self, method, url):\n        return (method, url)\n",
+  });
+  const e = entry({ repo: "psf/requests", workspace, expected_files: ["requests/sessions.py"], expected_symbols: ["Session.request"] });
+  const issues = await validateFixtureOnDisk([e], new Set([e.instance_id]));
+  assert.deepEqual(issues, []);
+});
+
+test("expected labels never leak in (cross-repo): same task, different labels → identical capsule", async () => {
+  const workspace = await indexedWorkspace("vtrace-r5r-xrepo-leak-", {
+    "requests/sessions.py": "class Session:\n    def request(self, method, url):\n        return (method, url)\n",
+  });
+  const a = await evaluateEntryLive(entry({ repo: "psf/requests", workspace, task: "fix Session.request", expected_files: ["requests/sessions.py"], expected_symbols: ["request"] }));
+  const b = await evaluateEntryLive(entry({ repo: "psf/requests", workspace, task: "fix Session.request", expected_files: ["totally/unrelated.py"], expected_symbols: ["nope"] }));
+  assert.deepEqual(a, b);
+});
+
+test("missing workspace handled cleanly (cross-repo): a missing non-Django workspace is workspace_error", async () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "vtrace-r5r-xrepo-miss-"));
+  const fixturePath = path.join(dir, "fixture.json");
+  writeFileSync(
+    fixturePath,
+    JSON.stringify([
+      { instance_id: "matplotlib__matplotlib-1", repo: "matplotlib/matplotlib", workspace: path.join(dir, "nope"), task: "fix axes", intent: "debug", budget: 8000, label_source: "gold_patch", expected_files: ["lib/matplotlib/axes/_axes.py"], expected_symbols: ["plot"] },
+    ]),
+  );
+  const artifact = await runRetrievalEval({ fixture: fixturePath, out: dir });
+  assert.equal(artifact.rows[0]!.result, "workspace_error");
+  assert.equal(artifact.rows[0]!.repo, "matplotlib/matplotlib");
+  assert.equal(artifact.byRepo[0]!.repo, "matplotlib/matplotlib");
+  assert.equal(artifact.byRepo[0]!.workspace_error_count, 1);
+});
+
+test("report-name routing still works for the cross-repo report name", async () => {
+  const cfg = parseArgs(["--retrieval-fixture", "f.json", "--report-name", "stage5_retrieval_eval_cross_repo", "--out", "o"]);
+  assert.equal(cfg.reportName, "stage5_retrieval_eval_cross_repo");
+  assert.equal(cfg.fixture, "f.json");
+  assert.equal(cfg.out, "o");
+  const dir = mkdtempSync(path.join(tmpdir(), "vtrace-r5r-xrepo-name-"));
+  const rows = [evaluateInstance(entry({ repo: "sympy/sympy" }), summary({ pivots: [selected("pivot", "pkg/target.py", "do_thing")] }))];
+  await writeReports({ fixture: "f.json", out: dir, reportName: "stage5_retrieval_eval_cross_repo" }, artifactOf(rows));
+  assert.ok(existsSync(path.join(dir, "stage5_retrieval_eval_cross_repo.md")));
+  assert.ok(existsSync(path.join(dir, "stage5_retrieval_eval_cross_repo.csv")));
+  assert.ok(existsSync(path.join(dir, "stage5_retrieval_eval_cross_repo.json")));
+});
+
+// --- new miss categories -----------------------------------------------------
+
+test("taskHasBodyLiteral detects a quoted code literal but not quoted prose", () => {
+  assert.ok(taskHasBodyLiteral('the helper "get_group_by_cols" drops a space'));
+  assert.ok(taskHasBodyLiteral("emits 'COUNT(DISTINCT' without a trailing space"));
+  assert.ok(!taskHasBodyLiteral('a quoted "plain english phrase here"'));
+  assert.ok(!taskHasBodyLiteral("no quotes at all in this task"));
+});
+
+test("classifyMiss: body_literal_not_resolved when a quoted literal resolved to nothing", () => {
+  const s = summary({ pivots: [selected("pivot", "pkg/other.py", "other")], bodyLiteralMatches: [] });
+  const cat = classifyMiss(
+    { result: "missing", expected_file_role: "missing", contains_expected_file_top3: false, expected_files: ["pkg/target.py"] },
+    s,
+    'fix the "get_group_by_cols" helper',
+  );
+  assert.equal(cat, "body_literal_not_resolved");
+});
+
+test("expectedFilesAreUnparsedLanguage flags non-Python edit sites", () => {
+  assert.ok(expectedFilesAreUnparsedLanguage(["sklearn/tree/_tree.pyx"]));
+  assert.ok(expectedFilesAreUnparsedLanguage(["doc/whatsnew.rst"]));
+  assert.ok(!expectedFilesAreUnparsedLanguage(["pkg/target.py"]));
+  assert.ok(!expectedFilesAreUnparsedLanguage(["pkg/target.py", "doc/x.rst"])); // any .py present
+  assert.ok(!expectedFilesAreUnparsedLanguage([]));
+});
+
+test("classifyMiss: language_parser_gap when the only edit site is a non-Python file", () => {
+  const s = summary({ pivots: [selected("pivot", "pkg/other.py", "other")] });
+  const cat = classifyMiss(
+    { result: "missing", expected_file_role: "missing", contains_expected_file_top3: false, expected_files: ["sklearn/tree/_tree.pyx"] },
+    s,
+    "fix the cython splitter",
+  );
+  assert.equal(cat, "language_parser_gap");
 });

@@ -32,7 +32,7 @@ import {
   type LabelSource,
   type RetrievalEvalFixtureEntry,
 } from "./run_stage5_retrieval_eval";
-import { DEFAULT_EXPANSION_INSTANCES } from "./prepare_stage5_workspaces";
+import { CROSS_REPO_INSTANCES, DEFAULT_EXPANSION_INSTANCES } from "./prepare_stage5_workspaces";
 
 // ---------------------------------------------------------------------------
 // Task prose derivation (deterministic, from the problem statement)
@@ -146,6 +146,9 @@ export async function resolveWorkspace(
   const indexRel = path.join(".vtrace", "index.sqlite");
   const expanded = path.join(resultsRoot, "workspaces", "expanded", instanceId);
   if (await pathExists(path.join(expanded, indexRel))) return expanded;
+  // Cross-repo (non-Django) workspaces live under workspaces/cross_repo/<id>.
+  const crossRepo = path.join(resultsRoot, "workspaces", "cross_repo", instanceId);
+  if (await pathExists(path.join(crossRepo, indexRel))) return crossRepo;
   // Legacy experiment dirs: <results-root>/workspaces/<exp>/<instance_id>.
   const { readdir } = await import("node:fs/promises");
   const root = path.join(resultsRoot, "workspaces");
@@ -222,12 +225,18 @@ const DEFAULT_OUT = path.join(
   "stage5_vexp_swe_bench_smoke",
   "retrieval_eval.django.expanded.json",
 );
+const CROSS_REPO_OUT = path.join(
+  "benchmarks",
+  "stage5_vexp_swe_bench_smoke",
+  "retrieval_eval.cross_repo.json",
+);
 
 export function parseBuildArgs(argv: readonly string[]): BuildFixtureConfig {
   let sweBenchData = DEFAULT_DATA;
   let resultsRoot = DEFAULT_RESULTS_ROOT;
-  let out = DEFAULT_OUT;
-  let instances = [...DEFAULT_EXPANSION_INSTANCES];
+  let out: string | null = null;
+  let instances: string[] | null = null;
+  let crossRepo = false;
   let labelSource: LabelSource = "gold_patch";
   let budget = 8000;
   let baseFixture: string | null = null;
@@ -242,6 +251,8 @@ export function parseBuildArgs(argv: readonly string[]): BuildFixtureConfig {
     else if (arg === "--results-root") resultsRoot = value();
     else if (arg === "--out") out = value();
     else if (arg === "--instances") instances = value().split(",").map((s) => s.trim()).filter(Boolean);
+    // Cross-repo mode flips the defaults to the non-Django instance set + output.
+    else if (arg === "--cross-repo") crossRepo = true;
     else if (arg === "--label-source") {
       const v = value();
       if (!(LABEL_SOURCES as readonly string[]).includes(v)) {
@@ -252,7 +263,15 @@ export function parseBuildArgs(argv: readonly string[]): BuildFixtureConfig {
     else if (arg === "--base-fixture") baseFixture = value();
     else throw new Error(`Unknown argument: ${arg}`);
   }
-  return { sweBenchData, resultsRoot, out, instances, labelSource, budget, baseFixture };
+  return {
+    sweBenchData,
+    resultsRoot,
+    out: out ?? (crossRepo ? CROSS_REPO_OUT : DEFAULT_OUT),
+    instances: instances ?? (crossRepo ? [...CROSS_REPO_INSTANCES] : [...DEFAULT_EXPANSION_INSTANCES]),
+    labelSource,
+    budget,
+    baseFixture,
+  };
 }
 
 export async function buildFixture(config: BuildFixtureConfig): Promise<RetrievalEvalFixtureEntry[]> {
