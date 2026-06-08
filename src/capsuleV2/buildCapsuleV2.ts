@@ -66,6 +66,7 @@ import {
 } from "./nonSourceExample";
 import { anchorTitleSymbols, type TitleSymbolResult } from "./titleSymbolAnchoring";
 import { anchorLiterals, type LiteralAnchorResult } from "./literalAnchoring";
+import { anchorGraphNeighbors, type GraphNeighborResult } from "./graphNeighborAnchoring";
 import {
   classifyGenericLexicalDecoy,
   collectQueryTokens,
@@ -79,6 +80,7 @@ import {
   CapsuleIntent,
   CapsuleV2ContentMode,
   CapsuleV2Mode,
+  NO_DEBUG_ROLE_SIGNALS,
   toScorecard,
   type CapsuleV2Discarded,
   type CapsuleV2Item,
@@ -294,6 +296,9 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // suppressed candidate; the diagnostic surface reports one entry per (token, path)
   // so the miss-analysis line stays readable.
   const reportedDecoys = new Set<string>();
+  // Symbol ids of every down-weighted decoy — graph-neighbour expansion must never
+  // seed from a generic lexical decoy.
+  const suppressedDecoyIds = new Set<string>();
   for (const candidate of candidates) {
     const decision = classifyGenericLexicalDecoy({
       filePath: candidate.filePath,
@@ -305,6 +310,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       taskNamesPath: taskNamesCandidatePath(input.task, candidate.filePath),
     });
     if (!decision.isDecoy) continue;
+    suppressedDecoyIds.add(candidate.symbolId);
     candidate.scores = recomputeWithWeakenedLexical(
       candidate.scores,
       weights,
@@ -328,6 +334,54 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     genericLexicalDecoys.length > 0
       ? { generic_lexical_decoys_suppressed: genericLexicalDecoys }
       : {};
+
+  // Bounded test/import graph-neighbour expansion. The bug report may not name the
+  // production edit target, but vtrace has already found something next to it (a
+  // failing test, a config/warning helper, a parser adapter, a sibling module). This
+  // walks ONE hop from the high-confidence seeds in the pool (line/title/literal
+  // anchors, body-literal hits, test-routed, strong lexical — never decoys,
+  // non-source, low-actionability, or undirect-evidence hubs) and seeds the
+  // production neighbours that import/call/reference (or are referenced by) them.
+  // Neighbours enter as SUPPORT-strength candidates (no direct evidence → the role
+  // gate never makes them a pivot), so they can lift top-3 recall without displacing
+  // a real edit target or out-ranking any explicit anchor. Runs AFTER decoy
+  // suppression so it can exclude suppressed decoys as seeds.
+  const graphNeighbors: GraphNeighborResult = anchorGraphNeighbors({
+    db: input.db,
+    task: input.task,
+    candidates,
+    anchorSymbolIds,
+    titleSymbolIds,
+    literalAnchorIds,
+    suppressedDecoyIds,
+  });
+  // Recovered neighbours are kept OUT of the role pipeline entirely: adding them to
+  // `candidates` would perturb debug role refinement (subsystem inference, the
+  // helper/infra split) and could reorder REAL support. Instead they become support
+  // entries rendered ONLY into leftover support budget, after every real support
+  // item — purely additive recall that can never displace a file vtrace found.
+  const graphNeighborPoolIds = new Set(candidates.map((c) => c.symbolId));
+  const graphNeighborSupport: RefinedRoledCandidate[] = graphNeighbors.candidates
+    .filter((c) => !graphNeighborPoolIds.has(c.symbolId))
+    .map((candidate) => ({
+      candidate,
+      role: CandidateRole.Support,
+      roleReason: candidate.evidence[0] ?? "production neighbour of high-confidence seed",
+      signals: NO_DEBUG_ROLE_SIGNALS,
+    }));
+  const graphNeighborDiagnostics: Partial<CapsuleV2Result["diagnostics"]> = graphNeighbors.used
+    ? {
+        graph_neighbor_expansion_used: true,
+        graph_neighbor_matches: graphNeighbors.matches.map((m) => ({
+          seed_path: m.seedPath,
+          seed_symbol: m.seedSymbol,
+          edge: m.edge,
+          neighbor_path: m.neighborPath,
+          neighbor_symbol: m.neighborSymbol,
+          reason: m.reason,
+        })),
+      }
+    : {};
 
   // Role assignment. The base gate scores each candidate in isolation; for debug
   // intent we then refine roles with call-graph structure (caller vs helper,
@@ -481,6 +535,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         ...nonSourceDiagnostics,
         ...titleSymbolDiagnostics,
         ...literalAnchorDiagnostics,
+        ...graphNeighborDiagnostics,
         ...genericLexicalDecoyDiagnostics,
       },
     });
@@ -511,11 +566,16 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // generic infrastructure last — a generic parser class must never outrank a
   // local helper (Problem B). Within a tier, higher final score wins. For
   // non-debug intents every signal is false, so this reduces to final order.
-  const orderedSupport = [...supportCandidates].sort(
-    (left, right) =>
-      supportTier(left) - supportTier(right)
-      || right.candidate.scores.final - left.candidate.scores.final,
-  );
+  // Recovered graph neighbours are appended AFTER every real support candidate, so
+  // they only fill a leftover slot and never displace a file vtrace already found.
+  const orderedSupport = [
+    ...[...supportCandidates].sort(
+      (left, right) =>
+        supportTier(left) - supportTier(right)
+        || right.candidate.scores.final - left.candidate.scores.final,
+    ),
+    ...graphNeighborSupport,
+  ];
 
   for (const entry of orderedSupport) {
     if (support.length >= allocation.maxSupport) {
@@ -592,6 +652,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...nonSourceDiagnostics,
       ...titleSymbolDiagnostics,
       ...literalAnchorDiagnostics,
+      ...graphNeighborDiagnostics,
       ...genericLexicalDecoyDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
     },

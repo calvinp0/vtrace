@@ -39,7 +39,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -55,6 +55,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "sympy/physics/quantum/identitysearch.py::is_scalar_sparse_matrix -[references]-> sympy/physics/quantum/identitysearch.py::np",
+        "sympy/matrices/matrices.py::is_zero -[contains]-> sympy/matrices/matrices.py::MatrixProperties",
+        "sympy/physics/quantum/identitysearch.py::is_scalar_sparse_matrix -[references]-> sympy/physics/quantum/identitysearch.py::scipy",
+        "sympy/assumptions/handlers/matrices.py::ZeroMatrix -[contains]-> sympy/assumptions/handlers/matrices.py::AskSymmetricHandler",
+        "sympy/assumptions/handlers/matrices.py::BM_elements -[references]-> sympy/assumptions/handlers/matrices.py::AskComplexElementsHandler",
+        "sympy/assumptions/handlers/matrices.py::BM_elements -[references]-> sympy/assumptions/handlers/matrices.py::AskIntegerElementsHandler",
+        "sympy/assumptions/handlers/matrices.py::BM_elements -[references]-> sympy/assumptions/handlers/matrices.py::AskRealElementsHandler",
+        "sympy/assumptions/handlers/sets.py::MatrixElement -[contains]-> sympy/assumptions/handlers/sets.py::AskIntegerHandler"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -150,7 +160,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 24,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -178,6 +188,16 @@
         "Permutation -> sympy/combinatorics/permutations.py::Permutation",
         "Permutation -> sympy/combinatorics/perm_groups.py::PermutationGroup",
         "Permutation -> sympy/combinatorics/permutations.py::__new__"
+      ],
+      "graph_neighbor_matches": [
+        "sympy/combinatorics/permutations.py::Permutation -[contains]-> sympy/combinatorics/permutations.py::cycle_structure",
+        "sympy/combinatorics/permutations.py::Permutation -[contains]-> sympy/combinatorics/permutations.py::__invert__",
+        "sympy/combinatorics/permutations.py::Permutation -[contains]-> sympy/combinatorics/permutations.py::mul_inv",
+        "sympy/combinatorics/permutations.py::Permutation -[contains]-> sympy/combinatorics/permutations.py::length",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup -[contains]-> sympy/combinatorics/perm_groups.py::coset_factor",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup -[contains]-> sympy/combinatorics/perm_groups.py::__contains__",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup -[contains]-> sympy/combinatorics/perm_groups.py::basic_orbits",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup -[contains]-> sympy/combinatorics/perm_groups.py::__len__"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -275,7 +295,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
@@ -297,6 +317,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "sympy/core/evalf.py::evalf_trig -[references]-> sympy/core/evalf.py::_create_evalf_table",
+        "sympy/core/evalf.py::add_terms -[references]-> sympy/core/evalf.py::MINUS_INF",
+        "sympy/core/evalf.py::add_terms -[calls]-> sympy/core/evalf.py::scaled_zero",
+        "sympy/core/evalf.py::evalf_trig -[references]-> sympy/core/evalf.py::DEFAULT_MAXPREC",
+        "sympy/core/evalf.py::get_integer_part -[calls]-> sympy/functions/elementary/integers.py::eval",
+        "sympy/functions/special/error_functions.py::_eval_evalf -[contains]-> sympy/functions/special/error_functions.py::Li",
+        "sympy/core/evalf.py::get_integer_part -[calls]-> sympy/core/evalf.py::evalf_floor",
+        "sympy/core/evalf.py::add_terms -[calls]-> sympy/core/evalf.py::iszero"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -395,7 +425,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -417,6 +447,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "sklearn/model_selection/_validation.py::permutation_test_score -[calls]-> sklearn/model_selection/_validation.py::_shuffle",
+        "sklearn/model_selection/_validation.py::permutation_test_score -[calls]-> sklearn/model_selection/_validation.py::_permutation_test_score",
+        "sklearn/cross_validation.py::permutation_test_score -[calls]-> sklearn/cross_validation.py::_permutation_test_score",
+        "sklearn/multioutput.py::score -[calls]-> sklearn/multioutput.py::predict",
+        "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score -[imports]-> sklearn/metrics/cluster/__init__.py::__all__",
+        "sklearn/model_selection/_validation.py::permutation_test_score -[imports]-> sklearn/model_selection/__init__.py::__all__",
+        "sklearn/grid_search.py::score -[contains]-> sklearn/grid_search.py::BaseSearchCV",
+        "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score -[imports]-> sklearn/metrics/__init__.py::__all__"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -514,7 +554,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -534,6 +574,16 @@
         "multinomial -> examples/applications/plot_out_of_core_classification.py::partial_fit_classifiers",
         "multinomial -> sklearn/linear_model/logistic.py::_check_solver_option",
         "multinomial -> sklearn/linear_model/logistic.py::_log_reg_scoring_path"
+      ],
+      "graph_neighbor_matches": [
+        "sklearn/linear_model/logistic.py::LogisticRegressionCV -[contains]-> sklearn/linear_model/logistic.py::__init__",
+        "sklearn/linear_model/logistic.py::logistic_regression_path -[calls]-> sklearn/linear_model/logistic.py::_multinomial_loss",
+        "sklearn/linear_model/logistic.py::LogisticRegressionCV -[contains]-> sklearn/linear_model/logistic.py::score",
+        "sklearn/linear_model/logistic.py::LogisticRegressionCV -[imports]-> sklearn/linear_model/__init__.py::__all__",
+        "sklearn/linear_model/logistic.py::logistic_regression_path -[calls]-> sklearn/utils/optimize.py::newton_cg",
+        "sklearn/linear_model/logistic.py::predict_proba -[calls]-> sklearn/utils/extmath.py::softmax",
+        "sklearn/linear_model/randomized_l1.py::RandomizedLogisticRegression -[contains]-> sklearn/linear_model/randomized_l1.py::_preprocess_data",
+        "sklearn/linear_model/randomized_l1.py::RandomizedLogisticRegression -[references]-> sklearn/linear_model/randomized_l1.py::BaseRandomizedLinearModel"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -633,7 +683,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 26,
       "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
@@ -649,6 +699,15 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "lib/matplotlib/category.py::default_units -[contains]-> lib/matplotlib/category.py::StrCategoryConverter",
+        "lib/matplotlib/category.py::convert -[calls]-> lib/matplotlib/category.py::_validate_unit",
+        "lib/matplotlib/axis.py::set_data_interval -[calls]-> lib/mpl_toolkits/mplot3d/axis3d.py::__init__",
+        "lib/matplotlib/axis.py::update_units -[calls]-> lib/matplotlib/axis.py::axis_date",
+        "lib/matplotlib/category.py::axisinfo -[calls]-> lib/matplotlib/category.py::StrCategoryLocator",
+        "lib/matplotlib/axis.py::update_units -[calls]-> lib/matplotlib/axis.py::_update_axisinfo",
+        "lib/matplotlib/category.py::axisinfo -[calls]-> lib/matplotlib/category.py::StrCategoryFormatter"
+      ],
       "generic_lexical_decoys_suppressed": [
         "deprecation -> lib/matplotlib/_api/deprecation.py"
       ],
@@ -748,7 +807,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
@@ -762,6 +821,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "lib/mpl_toolkits/axisartist/axis_artist.py::AttributeCopier -[references]-> lib/mpl_toolkits/axisartist/axis_artist.py::Ticks",
+        "lib/matplotlib/contour.py::clabel -[contains]-> lib/matplotlib/contour.py::ContourLabeler",
+        "lib/mpl_toolkits/axisartist/axis_artist.py::AttributeCopier -[contains]-> lib/mpl_toolkits/axisartist/axis_artist.py::get_ref_artist",
+        "lib/matplotlib/artist.py::get_window_extent -[calls]-> lib/matplotlib/artist.py::get_tightbbox",
+        "lib/mpl_toolkits/axes_grid1/anchored_artists.py::__init__ -[contains]-> lib/mpl_toolkits/axes_grid1/anchored_artists.py::AnchoredAuxTransformBox",
+        "lib/matplotlib/contour.py::clabel -[calls]-> lib/matplotlib/contour.py::labels",
+        "lib/matplotlib/contour.py::clabel -[calls]-> lib/matplotlib/contour.py::add_label_near",
+        "lib/matplotlib/artist.py::_Unset -[contains]-> lib/matplotlib/artist.py::__repr__"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -858,7 +927,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -884,6 +953,16 @@
         "QDP -> astropy/io/ascii/qdp.py::QDP",
         "QDP -> astropy/io/ascii/qdp.py::QDPHeader",
         "QDP -> astropy/io/ascii/qdp.py::QDPSplitter"
+      ],
+      "graph_neighbor_matches": [
+        "astropy/io/ascii/qdp.py::QDP -[contains]-> astropy/io/ascii/qdp.py::_io_registry_suffix",
+        "astropy/io/ascii/qdp.py::QDP -[contains]-> astropy/io/ascii/qdp.py::_io_registry_can_write",
+        "astropy/io/fits/connect.py::read_table_fits -[calls]-> astropy/io/fits/column.py::_fortran_to_python_format",
+        "astropy/io/ascii/qdp.py::QDP -[contains]-> astropy/io/ascii/qdp.py::_description",
+        "astropy/io/ascii/qdp.py::QDPHeader -[references]-> astropy/io/ascii/basic.py::CommentedHeaderHeader",
+        "astropy/io/ascii/qdp.py::_write_table_qdp -[calls]-> astropy/io/ascii/qdp.py::_understand_err_col",
+        "astropy/io/fits/connect.py::read_table_fits -[calls]-> astropy/io/fits/connect.py::_decode_mixins",
+        "astropy/io/ascii/qdp.py::QDPHeader -[contains]-> astropy/io/ascii/qdp.py::splitter_class"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -988,7 +1067,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 26,
       "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
@@ -1012,6 +1091,16 @@
         "CDS -> astropy/io/ascii/cds.py::Cds",
         "CDS -> astropy/units/format/cds.py::CDS",
         "CDS -> astropy/io/ascii/cds.py::CdsData"
+      ],
+      "graph_neighbor_matches": [
+        "astropy/io/ascii/mrt.py::MrtData -[contains]-> astropy/io/ascii/mrt.py::splitter_class",
+        "astropy/io/ascii/cds.py::Cds -[contains]-> astropy/io/ascii/cds.py::_io_registry_format_aliases",
+        "astropy/io/ascii/cds.py::Cds -[contains]-> astropy/io/ascii/cds.py::_io_registry_can_write",
+        "astropy/io/ascii/cds.py::CdsData -[contains]-> astropy/io/ascii/cds.py::_subfmt",
+        "astropy/io/ascii/mrt.py::Mrt -[references]-> astropy/io/ascii/mrt.py::MrtHeader",
+        "astropy/io/ascii/cds.py::Cds -[contains]-> astropy/io/ascii/cds.py::_format_name",
+        "astropy/units/format/cds.py::CDS -[contains]-> astropy/units/format/cds.py::_lexer",
+        "astropy/io/ascii/cds.py::Cds -[contains]-> astropy/io/ascii/cds.py::_description"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -1114,7 +1203,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1132,6 +1221,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "src/_pytest/pytester.py::_match_lines -[calls]-> src/_pytest/pytester.py::_log",
+        "src/_pytest/pytester.py::_match_lines -[calls]-> src/_pytest/pytester.py::_fail",
+        "src/_pytest/pytester.py::_match_lines -[calls]-> src/_pytest/pytester.py::fnmatch_lines",
+        "src/_pytest/pytester.py::_match_lines -[calls]-> src/_pytest/pytester.py::re_match_lines",
+        "src/_pytest/pytester.py::RecordedHookCall -[references]-> src/_pytest/pytester.py::popcall",
+        "src/_pytest/junitxml.py::record_testsuite_property -[calls]-> src/_pytest/junitxml.py::_check_record_param_type",
+        "src/_pytest/pytester.py::RecordedHookCall -[contains]-> src/_pytest/pytester.py::__repr__",
+        "src/_pytest/pytester.py::RecordedHookCall -[contains]-> src/_pytest/pytester.py::__init__"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1229,7 +1328,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 24,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1247,6 +1346,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "src/_pytest/capture.py::FDCaptureBinary -[references]-> src/_pytest/capture.py::capfdbinary",
+        "src/_pytest/capture.py::SysCaptureBinary -[contains]-> src/_pytest/capture.py::snap",
+        "src/_pytest/capture.py::SysCaptureBinary -[contains]-> src/_pytest/capture.py::EMPTY_BUFFER",
+        "src/_pytest/capture.py::FDCaptureBinary -[contains]-> src/_pytest/capture.py::resume",
+        "src/_pytest/capture.py::FDCaptureBinary -[contains]-> src/_pytest/capture.py::EMPTY_BUFFER",
+        "src/_pytest/capture.py::FDCaptureBinary -[contains]-> src/_pytest/capture.py::__repr__",
+        "src/_pytest/capture.py::EncodedFile -[contains]-> src/_pytest/capture.py::errors",
+        "src/_pytest/capture.py::SysCaptureBinary -[references]-> src/_pytest/capture.py::capsysbinary"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1345,7 +1454,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 21,
       "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
@@ -1365,6 +1474,10 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "sphinx/domains/python.py::_parse_annotation -[calls]-> sphinx/domains/python.py::_parse_arglist",
+        "sphinx/domains/python.py::_parse_annotation -[calls]-> sphinx/domains/python.py::handle_signature"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1466,7 +1579,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1480,6 +1593,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "sphinx/ext/autodoc/__init__.py::ClassDocumenter -[references]-> sphinx/ext/autodoc/__init__.py::members_set_option",
+        "sphinx/ext/autodoc/__init__.py::ClassDocumenter -[contains]-> sphinx/ext/autodoc/__init__.py::add_content",
+        "sphinx/ext/autodoc/__init__.py::ClassDocumenter -[contains]-> sphinx/ext/autodoc/__init__.py::objtype",
+        "sphinx/ext/autodoc/__init__.py::ClassDocumenter -[contains]-> sphinx/ext/autodoc/__init__.py::format_args",
+        "sphinx/ext/autodoc/__init__.py::MethodDocumenter -[references]-> sphinx/ext/autodoc/__init__.py::SingledispatchMethodDocumenter",
+        "sphinx/ext/autodoc/__init__.py::MethodDocumenter -[contains]-> sphinx/ext/autodoc/__init__.py::format_args",
+        "sphinx/domains/python.py::handle_signature -[contains]-> sphinx/domains/python.py::PyDecoratorMethod",
+        "sphinx/ext/autodoc/__init__.py::_find_signature -[references]-> sphinx/ext/autodoc/__init__.py::py_ext_sig_re"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1579,7 +1702,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 23,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1593,6 +1716,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "requests/packages/urllib3/request.py::request_encode_body -[calls]-> requests/packages/urllib3/request.py::urlopen",
+        "requests/models.py::prepare_content_length -[calls]-> requests/models.py::prepare_body",
+        "requests/packages/urllib3/connectionpool.py::urlopen -[references]-> requests/packages/urllib3/packages/ssl_match_hostname/__init__.py::CertificateError",
+        "requests/cookies.py::get_cookie_header -[calls]-> requests/cookies.py::MockRequest",
+        "requests/packages/urllib3/connectionpool.py::urlopen -[calls]-> requests/packages/urllib3/connectionpool.py::is_same_host",
+        "requests/packages/urllib3/connectionpool.py::urlopen -[references]-> requests/packages/urllib3/connectionpool.py::scheme",
+        "requests/packages/urllib3/connectionpool.py::urlopen -[calls]-> requests/packages/urllib3/connectionpool.py::_put_conn",
+        "requests/utils.py::parse_dict_header -[calls]-> requests/auth.py::handle_401"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1690,7 +1823,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 25,
       "result": "hit_discarded",
       "miss_category": "present_but_discarded",
       "failure_reason": "expected file recovered but discarded: requests/sessions.py — beyond standard support budget (max 4)",
@@ -1709,6 +1842,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "requests/models.py::prepare_method -[calls]-> requests/models.py::prepare",
+        "requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_put_conn",
+        "requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_get_conn",
+        "requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_get_timeout",
+        "requests/packages/urllib3/fields.py::from_tuples -[calls]-> requests/packages/urllib3/filepost.py::iter_field_objects",
+        "requests/packages/charade/hebrewprober.py::feed -[calls]-> requests/packages/charade/hebrewprober.py::is_non_final",
+        "requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_make_request",
+        "requests/packages/urllib3/request.py::RequestMethods -[contains]-> requests/packages/urllib3/request.py::_encode_url_methods"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1806,7 +1949,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 26,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1820,6 +1963,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "src/flask/blueprints.py::add_url_rule -[calls]-> src/flask/scaffold.py::_endpoint_from_view_func",
+        "src/flask/blueprints.py::register -[references]-> src/flask/scaffold.py::_sentinel",
+        "src/flask/blueprints.py::register -[calls]-> src/flask/blueprints.py::make_setup_state",
+        "src/flask/blueprints.py::register -[references]-> src/flask/scaffold.py::send_static_file",
+        "src/flask/wrappers.py::blueprints -[contains]-> src/flask/wrappers.py::Request",
+        "src/flask/blueprints.py::add_url_rule -[calls]-> src/flask/blueprints.py::record",
+        "src/flask/blueprints.py::__init__ -[calls]-> src/flask/scaffold.py::__init__",
+        "src/flask/blueprints.py::register -[references]-> src/flask/scaffold.py::name"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1915,7 +2068,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1931,6 +2084,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "astropy/io/fits/diff.py::identical -[references]-> astropy/io/fits/diff.py::__bool__",
+        "astropy/io/fits/hdu/compressed.py::__init__ -[references]-> astropy/io/fits/hdu/compressed.py::CMTYPE_ALIASES",
+        "astropy/io/fits/hdu/compressed.py::__init__ -[calls]-> astropy/io/fits/hdu/table.py::__init__",
+        "astropy/io/fits/diff.py::report -[calls]-> astropy/io/fits/diff.py::_report",
+        "astropy/io/fits/hdu/compressed.py::__init__ -[contains]-> astropy/io/fits/hdu/compressed.py::CompImageHDU",
+        "astropy/io/fits/diff.py::identical -[references]-> astropy/io/fits/diff.py::_report",
+        "astropy/io/fits/diff.py::__init__ -[contains]-> astropy/io/fits/diff.py::RawDataDiff",
+        "astropy/io/fits/diff.py::report_diff_keyword_attr -[calls]-> astropy/io/fits/diff.py::_report"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2029,7 +2192,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_support",
       "miss_category": "present_but_support",
       "failure_reason": null,
@@ -2050,6 +2213,16 @@
         "FITS -> astropy/units/format/fits.py::Fits",
         "FITS -> astropy/io/fits/diff.py::FITSDiff",
         "FITS -> astropy/io/fits/fitsrec.py::FITS_rec"
+      ],
+      "graph_neighbor_matches": [
+        "astropy/io/fits/fitsrec.py::FITS_rec -[contains]-> astropy/io/fits/fitsrec.py::_coldefs",
+        "astropy/io/fits/fitsrec.py::FITS_rec -[contains]-> astropy/io/fits/fitsrec.py::_convert_other",
+        "astropy/io/fits/fitsrec.py::FITS_rec -[contains]-> astropy/io/fits/fitsrec.py::_coldefs",
+        "astropy/io/fits/fitsrec.py::FITS_rec -[references]-> astropy/io/fits/hdu/groups.py::__new__",
+        "astropy/units/format/fits.py::Fits -[contains]-> astropy/units/format/fits.py::_to_decomposed_alternative",
+        "astropy/units/format/fits.py::Fits -[contains]-> astropy/units/format/fits.py::_generate_unit_names",
+        "astropy/units/format/fits.py::Fits -[contains]-> astropy/units/format/fits.py::to_string",
+        "astropy/units/format/fits.py::Fits -[contains]-> astropy/units/format/fits.py::parse"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -2104,14 +2277,14 @@
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "astropy/io/ascii/tests/test_c_reader.py",
-            "symbol": "test_doubled_quotes_segv",
-            "discard_reason": "a test symbol, not an edit target"
+            "path": "astropy/io/fits/fitsrec.py",
+            "symbol": "_coldefs",
+            "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "astropy/io/ascii/tests/test_c_reader.py",
-            "symbol": "test_doubled_quotes",
-            "discard_reason": "a test symbol, not an edit target"
+            "path": "astropy/io/fits/fitsrec.py",
+            "symbol": "_convert_other",
+            "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
       }
@@ -2162,6 +2335,7 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [],
       "generic_lexical_decoys_suppressed": [
         "deprecation -> lib/matplotlib/_api/deprecation.py"
       ],
@@ -2273,6 +2447,10 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "lib/matplotlib/figure.py::subfigures -[contains]-> lib/matplotlib/figure.py::FigureBase",
+        "lib/matplotlib/figure.py::subfigures -[calls]-> lib/matplotlib/figure.py::add_subfigure"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [],
@@ -2340,7 +2518,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 21,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -2356,6 +2534,10 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "seaborn/_core/properties.py::_default_values -[calls]-> seaborn/_core/properties.py::_get_dash_pattern",
+        "seaborn/_core/properties.py::_default_values -[references]-> seaborn/_core/properties.py::DashPattern"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2453,7 +2635,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 9,
+      "discarded_count": 13,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -2475,6 +2657,13 @@
       ],
       "literal_anchor_matches": [
         "InvalidUrl -> requests/exceptions.py::InvalidURL"
+      ],
+      "graph_neighbor_matches": [
+        "requests/models.py::prepare_url -[calls]-> requests/models.py::_encode_params",
+        "requests/models.py::prepare_url -[calls]-> requests/models.py::_get_idna_encoded_host",
+        "requests/models.py::prepare_url -[calls]-> requests/_internal_utils.py::unicode_is_ascii",
+        "requests/exceptions.py::InvalidURL -[calls]-> requests/adapters.py::send",
+        "requests/models.py::prepare_url -[calls]-> requests/models.py::prepare"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -2573,7 +2762,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -2596,6 +2785,16 @@
         "__setitem__ -> xarray/core/variable.py::__setitem__",
         "__setitem__ -> xarray/backends/lru_cache.py::__setitem__",
         "__setitem__ -> xarray/backends/netCDF4_.py::__setitem__"
+      ],
+      "graph_neighbor_matches": [
+        "xarray/core/variable.py::__setitem__ -[calls]-> xarray/core/variable.py::_broadcast_indexes",
+        "xarray/backends/netCDF4_.py::__setitem__ -[contains]-> xarray/backends/netCDF4_.py::BaseNetCDF4Array",
+        "xarray/core/merge.py::coerce_pandas_values -[references]-> xarray/core/merge.py::PANDAS_TYPES",
+        "xarray/core/variable.py::astype -[references]-> xarray/core/variable.py::VariableType",
+        "xarray/backends/netCDF4_.py::__setitem__ -[calls]-> xarray/backends/netCDF4_.py::get_array",
+        "xarray/core/merge.py::coerce_pandas_values -[calls]-> xarray/core/merge.py::merge_coords",
+        "xarray/backends/lru_cache.py::__setitem__ -[references]-> xarray/backends/lru_cache.py::K",
+        "xarray/coding/variables.py::safe_setitem -[calls]-> xarray/coding/times.py::encode"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -2694,7 +2893,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 26,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -2710,6 +2909,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "xarray/core/merge.py::merge_core -[calls]-> xarray/core/variable.py::assert_unique_multiindex_level_names",
+        "xarray/core/merge.py::merge_core -[calls]-> xarray/core/merge.py::coerce_pandas_values",
+        "xarray/core/merge.py::merge_coordinates_without_align -[calls]-> xarray/core/computation.py::build_output_coords",
+        "xarray/core/coordinates.py::merge -[contains]-> xarray/core/coordinates.py::Coordinates",
+        "xarray/core/dataarray.py::to_unstacked_dataset -[references]-> xarray/core/dataarray.py::indexes",
+        "xarray/core/merge.py::merge_coords -[calls]-> xarray/core/coordinates.py::update",
+        "xarray/core/merge.py::merge_data_and_coords -[calls]-> xarray/core/merge.py::_extract_indexes_from_coords",
+        "xarray/core/merge.py::merge_coordinates_without_align -[calls]-> xarray/core/dataset.py::_get_indexers_coords_and_indexes"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2828,6 +3037,9 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "pylint/checkers/lambda_expressions.py::visit_namedexpr -[contains]-> pylint/checkers/lambda_expressions.py::LambdaExpressionChecker"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [],
@@ -2893,7 +3105,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 26,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -2907,6 +3119,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "src/_pytest/terminal.py::get_location -[references]-> src/_pytest/terminal.py::nodeid",
+        "src/_pytest/skipping.py::Xfail -[contains]-> src/_pytest/skipping.py::reason",
+        "src/_pytest/skipping.py::Xfail -[contains]-> src/_pytest/skipping.py::run",
+        "src/_pytest/skipping.py::Skip -[contains]-> src/_pytest/skipping.py::reason",
+        "src/_pytest/terminal.py::get_location -[contains]-> src/_pytest/terminal.py::WarningReport",
+        "src/_pytest/terminal.py::_width_of_current_line -[references]-> src/_pytest/terminal.py::pytest_runtest_logfinish",
+        "src/_pytest/terminal.py::get_location -[references]-> src/_pytest/terminal.py::fslocation",
+        "src/_pytest/skipping.py::pytest_runtest_makereport -[references]-> src/_pytest/skipping.py::xfailed_key"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -3003,7 +3225,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 26,
       "result": "missing",
       "miss_category": "wrong_subsystem",
       "failure_reason": "expected file not surfaced (candidate_count=25)",
@@ -3017,6 +3239,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "sphinx/ext/autodoc/__init__.py::DecoratorDocumenter -[references]-> sphinx/ext/autodoc/__init__.py::FunctionDocumenter",
+        "sphinx/ext/autosummary/__init__.py::get_documenter -[calls]-> sphinx/ext/autosummary/__init__.py::FakeDirective",
+        "sphinx/ext/autodoc/__init__.py::DecoratorDocumenter -[contains]-> sphinx/ext/autodoc/__init__.py::objtype",
+        "sphinx/ext/autodoc/__init__.py::document_members -[calls]-> sphinx/ext/autodoc/__init__.py::get_object_members",
+        "sphinx/ext/autodoc/__init__.py::DecoratorDocumenter -[references]-> sphinx/ext/autodoc/__init__.py::setup",
+        "sphinx/ext/autodoc/__init__.py::format_name -[calls]-> sphinx/ext/autodoc/__init__.py::add_directive_header",
+        "sphinx/ext/autosummary/__init__.py::get_documenter -[calls]-> sphinx/ext/autosummary/__init__.py::get_items",
+        "sphinx/ext/autodoc/__init__.py::document_members -[contains]-> sphinx/ext/autodoc/__init__.py::AttributeDocumenter"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -3114,7 +3346,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "missing",
       "miss_category": "wrong_subsystem",
       "failure_reason": "expected file not surfaced (candidate_count=25)",
@@ -3130,6 +3362,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "sphinx/builders/__init__.py::write_doc_serialized -[calls]-> sphinx/builders/__init__.py::_write_parallel",
+        "sphinx/builders/__init__.py::write_doc_serialized -[calls]-> sphinx/builders/__init__.py::_write_serial",
+        "sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTTemplateParamConstrainedTypeWithInit",
+        "sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTTemplateParamType",
+        "sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTTemplateParamTemplateType",
+        "sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTSizeofParamPack",
+        "sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTDeclaratorParamPack",
+        "sphinx/domains/c.py::describe_signature -[contains]-> sphinx/domains/c.py::ASTDeclaratorNameParam"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -3243,6 +3485,7 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -3341,7 +3584,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -3361,6 +3604,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "sympy/plotting/experimental_lambdify.py::vectorized_lambdify -[calls]-> sympy/plotting/plot.py::get_meshes",
+        "sympy/utilities/lambdify.py::lambdify -[calls]-> sympy/utilities/lambdify.py::_module_present",
+        "sympy/utilities/lambdify.py::lambdify -[calls]-> sympy/utilities/lambdify.py::_TensorflowEvaluatorPrinter",
+        "sympy/plotting/experimental_lambdify.py::lambdify -[contains]-> sympy/plotting/experimental_lambdify.py::__init__",
+        "sympy/utilities/lambdify.py::_print_unpacking -[calls]-> sympy/utilities/lambdify.py::doprint",
+        "sympy/printing/pycode.py::PythonCodePrinter -[calls]-> sympy/printing/pycode.py::pycode",
+        "sympy/utilities/lambdify.py::lambdify -[calls]-> sympy/plotting/textplot.py::textplot",
+        "sympy/printing/octave.py::octave_code -[calls]-> sympy/printing/octave.py::print_octave_code"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [

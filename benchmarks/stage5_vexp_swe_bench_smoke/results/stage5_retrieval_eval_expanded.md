@@ -145,6 +145,7 @@ support / discarded are compared against the fixture's `expected_files` and
 - expected: django/db/models/base.py, django/db/models/options.py
 - reason: —
 - down-weighted lexical tokens: multiple
+- graph-neighbour expansions: conf/__init__.py::_setup -[calls]-> conf/__init__.py::__getattr__; db/models/fields/related_descriptors.py::ReverseManyToOneDescriptor -[references]-> db/models/fields/related.py::ForeignObject; db/backends/sqlite3/schema.py::_is_referenced_by_fk_constraint -[contains]-> db/backends/sqlite3/schema.py::DatabaseSchemaEditor; db/backends/ddl_references.py::Columns -[references]-> db/backends/ddl_references.py::IndexColumns; db/models/fields/related_descriptors.py::ForwardManyToOneDescriptor -[contains]-> db/models/fields/related_descriptors.py::__init__; db/models/sql/compiler.py::pre_sql_setup -[calls]-> db/models/sql/compiler.py::get_group_by; conf/__init__.py::_setup -[calls]-> conf/__init__.py::Settings; db/models/sql/compiler.py::pre_sql_setup -[calls]-> db/models/sql/compiler.py::setup_query
 - top pivots:
   - core/checks/model_checks.py::_check_lazy_references — actionable function — strong lexical match; issue-domain relevance
 - top support:

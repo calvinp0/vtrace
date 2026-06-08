@@ -291,6 +291,8 @@ export interface CapsuleSummary {
   readonly literalAnchorTerms: readonly string[];
   /** Literal-anchor resolutions ("term -> path::symbol"). */
   readonly literalAnchorMatches: readonly string[];
+  /** Bounded graph-neighbour expansions ("seed -[edge]-> neighbour"). */
+  readonly graphNeighborMatches: readonly string[];
   /** Generic-infrastructure lexical decoys suppressed ("token -> path"). */
   readonly genericLexicalDecoysSuppressed: readonly string[];
 }
@@ -345,6 +347,9 @@ export function summarizeCapsule(result: CapsuleV2Result): CapsuleSummary {
     literalAnchorTerms: result.diagnostics.literal_anchor_terms ?? [],
     literalAnchorMatches: (result.diagnostics.literal_anchor_matches ?? []).map(
       (m) => `${m.term} -> ${m.path}::${m.symbol}`,
+    ),
+    graphNeighborMatches: (result.diagnostics.graph_neighbor_matches ?? []).map(
+      (m) => `${m.seed_path}::${m.seed_symbol} -[${m.edge}]-> ${m.neighbor_path}::${m.neighbor_symbol}`,
     ),
     genericLexicalDecoysSuppressed: (result.diagnostics.generic_lexical_decoys_suppressed ?? []).map(
       (d) => `${d.token} -> ${d.path}`,
@@ -719,6 +724,8 @@ export interface RetrievalEvalRow {
   readonly literal_anchor_terms: readonly string[];
   /** Literal-anchor resolutions ("term -> path::symbol") for this instance. */
   readonly literal_anchor_matches: readonly string[];
+  /** Bounded graph-neighbour expansions ("seed -[edge]-> neighbour") for this instance. */
+  readonly graph_neighbor_matches: readonly string[];
   /** Generic-infrastructure lexical decoys suppressed ("token -> path") for this instance. */
   readonly generic_lexical_decoys_suppressed: readonly string[];
 
@@ -777,6 +784,7 @@ export function evaluateInstance(
       title_symbol_matches: [],
       literal_anchor_terms: [],
       literal_anchor_matches: [],
+      graph_neighbor_matches: [],
       generic_lexical_decoys_suppressed: [],
       diagnostics: { top_pivots: [], top_support: [], top_discarded: [] },
     };
@@ -840,6 +848,7 @@ export function evaluateInstance(
     title_symbol_matches: summary.titleSymbolMatches,
     literal_anchor_terms: summary.literalAnchorTerms,
     literal_anchor_matches: summary.literalAnchorMatches,
+    graph_neighbor_matches: summary.graphNeighborMatches,
     generic_lexical_decoys_suppressed: summary.genericLexicalDecoysSuppressed,
     diagnostics: topKDiagnostics(summary),
   };
@@ -1050,6 +1059,7 @@ const CSV_COLUMNS: readonly (keyof RetrievalEvalRow)[] = [
   "title_symbol_matches",
   "literal_anchor_terms",
   "literal_anchor_matches",
+  "graph_neighbor_matches",
   "generic_lexical_decoys_suppressed",
 ];
 
@@ -1353,6 +1363,9 @@ export function renderMarkdown(
       }
       if (row.literal_anchor_matches.length > 0) {
         lines.push(`- literal-anchor matches: ${row.literal_anchor_matches.join("; ")}`);
+      }
+      if (row.graph_neighbor_matches.length > 0) {
+        lines.push(`- graph-neighbour expansions: ${row.graph_neighbor_matches.join("; ")}`);
       }
       if (row.generic_lexical_decoys_suppressed.length > 0) {
         lines.push(`- generic lexical decoys suppressed: ${row.generic_lexical_decoys_suppressed.join("; ")}`);

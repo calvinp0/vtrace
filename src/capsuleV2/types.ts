@@ -354,6 +354,18 @@ export interface CapsuleV2Diagnostics {
   /** The production symbols those literal terms resolved to. */
   literal_anchor_matches?: LiteralAnchorMatchDiagnostic[];
   /**
+   * Bounded test/import graph-neighbour expansion. The bug report may not name the
+   * production edit target, but a high-confidence candidate vtrace already found (a
+   * failing test, a config/warning helper, a parser adapter, a sibling module) may
+   * import / call / reference it. This walks ONE hop from those high-confidence
+   * seeds and seeds the production neighbours as SUPPORT-strength candidates — they
+   * can lift top-3 recall but never displace a real pivot. Present only when at
+   * least one production neighbour was added.
+   */
+  graph_neighbor_expansion_used?: boolean;
+  /** The seed→neighbour links the expansion added. */
+  graph_neighbor_matches?: GraphNeighborMatchDiagnostic[];
+  /**
    * Generic-infrastructure lexical-decoy suppression. A generic bug-report word
    * ("deprecation", "dict", "utils") over-anchors retrieval to an
    * infrastructure/helper module NAMED after that word (`deprecation.py`, a
@@ -391,6 +403,18 @@ export interface LiteralAnchorMatchDiagnostic {
   term: string;
   path: string;
   symbol: string;
+}
+
+/** One production neighbour added by bounded graph-neighbour expansion. */
+export interface GraphNeighborMatchDiagnostic {
+  /** The high-confidence seed the neighbour was reached from. */
+  seed_path: string;
+  seed_symbol: string;
+  /** The edge relation linking seed → neighbour ("imports"/"calls"/"references"/"contains"). */
+  edge: string;
+  neighbor_path: string;
+  neighbor_symbol: string;
+  reason: string;
 }
 
 /** One non-source candidate down-ranked from pivot to support. */

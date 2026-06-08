@@ -113,6 +113,7 @@ function summary(overrides: Partial<CapsuleSummary> = {}): CapsuleSummary {
     titleSymbolMatches: [],
     literalAnchorTerms: [],
     literalAnchorMatches: [],
+    graphNeighborMatches: [],
     genericLexicalDecoysSuppressed: [],
     ...overrides,
   };

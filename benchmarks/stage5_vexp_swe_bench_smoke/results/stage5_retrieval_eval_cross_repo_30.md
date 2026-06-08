@@ -142,6 +142,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 - reason: expected file recovered but discarded: requests/sessions.py — beyond standard support budget (max 4)
 - down-weighted lexical tokens: decode, error
 - de-anchored exception tokens: decode
+- graph-neighbour expansions: requests/models.py::prepare_method -[calls]-> requests/models.py::prepare; requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_put_conn; requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_get_conn; requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_get_timeout; requests/packages/urllib3/fields.py::from_tuples -[calls]-> requests/packages/urllib3/filepost.py::iter_field_objects; requests/packages/charade/hebrewprober.py::feed -[calls]-> requests/packages/charade/hebrewprober.py::is_non_final; requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_make_request; requests/packages/urllib3/request.py::RequestMethods -[contains]-> requests/packages/urllib3/request.py::_encode_url_methods
 - top pivots:
   - requests/utils.py::stream_decode_response_unicode — local implementation helper whose name matches the issue — likely edit site
   - requests/packages/urllib3/exceptions.py::DecodeError — actionable class — strong lexical match; issue-domain relevance
@@ -164,6 +165,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 - down-weighted lexical tokens: single
 - literal-anchor terms: FITS
 - literal-anchor matches: FITS -> astropy/units/format/fits.py::Fits; FITS -> astropy/io/fits/diff.py::FITSDiff; FITS -> astropy/io/fits/fitsrec.py::FITS_rec
+- graph-neighbour expansions: astropy/io/fits/fitsrec.py::FITS_rec -[contains]-> astropy/io/fits/fitsrec.py::_coldefs; astropy/io/fits/fitsrec.py::FITS_rec -[contains]-> astropy/io/fits/fitsrec.py::_convert_other; astropy/io/fits/fitsrec.py::FITS_rec -[contains]-> astropy/io/fits/fitsrec.py::_coldefs; astropy/io/fits/fitsrec.py::FITS_rec -[references]-> astropy/io/fits/hdu/groups.py::__new__; astropy/units/format/fits.py::Fits -[contains]-> astropy/units/format/fits.py::_to_decomposed_alternative; astropy/units/format/fits.py::Fits -[contains]-> astropy/units/format/fits.py::_generate_unit_names; astropy/units/format/fits.py::Fits -[contains]-> astropy/units/format/fits.py::to_string; astropy/units/format/fits.py::Fits -[contains]-> astropy/units/format/fits.py::parse
 - top pivots:
   - astropy/io/fits/diff.py::FITSDiff — actionable class — symbol-name match; strong lexical match
   - astropy/io/fits/fitsrec.py::FITS_rec — actionable class — symbol-name match; strong lexical match
@@ -176,8 +178,8 @@ All 30 instances share one label source (gold_patch); see the table above.
   - astropy/extern/configobj/configobj.py::_quote — beyond standard support budget (max 4)
   - astropy/io/fits/hdu/hdulist.py::fitsopen — beyond standard support budget (max 4)
   - astropy/io/fits/header.py::__repr__ — beyond standard support budget (max 4)
-  - astropy/io/ascii/tests/test_c_reader.py::test_doubled_quotes_segv — a test symbol, not an edit target
-  - astropy/io/ascii/tests/test_c_reader.py::test_doubled_quotes — a test symbol, not an edit target
+  - astropy/io/fits/fitsrec.py::_coldefs — beyond standard support budget (max 4)
+  - astropy/io/fits/fitsrec.py::_convert_other — beyond standard support budget (max 4)
 
 ### matplotlib__matplotlib-24970 — missing / wrong_subsystem
 
@@ -205,6 +207,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 - expected: lib/matplotlib/figure.py
 - reason: capsule returned no_context (no high-confidence edit target)
 - down-weighted lexical tokens: bug
+- graph-neighbour expansions: lib/matplotlib/figure.py::subfigures -[contains]-> lib/matplotlib/figure.py::FigureBase; lib/matplotlib/figure.py::subfigures -[calls]-> lib/matplotlib/figure.py::add_subfigure
 - top pivots: (none)
 - top support: (none)
 - top discarded:
@@ -220,6 +223,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 - reason: capsule returned no_context (no high-confidence edit target)
 - down-weighted lexical tokens: bug
 - non-source candidates down-ranked: doc/data/messages/b/bad-dunder-name/bad.py — path under doc/data; doc/data/messages/b/bad-dunder-name/bad.py — path under doc/data
+- graph-neighbour expansions: pylint/checkers/lambda_expressions.py::visit_namedexpr -[contains]-> pylint/checkers/lambda_expressions.py::LambdaExpressionChecker
 - top pivots: (none)
 - top support: (none)
 - top discarded:
@@ -233,6 +237,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 
 - expected: sphinx/ext/napoleon/__init__.py
 - reason: expected file not surfaced (candidate_count=25)
+- graph-neighbour expansions: sphinx/ext/autodoc/__init__.py::DecoratorDocumenter -[references]-> sphinx/ext/autodoc/__init__.py::FunctionDocumenter; sphinx/ext/autosummary/__init__.py::get_documenter -[calls]-> sphinx/ext/autosummary/__init__.py::FakeDirective; sphinx/ext/autodoc/__init__.py::DecoratorDocumenter -[contains]-> sphinx/ext/autodoc/__init__.py::objtype; sphinx/ext/autodoc/__init__.py::document_members -[calls]-> sphinx/ext/autodoc/__init__.py::get_object_members; sphinx/ext/autodoc/__init__.py::DecoratorDocumenter -[references]-> sphinx/ext/autodoc/__init__.py::setup; sphinx/ext/autodoc/__init__.py::format_name -[calls]-> sphinx/ext/autodoc/__init__.py::add_directive_header; sphinx/ext/autosummary/__init__.py::get_documenter -[calls]-> sphinx/ext/autosummary/__init__.py::get_items; sphinx/ext/autodoc/__init__.py::document_members -[contains]-> sphinx/ext/autodoc/__init__.py::AttributeDocumenter
 - top pivots:
   - sphinx/ext/autodoc/__init__.py::DecoratorDocumenter — actionable class — strong lexical match; issue-domain relevance
   - sphinx/ext/autodoc/__init__.py::Documenter — actionable class — strong lexical match; issue-domain relevance; 7 dependents
@@ -253,6 +258,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 - expected: sphinx/util/docfields.py
 - reason: expected file not surfaced (candidate_count=25)
 - down-weighted lexical tokens: bug
+- graph-neighbour expansions: sphinx/builders/__init__.py::write_doc_serialized -[calls]-> sphinx/builders/__init__.py::_write_parallel; sphinx/builders/__init__.py::write_doc_serialized -[calls]-> sphinx/builders/__init__.py::_write_serial; sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTTemplateParamConstrainedTypeWithInit; sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTTemplateParamType; sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTTemplateParamTemplateType; sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTSizeofParamPack; sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTDeclaratorParamPack; sphinx/domains/c.py::describe_signature -[contains]-> sphinx/domains/c.py::ASTDeclaratorNameParam
 - top pivots:
   - sphinx/util/__init__.py::FilenameUniqDict — actionable class — symbol-name match; lexical match; issue-domain relevance
   - sphinx/pycode/ast.py::visit_Dict — actionable method — symbol-name match; lexical match; issue-domain relevance

@@ -38,7 +38,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 23,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -52,6 +52,12 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "django/db/models/aggregates.py::Count -[calls]-> django/db/models/sql/query.py::get_count",
+        "django/db/models/aggregates.py::Count -[contains]-> django/db/models/aggregates.py::output_field",
+        "django/db/models/aggregates.py::Count -[contains]-> django/db/models/aggregates.py::__init__",
+        "django/db/models/aggregates.py::Count -[contains]-> django/db/models/aggregates.py::name"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -149,7 +155,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 23,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -169,6 +175,12 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "django/contrib/admin/checks.py::InlineModelAdminChecks -[contains]-> django/contrib/admin/checks.py::_check_exclude_of_parent_model",
+        "django/contrib/admin/options.py::ModelAdmin -[imports]-> django/contrib/gis/admin/__init__.py::__all__",
+        "django/contrib/admin/options.py::ModelAdmin -[references]-> django/contrib/sites/admin.py::SiteAdmin",
+        "django/contrib/admin/options.py::ModelAdmin -[references]-> django/contrib/redirects/admin.py::RedirectAdmin"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -264,7 +276,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 25,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -284,6 +296,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "django/db/models/sql/compiler.py::as_sql -[references]-> django/db/models/sql/compiler.py::FORCE",
+        "django/db/models/query.py::ValuesListIterable -[contains]-> django/db/models/query.py::__iter__",
+        "django/db/models/sql/compiler.py::as_sql -[calls]-> django/db/backends/mysql/compiler.py::as_subquery_condition",
+        "django/db/models/sql/compiler.py::execute_sql -[calls]-> django/db/models/sql/compiler.py::has_results",
+        "django/db/models/query.py::values -[calls]-> django/db/models/query.py::__or__",
+        "django/db/models/sql/compiler.py::as_sql -[calls]-> django/db/models/sql/compiler.py::as_subquery_condition",
+        "django/db/models/sql/compiler.py::as_sql -[calls]-> django/db/models/sql/compiler.py::get_from_clause",
+        "django/db/models/query.py::_combinator_query -[calls]-> django/db/models/query.py::union"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -382,7 +404,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 21,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -396,6 +418,12 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "django/db/backends/mysql/operations.py::regex_lookup -[contains]-> django/db/backends/mysql/operations.py::DatabaseOperations",
+        "django/utils/regex_helper.py::NonCapture -[references]-> django/utils/regex_helper.py::contains",
+        "django/contrib/admindocs/views.py::simplify_regex -[calls]-> django/contrib/admindocs/views.py::get_context_data",
+        "django/utils/regex_helper.py::Choice -[references]-> django/utils/regex_helper.py::flatten_result"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -491,7 +519,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 25,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -509,6 +537,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "django/db/migrations/autodetector.py::_detect_changes -[calls]-> django/db/migrations/autodetector.py::generate_altered_unique_together",
+        "django/db/migrations/autodetector.py::_detect_changes -[calls]-> django/db/migrations/autodetector.py::generate_renamed_fields",
+        "django/db/migrations/autodetector.py::_detect_changes -[calls]-> django/db/migrations/autodetector.py::generate_added_fields",
+        "django/db/migrations/autodetector.py::_detect_changes -[calls]-> django/db/migrations/autodetector.py::generate_removed_indexes",
+        "django/db/migrations/autodetector.py::_resolve_dependency -[calls]-> django/db/migrations/autodetector.py::_sort_migrations",
+        "django/db/migrations/autodetector.py::arrange_for_graph -[calls]-> django/db/migrations/autodetector.py::suggest_name",
+        "django/db/migrations/autodetector.py::_resolve_dependency -[calls]-> django/db/migrations/autodetector.py::_build_migration_list",
+        "django/db/migrations/autodetector.py::generate_created_models -[calls]-> django/db/migrations/operations/models.py::AddConstraint"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -609,7 +647,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 1,
       "support_count": 4,
-      "discarded_count": 20,
+      "discarded_count": 26,
       "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
@@ -625,6 +663,15 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "contrib/gis/db/backends/postgis/operations.py::postgis_lib_version -[contains]-> contrib/gis/db/backends/postgis/operations.py::PostGISOperations",
+        "contrib/postgres/forms/array.py::run_validators -[contains]-> contrib/postgres/forms/array.py::SimpleArrayField",
+        "contrib/gis/db/backends/postgis/adapter.py::getquoted -[contains]-> contrib/gis/db/backends/postgis/adapter.py::PostGISAdapter",
+        "contrib/gis/db/backends/postgis/operations.py::postgis_lib_version -[calls]-> contrib/gis/db/backends/postgis/operations.py::postgis_version_tuple",
+        "contrib/postgres/fields/array.py::run_validators -[contains]-> contrib/postgres/fields/array.py::ArrayField",
+        "db/backends/postgresql/client.py::DatabaseClient -[contains]-> db/backends/postgresql/client.py::executable_name",
+        "contrib/gis/db/backends/postgis/adapter.py::getquoted -[calls]-> contrib/gis/db/backends/postgis/adapter.py::__str__"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -715,7 +762,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 22,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -733,6 +780,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "http/response.py::HttpResponseBase -[contains]-> http/response.py::get",
+        "http/response.py::HttpResponse -[contains]-> http/response.py::__iter__",
+        "http/response.py::HttpResponseBase -[contains]-> http/response.py::_content_type_for_repr",
+        "http/multipartparser.py::handle_file_complete -[calls]-> http/multipartparser.py::parse",
+        "http/response.py::HttpResponseBase -[contains]-> http/response.py::readable",
+        "http/response.py::HttpResponseBase -[contains]-> http/response.py::__delitem__",
+        "http/response.py::HttpResponse -[references]-> http/response.py::HttpResponseNotFound",
+        "db/backends/oracle/creation.py::_handle_objects_preventing_db_destruction -[calls]-> db/backends/oracle/creation.py::_create_test_db"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -830,7 +887,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 26,
       "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
@@ -844,6 +901,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "utils/log.py::format -[calls]-> utils/log.py::uses_server_time",
+        "utils/dateformat.py::format -[references]-> utils/dateformat.py::re_escaped",
+        "utils/html.py::format_html -[calls]-> utils/html.py::json_script",
+        "utils/dateformat.py::format -[contains]-> utils/dateformat.py::Formatter",
+        "utils/formats.py::number_format -[calls]-> utils/formats.py::localize",
+        "utils/html.py::format_html_join -[calls]-> utils/html.py::conditional_escape",
+        "utils/dateformat.py::format -[references]-> utils/dateformat.py::re_formatchars",
+        "utils/dateformat.py::format -[calls]-> utils/dateformat.py::DateFormat"
+      ],
       "generic_lexical_decoys_suppressed": [
         "utils -> db/backends/utils.py"
       ],
@@ -943,7 +1010,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 1,
       "support_count": 4,
-      "discarded_count": 20,
+      "discarded_count": 25,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -963,6 +1030,13 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "contrib/gis/management/commands/ogrinspect.py::__call__ -[contains]-> contrib/gis/management/commands/ogrinspect.py::LayerOptionAction",
+        "core/management/__init__.py::call_command -[calls]-> core/management/__init__.py::get_commands",
+        "contrib/auth/management/commands/changepassword.py::add_arguments -[contains]-> contrib/auth/management/commands/changepassword.py::Command",
+        "core/management/__init__.py::call_command -[calls]-> core/management/__init__.py::load_command_class",
+        "contrib/gis/management/commands/ogrinspect.py::__call__ -[contains]-> contrib/gis/management/commands/ogrinspect.py::ListOptionAction"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1058,7 +1132,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 25,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1072,6 +1146,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "db/migrations/autodetector.py::deep_deconstruct -[calls]-> db/migrations/autodetector.py::generate_renamed_fields",
+        "db/migrations/autodetector.py::deep_deconstruct -[calls]-> db/migrations/autodetector.py::only_relation_agnostic_fields",
+        "db/migrations/serializer.py::EnumSerializer -[contains]-> db/migrations/serializer.py::serialize",
+        "contrib/auth/migrations/0002_alter_permission_name_max_length.py::Migration -[contains]-> contrib/auth/migrations/0002_alter_permission_name_max_length.py::operations",
+        "contrib/auth/migrations/0002_alter_permission_name_max_length.py::Migration -[contains]-> contrib/auth/migrations/0002_alter_permission_name_max_length.py::dependencies",
+        "contrib/auth/migrations/0009_alter_user_last_name_max_length.py::Migration -[contains]-> contrib/auth/migrations/0009_alter_user_last_name_max_length.py::dependencies",
+        "contrib/auth/migrations/0010_alter_group_name_max_length.py::Migration -[contains]-> contrib/auth/migrations/0010_alter_group_name_max_length.py::operations",
+        "contrib/auth/migrations/0009_alter_user_last_name_max_length.py::Migration -[contains]-> contrib/auth/migrations/0009_alter_user_last_name_max_length.py::operations"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1169,7 +1253,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 23,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1186,6 +1270,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "db/models/fields/related.py::lazy_related_operation -[calls]-> db/models/fields/related.py::contribute_to_class",
+        "db/models/fields/related_descriptors.py::ReverseManyToOneDescriptor -[contains]-> db/models/fields/related_descriptors.py::related_manager_cls",
+        "db/models/fields/related.py::get_extra_descriptor_filter -[contains]-> db/models/fields/related.py::ForeignObject",
+        "db/models/fields/related.py::ForeignKey -[contains]-> db/models/fields/related.py::get_prep_value",
+        "db/models/fields/reverse_related.py::ForeignObjectRel -[contains]-> db/models/fields/reverse_related.py::get_path_info",
+        "db/models/fields/reverse_related.py::ForeignObjectRel -[contains]-> db/models/fields/reverse_related.py::__init__",
+        "db/models/fields/related.py::ForeignKey -[contains]-> db/models/fields/related.py::rel_class",
+        "db/models/fields/related.py::ForeignKey -[contains]-> db/models/fields/related.py::get_col"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1283,7 +1377,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1304,6 +1398,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "views/generic/list.py::get_queryset -[calls]-> views/generic/list.py::get_ordering",
+        "contrib/admin/templatetags/admin_list.py::_coerce_field_name -[calls]-> contrib/admin/templatetags/admin_list.py::result_headers",
+        "db/models/query.py::resolve_model_init_order -[references]-> db/models/query.py::model_fields",
+        "db/models/sql/query.py::solve_lookup_type -[contains]-> db/models/sql/query.py::Query",
+        "views/generic/list.py::get_queryset -[references]-> views/generic/list.py::model",
+        "contrib/admin/templatetags/admin_list.py::_coerce_field_name -[calls]-> contrib/admin/templatetags/admin_list.py::items_for_result",
+        "db/models/query.py::NamedValuesListIterable -[contains]-> db/models/query.py::create_namedtuple_class",
+        "db/models/query.py::resolve_model_init_order -[contains]-> db/models/query.py::RawQuerySet"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1402,7 +1506,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
@@ -1416,6 +1520,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "forms/models.py::save -[contains]-> forms/models.py::BaseModelForm",
+        "contrib/gis/utils/layermapping.py::save -[calls]-> contrib/gis/utils/layermapping.py::check_fid_range",
+        "forms/models.py::save -[contains]-> forms/models.py::BaseModelFormSet",
+        "contrib/auth/models.py::save -[contains]-> contrib/auth/models.py::AnonymousUser",
+        "contrib/gis/utils/layermapping.py::save -[calls]-> contrib/gis/utils/layermapping.py::feature_kwargs",
+        "forms/models.py::save -[calls]-> forms/models.py::_save_m2m",
+        "forms/models.py::save_existing_objects -[calls]-> forms/models.py::delete_existing",
+        "contrib/gis/utils/layermapping.py::save -[calls]-> contrib/gis/utils/layermapping.py::unique_kwargs"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1513,7 +1627,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1531,6 +1645,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "forms/widgets.py::FileInput -[contains]-> forms/widgets.py::value_from_datadict",
+        "contrib/auth/forms.py::bound_data -[contains]-> contrib/auth/forms.py::ReadOnlyPasswordHashField",
+        "forms/widgets.py::is_initial -[contains]-> forms/widgets.py::ClearableFileInput",
+        "forms/widgets.py::is_initial -[calls]-> forms/widgets.py::format_value",
+        "forms/widgets.py::FileInput -[contains]-> forms/widgets.py::input_type",
+        "core/files/uploadhandler.py::receive_data_chunk -[contains]-> core/files/uploadhandler.py::FileUploadHandler",
+        "core/files/uploadhandler.py::receive_data_chunk -[contains]-> core/files/uploadhandler.py::MemoryFileUploadHandler",
+        "forms/widgets.py::FileInput -[contains]-> forms/widgets.py::needs_multipart_form"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1630,7 +1754,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 1,
       "support_count": 4,
-      "discarded_count": 20,
+      "discarded_count": 28,
       "result": "hit_support",
       "miss_category": "present_but_support",
       "failure_reason": null,
@@ -1646,6 +1770,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "conf/__init__.py::_setup -[calls]-> conf/__init__.py::__getattr__",
+        "db/models/fields/related_descriptors.py::ReverseManyToOneDescriptor -[references]-> db/models/fields/related.py::ForeignObject",
+        "db/backends/sqlite3/schema.py::_is_referenced_by_fk_constraint -[contains]-> db/backends/sqlite3/schema.py::DatabaseSchemaEditor",
+        "db/backends/ddl_references.py::Columns -[references]-> db/backends/ddl_references.py::IndexColumns",
+        "db/models/fields/related_descriptors.py::ForwardManyToOneDescriptor -[contains]-> db/models/fields/related_descriptors.py::__init__",
+        "db/models/sql/compiler.py::pre_sql_setup -[calls]-> db/models/sql/compiler.py::get_group_by",
+        "conf/__init__.py::_setup -[calls]-> conf/__init__.py::Settings",
+        "db/models/sql/compiler.py::pre_sql_setup -[calls]-> db/models/sql/compiler.py::setup_query"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1738,7 +1872,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1762,6 +1896,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "db/models/query.py::bulk_create -[calls]-> db/models/query.py::_batched_insert",
+        "db/models/constraints.py::UniqueConstraint -[contains]-> db/models/constraints.py::deconstruct",
+        "db/models/constraints.py::UniqueConstraint -[contains]-> db/models/constraints.py::create_sql",
+        "db/models/sql/query.py::get_loaded_field_names -[calls]-> db/models/sql/query.py::deferred_to_data",
+        "db/models/query.py::model_fields -[contains]-> db/models/query.py::RawQuerySet",
+        "db/models/sql/query.py::add_fields -[calls]-> db/models/sql/query.py::set_select",
+        "db/models/constraints.py::UniqueConstraint -[references]-> db/models/constraints.py::BaseConstraint",
+        "db/models/query.py::model_fields -[references]-> db/models/query.py::iterator"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1859,7 +2003,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1876,6 +2020,16 @@
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "db/models/lookups.py::Transform -[contains]-> db/models/lookups.py::arity",
+        "db/models/lookups.py::Transform -[contains]-> db/models/lookups.py::lhs",
+        "db/models/lookups.py::as_oracle -[contains]-> db/models/lookups.py::Lookup",
+        "db/models/lookups.py::as_sql -[contains]-> db/models/lookups.py::Exact",
+        "contrib/gis/db/models/lookups.py::RasterBandTransform -[references]-> contrib/gis/db/models/lookups.py::process_band_indices",
+        "db/models/lookups.py::apply_bilateral_transforms -[calls]-> db/models/lookups.py::batch_process_rhs",
+        "contrib/gis/db/models/lookups.py::RasterBandTransform -[references]-> contrib/gis/db/models/lookups.py::process_rhs_params",
+        "db/models/sql/query.py::add_ordering -[calls]-> db/models/sql/query.py::names_to_path"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -1976,7 +2130,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1994,6 +2148,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "db/models/expressions.py::get_group_by_cols -[calls]-> db/models/expressions.py::Ref",
+        "db/models/expressions.py::ExpressionWrapper -[contains]-> db/models/expressions.py::__repr__",
+        "contrib/postgres/aggregates/mixins.py::set_source_expressions -[calls]-> contrib/postgres/aggregates/mixins.py::_get_ordering_expressions_index",
+        "db/models/expressions.py::get_group_by_cols -[contains]-> db/models/expressions.py::Subquery",
+        "db/models/expressions.py::ExpressionWrapper -[contains]-> db/models/expressions.py::get_source_expressions",
+        "db/models/query_utils.py::resolve_expression -[contains]-> db/models/query_utils.py::Q",
+        "db/models/expressions.py::ExpressionWrapper -[contains]-> db/models/expressions.py::__init__",
+        "db/models/expressions.py::get_group_by_cols -[contains]-> db/models/expressions.py::Value"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2091,7 +2255,7 @@
       "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 26,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -2113,6 +2277,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "db/models/fields/related.py::ForeignKey -[contains]-> db/models/fields/related.py::to_python",
+        "db/models/fields/related.py::ForeignKey -[references]-> db/models/fields/reverse_related.py::ManyToOneRel",
+        "db/models/fields/related.py::ForeignKey -[contains]-> db/models/fields/related.py::get_default",
+        "db/models/fields/related.py::ForeignKey -[contains]-> db/models/fields/related.py::get_col",
+        "utils/datastructures.py::CaseInsensitiveMapping -[contains]-> utils/datastructures.py::__len__",
+        "db/backends/ddl_references.py::ForeignKeyName -[contains]-> db/backends/ddl_references.py::rename_column_references",
+        "utils/datastructures.py::CaseInsensitiveMapping -[contains]-> utils/datastructures.py::__getitem__",
+        "contrib/contenttypes/fields.py::GenericForeignKey -[contains]-> contrib/contenttypes/fields.py::__str__"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
@@ -2215,7 +2389,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 19,
+      "discarded_count": 25,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -2238,6 +2412,16 @@
       ],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
+      "graph_neighbor_matches": [
+        "http/response.py::StreamingHttpResponse -[contains]-> http/response.py::content",
+        "http/response.py::HttpResponseBase -[contains]-> http/response.py::__delitem__",
+        "http/response.py::HttpResponseBase -[contains]-> http/response.py::write",
+        "http/response.py::HttpResponseBase -[contains]-> http/response.py::reason_phrase",
+        "http/response.py::HttpResponseBase -[contains]-> http/response.py::status_code",
+        "contrib/messages/storage/cookie.py::_update_cookie -[contains]-> contrib/messages/storage/cookie.py::CookieStorage",
+        "http/response.py::StreamingHttpResponse -[contains]-> http/response.py::_set_streaming_content",
+        "http/response.py::StreamingHttpResponse -[contains]-> http/response.py::__iter__"
+      ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
