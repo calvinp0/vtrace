@@ -435,7 +435,7 @@ export function renderCsv(rows: readonly InstanceRow[]): string {
   const header = CSV_COLUMNS.join(",");
   const lines = rows.map((row) =>
     CSV_COLUMNS.map((col) => {
-      const value = (row as Record<string, unknown>)[col];
+      const value = (row as unknown as Record<string, unknown>)[col];
       if (value === null || value === undefined) return "";
       if (Array.isArray(value)) return csvEscape(value.join(" | "));
       return csvEscape(String(value));

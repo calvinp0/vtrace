@@ -10,7 +10,8 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "lint": "bun run typecheck",
+    "typecheck:benchmarks": "tsc -p tsconfig.benchmarks.json",
+    "lint": "bun run typecheck && bun run typecheck:benchmarks",
     "format:check": "prettier --ignore-unknown --check README.md docs/**/*.md package.json tsconfig.json .github/workflows/*.yml LICENSE CHANGELOG.md CONTRIBUTING.md SECURITY.md",
     "format": "prettier --ignore-unknown --write README.md docs/**/*.md package.json tsconfig.json .github/workflows/*.yml LICENSE CHANGELOG.md CONTRIBUTING.md SECURITY.md",
     "vscode:copy-bin": "node vscode-extension/scripts/copy-bin.mjs",

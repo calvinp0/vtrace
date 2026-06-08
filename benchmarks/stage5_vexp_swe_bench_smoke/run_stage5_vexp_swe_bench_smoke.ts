@@ -2432,7 +2432,9 @@ function errorClassification(message: string): CapsuleClassification {
 // actual_mode is a valid SKIP policy (the cost-aware gate's no_context analogue),
 // never an error. Pivot/support counts come from the v2 diagnostics.
 export function classifyCapsuleV2Output(result: CapsuleV2Result): CapsuleClassification {
-  const diagnostics = isRecord(result.diagnostics) ? result.diagnostics : {};
+  // Read defensively as an untyped record: the diagnostics surface is optional and
+  // partial JSON must degrade to 0/false rather than throw (the guards below narrow).
+  const diagnostics: Record<string, unknown> = isRecord(result.diagnostics) ? result.diagnostics : {};
   const pivots = toCapsuleAuditItems(result.pivots);
   const support = toCapsuleAuditItems(result.support);
   const pivotCount = isNumber(diagnostics.pivot_count) ? diagnostics.pivot_count : pivots.length;
@@ -3634,7 +3636,7 @@ async function runCondition(
       : condition === "vexp"
         ? buildVexpCommand(config, instances)
         : buildVtraceCommand(config, instances, injectContext);
-  const env = condition === "vtrace" ? (spec as { env: Record<string, string> }).env : {};
+  const env = condition === "vtrace" ? (spec as unknown as { env: Record<string, string> }).env : {};
   const startedMs = Date.now();
   const result = await (deps.runProcess ?? runProcess)(spec.command, spec.args, {
     cwd: spec.cwd ?? undefined,
@@ -4029,6 +4031,16 @@ export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5
     vtraceCapsuleTopPivotSymbol: null,
     vtraceCapsuleActualMode: null,
     vtraceCapsuleEstimatedTokens: null,
+    // Per-instance capsule-audit + policy-signal fields collapse to null at the
+    // run level (same rule as the per-instance fields above); the authoritative
+    // values live on each row. Matches `emptyEvidence()`.
+    vtraceContextPolicyDecisionSignals: null,
+    vtraceCapsuleTopPivotHasSource: null,
+    vtraceCapsulePivotSourceChars: null,
+    vtraceCapsulePivotSourceMode: null,
+    vtraceCapsuleEditRiskDirectivesCount: null,
+    vtraceCapsuleLineAnchorResolutionUsed: null,
+    vtraceCapsuleSqlRenderingBackfillUsed: null,
     notes: perRun.flatMap((e) => e.notes),
   };
 }

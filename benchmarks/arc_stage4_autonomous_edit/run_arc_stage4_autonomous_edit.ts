@@ -574,9 +574,9 @@ export async function runIngest(config: CliConfig): Promise<void> {
     }
   }
   const pairs = comparePairs(rows);
-  const rowsWithOutcomes = rows.map((row) => {
+  const rowsWithOutcomes: Stage4RunRow[] = rows.map((row) => {
     const pair = pairs.find((item) => item.taskId === row.taskId);
-    return { ...row, outcome: pair?.outcome ?? "" };
+    return { ...row, outcome: (pair?.outcome ?? "") as PairOutcome | "" };
   });
   const summary = summarize(rowsWithOutcomes, pairs);
   await writeFile(path.join(config.out, "arc_stage4_autonomous_edit.csv"), renderCsv(rowsWithOutcomes));

@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["benchmarks/**/*.ts"],
+  "exclude": [
+    "benchmarks/**/*.test.ts",
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    ".vtrace",
+    ".mytool",
+    ".vtrace-test-tmp",
+    "benchmarks/**/results/**",
+    "benchmarks/**/workspaces/**",
+    "benchmarks/**/raw/**",
+    "benchmarks/**/runs/**"
+  ]
+}
