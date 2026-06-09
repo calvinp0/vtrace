@@ -1,0 +1,211 @@
+{
+  "generatedAt": "2026-06-09T18:52:25.443Z",
+  "sourceDiscoveryReport": "stage5_edit_relevant_hidden_pivot_candidates.json",
+  "capsule": {
+    "engine": "v2",
+    "intent": "debug",
+    "budget": 8000,
+    "contextPolicy": "force-inject"
+  },
+  "summary": {
+    "checked": 6,
+    "promoted": 4,
+    "demoted": 2,
+    "ambiguous": 0
+  },
+  "checkedCandidates": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "inputTier": "tier2",
+      "suspectedHiddenGoldFiles": [
+        "astropy/units/format/cds.py"
+      ],
+      "suspectedHiddenSymbols": [
+        "CDS",
+        "VOUnit"
+      ],
+      "liveCapsuleBuilt": true,
+      "livePivotCount": 2,
+      "livePivots": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/vounit.py"
+      ],
+      "sourceAnchoredPivots": [],
+      "hiddenOrNonSourcePivots": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/vounit.py"
+      ],
+      "suspectedFilePresentAsPivot": "yes",
+      "suspectedFileHiddenInLiveCapsule": "yes",
+      "pivotsOverlapGoldPatch": "yes",
+      "promotionDecision": "promote",
+      "reason": "suspected edit-relevant gold file appears as a non-source-anchored live Capsule v2 pivot among >= 2 pivots — hidden pivot confirmed live",
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-astropy-14369-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-astropy-14369",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances astropy__astropy-14369 \\\n  --run-label eval-pivot-telemetry-vtrace-astropy-14369-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances astropy__astropy-14369 \\\n  --run-label eval-pivot-check-vtrace-astropy-14369 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ],
+      "liveBuildError": null
+    },
+    {
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "inputTier": "tier2",
+      "suspectedHiddenGoldFiles": [
+        "django/db/models/base.py"
+      ],
+      "suspectedHiddenSymbols": [
+        "_check_ordering",
+        "ChoicesMeta"
+      ],
+      "liveCapsuleBuilt": true,
+      "livePivotCount": 2,
+      "livePivots": [
+        "django/db/models/base.py",
+        "django/db/models/enums.py"
+      ],
+      "sourceAnchoredPivots": [],
+      "hiddenOrNonSourcePivots": [
+        "django/db/models/base.py",
+        "django/db/models/enums.py"
+      ],
+      "suspectedFilePresentAsPivot": "yes",
+      "suspectedFileHiddenInLiveCapsule": "yes",
+      "pivotsOverlapGoldPatch": "yes",
+      "promotionDecision": "promote",
+      "reason": "suspected edit-relevant gold file appears as a non-source-anchored live Capsule v2 pivot among >= 2 pivots — hidden pivot confirmed live",
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-django-11820-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-django-11820",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-11820 \\\n  --run-label eval-pivot-telemetry-vtrace-django-11820-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-11820 \\\n  --run-label eval-pivot-check-vtrace-django-11820 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ],
+      "liveBuildError": null
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "inputTier": "tier2",
+      "suspectedHiddenGoldFiles": [
+        "sympy/core/evalf.py"
+      ],
+      "suspectedHiddenSymbols": [
+        "add_terms"
+      ],
+      "liveCapsuleBuilt": true,
+      "livePivotCount": 2,
+      "livePivots": [
+        "sympy/core/evalf.py"
+      ],
+      "sourceAnchoredPivots": [],
+      "hiddenOrNonSourcePivots": [
+        "sympy/core/evalf.py"
+      ],
+      "suspectedFilePresentAsPivot": "yes",
+      "suspectedFileHiddenInLiveCapsule": "yes",
+      "pivotsOverlapGoldPatch": "yes",
+      "promotionDecision": "promote",
+      "reason": "suspected edit-relevant gold file appears as a non-source-anchored live Capsule v2 pivot among >= 2 pivots — hidden pivot confirmed live",
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-sympy-13372-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-sympy-13372",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-13372 \\\n  --run-label eval-pivot-telemetry-vtrace-sympy-13372-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-13372 \\\n  --run-label eval-pivot-check-vtrace-sympy-13372 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ],
+      "liveBuildError": null
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "inputTier": "tier2",
+      "suspectedHiddenGoldFiles": [
+        "sympy/printing/pycode.py"
+      ],
+      "suspectedHiddenSymbols": [
+        "PythonCodePrinter",
+        "_print"
+      ],
+      "liveCapsuleBuilt": true,
+      "livePivotCount": 2,
+      "livePivots": [
+        "sympy/printing/pycode.py",
+        "sympy/printing/printer.py"
+      ],
+      "sourceAnchoredPivots": [],
+      "hiddenOrNonSourcePivots": [
+        "sympy/printing/pycode.py",
+        "sympy/printing/printer.py"
+      ],
+      "suspectedFilePresentAsPivot": "yes",
+      "suspectedFileHiddenInLiveCapsule": "yes",
+      "pivotsOverlapGoldPatch": "yes",
+      "promotionDecision": "promote",
+      "reason": "suspected edit-relevant gold file appears as a non-source-anchored live Capsule v2 pivot among >= 2 pivots — hidden pivot confirmed live",
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-sympy-16766-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-sympy-16766",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-16766 \\\n  --run-label eval-pivot-telemetry-vtrace-sympy-16766-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-16766 \\\n  --run-label eval-pivot-check-vtrace-sympy-16766 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ],
+      "liveBuildError": null
+    },
+    {
+      "instanceId": "django__django-11740",
+      "repo": "django/django",
+      "inputTier": "tier2",
+      "suspectedHiddenGoldFiles": [
+        "django/db/migrations/autodetector.py"
+      ],
+      "suspectedHiddenSymbols": [
+        "_get_dependencies_for_foreign_key",
+        "ForeignKey"
+      ],
+      "liveCapsuleBuilt": true,
+      "livePivotCount": 2,
+      "livePivots": [
+        "django/contrib/gis/gdal/feature.py"
+      ],
+      "sourceAnchoredPivots": [],
+      "hiddenOrNonSourcePivots": [
+        "django/contrib/gis/gdal/feature.py"
+      ],
+      "suspectedFilePresentAsPivot": "no",
+      "suspectedFileHiddenInLiveCapsule": "unknown",
+      "pivotsOverlapGoldPatch": "no",
+      "promotionDecision": "demote",
+      "reason": "suspected edit-relevant file is absent from the live Capsule v2 pivots — the deterministic suspicion is not confirmed by the live build",
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null,
+      "liveBuildError": null
+    },
+    {
+      "instanceId": "django__django-12858",
+      "repo": "django/django",
+      "inputTier": "tier2",
+      "suspectedHiddenGoldFiles": [
+        "django/db/models/base.py"
+      ],
+      "suspectedHiddenSymbols": [
+        "_check_ordering",
+        "ForeignKey"
+      ],
+      "liveCapsuleBuilt": true,
+      "livePivotCount": 0,
+      "livePivots": [],
+      "sourceAnchoredPivots": [],
+      "hiddenOrNonSourcePivots": [],
+      "suspectedFilePresentAsPivot": "no",
+      "suspectedFileHiddenInLiveCapsule": "unknown",
+      "pivotsOverlapGoldPatch": "no",
+      "promotionDecision": "demote",
+      "reason": "live capsule produced no pivots — retrieval failure, not a hidden-pivot case",
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null,
+      "liveBuildError": "django__django-12858: vtrace query failed (exit 1): Repo not indexed: /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/precheck/workspaces/django__django-12858"
+    }
+  ]
+}
