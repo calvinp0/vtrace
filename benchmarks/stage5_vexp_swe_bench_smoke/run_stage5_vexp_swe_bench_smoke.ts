@@ -683,6 +683,13 @@ const VTRACE_STREAM_ANCHOR = "const durationMs = Date.now() - startMs;";
 // telemetry. Not load-bearing for treatment validity (purely observational).
 export const STAGE5_VTRACE_STREAM_LOG = "Stage5 vtrace tool-call stream written to";
 
+// Sentinel the stream block writes when it DID execute but `rawOutput` was not a
+// usable string. It lets us tell three states apart from the captured artifact:
+//   - file absent          → stream patch never executed (not installed / not run)
+//   - file has sentinel     → stream patch executed, but rawOutput was not a string
+//   - file has stream-json  → stream patch executed and captured a real stream
+export const STAGE5_VTRACE_STREAM_SENTINEL = "__STAGE5_VTRACE_STREAM_SENTINEL__";
+
 export interface VtracePatchManifest {
   readonly installed: boolean;
   readonly vexpSweBenchDir: string;
@@ -3648,15 +3655,33 @@ async function formatRunStatusSummary(
 // Parse the raw agent stream the patched adapter dumped (at the results-root
 // VTRACE_AGENT_STREAM_FILE) into an ordered `_tool_calls.json` written into this
 // run's raw dir. Returns meta fields recording whether an ordered log was
-// captured; never throws (telemetry must not fail a run).
-async function persistOrderedToolCalls(
+// captured; never throws (telemetry must not fail a run). The three observable
+// states (Requirement 5) map to distinct meta:
+//   - stream file absent  → ordered:false, error:null  (block never ran / not patched)
+//   - sentinel in stream   → ordered:false, error:"…sentinel…" (ran, rawOutput not string)
+//   - real stream-json     → ordered:true, count:N      (ran and captured a stream)
+export async function persistOrderedToolCalls(
   config: CliConfig,
   rawDir: string,
 ): Promise<Record<string, unknown>> {
   const streamPath = vtraceAgentStreamFilePath(config.out);
   const stream = await readFile(streamPath, "utf8").catch(() => null);
   if (stream === null) {
-    return { vtraceToolLogOrdered: false, vtraceToolCallLogFile: null, vtraceToolCallCount: null };
+    return {
+      vtraceToolLogOrdered: false,
+      vtraceToolCallLogFile: null,
+      vtraceToolCallCount: null,
+      vtraceToolCallError: null,
+    };
+  }
+  if (stream.includes(STAGE5_VTRACE_STREAM_SENTINEL)) {
+    return {
+      vtraceToolLogOrdered: false,
+      vtraceToolCallLogFile: null,
+      vtraceToolCallCount: null,
+      vtraceToolCallError:
+        "adapter stream sentinel: the stream patch executed but rawOutput was not a usable string (no stream-json captured).",
+    };
   }
   try {
     const calls = parseOrderedToolCalls(stream);
@@ -3667,6 +3692,7 @@ async function persistOrderedToolCalls(
       vtraceToolLogOrdered: true,
       vtraceToolCallLogFile: logPath,
       vtraceToolCallCount: calls.length,
+      vtraceToolCallError: null,
     };
   } catch (error) {
     return {
@@ -4153,14 +4179,20 @@ export function buildVtraceStreamPatchBlock(): string {
   return [
     `        // ${STAGE5_VTRACE_STREAM_MARKER} begin — local Stage 5 smoke patch (dumps the`,
     "        // raw agent stream-json for pivot-inspection tool-call telemetry; no behavior change).",
-    "        if (process.env.VTRACE_AGENT_STREAM_FILE && typeof rawOutput === \"string\") {",
+    "        // Writes UNCONDITIONALLY when the env var is set: a sentinel when rawOutput is not a",
+    "        // usable string, so an empty/absent file means the block never ran (vs. ran-but-no-stream).",
+    "        if (process.env.VTRACE_AGENT_STREAM_FILE) {",
     "            const __stage5StreamFile = process.env.VTRACE_AGENT_STREAM_FILE;",
     "            try {",
     '                const { writeFile: __stage5WriteFile, mkdir: __stage5Mkdir } = await import("node:fs/promises");',
     '                const { dirname: __stage5Dirname } = await import("node:path");',
     "                await __stage5Mkdir(__stage5Dirname(__stage5StreamFile), { recursive: true });",
-    '                await __stage5WriteFile(__stage5StreamFile, rawOutput, "utf8");',
-    `                console.error(\`${STAGE5_VTRACE_STREAM_LOG} \${__stage5StreamFile}\`);`,
+    '                const __stage5HasStream = typeof rawOutput === "string" && rawOutput.length > 0;',
+    "                const __stage5Payload = __stage5HasStream",
+    "                    ? rawOutput",
+    `                    : JSON.stringify({ sentinel: "${STAGE5_VTRACE_STREAM_SENTINEL}", rawOutputType: typeof rawOutput });`,
+    '                await __stage5WriteFile(__stage5StreamFile, __stage5Payload, "utf8");',
+    `                console.error(\`${STAGE5_VTRACE_STREAM_LOG} \${__stage5StreamFile} (\${__stage5HasStream ? "stream-json" : "sentinel:rawOutput-not-string"})\`);`,
     "            } catch (__stage5StreamErr) {",
     "                console.error(`Stage5 vtrace stream capture skipped: ${__stage5StreamErr instanceof Error ? __stage5StreamErr.message : String(__stage5StreamErr)}`);",
     "            }",
@@ -4170,8 +4202,15 @@ export function buildVtraceStreamPatchBlock(): string {
   ].join("\n");
 }
 
-export function isVtracePatched(content: string): boolean {
+// Independent per-block presence checks. A given adapter may carry the
+// instructions patch but not the (later-introduced) stream patch — these let the
+// patcher migrate one without re-installing the other.
+export function hasInstructionsPatch(content: string): boolean {
   return content.includes(STAGE5_VTRACE_PATCH_MARKER);
+}
+
+export function hasStreamPatch(content: string): boolean {
+  return content.includes(STAGE5_VTRACE_STREAM_MARKER);
 }
 
 // Insert `block` immediately after the first line containing `anchor`. Pure.
@@ -4183,17 +4222,20 @@ function insertAfterAnchor(content: string, anchor: string, block: string): stri
   return `${content.slice(0, insertAt)}${block}${content.slice(insertAt)}`;
 }
 
-// Pure transform: insert the injection block(s) after their anchor lines.
-// Idempotent per block (skips one whose marker is already present). The
-// instructions block is REQUIRED — its missing anchor throws so the caller can
-// patch manually. The stream-telemetry block is OPTIONAL — if its anchor is
+// Pure transform: insert the injection block(s) after their anchor lines, each
+// guarded by its OWN marker so the two patches migrate independently. Idempotent
+// per block:
+//   - instructions present, stream missing → installs ONLY the stream block
+//   - both present                          → no-op (changed:false), no duplication
+// The instructions block is REQUIRED — its missing anchor throws so the caller
+// can patch manually. The stream-telemetry block is OPTIONAL — if its anchor is
 // absent it is silently skipped, so an adapter without the `rawOutput`/duration
 // line still patches cleanly (just without tool-call telemetry).
 export function applyVtracePatch(content: string): { content: string; changed: boolean } {
   let next = content;
   let changed = false;
 
-  if (!next.includes(STAGE5_VTRACE_PATCH_MARKER)) {
+  if (!hasInstructionsPatch(next)) {
     if (next.indexOf(VTRACE_PATCH_ANCHOR) === -1) {
       throw new Error(
         `Could not find anchor "${VTRACE_PATCH_ANCHOR}" in the Claude Code adapter. ` +
@@ -4204,7 +4246,7 @@ export function applyVtracePatch(content: string): { content: string; changed: b
     changed = true;
   }
 
-  if (!next.includes(STAGE5_VTRACE_STREAM_MARKER) && next.indexOf(VTRACE_STREAM_ANCHOR) !== -1) {
+  if (!hasStreamPatch(next) && next.indexOf(VTRACE_STREAM_ANCHOR) !== -1) {
     next = insertAfterAnchor(next, VTRACE_STREAM_ANCHOR, buildVtraceStreamPatchBlock());
     changed = true;
   }
@@ -4247,17 +4289,32 @@ export async function installVtracePatch(config: CliConfig): Promise<VtracePatch
   const notes: string[] = [];
   const backupPath = `${target}${VTRACE_PATCH_BACKUP_SUFFIX}`;
 
+  const hadInstructions = hasInstructionsPatch(original);
+  const hadStream = hasStreamPatch(original);
   const { content: patched, changed } = applyVtracePatch(original);
   if (!changed) {
-    notes.push("Patch marker already present; left the file untouched (idempotent).");
+    notes.push("Both patch blocks already present; left the file untouched (idempotent).");
   } else {
-    // Back up the pristine file exactly once, before the first edit.
+    // Back up the pristine file exactly once, before the first edit. An existing
+    // backup (from an earlier instructions-only install) is preserved, NOT
+    // overwritten — it must not block migrating in the newer stream block.
     if (await pathExists(backupPath)) {
       notes.push("Backup already existed; preserved it and did not overwrite.");
     } else {
       await writeFile(backupPath, original);
     }
     await writeFile(target, patched);
+    if (!hadInstructions) notes.push(`Installed instructions patch (${STAGE5_VTRACE_PATCH_MARKER}).`);
+    if (!hadStream && hasStreamPatch(patched)) {
+      notes.push(
+        hadInstructions
+          ? `Migrated: added stream-telemetry patch (${STAGE5_VTRACE_STREAM_MARKER}) to an already-instructions-patched adapter.`
+          : `Installed stream-telemetry patch (${STAGE5_VTRACE_STREAM_MARKER}).`,
+      );
+    }
+    if (!hadStream && !hasStreamPatch(patched)) {
+      notes.push(`Stream-telemetry anchor ("${VTRACE_STREAM_ANCHOR}") not found; stream patch skipped.`);
+    }
   }
   if (target.includes(`${path.sep}dist${path.sep}`)) {
     notes.push("Patched the built dist/ output directly; this is a local smoke patch and is lost on rebuild.");
@@ -4292,9 +4349,15 @@ export async function verifyVtracePatch(config: CliConfig): Promise<VtracePatchV
     };
   }
   const content = await readFile(target, "utf8").catch(() => "");
-  const installed = isVtracePatched(content);
+  const installed = hasInstructionsPatch(content);
+  const streamInstalled = hasStreamPatch(content);
   const backupPresent = await pathExists(`${target}${VTRACE_PATCH_BACKUP_SUFFIX}`);
-  notes.push(installed ? `Patch marker present in ${target}.` : `Patch marker NOT found in ${target}.`);
+  notes.push(installed ? `Instructions patch present in ${target}.` : `Instructions patch NOT found in ${target}.`);
+  notes.push(
+    streamInstalled
+      ? `Stream-telemetry patch present in ${target}.`
+      : `Stream-telemetry patch NOT found in ${target} (re-run install-vtrace-patch to migrate it).`,
+  );
   return {
     installed,
     vexpSweBenchDir: config.vexpSweBenchDir,
@@ -4312,18 +4375,54 @@ async function writeVtracePatchManifest(outDir: string, manifest: VtracePatchMan
   );
 }
 
-// Guard for run-vtrace --vtrace-method local-patch: the external prompt builder
-// MUST already carry the marker, or the run would silently behave like baseline.
-// We fail here, before any agent process is spawned, so no tokens are spent.
+// Guard for run-vtrace --vtrace-method local-patch / indexed-context: the
+// external prompt builder MUST already carry the instructions marker, or the run
+// would silently behave like baseline. We fail here, before any agent process is
+// spawned, so no tokens are spent.
+//
+// As a side effect we MIGRATE the stream-telemetry patch when it is missing: it
+// was introduced after the instructions patch, so adapters installed by an older
+// harness lack it (the symptom: env var set, but no _agent_stream.jsonl / no
+// _tool_calls.json). Migration is telemetry-only and best-effort — any failure is
+// logged and swallowed so it never aborts the run (Requirement 6).
 async function assertVtracePatchInstalled(config: CliConfig): Promise<void> {
   if (config.vexpSweBenchDir === null) throw new Error("--mode run-vtrace requires --vexp-swe-bench-dir.");
   const target = await locateClaudePromptFile(config.vexpSweBenchDir);
   const content = target === null ? "" : await readFile(target, "utf8").catch(() => "");
-  if (target === null || !isVtracePatched(content)) {
+  if (target === null || !hasInstructionsPatch(content)) {
     throw new Error(
       "--vtrace-method local-patch requires the local vtrace patch to be installed first, but its marker " +
         `(${STAGE5_VTRACE_PATCH_MARKER}) was not found in the external checkout. Run --mode install-vtrace-patch ` +
         "before run-vtrace so the vtrace condition is real and no tokens are wasted on a no-op run.",
+    );
+  }
+  await migrateStreamPatchIfMissing(target, content);
+}
+
+// Best-effort, idempotent migration of the stream-telemetry block into an adapter
+// that already carries the instructions patch. Writes a backup only if none
+// exists (the pristine original from the instructions install is preserved).
+// Never throws — telemetry must not fail the Stage 5 run.
+async function migrateStreamPatchIfMissing(target: string, content: string): Promise<void> {
+  if (hasStreamPatch(content)) return;
+  try {
+    const { content: patched, changed } = applyVtracePatch(content);
+    if (!changed || !hasStreamPatch(patched)) {
+      process.stderr.write(
+        `Stage5 vtrace: stream-telemetry patch could not be migrated (anchor "${VTRACE_STREAM_ANCHOR}" not found); ` +
+          "tool-call telemetry will be unavailable for this run.\n",
+      );
+      return;
+    }
+    const backupPath = `${target}${VTRACE_PATCH_BACKUP_SUFFIX}`;
+    if (!(await pathExists(backupPath))) await writeFile(backupPath, content);
+    await writeFile(target, patched);
+    process.stderr.write(
+      `Stage5 vtrace: migrated stream-telemetry patch (${STAGE5_VTRACE_STREAM_MARKER}) into ${target}.\n`,
+    );
+  } catch (error) {
+    process.stderr.write(
+      `Stage5 vtrace: stream-telemetry patch migration skipped: ${error instanceof Error ? error.message : String(error)}\n`,
     );
   }
 }

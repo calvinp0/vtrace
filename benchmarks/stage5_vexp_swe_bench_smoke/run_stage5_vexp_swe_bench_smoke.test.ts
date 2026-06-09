@@ -48,7 +48,9 @@ import {
   findCanonicalResultsFile,
   findSweBenchRecord,
   installVtracePatch,
-  isVtracePatched,
+  hasInstructionsPatch,
+  hasStreamPatch,
+  persistOrderedToolCalls,
   loadSmokeInstances,
   loadSweBenchData,
   normalizeEvaluationEvidence,
@@ -72,9 +74,11 @@ import {
   STAGE5_VTRACE_PATCH_MARKER,
   STAGE5_VTRACE_STREAM_MARKER,
   STAGE5_VTRACE_STREAM_LOG,
+  STAGE5_VTRACE_STREAM_SENTINEL,
   toSweBenchInstance,
   truncateContext,
   verifyVtracePatch,
+  vtraceAgentStreamFilePath,
   vtraceInstructionsFilePath,
   vtraceInstructionsSnapshotFilePath,
   workspacePathFor,
@@ -491,6 +495,97 @@ test("applyVtracePatch skips the optional stream block when its anchor is absent
   assert.ok(!content.includes(STAGE5_VTRACE_STREAM_MARKER));
 });
 
+// An adapter patched by an OLDER harness: instructions block present, stream
+// block absent, the stream anchor (durationMs) still there.
+const INSTRUCTIONS_ONLY_ADAPTER = [
+  "export class ClaudeCodeAdapter {",
+  "    async run(opts) {",
+  "        const startMs = Date.now();",
+  `        // ${STAGE5_VTRACE_PATCH_MARKER} begin`,
+  "        // ...instructions injection body...",
+  `        // ${STAGE5_VTRACE_PATCH_MARKER} end`,
+  '        const rawOutput = await spawnAgent("claude", args);',
+  "        const durationMs = Date.now() - startMs;",
+  "        return { rawOutput, durationMs };",
+  "    }",
+  "}",
+  "",
+].join("\n");
+
+test("applyVtracePatch migrates the stream block into an instructions-only adapter", () => {
+  assert.ok(hasInstructionsPatch(INSTRUCTIONS_ONLY_ADAPTER));
+  assert.ok(!hasStreamPatch(INSTRUCTIONS_ONLY_ADAPTER));
+
+  const { content, changed } = applyVtracePatch(INSTRUCTIONS_ONLY_ADAPTER);
+  assert.equal(changed, true);
+  // Stream block migrated in; instructions block NOT re-added (one begin+end pair).
+  assert.ok(hasStreamPatch(content));
+  assert.equal(content.split(STAGE5_VTRACE_PATCH_MARKER).length - 1, 2);
+});
+
+test("applyVtracePatch is a no-op on a fully patched adapter (neither block duplicated)", () => {
+  const once = applyVtracePatch(FAKE_CLAUDE_ADAPTER);
+  const twice = applyVtracePatch(once.content);
+  assert.equal(twice.changed, false);
+  assert.equal(twice.content, once.content);
+  assert.equal(twice.content.split(STAGE5_VTRACE_PATCH_MARKER).length - 1, 2);
+  assert.equal(twice.content.split(STAGE5_VTRACE_STREAM_MARKER).length - 1, 2);
+});
+
+test("buildVtraceStreamPatchBlock writes a sentinel when rawOutput is not a string", () => {
+  const block = buildVtraceStreamPatchBlock();
+  // Always-write guard (no `typeof rawOutput === "string"` gate on the outer if).
+  assert.ok(block.includes("if (process.env.VTRACE_AGENT_STREAM_FILE) {"));
+  assert.ok(block.includes(STAGE5_VTRACE_STREAM_SENTINEL));
+  assert.ok(block.includes("rawOutputType"));
+});
+
+test("persistOrderedToolCalls: missing stream file gives explicit false telemetry meta", async () => {
+  const out = path.join(await tmpDir("persist-none"), "results");
+  await mkdir(out, { recursive: true });
+  const meta = await persistOrderedToolCalls(baseConfig({ out }), path.join(out, "raw", "vtrace"));
+  assert.equal(meta.vtraceToolLogOrdered, false);
+  assert.equal(meta.vtraceToolCallLogFile, null);
+  assert.equal(meta.vtraceToolCallCount, null);
+  assert.equal(meta.vtraceToolCallError, null);
+});
+
+test("persistOrderedToolCalls: valid raw stream produces _tool_calls.json", async () => {
+  const out = path.join(await tmpDir("persist-ok"), "results");
+  await mkdir(out, { recursive: true });
+  await writeFile(
+    vtraceAgentStreamFilePath(out),
+    [
+      JSON.stringify({ type: "tool_use", name: "Read", input: { file_path: "sphinx/pycode/ast.py" } }),
+      JSON.stringify({ type: "tool_use", name: "Grep", input: { pattern: "unparse" } }),
+    ].join("\n"),
+  );
+  const rawDir = path.join(out, "raw", "vtrace");
+  const meta = await persistOrderedToolCalls(baseConfig({ out }), rawDir);
+  assert.equal(meta.vtraceToolLogOrdered, true);
+  assert.equal(meta.vtraceToolCallCount, 2);
+  assert.equal(meta.vtraceToolCallError, null);
+
+  const log = JSON.parse(await readFile(path.join(rawDir, "_tool_calls.json"), "utf8"));
+  assert.equal(log.length, 2);
+  assert.equal(log[0].tool, "Read");
+  assert.equal(log[0].path, "sphinx/pycode/ast.py");
+  assert.equal(log[1].category, "search");
+});
+
+test("persistOrderedToolCalls: sentinel stream yields false meta with explanatory error", async () => {
+  const out = path.join(await tmpDir("persist-sentinel"), "results");
+  await mkdir(out, { recursive: true });
+  await writeFile(
+    vtraceAgentStreamFilePath(out),
+    JSON.stringify({ sentinel: STAGE5_VTRACE_STREAM_SENTINEL, rawOutputType: "undefined" }),
+  );
+  const meta = await persistOrderedToolCalls(baseConfig({ out }), path.join(out, "raw", "vtrace"));
+  assert.equal(meta.vtraceToolLogOrdered, false);
+  assert.equal(meta.vtraceToolCallCount, null);
+  assert.match(String(meta.vtraceToolCallError), /sentinel/i);
+});
+
 test("install-vtrace-patch patches the fixture, backs it up, and writes a manifest", async () => {
   const vexpDir = await fakeVexpDir();
   const out = path.join(await tmpDir("patch-out"), "results");
@@ -501,9 +596,10 @@ test("install-vtrace-patch patches the fixture, backs it up, and writes a manife
   assert.equal(manifest.patchMarker, STAGE5_VTRACE_PATCH_MARKER);
   assert.deepEqual(manifest.patchedFiles, [target]);
 
-  // Target file now carries the marker.
+  // Target file now carries both patch blocks.
   const patched = await readFile(target, "utf8");
-  assert.ok(isVtracePatched(patched));
+  assert.ok(hasInstructionsPatch(patched));
+  assert.ok(hasStreamPatch(patched));
 
   // Backup created and equals the pristine original.
   const backup = await readFile(`${target}.stage5-vtrace-backup`, "utf8");
@@ -529,9 +625,10 @@ test("install-vtrace-patch is idempotent and never overwrites an existing backup
   assert.ok(manifest.notes.some((note) => /already present/i.test(note)));
   const backup = await readFile(`${target}.stage5-vtrace-backup`, "utf8");
   assert.equal(backup, "SENTINEL ORIGINAL\n");
-  // Still exactly one marker pair after re-install.
+  // Neither marker pair is duplicated after re-install (begin+end => 2 occurrences each).
   const patched = await readFile(target, "utf8");
-  assert.equal(patched.split(STAGE5_VTRACE_PATCH_MARKER).length - 1, patched.split(STAGE5_VTRACE_PATCH_MARKER).length - 1);
+  assert.equal(patched.split(STAGE5_VTRACE_PATCH_MARKER).length - 1, 2);
+  assert.equal(patched.split(STAGE5_VTRACE_STREAM_MARKER).length - 1, 2);
 });
 
 test("verify-vtrace-patch detects the marker before and after install", async () => {
