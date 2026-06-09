@@ -209,7 +209,51 @@ To keep this honest:
 
 ---
 
-## 8. Recommended next steps
+## 8. Follow-up: targeted live validation on recovered cases
+
+Next-step #4 (below) has now been run as a **targeted** live-agent sanity check —
+not a benchmark. Three instances that recent retrieval/input fixes *recovered* in
+the deterministic cross-repo set were run live with **Capsule v2 force-inject**
+(`--protocol vtrace-indexed --capsule-engine v2 --capsule-intent debug
+--capsule-budget 8000 --context-policy force-inject`), then evaluated with the
+real SWE-bench Docker suite. One condition only; no baseline, no vexp, no
+auto-policy. Source:
+[`stage5_capsule_v2_recovered_live_validation.md`](../../benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_capsule_v2_recovered_live_validation.md).
+
+Headline: **2 / 3 resolved under Docker**, and in **all 3** the agent edited the
+exact file/symbol Capsule v2 surfaced as the **lead pivot** — so retrieval steered
+the agent correctly on every case, including the one that did not pass.
+
+| Instance | Stage 5R (deterministic) | Live lead pivot | Docker `resolved` | Interpretation |
+| --- | --- | --- | --- | --- |
+| requests-5414 | top-1 pivot | `requests/models.py::prepare_url` | **false** | retrieval correct; agent made too broad a patch (unconditional IDNA encoding instead of the minimal `startswith((u'*', u'.'))` guard), regressing `PASS_TO_PASS` |
+| sympy-16766 | top-1 pivot | `sympy/printing/pycode.py::PythonCodePrinter` | **true** | title-symbol anchoring translated to live success (`_print_Indexed` added to the right class) |
+| astropy-14369 | top-3, rank 2 | `astropy/units/format/cds.py::CDS` | **true** | literal/`CDS` anchoring translated to live success (gold grammar fix + cached parser-table regeneration) |
+
+> **Live vs deterministic are different query constructions.** The Stage 5R
+> column is the deterministic cross-repo-30 ranking; the live lead pivot is the
+> Capsule v2 `debug`-intent query actually injected at run time. For
+> astropy-14369 they disagree in the agent's favour: the live query promoted the
+> correct `units/format/cds.py` to the lead pivot, ahead of the wrong-subsystem
+> `io/ascii/cds.py` that topped the deterministic eval.
+
+**Non-claims (live):** this is **not** a public SWE-bench score, **not** a broad
+live benchmark (three instances, one condition), and **not** evidence that every
+retrieval win becomes a correct patch — requests-5414 is the standing example of
+correct retrieval with an incorrect edit shape. Live patch synthesis is
+stochastic; these numbers are kept separate from the deterministic Stage 5R
+measurement and from the earlier live force-inject Django result (§2/§7).
+
+**Artifacts.** The curated report
+(`stage5_capsule_v2_recovered_live_validation.md`) is tracked; the raw per-run
+artifacts (run JSONLs, `_run.meta.json` capsule audit, `_eval.meta.json` Docker
+evidence, injected-context snapshots) remain under
+`benchmarks/stage5_vexp_swe_bench_smoke/results/runs/eval-capsulev2-recovered-live-*/`
+and are **not** tracked by default.
+
+---
+
+## 9. Recommended next steps
 
 1. **Freeze retrieval heuristics for now.** Title-symbol, literal-anchor,
    decoy-suppression, non-source demotion, and graph-neighbour expansion have each landed
@@ -223,9 +267,11 @@ To keep this honest:
    errors surface only at runtime under `bun test`). Add a separate tsconfig or extend the
    include in a dedicated task — it is not a drive-by change, as it may surface latent
    issues in the benchmark code.
-4. **Run a small live-agent validation on the recovered cases.** Confirm that the
-   retrieval recoveries (sympy-16766, astropy-14369, requests-5414, django-13112) actually
-   help an agent end-to-end, separating "retrieval found it" from "the agent used it".
+4. **Run a small live-agent validation on the recovered cases.** ✅ *Done for
+   sympy-16766, astropy-14369, requests-5414 — see §8.* It confirmed the recoveries
+   reach the agent end-to-end (all three edited the lead pivot; 2/3 resolved),
+   separating "retrieval found it" from "the agent used it". django-13112 remains
+   to be validated live.
 5. **Later, revisit the actionability gate and the ranking near-misses with more data.**
    matplotlib-25960 (gate) and requests-1724 / astropy-14598 (rank 6) are the most
    tractable remaining cases, but each is Django-risky and should be tackled only once the
