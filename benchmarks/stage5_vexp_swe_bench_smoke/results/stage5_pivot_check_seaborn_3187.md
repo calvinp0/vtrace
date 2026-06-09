@@ -1,6 +1,6 @@
 # Stage 5 Pivot Check comparison
 
-_Generated: 2026-06-09T15:36:45.091Z_
+_Generated: 2026-06-09T15:36:45.070Z_
 
 _Scope: Stage 5 PIVOT_CHECK before/after comparison: per-pivot engagement (ignored / discovered-only / inspected / edited) for one or more vtrace run-label pairs on a fixed instance. Reporting only — no retrieval, scoring, injection, or run behavior changed._
 
@@ -17,20 +17,21 @@ _Scope: Stage 5 PIVOT_CHECK before/after comparison: per-pivot engagement (ignor
 - Docker evaluated: no / not in these reports
 - Conversion tally:
   - `discovered_only_to_inspected`: 1
-  - `unchanged_edited`: 3
+  - `ignored_to_inspected`: 1
+  - `unchanged_edited`: 2
   - `unchanged_ignored`: 2
 
 ## Targeted summary
 
 | instance | hidden pivot conversion | before edited files | after edited files | edited-file set changed | token Δ% | cost Δ% |
 | --- | --- | --- | --- | --- | --- | --- |
-| sphinx-doc__sphinx-7462 | discovered_only_to_inspected | sphinx/domains/python.py | sphinx/domains/python.py | no | +77.9% | +95.0% |
+| mwaskom__seaborn-3187 | discovered_only_to_inspected | seaborn/_core/scales.py, seaborn/utils.py | seaborn/_core/scales.py, seaborn/utils.py | no | +35.4% | +7.3% |
 
 ## Compared runs
 
 | instance | before label | after label | treatment valid (before→after) | pivot-check injected (before→after) | PIVOT_CHECK state (before→after) |
 | --- | --- | --- | --- | --- | --- |
-| sphinx-doc__sphinx-7462 | `eval-pivot-telemetry-vtrace-sphinx-7462-r2` | `eval-pivot-check-vtrace-sphinx-7462` | yes → yes | no → yes | not injected → injected |
+| mwaskom__seaborn-3187 | `eval-pivot-telemetry-vtrace-seaborn-3187-no-pivot-check` | `eval-pivot-check-vtrace-seaborn-3187` | yes → yes | no → yes | disabled (flag) → injected |
 
 PIVOT_CHECK state disambiguates a controlled before run from a failed injection: `disabled (flag)` = the run passed `--disable-pivot-check` (a deliberate before condition); `enabled, not injected` = PIVOT_CHECK was on but no block was emitted (e.g. a single-pivot capsule); `injected` = the block was present.
 
@@ -38,16 +39,16 @@ PIVOT_CHECK state disambiguates a controlled before run from a failed injection:
 
 Per-pivot engagement, before vs. after. `discovered` = surfaced in a search but not opened; `inspected` = the file's contents were read/opened; `edited` = the final patch touched the file. `discovered` alone never counts as inspection.
 
-### sphinx-doc__sphinx-7462
+### mwaskom__seaborn-3187
 
 | path | symbol | hidden | before disc | before insp | before edit | before status | after disc | after insp | after edit | after status | conversion |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `sphinx/domains/python.py` | `_parse_annotation` | no | no | yes | yes | edited | no | yes | yes | edited | `unchanged_edited` |
-| `sphinx/pycode/ast.py` | `unparse` | yes | yes | no | no | ignored | no | yes | no | inspected | `discovered_only_to_inspected` |
-| `sphinx/domains/python.py` | `_parse_arglist` | no | no | yes | yes | edited | no | yes | yes | edited | `unchanged_edited` |
-| `sphinx/domains/python.py` | `PythonDomain` | no | no | yes | yes | edited | no | yes | yes | edited | `unchanged_edited` |
-| `sphinx/application.py` | `Sphinx` | no | no | no | no | ignored | no | no | no | ignored | `unchanged_ignored` |
-| `sphinx/application.py` | `add_js_file` | no | no | no | no | ignored | no | no | no | ignored | `unchanged_ignored` |
+| `seaborn/_core/scales.py` | `_setup` | no | no | yes | yes | edited | no | yes | yes | edited | `unchanged_edited` |
+| `seaborn/relational.py` | `scatterplot` | yes | yes | no | no | ignored | no | yes | no | inspected | `discovered_only_to_inspected` |
+| `seaborn/utils.py` | `load_dataset` | no | no | yes | yes | edited | no | yes | yes | edited | `unchanged_edited` |
+| `seaborn/_core/plot.py` | `Plot` | no | no | no | no | ignored | no | yes | no | inspected | `ignored_to_inspected` |
+| `examples/grouped_barplot.py` | `penguins` | no | no | no | no | ignored | no | no | no | ignored | `unchanged_ignored` |
+| `examples/joint_kde.py` | `penguins` | no | no | no | no | ignored | no | no | no | ignored | `unchanged_ignored` |
 
 Hidden-pivot counts — before: ignored 1 (discovered-only 1), inspected 0, edited 0; after: ignored 0 (discovered-only 0), inspected 1, edited 0.
 
@@ -57,7 +58,7 @@ Checklist emission is the agent echoing a PIVOT_CHECK section; it is NOT the sou
 
 | instance | tool log ordered (before→after) | tool calls (before→after) | checklist emitted (before→after) |
 | --- | --- | --- | --- |
-| sphinx-doc__sphinx-7462 | yes → yes | 6 → 11 | — → no |
+| mwaskom__seaborn-3187 | yes → yes | 23 → 29 | no → no |
 
 ## Cost / token delta
 
@@ -65,17 +66,17 @@ Delta is after − before (positive = the after run spent more).
 
 | instance | before tokens | after tokens | token Δ | token Δ% | before cost | after cost | cost Δ | cost Δ% |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| sphinx-doc__sphinx-7462 | 581546 | 1034743 | +453197 | +77.9% | $0.2172 | $0.4234 | $0.2063 | +95.0% |
+| mwaskom__seaborn-3187 | 2444167 | 3308810 | +864643 | +35.4% | $1.0404 | $1.1158 | $0.0754 | +7.3% |
 
 ## Patch / resolution outcome
 
 | instance | before resolved | after resolved | resolved changed | edited files before | edited files after |
 | --- | --- | --- | --- | --- | --- |
-| sphinx-doc__sphinx-7462 | not evaluated | not evaluated | no | sphinx/domains/python.py | sphinx/domains/python.py |
+| mwaskom__seaborn-3187 | not evaluated | not evaluated | no | seaborn/_core/scales.py, seaborn/utils.py | seaborn/_core/scales.py, seaborn/utils.py |
 
 ## Interpretation
 
-On sphinx-doc__sphinx-7462, PIVOT_CHECK converted one hidden pivot from discovered-only / ignored to inspected. Docker resolution and patch correctness remain separate outcomes.
+On mwaskom__seaborn-3187, PIVOT_CHECK converted one hidden pivot from discovered-only / ignored to inspected. Docker resolution and patch correctness remain separate outcomes.
 
 ## Non-claims
 

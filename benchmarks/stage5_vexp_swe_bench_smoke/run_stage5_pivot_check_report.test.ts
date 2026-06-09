@@ -7,11 +7,13 @@ import { test } from "bun:test";
 import { classifyPivotInspection } from "../../src/capsule/finalEditDiagnostics";
 import {
   NON_CLAIMS,
-  SAFE_INTERPRETATION,
   buildConversionRows,
+  buildInterpretation,
   buildPair,
   buildReport,
   classifyConversion,
+  editedFileSetChanged,
+  hiddenConversionsFor,
   loadRun,
   parsePairArg,
   parseReportArgs,
@@ -292,6 +294,65 @@ async function scaffoldSphinxLikePair(runsDir: string): Promise<void> {
   });
 }
 
+// A second, non-sphinx pair (mirrors the real seaborn-3187 shape: two edited
+// files unchanged before→after, one hidden pivot converted discovered_only →
+// inspected, cost + tokens both up). Used to prove the interpretation is not
+// hard-coded to sphinx and to drive the multi-pair aggregate.
+async function scaffoldSeabornLikePair(runsDir: string): Promise<void> {
+  const pivots = [
+    { path: "seaborn/_core/scales.py", symbol: "get_view_interval", roleReason: SOURCE_ANCHOR_REASON },
+    { path: "seaborn/relational.py", symbol: "scatterplot", roleReason: HIDDEN_REASON },
+    { path: "seaborn/utils.py", symbol: "spacer", roleReason: SOURCE_ANCHOR_REASON },
+  ];
+  const patch =
+    "diff --git a/seaborn/_core/scales.py b/seaborn/_core/scales.py\n" +
+    "--- a/seaborn/_core/scales.py\n+++ b/seaborn/_core/scales.py\n@@ -1 +1 @@\n-x\n+y\n" +
+    "diff --git a/seaborn/utils.py b/seaborn/utils.py\n" +
+    "--- a/seaborn/utils.py\n+++ b/seaborn/utils.py\n@@ -1 +1 @@\n-a\n+b\n";
+
+  // before: hidden pivot only grep-surfaced (discovered-only); both gold files edited.
+  await scaffoldRun(runsDir, "seaborn-before", {
+    instanceId: "mwaskom__seaborn-3187",
+    resolved: null,
+    inputTokens: 100,
+    costUsd: 1.0,
+    patch,
+    pivots,
+    toolCalls: [
+      { tool: "Read", category: "read", path: "seaborn/_core/scales.py" },
+      { tool: "Read", category: "read", path: "seaborn/utils.py" },
+      { tool: "Edit", category: "edit", path: "seaborn/_core/scales.py" },
+      { tool: "Edit", category: "edit", path: "seaborn/utils.py" },
+      { tool: "Grep", category: "search", path: "seaborn/relational.py", query: "scatterplot" },
+    ],
+    pivotCheckInjected: false,
+    checklistEmitted: null,
+    pivotCheckEnabled: false,
+    pivotCheckDisabledByFlag: true,
+  });
+
+  // after: hidden pivot directly read (inspected); same two gold files edited.
+  await scaffoldRun(runsDir, "seaborn-after", {
+    instanceId: "mwaskom__seaborn-3187",
+    resolved: null,
+    inputTokens: 150,
+    costUsd: 1.1,
+    patch,
+    pivots,
+    toolCalls: [
+      { tool: "Read", category: "read", path: "seaborn/_core/scales.py" },
+      { tool: "Read", category: "read", path: "seaborn/utils.py" },
+      { tool: "Read", category: "read", path: "seaborn/relational.py" },
+      { tool: "Edit", category: "edit", path: "seaborn/_core/scales.py" },
+      { tool: "Edit", category: "edit", path: "seaborn/utils.py" },
+    ],
+    pivotCheckInjected: true,
+    checklistEmitted: false,
+    pivotCheckEnabled: true,
+    pivotCheckDisabledByFlag: false,
+  });
+}
+
 test("buildReport produces the expected hidden-pivot conversion and resolves all required pair fields", async () => {
   const tmp = await mkdtemp(path.join(os.tmpdir(), "pivot-check-report-"));
   const runsDir = path.join(tmp, "runs");
@@ -384,7 +445,9 @@ test("renderMarkdown includes every required section and all non-claims", async 
   for (const claim of NON_CLAIMS) {
     assert.ok(md.includes(claim), `markdown missing non-claim: ${claim}`);
   }
-  assert.ok(md.includes(SAFE_INTERPRETATION));
+  // The interpretation names the actual compared instance, not a hard-coded case.
+  assert.ok(md.includes(buildInterpretation(report.pairs, report.summary)));
+  assert.ok(md.includes("On sphinx-doc__sphinx-7462, PIVOT_CHECK converted"));
   // The checklist-vs-tools distinction must be stated.
   assert.ok(md.includes("Ordered tool evidence"));
 });
@@ -445,6 +508,150 @@ test("renderJson contains the expected summary fields and is valid JSON", async 
   assert.ok(Array.isArray(parsed.nonClaims));
   assert.equal(parsed.nonClaims.length, NON_CLAIMS.length);
   assert.equal(parsed.scope.length > 0, true);
+});
+
+// --------------------------------------------------------------------------
+// Wording: interpretation names the actual instance; non-claims are generic.
+// --------------------------------------------------------------------------
+
+test("single-pair interpretation names the actual instance, not a hard-coded sphinx", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pivot-check-seaborn-"));
+  const runsDir = path.join(tmp, "runs");
+  await scaffoldSeabornLikePair(runsDir);
+  const report = await buildReport(
+    [{ beforeLabel: "seaborn-before", afterLabel: "seaborn-after" }],
+    { runsDir },
+    null,
+  );
+
+  // The Interpretation refers to seaborn, never sphinx.
+  assert.ok(report.safeInterpretation.includes("On mwaskom__seaborn-3187, PIVOT_CHECK converted"));
+  assert.ok(report.safeInterpretation.includes("to inspected"));
+  assert.ok(!report.safeInterpretation.toLowerCase().includes("sphinx"));
+
+  const md = renderMarkdown(report);
+  assert.ok(md.includes("On mwaskom__seaborn-3187, PIVOT_CHECK converted"));
+  assert.ok(!md.includes("On sphinx-7462"));
+});
+
+test("non-claim wording is generic, not pinned to sphinx-7462", () => {
+  // No non-claim hard-codes a single instance id.
+  for (const claim of NON_CLAIMS) {
+    assert.ok(!claim.includes("sphinx-7462"), `non-claim should be generic: ${claim}`);
+  }
+  // The generic broad-improvement non-claim is present.
+  assert.ok(
+    NON_CLAIMS.some((c) => c.includes("targeted live runs do not prove broad benchmark improvement")),
+    "expected a generic 'targeted live runs do not prove broad benchmark improvement' non-claim",
+  );
+});
+
+test("buildInterpretation reads differently for single vs multiple pairs", () => {
+  const single = buildInterpretation(
+    [{ instanceId: "mwaskom__seaborn-3187" } as never],
+    {
+      pairCount: 1, hiddenPivotsConverted: 1, hiddenPivotsConvertedToInspected: 1,
+      hiddenPivotsConvertedToEdited: 0, hiddenPivotsRegressed: 0, editedFileSetChangedCount: 0,
+      costIncreasedCount: 1, tokenIncreasedCount: 1, dockerEvaluatedCount: 0, conversionCounts: {},
+    },
+  );
+  assert.ok(single.startsWith("On mwaskom__seaborn-3187, PIVOT_CHECK converted one hidden pivot"));
+
+  const multi = buildInterpretation(
+    [{ instanceId: "a" } as never, { instanceId: "b" } as never],
+    {
+      pairCount: 2, hiddenPivotsConverted: 2, hiddenPivotsConvertedToInspected: 2,
+      hiddenPivotsConvertedToEdited: 0, hiddenPivotsRegressed: 0, editedFileSetChangedCount: 0,
+      costIncreasedCount: 2, tokenIncreasedCount: 2, dockerEvaluatedCount: 0, conversionCounts: {},
+    },
+  );
+  assert.ok(multi.includes("Across 2 targeted pairs"));
+  assert.ok(multi.includes("2 hidden pivots from ignored / discovered-only to inspected"));
+  assert.ok(multi.includes("No hidden pivots were converted to edited"));
+  assert.ok(multi.includes("no edited-file-set changes were observed"));
+  assert.ok(multi.includes("inspection-enforcement mechanism, not yet as a patch-quality"));
+});
+
+// --------------------------------------------------------------------------
+// Aggregate: multi-pair report headline numbers + concise rollup table.
+// --------------------------------------------------------------------------
+
+test("multi-pair aggregate report carries the correct headline totals and rollup", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pivot-check-aggregate-"));
+  const runsDir = path.join(tmp, "runs");
+  await scaffoldSphinxLikePair(runsDir);
+  await scaffoldSeabornLikePair(runsDir);
+
+  const report = await buildReport(
+    [
+      { beforeLabel: "before-lbl", afterLabel: "after-lbl" },
+      { beforeLabel: "seaborn-before", afterLabel: "seaborn-after" },
+    ],
+    { runsDir },
+    null,
+  );
+
+  const s = report.summary;
+  assert.equal(s.pairCount, 2);
+  // Two hidden pivots reached inspected; none reached edited.
+  assert.equal(s.hiddenPivotsConvertedToInspected, 2);
+  assert.equal(s.hiddenPivotsConvertedToEdited, 0);
+  assert.equal(s.hiddenPivotsConverted, 2);
+  assert.equal(s.hiddenPivotsRegressed, 0);
+  // No pair changed its edited-file set; both cost and tokens went up on both.
+  assert.equal(s.editedFileSetChangedCount, 0);
+  assert.equal(s.costIncreasedCount, 2);
+  assert.equal(s.tokenIncreasedCount, 2);
+  // Neither pair was Docker-evaluated in these reports.
+  assert.equal(s.dockerEvaluatedCount, 0);
+
+  const md = renderMarkdown(report);
+  // Headline numbers are rendered explicitly.
+  assert.ok(md.includes("Compared targeted pairs: 2"));
+  assert.ok(md.includes("Hidden pivots converted to inspected: 2"));
+  assert.ok(md.includes("Hidden pivots converted to edited: 0"));
+  assert.ok(md.includes("Edited-file-set changes: 0"));
+  assert.ok(md.includes("Cost increased: 2/2"));
+  assert.ok(md.includes("Token count increased: 2/2"));
+  assert.ok(md.includes("Docker evaluated: no / not in these reports"));
+  // The concise rollup table is present with both instances.
+  assert.ok(md.includes("## Targeted summary"));
+  assert.ok(md.includes("| instance | hidden pivot conversion | before edited files |"));
+  assert.ok(md.includes("sphinx-doc__sphinx-7462"));
+  assert.ok(md.includes("mwaskom__seaborn-3187"));
+  // Honest aggregate interpretation: inspection improved, edits did not.
+  assert.ok(md.includes("Across 2 targeted pairs"));
+  assert.ok(md.includes("inspection-enforcement mechanism, not yet as a patch-quality"));
+
+  // JSON exposes the aggregate fields for automation.
+  const parsed = JSON.parse(renderJson(report));
+  for (const key of [
+    "pairCount", "hiddenPivotsConvertedToInspected", "hiddenPivotsConvertedToEdited",
+    "editedFileSetChangedCount", "costIncreasedCount", "tokenIncreasedCount", "dockerEvaluatedCount",
+  ]) {
+    assert.ok(key in parsed.summary, `aggregate summary missing field: ${key}`);
+  }
+});
+
+test("editedFileSetChanged and hiddenConversionsFor summarize a pair correctly", () => {
+  const base = {
+    editedFilesBefore: ["a.py", "b.py"],
+    editedFilesAfter: ["b.py", "a.py"], // same set, different order
+    pivots: [
+      { hidden: true, conversion: "discovered_only_to_inspected" },
+      { hidden: false, conversion: "ignored_to_inspected" },
+    ],
+  } as never as import("./run_stage5_pivot_check_report").PivotCheckPair;
+  assert.equal(editedFileSetChanged(base), false);
+  assert.equal(hiddenConversionsFor(base), "discovered_only_to_inspected");
+
+  const changed = { ...base, editedFilesAfter: ["a.py", "c.py"] } as never as
+    import("./run_stage5_pivot_check_report").PivotCheckPair;
+  assert.equal(editedFileSetChanged(changed), true);
+
+  const noHidden = { ...base, pivots: [{ hidden: false, conversion: "unchanged_edited" }] } as never as
+    import("./run_stage5_pivot_check_report").PivotCheckPair;
+  assert.equal(hiddenConversionsFor(noHidden), "—");
 });
 
 // --------------------------------------------------------------------------

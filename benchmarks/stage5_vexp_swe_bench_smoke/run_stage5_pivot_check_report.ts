@@ -184,9 +184,26 @@ export interface PivotCheckReport {
 export interface PivotCheckSummary {
   pairCount: number;
   // Hidden pivots that moved from ignored/discovered-only into inspected/edited.
+  // (= hiddenPivotsConvertedToInspected + hiddenPivotsConvertedToEdited.)
   hiddenPivotsConverted: number;
+  // Split of the above: a hidden pivot reaching `inspected` (the engagement
+  // PIVOT_CHECK enforces) vs reaching `edited` (a stronger, patch-changing
+  // outcome PIVOT_CHECK has NOT yet been shown to produce). Kept distinct so the
+  // honest "inspection improved but edits did not" story is machine-readable.
+  hiddenPivotsConvertedToInspected: number;
+  hiddenPivotsConvertedToEdited: number;
   // Hidden pivots that regressed out of inspected/edited.
   hiddenPivotsRegressed: number;
+  // Pairs whose edited-file SET differs before vs after (order-independent). 0
+  // means PIVOT_CHECK changed inspection but not which files were edited.
+  editedFileSetChangedCount: number;
+  // Pairs where the after run cost more / used more tokens than the before run.
+  costIncreasedCount: number;
+  tokenIncreasedCount: number;
+  // Pairs that carry a real Docker resolution verdict (resolved !== null on
+  // either side). 0 here means these comparisons are inspection-only, not
+  // resolution evidence.
+  dockerEvaluatedCount: number;
   // Tally of every conversion value seen, across all pairs' pivots.
   conversionCounts: Record<string, number>;
 }
@@ -202,17 +219,16 @@ export const REPORT_SCOPE =
 
 // Claims this report MUST NOT make. Rendered verbatim in the Markdown and
 // asserted by the test suite, so editing these is a deliberate, tested change.
+// Instance-specific phrasing is deliberately avoided so the same list is honest
+// for a single-pair report and for the aggregate across several targeted pairs.
 export const NON_CLAIMS: readonly string[] = [
   "PIVOT_CHECK improves Docker resolution.",
   "PIVOT_CHECK guarantees correct edits.",
+  "PIVOT_CHECK should be broadly enabled by default.",
   "Checklist emission is required for compliance.",
-  "One sphinx-7462 run proves broad benchmark improvement.",
+  "One or a small number of targeted live runs do not prove broad benchmark improvement.",
   "This is a public SWE-bench result.",
 ];
-
-export const SAFE_INTERPRETATION =
-  "On sphinx-7462, PIVOT_CHECK converted the hidden pivot from discovered-only / " +
-  "ignored to inspected. Docker resolution and patch correctness remain separate outcomes.";
 
 // `vtrace` condition subdirectory under `results/runs/<label>/raw/`. Both sides of
 // a PIVOT_CHECK pair are vtrace runs; overridable via CLI for future label sets.
@@ -343,33 +359,111 @@ export function buildConversionRows(
   });
 }
 
-// Conversion values that represent a hidden pivot gaining real engagement.
-const CONVERSIONS_IMPROVED = new Set<ConversionValue>([
+// Conversion values where a hidden pivot reached `inspected` (the engagement
+// PIVOT_CHECK directly enforces).
+const CONVERSIONS_TO_INSPECTED = new Set<ConversionValue>([
   "ignored_to_inspected",
-  "ignored_to_edited",
   "discovered_only_to_inspected",
+]);
+
+// Conversion values where a hidden pivot reached `edited` (a stronger,
+// patch-changing outcome).
+const CONVERSIONS_TO_EDITED = new Set<ConversionValue>([
+  "ignored_to_edited",
   "discovered_only_to_edited",
   "inspected_to_edited",
 ]);
 
+// True when the pair's edited-file SET differs before vs after (order-independent).
+export function editedFileSetChanged(pair: PivotCheckPair): boolean {
+  const before = new Set(pair.editedFilesBefore);
+  const after = new Set(pair.editedFilesAfter);
+  if (before.size !== after.size) return true;
+  for (const file of before) if (!after.has(file)) return true;
+  return false;
+}
+
 export function summarize(pairs: readonly PivotCheckPair[]): PivotCheckSummary {
   const conversionCounts: Record<string, number> = {};
-  let hiddenPivotsConverted = 0;
+  let hiddenPivotsConvertedToInspected = 0;
+  let hiddenPivotsConvertedToEdited = 0;
   let hiddenPivotsRegressed = 0;
+  let editedFileSetChangedCount = 0;
+  let costIncreasedCount = 0;
+  let tokenIncreasedCount = 0;
+  let dockerEvaluatedCount = 0;
   for (const pair of pairs) {
     for (const pivot of pair.pivots) {
       conversionCounts[pivot.conversion] = (conversionCounts[pivot.conversion] ?? 0) + 1;
       if (!pivot.hidden) continue;
-      if (CONVERSIONS_IMPROVED.has(pivot.conversion)) hiddenPivotsConverted += 1;
+      if (CONVERSIONS_TO_INSPECTED.has(pivot.conversion)) hiddenPivotsConvertedToInspected += 1;
+      if (CONVERSIONS_TO_EDITED.has(pivot.conversion)) hiddenPivotsConvertedToEdited += 1;
       if (pivot.conversion === "regressed_to_ignored") hiddenPivotsRegressed += 1;
     }
+    if (editedFileSetChanged(pair)) editedFileSetChangedCount += 1;
+    if (pair.costDelta > 0) costIncreasedCount += 1;
+    if (pair.tokenDelta > 0) tokenIncreasedCount += 1;
+    if (pair.beforeResolved !== null || pair.afterResolved !== null) dockerEvaluatedCount += 1;
   }
   return {
     pairCount: pairs.length,
-    hiddenPivotsConverted,
+    hiddenPivotsConverted: hiddenPivotsConvertedToInspected + hiddenPivotsConvertedToEdited,
+    hiddenPivotsConvertedToInspected,
+    hiddenPivotsConvertedToEdited,
     hiddenPivotsRegressed,
+    editedFileSetChangedCount,
+    costIncreasedCount,
+    tokenIncreasedCount,
+    dockerEvaluatedCount,
     conversionCounts,
   };
+}
+
+// Distinct hidden-pivot conversion label(s) for one pair, for the concise
+// per-instance rollup. "—" when the pair surfaced no hidden pivot.
+export function hiddenConversionsFor(pair: PivotCheckPair): string {
+  const seen: string[] = [];
+  for (const pivot of pair.pivots) {
+    if (pivot.hidden && !seen.includes(pivot.conversion)) seen.push(pivot.conversion);
+  }
+  return seen.length === 0 ? "—" : seen.join("; ");
+}
+
+// Build the Interpretation prose from the resolved report, so it always names the
+// actual instance(s) compared rather than a hard-coded case. Single-pair reads
+// like a focused note; multi-pair reads as the honest aggregate verdict.
+export function buildInterpretation(
+  pairs: readonly PivotCheckPair[],
+  summary: PivotCheckSummary,
+): string {
+  if (pairs.length === 0) return "No pairs were compared.";
+
+  if (pairs.length === 1) {
+    const pair = pairs[0]!;
+    const n = summary.hiddenPivotsConvertedToInspected;
+    const noun = n === 1 ? "one hidden pivot" : `${n} hidden pivots`;
+    return (
+      `On ${pair.instanceId}, PIVOT_CHECK converted ${noun} from discovered-only / ignored ` +
+      "to inspected. Docker resolution and patch correctness remain separate outcomes."
+    );
+  }
+
+  const editedClause =
+    summary.hiddenPivotsConvertedToEdited === 0
+      ? "No hidden pivots were converted to edited,"
+      : `${summary.hiddenPivotsConvertedToEdited} hidden pivot(s) were converted to edited,`;
+  const fileSetClause =
+    summary.editedFileSetChangedCount === 0
+      ? "and no edited-file-set changes were observed."
+      : `and ${summary.editedFileSetChangedCount} edited-file set(s) changed.`;
+  return [
+    `Across ${pairs.length} targeted pairs, PIVOT_CHECK converted ` +
+      `${summary.hiddenPivotsConvertedToInspected} hidden pivots from ignored / discovered-only to inspected.`,
+    `${editedClause} ${fileSetClause}`,
+    "Docker resolution and patch correctness remain separate outcomes.",
+    "The current evidence supports PIVOT_CHECK as an inspection-enforcement mechanism, " +
+      "not yet as a patch-quality or resolution-improvement mechanism.",
+  ].join(" ");
 }
 
 // ---------------------------------------------------------------------------
@@ -576,12 +670,13 @@ export async function buildReport(
 ): Promise<PivotCheckReport> {
   const pairs: PivotCheckPair[] = [];
   for (const spec of specs) pairs.push(await loadPair(spec, options));
+  const summary = summarize(pairs);
   return {
     generatedAt,
     scope: REPORT_SCOPE,
     pairs,
-    summary: summarize(pairs),
-    safeInterpretation: SAFE_INTERPRETATION,
+    summary,
+    safeInterpretation: buildInterpretation(pairs, summary),
     nonClaims: [...NON_CLAIMS],
   };
 }
@@ -651,15 +746,42 @@ export function renderMarkdown(report: PivotCheckReport): string {
 
   // --- Summary -------------------------------------------------------------
   const s = report.summary;
+  const dockerState =
+    s.dockerEvaluatedCount === 0
+      ? "no / not in these reports"
+      : `yes (${s.dockerEvaluatedCount}/${s.pairCount} pairs)`;
   lines.push("## Summary");
   lines.push("");
-  lines.push(`- Compared pairs: ${s.pairCount}`);
+  lines.push(`- Compared targeted pairs: ${s.pairCount}`);
+  lines.push(`- Hidden pivots converted to inspected: ${s.hiddenPivotsConvertedToInspected}`);
+  lines.push(`- Hidden pivots converted to edited: ${s.hiddenPivotsConvertedToEdited}`);
   lines.push(`- Hidden pivots converted (gained inspection/edit): ${s.hiddenPivotsConverted}`);
   lines.push(`- Hidden pivots regressed (lost inspection/edit): ${s.hiddenPivotsRegressed}`);
+  lines.push(`- Edited-file-set changes: ${s.editedFileSetChangedCount}`);
+  lines.push(`- Cost increased: ${s.costIncreasedCount}/${s.pairCount}`);
+  lines.push(`- Token count increased: ${s.tokenIncreasedCount}/${s.pairCount}`);
+  lines.push(`- Docker evaluated: ${dockerState}`);
   const convEntries = Object.entries(s.conversionCounts).sort(([a], [b]) => a.localeCompare(b));
   if (convEntries.length > 0) {
     lines.push("- Conversion tally:");
     for (const [value, count] of convEntries) lines.push(`  - \`${value}\`: ${count}`);
+  }
+  lines.push("");
+
+  // --- Targeted summary (concise per-instance rollup) ----------------------
+  lines.push("## Targeted summary");
+  lines.push("");
+  lines.push(
+    "| instance | hidden pivot conversion | before edited files | after edited files | " +
+      "edited-file set changed | token Δ% | cost Δ% |",
+  );
+  lines.push("| --- | --- | --- | --- | --- | --- | --- |");
+  for (const p of report.pairs) {
+    lines.push(
+      `| ${p.instanceId} | ${hiddenConversionsFor(p)} | ${fmtFiles(p.editedFilesBefore)} | ` +
+        `${fmtFiles(p.editedFilesAfter)} | ${boolMark(editedFileSetChanged(p))} | ` +
+        `${fmtPct(p.tokenDeltaPct)} | ${fmtPct(p.costDeltaPct)} |`,
+    );
   }
   lines.push("");
 

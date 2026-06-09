@@ -1,36 +1,36 @@
 {
-  "generatedAt": "2026-06-09T15:36:45.091Z",
+  "generatedAt": "2026-06-09T15:36:45.070Z",
   "scope": "Stage 5 PIVOT_CHECK before/after comparison: per-pivot engagement (ignored / discovered-only / inspected / edited) for one or more vtrace run-label pairs on a fixed instance. Reporting only — no retrieval, scoring, injection, or run behavior changed.",
   "pairs": [
     {
-      "beforeLabel": "eval-pivot-telemetry-vtrace-sphinx-7462-r2",
-      "afterLabel": "eval-pivot-check-vtrace-sphinx-7462",
-      "instanceId": "sphinx-doc__sphinx-7462",
+      "beforeLabel": "eval-pivot-telemetry-vtrace-seaborn-3187-no-pivot-check",
+      "afterLabel": "eval-pivot-check-vtrace-seaborn-3187",
+      "instanceId": "mwaskom__seaborn-3187",
       "treatmentValidBefore": true,
       "treatmentValidAfter": true,
-      "beforeTokens": 581546,
-      "afterTokens": 1034743,
-      "tokenDelta": 453197,
-      "tokenDeltaPct": 77.92969085850474,
-      "beforeCost": 0.21719075000000002,
-      "afterCost": 0.4234495,
-      "costDelta": 0.20625874999999996,
-      "costDeltaPct": 94.96663647047582,
+      "beforeTokens": 2444167,
+      "afterTokens": 3308810,
+      "tokenDelta": 864643,
+      "tokenDeltaPct": 35.37577424128548,
+      "beforeCost": 1.0403765,
+      "afterCost": 1.1158207500000001,
+      "costDelta": 0.0754442500000001,
+      "costDeltaPct": 7.251629578330547,
       "beforeResolved": null,
       "afterResolved": null,
       "resolvedChanged": false,
       "pivotCheckInjectedBefore": false,
       "pivotCheckInjectedAfter": true,
-      "pivotCheckEnabledBefore": null,
-      "pivotCheckEnabledAfter": null,
-      "pivotCheckDisabledByFlagBefore": null,
-      "pivotCheckDisabledByFlagAfter": null,
-      "checklistEmittedBefore": null,
+      "pivotCheckEnabledBefore": false,
+      "pivotCheckEnabledAfter": true,
+      "pivotCheckDisabledByFlagBefore": true,
+      "pivotCheckDisabledByFlagAfter": false,
+      "checklistEmittedBefore": false,
       "checklistEmittedAfter": false,
       "toolLogOrderedBefore": true,
       "toolLogOrderedAfter": true,
-      "toolCallCountBefore": 6,
-      "toolCallCountAfter": 11,
+      "toolCallCountBefore": 23,
+      "toolCallCountAfter": 29,
       "hiddenPivotCountBefore": 1,
       "hiddenPivotCountAfter": 1,
       "hiddenPivotsIgnoredBefore": 1,
@@ -42,15 +42,17 @@
       "hiddenPivotsEditedBefore": 0,
       "hiddenPivotsEditedAfter": 0,
       "editedFilesBefore": [
-        "sphinx/domains/python.py"
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
       ],
       "editedFilesAfter": [
-        "sphinx/domains/python.py"
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
       ],
       "pivots": [
         {
-          "path": "sphinx/domains/python.py",
-          "symbol": "_parse_annotation",
+          "path": "seaborn/_core/scales.py",
+          "symbol": "_setup",
           "hidden": false,
           "beforeDiscovered": false,
           "beforeInspected": true,
@@ -63,8 +65,8 @@
           "conversion": "unchanged_edited"
         },
         {
-          "path": "sphinx/pycode/ast.py",
-          "symbol": "unparse",
+          "path": "seaborn/relational.py",
+          "symbol": "scatterplot",
           "hidden": true,
           "beforeDiscovered": true,
           "beforeInspected": false,
@@ -77,8 +79,8 @@
           "conversion": "discovered_only_to_inspected"
         },
         {
-          "path": "sphinx/domains/python.py",
-          "symbol": "_parse_arglist",
+          "path": "seaborn/utils.py",
+          "symbol": "load_dataset",
           "hidden": false,
           "beforeDiscovered": false,
           "beforeInspected": true,
@@ -91,22 +93,22 @@
           "conversion": "unchanged_edited"
         },
         {
-          "path": "sphinx/domains/python.py",
-          "symbol": "PythonDomain",
+          "path": "seaborn/_core/plot.py",
+          "symbol": "Plot",
           "hidden": false,
           "beforeDiscovered": false,
-          "beforeInspected": true,
-          "beforeEdited": true,
-          "beforeStatus": "edited",
+          "beforeInspected": false,
+          "beforeEdited": false,
+          "beforeStatus": "ignored",
           "afterDiscovered": false,
           "afterInspected": true,
-          "afterEdited": true,
-          "afterStatus": "edited",
-          "conversion": "unchanged_edited"
+          "afterEdited": false,
+          "afterStatus": "inspected",
+          "conversion": "ignored_to_inspected"
         },
         {
-          "path": "sphinx/application.py",
-          "symbol": "Sphinx",
+          "path": "examples/grouped_barplot.py",
+          "symbol": "penguins",
           "hidden": false,
           "beforeDiscovered": false,
           "beforeInspected": false,
@@ -119,8 +121,8 @@
           "conversion": "unchanged_ignored"
         },
         {
-          "path": "sphinx/application.py",
-          "symbol": "add_js_file",
+          "path": "examples/joint_kde.py",
+          "symbol": "penguins",
           "hidden": false,
           "beforeDiscovered": false,
           "beforeInspected": false,
@@ -146,12 +148,13 @@
     "tokenIncreasedCount": 1,
     "dockerEvaluatedCount": 0,
     "conversionCounts": {
-      "unchanged_edited": 3,
+      "unchanged_edited": 2,
       "discovered_only_to_inspected": 1,
+      "ignored_to_inspected": 1,
       "unchanged_ignored": 2
     }
   },
-  "safeInterpretation": "On sphinx-doc__sphinx-7462, PIVOT_CHECK converted one hidden pivot from discovered-only / ignored to inspected. Docker resolution and patch correctness remain separate outcomes.",
+  "safeInterpretation": "On mwaskom__seaborn-3187, PIVOT_CHECK converted one hidden pivot from discovered-only / ignored to inspected. Docker resolution and patch correctness remain separate outcomes.",
   "nonClaims": [
     "PIVOT_CHECK improves Docker resolution.",
     "PIVOT_CHECK guarantees correct edits.",
