@@ -1,21 +1,21 @@
 # Stage 5 outcome ledger
 
-_Generated: 2026-06-09T19:15:20.305Z_
+_Generated: 2026-06-09T21:43:25.731Z_
 
 _Reporting / indexing only. No agents, no Docker, no retrieval / PIVOT_CHECK / telemetry changes. Folds existing Stage 5 run artifacts into one outcome table for future VTRACE-vs-baseline / VEXP-style measurement._
 
 ## Summary
 
-- Total runs discovered: 79
-- Valid VTRACE runs: 67
-- Runs with ordered tool logs: 4
-- Runs with resolution known: 70
+- Total runs discovered: 84
+- Valid VTRACE runs: 72
+- Runs with ordered tool logs: 9
+- Runs with resolution known: 75
 - Runs with resolution unknown: 9
-- Total cost (USD): 51.7999
-- Mean cost per run (USD): 0.6816
-- Mean tokens per run: 1618944
+- Total cost (USD): 57.0636
+- Mean cost per run (USD): 0.7045
+- Mean tokens per run: 1631374
 - PIVOT_CHECK before/after pairs discovered: 2
-- baseline-vs-vtrace pairs discovered: 5
+- baseline-vs-vtrace pairs discovered: 10
 
 ## What this ledger measures
 
@@ -68,6 +68,11 @@ This ledger INDEXES existing artifacts; it does not evaluate. For each run it re
 | eval-capsulev2-sqlcompiler-11490 | vtrace | django__django-11490 | vtrace-indexed | yes | unknown | 2294811 | 0.9444 | resolved | 2 | no | django/db/models/sql/compiler.py | complete |
 | eval-capsulev2-state-11820 | vtrace | django__django-11820 | vtrace-indexed | yes | unknown | 1196151 | 0.5035 | resolved | 2 | no | django/db/models/base.py | complete |
 | eval-capsulev2-traversal-11820 | vtrace | django__django-11820 | vtrace-indexed | yes | unknown | 986834 | 0.4503 | unresolved | 2 | no | django/db/models/base.py | complete |
+| eval-controlled-vtrace-astropy-14369 | vtrace | astropy__astropy-14369 | vtrace-indexed | yes | yes | 3365366 | 3.0284 | unresolved | 2 | yes | astropy/units/format/cds.py, astropy/units/format/cds_parsetab.py | complete |
+| eval-controlled-vtrace-matplotlib-22719 | vtrace | matplotlib__matplotlib-22719 | vtrace-indexed | yes | yes | 2718398 | 0.9627 | unresolved | 2 | yes | lib/matplotlib/category.py | complete |
+| eval-controlled-vtrace-requests-5414 | vtrace | psf__requests-5414 | vtrace-indexed | yes | yes | 956785 | 0.4065 | unresolved | 2 | yes | requests/models.py | complete |
+| eval-controlled-vtrace-sphinx-7462 | vtrace | sphinx-doc__sphinx-7462 | vtrace-indexed | yes | yes | 638586 | 0.2895 | unresolved | 2 | yes | sphinx/domains/python.py | complete |
+| eval-controlled-vtrace-sympy-16766 | vtrace | sympy__sympy-16766 | vtrace-indexed | yes | yes | 1422447 | 0.5765 | unresolved | 2 | yes | sympy/printing/pycode.py | complete |
 | eval-diagnostic-10880 | vtrace | django__django-10880 | vtrace | yes | unknown | 851780 | 0.3307 | resolved | 0 | no | django/db/models/aggregates.py | complete |
 | eval-diagnostic-11095 | vtrace | django__django-11095 | vtrace | yes | unknown | 662786 | 0.2661 | resolved | 0 | no | django/contrib/admin/options.py | complete |
 | eval-diagnostic-11490 | vtrace | django__django-11490 | vtrace-indexed | yes | unknown | 4002572 | 1.3645 | resolved | 0 | no | django/db/models/sql/compiler.py | complete |
@@ -119,26 +124,38 @@ This ledger INDEXES existing artifacts; it does not evaluate. For each run it re
 | baseline_vs_vtrace | django__django-11490 | eval-11490 [baseline] → eval-11490 [vtrace] | -1360178 | -29.2 | -0.5454 | resolved→resolved | no | — | — | runs/eval-11490 (baseline+vtrace conditions) |
 | baseline_vs_vtrace | django__django-11728 | eval-11728 [baseline] → eval-11728 [vtrace] | -522005 | -30.4 | -0.1420 | resolved→resolved | no | — | — | runs/eval-11728 (baseline+vtrace conditions) |
 | baseline_vs_vtrace | django__django-11740 | eval-11740 [baseline] → eval-11740 [vtrace] | -537533 | -22.5 | -0.2498 | resolved→resolved | no | — | — | runs/eval-11740 (baseline+vtrace conditions) |
+| baseline_vs_vtrace (cross-label) | astropy__astropy-14369 | eval-baseline-vs-vtrace-baseline-astropy-14369 → eval-controlled-vtrace-astropy-14369 | 289053 | 9.4 | 1.4734 | unresolved→unresolved | yes | — | — | cross-label controlled pair (baseline=eval-baseline-vs-vtrace-baseline-astropy-14369, vtrace=eval-controlled-vtrace-astropy-14369) |
+| baseline_vs_vtrace (cross-label) | matplotlib__matplotlib-22719 | eval-localization-gap-baseline-matplotlib-22719 → eval-controlled-vtrace-matplotlib-22719 | 1550405 | 132.7 | 0.4989 | resolved→unresolved | no | — | — | cross-label controlled pair (baseline=eval-localization-gap-baseline-matplotlib-22719, vtrace=eval-controlled-vtrace-matplotlib-22719) |
+| baseline_vs_vtrace (cross-label) | psf__requests-5414 | eval-baseline-vs-vtrace-baseline-requests-5414 → eval-controlled-vtrace-requests-5414 | 219887 | 29.8 | -0.0660 | resolved→unresolved | no | — | — | cross-label controlled pair (baseline=eval-baseline-vs-vtrace-baseline-requests-5414, vtrace=eval-controlled-vtrace-requests-5414) |
+| baseline_vs_vtrace (cross-label) | sphinx-doc__sphinx-7462 | eval-localization-gap-baseline-sphinx-7462 → eval-controlled-vtrace-sphinx-7462 | 11323 | 1.8 | 0.0244 | unresolved→unresolved | no | — | — | cross-label controlled pair (baseline=eval-localization-gap-baseline-sphinx-7462, vtrace=eval-controlled-vtrace-sphinx-7462) |
+| baseline_vs_vtrace (cross-label) | sympy__sympy-16766 | eval-baseline-vs-vtrace-baseline-sympy-16766 → eval-controlled-vtrace-sympy-16766 | 8006 | 0.6 | 0.0580 | resolved→unresolved | no | — | — | cross-label controlled pair (baseline=eval-baseline-vs-vtrace-baseline-sympy-16766, vtrace=eval-controlled-vtrace-sympy-16766) |
 | pivot_check_before_after | mwaskom__seaborn-3187 | eval-pivot-telemetry-vtrace-seaborn-3187-no-pivot-check → eval-pivot-check-vtrace-seaborn-3187 | 864643 | 35.4 | 0.0754 | unknown→unknown | no | 1 | 0 | stage5_pivot_check_targeted_summary.json |
 | pivot_check_before_after | sphinx-doc__sphinx-7462 | eval-pivot-telemetry-vtrace-sphinx-7462-r2 → eval-pivot-check-vtrace-sphinx-7462 | 453197 | 77.9 | 0.2063 | unknown→unknown | no | 1 | 0 | stage5_pivot_check_targeted_summary.json |
 
+baseline-vs-vtrace pairs: 5 same-label (baseline + vtrace under one run label) + 5 cross-label (baseline + vtrace from separate run labels, matched by instanceId). Cross-label pairs reuse an existing baseline for an `eval-controlled-vtrace-*` run; both run labels are shown above.
+
 ## Token and cost summary
 
-- Total cost across runs with known cost: 51.7999 USD.
-- Mean cost per run (known-cost runs): 0.6816 USD.
-- Mean tokens per run (known-token runs): 1618944.
+- Total cost across runs with known cost: 57.0636 USD.
+- Mean cost per run (known-cost runs): 0.7045 USD.
+- Mean tokens per run (known-token runs): 1631374.
 - Token/cost deltas live ONLY in the pair inventory; a standalone run's spend is not a saving or a loss without a comparable counterpart.
 
 ## Resolution summary
 
-- Resolution known: 70 / 79 runs.
-- Resolution unknown: 9 / 79 runs.
-- Of the 70 EVALUATED run(s), 59 resolved. This is a resolved count over evaluated runs only — NOT a pass@1 over all runs.
+- Resolution known: 75 / 84 runs.
+- Resolution unknown: 9 / 84 runs.
+- Of the 75 EVALUATED run(s), 59 resolved. This is a resolved count over evaluated runs only — NOT a pass@1 over all runs.
 
 ## Pivot inspection summary
 
 | run label | hidden pivots | inspected | edited | ignored |
 | --- | ---: | ---: | ---: | ---: |
+| eval-controlled-vtrace-astropy-14369 | 2 | 2 | 1 | 0 |
+| eval-controlled-vtrace-matplotlib-22719 | 2 | 2 | 0 | 0 |
+| eval-controlled-vtrace-requests-5414 | 1 | 1 | 0 | 0 |
+| eval-controlled-vtrace-sphinx-7462 | 1 | 1 | 0 | 0 |
+| eval-controlled-vtrace-sympy-16766 | 2 | 2 | 1 | 0 |
 | eval-pivot-check-vtrace-seaborn-3187 | 1 | 1 | 0 | 0 |
 | eval-pivot-check-vtrace-sphinx-7462 | 1 | 1 | 0 | 0 |
 | eval-pivot-telemetry-vtrace-seaborn-3187-no-pivot-check | 1 | 0 | 0 | 1 |
@@ -148,7 +165,7 @@ Inspection conversion across before/after pairs is in the pair inventory (`→in
 
 ## Data completeness
 
-- complete: 70
+- complete: 75
 - partial: 6
 - metadata_only: 2
 - missing: 1
@@ -157,7 +174,7 @@ Inspection conversion across before/after pairs is in the pair inventory (`→in
 
 ## Recommended next benchmark step
 
-- 2. Extend the 5 baseline-vs-vtrace pair(s) into a fixed 10-task controlled subset run with both conditions per instance, so token/cost/resolution deltas are comparable across a stable set.
+- 2. Extend the 10 baseline-vs-vtrace pair(s) into a fixed 10-task controlled subset run with both conditions per instance, so token/cost/resolution deltas are comparable across a stable set.
 - 3. Add a VEXP-style savings estimate ONLY where a baseline context size (or baseline token spend) is known for the same instance — never extrapolate savings from a vtrace-only run.
 
 ## Non-claims

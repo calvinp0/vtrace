@@ -30,7 +30,14 @@ import path from "node:path";
 
 export type Condition = "baseline" | "vtrace";
 export type Resolution = boolean | null; // null === unknown (never evaluated)
-export type SelectionSource = "existing_pair" | "existing_condition_data" | "candidate_report";
+export type SelectionSource =
+  | "existing_pair" // same run label carried both baseline + vtrace
+  | "cross_label_pair" // baseline + controlled vtrace under SEPARATE labels, matched by instanceId
+  | "existing_condition_data" // reusable baseline exists; the controlled vtrace run is still missing
+  | "candidate_report";
+
+// Outcome of a COMPLETED controlled pair (both conditions evaluated).
+export type PilotOutcome = "tie_resolved" | "tie_unresolved" | "vtrace_win" | "vtrace_loss" | "unknown";
 
 // One condition's reusable evidence for an instance (from the ledger).
 export interface ConditionEvidence {
@@ -76,8 +83,9 @@ export interface PlannedCommand {
 
 export interface PlanSummary {
   readonly targetSize: number;
-  readonly existingPairCount: number;
-  readonly additionalTaskCount: number;
+  readonly existingPairCount: number; // same-label baseline-vs-vtrace pairs (preserved)
+  readonly crossLabelPairCount: number; // completed cross-label controlled pairs (recognized)
+  readonly additionalTaskCount: number; // recognized cross-label + freshly-selected tasks
   readonly totalSelected: number;
   readonly reposRepresented: readonly string[];
   readonly missingRunCount: number;
@@ -92,6 +100,55 @@ export interface PlanSummary {
   readonly shortfall: boolean;
 }
 
+// One row of the completed controlled-pilot table (a pair where BOTH conditions ran).
+export interface ControlledPilotRow {
+  readonly instanceId: string;
+  readonly repo: string;
+  readonly pairScope: "same_label" | "cross_label";
+  readonly baselineRunLabel: string | null;
+  readonly vtraceRunLabel: string | null;
+  readonly baselineResolved: Resolution;
+  readonly vtraceResolved: Resolution;
+  readonly baselineTokens: number | null;
+  readonly vtraceTokens: number | null;
+  readonly tokenDelta: number | null; // VTRACE − baseline
+  readonly tokenDeltaPct: number | null;
+  readonly baselineCost: number | null;
+  readonly vtraceCost: number | null;
+  readonly costDelta: number | null; // VTRACE − baseline
+  readonly costDeltaPct: number | null;
+  readonly outcome: PilotOutcome;
+}
+
+// Pilot-level roll-up over the completed controlled pairs. This is an opportunistic
+// 10-task controlled pilot — NOT a pass@1 / SWE-bench claim and NOT a VEXP comparison.
+export interface ControlledPilotSummary {
+  readonly pairedTasks: number;
+  readonly sameLabelPairs: number;
+  readonly crossLabelPairs: number;
+  readonly baselineResolvedCount: number;
+  readonly vtraceResolvedCount: number;
+  readonly tiesResolved: number;
+  readonly tiesUnresolved: number;
+  readonly vtraceWins: number;
+  readonly vtraceLosses: number;
+  readonly unknownOutcomes: number;
+  readonly meanBaselineCost: number | null;
+  readonly meanVtraceCost: number | null;
+  readonly meanCostDelta: number | null;
+  readonly meanBaselineTokens: number | null;
+  readonly meanVtraceTokens: number | null;
+  readonly meanTokenDelta: number | null;
+}
+
+// The completed controlled pilot, present ONLY when every selected task is controlled
+// (no missing runs). When work remains, this is null and the report keeps the
+// "expected metrics after completion" language instead of computing a partial pilot.
+export interface ControlledPilot {
+  readonly rows: readonly ControlledPilotRow[];
+  readonly summary: ControlledPilotSummary;
+}
+
 export interface ControlledSubsetPlan {
   readonly generatedAt: string | null;
   readonly targetSize: number;
@@ -101,6 +158,7 @@ export interface ControlledSubsetPlan {
   readonly selectedTasks: readonly SelectedTask[];
   readonly missingRuns: readonly MissingRun[];
   readonly commands: readonly PlannedCommand[];
+  readonly controlledPilot: ControlledPilot | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -154,6 +212,29 @@ function asNumber(v: unknown): number | null {
 
 function asBool(v: unknown): boolean | null {
   return typeof v === "boolean" ? v : null;
+}
+
+// VTRACE − baseline (after − before), mirroring the ledger/pivot-report convention.
+export function delta(baseline: number, vtrace: number): number {
+  return vtrace - baseline;
+}
+
+export function deltaPct(baseline: number, vtrace: number): number {
+  if (!Number.isFinite(baseline) || baseline === 0) return 0;
+  return ((vtrace - baseline) / baseline) * 100;
+}
+
+function mean(values: readonly number[]): number | null {
+  return values.length === 0 ? null : values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+// Per-pair outcome from the two EVALUATED resolutions. Unknown when either side was
+// never evaluated — never guessed.
+export function classifyOutcome(baselineResolved: Resolution, vtraceResolved: Resolution): PilotOutcome {
+  if (baselineResolved === null || vtraceResolved === null) return "unknown";
+  if (baselineResolved && vtraceResolved) return "tie_resolved";
+  if (!baselineResolved && !vtraceResolved) return "tie_unresolved";
+  return vtraceResolved ? "vtrace_win" : "vtrace_loss";
 }
 
 // ---------------------------------------------------------------------------
@@ -220,6 +301,7 @@ export interface LedgerRunLite {
 export interface LedgerPairLite {
   readonly instanceId: string | null;
   readonly pairType: string;
+  readonly labelScope: string | null; // "same_label" | "cross_label" | null
   readonly beforeRunLabel: string;
   readonly afterRunLabel: string;
   readonly beforeResolved: Resolution;
@@ -260,6 +342,7 @@ export function parseLedger(raw: unknown): ParsedLedger {
       pairs.push({
         instanceId: asString(p.instanceId),
         pairType: asString(p.pairType) ?? "unknown",
+        labelScope: asString(p.labelScope),
         beforeRunLabel: asString(p.beforeRunLabel) ?? "unknown",
         afterRunLabel: asString(p.afterRunLabel) ?? "unknown",
         beforeResolved: asBool(p.beforeResolved),
@@ -315,11 +398,13 @@ export function buildConditionIndex(runs: readonly LedgerRunLite[]): ConditionIn
 // Selection (pure, deterministic)
 // ---------------------------------------------------------------------------
 
-// The 5 existing controlled pairs come straight from the ledger's same-label
-// baseline-vs-vtrace pairs. They are PRESERVED first (principle 1).
+// The existing controlled pairs come straight from the ledger's SAME-label
+// baseline-vs-vtrace pairs (baseline + vtrace produced under ONE run label). They are
+// PRESERVED first (principle 1). Cross-label pairs are handled separately so the report
+// can keep the provenance distinction explicit.
 export function buildExistingPairTasks(pairs: readonly LedgerPairLite[]): SelectedTask[] {
   return pairs
-    .filter((p) => p.pairType === "baseline_vs_vtrace" && p.instanceId !== null)
+    .filter((p) => p.pairType === "baseline_vs_vtrace" && p.labelScope !== "cross_label" && p.instanceId !== null)
     .map((p) => {
       const instanceId = p.instanceId!;
       return {
@@ -338,6 +423,38 @@ export function buildExistingPairTasks(pairs: readonly LedgerPairLite[]): Select
         vtraceTokens: p.afterTokens,
         reasonSelected: "already a controlled same-run-label baseline-vs-vtrace pair (preserved as-is)",
         risk: "none — both conditions already ran together under one label",
+      };
+    });
+}
+
+// Cross-label controlled pairs: the ledger already paired a reusable baseline with a
+// completed `eval-controlled-vtrace-*` run for the same instanceId (under SEPARATE run
+// labels). These are RECOGNIZED as complete — they need no new runs — but are tracked
+// distinctly from same-label pairs so the report preserves BOTH run labels and the
+// provenance distinction the controlled pilot requires.
+export function buildCrossLabelPairTasks(pairs: readonly LedgerPairLite[]): SelectedTask[] {
+  return pairs
+    .filter((p) => p.pairType === "baseline_vs_vtrace" && p.labelScope === "cross_label" && p.instanceId !== null)
+    .map((p) => {
+      const instanceId = p.instanceId!;
+      return {
+        instanceId,
+        repo: repoOf(instanceId),
+        selectionSource: "cross_label_pair" as SelectionSource,
+        hasBaselineRun: true,
+        hasVtraceRun: true,
+        // Cross-label: the real, distinct run labels are preserved verbatim.
+        baselineRunLabel: p.beforeRunLabel,
+        vtraceRunLabel: p.afterRunLabel,
+        baselineResolved: p.beforeResolved,
+        vtraceResolved: p.afterResolved,
+        baselineCost: p.beforeCost,
+        vtraceCost: p.afterCost,
+        baselineTokens: p.beforeTokens,
+        vtraceTokens: p.afterTokens,
+        reasonSelected:
+          "completed controlled pair across separate run labels (reused baseline ↔ controlled VTRACE run), matched by instanceId",
+        risk: "cross-label: baseline and VTRACE carry different run labels (both shown); the controlled VTRACE ran under the current normal protocol",
       };
     });
 }
@@ -443,7 +560,9 @@ function describeOutcome(baseline: Resolution, vtrace: Resolution): string | nul
 // Additional tasks re-run VTRACE under the controlled protocol (config heterogeneity)
 // and run baseline only when no reusable baseline exists.
 export function buildMissingRuns(task: SelectedTask): MissingRun[] {
-  if (task.selectionSource === "existing_pair") return [];
+  // Already-controlled pairs (same-label OR cross-label) need no new runs: the
+  // controlled VTRACE run has already been executed and evaluated.
+  if (task.selectionSource === "existing_pair" || task.selectionSource === "cross_label_pair") return [];
   const runs: MissingRun[] = [];
   if (!task.hasBaselineRun) {
     runs.push({
@@ -470,20 +589,91 @@ export function buildMissingRuns(task: SelectedTask): MissingRun[] {
 // Plan assembly (pure)
 // ---------------------------------------------------------------------------
 
+// A task is a COMPLETED controlled pair when both conditions already ran together:
+// same-label preserved pairs and recognized cross-label pairs both qualify.
+function isCompletedPair(task: SelectedTask): boolean {
+  return task.selectionSource === "existing_pair" || task.selectionSource === "cross_label_pair";
+}
+
+export function buildControlledPilotRow(task: SelectedTask): ControlledPilotRow {
+  const bTok = task.baselineTokens;
+  const vTok = task.vtraceTokens;
+  const bCost = task.baselineCost;
+  const vCost = task.vtraceCost;
+  return {
+    instanceId: task.instanceId,
+    repo: task.repo,
+    pairScope: task.selectionSource === "cross_label_pair" ? "cross_label" : "same_label",
+    baselineRunLabel: task.baselineRunLabel,
+    vtraceRunLabel: task.vtraceRunLabel,
+    baselineResolved: task.baselineResolved,
+    vtraceResolved: task.vtraceResolved,
+    baselineTokens: bTok,
+    vtraceTokens: vTok,
+    tokenDelta: bTok !== null && vTok !== null ? delta(bTok, vTok) : null,
+    tokenDeltaPct: bTok !== null && vTok !== null ? deltaPct(bTok, vTok) : null,
+    baselineCost: bCost,
+    vtraceCost: vCost,
+    costDelta: bCost !== null && vCost !== null ? delta(bCost, vCost) : null,
+    costDeltaPct: bCost !== null && vCost !== null ? deltaPct(bCost, vCost) : null,
+    outcome: classifyOutcome(task.baselineResolved, task.vtraceResolved),
+  };
+}
+
+// Roll the completed pairs into pilot-level counts and means. Pure over the selected
+// tasks; computes nothing for tasks whose runs do not yet exist.
+export function buildControlledPilot(completed: readonly SelectedTask[]): ControlledPilot {
+  const rows = completed.map(buildControlledPilotRow);
+  const outcomes = rows.map((r) => r.outcome);
+  const count = (o: PilotOutcome): number => outcomes.filter((x) => x === o).length;
+  const known = <T>(vals: readonly (T | null)[]): T[] => vals.filter((v): v is T => v !== null);
+
+  const summary: ControlledPilotSummary = {
+    pairedTasks: rows.length,
+    sameLabelPairs: rows.filter((r) => r.pairScope === "same_label").length,
+    crossLabelPairs: rows.filter((r) => r.pairScope === "cross_label").length,
+    baselineResolvedCount: rows.filter((r) => r.baselineResolved === true).length,
+    vtraceResolvedCount: rows.filter((r) => r.vtraceResolved === true).length,
+    tiesResolved: count("tie_resolved"),
+    tiesUnresolved: count("tie_unresolved"),
+    vtraceWins: count("vtrace_win"),
+    vtraceLosses: count("vtrace_loss"),
+    unknownOutcomes: count("unknown"),
+    meanBaselineCost: mean(known(rows.map((r) => r.baselineCost))),
+    meanVtraceCost: mean(known(rows.map((r) => r.vtraceCost))),
+    meanCostDelta: mean(known(rows.map((r) => r.costDelta))),
+    meanBaselineTokens: mean(known(rows.map((r) => r.baselineTokens))),
+    meanVtraceTokens: mean(known(rows.map((r) => r.vtraceTokens))),
+    meanTokenDelta: mean(known(rows.map((r) => r.tokenDelta))),
+  };
+  return { rows, summary };
+}
+
 export function buildPlan(
   ledger: ParsedLedger,
   promotedSet: ReadonlySet<string>,
   targetSize: number,
   generatedAt: string | null,
 ): ControlledSubsetPlan {
+  // 1. Same-label pairs are preserved as-is (already controlled under one run label).
   const existing = buildExistingPairTasks(ledger.pairs);
-  const existingInstances = new Set(existing.map((t) => t.instanceId));
-  const existingRepos = new Set(existing.map((t) => t.repo));
+  // 2. Completed cross-label controlled pairs are RECOGNIZED (no new runs needed).
+  const crossLabelAll = buildCrossLabelPairTasks(ledger.pairs).filter(
+    (t) => !existing.some((e) => e.instanceId === t.instanceId),
+  );
+
   const needed = Math.max(0, targetSize - existing.length);
+  // Recognized cross-label pairs fill the additional slots first.
+  const recognized = crossLabelAll.slice(0, needed);
 
+  const claimedInstances = new Set([...existing, ...recognized].map((t) => t.instanceId));
+  const claimedRepos = new Set([...existing, ...recognized].map((t) => t.repo));
+  // 3. Any remaining slots are filled by selecting fresh tasks (these DO need a run).
+  const remaining = Math.max(0, needed - recognized.length);
   const index = buildConditionIndex(ledger.runs);
-  const additional = selectAdditionalTasks(index, existingInstances, existingRepos, promotedSet, needed);
+  const fresh = selectAdditionalTasks(index, claimedInstances, claimedRepos, promotedSet, remaining);
 
+  const additional = [...recognized, ...fresh];
   const selectedTasks = [...existing, ...additional];
   const missingRuns = selectedTasks.flatMap(buildMissingRuns);
   const commands: PlannedCommand[] = missingRuns.map((m) => ({
@@ -497,20 +687,29 @@ export function buildPlan(
   const missingBaselineCount = missingRuns.filter((m) => m.condition === "baseline").length;
   const missingVtraceCount = missingRuns.filter((m) => m.condition === "vtrace").length;
 
+  // Comparable NOW = every task whose two conditions already ran (same-label + cross-label).
+  const completedPairs = selectedTasks.filter(isCompletedPair);
+  const currentlyComparablePairs = completedPairs.length;
+
   const summary: PlanSummary = {
     targetSize,
     existingPairCount: existing.length,
+    crossLabelPairCount: recognized.length,
     additionalTaskCount: additional.length,
     totalSelected: selectedTasks.length,
     reposRepresented,
     missingRunCount: missingRuns.length,
     missingBaselineCount,
     missingVtraceCount,
-    currentlyComparablePairs: existing.length,
+    currentlyComparablePairs,
     comparablePairsAfterCompletion: selectedTasks.length,
     opportunistic: additional.length > 0,
     shortfall: additional.length < needed,
   };
+
+  // The completed pilot is materialized ONLY when the subset is fully controlled (no
+  // missing runs) — a partial subset keeps the "expected after completion" framing.
+  const controlledPilot = missingRuns.length === 0 && completedPairs.length > 0 ? buildControlledPilot(completedPairs) : null;
 
   return {
     generatedAt,
@@ -521,6 +720,7 @@ export function buildPlan(
     selectedTasks,
     missingRuns,
     commands,
+    controlledPilot,
   };
 }
 
@@ -544,6 +744,64 @@ function fmtList(values: readonly string[]): string {
   return values.length === 0 ? "—" : values.join(", ");
 }
 
+// Signed delta (a leading +/−), so a VTRACE saving vs overspend reads at a glance.
+function fmtDelta(n: number | null, digits = 0): string {
+  if (n === null) return "unknown";
+  const sign = n > 0 ? "+" : "";
+  return `${sign}${n.toFixed(digits)}`;
+}
+
+const OUTCOME_LABEL: Record<PilotOutcome, string> = {
+  tie_resolved: "tie (both resolved)",
+  tie_unresolved: "tie (both unresolved)",
+  vtrace_win: "VTRACE win",
+  vtrace_loss: "VTRACE loss",
+  unknown: "unknown",
+};
+
+// The completed-controlled-pilot table + pilot-level roll-up. Both labels are shown for
+// cross-label rows so provenance is never lost.
+function renderControlledPilot(lines: string[], pilot: ControlledPilot): void {
+  const ps = pilot.summary;
+  lines.push("## Completed controlled pilot");
+  lines.push("");
+  lines.push(
+    `All ${ps.pairedTasks} selected tasks are now controlled (${ps.sameLabelPairs} same-label, ` +
+      `${ps.crossLabelPairs} cross-label). Per-pair measurements (token/cost Δ are VTRACE − baseline):`,
+  );
+  lines.push("");
+  lines.push(
+    "| instance | repo | scope | baseline label | vtrace label | base res | vtrace res | base tok | vtrace tok | tok Δ | tok Δ% | base $ | vtrace $ | $ Δ | $ Δ% | outcome |",
+  );
+  lines.push(
+    "| --- | --- | --- | --- | --- | :---: | :---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+  );
+  for (const r of pilot.rows) {
+    lines.push(
+      `| ${r.instanceId} | ${r.repo} | ${r.pairScope === "cross_label" ? "cross-label" : "same-label"} | ` +
+        `${r.baselineRunLabel ?? "—"} | ${r.vtraceRunLabel ?? "—"} | ${fmtResolved(r.baselineResolved)} | ${fmtResolved(r.vtraceResolved)} | ` +
+        `${fmtNum(r.baselineTokens)} | ${fmtNum(r.vtraceTokens)} | ${fmtDelta(r.tokenDelta)} | ${fmtDelta(r.tokenDeltaPct, 1)} | ` +
+        `${fmtNum(r.baselineCost, 4)} | ${fmtNum(r.vtraceCost, 4)} | ${fmtDelta(r.costDelta, 4)} | ${fmtDelta(r.costDeltaPct, 1)} | ${OUTCOME_LABEL[r.outcome]} |`,
+    );
+  }
+  lines.push("");
+  lines.push("### Pilot-level summary");
+  lines.push("");
+  lines.push(`- Paired tasks: ${ps.pairedTasks} (${ps.sameLabelPairs} same-label + ${ps.crossLabelPairs} cross-label).`);
+  lines.push(`- Baseline resolved: ${ps.baselineResolvedCount} / ${ps.pairedTasks}.`);
+  lines.push(`- VTRACE resolved: ${ps.vtraceResolvedCount} / ${ps.pairedTasks}.`);
+  lines.push(`- Ties resolved: ${ps.tiesResolved}; ties unresolved: ${ps.tiesUnresolved}.`);
+  lines.push(`- VTRACE wins: ${ps.vtraceWins}; VTRACE losses: ${ps.vtraceLosses}; unknown: ${ps.unknownOutcomes}.`);
+  lines.push(`- Mean baseline cost: ${fmtNum(ps.meanBaselineCost, 4)} USD; mean VTRACE cost: ${fmtNum(ps.meanVtraceCost, 4)} USD; mean cost Δ: ${fmtDelta(ps.meanCostDelta, 4)} USD.`);
+  lines.push(`- Mean baseline tokens: ${fmtNum(ps.meanBaselineTokens, 0)}; mean VTRACE tokens: ${fmtNum(ps.meanVtraceTokens, 0)}; mean token Δ: ${fmtDelta(ps.meanTokenDelta, 0)}.`);
+  lines.push("");
+  lines.push(
+    "This is an opportunistic 10-task controlled pilot — NOT a pass@1 over SWE-bench, NOT a VEXP comparison, " +
+      "and too small for a statistically powered claim. Cost/token deltas describe spend, not quality.",
+  );
+  lines.push("");
+}
+
 export function renderMarkdown(plan: ControlledSubsetPlan): string {
   const lines: string[] = [];
   const s = plan.summary;
@@ -561,8 +819,9 @@ export function renderMarkdown(plan: ControlledSubsetPlan): string {
   lines.push("## Summary");
   lines.push("");
   lines.push(`- Target size: ${s.targetSize} tasks (each run in baseline AND VTRACE).`);
-  lines.push(`- Existing controlled pairs preserved: ${s.existingPairCount}.`);
+  lines.push(`- Existing controlled pairs preserved (same-label): ${s.existingPairCount}.`);
   lines.push(`- Additional tasks selected: ${s.additionalTaskCount}.`);
+  lines.push(`- Completed cross-label controlled pairs recognized: ${s.crossLabelPairCount}.`);
   lines.push(`- Total tasks in subset: ${s.totalSelected}.`);
   lines.push(`- Repositories represented: ${s.reposRepresented.length} (${fmtList(s.reposRepresented)}).`);
   lines.push(`- Currently comparable pairs (controlled now): ${s.currentlyComparablePairs}.`);
@@ -603,21 +862,32 @@ export function renderMarkdown(plan: ControlledSubsetPlan): string {
   if (additional.length === 0) {
     lines.push("_No additional tasks were selected._");
   } else {
-    lines.push("| instance | repo | baseline run (reuse) | existing VTRACE | base res | vtrace res | reason |");
-    lines.push("| --- | --- | --- | --- | :---: | :---: | --- |");
+    lines.push("| instance | repo | baseline run (reuse) | VTRACE run | base res | vtrace res | status | reason |");
+    lines.push("| --- | --- | --- | --- | :---: | :---: | --- | --- |");
     for (const t of additional) {
+      const complete = t.selectionSource === "cross_label_pair";
+      const status = complete ? "complete (cross-label pair)" : "needs controlled VTRACE run";
       lines.push(
         `| ${t.instanceId} | ${t.repo} | ${t.baselineRunLabel ?? "—"} | ${t.vtraceRunLabel ?? "—"} | ` +
-          `${fmtResolved(t.baselineResolved)} | ${fmtResolved(t.vtraceResolved)} | ${t.reasonSelected} |`,
+          `${fmtResolved(t.baselineResolved)} | ${fmtResolved(t.vtraceResolved)} | ${status} | ${t.reasonSelected} |`,
       );
     }
     lines.push("");
     lines.push(
-      "Per-condition resolution above is SELECTION EVIDENCE from existing runs, not a controlled " +
-        "measurement — the VTRACE condition is re-run under the current normal protocol before any delta is computed.",
+      "Tasks marked **complete (cross-label pair)** already ran the controlled VTRACE condition under a " +
+        "separate run label (both labels shown); their resolutions are evaluated measurements. For tasks " +
+        "that still **need a controlled VTRACE run**, the per-condition resolution shown is SELECTION " +
+        "EVIDENCE from existing runs, not a controlled measurement.",
     );
   }
   lines.push("");
+
+  // --- Completed controlled pilot -----------------------------------------
+  // Rendered ONLY when the subset is fully controlled (no missing runs). A partial
+  // subset keeps the "expected after completion" framing further below.
+  if (plan.controlledPilot !== null) {
+    renderControlledPilot(lines, plan.controlledPilot);
+  }
 
   // --- Missing runs to execute --------------------------------------------
   lines.push("## Missing runs to execute");
@@ -651,21 +921,25 @@ export function renderMarkdown(plan: ControlledSubsetPlan): string {
   lines.push("");
 
   // --- Expected metrics after completion ----------------------------------
-  lines.push("## Expected metrics after completion");
-  lines.push("");
-  lines.push("Once the missing runs are executed and evaluated, the outcome ledger can report over the fixed subset:");
-  lines.push("");
-  lines.push("- 10 paired tasks (baseline + VTRACE per instance).");
-  lines.push("- Baseline resolved count and VTRACE resolved count.");
-  lines.push("- Wins / losses / ties (per-instance resolution comparison).");
-  lines.push("- Cost per task by condition; token use by condition.");
-  lines.push("- Token/cost deltas (VTRACE − baseline) per task and aggregated.");
-  lines.push("- Unique VTRACE wins (VTRACE resolved where baseline did not) and unique VTRACE losses (the reverse).");
-  lines.push("");
-  lines.push(
-    "**None of these are computed here.** They require the missing runs to be executed and evaluated first; this plan only enumerates the work.",
-  );
-  lines.push("");
+  // Only when work remains. Once the subset is fully controlled, the Completed
+  // controlled pilot section above carries the real numbers instead.
+  if (plan.controlledPilot === null) {
+    lines.push("## Expected metrics after completion");
+    lines.push("");
+    lines.push("Once the missing runs are executed and evaluated, the outcome ledger can report over the fixed subset:");
+    lines.push("");
+    lines.push(`- ${s.targetSize} paired tasks (baseline + VTRACE per instance).`);
+    lines.push("- Baseline resolved count and VTRACE resolved count.");
+    lines.push("- Wins / losses / ties (per-instance resolution comparison).");
+    lines.push("- Cost per task by condition; token use by condition.");
+    lines.push("- Token/cost deltas (VTRACE − baseline) per task and aggregated.");
+    lines.push("- Unique VTRACE wins (VTRACE resolved where baseline did not) and unique VTRACE losses (the reverse).");
+    lines.push("");
+    lines.push(
+      "**None of these are computed here.** They require the missing runs to be executed and evaluated first; this plan only enumerates the work.",
+    );
+    lines.push("");
+  }
 
   // --- Run commands --------------------------------------------------------
   lines.push("## Run commands");

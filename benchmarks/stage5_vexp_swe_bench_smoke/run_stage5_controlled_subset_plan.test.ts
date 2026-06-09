@@ -3,11 +3,14 @@ import { test } from "bun:test";
 
 import {
   buildConditionIndex,
+  buildControlledPilot,
+  buildCrossLabelPairTasks,
   buildExistingPairTasks,
   buildMissingRuns,
   buildPlan,
   buildVtraceCommand,
   buildBaselineCommand,
+  classifyOutcome,
   parseLedger,
   renderJson,
   renderMarkdown,
@@ -23,6 +26,7 @@ function djangoPairs(): LedgerPairLite[] {
   return ["10880", "11095", "11490", "11728", "11740"].map((n) => ({
     instanceId: `django__django-${n}`,
     pairType: "baseline_vs_vtrace",
+    labelScope: "same_label",
     beforeRunLabel: `eval-${n} [baseline]`,
     afterRunLabel: `eval-${n} [vtrace]`,
     beforeResolved: true,
@@ -32,6 +36,35 @@ function djangoPairs(): LedgerPairLite[] {
     beforeTokens: 100,
     afterTokens: 200,
   }));
+}
+
+// The five cross-label controlled pairs (separate baseline + controlled-vtrace labels),
+// mirroring the real ledger: all VTRACE unresolved; baselines mixed.
+function crossLabelPairs(): LedgerPairLite[] {
+  const mk = (
+    instanceId: string,
+    baselineLabel: string,
+    baselineResolved: boolean,
+  ): LedgerPairLite => ({
+    instanceId,
+    pairType: "baseline_vs_vtrace",
+    labelScope: "cross_label",
+    beforeRunLabel: baselineLabel,
+    afterRunLabel: `eval-controlled-vtrace-${instanceId.split("__")[1]}`,
+    beforeResolved: baselineResolved,
+    afterResolved: false,
+    beforeCost: 0.5,
+    afterCost: 0.6,
+    beforeTokens: 1000,
+    afterTokens: 1200,
+  });
+  return [
+    mk("astropy__astropy-14369", "eval-baseline-vs-vtrace-baseline-astropy-14369", false),
+    mk("sympy__sympy-16766", "eval-baseline-vs-vtrace-baseline-sympy-16766", true),
+    mk("matplotlib__matplotlib-22719", "eval-localization-gap-baseline-matplotlib-22719", true),
+    mk("psf__requests-5414", "eval-baseline-vs-vtrace-baseline-requests-5414", true),
+    mk("sphinx-doc__sphinx-7462", "eval-localization-gap-baseline-sphinx-7462", false),
+  ];
 }
 
 // Runs across diverse repos with mixed outcomes, each with a reusable baseline.
@@ -265,4 +298,162 @@ test("selectAdditionalTasks gives a promoted candidate a ranking bonus on a tie"
   const picked = selectAdditionalTasks(idx, new Set(), new Set(), new Set(["z__beta-2"]), 1);
   assert.equal(picked.length, 1);
   assert.equal(picked[0]!.instanceId, "z__beta-2");
+});
+
+// ---------------------------------------------------------------------------
+// Cross-label controlled pairs (the fix).
+// ---------------------------------------------------------------------------
+
+// A fully-controlled 10-task subset: 5 same-label django + 5 cross-label pairs.
+function pilotLedger(): ParsedLedger {
+  return { runs: [], pairs: [...djangoPairs(), ...crossLabelPairs()] };
+}
+
+test("buildCrossLabelPairTasks preserves BOTH run labels and marks them complete", () => {
+  const tasks = buildCrossLabelPairTasks(crossLabelPairs());
+  assert.equal(tasks.length, 5);
+  assert.ok(tasks.every((t) => t.selectionSource === "cross_label_pair"));
+  assert.ok(tasks.every((t) => t.hasBaselineRun && t.hasVtraceRun));
+  const astropy = tasks.find((t) => t.instanceId === "astropy__astropy-14369")!;
+  // Both labels preserved verbatim — NOT collapsed to one shared label.
+  assert.equal(astropy.baselineRunLabel, "eval-baseline-vs-vtrace-baseline-astropy-14369");
+  assert.equal(astropy.vtraceRunLabel, "eval-controlled-vtrace-astropy-14369");
+  assert.notEqual(astropy.baselineRunLabel, astropy.vtraceRunLabel);
+  // Completed cross-label pairs require NO new runs.
+  assert.deepEqual(buildMissingRuns(astropy), []);
+});
+
+test("planner recognizes cross-label pairs: 10 comparable, 0 missing", () => {
+  const plan = buildPlan(pilotLedger(), new Set(), 10, "t");
+  assert.equal(plan.summary.existingPairCount, 5); // same-label preserved
+  assert.equal(plan.summary.crossLabelPairCount, 5); // cross-label recognized
+  assert.equal(plan.summary.additionalTaskCount, 5);
+  assert.equal(plan.summary.totalSelected, 10);
+  assert.equal(plan.summary.currentlyComparablePairs, 10);
+  assert.equal(plan.summary.comparablePairsAfterCompletion, 10);
+  assert.equal(plan.summary.missingRunCount, 0);
+  assert.equal(plan.missingRuns.length, 0);
+  assert.equal(plan.commands.length, 0);
+});
+
+test("cross-label controlled VTRACE runs are NOT listed as missing", () => {
+  const plan = buildPlan(pilotLedger(), new Set(), 10, "t");
+  const missingInstances = plan.missingRuns.map((m) => m.instanceId);
+  for (const inst of [
+    "astropy__astropy-14369",
+    "sympy__sympy-16766",
+    "matplotlib__matplotlib-22719",
+    "psf__requests-5414",
+    "sphinx-doc__sphinx-7462",
+  ]) {
+    assert.ok(!missingInstances.includes(inst), `${inst} must not be missing`);
+  }
+});
+
+test("a controlled VTRACE run that has NOT completed is still listed as missing", () => {
+  // No cross-label pair exists (controlled vtrace unevaluated) but a reusable baseline does.
+  const ledger: ParsedLedger = {
+    runs: [
+      { runLabel: "eval-some-baseline-astropy-14369", condition: "baseline", instanceId: "astropy__astropy-14369", resolved: true, cost: 0.5, tokens: 1000, treatmentValid: null },
+    ],
+    pairs: djangoPairs(), // only the 5 same-label pairs; NO cross-label pair
+  };
+  const plan = buildPlan(ledger, new Set(), 10, "t");
+  // astropy is selected as a fresh additional task and its VTRACE run is missing.
+  const astropyMissing = plan.missingRuns.filter((m) => m.instanceId === "astropy__astropy-14369");
+  assert.deepEqual(astropyMissing.map((m) => m.condition), ["vtrace"]);
+  assert.ok(plan.summary.missingRunCount >= 1);
+  assert.equal(plan.controlledPilot, null); // not fully controlled => no pilot
+});
+
+test("classifyOutcome covers ties, wins, losses, and unknown", () => {
+  assert.equal(classifyOutcome(true, true), "tie_resolved");
+  assert.equal(classifyOutcome(false, false), "tie_unresolved");
+  assert.equal(classifyOutcome(false, true), "vtrace_win");
+  assert.equal(classifyOutcome(true, false), "vtrace_loss");
+  assert.equal(classifyOutcome(null, true), "unknown");
+  assert.equal(classifyOutcome(true, null), "unknown");
+});
+
+test("controlled pilot computes outcomes, token/cost deltas, and roll-up counts", () => {
+  const plan = buildPlan(pilotLedger(), new Set(), 10, "t");
+  const pilot = plan.controlledPilot!;
+  assert.notEqual(pilot, null);
+  assert.equal(pilot.rows.length, 10);
+
+  // Per-pair deltas are VTRACE − baseline. Cross-label astropy: 1200−1000 tok, 0.6−0.5 cost.
+  const astropy = pilot.rows.find((r) => r.instanceId === "astropy__astropy-14369")!;
+  assert.equal(astropy.pairScope, "cross_label");
+  assert.equal(astropy.tokenDelta, 200);
+  assert.ok(Math.abs(astropy.costDelta! - 0.1) < 1e-9);
+  assert.equal(astropy.outcome, "tie_unresolved");
+
+  const sympy = pilot.rows.find((r) => r.instanceId === "sympy__sympy-16766")!;
+  assert.equal(sympy.outcome, "vtrace_loss"); // baseline resolved, vtrace did not
+
+  // Roll-up: 5 django ties resolved, 2 ties unresolved (astropy, sphinx), 3 vtrace losses.
+  const ps = pilot.summary;
+  assert.equal(ps.pairedTasks, 10);
+  assert.equal(ps.sameLabelPairs, 5);
+  assert.equal(ps.crossLabelPairs, 5);
+  assert.equal(ps.tiesResolved, 5);
+  assert.equal(ps.tiesUnresolved, 2);
+  assert.equal(ps.vtraceWins, 0);
+  assert.equal(ps.vtraceLosses, 3);
+  assert.equal(ps.unknownOutcomes, 0);
+  assert.equal(ps.baselineResolvedCount, 8);
+  assert.equal(ps.vtraceResolvedCount, 5);
+});
+
+test("buildControlledPilot leaves unknown outcomes and unknown means when data is missing", () => {
+  const task: SelectedTask = {
+    instanceId: "x__y-1",
+    repo: "x",
+    selectionSource: "cross_label_pair",
+    hasBaselineRun: true,
+    hasVtraceRun: true,
+    baselineRunLabel: "eval-base-x",
+    vtraceRunLabel: "eval-controlled-vtrace-y-1",
+    baselineResolved: null, // never evaluated
+    vtraceResolved: false,
+    baselineCost: null,
+    vtraceCost: 0.5,
+    baselineTokens: null,
+    vtraceTokens: 100,
+    reasonSelected: "fixture",
+    risk: "fixture",
+  };
+  const pilot = buildControlledPilot([task]);
+  assert.equal(pilot.rows[0]!.outcome, "unknown");
+  assert.equal(pilot.rows[0]!.tokenDelta, null); // one side unknown => delta unknown
+  assert.equal(pilot.summary.unknownOutcomes, 1);
+  assert.equal(pilot.summary.meanBaselineCost, null);
+  assert.equal(pilot.summary.meanVtraceCost, 0.5);
+});
+
+test("markdown renders the completed pilot table with both labels when fully controlled", () => {
+  const md = renderMarkdown(buildPlan(pilotLedger(), new Set(), 10, "2026-06-10T00:00:00.000Z"));
+  assert.match(md, /## Completed controlled pilot/);
+  assert.match(md, /Currently comparable pairs \(controlled now\): 10/);
+  assert.match(md, /Missing runs to execute: 0/);
+  // Both labels of a cross-label pair appear in the table.
+  assert.ok(md.includes("eval-baseline-vs-vtrace-baseline-astropy-14369"));
+  assert.ok(md.includes("eval-controlled-vtrace-astropy-14369"));
+  // Outcome vocabulary is present.
+  assert.match(md, /VTRACE loss/);
+  assert.match(md, /tie \(both unresolved\)/);
+  // Pilot is honestly framed (no pass@1 / VEXP claim).
+  assert.match(md, /opportunistic 10-task controlled pilot/);
+  assert.match(md, /NOT a pass@1/);
+  // With a complete subset there is nothing left to compute "after completion".
+  assert.doesNotMatch(md, /None of these are computed here/);
+});
+
+test("provenance distinction: same-label preserved, cross-label both-labels", () => {
+  const md = renderMarkdown(buildPlan(pilotLedger(), new Set(), 10, "t"));
+  // Same-label section keeps the single shared run label.
+  assert.match(md, /Existing controlled pairs preserved \(same-label\): 5/);
+  assert.match(md, /Completed cross-label controlled pairs recognized: 5/);
+  // The cross-label rows carry the "cross-label" scope marker.
+  assert.match(md, /cross-label/);
 });

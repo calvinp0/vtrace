@@ -8,8 +8,10 @@ import {
   buildLedger,
   buildRun,
   buildBaselineVtracePair,
+  buildCrossLabelControlledPair,
   classifyCompleteness,
   deriveResolution,
+  detectCrossLabelControlledPairs,
   editedFileSetChanged,
   loadRuns,
   normalizePivotCheckPair,
@@ -20,6 +22,44 @@ import {
   type LedgerRun,
   type RawRunParts,
 } from "./run_stage5_outcome_ledger";
+
+// A minimal LedgerRun for pairing tests (only the fields the pair/detector read).
+function makeRun(overrides: Partial<LedgerRun> & Pick<LedgerRun, "runLabel" | "condition">): LedgerRun {
+  return {
+    instanceId: null,
+    protocol: "unknown",
+    contextPolicy: null,
+    capsuleEngine: null,
+    capsuleIntent: null,
+    capsuleBudget: null,
+    treatmentValid: null,
+    injectionObserved: null,
+    pivotCheckEnabled: null,
+    pivotCheckInjected: null,
+    pivotCheckDisabledByFlag: null,
+    exitCode: null,
+    completedPatch: null,
+    patchProduced: false,
+    resolved: null,
+    resolutionSource: "unknown",
+    tokens: { input: null, output: null, cacheRead: null, cacheCreation: null, total: null },
+    cost: null,
+    durationMs: null,
+    pivotCount: null,
+    toolLogOrdered: false,
+    toolCallCount: null,
+    editedFiles: [],
+    readFiles: [],
+    searchedFiles: [],
+    hiddenPivotCount: null,
+    hiddenPivotsInspected: null,
+    hiddenPivotsEdited: null,
+    hiddenPivotsIgnored: null,
+    rawArtifactPaths: [],
+    dataCompleteness: "partial",
+    ...overrides,
+  };
+}
 
 // A complete vtrace run's raw parts (meta + eval + jsonl record + tool log).
 function completeVtraceParts(overrides: Partial<RawRunParts> = {}): RawRunParts {
@@ -310,6 +350,116 @@ test("loadRuns + buildLedger read a temp fixture results dir", async () => {
   assert.equal(report.summary.totalRuns, 1);
   assert.equal(report.summary.runsWithResolutionKnown, 1);
   assert.equal(report.summary.validVtraceRuns, 1);
+});
+
+// ---------------------------------------------------------------------------
+// Cross-label controlled pairs (the fix): baseline + vtrace from SEPARATE labels.
+// ---------------------------------------------------------------------------
+test("same-label baseline-vs-vtrace pair is tagged same_label", () => {
+  const run = buildRun(completeVtraceParts());
+  const pair = buildBaselineVtracePair("eval-pair-1", run, run);
+  assert.equal(pair.labelScope, "same_label");
+});
+
+test("buildCrossLabelControlledPair preserves both real labels and computes deltas", () => {
+  const baseline = makeRun({
+    runLabel: "eval-localization-gap-baseline-matplotlib-22719",
+    condition: "baseline",
+    instanceId: "matplotlib__matplotlib-22719",
+    resolved: true,
+    cost: 0.46,
+    tokens: { input: 1, output: 1, cacheRead: null, cacheCreation: null, total: 1167993 },
+  });
+  const vtrace = makeRun({
+    runLabel: "eval-controlled-vtrace-matplotlib-22719",
+    condition: "vtrace",
+    instanceId: "matplotlib__matplotlib-22719",
+    resolved: false,
+    cost: 0.96,
+    tokens: { input: 1, output: 1, cacheRead: null, cacheCreation: null, total: 2718398 },
+  });
+  const pair = buildCrossLabelControlledPair(baseline, vtrace);
+  assert.equal(pair.pairType, "baseline_vs_vtrace");
+  assert.equal(pair.labelScope, "cross_label");
+  assert.equal(pair.beforeRunLabel, "eval-localization-gap-baseline-matplotlib-22719");
+  assert.equal(pair.afterRunLabel, "eval-controlled-vtrace-matplotlib-22719");
+  assert.notEqual(pair.beforeRunLabel, pair.afterRunLabel);
+  assert.equal(pair.tokenDelta, 2718398 - 1167993);
+  assert.equal(pair.beforeResolved, true);
+  assert.equal(pair.afterResolved, false);
+  assert.equal(pair.resolvedChanged, true);
+});
+
+test("detectCrossLabelControlledPairs pairs an evaluated controlled vtrace with the best baseline", () => {
+  const runs: LedgerRun[] = [
+    makeRun({ runLabel: "eval-baseline-vs-vtrace-baseline-astropy-14369", condition: "baseline", instanceId: "astropy__astropy-14369", resolved: false }),
+    makeRun({ runLabel: "eval-controlled-vtrace-astropy-14369", condition: "vtrace", instanceId: "astropy__astropy-14369", resolved: false }),
+    // Unrelated baseline for a different instance must not be paired.
+    makeRun({ runLabel: "eval-x-baseline", condition: "baseline", instanceId: "other__o-1", resolved: true }),
+  ];
+  const pairs = detectCrossLabelControlledPairs(runs);
+  assert.equal(pairs.length, 1);
+  assert.equal(pairs[0]!.instanceId, "astropy__astropy-14369");
+  assert.equal(pairs[0]!.labelScope, "cross_label");
+  assert.equal(pairs[0]!.beforeRunLabel, "eval-baseline-vs-vtrace-baseline-astropy-14369");
+  assert.equal(pairs[0]!.afterRunLabel, "eval-controlled-vtrace-astropy-14369");
+});
+
+test("an unevaluated controlled vtrace yields NO cross-label pair", () => {
+  const runs: LedgerRun[] = [
+    makeRun({ runLabel: "eval-some-baseline-sphinx-7462", condition: "baseline", instanceId: "sphinx-doc__sphinx-7462", resolved: false }),
+    // resolved === null => never evaluated => not a finished comparable pair.
+    makeRun({ runLabel: "eval-controlled-vtrace-sphinx-7462", condition: "vtrace", instanceId: "sphinx-doc__sphinx-7462", resolved: null }),
+  ];
+  assert.deepEqual(detectCrossLabelControlledPairs(runs), []);
+});
+
+test("a controlled vtrace with no baseline for its instance yields NO pair", () => {
+  const runs: LedgerRun[] = [
+    makeRun({ runLabel: "eval-controlled-vtrace-requests-5414", condition: "vtrace", instanceId: "psf__requests-5414", resolved: false }),
+  ];
+  assert.deepEqual(detectCrossLabelControlledPairs(runs), []);
+});
+
+test("detectCrossLabelControlledPairs prefers an evaluated baseline on ties", () => {
+  const runs: LedgerRun[] = [
+    makeRun({ runLabel: "eval-aaa-baseline-sympy-16766", condition: "baseline", instanceId: "sympy__sympy-16766", resolved: null }),
+    makeRun({ runLabel: "eval-zzz-baseline-sympy-16766", condition: "baseline", instanceId: "sympy__sympy-16766", resolved: true }),
+    makeRun({ runLabel: "eval-controlled-vtrace-sympy-16766", condition: "vtrace", instanceId: "sympy__sympy-16766", resolved: false }),
+  ];
+  const pairs = detectCrossLabelControlledPairs(runs);
+  assert.equal(pairs.length, 1);
+  // The EVALUATED baseline wins despite sorting later alphabetically.
+  assert.equal(pairs[0]!.beforeRunLabel, "eval-zzz-baseline-sympy-16766");
+});
+
+test("buildLedger emits cross-label pairs end-to-end from a temp fixture", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "stage5-ledger-cross-"));
+  const write = async (label: string, cond: string, instanceId: string, resolved: boolean) => {
+    const condDir = path.join(dir, "runs", label, "raw", cond);
+    await mkdir(condDir, { recursive: true });
+    await writeFile(
+      path.join(condDir, "_run.meta.json"),
+      JSON.stringify({ condition: cond, instances: [instanceId], exitCode: 0, vtraceTreatmentValid: cond === "vtrace" ? true : undefined }),
+    );
+    await writeFile(path.join(condDir, "_eval.meta.json"), JSON.stringify({ evaluationRan: true, resolvedCount: resolved ? 1 : 0 }));
+    await writeFile(
+      path.join(condDir, "swebench-x.jsonl"),
+      `${JSON.stringify({ instanceId, resolved, inputTokens: 100, outputTokens: 0, costUsd: 0.2, modelPatch: "diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-a\n+b" })}\n`,
+    );
+  };
+  // Separate-label baseline + controlled vtrace for one instance.
+  await write("eval-localization-gap-baseline-sphinx-7462", "baseline", "sphinx-doc__sphinx-7462", false);
+  await write("eval-controlled-vtrace-sphinx-7462", "vtrace", "sphinx-doc__sphinx-7462", false);
+
+  const report = await buildLedger(dir, null);
+  const cross = report.pairs.filter((p) => p.labelScope === "cross_label");
+  assert.equal(cross.length, 1);
+  assert.equal(cross[0]!.beforeRunLabel, "eval-localization-gap-baseline-sphinx-7462");
+  assert.equal(cross[0]!.afterRunLabel, "eval-controlled-vtrace-sphinx-7462");
+  assert.equal(report.summary.baselineVsVtracePairs, 1);
+  // Markdown marks it cross-label.
+  assert.match(renderMarkdown(report), /cross-label/);
 });
 
 test("loadRuns enumerates both conditions and detectBaselineVtracePairs pairs them", async () => {

@@ -1,19 +1,19 @@
 {
-  "generatedAt": "2026-06-09T19:15:20.305Z",
+  "generatedAt": "2026-06-09T21:43:25.731Z",
   "resultsDir": "benchmarks/stage5_vexp_swe_bench_smoke/results",
   "summary": {
-    "totalRuns": 79,
-    "validVtraceRuns": 67,
-    "runsWithOrderedToolLogs": 4,
-    "runsWithResolutionKnown": 70,
+    "totalRuns": 84,
+    "validVtraceRuns": 72,
+    "runsWithOrderedToolLogs": 9,
+    "runsWithResolutionKnown": 75,
     "runsWithResolutionUnknown": 9,
-    "totalCost": 51.7998665,
-    "meanCostPerRun": 0.6815771907894737,
-    "meanTokensPerRun": 1618943.5131578948,
+    "totalCost": 57.06357499999999,
+    "meanCostPerRun": 0.7044885802469135,
+    "meanTokensPerRun": 1631373.938271605,
     "pivotCheckPairs": 2,
-    "baselineVsVtracePairs": 5,
+    "baselineVsVtracePairs": 10,
     "completeness": {
-      "complete": 70,
+      "complete": 75,
       "partial": 6,
       "metadata_only": 2,
       "missing": 1
@@ -1806,6 +1806,280 @@
         "runs/eval-capsulev2-traversal-11820/raw/vtrace/_run.meta.json",
         "runs/eval-capsulev2-traversal-11820/raw/vtrace/_eval.meta.json",
         "runs/eval-capsulev2-traversal-11820/raw/vtrace/swebench-*.jsonl"
+      ],
+      "dataCompleteness": "complete"
+    },
+    {
+      "runLabel": "eval-controlled-vtrace-astropy-14369",
+      "condition": "vtrace",
+      "instanceId": "astropy__astropy-14369",
+      "protocol": "vtrace-indexed",
+      "contextPolicy": "force-inject",
+      "capsuleEngine": "v2",
+      "capsuleIntent": "debug",
+      "capsuleBudget": 8000,
+      "treatmentValid": true,
+      "injectionObserved": true,
+      "pivotCheckEnabled": true,
+      "pivotCheckInjected": true,
+      "pivotCheckDisabledByFlag": false,
+      "exitCode": 0,
+      "completedPatch": true,
+      "patchProduced": true,
+      "resolved": false,
+      "resolutionSource": "docker_eval",
+      "tokens": {
+        "input": 428,
+        "output": 169,
+        "cacheRead": 3131785,
+        "cacheCreation": 232984,
+        "total": 3365366
+      },
+      "cost": 3.0284075,
+      "durationMs": 342771,
+      "pivotCount": 2,
+      "toolLogOrdered": true,
+      "toolCallCount": 23,
+      "editedFiles": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/cds_parsetab.py"
+      ],
+      "readFiles": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/vounit.py",
+        "astropy/units/format/cds_parsetab.py",
+        "astropy/utils/parsing.py"
+      ],
+      "searchedFiles": [
+        "astropy/utils"
+      ],
+      "hiddenPivotCount": 2,
+      "hiddenPivotsInspected": 2,
+      "hiddenPivotsEdited": 1,
+      "hiddenPivotsIgnored": 0,
+      "rawArtifactPaths": [
+        "runs/eval-controlled-vtrace-astropy-14369/raw/vtrace/_run.meta.json",
+        "runs/eval-controlled-vtrace-astropy-14369/raw/vtrace/_eval.meta.json",
+        "runs/eval-controlled-vtrace-astropy-14369/raw/vtrace/swebench-*.jsonl",
+        "runs/eval-controlled-vtrace-astropy-14369/raw/vtrace/_tool_calls.json"
+      ],
+      "dataCompleteness": "complete"
+    },
+    {
+      "runLabel": "eval-controlled-vtrace-matplotlib-22719",
+      "condition": "vtrace",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "protocol": "vtrace-indexed",
+      "contextPolicy": "force-inject",
+      "capsuleEngine": "v2",
+      "capsuleIntent": "debug",
+      "capsuleBudget": 8000,
+      "treatmentValid": true,
+      "injectionObserved": true,
+      "pivotCheckEnabled": true,
+      "pivotCheckInjected": true,
+      "pivotCheckDisabledByFlag": false,
+      "exitCode": 0,
+      "completedPatch": true,
+      "patchProduced": true,
+      "resolved": false,
+      "resolutionSource": "docker_eval",
+      "tokens": {
+        "input": 491,
+        "output": 158,
+        "cacheRead": 2632899,
+        "cacheCreation": 84850,
+        "total": 2718398
+      },
+      "cost": 0.9627022500000002,
+      "durationMs": 180349,
+      "pivotCount": 2,
+      "toolLogOrdered": true,
+      "toolCallCount": 30,
+      "editedFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "readFiles": [
+        "lib/matplotlib/axis.py",
+        "lib/matplotlib/category.py",
+        "lib/matplotlib/units.py",
+        "lib/matplotlib/_api/deprecation.py"
+      ],
+      "searchedFiles": [
+        "lib/matplotlib/axis.py",
+        "lib/matplotlib/units.py",
+        "lib/matplotlib/_api/deprecation.py"
+      ],
+      "hiddenPivotCount": 2,
+      "hiddenPivotsInspected": 2,
+      "hiddenPivotsEdited": 0,
+      "hiddenPivotsIgnored": 0,
+      "rawArtifactPaths": [
+        "runs/eval-controlled-vtrace-matplotlib-22719/raw/vtrace/_run.meta.json",
+        "runs/eval-controlled-vtrace-matplotlib-22719/raw/vtrace/_eval.meta.json",
+        "runs/eval-controlled-vtrace-matplotlib-22719/raw/vtrace/swebench-*.jsonl",
+        "runs/eval-controlled-vtrace-matplotlib-22719/raw/vtrace/_tool_calls.json"
+      ],
+      "dataCompleteness": "complete"
+    },
+    {
+      "runLabel": "eval-controlled-vtrace-requests-5414",
+      "condition": "vtrace",
+      "instanceId": "psf__requests-5414",
+      "protocol": "vtrace-indexed",
+      "contextPolicy": "force-inject",
+      "capsuleEngine": "v2",
+      "capsuleIntent": "debug",
+      "capsuleBudget": 8000,
+      "treatmentValid": true,
+      "injectionObserved": true,
+      "pivotCheckEnabled": true,
+      "pivotCheckInjected": true,
+      "pivotCheckDisabledByFlag": false,
+      "exitCode": 0,
+      "completedPatch": true,
+      "patchProduced": true,
+      "resolved": false,
+      "resolutionSource": "docker_eval",
+      "tokens": {
+        "input": 197,
+        "output": 37,
+        "cacheRead": 885707,
+        "cacheCreation": 70844,
+        "total": 956785
+      },
+      "cost": 0.4065295,
+      "durationMs": 96115,
+      "pivotCount": 2,
+      "toolLogOrdered": true,
+      "toolCallCount": 9,
+      "editedFiles": [
+        "requests/models.py"
+      ],
+      "readFiles": [
+        "requests/models.py",
+        "requests/api.py"
+      ],
+      "searchedFiles": [
+        "psf__requests"
+      ],
+      "hiddenPivotCount": 1,
+      "hiddenPivotsInspected": 1,
+      "hiddenPivotsEdited": 0,
+      "hiddenPivotsIgnored": 0,
+      "rawArtifactPaths": [
+        "runs/eval-controlled-vtrace-requests-5414/raw/vtrace/_run.meta.json",
+        "runs/eval-controlled-vtrace-requests-5414/raw/vtrace/_eval.meta.json",
+        "runs/eval-controlled-vtrace-requests-5414/raw/vtrace/swebench-*.jsonl",
+        "runs/eval-controlled-vtrace-requests-5414/raw/vtrace/_tool_calls.json"
+      ],
+      "dataCompleteness": "complete"
+    },
+    {
+      "runLabel": "eval-controlled-vtrace-sphinx-7462",
+      "condition": "vtrace",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "protocol": "vtrace-indexed",
+      "contextPolicy": "force-inject",
+      "capsuleEngine": "v2",
+      "capsuleIntent": "debug",
+      "capsuleBudget": 8000,
+      "treatmentValid": true,
+      "injectionObserved": true,
+      "pivotCheckEnabled": true,
+      "pivotCheckInjected": true,
+      "pivotCheckDisabledByFlag": false,
+      "exitCode": 0,
+      "completedPatch": true,
+      "patchProduced": true,
+      "resolved": false,
+      "resolutionSource": "docker_eval",
+      "tokens": {
+        "input": 141,
+        "output": 19,
+        "cacheRead": 573358,
+        "cacheCreation": 65068,
+        "total": 638586
+      },
+      "cost": 0.28952975000000003,
+      "durationMs": 58038,
+      "pivotCount": 2,
+      "toolLogOrdered": true,
+      "toolCallCount": 7,
+      "editedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "readFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "searchedFiles": [
+        "sphinx/pycode/ast.py"
+      ],
+      "hiddenPivotCount": 1,
+      "hiddenPivotsInspected": 1,
+      "hiddenPivotsEdited": 0,
+      "hiddenPivotsIgnored": 0,
+      "rawArtifactPaths": [
+        "runs/eval-controlled-vtrace-sphinx-7462/raw/vtrace/_run.meta.json",
+        "runs/eval-controlled-vtrace-sphinx-7462/raw/vtrace/_eval.meta.json",
+        "runs/eval-controlled-vtrace-sphinx-7462/raw/vtrace/swebench-*.jsonl",
+        "runs/eval-controlled-vtrace-sphinx-7462/raw/vtrace/_tool_calls.json"
+      ],
+      "dataCompleteness": "complete"
+    },
+    {
+      "runLabel": "eval-controlled-vtrace-sympy-16766",
+      "condition": "vtrace",
+      "instanceId": "sympy__sympy-16766",
+      "protocol": "vtrace-indexed",
+      "contextPolicy": "force-inject",
+      "capsuleEngine": "v2",
+      "capsuleIntent": "debug",
+      "capsuleBudget": 8000,
+      "treatmentValid": true,
+      "injectionObserved": true,
+      "pivotCheckEnabled": true,
+      "pivotCheckInjected": true,
+      "pivotCheckDisabledByFlag": false,
+      "exitCode": 0,
+      "completedPatch": true,
+      "patchProduced": true,
+      "resolved": false,
+      "resolutionSource": "docker_eval",
+      "tokens": {
+        "input": 225,
+        "output": 72,
+        "cacheRead": 1300388,
+        "cacheCreation": 121762,
+        "total": 1422447
+      },
+      "cost": 0.5765395000000001,
+      "durationMs": 94346,
+      "pivotCount": 2,
+      "toolLogOrdered": true,
+      "toolCallCount": 12,
+      "editedFiles": [
+        "sympy/printing/pycode.py"
+      ],
+      "readFiles": [
+        "sympy/printing/pycode.py",
+        "sympy/printing/ccode.py",
+        "sympy/printing/printer.py"
+      ],
+      "searchedFiles": [
+        "sympy/printing/ccode.py",
+        "sympy/printing"
+      ],
+      "hiddenPivotCount": 2,
+      "hiddenPivotsInspected": 2,
+      "hiddenPivotsEdited": 1,
+      "hiddenPivotsIgnored": 0,
+      "rawArtifactPaths": [
+        "runs/eval-controlled-vtrace-sympy-16766/raw/vtrace/_run.meta.json",
+        "runs/eval-controlled-vtrace-sympy-16766/raw/vtrace/_eval.meta.json",
+        "runs/eval-controlled-vtrace-sympy-16766/raw/vtrace/swebench-*.jsonl",
+        "runs/eval-controlled-vtrace-sympy-16766/raw/vtrace/_tool_calls.json"
       ],
       "dataCompleteness": "complete"
     },
@@ -3759,6 +4033,7 @@
       "beforeRunLabel": "eval-10880 [baseline]",
       "afterRunLabel": "eval-10880 [vtrace]",
       "pairType": "baseline_vs_vtrace",
+      "labelScope": "same_label",
       "beforeTokens": 432600,
       "afterTokens": 628051,
       "tokenDelta": 195451,
@@ -3786,6 +4061,7 @@
       "beforeRunLabel": "eval-11095 [baseline]",
       "afterRunLabel": "eval-11095 [vtrace]",
       "pairType": "baseline_vs_vtrace",
+      "labelScope": "same_label",
       "beforeTokens": 535997,
       "afterTokens": 999877,
       "tokenDelta": 463880,
@@ -3813,6 +4089,7 @@
       "beforeRunLabel": "eval-11490 [baseline]",
       "afterRunLabel": "eval-11490 [vtrace]",
       "pairType": "baseline_vs_vtrace",
+      "labelScope": "same_label",
       "beforeTokens": 4661640,
       "afterTokens": 3301462,
       "tokenDelta": -1360178,
@@ -3840,6 +4117,7 @@
       "beforeRunLabel": "eval-11728 [baseline]",
       "afterRunLabel": "eval-11728 [vtrace]",
       "pairType": "baseline_vs_vtrace",
+      "labelScope": "same_label",
       "beforeTokens": 1716132,
       "afterTokens": 1194127,
       "tokenDelta": -522005,
@@ -3867,6 +4145,7 @@
       "beforeRunLabel": "eval-11740 [baseline]",
       "afterRunLabel": "eval-11740 [vtrace]",
       "pairType": "baseline_vs_vtrace",
+      "labelScope": "same_label",
       "beforeTokens": 2387415,
       "afterTokens": 1849882,
       "tokenDelta": -537533,
@@ -3890,10 +4169,154 @@
       "sourceReport": "runs/eval-11740 (baseline+vtrace conditions)"
     },
     {
+      "instanceId": "astropy__astropy-14369",
+      "beforeRunLabel": "eval-baseline-vs-vtrace-baseline-astropy-14369",
+      "afterRunLabel": "eval-controlled-vtrace-astropy-14369",
+      "pairType": "baseline_vs_vtrace",
+      "labelScope": "cross_label",
+      "beforeTokens": 3076313,
+      "afterTokens": 3365366,
+      "tokenDelta": 289053,
+      "tokenDeltaPct": 9.396085508854268,
+      "beforeCost": 1.5550305,
+      "afterCost": 3.0284075,
+      "costDelta": 1.4733770000000002,
+      "costDeltaPct": 94.74907405353143,
+      "beforeResolved": false,
+      "afterResolved": false,
+      "resolvedChanged": false,
+      "beforeEditedFiles": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/cds_parsetab.py",
+        "astropy/units/format/parser.out"
+      ],
+      "afterEditedFiles": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/cds_parsetab.py"
+      ],
+      "editedFileSetChanged": true,
+      "hiddenPivotsConvertedToInspected": null,
+      "hiddenPivotsConvertedToEdited": null,
+      "sourceReport": "cross-label controlled pair (baseline=eval-baseline-vs-vtrace-baseline-astropy-14369, vtrace=eval-controlled-vtrace-astropy-14369)"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "beforeRunLabel": "eval-localization-gap-baseline-matplotlib-22719",
+      "afterRunLabel": "eval-controlled-vtrace-matplotlib-22719",
+      "pairType": "baseline_vs_vtrace",
+      "labelScope": "cross_label",
+      "beforeTokens": 1167993,
+      "afterTokens": 2718398,
+      "tokenDelta": 1550405,
+      "tokenDeltaPct": 132.74094964610234,
+      "beforeCost": 0.46377525,
+      "afterCost": 0.9627022500000002,
+      "costDelta": 0.4989270000000002,
+      "costDeltaPct": 107.57947950003803,
+      "beforeResolved": true,
+      "afterResolved": false,
+      "resolvedChanged": true,
+      "beforeEditedFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "afterEditedFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "editedFileSetChanged": false,
+      "hiddenPivotsConvertedToInspected": null,
+      "hiddenPivotsConvertedToEdited": null,
+      "sourceReport": "cross-label controlled pair (baseline=eval-localization-gap-baseline-matplotlib-22719, vtrace=eval-controlled-vtrace-matplotlib-22719)"
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "beforeRunLabel": "eval-baseline-vs-vtrace-baseline-requests-5414",
+      "afterRunLabel": "eval-controlled-vtrace-requests-5414",
+      "pairType": "baseline_vs_vtrace",
+      "labelScope": "cross_label",
+      "beforeTokens": 736898,
+      "afterTokens": 956785,
+      "tokenDelta": 219887,
+      "tokenDeltaPct": 29.83954360033546,
+      "beforeCost": 0.47255224999999995,
+      "afterCost": 0.4065295,
+      "costDelta": -0.06602274999999996,
+      "costDeltaPct": -13.971523783877862,
+      "beforeResolved": true,
+      "afterResolved": false,
+      "resolvedChanged": true,
+      "beforeEditedFiles": [
+        "requests/models.py"
+      ],
+      "afterEditedFiles": [
+        "requests/models.py"
+      ],
+      "editedFileSetChanged": false,
+      "hiddenPivotsConvertedToInspected": null,
+      "hiddenPivotsConvertedToEdited": null,
+      "sourceReport": "cross-label controlled pair (baseline=eval-baseline-vs-vtrace-baseline-requests-5414, vtrace=eval-controlled-vtrace-requests-5414)"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "beforeRunLabel": "eval-localization-gap-baseline-sphinx-7462",
+      "afterRunLabel": "eval-controlled-vtrace-sphinx-7462",
+      "pairType": "baseline_vs_vtrace",
+      "labelScope": "cross_label",
+      "beforeTokens": 627263,
+      "afterTokens": 638586,
+      "tokenDelta": 11323,
+      "tokenDeltaPct": 1.8051439348407288,
+      "beforeCost": 0.2651115,
+      "afterCost": 0.28952975000000003,
+      "costDelta": 0.02441825000000003,
+      "costDeltaPct": 9.210558576297153,
+      "beforeResolved": false,
+      "afterResolved": false,
+      "resolvedChanged": false,
+      "beforeEditedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "afterEditedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "editedFileSetChanged": false,
+      "hiddenPivotsConvertedToInspected": null,
+      "hiddenPivotsConvertedToEdited": null,
+      "sourceReport": "cross-label controlled pair (baseline=eval-localization-gap-baseline-sphinx-7462, vtrace=eval-controlled-vtrace-sphinx-7462)"
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "beforeRunLabel": "eval-baseline-vs-vtrace-baseline-sympy-16766",
+      "afterRunLabel": "eval-controlled-vtrace-sympy-16766",
+      "pairType": "baseline_vs_vtrace",
+      "labelScope": "cross_label",
+      "beforeTokens": 1414441,
+      "afterTokens": 1422447,
+      "tokenDelta": 8006,
+      "tokenDeltaPct": 0.5660186603753709,
+      "beforeCost": 0.5185075,
+      "afterCost": 0.5765395000000001,
+      "costDelta": 0.058032000000000084,
+      "costDeltaPct": 11.192123546911102,
+      "beforeResolved": true,
+      "afterResolved": false,
+      "resolvedChanged": true,
+      "beforeEditedFiles": [
+        "sympy/printing/pycode.py"
+      ],
+      "afterEditedFiles": [
+        "sympy/printing/pycode.py"
+      ],
+      "editedFileSetChanged": false,
+      "hiddenPivotsConvertedToInspected": null,
+      "hiddenPivotsConvertedToEdited": null,
+      "sourceReport": "cross-label controlled pair (baseline=eval-baseline-vs-vtrace-baseline-sympy-16766, vtrace=eval-controlled-vtrace-sympy-16766)"
+    },
+    {
       "instanceId": "mwaskom__seaborn-3187",
       "beforeRunLabel": "eval-pivot-telemetry-vtrace-seaborn-3187-no-pivot-check",
       "afterRunLabel": "eval-pivot-check-vtrace-seaborn-3187",
       "pairType": "pivot_check_before_after",
+      "labelScope": null,
       "beforeTokens": 2444167,
       "afterTokens": 3308810,
       "tokenDelta": 864643,
@@ -3923,6 +4346,7 @@
       "beforeRunLabel": "eval-pivot-telemetry-vtrace-sphinx-7462-r2",
       "afterRunLabel": "eval-pivot-check-vtrace-sphinx-7462",
       "pairType": "pivot_check_before_after",
+      "labelScope": null,
       "beforeTokens": 581546,
       "afterTokens": 1034743,
       "tokenDelta": 453197,

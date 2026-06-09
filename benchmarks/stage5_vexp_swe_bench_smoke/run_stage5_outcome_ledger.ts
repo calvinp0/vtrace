@@ -29,6 +29,12 @@ import { delta, deltaPct } from "./run_stage5_pivot_check_report";
 export type Resolution = boolean | null; // null === unknown (never evaluated)
 export type DataCompleteness = "complete" | "partial" | "metadata_only" | "missing";
 export type PairType = "baseline_vs_vtrace" | "pivot_check_before_after" | "unknown";
+// How the two runs of a baseline_vs_vtrace pair were labeled:
+//   same_label  — baseline + vtrace ran under ONE run label (e.g. `eval-10880`).
+//   cross_label — baseline + vtrace came from SEPARATE run labels, matched by
+//                 instanceId (e.g. a reused baseline + an `eval-controlled-vtrace-*` run).
+// `null` for pivot_check pairs (the distinction does not apply).
+export type PairLabelScope = "same_label" | "cross_label";
 
 export interface TokenUsage {
   readonly input: number | null;
@@ -88,6 +94,8 @@ export interface LedgerPair {
   readonly beforeRunLabel: string;
   readonly afterRunLabel: string;
   readonly pairType: PairType;
+  // For baseline_vs_vtrace pairs: same_label vs cross_label provenance. null otherwise.
+  readonly labelScope: PairLabelScope | null;
   readonly beforeTokens: number | null;
   readonly afterTokens: number | null;
   readonly tokenDelta: number | null;
@@ -138,6 +146,11 @@ export interface LedgerReport {
 
 export const RESULTS_REL = "benchmarks/stage5_vexp_swe_bench_smoke/results";
 export const DEFAULT_OUT_NAME = "stage5_outcome_ledger";
+
+// Run-label prefix for the controlled-subset VTRACE condition. Cross-label pairs are
+// anchored on these runs: a controlled VTRACE run is paired with the best reusable
+// baseline for the SAME instanceId, even when the two carry different run labels.
+export const CONTROLLED_VTRACE_LABEL_PREFIX = "eval-controlled-vtrace-";
 
 // Curated/generated reports scanned for already-computed before/after pairs.
 export const PIVOT_CHECK_PAIR_REPORTS: readonly string[] = [
@@ -478,6 +491,7 @@ export function buildBaselineVtracePair(label: string, baseline: LedgerRun, vtra
     beforeRunLabel: `${label} [baseline]`,
     afterRunLabel: `${label} [vtrace]`,
     pairType: "baseline_vs_vtrace",
+    labelScope: "same_label",
     beforeTokens,
     afterTokens,
     tokenDelta: beforeTokens !== null && afterTokens !== null ? delta(beforeTokens, afterTokens) : null,
@@ -522,6 +536,7 @@ export function normalizePivotCheckPair(raw: Record<string, unknown>, sourceRepo
     beforeRunLabel: asString(raw.beforeLabel) ?? "unknown",
     afterRunLabel: asString(raw.afterLabel) ?? "unknown",
     pairType: "pivot_check_before_after",
+    labelScope: null,
     beforeTokens,
     afterTokens,
     tokenDelta: asNumber(raw.tokenDelta) ?? (beforeTokens !== null && afterTokens !== null ? delta(beforeTokens, afterTokens) : null),
@@ -732,12 +747,21 @@ export function renderMarkdown(report: LedgerReport): string {
     lines.push("| --- | --- | --- | ---: | ---: | ---: | :---: | :---: | ---: | ---: | --- |");
     for (const p of report.pairs) {
       const resolvedDelta = `${fmtResolved(p.beforeResolved)}→${fmtResolved(p.afterResolved)}`;
+      const typeLabel = p.labelScope === "cross_label" ? `${p.pairType} (cross-label)` : p.pairType;
       lines.push(
-        `| ${p.pairType} | ${p.instanceId ?? "unknown"} | ${p.beforeRunLabel} → ${p.afterRunLabel} | ` +
+        `| ${typeLabel} | ${p.instanceId ?? "unknown"} | ${p.beforeRunLabel} → ${p.afterRunLabel} | ` +
           `${fmtNum(p.tokenDelta)} | ${fmtNum(p.tokenDeltaPct, 1)} | ${fmtNum(p.costDelta, 4)} | ${resolvedDelta} | ` +
           `${p.editedFileSetChanged ? "yes" : "no"} | ${p.hiddenPivotsConvertedToInspected ?? "—"} | ${p.hiddenPivotsConvertedToEdited ?? "—"} | ${p.sourceReport} |`,
       );
     }
+    lines.push("");
+    const crossLabel = report.pairs.filter((p) => p.labelScope === "cross_label");
+    const sameLabel = report.pairs.filter((p) => p.pairType === "baseline_vs_vtrace" && p.labelScope !== "cross_label");
+    lines.push(
+      `baseline-vs-vtrace pairs: ${sameLabel.length} same-label (baseline + vtrace under one run label) + ` +
+        `${crossLabel.length} cross-label (baseline + vtrace from separate run labels, matched by instanceId). ` +
+        "Cross-label pairs reuse an existing baseline for an `eval-controlled-vtrace-*` run; both run labels are shown above.",
+    );
     lines.push("");
   }
 
@@ -930,6 +954,84 @@ export function detectBaselineVtracePairs(runs: readonly LedgerRun[]): LedgerPai
   return pairs;
 }
 
+// A cross-label baseline_vs_vtrace pair: baseline and vtrace ran under SEPARATE run
+// labels but describe the SAME instance. Unlike the same-label builder, both real run
+// labels are preserved verbatim (no `[baseline]`/`[vtrace]` synthesis) so provenance
+// is explicit.
+export function buildCrossLabelControlledPair(baseline: LedgerRun, vtrace: LedgerRun): LedgerPair {
+  const beforeTokens = baseline.tokens.total;
+  const afterTokens = vtrace.tokens.total;
+  const beforeCost = baseline.cost;
+  const afterCost = vtrace.cost;
+  const bothResolved = baseline.resolved !== null && vtrace.resolved !== null;
+  return {
+    instanceId: vtrace.instanceId ?? baseline.instanceId,
+    beforeRunLabel: baseline.runLabel,
+    afterRunLabel: vtrace.runLabel,
+    pairType: "baseline_vs_vtrace",
+    labelScope: "cross_label",
+    beforeTokens,
+    afterTokens,
+    tokenDelta: beforeTokens !== null && afterTokens !== null ? delta(beforeTokens, afterTokens) : null,
+    tokenDeltaPct: beforeTokens !== null && afterTokens !== null ? deltaPct(beforeTokens, afterTokens) : null,
+    beforeCost,
+    afterCost,
+    costDelta: beforeCost !== null && afterCost !== null ? delta(beforeCost, afterCost) : null,
+    costDeltaPct: beforeCost !== null && afterCost !== null ? deltaPct(beforeCost, afterCost) : null,
+    beforeResolved: baseline.resolved,
+    afterResolved: vtrace.resolved,
+    resolvedChanged: bothResolved ? baseline.resolved !== vtrace.resolved : false,
+    beforeEditedFiles: baseline.editedFiles,
+    afterEditedFiles: vtrace.editedFiles,
+    editedFileSetChanged: editedFileSetChanged(baseline.editedFiles, vtrace.editedFiles),
+    hiddenPivotsConvertedToInspected: null, // baseline carries no pivots
+    hiddenPivotsConvertedToEdited: null,
+    sourceReport: `cross-label controlled pair (baseline=${baseline.runLabel}, vtrace=${vtrace.runLabel})`,
+  };
+}
+
+// Pick the best reusable baseline run for an instance: prefer an EVALUATED baseline
+// (known resolution), then break ties deterministically by run label.
+function bestBaselineFor(instanceId: string, runs: readonly LedgerRun[]): LedgerRun | null {
+  const candidates = runs
+    .filter((r) => r.condition === "baseline" && r.instanceId === instanceId)
+    .sort((a, b) => {
+      const sa = a.resolved !== null ? 1 : 0;
+      const sb = b.resolved !== null ? 1 : 0;
+      if (sa !== sb) return sb - sa;
+      return a.runLabel.localeCompare(b.runLabel);
+    });
+  return candidates[0] ?? null;
+}
+
+// Build cross-label baseline_vs_vtrace pairs anchored on EVALUATED controlled VTRACE
+// runs (`eval-controlled-vtrace-*`). Each is paired with the best reusable baseline for
+// the same instanceId. A controlled VTRACE run that has NOT been evaluated (resolution
+// unknown) yields no pair — so an incomplete controlled run is never silently treated as
+// a finished comparable pair.
+export function detectCrossLabelControlledPairs(runs: readonly LedgerRun[]): LedgerPair[] {
+  const pairs: LedgerPair[] = [];
+  const seen = new Set<string>();
+  const controlled = runs
+    .filter(
+      (r) =>
+        r.runLabel.startsWith(CONTROLLED_VTRACE_LABEL_PREFIX) &&
+        r.condition === "vtrace" &&
+        r.instanceId !== null &&
+        r.resolved !== null,
+    )
+    .sort((a, b) => a.runLabel.localeCompare(b.runLabel));
+  for (const vtrace of controlled) {
+    const baseline = bestBaselineFor(vtrace.instanceId!, runs);
+    if (baseline === null) continue;
+    const key = `${baseline.runLabel}::${vtrace.runLabel}::${vtrace.instanceId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    pairs.push(buildCrossLabelControlledPair(baseline, vtrace));
+  }
+  return pairs;
+}
+
 // Load pivot_check_before_after pairs from the curated report JSONs. Dedupes by
 // (beforeLabel, afterLabel, instanceId) — the targeted summary and a per-instance
 // report can carry the same pair.
@@ -954,8 +1056,9 @@ export async function loadPivotCheckPairs(resultsDir: string): Promise<LedgerPai
 export async function buildLedger(resultsDir: string, generatedAt: string | null): Promise<LedgerReport> {
   const runs = await loadRuns(resultsDir);
   const baselinePairs = detectBaselineVtracePairs(runs);
+  const crossLabelPairs = detectCrossLabelControlledPairs(runs);
   const pivotPairs = await loadPivotCheckPairs(resultsDir);
-  return buildReport(runs, [...baselinePairs, ...pivotPairs], resultsDir, generatedAt);
+  return buildReport(runs, [...baselinePairs, ...crossLabelPairs, ...pivotPairs], resultsDir, generatedAt);
 }
 
 // ---------------------------------------------------------------------------
