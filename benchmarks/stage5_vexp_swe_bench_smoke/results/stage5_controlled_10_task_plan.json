@@ -1,0 +1,268 @@
+{
+  "generatedAt": "2026-06-09T19:41:26.043Z",
+  "targetSize": 10,
+  "existingPairCount": 5,
+  "additionalTaskCount": 5,
+  "summary": {
+    "targetSize": 10,
+    "existingPairCount": 5,
+    "additionalTaskCount": 5,
+    "totalSelected": 10,
+    "reposRepresented": [
+      "astropy",
+      "django",
+      "matplotlib",
+      "psf",
+      "sphinx-doc",
+      "sympy"
+    ],
+    "missingRunCount": 5,
+    "missingBaselineCount": 0,
+    "missingVtraceCount": 5,
+    "currentlyComparablePairs": 5,
+    "comparablePairsAfterCompletion": 10,
+    "opportunistic": true,
+    "shortfall": false
+  },
+  "selectedTasks": [
+    {
+      "instanceId": "django__django-10880",
+      "repo": "django",
+      "selectionSource": "existing_pair",
+      "hasBaselineRun": true,
+      "hasVtraceRun": true,
+      "baselineRunLabel": "eval-10880",
+      "vtraceRunLabel": "eval-10880",
+      "baselineResolved": true,
+      "vtraceResolved": true,
+      "baselineCost": 0.20882475,
+      "vtraceCost": 0.25608574999999995,
+      "baselineTokens": 432600,
+      "vtraceTokens": 628051,
+      "reasonSelected": "already a controlled same-run-label baseline-vs-vtrace pair (preserved as-is)",
+      "risk": "none — both conditions already ran together under one label"
+    },
+    {
+      "instanceId": "django__django-11095",
+      "repo": "django",
+      "selectionSource": "existing_pair",
+      "hasBaselineRun": true,
+      "hasVtraceRun": true,
+      "baselineRunLabel": "eval-11095",
+      "vtraceRunLabel": "eval-11095",
+      "baselineResolved": true,
+      "vtraceResolved": true,
+      "baselineCost": 0.22295474999999998,
+      "vtraceCost": 0.3552597500000001,
+      "baselineTokens": 535997,
+      "vtraceTokens": 999877,
+      "reasonSelected": "already a controlled same-run-label baseline-vs-vtrace pair (preserved as-is)",
+      "risk": "none — both conditions already ran together under one label"
+    },
+    {
+      "instanceId": "django__django-11490",
+      "repo": "django",
+      "selectionSource": "existing_pair",
+      "hasBaselineRun": true,
+      "hasVtraceRun": true,
+      "baselineRunLabel": "eval-11490",
+      "vtraceRunLabel": "eval-11490",
+      "baselineResolved": true,
+      "vtraceResolved": true,
+      "baselineCost": 1.6255705,
+      "vtraceCost": 1.0801967500000003,
+      "baselineTokens": 4661640,
+      "vtraceTokens": 3301462,
+      "reasonSelected": "already a controlled same-run-label baseline-vs-vtrace pair (preserved as-is)",
+      "risk": "none — both conditions already ran together under one label"
+    },
+    {
+      "instanceId": "django__django-11728",
+      "repo": "django",
+      "selectionSource": "existing_pair",
+      "hasBaselineRun": true,
+      "hasVtraceRun": true,
+      "baselineRunLabel": "eval-11728",
+      "vtraceRunLabel": "eval-11728",
+      "baselineResolved": true,
+      "vtraceResolved": true,
+      "baselineCost": 0.7335555000000001,
+      "vtraceCost": 0.5915555,
+      "baselineTokens": 1716132,
+      "vtraceTokens": 1194127,
+      "reasonSelected": "already a controlled same-run-label baseline-vs-vtrace pair (preserved as-is)",
+      "risk": "none — both conditions already ran together under one label"
+    },
+    {
+      "instanceId": "django__django-11740",
+      "repo": "django",
+      "selectionSource": "existing_pair",
+      "hasBaselineRun": true,
+      "hasVtraceRun": true,
+      "baselineRunLabel": "eval-11740",
+      "vtraceRunLabel": "eval-11740",
+      "baselineResolved": true,
+      "vtraceResolved": true,
+      "baselineCost": 0.9118657499999999,
+      "vtraceCost": 0.6620922499999999,
+      "baselineTokens": 2387415,
+      "vtraceTokens": 1849882,
+      "reasonSelected": "already a controlled same-run-label baseline-vs-vtrace pair (preserved as-is)",
+      "risk": "none — both conditions already ran together under one label"
+    },
+    {
+      "instanceId": "astropy__astropy-14369",
+      "repo": "astropy",
+      "selectionSource": "existing_condition_data",
+      "hasBaselineRun": true,
+      "hasVtraceRun": true,
+      "baselineRunLabel": "eval-baseline-vs-vtrace-baseline-astropy-14369",
+      "vtraceRunLabel": "eval-capsulev2-recovered-live-astropy-14369",
+      "baselineResolved": false,
+      "vtraceResolved": true,
+      "baselineCost": 1.5550305,
+      "vtraceCost": 3.0239777500000002,
+      "baselineTokens": 3076313,
+      "vtraceTokens": 4298912,
+      "reasonSelected": "repository diversity (astropy); reusable existing baseline run; existing VTRACE evidence; existing VTRACE resolved where baseline did not (apparent win); promoted live-capsule precheck candidate",
+      "risk": "existing condition data was produced under heterogeneous run labels/configs; the VTRACE condition is re-run under the current normal protocol for a controlled pair (existing baseline is protocol-stable and reused)"
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "repo": "sympy",
+      "selectionSource": "existing_condition_data",
+      "hasBaselineRun": true,
+      "hasVtraceRun": true,
+      "baselineRunLabel": "eval-baseline-vs-vtrace-baseline-sympy-16766",
+      "vtraceRunLabel": "eval-capsulev2-recovered-live-sympy-16766",
+      "baselineResolved": true,
+      "vtraceResolved": true,
+      "baselineCost": 0.5185075,
+      "vtraceCost": 0.6317115,
+      "baselineTokens": 1414441,
+      "vtraceTokens": 1658843,
+      "reasonSelected": "repository diversity (sympy); reusable existing baseline run; existing VTRACE evidence; both existing conditions resolved (tie); promoted live-capsule precheck candidate",
+      "risk": "existing condition data was produced under heterogeneous run labels/configs; the VTRACE condition is re-run under the current normal protocol for a controlled pair (existing baseline is protocol-stable and reused)"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib",
+      "selectionSource": "existing_condition_data",
+      "hasBaselineRun": true,
+      "hasVtraceRun": true,
+      "baselineRunLabel": "eval-localization-gap-baseline-matplotlib-22719",
+      "vtraceRunLabel": "eval-localization-gap-vtrace-matplotlib-22719",
+      "baselineResolved": true,
+      "vtraceResolved": true,
+      "baselineCost": 0.46377525,
+      "vtraceCost": 0.6145744999999999,
+      "baselineTokens": 1167993,
+      "vtraceTokens": 1543461,
+      "reasonSelected": "repository diversity (matplotlib); reusable existing baseline run; existing VTRACE evidence; both existing conditions resolved (tie)",
+      "risk": "existing condition data was produced under heterogeneous run labels/configs; the VTRACE condition is re-run under the current normal protocol for a controlled pair (existing baseline is protocol-stable and reused)"
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "repo": "psf",
+      "selectionSource": "existing_condition_data",
+      "hasBaselineRun": true,
+      "hasVtraceRun": true,
+      "baselineRunLabel": "eval-baseline-vs-vtrace-baseline-requests-5414",
+      "vtraceRunLabel": "eval-capsulev2-recovered-live-requests-5414",
+      "baselineResolved": true,
+      "vtraceResolved": false,
+      "baselineCost": 0.47255224999999995,
+      "vtraceCost": 0.30092874999999997,
+      "baselineTokens": 736898,
+      "vtraceTokens": 543663,
+      "reasonSelected": "repository diversity (psf); reusable existing baseline run; existing VTRACE evidence; existing baseline resolved where VTRACE did not (apparent loss)",
+      "risk": "existing condition data was produced under heterogeneous run labels/configs; the VTRACE condition is re-run under the current normal protocol for a controlled pair (existing baseline is protocol-stable and reused)"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc",
+      "selectionSource": "existing_condition_data",
+      "hasBaselineRun": true,
+      "hasVtraceRun": true,
+      "baselineRunLabel": "eval-localization-gap-baseline-sphinx-7462",
+      "vtraceRunLabel": "eval-localization-gap-vtrace-sphinx-7462",
+      "baselineResolved": false,
+      "vtraceResolved": false,
+      "baselineCost": 0.2651115,
+      "vtraceCost": 0.24934125000000001,
+      "baselineTokens": 627263,
+      "vtraceTokens": 572906,
+      "reasonSelected": "repository diversity (sphinx-doc); reusable existing baseline run; existing VTRACE evidence; both existing conditions unresolved",
+      "risk": "existing condition data was produced under heterogeneous run labels/configs; the VTRACE condition is re-run under the current normal protocol for a controlled pair (existing baseline is protocol-stable and reused)"
+    }
+  ],
+  "missingRuns": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "condition": "vtrace",
+      "reasonMissing": "existing VTRACE data is from a non-controlled label/config; re-run under the current normal protocol",
+      "recommendedRunLabel": "eval-controlled-vtrace-astropy-14369",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances astropy__astropy-14369 \\\n  --run-label eval-controlled-vtrace-astropy-14369 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "condition": "vtrace",
+      "reasonMissing": "existing VTRACE data is from a non-controlled label/config; re-run under the current normal protocol",
+      "recommendedRunLabel": "eval-controlled-vtrace-sympy-16766",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-16766 \\\n  --run-label eval-controlled-vtrace-sympy-16766 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "condition": "vtrace",
+      "reasonMissing": "existing VTRACE data is from a non-controlled label/config; re-run under the current normal protocol",
+      "recommendedRunLabel": "eval-controlled-vtrace-matplotlib-22719",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances matplotlib__matplotlib-22719 \\\n  --run-label eval-controlled-vtrace-matplotlib-22719 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "condition": "vtrace",
+      "reasonMissing": "existing VTRACE data is from a non-controlled label/config; re-run under the current normal protocol",
+      "recommendedRunLabel": "eval-controlled-vtrace-requests-5414",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances psf__requests-5414 \\\n  --run-label eval-controlled-vtrace-requests-5414 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "condition": "vtrace",
+      "reasonMissing": "existing VTRACE data is from a non-controlled label/config; re-run under the current normal protocol",
+      "recommendedRunLabel": "eval-controlled-vtrace-sphinx-7462",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sphinx-doc__sphinx-7462 \\\n  --run-label eval-controlled-vtrace-sphinx-7462 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    }
+  ],
+  "commands": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "condition": "vtrace",
+      "runLabel": "eval-controlled-vtrace-astropy-14369",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances astropy__astropy-14369 \\\n  --run-label eval-controlled-vtrace-astropy-14369 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "condition": "vtrace",
+      "runLabel": "eval-controlled-vtrace-sympy-16766",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-16766 \\\n  --run-label eval-controlled-vtrace-sympy-16766 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "condition": "vtrace",
+      "runLabel": "eval-controlled-vtrace-matplotlib-22719",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances matplotlib__matplotlib-22719 \\\n  --run-label eval-controlled-vtrace-matplotlib-22719 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "condition": "vtrace",
+      "runLabel": "eval-controlled-vtrace-requests-5414",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances psf__requests-5414 \\\n  --run-label eval-controlled-vtrace-requests-5414 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "condition": "vtrace",
+      "runLabel": "eval-controlled-vtrace-sphinx-7462",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sphinx-doc__sphinx-7462 \\\n  --run-label eval-controlled-vtrace-sphinx-7462 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    }
+  ]
+}
