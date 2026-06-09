@@ -1,0 +1,124 @@
+{
+  "generatedFrom": {
+    "ledger": "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+    "plan": "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_controlled_10_task_plan.json",
+    "pilotFixCommit": "31108c3"
+  },
+  "scope": "reporting/analysis only — no live agents, no Docker, no retrieval/telemetry/PIVOT_CHECK changes, raw artifacts read-only",
+  "pilot": {
+    "pairedTasks": 10,
+    "baselineResolved": 8,
+    "vtraceResolved": 5,
+    "vtraceLosses": 3,
+    "vtraceWins": 0
+  },
+  "losses": [
+    {
+      "instance_id": "sympy__sympy-16766",
+      "baseline_run_label": "eval-baseline-vs-vtrace-baseline-sympy-16766",
+      "vtrace_run_label": "eval-controlled-vtrace-sympy-16766",
+      "baseline_resolved": true,
+      "vtrace_resolved": false,
+      "baseline_edited_files": ["sympy/printing/pycode.py"],
+      "vtrace_edited_files": ["sympy/printing/pycode.py"],
+      "baseline_tokens": 1414441,
+      "vtrace_tokens": 1422447,
+      "baseline_cost": 0.5185075,
+      "vtrace_cost": 0.5765395,
+      "token_delta": 8006,
+      "cost_delta": 0.058032,
+      "vtrace_tool_call_count": 12,
+      "vtrace_capsule_pivots": [
+        {"path": "sympy/printing/pycode.py", "roleReason": "actionable class — symbol-name match; lexical match; issue-domain relevance; 9 dependents"},
+        {"path": "sympy/printing/printer.py", "roleReason": "actionable method — symbol-name match; lexical match; issue-domain relevance; 523 dependents"}
+      ],
+      "vtrace_hidden_pivot_engagement": {"hiddenPivotCount": 2, "inspected": 2, "edited": 1, "ignored": 0},
+      "vtrace_read_files": ["sympy/printing/pycode.py", "sympy/printing/ccode.py", "sympy/printing/printer.py"],
+      "vtrace_searched_files": ["sympy/printing/ccode.py", "sympy/printing"],
+      "classification": "patch_mistake_despite_good_context",
+      "secondary_classifications": [],
+      "confidence": "high (classification); medium (exact failing mechanism)",
+      "evidence": "Gold file sympy/printing/pycode.py was the #1 capsule pivot and was edited (same file the resolving baseline edited). Both runs add _print_Indexed / _print_IndexedBase. Baseline inserts them INTO class PythonCodePrinter (hunk anchored at _print_NoneToken, after the class declaration). VTRACE inserts them ABOVE the `class PythonCodePrinter` line (hunk anchored at _print_Stream), placing them in the broader AbstractPythonCodePrinter scope. Same file, same symbols, correct context — the edit landed in a different class scope and failed docker evaluation.",
+      "recommended_fix": "edit-plan/rule-out guidance: after pivot inspection, confirm the enclosing class/scope of the insertion point before writing the method."
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-22719",
+      "baseline_run_label": "eval-localization-gap-baseline-matplotlib-22719",
+      "vtrace_run_label": "eval-controlled-vtrace-matplotlib-22719",
+      "baseline_resolved": true,
+      "vtrace_resolved": false,
+      "baseline_edited_files": ["lib/matplotlib/category.py"],
+      "vtrace_edited_files": ["lib/matplotlib/category.py"],
+      "baseline_tokens": 1167993,
+      "vtrace_tokens": 2718398,
+      "baseline_cost": 0.46377525,
+      "vtrace_cost": 0.96270225,
+      "token_delta": 1550405,
+      "cost_delta": 0.498927,
+      "vtrace_tool_call_count": 30,
+      "vtrace_capsule_pivots": [
+        {"path": "lib/matplotlib/axis.py", "roleReason": "task diagnostic literal appears in this symbol's body — explicit edit site"},
+        {"path": "lib/matplotlib/axis.py", "roleReason": "existing method recovered from Class.method expansion — more actionable than containing class"}
+      ],
+      "vtrace_hidden_pivot_engagement": {"hiddenPivotCount": 2, "inspected": 2, "edited": 0, "ignored": 0},
+      "vtrace_read_files": ["lib/matplotlib/axis.py", "lib/matplotlib/category.py", "lib/matplotlib/units.py", "lib/matplotlib/_api/deprecation.py"],
+      "vtrace_searched_files": ["lib/matplotlib/axis.py", "lib/matplotlib/units.py", "lib/matplotlib/_api/deprecation.py"],
+      "classification": "patch_mistake_despite_good_context",
+      "secondary_classifications": ["wrong_pivot_emphasis", "pivot_check_overhead_or_noise"],
+      "confidence": "high",
+      "evidence": "VTRACE edited the gold file lib/matplotlib/category.py (same as the resolving baseline) — it read category.py despite both capsule pivots pointing at lib/matplotlib/axis.py, so localization recovered. The semantic fix differs: baseline adds an early return for empty arrays (`if values.size == 0: return np.asarray(values, dtype=float)`), directly handling the empty-data case; VTRACE only narrows the deprecation-warning branch (`if is_numlike` -> `if is_numlike and values.size`) and never returns early for empty arrays, so the empty-data path still fails. Correct file, insufficient/incorrect patch. Secondary: capsule emphasized axis.py over the gold category.py (wrong_pivot_emphasis, recovered); PIVOT_CHECK injected and the run used 30 tool calls / 2.72M tokens vs 1.17M baseline (pivot_check_overhead_or_noise — a cost driver, not the resolution cause).",
+      "recommended_fix": "edit-plan/rule-out guidance: enumerate the failing input case (empty array) and verify the patch handles it before finalizing."
+    },
+    {
+      "instance_id": "psf__requests-5414",
+      "baseline_run_label": "eval-baseline-vs-vtrace-baseline-requests-5414",
+      "vtrace_run_label": "eval-controlled-vtrace-requests-5414",
+      "baseline_resolved": true,
+      "vtrace_resolved": false,
+      "baseline_edited_files": ["requests/models.py"],
+      "vtrace_edited_files": ["requests/models.py"],
+      "baseline_tokens": 736898,
+      "vtrace_tokens": 956785,
+      "baseline_cost": 0.47255225,
+      "vtrace_cost": 0.4065295,
+      "token_delta": 219887,
+      "cost_delta": -0.0660228,
+      "vtrace_tool_call_count": 9,
+      "vtrace_capsule_pivots": [
+        {"path": "requests/models.py", "roleReason": "source line anchor in the issue points at this symbol — explicit edit site"},
+        {"path": "requests/api.py", "roleReason": "actionable function — exercised by a failing test; symbol-name match; lexical match; issue-domain relevance; 65 dependents"}
+      ],
+      "vtrace_hidden_pivot_engagement": {"hiddenPivotCount": 1, "inspected": 1, "edited": 0, "ignored": 0},
+      "vtrace_read_files": ["requests/models.py", "requests/api.py"],
+      "vtrace_searched_files": ["psf__requests"],
+      "classification": "patch_mistake_despite_good_context",
+      "secondary_classifications": [],
+      "confidence": "high",
+      "evidence": "Gold file requests/models.py was the #1 capsule pivot (source-line anchor) and was edited — same file as the resolving baseline. The approaches differ: baseline ADDS an explicit IDNA validation (`host.encode('idna')` raising InvalidURL on UnicodeError) that catches empty labels like '.example.com'; VTRACE instead RESTRUCTURES the existing branch to always call self._get_idna_encoded_host(host) (even for ASCII hosts) and drops the original ASCII fast-path. Correct file and region, but the rewritten control flow failed docker evaluation. Correct context, incorrect patch approach.",
+      "recommended_fix": "edit-plan/rule-out guidance: prefer additive validation that targets the reported failing input over restructuring existing control flow."
+    }
+  ],
+  "cross_case_patterns": {
+    "all_edited_gold_file": true,
+    "all_had_gold_in_context": true,
+    "gold_was_top_pivot_count": 2,
+    "localization_failures": 0,
+    "ignored_pivot_failures": 0,
+    "retrieval_misses": 0,
+    "dominant_classification": "patch_mistake_despite_good_context",
+    "pivot_check_injected_count": 3,
+    "note": "In 3/3 losses VTRACE localized to the correct file (the same file the resolving baseline edited) and had it in context; the failure point was the edit/patch, not retrieval. PIVOT_CHECK overhead explains the higher mean cost/tokens but is not the cause of any resolution loss."
+  },
+  "recommended_next_engineering_work": {
+    "direction": "add edit-plan/rule-out guidance after pivot inspection",
+    "rationale": "All three losses are correct-localization, wrong-patch. Capsule v2 ranking is not the bottleneck (gold file was edited in 3/3 and was the top pivot in 2/3). A small, targeted edit-planning step (confirm scope, enumerate the failing input, prefer additive fixes) addresses the observed gap without a rewrite.",
+    "conservatism_note": "n=3 opportunistic pilot. Treat as a hypothesis to validate on more losses before broad behavior changes. A separate, secondary follow-up is making PIVOT_CHECK conditional to cut the cost/token overhead seen here (esp. matplotlib), but that does not affect resolution and is not the primary recommendation."
+  },
+  "non_claims": [
+    "This is a 10-task opportunistic pilot, not a statistically powered benchmark.",
+    "This analysis does not prove VTRACE is worse than baseline generally.",
+    "This analysis does not compare against VEXP directly.",
+    "This analysis does not rerun agents or Docker; resolution is taken from existing docker_eval artifacts.",
+    "This analysis separates context quality, agent behavior, patch correctness, and evaluation outcome."
+  ]
+}
