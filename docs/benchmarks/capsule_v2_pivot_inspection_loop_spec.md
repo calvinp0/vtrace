@@ -382,6 +382,27 @@ token delta vs C1:     report (bloat risk)
 `sphinx/pycode/ast.py::unparse` and either edited it or gave a grounded reason not
 to. Resolution is reported but not required.
 
+### Live validation result (first run) — done
+
+C2 was implemented (compact `PIVOT_CHECK`, commit `13c7a25`) and run as
+`eval-pivot-check-vtrace-sphinx-7462`. Actual readout vs. the expectations above:
+
+```
+pivotInspection[ast.py::unparse].state: inspected   ✓ (was discovered-only/ignored in C1)
+hidden pivot directly Read:             twice        ✓
+checklistEmitted:                       false        ✗ vs. the "expect true" above
+vtraceToolLogOrdered / toolCallCount:   true / 11
+resolved (Docker):                      reported separately, NOT the criterion
+```
+
+The behavioral success criterion was met — the hidden pivot was inspected. But the
+`checklistEmitted: expect true` line above was **wrong**: the agent complied with
+the inspection behavior without echoing the checklist table. This confirms the
+design's own §4.2 priority — **ordered tool evidence is authoritative; the emitted
+checklist is secondary** — and is the reason `checklistVsToolsAgreement` keeps
+row-level parsing as a TODO rather than a gate. Full write-up:
+[`capsule_v2_context_to_action_gap.md`](./capsule_v2_context_to_action_gap.md).
+
 ---
 
 ## 9. Non-claims
