@@ -134,6 +134,50 @@ export function parseOrderedToolCalls(streamJson: string): OrderedToolCall[] {
   return calls;
 }
 
+// Concatenate the agent's ASSISTANT-side text from the captured stream-json. Only
+// `assistant` events contribute (their `text` content blocks): the injected
+// context — which itself contains "PIVOT_CHECK" — rides in the user/prompt
+// message, so scanning the whole stream would always match. Scoping to assistant
+// text keeps "did the agent emit a checklist?" an honest agent-output signal.
+export function assistantTextFromStream(streamJson: string): string {
+  const parts: string[] = [];
+  for (const line of streamJson.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (trimmed.length === 0) continue;
+    let event: unknown;
+    try {
+      event = JSON.parse(trimmed);
+    } catch {
+      continue;
+    }
+    if (!isRecord(event) || event.type !== "assistant") continue;
+    const message = isRecord(event.message) ? event.message : null;
+    const content = message?.content;
+    if (typeof content === "string") {
+      parts.push(content);
+    } else if (Array.isArray(content)) {
+      for (const block of content) {
+        if (isRecord(block) && block.type === "text" && typeof block.text === "string") {
+          parts.push(block.text);
+        }
+      }
+    }
+  }
+  return parts.join("\n");
+}
+
+// The marker a PIVOT_CHECK enforcement block (and the agent's echo of it) carries.
+export const PIVOT_CHECK_MARKER = "PIVOT_CHECK";
+
+// Minimal detector: did the agent's response include a PIVOT_CHECK section? Scans
+// assistant text only (see `assistantTextFromStream`). This is a presence detector,
+// not a row parser — full row-level parsing of the checklist table (claimed
+// inspected=yes vs. tool evidence) is deliberately deferred. TODO: parse the
+// emitted table rows so `checklistVsToolsAgreement` can compare per-row claims.
+export function detectPivotChecklistEmitted(streamJson: string): boolean {
+  return assistantTextFromStream(streamJson).includes(PIVOT_CHECK_MARKER);
+}
+
 // Map ordered calls into the classifier's `InspectionToolCall` shape. `output`
 // carries the search result (or the query as a fallback) so a grep that surfaces
 // a pivot path/symbol is detected as `discovered` rather than `inspected`.

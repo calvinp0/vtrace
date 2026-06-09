@@ -17,6 +17,7 @@ import {
   buildEvaluateCommand,
   buildInstanceQuery,
   buildVexpCommand,
+  buildPivotCheckBlock,
   buildVtraceContextMarkdown,
   buildVtraceIndexCommand,
   buildVtracePatchBlock,
@@ -82,6 +83,8 @@ import {
   vtraceInstructionsFilePath,
   vtraceInstructionsSnapshotFilePath,
   workspacePathFor,
+  type CapsuleAuditItem,
+  type CapsuleClassification,
   type CapsulePolicyDiagnostics,
   type CapsuleV2PolicyDiagnostics,
   type CliConfig,
@@ -548,6 +551,8 @@ test("persistOrderedToolCalls: missing stream file gives explicit false telemetr
   assert.equal(meta.vtraceToolCallLogFile, null);
   assert.equal(meta.vtraceToolCallCount, null);
   assert.equal(meta.vtraceToolCallError, null);
+  // No stream → checklist emission is unobservable, recorded honestly as null.
+  assert.equal(meta.vtracePivotChecklistEmitted, null);
 });
 
 test("persistOrderedToolCalls: valid raw stream produces _tool_calls.json", async () => {
@@ -566,11 +571,33 @@ test("persistOrderedToolCalls: valid raw stream produces _tool_calls.json", asyn
   assert.equal(meta.vtraceToolCallCount, 2);
   assert.equal(meta.vtraceToolCallError, null);
 
+  // This stream has no assistant text → no detectable PIVOT_CHECK emission.
+  assert.equal(meta.vtracePivotChecklistEmitted, false);
+
   const log = JSON.parse(await readFile(path.join(rawDir, "_tool_calls.json"), "utf8"));
   assert.equal(log.length, 2);
   assert.equal(log[0].tool, "Read");
   assert.equal(log[0].path, "sphinx/pycode/ast.py");
   assert.equal(log[1].category, "search");
+});
+
+test("persistOrderedToolCalls: detects a PIVOT_CHECK emitted in the agent's assistant text", async () => {
+  const out = path.join(await tmpDir("persist-checklist"), "results");
+  await mkdir(out, { recursive: true });
+  await writeFile(
+    vtraceAgentStreamFilePath(out),
+    [
+      // A user/prompt message echoing the injected context must NOT trigger detection.
+      JSON.stringify({ type: "user", message: { content: "## PIVOT_CHECK\ninspect every pivot" } }),
+      JSON.stringify({
+        type: "assistant",
+        message: { content: [{ type: "text", text: "PIVOT_CHECK\n| pivot | ... | inspected | ..." }] },
+      }),
+      JSON.stringify({ type: "tool_use", name: "Read", input: { file_path: "sphinx/pycode/ast.py" } }),
+    ].join("\n"),
+  );
+  const meta = await persistOrderedToolCalls(baseConfig({ out }), path.join(out, "raw", "vtrace"));
+  assert.equal(meta.vtracePivotChecklistEmitted, true);
 });
 
 test("persistOrderedToolCalls: sentinel stream yields false meta with explanatory error", async () => {
@@ -584,6 +611,8 @@ test("persistOrderedToolCalls: sentinel stream yields false meta with explanator
   assert.equal(meta.vtraceToolLogOrdered, false);
   assert.equal(meta.vtraceToolCallCount, null);
   assert.match(String(meta.vtraceToolCallError), /sentinel/i);
+  // Sentinel stream carried no usable agent output → emission unobservable.
+  assert.equal(meta.vtracePivotChecklistEmitted, null);
 });
 
 test("install-vtrace-patch patches the fixture, backs it up, and writes a manifest", async () => {
@@ -1291,6 +1320,111 @@ test("buildVtraceContextMarkdown keeps a multi-line body when the section is pre
   const capped = buildVtraceContextMarkdown([{ ...section, preformatted: true }], { maxChars: 60, maxItems: 8 });
   assert.equal(capped.truncated, true);
   assert.match(capped.markdown, /\[truncated to 60 chars\]/);
+});
+
+// ----- Stage 5: PIVOT_CHECK enforcement (multi-pivot Capsule v2) -----
+
+// One source-anchored pivot (the issue pointed straight at it) + one hidden pivot
+// (surfaced by inference) — the sphinx-7462 shape PIVOT_CHECK exists to catch.
+const PIVOT_CHECK_PIVOTS: CapsuleAuditItem[] = [
+  {
+    path: "sphinx/domains/python.py",
+    symbol: "_parse_annotation",
+    roleReason: "source line anchor python.py#L120",
+    estimatedTokens: 200,
+  },
+  {
+    path: "sphinx/pycode/ast.py",
+    symbol: "unparse",
+    roleReason: "symbol-name match on the failing call path",
+    estimatedTokens: 80,
+  },
+];
+
+// Build a minimal classification carrying just the pivot audit list — the only
+// field buildVtraceContextMarkdown reads to decide PIVOT_CHECK injection.
+function classificationWithPivots(pivots: CapsuleAuditItem[] | null): CapsuleClassification {
+  return { capsulePivots: pivots } as unknown as CapsuleClassification;
+}
+
+test("buildPivotCheckBlock seeds a checklist from >=2 pivots, including hidden rows", () => {
+  const block = buildPivotCheckBlock(PIVOT_CHECK_PIVOTS);
+  assert.ok(block !== null, "a multi-pivot capsule must emit a PIVOT_CHECK block");
+  const text = block!;
+  assert.match(text, /PIVOT_CHECK/);
+  // Both pivots seeded as rows — the hidden pivot is never silently omitted.
+  assert.match(text, /sphinx\/domains\/python\.py/);
+  assert.match(text, /sphinx\/pycode\/ast\.py/);
+  assert.match(text, /unparse/);
+  // The checklist table header is present.
+  assert.match(text, /\| pivot \| symbol \| inspected \| relevant \| edit_needed \| reason \|/);
+  // Says Search/Grep is not enough AND direct Read/open is required.
+  assert.match(text, /Search\/Grep does NOT count as inspection/);
+  assert.match(text, /Read, open, view, or equivalent file-content access/);
+  // Does NOT require editing every pivot; smallest correct patch still preferred.
+  assert.match(text, /Do not edit every pivot/);
+  assert.match(text, /smallest correct patch is still preferred/);
+  // The hidden-pivot note is present (one pivot is non-source-anchored).
+  assert.match(text, /surfaced by VTRACE via symbol, graph, literal, or test evidence/);
+});
+
+test("buildPivotCheckBlock stays quiet for single-pivot / empty / null inputs", () => {
+  assert.equal(buildPivotCheckBlock(null), null);
+  assert.equal(buildPivotCheckBlock([]), null);
+  assert.equal(buildPivotCheckBlock([PIVOT_CHECK_PIVOTS[0]!]), null);
+});
+
+test("buildPivotCheckBlock omits the hidden note when every pivot is source-anchored", () => {
+  const anchored: CapsuleAuditItem[] = [
+    { path: "a.py", symbol: "f", roleReason: "source line anchor a.py#L1", estimatedTokens: 10 },
+    { path: "b.py", symbol: "g", roleReason: "source line anchor b.py#L2", estimatedTokens: 10 },
+  ];
+  const block = buildPivotCheckBlock(anchored);
+  assert.ok(block !== null);
+  assert.doesNotMatch(block!, /surfaced by VTRACE/);
+  // The core enforcement wording is still present even with no hidden pivots.
+  assert.match(block!, /Search\/Grep does NOT count as inspection/);
+});
+
+test("buildVtraceContextMarkdown injects PIVOT_CHECK for a multi-pivot Capsule v2 section", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const md = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 }).markdown;
+  assert.match(md, /## PIVOT_CHECK/);
+  assert.match(md, /sphinx\/pycode\/ast\.py/);
+});
+
+test("buildVtraceContextMarkdown does not inject PIVOT_CHECK for a single-pivot capsule", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification: classificationWithPivots([PIVOT_CHECK_PIVOTS[0]!]),
+    preformatted: true,
+  };
+  const md = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 }).markdown;
+  assert.doesNotMatch(md, /PIVOT_CHECK/);
+});
+
+test("buildVtraceContextMarkdown does not inject PIVOT_CHECK for legacy / no-capsule sections", () => {
+  // Legacy engine: classification carries no capsulePivots (null), even multi-item.
+  const legacy = {
+    instance: sampleInstance(),
+    rawContext: "some legacy retrieved context\nwith two lines",
+    error: null,
+    classification: classificationWithPivots(null),
+    preformatted: false,
+  };
+  assert.doesNotMatch(buildVtraceContextMarkdown([legacy], { maxChars: 12000, maxItems: 8 }).markdown, /PIVOT_CHECK/);
+
+  // No classification at all (hard-error section) → never injects.
+  const noClass = { instance: sampleInstance(), rawContext: "ctx", error: null, classification: null };
+  assert.doesNotMatch(buildVtraceContextMarkdown([noClass], { maxChars: 12000, maxItems: 8 }).markdown, /PIVOT_CHECK/);
 });
 
 async function v2InjectionResult(

@@ -10,9 +10,11 @@ import {
   aggregateMetrics,
   buildPivotInspection,
   buildReport,
+  checklistVsToolsAgreement,
   extractCapsuleMeta,
   extractCapsulePivots,
   extractOrderedToolCalls,
+  hiddenPivotCountsFor,
   loadPair,
   readOrderedToolCallLog,
   parseLabelMap,
@@ -24,10 +26,12 @@ import {
   renderJson,
   renderMarkdown,
   snapshotHasEditRiskDirective,
+  snapshotHasPivotCheck,
   totalTokens,
   type SweBenchRow,
   type ValidationPair,
 } from "./run_stage5_capsule_v2_validation_report";
+import type { PivotInspectionRecord } from "../../src/capsule/finalEditDiagnostics";
 
 // --------------------------------------------------------------------------
 // Fixtures
@@ -91,6 +95,7 @@ function pairFor(instanceId: keyof typeof EXPECTED): ValidationPair {
       snapshotSha256: "dde84da62e6f1c3f2a4e8657a759cbf0e782f91ea4209f8162456b172226badc",
       snapshotExists: true,
       editRiskDirectivePresent: instanceId === "django__django-11490",
+      pivotCheckInjected: false,
     },
   };
 }
@@ -290,6 +295,7 @@ test("renderMarkdown includes all required sections", () => {
     "## Instance set",
     "## Fresh-index evidence",
     "## Capsule v2 metadata",
+    "## PIVOT_CHECK enforcement",
     "## Resolution",
     "## Token / cost / duration comparison",
     "## Aggregate metrics",
@@ -575,6 +581,112 @@ test("buildPivotInspection degrades to patch-only when the record is missing", (
 });
 
 // --------------------------------------------------------------------------
+// PIVOT_CHECK enforcement metrics
+// --------------------------------------------------------------------------
+
+// Build a hidden-pivot inspection record with explicit outcome flags.
+function hiddenRecord(overrides: Partial<PivotInspectionRecord>): PivotInspectionRecord {
+  return {
+    path: "p.py",
+    symbol: "f",
+    role: "pivot",
+    hidden: true,
+    discovered: false,
+    inspected: false,
+    edited: false,
+    edited_without_inspection: false,
+    ruled_out: false,
+    status: "ignored",
+    ...overrides,
+  };
+}
+
+test("hiddenPivotCountsFor distinguishes discovered-only / inspected / edited / ignored hidden pivots", () => {
+  const records: PivotInspectionRecord[] = [
+    // discovered-only: seen in search, never read, never edited → ignored + discoveredOnly.
+    hiddenRecord({ path: "a.py", discovered: true, status: "ignored" }),
+    // plainly ignored: never seen, never read, never edited → ignored, NOT discoveredOnly.
+    hiddenRecord({ path: "b.py", status: "ignored" }),
+    // inspected: direct read.
+    hiddenRecord({ path: "c.py", inspected: true, status: "inspected" }),
+    // edited.
+    hiddenRecord({ path: "d.py", edited: true, status: "edited" }),
+    // a NON-hidden pivot is never counted, whatever its status.
+    hiddenRecord({ path: "e.py", hidden: false, inspected: true, status: "inspected" }),
+  ];
+  const counts = hiddenPivotCountsFor(records);
+  assert.equal(counts.ignored, 2);
+  assert.equal(counts.discoveredOnly, 1);
+  assert.equal(counts.inspected, 1);
+  assert.equal(counts.edited, 1);
+});
+
+test("hiddenPivotCountsFor returns zeros for missing/empty records", () => {
+  assert.deepEqual(hiddenPivotCountsFor(undefined), { ignored: 0, discoveredOnly: 0, inspected: 0, edited: 0 });
+  assert.deepEqual(hiddenPivotCountsFor([]), { ignored: 0, discoveredOnly: 0, inspected: 0, edited: 0 });
+});
+
+test("checklistVsToolsAgreement is null unless a checklist was emitted AND an ordered log exists", () => {
+  const inspected = [hiddenRecord({ inspected: true, status: "inspected" })];
+  // No claim → null.
+  assert.equal(checklistVsToolsAgreement(null, true, inspected), null);
+  assert.equal(checklistVsToolsAgreement(false, true, inspected), null);
+  // Claim but no ordered log to verify against → null.
+  assert.equal(checklistVsToolsAgreement(true, false, inspected), null);
+  assert.equal(checklistVsToolsAgreement(true, null, inspected), null);
+});
+
+test("checklistVsToolsAgreement corroborates the claim against hidden-pivot tool evidence", () => {
+  // Emitted + ordered + every hidden pivot inspected/edited → agreement true.
+  assert.equal(
+    checklistVsToolsAgreement(true, true, [hiddenRecord({ inspected: true }), hiddenRecord({ edited: true })]),
+    true,
+  );
+  // Emitted + ordered but a hidden pivot was only ignored → disagreement.
+  assert.equal(
+    checklistVsToolsAgreement(true, true, [hiddenRecord({ inspected: true }), hiddenRecord({ status: "ignored" })]),
+    false,
+  );
+  // No hidden pivots to verify → vacuously true.
+  assert.equal(checklistVsToolsAgreement(true, true, []), true);
+});
+
+test("snapshotHasPivotCheck detects the PIVOT_CHECK block in an injected snapshot", () => {
+  assert.equal(snapshotHasPivotCheck("# vtrace indexed context\n\n## PIVOT_CHECK\n| pivot |"), true);
+  assert.equal(snapshotHasPivotCheck("# vtrace indexed context\n\n## vtrace context\n"), false);
+  assert.equal(snapshotHasPivotCheck(null), false);
+});
+
+test("extractCapsuleMeta records whether a PIVOT_CHECK block was injected", () => {
+  assert.equal(extractCapsuleMeta({}, "## PIVOT_CHECK\n...").pivotCheckInjected, true);
+  assert.equal(extractCapsuleMeta({}, "no checklist here").pivotCheckInjected, false);
+  assert.equal(extractCapsuleMeta({}, null).pivotCheckInjected, false);
+});
+
+test("aggregateMetrics pools hidden-pivot conversion and checklist counts", () => {
+  const pairs = allPairs();
+  pairs[0]!.pivotInspection = [
+    hiddenRecord({ path: "a.py", discovered: true, status: "ignored" }),
+    hiddenRecord({ path: "b.py", inspected: true, status: "inspected" }),
+  ];
+  pairs[0]!.hiddenPivotCounts = hiddenPivotCountsFor(pairs[0]!.pivotInspection);
+  pairs[0]!.checklistEmitted = true;
+  pairs[0]!.checklistVsToolsAgreement = false;
+  pairs[1]!.pivotInspection = [hiddenRecord({ path: "c.py", edited: true, status: "edited" })];
+  pairs[1]!.hiddenPivotCounts = hiddenPivotCountsFor(pairs[1]!.pivotInspection);
+  pairs[1]!.checklistEmitted = true;
+  pairs[1]!.checklistVsToolsAgreement = true;
+
+  const a = aggregateMetrics(pairs);
+  assert.equal(a.hiddenPivotsIgnored, 1);
+  assert.equal(a.hiddenPivotsDiscoveredOnly, 1);
+  assert.equal(a.hiddenPivotsInspected, 1);
+  assert.equal(a.hiddenPivotsEdited, 1);
+  assert.equal(a.checklistEmittedRuns, 2);
+  assert.equal(a.checklistVsToolsAgreementRuns, 1);
+});
+
+// --------------------------------------------------------------------------
 // Ordered tool-call log: loading + wiring into pivot inspection
 // --------------------------------------------------------------------------
 
@@ -651,4 +763,43 @@ test("loadPair keeps false-by-absence when no _tool_calls.json is present", asyn
   );
   // No ordered log written => aggregate fallback => ordered:false (honest).
   assert.equal(pair.pivotInspectionToolLogOrdered, false);
+  // No _tool_calls.json must not crash; checklist/hidden metrics still resolve.
+  assert.ok(pair.hiddenPivotCounts);
+  // No vtracePivotChecklistEmitted in meta → null (unobservable), not a crash.
+  assert.equal(pair.checklistEmitted, null);
+  assert.equal(pair.checklistVsToolsAgreement, null);
+});
+
+test("loadPair reads checklist emission + PIVOT_CHECK injection from run artifacts", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage5-cap-checklist-"));
+  await buildRunTree(root);
+  const capLabelDir = path.join(root, "eval-capsulev2-risk5-10880");
+  const capDir = path.join(capLabelDir, "raw", "vtrace");
+  // Re-point at the sphinx hidden pivot, record that the agent emitted a checklist,
+  // and write an ordered log showing the hidden pivot WAS directly read.
+  await writeFile(
+    path.join(capDir, "_run.meta.json"),
+    JSON.stringify({
+      vtraceCapsuleEngine: "v2",
+      vtraceCapsulePivots: SPHINX_RUN_META.vtraceCapsulePivots,
+      vtracePivotChecklistEmitted: true,
+      vtraceInstructionsSnapshotFile: path.join(capLabelDir, "_vtrace_instructions.snapshot.md"),
+    }),
+  );
+  await writeFile(path.join(capDir, "_tool_calls.json"), JSON.stringify(TOOL_CALL_LOG));
+  await writeFile(
+    path.join(capLabelDir, "_vtrace_instructions.snapshot.md"),
+    "# vtrace indexed context\n\n## PIVOT_CHECK\n| pivot | symbol | inspected |\n",
+  );
+
+  const pair = await loadPair(
+    "django__django-10880",
+    ["eval-10880", "eval-capsulev2-risk5-10880"],
+    { runsDir: root },
+  );
+  assert.equal(pair.capsuleMeta.pivotCheckInjected, true);
+  assert.equal(pair.checklistEmitted, true);
+  // The ordered log shows ast.py was read → hidden pivot inspected, agreement true.
+  assert.equal(pair.hiddenPivotCounts?.inspected, 1);
+  assert.equal(pair.checklistVsToolsAgreement, true);
 });

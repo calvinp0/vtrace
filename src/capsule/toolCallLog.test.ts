@@ -3,6 +3,8 @@ import { test } from "bun:test";
 
 import { classifyPivotInspection, type PivotForInspection } from "./finalEditDiagnostics";
 import {
+  assistantTextFromStream,
+  detectPivotChecklistEmitted,
   inspectionCallsFromLog,
   parseOrderedToolCalls,
   toInspectionToolCalls,
@@ -128,4 +130,37 @@ test("inspectionCallsFromLog coerces a persisted _tool_calls.json array", () => 
 test("inspectionCallsFromLog returns null for a non-array (absent/invalid log)", () => {
   assert.equal(inspectionCallsFromLog(null), null);
   assert.equal(inspectionCallsFromLog({ not: "an array" }), null);
+});
+
+test("assistantTextFromStream concatenates only assistant text blocks", () => {
+  const stream = [
+    JSON.stringify({ type: "user", message: { content: "PIVOT_CHECK injected into the prompt" } }),
+    JSON.stringify({
+      type: "assistant",
+      message: { content: [{ type: "text", text: "Here is my checklist:" }, { type: "tool_use", name: "Read", input: {} }] },
+    }),
+    JSON.stringify({ type: "assistant", message: { content: "and a string-form turn" } }),
+  ].join("\n");
+  const text = assistantTextFromStream(stream);
+  assert.match(text, /Here is my checklist:/);
+  assert.match(text, /and a string-form turn/);
+  // The user/prompt echo of the injected context is excluded.
+  assert.doesNotMatch(text, /injected into the prompt/);
+});
+
+test("detectPivotChecklistEmitted is true only when the AGENT emits PIVOT_CHECK", () => {
+  // Agent echoes the checklist in its own response → true.
+  const emitted = JSON.stringify({
+    type: "assistant",
+    message: { content: [{ type: "text", text: "PIVOT_CHECK\n| pivot | symbol | inspected |" }] },
+  });
+  assert.equal(detectPivotChecklistEmitted(emitted), true);
+
+  // The injected context (a user message) contains PIVOT_CHECK but the agent never
+  // emits one → false (no input-echo false positive).
+  const promptOnly = JSON.stringify({ type: "user", message: { content: "## PIVOT_CHECK\n..." } });
+  assert.equal(detectPivotChecklistEmitted(promptOnly), false);
+
+  // Empty stream → false.
+  assert.equal(detectPivotChecklistEmitted(""), false);
 });

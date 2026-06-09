@@ -75,6 +75,10 @@ export interface CapsuleMeta {
   snapshotSha256: string | null;
   snapshotExists: boolean;
   editRiskDirectivePresent: boolean;
+  // Whether the injected instructions snapshot carried a PIVOT_CHECK enforcement
+  // block (multi-pivot Capsule v2 only). False off the snapshot; this is the
+  // treatment-applied flag, distinct from whether the agent EMITTED a checklist.
+  pivotCheckInjected: boolean;
 }
 
 // A fully-resolved instance comparison: baseline row, capsule row, capsule
@@ -95,6 +99,29 @@ export interface ValidationPair {
   // counts, in which case `inspected`/`discovered` cannot be observed and read as
   // false-by-absence rather than confirmed-not-inspected. null when no record.
   pivotInspectionToolLogOrdered?: boolean | null;
+  // Hidden-pivot conversion counts for this pair, derived from pivotInspection.
+  hiddenPivotCounts?: HiddenPivotCounts;
+  // Whether the agent's response emitted a PIVOT_CHECK section (from the capsule
+  // run's `vtracePivotChecklistEmitted` meta). null when no stream was captured.
+  checklistEmitted?: boolean | null;
+  // Coarse agreement between the agent's PIVOT_CHECK claim and the ordered
+  // tool-call evidence (see checklistVsToolsAgreement). null when unverifiable.
+  checklistVsToolsAgreement?: boolean | null;
+}
+
+// Hidden-pivot conversion counts. A "hidden" pivot was surfaced by VTRACE rather
+// than named by the traceback/problem path — the kind PIVOT_CHECK targets. These
+// distinguish a hidden pivot that was merely search-discovered from one actually
+// inspected or edited.
+export interface HiddenPivotCounts {
+  // hidden pivots with no direct read/open and no edit (search-discovered or not).
+  ignored: number;
+  // hidden pivots seen in search/grep but never read/opened and never edited.
+  discoveredOnly: number;
+  // hidden pivots with a direct read/open.
+  inspected: number;
+  // hidden pivots touched by the final patch.
+  edited: number;
 }
 
 // Per-task percentage reductions (positive = capsule used less than baseline).
@@ -118,6 +145,17 @@ export interface AggregateMetrics {
   pooledBaselineDurationMs: number;
   pooledCapsuleDurationMs: number;
   pooledDurationReductionPct: number;
+  // Hidden-pivot conversion, pooled across all pairs. The PIVOT_CHECK enforcement
+  // experiment aims to move hidden pivots out of `ignored`/`discoveredOnly` into
+  // `inspected`/`edited`.
+  hiddenPivotsIgnored: number;
+  hiddenPivotsDiscoveredOnly: number;
+  hiddenPivotsInspected: number;
+  hiddenPivotsEdited: number;
+  // Runs whose agent response emitted a detectable PIVOT_CHECK section, and runs
+  // whose emitted checklist agreed with the ordered tool-call evidence.
+  checklistEmittedRuns: number;
+  checklistVsToolsAgreementRuns: number;
 }
 
 export interface ValidationReport {
@@ -251,6 +289,53 @@ export function snapshotHasEditRiskDirective(snapshot: string | null): boolean {
   return /^##\s+Edit risk/im.test(snapshot);
 }
 
+// True when the injected-instructions snapshot carries a PIVOT_CHECK enforcement
+// block (multi-pivot Capsule v2). Absent snapshot => false. This is the
+// treatment-applied flag — distinct from whether the AGENT emitted a checklist.
+export function snapshotHasPivotCheck(snapshot: string | null): boolean {
+  if (!snapshot) return false;
+  return snapshot.includes("PIVOT_CHECK");
+}
+
+// Count hidden-pivot conversion outcomes from the pivot-inspection records.
+// Definitions follow the spec literally, so `discoveredOnly` is a strict subset of
+// `ignored` (a search-discovered-but-untouched hidden pivot is still ignored).
+export function hiddenPivotCountsFor(
+  records: readonly PivotInspectionRecord[] | undefined,
+): HiddenPivotCounts {
+  const counts: HiddenPivotCounts = { ignored: 0, discoveredOnly: 0, inspected: 0, edited: 0 };
+  for (const record of records ?? []) {
+    if (!record.hidden) continue;
+    if (record.inspected) counts.inspected += 1;
+    if (record.edited) counts.edited += 1;
+    if (!record.inspected && !record.edited) {
+      counts.ignored += 1;
+      if (record.discovered) counts.discoveredOnly += 1;
+    }
+  }
+  return counts;
+}
+
+// Coarse agreement between the agent's PIVOT_CHECK claim and the tool evidence.
+// The agent claiming a checklist (`checklistEmitted`) is corroborated only when an
+// ORDERED tool log exists AND every hidden pivot was actually inspected or edited.
+// Returns null when unverifiable (no checklist claim, or no ordered log to check
+// against) so absence never reads as disagreement.
+//
+// TODO: this is a coarse proxy. Full row-level parsing of the emitted checklist
+// table (per-row claimed inspected=yes vs. that row's tool evidence) is deferred;
+// see detectPivotChecklistEmitted in src/capsule/toolCallLog.ts.
+export function checklistVsToolsAgreement(
+  checklistEmitted: boolean | null | undefined,
+  toolLogOrdered: boolean | null | undefined,
+  records: readonly PivotInspectionRecord[] | undefined,
+): boolean | null {
+  if (checklistEmitted !== true || toolLogOrdered !== true) return null;
+  const hidden = (records ?? []).filter((record) => record.hidden);
+  if (hidden.length === 0) return true;
+  return hidden.every((record) => record.inspected || record.edited);
+}
+
 // Extract Capsule v2 audit metadata from the capsule run's `_run.meta.json`
 // object and the snapshot text. Missing fields degrade to null rather than
 // throwing, so partial older runs still render.
@@ -281,6 +366,7 @@ export function extractCapsuleMeta(
     snapshotSha256: asNullableString(runMeta.vtraceInstructionsSha256),
     snapshotExists: snapshot !== null,
     editRiskDirectivePresent: snapshotHasEditRiskDirective(snapshot),
+    pivotCheckInjected: snapshotHasPivotCheck(snapshot),
   };
 }
 
@@ -434,6 +520,12 @@ export function aggregateMetrics(pairs: readonly ValidationPair[]): AggregateMet
   let pooledCapsuleCostUsd = 0;
   let pooledBaselineDurationMs = 0;
   let pooledCapsuleDurationMs = 0;
+  let hiddenPivotsIgnored = 0;
+  let hiddenPivotsDiscoveredOnly = 0;
+  let hiddenPivotsInspected = 0;
+  let hiddenPivotsEdited = 0;
+  let checklistEmittedRuns = 0;
+  let checklistVsToolsAgreementRuns = 0;
   const perTaskTokenReductions: number[] = [];
 
   for (const pair of pairs) {
@@ -448,6 +540,13 @@ export function aggregateMetrics(pairs: readonly ValidationPair[]): AggregateMet
     pooledBaselineDurationMs += pair.baseline.durationMs;
     pooledCapsuleDurationMs += pair.capsule.durationMs;
     perTaskTokenReductions.push(reductionPct(bt, ct));
+    const counts = pair.hiddenPivotCounts ?? hiddenPivotCountsFor(pair.pivotInspection);
+    hiddenPivotsIgnored += counts.ignored;
+    hiddenPivotsDiscoveredOnly += counts.discoveredOnly;
+    hiddenPivotsInspected += counts.inspected;
+    hiddenPivotsEdited += counts.edited;
+    if (pair.checklistEmitted === true) checklistEmittedRuns += 1;
+    if (pair.checklistVsToolsAgreement === true) checklistVsToolsAgreementRuns += 1;
   }
 
   const meanPerTaskTokenReductionPct =
@@ -469,6 +568,12 @@ export function aggregateMetrics(pairs: readonly ValidationPair[]): AggregateMet
     pooledBaselineDurationMs,
     pooledCapsuleDurationMs,
     pooledDurationReductionPct: reductionPct(pooledBaselineDurationMs, pooledCapsuleDurationMs),
+    hiddenPivotsIgnored,
+    hiddenPivotsDiscoveredOnly,
+    hiddenPivotsInspected,
+    hiddenPivotsEdited,
+    checklistEmittedRuns,
+    checklistVsToolsAgreementRuns,
   };
 }
 
@@ -517,6 +622,12 @@ export function renderJson(report: ValidationReport): string {
       },
       reductions: pairReductions(pair.baseline, pair.capsule),
       capsuleMeta: pair.capsuleMeta,
+      pivotEnforcement: {
+        pivotCheckInjected: pair.capsuleMeta.pivotCheckInjected,
+        checklistEmitted: pair.checklistEmitted ?? null,
+        checklistVsToolsAgreement: pair.checklistVsToolsAgreement ?? null,
+        hiddenPivotCounts: pair.hiddenPivotCounts ?? hiddenPivotCountsFor(pair.pivotInspection),
+      },
     })),
   };
   return `${JSON.stringify(out, null, 2)}\n`;
@@ -680,6 +791,29 @@ export function renderMarkdown(report: ValidationReport): string {
   }
   lines.push("");
 
+  // PIVOT_CHECK enforcement: hidden-pivot conversion + agent checklist compliance.
+  lines.push("## PIVOT_CHECK enforcement");
+  lines.push("");
+  lines.push(
+    "Hidden pivots were surfaced by VTRACE (symbol/graph/literal/test evidence) rather " +
+      "than named by the traceback. PIVOT_CHECK forces direct inspection of every pivot " +
+      "before editing. `injected` = the PIVOT_CHECK block was in the injected context; " +
+      "`emitted` = the agent's response echoed a PIVOT_CHECK section (null when no agent " +
+      "stream was captured); `agreement` = emitted checklist corroborated by tool evidence.",
+  );
+  lines.push("");
+  lines.push(
+    "| instance | pivot-check injected | checklist emitted | agreement | hidden ignored | hidden discovered-only | hidden inspected | hidden edited |",
+  );
+  lines.push("| --- | --- | --- | --- | ---: | ---: | ---: | ---: |");
+  for (const pair of report.pairs) {
+    const counts = pair.hiddenPivotCounts ?? hiddenPivotCountsFor(pair.pivotInspection);
+    lines.push(
+      `| ${pair.instanceId} | ${boolMark(pair.capsuleMeta.pivotCheckInjected)} | ${boolMark(pair.checklistEmitted ?? null)} | ${boolMark(pair.checklistVsToolsAgreement ?? null)} | ${counts.ignored} | ${counts.discoveredOnly} | ${counts.inspected} | ${counts.edited} |`,
+    );
+  }
+  lines.push("");
+
   // Resolution table
   lines.push("## Resolution");
   lines.push("");
@@ -717,6 +851,15 @@ export function renderMarkdown(report: ValidationReport): string {
   lines.push(`- Pooled token reduction: ${fmtPct(a.pooledTokenReductionPct)}`);
   lines.push(`- Pooled cost reduction: ${fmtPct(a.pooledCostReductionPct)}`);
   lines.push(`- Pooled duration reduction: ${fmtPct(a.pooledDurationReductionPct)}`);
+  lines.push(
+    `- Hidden pivots — ignored: ${a.hiddenPivotsIgnored} ` +
+      `(discovered-only: ${a.hiddenPivotsDiscoveredOnly}), ` +
+      `inspected: ${a.hiddenPivotsInspected}, edited: ${a.hiddenPivotsEdited}`,
+  );
+  lines.push(
+    `- PIVOT_CHECK emitted by agent: ${a.checklistEmittedRuns}/${a.instanceCount} runs ` +
+      `(checklist↔tools agreement: ${a.checklistVsToolsAgreementRuns})`,
+  );
   lines.push("");
 
   // Caveats / non-claims
@@ -836,6 +979,14 @@ export async function loadPair(
 
   const orderedCalls = await readOrderedToolCallLog(capsuleDir);
   const pivotInspection = buildPivotInspection(runMeta, capsuleRaw, orderedCalls);
+  // Whether the agent's response emitted a PIVOT_CHECK section, recorded by the
+  // runner into `_run.meta.json` (null when no stream was captured / observable).
+  const checklistEmitted = asNullableBool(runMeta.vtracePivotChecklistEmitted);
+  const agreement = checklistVsToolsAgreement(
+    checklistEmitted,
+    pivotInspection.toolLogOrdered,
+    pivotInspection.records,
+  );
 
   return {
     instanceId,
@@ -846,6 +997,9 @@ export async function loadPair(
     capsuleMeta: extractCapsuleMeta(runMeta, snapshot),
     pivotInspection: pivotInspection.records,
     pivotInspectionToolLogOrdered: pivotInspection.toolLogOrdered,
+    hiddenPivotCounts: hiddenPivotCountsFor(pivotInspection.records),
+    checklistEmitted,
+    checklistVsToolsAgreement: agreement,
   };
 }
 

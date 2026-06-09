@@ -19,7 +19,7 @@ import {
   primaryEditedFile,
   primaryEditedSymbol,
 } from "../../src/capsule/finalEditDiagnostics";
-import { parseOrderedToolCalls } from "../../src/capsule/toolCallLog";
+import { detectPivotChecklistEmitted, parseOrderedToolCalls } from "../../src/capsule/toolCallLog";
 import { renderCapsuleV2Human } from "../../src/capsuleV2/renderHuman";
 import { CapsuleV2Mode, type CapsuleV2Result } from "../../src/capsuleV2/types";
 import {
@@ -3030,6 +3030,56 @@ export interface VtraceContextSection {
 
 // Assemble the full _vtrace_instructions.md content (one section per instance)
 // and report aggregate size/item/truncation metadata.
+// A source-anchored pivot's role_reason names the issue/traceback line that
+// pointed straight at it; everything else is a "hidden" pivot surfaced by
+// symbol/graph/literal/test reasoning. Mirrors renderHuman.isSourceAnchoredPivot
+// and the report's pivotIsHidden — the kind of pivot a traceback-following agent
+// skips, which is exactly what PIVOT_CHECK exists to surface.
+function pivotIsHidden(roleReason: string | null): boolean {
+  return !(roleReason ?? "").includes("source line anchor");
+}
+
+// Build the compact, benchmark-only PIVOT_CHECK enforcement block, seeded from the
+// actual Capsule v2 pivot list so the agent cannot accidentally omit a hidden
+// pivot. Returns null (stay quiet) unless there are >= 2 pivots — single-pivot
+// capsules need no localization checklist. The block forces direct inspection
+// (Read/open) of every pivot before editing; search/grep is explicitly NOT enough.
+// It never orders the agent to edit every pivot — the smallest correct patch is
+// still preferred. The pivot list is v2-only (legacy carries no audit items), so a
+// non-null pivot list also encodes the `capsule_engine == v2` gate.
+export function buildPivotCheckBlock(pivots: readonly CapsuleAuditItem[] | null): string | null {
+  if (pivots === null || pivots.length < 2) return null;
+  const anyHidden = pivots.some((pivot) => pivotIsHidden(pivot.roleReason));
+
+  const lines: string[] = [
+    "## PIVOT_CHECK",
+    "",
+    "Before editing, directly inspect every pivot path listed below. Direct inspection "
+      + "means Read, open, view, or equivalent file-content access. Search/Grep does NOT "
+      + "count as inspection.",
+    "",
+    "Account for every pivot in the checklist below. You may rule out a pivot only after "
+      + "directly inspecting it. Do not edit every pivot — the smallest correct patch is "
+      + "still preferred.",
+  ];
+  if (anyHidden) {
+    lines.push("");
+    lines.push(
+      "Some pivots below were not named directly by the traceback/problem path. They were "
+        + "surfaced by VTRACE via symbol, graph, literal, or test evidence. Do not finalize "
+        + "edits until these pivots have been directly inspected or ruled out with "
+        + "source-based reasoning.",
+    );
+  }
+  lines.push("");
+  lines.push("| pivot | symbol | inspected | relevant | edit_needed | reason |");
+  lines.push("|---|---|---:|---:|---:|---|");
+  for (const pivot of pivots) {
+    lines.push(`| ${pivot.path} | ${pivot.symbol || "?"} | yes/no | yes/no | yes/no | ... |`);
+  }
+  return lines.join("\n");
+}
+
 export function buildVtraceContextMarkdown(
   sections: readonly VtraceContextSection[],
   limits: { maxChars: number; maxItems: number },
@@ -3071,6 +3121,13 @@ export function buildVtraceContextMarkdown(
       totalChars += truncatedContext.chars;
       totalItems += truncatedContext.items;
       anyTruncated = anyTruncated || truncatedContext.truncated;
+      // Multi-pivot Capsule v2: append the compact PIVOT_CHECK enforcement block,
+      // seeded from this section's actual pivots so hidden pivots are never silently
+      // omitted. Gated on >= 2 v2 pivots (single-pivot capsules stay quiet).
+      const pivotCheck = buildPivotCheckBlock(section.classification?.capsulePivots ?? null);
+      if (pivotCheck !== null) {
+        lines.push(pivotCheck, "");
+      }
     }
     lines.push(
       "## Instruction",
@@ -3672,6 +3729,8 @@ export async function persistOrderedToolCalls(
       vtraceToolCallLogFile: null,
       vtraceToolCallCount: null,
       vtraceToolCallError: null,
+      // No stream → cannot observe whether the agent emitted a PIVOT_CHECK section.
+      vtracePivotChecklistEmitted: null,
     };
   }
   if (stream.includes(STAGE5_VTRACE_STREAM_SENTINEL)) {
@@ -3681,8 +3740,13 @@ export async function persistOrderedToolCalls(
       vtraceToolCallCount: null,
       vtraceToolCallError:
         "adapter stream sentinel: the stream patch executed but rawOutput was not a usable string (no stream-json captured).",
+      vtracePivotChecklistEmitted: null,
     };
   }
+  // Whether the agent's own response echoed a PIVOT_CHECK section (assistant text
+  // only; see detectPivotChecklistEmitted). Recorded even if tool-call parsing
+  // below fails — checklist telemetry must never fail a run.
+  const pivotChecklistEmitted = detectPivotChecklistEmitted(stream);
   try {
     const calls = parseOrderedToolCalls(stream);
     const logPath = toolCallLogFilePath(rawDir);
@@ -3693,6 +3757,7 @@ export async function persistOrderedToolCalls(
       vtraceToolCallLogFile: logPath,
       vtraceToolCallCount: calls.length,
       vtraceToolCallError: null,
+      vtracePivotChecklistEmitted: pivotChecklistEmitted,
     };
   } catch (error) {
     return {
@@ -3700,6 +3765,7 @@ export async function persistOrderedToolCalls(
       vtraceToolCallLogFile: null,
       vtraceToolCallCount: null,
       vtraceToolCallError: error instanceof Error ? error.message : String(error),
+      vtracePivotChecklistEmitted: pivotChecklistEmitted,
     };
   }
 }
