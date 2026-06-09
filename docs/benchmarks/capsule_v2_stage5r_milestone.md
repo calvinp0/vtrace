@@ -276,3 +276,11 @@ and are **not** tracked by default.
    matplotlib-25960 (gate) and requests-1724 / astropy-14598 (rank 6) are the most
    tractable remaining cases, but each is Django-risky and should be tackled only once the
    eval set is large enough to detect a regression reliably.
+6. **Close the context-to-action gap in the agent loop, not the render.** A live test
+   showed Capsule v2 can surface and explicitly flag a hidden, non-traceback pivot
+   (`sphinx-7462` → `pycode/ast.py::unparse`) and the agent still edits only the
+   traceback-named file. Render-only multi-pivot guidance was added and did **not**
+   convert on that run, so the next lever is agent-orchestration (force pivot
+   inspection / rule-out, gate finalization on uninspected pivots, diff-vs-pivots
+   check) rather than more retrieval or wording. See
+   [`capsule_v2_context_to_action_gap.md`](./capsule_v2_context_to_action_gap.md).

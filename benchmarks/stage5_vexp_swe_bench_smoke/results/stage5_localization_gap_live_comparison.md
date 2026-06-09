@@ -190,6 +190,14 @@ wins, 0 inconclusive.**
   closing it (not changing retrieval) is the indicated next question — explicitly out
   of scope here.
 
+> **Follow-up (context-to-action gap).** This agent-integration gap was then tested
+> directly: explicit multi-pivot / hidden-pivot guidance was added to the injected
+> context (render-only) and `sphinx-7462` was re-run. The guidance rendered and
+> flagged `sphinx/pycode/ast.py::unparse`, but the agent **still** edited only
+> `domains/python.py` and the run stayed unresolved — prompt-side wording alone did
+> not convert. See
+> [`docs/benchmarks/capsule_v2_context_to_action_gap.md`](../../../docs/benchmarks/capsule_v2_context_to_action_gap.md).
+
 ## Artifacts
 
 | Instance | baseline | vtrace |
