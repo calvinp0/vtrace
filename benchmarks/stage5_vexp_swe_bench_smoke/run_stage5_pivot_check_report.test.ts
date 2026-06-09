@@ -15,6 +15,7 @@ import {
   editedFileSetChanged,
   hiddenConversionsFor,
   loadRun,
+  parseEditRelevanceAnnotations,
   parsePairArg,
   parseReportArgs,
   pivotCheckStateLabel,
@@ -22,8 +23,34 @@ import {
   renderJson,
   renderMarkdown,
   summarize,
+  summarizeEditRelevance,
+  type EditRelevanceAnnotation,
   type PivotCheckRun,
 } from "./run_stage5_pivot_check_report";
+
+// Curated edit-relevance annotations mirroring the post-inspection analysis:
+// sphinx's hidden pivot is edit-relevant (gold) but was not edited; seaborn's is
+// not edit-relevant. Used to drive the edit-relevance subset tests.
+const EDIT_RELEVANCE_FIXTURE: EditRelevanceAnnotation[] = [
+  {
+    instanceId: "sphinx-doc__sphinx-7462",
+    hiddenPivot: "sphinx/pycode/ast.py::unparse",
+    classification: "failed_to_connect_to_edit",
+    editRelevant: true,
+    inspectedAfter: true,
+    editedAfter: false,
+    implication: "one edit-planning miss",
+  },
+  {
+    instanceId: "mwaskom__seaborn-3187",
+    hiddenPivot: "seaborn/relational.py::scatterplot",
+    classification: "not_actually_edit_relevant",
+    editRelevant: false,
+    inspectedAfter: true,
+    editedAfter: false,
+    implication: "correct/no-edit context or weak edit-conversion evidence",
+  },
+];
 
 // --------------------------------------------------------------------------
 // Fixtures
@@ -737,4 +764,147 @@ test("summarize tallies conversions and counts only hidden pivots toward convers
   const summary = summarize([pair]);
   // Hidden pivot converted; the visible pivot's ignored->inspected does not count.
   assert.equal(summary.hiddenPivotsConverted, 1);
+});
+
+// --------------------------------------------------------------------------
+// Edit-relevance subset (curated): accounting that distinguishes "converted to
+// inspected" (telemetry) from "edit-target conversion" (curated edit-relevance).
+// --------------------------------------------------------------------------
+
+test("summarizeEditRelevance separates edit-relevant inspection from edit conversion", () => {
+  const er = summarizeEditRelevance(EDIT_RELEVANCE_FIXTURE);
+  assert.equal(er.annotated, 2);
+  assert.equal(er.editRelevantInspected, 1);
+  assert.equal(er.editRelevantConvertedToEdited, 0);
+  assert.equal(er.nonEditRelevantInspected, 1);
+  // Effective N for "does inspection convert to an edit?" is only the edit-relevant
+  // inspected subset — NOT the total targeted pair count.
+  assert.equal(er.effectiveNForEditConversion, 1);
+});
+
+test("non-edit-relevant inspected pivots are not counted as edit-conversion failures", () => {
+  const er = summarizeEditRelevance(EDIT_RELEVANCE_FIXTURE);
+  // seaborn was inspected but not edit-relevant: it must not inflate the
+  // edit-conversion denominator.
+  assert.equal(er.effectiveNForEditConversion, 1);
+  assert.notEqual(er.effectiveNForEditConversion, EDIT_RELEVANCE_FIXTURE.length);
+  // It is still recorded as a non-edit-relevant inspection, not dropped.
+  assert.equal(er.nonEditRelevantInspected, 1);
+});
+
+test("buildReport attaches edit-relevance only when curated annotations are supplied", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pivot-check-er-attach-"));
+  const runsDir = path.join(tmp, "runs");
+  await scaffoldSphinxLikePair(runsDir);
+  await scaffoldSeabornLikePair(runsDir);
+  const specs = [
+    { beforeLabel: "before-lbl", afterLabel: "after-lbl" },
+    { beforeLabel: "seaborn-before", afterLabel: "seaborn-after" },
+  ];
+
+  // Without annotations: keys are omitted entirely (not invented).
+  const plain = await buildReport(specs, { runsDir }, null);
+  assert.equal(plain.editRelevance, undefined);
+  assert.equal(plain.editRelevanceSummary, undefined);
+  assert.equal("editRelevance" in JSON.parse(renderJson(plain)), false);
+
+  // With annotations: report exposes both the curated array and the summary.
+  const annotated = await buildReport(specs, { runsDir }, null, EDIT_RELEVANCE_FIXTURE);
+  assert.equal(annotated.editRelevance?.length, 2);
+  assert.equal(annotated.editRelevanceSummary?.effectiveNForEditConversion, 1);
+});
+
+test("aggregate markdown includes the Edit-relevance subset section, table, and headline numbers", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pivot-check-er-md-"));
+  const runsDir = path.join(tmp, "runs");
+  await scaffoldSphinxLikePair(runsDir);
+  await scaffoldSeabornLikePair(runsDir);
+  const report = await buildReport(
+    [
+      { beforeLabel: "before-lbl", afterLabel: "after-lbl" },
+      { beforeLabel: "seaborn-before", afterLabel: "seaborn-after" },
+    ],
+    { runsDir },
+    null,
+    EDIT_RELEVANCE_FIXTURE,
+  );
+  const md = renderMarkdown(report);
+
+  assert.ok(md.includes("## Edit-relevance subset"));
+  // Curated provenance is explicit, not pretended automation.
+  assert.ok(md.includes("CURATED post-inspection analysis"));
+  // Table header + both annotated rows.
+  assert.ok(md.includes("| instance | hidden pivot | classification | edit-relevant hidden pivot? |"));
+  assert.ok(md.includes("sphinx/pycode/ast.py::unparse"));
+  assert.ok(md.includes("seaborn/relational.py::scatterplot"));
+  // Required headline numbers.
+  assert.ok(md.includes("Targeted PIVOT_CHECK pairs: 2"));
+  assert.ok(md.includes("Hidden pivots converted to inspected: 2"));
+  assert.ok(md.includes("Known edit-relevant hidden pivots inspected: 1"));
+  assert.ok(md.includes("Known edit-relevant hidden pivots converted to edited: 0"));
+  assert.ok(md.includes("Known non-edit-relevant hidden pivots inspected: 1"));
+  assert.ok(md.includes("Effective N for edit-target conversion: 1"));
+});
+
+test("edit-relevance-aware interpretation counts conversion over the relevant subset only", () => {
+  const summary = summarize([]); // unused counts; interpretation reads editRelevance branch
+  const text = buildInterpretation(
+    [{ instanceId: "sphinx-doc__sphinx-7462" } as never, { instanceId: "mwaskom__seaborn-3187" } as never],
+    { ...summary, pairCount: 2, hiddenPivotsConvertedToInspected: 2 },
+    EDIT_RELEVANCE_FIXTURE,
+  );
+  assert.ok(text.includes("effective sample is only 1 case(s): sphinx-doc__sphinx-7462"));
+  assert.ok(text.includes("inspection did not lead to editing the hidden pivot"));
+  assert.ok(text.includes("mwaskom__seaborn-3187) were not actually edit targets"));
+  // It must NOT read as two edit-conversion failures.
+  assert.ok(!text.includes("2 edit"));
+});
+
+test("the aggregate report omits edit-relevance keys from JSON when not curated", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pivot-check-er-omit-"));
+  const runsDir = path.join(tmp, "runs");
+  await scaffoldSphinxLikePair(runsDir);
+  const report = await buildReport(
+    [{ beforeLabel: "before-lbl", afterLabel: "after-lbl" }],
+    { runsDir },
+    null,
+  );
+  const parsed = JSON.parse(renderJson(report));
+  assert.equal("editRelevance" in parsed, false);
+  assert.equal("editRelevanceSummary" in parsed, false);
+  // And no Edit-relevance subset section is rendered.
+  assert.ok(!renderMarkdown(report).includes("## Edit-relevance subset"));
+});
+
+test("parseEditRelevanceAnnotations validates shape and rejects malformed input", () => {
+  const ok = parseEditRelevanceAnnotations(EDIT_RELEVANCE_FIXTURE);
+  assert.equal(ok.length, 2);
+  assert.equal(ok[0]!.editRelevant, true);
+  // tri-state null is allowed.
+  const withNull = parseEditRelevanceAnnotations([
+    { ...EDIT_RELEVANCE_FIXTURE[0]!, editRelevant: null },
+  ]);
+  assert.equal(withNull[0]!.editRelevant, null);
+  // Non-array, missing fields, and wrong types are rejected.
+  assert.throws(() => parseEditRelevanceAnnotations({} as never), /must contain a JSON array/);
+  assert.throws(
+    () => parseEditRelevanceAnnotations([{ instanceId: "x" }] as never),
+    /must be a non-empty string|must be a boolean/,
+  );
+  assert.throws(
+    () => parseEditRelevanceAnnotations([{ ...EDIT_RELEVANCE_FIXTURE[0]!, editRelevant: "yes" }] as never),
+    /editRelevant must be true, false, or null/,
+  );
+});
+
+test("parseReportArgs captures --edit-relevance path", () => {
+  const config = parseReportArgs([
+    "--results", "/tmp/res",
+    "--pair", "b1,a1",
+    "--edit-relevance", "/tmp/res/edit_relevance.json",
+  ]);
+  assert.equal(config.editRelevancePath, "/tmp/res/edit_relevance.json");
+  // Default is null when the flag is absent.
+  const noFlag = parseReportArgs(["--results", "/tmp/res", "--pair", "b1,a1"]);
+  assert.equal(noFlag.editRelevancePath, null);
 });

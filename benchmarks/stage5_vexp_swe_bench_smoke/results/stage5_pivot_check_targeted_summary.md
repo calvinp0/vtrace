@@ -1,6 +1,6 @@
 # Stage 5 Pivot Check comparison
 
-_Generated: 2026-06-09T15:36:45.111Z_
+_Generated: 2026-06-09T16:39:47.150Z_
 
 _Scope: Stage 5 PIVOT_CHECK before/after comparison: per-pivot engagement (ignored / discovered-only / inspected / edited) for one or more vtrace run-label pairs on a fixed instance. Reporting only — no retrieval, scoring, injection, or run behavior changed._
 
@@ -92,9 +92,29 @@ Delta is after − before (positive = the after run spent more).
 | sphinx-doc__sphinx-7462 | not evaluated | not evaluated | no | sphinx/domains/python.py | sphinx/domains/python.py |
 | mwaskom__seaborn-3187 | not evaluated | not evaluated | no | seaborn/_core/scales.py, seaborn/utils.py | seaborn/_core/scales.py, seaborn/utils.py |
 
+## Edit-relevance subset
+
+The targeted cases should not all be counted as edit-target-conversion failures. "Converted to inspected" is a telemetry fact for every hidden pivot; "converted to edited" is only meaningful for hidden pivots that were actually edit-relevant.
+
+Edit-relevance below is CURATED post-inspection analysis (the analyst's gold/edit relevance label), not derived from the run's tool telemetry. See `stage5_pivot_check_post_inspection_analysis.md` for the per-case evidence.
+
+| instance | hidden pivot | classification | edit-relevant hidden pivot? | inspected after PIVOT_CHECK | edited after PIVOT_CHECK | implication |
+| --- | --- | --- | --- | --- | --- | --- |
+| sphinx-doc__sphinx-7462 | `sphinx/pycode/ast.py::unparse` | `failed_to_connect_to_edit` | yes | yes | no | one edit-planning miss |
+| mwaskom__seaborn-3187 | `seaborn/relational.py::scatterplot` | `not_actually_edit_relevant` | no | yes | no | correct/no-edit context or weak edit-conversion evidence |
+
+Headline numbers (telemetry + curated):
+
+- Targeted PIVOT_CHECK pairs: 2
+- Hidden pivots converted to inspected: 2
+- Known edit-relevant hidden pivots inspected: 1
+- Known edit-relevant hidden pivots converted to edited: 0
+- Known non-edit-relevant hidden pivots inspected: 1
+- Effective N for edit-target conversion: 1
+
 ## Interpretation
 
-Across 2 targeted pairs, PIVOT_CHECK converted 2 hidden pivots from ignored / discovered-only to inspected. No hidden pivots were converted to edited, and no edited-file-set changes were observed. Docker resolution and patch correctness remain separate outcomes. The current evidence supports PIVOT_CHECK as an inspection-enforcement mechanism, not yet as a patch-quality or resolution-improvement mechanism.
+Across the 2 targeted cases, PIVOT_CHECK consistently enforced hidden-pivot inspection (2/2 converted to inspected). For edit-target conversion the effective sample is only 1 case(s): sphinx-doc__sphinx-7462. In that edit-relevant case, inspection did not lead to editing the hidden pivot. The other inspected hidden pivot(s) (mwaskom__seaborn-3187) were not actually edit targets, so they should not be counted as failures to convert inspection into editing. Docker resolution and patch correctness remain separate, unevaluated outcomes.
 
 ## Non-claims
 

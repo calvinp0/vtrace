@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-09T15:36:45.111Z",
+  "generatedAt": "2026-06-09T16:39:47.150Z",
   "scope": "Stage 5 PIVOT_CHECK before/after comparison: per-pivot engagement (ignored / discovered-only / inspected / edited) for one or more vtrace run-label pairs on a fixed instance. Reporting only — no retrieval, scoring, injection, or run behavior changed.",
   "pairs": [
     {
@@ -286,7 +286,7 @@
       "ignored_to_inspected": 1
     }
   },
-  "safeInterpretation": "Across 2 targeted pairs, PIVOT_CHECK converted 2 hidden pivots from ignored / discovered-only to inspected. No hidden pivots were converted to edited, and no edited-file-set changes were observed. Docker resolution and patch correctness remain separate outcomes. The current evidence supports PIVOT_CHECK as an inspection-enforcement mechanism, not yet as a patch-quality or resolution-improvement mechanism.",
+  "safeInterpretation": "Across the 2 targeted cases, PIVOT_CHECK consistently enforced hidden-pivot inspection (2/2 converted to inspected). For edit-target conversion the effective sample is only 1 case(s): sphinx-doc__sphinx-7462. In that edit-relevant case, inspection did not lead to editing the hidden pivot. The other inspected hidden pivot(s) (mwaskom__seaborn-3187) were not actually edit targets, so they should not be counted as failures to convert inspection into editing. Docker resolution and patch correctness remain separate, unevaluated outcomes.",
   "nonClaims": [
     "PIVOT_CHECK improves Docker resolution.",
     "PIVOT_CHECK guarantees correct edits.",
@@ -294,5 +294,32 @@
     "Checklist emission is required for compliance.",
     "One or a small number of targeted live runs do not prove broad benchmark improvement.",
     "This is a public SWE-bench result."
-  ]
+  ],
+  "editRelevance": [
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "hiddenPivot": "sphinx/pycode/ast.py::unparse",
+      "classification": "failed_to_connect_to_edit",
+      "editRelevant": true,
+      "inspectedAfter": true,
+      "editedAfter": false,
+      "implication": "one edit-planning miss"
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "hiddenPivot": "seaborn/relational.py::scatterplot",
+      "classification": "not_actually_edit_relevant",
+      "editRelevant": false,
+      "inspectedAfter": true,
+      "editedAfter": false,
+      "implication": "correct/no-edit context or weak edit-conversion evidence"
+    }
+  ],
+  "editRelevanceSummary": {
+    "annotated": 2,
+    "editRelevantInspected": 1,
+    "editRelevantConvertedToEdited": 0,
+    "nonEditRelevantInspected": 1,
+    "effectiveNForEditConversion": 1
+  }
 }

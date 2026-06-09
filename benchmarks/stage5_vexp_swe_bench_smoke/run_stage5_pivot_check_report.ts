@@ -179,6 +179,46 @@ export interface PivotCheckReport {
   summary: PivotCheckSummary;
   safeInterpretation: string;
   nonClaims: string[];
+  // CURATED post-inspection edit-relevance annotations, supplied via
+  // `--edit-relevance <file>`. Present ONLY when curated data was provided — never
+  // synthesised from telemetry (gold-patch edit-relevance is not derivable from a
+  // run's tool log). Both fields are omitted from the JSON when absent rather than
+  // invented, so a reader can tell automated facts from curated judgement.
+  editRelevance?: EditRelevanceAnnotation[];
+  editRelevanceSummary?: EditRelevanceSummary;
+}
+
+// One curated per-instance edit-relevance judgement, mirroring the post-inspection
+// analysis report. `editRelevant` is the analyst's gold-relevance label (true =
+// the inspected hidden pivot is a real/gold edit target; false = it was
+// context/reproduction-relevant only; null = unknown). `inspectedAfter` /
+// `editedAfter` restate the after-run outcome for the hidden pivot. These are
+// EVALUATION labels — never agent input.
+export interface EditRelevanceAnnotation {
+  instanceId: string;
+  hiddenPivot: string;
+  classification: string;
+  editRelevant: boolean | null;
+  inspectedAfter: boolean;
+  editedAfter: boolean;
+  implication: string;
+}
+
+// Derived totals over the curated annotations. The point of these is to separate
+// "hidden pivot converted to inspected" (a telemetry fact, counted in
+// PivotCheckSummary) from "edit-target conversion" (only meaningful for the subset
+// of hidden pivots that were actually edit-relevant).
+export interface EditRelevanceSummary {
+  annotated: number;
+  // editRelevant === true && inspectedAfter.
+  editRelevantInspected: number;
+  // editRelevant === true && editedAfter.
+  editRelevantConvertedToEdited: number;
+  // editRelevant === false && inspectedAfter.
+  nonEditRelevantInspected: number;
+  // The honest denominator for "does inspection convert to an edit?": only the
+  // edit-relevant hidden pivots that were inspected can test that question.
+  effectiveNForEditConversion: number;
 }
 
 export interface PivotCheckSummary {
@@ -228,6 +268,18 @@ export const NON_CLAIMS: readonly string[] = [
   "Checklist emission is required for compliance.",
   "One or a small number of targeted live runs do not prove broad benchmark improvement.",
   "This is a public SWE-bench result.",
+];
+
+// Standing explanation for the curated edit-relevance subset. Rendered verbatim
+// when curated annotations are supplied; kept generic (no per-instance verdict) so
+// the dynamic table/numbers carry the case-specific facts.
+export const EDIT_RELEVANCE_NOTE: readonly string[] = [
+  "The targeted cases should not all be counted as edit-target-conversion failures. " +
+    '"Converted to inspected" is a telemetry fact for every hidden pivot; ' +
+    '"converted to edited" is only meaningful for hidden pivots that were actually edit-relevant.',
+  "Edit-relevance below is CURATED post-inspection analysis (the analyst's gold/edit " +
+    "relevance label), not derived from the run's tool telemetry. See " +
+    "`stage5_pivot_check_post_inspection_analysis.md` for the per-case evidence.",
 ];
 
 // `vtrace` condition subdirectory under `results/runs/<label>/raw/`. Both sides of
@@ -429,14 +481,64 @@ export function hiddenConversionsFor(pair: PivotCheckPair): string {
   return seen.length === 0 ? "—" : seen.join("; ");
 }
 
+// Derive the edit-relevance totals from curated annotations. Pure over its input.
+export function summarizeEditRelevance(
+  annotations: readonly EditRelevanceAnnotation[],
+): EditRelevanceSummary {
+  let editRelevantInspected = 0;
+  let editRelevantConvertedToEdited = 0;
+  let nonEditRelevantInspected = 0;
+  for (const a of annotations) {
+    if (a.editRelevant === true && a.inspectedAfter) editRelevantInspected += 1;
+    if (a.editRelevant === true && a.editedAfter) editRelevantConvertedToEdited += 1;
+    if (a.editRelevant === false && a.inspectedAfter) nonEditRelevantInspected += 1;
+  }
+  return {
+    annotated: annotations.length,
+    editRelevantInspected,
+    editRelevantConvertedToEdited,
+    nonEditRelevantInspected,
+    // Only edit-relevant, inspected hidden pivots can test edit conversion.
+    effectiveNForEditConversion: editRelevantInspected,
+  };
+}
+
 // Build the Interpretation prose from the resolved report, so it always names the
 // actual instance(s) compared rather than a hard-coded case. Single-pair reads
-// like a focused note; multi-pair reads as the honest aggregate verdict.
+// like a focused note; multi-pair reads as the honest aggregate verdict. When
+// curated edit-relevance is supplied, the multi-pair prose is corrected to count
+// edit-target conversion only over the edit-relevant subset.
 export function buildInterpretation(
   pairs: readonly PivotCheckPair[],
   summary: PivotCheckSummary,
+  editRelevance?: readonly EditRelevanceAnnotation[] | null,
 ): string {
   if (pairs.length === 0) return "No pairs were compared.";
+
+  if (editRelevance && editRelevance.length > 0) {
+    const er = summarizeEditRelevance(editRelevance);
+    const relevant = editRelevance.filter((a) => a.editRelevant === true).map((a) => a.instanceId);
+    const nonRelevant = editRelevance
+      .filter((a) => a.editRelevant === false && a.inspectedAfter)
+      .map((a) => a.instanceId);
+    const relevantList = relevant.length > 0 ? relevant.join(", ") : "(none)";
+    const editedClause =
+      er.editRelevantConvertedToEdited === 0
+        ? "inspection did not lead to editing the hidden pivot"
+        : `${er.editRelevantConvertedToEdited}/${er.effectiveNForEditConversion} edit-relevant hidden pivots were edited`;
+    const nonRelevantClause =
+      nonRelevant.length === 0
+        ? ""
+        : ` The other inspected hidden pivot(s) (${nonRelevant.join(", ")}) were not actually ` +
+          "edit targets, so they should not be counted as failures to convert inspection into editing.";
+    return (
+      `Across the ${pairs.length} targeted cases, PIVOT_CHECK consistently enforced hidden-pivot ` +
+      `inspection (${summary.hiddenPivotsConvertedToInspected}/${pairs.length} converted to inspected). ` +
+      `For edit-target conversion the effective sample is only ${er.effectiveNForEditConversion} ` +
+      `case(s): ${relevantList}. In that edit-relevant case, ${editedClause}.${nonRelevantClause} ` +
+      "Docker resolution and patch correctness remain separate, unevaluated outcomes."
+    );
+  }
 
   if (pairs.length === 1) {
     const pair = pairs[0]!;
@@ -667,17 +769,29 @@ export async function buildReport(
   specs: readonly PivotCheckPairSpec[],
   options: LoadOptions,
   generatedAt: string | null,
+  // Optional curated edit-relevance annotations (from `--edit-relevance`). When
+  // provided, the report gains the edit-relevance subset + summary and the
+  // interpretation is corrected to count edit conversion over the relevant subset.
+  editRelevance?: readonly EditRelevanceAnnotation[] | null,
 ): Promise<PivotCheckReport> {
   const pairs: PivotCheckPair[] = [];
   for (const spec of specs) pairs.push(await loadPair(spec, options));
   const summary = summarize(pairs);
+  const hasEditRelevance = Boolean(editRelevance && editRelevance.length > 0);
   return {
     generatedAt,
     scope: REPORT_SCOPE,
     pairs,
     summary,
-    safeInterpretation: buildInterpretation(pairs, summary),
+    safeInterpretation: buildInterpretation(pairs, summary, editRelevance),
     nonClaims: [...NON_CLAIMS],
+    // Only attach when curated data exists, so JSON omits these keys otherwise.
+    ...(hasEditRelevance
+      ? {
+          editRelevance: [...editRelevance!],
+          editRelevanceSummary: summarizeEditRelevance(editRelevance!),
+        }
+      : {}),
   };
 }
 
@@ -904,6 +1018,42 @@ export function renderMarkdown(report: PivotCheckReport): string {
   }
   lines.push("");
 
+  // --- Edit-relevance subset (curated) -------------------------------------
+  // Rendered only when curated annotations were supplied. Separates the telemetry
+  // fact "converted to inspected" from the curated judgement "edit-relevant".
+  if (report.editRelevance && report.editRelevance.length > 0) {
+    const er = report.editRelevanceSummary ?? summarizeEditRelevance(report.editRelevance);
+    lines.push("## Edit-relevance subset");
+    lines.push("");
+    for (const para of EDIT_RELEVANCE_NOTE) {
+      lines.push(para);
+      lines.push("");
+    }
+    lines.push(
+      "| instance | hidden pivot | classification | edit-relevant hidden pivot? | " +
+        "inspected after PIVOT_CHECK | edited after PIVOT_CHECK | implication |",
+    );
+    lines.push("| --- | --- | --- | --- | --- | --- | --- |");
+    for (const a of report.editRelevance) {
+      lines.push(
+        `| ${a.instanceId} | \`${a.hiddenPivot}\` | \`${a.classification}\` | ${boolMark(a.editRelevant)} | ` +
+          `${boolMark(a.inspectedAfter)} | ${boolMark(a.editedAfter)} | ${a.implication} |`,
+      );
+    }
+    lines.push("");
+    lines.push("Headline numbers (telemetry + curated):");
+    lines.push("");
+    lines.push(`- Targeted PIVOT_CHECK pairs: ${report.summary.pairCount}`);
+    lines.push(`- Hidden pivots converted to inspected: ${report.summary.hiddenPivotsConvertedToInspected}`);
+    lines.push(`- Known edit-relevant hidden pivots inspected: ${er.editRelevantInspected}`);
+    lines.push(
+      `- Known edit-relevant hidden pivots converted to edited: ${er.editRelevantConvertedToEdited}`,
+    );
+    lines.push(`- Known non-edit-relevant hidden pivots inspected: ${er.nonEditRelevantInspected}`);
+    lines.push(`- Effective N for edit-target conversion: ${er.effectiveNForEditConversion}`);
+    lines.push("");
+  }
+
   // --- Interpretation ------------------------------------------------------
   lines.push("## Interpretation");
   lines.push("");
@@ -932,6 +1082,55 @@ export interface ReportCliConfig {
   condition: string;
   reportName: string;
   pairs: PivotCheckPairSpec[];
+  // Optional path to a curated edit-relevance annotations JSON (array of
+  // EditRelevanceAnnotation). null => no edit-relevance subset is rendered.
+  editRelevancePath: string | null;
+}
+
+// Validate a parsed JSON value into curated edit-relevance annotations. Throws a
+// clear error on the wrong shape rather than silently inventing fields, so the
+// curated subset is never fabricated from a malformed file.
+export function parseEditRelevanceAnnotations(raw: unknown): EditRelevanceAnnotation[] {
+  if (!Array.isArray(raw)) {
+    throw new Error("--edit-relevance file must contain a JSON array of annotations.");
+  }
+  return raw.map((entry, index) => {
+    if (entry === null || typeof entry !== "object" || Array.isArray(entry)) {
+      throw new Error(`--edit-relevance[${index}] must be an object.`);
+    }
+    const e = entry as Record<string, unknown>;
+    const str = (key: string): string => {
+      const value = e[key];
+      if (typeof value !== "string" || value === "") {
+        throw new Error(`--edit-relevance[${index}].${key} must be a non-empty string.`);
+      }
+      return value;
+    };
+    const bool = (key: string): boolean => {
+      const value = e[key];
+      if (typeof value !== "boolean") throw new Error(`--edit-relevance[${index}].${key} must be a boolean.`);
+      return value;
+    };
+    // editRelevant is tri-state: true / false / null (unknown).
+    const tri = (key: string): boolean | null => {
+      const value = e[key];
+      if (value === null) return null;
+      if (typeof value === "boolean") return value;
+      throw new Error(`--edit-relevance[${index}].${key} must be true, false, or null.`);
+    };
+    // Property values evaluate in source order, so required strings are validated
+    // before the tri-state/boolean fields — error messages report the first
+    // genuinely-missing field rather than always blaming editRelevant.
+    return {
+      instanceId: str("instanceId"),
+      hiddenPivot: str("hiddenPivot"),
+      classification: str("classification"),
+      editRelevant: tri("editRelevant"),
+      inspectedAfter: bool("inspectedAfter"),
+      editedAfter: bool("editedAfter"),
+      implication: str("implication"),
+    };
+  });
 }
 
 // Parse a `before,after` pair argument into a spec.
@@ -949,6 +1148,7 @@ export function parseReportArgs(argv: readonly string[]): ReportCliConfig {
   let outDir: string | null = null;
   let condition = DEFAULT_CONDITION;
   let reportName = DEFAULT_REPORT_NAME;
+  let editRelevancePath: string | null = null;
   const pairs: PivotCheckPairSpec[] = [];
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -975,6 +1175,9 @@ export function parseReportArgs(argv: readonly string[]): ReportCliConfig {
       case "--report-name":
         reportName = next();
         break;
+      case "--edit-relevance":
+        editRelevancePath = next();
+        break;
       case "--pair":
         pairs.push(parsePairArg(next()));
         break;
@@ -997,15 +1200,22 @@ export function parseReportArgs(argv: readonly string[]): ReportCliConfig {
     condition,
     reportName,
     pairs,
+    editRelevancePath,
   };
 }
 
 async function main(config: ReportCliConfig): Promise<void> {
   const generatedAt = new Date().toISOString();
+  let editRelevance: EditRelevanceAnnotation[] | null = null;
+  if (config.editRelevancePath !== null) {
+    const text = await readFile(config.editRelevancePath, "utf8");
+    editRelevance = parseEditRelevanceAnnotations(JSON.parse(text));
+  }
   const report = await buildReport(
     config.pairs,
     { runsDir: config.runsDir, condition: config.condition },
     generatedAt,
+    editRelevance,
   );
 
   await mkdir(config.outDir, { recursive: true });
@@ -1015,18 +1225,25 @@ async function main(config: ReportCliConfig): Promise<void> {
   await writeFile(jsonPath, renderJson(report));
 
   const s = report.summary;
-  process.stdout.write(
-    [
-      "Stage 5 Pivot Check comparison report written:",
-      `  ${mdPath}`,
-      `  ${jsonPath}`,
-      "",
-      `Compared pairs:            ${s.pairCount}`,
-      `Hidden pivots converted:   ${s.hiddenPivotsConverted}`,
-      `Hidden pivots regressed:   ${s.hiddenPivotsRegressed}`,
-      "",
-    ].join("\n"),
-  );
+  const stdoutLines = [
+    "Stage 5 Pivot Check comparison report written:",
+    `  ${mdPath}`,
+    `  ${jsonPath}`,
+    "",
+    `Compared pairs:            ${s.pairCount}`,
+    `Hidden pivots converted:   ${s.hiddenPivotsConverted}`,
+    `Hidden pivots regressed:   ${s.hiddenPivotsRegressed}`,
+  ];
+  if (report.editRelevanceSummary) {
+    const er = report.editRelevanceSummary;
+    stdoutLines.push(
+      `Edit-relevant inspected:   ${er.editRelevantInspected}`,
+      `Edit-relevant edited:      ${er.editRelevantConvertedToEdited}`,
+      `Effective N (edit conv.):  ${er.effectiveNForEditConversion}`,
+    );
+  }
+  stdoutLines.push("");
+  process.stdout.write(stdoutLines.join("\n"));
 }
 
 if (import.meta.main) {
