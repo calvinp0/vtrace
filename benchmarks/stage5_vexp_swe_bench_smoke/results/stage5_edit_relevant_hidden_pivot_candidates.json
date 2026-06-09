@@ -1,0 +1,2274 @@
+{
+  "generatedAt": "2026-06-09T17:03:11.144Z",
+  "sourceArtifacts": [
+    "stage5_retrieval_eval_cross_repo_30.json",
+    "stage5_retrieval_eval_expanded.json",
+    "runs/*/raw/vtrace/_run.meta.json (+ modelPatch)",
+    "stage5_pivot_check_edit_relevance.json"
+  ],
+  "summary": {
+    "instancesConsidered": 50,
+    "tier1": 1,
+    "tier2": 6,
+    "ruleout": 16,
+    "reject": 27
+  },
+  "candidates": [
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "score": 11,
+      "factors": [
+        {
+          "label": "hidden pivot overlaps gold patch file",
+          "points": 3
+        },
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        },
+        {
+          "label": "prior live run ignored/discovered-only hidden pivot",
+          "points": 1
+        },
+        {
+          "label": "prior live edited only source-anchored file",
+          "points": 1
+        }
+      ],
+      "tier": "tier1",
+      "classificationReason": "hidden pivot is gold-relevant and distinct from the source-anchored file, split confirmed by the live capsule (sphinx-7462 shape)",
+      "sourceAnchorFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "hiddenPivotFiles": [
+        "sphinx/pycode/ast.py"
+      ],
+      "hiddenPivotSymbols": [
+        "unparse"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "hiddenGoldOverlap": true,
+      "curatedEditRelevant": true,
+      "curatedClassification": "failed_to_connect_to_edit",
+      "priorLiveStatus": "live run(s): eval-localization-gap-vtrace-sphinx-7462, eval-locgap-multipivot-sphinx-7462, eval-pivot-check-vtrace-sphinx-7462, eval-pivot-telemetry-vtrace-sphinx-7462, eval-pivot-telemetry-vtrace-sphinx-7462-r2",
+      "priorHiddenPivotEngagement": "curated: failed_to_connect_to_edit",
+      "priorEditedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "risks": [],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-sphinx-7462-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-sphinx-7462",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sphinx-doc__sphinx-7462 \\\n  --run-label eval-pivot-telemetry-vtrace-sphinx-7462-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sphinx-doc__sphinx-7462 \\\n  --run-label eval-pivot-check-vtrace-sphinx-7462 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "score": 9,
+      "factors": [
+        {
+          "label": "hidden pivot overlaps gold patch file",
+          "points": 3
+        },
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "tier2",
+      "classificationReason": "hidden pivot overlaps gold and looks distinct from the anchor, but the split is a deterministic rank proxy — confirm with a live capsule build before promoting",
+      "sourceAnchorFiles": [
+        "sympy/core/sympify.py"
+      ],
+      "hiddenPivotFiles": [
+        "sympy/core/evalf.py"
+      ],
+      "hiddenPivotSymbols": [
+        "add_terms"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "sympy/core/evalf.py"
+      ],
+      "hiddenGoldOverlap": true,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-sympy-13372-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-sympy-13372",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-13372 \\\n  --run-label eval-pivot-telemetry-vtrace-sympy-13372-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-13372 \\\n  --run-label eval-pivot-check-vtrace-sympy-13372 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "score": 7,
+      "factors": [
+        {
+          "label": "hidden pivot overlaps gold patch file",
+          "points": 3
+        },
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        }
+      ],
+      "tier": "tier2",
+      "classificationReason": "hidden pivot overlaps gold but is not clearly distinct from the anchored file — edit relevance plausible",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/vounit.py"
+      ],
+      "hiddenPivotSymbols": [
+        "CDS",
+        "VOUnit"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/cds_parsetab.py"
+      ],
+      "hiddenGoldOverlap": true,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-capsulev2-recovered-live-astropy-14369",
+      "priorHiddenPivotEngagement": "prior edited files: astropy/units/format/cds.py",
+      "priorEditedFiles": [
+        "astropy/units/format/cds.py"
+      ],
+      "risks": [],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-astropy-14369-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-astropy-14369",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances astropy__astropy-14369 \\\n  --run-label eval-pivot-telemetry-vtrace-astropy-14369-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances astropy__astropy-14369 \\\n  --run-label eval-pivot-check-vtrace-astropy-14369 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "django__django-11740",
+      "repo": "django/django",
+      "score": 7,
+      "factors": [
+        {
+          "label": "hidden pivot overlaps gold patch file",
+          "points": 3
+        },
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        }
+      ],
+      "tier": "tier2",
+      "classificationReason": "hidden pivot overlaps gold but is not clearly distinct from the anchored file — edit relevance plausible",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [
+        "django/db/migrations/autodetector.py",
+        "django/db/models/fields/related.py"
+      ],
+      "hiddenPivotSymbols": [
+        "_get_dependencies_for_foreign_key",
+        "ForeignKey"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "django/db/migrations/autodetector.py"
+      ],
+      "hiddenGoldOverlap": true,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-11740, eval-capsulev2-auto-11740, eval-capsulev2-force--11740, eval-capsulev2-risk5-11740, eval-diagnostic-11740, eval-diagnostic-rerun-11740, eval-fixed-11740, eval-pivot-11740, eval-shaped-11740, eval-sized-11740",
+      "priorHiddenPivotEngagement": "prior edited files: django/db/migrations/autodetector.py",
+      "priorEditedFiles": [
+        "django/db/migrations/autodetector.py"
+      ],
+      "risks": [],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-django-11740-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-django-11740",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-11740 \\\n  --run-label eval-pivot-telemetry-vtrace-django-11740-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-11740 \\\n  --run-label eval-pivot-check-vtrace-django-11740 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "score": 7,
+      "factors": [
+        {
+          "label": "hidden pivot overlaps gold patch file",
+          "points": 3
+        },
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        }
+      ],
+      "tier": "tier2",
+      "classificationReason": "hidden pivot overlaps gold but is not clearly distinct from the anchored file — edit relevance plausible",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [
+        "django/db/models/base.py",
+        "django/db/models/enums.py"
+      ],
+      "hiddenPivotSymbols": [
+        "_check_ordering",
+        "ChoicesMeta"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "django/db/models/base.py"
+      ],
+      "hiddenGoldOverlap": true,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-capsulev2-literal-11820, eval-capsulev2-state-11820, eval-capsulev2-traversal-11820",
+      "priorHiddenPivotEngagement": "prior edited files: django/db/models/base.py",
+      "priorEditedFiles": [
+        "django/db/models/base.py"
+      ],
+      "risks": [],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-django-11820-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-django-11820",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-11820 \\\n  --run-label eval-pivot-telemetry-vtrace-django-11820-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-11820 \\\n  --run-label eval-pivot-check-vtrace-django-11820 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "django__django-12858",
+      "repo": "django/django",
+      "score": 7,
+      "factors": [
+        {
+          "label": "hidden pivot overlaps gold patch file",
+          "points": 3
+        },
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        }
+      ],
+      "tier": "tier2",
+      "classificationReason": "hidden pivot overlaps gold but is not clearly distinct from the anchored file — edit relevance plausible",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [
+        "django/db/models/base.py",
+        "django/db/models/fields/related.py"
+      ],
+      "hiddenPivotSymbols": [
+        "_check_ordering",
+        "ForeignKey"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "django/db/models/base.py"
+      ],
+      "hiddenGoldOverlap": true,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-capsulev2-literal-12858",
+      "priorHiddenPivotEngagement": "prior edited files: django/db/models/base.py",
+      "priorEditedFiles": [
+        "django/db/models/base.py"
+      ],
+      "risks": [],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-django-12858-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-django-12858",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-12858 \\\n  --run-label eval-pivot-telemetry-vtrace-django-12858-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-12858 \\\n  --run-label eval-pivot-check-vtrace-django-12858 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "score": 7,
+      "factors": [
+        {
+          "label": "hidden pivot overlaps gold patch file",
+          "points": 3
+        },
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        }
+      ],
+      "tier": "tier2",
+      "classificationReason": "hidden pivot overlaps gold but is not clearly distinct from the anchored file — edit relevance plausible",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [
+        "sympy/printing/pycode.py",
+        "sympy/printing/printer.py"
+      ],
+      "hiddenPivotSymbols": [
+        "PythonCodePrinter",
+        "_print"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "sympy/printing/pycode.py"
+      ],
+      "hiddenGoldOverlap": true,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-capsulev2-recovered-live-sympy-16766",
+      "priorHiddenPivotEngagement": "prior edited files: sympy/printing/pycode.py",
+      "priorEditedFiles": [
+        "sympy/printing/pycode.py"
+      ],
+      "risks": [],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-sympy-16766-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-sympy-16766",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-16766 \\\n  --run-label eval-pivot-telemetry-vtrace-sympy-16766-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-16766 \\\n  --run-label eval-pivot-check-vtrace-sympy-16766 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "repo": "psf/requests",
+      "score": 7,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        },
+        {
+          "label": "prior live edited only source-anchored file",
+          "points": 1
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "requests/models.py"
+      ],
+      "hiddenPivotFiles": [
+        "requests/api.py"
+      ],
+      "hiddenPivotSymbols": [
+        "get"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "requests/models.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-capsulev2-recovered-live-requests-5414",
+      "priorHiddenPivotEngagement": "prior edited files: requests/models.py",
+      "priorEditedFiles": [
+        "requests/models.py"
+      ],
+      "risks": [
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-requests-5414-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-requests-5414",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances psf__requests-5414 \\\n  --run-label eval-pivot-telemetry-vtrace-requests-5414-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances psf__requests-5414 \\\n  --run-label eval-pivot-check-vtrace-requests-5414 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "astropy/io/fits/diff.py"
+      ],
+      "hiddenPivotFiles": [
+        "astropy/io/fits/fitsrec.py"
+      ],
+      "hiddenPivotSymbols": [
+        "FITS_rec"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-astropy-14598-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-astropy-14598",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances astropy__astropy-14598 \\\n  --run-label eval-pivot-telemetry-vtrace-astropy-14598-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances astropy__astropy-14598 \\\n  --run-label eval-pivot-check-vtrace-astropy-14598 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "django__django-11206",
+      "repo": "django/django",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "utils/formats.py"
+      ],
+      "hiddenPivotFiles": [
+        "utils/html.py"
+      ],
+      "hiddenPivotSymbols": [
+        "format_html"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/utils/numberformat.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-django-11206-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-django-11206",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-11206 \\\n  --run-label eval-pivot-telemetry-vtrace-django-11206-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-11206 \\\n  --run-label eval-pivot-check-vtrace-django-11206 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "django__django-11815",
+      "repo": "django/django",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "db/migrations/serializer.py"
+      ],
+      "hiddenPivotFiles": [
+        "db/migrations/autodetector.py"
+      ],
+      "hiddenPivotSymbols": [
+        "deep_deconstruct"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/db/migrations/serializer.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-django-11815-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-django-11815",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-11815 \\\n  --run-label eval-pivot-telemetry-vtrace-django-11815-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-11815 \\\n  --run-label eval-pivot-check-vtrace-django-11815 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "forms/models.py"
+      ],
+      "hiddenPivotFiles": [
+        "db/models/base.py"
+      ],
+      "hiddenPivotSymbols": [
+        "save"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/db/models/base.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-django-12273-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-django-12273",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-12273 \\\n  --run-label eval-pivot-telemetry-vtrace-django-12273-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-12273 \\\n  --run-label eval-pivot-check-vtrace-django-12273 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "django__django-13012",
+      "repo": "django/django",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "db/models/expressions.py"
+      ],
+      "hiddenPivotFiles": [
+        "contrib/postgres/aggregates/mixins.py"
+      ],
+      "hiddenPivotSymbols": [
+        "set_source_expressions"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/db/models/expressions.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-django-13012-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-django-13012",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-13012 \\\n  --run-label eval-pivot-telemetry-vtrace-django-13012-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-13012 \\\n  --run-label eval-pivot-check-vtrace-django-13012 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "django__django-13112",
+      "repo": "django/django",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "db/models/fields/related.py"
+      ],
+      "hiddenPivotFiles": [
+        "contrib/admin/utils.py"
+      ],
+      "hiddenPivotSymbols": [
+        "FieldIsAForeignKeyColumnName"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/db/models/fields/related.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-django-13112-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-django-13112",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-13112 \\\n  --run-label eval-pivot-telemetry-vtrace-django-13112-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-13112 \\\n  --run-label eval-pivot-check-vtrace-django-13112 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "django__django-13195",
+      "repo": "django/django",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "http/response.py"
+      ],
+      "hiddenPivotFiles": [
+        "contrib/sessions/backends/signed_cookies.py"
+      ],
+      "hiddenPivotSymbols": [
+        "delete"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-django-13195-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-django-13195",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-13195 \\\n  --run-label eval-pivot-telemetry-vtrace-django-13195-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-13195 \\\n  --run-label eval-pivot-check-vtrace-django-13195 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "src/flask/blueprints.py"
+      ],
+      "hiddenPivotFiles": [
+        "src/flask/app.py"
+      ],
+      "hiddenPivotSymbols": [
+        "name"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "src/flask/blueprints.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-flask-5014-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-flask-5014",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances pallets__flask-5014 \\\n  --run-label eval-pivot-telemetry-vtrace-flask-5014-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances pallets__flask-5014 \\\n  --run-label eval-pivot-check-vtrace-flask-5014 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "repo": "psf/requests",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "requests/utils.py"
+      ],
+      "hiddenPivotFiles": [
+        "requests/packages/urllib3/exceptions.py"
+      ],
+      "hiddenPivotSymbols": [
+        "DecodeError"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "requests/sessions.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-requests-1724-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-requests-1724",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances psf__requests-1724 \\\n  --run-label eval-pivot-telemetry-vtrace-requests-1724-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances psf__requests-1724 \\\n  --run-label eval-pivot-check-vtrace-requests-1724 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "pydata__xarray-3677",
+      "repo": "pydata/xarray",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "hiddenPivotFiles": [
+        "xarray/core/merge.py"
+      ],
+      "hiddenPivotSymbols": [
+        "merge"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-xarray-3677-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-xarray-3677",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances pydata__xarray-3677 \\\n  --run-label eval-pivot-telemetry-vtrace-xarray-3677-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances pydata__xarray-3677 \\\n  --run-label eval-pivot-check-vtrace-xarray-3677 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "hiddenPivotFiles": [
+        "sklearn/exceptions.py"
+      ],
+      "hiddenPivotSymbols": [
+        "FitFailedWarning"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-scikit-learn-10844-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-scikit-learn-10844",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances scikit-learn__scikit-learn-10844 \\\n  --run-label eval-pivot-telemetry-vtrace-scikit-learn-10844-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances scikit-learn__scikit-learn-10844 \\\n  --run-label eval-pivot-check-vtrace-scikit-learn-10844 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "sympy/matrices/expressions/matexpr.py"
+      ],
+      "hiddenPivotFiles": [
+        "sympy/assumptions/handlers/matrices.py"
+      ],
+      "hiddenPivotSymbols": [
+        "ZeroMatrix"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "sympy/matrices/expressions/matexpr.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-sympy-12419-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-sympy-12419",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-12419 \\\n  --run-label eval-pivot-telemetry-vtrace-sympy-12419-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-12419 \\\n  --run-label eval-pivot-check-vtrace-sympy-12419 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "sympy__sympy-15599",
+      "repo": "sympy/sympy",
+      "score": 6,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [
+        "sympy/core/mod.py"
+      ],
+      "hiddenPivotFiles": [
+        "sympy/polys/agca/modules.py"
+      ],
+      "hiddenPivotSymbols": [
+        "Module"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "sympy/core/mod.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-sympy-15599-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-sympy-15599",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-15599 \\\n  --run-label eval-pivot-telemetry-vtrace-sympy-15599-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-15599 \\\n  --run-label eval-pivot-check-vtrace-sympy-15599 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "score": 4,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "hidden pivot is not in the gold patch — useful as a correct-rule-out / overhead control, not edit conversion",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [
+        "django/db/models/query.py",
+        "django/db/models/functions/comparison.py"
+      ],
+      "hiddenPivotSymbols": [
+        "count",
+        "Least"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-10880, eval-capsulev2-auto-10880, eval-capsulev2-force--10880, eval-capsulev2-risk5-10880, eval-diagnostic-10880, eval-fixed-10880, eval-shaped-10880, eval-sized-10880",
+      "priorHiddenPivotEngagement": "prior edited files: django/db/models/aggregates.py",
+      "priorEditedFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "risks": [
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-django-10880-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-django-10880",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-10880 \\\n  --run-label eval-pivot-telemetry-vtrace-django-10880-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances django__django-10880 \\\n  --run-label eval-pivot-check-vtrace-django-10880 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "score": 4,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        },
+        {
+          "label": "prior live edited only source-anchored file",
+          "points": 1
+        },
+        {
+          "label": "hidden pivot is example/test-only or reproduction-only",
+          "points": -3
+        }
+      ],
+      "tier": "ruleout",
+      "classificationReason": "curated as not edit-relevant (reproduction/context only) — overhead/rule-out control",
+      "sourceAnchorFiles": [
+        "seaborn/_core/scales.py"
+      ],
+      "hiddenPivotFiles": [
+        "seaborn/relational.py"
+      ],
+      "hiddenPivotSymbols": [
+        "scatterplot"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": false,
+      "curatedClassification": "not_actually_edit_relevant",
+      "priorLiveStatus": "live run(s): eval-pivot-check-vtrace-seaborn-3187, eval-pivot-telemetry-vtrace-seaborn-3187-no-pivot-check",
+      "priorHiddenPivotEngagement": "curated: not_actually_edit_relevant",
+      "priorEditedFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "risks": [],
+      "recommendedBeforeLabel": "eval-pivot-telemetry-vtrace-seaborn-3187-no-pivot-check",
+      "recommendedAfterLabel": "eval-pivot-check-vtrace-seaborn-3187",
+      "commands": [
+        "# before: PIVOT_CHECK disabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances mwaskom__seaborn-3187 \\\n  --run-label eval-pivot-telemetry-vtrace-seaborn-3187-no-pivot-check \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-pivot-check \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results",
+        "# after: PIVOT_CHECK enabled\nrm -f benchmarks/stage5_vexp_swe_bench_smoke/results/_agent_stream.jsonl\n\nbun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances mwaskom__seaborn-3187 \\\n  --run-label eval-pivot-check-vtrace-seaborn-3187 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+      ]
+    },
+    {
+      "instanceId": "django__django-11095",
+      "repo": "django/django",
+      "score": 5,
+      "factors": [
+        {
+          "label": "hidden pivot overlaps gold patch file",
+          "points": 3
+        },
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "single-pivot capsule (no multi-pivot localization)",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [
+        "django/contrib/admin/options.py"
+      ],
+      "hiddenPivotSymbols": [
+        "get_inline_formsets",
+        "get_inline_instances"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "django/contrib/admin/options.py"
+      ],
+      "hiddenGoldOverlap": true,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-11095, eval-capsulev2-auto-11095, eval-capsulev2-force--11095, eval-capsulev2-risk5-11095, eval-diagnostic-11095, eval-fixed-11095, eval-shaped-11095, eval-sized-11095",
+      "priorHiddenPivotEngagement": "prior edited files: django/contrib/admin/options.py",
+      "priorEditedFiles": [
+        "django/contrib/admin/options.py"
+      ],
+      "risks": [],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "django__django-11490",
+      "repo": "django/django",
+      "score": 5,
+      "factors": [
+        {
+          "label": "hidden pivot overlaps gold patch file",
+          "points": 3
+        },
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "single-pivot capsule (no multi-pivot localization)",
+      "sourceAnchorFiles": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "hiddenPivotFiles": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "hiddenPivotSymbols": [
+        "_setup_joins"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "hiddenGoldOverlap": true,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-11490, eval-capsulev2-auto-11490, eval-capsulev2-force--11490, eval-capsulev2-risk-11490, eval-capsulev2-risk5-11490, eval-capsulev2-source-11490, eval-capsulev2-sqlcompiler-11490, eval-diagnostic-11490, eval-fixed-11490, eval-pivot-11490, eval-policy-11490, eval-shaped-11490, eval-sized-11490, eval-sqlcompiler-force-11490, eval-sqlcompiler-live-11490",
+      "priorHiddenPivotEngagement": "prior edited files: django/db/models/sql/compiler.py",
+      "priorEditedFiles": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "risks": [],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "django__django-11728",
+      "repo": "django/django",
+      "score": 5,
+      "factors": [
+        {
+          "label": "hidden pivot overlaps gold patch file",
+          "points": 3
+        },
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "single-pivot capsule (no multi-pivot localization)",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "hiddenPivotSymbols": [
+        "replace_named_groups",
+        "replace_unnamed_groups"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "hiddenGoldOverlap": true,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-11728, eval-capsulev2-auto-11728, eval-capsulev2-force--11728, eval-capsulev2-risk5-11728, eval-diagnostic-11728, eval-diagnostic-rerun-11728, eval-fixed-11728, eval-pivot-11728, eval-shaped-11728, eval-sized-11728",
+      "priorHiddenPivotEngagement": "prior edited files: django/contrib/admindocs/utils.py",
+      "priorEditedFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "risks": [],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "score": 2,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "single-pivot capsule (no multi-pivot localization)",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [
+        "lib/matplotlib/axis.py"
+      ],
+      "hiddenPivotSymbols": [
+        "convert_units",
+        "update_units"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-localization-gap-vtrace-matplotlib-22719",
+      "priorHiddenPivotEngagement": "prior edited files: lib/matplotlib/category.py",
+      "priorEditedFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "risks": [
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24627",
+      "repo": "matplotlib/matplotlib",
+      "score": 2,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "single-pivot capsule (no multi-pivot localization)",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [
+        "lib/matplotlib/pyplot.py"
+      ],
+      "hiddenPivotSymbols": [
+        "plot",
+        "subplots"
+      ],
+      "anchorSource": "live_role_reason",
+      "pivotSource": "live",
+      "goldPatchFiles": [
+        "lib/matplotlib/axes/_base.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": "live run(s): eval-localization-gap-vtrace-matplotlib-24627",
+      "priorHiddenPivotEngagement": "prior edited files: lib/matplotlib/axes/_base.py, lib/matplotlib/figure.py",
+      "priorEditedFiles": [
+        "lib/matplotlib/axes/_base.py",
+        "lib/matplotlib/figure.py"
+      ],
+      "risks": [
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9230",
+      "repo": "sphinx-doc/sphinx",
+      "score": 2,
+      "factors": [
+        {
+          "label": "hidden pivot is not issue/source anchored",
+          "points": 2
+        },
+        {
+          "label": "capsule has >= 2 pivots",
+          "points": 2
+        },
+        {
+          "label": "obvious source-anchored pivot differs from hidden pivot",
+          "points": 2
+        },
+        {
+          "label": "retrieval missing hidden/gold file",
+          "points": -4
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "retrieval failure — gold file not surfaced by the capsule",
+      "sourceAnchorFiles": [
+        "sphinx/util/__init__.py"
+      ],
+      "hiddenPivotFiles": [
+        "sphinx/pycode/ast.py"
+      ],
+      "hiddenPivotSymbols": [
+        "visit_Dict"
+      ],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "sphinx/util/docfields.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "astropy/io/fits/diff.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "astropy/io/fits/diff.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "django__django-10973",
+      "repo": "django/django",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "contrib/postgres/fields/array.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/db/backends/postgresql/client.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "django__django-11133",
+      "repo": "django/django",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "http/response.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/http/response.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "django__django-11749",
+      "repo": "django/django",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "core/management/__init__.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "django__django-12050",
+      "repo": "django/django",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "db/models/sql/query.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "django__django-12276",
+      "repo": "django/django",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "forms/widgets.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/forms/widgets.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "django__django-12325",
+      "repo": "django/django",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "core/checks/model_checks.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/db/models/base.py",
+        "django/db/models/options.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "django__django-12774",
+      "repo": "django/django",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "db/models/query.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "django/db/models/query.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25960",
+      "repo": "matplotlib/matplotlib",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "none",
+      "pivotSource": "none",
+      "goldPatchFiles": [
+        "lib/matplotlib/figure.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "psf__requests-1142",
+      "repo": "psf/requests",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "requests/models.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "requests/models.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "pydata__xarray-2905",
+      "repo": "pydata/xarray",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "xarray/core/variable.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "xarray/core/variable.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "src/_pytest/logging.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "src/_pytest/logging.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5262",
+      "repo": "pytest-dev/pytest",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "src/_pytest/capture.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "src/_pytest/capture.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-11578",
+      "repo": "scikit-learn/scikit-learn",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "score": -5,
+      "factors": [
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24970",
+      "repo": "matplotlib/matplotlib",
+      "score": -9,
+      "factors": [
+        {
+          "label": "retrieval missing hidden/gold file",
+          "points": -4
+        },
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "lib/matplotlib/_api/deprecation.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "lib/matplotlib/colors.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "score": -9,
+      "factors": [
+        {
+          "label": "retrieval missing hidden/gold file",
+          "points": -4
+        },
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "none",
+      "pivotSource": "none",
+      "goldPatchFiles": [
+        "pylint/config/argument.py",
+        "pylint/utils/__init__.py",
+        "pylint/utils/utils.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "repo": "sphinx-doc/sphinx",
+      "score": -9,
+      "factors": [
+        {
+          "label": "retrieval missing hidden/gold file",
+          "points": -4
+        },
+        {
+          "label": "no hidden pivot",
+          "points": -5
+        }
+      ],
+      "tier": "reject",
+      "classificationReason": "no hidden (non-source-anchored) pivot",
+      "sourceAnchorFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "hiddenPivotFiles": [],
+      "hiddenPivotSymbols": [],
+      "anchorSource": "deterministic_rank_proxy",
+      "pivotSource": "deterministic",
+      "goldPatchFiles": [
+        "sphinx/ext/napoleon/__init__.py"
+      ],
+      "hiddenGoldOverlap": false,
+      "curatedEditRelevant": null,
+      "curatedClassification": null,
+      "priorLiveStatus": null,
+      "priorHiddenPivotEngagement": null,
+      "priorEditedFiles": null,
+      "risks": [
+        "anchored/hidden split is a deterministic rank proxy (top-1 = obvious anchor), not a live capsule role-reason — confirm with a live capsule build",
+        "pivots are from the deterministic retrieval eval; the live force-inject capsule (failing-test signal) may surface different pivots",
+        "edit relevance not curated; treat as a hypothesis until a live run confirms inspection→edit behavior"
+      ],
+      "recommendedBeforeLabel": null,
+      "recommendedAfterLabel": null,
+      "commands": null
+    }
+  ]
+}
