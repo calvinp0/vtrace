@@ -4,4 +4,6 @@
 # Those clones carry their own test files (e.g. Django's js_tests/*.test.js), which
 # `bun test` would otherwise discover and fail on. Exclude all cloned benchmark
 # workspaces from test discovery — they are generated artifacts, not our tests.
-pathIgnorePatterns = ["**/results/workspaces/**"]
+# The live Capsule v2 precheck builds the same clones under results/precheck/, so
+# that path is excluded too.
+pathIgnorePatterns = ["**/results/workspaces/**", "**/results/precheck/**"]
