@@ -15,6 +15,7 @@ import {
   loadRun,
   parsePairArg,
   parseReportArgs,
+  pivotCheckStateLabel,
   pivotPhase,
   renderJson,
   renderMarkdown,
@@ -44,6 +45,10 @@ async function scaffoldRun(
     pivotCheckInjected: boolean;
     checklistEmitted: boolean | null;
     treatmentValid?: boolean;
+    // Optional PIVOT_CHECK feature/flag meta. Omitted => the keys are absent from
+    // `_run.meta.json` (mirrors a run whose meta predates the flag).
+    pivotCheckEnabled?: boolean;
+    pivotCheckDisabledByFlag?: boolean;
   },
 ): Promise<void> {
   const condDir = path.join(runsDir, label, "raw", "vtrace");
@@ -72,6 +77,10 @@ async function scaffoldRun(
     vtraceCapsulePivots: opts.pivots,
     vtraceCapsuleSupport: opts.support ?? [],
   };
+  if (opts.pivotCheckEnabled !== undefined) meta.vtracePivotCheckEnabled = opts.pivotCheckEnabled;
+  if (opts.pivotCheckDisabledByFlag !== undefined) {
+    meta.vtracePivotCheckDisabledByFlag = opts.pivotCheckDisabledByFlag;
+  }
   await writeFile(path.join(condDir, "_run.meta.json"), JSON.stringify(meta));
 
   if (opts.toolCalls !== null) {
@@ -257,6 +266,9 @@ async function scaffoldSphinxLikePair(runsDir: string): Promise<void> {
     ],
     pivotCheckInjected: false,
     checklistEmitted: null,
+    // before = controlled PIVOT_CHECK-off run (the new --disable-pivot-check path).
+    pivotCheckEnabled: false,
+    pivotCheckDisabledByFlag: true,
   });
 
   // after: hidden pivot directly read (inspected); checklist NOT emitted
@@ -274,6 +286,9 @@ async function scaffoldSphinxLikePair(runsDir: string): Promise<void> {
     ],
     pivotCheckInjected: true,
     checklistEmitted: false,
+    // after = default PIVOT_CHECK-on run.
+    pivotCheckEnabled: true,
+    pivotCheckDisabledByFlag: false,
   });
 }
 
@@ -312,6 +327,8 @@ test("buildReport produces the expected hidden-pivot conversion and resolves all
     "beforeCost", "afterCost", "costDelta", "costDeltaPct",
     "beforeResolved", "afterResolved", "resolvedChanged",
     "pivotCheckInjectedBefore", "pivotCheckInjectedAfter",
+    "pivotCheckEnabledBefore", "pivotCheckEnabledAfter",
+    "pivotCheckDisabledByFlagBefore", "pivotCheckDisabledByFlagAfter",
     "checklistEmittedBefore", "checklistEmittedAfter",
     "toolLogOrderedBefore", "toolLogOrderedAfter", "toolCallCountBefore", "toolCallCountAfter",
     "hiddenPivotCountBefore", "hiddenPivotCountAfter",
@@ -372,6 +389,43 @@ test("renderMarkdown includes every required section and all non-claims", async 
   assert.ok(md.includes("Ordered tool evidence"));
 });
 
+test("pivotCheckStateLabel disambiguates disabled-by-flag from a naturally-absent injection", () => {
+  // Controlled before run: --disable-pivot-check was passed.
+  assert.equal(pivotCheckStateLabel(false, false, true), "disabled (flag)");
+  // Default after run: block actually injected.
+  assert.equal(pivotCheckStateLabel(true, true, false), "injected");
+  // Enabled but nothing to inject (e.g. single-pivot capsule) — NOT a flag-disable.
+  assert.equal(pivotCheckStateLabel(false, true, false), "enabled, not injected");
+  // Older run with no flag meta but a present block.
+  assert.equal(pivotCheckStateLabel(true, null, null), "injected");
+  // Older run with no flag meta and no block.
+  assert.equal(pivotCheckStateLabel(false, null, null), "not injected");
+});
+
+test("report carries and renders PIVOT_CHECK enabled/disabled-by-flag state per side", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pivot-check-state-"));
+  const runsDir = path.join(tmp, "runs");
+  await scaffoldSphinxLikePair(runsDir);
+  const report = await buildReport(
+    [{ beforeLabel: "before-lbl", afterLabel: "after-lbl" }],
+    { runsDir },
+    null,
+  );
+
+  const pair = report.pairs[0]!;
+  // The before run is a controlled PIVOT_CHECK-off run; the after run has it on.
+  assert.equal(pair.pivotCheckDisabledByFlagBefore, true);
+  assert.equal(pair.pivotCheckEnabledBefore, false);
+  assert.equal(pair.pivotCheckDisabledByFlagAfter, false);
+  assert.equal(pair.pivotCheckEnabledAfter, true);
+
+  const md = renderMarkdown(report);
+  // The disambiguated state is rendered so a before run is not read as a failed
+  // injection.
+  assert.ok(md.includes("PIVOT_CHECK state (before→after)"));
+  assert.ok(md.includes("disabled (flag) → injected"));
+});
+
 test("renderJson contains the expected summary fields and is valid JSON", async () => {
   const tmp = await mkdtemp(path.join(os.tmpdir(), "pivot-check-json-"));
   const runsDir = path.join(tmp, "runs");
@@ -403,6 +457,8 @@ test("buildPair handles a missing JSONL row by zeroing tokens/cost without crash
     row: null,
     treatmentValid: null,
     pivotCheckInjected: false,
+    pivotCheckEnabled: null,
+    pivotCheckDisabledByFlag: null,
     checklistEmitted: null,
     toolLogOrdered: null,
     toolCallCount: null,
@@ -456,11 +512,13 @@ test("summarize tallies conversions and counts only hidden pivots toward convers
   const pair = buildPair(
     {
       label: "b", row: null, treatmentValid: null, pivotCheckInjected: false,
+      pivotCheckEnabled: false, pivotCheckDisabledByFlag: true,
       checklistEmitted: null, toolLogOrdered: true, toolCallCount: 1, records: before,
       editedFiles: [], hiddenCounts: { ignored: 1, discoveredOnly: 1, inspected: 0, edited: 0 },
     },
     {
       label: "a", row: null, treatmentValid: null, pivotCheckInjected: true,
+      pivotCheckEnabled: true, pivotCheckDisabledByFlag: false,
       checklistEmitted: false, toolLogOrdered: true, toolCallCount: 2, records: after,
       editedFiles: [], hiddenCounts: { ignored: 0, discoveredOnly: 0, inspected: 1, edited: 0 },
     },

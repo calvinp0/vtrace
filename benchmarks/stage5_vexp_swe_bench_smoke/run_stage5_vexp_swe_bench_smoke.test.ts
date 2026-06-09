@@ -52,6 +52,7 @@ import {
   hasInstructionsPatch,
   hasStreamPatch,
   persistOrderedToolCalls,
+  indexedContextMetaFields,
   loadSmokeInstances,
   loadSweBenchData,
   normalizeEvaluationEvidence,
@@ -151,6 +152,7 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     capsuleIntent: "auto",
     capsuleBudget: 8000,
     contextPolicyOverride: "auto",
+    disablePivotCheck: false,
     sweBenchDataFile: null,
     runLabel: null,
     runLabels: null,
@@ -176,6 +178,16 @@ test("instances are parsed from the CLI", () => {
 test("invalid mode and vtrace-method are rejected", () => {
   assert.throws(() => parseArgs(["--mode", "bogus"]), /Invalid --mode/);
   assert.throws(() => parseArgs(["--vtrace-method", "bogus"]), /Invalid --vtrace-method/);
+});
+
+test("--disable-pivot-check is off by default and opt-in only", () => {
+  // Default: PIVOT_CHECK stays enabled (flag absent).
+  assert.equal(parseArgs(["--mode", "prepare", "--instances", "a__1"]).disablePivotCheck, false);
+  // Explicit flag flips it.
+  assert.equal(
+    parseArgs(["--mode", "prepare", "--instances", "a__1", "--disable-pivot-check"]).disablePivotCheck,
+    true,
+  );
 });
 
 test("smoke_instances.json loads instances and notes", async () => {
@@ -1394,9 +1406,43 @@ test("buildVtraceContextMarkdown injects PIVOT_CHECK for a multi-pivot Capsule v
     classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
     preformatted: true,
   };
-  const md = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 }).markdown;
-  assert.match(md, /## PIVOT_CHECK/);
-  assert.match(md, /sphinx\/pycode\/ast\.py/);
+  const assembled = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  assert.match(assembled.markdown, /## PIVOT_CHECK/);
+  assert.match(assembled.markdown, /sphinx\/pycode\/ast\.py/);
+  // Default (flag absent): the block is reported as injected.
+  assert.equal(assembled.pivotCheckInjected, true);
+});
+
+test("buildVtraceContextMarkdown suppresses PIVOT_CHECK under disablePivotCheck but keeps the context body", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\nget_combinator_sql lives here",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const enabled = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  const disabled = buildVtraceContextMarkdown([section], {
+    maxChars: 12000,
+    maxItems: 8,
+    disablePivotCheck: true,
+  });
+
+  // The flag removes ONLY the PIVOT_CHECK block.
+  assert.match(enabled.markdown, /## PIVOT_CHECK/);
+  assert.doesNotMatch(disabled.markdown, /PIVOT_CHECK/);
+  assert.equal(enabled.pivotCheckInjected, true);
+  assert.equal(disabled.pivotCheckInjected, false);
+
+  // Normal VTRACE context is still injected with the flag on: the retrieved body,
+  // the instance header, and the standing instruction all survive.
+  assert.match(disabled.markdown, /# vtrace indexed context/);
+  assert.match(disabled.markdown, /get_combinator_sql lives here/);
+  assert.match(disabled.markdown, /Use the vtrace context above to orient/);
+
+  // The two renders are identical except for the excised PIVOT_CHECK block.
+  const withoutBlock = enabled.markdown.replace(/## PIVOT_CHECK[\s\S]*?\n\n(?=## Instruction)/, "");
+  assert.equal(disabled.markdown, withoutBlock);
 });
 
 test("buildVtraceContextMarkdown does not inject PIVOT_CHECK for a single-pivot capsule", () => {
@@ -1503,6 +1549,50 @@ test("v2 injection with a signature-only pivot records missing source, not a pre
   const ctx = await readFile(vtraceInstructionsFilePath(out), "utf8");
   assert.ok(ctx.includes("get_combinator_sql"));
   assert.equal((ctx.match(/\n {2}source:/g) ?? []).length, 0);
+});
+
+test("prepareIndexedContext records PIVOT_CHECK enabled by default and the snapshot is untouched by the flag absent", async () => {
+  // The default fixture is a single-pivot capsule, so PIVOT_CHECK never injects
+  // naturally — the meta must still read enabled=true / disabledByFlag=false /
+  // injected=false, distinguishing it from a flag-disabled run.
+  const { result, out } = await v2InjectionResult(capsuleV2Json());
+  assert.equal(result.pivotCheckEnabled, true);
+  assert.equal(result.pivotCheckDisabledByFlag, false);
+  assert.equal(result.pivotCheckInjected, false);
+  // Telemetry is intact: real context was injected and capsule pivots recorded.
+  assert.equal(result.contextInjected, true);
+  assert.equal(result.capsulePivots.length, 1);
+
+  const meta = indexedContextMetaFields(result);
+  assert.equal(meta.vtracePivotCheckEnabled, true);
+  assert.equal(meta.vtracePivotCheckInjected, false);
+  assert.equal(meta.vtracePivotCheckDisabledByFlag, false);
+
+  const ctx = await readFile(vtraceInstructionsFilePath(out), "utf8");
+  assert.ok(!ctx.includes("PIVOT_CHECK"));
+});
+
+test("--disable-pivot-check records disabled state and never injects the block; telemetry untouched", async () => {
+  const { result, out } = await v2InjectionResult(capsuleV2Json(), { disablePivotCheck: true });
+  // Flag state recorded for the before run.
+  assert.equal(result.pivotCheckEnabled, false);
+  assert.equal(result.pivotCheckDisabledByFlag, true);
+  assert.equal(result.pivotCheckInjected, false);
+
+  // The flag does NOT suppress the normal indexed context or its telemetry.
+  assert.equal(result.contextInjected, true);
+  assert.equal(result.capsulePivots.length, 1);
+  assert.equal(result.capsuleTopPivotSymbol, "get_combinator_sql");
+
+  const meta = indexedContextMetaFields(result);
+  assert.equal(meta.vtracePivotCheckEnabled, false);
+  assert.equal(meta.vtracePivotCheckDisabledByFlag, true);
+  assert.equal(meta.vtracePivotCheckInjected, false);
+
+  const ctx = await readFile(vtraceInstructionsFilePath(out), "utf8");
+  assert.ok(!ctx.includes("PIVOT_CHECK"));
+  // The retrieved capsule body is still present — only PIVOT_CHECK was removed.
+  assert.ok(ctx.includes("get_combinator_sql"));
 });
 
 test("prepareIndexedContext with v2 issues a v2 query and records the engine metadata", async () => {

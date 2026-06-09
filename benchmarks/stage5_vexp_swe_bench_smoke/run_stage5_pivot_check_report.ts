@@ -72,7 +72,16 @@ export interface PivotCheckRun {
   // null when the run's JSONL record is missing entirely.
   row: SweBenchRow | null;
   treatmentValid: boolean | null;
+  // Whether the PIVOT_CHECK block is actually present in the injected snapshot
+  // (ground truth from `_vtrace_instructions.snapshot.md`).
   pivotCheckInjected: boolean;
+  // PIVOT_CHECK feature state from `_run.meta.json`. `enabled` is false only when
+  // the run passed --disable-pivot-check; `disabledByFlag` mirrors that flag.
+  // Both null on older runs whose meta predates these fields. Together they let
+  // the report tell a controlled "before" (disabled by flag) apart from a failed
+  // or naturally-absent injection.
+  pivotCheckEnabled: boolean | null;
+  pivotCheckDisabledByFlag: boolean | null;
   checklistEmitted: boolean | null;
   // true => a real ORDERED `_tool_calls.json` was loaded; false => only aggregate
   // counts were available (inspection signals degrade to patch-only); null => no
@@ -125,6 +134,13 @@ export interface PivotCheckPair {
 
   pivotCheckInjectedBefore: boolean;
   pivotCheckInjectedAfter: boolean;
+
+  // Feature/flag state, so a "before" run (PIVOT_CHECK disabled by flag) is never
+  // confused with a failed injection. null on runs whose meta predates the flag.
+  pivotCheckEnabledBefore: boolean | null;
+  pivotCheckEnabledAfter: boolean | null;
+  pivotCheckDisabledByFlagBefore: boolean | null;
+  pivotCheckDisabledByFlagAfter: boolean | null;
 
   checklistEmittedBefore: boolean | null;
   checklistEmittedAfter: boolean | null;
@@ -449,6 +465,8 @@ export async function loadRun(label: string, options: LoadOptions): Promise<Pivo
     row,
     treatmentValid: asNullableBool(runMeta.vtraceTreatmentValid),
     pivotCheckInjected: snapshotHasPivotCheck(snapshot),
+    pivotCheckEnabled: asNullableBool(runMeta.vtracePivotCheckEnabled),
+    pivotCheckDisabledByFlag: asNullableBool(runMeta.vtracePivotCheckDisabledByFlag),
     checklistEmitted: asNullableBool(runMeta.vtracePivotChecklistEmitted),
     toolLogOrdered: inspection.toolLogOrdered,
     toolCallCount,
@@ -516,6 +534,11 @@ export function buildPair(before: PivotCheckRun, after: PivotCheckRun): PivotChe
     pivotCheckInjectedBefore: before.pivotCheckInjected,
     pivotCheckInjectedAfter: after.pivotCheckInjected,
 
+    pivotCheckEnabledBefore: before.pivotCheckEnabled,
+    pivotCheckEnabledAfter: after.pivotCheckEnabled,
+    pivotCheckDisabledByFlagBefore: before.pivotCheckDisabledByFlag,
+    pivotCheckDisabledByFlagAfter: after.pivotCheckDisabledByFlag,
+
     checklistEmittedBefore: before.checklistEmitted,
     checklistEmittedAfter: after.checklistEmitted,
 
@@ -579,6 +602,23 @@ function resolvedMark(value: boolean | null): string {
   return "not evaluated";
 }
 
+// Disambiguated PIVOT_CHECK state for one run side, so a controlled "before" run
+// (PIVOT_CHECK disabled via --disable-pivot-check) is never read as a failed or
+// accidentally-absent injection. Order matters: an explicit flag-disable is the
+// strongest signal, then a real injection, then the honest "enabled but not
+// injected" case (e.g. a single-pivot capsule), then unknowns.
+export function pivotCheckStateLabel(
+  injected: boolean,
+  enabled: boolean | null,
+  disabledByFlag: boolean | null,
+): string {
+  if (disabledByFlag === true) return "disabled (flag)";
+  if (injected) return "injected";
+  if (enabled === true) return "enabled, not injected";
+  if (enabled === false) return "disabled (flag)";
+  return "not injected";
+}
+
 function fmtPct(value: number): string {
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(1)}%`;
@@ -626,15 +666,36 @@ export function renderMarkdown(report: PivotCheckReport): string {
   // --- Compared runs -------------------------------------------------------
   lines.push("## Compared runs");
   lines.push("");
-  lines.push("| instance | before label | after label | treatment valid (before→after) | pivot-check injected (before→after) |");
-  lines.push("| --- | --- | --- | --- | --- |");
+  lines.push(
+    "| instance | before label | after label | treatment valid (before→after) | " +
+      "pivot-check injected (before→after) | PIVOT_CHECK state (before→after) |",
+  );
+  lines.push("| --- | --- | --- | --- | --- | --- |");
   for (const p of report.pairs) {
+    const beforeState = pivotCheckStateLabel(
+      p.pivotCheckInjectedBefore,
+      p.pivotCheckEnabledBefore,
+      p.pivotCheckDisabledByFlagBefore,
+    );
+    const afterState = pivotCheckStateLabel(
+      p.pivotCheckInjectedAfter,
+      p.pivotCheckEnabledAfter,
+      p.pivotCheckDisabledByFlagAfter,
+    );
     lines.push(
       `| ${p.instanceId} | \`${p.beforeLabel}\` | \`${p.afterLabel}\` | ` +
         `${boolMark(p.treatmentValidBefore)} → ${boolMark(p.treatmentValidAfter)} | ` +
-        `${boolMark(p.pivotCheckInjectedBefore)} → ${boolMark(p.pivotCheckInjectedAfter)} |`,
+        `${boolMark(p.pivotCheckInjectedBefore)} → ${boolMark(p.pivotCheckInjectedAfter)} | ` +
+        `${beforeState} → ${afterState} |`,
     );
   }
+  lines.push("");
+  lines.push(
+    "PIVOT_CHECK state disambiguates a controlled before run from a failed injection: " +
+      "`disabled (flag)` = the run passed `--disable-pivot-check` (a deliberate before " +
+      "condition); `enabled, not injected` = PIVOT_CHECK was on but no block was emitted " +
+      "(e.g. a single-pivot capsule); `injected` = the block was present.",
+  );
   lines.push("");
 
   // --- Hidden pivot conversion --------------------------------------------

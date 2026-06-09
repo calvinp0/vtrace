@@ -172,6 +172,13 @@ export interface CliConfig {
   // "auto" (default) keeps decideContextPolicy in charge; the force-* values are
   // for Capsule v2 live validation. See ContextPolicyOverride.
   readonly contextPolicyOverride: ContextPolicyOverride;
+  // Benchmark-only PIVOT_CHECK suppression (--disable-pivot-check). Default false:
+  // PIVOT_CHECK injects as usual for multi-pivot Capsule v2 runs. When true, the
+  // compact PIVOT_CHECK block is NOT appended to the injected context, so a
+  // controlled "before" run (Capsule v2 injected, PIVOT_CHECK off) can be compared
+  // against the default "after" run. Affects only the PIVOT_CHECK block; normal
+  // VTRACE context, telemetry, and ordered tool-call capture are untouched.
+  readonly disablePivotCheck: boolean;
   readonly sweBenchDataFile: string | null;
   readonly runLabel: string | null;
   // Stage 5C aggregate-runs: the set of run-labels to combine into one report.
@@ -257,6 +264,16 @@ export interface IndexedContextFields {
   readonly vtraceCapsuleEditRiskDirectivesCount: number | null;
   readonly vtraceCapsuleLineAnchorResolutionUsed: boolean | null;
   readonly vtraceCapsuleSqlRenderingBackfillUsed: boolean | null;
+  // PIVOT_CHECK state (Stage 5 before/after experiments). `Enabled` is false only
+  // when --disable-pivot-check was passed; `DisabledByFlag` mirrors that flag;
+  // `Injected` is whether the compact PIVOT_CHECK block actually entered the
+  // injected context. A "before" run reads enabled=false / disabledByFlag=true /
+  // injected=false; a single-pivot run reads enabled=true / disabledByFlag=false /
+  // injected=false — so a controlled before run is never confused with a failed
+  // injection. All null on baseline / non-indexed rows.
+  readonly vtracePivotCheckEnabled: boolean | null;
+  readonly vtracePivotCheckInjected: boolean | null;
+  readonly vtracePivotCheckDisabledByFlag: boolean | null;
 }
 
 // Stage 5C evaluation evidence, normalized per instance. resolved itself stays
@@ -539,6 +556,8 @@ const DEFAULT_CONFIG: CliConfig = {
   capsuleIntent: "auto",
   capsuleBudget: CAPSULE_V2_DEFAULT_BUDGET,
   contextPolicyOverride: "auto",
+  // PIVOT_CHECK is ON by default (only --disable-pivot-check turns it off).
+  disablePivotCheck: false,
   sweBenchDataFile: null,
   runLabel: null,
   runLabels: null,
@@ -2043,6 +2062,14 @@ export interface IndexedContextResult {
   readonly capsuleEditRiskDirectivesCount: number;
   readonly capsuleLineAnchorResolutionUsed: boolean;
   readonly capsuleSqlRenderingBackfillUsed: boolean;
+  // PIVOT_CHECK state for this run. `enabled` is the feature switch (false only
+  // when --disable-pivot-check was passed); `disabledByFlag` mirrors that flag
+  // explicitly so a before run is never mistaken for a failed injection;
+  // `injected` is whether the block actually made it into the assembled context
+  // (true only when enabled AND a multi-pivot v2 section qualified).
+  readonly pivotCheckEnabled: boolean;
+  readonly pivotCheckInjected: boolean;
+  readonly pivotCheckDisabledByFlag: boolean;
 }
 
 // Resolve the bundled vexp-swe-bench dataset path (overridable via --swe-bench-data).
@@ -3082,8 +3109,12 @@ export function buildPivotCheckBlock(pivots: readonly CapsuleAuditItem[] | null)
 
 export function buildVtraceContextMarkdown(
   sections: readonly VtraceContextSection[],
-  limits: { maxChars: number; maxItems: number },
-): { markdown: string; chars: number; items: number; truncated: boolean } {
+  // `disablePivotCheck` (default false) suppresses the compact PIVOT_CHECK block
+  // for controlled "before" runs; it never affects the rest of the injected
+  // context. `pivotCheckInjected` in the return reports whether the block was
+  // actually appended (true only when not disabled AND a section qualified).
+  limits: { maxChars: number; maxItems: number; disablePivotCheck?: boolean },
+): { markdown: string; chars: number; items: number; truncated: boolean; pivotCheckInjected: boolean } {
   const lines: string[] = [
     "# vtrace indexed context",
     "",
@@ -3093,6 +3124,7 @@ export function buildVtraceContextMarkdown(
   let totalChars = 0;
   let totalItems = 0;
   let anyTruncated = false;
+  let pivotCheckInjected = false;
   for (const section of sections) {
     const { instance } = section;
     // NOTE: the full problem statement is intentionally NOT repeated here. The
@@ -3124,9 +3156,14 @@ export function buildVtraceContextMarkdown(
       // Multi-pivot Capsule v2: append the compact PIVOT_CHECK enforcement block,
       // seeded from this section's actual pivots so hidden pivots are never silently
       // omitted. Gated on >= 2 v2 pivots (single-pivot capsules stay quiet).
-      const pivotCheck = buildPivotCheckBlock(section.classification?.capsulePivots ?? null);
+      // --disable-pivot-check suppresses ONLY this block (controlled before runs);
+      // everything else in the section is injected unchanged.
+      const pivotCheck = limits.disablePivotCheck
+        ? null
+        : buildPivotCheckBlock(section.classification?.capsulePivots ?? null);
       if (pivotCheck !== null) {
         lines.push(pivotCheck, "");
+        pivotCheckInjected = true;
       }
     }
     lines.push(
@@ -3136,7 +3173,13 @@ export function buildVtraceContextMarkdown(
       "",
     );
   }
-  return { markdown: `${lines.join("\n")}\n`, chars: totalChars, items: totalItems, truncated: anyTruncated };
+  return {
+    markdown: `${lines.join("\n")}\n`,
+    chars: totalChars,
+    items: totalItems,
+    truncated: anyTruncated,
+    pivotCheckInjected,
+  };
 }
 
 // Workspace/index-run metadata for the vtrace _run.meta.json (alongside the flat
@@ -3161,7 +3204,7 @@ function indexRunMetaFields(result: IndexedContextResult): Record<string, unknow
 }
 
 // Map the orchestration result onto the flat IndexedContextFields meta keys.
-function indexedContextMetaFields(result: IndexedContextResult): IndexedContextFields {
+export function indexedContextMetaFields(result: IndexedContextResult): IndexedContextFields {
   return {
     vtraceIndexedContext: result.indexedContext,
     vtraceIndexCommand: result.indexCommand,
@@ -3198,6 +3241,9 @@ function indexedContextMetaFields(result: IndexedContextResult): IndexedContextF
     vtraceCapsuleEditRiskDirectivesCount: result.capsuleEditRiskDirectivesCount,
     vtraceCapsuleLineAnchorResolutionUsed: result.capsuleLineAnchorResolutionUsed,
     vtraceCapsuleSqlRenderingBackfillUsed: result.capsuleSqlRenderingBackfillUsed,
+    vtracePivotCheckEnabled: result.pivotCheckEnabled,
+    vtracePivotCheckInjected: result.pivotCheckInjected,
+    vtracePivotCheckDisabledByFlag: result.pivotCheckDisabledByFlag,
   };
 }
 
@@ -3392,6 +3438,7 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
   const assembled = buildVtraceContextMarkdown(gatedSections, {
     maxChars: config.vtraceContextMaxChars,
     maxItems: config.vtraceContextMaxItems,
+    disablePivotCheck: config.disablePivotCheck,
   });
   await writeFile(contextFile, assembled.markdown);
 
@@ -3513,6 +3560,15 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     capsuleEditRiskDirectivesCount,
     capsuleLineAnchorResolutionUsed,
     capsuleSqlRenderingBackfillUsed,
+    // PIVOT_CHECK is enabled unless the operator suppressed it via the flag; the
+    // assembled markdown reports whether the block was actually appended (a before
+    // run, or a single-pivot capsule, both yield injected=false but for different
+    // reasons — disabledByFlag disambiguates). Coerced to a strict boolean so a
+    // config without the field set (e.g. a partial test config) never leaks
+    // `undefined` into the metadata.
+    pivotCheckEnabled: config.disablePivotCheck !== true,
+    pivotCheckInjected: assembled.pivotCheckInjected,
+    pivotCheckDisabledByFlag: config.disablePivotCheck === true,
   };
 }
 
@@ -3919,6 +3975,9 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtraceCapsuleEditRiskDirectivesCount: evidence.vtraceCapsuleEditRiskDirectivesCount,
           vtraceCapsuleLineAnchorResolutionUsed: evidence.vtraceCapsuleLineAnchorResolutionUsed,
           vtraceCapsuleSqlRenderingBackfillUsed: evidence.vtraceCapsuleSqlRenderingBackfillUsed,
+          vtracePivotCheckEnabled: evidence.vtracePivotCheckEnabled,
+          vtracePivotCheckInjected: evidence.vtracePivotCheckInjected,
+          vtracePivotCheckDisabledByFlag: evidence.vtracePivotCheckDisabledByFlag,
         },
   );
 }
@@ -4206,6 +4265,9 @@ export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5
     vtraceCapsuleEditRiskDirectivesCount: null,
     vtraceCapsuleLineAnchorResolutionUsed: null,
     vtraceCapsuleSqlRenderingBackfillUsed: null,
+    vtracePivotCheckEnabled: null,
+    vtracePivotCheckInjected: null,
+    vtracePivotCheckDisabledByFlag: null,
     notes: perRun.flatMap((e) => e.notes),
   };
 }
@@ -4706,6 +4768,9 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtraceCapsuleEditRiskDirectivesCount: null,
     vtraceCapsuleLineAnchorResolutionUsed: null,
     vtraceCapsuleSqlRenderingBackfillUsed: null,
+    vtracePivotCheckEnabled: null,
+    vtracePivotCheckInjected: null,
+    vtracePivotCheckDisabledByFlag: null,
   };
 }
 
@@ -5037,6 +5102,9 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtraceCapsuleEditRiskDirectivesCount: num(meta.vtraceCapsuleEditRiskDirectivesCount),
     vtraceCapsuleLineAnchorResolutionUsed: bool(meta.vtraceCapsuleLineAnchorResolutionUsed),
     vtraceCapsuleSqlRenderingBackfillUsed: bool(meta.vtraceCapsuleSqlRenderingBackfillUsed),
+    vtracePivotCheckEnabled: bool(meta.vtracePivotCheckEnabled),
+    vtracePivotCheckInjected: bool(meta.vtracePivotCheckInjected),
+    vtracePivotCheckDisabledByFlag: bool(meta.vtracePivotCheckDisabledByFlag),
   };
 }
 
@@ -5843,6 +5911,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         break;
       }
       case "--capsule-budget": config.capsuleBudget = requirePositiveInt(argv, ++index, arg); break;
+      case "--disable-pivot-check": config.disablePivotCheck = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
       case "--run-labels":
@@ -5899,6 +5968,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --capsule-engine legacy|v2                    capsule retrieval engine for indexed-context (default: legacy)",
       "  --capsule-intent auto|debug|refactor|impact|test-failure   Capsule v2 intent (default: auto; v2 only)",
       "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
+      "  --disable-pivot-check                         suppress the PIVOT_CHECK block for a controlled before run (default: PIVOT_CHECK on for multi-pivot v2)",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),
