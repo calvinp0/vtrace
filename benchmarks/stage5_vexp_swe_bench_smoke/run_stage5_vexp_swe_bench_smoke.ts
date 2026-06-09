@@ -19,6 +19,7 @@ import {
   primaryEditedFile,
   primaryEditedSymbol,
 } from "../../src/capsule/finalEditDiagnostics";
+import { parseOrderedToolCalls } from "../../src/capsule/toolCallLog";
 import { renderCapsuleV2Human } from "../../src/capsuleV2/renderHuman";
 import { CapsuleV2Mode, type CapsuleV2Result } from "../../src/capsuleV2/types";
 import {
@@ -641,6 +642,12 @@ const NORMALIZED_FILENAME = "stage5_normalized.json";
 // recorded in the manifest. Its presence means "already patched, do not touch".
 export const STAGE5_VTRACE_PATCH_MARKER = "STAGE5_VTRACE_INSTRUCTIONS_PATCH";
 
+// Marker for the SECOND (telemetry) patch block: it dumps the adapter's raw
+// stream-json to VTRACE_AGENT_STREAM_FILE so the harness can recover an ordered
+// tool-call log. Independent of the instructions block — inserted only when its
+// anchor is present, so an adapter that lacks it still patches cleanly.
+export const STAGE5_VTRACE_STREAM_MARKER = "STAGE5_VTRACE_STREAM_PATCH";
+
 const VTRACE_PATCH_MANIFEST_FILENAME = "vtrace_patch_manifest.json";
 const VTRACE_PATCH_BACKUP_SUFFIX = ".stage5-vtrace-backup";
 
@@ -666,6 +673,15 @@ const CLAUDE_ADAPTER_CANDIDATES: readonly string[] = [
 // Anchor line in the adapter's run() method; the injection block is inserted
 // immediately after it, before the `claude -p` args array is assembled.
 const VTRACE_PATCH_ANCHOR = "const startMs = Date.now();";
+
+// Anchor for the telemetry block: by this line `rawOutput` (the full stream-json
+// the agent emitted) is in scope, so the block can dump it. Optional — if the
+// adapter layout changed and this line is absent, the stream block is skipped.
+const VTRACE_STREAM_ANCHOR = "const durationMs = Date.now() - startMs;";
+
+// Stderr line the patched adapter logs when it writes the raw stream for tool-call
+// telemetry. Not load-bearing for treatment validity (purely observational).
+export const STAGE5_VTRACE_STREAM_LOG = "Stage5 vtrace tool-call stream written to";
 
 export interface VtracePatchManifest {
   readonly installed: boolean;
@@ -781,6 +797,22 @@ export function vtraceInstructionsFilePath(outDir: string): string {
   return path.join(outDir, "_vtrace_instructions.md");
 }
 
+// The raw agent stream-json the patched adapter dumps for tool-call telemetry.
+// Lives at the results ROOT (like the instructions file) so vexp's --output dir
+// clean cannot delete it. It is overwritten each run; runCondition parses it into
+// the per-run `_tool_calls.json` immediately after, so a later run cannot clobber
+// captured evidence. This is the only artifact written for pivot-inspection
+// telemetry; it is a raw log and is gitignored.
+export function vtraceAgentStreamFilePath(outDir: string): string {
+  return path.join(outDir, "_agent_stream.jsonl");
+}
+
+// The normalized, ordered tool-call log for one condition run, written next to
+// that run's JSONL so the report can join it by run directory.
+export function toolCallLogFilePath(rawDir: string): string {
+  return path.join(rawDir, "_tool_calls.json");
+}
+
 // The ACTIVE instructions file (above) is a single shared path at the results
 // root, so a later run overwrites it — making post-run auditing unreliable. The
 // snapshot is an immutable per-run-label copy of exactly what was injected: it
@@ -819,6 +851,10 @@ function vtraceEnv(config: CliConfig, injectContext = true): Record<string, stri
   const env: Record<string, string> = {
     VTRACE_SMOKE: "1",
     VTRACE_METHOD: config.vtraceMethod,
+    // Tool-call telemetry: the patched adapter dumps its raw stream-json here so
+    // pivot inspection can be measured. Set regardless of injectContext — a
+    // no-context (skip-policy) run still benefits from the ordered tool log.
+    VTRACE_AGENT_STREAM_FILE: vtraceAgentStreamFilePath(config.out),
   };
   // Only point the adapter at the instructions file when we actually inject. A
   // skip-policy run leaves it unset so nothing is injected.
@@ -3609,6 +3645,39 @@ async function formatRunStatusSummary(
   return blocks.join("\n\n");
 }
 
+// Parse the raw agent stream the patched adapter dumped (at the results-root
+// VTRACE_AGENT_STREAM_FILE) into an ordered `_tool_calls.json` written into this
+// run's raw dir. Returns meta fields recording whether an ordered log was
+// captured; never throws (telemetry must not fail a run).
+async function persistOrderedToolCalls(
+  config: CliConfig,
+  rawDir: string,
+): Promise<Record<string, unknown>> {
+  const streamPath = vtraceAgentStreamFilePath(config.out);
+  const stream = await readFile(streamPath, "utf8").catch(() => null);
+  if (stream === null) {
+    return { vtraceToolLogOrdered: false, vtraceToolCallLogFile: null, vtraceToolCallCount: null };
+  }
+  try {
+    const calls = parseOrderedToolCalls(stream);
+    const logPath = toolCallLogFilePath(rawDir);
+    await mkdir(path.dirname(logPath), { recursive: true });
+    await writeFile(logPath, `${JSON.stringify(calls, null, 2)}\n`);
+    return {
+      vtraceToolLogOrdered: true,
+      vtraceToolCallLogFile: logPath,
+      vtraceToolCallCount: calls.length,
+    };
+  } catch (error) {
+    return {
+      vtraceToolLogOrdered: false,
+      vtraceToolCallLogFile: null,
+      vtraceToolCallCount: null,
+      vtraceToolCallError: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 async function runCondition(
   config: CliConfig,
   condition: Stage5Condition,
@@ -3652,9 +3721,13 @@ async function runCondition(
   const policyAction = isVtracePolicyAction(extraVtraceMeta.vtracePolicyAction)
     ? extraVtraceMeta.vtracePolicyAction
     : null;
+  // Tool-call telemetry: parse the raw stream the patched adapter dumped into an
+  // ordered `_tool_calls.json` next to this run's JSONL. Best-effort and additive
+  // — absence just leaves the report's honest false-by-absence behavior.
+  const toolCallMeta = condition === "vtrace" ? await persistOrderedToolCalls(config, dir) : {};
   const vtraceMeta =
     condition === "vtrace"
-      ? { ...(await vtraceRunMetaFields(config, result.stderr, indexedFlag, policyAction)), ...extraVtraceMeta }
+      ? { ...(await vtraceRunMetaFields(config, result.stderr, indexedFlag, policyAction)), ...toolCallMeta, ...extraVtraceMeta }
       : {};
   const meta = {
     condition,
@@ -4072,26 +4145,71 @@ export function buildVtracePatchBlock(): string {
   ].join("\n");
 }
 
+// The SECOND inserted block: after `rawOutput` (the agent's full stream-json) is
+// in scope, dump it to VTRACE_AGENT_STREAM_FILE so the harness can recover an
+// ordered tool-call log. Telemetry only — it neither changes `opts` nor the
+// returned metrics/patch. Logs to STDERR (stdout is parsed as stream-json).
+export function buildVtraceStreamPatchBlock(): string {
+  return [
+    `        // ${STAGE5_VTRACE_STREAM_MARKER} begin — local Stage 5 smoke patch (dumps the`,
+    "        // raw agent stream-json for pivot-inspection tool-call telemetry; no behavior change).",
+    "        if (process.env.VTRACE_AGENT_STREAM_FILE && typeof rawOutput === \"string\") {",
+    "            const __stage5StreamFile = process.env.VTRACE_AGENT_STREAM_FILE;",
+    "            try {",
+    '                const { writeFile: __stage5WriteFile, mkdir: __stage5Mkdir } = await import("node:fs/promises");',
+    '                const { dirname: __stage5Dirname } = await import("node:path");',
+    "                await __stage5Mkdir(__stage5Dirname(__stage5StreamFile), { recursive: true });",
+    '                await __stage5WriteFile(__stage5StreamFile, rawOutput, "utf8");',
+    `                console.error(\`${STAGE5_VTRACE_STREAM_LOG} \${__stage5StreamFile}\`);`,
+    "            } catch (__stage5StreamErr) {",
+    "                console.error(`Stage5 vtrace stream capture skipped: ${__stage5StreamErr instanceof Error ? __stage5StreamErr.message : String(__stage5StreamErr)}`);",
+    "            }",
+    "        }",
+    `        // ${STAGE5_VTRACE_STREAM_MARKER} end`,
+    "",
+  ].join("\n");
+}
+
 export function isVtracePatched(content: string): boolean {
   return content.includes(STAGE5_VTRACE_PATCH_MARKER);
 }
 
-// Pure transform: insert the injection block after the anchor line. Idempotent —
-// returns changed:false if the marker is already present. Throws if the anchor
-// is missing so the caller can tell the user to patch manually.
-export function applyVtracePatch(content: string): { content: string; changed: boolean } {
-  if (isVtracePatched(content)) return { content, changed: false };
-  const anchorIndex = content.indexOf(VTRACE_PATCH_ANCHOR);
-  if (anchorIndex === -1) {
-    throw new Error(
-      `Could not find anchor "${VTRACE_PATCH_ANCHOR}" in the Claude Code adapter. ` +
-        "The external vexp-swe-bench layout may have changed; patch the prompt builder manually.",
-    );
-  }
+// Insert `block` immediately after the first line containing `anchor`. Pure.
+function insertAfterAnchor(content: string, anchor: string, block: string): string {
+  const anchorIndex = content.indexOf(anchor);
+  if (anchorIndex === -1) return content;
   const lineEnd = content.indexOf("\n", anchorIndex);
   const insertAt = lineEnd === -1 ? content.length : lineEnd + 1;
-  const patched = `${content.slice(0, insertAt)}${buildVtracePatchBlock()}${content.slice(insertAt)}`;
-  return { content: patched, changed: true };
+  return `${content.slice(0, insertAt)}${block}${content.slice(insertAt)}`;
+}
+
+// Pure transform: insert the injection block(s) after their anchor lines.
+// Idempotent per block (skips one whose marker is already present). The
+// instructions block is REQUIRED — its missing anchor throws so the caller can
+// patch manually. The stream-telemetry block is OPTIONAL — if its anchor is
+// absent it is silently skipped, so an adapter without the `rawOutput`/duration
+// line still patches cleanly (just without tool-call telemetry).
+export function applyVtracePatch(content: string): { content: string; changed: boolean } {
+  let next = content;
+  let changed = false;
+
+  if (!next.includes(STAGE5_VTRACE_PATCH_MARKER)) {
+    if (next.indexOf(VTRACE_PATCH_ANCHOR) === -1) {
+      throw new Error(
+        `Could not find anchor "${VTRACE_PATCH_ANCHOR}" in the Claude Code adapter. ` +
+          "The external vexp-swe-bench layout may have changed; patch the prompt builder manually.",
+      );
+    }
+    next = insertAfterAnchor(next, VTRACE_PATCH_ANCHOR, buildVtracePatchBlock());
+    changed = true;
+  }
+
+  if (!next.includes(STAGE5_VTRACE_STREAM_MARKER) && next.indexOf(VTRACE_STREAM_ANCHOR) !== -1) {
+    next = insertAfterAnchor(next, VTRACE_STREAM_ANCHOR, buildVtraceStreamPatchBlock());
+    changed = true;
+  }
+
+  return { content: next, changed };
 }
 
 // Find the adapter file that builds the `claude -p <prompt>` invocation. Tries

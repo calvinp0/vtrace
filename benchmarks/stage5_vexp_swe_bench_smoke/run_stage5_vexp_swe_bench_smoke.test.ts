@@ -20,6 +20,7 @@ import {
   buildVtraceContextMarkdown,
   buildVtraceIndexCommand,
   buildVtracePatchBlock,
+  buildVtraceStreamPatchBlock,
   buildVtraceQueryCommand,
   decideIndexPolicy,
   buildVtraceCommand,
@@ -69,6 +70,8 @@ import {
   STAGE5_VTRACE_INJECTION_LOG,
   STAGE5_VTRACE_INJECTION_SKIPPED,
   STAGE5_VTRACE_PATCH_MARKER,
+  STAGE5_VTRACE_STREAM_MARKER,
+  STAGE5_VTRACE_STREAM_LOG,
   toSweBenchInstance,
   truncateContext,
   verifyVtracePatch,
@@ -102,7 +105,9 @@ const FAKE_CLAUDE_ADAPTER = [
   '            "-p", opts.prompt,',
   '            "--output-format", "stream-json",',
   "        ];",
-  "        return { args, startMs };",
+  '        const rawOutput = await spawnAgent("claude", args);',
+  "        const durationMs = Date.now() - startMs;",
+  "        return { args, startMs, rawOutput, durationMs };",
   "    }",
   "}",
   "",
@@ -442,6 +447,48 @@ test("buildVtracePatchBlock injects under the documented marker heading", () => 
   // Logs to stderr (console.error), never stdout, to avoid corrupting stream-json.
   assert.ok(block.includes("console.error"));
   assert.ok(!block.includes("console.log"));
+});
+
+test("buildVtraceStreamPatchBlock dumps rawOutput to the stream env file via stderr", () => {
+  const block = buildVtraceStreamPatchBlock();
+  assert.ok(block.includes(`${STAGE5_VTRACE_STREAM_MARKER} begin`));
+  assert.ok(block.includes(`${STAGE5_VTRACE_STREAM_MARKER} end`));
+  assert.ok(block.includes("VTRACE_AGENT_STREAM_FILE"));
+  assert.ok(block.includes("rawOutput"));
+  // Telemetry must never touch stdout (parsed as stream-json) and never mutate opts.
+  assert.ok(block.includes("console.error"));
+  assert.ok(!block.includes("console.log"));
+  assert.ok(!block.includes("opts.prompt"));
+});
+
+test("applyVtracePatch inserts the stream telemetry block after its anchor", () => {
+  const { content, changed } = applyVtracePatch(FAKE_CLAUDE_ADAPTER);
+  assert.equal(changed, true);
+  assert.ok(content.includes(STAGE5_VTRACE_STREAM_MARKER));
+  assert.ok(content.includes(STAGE5_VTRACE_STREAM_LOG));
+  // Inserted after the durationMs anchor, where rawOutput is in scope.
+  const anchorIdx = content.indexOf("const durationMs = Date.now() - startMs;");
+  const streamIdx = content.indexOf(STAGE5_VTRACE_STREAM_MARKER);
+  assert.ok(anchorIdx !== -1 && anchorIdx < streamIdx);
+});
+
+test("applyVtracePatch skips the optional stream block when its anchor is absent", () => {
+  // An adapter with the required instructions anchor but no rawOutput/duration line.
+  const minimal = [
+    "export class ClaudeCodeAdapter {",
+    "    async run(opts) {",
+    "        const startMs = Date.now();",
+    "        const args = [];",
+    "        return { args };",
+    "    }",
+    "}",
+    "",
+  ].join("\n");
+  const { content, changed } = applyVtracePatch(minimal);
+  assert.equal(changed, true);
+  // Instructions block still installed (required); stream block silently skipped.
+  assert.ok(content.includes(STAGE5_VTRACE_PATCH_MARKER));
+  assert.ok(!content.includes(STAGE5_VTRACE_STREAM_MARKER));
 });
 
 test("install-vtrace-patch patches the fixture, backs it up, and writes a manifest", async () => {

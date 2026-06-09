@@ -14,6 +14,7 @@ import {
   extractCapsulePivots,
   extractOrderedToolCalls,
   loadPair,
+  readOrderedToolCallLog,
   parseLabelMap,
   parseSweBenchRow,
   pairReductions,
@@ -571,4 +572,83 @@ test("buildPivotInspection degrades to patch-only when the record is missing", (
   assert.equal(toolLogOrdered, null);
   assert.equal(records.length, 3);
   assert.ok(records.every((r) => r.edited === false && r.status === "ignored"));
+});
+
+// --------------------------------------------------------------------------
+// Ordered tool-call log: loading + wiring into pivot inspection
+// --------------------------------------------------------------------------
+
+// A persisted _tool_calls.json: the agent grepped (surfacing ast.py in output),
+// directly read ast.py, then edited python.py.
+const TOOL_CALL_LOG = [
+  { index: 0, tool: "Grep", category: "search", path: null, query: "unparse", output_summary: "sphinx/pycode/ast.py:42" },
+  { index: 1, tool: "Read", category: "read", path: "sphinx/pycode/ast.py", query: null, output_summary: "def unparse(node):" },
+  { index: 2, tool: "Edit", category: "edit", path: "sphinx/domains/python.py", query: null, output_summary: null },
+];
+
+test("1. readOrderedToolCallLog loads the ordered log from run artifacts", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage5-tcl-"));
+  await writeFile(path.join(dir, "_tool_calls.json"), JSON.stringify(TOOL_CALL_LOG));
+  const calls = await readOrderedToolCallLog(dir);
+  assert.ok(calls);
+  assert.equal(calls!.length, 3);
+  assert.equal(calls![1]!.target, "sphinx/pycode/ast.py");
+});
+
+test("4. missing tool-call log sets pivotInspectionToolLogOrdered=false", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "stage5-tcl-"));
+  assert.equal(await readOrderedToolCallLog(dir), null);
+  // With no ordered log and an aggregate-only record, the flag is false.
+  const result = buildPivotInspection(SPHINX_RUN_META, SPHINX_RESULT, null);
+  assert.equal(result.toolLogOrdered, false);
+});
+
+test("5. buildPivotInspection uses real ordered calls when available", () => {
+  const calls = TOOL_CALL_LOG.map((c) => ({
+    tool: c.tool,
+    target: c.path,
+    output: c.output_summary ?? c.query,
+  }));
+  const { records, toolLogOrdered } = buildPivotInspection(SPHINX_RUN_META, SPHINX_RESULT, calls);
+  assert.equal(toolLogOrdered, true);
+  const ast = records.find((r) => r.path === "sphinx/pycode/ast.py");
+  // With an ordered log we can now SEE the direct read — no longer false-by-absence.
+  assert.equal(ast?.inspected, true);
+  assert.equal(ast?.status, "inspected");
+});
+
+test("loadPair wires _tool_calls.json into pivot inspection (ordered log distinguishes inspected)", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage5-cap-tcl-"));
+  await buildRunTree(root);
+  const capDir = path.join(root, "eval-capsulev2-risk5-10880", "raw", "vtrace");
+  // Re-point the run meta's pivots at the sphinx hidden pivot so the wiring is visible.
+  await writeFile(
+    path.join(capDir, "_run.meta.json"),
+    JSON.stringify({
+      vtraceCapsuleEngine: "v2",
+      vtraceCapsulePivots: SPHINX_RUN_META.vtraceCapsulePivots,
+    }),
+  );
+  await writeFile(path.join(capDir, "_tool_calls.json"), JSON.stringify(TOOL_CALL_LOG));
+
+  const pair = await loadPair(
+    "django__django-10880",
+    ["eval-10880", "eval-capsulev2-risk5-10880"],
+    { runsDir: root },
+  );
+  assert.equal(pair.pivotInspectionToolLogOrdered, true);
+  const ast = pair.pivotInspection?.find((r) => r.path === "sphinx/pycode/ast.py");
+  assert.equal(ast?.inspected, true);
+});
+
+test("loadPair keeps false-by-absence when no _tool_calls.json is present", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stage5-cap-notcl-"));
+  await buildRunTree(root);
+  const pair = await loadPair(
+    "django__django-10880",
+    ["eval-10880", "eval-capsulev2-risk5-10880"],
+    { runsDir: root },
+  );
+  // No ordered log written => aggregate fallback => ordered:false (honest).
+  assert.equal(pair.pivotInspectionToolLogOrdered, false);
 });

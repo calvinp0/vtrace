@@ -23,6 +23,7 @@ import {
   type PivotForInspection,
   type PivotInspectionRecord,
 } from "../../src/capsule/finalEditDiagnostics";
+import { inspectionCallsFromLog } from "../../src/capsule/toolCallLog";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -351,20 +352,41 @@ export function extractOrderedToolCalls(
 }
 
 // Classify what the agent did with each surfaced pivot, from the capsule run's
-// metadata (pivot list) and result record (ordered tool calls, if any, + the
-// final patch). Pure read-over of artifacts; no gold labels.
+// metadata (pivot list), the final patch, and — when available — a real ORDERED
+// tool-call log (`orderedCalls`, loaded from `_tool_calls.json`). Pure read-over
+// of artifacts; no gold labels.
+//
+// Precedence: a loaded ordered log wins (`toolLogOrdered: true`); otherwise we
+// fall back to the result record, whose aggregate tool counts have no ordering
+// (`toolLogOrdered: false`); with neither, `null`.
 export function buildPivotInspection(
   runMeta: Record<string, unknown>,
   capsuleRecord: Record<string, unknown> | null,
+  orderedCalls: InspectionToolCall[] | null = null,
 ): { records: PivotInspectionRecord[]; toolLogOrdered: boolean | null } {
   const pivots = extractCapsulePivots(runMeta);
+  const patch =
+    capsuleRecord === null
+      ? ""
+      : asNullableString(capsuleRecord.modelPatch) ?? asNullableString(capsuleRecord.patch) ?? "";
+  const editedFiles = editedFilesFromPatch(patch);
+
+  if (orderedCalls !== null) {
+    return { records: classifyPivotInspection(pivots, orderedCalls, editedFiles), toolLogOrdered: true };
+  }
   if (capsuleRecord === null) {
     return { records: classifyPivotInspection(pivots, [], []), toolLogOrdered: null };
   }
   const { calls, ordered } = extractOrderedToolCalls(capsuleRecord);
-  const patch = asNullableString(capsuleRecord.modelPatch) ?? asNullableString(capsuleRecord.patch) ?? "";
-  const editedFiles = editedFilesFromPatch(patch);
   return { records: classifyPivotInspection(pivots, calls, editedFiles), toolLogOrdered: ordered };
+}
+
+// Load and coerce the ordered tool-call log (`_tool_calls.json`) for one run
+// directory into the classifier's call shape, or null when absent/invalid (so
+// the caller keeps the honest false-by-absence behavior).
+export async function readOrderedToolCallLog(dir: string): Promise<InspectionToolCall[] | null> {
+  const parsed = await readJsonArrayFile(path.join(dir, "_tool_calls.json"));
+  return parsed === null ? null : inspectionCallsFromLog(parsed);
 }
 
 // Parse and validate a label-map JSON document. Each value must be a 2-element
@@ -720,6 +742,17 @@ async function readJsonFile(filePath: string): Promise<Record<string, unknown> |
   }
 }
 
+// Read a JSON file expected to hold a top-level array (e.g. `_tool_calls.json`).
+// Returns null when missing, unparseable, or not an array.
+async function readJsonArrayFile(filePath: string): Promise<unknown[] | null> {
+  try {
+    const parsed = JSON.parse(await readFile(filePath, "utf8"));
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 async function readTextFile(filePath: string): Promise<string | null> {
   try {
     return await readFile(filePath, "utf8");
@@ -801,7 +834,8 @@ export async function loadPair(
     capsule.resolved = (evalMeta.resolvedCount as number) > 0;
   }
 
-  const pivotInspection = buildPivotInspection(runMeta, capsuleRaw);
+  const orderedCalls = await readOrderedToolCallLog(capsuleDir);
+  const pivotInspection = buildPivotInspection(runMeta, capsuleRaw, orderedCalls);
 
   return {
     instanceId,

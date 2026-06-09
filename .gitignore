@@ -15,3 +15,8 @@ vscode-extension/*.vsix
 
 # Stage 5B reproduces SWE-bench task checkouts by cloning upstream repos here.
 benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/
+
+# Raw agent stream-json captured for pivot-inspection tool-call telemetry. It is
+# a large raw log; the normalized `_tool_calls.json` is derived from it. Not
+# tracked by default (the per-run raw artifacts are untracked too).
+_agent_stream.jsonl
