@@ -153,6 +153,167 @@ function samePath(selectionPath: string, editedFile: string): boolean {
   return a.length > 0 && a === b;
 }
 
+// ----- pivot inspection (Stage 5 post-hoc, pivot-inspection loop) -------------
+//
+// Did the agent actually ENGAGE with each Capsule v2 pivot before patching, or
+// did it edit the traceback-named file and silently skip the hidden pivot that
+// held the root cause (the sphinx-7462 gap)? This classifies, per surfaced
+// pivot, what the agent did with it — using only agent-side artifacts (the
+// ordered tool-call log and the final patch), never the gold patch or any
+// expected-label table. See docs/benchmarks/capsule_v2_pivot_inspection_loop_spec.md.
+//
+// The load-bearing rule: a grep/search that merely SURFACES a path or symbol is
+// `discovered`, NOT `inspected`. Inspection means the agent directly opened/read
+// the pivot file's contents. Search reveals a file exists; inspection means the
+// agent actually looked inside it. This is why `discovered` never, on its own,
+// promotes the status above `ignored` — visibility is not engagement.
+
+// Read/open operations: the agent looked at a file's CONTENTS.
+const PIVOT_READ_TOOLS = new Set([
+  "read",
+  "view",
+  "open",
+  "cat",
+  "readfile",
+  "read_file",
+  "str_replace_editor", // view-mode opens count; edits are detected from the patch
+]);
+
+// Search/grep operations: the agent learned a path/symbol EXISTS, but did not
+// necessarily read it. These never count as inspection.
+const PIVOT_SEARCH_TOOLS = new Set([
+  "grep",
+  "grep_search",
+  "glob",
+  "search",
+  "find",
+  "ripgrep",
+  "rg",
+  "codebase_search",
+  "ls",
+]);
+
+// The terminal classification for one pivot. `discovered` is an observation flag,
+// not a terminal status: a pivot seen only in search output is still `ignored`
+// (the agent never engaged with its contents).
+export type PivotInspectionStatus =
+  | "edited"
+  | "edited_without_inspection"
+  | "ruled_out"
+  | "inspected"
+  | "ignored";
+
+// A Capsule v2 pivot to classify. Shape-only — carries no scoring or gold data.
+export interface PivotForInspection {
+  readonly path: string;
+  readonly symbol: string;
+  readonly role: "pivot" | "support";
+  // Non-source-anchored pivot (surfaced by symbol/graph/literal reasoning rather
+  // than a traceback/issue line) — the kind a traceback-following agent skips.
+  readonly hidden: boolean;
+}
+
+// One ordered tool call from the agent's run. `target` is the file-path argument
+// (when the tool takes one); `output` is the textual result (e.g. grep matches),
+// used only to detect search-time DISCOVERY of a pivot.
+export interface InspectionToolCall {
+  readonly tool: string;
+  readonly target?: string | null;
+  readonly output?: string | null;
+}
+
+// A pivot the agent EXPLICITLY ruled out (e.g. a checklist row marked not
+// edit-needed with a grounded reason). Parsed upstream from the agent's emitted
+// pivot-inspection checklist; never inferred from gold.
+export interface PivotRuleOut {
+  readonly path: string;
+}
+
+export interface PivotInspectionRecord {
+  readonly path: string;
+  readonly symbol: string;
+  readonly role: "pivot" | "support";
+  readonly hidden: boolean;
+  readonly discovered: boolean;
+  readonly inspected: boolean;
+  readonly edited: boolean;
+  readonly edited_without_inspection: boolean;
+  readonly ruled_out: boolean;
+  readonly status: PivotInspectionStatus;
+}
+
+// Does a search call's textual output surface this pivot's path or symbol?
+function searchOutputMentions(output: string | null | undefined, path: string, symbol: string): boolean {
+  if (typeof output !== "string" || output.length === 0) return false;
+  if (path.length > 0 && output.includes(path)) return true;
+  const base = path.split("/").pop() ?? "";
+  if (base.length > 0 && output.includes(base)) return true;
+  if (symbol.length > 0 && new RegExp(`\\b${escapeRegExp(symbol)}\\b`).test(output)) return true;
+  return false;
+}
+
+// Classify what the agent did with each Capsule v2 pivot. Pure: depends only on
+// the pivot list, the agent's ordered tool calls, the files its patch touched,
+// and any explicit rule-out claims. No gold patch, no expected-label lookup —
+// a pivot that happens to be the correct fix but was never read/edited is
+// `ignored` like any other, so the classifier cannot leak gold labels.
+export function classifyPivotInspection(
+  pivots: readonly PivotForInspection[],
+  toolCalls: readonly InspectionToolCall[],
+  editedFiles: readonly string[],
+  ruledOut: readonly PivotRuleOut[] = [],
+): PivotInspectionRecord[] {
+  const normalize = (tool: string): string => tool.toLowerCase().trim();
+  const reads = toolCalls.filter((call) => PIVOT_READ_TOOLS.has(normalize(call.tool)));
+  const searches = toolCalls.filter((call) => PIVOT_SEARCH_TOOLS.has(normalize(call.tool)));
+
+  return pivots.map((pivot) => {
+    // Inspection: a direct read/open whose target is the pivot path. A search
+    // listing the path does NOT count, by design.
+    const inspected = reads.some(
+      (call) => typeof call.target === "string" && samePath(call.target, pivot.path),
+    );
+    // Editing is taken from the final patch (authoritative end state), never from
+    // a tool-call name.
+    const edited = editedFiles.some((file) => samePath(file, pivot.path));
+    const editedWithoutInspection = edited && !inspected;
+    // Discovery: the pivot showed up in a search (as the search target or in its
+    // output) but the file was never opened/read.
+    const seenInSearch = searches.some(
+      (call) =>
+        (typeof call.target === "string" && samePath(call.target, pivot.path)) ||
+        searchOutputMentions(call.output, pivot.path, pivot.symbol),
+    );
+    const discovered = !inspected && seenInSearch;
+    // Ruling out is only meaningful AFTER inspection — an agent cannot grounded-ly
+    // dismiss a pivot it never opened.
+    const ruled_out = inspected && ruledOut.some((entry) => samePath(entry.path, pivot.path));
+
+    const status: PivotInspectionStatus = editedWithoutInspection
+      ? "edited_without_inspection"
+      : edited
+        ? "edited"
+        : ruled_out
+          ? "ruled_out"
+          : inspected
+            ? "inspected"
+            : "ignored";
+
+    return {
+      path: pivot.path,
+      symbol: pivot.symbol,
+      role: pivot.role,
+      hidden: pivot.hidden,
+      discovered,
+      inspected,
+      edited,
+      edited_without_inspection: editedWithoutInspection,
+      ruled_out,
+      status,
+    };
+  });
+}
+
 function dedupe(values: readonly string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];

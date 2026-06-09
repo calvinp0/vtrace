@@ -177,47 +177,83 @@ blocks already exist:
 - `samePath` lenient matching (`finalEditDiagnostics.ts:146`).
 - `targetsFile` (`:1027`).
 
-Add a function that classifies each pivot. This is the load-bearing piece of
-judgment in the whole design, so it is scaffolded here for review rather than
-asserted:
+A function classifies each pivot. This was the load-bearing piece of judgment in
+the design; it is now **implemented and settled** as `classifyPivotInspection`
+in `src/capsule/finalEditDiagnostics.ts` (pure, shape-only, no per-instance
+tables).
+
+**The chosen classification rule (resolves the former `TODO(user)`):**
+
+- **Read-on-path counts as inspected.** A direct read/open whose target is the
+  pivot path (`Read`/`view`/`open`/…) means the agent looked at the file's
+  contents → `inspected`.
+- **Search-only does not.** A grep/search that merely surfaces the path or symbol
+  (as the search target or in its output) is `discovered`, never `inspected` —
+  search reveals a file *exists*; inspection means the agent *read inside it*.
+  Because of this, `discovered` is an observation flag, not a terminal status: a
+  pivot seen only in search is still `ignored`.
+- **Edited-without-reading is tracked separately.** Editing is taken from the
+  final patch (authoritative). A pivot the patch touched **without** a prior
+  read/open is `edited_without_inspection`; with a prior read it is `edited`.
+- **Ruling out requires inspection first.** `ruled_out` is set only when the
+  agent both inspected the pivot *and* explicitly dismissed it (a checklist
+  rule-out claim) — you cannot grounded-ly dismiss a file you never opened.
 
 ```ts
-// Per-pivot inspection outcome, derived from the ordered tool-call log and the
-// final patch. Pure: no per-instance lookup tables, shape-only matching.
-export type PivotInspectionState =
-  | "edited"     // a pivot the agent edited (Edit/Write targeting its path)
-  | "inspected"  // read but not edited (Read/view targeting its path, no edit)
-  | "ignored";   // neither read nor edited — the sphinx-7462 failure mode
+export type PivotInspectionStatus =
+  | "edited"
+  | "edited_without_inspection"
+  | "ruled_out"
+  | "inspected"
+  | "ignored"; // surfaced but neither inspected nor edited — the sphinx-7462 gap
 
 export interface PivotInspectionRecord {
   path: string;
   symbol: string;
-  isHidden: boolean;          // from renderer's isSourceAnchoredPivot (inverted)
-  state: PivotInspectionState;
-  // TODO(user): classify one pivot.
-  //   `calls` is the ordered [{tool, target}] log (READ_TOOLS / EDIT_TOOLS as
-  //   defined in run_stage5_vexp_swe_bench_smoke.ts); `editedFiles` is from the
-  //   patch. Decide what counts as "inspected": is a single Read enough, or must
-  //   the agent open the pivot's file specifically (vs. a grep that merely lists
-  //   it)? And how do we treat a pivot that was edited but never read first —
-  //   "edited" (outcome wins) or a distinct "edited-without-reading" flag? This
-  //   choice defines what the experiment actually rewards.
+  role: "pivot" | "support";
+  hidden: boolean;            // non-source-anchored pivot (the skip-prone kind)
+  discovered: boolean;        // appeared in search output/target; NOT engagement
+  inspected: boolean;         // direct read/open of the pivot path
+  edited: boolean;            // final patch touched the pivot path
+  edited_without_inspection: boolean;
+  ruled_out: boolean;
+  status: PivotInspectionStatus;
 }
 
-export function classifyPivots(
-  pivots: readonly { path: string; symbol: string; isHidden: boolean }[],
-  calls: readonly { tool: string; target: string | null }[],
-  editedFiles: readonly string[],
-): PivotInspectionRecord[] {
-  // ... see TODO above for the per-pivot decision.
-}
+export function classifyPivotInspection(
+  pivots: readonly PivotForInspection[],
+  toolCalls: readonly InspectionToolCall[],   // {tool, target?, output?}
+  editedFiles: readonly string[],             // from editedFilesFromPatch(patch)
+  ruledOut?: readonly PivotRuleOut[],
+): PivotInspectionRecord[];
 ```
 
-The verifier runs in the same post-hoc stamping pass as
-`stampCapsuleDiagnostics` (~`:3770`), which already reads the per-instance
-context and computes `containsFinalEditedFile` / `finalEditedFileRole`. It needs
-no new inputs — `vtraceCapsulePivots`, the tool-call log, and the patch are all
-already in scope there.
+Status precedence (highest first): `edited_without_inspection` → `edited` →
+`ruled_out` → `inspected` → `ignored`.
+
+**Wiring (implemented).** The classifier is threaded through the curated
+live-comparison report, `run_stage5_capsule_v2_validation_report.ts`, in
+`loadPair` — the one place that already joins the capsule run's
+`_run.meta.json` (the pivot list, `vtraceCapsulePivots` / `vtraceCapsuleSupport`)
+with the agent's result record (`modelPatch` + `toolCalls`). Three thin,
+exported helpers do the adaptation:
+
+- `extractCapsulePivots(runMeta)` — pivots + support as
+  `PivotForInspection[]`; `hidden` is derived from `role_reason` (not
+  source-anchored), mirroring `renderHuman.isSourceAnchoredPivot`.
+- `extractOrderedToolCalls(record)` — returns `{calls, ordered}`. SWE-bench
+  records carry only an **aggregate** count object (`{Read: 2, Edit: 2}`) with no
+  ordering or targets, so this honestly reports `ordered: false` and the
+  inspection signals degrade to patch-only rather than guessing.
+- `buildPivotInspection(runMeta, record)` — runs `classifyPivotInspection` and
+  reports `toolLogOrdered`.
+
+Because current live records lack an ordered tool log, `inspected` / `discovered`
+are *false-by-absence* (recorded as such via `toolLogOrdered`), while `edited` /
+`ignored` come from the patch and are authoritative. On the real
+`eval-locgap-multipivot-sphinx-7462` artifacts this yields exactly the target
+statement: `sphinx/pycode/ast.py::unparse` → hidden, inspected:no, edited:no,
+**status `ignored`**.
 
 ### 4.3 No changes to
 
@@ -232,8 +268,17 @@ already in scope there.
 
 ## 5. Required artifacts / logging
 
-Per vtrace row (extend the existing `CapsuleDiagnosticFields` / a sibling
-`PivotInspectionFields`), record:
+**Implemented now (analysis lever).** The validation report
+(`run_stage5_capsule_v2_validation_report.ts`) attaches `pivotInspection`
+(`PivotInspectionRecord[]`) and `pivotInspectionToolLogOrdered` to each
+`ValidationPair`, and renders a **`## Pivot inspection`** markdown section: one
+row per surfaced pivot with `hidden / discovered / inspected / edited / status`,
+plus an explicit note when no run carried an ordered tool log (so a `false`
+`inspected` is not misread as confirmed-not-inspected). This is what produces the
+sphinx-7462 statement below.
+
+**Planned (prompt lever, when the checklist is injected).** Per vtrace row,
+additionally record:
 
 | field | meaning |
 |-------|---------|
@@ -266,11 +311,14 @@ or ruled out with a grounded reason), regardless of Docker resolution.
   actually inspecting (mark `inspected? = yes` for a pivot it never opened). This
   is exactly why verification is tool-call-based, not text-based:
   `checklistVsToolsAgreement` surfaces fabrication.
-- **Tool-call log may be absent.** `readOrderedToolCalls` returns `null` when the
-  external record carries no ordered log; then per-pivot state is `unknown`, not
-  guessed (mirror the existing `nullAgentComplianceFields` discipline at `:1042`).
-  If sphinx-7462's record lacks a tool log, the verifier degrades to
-  checklist-text-only + patch — log this honestly rather than inventing signal.
+- **Tool-call log is absent in practice.** SWE-bench result records carry only an
+  aggregate tool-count object (`{Read: 2, Edit: 2}`), no ordering or file targets
+  (confirmed on sphinx-7462). The classifier handles this honestly: with no
+  ordered log, `inspected` / `discovered` are false-by-absence and
+  `pivotInspectionToolLogOrdered` is `false`, so a reader does not mistake them
+  for confirmed-not-inspected; `edited` / `ignored` still come from the patch and
+  are authoritative. Getting true `inspected`/`discovered` signal requires the
+  external adapter to emit an ordered tool log — a follow-up, not this change.
 - **Over-editing.** Forcing inspection of every pivot risks nudging the agent to
   edit pivots it should have ruled out, trading false-negatives for
   false-positives. The instruction explicitly forbids "edit them all"; the
@@ -282,21 +330,26 @@ or ruled out with a grounded reason), regardless of Docker resolution.
 
 ## 7. Minimal implementation plan
 
+**Done in this change (post-hoc verifier + reporting):**
+
+2. ✅ **Verifier:** `classifyPivotInspection` + `PivotInspectionRecord` in
+   `src/capsule/finalEditDiagnostics.ts` (pure, shape-only), implementing the §4.2
+   rule.
+3. ✅ **Wire-up:** `extractCapsulePivots` / `extractOrderedToolCalls` /
+   `buildPivotInspection` in `run_stage5_capsule_v2_validation_report.ts`, called
+   from `loadPair`, rendered as the `## Pivot inspection` section.
+5. ✅ **Tests:** the 8 required cases for `classifyPivotInspection` in
+   `finalEditDiagnostics.test.ts`, plus wiring/sphinx-7462 tests in the report's
+   test file (mocked, no external deps).
+
+**Not in this change (the prompt lever / live loop — deliberately deferred):**
+
 1. **Prompt:** in `buildVtraceContextMarkdown`, when the capsule is multi-pivot,
    append the checklist requirement + seed the pivot rows from
    `vtraceCapsulePivots`. (Benchmark-only first.)
-2. **Verifier:** add `classifyPivots` + `PivotInspectionRecord` to
-   `src/capsule/finalEditDiagnostics.ts` (pure, shape-only). Settle the per-pivot
-   classification decision flagged in §4.2.
-3. **Wire-up:** call it from the post-hoc stamping pass (~`:3770`), populate the
-   new `PivotInspectionFields`, write `_pivot_inspection.snapshot.md`.
 4. **Parser:** a small, lenient markdown-table parser to recover the agent's
-   emitted checklist from its response text (best-effort; absence ⇒
-   `checklistEmitted: false`, not an error).
-5. **Tests:** unit-test `classifyPivots` against synthetic tool-call logs
-   (`edited`, `inspected`, `ignored`, `unknown` when no log) and the table parser
-   against a hand-written checklist — mirroring the existing mocked `*.test.ts`
-   pattern (no external deps).
+   emitted checklist from its response text, feeding `classifyPivotInspection`'s
+   `ruledOut` argument (best-effort; absence ⇒ `checklistEmitted: false`).
 
 No step touches `src/capsuleV2/**` scoring or the external CLI.
 

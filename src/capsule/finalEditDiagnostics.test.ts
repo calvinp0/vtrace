@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "bun:test";
 
 import {
+  classifyPivotInspection,
   contextMentionsFile,
   contextMentionsSymbol,
   editedFilesFromPatch,
   editedSymbolsFromPatch,
   primaryEditedFile,
   primaryEditedSymbol,
+  type PivotForInspection,
 } from "./finalEditDiagnostics";
 
 const PATCH = `diff --git a/django/contrib/admin/options.py b/django/contrib/admin/options.py
@@ -79,4 +81,157 @@ test("contextMentionsSymbol is word-boundary aware", () => {
   assert.equal(contextMentionsSymbol("calls get_inlines(request)", "get_inlines"), true);
   assert.equal(contextMentionsSymbol("get_inline_instances only", "get_inlines"), false);
   assert.equal(contextMentionsSymbol("", "get_inlines"), false);
+});
+
+// ----- classifyPivotInspection -----------------------------------------------
+
+const AST_PIVOT: PivotForInspection = {
+  path: "sphinx/pycode/ast.py",
+  symbol: "unparse",
+  role: "pivot",
+  hidden: true,
+};
+
+function only(records: ReturnType<typeof classifyPivotInspection>) {
+  assert.equal(records.length, 1);
+  return records[0]!;
+}
+
+test("1. direct read/open of pivot path => inspected", () => {
+  const record = only(
+    classifyPivotInspection(
+      [AST_PIVOT],
+      [{ tool: "Read", target: "sphinx/pycode/ast.py" }],
+      [],
+    ),
+  );
+  assert.equal(record.inspected, true);
+  assert.equal(record.discovered, false);
+  assert.equal(record.edited, false);
+  assert.equal(record.status, "inspected");
+});
+
+test("2. grep/search hit only => discovered but not inspected", () => {
+  const record = only(
+    classifyPivotInspection(
+      [AST_PIVOT],
+      [{ tool: "grep", target: null, output: "sphinx/pycode/ast.py:42: def unparse(node):" }],
+      [],
+    ),
+  );
+  assert.equal(record.discovered, true);
+  assert.equal(record.inspected, false);
+  // Search visibility is not engagement: the pivot is still ignored.
+  assert.equal(record.status, "ignored");
+});
+
+test("3. patch touches pivot path after read => inspected + edited", () => {
+  const record = only(
+    classifyPivotInspection(
+      [AST_PIVOT],
+      [{ tool: "Read", target: "sphinx/pycode/ast.py" }],
+      ["sphinx/pycode/ast.py"],
+    ),
+  );
+  assert.equal(record.inspected, true);
+  assert.equal(record.edited, true);
+  assert.equal(record.edited_without_inspection, false);
+  assert.equal(record.status, "edited");
+});
+
+test("4. patch touches pivot path without read => edited_without_inspection", () => {
+  const record = only(
+    classifyPivotInspection(
+      [AST_PIVOT],
+      [{ tool: "grep", output: "found in sphinx/pycode/ast.py" }],
+      ["sphinx/pycode/ast.py"],
+    ),
+  );
+  assert.equal(record.edited, true);
+  assert.equal(record.inspected, false);
+  assert.equal(record.edited_without_inspection, true);
+  assert.equal(record.status, "edited_without_inspection");
+});
+
+test("5. surfaced pivot with no read and no edit => ignored (sphinx-7462)", () => {
+  const record = only(classifyPivotInspection([AST_PIVOT], [], []));
+  assert.equal(record.discovered, false);
+  assert.equal(record.inspected, false);
+  assert.equal(record.edited, false);
+  assert.equal(record.ruled_out, false);
+  assert.equal(record.status, "ignored");
+});
+
+test("6. explicit ruled-out statement after read => ruled_out", () => {
+  const record = only(
+    classifyPivotInspection(
+      [AST_PIVOT],
+      [{ tool: "Read", target: "sphinx/pycode/ast.py" }],
+      [],
+      [{ path: "sphinx/pycode/ast.py" }],
+    ),
+  );
+  assert.equal(record.inspected, true);
+  assert.equal(record.ruled_out, true);
+  assert.equal(record.status, "ruled_out");
+
+  // A rule-out claim WITHOUT a prior read does not count — you cannot grounded-ly
+  // dismiss a pivot you never opened.
+  const noRead = only(
+    classifyPivotInspection([AST_PIVOT], [], [], [{ path: "sphinx/pycode/ast.py" }]),
+  );
+  assert.equal(noRead.ruled_out, false);
+  assert.equal(noRead.status, "ignored");
+});
+
+test("7. path normalization works (absolute target, diff-style suffix, basename)", () => {
+  // Absolute checkout path read matches a repo-relative pivot.
+  const abs = only(
+    classifyPivotInspection(
+      [AST_PIVOT],
+      [{ tool: "open", target: "/tmp/ws/sphinx-7462/sphinx/pycode/ast.py" }],
+      [],
+    ),
+  );
+  assert.equal(abs.inspected, true);
+  assert.equal(abs.status, "inspected");
+
+  // Edited-file list carrying only the basename still matches.
+  const base = only(classifyPivotInspection([AST_PIVOT], [], ["ast.py"]));
+  assert.equal(base.edited, true);
+});
+
+test("8. classifier does not leak gold labels", () => {
+  // The pivot here IS the correct fix location, but the agent never read or
+  // edited it. A gold-aware classifier would mark it relevant/edited; a pure
+  // observation-only classifier must report `ignored`. The function signature
+  // takes no gold patch or expected-label argument, so it cannot peek.
+  const goldButUntouched = only(
+    classifyPivotInspection(
+      [AST_PIVOT],
+      [
+        { tool: "Read", target: "sphinx/domains/python.py" },
+        { tool: "grep", output: "sphinx/domains/python.py" },
+      ],
+      ["sphinx/domains/python.py"],
+    ),
+  );
+  assert.equal(goldButUntouched.inspected, false);
+  assert.equal(goldButUntouched.edited, false);
+  assert.equal(goldButUntouched.status, "ignored");
+
+  // Output shape is exactly the documented observation fields — no gold/expected
+  // field leaks into the record.
+  assert.deepEqual(Object.keys(goldButUntouched).sort(), [
+    "discovered",
+    "edited",
+    "edited_without_inspection",
+    "hidden",
+    "inspected",
+    "path",
+    "role",
+    "ruled_out",
+    "status",
+    "symbol",
+  ]);
 });

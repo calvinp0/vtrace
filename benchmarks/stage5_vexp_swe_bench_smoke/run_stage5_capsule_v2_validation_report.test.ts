@@ -8,8 +8,11 @@ import {
   NON_CLAIMS,
   REPORT_SCOPE,
   aggregateMetrics,
+  buildPivotInspection,
   buildReport,
   extractCapsuleMeta,
+  extractCapsulePivots,
+  extractOrderedToolCalls,
   loadPair,
   parseLabelMap,
   parseSweBenchRow,
@@ -484,4 +487,88 @@ test("parseReportArgs allows overriding condition subdirs", () => {
   const cfg = parseReportArgs(["--baseline-condition", "b2", "--capsule-condition", "c2"]);
   assert.equal(cfg.baselineCondition, "b2");
   assert.equal(cfg.capsuleCondition, "c2");
+});
+
+// --------------------------------------------------------------------------
+// Pivot inspection wiring
+// --------------------------------------------------------------------------
+
+// The sphinx-7462 force-inject run, reduced to the fields the wiring reads.
+const SPHINX_RUN_META = {
+  vtraceCapsulePivots: [
+    {
+      path: "sphinx/domains/python.py",
+      symbol: "_parse_annotation",
+      roleReason: "source line anchor in the issue points at this symbol — explicit edit site",
+    },
+    {
+      path: "sphinx/pycode/ast.py",
+      symbol: "unparse",
+      roleReason: "actionable function — exercised by a failing test; symbol-name match; 9 dependents",
+    },
+  ],
+  vtraceCapsuleSupport: [
+    { path: "sphinx/domains/python.py", symbol: "_parse_arglist", roleReason: "strong target beyond the pivot budget" },
+  ],
+};
+
+// The agent edited only the traceback-named file (python.py), skipping the hidden
+// pivot (ast.py). toolCalls is the aggregate count object SWE-bench emits.
+const SPHINX_RESULT = {
+  modelPatch:
+    "diff --git a/sphinx/domains/python.py b/sphinx/domains/python.py\n" +
+    "--- a/sphinx/domains/python.py\n+++ b/sphinx/domains/python.py\n" +
+    "@@ -110,0 +111,1 @@ def _parse_annotation(annotation):\n+    pass\n",
+  toolCalls: { Read: 2, Edit: 2, Bash: 3 },
+};
+
+test("extractCapsulePivots flags the non-source-anchored pivot as hidden", () => {
+  const pivots = extractCapsulePivots(SPHINX_RUN_META);
+  assert.equal(pivots.length, 3);
+  const ast = pivots.find((p) => p.path === "sphinx/pycode/ast.py");
+  const python = pivots.find((p) => p.path === "sphinx/domains/python.py" && p.role === "pivot");
+  assert.equal(ast?.hidden, true);
+  assert.equal(python?.hidden, false);
+  // Support items are never flagged as hidden pivots.
+  assert.equal(pivots.find((p) => p.role === "support")?.hidden, false);
+});
+
+test("extractOrderedToolCalls treats an aggregate count object as no ordered log", () => {
+  assert.deepEqual(extractOrderedToolCalls({ toolCalls: { Read: 2, Edit: 2 } }), {
+    calls: [],
+    ordered: false,
+  });
+  // An actual ordered list is parsed into {tool,target} entries.
+  const ordered = extractOrderedToolCalls({
+    toolCalls: [{ name: "Read", input: { file_path: "sphinx/pycode/ast.py" } }],
+  });
+  assert.equal(ordered.ordered, true);
+  assert.equal(ordered.calls[0]?.target, "sphinx/pycode/ast.py");
+});
+
+test("buildPivotInspection reproduces the sphinx-7462 hidden-pivot statement", () => {
+  const { records, toolLogOrdered } = buildPivotInspection(SPHINX_RUN_META, SPHINX_RESULT);
+  // Aggregate-only tool counts => no ordered log.
+  assert.equal(toolLogOrdered, false);
+
+  const ast = records.find((r) => r.path === "sphinx/pycode/ast.py");
+  assert.ok(ast);
+  // hidden pivot sphinx/pycode/ast.py::unparse — inspected: no, edited: no, ignored.
+  assert.equal(ast.hidden, true);
+  assert.equal(ast.inspected, false);
+  assert.equal(ast.edited, false);
+  assert.equal(ast.status, "ignored");
+
+  // The traceback-named pivot was the one edited.
+  const python = records.find((r) => r.path === "sphinx/domains/python.py" && r.role === "pivot");
+  assert.equal(python?.edited, true);
+  // No prior ordered read could be observed, so it reads as edited-without-inspection.
+  assert.equal(python?.status, "edited_without_inspection");
+});
+
+test("buildPivotInspection degrades to patch-only when the record is missing", () => {
+  const { records, toolLogOrdered } = buildPivotInspection(SPHINX_RUN_META, null);
+  assert.equal(toolLogOrdered, null);
+  assert.equal(records.length, 3);
+  assert.ok(records.every((r) => r.edited === false && r.status === "ignored"));
 });

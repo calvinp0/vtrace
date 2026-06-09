@@ -16,6 +16,14 @@ import { createHash } from "node:crypto";
 import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 
+import {
+  classifyPivotInspection,
+  editedFilesFromPatch,
+  type InspectionToolCall,
+  type PivotForInspection,
+  type PivotInspectionRecord,
+} from "../../src/capsule/finalEditDiagnostics";
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -77,6 +85,15 @@ export interface ValidationPair {
   baseline: SweBenchRow;
   capsule: SweBenchRow;
   capsuleMeta: CapsuleMeta;
+  // Post-hoc pivot-inspection classification (one record per surfaced Capsule v2
+  // pivot/support item). Optional so older fixtures and partial runs still build;
+  // loadPair always populates it.
+  pivotInspection?: PivotInspectionRecord[];
+  // Whether the capsule run's result record carried an ORDERED tool-call log
+  // (with file targets). SWE-bench records usually report only aggregate tool
+  // counts, in which case `inspected`/`discovered` cannot be observed and read as
+  // false-by-absence rather than confirmed-not-inspected. null when no record.
+  pivotInspectionToolLogOrdered?: boolean | null;
 }
 
 // Per-task percentage reductions (positive = capsule used less than baseline).
@@ -264,6 +281,90 @@ export function extractCapsuleMeta(
     snapshotExists: snapshot !== null,
     editRiskDirectivePresent: snapshotHasEditRiskDirective(snapshot),
   };
+}
+
+// A source-anchored pivot's role_reason names the issue/traceback line that
+// pointed straight at it; everything else is a "hidden" pivot surfaced by
+// symbol/graph/literal reasoning. Mirrors renderHuman.isSourceAnchoredPivot,
+// reading the role_reason the audit metadata records (`vtraceCapsulePivots`).
+function pivotIsHidden(roleReason: string | null): boolean {
+  return !(roleReason ?? "").includes("source line anchor");
+}
+
+function readAuditItems(value: unknown, role: "pivot" | "support"): PivotForInspection[] {
+  if (!Array.isArray(value)) return [];
+  const items: PivotForInspection[] = [];
+  for (const entry of value) {
+    if (entry === null || typeof entry !== "object") continue;
+    const record = entry as Record<string, unknown>;
+    const itemPath = asNullableString(record.path);
+    if (itemPath === null) continue;
+    items.push({
+      path: itemPath,
+      symbol: asNullableString(record.symbol) ?? "",
+      role,
+      // Support items are never "hidden pivots" — the flag is a pivot concept.
+      hidden: role === "pivot" ? pivotIsHidden(asNullableString(record.roleReason)) : false,
+    });
+  }
+  return items;
+}
+
+// The Capsule v2 pivots + support items the run surfaced, from the audit metadata
+// in `_run.meta.json`. Pivots first, then support (the order the agent saw them).
+export function extractCapsulePivots(runMeta: Record<string, unknown>): PivotForInspection[] {
+  return [
+    ...readAuditItems(runMeta.vtraceCapsulePivots, "pivot"),
+    ...readAuditItems(runMeta.vtraceCapsuleSupport, "support"),
+  ];
+}
+
+// Pull an ORDERED tool-call list (with file targets) out of a result record, if
+// one is present. SWE-bench records usually carry only an AGGREGATE count object
+// ({Read: 2, Edit: 2}); that has no ordering or targets, so this returns
+// `ordered: false` and the inspection signals degrade honestly to patch-only.
+export function extractOrderedToolCalls(
+  record: Record<string, unknown>,
+): { calls: InspectionToolCall[]; ordered: boolean } {
+  const raw =
+    record.toolCalls ?? record.tool_calls ?? record.toolUses ?? record.tool_uses ?? record.actions;
+  if (!Array.isArray(raw)) return { calls: [], ordered: false };
+  const calls: InspectionToolCall[] = [];
+  for (const entry of raw) {
+    if (entry === null || typeof entry !== "object") continue;
+    const r = entry as Record<string, unknown>;
+    const name = asNullableString(r.name) ?? asNullableString(r.tool) ?? asNullableString(r.tool_name);
+    if (name === null) continue;
+    const input = r.input ?? r.args ?? r.arguments ?? r.parameters;
+    const target =
+      input !== null && typeof input === "object"
+        ? asNullableString((input as Record<string, unknown>).file_path) ??
+          asNullableString((input as Record<string, unknown>).filePath) ??
+          asNullableString((input as Record<string, unknown>).path) ??
+          asNullableString((input as Record<string, unknown>).file)
+        : null;
+    const output =
+      asNullableString(r.output) ?? asNullableString(r.result) ?? asNullableString(r.content);
+    calls.push({ tool: name, target, output });
+  }
+  return { calls, ordered: true };
+}
+
+// Classify what the agent did with each surfaced pivot, from the capsule run's
+// metadata (pivot list) and result record (ordered tool calls, if any, + the
+// final patch). Pure read-over of artifacts; no gold labels.
+export function buildPivotInspection(
+  runMeta: Record<string, unknown>,
+  capsuleRecord: Record<string, unknown> | null,
+): { records: PivotInspectionRecord[]; toolLogOrdered: boolean | null } {
+  const pivots = extractCapsulePivots(runMeta);
+  if (capsuleRecord === null) {
+    return { records: classifyPivotInspection(pivots, [], []), toolLogOrdered: null };
+  }
+  const { calls, ordered } = extractOrderedToolCalls(capsuleRecord);
+  const patch = asNullableString(capsuleRecord.modelPatch) ?? asNullableString(capsuleRecord.patch) ?? "";
+  const editedFiles = editedFilesFromPatch(patch);
+  return { records: classifyPivotInspection(pivots, calls, editedFiles), toolLogOrdered: ordered };
 }
 
 // Parse and validate a label-map JSON document. Each value must be a 2-element
@@ -524,6 +625,39 @@ export function renderMarkdown(report: ValidationReport): string {
   }
   lines.push("");
 
+  // Pivot inspection: what the agent did with each surfaced Capsule v2 pivot.
+  lines.push("## Pivot inspection");
+  lines.push("");
+  lines.push(
+    "Per surfaced Capsule v2 pivot, what the agent did with it — derived from the " +
+      "run's ordered tool calls (when present) and the final patch. A search/grep " +
+      "hit is `discovered`, not `inspected`: inspection means the agent opened the " +
+      "file's contents. `ignored` = surfaced but neither inspected nor edited.",
+  );
+  lines.push("");
+  const anyOrderedLog = report.pairs.some((pair) => pair.pivotInspectionToolLogOrdered === true);
+  if (!anyOrderedLog) {
+    lines.push(
+      "> Note: no run carried an ordered tool-call log with file targets (SWE-bench " +
+        "records report only aggregate tool counts), so `inspected` / `discovered` are " +
+        "false-by-absence here, not confirmed-not-inspected. `edited` / `ignored` come " +
+        "from the patch and are authoritative.",
+    );
+    lines.push("");
+  }
+  lines.push("| instance | pivot | symbol | role | hidden | discovered | inspected | edited | status |");
+  lines.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+  for (const pair of report.pairs) {
+    for (const record of pair.pivotInspection ?? []) {
+      lines.push(
+        `| ${pair.instanceId} | ${record.path} | ${record.symbol || "n/a"} | ${record.role} | ` +
+          `${boolMark(record.hidden)} | ${boolMark(record.discovered)} | ${boolMark(record.inspected)} | ` +
+          `${boolMark(record.edited)} | ${record.status} |`,
+      );
+    }
+  }
+  lines.push("");
+
   // Resolution table
   lines.push("## Resolution");
   lines.push("");
@@ -667,6 +801,8 @@ export async function loadPair(
     capsule.resolved = (evalMeta.resolvedCount as number) > 0;
   }
 
+  const pivotInspection = buildPivotInspection(runMeta, capsuleRaw);
+
   return {
     instanceId,
     baselineLabel,
@@ -674,6 +810,8 @@ export async function loadPair(
     baseline,
     capsule,
     capsuleMeta: extractCapsuleMeta(runMeta, snapshot),
+    pivotInspection: pivotInspection.records,
+    pivotInspectionToolLogOrdered: pivotInspection.toolLogOrdered,
   };
 }
 
