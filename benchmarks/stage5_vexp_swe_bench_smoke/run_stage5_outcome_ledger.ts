@@ -61,6 +61,13 @@ export interface LedgerRun {
   readonly pivotCheckEnabled: boolean | null;
   readonly pivotCheckInjected: boolean | null;
   readonly pivotCheckDisabledByFlag: boolean | null;
+  // EDIT_GUARD treatment state (rides with PIVOT_CHECK). Separate observability flags,
+  // never conflated with inspection conversion / edited-file / patch / resolution
+  // signals. All null on runs that predate EDIT_GUARD (tolerated, never fabricated).
+  readonly editGuardEnabled: boolean | null;
+  readonly editGuardInjected: boolean | null;
+  readonly editGuardDisabledByFlag: boolean | null;
+  readonly editGuardTextPresent: boolean | null;
   // Run status + patch + resolution.
   readonly exitCode: number | null;
   readonly completedPatch: boolean | null; // run completed (exitCode 0); null if exit unknown
@@ -353,6 +360,12 @@ export function buildRun(parts: RawRunParts): LedgerRun {
   const pivotCheckEnabled = asBool(meta?.vtracePivotCheckEnabled);
   const pivotCheckInjected = asBool(meta?.vtracePivotCheckInjected);
   const pivotCheckDisabledByFlag = asBool(meta?.vtracePivotCheckDisabledByFlag);
+  // asBool yields null when the field is absent, so old runs without EDIT_GUARD
+  // metadata read as null rather than a fabricated false.
+  const editGuardEnabled = asBool(meta?.vtraceEditGuardEnabled);
+  const editGuardInjected = asBool(meta?.vtraceEditGuardInjected);
+  const editGuardDisabledByFlag = asBool(meta?.vtraceEditGuardDisabledByFlag);
+  const editGuardTextPresent = asBool(meta?.vtraceEditGuardTextPresent);
 
   const exitCode = asNumber(meta?.exitCode);
   const modelPatch = asString(record?.modelPatch) ?? "";
@@ -452,6 +465,10 @@ export function buildRun(parts: RawRunParts): LedgerRun {
     pivotCheckEnabled,
     pivotCheckInjected,
     pivotCheckDisabledByFlag,
+    editGuardEnabled,
+    editGuardInjected,
+    editGuardDisabledByFlag,
+    editGuardTextPresent,
     exitCode,
     completedPatch,
     patchProduced,
@@ -710,7 +727,7 @@ export function renderMarkdown(report: LedgerReport): string {
   lines.push("");
   lines.push(
     "This ledger INDEXES existing artifacts; it does not evaluate. For each run it records the " +
-      "protocol/treatment validity, PIVOT_CHECK state, tokens/cost, edited/read/searched files, " +
+      "protocol/treatment validity, PIVOT_CHECK / EDIT_GUARD state, tokens/cost, edited/read/searched files, " +
       "capsule pivots, ordered tool-call presence, hidden-pivot engagement (when both a capsule and " +
       "an ordered tool log exist), and resolution (ONLY when actually evaluated). It keeps four " +
       "signals strictly separate and never conflates them:",
@@ -725,12 +742,12 @@ export function renderMarkdown(report: LedgerReport): string {
   // --- Run inventory -------------------------------------------------------
   lines.push("## Run inventory");
   lines.push("");
-  lines.push("| run label | cond | instance | protocol | treat. valid | pivot-check inj | tokens | cost | resolved | pivots | tool log | edited | completeness |");
-  lines.push("| --- | --- | --- | --- | :---: | :---: | ---: | ---: | :---: | ---: | :---: | --- | --- |");
+  lines.push("| run label | cond | instance | protocol | treat. valid | pivot-check inj | edit-guard inj | tokens | cost | resolved | pivots | tool log | edited | completeness |");
+  lines.push("| --- | --- | --- | --- | :---: | :---: | :---: | ---: | ---: | :---: | ---: | :---: | --- | --- |");
   for (const r of report.runs) {
     lines.push(
       `| ${r.runLabel} | ${r.condition} | ${r.instanceId ?? "unknown"} | ${r.protocol} | ${fmtBool(r.treatmentValid)} | ` +
-        `${fmtBool(r.pivotCheckInjected)} | ${fmtNum(r.tokens.total)} | ${fmtNum(r.cost, 4)} | ${fmtResolved(r.resolved)} | ` +
+        `${fmtBool(r.pivotCheckInjected)} | ${fmtBool(r.editGuardInjected)} | ${fmtNum(r.tokens.total)} | ${fmtNum(r.cost, 4)} | ${fmtResolved(r.resolved)} | ` +
         `${r.pivotCount ?? "?"} | ${r.toolLogOrdered ? "yes" : "no"} | ${fmtList(r.editedFiles)} | ${r.dataCompleteness} |`,
     );
   }

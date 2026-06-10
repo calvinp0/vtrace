@@ -647,6 +647,7 @@ export function buildPrecheckConfig(opts: {
     capsuleBudget: opts.capsuleBudget,
     contextPolicyOverride: "force-inject",
     disablePivotCheck: false,
+    disableEditGuard: false,
     sweBenchDataFile: null,
     runLabel: null,
     runLabels: null,

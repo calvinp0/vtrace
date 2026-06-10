@@ -108,6 +108,35 @@ function completeVtraceParts(overrides: Partial<RawRunParts> = {}): RawRunParts 
 // ---------------------------------------------------------------------------
 // 1. Ledger loads runs with complete metadata.
 // ---------------------------------------------------------------------------
+test("edit-guard metadata is recorded when present and tolerated (null) when absent", () => {
+  // Present: a run whose meta carries the EDIT_GUARD treatment fields.
+  const withGuard = buildRun(
+    completeVtraceParts({
+      meta: {
+        ...completeVtraceParts().meta,
+        vtracePivotCheckEnabled: true,
+        vtracePivotCheckInjected: true,
+        vtraceEditGuardEnabled: true,
+        vtraceEditGuardInjected: true,
+        vtraceEditGuardDisabledByFlag: false,
+        vtraceEditGuardTextPresent: true,
+      },
+    }),
+  );
+  assert.equal(withGuard.editGuardEnabled, true);
+  assert.equal(withGuard.editGuardInjected, true);
+  assert.equal(withGuard.editGuardDisabledByFlag, false);
+  assert.equal(withGuard.editGuardTextPresent, true);
+
+  // Absent (old run): the default fixture meta has no edit-guard fields → all null,
+  // never a fabricated false. PIVOT_CHECK fields are likewise null here.
+  const oldRun = buildRun(completeVtraceParts());
+  assert.equal(oldRun.editGuardEnabled, null);
+  assert.equal(oldRun.editGuardInjected, null);
+  assert.equal(oldRun.editGuardDisabledByFlag, null);
+  assert.equal(oldRun.editGuardTextPresent, null);
+});
+
 test("buildRun produces a complete run from full metadata", () => {
   const run = buildRun(completeVtraceParts());
   assert.equal(run.condition, "vtrace");

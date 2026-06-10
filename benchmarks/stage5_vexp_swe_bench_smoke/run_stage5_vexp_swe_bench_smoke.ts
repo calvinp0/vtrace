@@ -179,6 +179,14 @@ export interface CliConfig {
   // against the default "after" run. Affects only the PIVOT_CHECK block; normal
   // VTRACE context, telemetry, and ordered tool-call capture are untouched.
   readonly disablePivotCheck: boolean;
+  // Benchmark-only EDIT_GUARD suppression (--disable-edit-guard). Default false:
+  // the compact EDIT_GUARD edit-discipline block rides with PIVOT_CHECK for
+  // multi-pivot Capsule v2 runs (injected right after it). When true, EDIT_GUARD is
+  // NOT appended, so a "PIVOT_CHECK only" before run can be compared against a
+  // "PIVOT_CHECK + EDIT_GUARD" after run. Because EDIT_GUARD rides on the PIVOT_CHECK
+  // block, --disable-pivot-check also removes EDIT_GUARD (no checklist => no guard).
+  // Affects only the EDIT_GUARD block; retrieval, ranking, and telemetry are untouched.
+  readonly disableEditGuard: boolean;
   readonly sweBenchDataFile: string | null;
   readonly runLabel: string | null;
   // Stage 5C aggregate-runs: the set of run-labels to combine into one report.
@@ -274,6 +282,19 @@ export interface IndexedContextFields {
   readonly vtracePivotCheckEnabled: boolean | null;
   readonly vtracePivotCheckInjected: boolean | null;
   readonly vtracePivotCheckDisabledByFlag: boolean | null;
+  // EDIT_GUARD state (Stage 5 before/after experiments), recorded alongside
+  // PIVOT_CHECK and kept strictly SEPARATE from inspection-conversion / edited-file /
+  // patch / resolution signals — it is an observability flag, never an outcome.
+  // `Enabled` is false only when --disable-edit-guard was passed; `DisabledByFlag`
+  // mirrors that flag; `Injected` is whether the compact EDIT_GUARD block actually
+  // entered the injected context (true only when enabled AND a PIVOT_CHECK block was
+  // injected — the guard rides with the checklist). `TextPresent` independently
+  // re-scans the assembled instruction snapshot for the EDIT_GUARD marker. All null
+  // on baseline / non-indexed rows and on older runs that predate the field.
+  readonly vtraceEditGuardEnabled: boolean | null;
+  readonly vtraceEditGuardInjected: boolean | null;
+  readonly vtraceEditGuardDisabledByFlag: boolean | null;
+  readonly vtraceEditGuardTextPresent: boolean | null;
 }
 
 // Stage 5C evaluation evidence, normalized per instance. resolved itself stays
@@ -558,6 +579,9 @@ const DEFAULT_CONFIG: CliConfig = {
   contextPolicyOverride: "auto",
   // PIVOT_CHECK is ON by default (only --disable-pivot-check turns it off).
   disablePivotCheck: false,
+  // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
+  // off only the guard block).
+  disableEditGuard: false,
   sweBenchDataFile: null,
   runLabel: null,
   runLabels: null,
@@ -2070,6 +2094,15 @@ export interface IndexedContextResult {
   readonly pivotCheckEnabled: boolean;
   readonly pivotCheckInjected: boolean;
   readonly pivotCheckDisabledByFlag: boolean;
+  // EDIT_GUARD state for this run. `enabled` is the feature switch (false only when
+  // --disable-edit-guard was passed); `disabledByFlag` mirrors that flag; `injected`
+  // is whether the guard block actually entered the assembled context (true only when
+  // enabled AND a PIVOT_CHECK block was injected); `textPresent` re-scans the final
+  // snapshot for the marker.
+  readonly editGuardEnabled: boolean;
+  readonly editGuardInjected: boolean;
+  readonly editGuardDisabledByFlag: boolean;
+  readonly editGuardTextPresent: boolean;
 }
 
 // Resolve the bundled vexp-swe-bench dataset path (overridable via --swe-bench-data).
@@ -3107,14 +3140,58 @@ export function buildPivotCheckBlock(pivots: readonly CapsuleAuditItem[] | null)
   return lines.join("\n");
 }
 
+// Marker string that uniquely identifies the injected EDIT_GUARD block in a
+// snapshot. Used by detectEditGuardText and tests; kept distinct from "PIVOT_CHECK".
+export const EDIT_GUARD_MARKER = "## EDIT_GUARD";
+
+// Build the compact, benchmark-only EDIT_GUARD block. This rides WITH PIVOT_CHECK
+// (same multi-pivot Capsule v2 gate, appended right after the checklist) and targets
+// the dominant Stage 5 loss mode: bad edits AFTER correct retrieval (wrong class
+// scope, missed failing input, over-broad control-flow rewrites). It is pure edit
+// discipline — it changes NO retrieval, ranking, or patch application, and it never
+// orders the agent to edit any particular pivot. Returns a constant block; the
+// multi-pivot gate lives at the call site (it is appended only when PIVOT_CHECK was).
+export function buildEditGuardBlock(): string {
+  return [
+    "## EDIT_GUARD",
+    "",
+    "Good context is not enough: most failures here are bad edits made after correct "
+      + "retrieval. Before editing any file, write a short edit plan:",
+    "",
+    "- SCOPE: name the exact enclosing class/function/module that will receive the edit; "
+      + "read its boundary before inserting any method/helper.",
+    "- FAILING BEHAVIOR: state the concrete failing input, exception, assertion, or "
+      + "behavior from the issue/test that the patch must directly handle.",
+    "- MINIMAL FIX: prefer the smallest additive guard/branch/validation; avoid broad "
+      + "control-flow rewrites unless the issue requires them.",
+    "- RULED OUT: name one nearby plausible edit you are NOT making, and why.",
+    "",
+    "Then apply the patch and run the narrowest relevant test/check available.",
+  ].join("\n");
+}
+
+// Does an assembled instruction snapshot carry the EDIT_GUARD block? Independent
+// re-scan of the final text (separate from the assembly-time `injected` flag), so a
+// truncated/edited snapshot can be detected. Observability only.
+export function detectEditGuardText(markdown: string): boolean {
+  return markdown.includes(EDIT_GUARD_MARKER);
+}
+
 export function buildVtraceContextMarkdown(
   sections: readonly VtraceContextSection[],
   // `disablePivotCheck` (default false) suppresses the compact PIVOT_CHECK block
   // for controlled "before" runs; it never affects the rest of the injected
   // context. `pivotCheckInjected` in the return reports whether the block was
   // actually appended (true only when not disabled AND a section qualified).
-  limits: { maxChars: number; maxItems: number; disablePivotCheck?: boolean },
-): { markdown: string; chars: number; items: number; truncated: boolean; pivotCheckInjected: boolean } {
+  limits: { maxChars: number; maxItems: number; disablePivotCheck?: boolean; disableEditGuard?: boolean },
+): {
+  markdown: string;
+  chars: number;
+  items: number;
+  truncated: boolean;
+  pivotCheckInjected: boolean;
+  editGuardInjected: boolean;
+} {
   const lines: string[] = [
     "# vtrace indexed context",
     "",
@@ -3125,6 +3202,7 @@ export function buildVtraceContextMarkdown(
   let totalItems = 0;
   let anyTruncated = false;
   let pivotCheckInjected = false;
+  let editGuardInjected = false;
   for (const section of sections) {
     const { instance } = section;
     // NOTE: the full problem statement is intentionally NOT repeated here. The
@@ -3164,6 +3242,13 @@ export function buildVtraceContextMarkdown(
       if (pivotCheck !== null) {
         lines.push(pivotCheck, "");
         pivotCheckInjected = true;
+        // EDIT_GUARD rides with PIVOT_CHECK: same multi-pivot Capsule v2 gate,
+        // appended right after the checklist. --disable-edit-guard suppresses ONLY
+        // this guard block; the PIVOT_CHECK checklist above is untouched.
+        if (limits.disableEditGuard !== true) {
+          lines.push(buildEditGuardBlock(), "");
+          editGuardInjected = true;
+        }
       }
     }
     lines.push(
@@ -3179,6 +3264,7 @@ export function buildVtraceContextMarkdown(
     items: totalItems,
     truncated: anyTruncated,
     pivotCheckInjected,
+    editGuardInjected,
   };
 }
 
@@ -3244,6 +3330,10 @@ export function indexedContextMetaFields(result: IndexedContextResult): IndexedC
     vtracePivotCheckEnabled: result.pivotCheckEnabled,
     vtracePivotCheckInjected: result.pivotCheckInjected,
     vtracePivotCheckDisabledByFlag: result.pivotCheckDisabledByFlag,
+    vtraceEditGuardEnabled: result.editGuardEnabled,
+    vtraceEditGuardInjected: result.editGuardInjected,
+    vtraceEditGuardDisabledByFlag: result.editGuardDisabledByFlag,
+    vtraceEditGuardTextPresent: result.editGuardTextPresent,
   };
 }
 
@@ -3439,6 +3529,7 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     maxChars: config.vtraceContextMaxChars,
     maxItems: config.vtraceContextMaxItems,
     disablePivotCheck: config.disablePivotCheck,
+    disableEditGuard: config.disableEditGuard,
   });
   await writeFile(contextFile, assembled.markdown);
 
@@ -3569,6 +3660,16 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     pivotCheckEnabled: config.disablePivotCheck !== true,
     pivotCheckInjected: assembled.pivotCheckInjected,
     pivotCheckDisabledByFlag: config.disablePivotCheck === true,
+    // EDIT_GUARD mirrors the PIVOT_CHECK state shape. `enabled` is the feature switch
+    // (--disable-edit-guard off); `injected` is whether the guard block actually
+    // entered the assembled context (false when PIVOT_CHECK was not injected, since
+    // the guard rides with it); `textPresent` independently confirms the marker in the
+    // final snapshot. Coerced to strict booleans so a partial config never leaks
+    // `undefined` into metadata.
+    editGuardEnabled: config.disableEditGuard !== true,
+    editGuardInjected: assembled.editGuardInjected,
+    editGuardDisabledByFlag: config.disableEditGuard === true,
+    editGuardTextPresent: detectEditGuardText(assembled.markdown),
   };
 }
 
@@ -3978,6 +4079,10 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtracePivotCheckEnabled: evidence.vtracePivotCheckEnabled,
           vtracePivotCheckInjected: evidence.vtracePivotCheckInjected,
           vtracePivotCheckDisabledByFlag: evidence.vtracePivotCheckDisabledByFlag,
+          vtraceEditGuardEnabled: evidence.vtraceEditGuardEnabled,
+          vtraceEditGuardInjected: evidence.vtraceEditGuardInjected,
+          vtraceEditGuardDisabledByFlag: evidence.vtraceEditGuardDisabledByFlag,
+          vtraceEditGuardTextPresent: evidence.vtraceEditGuardTextPresent,
         },
   );
 }
@@ -4268,6 +4373,10 @@ export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5
     vtracePivotCheckEnabled: null,
     vtracePivotCheckInjected: null,
     vtracePivotCheckDisabledByFlag: null,
+    vtraceEditGuardEnabled: null,
+    vtraceEditGuardInjected: null,
+    vtraceEditGuardDisabledByFlag: null,
+    vtraceEditGuardTextPresent: null,
     notes: perRun.flatMap((e) => e.notes),
   };
 }
@@ -4771,6 +4880,10 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtracePivotCheckEnabled: null,
     vtracePivotCheckInjected: null,
     vtracePivotCheckDisabledByFlag: null,
+    vtraceEditGuardEnabled: null,
+    vtraceEditGuardInjected: null,
+    vtraceEditGuardDisabledByFlag: null,
+    vtraceEditGuardTextPresent: null,
   };
 }
 
@@ -5105,6 +5218,12 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtracePivotCheckEnabled: bool(meta.vtracePivotCheckEnabled),
     vtracePivotCheckInjected: bool(meta.vtracePivotCheckInjected),
     vtracePivotCheckDisabledByFlag: bool(meta.vtracePivotCheckDisabledByFlag),
+    // EDIT_GUARD fields tolerate older metadata: bool() yields null when the field is
+    // absent, so runs that predate EDIT_GUARD read as null (never a fabricated false).
+    vtraceEditGuardEnabled: bool(meta.vtraceEditGuardEnabled),
+    vtraceEditGuardInjected: bool(meta.vtraceEditGuardInjected),
+    vtraceEditGuardDisabledByFlag: bool(meta.vtraceEditGuardDisabledByFlag),
+    vtraceEditGuardTextPresent: bool(meta.vtraceEditGuardTextPresent),
   };
 }
 
@@ -5912,6 +6031,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       }
       case "--capsule-budget": config.capsuleBudget = requirePositiveInt(argv, ++index, arg); break;
       case "--disable-pivot-check": config.disablePivotCheck = true; break;
+      case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
       case "--run-labels":
@@ -5969,6 +6089,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --capsule-intent auto|debug|refactor|impact|test-failure   Capsule v2 intent (default: auto; v2 only)",
       "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
       "  --disable-pivot-check                         suppress the PIVOT_CHECK block for a controlled before run (default: PIVOT_CHECK on for multi-pivot v2)",
+      "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),

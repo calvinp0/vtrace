@@ -18,6 +18,9 @@ import {
   buildInstanceQuery,
   buildVexpCommand,
   buildPivotCheckBlock,
+  buildEditGuardBlock,
+  detectEditGuardText,
+  EDIT_GUARD_MARKER,
   buildVtraceContextMarkdown,
   buildVtraceIndexCommand,
   buildVtracePatchBlock,
@@ -188,6 +191,17 @@ test("--disable-pivot-check is off by default and opt-in only", () => {
     parseArgs(["--mode", "prepare", "--instances", "a__1", "--disable-pivot-check"]).disablePivotCheck,
     true,
   );
+});
+
+test("--disable-edit-guard is off by default and opt-in only", () => {
+  // Default: EDIT_GUARD stays enabled (flag absent), independent of PIVOT_CHECK.
+  const base = parseArgs(["--mode", "prepare", "--instances", "a__1"]);
+  assert.equal(base.disableEditGuard, false);
+  assert.equal(base.disablePivotCheck, false);
+  // Explicit flag flips only the edit guard.
+  const flagged = parseArgs(["--mode", "prepare", "--instances", "a__1", "--disable-edit-guard"]);
+  assert.equal(flagged.disableEditGuard, true);
+  assert.equal(flagged.disablePivotCheck, false); // EDIT_GUARD flag does not touch PIVOT_CHECK
 });
 
 test("smoke_instances.json loads instances and notes", async () => {
@@ -1473,6 +1487,121 @@ test("buildVtraceContextMarkdown does not inject PIVOT_CHECK for legacy / no-cap
   assert.doesNotMatch(buildVtraceContextMarkdown([noClass], { maxChars: 12000, maxItems: 8 }).markdown, /PIVOT_CHECK/);
 });
 
+// ----- Stage 5: EDIT_GUARD edit-discipline block (rides with PIVOT_CHECK) -----
+
+test("buildEditGuardBlock contains SCOPE, FAILING BEHAVIOR, MINIMAL FIX, and RULED OUT", () => {
+  const block = buildEditGuardBlock();
+  assert.match(block, /## EDIT_GUARD/);
+  assert.match(block, /SCOPE:/);
+  assert.match(block, /FAILING BEHAVIOR:/);
+  assert.match(block, /MINIMAL FIX:/);
+  assert.match(block, /RULED OUT:/);
+  // It targets the loss mode (bad edits after good context) and prefers minimal fixes.
+  assert.match(block, /enclosing class\/function\/module/);
+  assert.match(block, /avoid broad .*control-flow rewrites/);
+  // It carries the detectable marker and does NOT mention PIVOT_CHECK (separate signal).
+  assert.ok(block.includes(EDIT_GUARD_MARKER));
+  assert.doesNotMatch(block, /PIVOT_CHECK/);
+});
+
+test("detectEditGuardText finds the marker only when the guard block is present", () => {
+  assert.equal(detectEditGuardText(buildEditGuardBlock()), true);
+  assert.equal(detectEditGuardText("# vtrace indexed context\n\n## Instruction\n"), false);
+});
+
+test("buildVtraceContextMarkdown injects EDIT_GUARD right after PIVOT_CHECK for a multi-pivot v2 section", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const assembled = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  // Both blocks present, and EDIT_GUARD follows PIVOT_CHECK (rides with the checklist).
+  assert.match(assembled.markdown, /## PIVOT_CHECK/);
+  assert.match(assembled.markdown, /## EDIT_GUARD/);
+  assert.ok(assembled.markdown.indexOf("## PIVOT_CHECK") < assembled.markdown.indexOf("## EDIT_GUARD"));
+  assert.equal(assembled.pivotCheckInjected, true);
+  assert.equal(assembled.editGuardInjected, true);
+  // The guard carries its required headings.
+  assert.match(assembled.markdown, /SCOPE:/);
+  assert.match(assembled.markdown, /RULED OUT:/);
+});
+
+test("--disable-edit-guard removes ONLY the guard; PIVOT_CHECK and context body remain", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\nget_combinator_sql lives here",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const guarded = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  const noGuard = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8, disableEditGuard: true });
+
+  // PIVOT_CHECK is untouched by the edit-guard flag; only EDIT_GUARD is excised.
+  assert.match(noGuard.markdown, /## PIVOT_CHECK/);
+  assert.doesNotMatch(noGuard.markdown, /EDIT_GUARD/);
+  assert.equal(noGuard.pivotCheckInjected, true);
+  assert.equal(noGuard.editGuardInjected, false);
+  // The retrieved context body still survives.
+  assert.match(noGuard.markdown, /get_combinator_sql lives here/);
+
+  // The two renders differ ONLY by the excised EDIT_GUARD block.
+  const withoutGuard = guarded.markdown.replace(/## EDIT_GUARD[\s\S]*?\n\n(?=## Instruction)/, "");
+  assert.equal(noGuard.markdown, withoutGuard);
+});
+
+test("--disable-pivot-check also removes EDIT_GUARD (the guard rides with the checklist)", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const both = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  const neither = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8, disablePivotCheck: true });
+  assert.equal(both.editGuardInjected, true);
+  // No checklist => no guard, even though --disable-edit-guard was NOT passed.
+  assert.equal(neither.pivotCheckInjected, false);
+  assert.equal(neither.editGuardInjected, false);
+  assert.doesNotMatch(neither.markdown, /EDIT_GUARD/);
+});
+
+test("EDIT_GUARD never injects for a single-pivot capsule (no checklist to ride)", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification: classificationWithPivots([PIVOT_CHECK_PIVOTS[0]!]),
+    preformatted: true,
+  };
+  const assembled = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  assert.equal(assembled.pivotCheckInjected, false);
+  assert.equal(assembled.editGuardInjected, false);
+  assert.doesNotMatch(assembled.markdown, /EDIT_GUARD/);
+});
+
+test("EDIT_GUARD changes no retrieval/ranking output: capsule pivots and body are identical", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\nget_combinator_sql body here",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const guarded = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  const noGuard = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8, disableEditGuard: true });
+  // The injected retrieved context (pivot rows, body) is byte-identical up to the
+  // appended guard block — the guard adds guidance only, never altering retrieval.
+  assert.ok(guarded.markdown.includes("get_combinator_sql body here"));
+  assert.ok(noGuard.markdown.includes("get_combinator_sql body here"));
+  assert.match(guarded.markdown, /sphinx\/pycode\/ast\.py/); // pivot rows unchanged
+  assert.match(noGuard.markdown, /sphinx\/pycode\/ast\.py/);
+});
+
 async function v2InjectionResult(
   capsuleStdout: string,
   overrides: Record<string, unknown> = {},
@@ -1593,6 +1722,47 @@ test("--disable-pivot-check records disabled state and never injects the block; 
   assert.ok(!ctx.includes("PIVOT_CHECK"));
   // The retrieved capsule body is still present — only PIVOT_CHECK was removed.
   assert.ok(ctx.includes("get_combinator_sql"));
+});
+
+test("prepareIndexedContext records EDIT_GUARD enabled by default; meta + snapshot reflect it", async () => {
+  // The default fixture is a single-pivot capsule, so neither PIVOT_CHECK nor the
+  // guard that rides with it injects — but the meta must still read enabled=true /
+  // disabledByFlag=false / injected=false (distinct from a flag-disabled run).
+  const { result, out } = await v2InjectionResult(capsuleV2Json());
+  assert.equal(result.editGuardEnabled, true);
+  assert.equal(result.editGuardDisabledByFlag, false);
+  assert.equal(result.editGuardInjected, false);
+  assert.equal(result.editGuardTextPresent, false);
+  // Retrieval telemetry is intact and unaffected by the guard feature.
+  assert.equal(result.contextInjected, true);
+  assert.equal(result.capsulePivots.length, 1);
+
+  const meta = indexedContextMetaFields(result);
+  assert.equal(meta.vtraceEditGuardEnabled, true);
+  assert.equal(meta.vtraceEditGuardInjected, false);
+  assert.equal(meta.vtraceEditGuardDisabledByFlag, false);
+  assert.equal(meta.vtraceEditGuardTextPresent, false);
+
+  const ctx = await readFile(vtraceInstructionsFilePath(out), "utf8");
+  assert.ok(!ctx.includes("EDIT_GUARD"));
+});
+
+test("--disable-edit-guard records disabled state in result + meta; retrieval untouched", async () => {
+  const { result } = await v2InjectionResult(capsuleV2Json(), { disableEditGuard: true });
+  assert.equal(result.editGuardEnabled, false);
+  assert.equal(result.editGuardDisabledByFlag, true);
+  assert.equal(result.editGuardInjected, false);
+  // PIVOT_CHECK state is independent of the edit-guard flag.
+  assert.equal(result.pivotCheckEnabled, true);
+  assert.equal(result.pivotCheckDisabledByFlag, false);
+  // Retrieval telemetry is unaffected.
+  assert.equal(result.contextInjected, true);
+  assert.equal(result.capsulePivots.length, 1);
+
+  const meta = indexedContextMetaFields(result);
+  assert.equal(meta.vtraceEditGuardEnabled, false);
+  assert.equal(meta.vtraceEditGuardDisabledByFlag, true);
+  assert.equal(meta.vtraceEditGuardInjected, false);
 });
 
 test("prepareIndexedContext with v2 issues a v2 query and records the engine metadata", async () => {
