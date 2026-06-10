@@ -244,6 +244,31 @@ test("classifyOutcome distinguishes the three outcomes", () => {
 });
 
 // ---------------------------------------------------------------------------
+// 9. Paired token/tool regressions are regression_without_suppression, not missing_evidence.
+// ---------------------------------------------------------------------------
+
+test("paired non-improving tasks split into regression vs no-improvement, never missing_evidence", () => {
+  const oldV = toRunView(buildRunUsage(MPL_NEW)); // smaller usage as the baseline
+  const newV = toRunView(buildRunUsage(MPL_OLD)); // larger usage as the new side → regression
+
+  // Tokens, tool calls, and turns all increased and resolution did not improve (new resolved=false).
+  const regress = classifyOutcome("paired", oldV, newV, false, +1_000_000, +18, +35);
+  assert.equal(regress.outcome, "regression_without_suppression");
+
+  // No movement at all (deltas zero), no resolution gain → no_suppression_no_improvement.
+  const flat = classifyOutcome("paired", oldV, oldV, false, 0, 0, 0);
+  assert.equal(flat.outcome, "no_suppression_no_improvement");
+
+  // missing_evidence is reserved for missing artifacts.
+  const missing = classifyOutcome("missing_new_artifact", oldV, null, null, null, null, null);
+  assert.equal(missing.outcome, "missing_evidence");
+
+  // The real astropy/requests-shaped case: paired, suppression not claimable, usage up → regression.
+  const astroOld = buildTask(TASK_SEEDS[1]!, "old-astro", MPL_NEW, MPL_OLD);
+  assert.equal(astroOld.outcome, "regression_without_suppression");
+});
+
+// ---------------------------------------------------------------------------
 // 9. Emits required Markdown sections.
 // ---------------------------------------------------------------------------
 

@@ -119,7 +119,7 @@ export const NON_CLAIMS: readonly string[] = [
   "It does not isolate which factor (tool-loop behavior, stochasticity, sampling) drove any token drop.",
   "It does not change retrieval, Capsule v2, PIVOT_CHECK, EDIT_GUARD, PATCH_VERIFY, probes, critic, repair, the evaluator, or policy behavior.",
   "It does not rerun agents or Docker; usage/cost/resolution are read verbatim from existing run + docker-eval artifacts.",
-  "Missing risk-gated runs are reported as missing evidence, not as regressions.",
+  "Missing risk-gated runs are reported as missing evidence; paired tasks whose usage grew are labeled regression_without_suppression, not missing_evidence.",
 ];
 
 // ---------------------------------------------------------------------------
@@ -183,6 +183,8 @@ export function toRunView(usage: RunUsage): TaskRunView {
 export type TaskOutcome =
   | "suppression"
   | "lower_loopiness_without_suppression"
+  | "no_suppression_no_improvement"
+  | "regression_without_suppression"
   | "missing_evidence";
 
 export interface TaskComparison {
@@ -239,6 +241,8 @@ export function classifyOutcome(
   orderedToolCallDelta: number | null,
   numTurnDelta: number | null,
 ): { outcome: TaskOutcome; detail: string } {
+  // `missing_evidence` is now RESERVED for genuinely missing artifacts / telemetry — never used
+  // for a paired pair that simply failed to improve.
   if (status !== "paired" || oldView === null || newView === null) {
     return {
       outcome: "missing_evidence",
@@ -272,10 +276,31 @@ export function classifyOutcome(
         tokenNote,
     };
   }
+  // Both runs present, suppression not claimable, no loop/turn drop. Split the old catch-all
+  // `missing_evidence` into two telemetry-backed labels: a regression (tokens / tool calls / turns
+  // went UP without a resolution gain) vs a flat non-improvement.
+  const resolvedImproved = oldView.resolved === false && newView.resolved === true;
+  const tokensUp = tokenDelta !== null && tokenDelta > 0;
+  const callsUp = orderedToolCallDelta !== null && orderedToolCallDelta > 0;
+  const turnsUp = numTurnDelta !== null && numTurnDelta > 0;
+  if (!resolvedImproved && (tokensUp || callsUp || turnsUp)) {
+    const ups = [
+      tokensUp ? "tokens" : null,
+      callsUp ? "ordered tool calls" : null,
+      turnsUp ? "turns" : null,
+    ].filter((s): s is string => s !== null);
+    return {
+      outcome: "regression_without_suppression",
+      detail:
+        `PIVOT_CHECK suppression was not claimable and ${ups.join(" / ")} increased without a resolution ` +
+        "gain — a regression, not missing evidence.",
+    };
+  }
   return {
-    outcome: "missing_evidence",
+    outcome: "no_suppression_no_improvement",
     detail:
-      "Both runs present, but neither suppression nor a clear loop/turn reduction is evidenced.",
+      "Both runs present, but PIVOT_CHECK suppression was not claimable and there was no clear " +
+      "token / tool-call / turn improvement and no resolution gain.",
   };
 }
 
@@ -668,11 +693,13 @@ export function renderMarkdown(report: Report): string {
   // --- Interpretation ------------------------------------------------------
   lines.push("## Interpretation");
   lines.push("");
-  lines.push("Each task is classified into one of three evidence outcomes:");
+  lines.push("Each task is classified into one of these evidence outcomes:");
   lines.push("");
-  lines.push("1. **Evidence of suppression** — risk_gated prevented PIVOT_CHECK where multi-pivot would have injected.");
-  lines.push("2. **Evidence of lower loopiness without suppression** — PIVOT_CHECK still injected, but tool calls/turns dropped.");
-  lines.push("3. **Missing evidence** — run not available or telemetry missing.");
+  lines.push("1. **suppression** — risk_gated prevented PIVOT_CHECK where multi-pivot would have injected.");
+  lines.push("2. **lower_loopiness_without_suppression** — PIVOT_CHECK still injected, but tool calls/turns dropped.");
+  lines.push("3. **regression_without_suppression** — paired, no suppression, and tokens / tool calls / turns increased without a resolution gain.");
+  lines.push("4. **no_suppression_no_improvement** — paired, no suppression, and no clear token / tool / turn improvement or resolution gain.");
+  lines.push("5. **missing_evidence** — RESERVED for missing artifacts or missing telemetry only (not for paired non-improving tasks).");
   lines.push("");
   for (const t of tasks) {
     lines.push(`- \`${t.instanceId}\`: **${t.outcome}** — ${t.outcomeDetail}`);

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-10T21:24:10.802Z",
+  "generatedAt": "2026-06-10T22:00:56.264Z",
   "tasks": [
     {
       "instanceId": "matplotlib__matplotlib-22719",
@@ -61,7 +61,7 @@
       "instanceId": "astropy__astropy-14369",
       "oldLabel": "eval-controlled-vtrace-astropy-14369",
       "newLabel": "eval-riskgated-vtrace-astropy-14369",
-      "status": "missing_new_artifact",
+      "status": "paired",
       "old": {
         "totalTokens": 3365366,
         "costUsd": 3.0284075,
@@ -81,17 +81,37 @@
         "vtracePivotCheckRiskSignals": null,
         "vtracePivotCheckWouldInjectUnderMultiPivot": null
       },
-      "new": null,
-      "tokenDelta": null,
-      "tokenDeltaPct": null,
-      "costDelta": null,
-      "costDeltaPct": null,
-      "resolvedChanged": null,
-      "orderedToolCallDelta": null,
-      "numTurnDelta": null,
-      "suppressionClaimable": null,
-      "outcome": "missing_evidence",
-      "outcomeDetail": "risk-gated run not available yet — no new-side telemetry to compare.",
+      "new": {
+        "totalTokens": 3649897,
+        "costUsd": 1.7339875000000002,
+        "resolved": false,
+        "orderedToolCallCount": 30,
+        "numTurns": 68,
+        "toolCallsByType": {
+          "Read": 7,
+          "Bash": 15,
+          "Edit": 1,
+          "Glob": 4,
+          "Grep": 3
+        },
+        "vtracePivotCheckInjected": true,
+        "vtracePivotCheckPolicy": "risk_gated",
+        "vtracePivotCheckPolicyReason": "risk_gated: risk signals [hidden_pivot]",
+        "vtracePivotCheckRiskSignals": [
+          "hidden_pivot"
+        ],
+        "vtracePivotCheckWouldInjectUnderMultiPivot": true
+      },
+      "tokenDelta": 284531,
+      "tokenDeltaPct": 8.454682195042086,
+      "costDelta": -1.29442,
+      "costDeltaPct": -42.74259656271489,
+      "resolvedChanged": false,
+      "orderedToolCallDelta": 7,
+      "numTurnDelta": 8,
+      "suppressionClaimable": false,
+      "outcome": "regression_without_suppression",
+      "outcomeDetail": "PIVOT_CHECK suppression was not claimable and tokens / ordered tool calls / turns increased without a resolution gain — a regression, not missing evidence.",
       "runCommand": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances astropy__astropy-14369 \\\n  --run-label eval-riskgated-vtrace-astropy-14369 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results \\\n  --capsule-engine v2 \\\n  --context-policy force-inject \\\n  --pivot-check-policy risk_gated \\\n  --reuse-workspace \\\n  --capsule-budget 8000",
       "evalCommand": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode evaluate \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --run-label eval-riskgated-vtrace-astropy-14369 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
     },
@@ -99,7 +119,7 @@
       "instanceId": "psf__requests-5414",
       "oldLabel": "eval-controlled-vtrace-requests-5414",
       "newLabel": "eval-riskgated-vtrace-requests-5414",
-      "status": "missing_new_artifact",
+      "status": "paired",
       "old": {
         "totalTokens": 956785,
         "costUsd": 0.4065295,
@@ -118,49 +138,68 @@
         "vtracePivotCheckRiskSignals": null,
         "vtracePivotCheckWouldInjectUnderMultiPivot": null
       },
-      "new": null,
-      "tokenDelta": null,
-      "tokenDeltaPct": null,
-      "costDelta": null,
-      "costDeltaPct": null,
-      "resolvedChanged": null,
-      "orderedToolCallDelta": null,
-      "numTurnDelta": null,
-      "suppressionClaimable": null,
-      "outcome": "missing_evidence",
-      "outcomeDetail": "risk-gated run not available yet — no new-side telemetry to compare.",
+      "new": {
+        "totalTokens": 1676057,
+        "costUsd": 0.6886879999999999,
+        "resolved": false,
+        "orderedToolCallCount": 16,
+        "numTurns": 45,
+        "toolCallsByType": {
+          "Read": 4,
+          "Grep": 1,
+          "Bash": 10,
+          "Edit": 1
+        },
+        "vtracePivotCheckInjected": true,
+        "vtracePivotCheckPolicy": "risk_gated",
+        "vtracePivotCheckPolicyReason": "risk_gated: risk signals [hidden_pivot]",
+        "vtracePivotCheckRiskSignals": [
+          "hidden_pivot"
+        ],
+        "vtracePivotCheckWouldInjectUnderMultiPivot": true
+      },
+      "tokenDelta": 719272,
+      "tokenDeltaPct": 75.1759277162581,
+      "costDelta": 0.28215849999999987,
+      "costDeltaPct": 69.40664822602047,
+      "resolvedChanged": false,
+      "orderedToolCallDelta": 7,
+      "numTurnDelta": 18,
+      "suppressionClaimable": false,
+      "outcome": "regression_without_suppression",
+      "outcomeDetail": "PIVOT_CHECK suppression was not claimable and tokens / ordered tool calls / turns increased without a resolution gain — a regression, not missing evidence.",
       "runCommand": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances psf__requests-5414 \\\n  --run-label eval-riskgated-vtrace-requests-5414 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results \\\n  --capsule-engine v2 \\\n  --context-policy force-inject \\\n  --pivot-check-policy risk_gated \\\n  --reuse-workspace \\\n  --capsule-budget 8000",
       "evalCommand": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode evaluate \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --run-label eval-riskgated-vtrace-requests-5414 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
     }
   ],
   "aggregate": {
-    "pairedCount": 1,
-    "missingNewCount": 2,
+    "pairedCount": 3,
+    "missingNewCount": 0,
     "missingOldCount": 0,
-    "totalOldTokens": 2718398,
-    "totalNewTokens": 1277672,
-    "totalTokenDelta": -1440726,
-    "totalTokenDeltaPct": -52.99908254788298,
-    "totalOldCost": 0.9627022500000002,
-    "totalNewCost": 0.7694869999999998,
-    "totalCostDelta": -0.1932152500000004,
-    "totalCostDeltaPct": -20.070094361989945,
+    "totalOldTokens": 7040549,
+    "totalNewTokens": 6603626,
+    "totalTokenDelta": -436923,
+    "totalTokenDeltaPct": -6.205808666341219,
+    "totalOldCost": 4.397639250000001,
+    "totalNewCost": 3.1921625000000002,
+    "totalCostDelta": -1.2054767500000008,
+    "totalCostDeltaPct": -27.41190628585554,
     "resolvedOld": 0,
     "resolvedNew": 1,
     "resolvedDelta": 1,
-    "orderedToolCallsOld": 30,
-    "orderedToolCallsNew": 12,
-    "orderedToolCallDelta": -18,
+    "orderedToolCallsOld": 62,
+    "orderedToolCallsNew": 58,
+    "orderedToolCallDelta": -4,
     "suppressionClaimableCount": 0,
-    "pivotCheckStillInjectedCount": 1
+    "pivotCheckStillInjectedCount": 3
   },
-  "recommendation": "Run the remaining two risk-gated verification tasks: astropy__astropy-14369 and psf__requests-5414.",
+  "recommendation": "Analyze per-task causes before rerunning the full 10-task set.",
   "nonClaims": [
     "This does NOT prove risk_gated cut tokens by suppressing PIVOT_CHECK; where PIVOT_CHECK was still injected, the suppression pathway never fired.",
     "This is a small verification set (n≤3), not a statistical benchmark; no significance is claimed.",
     "It does not isolate which factor (tool-loop behavior, stochasticity, sampling) drove any token drop.",
     "It does not change retrieval, Capsule v2, PIVOT_CHECK, EDIT_GUARD, PATCH_VERIFY, probes, critic, repair, the evaluator, or policy behavior.",
     "It does not rerun agents or Docker; usage/cost/resolution are read verbatim from existing run + docker-eval artifacts.",
-    "Missing risk-gated runs are reported as missing evidence, not as regressions."
+    "Missing risk-gated runs are reported as missing evidence; paired tasks whose usage grew are labeled regression_without_suppression, not missing_evidence."
   ]
 }
