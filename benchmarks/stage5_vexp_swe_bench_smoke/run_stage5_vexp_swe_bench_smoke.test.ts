@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { mkdtemp, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -13,6 +14,12 @@ import {
   buildBaselineCommand,
   buildCheckoutCommand,
   buildCloneCommand,
+  prepareWorkspaceForInstance,
+  gitWithRetry,
+  isTransientGitError,
+  isHttp2GitError,
+  WorkspacePreparationError,
+  GIT_RETRY_BACKOFF_MS,
   buildConditionSummaries,
   buildEvaluateCommand,
   buildInstanceQuery,
@@ -2108,7 +2115,11 @@ function scriptedRunner(script: Array<{ match: string; result: Partial<ProcessRe
     const line = [command, ...args].join(" ");
     calls.push(line);
     const entry = script.find((s) => line.includes(s.match));
-    return { exitCode: 0, stdout: "", stderr: "", ...(entry?.result ?? {}) };
+    if (entry) return { exitCode: 0, stdout: "", stderr: "", ...entry.result };
+    // Default: a valid, correctly-cloned workspace whose base commit is already present
+    // — so probeUsableWorkspace/resetCleanToBase succeed without a clone/fetch.
+    if (line.includes("rev-parse --is-inside-work-tree")) return { exitCode: 0, stdout: "true", stderr: "" };
+    return { exitCode: 0, stdout: "", stderr: "" };
   };
   return { run, calls };
 }
@@ -2179,22 +2190,29 @@ test("prepareIndexedContext recreates a fresh workspace by default (clean + rech
   const config = baseConfig({ out, instances: ["django__django-11490"], sweBenchDataFile: dataFile, vtraceMethod: "indexed-context" });
   const result = await prepareIndexedContext(config, { runProcess: run });
 
-  // The existing clone is scrubbed (clean -fdx) + re-checked-out, never re-cloned,
-  // and re-indexed despite the stale index being present.
+  // The existing clone is scrubbed to base (reset --hard + clean -fdx), never
+  // re-cloned, and re-indexed despite the stale index being present.
+  assert.ok(calls.some((c) => c.includes("reset --hard")), "reset --hard to base must run");
   assert.ok(calls.some((c) => c.includes("clean") && c.includes("-fdx")), "git clean -fdx must run");
-  assert.ok(calls.some((c) => c.includes("checkout")), "checkout must run");
   assert.ok(calls.some((c) => c.includes(" index ")), "the index must be rebuilt");
   assert.ok(!calls.some((c) => c.includes("clone")), "an existing clone must not be re-cloned");
+  assert.ok(!calls.some((c) => c.includes("pull")), "must never git pull main");
   // Meta records the fresh policy + the observed index timing.
   assert.equal(result.freshWorkspace, true);
   // The index never runs quiet now (progress is always surfaced).
   assert.equal(result.vtraceIndexQuiet, false);
+  // Workspace prep observability: an existing valid workspace was reused + reset.
+  assert.equal(result.workspaceReused, true);
+  assert.equal(result.workspaceResetToBaseCommit, true);
+  assert.equal(result.workspaceCleaned, true);
+  assert.equal(result.workspaceGitRetryCount, 0);
+  assert.equal(result.workspaceRecreatedAfterFailure, false);
   assert.equal(typeof result.vtraceIndexDurationMs, "number");
   assert.match(result.vtraceIndexStartedAt ?? "", /T.*Z$/);
   assert.match(result.vtraceIndexFinishedAt ?? "", /T.*Z$/);
 });
 
-test("prepareIndexedContext --reuse-workspace reuses the existing checkout + index", async () => {
+test("prepareIndexedContext --reuse-workspace resets to base + cleans, reuses present index, no reclone", async () => {
   const out = path.join(await tmpDir("idx-reuse"), "results");
   const dataDir = await tmpDir("idx-reuse-data");
   const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
@@ -2214,14 +2232,245 @@ test("prepareIndexedContext --reuse-workspace reuses the existing checkout + ind
   });
   const result = await prepareIndexedContext(config, { runProcess: run });
 
-  // Reuse touches nothing: no clean, no checkout, no reindex — only the query runs.
-  assert.ok(!calls.some((c) => c.includes("clean")), "reuse must not git clean");
-  assert.ok(!calls.some((c) => c.includes("checkout")), "reuse must not re-checkout");
+  // Reuse still HARDENS the tree: reset --hard to base + clean -fdx run (the unsafe
+  // "touch nothing" behavior is gone), but the repo is not re-cloned and a present
+  // index is reused (no reindex). Never pulls main.
+  assert.ok(calls.some((c) => c.includes("reset --hard")), "reuse must reset --hard to base");
+  assert.ok(calls.some((c) => c.includes("clean") && c.includes("-fdx")), "reuse must git clean -fdx");
+  assert.ok(!calls.some((c) => c.includes("clone")), "reuse must not re-clone");
+  assert.ok(!calls.some((c) => c.includes("pull")), "reuse must never git pull main");
   assert.ok(!calls.some((c) => c.includes(" index ")), "reuse must not reindex when index.sqlite is present");
   assert.ok(calls.some((c) => c.includes("capsule")), "the query still runs");
   assert.equal(result.freshWorkspace, false);
+  assert.equal(result.workspaceReused, true);
+  assert.equal(result.workspaceResetToBaseCommit, true);
+  assert.equal(result.workspaceCleaned, true);
   assert.equal(result.vtraceIndexStartedAt, null);
   assert.equal(result.vtraceIndexDurationMs, null);
+});
+
+// --- reusable clean workspace + git retry --------------------------------
+
+const noSleep = async (): Promise<void> => {};
+
+function testInstance(overrides: Partial<SweBenchInstance> = {}): SweBenchInstance {
+  return {
+    repo: "django/django",
+    instanceId: "django__django-11490",
+    baseCommit: "abc123base",
+    problemStatement: "fix it",
+    hintsText: null,
+    failToPass: [],
+    ...overrides,
+  };
+}
+
+// A programmable git runner: each handler matches a command line and returns its
+// results in sequence (last result repeats). Unmatched git calls succeed with empty
+// output, except rev-parse --is-inside-work-tree which reports a valid tree.
+// A programmable git runner. Handlers match on the git ARG TOKENS (e.g.
+// args.includes("fetch")) — NOT the joined line — so a workspace path that happens to
+// contain a git verb (e.g. a tmp dir named "…-fetch-…") never spuriously matches.
+// Results are returned in sequence (last repeats). Unmatched calls succeed empty,
+// except `rev-parse` which reports a valid work tree.
+function gitMock(
+  handlers: Array<{ when: (args: readonly string[]) => boolean; results: Array<Partial<ProcessResult>> }> = [],
+): { run: (command: string, args: readonly string[], options?: unknown) => Promise<ProcessResult>; calls: string[] } {
+  const calls: string[] = [];
+  const counters = new Map<number, number>();
+  const run = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    calls.push([command, ...args].join(" "));
+    for (let i = 0; i < handlers.length; i += 1) {
+      if (handlers[i]!.when(args)) {
+        const n = counters.get(i) ?? 0;
+        counters.set(i, n + 1);
+        const seq = handlers[i]!.results;
+        return { exitCode: 0, stdout: "", stderr: "", ...(seq[Math.min(n, seq.length - 1)] ?? {}) };
+      }
+    }
+    if (args.includes("rev-parse")) return { exitCode: 0, stdout: "true", stderr: "" };
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  return { run, calls };
+}
+
+// The exact failure from the bug report (HTTP/2 reset mid-clone).
+const BUG_REPORT_FETCH_ERROR =
+  "error: RPC failed; curl 92 HTTP/2 stream 5 reset by server (error 0x8 CANCEL)\n" +
+  "fetch-pack: unexpected disconnect while reading sideband packet\n" +
+  "fatal: early EOF\nfatal: fetch-pack: invalid index-pack output";
+
+test("isTransientGitError matches the bug-report failure and the documented transient set", () => {
+  assert.equal(isTransientGitError(BUG_REPORT_FETCH_ERROR), true);
+  for (const msg of [
+    "remote end hung up unexpectedly",
+    "Connection reset by peer",
+    "GnuTLS recv error (-110): The TLS connection was non-properly terminated.",
+    "fatal: early EOF",
+  ]) {
+    assert.equal(isTransientGitError(msg), true, msg);
+  }
+  // A deterministic failure is NOT retried.
+  assert.equal(isTransientGitError("fatal: couldn't find remote ref abc123base"), false);
+  assert.equal(isTransientGitError("Permission denied (publickey)."), false);
+  // HTTP/2 detection drives the HTTP/1.1 fallback.
+  assert.equal(isHttp2GitError(BUG_REPORT_FETCH_ERROR), true);
+  assert.equal(isHttp2GitError("fatal: early EOF"), false);
+});
+
+test("gitWithRetry retries a transient failure then succeeds, switching to HTTP/1.1", async () => {
+  const { run, calls } = gitMock([
+    {
+      when: (a) => a.includes("clone"),
+      results: [{ exitCode: 128, stderr: BUG_REPORT_FETCH_ERROR }, { exitCode: 0 }],
+    },
+  ]);
+  const outcome = await gitWithRetry(run, ["clone", "--progress", "url", "/ws"], { sleep: noSleep });
+  assert.equal(outcome.result.exitCode, 0);
+  assert.equal(outcome.retries, 1);
+  assert.equal(outcome.fallbackUsed, true);
+  // The retry used the HTTP/1.1 transport fallback (process-local, not global config).
+  assert.ok(calls.some((c) => c.includes("-c http.version=HTTP/1.1 clone")));
+});
+
+test("gitWithRetry does NOT retry a deterministic (non-transient) failure", async () => {
+  const { run, calls } = gitMock([
+    { when: (a) => a.includes("fetch"), results: [{ exitCode: 128, stderr: "fatal: couldn't find remote ref deadbeef" }] },
+  ]);
+  const outcome = await gitWithRetry(run, ["fetch", "origin", "deadbeef"], { sleep: noSleep });
+  assert.equal(outcome.result.exitCode, 128);
+  assert.equal(outcome.retries, 0);
+  assert.equal(calls.filter((c) => c.includes("fetch")).length, 1);
+});
+
+test("gitWithRetry respects the attempt limit on persistent transient failure", async () => {
+  const { run, calls } = gitMock([
+    { when: (a) => a.includes("clone"), results: [{ exitCode: 128, stderr: BUG_REPORT_FETCH_ERROR }] },
+  ]);
+  const outcome = await gitWithRetry(run, ["clone", "url", "/ws"], { sleep: noSleep });
+  assert.equal(outcome.result.exitCode, 128);
+  assert.equal(outcome.retries, GIT_RETRY_BACKOFF_MS.length - 1); // 2 retries after the first attempt
+  assert.equal(calls.filter((c) => c.includes("clone")).length, 3); // 3 total attempts
+});
+
+test("reused workspace resets tracked changes to base and cleans untracked, no reclone, no main", async () => {
+  const ws = path.join(await tmpDir("prep-reuse"), "ws");
+  await mkdir(path.join(ws, ".git"), { recursive: true });
+  const { run, calls } = gitMock(); // base commit present (cat-file → 0), reset/clean ok
+  const prep = await prepareWorkspaceForInstance({ instance: testInstance(), workspace: ws, runProc: run, sleep: noSleep });
+
+  assert.equal(prep.reused, true);
+  assert.equal(prep.resetToBaseCommit, true);
+  assert.equal(prep.cleaned, true);
+  assert.equal(prep.recreatedAfterFailure, false);
+  assert.equal(prep.gitRetryCount, 0);
+  assert.equal(prep.baseCommit, "abc123base");
+  // Exact safe sequence, no clone, no pull/main.
+  assert.ok(calls.some((c) => c.includes("reset --hard abc123base")), "reset --hard <base>");
+  assert.ok(calls.some((c) => c.includes("clean -fdx -e .vtrace")), "clean -fdx");
+  assert.ok(!calls.some((c) => c.includes("clone")), "no reclone");
+  assert.ok(!calls.some((c) => c.includes("pull") || c.includes(" main")), "never pulls main");
+});
+
+test("reused workspace fetches ONLY the base commit when it is missing locally (with retry)", async () => {
+  const ws = path.join(await tmpDir("prep-fetch"), "ws");
+  await mkdir(path.join(ws, ".git"), { recursive: true });
+  const { run, calls } = gitMock([
+    // base commit absent locally → must fetch it; first fetch resets transiently, then ok
+    { when: (a) => a.includes("cat-file"), results: [{ exitCode: 1 }] },
+    { when: (a) => a.includes("fetch"), results: [{ exitCode: 128, stderr: "fatal: early EOF" }, { exitCode: 0 }] },
+  ]);
+  const prep = await prepareWorkspaceForInstance({ instance: testInstance(), workspace: ws, runProc: run, sleep: noSleep });
+
+  assert.equal(prep.reused, true);
+  assert.equal(prep.gitRetryCount, 1);
+  // The fetch targets the exact base commit (not main) and prunes/tags.
+  assert.ok(calls.some((c) => c.includes("fetch origin abc123base --tags --prune")), "fetch targets base commit");
+  assert.ok(!calls.some((c) => c.includes(" main")), "never fetches main");
+});
+
+test("wrong-repo workspace is removed and recreated safely (recreatedAfterFailure)", async () => {
+  const ws = path.join(await tmpDir("prep-wrong"), "ws");
+  await mkdir(path.join(ws, ".git"), { recursive: true });
+  const { run, calls } = gitMock([
+    // origin points at a DIFFERENT repo → probe rejects → recreate
+    { when: (a) => a.includes("get-url"), results: [{ exitCode: 0, stdout: "https://github.com/other/thing.git" }] },
+  ]);
+  const prep = await prepareWorkspaceForInstance({ instance: testInstance(), workspace: ws, runProc: run, sleep: noSleep });
+
+  assert.equal(prep.reused, false);
+  assert.equal(prep.recreatedAfterFailure, true);
+  assert.equal(prep.resetToBaseCommit, true);
+  assert.ok(calls.some((c) => c.includes("clone")), "the correct repo is cloned");
+});
+
+test("corrupt workspace (rev-parse fails) is recreated safely", async () => {
+  const ws = path.join(await tmpDir("prep-corrupt"), "ws");
+  await mkdir(path.join(ws, ".git"), { recursive: true });
+  const { run, calls } = gitMock([
+    { when: (a) => a.includes("rev-parse"), results: [{ exitCode: 128, stderr: "fatal: not a git repository" }] },
+  ]);
+  const prep = await prepareWorkspaceForInstance({ instance: testInstance(), workspace: ws, runProc: run, sleep: noSleep });
+
+  assert.equal(prep.recreatedAfterFailure, true);
+  assert.equal(prep.reused, false);
+  assert.ok(calls.some((c) => c.includes("clone")), "recreated by clone");
+});
+
+test("absent workspace clones fresh (NOT a failure recreate) and resets to base", async () => {
+  const ws = path.join(await tmpDir("prep-absent"), "ws", "nested"); // does not exist
+  const { run, calls } = gitMock();
+  const prep = await prepareWorkspaceForInstance({ instance: testInstance(), workspace: ws, runProc: run, sleep: noSleep });
+
+  assert.equal(prep.reused, false);
+  assert.equal(prep.recreatedAfterFailure, false); // brand-new clone, no prior dir
+  assert.equal(prep.resetToBaseCommit, true);
+  assert.ok(calls.some((c) => c.includes("clone")), "fresh clone");
+  assert.ok(calls.some((c) => c.includes("reset --hard abc123base")), "reset to base");
+});
+
+test("transient clone failures are retried then succeed; metadata records retries + fallback", async () => {
+  const ws = path.join(await tmpDir("prep-retry"), "ws");
+  const { run, calls } = gitMock([
+    { when: (a) => a.includes("clone"), results: [{ exitCode: 128, stderr: BUG_REPORT_FETCH_ERROR }, { exitCode: 128, stderr: BUG_REPORT_FETCH_ERROR }, { exitCode: 0 }] },
+  ]);
+  const prep = await prepareWorkspaceForInstance({ instance: testInstance(), workspace: ws, runProc: run, sleep: noSleep });
+
+  assert.equal(prep.gitRetryCount, 2);
+  assert.equal(prep.fallbackUsed, true); // HTTP/2 error → HTTP/1.1 fallback engaged
+  assert.equal(prep.resetToBaseCommit, true);
+  assert.equal(calls.filter((c) => c.includes("clone")).length, 3);
+});
+
+test("persistent clone failure aborts before spawn with a clear no-tokens message", async () => {
+  const ws = path.join(await tmpDir("prep-persist"), "ws");
+  const { run, calls } = gitMock([
+    { when: (a) => a.includes("clone"), results: [{ exitCode: 128, stderr: BUG_REPORT_FETCH_ERROR }] },
+  ]);
+  await assert.rejects(
+    () => prepareWorkspaceForInstance({ instance: testInstance(), workspace: ws, runProc: run, sleep: noSleep }),
+    (err: unknown) => {
+      assert.ok(err instanceof WorkspacePreparationError);
+      assert.match((err as Error).message, /no model tokens were spent/);
+      return true;
+    },
+  );
+  assert.equal(calls.filter((c) => c.includes("clone")).length, 3); // retried up to the limit, then aborted
+});
+
+test("--reuse-workspace help text documents reset-to-base + clean semantics", () => {
+  // The help string is emitted by printing usage; assert the documented wording exists
+  // in the module source so the operator-facing meaning ("reset to base", not "continue
+  // from previous edits") cannot silently regress.
+  const source = readFileSync(
+    path.join(import.meta.dir, "run_stage5_vexp_swe_bench_smoke.ts"),
+    "utf8",
+  );
+  const helpLine = source.split("\n").find((l) => l.includes('"  --reuse-workspace'));
+  assert.ok(helpLine, "the --reuse-workspace help line must exist");
+  assert.match(helpLine!, /RESETTING it to the SWE-bench base commit/);
+  assert.match(helpLine!, /git clean -fdx/);
+  assert.match(helpLine!, /never pulls main/);
 });
 
 // --- index-reuse policy --------------------------------------------------
@@ -2286,10 +2535,15 @@ test("prepareIndexedContext --index-policy auto reuses a fresh index without rei
     { runProcess: run },
   );
 
+  // The workspace is reset --hard + cleaned (preserving .vtrace via `-e .vtrace`)
+  // BEFORE the freshness check, and the still-fresh index is then reused (not rebuilt).
+  assert.ok(calls.some((c) => c.includes("reset --hard")), "reset to base runs before the freshness check");
+  assert.ok(calls.some((c) => c.includes("clean -fdx -e .vtrace")), "clean preserves .vtrace so a fresh index survives");
   assert.ok(!calls.some((c) => c.includes(" index ")), "a fresh index must not be rebuilt under --index-policy auto");
   assert.equal(result.vtraceIndexPolicy, "auto");
   assert.equal(result.vtraceIndexReused, true);
   assert.equal(result.vtraceIndexFresh, true);
+  assert.equal(result.workspaceReused, true);
   assert.equal(result.vtraceIndexFreshnessReason, "index metadata matches");
   assert.deepEqual(result.vtraceIndexMismatches, []);
   assert.equal(result.vtraceIndexMetaFile, resolveIndexMetaPath(ws));

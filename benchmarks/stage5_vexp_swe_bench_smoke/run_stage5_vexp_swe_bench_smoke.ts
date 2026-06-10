@@ -133,6 +133,13 @@ export type ProcessRunner = (
 
 export interface RunDeps {
   readonly runProcess?: ProcessRunner;
+  // Injectable backoff sleep for git-retry tests (default: real setTimeout). Tests
+  // pass a no-op so retries are deterministic and instant.
+  readonly sleep?: (ms: number) => Promise<void>;
+}
+
+function defaultSleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export interface CliConfig {
@@ -2026,6 +2033,16 @@ export interface IndexedContextResult {
   readonly indexCommand: string | null;
   readonly queryCommand: string | null;
   readonly workspacePath: string | null;
+  // Reusable-clean-workspace prep observability (see prepareWorkspaceForInstance).
+  // All defaulted (false/0/null) when no indexed-context workspace prep ran.
+  readonly workspaceReused: boolean;
+  readonly workspaceResetToBaseCommit: boolean;
+  readonly workspaceBaseCommit: string | null;
+  readonly workspaceCleaned: boolean;
+  readonly workspaceGitRetryCount: number;
+  readonly workspaceGitFallbackUsed: boolean;
+  readonly workspaceRecreatedAfterFailure: boolean;
+  readonly workspacePreparationError: string | null;
   // Workspace/index run metadata, surfaced into the vtrace _run.meta.json.
   readonly freshWorkspace: boolean;
   readonly vtraceIndexQuiet: boolean;
@@ -3282,6 +3299,15 @@ export function buildVtraceContextMarkdown(
 function indexRunMetaFields(result: IndexedContextResult): Record<string, unknown> {
   return {
     freshWorkspace: result.freshWorkspace,
+    // Reusable-clean-workspace observability (no-op flags off the indexed path).
+    workspaceReused: result.workspaceReused,
+    workspaceResetToBaseCommit: result.workspaceResetToBaseCommit,
+    workspaceBaseCommit: result.workspaceBaseCommit,
+    workspaceCleaned: result.workspaceCleaned,
+    workspaceGitRetryCount: result.workspaceGitRetryCount,
+    workspaceGitFallbackUsed: result.workspaceGitFallbackUsed,
+    workspaceRecreatedAfterFailure: result.workspaceRecreatedAfterFailure,
+    workspacePreparationError: result.workspacePreparationError,
     vtraceIndexQuiet: result.vtraceIndexQuiet,
     vtraceIndexStartedAt: result.vtraceIndexStartedAt,
     vtraceIndexFinishedAt: result.vtraceIndexFinishedAt,
@@ -3351,6 +3377,7 @@ export function indexedContextMetaFields(result: IndexedContextResult): IndexedC
 // (never silently fall back to generic instructions).
 export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {}): Promise<IndexedContextResult> {
   const runProc = deps.runProcess ?? runProcess;
+  const sleep = deps.sleep ?? defaultSleep;
   const contextFile = vtraceInstructionsFilePath(config.out);
   const records = await loadSweBenchData(sweBenchDataPath(config));
   const instanceIds = await resolveInstances(config);
@@ -3375,6 +3402,9 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
   let indexFreshnessReason = "";
   let indexMismatches: readonly string[] = [];
   let indexMetaFile: string | null = null;
+  // Workspace-prep outcome (last instance wins; smoke runs are single-instance).
+  let workspacePrep: WorkspacePrep | null = null;
+  let workspacePrepError: string | null = null;
 
   for (const instanceId of instanceIds) {
     const record = findSweBenchRecord(records, instanceId);
@@ -3389,7 +3419,7 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     let sectionError: string | null = null;
     let classification: CapsuleClassification | null = null;
     try {
-      await ensureWorkspaceCheckout(instance, workspace, runProc, config.reuseWorkspace);
+      workspacePrep = await prepareWorkspaceForInstance({ instance, workspace, runProc, sleep });
       const indexSpec = buildVtraceIndexCommand(config, workspace);
       indexCommand = renderCommand(indexSpec);
       indexQuiet = indexSpec.args.includes("--quiet");
@@ -3471,6 +3501,9 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     } catch (error) {
       sectionError = error instanceof Error ? error.message : String(error);
       errors.push(`${instance.instanceId}: ${sectionError}`);
+      // A workspace-prep failure is recorded distinctly for observability; the run
+      // still aborts before spawn via the empty-context check in runVtrace.
+      if (error instanceof WorkspacePreparationError) workspacePrepError = sectionError;
       classification = null;
     }
     sections.push({
@@ -3604,6 +3637,14 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     indexCommand,
     queryCommand,
     workspacePath,
+    workspaceReused: workspacePrep?.reused ?? false,
+    workspaceResetToBaseCommit: workspacePrep?.resetToBaseCommit ?? false,
+    workspaceBaseCommit: workspacePrep?.baseCommit ?? null,
+    workspaceCleaned: workspacePrep?.cleaned ?? false,
+    workspaceGitRetryCount: workspacePrep?.gitRetryCount ?? 0,
+    workspaceGitFallbackUsed: workspacePrep?.fallbackUsed ?? false,
+    workspaceRecreatedAfterFailure: workspacePrep?.recreatedAfterFailure ?? false,
+    workspacePreparationError: workspacePrepError,
     freshWorkspace: !config.reuseWorkspace,
     vtraceIndexQuiet: indexQuiet,
     vtraceIndexStartedAt: indexStartedAt,
@@ -3691,55 +3732,237 @@ function sumClassification(
   return seen ? total : null;
 }
 
-// Reproduce the instance checkout (Approach B): clone if absent, then checkout
-// the base commit. Mirrors vexp-swe-bench's shallow-clone + fetch fallback.
-//
-// Workspace freshness: a re-run of an existing labeled workspace is, by default,
-// scrubbed back to a clean base-commit tree (`git clean -fdx` removes untracked
-// state — a stale `.vtrace` index, files a prior patch added — and the forced
-// checkout resets tracked files) before it is re-indexed. `reuseWorkspace` opts
-// out: an existing checkout is left exactly as-is (no clean, no checkout).
-async function ensureWorkspaceCheckout(
+// ---------------------------------------------------------------------------
+// Reusable clean workspaces + git network-retry (Stage 5 SWE-bench setup)
+// ---------------------------------------------------------------------------
+
+// Transient git network failures worth retrying. SWE-bench clones hit GitHub over
+// HTTP/2, which intermittently resets mid-transfer; these are not deterministic
+// errors (a bad ref, auth) and almost always succeed on a retry or HTTP/1.1.
+export const TRANSIENT_GIT_PATTERNS: readonly RegExp[] = [
+  /RPC failed/i,
+  /HTTP\/2 stream \d+/i,
+  /stream \d+ (was )?(reset|not closed cleanly|cancelled|canceled)/i,
+  /\berror 0x8\b/i, // HTTP/2 CANCEL
+  /early EOF/i,
+  /fetch-pack: unexpected disconnect/i,
+  /invalid index-pack output/i,
+  /unexpected disconnect while reading sideband packet/i,
+  /remote end hung up unexpectedly/i,
+  /connection reset/i,
+  /TLS connection was non-properly terminated/i,
+  /Could not resolve host|Failed to connect|Operation timed out|Connection timed out/i,
+];
+
+// Exponential backoff between git attempts: 1st retry after 2s, 2nd after 5s, 3rd 10s.
+export const GIT_RETRY_BACKOFF_MS: readonly number[] = [2000, 5000, 10000];
+const GIT_MAX_ATTEMPTS = 3; // initial attempt + up to 2 retries
+
+export function isTransientGitError(text: string): boolean {
+  return TRANSIENT_GIT_PATTERNS.some((re) => re.test(text));
+}
+
+// Whether a failure looks like a GitHub HTTP/2 problem an HTTP/1.1 retry can dodge.
+export function isHttp2GitError(text: string): boolean {
+  return /HTTP\/2|stream \d+|error 0x8/i.test(text);
+}
+
+// Thrown when workspace preparation cannot complete. Caught by the section loop so the
+// run aborts BEFORE the agent spawns — no model tokens are spent on a non-treatment run.
+export class WorkspacePreparationError extends Error {
+  constructor(message: string) {
+    super(`Workspace preparation failed before agent spawn; no model tokens were spent. ${message}`);
+    this.name = "WorkspacePreparationError";
+  }
+}
+
+export interface GitRetryOutcome {
+  readonly result: ProcessResult;
+  readonly retries: number; // re-attempts beyond the first (0 on first-try success)
+  readonly fallbackUsed: boolean; // an HTTP/1.1 fallback attempt was made
+}
+
+// Run a git command with bounded retry on TRANSIENT network failures. On an
+// HTTP/2-style failure it transparently retries with `-c http.version=HTTP/1.1`
+// (process-local; never mutates the user's global git config). `onBeforeRetry` lets
+// the caller scrub a corrupt partial workspace before the next attempt. Non-transient
+// failures return immediately (the caller decides what to do).
+export async function gitWithRetry(
+  runProc: ProcessRunner,
+  args: readonly string[],
+  opts: {
+    readonly sleep: (ms: number) => Promise<void>;
+    readonly liveOptions?: { inheritStdio?: boolean; streamToTerminal?: boolean };
+    readonly onBeforeRetry?: () => Promise<void>;
+  },
+): Promise<GitRetryOutcome> {
+  let retries = 0;
+  let fallbackUsed = false;
+  let last: ProcessResult = { exitCode: 1, stdout: "", stderr: "(git never ran)" };
+  for (let attempt = 0; attempt < GIT_MAX_ATTEMPTS; attempt += 1) {
+    const effectiveArgs = fallbackUsed ? ["-c", "http.version=HTTP/1.1", ...args] : [...args];
+    last = await runProc("git", effectiveArgs, opts.liveOptions);
+    if (last.exitCode === 0) return { result: last, retries, fallbackUsed };
+    const text = `${last.stderr}\n${last.stdout}`;
+    if (!isTransientGitError(text)) return { result: last, retries, fallbackUsed }; // deterministic failure
+    if (attempt === GIT_MAX_ATTEMPTS - 1) break; // out of attempts
+    // Switch to the HTTP/1.1 transport for the next try if this looked like HTTP/2.
+    if (!fallbackUsed && isHttp2GitError(text)) fallbackUsed = true;
+    if (opts.onBeforeRetry) await opts.onBeforeRetry();
+    await opts.sleep(GIT_RETRY_BACKOFF_MS[Math.min(attempt, GIT_RETRY_BACKOFF_MS.length - 1)]!);
+    retries += 1;
+  }
+  return { result: last, retries, fallbackUsed };
+}
+
+export interface WorkspacePrep {
+  readonly workspaceDir: string;
+  readonly baseCommit: string;
+  readonly reused: boolean; // an existing valid workspace was reused (not re-cloned)
+  readonly resetToBaseCommit: boolean; // `git reset --hard <baseCommit>` succeeded
+  readonly cleaned: boolean; // `git clean -fdx` succeeded
+  readonly gitRetryCount: number; // transient-failure retries across clone+fetch
+  readonly fallbackUsed: boolean; // an HTTP/1.1 transport fallback was used
+  readonly recreatedAfterFailure: boolean; // an existing workspace was wrong/corrupt and rebuilt
+}
+
+// Does this look like a usable git workspace for `repo`? Returns false for a missing
+// `.git`, a non-git directory, OR a definitive wrong-repo (origin URL present but not
+// for this repo). A best-effort/empty origin is trusted (path is keyed by instanceId).
+async function probeUsableWorkspace(workspace: string, repo: string, runProc: ProcessRunner): Promise<boolean> {
+  if (!(await pathExists(path.join(workspace, ".git")))) return false;
+  const inside = await runProc("git", ["-C", workspace, "rev-parse", "--is-inside-work-tree"]);
+  if (inside.exitCode !== 0 || inside.stdout.trim() !== "true") return false;
+  const origin = await runProc("git", ["-C", workspace, "remote", "get-url", "origin"]);
+  const url = origin.stdout.trim();
+  if (origin.exitCode === 0 && url.length > 0 && !url.includes(repo)) return false; // wrong repo
+  return true;
+}
+
+// Reset an existing workspace EXACTLY to the base commit with no leftovers:
+//   fetch (only if the commit is missing locally) → reset --hard <base> → clean -fdx.
+// Never `git pull`/checkout of main — SWE-bench runs from the historical base commit.
+// `.vtrace` is preserved so the index-reuse policy (not a blanket clean) decides reuse.
+// Returns null on any failure (the caller recreates the workspace).
+async function resetCleanToBase(
+  workspace: string,
+  baseCommit: string,
+  runProc: ProcessRunner,
+  sleep: (ms: number) => Promise<void>,
+): Promise<{ gitRetryCount: number; fallbackUsed: boolean } | null> {
+  let gitRetryCount = 0;
+  let fallbackUsed = false;
+  const present = await runProc("git", ["-C", workspace, "cat-file", "-e", `${baseCommit}^{commit}`]);
+  if (present.exitCode !== 0) {
+    const fetched = await gitWithRetry(
+      runProc,
+      ["-C", workspace, "fetch", "origin", baseCommit, "--tags", "--prune"],
+      { sleep },
+    );
+    gitRetryCount += fetched.retries;
+    fallbackUsed = fallbackUsed || fetched.fallbackUsed;
+    if (fetched.result.exitCode !== 0) return null;
+  }
+  const reset = await runProc("git", ["-C", workspace, "reset", "--hard", baseCommit]);
+  if (reset.exitCode !== 0) return null;
+  const clean = await runProc("git", ["-C", workspace, "clean", "-fdx", "-e", ".vtrace"]);
+  if (clean.exitCode !== 0) return null;
+  return { gitRetryCount, fallbackUsed };
+}
+
+// Fresh clone (with retry) then reset --hard <base> + clean. A failed clone may leave a
+// corrupt partial dir, so it is removed before each retry. Throws on irrecoverable
+// failure (aborts before spawn).
+async function cloneAndResetToBase(
   instance: SweBenchInstance,
   workspace: string,
   runProc: ProcessRunner,
-  reuseWorkspace: boolean,
-): Promise<void> {
-  const alreadyCloned = await pathExists(path.join(workspace, ".git"));
-  if (!alreadyCloned) {
-    await mkdir(path.dirname(workspace), { recursive: true });
-    process.stderr.write(`[stage5] cloning ${instance.repo} → ${workspace} …\n`);
-    operatorTtyHintOnce();
-    const clone = buildCloneCommand(instance.repo, workspace);
-    // Stream the clone live (git --progress to stderr) so the operator sees it happen,
-    // while still capturing stderr for the error message below.
-    const cloneResult = await runProc(clone.command, clone.args, liveGitRunOptions());
-    if (cloneResult.exitCode !== 0) {
-      throw new Error(`git clone of ${instance.repo} failed (exit ${cloneResult.exitCode}): ${cloneResult.stderr.trim() || "(no stderr)"}`);
-    }
-  } else if (reuseWorkspace) {
-    // --reuse-workspace: trust the existing checkout + index; touch nothing.
-    return;
-  } else {
-    // Fresh (default): scrub untracked state so the re-checkout starts from a
-    // clean tree at the base commit. `.vtrace` is preserved (`-e .vtrace`) so a
-    // fingerprint-fresh index survives the source reset and the index-reuse
-    // policy — not a blanket clean — decides whether to rebuild it.
-    const clean = await runProc("git", ["-C", workspace, "clean", "-fdx", "-e", ".vtrace"]);
-    if (clean.exitCode !== 0) {
-      throw new Error(`git clean of ${workspace} failed (exit ${clean.exitCode}): ${clean.stderr.trim() || "(no stderr)"}`);
-    }
+  sleep: (ms: number) => Promise<void>,
+): Promise<{ gitRetryCount: number; fallbackUsed: boolean }> {
+  await mkdir(path.dirname(workspace), { recursive: true });
+  process.stderr.write(`[stage5] cloning ${instance.repo} → ${workspace} …\n`);
+  operatorTtyHintOnce();
+  const clone = buildCloneCommand(instance.repo, workspace);
+  let gitRetryCount = 0;
+  let fallbackUsed = false;
+  const cloned = await gitWithRetry(runProc, clone.args, {
+    sleep,
+    liveOptions: liveGitRunOptions(),
+    // A failed clone can leave a corrupt partial workspace; remove it before retry.
+    onBeforeRetry: async () => {
+      await rm(workspace, { recursive: true, force: true });
+    },
+  });
+  gitRetryCount += cloned.retries;
+  fallbackUsed = fallbackUsed || cloned.fallbackUsed;
+  if (cloned.result.exitCode !== 0) {
+    throw new WorkspacePreparationError(
+      `git clone of ${instance.repo} failed after ${cloned.retries} retr${cloned.retries === 1 ? "y" : "ies"} ` +
+        `(exit ${cloned.result.exitCode}): ${cloned.result.stderr.trim() || "(no stderr)"}`,
+    );
   }
-  const checkout = buildCheckoutCommand(workspace, instance.baseCommit);
-  const checkoutResult = await runProc(checkout.command, checkout.args);
-  if (checkoutResult.exitCode !== 0) {
-    // The base commit may be missing from a shallow clone; fetch it and retry.
-    await runProc("git", ["-C", workspace, "fetch", "--depth", "1", "origin", instance.baseCommit]);
-    const retry = await runProc(checkout.command, checkout.args);
-    if (retry.exitCode !== 0) {
-      throw new Error(`git checkout ${instance.baseCommit} failed (exit ${retry.exitCode}): ${retry.stderr.trim() || "(no stderr)"}`);
-    }
+  const reset = await resetCleanToBase(workspace, instance.baseCommit, runProc, sleep);
+  if (reset === null) {
+    throw new WorkspacePreparationError(
+      `could not reset freshly-cloned ${instance.repo} to base commit ${instance.baseCommit}.`,
+    );
   }
+  return { gitRetryCount: gitRetryCount + reset.gitRetryCount, fallbackUsed: fallbackUsed || reset.fallbackUsed };
+}
+
+// Prepare the labeled workspace so it is EXACTLY at the SWE-bench base commit with no
+// tracked/untracked leftovers before the agent spawns. Reuses an existing valid
+// workspace (reset --hard + clean, no redownload); recreates a wrong/corrupt one;
+// clones a missing one. All clone/fetch hops retry transient network failures.
+export async function prepareWorkspaceForInstance(args: {
+  readonly instance: SweBenchInstance;
+  readonly workspace: string;
+  readonly runProc: ProcessRunner;
+  readonly sleep: (ms: number) => Promise<void>;
+}): Promise<WorkspacePrep> {
+  const { instance, workspace, runProc, sleep } = args;
+  const baseCommit = instance.baseCommit;
+  let gitRetryCount = 0;
+  let fallbackUsed = false;
+  let recreatedAfterFailure = false;
+
+  const usable = await probeUsableWorkspace(workspace, instance.repo, runProc);
+  if (usable) {
+    // Reuse the existing clone: reset hard to base + clean. No huge redownload.
+    const reset = await resetCleanToBase(workspace, baseCommit, runProc, sleep);
+    if (reset !== null) {
+      return {
+        workspaceDir: workspace,
+        baseCommit,
+        reused: true,
+        resetToBaseCommit: true,
+        cleaned: true,
+        gitRetryCount: reset.gitRetryCount,
+        fallbackUsed: reset.fallbackUsed,
+        recreatedAfterFailure: false,
+      };
+    }
+    // Reset failed (corrupt history, a missing ref on a wrong remote) → fall through
+    // and recreate the workspace from scratch.
+  }
+
+  // Recreate: a wrong/corrupt/leftover dir is removed first (a clean MISSING workspace
+  // is not — that is a normal fresh clone, not a failure recovery).
+  if (await pathExists(workspace)) {
+    await rm(workspace, { recursive: true, force: true });
+    recreatedAfterFailure = true;
+  }
+  const cloned = await cloneAndResetToBase(instance, workspace, runProc, sleep);
+  return {
+    workspaceDir: workspace,
+    baseCommit,
+    reused: false,
+    resetToBaseCommit: true,
+    cleaned: true,
+    gitRetryCount: gitRetryCount + cloned.gitRetryCount,
+    fallbackUsed: fallbackUsed || cloned.fallbackUsed,
+    recreatedAfterFailure,
+  };
 }
 
 interface RunStatusBlockInput {
@@ -6142,7 +6365,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --eval-dataset <jsonl-or-hf-name>             full SWE-bench dataset for docker evaluation",
       "  --eval-timeout <seconds>                      per-instance evaluation timeout",
       "  --run-label <label>                           isolate runs under results/runs/<label>/",
-      "  --reuse-workspace                             reuse an existing labeled workspace + index (default: recreate fresh)",
+      "  --reuse-workspace                             reuse an existing labeled workspace by RESETTING it to the SWE-bench base commit and running git clean -fdx (never pulls main; reuses a fresh index per --index-policy) instead of redownloading the repo",
       "  --index-policy auto|always|reuse              reuse a fingerprint-fresh index (auto), force rebuild (always), or keep a stale index (reuse). default: auto",
       "  --show-vtrace-index-log                       print the vtrace index log to the terminal (drops --quiet)",
       "  --context-policy auto|force-inject|force-no-context   override the cost-aware context gate (default: auto)",
