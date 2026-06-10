@@ -1,0 +1,409 @@
+import assert from "node:assert/strict";
+import { test } from "bun:test";
+
+import { type PatchProbeSummary, type PythonParser, summarizePatch } from "./stage5_patch_probes";
+import { type PatchCriticInput, buildDeterministicPatchCriticReport } from "./stage5_patch_critic";
+import { type CriticCaller } from "./stage5_patch_critic_live";
+import {
+  type CriticCandidate,
+  type GateConfig,
+  DEFAULT_CRITIC_COST_CAP_USD,
+  DEFAULT_MAX_CRITIC_RUNS,
+  DEFAULT_ONLY_DETERMINISTIC_REPAIR_REQUIRED,
+  buildLiveReport,
+  parseArgs,
+  renderJson,
+  renderMarkdown,
+  runGatedCritic,
+} from "./run_stage5_patch_critic_live";
+
+// ---------------------------------------------------------------------------
+// Fixtures — synthetic candidates (no filesystem, no agents, no Docker, no model).
+// ---------------------------------------------------------------------------
+
+const PARSE_OK: PythonParser = () => ({ ok: true });
+
+// A requests broad rewrite → deterministic minimality fail → repair_required=true (high risk).
+const REQ_BROAD_REWRITE = [
+  "diff --git a/requests/models.py b/requests/models.py",
+  "--- a/requests/models.py",
+  "+++ b/requests/models.py",
+  "@@ -394,16 +394,16 @@ class PreparedRequest:",
+  "-        if not unicode_is_ascii(host):",
+  "-            try:",
+  "-                host = self._get_idna_encoded_host(host)",
+  "-            except UnicodeError:",
+  "-                raise InvalidURL('URL has an invalid label.')",
+  "-        elif host.startswith(u'*'):",
+  "-            raise InvalidURL('URL has an invalid label.')",
+  "-        elif host is None:",
+  "-            raise ValueError('host cannot be None')",
+  "-        else:",
+  "+        if host is None:",
+  "+            raise ValueError('host cannot be None')",
+  "+        if not unicode_is_ascii(host):",
+  "+            host = self._get_idna_encoded_host(host)",
+].join("\n");
+
+// A sympy diff-window-only additive patch → scope unknown → repair_required=false (low risk).
+const SYMPY_LOW_RISK = [
+  "diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py",
+  "--- a/sympy/printing/pycode.py",
+  "+++ b/sympy/printing/pycode.py",
+  "@@ -357,6 +357,9 @@ def _print_Not(self, expr):",
+  "+    def _print_Indexed(self, expr):",
+  "+        return base",
+].join("\n");
+
+function candidateFor(
+  runLabel: string,
+  patch: string,
+  instanceId = "psf__requests-5414",
+): CriticCandidate {
+  const probeSummary: PatchProbeSummary = summarizePatch({
+    instanceId,
+    runLabel,
+    patch,
+    toolCalls: null,
+    stdout: null,
+    stderr: null,
+    parsePython: PARSE_OK,
+  });
+  const input: PatchCriticInput = {
+    instanceId,
+    runLabel,
+    repo: "psf/requests",
+    issueText: null,
+    firstPatch: patch,
+    editedFiles: probeSummary.editedFiles,
+    patchChars: probeSummary.patchChars,
+    probeSummary,
+    treatmentMetadata: { pivotCheckInjected: true, editGuardInjected: false, patchVerifyInjected: null },
+    contextSignals: { hiddenPivotsInspected: null, hiddenPivotsEdited: null, orderedToolLogPresent: true },
+  };
+  return { runLabel, instanceId, input, deterministicReport: buildDeterministicPatchCriticReport(input) };
+}
+
+function highRisk(runLabel: string): CriticCandidate {
+  const c = candidateFor(runLabel, REQ_BROAD_REWRITE);
+  assert.equal(c.deterministicReport.repair_required, true, `${runLabel} should be high-risk`);
+  return c;
+}
+
+function lowRisk(runLabel: string): CriticCandidate {
+  const c = candidateFor(runLabel, SYMPY_LOW_RISK, "sympy__sympy-16766");
+  assert.equal(c.deterministicReport.repair_required, false, `${runLabel} should be low-risk`);
+  return c;
+}
+
+// A valid critic JSON response that agrees with the deterministic verdict.
+function validReportJson(repairRequired: boolean): string {
+  return JSON.stringify({
+    scope_ok: null,
+    scope_evidence: "No inserted method pattern for this instance.",
+    failing_behavior_handled: true,
+    failing_behavior_evidence: "Patch references the relevant handling.",
+    minimality_ok: !repairRequired,
+    minimality_evidence: repairRequired ? "Broad rewrite: many deletions." : "Small additive patch.",
+    test_evidence_ok: false,
+    test_evidence: "No named test command observed.",
+    risk: repairRequired ? "high" : "low",
+    repair_required: repairRequired,
+    repair_reason: repairRequired ? "Broad control-flow rewrite." : "",
+    repair_instructions: repairRequired ? "Prefer a minimal additive validation." : "",
+    confidence: repairRequired ? "high" : "medium",
+    evidence_probe_ids: ["minimality_rewrite_risk"],
+  });
+}
+
+// A counting mock caller; NEVER touches a live model. costUsd is configurable for cost-cap tests.
+function mockCaller(opts: { response?: string; costUsd?: number; throws?: boolean } = {}): {
+  caller: CriticCaller;
+  readonly calls: number;
+} {
+  let calls = 0;
+  const caller: CriticCaller = async () => {
+    calls += 1;
+    if (opts.throws) throw new Error("simulated invocation failure");
+    return {
+      raw: opts.response ?? validReportJson(true),
+      model: "mock-critic",
+      costUsd: opts.costUsd ?? 0.01,
+      inputTokens: 1000,
+      outputTokens: 50,
+    };
+  };
+  return {
+    caller,
+    get calls() {
+      return calls;
+    },
+  };
+}
+
+function gateOf(overrides: Partial<GateConfig> = {}): GateConfig {
+  return {
+    runLabels: [],
+    maxCriticRuns: 1,
+    onlyDeterministicRepairRequired: true,
+    criticCostCapUsd: 0.25,
+    dryRun: false,
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// parseArgs: conservative defaults + the new safety-gate flags.
+// ---------------------------------------------------------------------------
+test("parseArgs defaults are conservative and disabled-by-default", () => {
+  const cfg = parseArgs([]);
+  assert.equal(cfg.enablePatchCritic, false); // 7. disabled mode is the default
+  assert.equal(cfg.maxCriticRuns, DEFAULT_MAX_CRITIC_RUNS);
+  assert.equal(cfg.maxCriticRuns, 1);
+  assert.equal(cfg.onlyDeterministicRepairRequired, DEFAULT_ONLY_DETERMINISTIC_REPAIR_REQUIRED);
+  assert.equal(cfg.onlyDeterministicRepairRequired, true);
+  assert.equal(cfg.criticCostCapUsd, DEFAULT_CRITIC_COST_CAP_USD);
+  assert.equal(cfg.criticCostCapUsd, 0.25);
+  assert.deepEqual(cfg.runLabels, []);
+  assert.equal(cfg.dryRun, false);
+});
+
+test("parseArgs supports the smoke-target flags (repeatable run-label, caps, dry-run)", () => {
+  const cfg = parseArgs([
+    "--results",
+    "some/dir",
+    "--enable-patch-critic",
+    "--run-label",
+    "eval-patchverify-before-sympy-16766",
+    "--run-label",
+    "eval-editguard-after-requests-5414",
+    "--max-critic-runs",
+    "2",
+    "--only-deterministic-repair-required",
+    "--critic-cost-cap-usd",
+    "0.10",
+    "--dry-run",
+    "--out-name",
+    "custom",
+  ]);
+  assert.equal(cfg.resultsDir, "some/dir");
+  assert.equal(cfg.enablePatchCritic, true);
+  assert.deepEqual(cfg.runLabels, ["eval-patchverify-before-sympy-16766", "eval-editguard-after-requests-5414"]);
+  assert.equal(cfg.maxCriticRuns, 2);
+  assert.equal(cfg.onlyDeterministicRepairRequired, true);
+  assert.equal(cfg.criticCostCapUsd, 0.1);
+  assert.equal(cfg.dryRun, true);
+  assert.equal(cfg.outName, "custom");
+});
+
+test("parseArgs --include-low-risk flips off the repair-required gate; bad numeric flags throw", () => {
+  assert.equal(parseArgs(["--include-low-risk"]).onlyDeterministicRepairRequired, false);
+  assert.throws(() => parseArgs(["--max-critic-runs", "-1"]), /non-negative integer/);
+  assert.throws(() => parseArgs(["--max-critic-runs", "1.5"]), /non-negative integer/);
+  assert.throws(() => parseArgs(["--critic-cost-cap-usd", "-0.5"]), /non-negative number/);
+  assert.throws(() => parseArgs(["--bogus"]), /Unknown argument/);
+});
+
+// ---------------------------------------------------------------------------
+// 1. Default max critic runs prevents accidental all-run live invocation.
+// ---------------------------------------------------------------------------
+test("default --max-critic-runs=1 calls the critic on at most one run", async () => {
+  const candidates = [highRisk("run-a"), highRisk("run-b"), highRisk("run-c")];
+  const m = mockCaller();
+  const { decisions, counters } = await runGatedCritic({
+    candidates,
+    gate: gateOf({ maxCriticRuns: 1 }),
+    caller: m.caller,
+    criticModel: null,
+  });
+  assert.equal(m.calls, 1); // exactly one live call despite three eligible runs
+  assert.equal(counters.candidateRuns, 3);
+  assert.equal(counters.eligibleRuns, 3);
+  assert.equal(counters.liveCallsAttempted, 1);
+  assert.equal(counters.skippedByMaxRuns, 2);
+  assert.equal(decisions.filter((d) => d.called).length, 1);
+  assert.equal(decisions.filter((d) => d.skipReason === "max-critic-runs").length, 2);
+});
+
+// ---------------------------------------------------------------------------
+// 2. --run-label restricts to the requested run.
+// ---------------------------------------------------------------------------
+test("--run-label restricts the live critic to the requested run(s)", async () => {
+  const candidates = [highRisk("run-a"), highRisk("run-b"), highRisk("run-c")];
+  const m = mockCaller();
+  const { decisions, counters } = await runGatedCritic({
+    candidates,
+    gate: gateOf({ runLabels: ["run-b"], maxCriticRuns: 5 }),
+    caller: m.caller,
+    criticModel: null,
+  });
+  assert.equal(m.calls, 1);
+  assert.equal(counters.skippedByRunLabel, 2);
+  assert.equal(counters.eligibleRuns, 1);
+  const called = decisions.filter((d) => d.called);
+  assert.equal(called.length, 1);
+  assert.equal(called[0]!.runLabel, "run-b");
+  // The other runs are skipped with the run-label reason recorded.
+  for (const d of decisions.filter((d) => !d.called)) {
+    assert.equal(d.skipReason, "not-in-run-label");
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 3. --only-deterministic-repair-required skips low-risk runs (default ON).
+// ---------------------------------------------------------------------------
+test("--only-deterministic-repair-required skips deterministic low-risk runs", async () => {
+  const candidates = [lowRisk("low-1"), highRisk("high-1"), lowRisk("low-2")];
+  const m = mockCaller();
+  const { decisions, counters } = await runGatedCritic({
+    candidates,
+    gate: gateOf({ onlyDeterministicRepairRequired: true, maxCriticRuns: 5 }),
+    caller: m.caller,
+    criticModel: null,
+  });
+  assert.equal(m.calls, 1); // only the high-risk run is called
+  assert.equal(counters.skippedLowRiskRuns, 2);
+  assert.equal(counters.eligibleRuns, 1);
+  const skippedLow = decisions.filter((d) => d.skipReason === "low-risk-deterministic");
+  assert.equal(skippedLow.length, 2);
+  for (const d of skippedLow) assert.ok(/low risk/i.test(d.reason)); // skip reason recorded
+});
+
+test("--include-low-risk (onlyDeterministicRepairRequired=false) processes low-risk runs too", async () => {
+  const candidates = [lowRisk("low-1"), highRisk("high-1")];
+  const m = mockCaller();
+  const { counters } = await runGatedCritic({
+    candidates,
+    gate: gateOf({ onlyDeterministicRepairRequired: false, maxCriticRuns: 5 }),
+    caller: m.caller,
+    criticModel: null,
+  });
+  assert.equal(counters.skippedLowRiskRuns, 0);
+  assert.equal(counters.eligibleRuns, 2);
+  assert.equal(counters.liveCallsAttempted, 2);
+});
+
+// ---------------------------------------------------------------------------
+// 4. --dry-run performs no live calls.
+// ---------------------------------------------------------------------------
+test("--dry-run invokes no caller and records would-call decisions", async () => {
+  const candidates = [highRisk("run-a"), highRisk("run-b")];
+  const m = mockCaller();
+  const { decisions, counters } = await runGatedCritic({
+    candidates,
+    gate: gateOf({ dryRun: true, maxCriticRuns: 5 }),
+    caller: m.caller,
+    criticModel: null,
+  });
+  assert.equal(m.calls, 0); // the model is NEVER reached in dry-run
+  assert.equal(counters.liveCallsAttempted, 0);
+  assert.equal(counters.totalCriticCostUsd, 0);
+  const wouldCall = decisions.filter((d) => d.wouldCall);
+  assert.equal(wouldCall.length, 2);
+  for (const d of wouldCall) {
+    assert.equal(d.called, false);
+    assert.equal(d.result, null); // no live critic artifacts produced
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 5. Cost cap stops additional calls.
+// ---------------------------------------------------------------------------
+test("--critic-cost-cap-usd stops further calls once accumulated spend reaches the cap", async () => {
+  const candidates = [highRisk("run-a"), highRisk("run-b"), highRisk("run-c")];
+  // Each call costs 0.30; cap 0.25 → after the first call accumulated spend exceeds the cap.
+  const m = mockCaller({ costUsd: 0.3 });
+  const { decisions, counters } = await runGatedCritic({
+    candidates,
+    gate: gateOf({ criticCostCapUsd: 0.25, maxCriticRuns: 5 }),
+    caller: m.caller,
+    criticModel: null,
+  });
+  assert.equal(m.calls, 1); // one call made, then stopped
+  assert.equal(counters.liveCallsAttempted, 1);
+  assert.equal(counters.stoppedByCostCap, 2);
+  assert.ok(Math.abs(counters.totalCriticCostUsd - 0.3) < 1e-9);
+  const stopped = decisions.filter((d) => d.skipReason === "cost-cap");
+  assert.equal(stopped.length, 2);
+  for (const d of stopped) assert.ok(/cost-cap-usd/.test(d.reason)); // 6. stop reason recorded
+});
+
+// ---------------------------------------------------------------------------
+// 6. Candidate / skip reasons are reported, and the report carries the gate counters.
+// ---------------------------------------------------------------------------
+test("buildLiveReport surfaces gate config, counters, and per-run decisions", async () => {
+  const candidates = [highRisk("run-a"), highRisk("run-b"), lowRisk("low-1")];
+  const gate = gateOf({ maxCriticRuns: 1 });
+  const m = mockCaller();
+  const outcome = await runGatedCritic({ candidates, gate, caller: m.caller, criticModel: null });
+  const report = buildLiveReport({ generatedAt: "2026-01-01T00:00:00.000Z", enabled: true, gate, outcome });
+
+  // Required report fields are all present.
+  const parsed = JSON.parse(renderJson(report));
+  for (const field of [
+    "candidateRuns",
+    "eligibleRuns",
+    "skippedLowRiskRuns",
+    "skippedByRunLabel",
+    "skippedByMaxRuns",
+    "stoppedByCostCap",
+    "liveCallsAttempted",
+    "liveCallsSucceeded",
+    "liveCallsFailedOpen",
+    "totalCriticCostUsd",
+  ]) {
+    assert.ok(field in parsed.counters, `missing counter ${field}`);
+  }
+  assert.equal(parsed.counters.candidateRuns, 3);
+  assert.equal(parsed.counters.eligibleRuns, 2); // two high-risk
+  assert.equal(parsed.counters.skippedLowRiskRuns, 1);
+  assert.equal(parsed.counters.skippedByMaxRuns, 1);
+  assert.equal(parsed.counters.liveCallsSucceeded, 1);
+  assert.equal(parsed.gates.maxCriticRuns, 1);
+  assert.equal(parsed.gates.onlyDeterministicRepairRequired, true);
+
+  // Every candidate has a decision row with a human-readable reason.
+  assert.equal(report.runs.length, 3);
+  for (const r of report.runs) assert.ok(r.reason.length > 0);
+
+  // Markdown renders the gates + decisions sections without throwing.
+  const md = renderMarkdown(report);
+  assert.ok(md.includes("## Gates"));
+  assert.ok(md.includes("## Decisions by run"));
+  assert.ok(md.includes("candidateRuns"));
+});
+
+// ---------------------------------------------------------------------------
+// 8. Existing fail-open behavior remains unchanged through the gate.
+// ---------------------------------------------------------------------------
+test("a thrown invocation fails open through the gate without aborting the run set", async () => {
+  const candidates = [highRisk("run-a")];
+  const m = mockCaller({ throws: true });
+  const { decisions, counters } = await runGatedCritic({
+    candidates,
+    gate: gateOf({ maxCriticRuns: 5 }),
+    caller: m.caller,
+    criticModel: null,
+  });
+  assert.equal(m.calls, 1);
+  assert.equal(counters.liveCallsAttempted, 1);
+  assert.equal(counters.liveCallsFailedOpen, 1);
+  assert.equal(counters.liveCallsSucceeded, 0);
+  const d = decisions[0]!;
+  assert.equal(d.called, true);
+  assert.equal(d.result!.meta.failedOpen, true);
+  assert.equal(d.result!.report, null); // patch/input preserved; no valid report
+});
+
+test("invalid critic JSON fails open and is reported, but the run is still 'called'", async () => {
+  const candidates = [highRisk("run-a")];
+  const m = mockCaller({ response: "the model refused to emit JSON" });
+  const { counters } = await runGatedCritic({
+    candidates,
+    gate: gateOf({ maxCriticRuns: 5 }),
+    caller: m.caller,
+    criticModel: null,
+  });
+  assert.equal(counters.liveCallsFailedOpen, 1);
+  assert.equal(counters.liveCallsSucceeded, 0);
+});
