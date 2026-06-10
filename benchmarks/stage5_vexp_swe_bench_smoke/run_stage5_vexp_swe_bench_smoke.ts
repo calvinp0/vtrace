@@ -3439,11 +3439,10 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
         operatorTtyHintOnce();
         const startMs = Date.now();
         indexStartedAt = new Date(startMs).toISOString();
-        // Index progress is ALWAYS surfaced now (no longer gated behind
-        // --show-vtrace-index-log). liveIndexRunOptions() inherits our TTY when we
-        // have one — so the indexer draws its FANCY progress bar exactly as a direct
-        // `vtrace index` run does — and otherwise tees the plain per-file progress
-        // stream live (the `| tee` / non-TTY case, where a \r-bar can't render).
+        // No longer gated behind --show-vtrace-index-log. On a real terminal the
+        // indexer inherits our TTY and draws its FANCY single-line progress bar
+        // exactly as a direct `vtrace index` run does; when piped (`| tee`), where a
+        // \r-bar cannot render, it stays quiet instead of dumping per-file noise.
         const indexResult = await runProc(indexSpec.command, indexSpec.args, liveIndexRunOptions());
         const endMs = Date.now();
         indexFinishedAt = new Date(endMs).toISOString();
@@ -5884,36 +5883,34 @@ async function readJsonIfExists(filePath: string): Promise<unknown | null> {
   }
 }
 
-// Live-output stdio options for vtrace's OWN children (index + git clone), chosen by
-// whether our stderr is a real terminal:
-//   - TTY  → inherit: the child sees a real TTY and draws its FANCY progress bar /
-//            git's native progress. (Captured buffers come back empty — fine, these
-//            children's output is progress, not telemetry we parse.)
-//   - pipe → tee + VTRACE_PROGRESS_STREAM=1: a \r-bar cannot render without a TTY, so
-//            force the plain per-file progress stream and echo it live while still
-//            capturing it. This is the `… | tee log` case: the fancy bar is impossible
-//            there because tee strips the TTY.
-// Always on (no longer gated behind --show-vtrace-index-log): the operator always sees
-// indexing/cloning happen. See operatorTtyHintOnce() for the fancy-bar caveat.
-function liveIndexRunOptions(): { inheritStdio?: boolean; streamToTerminal?: boolean; env: Record<string, string> } {
-  return process.stderr.isTTY === true
-    ? { inheritStdio: true, env: { VTRACE_PROGRESS_STREAM: "1" } }
-    : { streamToTerminal: true, env: { VTRACE_PROGRESS_STREAM: "1" } };
+// Live-output stdio for the vtrace INDEX child. The index's fancy single-line progress
+// bar is TTY-only (src/cli/progress.ts: selectProgressReporter requires stderr.isTTY).
+//   - TTY  → inherit: the child sees our real terminal and draws its FANCY bar.
+//   - pipe → capture quietly: a \r-bar cannot render through a pipe (`… | tee`), and
+//            the verbose per-file fallback ([read] N/M …) is just noise — so we do NOT
+//            force VTRACE_PROGRESS_STREAM and the index stays silent (nullReporter).
+// `--quiet` is dropped from the index args either way so the TTY bar is never gated off.
+function liveIndexRunOptions(): { inheritStdio?: boolean } {
+  return process.stderr.isTTY === true ? { inheritStdio: true } : {};
 }
 
+// Live-output stdio for git clone. Clone progress (`git --progress`: "Receiving
+// objects: X%") is a single compact \r line, not per-file spam, so it is worth showing
+// even when piped: TTY → inherit (native), pipe → tee (echo + capture for errors).
 function liveGitRunOptions(): { inheritStdio?: boolean; streamToTerminal?: boolean } {
   return process.stderr.isTTY === true ? { inheritStdio: true } : { streamToTerminal: true };
 }
 
 // Print, at most once per process, why the fancy TTY progress bar is unavailable when
-// our output is piped (e.g. `… | tee log`). The plain per-file stream is shown instead.
+// our output is piped (e.g. `… | tee log`): the bar needs a real terminal, so indexing
+// runs quietly instead of dumping the verbose per-file fallback.
 let operatorTtyHintPrinted = false;
 function operatorTtyHintOnce(): void {
   if (operatorTtyHintPrinted || process.stderr.isTTY === true) return;
   operatorTtyHintPrinted = true;
   process.stderr.write(
-    "[stage5] output is piped (no TTY) — showing the plain progress stream. For vtrace's fancy " +
-      "progress bar, run attached to a terminal (drop `| tee`), or keep a log with a pseudo-TTY: " +
+    "[stage5] output is piped (no TTY) — indexing runs quietly (the fancy progress bar needs a real " +
+      "terminal). For the live bar, run without `| tee`, or keep a log via a pseudo-TTY: " +
       "`script -qefc '<command>' run.log`.\n",
   );
 }

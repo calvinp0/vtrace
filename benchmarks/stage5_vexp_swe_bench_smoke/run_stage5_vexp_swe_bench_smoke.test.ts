@@ -2385,9 +2385,11 @@ test("parseArgs parses --index-policy (default auto)", () => {
   assert.throws(() => parseArgs(["--mode", "run-protocol", "--index-policy", "bogus"]), /Invalid --index-policy/);
 });
 
-// The index progress is now ALWAYS surfaced (no longer gated behind the flag) and is
-// TTY-aware: a real terminal inherits stdio (fancy bar); a piped stderr (the test
-// runner's case, and `… | tee`) tees the plain progress stream + forces it on.
+// The index is TTY-aware: a real terminal inherits stdio (fancy bar); a piped stderr
+// (the test runner's case, and `… | tee`) runs the index QUIETLY — no inherit, no tee,
+// and crucially no forced VTRACE_PROGRESS_STREAM, so the verbose per-file fallback
+// ([read] N/M …) is never dumped. `--quiet` is always dropped so the TTY bar isn't
+// gated off.
 async function captureIndexOpts(
   configOverrides: Record<string, unknown>,
 ): Promise<{ indexArgs: readonly string[]; indexOpts: { env?: Record<string, string>; inheritStdio?: boolean; streamToTerminal?: boolean } | undefined }> {
@@ -2420,21 +2422,25 @@ async function captureIndexOpts(
   return { indexArgs, indexOpts };
 }
 
-test("the index always surfaces progress: --quiet dropped and progress forced on (piped → tee)", async () => {
-  // The test runner's stderr is not a TTY, so the live path tees + forces progress.
+test("piped index runs quietly: --quiet dropped but NO verbose per-file fallback", async () => {
+  // The test runner's stderr is not a TTY (the `… | tee` case). The index must NOT
+  // dump the [read]/[parse] N/M per-file stream: no forced VTRACE_PROGRESS_STREAM, no
+  // tee, no inherit — just a quiet captured run.
   const { indexArgs, indexOpts } = await captureIndexOpts({ showVtraceIndexLog: true });
-  assert.ok(!indexArgs.includes("--quiet"), "--quiet must be dropped so the indexer emits progress");
-  assert.equal(indexOpts?.env?.VTRACE_PROGRESS_STREAM, "1", "progress must be forced on for the non-TTY (piped) case");
-  // Non-TTY → tee (visible + captured), not inherit (which would blank the buffers).
-  assert.equal(indexOpts?.streamToTerminal, true, "a piped stderr must tee the plain progress stream");
+  assert.ok(!indexArgs.includes("--quiet"), "--quiet is dropped so the TTY bar isn't gated off");
+  assert.notEqual(indexOpts?.env?.VTRACE_PROGRESS_STREAM, "1", "the verbose per-file fallback must NOT be forced on when piped");
+  assert.notEqual(indexOpts?.streamToTerminal, true, "a piped index is not tee'd (would echo per-file noise)");
   assert.notEqual(indexOpts?.inheritStdio, true, "a piped stderr cannot draw the fancy TTY bar");
 });
 
-test("the index surfaces progress even WITHOUT --show-vtrace-index-log (always on)", async () => {
-  const { indexArgs, indexOpts } = await captureIndexOpts({});
-  assert.ok(!indexArgs.includes("--quiet"), "--quiet is dropped even without the flag now");
-  assert.equal(indexOpts?.env?.VTRACE_PROGRESS_STREAM, "1", "progress is forced on regardless of the flag");
-  assert.equal(indexOpts?.streamToTerminal, true, "the index streams live regardless of the flag");
+test("the flag no longer changes piped index behavior (quiet either way)", async () => {
+  const withFlag = await captureIndexOpts({ showVtraceIndexLog: true });
+  const without = await captureIndexOpts({});
+  for (const { indexArgs, indexOpts } of [withFlag, without]) {
+    assert.ok(!indexArgs.includes("--quiet"));
+    assert.notEqual(indexOpts?.env?.VTRACE_PROGRESS_STREAM, "1");
+    assert.notEqual(indexOpts?.inheritStdio, true);
+  }
 });
 
 test("prepareIndexedContext reports failure when the vtrace query fails", async () => {
