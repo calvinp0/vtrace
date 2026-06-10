@@ -1,0 +1,224 @@
+{
+  "generatedAt": "2026-06-10",
+  "kind": "design-spec",
+  "implemented": false,
+  "summary": "Benchmark-only active patch critic / repair loop proposed after two passive prompt mechanisms (EDIT_GUARD, PATCH_VERIFY) each converted 0/3 of the same known VTRACE losses while raising cost. The loop externalizes verification into inspectable artifacts and allows exactly one bounded repair attempt before Docker evaluation.",
+  "motivation": {
+    "knownLosses": ["sympy__sympy-16766", "matplotlib__matplotlib-22719", "psf__requests-5414"],
+    "originalClassification": "patch_mistake_despite_good_context",
+    "passiveBaselines": [
+      {
+        "mechanism": "EDIT_GUARD",
+        "addCommit": "c71232f",
+        "compareCommit": "9962b8b",
+        "beforeResolved": 0,
+        "afterResolved": 0,
+        "conversions": 0,
+        "costTokens": "increased"
+      },
+      {
+        "mechanism": "PATCH_VERIFY",
+        "addCommit": "4cf9d95",
+        "compareCommit": "37eda12",
+        "beforeResolved": 0,
+        "afterResolved": 0,
+        "conversions": 0,
+        "meanCostDeltaUsd": 0.0736,
+        "meanTokenDelta": 188833,
+        "verificationBehavior": "not_observable"
+      }
+    ],
+    "establishedConclusions": [
+      "Retrieval was not the bottleneck.",
+      "Pivot inspection was not the bottleneck.",
+      "Edited files and hidden-pivot inspection stayed stable.",
+      "Passive prose guidance changed patch shape but did not convert any task to resolved."
+    ]
+  },
+  "designGoals": {
+    "perInstanceTargets": [
+      {
+        "instanceId": "sympy__sympy-16766",
+        "observedDefect": "wrong class/function/class-scope placement",
+        "criticDimension": "scope_ok",
+        "probe": "class/function scope detection (AST over patched snapshot)"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-22719",
+        "observedDefect": "patch did not fully handle the failing empty-array behavior",
+        "criticDimension": "failing_behavior_handled",
+        "probe": "failing-behavior pattern probe (empty-array guard/branch)"
+      },
+      {
+        "instanceId": "psf__requests-5414",
+        "observedDefect": "broad control-flow rewrite instead of minimal additive validation",
+        "criticDimension": "minimality_ok",
+        "probe": "minimality heuristic (large deletion / branch removal flags)"
+      }
+    ],
+    "general": [
+      "Make defects visible before Docker evaluation via inspectable artifacts.",
+      "Be conservative: at most one repair, never forced on weak evidence.",
+      "Be cheap by default: deterministic probes first, bounded critic input, single-shot repair.",
+      "Record first-patch and final-patch outcomes separately."
+    ]
+  },
+  "nonGoals": [
+    "This does not improve retrieval.",
+    "This does not change Capsule v2 ranking.",
+    "This does not force editing every pivot.",
+    "This does not claim VEXP parity.",
+    "This does not replace Docker evaluation.",
+    "This does not make a statistical claim from three cases."
+  ],
+  "runFlow": [
+    "Run normal VTRACE treatment (PIVOT_CHECK, force-inject, Capsule v2, intent debug, budget 8000) and collect the first patch.",
+    "Run deterministic patch probes over the first patch + edited files + issue text.",
+    "Run the critic over the bounded input contract; it emits a strict structured report.",
+    "Decide repair: repair_required=true proceeds to repair; false sets final_patch := first_patch.",
+    "Allow one repair attempt that MODIFIES the existing patch (does not restart the task).",
+    "final_patch := repaired_patch if valid else first_patch; persist first/final diffs and repair meta.",
+    "Evaluate the final patch with Docker; record first_patch_resolved (if available) and final_patch_resolved."
+  ],
+  "criticInputContract": {
+    "included": [
+      "instance_id",
+      "repo",
+      "issue_text",
+      "first_patch",
+      "edited_files",
+      "capsule_pivots",
+      "hidden_pivot_engagement",
+      "ordered_tool_calls_summary",
+      "relevant_file_snippets",
+      "tests_run_by_agent",
+      "test_or_probe_output",
+      "treatment_metadata",
+      "deterministic_probe_results"
+    ],
+    "excludedOrBounded": [
+      "No full repository dump.",
+      "No unrestricted giant context.",
+      "Bound snippets around edited hunks and known pivots (per-hunk line cap, one symbol body per pivot, total char cap).",
+      "Prefer deterministic summaries over raw full streams (tool-call summary, not the raw agent stream).",
+      "Truncate test_or_probe_output to a fixed cap with an elision marker.",
+      "Never include gold patches, hidden tests, or post-hoc loss analyses (contamination guard)."
+    ]
+  },
+  "criticOutputSchema": {
+    "scope_ok": "true | false | null",
+    "scope_evidence": "string (required, non-empty)",
+    "failing_behavior_handled": "true | false | null",
+    "failing_behavior_evidence": "string (required, non-empty)",
+    "minimality_ok": "true | false | null",
+    "minimality_evidence": "string (required, non-empty)",
+    "test_evidence_ok": "true | false | null",
+    "test_evidence": "string (required, non-empty)",
+    "risk": "low | medium | high | unknown",
+    "repair_required": "true | false",
+    "repair_reason": "string (required non-empty when repair_required=true)",
+    "repair_instructions": "string (required non-empty when repair_required=true; must describe a modification, not a restart)",
+    "confidence": "low | medium | high"
+  },
+  "criticOutputRules": [
+    "null means could-not-determine and is explicitly NOT a pass.",
+    "Every boolean dimension must carry a non-empty *_evidence string referencing concrete patch lines / probe results.",
+    "A schema-invalid or evidence-free report is rejected and re-requested once.",
+    "A second invalid report is recorded as critic_invalid and the run proceeds fail-open with final_patch := first_patch (no repair)."
+  ],
+  "deterministicProbes": [
+    { "probe": "diff parser", "output": "edited files, inserted/deleted line counts, hunk headers, per-hunk enclosing context", "targets": ["all"] },
+    { "probe": "python_ast_parse_check", "output": "does each edited file still parse after applying the patch to a snapshot", "targets": ["all"] },
+    { "probe": "scope_detection", "output": "enclosing class/function name for each inserted method/def", "targets": ["sympy__sympy-16766"] },
+    { "probe": "minimality_heuristic", "output": "large-deletion / branch-removal / net-negative flags", "targets": ["psf__requests-5414"] },
+    { "probe": "failing_behavior_pattern", "output": "whether added lines contain a guard/branch matching a per-case failing-input pattern", "targets": ["matplotlib__matplotlib-22719"] },
+    { "probe": "narrow_test_capture", "output": "any test/repro command the agent ran and its captured output", "targets": ["all"] }
+  ],
+  "probeNotes": [
+    "Probes are warning signals, not correctness oracles.",
+    "Per-case patterns live in a registry keyed by instance/issue features, not hard-coded into control flow."
+  ],
+  "repairPolicy": {
+    "maxAttempts": 1,
+    "repairInput": ["critic_report", "first_patch", "bounded_context"],
+    "mustModifyExistingPatch": true,
+    "mustNotRestartTask": true,
+    "doNotForceRepairWhen": "critic confidence is low AND no deterministic probe failed",
+    "requestRepairWhen": "wrong scope, missing failing behavior, broad rewrite, or no test evidence — at high confidence and/or a corroborating failed probe",
+    "invalidRepairFallback": "discard repaired patch and keep first patch (repair_attempted=true, repair_changed_patch=false)",
+    "failOpen": "any critic/repair error degrades to evaluating the first patch, never worse than baseline"
+  },
+  "telemetry": {
+    "artifacts": [
+      "_patch_critic_input.json",
+      "_patch_critic_report.json",
+      "_patch_repair_attempt.json",
+      "_first_patch.diff",
+      "_final_patch.diff",
+      "_patch_repair.meta.json"
+    ],
+    "metadataFields": [
+      "vtracePatchCriticEnabled",
+      "vtracePatchCriticRan",
+      "vtracePatchCriticRepairRequired",
+      "vtracePatchRepairAttempted",
+      "vtracePatchRepairChangedFiles",
+      "vtracePatchRepairChangedPatch",
+      "vtraceFirstPatchResolved",
+      "vtraceFinalPatchResolved",
+      "vtracePatchCriticCostUsd",
+      "vtracePatchRepairCostUsd"
+    ],
+    "notes": [
+      "Artifacts are written alongside existing run artifacts; none overwrite existing ones.",
+      "Specified here only; no implementation required now."
+    ]
+  },
+  "experimentPlan": {
+    "instances": ["sympy__sympy-16766", "matplotlib__matplotlib-22719", "psf__requests-5414"],
+    "arms": {
+      "before": "PIVOT_CHECK only",
+      "after": "PIVOT_CHECK + PATCH_CRITIC_REPAIR"
+    },
+    "excludedFromBothArmsInitially": ["EDIT_GUARD", "PATCH_VERIFY"],
+    "measure": [
+      "resolution conversion",
+      "patch-shape improvement",
+      "known defect fixed",
+      "cost/token overhead",
+      "first patch vs repaired patch difference",
+      "critic precision: did it flag real defects?",
+      "critic false positives",
+      "repair success/failure"
+    ],
+    "negativeBaselines": [
+      "stage5_edit_guard_3_loss_comparison",
+      "stage5_patch_verify_3_loss_comparison"
+    ]
+  },
+  "risks": [
+    "Cost increase from the critic and repair calls.",
+    "Critic hallucination / invented evidence.",
+    "Repair making the patch worse.",
+    "Overfitting to three cases via per-case probes.",
+    "Benchmark contamination if the critic sees gold patches / hidden tests / loss analyses.",
+    "Hard-to-compare first vs final patch when only the final patch is Docker-evaluated.",
+    "Docker is still required; probes are not correctness oracles."
+  ],
+  "implementationMilestones": [
+    "Design doc only (this document + companion JSON).",
+    "Patch probe utilities over existing artifacts, with unit tests over the six passive-experiment runs as fixtures.",
+    "Critic input/report schema and report-only dry run over the existing six passive experiments.",
+    "Critic prompt/invocation behind a disabled-by-default benchmark flag (writes input/report, no repair).",
+    "One-repair-attempt harness path behind a disabled-by-default flag (writes first/final diffs + repair meta, fail-open).",
+    "Three-case controlled experiment and comparison report (PIVOT_CHECK vs PIVOT_CHECK + PATCH_CRITIC_REPAIR)."
+  ],
+  "nonClaims": [
+    "This is a design proposal, not an implementation.",
+    "It does not run agents or Docker.",
+    "It does not prove a critic loop will improve resolution.",
+    "It does not compare against VEXP.",
+    "It does not change current benchmark results.",
+    "It is motivated by three targeted losses plus two negative passive-guidance experiments (EDIT_GUARD, PATCH_VERIFY)."
+  ]
+}
