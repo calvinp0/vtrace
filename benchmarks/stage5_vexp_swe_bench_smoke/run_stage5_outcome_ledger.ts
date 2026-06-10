@@ -102,6 +102,46 @@ export interface LedgerRun {
   readonly hiddenPivotsIgnored: number | null;
   readonly rawArtifactPaths: readonly string[];
   readonly dataCompleteness: DataCompleteness;
+  // Live patch-critic observability (read tolerantly from _patch_critic.meta.json). All fields
+  // null on runs that predate the live critic / were not critiqued — never fabricated.
+  readonly patchCritic: LedgerPatchCritic;
+}
+
+// Tolerant projection of a run's `_patch_critic.meta.json` (milestone 4b). Every field is
+// null when the critic artifact is absent or the field is missing, so the live critic is never
+// required for ledger completeness.
+export interface LedgerPatchCritic {
+  readonly enabled: boolean | null;
+  readonly ran: boolean | null;
+  readonly validReport: boolean | null;
+  readonly failedOpen: boolean | null;
+  readonly repairRequired: boolean | null;
+  readonly agreementWithDeterministic: boolean | null;
+  readonly costUsd: number | null;
+}
+
+export const EMPTY_PATCH_CRITIC: LedgerPatchCritic = {
+  enabled: null,
+  ran: null,
+  validReport: null,
+  failedOpen: null,
+  repairRequired: null,
+  agreementWithDeterministic: null,
+  costUsd: null,
+};
+
+// Derive the tolerant critic projection from a parsed `_patch_critic.meta.json` (or null).
+export function derivePatchCritic(metaJson: Record<string, unknown> | null): LedgerPatchCritic {
+  if (metaJson === null) return EMPTY_PATCH_CRITIC;
+  return {
+    enabled: asBool(metaJson.enabled),
+    ran: asBool(metaJson.ran),
+    validReport: asBool(metaJson.validReport),
+    failedOpen: asBool(metaJson.failedOpen),
+    repairRequired: asBool(metaJson.liveRepairRequired),
+    agreementWithDeterministic: asBool(metaJson.agreementWithDeterministic),
+    costUsd: asNumber(metaJson.criticCostUsd),
+  };
 }
 
 export interface LedgerPair {
@@ -283,6 +323,8 @@ export interface RawRunParts {
   readonly record: Record<string, unknown> | null; // first swebench jsonl record
   readonly toolCalls: readonly RawToolCall[] | null; // _tool_calls.json (null = absent)
   readonly rawArtifactPaths: readonly string[];
+  // Optional parsed _patch_critic.meta.json (milestone 4b); absent on older fixtures/runs.
+  readonly patchCriticMeta?: Record<string, unknown> | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -507,6 +549,7 @@ export function buildRun(parts: RawRunParts): LedgerRun {
     hiddenPivotsIgnored,
     rawArtifactPaths: [...parts.rawArtifactPaths],
     dataCompleteness,
+    patchCritic: derivePatchCritic(parts.patchCriticMeta ?? null),
   };
 }
 
@@ -756,6 +799,14 @@ export function renderMarkdown(report: LedgerReport): string {
   lines.push("- **inspection conversion** — a hidden pivot moved from ignored → inspected/edited across a pair.");
   lines.push("- **docker resolution** — the SWE-bench evaluation said the patch resolves the task.");
   lines.push("");
+  lines.push(
+    "Live patch-critic observability (milestone 4b) is read tolerantly from each run's optional " +
+      "`_patch_critic.meta.json` and exposed per run in the JSON output under `patchCritic` " +
+      "(`enabled`/`ran`/`validReport`/`failedOpen`/`repairRequired`/`agreementWithDeterministic`/`costUsd`); it is " +
+      "`null` on runs that were not critiqued and is never required for completeness. It is observation only — the " +
+      "critic never modifies a patch.",
+  );
+  lines.push("");
 
   // --- Run inventory -------------------------------------------------------
   lines.push("## Run inventory");
@@ -933,6 +984,10 @@ export async function loadRunParts(runsDir: string, runLabel: string, condition:
   const evalMeta = (await readJsonFile(evalMetaPath)) as Record<string, unknown> | null;
   const record = await readFirstSwebenchRecord(condDir);
   const toolCalls = parseToolCalls(await readJsonFile(toolCallsPath));
+  // Optional live-critic metadata (milestone 4b); absent on runs that were not critiqued.
+  const patchCriticMeta = (await readJsonFile(path.join(condDir, "_patch_critic.meta.json"))) as
+    | Record<string, unknown>
+    | null;
 
   const rawArtifactPaths: string[] = [];
   const rel = path.join("runs", runLabel, "raw", condition);
@@ -940,8 +995,9 @@ export async function loadRunParts(runsDir: string, runLabel: string, condition:
   if (evalMeta !== null) rawArtifactPaths.push(path.join(rel, "_eval.meta.json"));
   if (record !== null) rawArtifactPaths.push(path.join(rel, "swebench-*.jsonl"));
   if (toolCalls !== null) rawArtifactPaths.push(path.join(rel, "_tool_calls.json"));
+  if (patchCriticMeta !== null) rawArtifactPaths.push(path.join(rel, "_patch_critic.meta.json"));
 
-  return { runLabel, condition, meta, evalMeta, record, toolCalls, rawArtifactPaths };
+  return { runLabel, condition, meta, evalMeta, record, toolCalls, rawArtifactPaths, patchCriticMeta };
 }
 
 // Enumerate every (runLabel, condition) under results/runs and build LedgerRuns.
