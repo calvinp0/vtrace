@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-06-10T19:48:59.065Z",
+  "runLabel": "eval-editguard-before-requests-5414",
+  "instanceId": "psf__requests-5414",
+  "summary": {
+    "artifactSuccess": true,
+    "evaluationSuccess": true,
+    "convertedUnresolvedToResolved": true,
+    "headline": "Observed Stage 5 loss recovery: an unresolved VTRACE first patch became RESOLVED after critic-guided one-repair mode (Docker resolved=true)."
+  },
+  "firstPatch": {
+    "hash": "3019c5488db0d43929b8bfe531866da399bd6de6b01735fb1868d6874aa7a3f2",
+    "resolved": false,
+    "present": true
+  },
+  "critic": {
+    "model": null,
+    "scopeOk": true,
+    "defectClass": "broad_rewrite_minimality",
+    "risk": "medium",
+    "confidence": "medium",
+    "repairRequired": true,
+    "repairReason": "The minimality probe flags a broad non-minimal rewrite (10 deletions, 5 deleted control-flow lines) that also changes behavior: removing the `unicode_is_ascii` gate forces every ASCII hostname through _get_idna_encoded_host, which can reject previously-valid ASCII hosts (e.g. names with underscores) under IDNA's stricter rules. This is an over-reach beyond the minimal fix.",
+    "repairInstructions": "Modify the existing block rather than rewriting it: restore the original branching — keep `if not unicode_is_ascii(host): try host = self._get_idna_encoded_host(host) except UnicodeError: raise InvalidURL('URL has an invalid label.') elif host.startswith(u'*'): raise InvalidURL(...)`. Then add only a narrow guard for the targeted failing behavior (empty labels such as leading '.' or '..' in the host) within that preserved structure, instead of unconditionally IDNA-encoding all ASCII hosts.",
+    "liveRepairRequired": true,
+    "agreementWithDeterministic": true
+  },
+  "repair": {
+    "defectClass": "broad_rewrite_minimality",
+    "instructionQuality": "actionable",
+    "validPatch": true,
+    "changedPatch": true,
+    "failedOpen": false,
+    "repairedPatchHash": "d1112495fcfc06d120ddfc3bd39ecdf16846c7418ad91e806e4c11211b316d7a",
+    "present": true
+  },
+  "evaluation": {
+    "evaluationRan": true,
+    "dockerUsed": true,
+    "resolved": true,
+    "evaluationError": null,
+    "command": "node dist/cli.js evaluate /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/runs/eval-editguard-before-requests-5414/raw/vtrace/repair_eval/_repaired_eval_input.jsonl --mode docker --timeout 1800 (cwd: /home/calvin/code/vexp-swe-bench)"
+  },
+  "conversion": {
+    "firstPatchResolved": false,
+    "repairedPatchResolved": true,
+    "convertedUnresolvedToResolved": true
+  },
+  "costs": {
+    "criticCostUsd": 0.13804625,
+    "criticInputTokens": 4343,
+    "criticOutputTokens": 3005,
+    "repairCostUsd": 0.10292124999999999,
+    "repairInputTokens": 4343,
+    "repairOutputTokens": 1434,
+    "totalCriticRepairCostUsd": 0.2409675,
+    "originalAgentCostUsd": 0.3681265,
+    "originalAgentModel": "claude-opus-4-5-20251101"
+  },
+  "safety": {
+    "originalJsonlModified": false,
+    "originalFirstPatchModified": false,
+    "repairedPatchModifiedDuringEvaluation": false,
+    "originalWorkspaceModified": false,
+    "evaluationUsedDerivedJsonl": true,
+    "firstPatchReEvaluated": false
+  },
+  "nonClaims": [
+    "This is ONE instance (psf__requests-5414); it does NOT prove aggregate improvement.",
+    "It does NOT justify always-on repair; gated one-repair mode stays disabled by default.",
+    "It does NOT compare VTRACE to VEXP.",
+    "Evidence-only: this report re-runs nothing and only re-states immutable artifacts from one run.",
+    "Conversion is claimed ONLY because the first patch was observed unresolved AND the repaired patch observed resolved under Docker.",
+    "The original swebench JSONL, first patch, repaired patch, and workspace were never modified; the first patch was not re-evaluated."
+  ]
+}

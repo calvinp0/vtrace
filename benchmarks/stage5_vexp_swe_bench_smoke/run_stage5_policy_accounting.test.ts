@@ -81,7 +81,8 @@ test("computes resolved count per policy", () => {
 test("applies a verified conversion to the repaired policy", () => {
   const inp = inputs();
   const gated = policy("vtrace_with_observed_gated_repair", inp);
-  assert.equal(gated.conversionCount, 1);
+  assert.equal(gated.taskConversionCount, 1);
+  assert.equal(gated.artifactConversionCount, 1);
   assert.equal(gated.resolvedCount, 2);
   // cost basis unchanged (optimistic ceiling): equals vtrace agent cost, no recovery added.
   assert.equal(gated.criticCostUsd, null);
@@ -93,7 +94,8 @@ test("applies a verified conversion to the repaired policy", () => {
 test("does not apply unverified repair artifacts", () => {
   const inp = inputs({ conversions: [unverifiedConversion()] });
   const gated = policy("vtrace_with_observed_gated_repair", inp);
-  assert.equal(gated.conversionCount, 0);
+  assert.equal(gated.taskConversionCount, 0);
+  assert.equal(gated.artifactConversionCount, 0);
   assert.equal(gated.resolvedCount, 1); // only a; c stays unresolved
   const verified = policy("vtrace_with_verified_repair_cost", inp);
   assert.equal(verified.repairCostUsd, null); // no recovery cost added for unverified
@@ -116,7 +118,8 @@ test("separates agent, critic, and repair cost", () => {
   assert.equal(obs.repairCostUsd, null);
   assert.equal(obs.criticCostUsd, 0.1); // mean observation for instance b
   assert.equal(obs.resolvedCount, 1); // unchanged
-  assert.equal(obs.conversionCount, 0);
+  assert.equal(obs.taskConversionCount, 0);
+  assert.equal(obs.artifactConversionCount, 0);
 });
 
 // 5. Computes costPerResolved and tokensPerResolved.
@@ -167,7 +170,8 @@ test("emits required Markdown sections", () => {
     "## Token accounting",
     "## Cost per resolved task",
     "## Token per resolved task",
-    "## Repair conversions included",
+    "## Verified repair artifacts included",
+    "## Unique task recoveries",
     "## Interpretation",
     "## Recommended next step",
     "## Non-claims",
@@ -185,16 +189,21 @@ test("emits required JSON fields", () => {
   }
   // policy entry fields
   const p0 = json.policies[0];
-  for (const key of ["policyName", "taskCount", "resolvedCount", "unknownCount", "totalCostUsd", "costPerResolved", "totalTokens", "tokensPerResolved", "conversionCount"]) {
+  for (const key of ["policyName", "taskCount", "resolvedCount", "unknownCount", "totalCostUsd", "costPerResolved", "totalTokens", "tokensPerResolved", "artifactConversionCount", "taskConversionCount"]) {
     assert.ok(key in p0, `policy missing ${key}`);
   }
+  // summary exposes BOTH artifact-level and task-level conversion counts
+  for (const key of ["verifiedRepairArtifacts", "uniqueTaskConversions"]) {
+    assert.ok(key in json.summary, `summary missing ${key}`);
+  }
+  assert.ok("uniqueTaskRecoveries" in json, "missing uniqueTaskRecoveries");
   // conversion entry fields
   const c0 = json.conversions[0];
   for (const key of ["runLabel", "instanceId", "firstPatchResolved", "repairedPatchResolved", "convertedUnresolvedToResolved", "criticCostUsd", "repairCostUsd", "totalRecoveryCostUsd"]) {
     assert.ok(key in c0, `conversion missing ${key}`);
   }
   assert.equal(json.policies.length, 5);
-  assert.ok(["A", "B", "C"].includes(json.recommendation.choice));
+  assert.ok(["A", "B", "C", "D"].includes(json.recommendation.choice));
 });
 
 test("recommendation: B when no verified conversion", () => {
@@ -220,6 +229,65 @@ test("recommendation: A when >=3 verified conversions improve cost-per-resolved"
   ];
   const rec = pickRecommendationFromInputs({ tasks: extraTasks, conversions: convs, criticObservations: [] });
   assert.equal(rec.choice, "A");
+});
+
+// --- artifact-vs-task conversion distinction ---------------------------------
+
+// Two verified converted artifacts for the SAME instance "b" (e.g. patchverify-before
+// and editguard-before on the same task), like the real psf__requests-5414 case.
+function duplicateArtifacts(): Conversion[] {
+  return [
+    { ...verifiedConversion(), runLabel: "eval-patchverify-before-b" },
+    { ...verifiedConversion(), runLabel: "eval-editguard-before-b" },
+  ];
+}
+
+// 1 + 2. Duplicate artifacts on one instance: many artifacts, one unique task recovery.
+test("duplicate converted artifacts on one instance: many artifacts, one task conversion", () => {
+  const inp = inputs({ conversions: duplicateArtifacts() });
+  const gated = policy("vtrace_with_observed_gated_repair", inp);
+  assert.equal(gated.artifactConversionCount, 2); // both artifacts counted
+  assert.equal(gated.taskConversionCount, 1); // but only one unique task recovery
+});
+
+// 3. Resolved-count effect uses unique task conversions, not artifact rows.
+test("resolved count uses unique task conversions, not artifact rows", () => {
+  const inp = inputs({ conversions: duplicateArtifacts() });
+  const gated = policy("vtrace_with_observed_gated_repair", inp);
+  // a (already resolved) + b (recovered once) = 2; NOT 3 despite two artifacts.
+  assert.equal(gated.resolvedCount, 2);
+  const verified = policy("vtrace_with_verified_repair_cost", inp);
+  assert.equal(verified.resolvedCount, 2);
+  // recovery cost counted once per unique task (deduped by instance), not per artifact.
+  assert.equal(verified.criticCostUsd, 0.12);
+  assert.equal(verified.repairCostUsd, 0.2);
+});
+
+// 4. The repair artifact table lists ALL artifact conversions (both duplicate rows).
+test("repair artifact table lists all artifact conversions", () => {
+  const report = buildReport({ generatedAt: "t", inputs: inputs({ conversions: duplicateArtifacts() }) });
+  assert.equal(report.conversions.length, 2);
+  const md = renderMarkdown(report);
+  assert.ok(md.includes("## Verified repair artifacts included"));
+  assert.ok(md.includes("eval-patchverify-before-b"));
+  assert.ok(md.includes("eval-editguard-before-b"));
+});
+
+// 5. Summary exposes BOTH artifact and unique-task conversion counts + the unique list.
+test("summary exposes both artifact and task conversion counts", () => {
+  const report = buildReport({ generatedAt: "t", inputs: inputs({ conversions: duplicateArtifacts() }) });
+  assert.equal(report.summary.verifiedRepairArtifacts, 2);
+  assert.equal(report.summary.uniqueTaskConversions, 1);
+  assert.deepEqual(report.uniqueTaskRecoveries, ["b"]);
+});
+
+// 6. Recommendation moves away from "one more smoke" (C) to D when duplicate artifacts
+//    exist but no NEW unique candidate was added — i.e. re-running the same instance.
+test("recommendation: D when duplicate artifacts add no new unique task conversion", () => {
+  const rec = recFor({ conversions: duplicateArtifacts() });
+  assert.equal(rec.choice, "D");
+  assert.ok(!rec.statement.includes("one more"), "must not recommend another duplicate smoke");
+  assert.ok(/duplicate/i.test(rec.statement));
 });
 
 function recFor(overrides: Partial<AccountingInputs>) {

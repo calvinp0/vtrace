@@ -341,7 +341,12 @@ export interface PolicyMetrics {
   readonly criticOutputTokens: number | null;
   readonly repairInputTokens: number | null;
   readonly repairOutputTokens: number | null;
-  readonly conversionCount: number;
+  // Verified repaired-patch evaluation artifacts whose instance is in the controlled set
+  // (artifact-level: multiple converted artifacts for the SAME instance each count).
+  readonly artifactConversionCount: number;
+  // Unique controlled tasks flipped to resolved by a verified conversion
+  // (task-level: many artifacts for one instance count as ONE recovery).
+  readonly taskConversionCount: number;
 }
 
 // Sum a list of (number | null), returning null only when NO value was present
@@ -365,11 +370,13 @@ export function computePolicyMetrics(spec: PolicySpec, inputs: AccountingInputs)
   const verified = inputs.conversions.filter((c) => c.convertedUnresolvedToResolved);
   const verifiedByInstance = new Map(verified.map((c) => [c.instanceId, c]));
   const criticByInstance = new Map(inputs.criticObservations.map((o) => [o.instanceId, o]));
+  const taskInstanceIds = new Set(inputs.tasks.map((t) => t.instanceId));
 
   let resolvedCount = 0;
   let unresolvedCount = 0;
   let unknownCount = 0;
-  let conversionCount = 0;
+  // Task-level: counts unique controlled tasks flipped to resolved (one per instance).
+  let taskConversionCount = 0;
 
   const agentCosts: Array<number | null> = [];
   const agentTokens: Array<number | null> = [];
@@ -386,7 +393,7 @@ export function computePolicyMetrics(spec: PolicySpec, inputs: AccountingInputs)
     const conv = verifiedByInstance.get(task.instanceId);
     if (spec.applyConversions && conv) {
       resolved = true;
-      conversionCount += 1;
+      taskConversionCount += 1;
     }
     if (resolved === true) resolvedCount += 1;
     else if (resolved === false) unresolvedCount += 1;
@@ -418,6 +425,11 @@ export function computePolicyMetrics(spec: PolicySpec, inputs: AccountingInputs)
   }
 
   const taskCount = inputs.tasks.length;
+  // Artifact-level: every verified conversion artifact for an instance in the set.
+  // Many artifacts for one instance each count here, but only ONE task recovery above.
+  const artifactConversionCount = spec.applyConversions
+    ? verified.filter((c) => taskInstanceIds.has(c.instanceId)).length
+    : 0;
   const agentCostUsd = sumNullable(agentCosts);
   const agentTokensTotal = sumNullable(agentTokens);
 
@@ -451,7 +463,8 @@ export function computePolicyMetrics(spec: PolicySpec, inputs: AccountingInputs)
     criticOutputTokens,
     repairInputTokens,
     repairOutputTokens,
-    conversionCount,
+    artifactConversionCount,
+    taskConversionCount,
   };
 }
 
@@ -459,7 +472,7 @@ export function computePolicyMetrics(spec: PolicySpec, inputs: AccountingInputs)
 // Recommendation (deterministic, data-driven)
 // ---------------------------------------------------------------------------
 
-export type RecommendationChoice = "A" | "B" | "C";
+export type RecommendationChoice = "A" | "B" | "C" | "D";
 
 export interface Recommendation {
   readonly choice: RecommendationChoice;
@@ -468,27 +481,34 @@ export interface Recommendation {
 }
 
 export const RECOMMENDATION_TEXT: Record<RecommendationChoice, string> = {
-  A: "Run the three Requests repairs because one verified conversion improved cost-per-resolved enough to justify more data.",
+  A: "Scale up repair experiments: the unique-task evidence base is now broad enough to justify a batch of new unique candidates.",
   B: "Do not run more repairs yet; first reduce default Capsule/agent tokens because recovery cost is too high.",
-  C: "Run only one Requests repair smoke, then update the policy accounting.",
+  C: "Run only one more repair smoke on a NEW unique candidate, then update the policy accounting.",
+  D: "Stop duplicate Requests repair runs. Shift back to reducing default VTRACE first-pass token use and/or expand the controlled set with new unique high-risk tasks before more repair experiments.",
 };
 
-// Pick exactly one recommendation from the computed metrics:
-// - No verified conversion → B (no evidence repair helps; the lever is token reduction).
-// - Verified conversions improved cost-per-resolved AND there are >=3 of them → A (scale).
-// - Verified conversions improved cost-per-resolved but evidence is thin (<3) → C (one more smoke).
-// - A verified conversion that did NOT improve cost-per-resolved → B.
+// Pick exactly one recommendation from the computed metrics. The decision is driven by
+// UNIQUE TASK conversions, never by artifact rows — re-running repair on an already-
+// recovered instance produces more artifacts but no new resolved task.
+// - No unique task conversion → B (no evidence repair helps; the lever is token reduction).
+// - Unique conversions did NOT improve cost-per-resolved → B.
+// - >=3 unique task conversions improved cost-per-resolved → A (scale).
+// - Improved, <3 unique, but duplicate artifacts already exist for recovered instances → D
+//   (stop duplicate runs; the marginal artifact added no unique recovery).
+// - Improved, <3 unique, no duplicate artifacts yet → C (one more smoke on a NEW unique candidate).
 export function pickRecommendation(args: {
   readonly vtraceFirstPatch: PolicyMetrics;
   readonly verifiedRepair: PolicyMetrics;
 }): Recommendation {
   const { vtraceFirstPatch, verifiedRepair } = args;
-  const conversionCount = verifiedRepair.conversionCount;
+  const taskConversions = verifiedRepair.taskConversionCount;
+  const artifacts = verifiedRepair.artifactConversionCount;
+  const duplicateArtifacts = artifacts > taskConversions;
   const before = vtraceFirstPatch.costPerResolved;
   const after = verifiedRepair.costPerResolved;
   const improvedCostPerResolved = before !== null && after !== null && after < before;
 
-  if (conversionCount === 0) {
+  if (taskConversions === 0) {
     return {
       choice: "B",
       statement: RECOMMENDATION_TEXT.B,
@@ -502,17 +522,24 @@ export function pickRecommendation(args: {
       rationale: "The verified conversion(s) did not improve cost-per-resolved over vtrace_first_patch; repair overhead currently outweighs the resolution gain, so reduce default tokens first.",
     };
   }
-  if (conversionCount >= 3) {
+  if (taskConversions >= 3) {
     return {
       choice: "A",
       statement: RECOMMENDATION_TEXT.A,
-      rationale: `${conversionCount} verified conversions improved cost-per-resolved (from ${fmtUsd(before)} to ${fmtUsd(after)} per resolved); the evidence base is now broad enough to justify the batch of Requests repairs.`,
+      rationale: `${taskConversions} unique task conversions improved cost-per-resolved (from ${fmtUsd(before)} to ${fmtUsd(after)} per resolved); the evidence base is now broad enough to justify a batch of new unique candidates.`,
+    };
+  }
+  if (duplicateArtifacts) {
+    return {
+      choice: "D",
+      statement: RECOMMENDATION_TEXT.D,
+      rationale: `${artifacts} verified repair artifacts improved cost-per-resolved (from ${fmtUsd(before)} to ${fmtUsd(after)} per resolved), but they cover only ${taskConversions} unique controlled task${taskConversions === 1 ? "" : "s"}; the extra artifacts re-ran repair on an already-recovered instance and added no new task recovery. Running more duplicate Requests repairs cannot raise the unique-task count, so stop duplicate runs and instead reduce default VTRACE first-pass tokens and/or add new unique high-risk tasks.`,
     };
   }
   return {
     choice: "C",
     statement: RECOMMENDATION_TEXT.C,
-    rationale: `${conversionCount} verified conversion${conversionCount === 1 ? "" : "s"} improved cost-per-resolved within vtrace (from ${fmtUsd(before)} to ${fmtUsd(after)} per resolved) and recovery was cheap (${fmtUsd(verifiedRepair.criticCostUsd)} critic + ${fmtUsd(verifiedRepair.repairCostUsd)} repair), but n=${conversionCount} is still too thin to commit to a batch (the batch threshold is 3 verified conversions); gather one more verified conversion (Requests) and re-account.`,
+    rationale: `${taskConversions} unique task conversion${taskConversions === 1 ? "" : "s"} improved cost-per-resolved within vtrace (from ${fmtUsd(before)} to ${fmtUsd(after)} per resolved) and recovery was cheap (${fmtUsd(verifiedRepair.criticCostUsd)} critic + ${fmtUsd(verifiedRepair.repairCostUsd)} repair), but n=${taskConversions} is still too thin to commit to a batch (the batch threshold is 3 unique task conversions); gather one more verified conversion on a NEW unique instance and re-account.`,
   };
 }
 
@@ -524,13 +551,18 @@ export interface PolicyAccountingReport {
   readonly generatedAt: string | null;
   readonly summary: {
     readonly taskCount: number;
-    readonly conversionCount: number;
+    // Artifact-level: total verified repaired-patch artifacts resolved under Docker.
+    readonly verifiedRepairArtifacts: number;
+    // Task-level: unique controlled tasks recovered (de-duplicated by instance).
+    readonly uniqueTaskConversions: number;
     readonly baselineResolved: number;
     readonly vtraceFirstPatchResolved: number;
     readonly gatedRepairResolved: number;
     readonly recoveryCostAddedUsd: number | null;
     readonly headline: string;
   };
+  // Distinct controlled-task instances recovered by a verified conversion (sorted).
+  readonly uniqueTaskRecoveries: readonly string[];
   readonly policies: readonly PolicyMetrics[];
   readonly tasks: ReadonlyArray<{
     readonly instanceId: string;
@@ -599,18 +631,24 @@ export function buildReport(args: { readonly generatedAt: string | null; readonl
   const gatedRepair = byName.get("vtrace_with_observed_gated_repair")!;
   const verifiedRepair = byName.get("vtrace_with_verified_repair_cost")!;
 
-  const verifiedByInstance = new Map(inputs.conversions.filter((c) => c.convertedUnresolvedToResolved).map((c) => [c.instanceId, c]));
+  const verifiedConversions = inputs.conversions.filter((c) => c.convertedUnresolvedToResolved);
+  const verifiedByInstance = new Map(verifiedConversions.map((c) => [c.instanceId, c]));
+  const taskInstanceIds = new Set(inputs.tasks.map((t) => t.instanceId));
+  const uniqueTaskRecoveries = [...new Set(verifiedConversions.filter((c) => taskInstanceIds.has(c.instanceId)).map((c) => c.instanceId))].sort();
 
   const recommendation = pickRecommendation({ vtraceFirstPatch, verifiedRepair });
   const recoveryCostAddedUsd = addNullable(verifiedRepair.criticCostUsd, verifiedRepair.repairCostUsd);
 
+  const verifiedRepairArtifacts = verifiedRepair.artifactConversionCount;
+  const uniqueTaskConversions = verifiedRepair.taskConversionCount;
+
   const headline = (() => {
-    const conv = verifiedRepair.conversionCount;
     const before = vtraceFirstPatch.costPerResolved;
     const after = verifiedRepair.costPerResolved;
     const dir = before !== null && after !== null ? (after < before ? "improved" : after > before ? "worsened" : "unchanged") : "n/a";
     return (
-      `${conv} verified conversion(s): vtrace_first_patch resolved ${vtraceFirstPatch.resolvedCount}/${vtraceFirstPatch.taskCount} → ` +
+      `${verifiedRepairArtifacts} verified repaired-patch artifact(s) resolved under Docker, corresponding to ${uniqueTaskConversions} unique controlled task recovery(ies). ` +
+      `vtrace_first_patch resolved ${vtraceFirstPatch.resolvedCount}/${vtraceFirstPatch.taskCount} → ` +
       `gated repair ${gatedRepair.resolvedCount}/${gatedRepair.taskCount}. Cost-per-resolved ${dir} ` +
       `(${fmtUsd(before)} → ${fmtUsd(after)} with recovery cost included). Baseline remains ${baseline.resolvedCount}/${baseline.taskCount} at ${fmtUsd(baseline.costPerResolved)}/resolved.`
     );
@@ -620,13 +658,15 @@ export function buildReport(args: { readonly generatedAt: string | null; readonl
     generatedAt,
     summary: {
       taskCount: vtraceFirstPatch.taskCount,
-      conversionCount: verifiedRepair.conversionCount,
+      verifiedRepairArtifacts,
+      uniqueTaskConversions,
       baselineResolved: baseline.resolvedCount,
       vtraceFirstPatchResolved: vtraceFirstPatch.resolvedCount,
       gatedRepairResolved: gatedRepair.resolvedCount,
       recoveryCostAddedUsd,
       headline,
     },
+    uniqueTaskRecoveries,
     policies,
     tasks: inputs.tasks.map((t) => {
       const verified = verifiedByInstance.has(t.instanceId);
@@ -683,7 +723,8 @@ export function renderMarkdown(report: PolicyAccountingReport): string {
   L.push(summary.headline);
   L.push("");
   L.push(`- controlled tasks: **${summary.taskCount}**`);
-  L.push(`- verified conversions: **${summary.conversionCount}**`);
+  L.push(`- verified repair artifacts: **${summary.verifiedRepairArtifacts}**`);
+  L.push(`- unique task recoveries: **${summary.uniqueTaskConversions}**${report.uniqueTaskRecoveries.length > 0 ? ` (${report.uniqueTaskRecoveries.join(", ")})` : ""}`);
   L.push(`- resolved: baseline **${summary.baselineResolved}**, vtrace_first_patch **${summary.vtraceFirstPatchResolved}**, gated repair **${summary.gatedRepairResolved}**`);
   L.push(`- recovery cost added (critic+repair): **${fmtUsd(summary.recoveryCostAddedUsd)}**`);
   L.push("");
@@ -695,11 +736,13 @@ export function renderMarkdown(report: PolicyAccountingReport): string {
 
   L.push("## Resolution results");
   L.push("");
-  L.push("| policy | tasks | resolved | unresolved | unknown | conversions |");
+  L.push("| policy | tasks | resolved | unresolved | unknown | task conversions |");
   L.push("| --- | --- | --- | --- | --- | --- |");
   for (const p of policies) {
-    L.push(`| ${p.policyName} | ${p.taskCount} | ${p.resolvedCount} | ${p.unresolvedCount} | ${p.unknownCount} | ${p.conversionCount} |`);
+    L.push(`| ${p.policyName} | ${p.taskCount} | ${p.resolvedCount} | ${p.unresolvedCount} | ${p.unknownCount} | ${p.taskConversionCount} |`);
   }
+  L.push("");
+  L.push("_`task conversions` counts unique controlled tasks recovered (de-duplicated by instance), not artifact rows._");
   L.push("");
 
   L.push("## Cost accounting");
@@ -736,11 +779,14 @@ export function renderMarkdown(report: PolicyAccountingReport): string {
   for (const p of policies) L.push(`| ${p.policyName} | ${p.resolvedCount} | ${fmtNum(p.totalTokens)} | ${fmtNum(p.tokensPerResolved)} |`);
   L.push("");
 
-  L.push("## Repair conversions included");
+  L.push("## Verified repair artifacts included");
   L.push("");
+  const convertedArtifacts = report.conversions.filter((c) => c.convertedUnresolvedToResolved);
   if (report.conversions.length === 0) {
     L.push("_No repair conversions found._");
   } else {
+    L.push(`${convertedArtifacts.length} verified repaired-patch artifact(s) resolved under Docker, corresponding to ${report.summary.uniqueTaskConversions} unique controlled task recovery(ies). Each artifact row below is an individual repair run; multiple rows for one instance are still one task recovery.`);
+    L.push("");
     L.push("| run | instance | first resolved | repaired resolved | converted | critic $ | repair $ | recovery $ |");
     L.push("| --- | --- | --- | --- | --- | --- | --- | --- |");
     for (const c of report.conversions) {
@@ -748,6 +794,19 @@ export function renderMarkdown(report: PolicyAccountingReport): string {
         `| ${c.runLabel} | ${c.instanceId} | ${tri(c.firstPatchResolved)} | ${tri(c.repairedPatchResolved)} | ${tri(c.convertedUnresolvedToResolved)} | ${fmtUsd(c.criticCostUsd)} | ${fmtUsd(c.repairCostUsd)} | ${fmtUsd(c.totalRecoveryCostUsd)} |`,
       );
     }
+  }
+  L.push("");
+
+  L.push("## Unique task recoveries");
+  L.push("");
+  if (report.uniqueTaskRecoveries.length === 0) {
+    L.push("_No unique controlled task recoveries._");
+  } else {
+    L.push(`${report.uniqueTaskRecoveries.length} unique controlled task(s) recovered (de-duplicated by instance):`);
+    L.push("");
+    for (const id of report.uniqueTaskRecoveries) L.push(`- \`${id}\``);
+    L.push("");
+    L.push("_Resolved-count effect and the recommendation are driven by these unique task recoveries, not by the artifact rows above. Recovery cost counts one representative repair artifact per unique task recovery (a realistic gated policy runs repair once per task), so duplicate artifacts for the same instance do not multiply cost._");
   }
   L.push("");
   L.push("_Cost sources:_");
@@ -765,7 +824,7 @@ export function renderMarkdown(report: PolicyAccountingReport): string {
   L.push(`2. **How much extra cost/tokens did recovery add?** ${fmtUsd(summary.recoveryCostAddedUsd)} and ${fmtNum(addNullableForReport(verified.criticInputTokens, verified.criticOutputTokens, verified.repairInputTokens, verified.repairOutputTokens))} tokens, for the verified conversion(s) only.`);
   L.push(`3. **Did cost per resolved improve or worsen?** Within vtrace it ${improvedCost ? "**improved**" : "did not improve"} (${fmtUsd(vtrace.costPerResolved)} → ${fmtUsd(verified.costPerResolved)} with recovery cost). Baseline is still cheaper at ${fmtUsd(baseline.costPerResolved)}/resolved.`);
   L.push(`4. **Did tokens per resolved improve or worsen?** Within vtrace it ${improvedTokens ? "**improved**" : "did not improve"} (${fmtNum(vtrace.tokensPerResolved)} → ${fmtNum(gated.tokensPerResolved)}). Baseline is still leaner at ${fmtNum(baseline.tokensPerResolved)}/resolved.`);
-  L.push(`5. **Is there enough evidence to run the three Requests repairs?** ${summary.conversionCount >= 3 ? "Yes." : `Not yet — only ${summary.conversionCount} verified conversion(s).`}`);
+  L.push(`5. **Is there enough unique-task evidence to scale up repair experiments?** ${summary.uniqueTaskConversions >= 3 ? `Yes — ${summary.uniqueTaskConversions} unique task conversions.` : `Not yet — ${summary.verifiedRepairArtifacts} verified repair artifacts, but only ${summary.uniqueTaskConversions} unique controlled task conversions (re-running repair on an already-recovered instance adds artifacts, not unique recoveries).`}`);
   L.push("6. **Does this support always-on critic/repair?** **No.** Gated, disabled-by-default repair recovered one lost resolution cheaply, but vtrace_first_patch is still behind baseline; the dominant lever is reducing default Capsule/agent tokens, not always-on repair.");
   L.push("");
 
@@ -813,7 +872,7 @@ export async function run(config: CliConfig): Promise<PolicyAccountingReport> {
       `  ${mdPath}`,
       `  ${jsonPath}`,
       "",
-      `Tasks: ${report.summary.taskCount}   Verified conversions: ${report.summary.conversionCount}`,
+      `Tasks: ${report.summary.taskCount}   Verified repair artifacts: ${report.summary.verifiedRepairArtifacts}   Unique task recoveries: ${report.summary.uniqueTaskConversions}`,
       `Resolved — baseline: ${report.summary.baselineResolved}   vtrace_first_patch: ${report.summary.vtraceFirstPatchResolved}   gated repair: ${report.summary.gatedRepairResolved}`,
       `Cost/resolved — vtrace_first_patch: ${fmtUsd(v.costPerResolved)}   verified repair: ${fmtUsd(r.costPerResolved)}`,
       `Recommendation: Option ${report.recommendation.choice} — ${report.recommendation.statement}`,

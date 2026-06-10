@@ -1,14 +1,19 @@
 {
-  "generatedAt": "2026-06-10T19:44:43.607Z",
+  "generatedAt": "2026-06-10T19:56:24.161Z",
   "summary": {
     "taskCount": 10,
-    "conversionCount": 2,
+    "verifiedRepairArtifacts": 4,
+    "uniqueTaskConversions": 2,
     "baselineResolved": 8,
     "vtraceFirstPatchResolved": 5,
     "gatedRepairResolved": 7,
-    "recoveryCostAddedUsd": 0.54858925,
-    "headline": "2 verified conversion(s): vtrace_first_patch resolved 5/10 → gated repair 7/10. Cost-per-resolved improved ($1.6418 → $1.2511 with recovery cost included). Baseline remains 8/10 at $0.8722/resolved."
+    "recoveryCostAddedUsd": 0.5703705,
+    "headline": "4 verified repaired-patch artifact(s) resolved under Docker, corresponding to 2 unique controlled task recovery(ies). vtrace_first_patch resolved 5/10 → gated repair 7/10. Cost-per-resolved improved ($1.6418 → $1.2542 with recovery cost included). Baseline remains 8/10 at $0.8722/resolved."
   },
+  "uniqueTaskRecoveries": [
+    "psf__requests-5414",
+    "sympy__sympy-16766"
+  ],
   "policies": [
     {
       "policyName": "baseline",
@@ -30,7 +35,8 @@
       "criticOutputTokens": null,
       "repairInputTokens": null,
       "repairOutputTokens": null,
-      "conversionCount": 0
+      "artifactConversionCount": 0,
+      "taskConversionCount": 0
     },
     {
       "policyName": "vtrace_first_patch",
@@ -52,7 +58,8 @@
       "criticOutputTokens": null,
       "repairInputTokens": null,
       "repairOutputTokens": null,
-      "conversionCount": 0
+      "artifactConversionCount": 0,
+      "taskConversionCount": 0
     },
     {
       "policyName": "vtrace_with_observed_gated_repair",
@@ -74,7 +81,8 @@
       "criticOutputTokens": null,
       "repairInputTokens": null,
       "repairOutputTokens": null,
-      "conversionCount": 2
+      "artifactConversionCount": 4,
+      "taskConversionCount": 2
     },
     {
       "policyName": "vtrace_with_live_critic_observation_cost",
@@ -96,7 +104,8 @@
       "criticOutputTokens": 6717.5,
       "repairInputTokens": null,
       "repairOutputTokens": null,
-      "conversionCount": 0
+      "artifactConversionCount": 0,
+      "taskConversionCount": 0
     },
     {
       "policyName": "vtrace_with_verified_repair_cost",
@@ -105,20 +114,21 @@
       "resolvedCount": 7,
       "unresolvedCount": 3,
       "unknownCount": 0,
-      "totalCostUsd": 8.757487750000001,
-      "meanCostUsd": 0.8757487750000001,
-      "costPerResolved": 1.2510696785714288,
-      "totalTokens": 17101538,
-      "meanTokens": 1710153.8,
-      "tokensPerResolved": 2443076.8571428573,
+      "totalCostUsd": 8.779269000000001,
+      "meanCostUsd": 0.8779269000000001,
+      "costPerResolved": 1.2541812857142858,
+      "totalTokens": 17102353,
+      "meanTokens": 1710235.3,
+      "tokensPerResolved": 2443193.285714286,
       "agentCostUsd": 8.208898500000002,
-      "criticCostUsd": 0.2413175,
-      "repairCostUsd": 0.30727175,
+      "criticCostUsd": 0.25983,
+      "repairCostUsd": 0.3105405,
       "criticInputTokens": 8686,
-      "criticOutputTokens": 4775,
+      "criticOutputTokens": 5492,
       "repairInputTokens": 10364,
-      "repairOutputTokens": 2732,
-      "conversionCount": 2
+      "repairOutputTokens": 2830,
+      "artifactConversionCount": 4,
+      "taskConversionCount": 2
     }
   ],
   "tasks": [
@@ -255,6 +265,16 @@
       "totalRecoveryCostUsd": 0.21918625
     },
     {
+      "runLabel": "eval-editguard-before-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "firstPatchResolved": false,
+      "repairedPatchResolved": true,
+      "convertedUnresolvedToResolved": true,
+      "criticCostUsd": 0.13804625,
+      "repairCostUsd": 0.10292124999999999,
+      "totalRecoveryCostUsd": 0.2409675
+    },
+    {
       "runLabel": "eval-patchverify-before-sympy-16766",
       "instanceId": "sympy__sympy-16766",
       "firstPatchResolved": false,
@@ -276,9 +296,9 @@
     "repair tokens ← stage5_repair_conversion_*.json costs.repairInput/OutputTokens (verified conversions only)."
   ],
   "recommendation": {
-    "choice": "C",
-    "statement": "Run only one Requests repair smoke, then update the policy accounting.",
-    "rationale": "2 verified conversions improved cost-per-resolved within vtrace (from $1.6418 to $1.2511 per resolved) and recovery was cheap ($0.2413 critic + $0.3073 repair), but n=2 is still too thin to commit to a batch (the batch threshold is 3 verified conversions); gather one more verified conversion (Requests) and re-account."
+    "choice": "D",
+    "statement": "Stop duplicate Requests repair runs. Shift back to reducing default VTRACE first-pass token use and/or expand the controlled set with new unique high-risk tasks before more repair experiments.",
+    "rationale": "4 verified repair artifacts improved cost-per-resolved (from $1.6418 to $1.2542 per resolved), but they cover only 2 unique controlled tasks; the extra artifacts re-ran repair on an already-recovered instance and added no new task recovery. Running more duplicate Requests repairs cannot raise the unique-task count, so stop duplicate runs and instead reduce default VTRACE first-pass tokens and/or add new unique high-risk tasks."
   },
   "nonClaims": [
     "This is not a VEXP comparison.",
