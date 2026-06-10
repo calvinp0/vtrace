@@ -1,0 +1,117 @@
+{
+  "generatedAt": "2026-06-10T08:13:46.716Z",
+  "cases": [
+    {
+      "instanceId": "sympy__sympy-16766",
+      "repo": "sympy",
+      "knownLossClassification": "patch_mistake_despite_good_context",
+      "beforeLabel": "eval-editguard-before-sympy-16766",
+      "afterLabel": "eval-editguard-after-sympy-16766",
+      "beforeTreatment": "PIVOT_CHECK only",
+      "afterTreatment": "PIVOT_CHECK + EDIT_GUARD",
+      "reasonIncluded": "wrong class scope — new printer methods landed in AbstractPythonCodePrinter instead of PythonCodePrinter; targeted by EDIT_GUARD's SCOPE (confirm the exact enclosing class/function before inserting methods)"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib",
+      "knownLossClassification": "patch_mistake_despite_good_context",
+      "beforeLabel": "eval-editguard-before-matplotlib-22719",
+      "afterLabel": "eval-editguard-after-matplotlib-22719",
+      "beforeTreatment": "PIVOT_CHECK only",
+      "afterTreatment": "PIVOT_CHECK + EDIT_GUARD",
+      "reasonIncluded": "incomplete fix — narrowed a warning guard but missed the baseline's early return for empty arrays; targeted by EDIT_GUARD's FAILING BEHAVIOR (name the concrete failing input — the empty array — and verify the patch handles it)"
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "repo": "psf",
+      "knownLossClassification": "patch_mistake_despite_good_context",
+      "beforeLabel": "eval-editguard-before-requests-5414",
+      "afterLabel": "eval-editguard-after-requests-5414",
+      "beforeTreatment": "PIVOT_CHECK only",
+      "afterTreatment": "PIVOT_CHECK + EDIT_GUARD",
+      "reasonIncluded": "broad control-flow rewrite — always-IDNA-encode restructure instead of minimal additive empty-label validation; targeted by EDIT_GUARD's MINIMAL FIX (prefer the smallest additive guard/validation over a control-flow rewrite)"
+    }
+  ],
+  "commands": [
+    {
+      "instanceId": "sympy__sympy-16766",
+      "condition": "before",
+      "runLabel": "eval-editguard-before-sympy-16766",
+      "treatment": "PIVOT_CHECK only",
+      "editGuardDisabled": true,
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-16766 \\\n  --run-label eval-editguard-before-sympy-16766 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-edit-guard \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "condition": "after",
+      "runLabel": "eval-editguard-after-sympy-16766",
+      "treatment": "PIVOT_CHECK + EDIT_GUARD",
+      "editGuardDisabled": false,
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-16766 \\\n  --run-label eval-editguard-after-sympy-16766 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "condition": "before",
+      "runLabel": "eval-editguard-before-matplotlib-22719",
+      "treatment": "PIVOT_CHECK only",
+      "editGuardDisabled": true,
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances matplotlib__matplotlib-22719 \\\n  --run-label eval-editguard-before-matplotlib-22719 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-edit-guard \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "condition": "after",
+      "runLabel": "eval-editguard-after-matplotlib-22719",
+      "treatment": "PIVOT_CHECK + EDIT_GUARD",
+      "editGuardDisabled": false,
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances matplotlib__matplotlib-22719 \\\n  --run-label eval-editguard-after-matplotlib-22719 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "condition": "before",
+      "runLabel": "eval-editguard-before-requests-5414",
+      "treatment": "PIVOT_CHECK only",
+      "editGuardDisabled": true,
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances psf__requests-5414 \\\n  --run-label eval-editguard-before-requests-5414 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --disable-edit-guard \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "condition": "after",
+      "runLabel": "eval-editguard-after-requests-5414",
+      "treatment": "PIVOT_CHECK + EDIT_GUARD",
+      "editGuardDisabled": false,
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode run-protocol \\\n  --protocol vtrace-indexed \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances psf__requests-5414 \\\n  --run-label eval-editguard-after-requests-5414 \\\n  --show-vtrace-index-log \\\n  --context-policy force-inject \\\n  --capsule-engine v2 \\\n  --capsule-intent debug \\\n  --capsule-budget 8000 \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    }
+  ],
+  "evaluationCommands": [
+    {
+      "instanceId": "sympy__sympy-16766",
+      "runLabel": "eval-editguard-before-sympy-16766",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode evaluate \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-16766 \\\n  --run-label eval-editguard-before-sympy-16766 \\\n  --eval-mode docker \\\n  --eval-dataset swebench-verified-full.jsonl \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "runLabel": "eval-editguard-after-sympy-16766",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode evaluate \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances sympy__sympy-16766 \\\n  --run-label eval-editguard-after-sympy-16766 \\\n  --eval-mode docker \\\n  --eval-dataset swebench-verified-full.jsonl \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "runLabel": "eval-editguard-before-matplotlib-22719",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode evaluate \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances matplotlib__matplotlib-22719 \\\n  --run-label eval-editguard-before-matplotlib-22719 \\\n  --eval-mode docker \\\n  --eval-dataset swebench-verified-full.jsonl \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "runLabel": "eval-editguard-after-matplotlib-22719",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode evaluate \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances matplotlib__matplotlib-22719 \\\n  --run-label eval-editguard-after-matplotlib-22719 \\\n  --eval-mode docker \\\n  --eval-dataset swebench-verified-full.jsonl \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "runLabel": "eval-editguard-before-requests-5414",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode evaluate \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances psf__requests-5414 \\\n  --run-label eval-editguard-before-requests-5414 \\\n  --eval-mode docker \\\n  --eval-dataset swebench-verified-full.jsonl \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "runLabel": "eval-editguard-after-requests-5414",
+      "command": "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\\n  --mode evaluate \\\n  --vexp-swe-bench-dir /home/calvin/code/vexp-swe-bench \\\n  --instances psf__requests-5414 \\\n  --run-label eval-editguard-after-requests-5414 \\\n  --eval-mode docker \\\n  --eval-dataset swebench-verified-full.jsonl \\\n  --out benchmarks/stage5_vexp_swe_bench_smoke/results"
+    }
+  ]
+}
