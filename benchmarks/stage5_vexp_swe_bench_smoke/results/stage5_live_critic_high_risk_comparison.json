@@ -1,0 +1,320 @@
+{
+  "generatedAt": "2026-06-10T16:51:48.564Z",
+  "summary": {
+    "runsAnalyzed": 6,
+    "validReportCount": 6,
+    "failedOpenCount": 0,
+    "agreementCount": 4,
+    "disagreementCount": 2,
+    "liveRepairRequiredCount": 4,
+    "deterministicRepairRequiredCount": 6,
+    "totalCostUsd": 0.71022625,
+    "meanCostUsd": 0.11837104166666666,
+    "totalInputTokens": 25874,
+    "totalOutputTokens": 13710,
+    "agreementByDefectClass": {
+      "wrong_scope": {
+        "total": 1,
+        "agree": 1,
+        "disagree": 0,
+        "agreementRate": 1
+      },
+      "missing_failing_behavior": {
+        "total": 2,
+        "agree": 0,
+        "disagree": 2,
+        "agreementRate": 0
+      },
+      "broad_rewrite_minimality": {
+        "total": 3,
+        "agree": 3,
+        "disagree": 0,
+        "agreementRate": 1
+      },
+      "unknown": {
+        "total": 0,
+        "agree": 0,
+        "disagree": 0,
+        "agreementRate": null
+      }
+    },
+    "liveRepairRequiredByDefectClass": {
+      "wrong_scope": {
+        "total": 1,
+        "liveRepairRequired": 1,
+        "deterministicRepairRequired": 1
+      },
+      "missing_failing_behavior": {
+        "total": 2,
+        "liveRepairRequired": 0,
+        "deterministicRepairRequired": 2
+      },
+      "broad_rewrite_minimality": {
+        "total": 3,
+        "liveRepairRequired": 3,
+        "deterministicRepairRequired": 3
+      },
+      "unknown": {
+        "total": 0,
+        "liveRepairRequired": 0,
+        "deterministicRepairRequired": 0
+      }
+    }
+  },
+  "runs": [
+    {
+      "runLabel": "eval-patchverify-before-sympy-16766",
+      "instanceId": "sympy__sympy-16766",
+      "defectClass": "wrong_scope",
+      "status": "ok",
+      "deterministicRepairRequired": true,
+      "liveRepairRequired": true,
+      "agreementWithDeterministic": true,
+      "liveRisk": "medium",
+      "liveConfidence": "medium",
+      "criticCostUsd": 0.12178375,
+      "criticInputTokens": 4343,
+      "criticOutputTokens": 2487,
+      "failedOpen": false,
+      "validReport": true,
+      "repairReason": "Wrong scope: _print_Indexed landed in AbstractPythonCodePrinter rather than PythonCodePrinter (inserted_method_scope=fail, high), broadening the behavior to all subclasses beyond the intended printer class.",
+      "repairInstructions": "Relocate the existing _print_Indexed method out of AbstractPythonCodePrinter and into the PythonCodePrinter class body, preserving the same implementation and indentation. This is a move/re-indent of the already-correct method, not a rewrite or new edit.",
+      "addedValueSummary": "Recognized the wrong-scope insertion the deterministic probe flagged and added a concrete move/re-indent repair instruction; interpretive value plus an actionable bounded fix.",
+      "instructionQuality": "actionable",
+      "patchUnchanged": true
+    },
+    {
+      "runLabel": "eval-editguard-before-matplotlib-22719",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "defectClass": "missing_failing_behavior",
+      "status": "ok",
+      "deterministicRepairRequired": true,
+      "liveRepairRequired": false,
+      "agreementWithDeterministic": false,
+      "liveRisk": "low",
+      "liveConfidence": "medium",
+      "criticCostUsd": 0.09600875,
+      "criticInputTokens": 4268,
+      "criticOutputTokens": 1413,
+      "failedOpen": false,
+      "validReport": true,
+      "repairReason": "",
+      "repairInstructions": "",
+      "addedValueSummary": "Recognized a semantically-equivalent truthiness guard (`values.size`) that the literal failing_behavior_pattern probe missed, judged the failing behavior handled, and declined repair — contradicting the deterministic critic. The correction is plausible but unverified without executable reproduction.",
+      "instructionQuality": "none",
+      "patchUnchanged": true
+    },
+    {
+      "runLabel": "eval-patchverify-after-matplotlib-22719",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "defectClass": "missing_failing_behavior",
+      "status": "ok",
+      "deterministicRepairRequired": true,
+      "liveRepairRequired": false,
+      "agreementWithDeterministic": false,
+      "liveRisk": "low",
+      "liveConfidence": "medium",
+      "criticCostUsd": 0.09835125,
+      "criticInputTokens": 4234,
+      "criticOutputTokens": 1524,
+      "failedOpen": false,
+      "validReport": true,
+      "repairReason": "",
+      "repairInstructions": "",
+      "addedValueSummary": "Recognized a semantically-equivalent truthiness guard (`values.size`) that the literal failing_behavior_pattern probe missed, judged the failing behavior handled, and declined repair — contradicting the deterministic critic. The correction is plausible but unverified without executable reproduction.",
+      "instructionQuality": "none",
+      "patchUnchanged": true
+    },
+    {
+      "runLabel": "eval-editguard-before-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "defectClass": "broad_rewrite_minimality",
+      "status": "ok",
+      "deterministicRepairRequired": true,
+      "liveRepairRequired": true,
+      "agreementWithDeterministic": true,
+      "liveRisk": "medium",
+      "liveConfidence": "medium",
+      "criticCostUsd": 0.13804625,
+      "criticInputTokens": 4343,
+      "criticOutputTokens": 3005,
+      "failedOpen": false,
+      "validReport": true,
+      "repairReason": "The minimality probe flags a broad non-minimal rewrite (10 deletions, 5 deleted control-flow lines) that also changes behavior: removing the `unicode_is_ascii` gate forces every ASCII hostname through _get_idna_encoded_host, which can reject previously-valid ASCII hosts (e.g. names with underscores) under IDNA's stricter rules. This is an over-reach beyond the minimal fix.",
+      "repairInstructions": "Modify the existing block rather than rewriting it: restore the original branching — keep `if not unicode_is_ascii(host): try host = self._get_idna_encoded_host(host) except UnicodeError: raise InvalidURL('URL has an invalid label.') elif host.startswith(u'*'): raise InvalidURL(...)`. Then add only a narrow guard for the targeted failing behavior (empty labels such as leading '.' or '..' in the host) within that preserved structure, instead of unconditionally IDNA-encoding all ASCII hosts.",
+      "addedValueSummary": "Explained the concrete regression risk behind the minimality fail (removing the unicode_is_ascii gate forces all ASCII hosts through IDNA encoding) and gave concrete restore-and-narrow-guard repair instructions.",
+      "instructionQuality": "actionable",
+      "patchUnchanged": true
+    },
+    {
+      "runLabel": "eval-editguard-after-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "defectClass": "broad_rewrite_minimality",
+      "status": "ok",
+      "deterministicRepairRequired": true,
+      "liveRepairRequired": true,
+      "agreementWithDeterministic": true,
+      "liveRisk": "medium",
+      "liveConfidence": "medium",
+      "criticCostUsd": 0.11953375,
+      "criticInputTokens": 4343,
+      "criticOutputTokens": 2288,
+      "failedOpen": false,
+      "validReport": true,
+      "repairReason": "Broad non-minimal rewrite: removing the unicode_is_ascii guard means all ASCII hostnames now pass through _get_idna_encoded_host, which can alter or reject previously-valid ASCII hosts and risks regressions beyond the intended invalid-label fix.",
+      "repairInstructions": "Modify the existing patch rather than restarting: restore the original `if not unicode_is_ascii(host):` IDNA branch so ASCII hosts keep their prior fast path, and limit the new validation to the ASCII case — e.g. keep/extend the `elif host.startswith(u'*')` branch (and any empty-label check) to raise InvalidURL('URL has an invalid label.') without unconditionally IDNA-encoding every host.",
+      "addedValueSummary": "Explained the concrete regression risk behind the minimality fail (removing the unicode_is_ascii gate forces all ASCII hosts through IDNA encoding) and gave concrete restore-and-narrow-guard repair instructions.",
+      "instructionQuality": "actionable",
+      "patchUnchanged": true
+    },
+    {
+      "runLabel": "eval-patchverify-before-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "defectClass": "broad_rewrite_minimality",
+      "status": "ok",
+      "deterministicRepairRequired": true,
+      "liveRepairRequired": true,
+      "agreementWithDeterministic": true,
+      "liveRisk": "medium",
+      "liveConfidence": "medium",
+      "criticCostUsd": 0.1365025,
+      "criticInputTokens": 4343,
+      "criticOutputTokens": 2993,
+      "failedOpen": false,
+      "validReport": true,
+      "repairReason": "The broad non-minimal rewrite (minimality_rewrite_risk fail, high; 5 deleted control-flow lines) introduces a concrete behavioral risk: ASCII hosts that previously skipped IDNA encoding are now always passed through _get_idna_encoded_host, which can alter handling of ordinary ASCII hostnames and depends on the idna package being available. This is a wrong-scope behavioral broadening beyond the empty-label fix the failing case requires.",
+      "repairInstructions": "Modify the existing patch rather than restarting: restore the original `if not unicode_is_ascii(host): try idna-encode except UnicodeError -> InvalidURL` branch and the `elif host.startswith(u'*')` guard so ASCII hosts are not unconditionally IDNA-encoded. Then add a targeted empty-label check for the ASCII path (e.g. reject hosts with a leading/trailing dot or any empty label, raising InvalidURL('URL has an invalid label.')), so http://.example.com is rejected without changing IDNA behavior for valid ASCII hosts.",
+      "addedValueSummary": "Explained the concrete regression risk behind the minimality fail (removing the unicode_is_ascii gate forces all ASCII hosts through IDNA encoding) and gave concrete restore-and-narrow-guard repair instructions.",
+      "instructionQuality": "actionable",
+      "patchUnchanged": true
+    }
+  ],
+  "defectClasses": [
+    {
+      "defectClass": "wrong_scope",
+      "instanceIds": [
+        "sympy__sympy-16766"
+      ],
+      "runs": 1,
+      "deterministicRepairRequired": 1,
+      "liveRepairRequired": 1,
+      "agree": 1,
+      "disagree": 0,
+      "deterministicKnew": "inserted_method_scope probe FAILED (high): _print_Indexed landed in AbstractPythonCodePrinter, not PythonCodePrinter; repair required.",
+      "liveAdded": "Human-readable synthesis plus a concrete move/re-indent repair instruction (relocate the method, preserving implementation/indentation).",
+      "justifiesCost": "yes",
+      "note": "Both critics agreed; live critic's instruction is actionable."
+    },
+    {
+      "defectClass": "missing_failing_behavior",
+      "instanceIds": [
+        "matplotlib__matplotlib-22719"
+      ],
+      "runs": 2,
+      "deterministicRepairRequired": 2,
+      "liveRepairRequired": 0,
+      "agree": 0,
+      "disagree": 2,
+      "deterministicKnew": "failing_behavior_pattern probe FAILED (medium): none of the literal tokens [values.size == 0, return, empty] matched the added code; deterministic critic requested repair.",
+      "liveAdded": "Recognized a semantically-equivalent truthiness guard (`values.size`) the literal probe missed, judged the failing behavior handled, and DECLINED repair — contradicting the deterministic critic.",
+      "justifiesCost": "uncertain",
+      "note": "The disagreement points to the deterministic probe being over-conservative (string matching), not obviously to the live critic under-calling. But the live critic's 'handled' verdict is unverified without executable reproduction; treat this class as undecided."
+    },
+    {
+      "defectClass": "broad_rewrite_minimality",
+      "instanceIds": [
+        "psf__requests-5414"
+      ],
+      "runs": 3,
+      "deterministicRepairRequired": 3,
+      "liveRepairRequired": 3,
+      "agree": 3,
+      "disagree": 0,
+      "deterministicKnew": "minimality_rewrite_risk probe FAILED (high): broad control-flow rewrite (deletions / deleted control-flow lines); repair required.",
+      "liveAdded": "Concrete regression-risk explanation (removing the unicode_is_ascii gate routes all ASCII hosts through IDNA, risking rejection of previously-valid hosts) plus concrete restore-and-narrow-guard repair instructions.",
+      "justifiesCost": "yes",
+      "note": "All three requests runs agreed; live critic instructions are actionable."
+    }
+  ],
+  "cost": {
+    "totalCostUsd": 0.71022625,
+    "meanCostUsd": 0.11837104166666666,
+    "totalInputTokens": 25874,
+    "totalOutputTokens": 13710,
+    "perRun": [
+      {
+        "runLabel": "eval-patchverify-before-sympy-16766",
+        "criticCostUsd": 0.12178375,
+        "criticInputTokens": 4343,
+        "criticOutputTokens": 2487
+      },
+      {
+        "runLabel": "eval-editguard-before-matplotlib-22719",
+        "criticCostUsd": 0.09600875,
+        "criticInputTokens": 4268,
+        "criticOutputTokens": 1413
+      },
+      {
+        "runLabel": "eval-patchverify-after-matplotlib-22719",
+        "criticCostUsd": 0.09835125,
+        "criticInputTokens": 4234,
+        "criticOutputTokens": 1524
+      },
+      {
+        "runLabel": "eval-editguard-before-requests-5414",
+        "criticCostUsd": 0.13804625,
+        "criticInputTokens": 4343,
+        "criticOutputTokens": 3005
+      },
+      {
+        "runLabel": "eval-editguard-after-requests-5414",
+        "criticCostUsd": 0.11953375,
+        "criticInputTokens": 4343,
+        "criticOutputTokens": 2288
+      },
+      {
+        "runLabel": "eval-patchverify-before-requests-5414",
+        "criticCostUsd": 0.1365025,
+        "criticInputTokens": 4343,
+        "criticOutputTokens": 2993
+      }
+    ]
+  },
+  "safety": {
+    "observationOnly": true,
+    "repairPerformed": false,
+    "dockerRun": false,
+    "failedOpenCount": 0,
+    "validReportCount": 6,
+    "allPatchesUnchanged": true
+  },
+  "recommendation": {
+    "primary": "Implement a gated one-repair-attempt mode ONLY for live critic reports where liveRepairRequired=true, validReport=true, failedOpen=false, defectClass is wrong_scope or broad_rewrite_minimality, and repairInstructions are concrete/actionable. Exclude missing_failing_behavior for now.",
+    "secondary": "Add executable / narrow reproduction probes (or issue-specific expectations) for missing_failing_behavior before allowing repair on that class, since the deterministic signal there is a literal pattern match and the live critic's contradicting 'handled' verdict is unverified.",
+    "eligibleForRepair": [
+      "eval-patchverify-before-sympy-16766",
+      "eval-editguard-before-requests-5414",
+      "eval-editguard-after-requests-5414",
+      "eval-patchverify-before-requests-5414"
+    ],
+    "excludedDefectClasses": [
+      "missing_failing_behavior"
+    ],
+    "criteria": [
+      "liveRepairRequired === true",
+      "validReport === true",
+      "failedOpen === false",
+      "defectClass ∈ {wrong_scope, broad_rewrite_minimality}",
+      "instructionQuality ∈ {concrete, actionable}"
+    ]
+  },
+  "skipped": [],
+  "nonClaims": [
+    "This report does not run agents, Docker, live critic calls, or repair.",
+    "This report does not modify patches or workspaces.",
+    "This report does not prove repair would improve SWE-bench resolution.",
+    "This report does not justify always-on live critic usage.",
+    "This report does not compare VTRACE against VEXP.",
+    "This is a six-call high-risk observation, not a statistical benchmark."
+  ]
+}
