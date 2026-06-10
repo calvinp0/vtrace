@@ -100,14 +100,15 @@ test("markdown has all required sections; json has the required shape", () => {
     "## Results by run",
     "## Results by instance",
     "## Which known defects were caught",
+    "## Full-file reconstruction",
     "## Probe limitations",
     "## Recommended next step",
     "## Non-claims",
   ]) {
     assert.ok(md.includes(heading), `missing section: ${heading}`);
   }
-  // The recommendation should point at the critic dry run (probes caught real risk here).
-  assert.ok(md.includes("critic schema"));
+  // The recommendation should point at a live critic (probes caught real risk here).
+  assert.ok(md.toLowerCase().includes("critic"));
 
   const parsed = JSON.parse(renderJson(report));
   for (const key of ["generatedAt", "summary", "runs", "instances", "probeDefinitions", "nonClaims"]) {
@@ -119,6 +120,8 @@ test("markdown has all required sections; json has the required shape", () => {
     "runsWithKnownDefectLikelyCaught",
     "runsWithUnknownScope",
     "runsWithNoTestEvidence",
+    "runsReconstructed",
+    "runsScopeResolvedByReconstruction",
   ]) {
     assert.ok(key in parsed.summary, `missing summary key: ${key}`);
   }
@@ -148,17 +151,78 @@ test("summary counts high-risk, caught, unknown-scope, and no-test-evidence runs
   assert.equal(req.knownDefectCaughtRuns, 1);
   const sympy = rollups.find((r) => r.instanceId === "sympy__sympy-16766")!;
   assert.equal(sympy.knownDefectUnknownRuns, 1);
+
+  // No reconstruction provided to these synthetic runs.
+  assert.equal(summary.runsReconstructed, 0);
+  assert.equal(summary.runsScopeResolvedByReconstruction, 0);
 });
 
-test("recommendedNextStep points to a critic dry run only when probes caught risk", () => {
+// ---------------------------------------------------------------------------
+// 8. Probe report includes reconstruction metadata, and reconstructed content
+//    flips a diff-only-unknown sympy scope to a determined pass/fail.
+// ---------------------------------------------------------------------------
+test("report surfaces reconstruction metadata and resolves scope from reconstructed content", () => {
+  // A reconstructed file in which the inserted method lands in the WRONG class.
+  const wrongScopeSource = [
+    "class AbstractPythonCodePrinter(CodePrinter):",
+    "    def _print_NoneToken(self, arg):",
+    "        return 'None'",
+    "",
+    "    def _print_Indexed(self, expr):",
+    "        return base",
+    "",
+    "",
+    "class PythonCodePrinter(AbstractPythonCodePrinter):",
+    "    def _print_sign(self, e):",
+    "        return e",
+    "",
+  ].join("\n");
+
+  const run = summarizePatch({
+    instanceId: "sympy__sympy-16766",
+    runLabel: "eval-patchverify-before-sympy-16766",
+    patch: SYMPY_UNKNOWN, // diff-window: scope unknown (no class header in the hunk)
+    toolCalls: null,
+    stdout: null,
+    stderr: null,
+    parsePython: PARSE_OK,
+    reconstructedSources: { "sympy/printing/pycode.py": wrongScopeSource },
+    reconstruction: {
+      attempted: true,
+      source: "workspace_plus_patch",
+      filesReconstructed: ["sympy/printing/pycode.py"],
+      filesFailed: [],
+      errors: [],
+    },
+  });
+
+  const scope = run.probes.find((p) => p.probeId === "inserted_method_scope")!;
+  assert.equal(scope.status, "fail"); // resolved from reconstructed content, not the diff
+  assert.ok(scope.evidence.join(" ").includes("Full-file reconstruction"));
+  assert.ok(scope.evidence.join(" ").includes("AbstractPythonCodePrinter"));
+  assert.equal(run.reconstruction?.source, "workspace_plus_patch");
+
+  const report = buildReport("t", [run]);
+  assert.equal(report.summary.runsReconstructed, 1);
+  assert.equal(report.summary.runsScopeResolvedByReconstruction, 1);
+  assert.equal(report.summary.runsWithUnknownScope, 0);
+
+  const md = renderMarkdown(report);
+  assert.ok(md.includes("## Full-file reconstruction"));
+  assert.ok(md.includes("workspace_plus_patch"));
+});
+
+test("recommendedNextStep points to a live critic only when probes caught risk", () => {
   const caught = recommendedNextStep({
     runsAnalyzed: 12,
-    runsWithHighRisk: 3,
-    runsWithKnownDefectLikelyCaught: 4,
-    runsWithUnknownScope: 2,
+    runsWithHighRisk: 4,
+    runsWithKnownDefectLikelyCaught: 6,
+    runsWithUnknownScope: 0,
     runsWithNoTestEvidence: 6,
+    runsReconstructed: 12,
+    runsScopeResolvedByReconstruction: 2,
   });
-  assert.ok(caught.includes("critic schema"));
+  assert.ok(caught.toLowerCase().includes("critic"));
 
   const nothing = recommendedNextStep({
     runsAnalyzed: 12,
@@ -166,6 +230,8 @@ test("recommendedNextStep points to a critic dry run only when probes caught ris
     runsWithKnownDefectLikelyCaught: 0,
     runsWithUnknownScope: 12,
     runsWithNoTestEvidence: 0,
+    runsReconstructed: 0,
+    runsScopeResolvedByReconstruction: 0,
   });
   assert.ok(nothing.toLowerCase().includes("improve the probes"));
 });

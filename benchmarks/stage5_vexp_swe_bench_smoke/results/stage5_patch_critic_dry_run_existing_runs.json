@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-06-10T15:30:47.954Z",
+  "generatedAt": "2026-06-10T15:51:35.828Z",
   "summary": {
     "runsAnalyzed": 12,
-    "repairRequiredCount": 5,
-    "highRiskCount": 3,
+    "repairRequiredCount": 6,
+    "highRiskCount": 4,
     "mediumRiskCount": 2,
-    "lowRiskCount": 7,
+    "lowRiskCount": 6,
     "unknownRiskCount": 0,
-    "scopeUnknownCount": 2,
+    "scopeUnknownCount": 0,
     "missingTestEvidenceCount": 10,
-    "knownDefectLikelyCaughtCount": 5
+    "knownDefectLikelyCaughtCount": 6
   },
   "reports": [
     {
@@ -39,8 +39,8 @@
     {
       "instanceId": "sympy__sympy-16766",
       "runLabel": "eval-editguard-after-sympy-16766",
-      "scope_ok": null,
-      "scope_evidence": "Inserted method(s) _print_Indexed, _print_IndexedBase found, but no enclosing class header is visible in the diff window, so the landing scope cannot be determined from the unified diff alone.",
+      "scope_ok": true,
+      "scope_evidence": "Full-file reconstruction: inserted method(s) _print_Indexed, _print_IndexedBase resolve inside the expected class PythonCodePrinter per the reconstructed file's indentation structure.",
       "failing_behavior_handled": null,
       "failing_behavior_evidence": "No failing-behavior pattern configured for this instance; failing-behavior coverage cannot be assessed from the diff.",
       "minimality_ok": true,
@@ -51,7 +51,7 @@
       "repair_required": false,
       "repair_reason": "No high- or medium-confidence defect signal; deterministic probes are pass/unknown only, so no repair is requested.",
       "repair_instructions": "",
-      "confidence": "low",
+      "confidence": "medium",
       "evidence_probe_ids": [
         "edited_files",
         "minimality_rewrite_risk",
@@ -63,19 +63,19 @@
     {
       "instanceId": "sympy__sympy-16766",
       "runLabel": "eval-patchverify-before-sympy-16766",
-      "scope_ok": null,
-      "scope_evidence": "Inserted method(s) _print_Indexed found, but no enclosing class header is visible in the diff window, so the landing scope cannot be determined from the unified diff alone.",
+      "scope_ok": false,
+      "scope_evidence": "Full-file reconstruction: inserted method(s) _print_Indexed in AbstractPythonCodePrinter (line 349) landed outside the expected class PythonCodePrinter. Resolved from the reconstructed file's indentation structure, not just the diff window.",
       "failing_behavior_handled": null,
       "failing_behavior_evidence": "No failing-behavior pattern configured for this instance; failing-behavior coverage cannot be assessed from the diff.",
       "minimality_ok": true,
       "minimality_evidence": "+4/-0 lines across 1 file(s), 1 hunk(s); deleted control-flow lines: 0. Patch appears small/additive (few or no deletions, single file).",
       "test_evidence_ok": false,
       "test_evidence": "Ad-hoc python check(s) ran (e.g. python3 -c \" from sympy import * p = IndexedBase('p') print('pycode(p[0]):', pycode(p[0])) print('pycode(p[1, 2]):', pyc…) but no named test suite (pytest/unittest) was detected.",
-      "risk": "low",
-      "repair_required": false,
-      "repair_reason": "No high- or medium-confidence defect signal; deterministic probes are pass/unknown only, so no repair is requested.",
-      "repair_instructions": "",
-      "confidence": "low",
+      "risk": "high",
+      "repair_required": true,
+      "repair_reason": "inserted method(s) landed outside the expected class (high-confidence scope fail).",
+      "repair_instructions": "Move the inserted _print_* methods into PythonCodePrinter; the diff shows them landing outside the intended class. Reconstruct full file scope to confirm placement before re-evaluating.",
+      "confidence": "high",
       "evidence_probe_ids": [
         "edited_files",
         "minimality_rewrite_risk",
@@ -307,9 +307,9 @@
       "knownDefect": "wrong class/function/class-scope placement (methods in AbstractPythonCodePrinter instead of PythonCodePrinter)",
       "targetProbeId": "inserted_method_scope",
       "runs": 4,
-      "repairRequiredRuns": 0,
-      "knownDefectCaughtRuns": 0,
-      "scopeUnknownRuns": 2
+      "repairRequiredRuns": 1,
+      "knownDefectCaughtRuns": 1,
+      "scopeUnknownRuns": 0
     },
     {
       "instanceId": "matplotlib__matplotlib-22719",

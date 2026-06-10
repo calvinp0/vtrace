@@ -15,8 +15,12 @@ import {
   type PatchProbeSummary,
   type PythonParser,
   type RawToolCall,
+  type ReconstructionInfo,
+  type ReconstructionSource,
+  reconstructFile,
   summarizePatch,
 } from "./stage5_patch_probes";
+import { editedFilesFromPatch } from "../../src/capsule/finalEditDiagnostics";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -60,8 +64,11 @@ export const PROBE_DEFINITIONS: readonly { id: string; checks: string; statuses:
   },
   {
     id: "inserted_method_scope",
-    checks: "For inserted `def <pattern>` methods, the enclosing class visible in the diff vs the expected class.",
-    statuses: "pass = in expected class; fail = wrong class; unknown = scope not visible in the diff.",
+    checks:
+      "For inserted `def <pattern>` methods, the enclosing class — from the diff window, escalating to the " +
+      "reconstructed full file (workspace base + patch) when the diff window is inconclusive.",
+    statuses:
+      "pass = in expected class; fail = wrong class/module scope; unknown = scope undetermined AND no reconstruction available.",
   },
   {
     id: "failing_behavior_pattern",
@@ -80,6 +87,8 @@ export const NON_CLAIMS: readonly string[] = [
   "A `pass` means a probe found no problem in the diff window — not that the patch is correct.",
   "An `unknown` is an honest measurement gap (e.g. scope not visible in the diff), not a pass.",
   "This does not run agents, Docker, or any model; it only inspects existing artifacts.",
+  "Full-file reconstruction reads the run workspace and applies the patch IN MEMORY only; it never writes reconstructed content back and never mutates the workspace.",
+  "The reconstruction parser is indentation-based, not a full Python parser, and could be fooled by `class`/`def` text inside multi-line strings.",
   "This does not implement the critic or repair loop, and changes no retrieval / Capsule / PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY behavior.",
   "Probe heuristics are tuned against three known losses and may not generalize without further validation.",
 ];
@@ -94,6 +103,17 @@ export interface ReportSummary {
   readonly runsWithKnownDefectLikelyCaught: number;
   readonly runsWithUnknownScope: number;
   readonly runsWithNoTestEvidence: number;
+  // Reconstruction observability (milestone 4).
+  readonly runsReconstructed: number; // at least one edited file reconstructed in memory
+  readonly runsScopeResolvedByReconstruction: number; // scope pass/fail decided via reconstruction
+}
+
+// A scope result was decided by full-file reconstruction when its evidence cites it. Used for
+// the before/after comparison; reconstruction evidence is tagged "Full-file reconstruction:".
+function scopeResolvedByReconstruction(run: PatchProbeSummary): boolean {
+  const scope = run.probes.find((p) => p.probeId === "inserted_method_scope");
+  if (!scope || (scope.status !== "pass" && scope.status !== "fail")) return false;
+  return scope.evidence.some((e) => e.includes("Full-file reconstruction"));
 }
 
 export interface InstanceRollup {
@@ -134,6 +154,8 @@ export function buildSummary(runs: readonly PatchProbeSummary[]): ReportSummary 
       const s = statusOf(r, "test_evidence");
       return s === "warn" || s === "fail";
     }).length,
+    runsReconstructed: runs.filter((r) => (r.reconstruction?.filesReconstructed.length ?? 0) > 0).length,
+    runsScopeResolvedByReconstruction: runs.filter((r) => scopeResolvedByReconstruction(r)).length,
   };
 }
 
@@ -165,9 +187,10 @@ export function recommendedNextStep(summary: ReportSummary): string {
   const caughtSomething = summary.runsWithKnownDefectLikelyCaught > 0 || summary.runsWithHighRisk > 0;
   if (caughtSomething) {
     return (
-      "Add the critic schema + a report-only dry run that consumes these probe outputs as input — still WITHOUT repair. " +
-      "The deterministic probes already flag real risk on a meaningful subset of runs (broad-rewrite and " +
-      "missing-failing-behavior signals), which is enough deterministic signal to justify a critic dry run."
+      "Full-file reconstruction has closed the scope blind spot: the sympy wrong-scope defect is now catchable and " +
+      `unknown-scope runs dropped to ${summary.runsWithUnknownScope}. With broad-rewrite, missing-failing-behavior, AND ` +
+      "wrong-scope signals now deterministic, proceed to a disabled-by-default LIVE critic invocation (report-only, no " +
+      "repair) that consumes these probe outputs — see the critic dry-run report."
     );
   }
   return (
@@ -220,7 +243,8 @@ export function renderMarkdown(report: ProbeReport): string {
     `Analyzed ${summary.runsAnalyzed} passive-treatment runs (EDIT_GUARD + PATCH_VERIFY, before/after, across ` +
       "sympy / matplotlib / requests). The deterministic probes flagged this instance's known target defect in " +
       `${summary.runsWithKnownDefectLikelyCaught} run(s) and rated ${summary.runsWithHighRisk} run(s) high-risk overall. ` +
-      `Scope was indeterminate from the diff in ${summary.runsWithUnknownScope} sympy run(s); ` +
+      `Scope remained indeterminate (unknown) in only ${summary.runsWithUnknownScope} run(s) after full-file ` +
+      `reconstruction resolved scope in ${summary.runsScopeResolvedByReconstruction} run(s); ` +
       `${summary.runsWithNoTestEvidence} run(s) showed no named-test evidence.`,
   );
   lines.push("");
@@ -231,6 +255,8 @@ export function renderMarkdown(report: ProbeReport): string {
   lines.push(`| runsWithKnownDefectLikelyCaught | ${summary.runsWithKnownDefectLikelyCaught} |`);
   lines.push(`| runsWithUnknownScope | ${summary.runsWithUnknownScope} |`);
   lines.push(`| runsWithNoTestEvidence | ${summary.runsWithNoTestEvidence} |`);
+  lines.push(`| runsReconstructed | ${summary.runsReconstructed} |`);
+  lines.push(`| runsScopeResolvedByReconstruction | ${summary.runsScopeResolvedByReconstruction} |`);
   lines.push("");
 
   // --- Method --------------------------------------------------------------
@@ -316,13 +342,52 @@ export function renderMarkdown(report: ProbeReport): string {
   );
   lines.push("");
 
+  // --- Full-file reconstruction (milestone 4) ------------------------------
+  lines.push("## Full-file reconstruction");
+  lines.push("");
+  lines.push(
+    "For each run we reconstruct the patched content of every edited file **in memory** from the run's workspace base " +
+      "(`vtraceWorkspacePath` in `_run.meta.json`) plus `modelPatch`, using a content-matching unified-diff applier " +
+      "(exact context, offset-tolerant). Nothing is written back to disk. The `inserted_method_scope` probe first tries " +
+      "diff-window scope and, when that is inconclusive, resolves each inserted method's enclosing class from the " +
+      "reconstructed file's indentation structure.",
+  );
+  lines.push("");
+  lines.push("| run | reconstruction source | files reconstructed | files failed | scope status |");
+  lines.push("| --- | --- | --- | --- | --- |");
+  for (const r of runs) {
+    const rec = r.reconstruction ?? { source: "unavailable", filesReconstructed: [], filesFailed: [] };
+    lines.push(
+      `| ${r.runLabel} | ${rec.source} | ${rec.filesReconstructed.join(", ") || "—"} | ` +
+        `${rec.filesFailed.join(", ") || "—"} | ${statusOf(r, "inserted_method_scope") ?? "—"} |`,
+    );
+  }
+  lines.push("");
+  lines.push(
+    "**Before full-file reconstruction (milestone 2/3):** the sympy `inserted_method_scope` probe was diff-window-only " +
+      "— 2 sympy runs returned `unknown` (class boundary off-screen) and the wrong-scope defect was caught in 0/4 runs.",
+  );
+  lines.push(
+    `**After full-file reconstruction:** scope was resolved from reconstructed content in ` +
+      `${summary.runsScopeResolvedByReconstruction} run(s), leaving ${summary.runsWithUnknownScope} run(s) with unknown ` +
+      "scope. Where reconstruction places an inserted `_print_*` method outside `PythonCodePrinter` (e.g. in " +
+      "`AbstractPythonCodePrinter` or module scope), the probe now reports `fail` with the resolved enclosing scope and " +
+      "line number — a defect that was invisible to the diff-only probe.",
+  );
+  lines.push("");
+
   // --- Probe limitations ---------------------------------------------------
   lines.push("## Probe limitations");
   lines.push("");
   lines.push(
-    "- **Scope is diff-window-only.** `inserted_method_scope` can confirm the enclosing class only when a `class` " +
-      "header is visible in the same hunk; otherwise it returns `unknown`. It cannot see the full file, so it cannot " +
-      "catch a wrong-scope insertion whose surrounding class is off-screen.",
+    "- **Scope now uses full-file reconstruction.** `inserted_method_scope` first tries the diff window, then resolves " +
+      "the enclosing class from the reconstructed patched file. It returns `unknown` only when no workspace base is " +
+      "available, the patch cannot be applied, or the inserted method cannot be located in the reconstructed file.",
+  );
+  lines.push(
+    "- **The reconstruction parser is indentation-based, not a full Python parser.** It is robust to decorators, " +
+      "comments, blank lines, nested functions, and multiple classes per file, but a `class `/`def ` token inside a " +
+      "multi-line string literal could fool it.",
   );
   lines.push(
     "- **python_parse is partial.** It parses only self-contained inserted blocks. Fragment edits (a changed " +
@@ -347,10 +412,11 @@ export function renderMarkdown(report: ProbeReport): string {
   lines.push(recommendedNextStep(summary));
   lines.push("");
   lines.push(
-    "Reliable enough to feed a critic now: `edited_files`, `minimality_rewrite_risk`, and `failing_behavior_pattern` " +
-      "(with its caveats). Still weak / mostly `unknown`: `inserted_method_scope` (needs full-file reconstruction) and " +
-      "`python_parse` (needs whole-file content). The requests broad-rewrite and matplotlib missing-empty-array " +
-      "signals are the strongest deterministic catches; the sympy scope defect remains largely invisible to cheap probes.",
+    "Reliable enough to feed a critic now: `edited_files`, `minimality_rewrite_risk`, `failing_behavior_pattern` " +
+      "(with its caveats), and — after full-file reconstruction — `inserted_method_scope`, which now catches the sympy " +
+      "wrong-scope defect that was previously invisible. Still partial: `python_parse` (parses only self-contained " +
+      "inserted blocks). The requests broad-rewrite, matplotlib missing-empty-array, and sympy wrong-scope signals are " +
+      "now all deterministic catches.",
   );
   lines.push("");
 
@@ -427,6 +493,75 @@ export interface LoadedRun {
   readonly toolCalls: RawToolCall[] | null;
   readonly stdout: string | null;
   readonly stderr: string | null;
+  // Full-file reconstruction (milestone 4): patched content per edited file (in memory) plus
+  // observability metadata. Empty / "unavailable" when no workspace base was found.
+  readonly reconstructedSources: Record<string, string>;
+  readonly reconstruction: ReconstructionInfo;
+}
+
+// Reconstruct each edited file's patched content in memory from the run's workspace base +
+// modelPatch. The workspace is read-only; reconstructed content is never written back. When the
+// workspace path is absent or a file/hunk fails to apply, the failure is recorded honestly.
+async function reconstructEditedFiles(
+  vtraceDir: string,
+  patch: string,
+): Promise<{ sources: Record<string, string>; info: ReconstructionInfo }> {
+  const editedFiles = editedFilesFromPatch(patch);
+  if (editedFiles.length === 0) {
+    return { sources: {}, info: { attempted: false, source: "unavailable", filesReconstructed: [], filesFailed: [], errors: [] } };
+  }
+  const meta = await readJsonRecord(path.join(vtraceDir, "_run.meta.json"));
+  const workspacePath = meta ? asString(meta.vtraceWorkspacePath) : null;
+  if (workspacePath === null) {
+    return {
+      sources: {},
+      info: {
+        attempted: true,
+        source: "unavailable",
+        filesReconstructed: [],
+        filesFailed: editedFiles,
+        errors: ["No vtraceWorkspacePath recorded in _run.meta.json; cannot read original file content."],
+      },
+    };
+  }
+
+  const sources: Record<string, string> = {};
+  const filesReconstructed: string[] = [];
+  const filesFailed: string[] = [];
+  const errors: string[] = [];
+  for (const rel of editedFiles) {
+    const original = await readTextFile(path.join(workspacePath, rel));
+    if (original === null) {
+      filesFailed.push(rel);
+      errors.push(`${rel}: original content not found in workspace.`);
+      continue;
+    }
+    const result = reconstructFile(original, patch, rel);
+    if (!result.ok || result.content === undefined) {
+      filesFailed.push(rel);
+      errors.push(`${rel}: ${result.error ?? "reconstruction failed"}.`);
+      continue;
+    }
+    sources[rel] = result.content;
+    filesReconstructed.push(rel);
+  }
+
+  const source: ReconstructionSource = filesReconstructed.length > 0 ? "workspace_plus_patch" : "unavailable";
+  return {
+    sources,
+    info: { attempted: true, source, filesReconstructed, filesFailed, errors },
+  };
+}
+
+async function readJsonRecord(p: string): Promise<Record<string, unknown> | null> {
+  const text = await readTextFile(p);
+  if (text === null) return null;
+  try {
+    const parsed = JSON.parse(text);
+    return isRecord(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function loadRun(resultsDir: string, runLabel: string): Promise<LoadedRun | null> {
@@ -438,13 +573,17 @@ export async function loadRun(resultsDir: string, runLabel: string): Promise<Loa
     readTextFile(path.join(vtraceDir, "_run.stderr.txt")),
   ]);
   if (record === null) return null;
+  const patch = asString(record.modelPatch) ?? "";
+  const { sources, info } = await reconstructEditedFiles(vtraceDir, patch);
   return {
     runLabel,
     instanceId: asString(record.instanceId) ?? runLabel,
-    patch: asString(record.modelPatch) ?? "",
+    patch,
     toolCalls,
     stdout,
     stderr,
+    reconstructedSources: sources,
+    reconstruction: info,
   };
 }
 
@@ -525,6 +664,8 @@ async function main(config: CliConfig): Promise<void> {
         stdout: loaded.stdout,
         stderr: loaded.stderr,
         parsePython,
+        reconstructedSources: loaded.reconstructedSources,
+        reconstruction: loaded.reconstruction,
       }),
     );
   }

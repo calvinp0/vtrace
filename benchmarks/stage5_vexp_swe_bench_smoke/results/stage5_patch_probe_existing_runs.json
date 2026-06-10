@@ -1,11 +1,13 @@
 {
-  "generatedAt": "2026-06-10T13:21:38.572Z",
+  "generatedAt": "2026-06-10T15:51:35.705Z",
   "summary": {
     "runsAnalyzed": 12,
-    "runsWithHighRisk": 3,
-    "runsWithKnownDefectLikelyCaught": 5,
-    "runsWithUnknownScope": 2,
-    "runsWithNoTestEvidence": 10
+    "runsWithHighRisk": 4,
+    "runsWithKnownDefectLikelyCaught": 6,
+    "runsWithUnknownScope": 0,
+    "runsWithNoTestEvidence": 10,
+    "runsReconstructed": 12,
+    "runsScopeResolvedByReconstruction": 2
   },
   "runs": [
     {
@@ -59,7 +61,16 @@
         }
       ],
       "overallRisk": "medium",
-      "knownDefectLikelyCaught": false
+      "knownDefectLikelyCaught": false,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "sympy/printing/pycode.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     },
     {
       "instanceId": "sympy__sympy-16766",
@@ -96,10 +107,10 @@
         },
         {
           "probeId": "inserted_method_scope",
-          "status": "unknown",
-          "confidence": "low",
+          "status": "pass",
+          "confidence": "high",
           "evidence": [
-            "Inserted method(s) _print_Indexed, _print_IndexedBase found, but no enclosing class header is visible in the diff window, so the landing scope cannot be determined from the unified diff alone."
+            "Full-file reconstruction: inserted method(s) _print_Indexed, _print_IndexedBase resolve inside the expected class PythonCodePrinter per the reconstructed file's indentation structure."
           ]
         },
         {
@@ -112,7 +123,16 @@
         }
       ],
       "overallRisk": "low",
-      "knownDefectLikelyCaught": null
+      "knownDefectLikelyCaught": false,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "sympy/printing/pycode.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     },
     {
       "instanceId": "sympy__sympy-16766",
@@ -149,10 +169,10 @@
         },
         {
           "probeId": "inserted_method_scope",
-          "status": "unknown",
-          "confidence": "low",
+          "status": "fail",
+          "confidence": "high",
           "evidence": [
-            "Inserted method(s) _print_Indexed found, but no enclosing class header is visible in the diff window, so the landing scope cannot be determined from the unified diff alone."
+            "Full-file reconstruction: inserted method(s) _print_Indexed in AbstractPythonCodePrinter (line 349) landed outside the expected class PythonCodePrinter. Resolved from the reconstructed file's indentation structure, not just the diff window."
           ]
         },
         {
@@ -164,8 +184,17 @@
           ]
         }
       ],
-      "overallRisk": "medium",
-      "knownDefectLikelyCaught": null
+      "overallRisk": "high",
+      "knownDefectLikelyCaught": true,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "sympy/printing/pycode.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     },
     {
       "instanceId": "sympy__sympy-16766",
@@ -218,7 +247,16 @@
         }
       ],
       "overallRisk": "medium",
-      "knownDefectLikelyCaught": false
+      "knownDefectLikelyCaught": false,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "sympy/printing/pycode.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     },
     {
       "instanceId": "matplotlib__matplotlib-22719",
@@ -272,7 +310,16 @@
         }
       ],
       "overallRisk": "medium",
-      "knownDefectLikelyCaught": true
+      "knownDefectLikelyCaught": true,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "lib/matplotlib/category.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     },
     {
       "instanceId": "matplotlib__matplotlib-22719",
@@ -326,7 +373,16 @@
         }
       ],
       "overallRisk": "medium",
-      "knownDefectLikelyCaught": false
+      "knownDefectLikelyCaught": false,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "lib/matplotlib/category.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     },
     {
       "instanceId": "matplotlib__matplotlib-22719",
@@ -380,7 +436,16 @@
         }
       ],
       "overallRisk": "medium",
-      "knownDefectLikelyCaught": false
+      "knownDefectLikelyCaught": false,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "lib/matplotlib/category.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     },
     {
       "instanceId": "matplotlib__matplotlib-22719",
@@ -434,7 +499,16 @@
         }
       ],
       "overallRisk": "medium",
-      "knownDefectLikelyCaught": true
+      "knownDefectLikelyCaught": true,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "lib/matplotlib/category.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     },
     {
       "instanceId": "psf__requests-5414",
@@ -488,7 +562,16 @@
         }
       ],
       "overallRisk": "high",
-      "knownDefectLikelyCaught": true
+      "knownDefectLikelyCaught": true,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "requests/models.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     },
     {
       "instanceId": "psf__requests-5414",
@@ -542,7 +625,16 @@
         }
       ],
       "overallRisk": "high",
-      "knownDefectLikelyCaught": true
+      "knownDefectLikelyCaught": true,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "requests/models.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     },
     {
       "instanceId": "psf__requests-5414",
@@ -596,7 +688,16 @@
         }
       ],
       "overallRisk": "high",
-      "knownDefectLikelyCaught": true
+      "knownDefectLikelyCaught": true,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "requests/models.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     },
     {
       "instanceId": "psf__requests-5414",
@@ -650,7 +751,16 @@
         }
       ],
       "overallRisk": "medium",
-      "knownDefectLikelyCaught": false
+      "knownDefectLikelyCaught": false,
+      "reconstruction": {
+        "attempted": true,
+        "source": "workspace_plus_patch",
+        "filesReconstructed": [
+          "requests/models.py"
+        ],
+        "filesFailed": [],
+        "errors": []
+      }
     }
   ],
   "instances": [
@@ -659,9 +769,9 @@
       "knownDefect": "wrong class/function/class-scope placement (methods in AbstractPythonCodePrinter instead of PythonCodePrinter)",
       "targetProbeId": "inserted_method_scope",
       "runs": 4,
-      "knownDefectCaughtRuns": 0,
-      "knownDefectNotFlaggedRuns": 2,
-      "knownDefectUnknownRuns": 2
+      "knownDefectCaughtRuns": 1,
+      "knownDefectNotFlaggedRuns": 3,
+      "knownDefectUnknownRuns": 0
     },
     {
       "instanceId": "matplotlib__matplotlib-22719",
@@ -700,8 +810,8 @@
     },
     {
       "id": "inserted_method_scope",
-      "checks": "For inserted `def <pattern>` methods, the enclosing class visible in the diff vs the expected class.",
-      "statuses": "pass = in expected class; fail = wrong class; unknown = scope not visible in the diff."
+      "checks": "For inserted `def <pattern>` methods, the enclosing class — from the diff window, escalating to the reconstructed full file (workspace base + patch) when the diff window is inconclusive.",
+      "statuses": "pass = in expected class; fail = wrong class/module scope; unknown = scope undetermined AND no reconstruction available."
     },
     {
       "id": "failing_behavior_pattern",
@@ -719,6 +829,8 @@
     "A `pass` means a probe found no problem in the diff window — not that the patch is correct.",
     "An `unknown` is an honest measurement gap (e.g. scope not visible in the diff), not a pass.",
     "This does not run agents, Docker, or any model; it only inspects existing artifacts.",
+    "Full-file reconstruction reads the run workspace and applies the patch IN MEMORY only; it never writes reconstructed content back and never mutates the workspace.",
+    "The reconstruction parser is indentation-based, not a full Python parser, and could be fooled by `class`/`def` text inside multi-line strings.",
     "This does not implement the critic or repair loop, and changes no retrieval / Capsule / PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY behavior.",
     "Probe heuristics are tuned against three known losses and may not generalize without further validation."
   ]

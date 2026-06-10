@@ -575,6 +575,8 @@ async function main(config: CliConfig): Promise<void> {
       stdout: loaded.stdout,
       stderr: loaded.stderr,
       parsePython,
+      reconstructedSources: loaded.reconstructedSources,
+      reconstruction: loaded.reconstruction,
     });
     const signals = await loadRunMetaSignals(config.resultsDir, label);
     const input = buildCriticInput(probeSummary, loaded.patch, signals);

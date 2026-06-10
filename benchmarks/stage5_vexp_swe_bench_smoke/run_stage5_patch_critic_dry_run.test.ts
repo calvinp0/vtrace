@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "bun:test";
 
-import { type PatchProbeSummary, type PythonParser, summarizePatch } from "./stage5_patch_probes";
+import { type PatchProbeSummary, type PythonParser, reconstructFile, summarizePatch } from "./stage5_patch_probes";
 import { buildDeterministicPatchCriticReport, validatePatchCriticReport } from "./stage5_patch_critic";
 import {
   type CriticRunRecord,
@@ -172,4 +172,63 @@ test("recommendedNextStep flags the scope-blind case when sympy scope is never c
   const rec = recommendedNextStep(report.summary, report.instances);
   assert.ok(rec.startsWith("B"));
   assert.ok(rec.toLowerCase().includes("full-file reconstruction"));
+});
+
+// ---------------------------------------------------------------------------
+// 9. Critic dry run consumes the improved (reconstruction-based) scope result.
+// ---------------------------------------------------------------------------
+test("critic consumes a reconstruction-derived scope FAIL as a high-confidence repair", () => {
+  const original = [
+    "class AbstractPythonCodePrinter(CodePrinter):",
+    "",
+    "    def _print_NoneToken(self, arg):",
+    "        return 'None'",
+    "",
+    "",
+    "class PythonCodePrinter(AbstractPythonCodePrinter):",
+    "",
+    "    def _print_sign(self, e):",
+    "        return e",
+    "",
+  ].join("\n");
+  // Diff-window-unknown patch that lands _print_Indexed in AbstractPythonCodePrinter.
+  const patch = [
+    "diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py",
+    "--- a/sympy/printing/pycode.py",
+    "+++ b/sympy/printing/pycode.py",
+    "@@ -3,6 +3,9 @@ def _print_NoneToken(self, arg):",
+    "     def _print_NoneToken(self, arg):",
+    "         return 'None'",
+    " ",
+    "+    def _print_Indexed(self, expr):",
+    "+        return base",
+    "+",
+    " ",
+    " class PythonCodePrinter(AbstractPythonCodePrinter):",
+  ].join("\n");
+  const reconstructed = reconstructFile(original, patch, "sympy/printing/pycode.py").content!;
+
+  const probeSummary = summarizePatch({
+    instanceId: "sympy__sympy-16766",
+    runLabel: "eval-patchverify-before-sympy-16766",
+    patch,
+    toolCalls: null,
+    stdout: null,
+    stderr: null,
+    parsePython: PARSE_OK,
+    reconstructedSources: { "sympy/printing/pycode.py": reconstructed },
+    reconstruction: {
+      attempted: true,
+      source: "workspace_plus_patch",
+      filesReconstructed: ["sympy/printing/pycode.py"],
+      filesFailed: [],
+      errors: [],
+    },
+  });
+  const report = buildDeterministicPatchCriticReport(buildCriticInput(probeSummary, patch, SIGNALS));
+  assert.equal(report.scope_ok, false);
+  assert.equal(report.risk, "high");
+  assert.equal(report.repair_required, true);
+  assert.equal(report.confidence, "high");
+  assert.deepEqual(validatePatchCriticReport(report), []);
 });

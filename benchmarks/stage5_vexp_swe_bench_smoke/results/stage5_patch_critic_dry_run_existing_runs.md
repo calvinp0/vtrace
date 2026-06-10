@@ -1,24 +1,24 @@
 # Stage 5 patch critic dry run over existing runs
 
-_Generated: 2026-06-10T15:30:47.954Z_
+_Generated: 2026-06-10T15:51:35.828Z_
 
 _Report-only dry run of a DETERMINISTIC/mock critic over patches that already exist on disk. No agents, no Docker, no model calls, NO repair (the sole subprocess is a local `python3 ast.parse`); no raw-artifact mutation. The critic dimensions are warning signals, not correctness oracles._
 
 ## Summary
 
-A deterministic critic consumed the milestone-2 probe outputs for 12 passive-treatment runs (EDIT_GUARD + PATCH_VERIFY, before/after, across sympy / matplotlib / requests). It would have requested a bounded repair on 5 run(s): 3 high-risk, 2 medium-risk. 7 run(s) were low-risk and 0 unknown-risk. The known target defect was likely caught in 5 run(s). Scope stayed indeterminate from the diff in 2 sympy run(s); 10 run(s) showed no named-test evidence.
+A deterministic critic consumed the milestone-2 probe outputs for 12 passive-treatment runs (EDIT_GUARD + PATCH_VERIFY, before/after, across sympy / matplotlib / requests). It would have requested a bounded repair on 6 run(s): 4 high-risk, 2 medium-risk. 6 run(s) were low-risk and 0 unknown-risk. The known target defect was likely caught in 6 run(s). Scope stayed indeterminate from the diff in 0 sympy run(s); 10 run(s) showed no named-test evidence.
 
 | metric | value |
 | --- | --- |
 | runsAnalyzed | 12 |
-| repairRequiredCount | 5 |
-| highRiskCount | 3 |
+| repairRequiredCount | 6 |
+| highRiskCount | 4 |
 | mediumRiskCount | 2 |
-| lowRiskCount | 7 |
+| lowRiskCount | 6 |
 | unknownRiskCount | 0 |
-| scopeUnknownCount | 2 |
+| scopeUnknownCount | 0 |
 | missingTestEvidenceCount | 10 |
-| knownDefectLikelyCaughtCount | 5 |
+| knownDefectLikelyCaughtCount | 6 |
 
 ## Method
 
@@ -35,8 +35,8 @@ For each run we ran the deterministic milestone-2 probes over the first patch (`
 | run | instance | scope_ok | failing_behavior | minimality_ok | test_evidence_ok | risk | confidence | repair |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | eval-editguard-before-sympy-16766 | sympy__sympy-16766 | true | null | true | false | low | medium | no |
-| eval-editguard-after-sympy-16766 | sympy__sympy-16766 | null | null | true | true | low | low | no |
-| eval-patchverify-before-sympy-16766 | sympy__sympy-16766 | null | null | true | false | low | low | no |
+| eval-editguard-after-sympy-16766 | sympy__sympy-16766 | true | null | true | true | low | medium | no |
+| eval-patchverify-before-sympy-16766 | sympy__sympy-16766 | false | null | true | false | high | high | yes |
 | eval-patchverify-after-sympy-16766 | sympy__sympy-16766 | true | null | true | false | low | medium | no |
 | eval-editguard-before-matplotlib-22719 | matplotlib__matplotlib-22719 | null | false | false | false | medium | medium | yes |
 | eval-editguard-after-matplotlib-22719 | matplotlib__matplotlib-22719 | null | true | true | false | low | medium | no |
@@ -59,8 +59,8 @@ For each run we ran the deterministic milestone-2 probes over the first patch (`
 
 ### eval-editguard-after-sympy-16766
 
-- **Instance**: sympy__sympy-16766; risk: low; confidence: low.
-- **scope_ok**: null — Inserted method(s) _print_Indexed, _print_IndexedBase found, but no enclosing class header is visible in the diff window, so the landing scope cannot be determined from the unified diff alone.
+- **Instance**: sympy__sympy-16766; risk: low; confidence: medium.
+- **scope_ok**: true — Full-file reconstruction: inserted method(s) _print_Indexed, _print_IndexedBase resolve inside the expected class PythonCodePrinter per the reconstructed file's indentation structure.
 - **failing_behavior_handled**: null — No failing-behavior pattern configured for this instance; failing-behavior coverage cannot be assessed from the diff.
 - **minimality_ok**: true — +7/-0 lines across 1 file(s), 1 hunk(s); deleted control-flow lines: 0. Patch appears small/additive (few or no deletions, single file).
 - **test_evidence_ok**: true — A named test command/run is present: python -m pytest sympy/printing/tests/test_pycode.py -v -x 2>&1 | head -80.
@@ -69,12 +69,13 @@ For each run we ran the deterministic milestone-2 probes over the first patch (`
 
 ### eval-patchverify-before-sympy-16766
 
-- **Instance**: sympy__sympy-16766; risk: low; confidence: low.
-- **scope_ok**: null — Inserted method(s) _print_Indexed found, but no enclosing class header is visible in the diff window, so the landing scope cannot be determined from the unified diff alone.
+- **Instance**: sympy__sympy-16766; risk: high; confidence: high.
+- **scope_ok**: false — Full-file reconstruction: inserted method(s) _print_Indexed in AbstractPythonCodePrinter (line 349) landed outside the expected class PythonCodePrinter. Resolved from the reconstructed file's indentation structure, not just the diff window.
 - **failing_behavior_handled**: null — No failing-behavior pattern configured for this instance; failing-behavior coverage cannot be assessed from the diff.
 - **minimality_ok**: true — +4/-0 lines across 1 file(s), 1 hunk(s); deleted control-flow lines: 0. Patch appears small/additive (few or no deletions, single file).
 - **test_evidence_ok**: false — Ad-hoc python check(s) ran (e.g. python3 -c " from sympy import * p = IndexedBase('p') print('pycode(p[0]):', pycode(p[0])) print('pycode(p[1, 2]):', pyc…) but no named test suite (pytest/unittest) was detected.
-- **repair_required**: no — No high- or medium-confidence defect signal; deterministic probes are pass/unknown only, so no repair is requested.
+- **repair_required**: yes — inserted method(s) landed outside the expected class (high-confidence scope fail).
+- **repair_instructions**: Move the inserted _print_* methods into PythonCodePrinter; the diff shows them landing outside the intended class. Reconstruct full file scope to confirm placement before re-evaluating.
 - **evidence probes**: edited_files, minimality_rewrite_risk, python_parse, inserted_method_scope, test_evidence.
 
 ### eval-patchverify-after-sympy-16766
@@ -176,14 +177,15 @@ For each run we ran the deterministic milestone-2 probes over the first patch (`
 
 | instance | known defect | target probe | runs | repair required | defect caught | scope unknown |
 | --- | --- | --- | --- | --- | --- | --- |
-| sympy__sympy-16766 | wrong class/function/class-scope placement (methods in AbstractPythonCodePrinter instead of PythonCodePrinter) | `inserted_method_scope` | 4 | 0 | 0 | 2 |
+| sympy__sympy-16766 | wrong class/function/class-scope placement (methods in AbstractPythonCodePrinter instead of PythonCodePrinter) | `inserted_method_scope` | 4 | 1 | 1 | 0 |
 | matplotlib__matplotlib-22719 | patch did not fully handle the failing empty-array behavior (missing early return for empty input) | `failing_behavior_pattern` | 4 | 2 | 2 | 0 |
 | psf__requests-5414 | broad control-flow rewrite instead of minimal additive validation | `minimality_rewrite_risk` | 4 | 3 | 3 | 0 |
 
 ## Repair-required analysis
 
-The critic would request repair on 5/12 run(s). Each request is backed by a concrete probe fail and carries actionable, patch-modifying instructions:
+The critic would request repair on 6/12 run(s). Each request is backed by a concrete probe fail and carries actionable, patch-modifying instructions:
 
+- **eval-patchverify-before-sympy-16766** (high risk, high confidence): inserted method(s) landed outside the expected class (high-confidence scope fail). → Move the inserted _print_* methods into PythonCodePrinter; the diff shows them landing outside the intended class. Reconstruct full file scope to confirm placement before re-evaluating.
 - **eval-editguard-before-matplotlib-22719** (medium risk, medium confidence): expected failing behavior not handled (no matching added code); non-minimal patch (deleted control-flow / net-negative hunk). → Add an explicit empty-array handling path in lib/matplotlib/category.py before the code path that assumes non-empty values. Prefer a minimal additive change in lib/matplotlib/category.py instead of deleting/restructuring the existing control flow.
 - **eval-patchverify-after-matplotlib-22719** (medium risk, medium confidence): expected failing behavior not handled (no matching added code); non-minimal patch (deleted control-flow / net-negative hunk). → Add an explicit empty-array handling path in lib/matplotlib/category.py before the code path that assumes non-empty values. Prefer a minimal additive change in lib/matplotlib/category.py instead of deleting/restructuring the existing control flow.
 - **eval-editguard-before-requests-5414** (high risk, high confidence): broad control-flow rewrite where a minimal additive change would suffice (high-confidence). → Prefer a minimal additive validation for empty/invalid IDNA labels instead of restructuring the existing unicode_is_ascii control flow.
@@ -194,10 +196,7 @@ Strong (high-confidence) signals that force repair: wrong inserted-method scope,
 
 ## Unknown / insufficient-signal cases
 
-These runs lack enough deterministic signal for the critic to act. They are reported honestly as `null` / `unknown` rather than passed, and would need better probes (full-file reconstruction) or a live critic with wider context to resolve:
-
-- **eval-editguard-after-sympy-16766** (sympy__sympy-16766): inserted-method scope not visible in the diff window. Inserted method(s) _print_Indexed, _print_IndexedBase found, but no enclosing class header is visible in the diff window, so the landing scope cannot be determined from the unified diff alone.
-- **eval-patchverify-before-sympy-16766** (sympy__sympy-16766): inserted-method scope not visible in the diff window. Inserted method(s) _print_Indexed found, but no enclosing class header is visible in the diff window, so the landing scope cannot be determined from the unified diff alone.
+No runs were left in an insufficient-signal state.
 
 The sympy wrong-scope defect is the clearest gap: the deterministic `inserted_method_scope` probe can only see the diff window, so when no `class` header is present it returns `unknown` and the critic correctly declines to force a repair. Catching that defect reliably requires full-file reconstruction (apply the patch to a snapshot and AST-resolve the enclosing class), not a cheap diff heuristic.
 
@@ -211,7 +210,7 @@ The sympy wrong-scope defect is the clearest gap: the deterministic `inserted_me
 
 ## Recommended next step
 
-B (with an A prerequisite for one dimension). Add a disabled-by-default LIVE critic invocation that writes `_patch_critic_input.json` / `_patch_critic_report.json` but takes NO repair action. The deterministic critic already converts 5 run(s) of real risk (broad-rewrite and missing-failing-behavior signals) into concrete, actionable repair instructions, which is enough deterministic grounding to justify a report-only live critic next. HOWEVER, the sympy wrong-scope defect remains invisible to cheap probes (scope undetermined in 2 run(s), 0 caught), so implement full-file reconstruction for the scope probe (option A) FIRST for that dimension — otherwise the live critic inherits the same blind spot.
+B. Add a disabled-by-default LIVE critic invocation that writes the critic input/report artifacts but takes NO repair action. The deterministic critic converts 6 run(s) of real risk into concrete repair instructions with no blind dimensions remaining.
 
 ## Non-claims
 

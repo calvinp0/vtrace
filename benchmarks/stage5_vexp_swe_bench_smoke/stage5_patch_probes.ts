@@ -28,6 +28,28 @@ export interface PatchProbeResult {
   readonly evidence: string[];
 }
 
+// Observability for full-file reconstruction (milestone 4). Records whether scope-sensitive
+// probes were able to inspect reconstructed patched-file content rather than only the diff
+// window, and where that content came from. `source` is "unavailable" when no reconstruction
+// was attempted or none succeeded.
+export type ReconstructionSource = "workspace_plus_patch" | "patched_workspace" | "unavailable";
+
+export interface ReconstructionInfo {
+  readonly attempted: boolean;
+  readonly source: ReconstructionSource;
+  readonly filesReconstructed: string[];
+  readonly filesFailed: string[];
+  readonly errors: string[];
+}
+
+export const NO_RECONSTRUCTION: ReconstructionInfo = {
+  attempted: false,
+  source: "unavailable",
+  filesReconstructed: [],
+  filesFailed: [],
+  errors: [],
+};
+
 export interface PatchProbeSummary {
   readonly instanceId: string;
   readonly runLabel: string;
@@ -36,6 +58,9 @@ export interface PatchProbeSummary {
   readonly probes: PatchProbeResult[];
   readonly overallRisk: RiskLevel;
   readonly knownDefectLikelyCaught: boolean | null;
+  // Reconstruction observability (milestone 4). Absent on summaries built before reconstruction
+  // was introduced; treated as NO_RECONSTRUCTION when missing.
+  readonly reconstruction?: ReconstructionInfo;
 }
 
 // A minimal view of a recorded tool call (Bash commands carry their command string).
@@ -269,6 +294,205 @@ export function pythonParseProbe(patch: string, parse: PythonParser): PatchProbe
 }
 
 // ---------------------------------------------------------------------------
+// Full-file reconstruction (milestone 4): apply a unified diff to original file
+// content IN MEMORY so scope-sensitive probes can inspect the patched file.
+// ---------------------------------------------------------------------------
+
+export interface DiffHunk {
+  readonly oldStart: number; // 1-based line in the original (a hint; matching is content-based)
+  readonly oldBlock: string[]; // context + removed lines (the "before" image)
+  readonly newBlock: string[]; // context + added lines (the "after" image)
+}
+
+export interface FilePatch {
+  readonly path: string;
+  readonly hunks: DiffHunk[];
+}
+
+// Parse a (possibly multi-file) unified diff into per-file hunks. The "before" image of each
+// hunk is its context + removed lines; the "after" image is its context + added lines. The
+// `--- /+++` and `index`/mode lines are ignored except to recover the file path.
+export function parseUnifiedDiff(patch: string): FilePatch[] {
+  const files: FilePatch[] = [];
+  let cur: { path: string; hunks: DiffHunk[] } | null = null;
+  let oldStart = 1;
+  let oldBlock: string[] = [];
+  let newBlock: string[] = [];
+  let inHunk = false;
+
+  const flushHunk = (): void => {
+    if (cur && inHunk) cur.hunks.push({ oldStart, oldBlock, newBlock });
+    oldBlock = [];
+    newBlock = [];
+    inHunk = false;
+  };
+  const flushFile = (): void => {
+    flushHunk();
+    if (cur) files.push(cur);
+    cur = null;
+  };
+
+  for (const line of patch.split("\n")) {
+    if (line.startsWith("diff --git")) {
+      flushFile();
+      continue;
+    }
+    if (line.startsWith("--- ")) continue;
+    if (line.startsWith("+++ ")) {
+      flushHunk();
+      const p = line.slice(4).trim().replace(/^[ab]\//, "");
+      if (!cur) cur = { path: p, hunks: [] };
+      else cur = { path: p, hunks: cur.hunks };
+      continue;
+    }
+    if (line.startsWith("@@")) {
+      flushHunk();
+      const m = /^@@ -(\d+)(?:,\d+)? \+\d+(?:,\d+)? @@/.exec(line);
+      oldStart = m ? parseInt(m[1]!, 10) : 1;
+      inHunk = true;
+      continue;
+    }
+    if (!cur || !inHunk) continue;
+    if (line.startsWith("\\")) continue; // "\ No newline at end of file"
+    const tag = line[0];
+    const text = line.slice(1);
+    if (tag === " ") {
+      oldBlock.push(text);
+      newBlock.push(text);
+    } else if (tag === "-") {
+      oldBlock.push(text);
+    } else if (tag === "+") {
+      newBlock.push(text);
+    }
+  }
+  flushFile();
+  return files;
+}
+
+export interface ApplyResult {
+  readonly ok: boolean;
+  readonly content?: string;
+  readonly error?: string;
+}
+
+// Locate the exact `block` of consecutive lines within `lines`, preferring the occurrence
+// nearest to `expected`. Returns -1 if not found. Matching is exact-content (no whitespace
+// fuzz); only the line OFFSET is tolerated, which is what real workspace bases need (the patch
+// base and the captured workspace differ in line numbers, not in the surrounding text).
+function locateBlock(lines: readonly string[], block: readonly string[], expected: number): number {
+  if (block.length === 0) return Math.max(0, Math.min(expected, lines.length));
+  const max = lines.length - block.length;
+  let best = -1;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (let i = 0; i <= max; i += 1) {
+    let match = true;
+    for (let j = 0; j < block.length; j += 1) {
+      if (lines[i + j] !== block[j]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) {
+      const dist = Math.abs(i - expected);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    }
+  }
+  return best;
+}
+
+// Apply a single file's hunks to its original content in memory. Pure: never touches disk.
+// Returns the reconstructed content, or an error describing the first hunk that did not match.
+export function applyFilePatch(original: string, hunks: readonly DiffHunk[]): ApplyResult {
+  const lines = original.split("\n");
+  let offset = 0;
+  for (const h of hunks) {
+    const expected = h.oldStart - 1 + offset;
+    const at = locateBlock(lines, h.oldBlock, expected);
+    if (at < 0) {
+      return { ok: false, error: `hunk near original line ${h.oldStart} did not match (context not found)` };
+    }
+    lines.splice(at, h.oldBlock.length, ...h.newBlock);
+    offset += h.newBlock.length - h.oldBlock.length;
+  }
+  return { ok: true, content: lines.join("\n") };
+}
+
+// Convenience: reconstruct one file from its original content + the full (multi-file) patch.
+export function reconstructFile(original: string, patch: string, filePath: string): ApplyResult {
+  const file = parseUnifiedDiff(patch).find((f) => f.path === filePath);
+  if (!file) return { ok: false, error: `no hunks for ${filePath} in patch` };
+  return applyFilePatch(original, file.hunks);
+}
+
+// ---------------------------------------------------------------------------
+// Indentation-based class/scope resolver (milestone 4). A deliberately simple parser: it does
+// NOT do full Python semantic resolution, only structural indentation. Robust to decorators,
+// blank lines, comments, nested functions, and multiple classes per file. Known limitation:
+// it can be fooled by `class `/`def ` text inside a multi-line string literal.
+// ---------------------------------------------------------------------------
+
+interface ScopeFrame {
+  readonly indent: number;
+  readonly kind: "class" | "def";
+  readonly name: string;
+}
+
+export interface EnclosingClassResult {
+  readonly methodName: string;
+  readonly lineNumber: number; // 1-based
+  readonly enclosingClass: string | null; // null = module scope or nested only in functions
+}
+
+const SOURCE_CLASS_RE = /^(\s*)class\s+(\w+)/;
+const SOURCE_DEF_RE = /^(\s*)(?:async\s+)?def\s+(\w+)/;
+
+function indentOf(line: string): number {
+  return line.length - line.replace(/^[ \t]*/, "").length;
+}
+
+// Find every `def <methodName>` in `source` and resolve its nearest enclosing class via an
+// indentation scope stack. A method defined directly at module level (or nested only inside
+// functions) resolves to `enclosingClass: null`.
+export function findEnclosingClasses(source: string, methodName: string): EnclosingClassResult[] {
+  const lines = source.split("\n");
+  const stack: ScopeFrame[] = [];
+  const results: EnclosingClassResult[] = [];
+  const targetRe = new RegExp(`^(\\s*)(?:async\\s+)?def\\s+(${escapeRegExp(methodName)})\\b`);
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i]!;
+    const stripped = line.trim();
+    if (stripped.length === 0 || stripped.startsWith("#") || stripped.startsWith("@")) continue;
+    const indent = indentOf(line);
+    while (stack.length > 0 && stack[stack.length - 1]!.indent >= indent) stack.pop();
+
+    const isTarget = targetRe.test(line);
+    if (isTarget) {
+      let enclosing: string | null = null;
+      for (let s = stack.length - 1; s >= 0; s -= 1) {
+        if (stack[s]!.kind === "class") {
+          enclosing = stack[s]!.name;
+          break;
+        }
+      }
+      results.push({ methodName, lineNumber: i + 1, enclosingClass: enclosing });
+    }
+
+    const cm = SOURCE_CLASS_RE.exec(line);
+    if (cm) {
+      stack.push({ indent, kind: "class", name: cm[2]! });
+      continue;
+    }
+    const dm = SOURCE_DEF_RE.exec(line);
+    if (dm) stack.push({ indent, kind: "def", name: dm[2]! });
+  }
+  return results;
+}
+
+// ---------------------------------------------------------------------------
 // Probe 4: inserted method / class scope
 // ---------------------------------------------------------------------------
 
@@ -327,7 +551,17 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-export function insertedMethodScopeProbe(patch: string, config: InstanceProbeConfig): PatchProbeResult {
+// Scope probe. First tries diff-only scope (cheap, works when the class header is visible in
+// the hunk). When the diff window is inconclusive AND reconstructed full-file content is
+// available, it resolves each inserted method's enclosing class from the reconstructed file's
+// indentation structure — which is what catches a wrong-scope insertion whose surrounding
+// class is off-screen in the diff (the SymPy failure mode). `reconstructedSource` is the
+// patched content of `config.expectedEditedFile`, or null when reconstruction was unavailable.
+export function insertedMethodScopeProbe(
+  patch: string,
+  config: InstanceProbeConfig,
+  reconstructedSource: string | null = null,
+): PatchProbeResult {
   const pattern = config.insertedMethodPattern!;
   const hint = config.expectedClassHint;
   const methods = findInsertedMethods(patch, pattern);
@@ -348,29 +582,82 @@ export function insertedMethodScopeProbe(patch: string, config: InstanceProbeCon
       confidence: "high",
       evidence: [
         `Inserted method(s) ${wrong.map((m) => `${m.name} in class ${m.enclosingClass}`).join(", ")} ` +
-          `landed outside the expected class ${hint}.`,
+          `landed outside the expected class ${hint} (diff-window evidence).`,
       ],
     };
   }
   const undetermined = methods.filter((m) => m.enclosingClass === null);
-  if (undetermined.length > 0) {
+  if (undetermined.length === 0) {
+    return {
+      probeId: "inserted_method_scope",
+      status: "pass",
+      confidence: "medium",
+      evidence: [
+        `Inserted method(s) ${named} appear within the expected class ${hint} per the diff context ` +
+          "(diff-window evidence only; full-file scope not independently confirmed).",
+      ],
+    };
+  }
+
+  // Diff window is inconclusive for at least one inserted method. Escalate to full-file
+  // reconstruction when available.
+  if (reconstructedSource === null) {
     return {
       probeId: "inserted_method_scope",
       status: "unknown",
       confidence: "low",
       evidence: [
-        `Inserted method(s) ${named} found, but no enclosing class header is visible in the diff window, ` +
-          "so the landing scope cannot be determined from the unified diff alone.",
+        `Inserted method(s) ${named} found, but no enclosing class header is visible in the diff window ` +
+          "and no reconstructed file content was available, so the landing scope cannot be determined.",
       ],
     };
   }
+
+  const names = Array.from(new Set(methods.map((m) => m.name)));
+  const located: EnclosingClassResult[] = [];
+  const unlocated: string[] = [];
+  for (const name of names) {
+    const hits = findEnclosingClasses(reconstructedSource, name);
+    if (hits.length === 0) unlocated.push(name);
+    else located.push(...hits);
+  }
+
+  if (located.length === 0) {
+    return {
+      probeId: "inserted_method_scope",
+      status: "unknown",
+      confidence: "low",
+      evidence: [
+        `Reconstructed full-file content was available but inserted method(s) ${named} could not be located in it; ` +
+          "scope cannot be determined.",
+      ],
+    };
+  }
+
+  const wrongScope = located.filter((r) => hint !== undefined && r.enclosingClass !== hint);
+  if (wrongScope.length > 0) {
+    const detail = wrongScope
+      .map((r) => `${r.methodName} in ${r.enclosingClass ?? "<module scope>"} (line ${r.lineNumber})`)
+      .join(", ");
+    return {
+      probeId: "inserted_method_scope",
+      status: "fail",
+      confidence: "high",
+      evidence: [
+        `Full-file reconstruction: inserted method(s) ${detail} landed outside the expected class ${hint}. ` +
+          "Resolved from the reconstructed file's indentation structure, not just the diff window.",
+      ],
+    };
+  }
+
+  const note = unlocated.length > 0 ? ` (could not locate: ${unlocated.join(", ")})` : "";
   return {
     probeId: "inserted_method_scope",
     status: "pass",
-    confidence: "medium",
+    confidence: "high",
     evidence: [
-      `Inserted method(s) ${named} appear within the expected class ${hint} per the diff context ` +
-        "(diff-window evidence only; full-file scope not independently confirmed).",
+      `Full-file reconstruction: inserted method(s) ${located.map((r) => r.methodName).join(", ")} resolve inside the ` +
+        `expected class ${hint} per the reconstructed file's indentation structure${note}.`,
     ],
   };
 }
@@ -480,6 +767,11 @@ export interface PatchInput {
   readonly parsePython: PythonParser;
   // Optional override; otherwise resolved from INSTANCE_CONFIGS by instanceId.
   readonly config?: InstanceProbeConfig;
+  // Optional full-file reconstruction (milestone 4). `reconstructedSources` maps an edited
+  // file path to its in-memory patched content; the scope probe consumes the entry for
+  // `config.expectedEditedFile`. `reconstruction` is attached to the summary for observability.
+  readonly reconstructedSources?: Record<string, string>;
+  readonly reconstruction?: ReconstructionInfo;
 }
 
 // Overall risk is the worst signal across the probes that can carry risk. Any high-confidence
@@ -504,7 +796,13 @@ export function summarizePatch(input: PatchInput): PatchProbeSummary {
     minimalityProbe(input.patch, { expectedFileCount }),
     pythonParseProbe(input.patch, input.parsePython),
   ];
-  if (config?.insertedMethodPattern) probes.push(insertedMethodScopeProbe(input.patch, config));
+  if (config?.insertedMethodPattern) {
+    const reconstructedSource =
+      config.expectedEditedFile && input.reconstructedSources
+        ? (input.reconstructedSources[config.expectedEditedFile] ?? null)
+        : null;
+    probes.push(insertedMethodScopeProbe(input.patch, config, reconstructedSource));
+  }
   if (config?.expectedBehaviorPatterns) probes.push(failingBehaviorProbe(input.patch, config));
   probes.push(testEvidenceProbe(input.toolCalls, input.stdout, input.stderr));
 
@@ -530,5 +828,6 @@ export function summarizePatch(input: PatchInput): PatchProbeSummary {
     probes,
     overallRisk,
     knownDefectLikelyCaught,
+    reconstruction: input.reconstruction ?? NO_RECONSTRUCTION,
   };
 }

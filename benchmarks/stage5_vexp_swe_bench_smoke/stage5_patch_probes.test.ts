@@ -5,13 +5,17 @@ import {
   INSTANCE_CONFIGS,
   type PythonParser,
   type RawToolCall,
+  applyFilePatch,
   editedFilesProbe,
   extractParseableBlocks,
   failingBehaviorProbe,
+  findEnclosingClasses,
   findInsertedMethods,
   insertedMethodScopeProbe,
   minimalityProbe,
+  parseUnifiedDiff,
   pythonParseProbe,
+  reconstructFile,
   summarizePatch,
   testEvidenceProbe,
 } from "./stage5_patch_probes";
@@ -295,4 +299,190 @@ test("summarizePatch wires probes and computes knownDefectLikelyCaught per targe
     parsePython: PARSE_OK,
   });
   assert.equal(sympyUnknown.knownDefectLikelyCaught, null);
+});
+
+// ===========================================================================
+// Full-file reconstruction (milestone 4).
+// ===========================================================================
+
+// An original Python module modeled on sympy/printing/pycode.py: two classes, the second
+// inheriting the first, with the printer methods that the patch inserts into.
+const ORIGINAL_PYCODE = [
+  "class AbstractPythonCodePrinter(CodePrinter):",
+  "",
+  "    def _print_NoneToken(self, arg):",
+  "        return 'None'",
+  "",
+  "",
+  "class PythonCodePrinter(AbstractPythonCodePrinter):",
+  "",
+  "    def _print_sign(self, e):",
+  "        return e",
+  "",
+].join("\n");
+
+// Patch that CORRECTLY inserts _print_Indexed into PythonCodePrinter (after its header).
+const PATCH_SCOPE_OK = [
+  "diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py",
+  "--- a/sympy/printing/pycode.py",
+  "+++ b/sympy/printing/pycode.py",
+  "@@ -7,6 +7,9 @@",
+  " class PythonCodePrinter(AbstractPythonCodePrinter):",
+  " ",
+  "+    def _print_Indexed(self, expr):",
+  "+        return base",
+  "+",
+  "     def _print_sign(self, e):",
+  "         return e",
+].join("\n");
+
+// Patch that WRONGLY inserts _print_Indexed into AbstractPythonCodePrinter (after _NoneToken,
+// before the PythonCodePrinter header). The diff window shows no class header above the insert,
+// so the diff-only probe is `unknown`; reconstruction reveals the wrong enclosing class.
+const PATCH_SCOPE_WRONG = [
+  "diff --git a/sympy/printing/pycode.py b/sympy/printing/pycode.py",
+  "--- a/sympy/printing/pycode.py",
+  "+++ b/sympy/printing/pycode.py",
+  "@@ -3,6 +3,9 @@ def _print_NoneToken(self, arg):",
+  "     def _print_NoneToken(self, arg):",
+  "         return 'None'",
+  " ",
+  "+    def _print_Indexed(self, expr):",
+  "+        return base",
+  "+",
+  " ",
+  " class PythonCodePrinter(AbstractPythonCodePrinter):",
+].join("\n");
+
+// 1. Applies a simple unified diff to original file content in memory.
+test("parseUnifiedDiff + applyFilePatch apply a hunk in memory", () => {
+  const files = parseUnifiedDiff(PATCH_SCOPE_OK);
+  assert.equal(files.length, 1);
+  assert.equal(files[0]!.path, "sympy/printing/pycode.py");
+  const result = applyFilePatch(ORIGINAL_PYCODE, files[0]!.hunks);
+  assert.equal(result.ok, true);
+  assert.ok(result.content!.includes("def _print_Indexed"));
+});
+
+// 2. Reconstructs a patched file without writing to disk (pure string in / string out), and
+//    the original input string is left unchanged.
+test("reconstructFile is pure — no disk, original untouched", () => {
+  const before = ORIGINAL_PYCODE;
+  const result = reconstructFile(ORIGINAL_PYCODE, PATCH_SCOPE_OK, "sympy/printing/pycode.py");
+  assert.equal(result.ok, true);
+  assert.notEqual(result.content, ORIGINAL_PYCODE);
+  assert.equal(before, ORIGINAL_PYCODE); // input not mutated
+  // A path with no hunks fails cleanly.
+  assert.equal(reconstructFile(ORIGINAL_PYCODE, PATCH_SCOPE_OK, "other/file.py").ok, false);
+});
+
+// Offset tolerance: the hunk's stated line number is wrong but the context still matches.
+test("applyFilePatch tolerates a wrong line-number hint (content-based match)", () => {
+  const shifted = `# license header\n# more\n${ORIGINAL_PYCODE}`;
+  const result = reconstructFile(shifted, PATCH_SCOPE_OK, "sympy/printing/pycode.py");
+  assert.equal(result.ok, true);
+  assert.ok(result.content!.includes("def _print_Indexed"));
+});
+
+// 3. Finds enclosing class for an inserted method in reconstructed Python content.
+test("findEnclosingClasses resolves the enclosing class by indentation", () => {
+  const ok = reconstructFile(ORIGINAL_PYCODE, PATCH_SCOPE_OK, "sympy/printing/pycode.py").content!;
+  const hits = findEnclosingClasses(ok, "_print_Indexed");
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0]!.enclosingClass, "PythonCodePrinter");
+
+  const wrong = reconstructFile(ORIGINAL_PYCODE, PATCH_SCOPE_WRONG, "sympy/printing/pycode.py").content!;
+  assert.equal(findEnclosingClasses(wrong, "_print_Indexed")[0]!.enclosingClass, "AbstractPythonCodePrinter");
+});
+
+// 7. Handles decorators / comments / blank lines / nested functions near defs.
+test("findEnclosingClasses is robust to decorators, comments, blanks, and nesting", () => {
+  const source = [
+    "class Outer:",
+    "    # a comment",
+    "",
+    "    @property",
+    "    @staticmethod",
+    "    def _print_Indexed(self, expr):",
+    "        # nested helper",
+    "        def helper():",
+    "            return 1",
+    "        return helper()",
+    "",
+    "def _print_Indexed_module_level(x):",
+    "    return x",
+  ].join("\n");
+  const inClass = findEnclosingClasses(source, "_print_Indexed");
+  assert.equal(inClass[0]!.enclosingClass, "Outer");
+  const moduleLevel = findEnclosingClasses(source, "_print_Indexed_module_level");
+  assert.equal(moduleLevel[0]!.enclosingClass, null); // module scope
+});
+
+// 5. Passes inserted _print_* method inside expected class (via reconstruction).
+test("scope probe PASSES via reconstruction when method lands in the expected class", () => {
+  const cfg = INSTANCE_CONFIGS["sympy__sympy-16766"]!;
+  const reconstructed = reconstructFile(ORIGINAL_PYCODE, PATCH_SCOPE_WRONG, "sympy/printing/pycode.py").content!;
+  // Use the diff that is diff-window-unknown so reconstruction is the decider; reconstructed
+  // content here is the CORRECT placement.
+  const ok = reconstructFile(ORIGINAL_PYCODE, PATCH_SCOPE_OK, "sympy/printing/pycode.py").content!;
+  const r = insertedMethodScopeProbe(PATCH_SCOPE_WRONG, cfg, ok);
+  assert.equal(r.status, "pass");
+  assert.equal(r.confidence, "high");
+  assert.ok(r.evidence.join(" ").includes("Full-file reconstruction"));
+  void reconstructed;
+});
+
+// 4. Flags inserted _print_* method inside wrong class (via reconstruction).
+test("scope probe FAILS via reconstruction when method lands in the wrong class", () => {
+  const cfg = INSTANCE_CONFIGS["sympy__sympy-16766"]!;
+  const reconstructed = reconstructFile(ORIGINAL_PYCODE, PATCH_SCOPE_WRONG, "sympy/printing/pycode.py").content!;
+  const r = insertedMethodScopeProbe(PATCH_SCOPE_WRONG, cfg, reconstructed);
+  assert.equal(r.status, "fail");
+  assert.equal(r.confidence, "high");
+  assert.ok(r.evidence.join(" ").includes("AbstractPythonCodePrinter"));
+});
+
+// 6. Returns unknown when reconstruction is unavailable and the diff window is inconclusive.
+test("scope probe stays UNKNOWN when reconstruction is unavailable", () => {
+  const cfg = INSTANCE_CONFIGS["sympy__sympy-16766"]!;
+  const r = insertedMethodScopeProbe(PATCH_SCOPE_WRONG, cfg, null);
+  assert.equal(r.status, "unknown");
+  assert.ok(r.evidence.join(" ").toLowerCase().includes("no reconstructed file content"));
+});
+
+// 10. Diff-only behavior still works (and short-circuits) when the class header is visible.
+test("scope probe still uses diff-only when the class header is in the hunk", () => {
+  const cfg = INSTANCE_CONFIGS["sympy__sympy-16766"]!;
+  // PATCH_SCOPE_OK shows `class PythonCodePrinter` in the hunk → diff-only PASS even if a
+  // (deliberately wrong) reconstructed source is supplied; reconstruction is not consulted.
+  const wrongSource = reconstructFile(ORIGINAL_PYCODE, PATCH_SCOPE_WRONG, "sympy/printing/pycode.py").content!;
+  const r = insertedMethodScopeProbe(PATCH_SCOPE_OK, cfg, wrongSource);
+  assert.equal(r.status, "pass");
+  assert.ok(r.evidence.join(" ").includes("diff context"));
+});
+
+// summarizePatch wires reconstructedSources into the scope probe and records reconstruction.
+test("summarizePatch consumes reconstructedSources and records reconstruction metadata", () => {
+  const wrong = reconstructFile(ORIGINAL_PYCODE, PATCH_SCOPE_WRONG, "sympy/printing/pycode.py").content!;
+  const summary = summarizePatch({
+    instanceId: "sympy__sympy-16766",
+    runLabel: "synthetic-recon",
+    patch: PATCH_SCOPE_WRONG,
+    toolCalls: null,
+    stdout: null,
+    stderr: null,
+    parsePython: PARSE_OK,
+    reconstructedSources: { "sympy/printing/pycode.py": wrong },
+    reconstruction: {
+      attempted: true,
+      source: "workspace_plus_patch",
+      filesReconstructed: ["sympy/printing/pycode.py"],
+      filesFailed: [],
+      errors: [],
+    },
+  });
+  const scope = summary.probes.find((p) => p.probeId === "inserted_method_scope")!;
+  assert.equal(scope.status, "fail");
+  assert.equal(summary.knownDefectLikelyCaught, true); // scope is sympy's target probe
+  assert.equal(summary.reconstruction?.source, "workspace_plus_patch");
 });
