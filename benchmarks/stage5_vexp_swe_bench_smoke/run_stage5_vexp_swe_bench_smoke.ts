@@ -121,8 +121,13 @@ export type ProcessRunner = (
     // Inherit this process's stdio for the child instead of capturing it, so the
     // child sees a real TTY and renders its native interactive output (the
     // vtrace index progress BAR, not the plain per-file fallback). The captured
-    // stdout/stderr come back empty in this mode. Used by --show-vtrace-index-log.
+    // stdout/stderr come back empty in this mode.
     readonly inheritStdio?: boolean;
+    // Tee mode: capture stdout/stderr AND echo them live to our terminal. Keeps the
+    // captured buffers populated (unlike inheritStdio), so telemetry/archival still
+    // work while the operator sees progress. Used for the agent child and the
+    // non-TTY index/clone fallback.
+    readonly streamToTerminal?: boolean;
   },
 ) => Promise<ProcessResult>;
 
@@ -2174,7 +2179,9 @@ export function workspacePathFor(outDir: string, instanceId: string, runLabel: s
 }
 
 export function buildCloneCommand(repo: string, workspace: string): { command: string; args: string[] } {
-  return { command: "git", args: ["clone", `https://github.com/${repo}.git`, workspace] };
+  // `--progress` forces git to emit its clone progress to stderr even when stderr is
+  // not a TTY (e.g. when we tee it through a pipe), so cloning is always visible.
+  return { command: "git", args: ["clone", "--progress", `https://github.com/${repo}.git`, workspace] };
 }
 
 export function buildCheckoutCommand(workspace: string, baseCommit: string): { command: string; args: string[] } {
@@ -2188,11 +2195,10 @@ function splitArgs(value: string): string[] {
 export function buildVtraceIndexCommand(config: CliConfig, workspace: string): { command: string; args: string[] } {
   const [command, ...base] = splitArgs(config.vtraceCommand);
   if (command === undefined) throw new Error("--vtrace-command is empty; cannot build the vtrace index command.");
-  // --show-vtrace-index-log drops --quiet so the index command prints its log;
-  // absent the flag, the configured index args (which include --quiet) stand.
-  const indexArgs = splitArgs(config.vtraceIndexArgs).filter(
-    (arg) => !(config.showVtraceIndexLog && arg === "--quiet"),
-  );
+  // Index progress is always surfaced now, so `--quiet` (which would force the index
+  // CLI's null progress reporter) is always dropped. The --show-vtrace-index-log flag
+  // is retained for back-compat but no longer gates this.
+  const indexArgs = splitArgs(config.vtraceIndexArgs).filter((arg) => arg !== "--quiet");
   return { command, args: [...base, "index", workspace, ...indexArgs] };
 }
 
@@ -3429,21 +3435,16 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
         if (config.indexPolicy === "always") {
           await rm(resolveVtraceDir(workspace), { recursive: true, force: true });
         }
-        if (config.showVtraceIndexLog) {
-          process.stderr.write(`\n[stage5] indexing ${workspace} …\n`);
-        }
+        process.stderr.write(`\n[stage5] indexing ${workspace} …\n`);
+        operatorTtyHintOnce();
         const startMs = Date.now();
         indexStartedAt = new Date(startMs).toISOString();
-        // --show-vtrace-index-log: drop --quiet (above) AND inherit our terminal,
-        // so the child sees a real TTY and draws its native index progress bar
-        // exactly as a direct `vtrace index` run does. VTRACE_PROGRESS_STREAM=1 is
-        // the fallback for when our OWN output is piped (non-TTY): it forces the
-        // plain per-file reporter on instead of the index going silent.
-        const indexResult = await runProc(indexSpec.command, indexSpec.args, {
-          ...(config.showVtraceIndexLog
-            ? { inheritStdio: true, env: { VTRACE_PROGRESS_STREAM: "1" } }
-            : {}),
-        });
+        // Index progress is ALWAYS surfaced now (no longer gated behind
+        // --show-vtrace-index-log). liveIndexRunOptions() inherits our TTY when we
+        // have one — so the indexer draws its FANCY progress bar exactly as a direct
+        // `vtrace index` run does — and otherwise tees the plain per-file progress
+        // stream live (the `| tee` / non-TTY case, where a \r-bar can't render).
+        const indexResult = await runProc(indexSpec.command, indexSpec.args, liveIndexRunOptions());
         const endMs = Date.now();
         indexFinishedAt = new Date(endMs).toISOString();
         indexDurationMs = endMs - startMs;
@@ -3708,8 +3709,12 @@ async function ensureWorkspaceCheckout(
   const alreadyCloned = await pathExists(path.join(workspace, ".git"));
   if (!alreadyCloned) {
     await mkdir(path.dirname(workspace), { recursive: true });
+    process.stderr.write(`[stage5] cloning ${instance.repo} → ${workspace} …\n`);
+    operatorTtyHintOnce();
     const clone = buildCloneCommand(instance.repo, workspace);
-    const cloneResult = await runProc(clone.command, clone.args);
+    // Stream the clone live (git --progress to stderr) so the operator sees it happen,
+    // while still capturing stderr for the error message below.
+    const cloneResult = await runProc(clone.command, clone.args, liveGitRunOptions());
     if (cloneResult.exitCode !== 0) {
       throw new Error(`git clone of ${instance.repo} failed (exit ${cloneResult.exitCode}): ${cloneResult.stderr.trim() || "(no stderr)"}`);
     }
@@ -3956,9 +3961,17 @@ async function runCondition(
         : buildVtraceCommand(config, instances, injectContext);
   const env = condition === "vtrace" ? (spec as unknown as { env: Record<string, string> }).env : {};
   const startedMs = Date.now();
+  process.stderr.write(`\n[stage5] running ${condition} agent for ${config.runLabel ?? instances.join(",")} …\n`);
+  operatorTtyHintOnce();
+  // Tee the agent child: its stdout (the external harness's human progress — repo
+  // cloning, the vexp progress bar, etc.) streams to our terminal live, while we still
+  // capture stdout (archived to _run.stdout.txt) and stderr (parsed for vtrace
+  // injection telemetry). Metrics/patch come from the swebench JSONL, not this stdout,
+  // so teeing is purely additive.
   const result = await (deps.runProcess ?? runProcess)(spec.command, spec.args, {
     cwd: spec.cwd ?? undefined,
     env,
+    streamToTerminal: true,
   });
   // For the vtrace condition, record the instruction-file state and the runtime
   // injection status parsed from this run's stderr, so the raw meta is itself
@@ -5871,16 +5884,61 @@ async function readJsonIfExists(filePath: string): Promise<unknown | null> {
   }
 }
 
+// Live-output stdio options for vtrace's OWN children (index + git clone), chosen by
+// whether our stderr is a real terminal:
+//   - TTY  → inherit: the child sees a real TTY and draws its FANCY progress bar /
+//            git's native progress. (Captured buffers come back empty — fine, these
+//            children's output is progress, not telemetry we parse.)
+//   - pipe → tee + VTRACE_PROGRESS_STREAM=1: a \r-bar cannot render without a TTY, so
+//            force the plain per-file progress stream and echo it live while still
+//            capturing it. This is the `… | tee log` case: the fancy bar is impossible
+//            there because tee strips the TTY.
+// Always on (no longer gated behind --show-vtrace-index-log): the operator always sees
+// indexing/cloning happen. See operatorTtyHintOnce() for the fancy-bar caveat.
+function liveIndexRunOptions(): { inheritStdio?: boolean; streamToTerminal?: boolean; env: Record<string, string> } {
+  return process.stderr.isTTY === true
+    ? { inheritStdio: true, env: { VTRACE_PROGRESS_STREAM: "1" } }
+    : { streamToTerminal: true, env: { VTRACE_PROGRESS_STREAM: "1" } };
+}
+
+function liveGitRunOptions(): { inheritStdio?: boolean; streamToTerminal?: boolean } {
+  return process.stderr.isTTY === true ? { inheritStdio: true } : { streamToTerminal: true };
+}
+
+// Print, at most once per process, why the fancy TTY progress bar is unavailable when
+// our output is piped (e.g. `… | tee log`). The plain per-file stream is shown instead.
+let operatorTtyHintPrinted = false;
+function operatorTtyHintOnce(): void {
+  if (operatorTtyHintPrinted || process.stderr.isTTY === true) return;
+  operatorTtyHintPrinted = true;
+  process.stderr.write(
+    "[stage5] output is piped (no TTY) — showing the plain progress stream. For vtrace's fancy " +
+      "progress bar, run attached to a terminal (drop `| tee`), or keep a log with a pseudo-TTY: " +
+      "`script -qefc '<command>' run.log`.\n",
+  );
+}
+
 async function runProcess(
   command: string,
   args: readonly string[],
-  options: { readonly cwd?: string; readonly env?: Record<string, string>; readonly inheritStdio?: boolean } = {},
+  options: {
+    readonly cwd?: string;
+    readonly env?: Record<string, string>;
+    readonly inheritStdio?: boolean;
+    // Tee mode: capture stdout/stderr into buffers (for archival + telemetry) AND
+    // echo each chunk to our own terminal live as it arrives. Unlike inheritStdio
+    // (which hands over the real TTY but leaves the captured buffers empty), this
+    // keeps the result populated — used when we need BOTH live visibility and a
+    // captured copy (e.g. the agent child, whose stderr telemetry we still parse).
+    readonly streamToTerminal?: boolean;
+  } = {},
 ): Promise<ProcessResult> {
   return await new Promise((resolve) => {
     // Inherit mode hands the child our real terminal, so it renders interactive
     // output (a TTY progress bar) directly; there are then no pipes to capture,
     // and stdout/stderr come back empty. Otherwise capture both into buffers.
     const inherit = options.inheritStdio === true;
+    const tee = !inherit && options.streamToTerminal === true;
     const proc = spawn(command, [...args], {
       cwd: options.cwd,
       env: { ...process.env, ...(options.env ?? {}) },
@@ -5888,8 +5946,14 @@ async function runProcess(
     });
     const stdoutChunks: Buffer[] = [];
     const stderrChunks: Buffer[] = [];
-    proc.stdout?.on("data", (chunk: Buffer) => stdoutChunks.push(chunk));
-    proc.stderr?.on("data", (chunk: Buffer) => stderrChunks.push(chunk));
+    proc.stdout?.on("data", (chunk: Buffer) => {
+      stdoutChunks.push(chunk);
+      if (tee) process.stdout.write(chunk);
+    });
+    proc.stderr?.on("data", (chunk: Buffer) => {
+      stderrChunks.push(chunk);
+      if (tee) process.stderr.write(chunk);
+    });
     proc.on("error", (error) =>
       resolve({ exitCode: 1, stdout: Buffer.concat(stdoutChunks).toString("utf8"), stderr: `${Buffer.concat(stderrChunks).toString("utf8")}${error.message}` }),
     );

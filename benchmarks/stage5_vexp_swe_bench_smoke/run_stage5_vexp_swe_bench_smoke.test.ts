@@ -1160,7 +1160,8 @@ test("workspace path is derived from the instance id (and optional run label)", 
 test("clone/checkout commands are built from instance data", () => {
   const clone = buildCloneCommand("django/django", "/ws");
   assert.equal(clone.command, "git");
-  assert.deepEqual(clone.args, ["clone", "https://github.com/django/django.git", "/ws"]);
+  // --progress forces git to emit clone progress even when stderr is piped (tee'd).
+  assert.deepEqual(clone.args, ["clone", "--progress", "https://github.com/django/django.git", "/ws"]);
   const checkout = buildCheckoutCommand("/ws", "abc123");
   assert.deepEqual(checkout.args, ["-C", "/ws", "checkout", "abc123", "--force"]);
 });
@@ -1169,7 +1170,8 @@ test("vtrace index/query commands embed the workspace and query", () => {
   const config = baseConfig({ vtraceCommand: "bun src/cli/index.ts", vtraceIndexArgs: "--quiet", vtraceQueryArgs: "--json" });
   const index = buildVtraceIndexCommand(config, "/ws");
   assert.equal(index.command, "bun");
-  assert.deepEqual(index.args, ["src/cli/index.ts", "index", "/ws", "--quiet"]);
+  // --quiet is always dropped now (index progress is always surfaced).
+  assert.deepEqual(index.args, ["src/cli/index.ts", "index", "/ws"]);
   const query = buildVtraceQueryCommand(config, "/ws", "fix the bug");
   assert.deepEqual(query.args, ["src/cli/index.ts", "capsule", "/ws", "fix the bug", "--json"]);
 });
@@ -2153,9 +2155,11 @@ test("parseArgs parses --reuse-workspace and --show-vtrace-index-log (default of
   assert.equal(off.showVtraceIndexLog, false);
 });
 
-test("buildVtraceIndexCommand drops --quiet only when --show-vtrace-index-log is set", () => {
-  const quiet = buildVtraceIndexCommand(baseConfig({ vtraceIndexArgs: "--quiet" }), "/ws");
-  assert.deepEqual(quiet.args, ["src/cli/index.ts", "index", "/ws", "--quiet"]);
+test("buildVtraceIndexCommand always drops --quiet (index progress is always surfaced)", () => {
+  // Default (no flag): --quiet still dropped so the indexer emits progress.
+  const def = buildVtraceIndexCommand(baseConfig({ vtraceIndexArgs: "--quiet" }), "/ws");
+  assert.deepEqual(def.args, ["src/cli/index.ts", "index", "/ws"]);
+  // Flag set: same result (the flag no longer gates this).
   const loud = buildVtraceIndexCommand(baseConfig({ vtraceIndexArgs: "--quiet", showVtraceIndexLog: true }), "/ws");
   assert.deepEqual(loud.args, ["src/cli/index.ts", "index", "/ws"]);
 });
@@ -2183,7 +2187,8 @@ test("prepareIndexedContext recreates a fresh workspace by default (clean + rech
   assert.ok(!calls.some((c) => c.includes("clone")), "an existing clone must not be re-cloned");
   // Meta records the fresh policy + the observed index timing.
   assert.equal(result.freshWorkspace, true);
-  assert.equal(result.vtraceIndexQuiet, true);
+  // The index never runs quiet now (progress is always surfaced).
+  assert.equal(result.vtraceIndexQuiet, false);
   assert.equal(typeof result.vtraceIndexDurationMs, "number");
   assert.match(result.vtraceIndexStartedAt ?? "", /T.*Z$/);
   assert.match(result.vtraceIndexFinishedAt ?? "", /T.*Z$/);
@@ -2380,16 +2385,21 @@ test("parseArgs parses --index-policy (default auto)", () => {
   assert.throws(() => parseArgs(["--mode", "run-protocol", "--index-policy", "bogus"]), /Invalid --index-policy/);
 });
 
-test("--show-vtrace-index-log shows the index bar (drops --quiet, inherits stdio, forces progress)", async () => {
-  const out = path.join(await tmpDir("idx-log"), "results");
-  const dataDir = await tmpDir("idx-log-data");
+// The index progress is now ALWAYS surfaced (no longer gated behind the flag) and is
+// TTY-aware: a real terminal inherits stdio (fancy bar); a piped stderr (the test
+// runner's case, and `… | tee`) tees the plain progress stream + forces it on.
+async function captureIndexOpts(
+  configOverrides: Record<string, unknown>,
+): Promise<{ indexArgs: readonly string[]; indexOpts: { env?: Record<string, string>; inheritStdio?: boolean; streamToTerminal?: boolean } | undefined }> {
+  const out = path.join(await tmpDir("idx-opts"), "results");
+  const dataDir = await tmpDir("idx-opts-data");
   const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
   let indexArgs: readonly string[] = [];
-  let indexOpts: { env?: Record<string, string>; inheritStdio?: boolean } | undefined;
+  let indexOpts: { env?: Record<string, string>; inheritStdio?: boolean; streamToTerminal?: boolean } | undefined;
   const run = async (
     command: string,
     args: readonly string[],
-    options?: { env?: Record<string, string>; inheritStdio?: boolean },
+    options?: { env?: Record<string, string>; inheritStdio?: boolean; streamToTerminal?: boolean },
   ): Promise<ProcessResult> => {
     const line = [command, ...args].join(" ");
     if (line.includes(" index ")) {
@@ -2404,44 +2414,27 @@ test("--show-vtrace-index-log shows the index bar (drops --quiet, inherits stdio
     instances: ["django__django-11490"],
     sweBenchDataFile: dataFile,
     vtraceMethod: "indexed-context",
-    showVtraceIndexLog: true,
+    ...configOverrides,
   });
   await prepareIndexedContext(config, { runProcess: run });
+  return { indexArgs, indexOpts };
+}
 
+test("the index always surfaces progress: --quiet dropped and progress forced on (piped → tee)", async () => {
+  // The test runner's stderr is not a TTY, so the live path tees + forces progress.
+  const { indexArgs, indexOpts } = await captureIndexOpts({ showVtraceIndexLog: true });
   assert.ok(!indexArgs.includes("--quiet"), "--quiet must be dropped so the indexer emits progress");
-  assert.equal(indexOpts?.inheritStdio, true, "the index must inherit our TTY to draw its native bar");
-  assert.equal(indexOpts?.env?.VTRACE_PROGRESS_STREAM, "1", "progress must be forced on for the non-TTY fallback");
+  assert.equal(indexOpts?.env?.VTRACE_PROGRESS_STREAM, "1", "progress must be forced on for the non-TTY (piped) case");
+  // Non-TTY → tee (visible + captured), not inherit (which would blank the buffers).
+  assert.equal(indexOpts?.streamToTerminal, true, "a piped stderr must tee the plain progress stream");
+  assert.notEqual(indexOpts?.inheritStdio, true, "a piped stderr cannot draw the fancy TTY bar");
 });
 
-test("without --show-vtrace-index-log the index is captured quietly (no stdio inherit)", async () => {
-  const out = path.join(await tmpDir("idx-quiet"), "results");
-  const dataDir = await tmpDir("idx-quiet-data");
-  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
-  let indexArgs: readonly string[] = [];
-  let indexOpts: { env?: Record<string, string>; inheritStdio?: boolean } | undefined;
-  const run = async (
-    command: string,
-    args: readonly string[],
-    options?: { env?: Record<string, string>; inheritStdio?: boolean },
-  ): Promise<ProcessResult> => {
-    const line = [command, ...args].join(" ");
-    if (line.includes(" index ")) {
-      indexArgs = args;
-      indexOpts = options;
-    }
-    if (line.includes("capsule")) return { exitCode: 0, stdout: injectCapsuleJson("symbol: x"), stderr: "" };
-    return { exitCode: 0, stdout: "", stderr: "" };
-  };
-  const config = baseConfig({
-    out,
-    instances: ["django__django-11490"],
-    sweBenchDataFile: dataFile,
-    vtraceMethod: "indexed-context",
-  });
-  await prepareIndexedContext(config, { runProcess: run });
-
-  assert.ok(indexArgs.includes("--quiet"), "the index stays quiet by default");
-  assert.notEqual(indexOpts?.inheritStdio, true, "default index must be captured, not inherited");
+test("the index surfaces progress even WITHOUT --show-vtrace-index-log (always on)", async () => {
+  const { indexArgs, indexOpts } = await captureIndexOpts({});
+  assert.ok(!indexArgs.includes("--quiet"), "--quiet is dropped even without the flag now");
+  assert.equal(indexOpts?.env?.VTRACE_PROGRESS_STREAM, "1", "progress is forced on regardless of the flag");
+  assert.equal(indexOpts?.streamToTerminal, true, "the index streams live regardless of the flag");
 });
 
 test("prepareIndexedContext reports failure when the vtrace query fails", async () => {
