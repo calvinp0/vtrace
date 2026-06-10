@@ -25,6 +25,8 @@ import {
   buildInstanceQuery,
   buildVexpCommand,
   buildPivotCheckBlock,
+  decidePivotCheckInjection,
+  pivotCheckRiskSignals,
   buildEditGuardBlock,
   detectEditGuardText,
   EDIT_GUARD_MARKER,
@@ -1515,6 +1517,195 @@ test("buildVtraceContextMarkdown does not inject PIVOT_CHECK for legacy / no-cap
   // No classification at all (hard-error section) → never injects.
   const noClass = { instance: sampleInstance(), rawContext: "ctx", error: null, classification: null };
   assert.doesNotMatch(buildVtraceContextMarkdown([noClass], { maxChars: 12000, maxItems: 8 }).markdown, /PIVOT_CHECK/);
+});
+
+// ----- Stage 5: deterministic PIVOT_CHECK policy (risk_gated default) -----
+
+// Two ordinary pivots: both source-anchored, no hidden / edit-risk signal. Under
+// risk_gated this is exactly the case that should NOT inject (the token saving);
+// under multi_pivot it must still inject (old behaviour).
+const TWO_ORDINARY_PIVOTS: CapsuleAuditItem[] = [
+  { path: "pkg/a.py", symbol: "f", roleReason: "source line anchor a.py#L10", estimatedTokens: 50 },
+  { path: "pkg/b.py", symbol: "g", roleReason: "source line anchor b.py#L20", estimatedTokens: 50 },
+];
+
+// Three source-anchored pivots → the three_or_more_pivots risk signal fires even
+// though none is hidden.
+const THREE_STRONG_PIVOTS: CapsuleAuditItem[] = [
+  ...TWO_ORDINARY_PIVOTS,
+  { path: "pkg/c.py", symbol: "h", roleReason: "source line anchor c.py#L30", estimatedTokens: 50 },
+];
+
+// Build a classification carrying the fields the policy actually reads (pivot list +
+// edit-risk directive count), so edit-relevant risk can be exercised without pivots.
+function classificationWith(opts: {
+  pivots: CapsuleAuditItem[] | null;
+  editRiskDirectives?: number;
+}): CapsuleClassification {
+  return {
+    capsulePivots: opts.pivots,
+    capsuleEditRiskDirectivesCount: opts.editRiskDirectives ?? 0,
+  } as unknown as CapsuleClassification;
+}
+
+function pivotSection(classification: CapsuleClassification | null) {
+  return {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification,
+    preformatted: true,
+  };
+}
+
+test("--pivot-check-policy parses, defaults to risk_gated, and rejects unknown values", () => {
+  assert.equal(parseArgs(["--mode", "prepare", "--instances", "a__1"]).pivotCheckPolicy, "risk_gated");
+  assert.equal(
+    parseArgs(["--mode", "prepare", "--instances", "a__1", "--pivot-check-policy", "multi_pivot"]).pivotCheckPolicy,
+    "multi_pivot",
+  );
+  assert.equal(
+    parseArgs(["--mode", "prepare", "--instances", "a__1", "--pivot-check-policy", "always"]).pivotCheckPolicy,
+    "always",
+  );
+  assert.throws(
+    () => parseArgs(["--mode", "prepare", "--instances", "a__1", "--pivot-check-policy", "bogus"]),
+    /Invalid --pivot-check-policy/,
+  );
+  // --disable-pivot-check still sets the compat flag (policy resolves to off at injection time).
+  assert.equal(parseArgs(["--mode", "prepare", "--instances", "a__1", "--disable-pivot-check"]).disablePivotCheck, true);
+});
+
+test("decidePivotCheckInjection: off never injects", () => {
+  const d = decidePivotCheckInjection("off", classificationWith({ pivots: THREE_STRONG_PIVOTS }));
+  assert.equal(d.inject, false);
+  assert.match(d.reason, /off/);
+});
+
+test("disablePivotCheck limit forces policy off regardless of pivotCheckPolicy", () => {
+  const a = buildVtraceContextMarkdown([pivotSection(classificationWith({ pivots: THREE_STRONG_PIVOTS }))], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "always",
+    disablePivotCheck: true,
+  });
+  assert.doesNotMatch(a.markdown, /PIVOT_CHECK/);
+  assert.equal(a.pivotCheckInjected, false);
+  assert.equal(a.pivotCheckPolicy, "off");
+});
+
+test("risk_gated does not inject for two ordinary pivots with no risk signals", () => {
+  const cls = classificationWith({ pivots: TWO_ORDINARY_PIVOTS });
+  assert.deepEqual(pivotCheckRiskSignals(cls), []);
+  const d = decidePivotCheckInjection("risk_gated", cls);
+  assert.equal(d.inject, false);
+  assert.deepEqual(d.riskSignals, []);
+  // The OLD multi_pivot behaviour WOULD have injected — recorded for cost comparison.
+  assert.equal(d.wouldInjectUnderMultiPivot, true);
+  const a = buildVtraceContextMarkdown([pivotSection(cls)], { maxChars: 12000, maxItems: 8, pivotCheckPolicy: "risk_gated" });
+  assert.doesNotMatch(a.markdown, /PIVOT_CHECK/);
+  assert.equal(a.pivotCheckInjected, false);
+});
+
+test("risk_gated injects for >= 3 strong pivots", () => {
+  const cls = classificationWith({ pivots: THREE_STRONG_PIVOTS });
+  const d = decidePivotCheckInjection("risk_gated", cls);
+  assert.equal(d.inject, true);
+  assert.ok(d.riskSignals.includes("three_or_more_pivots"));
+  const a = buildVtraceContextMarkdown([pivotSection(cls)], { maxChars: 12000, maxItems: 8, pivotCheckPolicy: "risk_gated" });
+  assert.match(a.markdown, /## PIVOT_CHECK/);
+  assert.equal(a.pivotCheckInjected, true);
+});
+
+test("risk_gated injects when a hidden pivot is present", () => {
+  const d = decidePivotCheckInjection("risk_gated", classificationWith({ pivots: PIVOT_CHECK_PIVOTS }));
+  assert.equal(d.inject, true);
+  assert.ok(d.riskSignals.includes("hidden_pivot"));
+});
+
+test("risk_gated injects when edit-risk directive metadata is present (two ordinary pivots)", () => {
+  const cls = classificationWith({ pivots: TWO_ORDINARY_PIVOTS, editRiskDirectives: 2 });
+  assert.deepEqual(pivotCheckRiskSignals(cls), ["edit_risk_directives"]);
+  const d = decidePivotCheckInjection("risk_gated", cls);
+  assert.equal(d.inject, true);
+  assert.ok(d.riskSignals.includes("edit_risk_directives"));
+});
+
+test("multi_pivot preserves old behaviour: injects for any two pivots; single pivot stays quiet", () => {
+  const d = decidePivotCheckInjection("multi_pivot", classificationWith({ pivots: TWO_ORDINARY_PIVOTS }));
+  assert.equal(d.inject, true);
+  const a = buildVtraceContextMarkdown([pivotSection(classificationWith({ pivots: TWO_ORDINARY_PIVOTS }))], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "multi_pivot",
+  });
+  assert.match(a.markdown, /## PIVOT_CHECK/);
+  const single = decidePivotCheckInjection("multi_pivot", classificationWith({ pivots: [TWO_ORDINARY_PIVOTS[0]!] }));
+  assert.equal(single.inject, false);
+});
+
+test("always injects whenever Capsule v2 context exists, including a single pivot", () => {
+  const multi = buildVtraceContextMarkdown([pivotSection(classificationWith({ pivots: TWO_ORDINARY_PIVOTS }))], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "always",
+  });
+  assert.match(multi.markdown, /## PIVOT_CHECK/);
+  assert.equal(multi.pivotCheckInjected, true);
+  // A single pivot also injects under `always` (the render floor drops to 1).
+  const single = buildVtraceContextMarkdown([pivotSection(classificationWith({ pivots: [TWO_ORDINARY_PIVOTS[0]!] }))], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "always",
+  });
+  assert.match(single.markdown, /## PIVOT_CHECK/);
+  assert.equal(single.pivotCheckInjected, true);
+});
+
+test("buildVtraceContextMarkdown records policy, reason, risk signals, and would-inject", () => {
+  const a = buildVtraceContextMarkdown([pivotSection(classificationWith({ pivots: THREE_STRONG_PIVOTS }))], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "risk_gated",
+  });
+  assert.equal(a.pivotCheckPolicy, "risk_gated");
+  assert.match(a.pivotCheckReason, /risk_gated/);
+  assert.ok(a.pivotCheckRiskSignals.includes("three_or_more_pivots"));
+  assert.equal(a.pivotCheckWouldInjectUnderMultiPivot, true);
+
+  // When risk_gated declines, the reason explains WHY and the signals are empty.
+  const declined = buildVtraceContextMarkdown([pivotSection(classificationWith({ pivots: TWO_ORDINARY_PIVOTS }))], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "risk_gated",
+  });
+  assert.equal(declined.pivotCheckPolicy, "risk_gated");
+  assert.match(declined.pivotCheckReason, /no high-risk signal/);
+  assert.deepEqual(declined.pivotCheckRiskSignals, []);
+  assert.equal(declined.pivotCheckWouldInjectUnderMultiPivot, true);
+});
+
+test("EDIT_GUARD / PATCH_VERIFY ride only on an ACTUAL PIVOT_CHECK injection (risk_gated)", () => {
+  // risk_gated declines (two ordinary pivots) → no PIVOT_CHECK, hence no guard/verify.
+  const declined = buildVtraceContextMarkdown([pivotSection(classificationWith({ pivots: TWO_ORDINARY_PIVOTS }))], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "risk_gated",
+  });
+  assert.equal(declined.pivotCheckInjected, false);
+  assert.equal(declined.editGuardInjected, false);
+  assert.equal(declined.patchVerifyInjected, false);
+  assert.doesNotMatch(declined.markdown, /EDIT_GUARD/);
+  assert.doesNotMatch(declined.markdown, /PATCH_VERIFY/);
+  // risk_gated injects (3 pivots) → guard + verify ride along.
+  const injected = buildVtraceContextMarkdown([pivotSection(classificationWith({ pivots: THREE_STRONG_PIVOTS }))], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "risk_gated",
+  });
+  assert.equal(injected.pivotCheckInjected, true);
+  assert.equal(injected.editGuardInjected, true);
+  assert.equal(injected.patchVerifyInjected, true);
 });
 
 // ----- Stage 5: EDIT_GUARD edit-discipline block (rides with PIVOT_CHECK) -----

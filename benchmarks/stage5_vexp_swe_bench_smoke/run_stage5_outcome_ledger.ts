@@ -61,6 +61,15 @@ export interface LedgerRun {
   readonly pivotCheckEnabled: boolean | null;
   readonly pivotCheckInjected: boolean | null;
   readonly pivotCheckDisabledByFlag: boolean | null;
+  // Deterministic PIVOT_CHECK policy state (--pivot-check-policy). All null on runs
+  // that predate the policy (tolerated, never fabricated). `policyReason` /
+  // `riskSignals` / `wouldInjectUnderMultiPivot` let a report distinguish PIVOT_CHECK
+  // absent-because-disabled from absent-because-risk_gated-did-not-trigger from
+  // injected-because-risk-signals-fired (see classifyPivotCheckAbsence).
+  readonly pivotCheckPolicy: string | null;
+  readonly pivotCheckPolicyReason: string | null;
+  readonly pivotCheckRiskSignals: readonly string[] | null;
+  readonly pivotCheckWouldInjectUnderMultiPivot: boolean | null;
   // EDIT_GUARD treatment state (rides with PIVOT_CHECK). Separate observability flags,
   // never conflated with inspection conversion / edited-file / patch / resolution
   // signals. All null on runs that predate EDIT_GUARD (tolerated, never fabricated).
@@ -251,6 +260,39 @@ export function uniq(values: readonly string[]): string[] {
   return [...new Set(values)];
 }
 
+// Why PIVOT_CHECK was (or was not) present on a run, derived tolerantly from the
+// recorded policy state so a report never conflates the distinct cases:
+//   "injected"                  the block was appended (a risk signal / policy fired).
+//   "absent_disabled"           --disable-pivot-check (or policy off) suppressed it.
+//   "absent_risk_not_triggered" risk_gated ran on a multi-pivot capsule but found no
+//                               high-risk signal — the old behaviour WOULD have injected.
+//   "absent_no_multi_pivot"     not injected and the old >= 2-pivot gate would not have
+//                               fired either (single pivot / no v2 context).
+//   "unknown"                   no injection signal recorded (pre-PIVOT_CHECK run).
+export type PivotCheckState =
+  | "injected"
+  | "absent_disabled"
+  | "absent_risk_not_triggered"
+  | "absent_no_multi_pivot"
+  | "unknown";
+
+export function classifyPivotCheckState(
+  run: Pick<
+    LedgerRun,
+    "pivotCheckInjected" | "pivotCheckDisabledByFlag" | "pivotCheckPolicy" | "pivotCheckWouldInjectUnderMultiPivot"
+  >,
+): PivotCheckState {
+  if (run.pivotCheckInjected === true) return "injected";
+  if (run.pivotCheckDisabledByFlag === true || run.pivotCheckPolicy === "off") return "absent_disabled";
+  if (run.pivotCheckInjected === null) return "unknown";
+  // Not injected and not disabled: the policy declined. Under risk_gated, separate
+  // "a multi-pivot capsule lacked a risk signal" from "there was no multi-pivot case".
+  if (run.pivotCheckPolicy === "risk_gated" && run.pivotCheckWouldInjectUnderMultiPivot === true) {
+    return "absent_risk_not_triggered";
+  }
+  return "absent_no_multi_pivot";
+}
+
 // Sum the token components into a total. null only when EVERY component is null
 // (so a run that reported just input/output still gets a real total).
 export function tokenTotal(t: Omit<TokenUsage, "total">): number | null {
@@ -410,6 +452,15 @@ export function buildRun(parts: RawRunParts): LedgerRun {
   const pivotCheckEnabled = asBool(meta?.vtracePivotCheckEnabled);
   const pivotCheckInjected = asBool(meta?.vtracePivotCheckInjected);
   const pivotCheckDisabledByFlag = asBool(meta?.vtracePivotCheckDisabledByFlag);
+  // Policy fields tolerate older metadata: asString / asStringArray / asBool yield
+  // null when the field is absent, so runs that predate --pivot-check-policy read as
+  // null rather than a fabricated value.
+  const pivotCheckPolicy = asString(meta?.vtracePivotCheckPolicy);
+  const pivotCheckPolicyReason = asString(meta?.vtracePivotCheckPolicyReason);
+  const pivotCheckRiskSignals = meta?.vtracePivotCheckRiskSignals === undefined
+    ? null
+    : asStringArray(meta?.vtracePivotCheckRiskSignals);
+  const pivotCheckWouldInjectUnderMultiPivot = asBool(meta?.vtracePivotCheckWouldInjectUnderMultiPivot);
   // asBool yields null when the field is absent, so old runs without EDIT_GUARD
   // metadata read as null rather than a fabricated false.
   const editGuardEnabled = asBool(meta?.vtraceEditGuardEnabled);
@@ -521,6 +572,10 @@ export function buildRun(parts: RawRunParts): LedgerRun {
     pivotCheckEnabled,
     pivotCheckInjected,
     pivotCheckDisabledByFlag,
+    pivotCheckPolicy,
+    pivotCheckPolicyReason,
+    pivotCheckRiskSignals,
+    pivotCheckWouldInjectUnderMultiPivot,
     editGuardEnabled,
     editGuardInjected,
     editGuardDisabledByFlag,
@@ -739,6 +794,20 @@ function fmtBool(v: boolean | null): string {
   return v === null ? "unknown" : v ? "yes" : "no";
 }
 
+// PIVOT_CHECK cell for the run inventory: "yes" when injected, else a reason-tagged
+// "no" so absent-because-disabled is never confused with absent-because-risk_gated
+// (the whole point of risk-gating). Falls back to plain yes/no/unknown on pre-policy
+// runs where the state cannot be derived.
+function fmtPivotCheck(run: LedgerRun): string {
+  if (run.pivotCheckInjected === true) return "yes";
+  switch (classifyPivotCheckState(run)) {
+    case "absent_disabled": return "no (off)";
+    case "absent_risk_not_triggered": return "no (risk-gated)";
+    case "absent_no_multi_pivot": return "no";
+    default: return fmtBool(run.pivotCheckInjected);
+  }
+}
+
 function fmtResolved(v: Resolution): string {
   return v === null ? "unknown" : v ? "resolved" : "unresolved";
 }
@@ -816,7 +885,7 @@ export function renderMarkdown(report: LedgerReport): string {
   for (const r of report.runs) {
     lines.push(
       `| ${r.runLabel} | ${r.condition} | ${r.instanceId ?? "unknown"} | ${r.protocol} | ${fmtBool(r.treatmentValid)} | ` +
-        `${fmtBool(r.pivotCheckInjected)} | ${fmtBool(r.editGuardInjected)} | ${fmtBool(r.patchVerifyInjected)} | ${fmtNum(r.tokens.total)} | ${fmtNum(r.cost, 4)} | ${fmtResolved(r.resolved)} | ` +
+        `${fmtPivotCheck(r)} | ${fmtBool(r.editGuardInjected)} | ${fmtBool(r.patchVerifyInjected)} | ${fmtNum(r.tokens.total)} | ${fmtNum(r.cost, 4)} | ${fmtResolved(r.resolved)} | ` +
         `${r.pivotCount ?? "?"} | ${r.toolLogOrdered ? "yes" : "no"} | ${fmtList(r.editedFiles)} | ${r.dataCompleteness} |`,
     );
   }

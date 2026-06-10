@@ -646,6 +646,7 @@ export function buildPrecheckConfig(opts: {
     capsuleIntent: opts.capsuleIntent,
     capsuleBudget: opts.capsuleBudget,
     contextPolicyOverride: "force-inject",
+    pivotCheckPolicy: "risk_gated",
     disablePivotCheck: false,
     disableEditGuard: false,
     disablePatchVerify: false,

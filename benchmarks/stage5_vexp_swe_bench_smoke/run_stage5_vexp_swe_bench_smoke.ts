@@ -63,6 +63,17 @@ export type Stage5IndexPolicy = "auto" | "always" | "reuse";
 export type CapsuleEngine = "legacy" | "v2";
 // Capsule v2 intents, matching the `capsule --intent` CLI surface.
 export type CapsuleV2Intent = "auto" | "debug" | "refactor" | "impact" | "test-failure";
+// Deterministic PIVOT_CHECK injection policy (--pivot-check-policy). Controls WHEN
+// the compact PIVOT_CHECK localization checklist (and the EDIT_GUARD / PATCH_VERIFY
+// blocks that ride with it) is appended to a Capsule v2 section. A token-cost knob:
+//   off         -> never inject PIVOT_CHECK.
+//   multi_pivot -> legacy behaviour: inject whenever the capsule has >= 2 pivots.
+//   risk_gated  -> inject only when a deterministic high-risk signal is present
+//                  (DEFAULT) — two ordinary pivots alone no longer qualify.
+//   always      -> inject whenever Capsule v2 context exists (experiments only).
+// --disable-pivot-check forces `off` regardless of this policy (compatibility).
+export type PivotCheckPolicy = "off" | "multi_pivot" | "risk_gated" | "always";
+export const PIVOT_CHECK_POLICIES: readonly PivotCheckPolicy[] = ["off", "multi_pivot", "risk_gated", "always"];
 // Stage 5C named protocols. A protocol selects which condition(s) to run and how:
 //   baseline       -> `run --no-vexp`
 //   vtrace-indexed -> `run --no-vexp` + vtrace indexed-context injection
@@ -184,12 +195,18 @@ export interface CliConfig {
   // "auto" (default) keeps decideContextPolicy in charge; the force-* values are
   // for Capsule v2 live validation. See ContextPolicyOverride.
   readonly contextPolicyOverride: ContextPolicyOverride;
-  // Benchmark-only PIVOT_CHECK suppression (--disable-pivot-check). Default false:
-  // PIVOT_CHECK injects as usual for multi-pivot Capsule v2 runs. When true, the
-  // compact PIVOT_CHECK block is NOT appended to the injected context, so a
-  // controlled "before" run (Capsule v2 injected, PIVOT_CHECK off) can be compared
-  // against the default "after" run. Affects only the PIVOT_CHECK block; normal
-  // VTRACE context, telemetry, and ordered tool-call capture are untouched.
+  // Deterministic PIVOT_CHECK injection policy (--pivot-check-policy). Default
+  // "risk_gated": PIVOT_CHECK injects only when a high-risk signal is present, NOT
+  // merely because the capsule has two pivots (a token-reduction change over the old
+  // "multi_pivot" behaviour). See PivotCheckPolicy. --disable-pivot-check overrides
+  // this to "off".
+  readonly pivotCheckPolicy: PivotCheckPolicy;
+  // Benchmark-only PIVOT_CHECK suppression (--disable-pivot-check). Default false.
+  // When true, the effective policy is forced to "off" (the compact PIVOT_CHECK
+  // block is NOT appended), so a controlled "before" run (Capsule v2 injected,
+  // PIVOT_CHECK off) can be compared against the default "after" run. Affects only
+  // the PIVOT_CHECK block; normal VTRACE context, telemetry, and ordered tool-call
+  // capture are untouched. Retained for compatibility alongside --pivot-check-policy.
   readonly disablePivotCheck: boolean;
   // Benchmark-only EDIT_GUARD suppression (--disable-edit-guard). Default false:
   // the compact EDIT_GUARD edit-discipline block rides with PIVOT_CHECK for
@@ -303,6 +320,17 @@ export interface IndexedContextFields {
   readonly vtracePivotCheckEnabled: boolean | null;
   readonly vtracePivotCheckInjected: boolean | null;
   readonly vtracePivotCheckDisabledByFlag: boolean | null;
+  // Deterministic PIVOT_CHECK policy state (--pivot-check-policy). `Policy` is the
+  // effective policy ("off" when --disable-pivot-check forced it); `PolicyReason` is
+  // the representative section's rationale; `RiskSignals` are the deterministic
+  // high-risk signals present (empty when none / not v2); `WouldInjectUnderMultiPivot`
+  // records whether the old >= 2-pivot behaviour would have injected — so a reader
+  // can tell "absent because disabled" from "absent because risk_gated did not
+  // trigger" and measure the token-cost change. All null on rows that predate them.
+  readonly vtracePivotCheckPolicy: PivotCheckPolicy | null;
+  readonly vtracePivotCheckPolicyReason: string | null;
+  readonly vtracePivotCheckRiskSignals: readonly string[] | null;
+  readonly vtracePivotCheckWouldInjectUnderMultiPivot: boolean | null;
   // EDIT_GUARD state (Stage 5 before/after experiments), recorded alongside
   // PIVOT_CHECK and kept strictly SEPARATE from inspection-conversion / edited-file /
   // patch / resolution signals — it is an observability flag, never an outcome.
@@ -612,7 +640,10 @@ const DEFAULT_CONFIG: CliConfig = {
   capsuleIntent: "auto",
   capsuleBudget: CAPSULE_V2_DEFAULT_BUDGET,
   contextPolicyOverride: "auto",
-  // PIVOT_CHECK is ON by default (only --disable-pivot-check turns it off).
+  // PIVOT_CHECK is risk-gated by default: it injects only when a deterministic
+  // high-risk signal is present, not merely for two pivots (a token-cost reduction).
+  pivotCheckPolicy: "risk_gated",
+  // --disable-pivot-check forces the effective policy to "off" (compatibility).
   disablePivotCheck: false,
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
   // off only the guard block).
@@ -2142,6 +2173,15 @@ export interface IndexedContextResult {
   readonly pivotCheckEnabled: boolean;
   readonly pivotCheckInjected: boolean;
   readonly pivotCheckDisabledByFlag: boolean;
+  // Deterministic PIVOT_CHECK policy state. `policy` is the effective policy (forced
+  // to "off" by --disable-pivot-check); `policyReason` is the representative section's
+  // rationale; `riskSignals` are the deterministic high-risk signals that were present
+  // (empty when none / not v2); `wouldInjectUnderMultiPivot` records whether the OLD
+  // >= 2-pivot behaviour would have injected, for token-cost comparison.
+  readonly pivotCheckPolicy: PivotCheckPolicy;
+  readonly pivotCheckPolicyReason: string;
+  readonly pivotCheckRiskSignals: readonly string[];
+  readonly pivotCheckWouldInjectUnderMultiPivot: boolean;
   // EDIT_GUARD state for this run. `enabled` is the feature switch (false only when
   // --disable-edit-guard was passed); `disabledByFlag` mirrors that flag; `injected`
   // is whether the guard block actually entered the assembled context (true only when
@@ -3157,16 +3197,94 @@ function pivotIsHidden(roleReason: string | null): boolean {
   return !(roleReason ?? "").includes("source line anchor");
 }
 
+// Deterministic high-risk signals that justify the extra PIVOT_CHECK inspection
+// turns under the `risk_gated` policy. Computed null-safely from the capsule
+// classification — absent metadata simply yields no signal (never a fabricated
+// one). The v2 audit emits no per-pivot score, so the "ambiguous top-pivot score
+// gap" rule is intentionally NOT evaluated here (no data to read) rather than
+// guessed. Signals (stable string keys, surfaced in run metadata):
+//   "hidden_pivot"          a pivot was NOT named directly by the traceback/problem
+//                           path (surfaced by symbol/graph/literal/test evidence) —
+//                           exactly the localization miss PIVOT_CHECK exists to catch.
+//   "three_or_more_pivots"  >= 3 pivots (not merely two): a genuinely multi-site fix.
+//   "edit_risk_directives"  the v2 engine attached >= 1 edit-risk directive to this
+//                           task (its own edit-relevant / cross-file evidence).
+export function pivotCheckRiskSignals(classification: CapsuleClassification | null): string[] {
+  // Nullish-safe: a hard-error / legacy section may carry null (or an absent field).
+  if (classification === null || classification === undefined) return [];
+  const pivots = classification.capsulePivots ?? null;
+  const signals: string[] = [];
+  if (pivots !== null) {
+    if (pivots.some((pivot) => pivotIsHidden(pivot.roleReason))) signals.push("hidden_pivot");
+    if (pivots.length >= 3) signals.push("three_or_more_pivots");
+  }
+  if (classification.capsuleEditRiskDirectivesCount > 0) signals.push("edit_risk_directives");
+  return signals;
+}
+
+// A PIVOT_CHECK injection decision under a deterministic policy, carrying the
+// rationale and risk signals so run metadata can distinguish "absent because
+// disabled" from "absent because risk_gated did not trigger" from "injected because
+// risk signals fired". `wouldInjectUnderMultiPivot` records whether the OLD behaviour
+// (inject for >= 2 pivots) would have fired, so a token-cost comparison is auditable.
+export interface PivotCheckDecision {
+  readonly inject: boolean;
+  readonly policy: PivotCheckPolicy;
+  readonly reason: string;
+  readonly riskSignals: readonly string[];
+  readonly wouldInjectUnderMultiPivot: boolean;
+}
+
+// Decide whether PIVOT_CHECK should be injected for one Capsule v2 section under the
+// given policy. Pure and deterministic — no agents, no I/O. The structural floor of
+// >= 2 pivots (PIVOT_CHECK is a multi-row localization checklist) applies to every
+// policy except `always`, which injects for any v2 context (single pivot included,
+// experiments only). `risk_gated` additionally requires >= 1 deterministic risk
+// signal; two ordinary pivots with no risk signal no longer qualify.
+export function decidePivotCheckInjection(
+  policy: PivotCheckPolicy,
+  classification: CapsuleClassification | null,
+): PivotCheckDecision {
+  const pivots = classification?.capsulePivots ?? null;
+  const pivotCount = pivots?.length ?? 0;
+  const multiPivot = pivotCount >= 2;
+  const riskSignals = pivotCheckRiskSignals(classification);
+  const base = { policy, riskSignals, wouldInjectUnderMultiPivot: multiPivot } as const;
+  switch (policy) {
+    case "off":
+      return { ...base, inject: false, reason: "policy=off: PIVOT_CHECK never injected" };
+    case "multi_pivot":
+      return multiPivot
+        ? { ...base, inject: true, reason: `multi_pivot: ${pivotCount} pivots (>= 2)` }
+        : { ...base, inject: false, reason: `multi_pivot: ${pivotCount} pivot(s) (< 2 — no checklist)` };
+    case "risk_gated":
+      if (!multiPivot) {
+        return { ...base, inject: false, reason: `risk_gated: ${pivotCount} pivot(s) (< 2 — below multi-pivot floor)` };
+      }
+      return riskSignals.length > 0
+        ? { ...base, inject: true, reason: `risk_gated: risk signals [${riskSignals.join(", ")}]` }
+        : { ...base, inject: false, reason: `risk_gated: ${pivotCount} pivots but no high-risk signal` };
+    case "always":
+      return pivotCount >= 1
+        ? { ...base, inject: true, reason: `always: Capsule v2 context exists (${pivotCount} pivot(s))` }
+        : { ...base, inject: false, reason: "always: no Capsule v2 pivots present" };
+  }
+}
+
 // Build the compact, benchmark-only PIVOT_CHECK enforcement block, seeded from the
 // actual Capsule v2 pivot list so the agent cannot accidentally omit a hidden
-// pivot. Returns null (stay quiet) unless there are >= 2 pivots — single-pivot
-// capsules need no localization checklist. The block forces direct inspection
-// (Read/open) of every pivot before editing; search/grep is explicitly NOT enough.
-// It never orders the agent to edit every pivot — the smallest correct patch is
-// still preferred. The pivot list is v2-only (legacy carries no audit items), so a
-// non-null pivot list also encodes the `capsule_engine == v2` gate.
-export function buildPivotCheckBlock(pivots: readonly CapsuleAuditItem[] | null): string | null {
-  if (pivots === null || pivots.length < 2) return null;
+// pivot. Returns null (stay quiet) unless there are >= `minPivots` pivots (default
+// 2 — single-pivot capsules need no localization checklist; the `always` policy
+// passes 1). The block forces direct inspection (Read/open) of every pivot before
+// editing; search/grep is explicitly NOT enough. It never orders the agent to edit
+// every pivot — the smallest correct patch is still preferred. The pivot list is
+// v2-only (legacy carries no audit items), so a non-null list also encodes the
+// `capsule_engine == v2` gate.
+export function buildPivotCheckBlock(
+  pivots: readonly CapsuleAuditItem[] | null,
+  minPivots = 2,
+): string | null {
+  if (pivots === null || pivots.length < minPivots) return null;
   const anyHidden = pivots.some((pivot) => pivotIsHidden(pivot.roleReason));
 
   const lines: string[] = [
@@ -3276,13 +3394,16 @@ export function detectPatchVerifyText(markdown: string): boolean {
 
 export function buildVtraceContextMarkdown(
   sections: readonly VtraceContextSection[],
-  // `disablePivotCheck` (default false) suppresses the compact PIVOT_CHECK block
-  // for controlled "before" runs; it never affects the rest of the injected
-  // context. `pivotCheckInjected` in the return reports whether the block was
-  // actually appended (true only when not disabled AND a section qualified).
+  // `pivotCheckPolicy` (default "risk_gated") decides WHEN the compact PIVOT_CHECK
+  // block is injected per Capsule v2 section; see decidePivotCheckInjection. The
+  // legacy `disablePivotCheck` flag (default false) forces policy "off" for a
+  // controlled "before" run and is retained for compatibility. Neither affects the
+  // rest of the injected context. `pivotCheckInjected` in the return reports whether
+  // the block was actually appended (true only when the policy + a section qualified).
   limits: {
     maxChars: number;
     maxItems: number;
+    pivotCheckPolicy?: PivotCheckPolicy;
     disablePivotCheck?: boolean;
     disableEditGuard?: boolean;
     disablePatchVerify?: boolean;
@@ -3295,7 +3416,22 @@ export function buildVtraceContextMarkdown(
   pivotCheckInjected: boolean;
   editGuardInjected: boolean;
   patchVerifyInjected: boolean;
+  // The effective policy and the representative section's decision (the injecting
+  // section when one qualified, else the first Capsule v2 section), so run metadata
+  // can record the policy, its rationale, and the deterministic risk signals.
+  pivotCheckPolicy: PivotCheckPolicy;
+  pivotCheckReason: string;
+  pivotCheckRiskSignals: readonly string[];
+  pivotCheckWouldInjectUnderMultiPivot: boolean;
 } {
+  // --disable-pivot-check is a hard override to "off"; otherwise honour the policy
+  // (defaulting to risk_gated when the caller omits it).
+  const effectivePolicy: PivotCheckPolicy = limits.disablePivotCheck ? "off" : (limits.pivotCheckPolicy ?? "risk_gated");
+  // Representative decisions: the first section that actually injected wins; failing
+  // that, the first section that carried a Capsule v2 classification (so the reason
+  // explains WHY nothing injected — e.g. risk_gated did not trigger).
+  let injectedDecision: PivotCheckDecision | null = null;
+  let firstDecision: PivotCheckDecision | null = null;
   const lines: string[] = [
     "# vtrace indexed context",
     "",
@@ -3336,15 +3472,21 @@ export function buildVtraceContextMarkdown(
       totalChars += truncatedContext.chars;
       totalItems += truncatedContext.items;
       anyTruncated = anyTruncated || truncatedContext.truncated;
-      // Multi-pivot Capsule v2: append the compact PIVOT_CHECK enforcement block,
-      // seeded from this section's actual pivots so hidden pivots are never silently
-      // omitted. Gated on >= 2 v2 pivots (single-pivot capsules stay quiet).
-      // --disable-pivot-check suppresses ONLY this block (controlled before runs);
-      // everything else in the section is injected unchanged.
-      const pivotCheck = limits.disablePivotCheck
-        ? null
-        : buildPivotCheckBlock(section.classification?.capsulePivots ?? null);
+      // Capsule v2: decide PIVOT_CHECK injection under the effective policy, seeded
+      // from this section's actual pivots so hidden pivots are never silently omitted.
+      // risk_gated (default) injects only on a deterministic high-risk signal; the
+      // legacy multi_pivot policy preserves the >= 2-pivot behaviour. The decision
+      // suppresses ONLY this block (and the EDIT_GUARD / PATCH_VERIFY blocks that ride
+      // with it); everything else in the section is injected unchanged.
+      const decision = decidePivotCheckInjection(effectivePolicy, section.classification);
+      if (firstDecision === null && section.classification !== null) firstDecision = decision;
+      // `always` lowers the render floor to a single pivot (experiments); every other
+      // policy keeps the >= 2 multi-row checklist floor.
+      const pivotCheck = decision.inject
+        ? buildPivotCheckBlock(section.classification?.capsulePivots ?? null, effectivePolicy === "always" ? 1 : 2)
+        : null;
       if (pivotCheck !== null) {
+        if (injectedDecision === null) injectedDecision = decision;
         lines.push(pivotCheck, "");
         pivotCheckInjected = true;
         // EDIT_GUARD rides with PIVOT_CHECK: same multi-pivot Capsule v2 gate,
@@ -3373,6 +3515,20 @@ export function buildVtraceContextMarkdown(
       "",
     );
   }
+  // The representative decision for run metadata: the injecting section's decision
+  // when one qualified, else the first Capsule v2 section's (its reason explains the
+  // non-injection), else a synthesised "no Capsule v2 context" decision under the
+  // effective policy (legacy / hard-error / baseline runs).
+  const repDecision: PivotCheckDecision = injectedDecision ?? firstDecision ?? {
+    inject: false,
+    policy: effectivePolicy,
+    reason:
+      effectivePolicy === "off"
+        ? "policy=off: PIVOT_CHECK never injected"
+        : "no Capsule v2 context for PIVOT_CHECK",
+    riskSignals: [],
+    wouldInjectUnderMultiPivot: false,
+  };
   return {
     markdown: `${lines.join("\n")}\n`,
     chars: totalChars,
@@ -3381,6 +3537,10 @@ export function buildVtraceContextMarkdown(
     pivotCheckInjected,
     editGuardInjected,
     patchVerifyInjected,
+    pivotCheckPolicy: effectivePolicy,
+    pivotCheckReason: repDecision.reason,
+    pivotCheckRiskSignals: repDecision.riskSignals,
+    pivotCheckWouldInjectUnderMultiPivot: repDecision.wouldInjectUnderMultiPivot,
   };
 }
 
@@ -3455,6 +3615,10 @@ export function indexedContextMetaFields(result: IndexedContextResult): IndexedC
     vtracePivotCheckEnabled: result.pivotCheckEnabled,
     vtracePivotCheckInjected: result.pivotCheckInjected,
     vtracePivotCheckDisabledByFlag: result.pivotCheckDisabledByFlag,
+    vtracePivotCheckPolicy: result.pivotCheckPolicy,
+    vtracePivotCheckPolicyReason: result.pivotCheckPolicyReason,
+    vtracePivotCheckRiskSignals: result.pivotCheckRiskSignals,
+    vtracePivotCheckWouldInjectUnderMultiPivot: result.pivotCheckWouldInjectUnderMultiPivot,
     vtraceEditGuardEnabled: result.editGuardEnabled,
     vtraceEditGuardInjected: result.editGuardInjected,
     vtraceEditGuardDisabledByFlag: result.editGuardDisabledByFlag,
@@ -3655,10 +3819,12 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     return decision.action === "inject" ? section : { ...section, rawContext: "" };
   });
 
+  // --disable-pivot-check forces "off"; otherwise the configured policy applies.
+  const effectivePivotCheckPolicy: PivotCheckPolicy = config.disablePivotCheck ? "off" : config.pivotCheckPolicy;
   const assembled = buildVtraceContextMarkdown(gatedSections, {
     maxChars: config.vtraceContextMaxChars,
     maxItems: config.vtraceContextMaxItems,
-    disablePivotCheck: config.disablePivotCheck,
+    pivotCheckPolicy: effectivePivotCheckPolicy,
     disableEditGuard: config.disableEditGuard,
     disablePatchVerify: config.disablePatchVerify,
   });
@@ -3796,9 +3962,17 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     // reasons — disabledByFlag disambiguates). Coerced to a strict boolean so a
     // config without the field set (e.g. a partial test config) never leaks
     // `undefined` into the metadata.
-    pivotCheckEnabled: config.disablePivotCheck !== true,
+    pivotCheckEnabled: effectivePivotCheckPolicy !== "off",
     pivotCheckInjected: assembled.pivotCheckInjected,
     pivotCheckDisabledByFlag: config.disablePivotCheck === true,
+    // Deterministic policy state: the effective policy, the representative decision's
+    // rationale, the risk signals that were (or were not) present, and whether the
+    // old multi_pivot behaviour would have injected — so a token-cost comparison and
+    // the "absent because risk_gated did not trigger" distinction stay auditable.
+    pivotCheckPolicy: assembled.pivotCheckPolicy,
+    pivotCheckPolicyReason: assembled.pivotCheckReason,
+    pivotCheckRiskSignals: assembled.pivotCheckRiskSignals,
+    pivotCheckWouldInjectUnderMultiPivot: assembled.pivotCheckWouldInjectUnderMultiPivot,
     // EDIT_GUARD mirrors the PIVOT_CHECK state shape. `enabled` is the feature switch
     // (--disable-edit-guard off); `injected` is whether the guard block actually
     // entered the assembled context (false when PIVOT_CHECK was not injected, since
@@ -4422,6 +4596,10 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtracePivotCheckEnabled: evidence.vtracePivotCheckEnabled,
           vtracePivotCheckInjected: evidence.vtracePivotCheckInjected,
           vtracePivotCheckDisabledByFlag: evidence.vtracePivotCheckDisabledByFlag,
+          vtracePivotCheckPolicy: evidence.vtracePivotCheckPolicy,
+          vtracePivotCheckPolicyReason: evidence.vtracePivotCheckPolicyReason,
+          vtracePivotCheckRiskSignals: evidence.vtracePivotCheckRiskSignals,
+          vtracePivotCheckWouldInjectUnderMultiPivot: evidence.vtracePivotCheckWouldInjectUnderMultiPivot,
           vtraceEditGuardEnabled: evidence.vtraceEditGuardEnabled,
           vtraceEditGuardInjected: evidence.vtraceEditGuardInjected,
           vtraceEditGuardDisabledByFlag: evidence.vtraceEditGuardDisabledByFlag,
@@ -4720,6 +4898,10 @@ export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5
     vtracePivotCheckEnabled: null,
     vtracePivotCheckInjected: null,
     vtracePivotCheckDisabledByFlag: null,
+    vtracePivotCheckPolicy: null,
+    vtracePivotCheckPolicyReason: null,
+    vtracePivotCheckRiskSignals: null,
+    vtracePivotCheckWouldInjectUnderMultiPivot: null,
     vtraceEditGuardEnabled: null,
     vtraceEditGuardInjected: null,
     vtraceEditGuardDisabledByFlag: null,
@@ -5231,6 +5413,10 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtracePivotCheckEnabled: null,
     vtracePivotCheckInjected: null,
     vtracePivotCheckDisabledByFlag: null,
+    vtracePivotCheckPolicy: null,
+    vtracePivotCheckPolicyReason: null,
+    vtracePivotCheckRiskSignals: null,
+    vtracePivotCheckWouldInjectUnderMultiPivot: null,
     vtraceEditGuardEnabled: null,
     vtraceEditGuardInjected: null,
     vtraceEditGuardDisabledByFlag: null,
@@ -5516,6 +5702,10 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     value === "low" || value === "medium" || value === "high" ? (value as ExpectedLevel) : null;
   const pivotSourceMode = (value: unknown): CapsulePivotSourceMode | null =>
     value === "focused" || value === "full" || value === "missing" ? (value as CapsulePivotSourceMode) : null;
+  // The recorded PIVOT_CHECK policy, tolerating older meta (an unknown/absent value
+  // reads as null rather than a fabricated default).
+  const pivotCheckPolicy = (value: unknown): PivotCheckPolicy | null =>
+    PIVOT_CHECK_POLICIES.includes(value as PivotCheckPolicy) ? (value as PivotCheckPolicy) : null;
   // A list of decision-signal strings, tolerating partial/legacy meta (non-array
   // reads as null; non-string entries are dropped).
   const strList = (value: unknown): string[] | null =>
@@ -5573,6 +5763,12 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtracePivotCheckEnabled: bool(meta.vtracePivotCheckEnabled),
     vtracePivotCheckInjected: bool(meta.vtracePivotCheckInjected),
     vtracePivotCheckDisabledByFlag: bool(meta.vtracePivotCheckDisabledByFlag),
+    // Policy fields tolerate older metadata: an absent/unknown value reads as null,
+    // never a fabricated default — so runs that predate --pivot-check-policy stay valid.
+    vtracePivotCheckPolicy: pivotCheckPolicy(meta.vtracePivotCheckPolicy),
+    vtracePivotCheckPolicyReason: str(meta.vtracePivotCheckPolicyReason),
+    vtracePivotCheckRiskSignals: strList(meta.vtracePivotCheckRiskSignals),
+    vtracePivotCheckWouldInjectUnderMultiPivot: bool(meta.vtracePivotCheckWouldInjectUnderMultiPivot),
     // EDIT_GUARD fields tolerate older metadata: bool() yields null when the field is
     // absent, so runs that predate EDIT_GUARD read as null (never a fabricated false).
     vtraceEditGuardEnabled: bool(meta.vtraceEditGuardEnabled),
@@ -6440,6 +6636,14 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         break;
       }
       case "--capsule-budget": config.capsuleBudget = requirePositiveInt(argv, ++index, arg); break;
+      case "--pivot-check-policy": {
+        const value = requireValue(argv, ++index, arg);
+        if (!PIVOT_CHECK_POLICIES.includes(value as PivotCheckPolicy)) {
+          throw new Error("Invalid --pivot-check-policy (expected off|multi_pivot|risk_gated|always).");
+        }
+        config.pivotCheckPolicy = value as PivotCheckPolicy;
+        break;
+      }
       case "--disable-pivot-check": config.disablePivotCheck = true; break;
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
@@ -6499,7 +6703,8 @@ function printUsageAndExit(exitCode: number): never {
       "  --capsule-engine legacy|v2                    capsule retrieval engine for indexed-context (default: legacy)",
       "  --capsule-intent auto|debug|refactor|impact|test-failure   Capsule v2 intent (default: auto; v2 only)",
       "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
-      "  --disable-pivot-check                         suppress the PIVOT_CHECK block for a controlled before run (default: PIVOT_CHECK on for multi-pivot v2)",
+      "  --pivot-check-policy off|multi_pivot|risk_gated|always   when to inject PIVOT_CHECK (default: risk_gated — inject only on a high-risk signal, not merely for two pivots)",
+      "  --disable-pivot-check                         force PIVOT_CHECK policy off for a controlled before run (compatibility; equivalent to --pivot-check-policy off)",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
       "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",

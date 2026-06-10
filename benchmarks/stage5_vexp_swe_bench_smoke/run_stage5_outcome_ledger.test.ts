@@ -7,6 +7,7 @@ import path from "node:path";
 import {
   buildLedger,
   buildRun,
+  classifyPivotCheckState,
   buildBaselineVtracePair,
   buildCrossLabelControlledPair,
   classifyCompleteness,
@@ -135,6 +136,58 @@ test("edit-guard metadata is recorded when present and tolerated (null) when abs
   assert.equal(oldRun.editGuardInjected, null);
   assert.equal(oldRun.editGuardDisabledByFlag, null);
   assert.equal(oldRun.editGuardTextPresent, null);
+});
+
+test("pivot-check policy metadata is recorded when present and tolerated (null) when absent", () => {
+  // Present: a run whose meta carries the deterministic PIVOT_CHECK policy fields.
+  const withPolicy = buildRun(
+    completeVtraceParts({
+      meta: {
+        ...completeVtraceParts().meta,
+        vtracePivotCheckInjected: false,
+        vtracePivotCheckDisabledByFlag: false,
+        vtracePivotCheckPolicy: "risk_gated",
+        vtracePivotCheckPolicyReason: "risk_gated: 2 pivots but no high-risk signal",
+        vtracePivotCheckRiskSignals: [],
+        vtracePivotCheckWouldInjectUnderMultiPivot: true,
+      },
+    }),
+  );
+  assert.equal(withPolicy.pivotCheckPolicy, "risk_gated");
+  assert.match(withPolicy.pivotCheckPolicyReason ?? "", /no high-risk signal/);
+  assert.deepEqual(withPolicy.pivotCheckRiskSignals, []);
+  assert.equal(withPolicy.pivotCheckWouldInjectUnderMultiPivot, true);
+  // The reader can tell "risk_gated declined on a multi-pivot capsule" apart from
+  // "disabled" or "injected".
+  assert.equal(classifyPivotCheckState(withPolicy), "absent_risk_not_triggered");
+
+  // Absent (old run): the default fixture meta has no policy fields → all null, and
+  // the state classifier degrades to "unknown" rather than fabricating a reason.
+  const oldRun = buildRun(completeVtraceParts());
+  assert.equal(oldRun.pivotCheckPolicy, null);
+  assert.equal(oldRun.pivotCheckPolicyReason, null);
+  assert.equal(oldRun.pivotCheckRiskSignals, null);
+  assert.equal(oldRun.pivotCheckWouldInjectUnderMultiPivot, null);
+  assert.equal(classifyPivotCheckState(oldRun), "unknown");
+});
+
+test("classifyPivotCheckState distinguishes injected / disabled / risk-declined", () => {
+  const base = buildRun(completeVtraceParts());
+  assert.equal(classifyPivotCheckState({ ...base, pivotCheckInjected: true }), "injected");
+  assert.equal(
+    classifyPivotCheckState({ ...base, pivotCheckInjected: false, pivotCheckDisabledByFlag: true, pivotCheckPolicy: "off" }),
+    "absent_disabled",
+  );
+  assert.equal(
+    classifyPivotCheckState({
+      ...base,
+      pivotCheckInjected: false,
+      pivotCheckDisabledByFlag: false,
+      pivotCheckPolicy: "risk_gated",
+      pivotCheckWouldInjectUnderMultiPivot: false,
+    }),
+    "absent_no_multi_pivot",
+  );
 });
 
 test("patch-verify metadata is recorded when present and tolerated (null) when absent", () => {

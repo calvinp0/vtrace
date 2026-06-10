@@ -368,7 +368,7 @@ test("offenders sort by delta and recommendations fire only on evidence", () => 
   assert.deepEqual(offenders.map((o) => o.instanceId), ["repo__task-2", "repo__task-3", "repo__task-1"]);
 
   const recs = computeRecommendations(tasks, computeAggregate(tasks));
-  assert.ok(recs.some((r) => r.title.includes("PIVOT_CHECK conditional")), "pivot-check recommendation should fire (2 tasks)");
+  assert.ok(recs.some((r) => r.title.includes("PIVOT_CHECK risk-gating")), "pivot-check recommendation should fire (2 tasks)");
   assert.ok(recs.some((r) => r.title.includes("ordered tool logs")), "telemetry recommendation should fire (unknown case)");
   assert.ok(!recs.some((r) => r.title.includes("EDIT_GUARD/PATCH_VERIFY")), "no guard evidence → no guard recommendation");
   assert.deepEqual(recs.map((r) => r.rank), recs.map((_, i) => i + 1));
@@ -386,6 +386,16 @@ test("parses ledger run and run meta shapes", () => {
   const meta = parseRunMeta({ vtraceContextChars: 100, vtraceCapsuleEstimatedTokens: 200, vtraceCapsulePivots: [{ path: "x.py" }, { bogus: 1 }], vtracePivotCheckInjected: true });
   assert.equal(meta.contextChars, 100);
   assert.deepEqual([...meta.capsulePivotPaths], ["x.py"]);
+  // Pivot-check policy fields read tolerantly when present, null on old runs.
+  assert.equal(meta.pivotCheckPolicy, null);
+  assert.equal(meta.pivotCheckWouldInjectUnderMultiPivot, null);
+  const metaWithPolicy = parseRunMeta({
+    vtracePivotCheckInjected: false,
+    vtracePivotCheckPolicy: "risk_gated",
+    vtracePivotCheckWouldInjectUnderMultiPivot: true,
+  });
+  assert.equal(metaWithPolicy.pivotCheckPolicy, "risk_gated");
+  assert.equal(metaWithPolicy.pivotCheckWouldInjectUnderMultiPivot, true);
 
   const cfg = parseArgs(["--results", "r", "--out-name", "o"]);
   assert.equal(cfg.resultsDir, "r");

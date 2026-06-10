@@ -191,10 +191,15 @@ export interface RunMetaInfo {
   readonly capsuleEstimatedTokens: number | null;
   readonly capsulePivotPaths: readonly string[];
   readonly pivotCheckInjected: boolean | null;
+  // Deterministic PIVOT_CHECK policy state (tolerant; null on pre-policy runs). Lets
+  // the audit tell "absent because disabled / risk_gated declined" apart from
+  // "injected", and see whether the old >= 2-pivot behaviour would have injected.
+  readonly pivotCheckPolicy: string | null;
+  readonly pivotCheckWouldInjectUnderMultiPivot: boolean | null;
 }
 
 export function parseRunMeta(raw: Record<string, unknown> | null): RunMetaInfo {
-  if (raw === null) return { contextChars: null, capsuleEstimatedTokens: null, capsulePivotPaths: [], pivotCheckInjected: null };
+  if (raw === null) return { contextChars: null, capsuleEstimatedTokens: null, capsulePivotPaths: [], pivotCheckInjected: null, pivotCheckPolicy: null, pivotCheckWouldInjectUnderMultiPivot: null };
   const pivots = Array.isArray(raw.vtraceCapsulePivots) ? raw.vtraceCapsulePivots : [];
   const capsulePivotPaths = pivots
     .map((p) => (p && typeof p === "object" ? asStr((p as Record<string, unknown>).path) : null))
@@ -204,6 +209,8 @@ export function parseRunMeta(raw: Record<string, unknown> | null): RunMetaInfo {
     capsuleEstimatedTokens: asNum(raw.vtraceCapsuleEstimatedTokens),
     capsulePivotPaths,
     pivotCheckInjected: asBool(raw.vtracePivotCheckInjected),
+    pivotCheckPolicy: asStr(raw.vtracePivotCheckPolicy),
+    pivotCheckWouldInjectUnderMultiPivot: asBool(raw.vtracePivotCheckWouldInjectUnderMultiPivot),
   };
 }
 
@@ -281,6 +288,9 @@ export interface TaskAudit {
   readonly capsuleEstimatedTokens: number | null;
 
   readonly vtracePivotCheckInjected: boolean | null;
+  // Deterministic PIVOT_CHECK policy state (tolerant; null on pre-policy runs).
+  readonly vtracePivotCheckPolicy: string | null;
+  readonly vtracePivotCheckWouldInjectUnderMultiPivot: boolean | null;
   readonly vtraceEditGuardInjected: boolean | null;
   readonly vtracePatchVerifyInjected: boolean | null;
   // Gated OFFLINE critic/repair artifacts exist for this instance (never part of
@@ -368,6 +378,8 @@ export function buildTaskAudit(args: BuildTaskAuditArgs): TaskAudit {
     contextChars: vtraceRunMeta?.contextChars ?? null,
     capsuleEstimatedTokens: vtraceRunMeta?.capsuleEstimatedTokens ?? null,
     vtracePivotCheckInjected: vtrace?.pivotCheckInjected ?? vtraceRunMeta?.pivotCheckInjected ?? null,
+    vtracePivotCheckPolicy: vtraceRunMeta?.pivotCheckPolicy ?? null,
+    vtracePivotCheckWouldInjectUnderMultiPivot: vtraceRunMeta?.pivotCheckWouldInjectUnderMultiPivot ?? null,
     vtraceEditGuardInjected: vtrace?.editGuardInjected ?? null,
     vtracePatchVerifyInjected: vtrace?.patchVerifyInjected ?? null,
     vtracePatchCriticRan: criticRepairRan,
@@ -634,9 +646,19 @@ export function computeRecommendations(tasks: readonly TaskAudit[], aggregate: A
 
   const pivotCheck = overheadWith(["pivot_check_overhead"]);
   if (pivotCheck.length >= 2) {
+    // PIVOT_CHECK is now risk_gated by default (--pivot-check-policy risk_gated):
+    // it injects only on a deterministic high-risk signal, not merely for two pivots.
+    // These overhead tasks predate or opted out of risk-gating; the recommendation is
+    // to re-run them under the default and tighten the risk signals if any still inject.
+    const stillMultiPivot = pivotCheck.filter((t) => t.vtracePivotCheckWouldInjectUnderMultiPivot === true).length;
     candidates.push({
-      title: "Make PIVOT_CHECK conditional on multi-pivot/high-risk cases only (it currently injects on every first pass).",
-      evidence: `PIVOT_CHECK was injected with hidden-pivot inspection on ${pivotCheck.length} overhead task(s) without any resolution improvement over baseline.`,
+      title: "Confirm PIVOT_CHECK risk-gating (now the default) suppresses these injections; tighten the risk signals if any still inject.",
+      evidence:
+        `PIVOT_CHECK was injected with hidden-pivot inspection on ${pivotCheck.length} overhead task(s) without any ` +
+        `resolution improvement over baseline. risk_gated is now the default policy; ` +
+        (stillMultiPivot > 0
+          ? `${stillMultiPivot} of these still satisfy the old >= 2-pivot gate, so verify their risk signals justify the cost.`
+          : `re-run under risk_gated to confirm the overhead injections no longer fire.`),
       affectedTasks: ids(pivotCheck),
       tokenMass: mass(pivotCheck),
     });
@@ -909,11 +931,11 @@ export function renderMarkdown(report: TokenPathAuditReport): string {
 
   L.push("## PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY overhead");
   L.push("");
-  L.push("| instance | PIVOT_CHECK injected | EDIT_GUARD injected | PATCH_VERIFY injected | critic ran (offline) | repair ran (offline) | Δ tok |");
-  L.push("| --- | --- | --- | --- | --- | --- | --- |");
+  L.push("| instance | PIVOT_CHECK injected | policy | would inj. (multi-pivot) | EDIT_GUARD injected | PATCH_VERIFY injected | critic ran (offline) | repair ran (offline) | Δ tok |");
+  L.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
   for (const t of tasks) {
     L.push(
-      `| ${t.instanceId} | ${tri(t.vtracePivotCheckInjected)} | ${tri(t.vtraceEditGuardInjected)} | ${tri(t.vtracePatchVerifyInjected)} | ${tri(t.vtracePatchCriticRan)} | ${tri(t.vtracePatchRepairRan)} | ${fmtSigned(t.tokenDelta)} |`,
+      `| ${t.instanceId} | ${tri(t.vtracePivotCheckInjected)} | ${t.vtracePivotCheckPolicy ?? "—"} | ${tri(t.vtracePivotCheckWouldInjectUnderMultiPivot)} | ${tri(t.vtraceEditGuardInjected)} | ${tri(t.vtracePatchVerifyInjected)} | ${tri(t.vtracePatchCriticRan)} | ${tri(t.vtracePatchRepairRan)} | ${fmtSigned(t.tokenDelta)} |`,
     );
   }
   L.push("");
