@@ -648,6 +648,7 @@ export function buildPrecheckConfig(opts: {
     contextPolicyOverride: "force-inject",
     disablePivotCheck: false,
     disableEditGuard: false,
+    disablePatchVerify: false,
     sweBenchDataFile: null,
     runLabel: null,
     runLabels: null,

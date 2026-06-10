@@ -68,6 +68,14 @@ export interface LedgerRun {
   readonly editGuardInjected: boolean | null;
   readonly editGuardDisabledByFlag: boolean | null;
   readonly editGuardTextPresent: boolean | null;
+  // PATCH_VERIFY treatment state (rides with PIVOT_CHECK, after EDIT_GUARD, but
+  // independent of it). A patch-quality checkpoint — separate observability flags,
+  // never conflated with inspection conversion / edited-file / patch / resolution
+  // signals. All null on runs that predate PATCH_VERIFY (tolerated, never fabricated).
+  readonly patchVerifyEnabled: boolean | null;
+  readonly patchVerifyInjected: boolean | null;
+  readonly patchVerifyDisabledByFlag: boolean | null;
+  readonly patchVerifyTextPresent: boolean | null;
   // Run status + patch + resolution.
   readonly exitCode: number | null;
   readonly completedPatch: boolean | null; // run completed (exitCode 0); null if exit unknown
@@ -366,6 +374,12 @@ export function buildRun(parts: RawRunParts): LedgerRun {
   const editGuardInjected = asBool(meta?.vtraceEditGuardInjected);
   const editGuardDisabledByFlag = asBool(meta?.vtraceEditGuardDisabledByFlag);
   const editGuardTextPresent = asBool(meta?.vtraceEditGuardTextPresent);
+  // asBool yields null when the field is absent, so old runs without PATCH_VERIFY
+  // metadata read as null rather than a fabricated false.
+  const patchVerifyEnabled = asBool(meta?.vtracePatchVerifyEnabled);
+  const patchVerifyInjected = asBool(meta?.vtracePatchVerifyInjected);
+  const patchVerifyDisabledByFlag = asBool(meta?.vtracePatchVerifyDisabledByFlag);
+  const patchVerifyTextPresent = asBool(meta?.vtracePatchVerifyTextPresent);
 
   const exitCode = asNumber(meta?.exitCode);
   const modelPatch = asString(record?.modelPatch) ?? "";
@@ -469,6 +483,10 @@ export function buildRun(parts: RawRunParts): LedgerRun {
     editGuardInjected,
     editGuardDisabledByFlag,
     editGuardTextPresent,
+    patchVerifyEnabled,
+    patchVerifyInjected,
+    patchVerifyDisabledByFlag,
+    patchVerifyTextPresent,
     exitCode,
     completedPatch,
     patchProduced,
@@ -727,7 +745,7 @@ export function renderMarkdown(report: LedgerReport): string {
   lines.push("");
   lines.push(
     "This ledger INDEXES existing artifacts; it does not evaluate. For each run it records the " +
-      "protocol/treatment validity, PIVOT_CHECK / EDIT_GUARD state, tokens/cost, edited/read/searched files, " +
+      "protocol/treatment validity, PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY state, tokens/cost, edited/read/searched files, " +
       "capsule pivots, ordered tool-call presence, hidden-pivot engagement (when both a capsule and " +
       "an ordered tool log exist), and resolution (ONLY when actually evaluated). It keeps four " +
       "signals strictly separate and never conflates them:",
@@ -742,12 +760,12 @@ export function renderMarkdown(report: LedgerReport): string {
   // --- Run inventory -------------------------------------------------------
   lines.push("## Run inventory");
   lines.push("");
-  lines.push("| run label | cond | instance | protocol | treat. valid | pivot-check inj | edit-guard inj | tokens | cost | resolved | pivots | tool log | edited | completeness |");
-  lines.push("| --- | --- | --- | --- | :---: | :---: | :---: | ---: | ---: | :---: | ---: | :---: | --- | --- |");
+  lines.push("| run label | cond | instance | protocol | treat. valid | pivot-check inj | edit-guard inj | patch-verify inj | tokens | cost | resolved | pivots | tool log | edited | completeness |");
+  lines.push("| --- | --- | --- | --- | :---: | :---: | :---: | :---: | ---: | ---: | :---: | ---: | :---: | --- | --- |");
   for (const r of report.runs) {
     lines.push(
       `| ${r.runLabel} | ${r.condition} | ${r.instanceId ?? "unknown"} | ${r.protocol} | ${fmtBool(r.treatmentValid)} | ` +
-        `${fmtBool(r.pivotCheckInjected)} | ${fmtBool(r.editGuardInjected)} | ${fmtNum(r.tokens.total)} | ${fmtNum(r.cost, 4)} | ${fmtResolved(r.resolved)} | ` +
+        `${fmtBool(r.pivotCheckInjected)} | ${fmtBool(r.editGuardInjected)} | ${fmtBool(r.patchVerifyInjected)} | ${fmtNum(r.tokens.total)} | ${fmtNum(r.cost, 4)} | ${fmtResolved(r.resolved)} | ` +
         `${r.pivotCount ?? "?"} | ${r.toolLogOrdered ? "yes" : "no"} | ${fmtList(r.editedFiles)} | ${r.dataCompleteness} |`,
     );
   }

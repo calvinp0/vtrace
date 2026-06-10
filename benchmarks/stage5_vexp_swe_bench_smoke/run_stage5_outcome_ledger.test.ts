@@ -137,6 +137,35 @@ test("edit-guard metadata is recorded when present and tolerated (null) when abs
   assert.equal(oldRun.editGuardTextPresent, null);
 });
 
+test("patch-verify metadata is recorded when present and tolerated (null) when absent", () => {
+  // Present: a run whose meta carries the PATCH_VERIFY treatment fields.
+  const withVerify = buildRun(
+    completeVtraceParts({
+      meta: {
+        ...completeVtraceParts().meta,
+        vtracePivotCheckEnabled: true,
+        vtracePivotCheckInjected: true,
+        vtracePatchVerifyEnabled: true,
+        vtracePatchVerifyInjected: true,
+        vtracePatchVerifyDisabledByFlag: false,
+        vtracePatchVerifyTextPresent: true,
+      },
+    }),
+  );
+  assert.equal(withVerify.patchVerifyEnabled, true);
+  assert.equal(withVerify.patchVerifyInjected, true);
+  assert.equal(withVerify.patchVerifyDisabledByFlag, false);
+  assert.equal(withVerify.patchVerifyTextPresent, true);
+
+  // Absent (old run that predates PATCH_VERIFY): the default fixture meta has no
+  // patch-verify fields → all null, never a fabricated false.
+  const oldRun = buildRun(completeVtraceParts());
+  assert.equal(oldRun.patchVerifyEnabled, null);
+  assert.equal(oldRun.patchVerifyInjected, null);
+  assert.equal(oldRun.patchVerifyDisabledByFlag, null);
+  assert.equal(oldRun.patchVerifyTextPresent, null);
+});
+
 test("buildRun produces a complete run from full metadata", () => {
   const run = buildRun(completeVtraceParts());
   assert.equal(run.condition, "vtrace");
@@ -292,6 +321,10 @@ test("markdown includes non-claims and refuses pass@1 when resolution is unknown
   assert.match(md, /## Non-claims/);
   assert.match(md, /## Summary/);
   assert.match(md, /## Run inventory/);
+  // The run inventory surfaces the PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY treatment columns.
+  assert.match(md, /pivot-check inj/);
+  assert.match(md, /edit-guard inj/);
+  assert.match(md, /patch-verify inj/);
   assert.match(md, /## Pair inventory/);
   assert.match(md, /## Resolution summary/);
   assert.match(md, /## Data completeness/);

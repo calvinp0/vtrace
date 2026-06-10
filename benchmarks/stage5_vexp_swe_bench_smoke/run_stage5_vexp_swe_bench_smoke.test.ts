@@ -28,6 +28,9 @@ import {
   buildEditGuardBlock,
   detectEditGuardText,
   EDIT_GUARD_MARKER,
+  buildPatchVerifyBlock,
+  detectPatchVerifyText,
+  PATCH_VERIFY_MARKER,
   buildVtraceContextMarkdown,
   buildVtraceIndexCommand,
   buildVtracePatchBlock,
@@ -209,6 +212,24 @@ test("--disable-edit-guard is off by default and opt-in only", () => {
   const flagged = parseArgs(["--mode", "prepare", "--instances", "a__1", "--disable-edit-guard"]);
   assert.equal(flagged.disableEditGuard, true);
   assert.equal(flagged.disablePivotCheck, false); // EDIT_GUARD flag does not touch PIVOT_CHECK
+});
+
+test("--disable-patch-verify is off by default and opt-in only, independent of the other gates", () => {
+  // Default: PATCH_VERIFY stays enabled (flag absent), independent of PIVOT_CHECK / EDIT_GUARD.
+  const base = parseArgs(["--mode", "prepare", "--instances", "a__1"]);
+  assert.equal(base.disablePatchVerify, false);
+  assert.equal(base.disableEditGuard, false);
+  assert.equal(base.disablePivotCheck, false);
+  // Explicit flag flips only the patch-verify checkpoint.
+  const flagged = parseArgs(["--mode", "prepare", "--instances", "a__1", "--disable-patch-verify"]);
+  assert.equal(flagged.disablePatchVerify, true);
+  assert.equal(flagged.disableEditGuard, false); // PATCH_VERIFY flag does not touch EDIT_GUARD
+  assert.equal(flagged.disablePivotCheck, false); // ...nor PIVOT_CHECK
+  // EDIT_GUARD and PATCH_VERIFY can be disabled together for a PIVOT_CHECK-only run.
+  const both = parseArgs(["--mode", "prepare", "--instances", "a__1", "--disable-edit-guard", "--disable-patch-verify"]);
+  assert.equal(both.disableEditGuard, true);
+  assert.equal(both.disablePatchVerify, true);
+  assert.equal(both.disablePivotCheck, false);
 });
 
 test("smoke_instances.json loads instances and notes", async () => {
@@ -1554,11 +1575,14 @@ test("--disable-edit-guard removes ONLY the guard; PIVOT_CHECK and context body 
   assert.doesNotMatch(noGuard.markdown, /EDIT_GUARD/);
   assert.equal(noGuard.pivotCheckInjected, true);
   assert.equal(noGuard.editGuardInjected, false);
-  // The retrieved context body still survives.
+  // The retrieved context body still survives, and PATCH_VERIFY (which rides after
+  // EDIT_GUARD and is independent of it) is unaffected by the edit-guard flag.
   assert.match(noGuard.markdown, /get_combinator_sql lives here/);
+  assert.match(noGuard.markdown, /## PATCH_VERIFY/);
 
-  // The two renders differ ONLY by the excised EDIT_GUARD block.
-  const withoutGuard = guarded.markdown.replace(/## EDIT_GUARD[\s\S]*?\n\n(?=## Instruction)/, "");
+  // The two renders differ ONLY by the excised EDIT_GUARD block: deleting EDIT_GUARD
+  // up to the following PATCH_VERIFY block reproduces the no-guard render exactly.
+  const withoutGuard = guarded.markdown.replace(/## EDIT_GUARD[\s\S]*?\n\n(?=## PATCH_VERIFY)/, "");
   assert.equal(noGuard.markdown, withoutGuard);
 });
 
@@ -1609,6 +1633,168 @@ test("EDIT_GUARD changes no retrieval/ranking output: capsule pivots and body ar
   assert.ok(noGuard.markdown.includes("get_combinator_sql body here"));
   assert.match(guarded.markdown, /sphinx\/pycode\/ast\.py/); // pivot rows unchanged
   assert.match(noGuard.markdown, /sphinx\/pycode\/ast\.py/);
+});
+
+// ----- Stage 5: PATCH_VERIFY patch-quality checkpoint (rides with PIVOT_CHECK) -----
+
+test("buildPatchVerifyBlock contains SCOPE LANDED, FAILING BEHAVIOR HANDLED, MINIMALITY, CHECK RUN, RISK", () => {
+  const block = buildPatchVerifyBlock();
+  assert.match(block, /## PATCH_VERIFY/);
+  assert.match(block, /SCOPE LANDED:/);
+  assert.match(block, /FAILING BEHAVIOR HANDLED:/);
+  assert.match(block, /MINIMALITY:/);
+  assert.match(block, /CHECK RUN:/);
+  assert.match(block, /RISK:/);
+  // It is an after-edit checkpoint that asks the agent to revise before finalizing.
+  assert.match(block, /Before finalizing the patch/);
+  assert.match(block, /revise the patch before finalizing/);
+  // It carries its own detectable marker and is NOT another retrieval/inspection block.
+  assert.ok(block.includes(PATCH_VERIFY_MARKER));
+  assert.doesNotMatch(block, /PIVOT_CHECK/);
+  assert.doesNotMatch(block, /EDIT_GUARD/);
+});
+
+test("detectPatchVerifyText finds the marker only when the checkpoint block is present", () => {
+  assert.equal(detectPatchVerifyText(buildPatchVerifyBlock()), true);
+  assert.equal(detectPatchVerifyText("# vtrace indexed context\n\n## Instruction\n"), false);
+});
+
+test("buildVtraceContextMarkdown injects PATCH_VERIFY after EDIT_GUARD for a multi-pivot v2 section", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const assembled = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  // All three blocks present, in order: PIVOT_CHECK → EDIT_GUARD → PATCH_VERIFY.
+  assert.match(assembled.markdown, /## PIVOT_CHECK/);
+  assert.match(assembled.markdown, /## EDIT_GUARD/);
+  assert.match(assembled.markdown, /## PATCH_VERIFY/);
+  assert.ok(assembled.markdown.indexOf("## PIVOT_CHECK") < assembled.markdown.indexOf("## EDIT_GUARD"));
+  assert.ok(assembled.markdown.indexOf("## EDIT_GUARD") < assembled.markdown.indexOf("## PATCH_VERIFY"));
+  assert.equal(assembled.pivotCheckInjected, true);
+  assert.equal(assembled.editGuardInjected, true);
+  assert.equal(assembled.patchVerifyInjected, true);
+  // The checkpoint carries its required items.
+  assert.match(assembled.markdown, /SCOPE LANDED:/);
+  assert.match(assembled.markdown, /CHECK RUN:/);
+});
+
+test("--disable-patch-verify removes ONLY the checkpoint; PIVOT_CHECK, EDIT_GUARD, and context body remain", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\nget_combinator_sql lives here",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const withVerify = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  const noVerify = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8, disablePatchVerify: true });
+
+  // PIVOT_CHECK and EDIT_GUARD are untouched by the patch-verify flag.
+  assert.match(noVerify.markdown, /## PIVOT_CHECK/);
+  assert.match(noVerify.markdown, /## EDIT_GUARD/);
+  assert.doesNotMatch(noVerify.markdown, /PATCH_VERIFY/);
+  assert.equal(noVerify.pivotCheckInjected, true);
+  assert.equal(noVerify.editGuardInjected, true);
+  assert.equal(noVerify.patchVerifyInjected, false);
+  // The retrieved context body still survives.
+  assert.match(noVerify.markdown, /get_combinator_sql lives here/);
+
+  // The two renders differ ONLY by the excised PATCH_VERIFY block.
+  const withoutVerify = withVerify.markdown.replace(/## PATCH_VERIFY[\s\S]*?\n\n(?=## Instruction)/, "");
+  assert.equal(noVerify.markdown, withoutVerify);
+});
+
+test("--disable-edit-guard leaves PATCH_VERIFY intact (the checkpoint is independent of the guard)", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const noGuard = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8, disableEditGuard: true });
+  // EDIT_GUARD gone, PATCH_VERIFY still present — and PATCH_VERIFY now follows PIVOT_CHECK directly.
+  assert.match(noGuard.markdown, /## PIVOT_CHECK/);
+  assert.doesNotMatch(noGuard.markdown, /EDIT_GUARD/);
+  assert.match(noGuard.markdown, /## PATCH_VERIFY/);
+  assert.equal(noGuard.editGuardInjected, false);
+  assert.equal(noGuard.patchVerifyInjected, true);
+  assert.ok(noGuard.markdown.indexOf("## PIVOT_CHECK") < noGuard.markdown.indexOf("## PATCH_VERIFY"));
+});
+
+test("--disable-edit-guard --disable-patch-verify yields PIVOT_CHECK only", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const pivotOnly = buildVtraceContextMarkdown([section], {
+    maxChars: 12000,
+    maxItems: 8,
+    disableEditGuard: true,
+    disablePatchVerify: true,
+  });
+  assert.match(pivotOnly.markdown, /## PIVOT_CHECK/);
+  assert.doesNotMatch(pivotOnly.markdown, /EDIT_GUARD/);
+  assert.doesNotMatch(pivotOnly.markdown, /PATCH_VERIFY/);
+  assert.equal(pivotOnly.pivotCheckInjected, true);
+  assert.equal(pivotOnly.editGuardInjected, false);
+  assert.equal(pivotOnly.patchVerifyInjected, false);
+});
+
+test("--disable-pivot-check also removes PATCH_VERIFY (the checkpoint rides with the checklist)", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const both = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  const neither = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8, disablePivotCheck: true });
+  assert.equal(both.patchVerifyInjected, true);
+  // No checklist => no checkpoint, even though --disable-patch-verify was NOT passed.
+  assert.equal(neither.pivotCheckInjected, false);
+  assert.equal(neither.patchVerifyInjected, false);
+  assert.doesNotMatch(neither.markdown, /PATCH_VERIFY/);
+});
+
+test("PATCH_VERIFY never injects for a single-pivot capsule (no checklist to ride)", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification: classificationWithPivots([PIVOT_CHECK_PIVOTS[0]!]),
+    preformatted: true,
+  };
+  const assembled = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  assert.equal(assembled.pivotCheckInjected, false);
+  assert.equal(assembled.patchVerifyInjected, false);
+  assert.doesNotMatch(assembled.markdown, /PATCH_VERIFY/);
+});
+
+test("PATCH_VERIFY changes no retrieval/ranking output: capsule pivots and body are identical", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\nget_combinator_sql body here",
+    error: null,
+    classification: classificationWithPivots(PIVOT_CHECK_PIVOTS),
+    preformatted: true,
+  };
+  const withVerify = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  const noVerify = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8, disablePatchVerify: true });
+  // The injected retrieved context (pivot rows, body) is identical except for the
+  // appended checkpoint — PATCH_VERIFY adds guidance only, never altering retrieval.
+  assert.ok(withVerify.markdown.includes("get_combinator_sql body here"));
+  assert.ok(noVerify.markdown.includes("get_combinator_sql body here"));
+  assert.match(withVerify.markdown, /sphinx\/pycode\/ast\.py/); // pivot rows unchanged
+  assert.match(noVerify.markdown, /sphinx\/pycode\/ast\.py/);
 });
 
 async function v2InjectionResult(
@@ -1772,6 +1958,49 @@ test("--disable-edit-guard records disabled state in result + meta; retrieval un
   assert.equal(meta.vtraceEditGuardEnabled, false);
   assert.equal(meta.vtraceEditGuardDisabledByFlag, true);
   assert.equal(meta.vtraceEditGuardInjected, false);
+});
+
+test("prepareIndexedContext records PATCH_VERIFY enabled by default; meta + snapshot reflect it", async () => {
+  // The default fixture is a single-pivot capsule, so neither PIVOT_CHECK nor the
+  // checkpoint that rides with it injects — but the meta must still read enabled=true /
+  // disabledByFlag=false / injected=false (distinct from a flag-disabled run).
+  const { result, out } = await v2InjectionResult(capsuleV2Json());
+  assert.equal(result.patchVerifyEnabled, true);
+  assert.equal(result.patchVerifyDisabledByFlag, false);
+  assert.equal(result.patchVerifyInjected, false);
+  assert.equal(result.patchVerifyTextPresent, false);
+  // Retrieval telemetry is intact and unaffected by the checkpoint feature.
+  assert.equal(result.contextInjected, true);
+  assert.equal(result.capsulePivots.length, 1);
+
+  const meta = indexedContextMetaFields(result);
+  assert.equal(meta.vtracePatchVerifyEnabled, true);
+  assert.equal(meta.vtracePatchVerifyInjected, false);
+  assert.equal(meta.vtracePatchVerifyDisabledByFlag, false);
+  assert.equal(meta.vtracePatchVerifyTextPresent, false);
+
+  const ctx = await readFile(vtraceInstructionsFilePath(out), "utf8");
+  assert.ok(!ctx.includes("PATCH_VERIFY"));
+});
+
+test("--disable-patch-verify records disabled state in result + meta; EDIT_GUARD and retrieval untouched", async () => {
+  const { result } = await v2InjectionResult(capsuleV2Json(), { disablePatchVerify: true });
+  assert.equal(result.patchVerifyEnabled, false);
+  assert.equal(result.patchVerifyDisabledByFlag, true);
+  assert.equal(result.patchVerifyInjected, false);
+  // PIVOT_CHECK and EDIT_GUARD state are independent of the patch-verify flag.
+  assert.equal(result.pivotCheckEnabled, true);
+  assert.equal(result.pivotCheckDisabledByFlag, false);
+  assert.equal(result.editGuardEnabled, true);
+  assert.equal(result.editGuardDisabledByFlag, false);
+  // Retrieval telemetry is unaffected.
+  assert.equal(result.contextInjected, true);
+  assert.equal(result.capsulePivots.length, 1);
+
+  const meta = indexedContextMetaFields(result);
+  assert.equal(meta.vtracePatchVerifyEnabled, false);
+  assert.equal(meta.vtracePatchVerifyDisabledByFlag, true);
+  assert.equal(meta.vtracePatchVerifyInjected, false);
 });
 
 test("prepareIndexedContext with v2 issues a v2 query and records the engine metadata", async () => {

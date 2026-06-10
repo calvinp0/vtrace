@@ -199,6 +199,15 @@ export interface CliConfig {
   // block, --disable-pivot-check also removes EDIT_GUARD (no checklist => no guard).
   // Affects only the EDIT_GUARD block; retrieval, ranking, and telemetry are untouched.
   readonly disableEditGuard: boolean;
+  // Benchmark-only PATCH_VERIFY suppression (--disable-patch-verify). Default false:
+  // the compact PATCH_VERIFY patch-quality checkpoint rides with PIVOT_CHECK for
+  // multi-pivot Capsule v2 runs and is appended AFTER EDIT_GUARD when both are
+  // present. It is INDEPENDENT of EDIT_GUARD: --disable-edit-guard removes only the
+  // guard and leaves PATCH_VERIFY, while this flag removes only PATCH_VERIFY. Because
+  // it rides on the PIVOT_CHECK checklist gate, --disable-pivot-check removes it too
+  // (no checklist => no checkpoint). PATCH_VERIFY is a patch-quality checkpoint, NOT
+  // a retrieval/inspection mechanism; it changes no retrieval, ranking, or telemetry.
+  readonly disablePatchVerify: boolean;
   readonly sweBenchDataFile: string | null;
   readonly runLabel: string | null;
   // Stage 5C aggregate-runs: the set of run-labels to combine into one report.
@@ -307,6 +316,20 @@ export interface IndexedContextFields {
   readonly vtraceEditGuardInjected: boolean | null;
   readonly vtraceEditGuardDisabledByFlag: boolean | null;
   readonly vtraceEditGuardTextPresent: boolean | null;
+  // PATCH_VERIFY state (Stage 5 before/after experiments). A patch-quality checkpoint
+  // recorded alongside PIVOT_CHECK / EDIT_GUARD and kept strictly SEPARATE from
+  // inspection-conversion / edited-file / patch / resolution signals — it is an
+  // observability flag, never an outcome, and is NOT a retrieval mechanism.
+  // `Enabled` is false only when --disable-patch-verify was passed; `DisabledByFlag`
+  // mirrors that flag; `Injected` is whether the compact PATCH_VERIFY block actually
+  // entered the injected context (true only when enabled AND a PIVOT_CHECK block was
+  // injected — the checkpoint rides with the checklist, after EDIT_GUARD).
+  // `TextPresent` independently re-scans the assembled snapshot for the marker. All
+  // null on baseline / non-indexed rows and on older runs that predate the field.
+  readonly vtracePatchVerifyEnabled: boolean | null;
+  readonly vtracePatchVerifyInjected: boolean | null;
+  readonly vtracePatchVerifyDisabledByFlag: boolean | null;
+  readonly vtracePatchVerifyTextPresent: boolean | null;
 }
 
 // Stage 5C evaluation evidence, normalized per instance. resolved itself stays
@@ -594,6 +617,9 @@ const DEFAULT_CONFIG: CliConfig = {
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
   // off only the guard block).
   disableEditGuard: false,
+  // PATCH_VERIFY is ON by default (rides with PIVOT_CHECK, after EDIT_GUARD;
+  // --disable-patch-verify turns off only the checkpoint, independent of EDIT_GUARD).
+  disablePatchVerify: false,
   sweBenchDataFile: null,
   runLabel: null,
   runLabels: null,
@@ -2125,6 +2151,15 @@ export interface IndexedContextResult {
   readonly editGuardInjected: boolean;
   readonly editGuardDisabledByFlag: boolean;
   readonly editGuardTextPresent: boolean;
+  // PATCH_VERIFY state for this run, mirroring the EDIT_GUARD shape. `enabled` is the
+  // feature switch (false only when --disable-patch-verify was passed); `disabledByFlag`
+  // mirrors that flag; `injected` is whether the checkpoint block actually entered the
+  // assembled context (true only when enabled AND a PIVOT_CHECK block was injected,
+  // independent of EDIT_GUARD); `textPresent` re-scans the final snapshot for the marker.
+  readonly patchVerifyEnabled: boolean;
+  readonly patchVerifyInjected: boolean;
+  readonly patchVerifyDisabledByFlag: boolean;
+  readonly patchVerifyTextPresent: boolean;
 }
 
 // Resolve the bundled vexp-swe-bench dataset path (overridable via --swe-bench-data).
@@ -3200,13 +3235,58 @@ export function detectEditGuardText(markdown: string): boolean {
   return markdown.includes(EDIT_GUARD_MARKER);
 }
 
+// Marker string that uniquely identifies the injected PATCH_VERIFY block in a
+// snapshot. Used by detectPatchVerifyText and tests; distinct from the PIVOT_CHECK
+// and EDIT_GUARD markers.
+export const PATCH_VERIFY_MARKER = "## PATCH_VERIFY";
+
+// Build the compact, benchmark-only PATCH_VERIFY checkpoint. This rides WITH
+// PIVOT_CHECK (same multi-pivot Capsule v2 gate) and is appended AFTER EDIT_GUARD
+// when both are present. Where EDIT_GUARD guides the agent BEFORE editing, this is a
+// patch-quality checkpoint AFTER editing and before the final answer: it targets the
+// observed Stage 5 loss modes that survived passive pre-edit prose (wrong class/
+// function scope, patch that does not explicitly handle the failing behavior, broad
+// control-flow rewrite instead of minimal additive validation, no narrow test/
+// reproduction check). It is pure verification discipline — it changes NO retrieval,
+// ranking, or patch application, and is NOT a retrieval mechanism. Returns a constant
+// block; the multi-pivot gate lives at the call site (appended only when PIVOT_CHECK was).
+export function buildPatchVerifyBlock(): string {
+  return [
+    "## PATCH_VERIFY",
+    "",
+    "Before finalizing the patch, check:",
+    "- SCOPE LANDED: the edit landed in the intended enclosing class/function/module.",
+    "- FAILING BEHAVIOR HANDLED: the patch directly handles the concrete failing "
+      + "input/assertion/exception.",
+    "- MINIMALITY: the change is additive/minimal unless a broader rewrite is explicitly "
+      + "justified.",
+    "- CHECK RUN: a narrow relevant test/reproduction/check was run, or the reason it "
+      + "could not be run is stated.",
+    "- RISK: name the remaining risk if the check did not prove the fix.",
+    "If any item fails, revise the patch before finalizing.",
+  ].join("\n");
+}
+
+// Does an assembled instruction snapshot carry the PATCH_VERIFY block? Independent
+// re-scan of the final text (separate from the assembly-time `injected` flag), so a
+// truncated/edited snapshot can be detected. Observability only.
+export function detectPatchVerifyText(markdown: string): boolean {
+  return markdown.includes(PATCH_VERIFY_MARKER);
+}
+
 export function buildVtraceContextMarkdown(
   sections: readonly VtraceContextSection[],
   // `disablePivotCheck` (default false) suppresses the compact PIVOT_CHECK block
   // for controlled "before" runs; it never affects the rest of the injected
   // context. `pivotCheckInjected` in the return reports whether the block was
   // actually appended (true only when not disabled AND a section qualified).
-  limits: { maxChars: number; maxItems: number; disablePivotCheck?: boolean; disableEditGuard?: boolean },
+  limits: {
+    maxChars: number;
+    maxItems: number;
+    disablePivotCheck?: boolean;
+    disableEditGuard?: boolean;
+    disablePatchVerify?: boolean;
+  },
 ): {
   markdown: string;
   chars: number;
@@ -3214,6 +3294,7 @@ export function buildVtraceContextMarkdown(
   truncated: boolean;
   pivotCheckInjected: boolean;
   editGuardInjected: boolean;
+  patchVerifyInjected: boolean;
 } {
   const lines: string[] = [
     "# vtrace indexed context",
@@ -3226,6 +3307,7 @@ export function buildVtraceContextMarkdown(
   let anyTruncated = false;
   let pivotCheckInjected = false;
   let editGuardInjected = false;
+  let patchVerifyInjected = false;
   for (const section of sections) {
     const { instance } = section;
     // NOTE: the full problem statement is intentionally NOT repeated here. The
@@ -3272,6 +3354,16 @@ export function buildVtraceContextMarkdown(
           lines.push(buildEditGuardBlock(), "");
           editGuardInjected = true;
         }
+        // PATCH_VERIFY rides on the SAME multi-pivot Capsule v2 gate and is appended
+        // AFTER EDIT_GUARD when both are present. It is INDEPENDENT of EDIT_GUARD:
+        // --disable-edit-guard removes only the guard above and leaves this checkpoint;
+        // --disable-patch-verify removes only this checkpoint. Because it rides on the
+        // PIVOT_CHECK checklist, --disable-pivot-check removes it too (no checklist =>
+        // no checkpoint). It is a patch-quality checkpoint, not a retrieval mechanism.
+        if (limits.disablePatchVerify !== true) {
+          lines.push(buildPatchVerifyBlock(), "");
+          patchVerifyInjected = true;
+        }
       }
     }
     lines.push(
@@ -3288,6 +3380,7 @@ export function buildVtraceContextMarkdown(
     truncated: anyTruncated,
     pivotCheckInjected,
     editGuardInjected,
+    patchVerifyInjected,
   };
 }
 
@@ -3366,6 +3459,10 @@ export function indexedContextMetaFields(result: IndexedContextResult): IndexedC
     vtraceEditGuardInjected: result.editGuardInjected,
     vtraceEditGuardDisabledByFlag: result.editGuardDisabledByFlag,
     vtraceEditGuardTextPresent: result.editGuardTextPresent,
+    vtracePatchVerifyEnabled: result.patchVerifyEnabled,
+    vtracePatchVerifyInjected: result.patchVerifyInjected,
+    vtracePatchVerifyDisabledByFlag: result.patchVerifyDisabledByFlag,
+    vtracePatchVerifyTextPresent: result.patchVerifyTextPresent,
   };
 }
 
@@ -3563,6 +3660,7 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     maxItems: config.vtraceContextMaxItems,
     disablePivotCheck: config.disablePivotCheck,
     disableEditGuard: config.disableEditGuard,
+    disablePatchVerify: config.disablePatchVerify,
   });
   await writeFile(contextFile, assembled.markdown);
 
@@ -3711,6 +3809,16 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     editGuardInjected: assembled.editGuardInjected,
     editGuardDisabledByFlag: config.disableEditGuard === true,
     editGuardTextPresent: detectEditGuardText(assembled.markdown),
+    // PATCH_VERIFY mirrors the EDIT_GUARD state shape but is INDEPENDENT of it.
+    // `enabled` is the feature switch (--disable-patch-verify off); `injected` is
+    // whether the checkpoint block entered the assembled context (false when
+    // PIVOT_CHECK was not injected, since it rides with the checklist); `textPresent`
+    // independently confirms the marker in the final snapshot. Coerced to strict
+    // booleans so a partial config never leaks `undefined` into metadata.
+    patchVerifyEnabled: config.disablePatchVerify !== true,
+    patchVerifyInjected: assembled.patchVerifyInjected,
+    patchVerifyDisabledByFlag: config.disablePatchVerify === true,
+    patchVerifyTextPresent: detectPatchVerifyText(assembled.markdown),
   };
 }
 
@@ -4318,6 +4426,10 @@ function stampVtraceRows(rows: readonly Stage5Row[], evidence: Stage5RunEvidence
           vtraceEditGuardInjected: evidence.vtraceEditGuardInjected,
           vtraceEditGuardDisabledByFlag: evidence.vtraceEditGuardDisabledByFlag,
           vtraceEditGuardTextPresent: evidence.vtraceEditGuardTextPresent,
+          vtracePatchVerifyEnabled: evidence.vtracePatchVerifyEnabled,
+          vtracePatchVerifyInjected: evidence.vtracePatchVerifyInjected,
+          vtracePatchVerifyDisabledByFlag: evidence.vtracePatchVerifyDisabledByFlag,
+          vtracePatchVerifyTextPresent: evidence.vtracePatchVerifyTextPresent,
         },
   );
 }
@@ -4612,6 +4724,10 @@ export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5
     vtraceEditGuardInjected: null,
     vtraceEditGuardDisabledByFlag: null,
     vtraceEditGuardTextPresent: null,
+    vtracePatchVerifyEnabled: null,
+    vtracePatchVerifyInjected: null,
+    vtracePatchVerifyDisabledByFlag: null,
+    vtracePatchVerifyTextPresent: null,
     notes: perRun.flatMap((e) => e.notes),
   };
 }
@@ -5119,6 +5235,10 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtraceEditGuardInjected: null,
     vtraceEditGuardDisabledByFlag: null,
     vtraceEditGuardTextPresent: null,
+    vtracePatchVerifyEnabled: null,
+    vtracePatchVerifyInjected: null,
+    vtracePatchVerifyDisabledByFlag: null,
+    vtracePatchVerifyTextPresent: null,
   };
 }
 
@@ -5459,6 +5579,12 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtraceEditGuardInjected: bool(meta.vtraceEditGuardInjected),
     vtraceEditGuardDisabledByFlag: bool(meta.vtraceEditGuardDisabledByFlag),
     vtraceEditGuardTextPresent: bool(meta.vtraceEditGuardTextPresent),
+    // PATCH_VERIFY fields tolerate older metadata: bool() yields null when the field is
+    // absent, so runs that predate PATCH_VERIFY read as null (never a fabricated false).
+    vtracePatchVerifyEnabled: bool(meta.vtracePatchVerifyEnabled),
+    vtracePatchVerifyInjected: bool(meta.vtracePatchVerifyInjected),
+    vtracePatchVerifyDisabledByFlag: bool(meta.vtracePatchVerifyDisabledByFlag),
+    vtracePatchVerifyTextPresent: bool(meta.vtracePatchVerifyTextPresent),
   };
 }
 
@@ -6316,6 +6442,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--capsule-budget": config.capsuleBudget = requirePositiveInt(argv, ++index, arg); break;
       case "--disable-pivot-check": config.disablePivotCheck = true; break;
       case "--disable-edit-guard": config.disableEditGuard = true; break;
+      case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
       case "--run-labels":
@@ -6374,6 +6501,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
       "  --disable-pivot-check                         suppress the PIVOT_CHECK block for a controlled before run (default: PIVOT_CHECK on for multi-pivot v2)",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
+      "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),
