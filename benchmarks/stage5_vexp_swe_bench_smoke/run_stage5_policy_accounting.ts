@@ -512,7 +512,7 @@ export function pickRecommendation(args: {
   return {
     choice: "C",
     statement: RECOMMENDATION_TEXT.C,
-    rationale: `Exactly ${conversionCount} verified conversion improved cost-per-resolved within vtrace (from ${fmtUsd(before)} to ${fmtUsd(after)} per resolved) and recovery was cheap (${fmtUsd(verifiedRepair.criticCostUsd)} critic + ${fmtUsd(verifiedRepair.repairCostUsd)} repair), but n=1 is too thin to commit to a batch; gather one more verified conversion (Requests) and re-account.`,
+    rationale: `${conversionCount} verified conversion${conversionCount === 1 ? "" : "s"} improved cost-per-resolved within vtrace (from ${fmtUsd(before)} to ${fmtUsd(after)} per resolved) and recovery was cheap (${fmtUsd(verifiedRepair.criticCostUsd)} critic + ${fmtUsd(verifiedRepair.repairCostUsd)} repair), but n=${conversionCount} is still too thin to commit to a batch (the batch threshold is 3 verified conversions); gather one more verified conversion (Requests) and re-account.`,
   };
 }
 

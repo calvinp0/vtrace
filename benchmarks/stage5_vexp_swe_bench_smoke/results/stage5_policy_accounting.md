@@ -1,17 +1,17 @@
 # Stage 5 policy accounting
 
-_Generated: 2026-06-10T18:59:25.753Z_
+_Generated: 2026-06-10T19:36:07.345Z_
 
 _Reporting/accounting only. Re-runs nothing (no agent, no live critic, no repair, no Docker); accounts for observed artifacts and verified repaired-patch evaluations over the controlled task set._
 
 ## Summary
 
-1 verified conversion(s): vtrace_first_patch resolved 5/10 → gated repair 6/10. Cost-per-resolved improved ($1.6418 → $1.4231 with recovery cost included). Baseline remains 8/10 at $0.8722/resolved.
+2 verified conversion(s): vtrace_first_patch resolved 5/10 → gated repair 7/10. Cost-per-resolved improved ($1.6418 → $1.2583 with recovery cost included). Baseline remains 8/10 at $0.8722/resolved.
 
 - controlled tasks: **10**
-- verified conversions: **1**
-- resolved: baseline **8**, vtrace_first_patch **5**, gated repair **6**
-- recovery cost added (critic+repair): **$0.3294**
+- verified conversions: **2**
+- resolved: baseline **8**, vtrace_first_patch **5**, gated repair **7**
+- recovery cost added (critic+repair): **$0.5993**
 
 ## Policies compared
 
@@ -27,9 +27,9 @@ _Reporting/accounting only. Re-runs nothing (no agent, no live critic, no repair
 | --- | --- | --- | --- | --- | --- |
 | baseline | 10 | 8 | 2 | 0 | 0 |
 | vtrace_first_patch | 10 | 5 | 5 | 0 | 0 |
-| vtrace_with_observed_gated_repair | 10 | 6 | 4 | 0 | 1 |
+| vtrace_with_observed_gated_repair | 10 | 7 | 3 | 0 | 2 |
 | vtrace_with_live_critic_observation_cost | 10 | 5 | 5 | 0 | 0 |
-| vtrace_with_verified_repair_cost | 10 | 6 | 4 | 0 | 1 |
+| vtrace_with_verified_repair_cost | 10 | 7 | 3 | 0 | 2 |
 
 ## Cost accounting
 
@@ -39,7 +39,7 @@ _Reporting/accounting only. Re-runs nothing (no agent, no live critic, no repair
 | vtrace_first_patch | $8.2089 | n/a | n/a | $8.2089 | $0.8209 |
 | vtrace_with_observed_gated_repair | $8.2089 | n/a | n/a | $8.2089 | $0.8209 |
 | vtrace_with_live_critic_observation_cost | $8.2089 | $0.3503 | n/a | $8.5592 | $0.8559 |
-| vtrace_with_verified_repair_cost | $8.2089 | $0.1218 | $0.2076 | $8.5383 | $0.8538 |
+| vtrace_with_verified_repair_cost | $8.2089 | $0.2583 | $0.3410 | $8.8082 | $0.8808 |
 
 ## Token accounting
 
@@ -49,7 +49,7 @@ _Reporting/accounting only. Re-runs nothing (no agent, no live critic, no repair
 | vtrace_first_patch | 17074981 | 1707498 | null | null | null | null |
 | vtrace_with_observed_gated_repair | 17074981 | 1707498 | null | null | null | null |
 | vtrace_with_live_critic_observation_cost | 17094636 | 1709464 | 12937 | 6718 | null | null |
-| vtrace_with_verified_repair_cost | 17089228 | 1708923 | 4343 | 2487 | 6021 | 1396 |
+| vtrace_with_verified_repair_cost | 17102010 | 1710201 | 8686 | 5480 | 10366 | 2497 |
 
 ## Cost per resolved task
 
@@ -57,9 +57,9 @@ _Reporting/accounting only. Re-runs nothing (no agent, no live critic, no repair
 | --- | --- | --- | --- |
 | baseline | 8 | $6.9777 | $0.8722 |
 | vtrace_first_patch | 5 | $8.2089 | $1.6418 |
-| vtrace_with_observed_gated_repair | 6 | $8.2089 | $1.3681 |
+| vtrace_with_observed_gated_repair | 7 | $8.2089 | $1.1727 |
 | vtrace_with_live_critic_observation_cost | 5 | $8.5592 | $1.7118 |
-| vtrace_with_verified_repair_cost | 6 | $8.5383 | $1.4231 |
+| vtrace_with_verified_repair_cost | 7 | $8.8082 | $1.2583 |
 
 ## Token per resolved task
 
@@ -67,14 +67,15 @@ _Reporting/accounting only. Re-runs nothing (no agent, no live critic, no repair
 | --- | --- | --- | --- |
 | baseline | 8 | 16756692 | 2094587 |
 | vtrace_first_patch | 5 | 17074981 | 3414996 |
-| vtrace_with_observed_gated_repair | 6 | 17074981 | 2845830 |
+| vtrace_with_observed_gated_repair | 7 | 17074981 | 2439283 |
 | vtrace_with_live_critic_observation_cost | 5 | 17094636 | 3418927 |
-| vtrace_with_verified_repair_cost | 6 | 17089228 | 2848205 |
+| vtrace_with_verified_repair_cost | 7 | 17102010 | 2443144 |
 
 ## Repair conversions included
 
 | run | instance | first resolved | repaired resolved | converted | critic $ | repair $ | recovery $ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| eval-patchverify-before-requests-5414 | psf__requests-5414 | false | true | true | $0.1365 | $0.1334 | $0.2699 |
 | eval-patchverify-before-sympy-16766 | sympy__sympy-16766 | false | true | true | $0.1218 | $0.2076 | $0.3294 |
 
 _Cost sources:_
@@ -89,18 +90,18 @@ _Token sources:_
 
 ## Interpretation
 
-1. **Did the verified repair conversion improve resolved count?** Yes — vtrace_first_patch 5 → gated repair 6 (+1).
-2. **How much extra cost/tokens did recovery add?** $0.3294 and 14247 tokens, for the verified conversion(s) only.
-3. **Did cost per resolved improve or worsen?** Within vtrace it **improved** ($1.6418 → $1.4231 with recovery cost). Baseline is still cheaper at $0.8722/resolved.
-4. **Did tokens per resolved improve or worsen?** Within vtrace it **improved** (3414996 → 2845830). Baseline is still leaner at 2094587/resolved.
-5. **Is there enough evidence to run the three Requests repairs?** Not yet — only 1 verified conversion(s).
+1. **Did the verified repair conversion improve resolved count?** Yes — vtrace_first_patch 5 → gated repair 7 (+2).
+2. **How much extra cost/tokens did recovery add?** $0.5993 and 27029 tokens, for the verified conversion(s) only.
+3. **Did cost per resolved improve or worsen?** Within vtrace it **improved** ($1.6418 → $1.2583 with recovery cost). Baseline is still cheaper at $0.8722/resolved.
+4. **Did tokens per resolved improve or worsen?** Within vtrace it **improved** (3414996 → 2439283). Baseline is still leaner at 2094587/resolved.
+5. **Is there enough evidence to run the three Requests repairs?** Not yet — only 2 verified conversion(s).
 6. **Does this support always-on critic/repair?** **No.** Gated, disabled-by-default repair recovered one lost resolution cheaply, but vtrace_first_patch is still behind baseline; the dominant lever is reducing default Capsule/agent tokens, not always-on repair.
 
 ## Recommended next step
 
 **Option C.** Run only one Requests repair smoke, then update the policy accounting.
 
-Exactly 1 verified conversion improved cost-per-resolved within vtrace (from $1.6418 to $1.4231 per resolved) and recovery was cheap ($0.1218 critic + $0.2076 repair), but n=1 is too thin to commit to a batch; gather one more verified conversion (Requests) and re-account.
+2 verified conversions improved cost-per-resolved within vtrace (from $1.6418 to $1.2583 per resolved) and recovery was cheap ($0.2583 critic + $0.3410 repair), but n=2 is still too thin to commit to a batch (the batch threshold is 3 verified conversions); gather one more verified conversion (Requests) and re-account.
 
 ## Non-claims
 

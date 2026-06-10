@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-06-10T19:34:47.874Z",
+  "runLabel": "eval-patchverify-before-requests-5414",
+  "instanceId": "psf__requests-5414",
+  "summary": {
+    "artifactSuccess": true,
+    "evaluationSuccess": true,
+    "convertedUnresolvedToResolved": true,
+    "headline": "Observed Stage 5 loss recovery: an unresolved VTRACE first patch became RESOLVED after critic-guided one-repair mode (Docker resolved=true)."
+  },
+  "firstPatch": {
+    "hash": "6b65044624a8b46daee4871405b79b81d8f4661950e48c419bee21fdf65c78c0",
+    "resolved": false,
+    "present": true
+  },
+  "critic": {
+    "model": null,
+    "scopeOk": true,
+    "defectClass": "broad_rewrite_minimality",
+    "risk": "medium",
+    "confidence": "medium",
+    "repairRequired": true,
+    "repairReason": "The broad non-minimal rewrite (minimality_rewrite_risk fail, high; 5 deleted control-flow lines) introduces a concrete behavioral risk: ASCII hosts that previously skipped IDNA encoding are now always passed through _get_idna_encoded_host, which can alter handling of ordinary ASCII hostnames and depends on the idna package being available. This is a wrong-scope behavioral broadening beyond the empty-label fix the failing case requires.",
+    "repairInstructions": "Modify the existing patch rather than restarting: restore the original `if not unicode_is_ascii(host): try idna-encode except UnicodeError -> InvalidURL` branch and the `elif host.startswith(u'*')` guard so ASCII hosts are not unconditionally IDNA-encoded. Then add a targeted empty-label check for the ASCII path (e.g. reject hosts with a leading/trailing dot or any empty label, raising InvalidURL('URL has an invalid label.')), so http://.example.com is rejected without changing IDNA behavior for valid ASCII hosts.",
+    "liveRepairRequired": true,
+    "agreementWithDeterministic": true
+  },
+  "repair": {
+    "defectClass": "broad_rewrite_minimality",
+    "instructionQuality": "actionable",
+    "validPatch": true,
+    "changedPatch": true,
+    "failedOpen": false,
+    "repairedPatchHash": "632717a0be721bb12e7c3e5b7bac50c79ca2034ebdc15d1d72ac97cc159ba57c",
+    "present": true
+  },
+  "evaluation": {
+    "evaluationRan": true,
+    "dockerUsed": true,
+    "resolved": true,
+    "evaluationError": null,
+    "command": "node dist/cli.js evaluate /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/runs/eval-patchverify-before-requests-5414/raw/vtrace/repair_eval/_repaired_eval_input.jsonl --mode docker --timeout 1800 (cwd: /home/calvin/code/vexp-swe-bench)"
+  },
+  "conversion": {
+    "firstPatchResolved": false,
+    "repairedPatchResolved": true,
+    "convertedUnresolvedToResolved": true
+  },
+  "costs": {
+    "criticCostUsd": 0.1365025,
+    "criticInputTokens": 4343,
+    "criticOutputTokens": 2993,
+    "repairCostUsd": 0.13338699999999998,
+    "repairInputTokens": 4345,
+    "repairOutputTokens": 1101,
+    "totalCriticRepairCostUsd": 0.2698895,
+    "originalAgentCostUsd": 0.31383925,
+    "originalAgentModel": "claude-opus-4-5-20251101"
+  },
+  "safety": {
+    "originalJsonlModified": false,
+    "originalFirstPatchModified": false,
+    "repairedPatchModifiedDuringEvaluation": false,
+    "originalWorkspaceModified": false,
+    "evaluationUsedDerivedJsonl": true,
+    "firstPatchReEvaluated": false
+  },
+  "nonClaims": [
+    "This is ONE instance (psf__requests-5414); it does NOT prove aggregate improvement.",
+    "It does NOT justify always-on repair; gated one-repair mode stays disabled by default.",
+    "It does NOT compare VTRACE to VEXP.",
+    "Evidence-only: this report re-runs nothing and only re-states immutable artifacts from one run.",
+    "Conversion is claimed ONLY because the first patch was observed unresolved AND the repaired patch observed resolved under Docker.",
+    "The original swebench JSONL, first patch, repaired patch, and workspace were never modified; the first patch was not re-evaluated."
+  ]
+}

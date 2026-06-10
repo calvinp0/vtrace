@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-06-10T18:59:25.753Z",
+  "generatedAt": "2026-06-10T19:36:07.345Z",
   "summary": {
     "taskCount": 10,
-    "conversionCount": 1,
+    "conversionCount": 2,
     "baselineResolved": 8,
     "vtraceFirstPatchResolved": 5,
-    "gatedRepairResolved": 6,
-    "recoveryCostAddedUsd": 0.329403,
-    "headline": "1 verified conversion(s): vtrace_first_patch resolved 5/10 → gated repair 6/10. Cost-per-resolved improved ($1.6418 → $1.4231 with recovery cost included). Baseline remains 8/10 at $0.8722/resolved."
+    "gatedRepairResolved": 7,
+    "recoveryCostAddedUsd": 0.5992925,
+    "headline": "2 verified conversion(s): vtrace_first_patch resolved 5/10 → gated repair 7/10. Cost-per-resolved improved ($1.6418 → $1.2583 with recovery cost included). Baseline remains 8/10 at $0.8722/resolved."
   },
   "policies": [
     {
@@ -58,15 +58,15 @@
       "policyName": "vtrace_with_observed_gated_repair",
       "description": "vtrace_first_patch with verified repaired-patch conversions applied to RESOLUTION only (recovery cost not added — optimistic ceiling).",
       "taskCount": 10,
-      "resolvedCount": 6,
-      "unresolvedCount": 4,
+      "resolvedCount": 7,
+      "unresolvedCount": 3,
       "unknownCount": 0,
       "totalCostUsd": 8.208898500000002,
       "meanCostUsd": 0.8208898500000001,
-      "costPerResolved": 1.3681497500000004,
+      "costPerResolved": 1.172699785714286,
       "totalTokens": 17074981,
       "meanTokens": 1707498.1,
-      "tokensPerResolved": 2845830.1666666665,
+      "tokensPerResolved": 2439283,
       "agentCostUsd": 8.208898500000002,
       "criticCostUsd": null,
       "repairCostUsd": null,
@@ -74,7 +74,7 @@
       "criticOutputTokens": null,
       "repairInputTokens": null,
       "repairOutputTokens": null,
-      "conversionCount": 1
+      "conversionCount": 2
     },
     {
       "policyName": "vtrace_with_live_critic_observation_cost",
@@ -102,23 +102,23 @@
       "policyName": "vtrace_with_verified_repair_cost",
       "description": "Realistic gated repair: verified conversions change resolution AND add critic+repair cost only for those conversions.",
       "taskCount": 10,
-      "resolvedCount": 6,
-      "unresolvedCount": 4,
+      "resolvedCount": 7,
+      "unresolvedCount": 3,
       "unknownCount": 0,
-      "totalCostUsd": 8.538301500000003,
-      "meanCostUsd": 0.8538301500000003,
-      "costPerResolved": 1.4230502500000004,
-      "totalTokens": 17089228,
-      "meanTokens": 1708922.8,
-      "tokensPerResolved": 2848204.6666666665,
+      "totalCostUsd": 8.808191,
+      "meanCostUsd": 0.8808191000000001,
+      "costPerResolved": 1.258313,
+      "totalTokens": 17102010,
+      "meanTokens": 1710201,
+      "tokensPerResolved": 2443144.285714286,
       "agentCostUsd": 8.208898500000002,
-      "criticCostUsd": 0.12178375,
-      "repairCostUsd": 0.20761925,
-      "criticInputTokens": 4343,
-      "criticOutputTokens": 2487,
-      "repairInputTokens": 6021,
-      "repairOutputTokens": 1396,
-      "conversionCount": 1
+      "criticCostUsd": 0.25828625,
+      "repairCostUsd": 0.34100624999999996,
+      "criticInputTokens": 8686,
+      "criticOutputTokens": 5480,
+      "repairInputTokens": 10366,
+      "repairOutputTokens": 2497,
+      "conversionCount": 2
     }
   ],
   "tasks": [
@@ -203,12 +203,12 @@
       "instanceId": "psf__requests-5414",
       "baselineResolved": true,
       "vtraceResolved": false,
-      "gatedRepairResolved": false,
+      "gatedRepairResolved": true,
       "baselineCostUsd": 0.47255224999999995,
       "vtraceCostUsd": 0.4065295,
       "baselineTokens": 736898,
       "vtraceTokens": 956785,
-      "verifiedConversion": false
+      "verifiedConversion": true
     },
     {
       "instanceId": "sphinx-doc__sphinx-7462",
@@ -235,6 +235,16 @@
   ],
   "conversions": [
     {
+      "runLabel": "eval-patchverify-before-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "firstPatchResolved": false,
+      "repairedPatchResolved": true,
+      "convertedUnresolvedToResolved": true,
+      "criticCostUsd": 0.1365025,
+      "repairCostUsd": 0.13338699999999998,
+      "totalRecoveryCostUsd": 0.2698895
+    },
+    {
       "runLabel": "eval-patchverify-before-sympy-16766",
       "instanceId": "sympy__sympy-16766",
       "firstPatchResolved": false,
@@ -258,7 +268,7 @@
   "recommendation": {
     "choice": "C",
     "statement": "Run only one Requests repair smoke, then update the policy accounting.",
-    "rationale": "Exactly 1 verified conversion improved cost-per-resolved within vtrace (from $1.6418 to $1.4231 per resolved) and recovery was cheap ($0.1218 critic + $0.2076 repair), but n=1 is too thin to commit to a batch; gather one more verified conversion (Requests) and re-account."
+    "rationale": "2 verified conversions improved cost-per-resolved within vtrace (from $1.6418 to $1.2583 per resolved) and recovery was cheap ($0.2583 critic + $0.3410 repair), but n=2 is still too thin to commit to a batch (the batch threshold is 3 verified conversions); gather one more verified conversion (Requests) and re-account."
   },
   "nonClaims": [
     "This is not a VEXP comparison.",

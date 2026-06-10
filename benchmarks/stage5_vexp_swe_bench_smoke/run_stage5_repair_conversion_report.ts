@@ -356,14 +356,17 @@ export interface ConversionReport {
   readonly nonClaims: readonly string[];
 }
 
-export const NON_CLAIMS: readonly string[] = [
-  "This is ONE instance (sympy__sympy-16766); it does NOT prove aggregate improvement.",
-  "It does NOT justify always-on repair; gated one-repair mode stays disabled by default.",
-  "It does NOT compare VTRACE to VEXP.",
-  "Evidence-only: this report re-runs nothing and only re-states immutable artifacts from one run.",
-  "Conversion is claimed ONLY because the first patch was observed unresolved AND the repaired patch observed resolved under Docker.",
-  "The original swebench JSONL, first patch, repaired patch, and workspace were never modified; the first patch was not re-evaluated.",
-];
+export function buildNonClaims(instanceId: string | null): readonly string[] {
+  const instance = instanceId ?? "this instance";
+  return [
+    `This is ONE instance (${instance}); it does NOT prove aggregate improvement.`,
+    "It does NOT justify always-on repair; gated one-repair mode stays disabled by default.",
+    "It does NOT compare VTRACE to VEXP.",
+    "Evidence-only: this report re-runs nothing and only re-states immutable artifacts from one run.",
+    "Conversion is claimed ONLY because the first patch was observed unresolved AND the repaired patch observed resolved under Docker.",
+    "The original swebench JSONL, first patch, repaired patch, and workspace were never modified; the first patch was not re-evaluated.",
+  ];
+}
 
 export function buildConversionReport(args: {
   readonly generatedAt: string | null;
@@ -385,7 +388,7 @@ export function buildConversionReport(args: {
   const costs = computeCriticRepairCost(cm?.criticCostUsd ?? null, r?.repairCostUsd ?? null);
 
   const headline = converted
-    ? "First observed Stage 5 loss recovery: an unresolved VTRACE first patch became RESOLVED after critic-guided one-repair mode (Docker resolved=true)."
+    ? "Observed Stage 5 loss recovery: an unresolved VTRACE first patch became RESOLVED after critic-guided one-repair mode (Docker resolved=true)."
     : "Repaired-patch evidence recorded; conversion not claimed (a resolution flag is unknown).";
 
   return {
@@ -446,7 +449,7 @@ export function buildConversionReport(args: {
       evaluationUsedDerivedJsonl: true,
       firstPatchReEvaluated: false,
     },
-    nonClaims: NON_CLAIMS,
+    nonClaims: buildNonClaims(inputs.instanceId),
   };
 }
 
@@ -466,11 +469,30 @@ function num(value: number | null): string {
   return value === null ? "—" : String(value);
 }
 
+// Derive a human project label from a SWE-bench instance id (e.g. `psf__requests-5414`
+// -> "Requests", `sympy__sympy-16766` -> "SymPy"). Known repos are stylized; otherwise
+// the repo segment is capitalized. Never invents instance-specific narrative.
+const STYLIZED_REPOS: Readonly<Record<string, string>> = {
+  sympy: "SymPy",
+  requests: "Requests",
+  matplotlib: "Matplotlib",
+  django: "Django",
+  flask: "Flask",
+  scikit_learn: "scikit-learn",
+};
+
+function projectLabel(instanceId: string | null): string {
+  if (!instanceId) return "instance";
+  const afterOwner = instanceId.includes("__") ? instanceId.split("__")[1]! : instanceId;
+  const repo = afterOwner.replace(/-\d+$/, "");
+  return STYLIZED_REPOS[repo] ?? (repo.charAt(0).toUpperCase() + repo.slice(1));
+}
+
 export function renderMarkdown(report: ConversionReport): string {
   const L: string[] = [];
   const { summary, firstPatch, critic, repair, evaluation, conversion, costs, safety } = report;
 
-  L.push("# Stage 5 repair conversion evidence: SymPy");
+  L.push(`# Stage 5 repair conversion evidence: ${projectLabel(report.instanceId)}`);
   L.push("");
   if (report.generatedAt) L.push(`_Generated: ${report.generatedAt}_`, "");
   L.push(
@@ -494,8 +516,8 @@ export function renderMarkdown(report: ConversionReport): string {
   L.push("## Pipeline");
   L.push("");
   L.push("1. VTRACE first patch was **unresolved**.");
-  L.push("2. Deterministic probes found a **wrong-scope** defect.");
-  L.push("3. Live critic **agreed** and produced an actionable move/re-indent instruction.");
+  L.push(`2. Deterministic probes found a **${critic.defectClass ?? "scope/minimality"}** defect.`);
+  L.push("3. Live critic **agreed** and produced an actionable repair instruction.");
   L.push("4. One repair attempt produced a **changed, valid** patch.");
   L.push("5. Docker evaluation of a derived JSONL using **only the repaired modelPatch** **resolved** the instance.");
   L.push("");
@@ -508,8 +530,8 @@ export function renderMarkdown(report: ConversionReport): string {
   L.push(`| resolved | ${tri(firstPatch.resolved)} |`);
   L.push("");
   L.push(
-    "The first patch inserted `_print_Indexed` in the wrong class scope (into `AbstractPythonCodePrinter`, before " +
-      "`class PythonCodePrinter`), and Docker recorded it as **unresolved**.",
+    `Docker recorded the first patch as **unresolved**. Deterministic probes and the live critic identified a ` +
+      `\`${critic.defectClass ?? "scope/minimality"}\` defect; see the critic finding below for the specific reason and instruction.`,
   );
   L.push("");
 
@@ -539,7 +561,7 @@ export function renderMarkdown(report: ConversionReport): string {
   L.push(`| failedOpen | ${tri(repair.failedOpen)} |`);
   L.push(`| repairedPatchHash | ${repair.repairedPatchHash ?? "—"} |`);
   L.push("");
-  L.push("Exactly one bounded repair attempt relocated `_print_Indexed` into the `PythonCodePrinter` class body (a move/re-indent of the already-correct method).");
+  L.push("Exactly one bounded repair attempt produced a changed, valid patch by following the critic's repair instructions above — a targeted modification of the first patch, not a from-scratch re-solve.");
   L.push("");
 
   L.push("## Repaired-patch evaluation");
@@ -594,7 +616,7 @@ export function renderMarkdown(report: ConversionReport): string {
   L.push("## Why this matters");
   L.push("");
   L.push(
-    "This is the first observed Stage 5 loss recovery for VTRACE: an unresolved first patch became resolved after " +
+    "This is an observed Stage 5 loss recovery for VTRACE: an unresolved first patch became resolved after " +
       "critic-guided one-repair mode. It demonstrates the full chain — deterministic probe → live-critic agreement → " +
       "one bounded repair → Docker-confirmed resolution — end to end on a real SWE-bench instance.",
   );
