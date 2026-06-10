@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-06-10T17:52:19.361Z",
+  "runLabel": "eval-patchverify-before-sympy-16766",
+  "instanceId": "sympy__sympy-16766",
+  "summary": {
+    "artifactSuccess": true,
+    "evaluationSuccess": true,
+    "convertedUnresolvedToResolved": true,
+    "headline": "First observed Stage 5 loss recovery: an unresolved VTRACE first patch became RESOLVED after critic-guided one-repair mode (Docker resolved=true)."
+  },
+  "firstPatch": {
+    "hash": "428bc414f215b92ce1db8bd1366af22018cc2b4dc1bf6fa5051b81b65a18e0be",
+    "resolved": false,
+    "present": true
+  },
+  "critic": {
+    "model": null,
+    "scopeOk": false,
+    "defectClass": "wrong_scope",
+    "risk": "medium",
+    "confidence": "medium",
+    "repairRequired": true,
+    "repairReason": "Wrong scope: _print_Indexed landed in AbstractPythonCodePrinter rather than PythonCodePrinter (inserted_method_scope=fail, high), broadening the behavior to all subclasses beyond the intended printer class.",
+    "repairInstructions": "Relocate the existing _print_Indexed method out of AbstractPythonCodePrinter and into the PythonCodePrinter class body, preserving the same implementation and indentation. This is a move/re-indent of the already-correct method, not a rewrite or new edit.",
+    "liveRepairRequired": true,
+    "agreementWithDeterministic": true
+  },
+  "repair": {
+    "defectClass": "wrong_scope",
+    "instructionQuality": "actionable",
+    "validPatch": true,
+    "changedPatch": true,
+    "failedOpen": false,
+    "repairedPatchHash": "c3abb49e99bbd71788f3ddf96fe735695ed830ebb08660683587335e996ac2ee",
+    "present": true
+  },
+  "evaluation": {
+    "evaluationRan": true,
+    "dockerUsed": true,
+    "resolved": true,
+    "evaluationError": null,
+    "command": "node dist/cli.js evaluate /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/runs/eval-patchverify-before-sympy-16766/raw/vtrace/repair_eval/_repaired_eval_input.jsonl --mode docker --timeout 1800 (cwd: /home/calvin/code/vexp-swe-bench)"
+  },
+  "conversion": {
+    "firstPatchResolved": false,
+    "repairedPatchResolved": true,
+    "convertedUnresolvedToResolved": true
+  },
+  "costs": {
+    "criticCostUsd": 0.12178375,
+    "criticInputTokens": 4343,
+    "criticOutputTokens": 2487,
+    "repairCostUsd": 0.20761925,
+    "repairInputTokens": 6021,
+    "repairOutputTokens": 1396,
+    "totalCriticRepairCostUsd": 0.329403,
+    "originalAgentCostUsd": 0.3718555,
+    "originalAgentModel": "claude-opus-4-5-20251101"
+  },
+  "safety": {
+    "originalJsonlModified": false,
+    "originalFirstPatchModified": false,
+    "repairedPatchModifiedDuringEvaluation": false,
+    "originalWorkspaceModified": false,
+    "evaluationUsedDerivedJsonl": true,
+    "firstPatchReEvaluated": false
+  },
+  "nonClaims": [
+    "This is ONE instance (sympy__sympy-16766); it does NOT prove aggregate improvement.",
+    "It does NOT justify always-on repair; gated one-repair mode stays disabled by default.",
+    "It does NOT compare VTRACE to VEXP.",
+    "Evidence-only: this report re-runs nothing and only re-states immutable artifacts from one run.",
+    "Conversion is claimed ONLY because the first patch was observed unresolved AND the repaired patch observed resolved under Docker.",
+    "The original swebench JSONL, first patch, repaired patch, and workspace were never modified; the first patch was not re-evaluated."
+  ]
+}
