@@ -50,6 +50,95 @@ export const DEFAULT_OUT_NAME = "stage5_patch_repair";
 export const DEFAULT_MAX_REPAIR_RUNS = 1;
 export const DEFAULT_REPAIR_COST_CAP_USD = 0.25;
 
+// Conservative worst-case cost of ONE repair model call, used by the pre-call ESTIMATED-MAX cap
+// enforcement. The repair caller (`claude -p`) passes no max-output-tokens budget, so a single call's
+// cost is not hard-bounded by the API; this estimate is the runner's pre-call upper bound. It is set
+// above the largest observed single repair call ($2.8185, the generated-parser conversion) so the
+// default enforcement refuses any call it cannot prove fits the remaining cap. Operators who want a
+// live repair must EITHER raise --repair-cost-cap-usd above this estimate OR pass a tighter
+// --repair-estimated-max-call-cost-usd they can justify. See evaluateCostCapPreCall.
+export const DEFAULT_REPAIR_ESTIMATED_MAX_CALL_COST_USD = 3.0;
+
+// ---------------------------------------------------------------------------
+// Repair cost-cap enforcement (pure) — root-cause fix for the single-call overrun
+// ---------------------------------------------------------------------------
+//
+// ROOT CAUSE: the original cap was checked ONLY against accumulated PRIOR cost before each call
+// (`totalRepairCostUsd >= cap`). With maxRepairRuns=1 the first/only call sees cumulative=0 < cap, so
+// it always proceeded and its ACTUAL cost was added afterward — a single call could (and did:
+// $2.8185 vs a $0.4000 cap) blow past the cap. That mode is honest only as a CUMULATIVE bound across
+// MULTIPLE calls; it cannot bound one call.
+//
+// FIX: a pre-call ESTIMATED-MAX mode that only permits a call when prior-cumulative PLUS an estimated
+// worst-case call cost still fits the cap. When no estimate is configured the runner falls back to the
+// honest CUMULATIVE-ONLY mode and flags singleCallMayExceedCap=true.
+
+export type RepairCostCapEnforcementMode = "pre_call_cumulative_only" | "pre_call_estimated_max";
+
+// The enforcement mode is determined purely by whether a per-call estimate is configured: a number
+// selects the stronger estimated-max bound; null/undefined falls back to cumulative-only.
+export function repairCostCapEnforcementMode(
+  estimatedMaxCallCostUsd: number | null | undefined,
+): RepairCostCapEnforcementMode {
+  return typeof estimatedMaxCallCostUsd === "number" ? "pre_call_estimated_max" : "pre_call_cumulative_only";
+}
+
+// Whether a SINGLE repair call can push cumulative spend past the cap under this mode. True for
+// cumulative-only (the first call is never bounded); false for estimated-max (a call is permitted only
+// when its estimated worst case fits, so an accurate estimate keeps every allowed call within cap).
+export function singleCallMayExceedCap(mode: RepairCostCapEnforcementMode): boolean {
+  return mode === "pre_call_cumulative_only";
+}
+
+export interface CostCapPreCallDecision {
+  readonly allowed: boolean;
+  readonly stoppedByCostCap: boolean;
+  readonly reason: string;
+}
+
+// Decide, BEFORE a repair call, whether the cost cap permits it. PURE. estimated-max requires
+// prior + estimated worst-case <= cap; cumulative-only requires only prior < cap (and cannot bound the
+// call itself). A zero cap forbids every call in either mode.
+export function evaluateCostCapPreCall(args: {
+  readonly mode: RepairCostCapEnforcementMode;
+  readonly preCallCumulativeCostUsd: number;
+  readonly repairCostCapUsd: number;
+  readonly estimatedMaxCallCostUsd: number | null;
+}): CostCapPreCallDecision {
+  const { mode, preCallCumulativeCostUsd: prior, repairCostCapUsd: cap } = args;
+  if (mode === "pre_call_estimated_max") {
+    const est = args.estimatedMaxCallCostUsd ?? 0;
+    const projected = prior + est;
+    if (projected > cap) {
+      return {
+        allowed: false,
+        stoppedByCostCap: true,
+        reason:
+          `estimated worst-case call $${est.toFixed(4)} + prior $${prior.toFixed(4)} = $${projected.toFixed(4)} ` +
+          `> --repair-cost-cap-usd $${cap.toFixed(4)} (pre_call_estimated_max; call skipped to keep within cap)`,
+      };
+    }
+    return {
+      allowed: true,
+      stoppedByCostCap: false,
+      reason: `estimated worst-case call $${est.toFixed(4)} + prior $${prior.toFixed(4)} fits cap $${cap.toFixed(4)} (pre_call_estimated_max)`,
+    };
+  }
+  // cumulative-only: the historical (weak) bound. The first call sees prior=0 and is NOT bounded.
+  if (prior >= cap) {
+    return {
+      allowed: false,
+      stoppedByCostCap: true,
+      reason: `accumulated $${prior.toFixed(4)} >= --repair-cost-cap-usd $${cap.toFixed(4)} (pre_call_cumulative_only — a single call is NOT bounded by the cap)`,
+    };
+  }
+  return {
+    allowed: true,
+    stoppedByCostCap: false,
+    reason: `prior cumulative $${prior.toFixed(4)} < cap $${cap.toFixed(4)} (pre_call_cumulative_only — this single call is NOT bounded by the cap)`,
+  };
+}
+
 // The live-critic summary report that carries the deterministic generated-parser patch-minimality
 // probe per run row (there is no per-run raw artifact for these fields). Read-only.
 export const GENERATED_PARSER_PROBE_SUMMARY_BASENAME = "stage5_live_critic_generated_parser_astropy";
@@ -81,6 +170,11 @@ export interface CliConfig {
   readonly runLabels: readonly string[];
   readonly maxRepairRuns: number;
   readonly repairCostCapUsd: number;
+  // The pre-call ESTIMATED worst-case cost of one repair call (USD). A number selects the stronger
+  // pre_call_estimated_max enforcement (a call is skipped unless prior + estimate fits the cap); null
+  // falls back to the honest pre_call_cumulative_only mode (single call NOT bounded). Defaults to
+  // DEFAULT_REPAIR_ESTIMATED_MAX_CALL_COST_USD so real runs are hardened by default.
+  readonly repairEstimatedMaxCallCostUsd: number | null;
   readonly allowedDefectClasses: readonly DefectClass[];
   readonly dryRun: boolean;
   // Optional, default false. This milestone does NOT run Docker: when set it only records intent
@@ -110,6 +204,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
   const runLabels: string[] = [];
   let maxRepairRuns = DEFAULT_MAX_REPAIR_RUNS;
   let repairCostCapUsd = DEFAULT_REPAIR_COST_CAP_USD;
+  let repairEstimatedMaxCallCostUsd: number | null = DEFAULT_REPAIR_ESTIMATED_MAX_CALL_COST_USD;
   const allowedDefectClasses: DefectClass[] = [];
   let dryRun = false;
   let evaluateRepairedPatch = false;
@@ -156,6 +251,20 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         repairCostCapUsd = n;
         break;
       }
+      case "--repair-estimated-max-call-cost-usd": {
+        const raw = next();
+        // "none"/"" explicitly opts OUT of estimated-max (honest cumulative-only fallback).
+        if (raw === "none" || raw === "") {
+          repairEstimatedMaxCallCostUsd = null;
+          break;
+        }
+        const n = Number(raw);
+        if (!Number.isFinite(n) || n < 0) {
+          throw new Error(`--repair-estimated-max-call-cost-usd must be a non-negative number or "none" (got ${raw}).`);
+        }
+        repairEstimatedMaxCallCostUsd = n;
+        break;
+      }
       case "--allow-defect-class": {
         const cls = next() as DefectClass;
         if (!KNOWN_DEFECT_CLASSES.includes(cls)) {
@@ -192,6 +301,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
     runLabels,
     maxRepairRuns,
     repairCostCapUsd,
+    repairEstimatedMaxCallCostUsd,
     // Default allowed classes deliberately EXCLUDE missing_failing_behavior.
     allowedDefectClasses: allowedDefectClasses.length > 0 ? allowedDefectClasses : DEFAULT_ALLOWED_DEFECT_CLASSES,
     dryRun,
@@ -332,6 +442,10 @@ export interface RepairGateConfig {
   readonly runLabels: readonly string[]; // REQUIRED: empty ⇒ nothing repaired
   readonly maxRepairRuns: number;
   readonly repairCostCapUsd: number;
+  // Pre-call estimated worst-case cost of one repair call (USD). A number ⇒ pre_call_estimated_max
+  // enforcement; null/undefined ⇒ pre_call_cumulative_only (single call NOT bounded). Optional so
+  // existing gate constructions default to the honest cumulative-only fallback.
+  readonly repairEstimatedMaxCallCostUsd?: number | null;
   readonly allowedDefectClasses: readonly DefectClass[];
   readonly dryRun: boolean;
   readonly evaluateRepairedPatch: boolean;
@@ -359,6 +473,24 @@ export interface RepairInvocation {
   readonly artifacts: Record<string, string>;
 }
 
+// Per-run cost-cap enforcement context, recorded for every run that reached the cost-cap gate (i.e.
+// passed eligibility + max-runs). Distinguishes the configured cap, the enforcement mode, the
+// pre-call cumulative spend the gate checked against, the estimated worst-case used (if any), and —
+// after a call — the actual cost and whether it pushed cumulative past the cap.
+export interface RepairCostCapContext {
+  readonly repairCostCapUsd: number;
+  readonly repairCostCapEnforcementMode: RepairCostCapEnforcementMode;
+  readonly repairPreCallCumulativeCostUsd: number;
+  readonly repairEstimatedMaxCallCostUsd: number | null;
+  // The actual cost of this run's repair call; null when the run was skipped before any call.
+  readonly repairActualCostUsd: number | null;
+  // Cumulative AFTER this run's call exceeded the cap (records a single-call overrun honestly).
+  readonly repairExceededCap: boolean;
+  // This run was skipped specifically by the cost cap.
+  readonly repairStoppedByCostCap: boolean;
+  readonly singleCallMayExceedCap: boolean;
+}
+
 export interface RepairRunDecision {
   readonly runLabel: string;
   readonly instanceId: string;
@@ -382,6 +514,9 @@ export interface RepairRunDecision {
   // analyzeGeneratedParserConsistency), or null when the run is not a generated-parser grammar change.
   // Surfaced so the report can audit which generated tables the repair guidance asked to keep in sync.
   readonly generatedParserConsistency: GeneratedParserConsistencyContext | null;
+  // Cost-cap enforcement context for this run; null for runs skipped before the cost-cap gate
+  // (run-label / ineligible / max-runs) and for dry-run would-repair decisions (no cost is incurred).
+  readonly costCap: RepairCostCapContext | null;
 }
 
 export interface RepairCounters {
@@ -523,6 +658,7 @@ export async function runGatedRepair(args: {
         viaGeneratedParser: false,
         generatedParser: null,
         generatedParserConsistency: null,
+        costCap: null,
       });
     };
     if (gate.runLabels.length === 0) {
@@ -565,7 +701,12 @@ export async function runGatedRepair(args: {
     const eligibleViaGp = gpElig?.eligible === true;
     const viaGeneratedParser = !standardEligible && eligibleViaGp;
 
-    const skip = (skipReason: RepairSkipReason, reason: string, eligible: boolean): void => {
+    const skip = (
+      skipReason: RepairSkipReason,
+      reason: string,
+      eligible: boolean,
+      costCap: RepairCostCapContext | null = null,
+    ): void => {
       decisions.push({
         ...base,
         eligible,
@@ -583,6 +724,7 @@ export async function runGatedRepair(args: {
         viaGeneratedParser,
         generatedParser,
         generatedParserConsistency: gpConsistency,
+        costCap,
       });
     };
 
@@ -605,14 +747,34 @@ export async function runGatedRepair(args: {
       skip("max-repair-runs", `--max-repair-runs=${gate.maxRepairRuns} reached`, true);
       continue;
     }
-    if (!gate.dryRun && totalRepairCostUsd >= gate.repairCostCapUsd) {
-      stoppedByCostCap += 1;
-      skip(
-        "cost-cap",
-        `accumulated $${totalRepairCostUsd.toFixed(4)} >= --repair-cost-cap-usd $${gate.repairCostCapUsd.toFixed(4)}`,
-        true,
-      );
-      continue;
+    // --- cost cap (pre-call) ----------------------------------------------
+    // Enforcement mode is determined by whether a per-call estimate is configured. estimated-max
+    // refuses a call whose estimated worst-case would not fit the remaining cap (so a single call
+    // cannot blow the cap); cumulative-only is the honest weak fallback (first call NOT bounded).
+    const enforcementMode = repairCostCapEnforcementMode(gate.repairEstimatedMaxCallCostUsd);
+    const estimate = gate.repairEstimatedMaxCallCostUsd ?? null;
+    const mayExceed = singleCallMayExceedCap(enforcementMode);
+    if (!gate.dryRun) {
+      const capDecision = evaluateCostCapPreCall({
+        mode: enforcementMode,
+        preCallCumulativeCostUsd: totalRepairCostUsd,
+        repairCostCapUsd: gate.repairCostCapUsd,
+        estimatedMaxCallCostUsd: estimate,
+      });
+      if (!capDecision.allowed) {
+        stoppedByCostCap += 1;
+        skip("cost-cap", capDecision.reason, true, {
+          repairCostCapUsd: gate.repairCostCapUsd,
+          repairCostCapEnforcementMode: enforcementMode,
+          repairPreCallCumulativeCostUsd: totalRepairCostUsd,
+          repairEstimatedMaxCallCostUsd: estimate,
+          repairActualCostUsd: null,
+          repairExceededCap: false,
+          repairStoppedByCostCap: true,
+          singleCallMayExceedCap: mayExceed,
+        });
+        continue;
+      }
     }
 
     committed += 1;
@@ -632,6 +794,7 @@ export async function runGatedRepair(args: {
         viaGeneratedParser,
         generatedParser,
         generatedParserConsistency: gpConsistency,
+        costCap: null,
       });
       continue;
     }
@@ -643,9 +806,23 @@ export async function runGatedRepair(args: {
     const input = viaGeneratedParser
       ? buildGeneratedParserRepairInput(candidate, gpConsistency)
       : buildRepairInput(candidate);
+    const preCallCumulativeCostUsd = totalRepairCostUsd;
     const outcome = await runPatchRepair({ enabled: true, input, caller, repairModel });
     repairCallsAttempted += 1;
-    totalRepairCostUsd += outcome.result.repairCostUsd ?? 0;
+    const actualCostUsd = outcome.result.repairCostUsd ?? 0;
+    totalRepairCostUsd += actualCostUsd;
+    // Honest post-hoc record: in cumulative-only mode a single call can push cumulative past the cap;
+    // record that overrun so the report/audit can surface it without re-running anything.
+    const costCap: RepairCostCapContext = {
+      repairCostCapUsd: gate.repairCostCapUsd,
+      repairCostCapEnforcementMode: enforcementMode,
+      repairPreCallCumulativeCostUsd: preCallCumulativeCostUsd,
+      repairEstimatedMaxCallCostUsd: estimate,
+      repairActualCostUsd: outcome.result.repairCostUsd ?? null,
+      repairExceededCap: totalRepairCostUsd > gate.repairCostCapUsd,
+      repairStoppedByCostCap: false,
+      singleCallMayExceedCap: mayExceed,
+    };
     if (outcome.result.validPatch) repairCallsSucceeded += 1;
     if (outcome.result.failedOpen) repairCallsFailedOpen += 1;
     if (outcome.result.repairedPatch !== null) repairedPatchProduced += 1;
@@ -669,6 +846,7 @@ export async function runGatedRepair(args: {
       viaGeneratedParser,
       generatedParser,
       generatedParserConsistency: gpConsistency,
+      costCap,
     });
   }
 
@@ -718,6 +896,22 @@ export interface RepairGateConfigReport {
   readonly dryRun: boolean;
   readonly evaluateRepairedPatch: boolean;
   readonly allowGeneratedParserRepair: boolean;
+}
+
+// Top-level cost-cap enforcement summary, surfaced so downstream readers (and the dedicated audit
+// report) can see the enforcement mode and whether a single call could exceed the cap WITHOUT
+// re-running anything. Carries the milestone's required field names.
+export interface CostCapEnforcementSummary {
+  readonly repairCostCapUsd: number;
+  readonly repairCostCapEnforcementMode: RepairCostCapEnforcementMode;
+  readonly repairEstimatedMaxCallCostUsd: number | null;
+  readonly singleCallMayExceedCap: boolean;
+  // Cumulative spend immediately before the FIRST committed repair call (0 for the canonical
+  // one-attempt run — exactly what left the historical first call unbounded under cumulative-only).
+  readonly repairPreCallCumulativeCostUsd: number;
+  readonly repairActualCostUsd: number; // total actual repair spend this run
+  readonly repairExceededCap: boolean; // total actual spend exceeded the cap
+  readonly repairStoppedByCostCap: number; // count of runs skipped specifically by the cap
 }
 
 // Per-run generated-parser repair eligibility + (live) outcome, surfaced in the report. In dry-run
@@ -822,6 +1016,7 @@ export interface RepairReport {
   readonly enabled: boolean;
   readonly summary: RepairSummary;
   readonly gates: RepairGateConfigReport;
+  readonly costCapEnforcement: CostCapEnforcementSummary;
   readonly counters: RepairCounters;
   readonly adHoc: RepairAdHocCounters;
   readonly runs: readonly RepairRunReportRow[];
@@ -904,6 +1099,21 @@ export function buildRepairReport(args: {
   const adHoc = args.adHoc ?? EMPTY_REPAIR_AD_HOC_COUNTERS;
   const c = outcome.counters;
 
+  // Cost-cap enforcement rollup (no re-run): mode + whether one call could exceed the cap, plus the
+  // prior cumulative the first committed call was checked against (0 ⇒ the historical unbounded case).
+  const enforcementMode = repairCostCapEnforcementMode(gate.repairEstimatedMaxCallCostUsd);
+  const firstCall = outcome.decisions.find((d) => d.costCap?.repairActualCostUsd != null)?.costCap ?? null;
+  const costCapEnforcement: CostCapEnforcementSummary = {
+    repairCostCapUsd: gate.repairCostCapUsd,
+    repairCostCapEnforcementMode: enforcementMode,
+    repairEstimatedMaxCallCostUsd: gate.repairEstimatedMaxCallCostUsd ?? null,
+    singleCallMayExceedCap: singleCallMayExceedCap(enforcementMode),
+    repairPreCallCumulativeCostUsd: firstCall?.repairPreCallCumulativeCostUsd ?? 0,
+    repairActualCostUsd: c.totalRepairCostUsd,
+    repairExceededCap: c.repairCallsAttempted > 0 && c.totalRepairCostUsd > gate.repairCostCapUsd,
+    repairStoppedByCostCap: c.stoppedByCostCap,
+  };
+
   const gpRuns = outcome.decisions
     .map(generatedParserRunReport)
     .filter((r): r is GeneratedParserRunReport => r !== null);
@@ -946,6 +1156,7 @@ export function buildRepairReport(args: {
       evaluateRepairedPatch: gate.evaluateRepairedPatch,
       allowGeneratedParserRepair: gate.allowGeneratedParserRepair === true,
     },
+    costCapEnforcement,
     counters: c,
     adHoc,
     runs: outcome.decisions.map((d) => ({
@@ -1032,6 +1243,41 @@ export function renderMarkdown(report: RepairReport): string {
     L.push(`| ${k} | ${k === "totalRepairCostUsd" ? `$${(v as number).toFixed(4)}` : v} |`);
   }
   for (const [k, v] of Object.entries(report.adHoc)) L.push(`| ${k} | ${v} |`);
+  L.push("");
+
+  // --- cost-cap enforcement -------------------------------------------------
+  const cc = report.costCapEnforcement;
+  L.push("## Cost-cap enforcement");
+  L.push("");
+  L.push("| field | value |");
+  L.push("| --- | --- |");
+  L.push(`| repairCostCapUsd | $${cc.repairCostCapUsd.toFixed(4)} |`);
+  L.push(`| repairCostCapEnforcementMode | ${cc.repairCostCapEnforcementMode} |`);
+  L.push(
+    `| repairEstimatedMaxCallCostUsd | ${cc.repairEstimatedMaxCallCostUsd === null ? "—" : `$${cc.repairEstimatedMaxCallCostUsd.toFixed(4)}`} |`,
+  );
+  L.push(`| repairPreCallCumulativeCostUsd | $${cc.repairPreCallCumulativeCostUsd.toFixed(4)} |`);
+  L.push(`| repairActualCostUsd | $${cc.repairActualCostUsd.toFixed(4)} |`);
+  L.push(`| repairExceededCap | ${cc.repairExceededCap} |`);
+  L.push(`| repairStoppedByCostCap | ${cc.repairStoppedByCostCap} |`);
+  L.push(`| singleCallMayExceedCap | ${cc.singleCallMayExceedCap} |`);
+  L.push("");
+  if (cc.singleCallMayExceedCap) {
+    L.push(
+      "> ⚠️ WARNING: enforcement mode is `pre_call_cumulative_only`. The cap is checked ONLY against " +
+        "accumulated PRIOR cost, so the first/only repair call (prior cumulative $0.0000) is NOT bounded — a " +
+        "single call can exceed the cap (this is what allowed the historical $2.8185 call under a $0.4000 cap). " +
+        "Pass `--repair-estimated-max-call-cost-usd` to switch to `pre_call_estimated_max`, which skips a call " +
+        "whose estimated worst-case would not fit the remaining cap.",
+    );
+  } else {
+    L.push(
+      "Enforcement mode is `pre_call_estimated_max`: a repair call is permitted ONLY when the estimated " +
+        "worst-case call cost plus prior cumulative spend fits within the cap, so an allowed call cannot push " +
+        "cumulative past the cap to the accuracy of the estimate. The `claude -p` caller passes no max-output-tokens " +
+        "budget, so the bound is the estimate, not a hard model-API limit.",
+    );
+  }
   L.push("");
 
   const repaired = report.runs.filter((r) => r.repaired || r.wouldRepair);
@@ -1258,6 +1504,7 @@ async function main(config: CliConfig): Promise<void> {
     runLabels: config.runLabels,
     maxRepairRuns: config.maxRepairRuns,
     repairCostCapUsd: config.repairCostCapUsd,
+    repairEstimatedMaxCallCostUsd: config.repairEstimatedMaxCallCostUsd,
     allowedDefectClasses: config.allowedDefectClasses,
     dryRun: config.dryRun,
     evaluateRepairedPatch: config.evaluateRepairedPatch,
@@ -1298,6 +1545,7 @@ async function main(config: CliConfig): Promise<void> {
         ? `Ad hoc — requested: ${adHocCounters.adHocRequested}   candidates: ${adHocCounters.adHocCandidates}${adHocLabels.length > 0 ? ` (${adHocLabels.join(", ")})` : ""}`
         : "",
       `Skipped — runLabel: ${c.skippedByRunLabel}   ineligible: ${c.skippedIneligible}   maxRuns: ${c.skippedByMaxRuns}   costCap: ${c.stoppedByCostCap}`,
+      `Cost-cap enforcement — mode: ${report.costCapEnforcement.repairCostCapEnforcementMode}   cap: $${report.costCapEnforcement.repairCostCapUsd.toFixed(4)}   estMaxCall: ${report.costCapEnforcement.repairEstimatedMaxCallCostUsd === null ? "—" : `$${report.costCapEnforcement.repairEstimatedMaxCallCostUsd.toFixed(4)}`}   singleCallMayExceedCap: ${report.costCapEnforcement.singleCallMayExceedCap}`,
       config.dryRun
         ? `Would repair: ${outcome.decisions.filter((d) => d.wouldRepair).length} run(s).`
         : `Repair calls — attempted: ${c.repairCallsAttempted}   succeeded: ${c.repairCallsSucceeded}   failed-open: ${c.repairCallsFailedOpen}   produced: ${c.repairedPatchProduced}   changed: ${c.changedPatchCount}   cost: $${c.totalRepairCostUsd.toFixed(4)}`,

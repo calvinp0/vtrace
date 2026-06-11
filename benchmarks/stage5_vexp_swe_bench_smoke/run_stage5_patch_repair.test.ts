@@ -26,14 +26,18 @@ import {
   type RepairGateConfig,
   DEFAULT_MAX_REPAIR_RUNS,
   DEFAULT_REPAIR_COST_CAP_USD,
+  DEFAULT_REPAIR_ESTIMATED_MAX_CALL_COST_USD,
   GENERATED_PARSER_DRY_RUN_BOUNDARY,
   buildRepairReport,
+  evaluateCostCapPreCall,
   loadPatchMinimalityProbe,
   loadRepairCandidates,
   parseArgs,
   renderJson,
   renderMarkdown,
+  repairCostCapEnforcementMode,
   runGatedRepair,
+  singleCallMayExceedCap,
 } from "./run_stage5_patch_repair";
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -1312,4 +1316,168 @@ test("consistency context does not change dry-run eligibility or the one-attempt
   });
   assert.equal(mLive.calls, 1);
   assert.equal(live.counters.repairCallsAttempted, 1);
+});
+
+// ---------------------------------------------------------------------------
+// Cost-cap enforcement — root-cause fix for the single-call overrun.
+// ---------------------------------------------------------------------------
+
+// parseArgs: estimated-max is the default; "none" opts back to cumulative-only; numerics validated.
+test("parseArgs: --repair-estimated-max-call-cost-usd defaults on, accepts none, validates", () => {
+  const def = parseArgs([]);
+  assert.equal(def.repairEstimatedMaxCallCostUsd, DEFAULT_REPAIR_ESTIMATED_MAX_CALL_COST_USD);
+  assert.equal(parseArgs(["--repair-estimated-max-call-cost-usd", "1.5"]).repairEstimatedMaxCallCostUsd, 1.5);
+  assert.equal(parseArgs(["--repair-estimated-max-call-cost-usd", "none"]).repairEstimatedMaxCallCostUsd, null);
+  assert.throws(() => parseArgs(["--repair-estimated-max-call-cost-usd", "-1"]), /non-negative number or "none"/);
+});
+
+// 5. enforcement mode is determined by whether a per-call estimate is configured.
+test("repairCostCapEnforcementMode + singleCallMayExceedCap reflect the configured estimate", () => {
+  assert.equal(repairCostCapEnforcementMode(3), "pre_call_estimated_max");
+  assert.equal(repairCostCapEnforcementMode(null), "pre_call_cumulative_only");
+  assert.equal(repairCostCapEnforcementMode(undefined), "pre_call_cumulative_only");
+  assert.equal(singleCallMayExceedCap("pre_call_cumulative_only"), true);
+  assert.equal(singleCallMayExceedCap("pre_call_estimated_max"), false);
+});
+
+// 1/2. pre-call decision: cumulative-only never bounds the first call; estimated-max does.
+test("evaluateCostCapPreCall: cumulative-only allows an unbounded first call; estimated-max skips it", () => {
+  // ROOT CAUSE reproduction: cumulative-only with prior=0 ALLOWS the call even though the cap is tiny.
+  const cumulativeFirst = evaluateCostCapPreCall({
+    mode: "pre_call_cumulative_only",
+    preCallCumulativeCostUsd: 0,
+    repairCostCapUsd: 0.4,
+    estimatedMaxCallCostUsd: null,
+  });
+  assert.equal(cumulativeFirst.allowed, true); // the bug: first call is NOT bounded
+  assert.equal(cumulativeFirst.stoppedByCostCap, false);
+
+  // 1. cumulative-only skips once accumulated prior cost has reached the cap.
+  const cumulativeAfter = evaluateCostCapPreCall({
+    mode: "pre_call_cumulative_only",
+    preCallCumulativeCostUsd: 0.5,
+    repairCostCapUsd: 0.4,
+    estimatedMaxCallCostUsd: null,
+  });
+  assert.equal(cumulativeAfter.allowed, false);
+  assert.equal(cumulativeAfter.stoppedByCostCap, true);
+
+  // 2. estimated-max SKIPS the first call when the estimate cannot fit the remaining cap.
+  const estSkip = evaluateCostCapPreCall({
+    mode: "pre_call_estimated_max",
+    preCallCumulativeCostUsd: 0,
+    repairCostCapUsd: 0.4,
+    estimatedMaxCallCostUsd: 3.0, // 0 + 3.0 > 0.4 ⇒ skip
+  });
+  assert.equal(estSkip.allowed, false);
+  assert.equal(estSkip.stoppedByCostCap, true);
+  assert.match(estSkip.reason, /pre_call_estimated_max/);
+
+  // estimated-max ALLOWS a call whose estimate fits the remaining cap.
+  const estAllow = evaluateCostCapPreCall({
+    mode: "pre_call_estimated_max",
+    preCallCumulativeCostUsd: 0,
+    repairCostCapUsd: 0.5,
+    estimatedMaxCallCostUsd: 0.3, // 0 + 0.3 <= 0.5 ⇒ allow
+  });
+  assert.equal(estAllow.allowed, true);
+  assert.equal(estAllow.stoppedByCostCap, false);
+});
+
+// 2/3. runGatedRepair in estimated-max mode SKIPS the call and records repairStoppedByCostCap=true.
+test("runGatedRepair: estimated-max skips the call when the estimate cannot fit the cap", async () => {
+  const candidates = [candidateFor({ runLabel: "run-a" })];
+  const m = mockCaller({ costUsd: 2.8185 }); // would be a huge overrun if it ran
+  const { decisions, counters } = await runGatedRepair({
+    candidates,
+    gate: gateOf({
+      runLabels: ["run-a"],
+      maxRepairRuns: 1,
+      repairCostCapUsd: 0.4,
+      repairEstimatedMaxCallCostUsd: 3.0, // estimated worst-case > cap ⇒ skip pre-call
+    }),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 0); // 9. NO model/repair call occurred
+  assert.equal(counters.repairCallsAttempted, 0);
+  assert.equal(counters.stoppedByCostCap, 1);
+  assert.equal(counters.totalRepairCostUsd, 0);
+  const d = decisions[0]!;
+  assert.equal(d.skipReason, "cost-cap");
+  // 3. per-run cost-cap context records the stop.
+  assert.equal(d.costCap?.repairStoppedByCostCap, true);
+  assert.equal(d.costCap?.repairCostCapEnforcementMode, "pre_call_estimated_max");
+  assert.equal(d.costCap?.singleCallMayExceedCap, false);
+  assert.equal(d.costCap?.repairActualCostUsd, null);
+});
+
+// estimated-max ALLOWS the call when the cap is wide enough to absorb the estimate.
+test("runGatedRepair: estimated-max allows the call when the cap covers the estimate", async () => {
+  const candidates = [candidateFor({ runLabel: "run-a" })];
+  const m = mockCaller({ costUsd: 0.2 });
+  const { decisions, counters } = await runGatedRepair({
+    candidates,
+    gate: gateOf({
+      runLabels: ["run-a"],
+      maxRepairRuns: 1,
+      repairCostCapUsd: 1.0,
+      repairEstimatedMaxCallCostUsd: 0.3, // 0 + 0.3 <= 1.0 ⇒ allowed
+    }),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 1);
+  assert.equal(counters.repairCallsAttempted, 1);
+  assert.equal(counters.stoppedByCostCap, 0);
+  assert.equal(decisions[0]!.costCap?.repairExceededCap, false);
+});
+
+// 4. cumulative-only historical over-cap: the call runs and the report records repairExceededCap=true.
+test("runGatedRepair: cumulative-only records a single-call over-cap overrun honestly", async () => {
+  const candidates = [candidateFor({ runLabel: "run-a" })];
+  const m = mockCaller({ costUsd: 2.8185 }); // mirrors the historical generated-parser overrun
+  const gate = gateOf({
+    runLabels: ["run-a"],
+    maxRepairRuns: 1,
+    repairCostCapUsd: 0.4,
+    repairEstimatedMaxCallCostUsd: null, // cumulative-only (honest weak fallback)
+  });
+  const outcome = await runGatedRepair({ candidates, gate, caller: m.caller, repairModel: null });
+  assert.equal(m.calls, 1); // the unbounded first call ran
+  const d = outcome.decisions[0]!;
+  assert.equal(d.repaired, true);
+  assert.equal(d.costCap?.repairExceededCap, true); // 4. records the overrun
+  assert.equal(d.costCap?.singleCallMayExceedCap, true);
+
+  // 5. report carries the enforcement summary + mode.
+  const report = buildRepairReport({ generatedAt: null, enabled: true, gate, outcome });
+  assert.equal(report.costCapEnforcement.repairCostCapEnforcementMode, "pre_call_cumulative_only");
+  assert.equal(report.costCapEnforcement.singleCallMayExceedCap, true);
+  assert.equal(report.costCapEnforcement.repairExceededCap, true);
+  assert.equal(report.costCapEnforcement.repairPreCallCumulativeCostUsd, 0); // the first call saw $0 prior
+  assert.ok(Math.abs(report.costCapEnforcement.repairActualCostUsd - 2.8185) < 1e-9);
+
+  // Markdown surfaces the mode + the cumulative-only warning.
+  const md = renderMarkdown(report);
+  assert.ok(md.includes("## Cost-cap enforcement"));
+  assert.ok(md.includes("repairCostCapEnforcementMode | pre_call_cumulative_only"));
+  assert.ok(md.includes("WARNING"));
+  assert.ok(md.includes("singleCallMayExceedCap | true"));
+});
+
+// 8. existing default-path (wrong_scope/broad_rewrite) behavior is unchanged in cumulative-only mode.
+test("runGatedRepair: cumulative-only default-path repair behavior is unchanged", async () => {
+  const candidates = [candidateFor({ runLabel: "run-a" })];
+  const m = mockCaller({ costUsd: 0.05 });
+  const { counters, decisions } = await runGatedRepair({
+    candidates,
+    gate: gateOf({ runLabels: ["run-a"], repairCostCapUsd: 0.25 }), // no estimate ⇒ cumulative-only
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 1);
+  assert.equal(counters.repairCallsAttempted, 1);
+  assert.equal(decisions[0]!.repaired, true);
+  assert.equal(decisions[0]!.costCap?.repairExceededCap, false); // 0.05 < 0.25
 });
