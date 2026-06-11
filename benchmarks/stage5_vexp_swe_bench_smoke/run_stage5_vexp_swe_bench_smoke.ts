@@ -5521,7 +5521,7 @@ async function migrateStreamPatchIfMissing(target: string, content: string): Pro
   }
 }
 
-async function parseConditionDir(dir: string, condition: Stage5Condition): Promise<Stage5Row[]> {
+export async function parseConditionDir(dir: string, condition: Stage5Condition): Promise<Stage5Row[]> {
   const files = await listFilesRecursive(dir).catch(() => [] as string[]);
   const readable = files.filter((absolute) => !path.basename(absolute).startsWith(RUNNER_ARTIFACT_PREFIX));
   // Prefer canonical `swebench-*.jsonl` logs over anything else when present, so
