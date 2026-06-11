@@ -1573,6 +1573,23 @@ test("classifyCapsuleOutput routes a Capsule v2 payload to the v2 classifier", (
   assert.match(classified.context, /get_combinator_sql/);
 });
 
+test("classifyCapsuleV2Output carries the full v2 result for artifact persistence", () => {
+  // The full parsed CapsuleV2Result rides along on the classification so the runner
+  // can persist the raw manifest/ranking artifacts (not just the reduced audit).
+  const inject = classifyCapsuleV2Output(JSON.parse(capsuleV2Json({ pivotSymbol: "get_combinator_sql" })));
+  assert.ok(inject.capsuleV2Result, "inject classification carries the v2 result");
+  assert.equal(inject.capsuleV2Result?.pivots[0]?.symbol, "get_combinator_sql");
+
+  // A no_context skip still carries the result (it documents WHY no pivot landed).
+  const skip = classifyCapsuleV2Output(JSON.parse(capsuleV2Json({ actualMode: "no_context", reason: "no pivot" })));
+  assert.ok(skip.capsuleV2Result, "no_context classification carries the v2 result");
+  assert.equal(skip.capsuleV2Result?.actual_mode, "no_context");
+
+  // The legacy path never produces a v2 result.
+  const legacy = classifyCapsuleOutput(JSON.stringify({ context: "some legacy context", diagnostics: {} }));
+  assert.equal(legacy.capsuleV2Result, null);
+});
+
 // A multi-line focused body (>maxItems non-blank lines) — the exact shape the
 // per-item line truncation used to decapitate. Includes the mutation site from
 // django-11490 so the test reads as the real failure it guards.
@@ -2647,6 +2664,15 @@ test("prepareIndexedContext with v2 issues a v2 query and records the engine met
   // The metadata + report carry the engine.
   const written = await readFile(result.contextFile, "utf8");
   assert.match(written, /get_combinator_sql/);
+
+  // A Capsule v2 evidence bundle is produced so the runner can persist the raw
+  // manifest/ranking/context artifacts. The bundle carries the FULL result (with
+  // ranking metadata) and the exact rendered Markdown that was injected.
+  assert.equal(result.capsuleV2Bundles.length, 1);
+  const bundle = result.capsuleV2Bundles[0]!;
+  assert.equal(bundle.instanceId, "django__django-11490");
+  assert.equal(bundle.result.pivots[0]?.symbol, "get_combinator_sql");
+  assert.match(bundle.contextMarkdown, /get_combinator_sql/);
 });
 
 test("legacy engine records capsule_engine legacy with null intent/budget", async () => {
@@ -2666,6 +2692,9 @@ test("legacy engine records capsule_engine legacy with null intent/budget", asyn
   assert.equal(result.capsuleEngine, "legacy");
   assert.equal(result.capsuleIntent, null);
   assert.equal(result.capsuleBudget, null);
+  // The legacy engine produces no Capsule v2 result, so no artifact bundle exists
+  // — the runner records this as "not persisted", never a false v2 claim.
+  assert.equal(result.capsuleV2Bundles.length, 0);
 });
 
 test("force-inject works with the v2 engine: a cheap/local task still injects v2 context", async () => {

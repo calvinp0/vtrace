@@ -28,6 +28,12 @@ import {
 import { renderCapsuleV2Human } from "../../src/capsuleV2/renderHuman";
 import { CapsuleV2Mode, type CapsuleV2Result } from "../../src/capsuleV2/types";
 import {
+  type CapsuleV2ArtifactBundle,
+  type CapsuleV2ArtifactMeta,
+  capsuleV2ArtifactsNotPersistedMeta,
+  writeCapsuleV2Artifacts,
+} from "../../src/capsuleV2/stage5Artifacts";
+import {
   buildExpectedIndexMeta,
   checkIndexFreshness,
   resolveIndexMetaPath,
@@ -1743,6 +1749,9 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
   // runs the benchmark WITHOUT injection (no instructions file env) — a real
   // vtrace-policy row, not an indexed-context treatment.
   let injectContext = true;
+  // Capsule v2 evidence bundles to persist as raw artifacts (only the
+  // indexed-context path builds a capsule; empty otherwise).
+  let capsuleV2Bundles: readonly CapsuleV2ArtifactBundle[] = [];
 
   if (config.vtraceMethod === "indexed-context") {
     // Stage 5B: real vtrace indexing + query produces the injected context. The
@@ -1753,6 +1762,7 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
     await assertVtracePatchInstalled(config);
     const indexed = await prepareIndexedContext(config, deps);
     extraVtraceMeta = { ...indexedContextMetaFields(indexed), ...indexRunMetaFields(indexed) };
+    capsuleV2Bundles = indexed.capsuleV2Bundles;
     if (indexed.policyAction === "skip") {
       // VALID no-context policy (cost-aware gate, decideContextPolicy): the
       // expected value of injected context did not exceed its overhead — either
@@ -1787,7 +1797,7 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
   if (injectContext) {
     extraVtraceMeta = { ...extraVtraceMeta, ...(await snapshotVtraceInstructions(config)) };
   }
-  await runCondition(config, "vtrace", deps, extraVtraceMeta, injectContext);
+  await runCondition(config, "vtrace", deps, extraVtraceMeta, injectContext, capsuleV2Bundles);
 }
 
 // Stage 5C: run the EXTERNAL benchmark with vexp ENABLED. This is the only
@@ -2245,6 +2255,10 @@ export interface IndexedContextResult {
   readonly capsuleEditRiskDirectivesCount: number;
   readonly capsuleLineAnchorResolutionUsed: boolean;
   readonly capsuleSqlRenderingBackfillUsed: boolean;
+  // Per-instance Capsule v2 evidence bundles (full result + exact injected
+  // Markdown), used to persist the raw manifest/ranking/context artifacts into the
+  // run directory. Empty off the v2 engine and when no v2 result was produced.
+  readonly capsuleV2Bundles: readonly CapsuleV2ArtifactBundle[];
   // PIVOT_CHECK state for this run. `enabled` is the feature switch (false only
   // when --disable-pivot-check was passed); `disabledByFlag` mirrors that flag
   // explicitly so a before run is never mistaken for a failed injection;
@@ -2534,6 +2548,9 @@ export interface CapsuleClassification {
   readonly capsuleEditRiskDirectivesCount: number;
   readonly capsuleLineAnchorResolutionUsed: boolean;
   readonly capsuleSqlRenderingBackfillUsed: boolean;
+  // The full Capsule v2 result (null on the legacy engine and on hard errors).
+  // Used only to persist the raw manifest/ranking artifacts — never injected.
+  readonly capsuleV2Result: CapsuleV2Result | null;
   /** Set only when policyAction === "error" (genuinely unusable output). */
   readonly error: string | null;
 }
@@ -2547,6 +2564,10 @@ interface CapsuleV2Audit {
   readonly editRiskDirectivesCount: number;
   readonly lineAnchorResolutionUsed: boolean;
   readonly sqlRenderingBackfillUsed: boolean;
+  // The full Capsule v2 result the engine emitted. Carried losslessly so the
+  // runner can persist the manifest/ranking artifacts (it is reduced to the audit
+  // fields above for `_run.meta.json`, but the raw result drives the artifacts).
+  readonly result: CapsuleV2Result;
 }
 
 // Classify a capsule `--json` (or raw) query output into a vtrace policy action.
@@ -2644,6 +2665,7 @@ function skipClassification(
     capsuleEditRiskDirectivesCount: v2?.editRiskDirectivesCount ?? 0,
     capsuleLineAnchorResolutionUsed: v2?.lineAnchorResolutionUsed ?? false,
     capsuleSqlRenderingBackfillUsed: v2?.sqlRenderingBackfillUsed ?? false,
+    capsuleV2Result: v2?.result ?? null,
     error: null,
   };
 }
@@ -2678,6 +2700,7 @@ function injectClassification(
     capsuleEditRiskDirectivesCount: v2?.editRiskDirectivesCount ?? 0,
     capsuleLineAnchorResolutionUsed: v2?.lineAnchorResolutionUsed ?? false,
     capsuleSqlRenderingBackfillUsed: v2?.sqlRenderingBackfillUsed ?? false,
+    capsuleV2Result: v2?.result ?? null,
     error: null,
   };
 }
@@ -2703,6 +2726,7 @@ function errorClassification(message: string): CapsuleClassification {
     capsuleEditRiskDirectivesCount: 0,
     capsuleLineAnchorResolutionUsed: false,
     capsuleSqlRenderingBackfillUsed: false,
+    capsuleV2Result: null,
     error: message,
   };
 }
@@ -2743,6 +2767,7 @@ export function classifyCapsuleV2Output(result: CapsuleV2Result): CapsuleClassif
     editRiskDirectivesCount,
     lineAnchorResolutionUsed,
     sqlRenderingBackfillUsed,
+    result,
   };
 
   // No pivot recovered → a valid no-context skip (recorded as actual_mode
@@ -4060,6 +4085,20 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
       ? (sections.find((s) => s.classification?.actualCapsuleMode != null)?.classification?.actualCapsuleMode ?? null)
       : null;
 
+  // Capsule v2 evidence bundles: one per section whose classification carried a
+  // full v2 result (the engine actually built a capsule). The contextMarkdown is
+  // the rendered Capsule v2 human view (`classification.context`) — the EXACT text
+  // injected, before the Stage 5 wrapper. These drive the raw manifest/ranking/
+  // context artifacts; legacy and hard-error sections carry no result and are
+  // naturally excluded.
+  const capsuleV2Bundles: CapsuleV2ArtifactBundle[] = sections
+    .filter((section) => section.classification?.capsuleV2Result != null)
+    .map((section) => ({
+      instanceId: section.instance.instanceId,
+      result: section.classification!.capsuleV2Result!,
+      contextMarkdown: section.classification!.context,
+    }));
+
   return {
     indexedContext,
     indexCommand,
@@ -4120,6 +4159,7 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     capsuleEditRiskDirectivesCount,
     capsuleLineAnchorResolutionUsed,
     capsuleSqlRenderingBackfillUsed,
+    capsuleV2Bundles,
     // PIVOT_CHECK is enabled unless the operator suppressed it via the flag; the
     // assembled markdown reports whether the block was actually appended (a before
     // run, or a single-pivot capsule, both yield injected=false but for different
@@ -4693,6 +4733,7 @@ async function runCondition(
   deps: RunDeps,
   extraVtraceMeta: Record<string, unknown> = {},
   injectContext = true,
+  capsuleV2Bundles: readonly CapsuleV2ArtifactBundle[] = [],
 ): Promise<void> {
   if (config.vexpSweBenchDir === null) throw new Error(`--mode run-${condition} requires --vexp-swe-bench-dir.`);
   const cliPath = path.join(config.vexpSweBenchDir, config.cliEntry);
@@ -4752,9 +4793,30 @@ async function runCondition(
   // JSONL. UNIVERSAL — captured for every condition now, not just vtrace. Best-effort
   // and additive: absence just leaves the report's honest false-by-absence behavior.
   const toolCallMeta = await persistOrderedToolCalls(config, dir, condition, instances);
+  // Persist Capsule v2 manifest/ranking/context artifacts next to the other raw
+  // VTRACE evidence (vtrace condition only) and record what was written into the
+  // run meta. Off the v2 engine no bundle exists, so nothing is written and the
+  // meta records an explicit missing reason; a v2 run that produced no capsule
+  // (gate/no_context) is distinguished as "capsule-v2-no-result". Best-effort and
+  // additive — it never changes the agent run, ordered telemetry, or discipline.
+  let capsuleV2ArtifactMeta: CapsuleV2ArtifactMeta | null = null;
+  if (condition === "vtrace") {
+    capsuleV2ArtifactMeta = await writeCapsuleV2Artifacts(dir, capsuleV2Bundles, {
+      runLabel: config.runLabel,
+      generatedAt: new Date().toISOString(),
+    });
+    if (!capsuleV2ArtifactMeta.capsuleV2ArtifactsPersisted && config.capsuleEngine === "v2") {
+      capsuleV2ArtifactMeta = { ...capsuleV2ArtifactMeta, capsuleV2ArtifactsMissingReason: "capsule-v2-no-result" };
+    }
+  }
   const vtraceMeta =
     condition === "vtrace"
-      ? { ...(await vtraceRunMetaFields(config, result.stderr, indexedFlag, policyAction)), ...toolCallMeta, ...extraVtraceMeta }
+      ? {
+          ...(await vtraceRunMetaFields(config, result.stderr, indexedFlag, policyAction)),
+          ...toolCallMeta,
+          ...extraVtraceMeta,
+          ...(capsuleV2ArtifactMeta ?? {}),
+        }
       : toolCallMeta;
   // Shared anti-loop tool-use-discipline metadata, recorded for EVERY condition so
   // reports can tell whether the block was injected (and which version), or that the
