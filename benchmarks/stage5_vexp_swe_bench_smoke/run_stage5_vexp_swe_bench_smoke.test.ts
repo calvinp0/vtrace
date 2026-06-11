@@ -168,6 +168,9 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     capsuleIntent: "auto",
     capsuleBudget: 8000,
     contextPolicyOverride: "auto",
+    // Mirror the production default (DEFAULT_CONFIG): omitting --pivot-check-policy
+    // resolves to strict_risk_gated.
+    pivotCheckPolicy: "strict_risk_gated",
     disablePivotCheck: false,
     sweBenchDataFile: null,
     runLabel: null,
@@ -1520,7 +1523,7 @@ test("buildVtraceContextMarkdown does not inject PIVOT_CHECK for legacy / no-cap
   assert.doesNotMatch(buildVtraceContextMarkdown([noClass], { maxChars: 12000, maxItems: 8 }).markdown, /PIVOT_CHECK/);
 });
 
-// ----- Stage 5: deterministic PIVOT_CHECK policy (risk_gated default) -----
+// ----- Stage 5: deterministic PIVOT_CHECK policy (strict_risk_gated default) -----
 
 // Two ordinary pivots: both source-anchored, no hidden / edit-risk signal. Under
 // risk_gated this is exactly the case that should NOT inject (the token saving);
@@ -1559,8 +1562,14 @@ function pivotSection(classification: CapsuleClassification | null) {
   };
 }
 
-test("--pivot-check-policy parses, defaults to risk_gated, and rejects unknown values", () => {
-  assert.equal(parseArgs(["--mode", "prepare", "--instances", "a__1"]).pivotCheckPolicy, "risk_gated");
+test("--pivot-check-policy parses, defaults to strict_risk_gated, and rejects unknown values", () => {
+  // Omitting --pivot-check-policy resolves to the internal Stage 5 default.
+  assert.equal(parseArgs(["--mode", "prepare", "--instances", "a__1"]).pivotCheckPolicy, "strict_risk_gated");
+  // Explicit policies are honoured exactly — old behaviour stays selectable.
+  assert.equal(
+    parseArgs(["--mode", "prepare", "--instances", "a__1", "--pivot-check-policy", "risk_gated"]).pivotCheckPolicy,
+    "risk_gated",
+  );
   assert.equal(
     parseArgs(["--mode", "prepare", "--instances", "a__1", "--pivot-check-policy", "multi_pivot"]).pivotCheckPolicy,
     "multi_pivot",
@@ -1575,6 +1584,28 @@ test("--pivot-check-policy parses, defaults to risk_gated, and rejects unknown v
   );
   // --disable-pivot-check still sets the compat flag (policy resolves to off at injection time).
   assert.equal(parseArgs(["--mode", "prepare", "--instances", "a__1", "--disable-pivot-check"]).disablePivotCheck, true);
+});
+
+test("the default policy (omitted flag) suppresses a hidden_pivot-only capsule end to end", () => {
+  // Resolve the policy the way a real run does — straight from the parsed CLI config
+  // with --pivot-check-policy omitted — then feed it through the render path. The
+  // hidden-pivot-only capsule meets the multi-pivot floor but carries no STRONG signal,
+  // so the default must NOT inject PIVOT_CHECK (the token saving the default exists for).
+  const defaultPolicy = parseArgs(["--mode", "prepare", "--instances", "a__1"]).pivotCheckPolicy;
+  assert.equal(defaultPolicy, "strict_risk_gated");
+  const cls = classificationWith({ pivots: PIVOT_CHECK_PIVOTS });
+  assert.deepEqual(pivotCheckRiskSignals(cls), ["hidden_pivot"]); // hidden only — no strong signal
+  const a = buildVtraceContextMarkdown([pivotSection(cls)], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: defaultPolicy,
+  });
+  assert.doesNotMatch(a.markdown, /## PIVOT_CHECK/);
+  assert.equal(a.pivotCheckInjected, false);
+  assert.equal(a.pivotCheckPolicy, "strict_risk_gated");
+  assert.match(a.pivotCheckReason, /hidden_pivot alone is insufficient/);
+  // The old default (risk_gated) WOULD have injected on the same capsule — the change is real.
+  assert.equal(decidePivotCheckInjection("risk_gated", cls).inject, true);
 });
 
 test("decidePivotCheckInjection: off never injects", () => {
@@ -2196,6 +2227,19 @@ test("prepareIndexedContext records PIVOT_CHECK enabled by default and the snaps
 
   const ctx = await readFile(vtraceInstructionsFilePath(out), "utf8");
   assert.ok(!ctx.includes("PIVOT_CHECK"));
+});
+
+test("run metadata records vtracePivotCheckPolicy=strict_risk_gated when the default is used", async () => {
+  // baseConfig mirrors the production default (DEFAULT_CONFIG): --pivot-check-policy
+  // omitted ⇒ strict_risk_gated. The effective policy is recorded on the run metadata
+  // even when nothing injects (single-pivot capsule), so the audit trail shows which
+  // policy governed the run.
+  const defaultPolicy = parseArgs(["--mode", "prepare", "--instances", "a__1"]).pivotCheckPolicy;
+  assert.equal(defaultPolicy, "strict_risk_gated");
+  const { result } = await v2InjectionResult(capsuleV2Json());
+  assert.equal(result.pivotCheckPolicy, "strict_risk_gated");
+  const meta = indexedContextMetaFields(result);
+  assert.equal(meta.vtracePivotCheckPolicy, "strict_risk_gated");
 });
 
 test("--disable-pivot-check records disabled state and never injects the block; telemetry untouched", async () => {

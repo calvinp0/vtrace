@@ -69,12 +69,12 @@ export type CapsuleV2Intent = "auto" | "debug" | "refactor" | "impact" | "test-f
 //   off                -> never inject PIVOT_CHECK.
 //   multi_pivot        -> legacy behaviour: inject whenever the capsule has >= 2 pivots.
 //   risk_gated         -> inject only when a deterministic high-risk signal is present
-//                         (DEFAULT) — two ordinary pivots alone no longer qualify.
-//   strict_risk_gated  -> experimental token-reduction gate: keep the multi-pivot floor
+//                         — two ordinary pivots alone no longer qualify.
+//   strict_risk_gated  -> token-reduction gate (DEFAULT): keep the multi-pivot floor
 //                         but require a STRONG risk signal (>= 3 pivots, edit-risk
 //                         directives, a known edit-relevant hidden pivot, or hidden_pivot
 //                         corroborated by >= 1 additional signal). hidden_pivot ALONE is
-//                         not sufficient. Not the default; selectable for experiments.
+//                         not sufficient. The internal Stage 5 default.
 //   always             -> inject whenever Capsule v2 context exists (experiments only).
 // --disable-pivot-check forces `off` regardless of this policy (compatibility).
 export type PivotCheckPolicy = "off" | "multi_pivot" | "risk_gated" | "strict_risk_gated" | "always";
@@ -207,10 +207,10 @@ export interface CliConfig {
   // for Capsule v2 live validation. See ContextPolicyOverride.
   readonly contextPolicyOverride: ContextPolicyOverride;
   // Deterministic PIVOT_CHECK injection policy (--pivot-check-policy). Default
-  // "risk_gated": PIVOT_CHECK injects only when a high-risk signal is present, NOT
-  // merely because the capsule has two pivots (a token-reduction change over the old
-  // "multi_pivot" behaviour). See PivotCheckPolicy. --disable-pivot-check overrides
-  // this to "off".
+  // "strict_risk_gated": PIVOT_CHECK keeps the multi-pivot floor but injects only on a
+  // STRONG risk signal — not merely a hidden pivot or two ordinary pivots (a further
+  // token-reduction change over "risk_gated"). See PivotCheckPolicy. --disable-pivot-check
+  // overrides this to "off".
   readonly pivotCheckPolicy: PivotCheckPolicy;
   // Benchmark-only PIVOT_CHECK suppression (--disable-pivot-check). Default false.
   // When true, the effective policy is forced to "off" (the compact PIVOT_CHECK
@@ -651,9 +651,14 @@ const DEFAULT_CONFIG: CliConfig = {
   capsuleIntent: "auto",
   capsuleBudget: CAPSULE_V2_DEFAULT_BUDGET,
   contextPolicyOverride: "auto",
-  // PIVOT_CHECK is risk-gated by default: it injects only when a deterministic
-  // high-risk signal is present, not merely for two pivots (a token-cost reduction).
-  pivotCheckPolicy: "risk_gated",
+  // PIVOT_CHECK is strict-risk-gated by default: it keeps the multi-pivot floor but
+  // injects only on a STRONG risk signal (>= 3 pivots, edit-risk directives, a known
+  // edit-relevant hidden pivot, or hidden_pivot corroborated by another signal) — a
+  // hidden_pivot alone no longer qualifies. This is the internal Stage 5 default; it
+  // cut first-pass token/cost overhead with no resolution regression in the controlled
+  // 10-task comparison. Override with --pivot-check-policy (off|multi_pivot|risk_gated|
+  // strict_risk_gated|always) for experiments.
+  pivotCheckPolicy: "strict_risk_gated",
   // --disable-pivot-check forces the effective policy to "off" (compatibility).
   disablePivotCheck: false,
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
@@ -3446,8 +3451,9 @@ export function detectPatchVerifyText(markdown: string): boolean {
 
 export function buildVtraceContextMarkdown(
   sections: readonly VtraceContextSection[],
-  // `pivotCheckPolicy` (default "risk_gated") decides WHEN the compact PIVOT_CHECK
-  // block is injected per Capsule v2 section; see decidePivotCheckInjection. The
+  // `pivotCheckPolicy` (helper fallback "risk_gated"; the Stage 5 run path passes
+  // strict_risk_gated by default) decides WHEN the compact PIVOT_CHECK block is
+  // injected per Capsule v2 section; see decidePivotCheckInjection. The
   // legacy `disablePivotCheck` flag (default false) forces policy "off" for a
   // controlled "before" run and is retained for compatibility. Neither affects the
   // rest of the injected context. `pivotCheckInjected` in the return reports whether
@@ -3476,8 +3482,11 @@ export function buildVtraceContextMarkdown(
   pivotCheckRiskSignals: readonly string[];
   pivotCheckWouldInjectUnderMultiPivot: boolean;
 } {
-  // --disable-pivot-check is a hard override to "off"; otherwise honour the policy
-  // (defaulting to risk_gated when the caller omits it).
+  // --disable-pivot-check is a hard override to "off"; otherwise honour the policy.
+  // This helper's own fallback when a caller omits the policy is "risk_gated" (the
+  // historical helper default); the Stage 5 run path always passes an explicit policy
+  // — strict_risk_gated by default (see DEFAULT_CONFIG) — so production never relies on
+  // this fallback. Kept at risk_gated so direct unit callers see unchanged behaviour.
   const effectivePolicy: PivotCheckPolicy = limits.disablePivotCheck ? "off" : (limits.pivotCheckPolicy ?? "risk_gated");
   // Representative decisions: the first section that actually injected wins; failing
   // that, the first section that carried a Capsule v2 classification (so the reason
@@ -6755,7 +6764,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --capsule-engine legacy|v2                    capsule retrieval engine for indexed-context (default: legacy)",
       "  --capsule-intent auto|debug|refactor|impact|test-failure   Capsule v2 intent (default: auto; v2 only)",
       "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
-      "  --pivot-check-policy off|multi_pivot|risk_gated|strict_risk_gated|always   when to inject PIVOT_CHECK (default: risk_gated — inject only on a high-risk signal, not merely for two pivots; strict_risk_gated also rejects hidden_pivot-only)",
+      "  --pivot-check-policy off|multi_pivot|risk_gated|strict_risk_gated|always   when to inject PIVOT_CHECK (default: strict_risk_gated — inject only on a STRONG risk signal, rejecting hidden_pivot-only and two ordinary pivots; risk_gated injects on any high-risk signal)",
       "  --disable-pivot-check                         force PIVOT_CHECK policy off for a controlled before run (compatibility; equivalent to --pivot-check-policy off)",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
       "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",
