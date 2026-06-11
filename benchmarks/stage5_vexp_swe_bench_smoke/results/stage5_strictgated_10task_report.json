@@ -1,0 +1,940 @@
+{
+  "generatedAt": "2026-06-11T07:56:33.148Z",
+  "question": "Should strict_risk_gated become the internal default policy for Stage 5 first-pass VTRACE?",
+  "tasks": [
+    {
+      "instanceId": "django__django-10880",
+      "baselineLabel": "eval-10880",
+      "oldVtraceLabel": "eval-10880",
+      "strictLabel": "eval-strictgated-vtrace-django-10880",
+      "riskLabel": "eval-riskgated-vtrace-django-10880",
+      "status": "complete",
+      "baseline": {
+        "totalTokens": 432600,
+        "costUsd": 0.20882475,
+        "numTurns": 15,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Grep": 2,
+          "Read": 2,
+          "Edit": 1
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "oldVtrace": {
+        "totalTokens": 628051,
+        "costUsd": 0.25608574999999995,
+        "numTurns": 21,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Grep": 1,
+          "Read": 1,
+          "Edit": 1,
+          "Bash": 4
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "risk": null,
+      "strict": {
+        "totalTokens": 523397,
+        "costUsd": 0.29351350000000004,
+        "numTurns": 17,
+        "orderedToolCallCount": 5,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 1,
+          "Edit": 1,
+          "Bash": 3
+        },
+        "pivotCheckPolicy": "strict_risk_gated",
+        "policyReason": "strict_risk_gated: no strong risk signal (hidden_pivot alone is insufficient)",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": false,
+        "editGuardInjected": false,
+        "patchVerifyInjected": false,
+        "suppressionClaimable": true
+      },
+      "oldToStrict": {
+        "tokenDelta": -104654,
+        "tokenDeltaPct": -16.663296452039724,
+        "costDelta": 0.03742775000000009,
+        "costDeltaPct": 14.615319282701245,
+        "turnDelta": -4,
+        "orderedToolCallDelta": null,
+        "resolutionChange": "same"
+      }
+    },
+    {
+      "instanceId": "django__django-11095",
+      "baselineLabel": "eval-11095",
+      "oldVtraceLabel": "eval-11095",
+      "strictLabel": "eval-strictgated-vtrace-django-11095",
+      "riskLabel": "eval-riskgated-vtrace-django-11095",
+      "status": "complete",
+      "baseline": {
+        "totalTokens": 535997,
+        "costUsd": 0.22295474999999998,
+        "numTurns": 19,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Grep": 3,
+          "Read": 2,
+          "Edit": 1
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "oldVtrace": {
+        "totalTokens": 999877,
+        "costUsd": 0.3552597500000001,
+        "numTurns": 32,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Grep": 4,
+          "Read": 3,
+          "Edit": 1,
+          "Bash": 3
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "risk": null,
+      "strict": {
+        "totalTokens": 581178,
+        "costUsd": 0.309469,
+        "numTurns": 19,
+        "orderedToolCallCount": 7,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 4,
+          "Grep": 2,
+          "Edit": 1
+        },
+        "pivotCheckPolicy": "strict_risk_gated",
+        "policyReason": "strict_risk_gated: no strong risk signal (hidden_pivot alone is insufficient)",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": false,
+        "editGuardInjected": false,
+        "patchVerifyInjected": false,
+        "suppressionClaimable": true
+      },
+      "oldToStrict": {
+        "tokenDelta": -418699,
+        "tokenDeltaPct": -41.87505063122764,
+        "costDelta": -0.0457907500000001,
+        "costDeltaPct": -12.889371790640535,
+        "turnDelta": -13,
+        "orderedToolCallDelta": null,
+        "resolutionChange": "same"
+      }
+    },
+    {
+      "instanceId": "django__django-11490",
+      "baselineLabel": "eval-11490",
+      "oldVtraceLabel": "eval-11490",
+      "strictLabel": "eval-strictgated-vtrace-django-11490",
+      "riskLabel": "eval-riskgated-vtrace-django-11490",
+      "status": "complete",
+      "baseline": {
+        "totalTokens": 4661640,
+        "costUsd": 1.6255705,
+        "numTurns": 107,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 9,
+          "Grep": 8,
+          "Edit": 5,
+          "Bash": 19
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "oldVtrace": {
+        "totalTokens": 3301462,
+        "costUsd": 1.0801967500000003,
+        "numTurns": 80,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 7,
+          "Grep": 8,
+          "Edit": 3,
+          "Bash": 12
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "risk": null,
+      "strict": {
+        "totalTokens": 1154475,
+        "costUsd": 0.661204,
+        "numTurns": 31,
+        "orderedToolCallCount": 10,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 2,
+          "Grep": 3,
+          "Edit": 1,
+          "Bash": 4
+        },
+        "pivotCheckPolicy": "strict_risk_gated",
+        "policyReason": "strict_risk_gated: strong risk signals [edit_risk_directives]",
+        "riskSignals": [
+          "hidden_pivot",
+          "edit_risk_directives"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": true,
+        "editGuardInjected": true,
+        "patchVerifyInjected": true,
+        "suppressionClaimable": false
+      },
+      "oldToStrict": {
+        "tokenDelta": -2146987,
+        "tokenDeltaPct": -65.03140123981436,
+        "costDelta": -0.41899275000000025,
+        "costDeltaPct": -38.78855865841109,
+        "turnDelta": -49,
+        "orderedToolCallDelta": null,
+        "resolutionChange": "same"
+      }
+    },
+    {
+      "instanceId": "django__django-11728",
+      "baselineLabel": "eval-11728",
+      "oldVtraceLabel": "eval-11728",
+      "strictLabel": "eval-strictgated-vtrace-django-11728",
+      "riskLabel": "eval-riskgated-vtrace-django-11728",
+      "status": "complete",
+      "baseline": {
+        "totalTokens": 1716132,
+        "costUsd": 0.7335555000000001,
+        "numTurns": 49,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Grep": 4,
+          "Read": 5,
+          "Bash": 7,
+          "Edit": 2,
+          "Glob": 1
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "oldVtrace": {
+        "totalTokens": 1194127,
+        "costUsd": 0.5915555,
+        "numTurns": 32,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 2,
+          "Edit": 2,
+          "Bash": 4,
+          "Grep": 3
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "risk": null,
+      "strict": {
+        "totalTokens": 1612163,
+        "costUsd": 0.7751015,
+        "numTurns": 42,
+        "orderedToolCallCount": 17,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 1,
+          "Edit": 2,
+          "Bash": 9,
+          "Grep": 5
+        },
+        "pivotCheckPolicy": "strict_risk_gated",
+        "policyReason": "strict_risk_gated: no strong risk signal (hidden_pivot alone is insufficient)",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": false,
+        "editGuardInjected": false,
+        "patchVerifyInjected": false,
+        "suppressionClaimable": true
+      },
+      "oldToStrict": {
+        "tokenDelta": 418036,
+        "tokenDeltaPct": 35.00766668871904,
+        "costDelta": 0.183546,
+        "costDeltaPct": 31.027688864358456,
+        "turnDelta": 10,
+        "orderedToolCallDelta": null,
+        "resolutionChange": "same"
+      }
+    },
+    {
+      "instanceId": "django__django-11740",
+      "baselineLabel": "eval-11740",
+      "oldVtraceLabel": "eval-11740",
+      "strictLabel": "eval-strictgated-vtrace-django-11740",
+      "riskLabel": "eval-riskgated-vtrace-django-11740",
+      "status": "complete",
+      "baseline": {
+        "totalTokens": 2387415,
+        "costUsd": 0.9118657499999999,
+        "numTurns": 48,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Grep": 2,
+          "Read": 3,
+          "Edit": 1,
+          "Bash": 14
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "oldVtrace": {
+        "totalTokens": 1849882,
+        "costUsd": 0.6620922499999999,
+        "numTurns": 50,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 5,
+          "Grep": 5,
+          "Edit": 1,
+          "Bash": 9
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "risk": null,
+      "strict": {
+        "totalTokens": 2468980,
+        "costUsd": 1.1264865000000002,
+        "numTurns": 47,
+        "orderedToolCallCount": 18,
+        "resolved": true,
+        "toolCallsByType": {
+          "Grep": 3,
+          "Read": 3,
+          "Edit": 2,
+          "Bash": 10
+        },
+        "pivotCheckPolicy": "strict_risk_gated",
+        "policyReason": "strict_risk_gated: no strong risk signal (hidden_pivot alone is insufficient)",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": false,
+        "editGuardInjected": false,
+        "patchVerifyInjected": false,
+        "suppressionClaimable": true
+      },
+      "oldToStrict": {
+        "tokenDelta": 619098,
+        "tokenDeltaPct": 33.46689140172184,
+        "costDelta": 0.46439425000000023,
+        "costDeltaPct": 70.14041472317494,
+        "turnDelta": -3,
+        "orderedToolCallDelta": null,
+        "resolutionChange": "same"
+      }
+    },
+    {
+      "instanceId": "astropy__astropy-14369",
+      "baselineLabel": "eval-baseline-vs-vtrace-baseline-astropy-14369",
+      "oldVtraceLabel": "eval-controlled-vtrace-astropy-14369",
+      "strictLabel": "eval-strictgated-vtrace-astropy-14369",
+      "riskLabel": "eval-riskgated-vtrace-astropy-14369",
+      "status": "complete",
+      "baseline": {
+        "totalTokens": 3076313,
+        "costUsd": 1.5550305,
+        "numTurns": 60,
+        "orderedToolCallCount": null,
+        "resolved": false,
+        "toolCallsByType": {
+          "Grep": 1,
+          "Glob": 1,
+          "Read": 6,
+          "Edit": 3,
+          "Bash": 11,
+          "Write": 1
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "oldVtrace": {
+        "totalTokens": 3365366,
+        "costUsd": 3.0284075,
+        "numTurns": 60,
+        "orderedToolCallCount": 23,
+        "resolved": false,
+        "toolCallsByType": {
+          "Read": 5,
+          "Bash": 13,
+          "Edit": 3,
+          "Glob": 1,
+          "Grep": 1
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": true,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": false
+      },
+      "risk": {
+        "totalTokens": 3649897,
+        "costUsd": 1.7339875000000002,
+        "numTurns": 68,
+        "orderedToolCallCount": 30,
+        "resolved": false,
+        "toolCallsByType": {
+          "Read": 7,
+          "Bash": 15,
+          "Edit": 1,
+          "Glob": 4,
+          "Grep": 3
+        },
+        "pivotCheckPolicy": "risk_gated",
+        "policyReason": "risk_gated: risk signals [hidden_pivot]",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": true,
+        "editGuardInjected": true,
+        "patchVerifyInjected": true,
+        "suppressionClaimable": false
+      },
+      "strict": {
+        "totalTokens": 2508804,
+        "costUsd": 1.4102260000000002,
+        "numTurns": 47,
+        "orderedToolCallCount": 17,
+        "resolved": false,
+        "toolCallsByType": {
+          "Read": 7,
+          "Edit": 1,
+          "Bash": 5,
+          "Grep": 2,
+          "Glob": 2
+        },
+        "pivotCheckPolicy": "strict_risk_gated",
+        "policyReason": "strict_risk_gated: no strong risk signal (hidden_pivot alone is insufficient)",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": false,
+        "editGuardInjected": false,
+        "patchVerifyInjected": false,
+        "suppressionClaimable": true
+      },
+      "oldToStrict": {
+        "tokenDelta": -856562,
+        "tokenDeltaPct": -25.45226878740678,
+        "costDelta": -1.6181815,
+        "costDeltaPct": -53.433413435939514,
+        "turnDelta": -13,
+        "orderedToolCallDelta": -6,
+        "resolutionChange": "same"
+      }
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "baselineLabel": "eval-localization-gap-baseline-matplotlib-22719",
+      "oldVtraceLabel": "eval-controlled-vtrace-matplotlib-22719",
+      "strictLabel": "eval-strictgated-vtrace-matplotlib-22719",
+      "riskLabel": "eval-riskgated-vtrace-matplotlib-22719",
+      "status": "complete",
+      "baseline": {
+        "totalTokens": 1167993,
+        "costUsd": 0.46377525,
+        "numTurns": 33,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 2,
+          "Edit": 1,
+          "Bash": 8
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "oldVtrace": {
+        "totalTokens": 2718398,
+        "costUsd": 0.9627022500000002,
+        "numTurns": 69,
+        "orderedToolCallCount": 30,
+        "resolved": false,
+        "toolCallsByType": {
+          "Read": 9,
+          "Grep": 4,
+          "Edit": 1,
+          "Bash": 16
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": true,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": false
+      },
+      "risk": {
+        "totalTokens": 1277672,
+        "costUsd": 0.7694869999999998,
+        "numTurns": 34,
+        "orderedToolCallCount": 12,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 5,
+          "Grep": 2,
+          "Edit": 1,
+          "Bash": 4
+        },
+        "pivotCheckPolicy": "risk_gated",
+        "policyReason": "risk_gated: risk signals [hidden_pivot]",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": true,
+        "editGuardInjected": true,
+        "patchVerifyInjected": true,
+        "suppressionClaimable": false
+      },
+      "strict": {
+        "totalTokens": 1059041,
+        "costUsd": 0.4899719999999999,
+        "numTurns": 30,
+        "orderedToolCallCount": 11,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 2,
+          "Edit": 1,
+          "Bash": 7,
+          "Grep": 1
+        },
+        "pivotCheckPolicy": "strict_risk_gated",
+        "policyReason": "strict_risk_gated: no strong risk signal (hidden_pivot alone is insufficient)",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": false,
+        "editGuardInjected": false,
+        "patchVerifyInjected": false,
+        "suppressionClaimable": true
+      },
+      "oldToStrict": {
+        "tokenDelta": -1659357,
+        "tokenDeltaPct": -61.04172383881977,
+        "costDelta": -0.4727302500000003,
+        "costDeltaPct": -49.1045128439245,
+        "turnDelta": -39,
+        "orderedToolCallDelta": -19,
+        "resolutionChange": "win"
+      }
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "baselineLabel": "eval-baseline-vs-vtrace-baseline-requests-5414",
+      "oldVtraceLabel": "eval-controlled-vtrace-requests-5414",
+      "strictLabel": "eval-strictgated-vtrace-requests-5414",
+      "riskLabel": "eval-riskgated-vtrace-requests-5414",
+      "status": "complete",
+      "baseline": {
+        "totalTokens": 736898,
+        "costUsd": 0.47255224999999995,
+        "numTurns": 20,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Grep": 3,
+          "Read": 1,
+          "Edit": 1,
+          "Bash": 2
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "oldVtrace": {
+        "totalTokens": 956785,
+        "costUsd": 0.4065295,
+        "numTurns": 27,
+        "orderedToolCallCount": 9,
+        "resolved": false,
+        "toolCallsByType": {
+          "Read": 3,
+          "Grep": 1,
+          "Bash": 3,
+          "Edit": 2
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": true,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": false
+      },
+      "risk": {
+        "totalTokens": 1676057,
+        "costUsd": 0.6886879999999999,
+        "numTurns": 45,
+        "orderedToolCallCount": 16,
+        "resolved": false,
+        "toolCallsByType": {
+          "Read": 4,
+          "Grep": 1,
+          "Bash": 10,
+          "Edit": 1
+        },
+        "pivotCheckPolicy": "risk_gated",
+        "policyReason": "risk_gated: risk signals [hidden_pivot]",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": true,
+        "editGuardInjected": true,
+        "patchVerifyInjected": true,
+        "suppressionClaimable": false
+      },
+      "strict": {
+        "totalTokens": 805298,
+        "costUsd": 0.41200299999999995,
+        "numTurns": 25,
+        "orderedToolCallCount": 8,
+        "resolved": false,
+        "toolCallsByType": {
+          "Read": 2,
+          "Grep": 1,
+          "Edit": 2,
+          "Bash": 3
+        },
+        "pivotCheckPolicy": "strict_risk_gated",
+        "policyReason": "strict_risk_gated: no strong risk signal (hidden_pivot alone is insufficient)",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": false,
+        "editGuardInjected": false,
+        "patchVerifyInjected": false,
+        "suppressionClaimable": true
+      },
+      "oldToStrict": {
+        "tokenDelta": -151487,
+        "tokenDeltaPct": -15.832919621440553,
+        "costDelta": 0.0054734999999999645,
+        "costDeltaPct": 1.3463967559549712,
+        "turnDelta": -2,
+        "orderedToolCallDelta": -1,
+        "resolutionChange": "same"
+      }
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "baselineLabel": "eval-localization-gap-baseline-sphinx-7462",
+      "oldVtraceLabel": "eval-controlled-vtrace-sphinx-7462",
+      "strictLabel": "eval-strictgated-vtrace-sphinx-7462",
+      "riskLabel": "eval-riskgated-vtrace-sphinx-7462",
+      "status": "complete",
+      "baseline": {
+        "totalTokens": 627263,
+        "costUsd": 0.2651115,
+        "numTurns": 21,
+        "orderedToolCallCount": null,
+        "resolved": false,
+        "toolCallsByType": {
+          "Read": 2,
+          "Edit": 2,
+          "Bash": 3
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "oldVtrace": {
+        "totalTokens": 638586,
+        "costUsd": 0.28952975000000003,
+        "numTurns": 19,
+        "orderedToolCallCount": 7,
+        "resolved": false,
+        "toolCallsByType": {
+          "Read": 2,
+          "Edit": 2,
+          "Bash": 2,
+          "Grep": 1
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": true,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": false
+      },
+      "risk": null,
+      "strict": {
+        "totalTokens": 1134164,
+        "costUsd": 0.5058105,
+        "numTurns": 33,
+        "orderedToolCallCount": 13,
+        "resolved": false,
+        "toolCallsByType": {
+          "Read": 4,
+          "Edit": 2,
+          "Grep": 3,
+          "Bash": 3,
+          "Glob": 1
+        },
+        "pivotCheckPolicy": "strict_risk_gated",
+        "policyReason": "strict_risk_gated: no strong risk signal (hidden_pivot alone is insufficient)",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": false,
+        "editGuardInjected": false,
+        "patchVerifyInjected": false,
+        "suppressionClaimable": true
+      },
+      "oldToStrict": {
+        "tokenDelta": 495578,
+        "tokenDeltaPct": 77.60552220061197,
+        "costDelta": 0.21628075000000002,
+        "costDeltaPct": 74.70070001441994,
+        "turnDelta": 14,
+        "orderedToolCallDelta": 6,
+        "resolutionChange": "same"
+      }
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "baselineLabel": "eval-baseline-vs-vtrace-baseline-sympy-16766",
+      "oldVtraceLabel": "eval-controlled-vtrace-sympy-16766",
+      "strictLabel": "eval-strictgated-vtrace-sympy-16766",
+      "riskLabel": "eval-riskgated-vtrace-sympy-16766",
+      "status": "complete",
+      "baseline": {
+        "totalTokens": 1414441,
+        "costUsd": 0.5185075,
+        "numTurns": 33,
+        "orderedToolCallCount": null,
+        "resolved": true,
+        "toolCallsByType": {
+          "Grep": 2,
+          "Read": 1,
+          "Edit": 2,
+          "Bash": 6
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": null,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": null
+      },
+      "oldVtrace": {
+        "totalTokens": 1422447,
+        "costUsd": 0.5765395000000001,
+        "numTurns": 31,
+        "orderedToolCallCount": 12,
+        "resolved": false,
+        "toolCallsByType": {
+          "Read": 4,
+          "Grep": 2,
+          "Edit": 2,
+          "Bash": 4
+        },
+        "pivotCheckPolicy": null,
+        "policyReason": null,
+        "riskSignals": null,
+        "wouldInjectUnderMultiPivot": null,
+        "pivotCheckInjected": true,
+        "editGuardInjected": null,
+        "patchVerifyInjected": null,
+        "suppressionClaimable": false
+      },
+      "risk": null,
+      "strict": {
+        "totalTokens": 679485,
+        "costUsd": 0.42426349999999996,
+        "numTurns": 17,
+        "orderedToolCallCount": 5,
+        "resolved": true,
+        "toolCallsByType": {
+          "Read": 1,
+          "Grep": 1,
+          "Edit": 1,
+          "Bash": 2
+        },
+        "pivotCheckPolicy": "strict_risk_gated",
+        "policyReason": "strict_risk_gated: no strong risk signal (hidden_pivot alone is insufficient)",
+        "riskSignals": [
+          "hidden_pivot"
+        ],
+        "wouldInjectUnderMultiPivot": true,
+        "pivotCheckInjected": false,
+        "editGuardInjected": false,
+        "patchVerifyInjected": false,
+        "suppressionClaimable": true
+      },
+      "oldToStrict": {
+        "tokenDelta": -742962,
+        "tokenDeltaPct": -52.23126063747894,
+        "costDelta": -0.15227600000000013,
+        "costDeltaPct": -26.412067169725596,
+        "turnDelta": -14,
+        "orderedToolCallDelta": -7,
+        "resolutionChange": "win"
+      }
+    }
+  ],
+  "aggregate": {
+    "taskCount": 10,
+    "pairedCount": 10,
+    "missingStrictCount": 0,
+    "baselineResolved": 8,
+    "oldVtraceResolved": 5,
+    "strictResolved": 7,
+    "baselineTotalTokens": 16756692,
+    "oldVtraceTotalTokens": 17074981,
+    "strictTotalTokens": 12526985,
+    "baselineTotalCost": 6.97774825,
+    "oldVtraceTotalCost": 8.208898500000002,
+    "strictTotalCost": 6.4080495000000015,
+    "oldToStrictTokenDelta": -4547996,
+    "oldToStrictTokenDeltaPct": -26.635438130209337,
+    "oldToStrictCostDelta": -1.8008490000000004,
+    "oldToStrictCostDeltaPct": -21.937766680876855,
+    "oldToStrictResolutionWins": 2,
+    "oldToStrictResolutionLosses": 0,
+    "oldToStrictResolutionNet": 2,
+    "suppressionClaimableCount": 9,
+    "strictPivotCheckInjectedCount": 1,
+    "strictEditGuardInjectedCount": 1,
+    "strictPatchVerifyInjectedCount": 1,
+    "strictInternalDefaultRecommendation": "Make strict_risk_gated the internal Stage 5 default PIVOT_CHECK policy. This should be an internal default policy, not a normal user toggle. Users should see simple modes such as auto/fast/thorough/debug."
+  },
+  "decision": "make_default",
+  "recommendation": "Make strict_risk_gated the internal Stage 5 default PIVOT_CHECK policy. This should be an internal default policy, not a normal user toggle. Users should see simple modes such as auto/fast/thorough/debug.",
+  "nonClaims": [
+    "This is a single controlled 10-task set, not a statistical benchmark; no significance is claimed.",
+    "It does not isolate which factor (tool-loop behavior, stochasticity, sampling) drove any token change.",
+    "It does not change retrieval, Capsule v2, PIVOT_CHECK, EDIT_GUARD, PATCH_VERIFY, probes, critic, repair, the evaluator, or policy behavior.",
+    "It does not rerun agents or Docker; usage/cost/resolution are read verbatim from existing run + docker-eval artifacts.",
+    "CLI policy flags are benchmark/dev controls only; the recommendation concerns the internal default, not a user-facing toggle.",
+    "Repair accounting is tracked by separate reports; this report does not re-run or re-account repair."
+  ]
+}
