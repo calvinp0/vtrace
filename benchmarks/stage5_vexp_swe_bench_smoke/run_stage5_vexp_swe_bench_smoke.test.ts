@@ -34,6 +34,16 @@ import {
   buildPatchVerifyBlock,
   detectPatchVerifyText,
   PATCH_VERIFY_MARKER,
+  buildToolUseDisciplineBlock,
+  detectToolUseDisciplineText,
+  TOOL_USE_DISCIPLINE_MARKER,
+  STAGE5_TOOL_USE_DISCIPLINE_VERSION,
+  buildToolUseDisciplinePatchBlock,
+  hasToolUseDisciplinePatch,
+  STAGE5_TOOL_USE_DISCIPLINE_MARKER,
+  STAGE5_TOOL_USE_DISCIPLINE_LOG,
+  stage5ToolUseDisciplineFilePath,
+  toolCallSummaryFilePath,
   buildVtraceContextMarkdown,
   buildVtraceIndexCommand,
   buildVtracePatchBlock,
@@ -84,6 +94,7 @@ import {
   runAggregateRuns,
   runIngest,
   runPrepare,
+  runBaseline,
   runProtocol,
   runVexp,
   runVtrace,
@@ -116,6 +127,11 @@ import {
   resolveIndexMetaPath,
   writeIndexMeta,
 } from "../../src/indexer/indexMeta";
+import {
+  isBashTool,
+  summarizeOrderedToolCalls,
+  type OrderedToolCall,
+} from "../../src/capsule/toolCallLog";
 
 // Minimal stand-in for the external vexp-swe-bench Claude Code adapter: it has
 // the anchor line and the `claude -p <prompt>` args array, so the patcher can
@@ -172,6 +188,7 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     // resolves to strict_risk_gated.
     pivotCheckPolicy: "strict_risk_gated",
     disablePivotCheck: false,
+    disableToolUseDiscipline: false,
     sweBenchDataFile: null,
     runLabel: null,
     runLabels: null,
@@ -673,6 +690,253 @@ test("persistOrderedToolCalls: sentinel stream yields false meta with explanator
   assert.match(String(meta.vtraceToolCallError), /sentinel/i);
   // Sentinel stream carried no usable agent output → emission unobservable.
   assert.equal(meta.vtracePivotChecklistEmitted, null);
+});
+
+// --- Part A: anti-loop tool-use-discipline guidance -------------------------
+
+test("--disable-tool-use-discipline is off by default and opt-in only", () => {
+  // Default: the shared anti-loop block stays injected (flag absent).
+  assert.equal(parseArgs(["--mode", "prepare", "--instances", "a__1"]).disableToolUseDiscipline, false);
+  // Explicit flag flips it.
+  assert.equal(
+    parseArgs(["--mode", "prepare", "--instances", "a__1", "--disable-tool-use-discipline"]).disableToolUseDiscipline,
+    true,
+  );
+});
+
+test("buildToolUseDisciplineBlock carries the generic anti-loop guidance under its marker", () => {
+  const block = buildToolUseDisciplineBlock();
+  assert.ok(block.includes(TOOL_USE_DISCIPLINE_MARKER));
+  assert.match(block, /Tool-use discipline:/);
+  assert.match(block, /Prefer one focused search over repeated broad Bash loops\./);
+  assert.match(block, /Do not run long grep\/find loops/);
+  assert.match(block, /stop searching and make the smallest patch/);
+  assert.match(block, /Avoid broad rewrites/);
+  // Generic and fair: it names no hidden internal policy and is not vtrace-only.
+  assert.doesNotMatch(block, /strict_risk_gated|PIVOT_CHECK|EDIT_GUARD|PATCH_VERIFY/);
+  assert.ok(detectToolUseDisciplineText(block));
+  assert.ok(!detectToolUseDisciplineText("no discipline here"));
+});
+
+test("STAGE5_TOOL_USE_DISCIPLINE_VERSION is v1", () => {
+  assert.equal(STAGE5_TOOL_USE_DISCIPLINE_VERSION, "v1");
+});
+
+test("buildToolUseDisciplinePatchBlock appends the discipline file via stderr, never stdout", () => {
+  const block = buildToolUseDisciplinePatchBlock();
+  assert.ok(block.includes(`${STAGE5_TOOL_USE_DISCIPLINE_MARKER} begin`));
+  assert.ok(block.includes(`${STAGE5_TOOL_USE_DISCIPLINE_MARKER} end`));
+  assert.ok(block.includes("VTRACE_TOOL_USE_DISCIPLINE_FILE"));
+  assert.ok(block.includes("opts.prompt"));
+  assert.ok(block.includes(STAGE5_TOOL_USE_DISCIPLINE_LOG));
+  assert.ok(block.includes("console.error"));
+  assert.ok(!block.includes("console.log"));
+});
+
+test("applyVtracePatch installs the tool-use-discipline block alongside instructions and stream", () => {
+  assert.ok(!hasToolUseDisciplinePatch(FAKE_CLAUDE_ADAPTER));
+  const { content, changed } = applyVtracePatch(FAKE_CLAUDE_ADAPTER);
+  assert.equal(changed, true);
+  assert.ok(hasToolUseDisciplinePatch(content));
+  assert.ok(content.includes("VTRACE_TOOL_USE_DISCIPLINE_FILE"));
+  // Idempotent: re-applying does not duplicate the discipline marker.
+  const twice = applyVtracePatch(content);
+  assert.equal(twice.changed, false);
+  assert.equal(content.split(STAGE5_TOOL_USE_DISCIPLINE_MARKER).length - 1, 2);
+});
+
+test("baseline and vtrace commands both export VTRACE_TOOL_USE_DISCIPLINE_FILE by default", () => {
+  const config = baseConfig({ vexpSweBenchDir: "/x", out: "/out", instances: ["a__1"] });
+  const baseline = buildBaselineCommand(config, ["a__1"]);
+  const vtrace = buildVtraceCommand(config, ["a__1"]);
+  const expected = stage5ToolUseDisciplineFilePath("/out");
+  // Same shared block path on BOTH arms — fair to baseline and vtrace.
+  assert.equal(baseline.env.VTRACE_TOOL_USE_DISCIPLINE_FILE, expected);
+  assert.equal(vtrace.env.VTRACE_TOOL_USE_DISCIPLINE_FILE, expected);
+  // Both arms also carry the universal telemetry stream env.
+  assert.ok(baseline.env.VTRACE_AGENT_STREAM_FILE);
+  assert.ok(vtrace.env.VTRACE_AGENT_STREAM_FILE);
+  // Baseline gets the shared block but NOT vtrace context (kept fair, not weaker).
+  assert.equal(baseline.env.VTRACE_AGENT_INSTRUCTIONS_FILE, undefined);
+});
+
+test("--disable-tool-use-discipline removes the discipline env from baseline and vtrace", () => {
+  const config = baseConfig({ vexpSweBenchDir: "/x", out: "/out", instances: ["a__1"], disableToolUseDiscipline: true });
+  const baseline = buildBaselineCommand(config, ["a__1"]);
+  const vtrace = buildVtraceCommand(config, ["a__1"]);
+  assert.equal(baseline.env.VTRACE_TOOL_USE_DISCIPLINE_FILE, undefined);
+  assert.equal(vtrace.env.VTRACE_TOOL_USE_DISCIPLINE_FILE, undefined);
+  // Telemetry stream env is independent of the discipline flag — still present.
+  assert.ok(baseline.env.VTRACE_AGENT_STREAM_FILE);
+  assert.ok(vtrace.env.VTRACE_AGENT_STREAM_FILE);
+});
+
+// Run a single condition with a mocked agent process that simulates the patched
+// adapter dumping a stream-json to the shared stream file, and return the env it
+// was spawned with plus the run meta the runner wrote.
+async function runMockedCondition(
+  config: CliConfig,
+  condition: "baseline" | "vtrace",
+  stream: string | null = null,
+): Promise<{ env: Record<string, string> | undefined; meta: Record<string, unknown> }> {
+  let capturedEnv: Record<string, string> | undefined;
+  const runProcess = async (_cmd: string, _args: readonly string[], options?: { env?: Record<string, string> }) => {
+    capturedEnv = options?.env;
+    // Simulate the patched adapter writing its stream-json (telemetry) if asked.
+    if (stream !== null) await writeFile(vtraceAgentStreamFilePath(config.out), stream);
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  if (condition === "baseline") await runBaseline(config, { runProcess });
+  else await runVtrace(config, { runProcess });
+  const dir = rawConditionDir(config.out, condition, config.runLabel);
+  const meta = JSON.parse(await readFile(path.join(dir, "_run.meta.json"), "utf8")) as Record<string, unknown>;
+  return { env: capturedEnv, meta };
+}
+
+async function mockVexpCheckout(label: string): Promise<{ vexpDir: string; out: string }> {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir(label), "results");
+  // Install the local patch so a local-patch vtrace run is considered real (the
+  // runner refuses to spawn a vtrace local-patch run with no patch installed).
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  return { vexpDir, out };
+}
+
+test("baseline run writes the shared discipline file, exports the env, and records injected metadata", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("baseline-discipline");
+  const config = baseConfig({ vexpSweBenchDir: vexpDir, out, instances: ["a__1"] });
+  const { env, meta } = await runMockedCondition(config, "baseline");
+
+  // Discipline file written at the results root and the env points at it.
+  const disciplineFile = stage5ToolUseDisciplineFilePath(out);
+  assert.equal(env?.VTRACE_TOOL_USE_DISCIPLINE_FILE, disciplineFile);
+  const written = await readFile(disciplineFile, "utf8");
+  assert.ok(detectToolUseDisciplineText(written));
+
+  // Metadata records the injection and version even on the baseline arm.
+  assert.equal(meta.stage5ToolUseDisciplineInjected, true);
+  assert.equal(meta.stage5ToolUseDisciplineVersion, "v1");
+  assert.equal(meta.stage5ToolUseDisciplineDisabledByFlag, false);
+});
+
+test("vtrace run records tool-use-discipline metadata injected=true and version", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("vtrace-discipline");
+  const config = baseConfig({ vexpSweBenchDir: vexpDir, out, vtraceMethod: "local-patch", instances: ["a__1"] });
+  const { env, meta } = await runMockedCondition(config, "vtrace");
+  assert.equal(env?.VTRACE_TOOL_USE_DISCIPLINE_FILE, stage5ToolUseDisciplineFilePath(out));
+  assert.equal(meta.stage5ToolUseDisciplineInjected, true);
+  assert.equal(meta.stage5ToolUseDisciplineVersion, "v1");
+});
+
+test("--disable-tool-use-discipline records injected=false, disabledByFlag=true, and writes no discipline file env", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("disabled-discipline");
+  const config = baseConfig({ vexpSweBenchDir: vexpDir, out, instances: ["a__1"], disableToolUseDiscipline: true });
+  const { env, meta } = await runMockedCondition(config, "baseline");
+  assert.equal(env?.VTRACE_TOOL_USE_DISCIPLINE_FILE, undefined);
+  assert.equal(meta.stage5ToolUseDisciplineInjected, false);
+  assert.equal(meta.stage5ToolUseDisciplineVersion, null);
+  assert.equal(meta.stage5ToolUseDisciplineDisabledByFlag, true);
+});
+
+// --- Part B: universal ordered telemetry ------------------------------------
+
+test("ordered telemetry artifacts are written for a mocked baseline run", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("baseline-telemetry");
+  const config = baseConfig({ vexpSweBenchDir: vexpDir, out, instances: ["a__1"] });
+  const stream = [
+    JSON.stringify({ type: "tool_use", name: "Read", input: { file_path: "pkg/mod.py" } }),
+    JSON.stringify({ type: "tool_use", name: "Grep", input: { pattern: "foo" } }),
+  ].join("\n");
+  await runMockedCondition(config, "baseline", stream);
+
+  const dir = rawConditionDir(out, "baseline", null);
+  const log = JSON.parse(await readFile(path.join(dir, "_tool_calls.json"), "utf8"));
+  assert.equal(log.length, 2);
+  const summary = JSON.parse(await readFile(toolCallSummaryFilePath(dir), "utf8"));
+  assert.equal(summary.orderedTelemetryAvailable, true);
+  assert.equal(summary.condition, "baseline");
+  assert.equal(summary.instanceId, "a__1");
+  assert.equal(summary.totalToolCalls, 2);
+  assert.equal(summary.fileReadToolCalls, 1);
+  assert.equal(summary.grepLikeToolCalls, 1);
+});
+
+test("ordered telemetry artifacts are written for a mocked vtrace run", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("vtrace-telemetry");
+  const config = baseConfig({ vexpSweBenchDir: vexpDir, out, vtraceMethod: "local-patch", instances: ["a__1"] });
+  const stream = JSON.stringify({ type: "tool_use", name: "Edit", input: { file_path: "pkg/mod.py" } });
+  const { meta } = await runMockedCondition(config, "vtrace", stream);
+
+  const dir = rawConditionDir(out, "vtrace", null);
+  const summary = JSON.parse(await readFile(toolCallSummaryFilePath(dir), "utf8"));
+  assert.equal(summary.orderedTelemetryAvailable, true);
+  assert.equal(summary.condition, "vtrace");
+  assert.equal(summary.fileWriteToolCalls, 1);
+  // The vtrace meta still carries the existing ordered-log fields.
+  assert.equal(meta.vtraceToolLogOrdered, true);
+  assert.equal(meta.orderedTelemetryAvailable, true);
+});
+
+test("a mocked run with no stream-json records orderedTelemetryAvailable=false with a legacy reason", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("legacy-telemetry");
+  const config = baseConfig({ vexpSweBenchDir: vexpDir, out, instances: ["a__1"] });
+  await runMockedCondition(config, "baseline", null);
+  const dir = rawConditionDir(out, "baseline", null);
+  const summary = JSON.parse(await readFile(toolCallSummaryFilePath(dir), "utf8"));
+  assert.equal(summary.orderedTelemetryAvailable, false);
+  assert.equal(summary.missingReason, "legacy-run-no-stream-json");
+});
+
+test("summarizeOrderedToolCalls computes bash/search/file counts and unique files", () => {
+  const calls: OrderedToolCall[] = [
+    { index: 0, tool: "Read", category: "read", path: "a.py", query: null, args: {}, output_summary: null },
+    { index: 1, tool: "Read", category: "read", path: "a.py", query: null, args: {}, output_summary: null },
+    { index: 2, tool: "Grep", category: "search", path: null, query: "foo", args: {}, output_summary: null },
+    { index: 3, tool: "Edit", category: "edit", path: "b.py", query: null, args: {}, output_summary: null },
+    { index: 4, tool: "Bash", category: "other", path: null, query: null, args: {}, output_summary: null },
+  ];
+  const summary = summarizeOrderedToolCalls(calls);
+  assert.equal(summary.totalToolCalls, 5);
+  assert.equal(summary.bashToolCalls, 1);
+  assert.equal(summary.grepLikeToolCalls, 1);
+  assert.equal(summary.fileReadToolCalls, 2);
+  assert.equal(summary.fileWriteToolCalls, 1);
+  assert.equal(summary.uniqueFilesTouchedByTools, 2); // a.py, b.py
+  assert.equal(summary.orderedTelemetryAvailable, true);
+  // unavailable → all zero, both heuristics false.
+  const empty = summarizeOrderedToolCalls([], false);
+  assert.equal(empty.totalToolCalls, 0);
+  assert.equal(empty.orderedTelemetryAvailable, false);
+  assert.equal(empty.longBashLoopHeuristic, false);
+});
+
+test("loop heuristics are diagnostic only: long bash loop and repeated search", () => {
+  const bash = (i: number): OrderedToolCall => ({ index: i, tool: "Bash", category: "other", path: null, query: null, args: {}, output_summary: null });
+  const grep = (i: number, q: string): OrderedToolCall => ({ index: i, tool: "Grep", category: "search", path: null, query: q, args: {}, output_summary: null });
+
+  // 8 bash calls trips longBashLoop.
+  const longBash = summarizeOrderedToolCalls(Array.from({ length: 8 }, (_v, i) => bash(i)));
+  assert.equal(longBash.bashToolCalls, 8);
+  assert.equal(longBash.longBashLoopHeuristic, true);
+  assert.equal(longBash.repeatedSearchHeuristic, false);
+
+  // 5 distinct greps trips repeatedSearch by count.
+  const manyGreps = summarizeOrderedToolCalls(Array.from({ length: 5 }, (_v, i) => grep(i, `q${i}`)));
+  assert.equal(manyGreps.repeatedSearchHeuristic, true);
+
+  // 2 identical greps trips repeatedSearch by repeated pattern (below the count floor).
+  const repeated = summarizeOrderedToolCalls([grep(0, "same"), grep(1, "same")]);
+  assert.equal(repeated.grepLikeToolCalls, 2);
+  assert.equal(repeated.repeatedSearchHeuristic, true);
+});
+
+test("isBashTool recognizes shell-family tools and rejects file tools", () => {
+  assert.ok(isBashTool("Bash"));
+  assert.ok(isBashTool("shell"));
+  assert.ok(isBashTool("run_command"));
+  assert.ok(!isBashTool("Read"));
+  assert.ok(!isBashTool("Grep"));
 });
 
 test("install-vtrace-patch patches the fixture, backs it up, and writes a manifest", async () => {

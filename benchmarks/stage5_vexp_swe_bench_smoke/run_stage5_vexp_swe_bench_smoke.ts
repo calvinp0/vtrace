@@ -19,7 +19,12 @@ import {
   primaryEditedFile,
   primaryEditedSymbol,
 } from "../../src/capsule/finalEditDiagnostics";
-import { detectPivotChecklistEmitted, parseOrderedToolCalls } from "../../src/capsule/toolCallLog";
+import {
+  detectPivotChecklistEmitted,
+  parseOrderedToolCalls,
+  summarizeOrderedToolCalls,
+  type OrderedToolCallSummary,
+} from "../../src/capsule/toolCallLog";
 import { renderCapsuleV2Human } from "../../src/capsuleV2/renderHuman";
 import { CapsuleV2Mode, type CapsuleV2Result } from "../../src/capsuleV2/types";
 import {
@@ -236,6 +241,14 @@ export interface CliConfig {
   // (no checklist => no checkpoint). PATCH_VERIFY is a patch-quality checkpoint, NOT
   // a retrieval/inspection mechanism; it changes no retrieval, ranking, or telemetry.
   readonly disablePatchVerify: boolean;
+  // Benchmark/dev-only suppression of the shared anti-loop tool-use-discipline block
+  // (--disable-tool-use-discipline). Default false: the generic anti-loop guidance is
+  // injected into BOTH baseline and vtrace agent prompts. When true, the block is NOT
+  // injected for any condition (so a controlled "before" run without anti-loop guidance
+  // can be measured). This is a benchmark/dev override, NOT a user-facing product mode;
+  // it changes only the appended discipline text — retrieval, ranking, PIVOT_CHECK,
+  // Capsule generation, critic, repair, and evaluation are untouched.
+  readonly disableToolUseDiscipline: boolean;
   readonly sweBenchDataFile: string | null;
   readonly runLabel: string | null;
   // Stage 5C aggregate-runs: the set of run-labels to combine into one report.
@@ -667,6 +680,9 @@ const DEFAULT_CONFIG: CliConfig = {
   // PATCH_VERIFY is ON by default (rides with PIVOT_CHECK, after EDIT_GUARD;
   // --disable-patch-verify turns off only the checkpoint, independent of EDIT_GUARD).
   disablePatchVerify: false,
+  // The shared anti-loop tool-use-discipline block is ON by default for both baseline
+  // and vtrace; --disable-tool-use-discipline is a benchmark/dev-only override.
+  disableToolUseDiscipline: false,
   sweBenchDataFile: null,
   runLabel: null,
   runLabels: null,
@@ -764,7 +780,7 @@ const CSV_COLUMNS = [
   "notes",
 ];
 
-const NORMALIZED_FILENAME = "stage5_normalized.json";
+export const NORMALIZED_FILENAME = "stage5_normalized.json";
 
 // Idempotency / discoverability marker embedded in the patched external file and
 // recorded in the manifest. Its presence means "already patched, do not touch".
@@ -775,6 +791,17 @@ export const STAGE5_VTRACE_PATCH_MARKER = "STAGE5_VTRACE_INSTRUCTIONS_PATCH";
 // tool-call log. Independent of the instructions block — inserted only when its
 // anchor is present, so an adapter that lacks it still patches cleanly.
 export const STAGE5_VTRACE_STREAM_MARKER = "STAGE5_VTRACE_STREAM_PATCH";
+
+// Marker for the THIRD patch block: it appends the shared anti-loop
+// tool-use-discipline file (VTRACE_TOOL_USE_DISCIPLINE_FILE) to the prompt for
+// EVERY condition, so baseline and vtrace receive the identical block. Independent
+// of the instructions/stream blocks (its own marker + anchor), so an adapter
+// already carrying the earlier patches migrates this one in cleanly.
+export const STAGE5_TOOL_USE_DISCIPLINE_MARKER = "STAGE5_TOOL_USE_DISCIPLINE_PATCH";
+
+// Stderr line the patched adapter logs when it appends the tool-use-discipline
+// block at runtime. Purely observational (not load-bearing for treatment validity).
+export const STAGE5_TOOL_USE_DISCIPLINE_LOG = "Stage5 tool-use-discipline injected from";
 
 const VTRACE_PATCH_MANIFEST_FILENAME = "vtrace_patch_manifest.json";
 const VTRACE_PATCH_BACKUP_SUFFIX = ".stage5-vtrace-backup";
@@ -882,11 +909,15 @@ export function buildRunArgs(
 export function buildBaselineCommand(
   config: CliConfig,
   instances: readonly string[],
-): { command: string; args: string[]; cwd: string | null } {
+): { command: string; args: string[]; cwd: string | null; env: Record<string, string> } {
   return {
     command: config.nodeCommand,
     args: buildRunArgs(config, instances, rawConditionDir(config.out, "baseline", config.runLabel), false),
     cwd: config.vexpSweBenchDir,
+    // Baseline now also carries the shared anti-loop discipline block and the
+    // ordered-telemetry stream env, so the anti-loop guidance is fair across arms
+    // and every run captures ordered tool-call telemetry. No vtrace context is set.
+    env: sharedConditionEnv(config),
   };
 }
 
@@ -914,11 +945,14 @@ export function buildVtraceCommand(
 export function buildVexpCommand(
   config: CliConfig,
   instances: readonly string[],
-): { command: string; args: string[]; cwd: string | null } {
+): { command: string; args: string[]; cwd: string | null; env: Record<string, string> } {
   return {
     command: config.nodeCommand,
     args: buildRunArgs(config, instances, rawConditionDir(config.out, "vexp", config.runLabel), true),
     cwd: config.vexpSweBenchDir,
+    // vexp gets the same shared discipline + telemetry env (no vtrace context); it
+    // is the only condition with vexp enabled, gated behind --allow-vexp.
+    env: sharedConditionEnv(config),
   };
 }
 
@@ -946,6 +980,22 @@ export function vtraceAgentStreamFilePath(outDir: string): string {
 // that run's JSONL so the report can join it by run directory.
 export function toolCallLogFilePath(rawDir: string): string {
   return path.join(rawDir, "_tool_calls.json");
+}
+
+// The diagnostic summary of a run's ordered tool-call log (counts + loop
+// heuristics + run identity). Written next to `_tool_calls.json` so the
+// telemetry audit can join it by run directory without re-parsing the stream.
+export function toolCallSummaryFilePath(rawDir: string): string {
+  return path.join(rawDir, "_tool_calls.summary.json");
+}
+
+// The shared anti-loop tool-use-discipline instructions file. Like the vtrace
+// instructions and the agent stream, it lives at the results ROOT so vexp's
+// --output clean cannot delete it. The patched adapter appends it to the prompt
+// for EVERY condition (baseline and vtrace alike) when the env var points here,
+// so the anti-loop guidance is identical and fair across conditions.
+export function stage5ToolUseDisciplineFilePath(outDir: string): string {
+  return path.join(outDir, "_stage5_tool_use_discipline.md");
 }
 
 // The ACTIVE instructions file (above) is a single shared path at the results
@@ -982,14 +1032,28 @@ async function snapshotVtraceInstructions(
   return { vtraceInstructionsSnapshotFile: snapshot, vtraceInstructionsSnapshotExists: true, vtraceInstructionsSha256: sha256 };
 }
 
+// Env shared by EVERY condition's agent run (baseline, vtrace, vexp): the raw
+// stream dump for ordered tool-call telemetry (now universal, not vtrace-only) and
+// the shared anti-loop tool-use-discipline file (unless suppressed by the
+// benchmark/dev flag). Keeping these in one place guarantees baseline and vtrace
+// receive the identical discipline block and both capture ordered telemetry.
+function sharedConditionEnv(config: CliConfig): Record<string, string> {
+  const env: Record<string, string> = {
+    // Tool-call telemetry: the patched adapter dumps its raw stream-json here so
+    // ordered tool-call telemetry can be recovered for ALL conditions.
+    VTRACE_AGENT_STREAM_FILE: vtraceAgentStreamFilePath(config.out),
+  };
+  if (config.disableToolUseDiscipline !== true) {
+    env.VTRACE_TOOL_USE_DISCIPLINE_FILE = stage5ToolUseDisciplineFilePath(config.out);
+  }
+  return env;
+}
+
 function vtraceEnv(config: CliConfig, injectContext = true): Record<string, string> {
   const env: Record<string, string> = {
+    ...sharedConditionEnv(config),
     VTRACE_SMOKE: "1",
     VTRACE_METHOD: config.vtraceMethod,
-    // Tool-call telemetry: the patched adapter dumps its raw stream-json here so
-    // pivot inspection can be measured. Set regardless of injectContext — a
-    // no-context (skip-policy) run still benefits from the ordered tool log.
-    VTRACE_AGENT_STREAM_FILE: vtraceAgentStreamFilePath(config.out),
   };
   // Only point the adapter at the instructions file when we actually inject. A
   // skip-policy run leaves it unset so nothing is injected.
@@ -3449,6 +3513,45 @@ export function detectPatchVerifyText(markdown: string): boolean {
   return markdown.includes(PATCH_VERIFY_MARKER);
 }
 
+// Version of the shared tool-use-discipline block. Bump when the wording changes
+// so reports can tell which generation of the anti-loop guidance a run carried.
+export const STAGE5_TOOL_USE_DISCIPLINE_VERSION = "v1";
+
+// Marker string that uniquely identifies the injected tool-use-discipline block
+// in a snapshot or prompt. Distinct from the PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY
+// markers so detectors never cross-match.
+export const TOOL_USE_DISCIPLINE_MARKER = "## STAGE5_TOOL_USE_DISCIPLINE";
+
+// Build the shared, generic anti-loop tool-use-discipline block. Unlike PIVOT_CHECK /
+// EDIT_GUARD / PATCH_VERIFY (which ride the multi-pivot Capsule v2 gate and are
+// vtrace-only), this block is injected into BOTH the baseline and vtrace agent
+// prompts, identically, so it is fair to both arms. It names no hidden internal
+// policy and references no vtrace-only artifacts; it is pure tool-use discipline —
+// it changes NO retrieval, ranking, candidate generation, or patch application.
+// (Implementation recommendation 2: curb over-searching and long Bash loops.)
+export function buildToolUseDisciplineBlock(): string {
+  return [
+    TOOL_USE_DISCIPLINE_MARKER,
+    "",
+    "Tool-use discipline:",
+    "- Start by inspecting the most likely target files/functions before broad repository search.",
+    "- Prefer one focused search over repeated broad Bash loops.",
+    "- Do not run long grep/find loops after you have identified the relevant file and function.",
+    "- After each search, state the concrete next file/function to inspect; do not keep searching without a new hypothesis.",
+    "- Once the failing behavior and edit location are clear, stop searching and make the smallest patch that addresses the failure.",
+    "- Avoid broad rewrites. Preserve existing behavior outside the failing case.",
+    "- If several pivots are provided, inspect them directly before expanding outward.",
+    "- Use deferred references only when needed; do not expand unrelated references just because they are available.",
+  ].join("\n");
+}
+
+// Does an assembled prompt/snapshot carry the tool-use-discipline block? Independent
+// re-scan of the final text (separate from the assembly-time `injected` flag), so a
+// truncated/edited snapshot can be detected. Observability only.
+export function detectToolUseDisciplineText(text: string): boolean {
+  return text.includes(TOOL_USE_DISCIPLINE_MARKER);
+}
+
 export function buildVtraceContextMarkdown(
   sections: readonly VtraceContextSection[],
   // `pivotCheckPolicy` (helper fallback "risk_gated"; the Stage 5 run path passes
@@ -4444,13 +4547,67 @@ async function formatRunStatusSummary(
 //   - stream file absent  → ordered:false, error:null  (block never ran / not patched)
 //   - sentinel in stream   → ordered:false, error:"…sentinel…" (ran, rawOutput not string)
 //   - real stream-json     → ordered:true, count:N      (ran and captured a stream)
+// The run-identity + diagnostic summary written to `_tool_calls.summary.json`.
+// `orderedTelemetryAvailable:false` + `missingReason` records the legacy/sentinel
+// cases honestly (we never fabricate ordered calls when the stream is absent).
+export interface OrderedToolCallSummaryArtifact extends OrderedToolCallSummary {
+  runLabel: string | null;
+  condition: Stage5Condition;
+  instances: readonly string[];
+  instanceId: string | null;
+  toolCallLogFile: string | null;
+  pivotChecklistEmitted: boolean | null;
+  missingReason: string | null;
+}
+
+// Reason codes for `orderedTelemetryAvailable:false` (telemetry audit consumes these).
+export const TELEMETRY_MISSING_LEGACY = "legacy-run-no-stream-json";
+export const TELEMETRY_MISSING_SENTINEL = "adapter-stream-sentinel-rawoutput-not-string";
+export const TELEMETRY_MISSING_PARSE_ERROR = "stream-json-parse-error";
+
+function buildSummaryArtifact(
+  summary: OrderedToolCallSummary,
+  condition: Stage5Condition,
+  instances: readonly string[],
+  runLabel: string | null,
+  extra: { toolCallLogFile: string | null; pivotChecklistEmitted: boolean | null; missingReason: string | null },
+): OrderedToolCallSummaryArtifact {
+  return {
+    runLabel,
+    condition,
+    instances: [...instances],
+    instanceId: instances.length === 1 ? instances[0] : null,
+    ...summary,
+    toolCallLogFile: extra.toolCallLogFile,
+    pivotChecklistEmitted: extra.pivotChecklistEmitted,
+    missingReason: extra.missingReason,
+  };
+}
+
 export async function persistOrderedToolCalls(
   config: CliConfig,
   rawDir: string,
+  condition: Stage5Condition = "vtrace",
+  instances: readonly string[] = [],
 ): Promise<Record<string, unknown>> {
+  const summaryPath = toolCallSummaryFilePath(rawDir);
+  // Write the summary alongside the ordered log for every observable state so the
+  // telemetry audit can join it by run directory without re-reading the stream.
+  const writeSummary = async (artifact: OrderedToolCallSummaryArtifact): Promise<void> => {
+    await mkdir(path.dirname(summaryPath), { recursive: true });
+    await writeFile(summaryPath, `${JSON.stringify(artifact, null, 2)}\n`);
+  };
   const streamPath = vtraceAgentStreamFilePath(config.out);
   const stream = await readFile(streamPath, "utf8").catch(() => null);
   if (stream === null) {
+    // No stream-json captured (block never ran / legacy run). Report honestly.
+    await writeSummary(
+      buildSummaryArtifact(summarizeOrderedToolCalls([], false), condition, instances, config.runLabel, {
+        toolCallLogFile: null,
+        pivotChecklistEmitted: null,
+        missingReason: TELEMETRY_MISSING_LEGACY,
+      }),
+    );
     return {
       vtraceToolLogOrdered: false,
       vtraceToolCallLogFile: null,
@@ -4458,9 +4615,19 @@ export async function persistOrderedToolCalls(
       vtraceToolCallError: null,
       // No stream → cannot observe whether the agent emitted a PIVOT_CHECK section.
       vtracePivotChecklistEmitted: null,
+      vtraceToolCallSummaryFile: summaryPath,
+      orderedTelemetryAvailable: false,
+      orderedTelemetryMissingReason: TELEMETRY_MISSING_LEGACY,
     };
   }
   if (stream.includes(STAGE5_VTRACE_STREAM_SENTINEL)) {
+    await writeSummary(
+      buildSummaryArtifact(summarizeOrderedToolCalls([], false), condition, instances, config.runLabel, {
+        toolCallLogFile: null,
+        pivotChecklistEmitted: null,
+        missingReason: TELEMETRY_MISSING_SENTINEL,
+      }),
+    );
     return {
       vtraceToolLogOrdered: false,
       vtraceToolCallLogFile: null,
@@ -4468,6 +4635,9 @@ export async function persistOrderedToolCalls(
       vtraceToolCallError:
         "adapter stream sentinel: the stream patch executed but rawOutput was not a usable string (no stream-json captured).",
       vtracePivotChecklistEmitted: null,
+      vtraceToolCallSummaryFile: summaryPath,
+      orderedTelemetryAvailable: false,
+      orderedTelemetryMissingReason: TELEMETRY_MISSING_SENTINEL,
     };
   }
   // Whether the agent's own response echoed a PIVOT_CHECK section (assistant text
@@ -4479,20 +4649,40 @@ export async function persistOrderedToolCalls(
     const logPath = toolCallLogFilePath(rawDir);
     await mkdir(path.dirname(logPath), { recursive: true });
     await writeFile(logPath, `${JSON.stringify(calls, null, 2)}\n`);
+    await writeSummary(
+      buildSummaryArtifact(summarizeOrderedToolCalls(calls, true), condition, instances, config.runLabel, {
+        toolCallLogFile: logPath,
+        pivotChecklistEmitted,
+        missingReason: null,
+      }),
+    );
     return {
       vtraceToolLogOrdered: true,
       vtraceToolCallLogFile: logPath,
       vtraceToolCallCount: calls.length,
       vtraceToolCallError: null,
       vtracePivotChecklistEmitted: pivotChecklistEmitted,
+      vtraceToolCallSummaryFile: summaryPath,
+      orderedTelemetryAvailable: true,
+      orderedTelemetryMissingReason: null,
     };
   } catch (error) {
+    await writeSummary(
+      buildSummaryArtifact(summarizeOrderedToolCalls([], false), condition, instances, config.runLabel, {
+        toolCallLogFile: null,
+        pivotChecklistEmitted,
+        missingReason: TELEMETRY_MISSING_PARSE_ERROR,
+      }),
+    );
     return {
       vtraceToolLogOrdered: false,
       vtraceToolCallLogFile: null,
       vtraceToolCallCount: null,
       vtraceToolCallError: error instanceof Error ? error.message : String(error),
       vtracePivotChecklistEmitted: pivotChecklistEmitted,
+      vtraceToolCallSummaryFile: summaryPath,
+      orderedTelemetryAvailable: false,
+      orderedTelemetryMissingReason: TELEMETRY_MISSING_PARSE_ERROR,
     };
   }
 }
@@ -4518,13 +4708,22 @@ async function runCondition(
 
   const dir = rawConditionDir(config.out, condition, config.runLabel);
   await mkdir(dir, { recursive: true });
+  // Write the shared anti-loop tool-use-discipline file (read by the patched
+  // adapter for ALL conditions) unless suppressed by the benchmark/dev flag. Lives
+  // at the results root so vexp's --output clean cannot delete it before the agent
+  // reads it. Idempotent: every condition rewrites identical content.
+  if (config.disableToolUseDiscipline !== true) {
+    await writeFile(stage5ToolUseDisciplineFilePath(config.out), `${buildToolUseDisciplineBlock()}\n`);
+  }
   const spec =
     condition === "baseline"
       ? buildBaselineCommand(config, instances)
       : condition === "vexp"
         ? buildVexpCommand(config, instances)
         : buildVtraceCommand(config, instances, injectContext);
-  const env = condition === "vtrace" ? (spec as unknown as { env: Record<string, string> }).env : {};
+  // Every condition now carries env (telemetry stream + shared discipline; vtrace
+  // additionally carries its context env), so the agent child always gets it.
+  const env = (spec as unknown as { env: Record<string, string> }).env;
   const startedMs = Date.now();
   process.stderr.write(`\n[stage5] running ${condition} agent for ${config.runLabel ?? instances.join(",")} …\n`);
   operatorTtyHintOnce();
@@ -4549,13 +4748,23 @@ async function runCondition(
     ? extraVtraceMeta.vtracePolicyAction
     : null;
   // Tool-call telemetry: parse the raw stream the patched adapter dumped into an
-  // ordered `_tool_calls.json` next to this run's JSONL. Best-effort and additive
-  // — absence just leaves the report's honest false-by-absence behavior.
-  const toolCallMeta = condition === "vtrace" ? await persistOrderedToolCalls(config, dir) : {};
+  // ordered `_tool_calls.json` (+ `_tool_calls.summary.json`) next to this run's
+  // JSONL. UNIVERSAL — captured for every condition now, not just vtrace. Best-effort
+  // and additive: absence just leaves the report's honest false-by-absence behavior.
+  const toolCallMeta = await persistOrderedToolCalls(config, dir, condition, instances);
   const vtraceMeta =
     condition === "vtrace"
       ? { ...(await vtraceRunMetaFields(config, result.stderr, indexedFlag, policyAction)), ...toolCallMeta, ...extraVtraceMeta }
-      : {};
+      : toolCallMeta;
+  // Shared anti-loop tool-use-discipline metadata, recorded for EVERY condition so
+  // reports can tell whether the block was injected (and which version), or that the
+  // benchmark/dev flag suppressed it.
+  const disciplineInjected = config.disableToolUseDiscipline !== true;
+  const toolUseDisciplineMeta = {
+    stage5ToolUseDisciplineInjected: disciplineInjected,
+    stage5ToolUseDisciplineVersion: disciplineInjected ? STAGE5_TOOL_USE_DISCIPLINE_VERSION : null,
+    stage5ToolUseDisciplineDisabledByFlag: config.disableToolUseDiscipline === true,
+  };
   const meta = {
     condition,
     command: spec.command,
@@ -4564,6 +4773,7 @@ async function runCondition(
     env,
     instances,
     vtraceMethod: condition === "vtrace" ? config.vtraceMethod : null,
+    ...toolUseDisciplineMeta,
     ...vtraceMeta,
     exitCode: result.exitCode,
     durationMs: Date.now() - startedMs,
@@ -5033,6 +5243,32 @@ export function buildVtraceStreamPatchBlock(): string {
   ].join("\n");
 }
 
+// The THIRD inserted block: when VTRACE_TOOL_USE_DISCIPLINE_FILE is set, append
+// that file's contents (the shared anti-loop block) to the prompt for ANY
+// condition. Mirrors the instructions block but uses a SEPARATE env var that the
+// harness sets for baseline AND vtrace, so the anti-loop guidance is identical and
+// fair across arms. Logs to STDERR (stdout is parsed as stream-json). vexp stays
+// disabled — this only enriches the prompt.
+export function buildToolUseDisciplinePatchBlock(): string {
+  return [
+    `        // ${STAGE5_TOOL_USE_DISCIPLINE_MARKER} begin — local Stage 5 smoke patch (injects the`,
+    "        // shared anti-loop tool-use-discipline block into ALL conditions' prompts; vexp stays disabled).",
+    "        if (process.env.VTRACE_TOOL_USE_DISCIPLINE_FILE) {",
+    "            const __stage5DisciplineFile = process.env.VTRACE_TOOL_USE_DISCIPLINE_FILE;",
+    "            try {",
+    '                const { readFile: __stage5ReadDiscipline } = await import("node:fs/promises");',
+    '                const __stage5DisciplineText = await __stage5ReadDiscipline(__stage5DisciplineFile, "utf8");',
+    "                opts.prompt = `${opts.prompt}\\n\\n${__stage5DisciplineText}`;",
+    `                console.error(\`${STAGE5_TOOL_USE_DISCIPLINE_LOG} \${__stage5DisciplineFile}\`);`,
+    "            } catch (__stage5DisciplineErr) {",
+    "                console.error(`Stage5 tool-use-discipline injection skipped: ${__stage5DisciplineErr instanceof Error ? __stage5DisciplineErr.message : String(__stage5DisciplineErr)}`);",
+    "            }",
+    "        }",
+    `        // ${STAGE5_TOOL_USE_DISCIPLINE_MARKER} end`,
+    "",
+  ].join("\n");
+}
+
 // Independent per-block presence checks. A given adapter may carry the
 // instructions patch but not the (later-introduced) stream patch — these let the
 // patcher migrate one without re-installing the other.
@@ -5042,6 +5278,10 @@ export function hasInstructionsPatch(content: string): boolean {
 
 export function hasStreamPatch(content: string): boolean {
   return content.includes(STAGE5_VTRACE_STREAM_MARKER);
+}
+
+export function hasToolUseDisciplinePatch(content: string): boolean {
+  return content.includes(STAGE5_TOOL_USE_DISCIPLINE_MARKER);
 }
 
 // Insert `block` immediately after the first line containing `anchor`. Pure.
@@ -5079,6 +5319,15 @@ export function applyVtracePatch(content: string): { content: string; changed: b
 
   if (!hasStreamPatch(next) && next.indexOf(VTRACE_STREAM_ANCHOR) !== -1) {
     next = insertAfterAnchor(next, VTRACE_STREAM_ANCHOR, buildVtraceStreamPatchBlock());
+    changed = true;
+  }
+
+  // The tool-use-discipline block shares the instructions anchor (`startMs`). It is
+  // inserted independently (own marker) so an adapter already carrying the earlier
+  // patches migrates it in. The anchor is REQUIRED for the instructions block above,
+  // so if we got here it is present.
+  if (!hasToolUseDisciplinePatch(next) && next.indexOf(VTRACE_PATCH_ANCHOR) !== -1) {
+    next = insertAfterAnchor(next, VTRACE_PATCH_ANCHOR, buildToolUseDisciplinePatchBlock());
     changed = true;
   }
 
@@ -5122,9 +5371,10 @@ export async function installVtracePatch(config: CliConfig): Promise<VtracePatch
 
   const hadInstructions = hasInstructionsPatch(original);
   const hadStream = hasStreamPatch(original);
+  const hadDiscipline = hasToolUseDisciplinePatch(original);
   const { content: patched, changed } = applyVtracePatch(original);
   if (!changed) {
-    notes.push("Both patch blocks already present; left the file untouched (idempotent).");
+    notes.push("All patch blocks already present; left the file untouched (idempotent).");
   } else {
     // Back up the pristine file exactly once, before the first edit. An existing
     // backup (from an earlier instructions-only install) is preserved, NOT
@@ -5145,6 +5395,13 @@ export async function installVtracePatch(config: CliConfig): Promise<VtracePatch
     }
     if (!hadStream && !hasStreamPatch(patched)) {
       notes.push(`Stream-telemetry anchor ("${VTRACE_STREAM_ANCHOR}") not found; stream patch skipped.`);
+    }
+    if (!hadDiscipline && hasToolUseDisciplinePatch(patched)) {
+      notes.push(
+        hadInstructions
+          ? `Migrated: added tool-use-discipline patch (${STAGE5_TOOL_USE_DISCIPLINE_MARKER}) to an already-instructions-patched adapter.`
+          : `Installed tool-use-discipline patch (${STAGE5_TOOL_USE_DISCIPLINE_MARKER}).`,
+      );
     }
   }
   if (target.includes(`${path.sep}dist${path.sep}`)) {
@@ -5182,12 +5439,18 @@ export async function verifyVtracePatch(config: CliConfig): Promise<VtracePatchV
   const content = await readFile(target, "utf8").catch(() => "");
   const installed = hasInstructionsPatch(content);
   const streamInstalled = hasStreamPatch(content);
+  const disciplineInstalled = hasToolUseDisciplinePatch(content);
   const backupPresent = await pathExists(`${target}${VTRACE_PATCH_BACKUP_SUFFIX}`);
   notes.push(installed ? `Instructions patch present in ${target}.` : `Instructions patch NOT found in ${target}.`);
   notes.push(
     streamInstalled
       ? `Stream-telemetry patch present in ${target}.`
       : `Stream-telemetry patch NOT found in ${target} (re-run install-vtrace-patch to migrate it).`,
+  );
+  notes.push(
+    disciplineInstalled
+      ? `Tool-use-discipline patch present in ${target}.`
+      : `Tool-use-discipline patch NOT found in ${target} (re-run install-vtrace-patch to migrate it).`,
   );
   return {
     installed,
@@ -6708,6 +6971,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--disable-pivot-check": config.disablePivotCheck = true; break;
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
+      case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
       case "--run-labels":
@@ -6768,6 +7032,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --disable-pivot-check                         force PIVOT_CHECK policy off for a controlled before run (compatibility; equivalent to --pivot-check-policy off)",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
       "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",
+      "  --disable-tool-use-discipline                 benchmark/dev-only: suppress the shared anti-loop tool-use-discipline block injected into BOTH baseline and vtrace prompts (default: injected). Not a user-facing product mode",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),

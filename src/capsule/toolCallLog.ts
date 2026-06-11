@@ -62,6 +62,99 @@ export function toolCategory(tool: string): ToolCategory {
   return "other";
 }
 
+// Shell/command tools. These fall under category "other" (they are neither a
+// file read/search/edit), so the loop heuristics count them separately: a long
+// run of Bash calls is the "long bash loop" symptom the Stage 5 audit watches.
+const BASH_TOOLS = new Set([
+  "bash",
+  "shell",
+  "sh",
+  "run_command",
+  "run_terminal_cmd",
+  "execute_command",
+  "terminal",
+  "command",
+]);
+
+export function isBashTool(tool: string): boolean {
+  return BASH_TOOLS.has(tool.toLowerCase().trim());
+}
+
+// Diagnostic summary of one run's ordered tool calls. Telemetry only — these
+// counts and heuristics never affect retrieval, ranking, prompt, or patch
+// generation. `orderedTelemetryAvailable` is false when there was no parsed
+// ordered log to summarize (legacy run / missing stream-json), in which case
+// every count is 0 and both loop heuristics are false.
+export interface OrderedToolCallSummary {
+  totalToolCalls: number;
+  bashToolCalls: number;
+  grepLikeToolCalls: number;
+  fileReadToolCalls: number;
+  fileWriteToolCalls: number;
+  uniqueFilesTouchedByTools: number;
+  longBashLoopHeuristic: boolean;
+  repeatedSearchHeuristic: boolean;
+  orderedTelemetryAvailable: boolean;
+}
+
+// Conservative loop heuristics (diagnostic only — see the interface doc).
+const LONG_BASH_LOOP_THRESHOLD = 8;
+const REPEATED_SEARCH_THRESHOLD = 5;
+
+// Compute the diagnostic summary from an ordered tool-call list. When
+// `orderedTelemetryAvailable` is false the caller had no parsed log, so we
+// return an all-zero summary rather than fabricating counts.
+export function summarizeOrderedToolCalls(
+  calls: readonly OrderedToolCall[],
+  orderedTelemetryAvailable = true,
+): OrderedToolCallSummary {
+  if (!orderedTelemetryAvailable) {
+    return {
+      totalToolCalls: 0,
+      bashToolCalls: 0,
+      grepLikeToolCalls: 0,
+      fileReadToolCalls: 0,
+      fileWriteToolCalls: 0,
+      uniqueFilesTouchedByTools: 0,
+      longBashLoopHeuristic: false,
+      repeatedSearchHeuristic: false,
+      orderedTelemetryAvailable: false,
+    };
+  }
+  let bashToolCalls = 0;
+  let grepLikeToolCalls = 0;
+  let fileReadToolCalls = 0;
+  let fileWriteToolCalls = 0;
+  const files = new Set<string>();
+  const searchPatterns = new Map<string, number>();
+  let repeatedSamePattern = false;
+  for (const call of calls) {
+    if (isBashTool(call.tool)) bashToolCalls += 1;
+    if (call.category === "search") {
+      grepLikeToolCalls += 1;
+      if (call.query !== null) {
+        const next = (searchPatterns.get(call.query) ?? 0) + 1;
+        searchPatterns.set(call.query, next);
+        if (next >= 2) repeatedSamePattern = true;
+      }
+    }
+    if (call.category === "read") fileReadToolCalls += 1;
+    if (call.category === "edit") fileWriteToolCalls += 1;
+    if (call.path !== null) files.add(call.path);
+  }
+  return {
+    totalToolCalls: calls.length,
+    bashToolCalls,
+    grepLikeToolCalls,
+    fileReadToolCalls,
+    fileWriteToolCalls,
+    uniqueFilesTouchedByTools: files.size,
+    longBashLoopHeuristic: bashToolCalls >= LONG_BASH_LOOP_THRESHOLD,
+    repeatedSearchHeuristic: grepLikeToolCalls >= REPEATED_SEARCH_THRESHOLD || repeatedSamePattern,
+    orderedTelemetryAvailable: true,
+  };
+}
+
 const PATH_KEYS = ["file_path", "filePath", "path", "file", "filename", "notebook_path"];
 const QUERY_KEYS = ["pattern", "query", "regex", "search"];
 // Cap captured tool output so a Read of a large file (or a long grep dump) does
