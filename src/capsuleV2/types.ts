@@ -164,6 +164,17 @@ export interface CapsuleV2Item extends DebugRoleSignals {
   is_non_source_example?: boolean;
   /** Why the path was treated as non-source (e.g. "path under doc/data"). */
   non_source_reason?: string;
+  /**
+   * Pivot-ranking v2 metadata (debug/report only — NOT rendered into the prompt,
+   * so it never affects token accounting). Present on pivots when the v2 ranker
+   * scored them. `pivot_rank_score` is the explainable ordering key;
+   * `pivot_rank_signals`/`pivot_rank_penalties` are the additive deltas behind it.
+   */
+  pivot_ranking_version?: "legacy" | "v2";
+  pivot_rank_score?: number;
+  pivot_rank_signals?: string[];
+  pivot_rank_penalties?: string[];
+  pivot_rank_reason?: string;
 }
 
 /** A candidate that did not make the capsule, with the reason it was dropped. */

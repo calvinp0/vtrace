@@ -37,6 +37,7 @@ import {
   type CapsuleSupportingCandidate,
 } from "../../capsule/types";
 import { buildCapsuleV2 } from "../../capsuleV2/buildCapsuleV2";
+import { parsePivotRankingVersion, type PivotRankingVersion } from "../../capsuleV2/pivotRankingV2";
 import { renderCapsuleV2Human } from "../../capsuleV2/renderHuman";
 import {
   CapsuleIntent,
@@ -60,7 +61,7 @@ import {
 
 const CAPSULE_USAGE =
   "Usage: capsule <repo> <query> [--intent <auto|debug|refactor|impact|test-failure>] [--budget <tokens>]"
-  + " [--mode <micro|standard|full>] [--max-items <n>] [--max-chars <n>] [--json]";
+  + " [--mode <micro|standard|full>] [--max-items <n>] [--max-chars <n>] [--pivot-ranking-version <legacy|v2>] [--json]";
 
 // The Capsule v2 product surface (`--intent`/`--budget`) defaults to an 8,000
 // token budget — generous enough for a couple of pivots plus a ring of support.
@@ -126,6 +127,7 @@ export async function runCapsuleCommand(
           task: query,
           intent: parsed.intent ?? CapsuleIntent.Auto,
           maxTokens: parsed.budget ?? CAPSULE_V2_DEFAULT_BUDGET,
+          ...(parsed.pivotRankingVersion === undefined ? {} : { pivotRankingVersion: parsed.pivotRankingVersion }),
         });
         return success(json ? formatJson(result) : renderCapsuleV2Human(result));
       }
@@ -538,6 +540,8 @@ interface ParsedCapsuleArgs {
   intent?: CapsuleIntent;
   /** Capsule v2 token budget. */
   budget?: number;
+  /** Capsule v2 pivot-ranking version (dev/benchmark lever). */
+  pivotRankingVersion?: PivotRankingVersion;
 }
 
 function parseCapsuleArgs(
@@ -548,6 +552,7 @@ function parseCapsuleArgs(
   let maxChars: number | undefined;
   let intent: CapsuleIntent | undefined;
   let budget: number | undefined;
+  let pivotRankingVersion: PivotRankingVersion | undefined;
   let json = false;
   const positional: string[] = [];
 
@@ -577,6 +582,16 @@ function parseCapsuleArgs(
         return { error: `--budget requires a positive integer token count. ${CAPSULE_USAGE}` };
       }
       budget = value;
+      index += 1;
+      continue;
+    }
+
+    if (argument === "--pivot-ranking-version") {
+      const next = args[index + 1];
+      if (next !== "legacy" && next !== "v2") {
+        return { error: `--pivot-ranking-version requires legacy|v2. ${CAPSULE_USAGE}` };
+      }
+      pivotRankingVersion = parsePivotRankingVersion(next);
       index += 1;
       continue;
     }
@@ -631,6 +646,7 @@ function parseCapsuleArgs(
     ...(maxChars === undefined ? {} : { maxChars }),
     ...(intent === undefined ? {} : { intent }),
     ...(budget === undefined ? {} : { budget }),
+    ...(pivotRankingVersion === undefined ? {} : { pivotRankingVersion }),
     json,
   };
 }

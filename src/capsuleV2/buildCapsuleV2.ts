@@ -75,6 +75,12 @@ import {
   type GenericLexicalDecoy,
 } from "./genericLexicalDecoy";
 import { itemBlockText } from "./renderItem";
+import {
+  DEFAULT_PIVOT_RANKING_VERSION,
+  scorePivot,
+  type PivotRankingVersion,
+  type PivotRankResult,
+} from "./pivotRankingV2";
 import { estimateTokens, roundPercent } from "./tokens";
 import {
   CapsuleIntent,
@@ -98,6 +104,13 @@ export interface BuildCapsuleV2Input {
   intent: CapsuleIntent;
   /** Token budget for the assembled capsule. */
   maxTokens: number;
+  /**
+   * Pivot ordering version (dev/benchmark lever, not user UX). `v2` (default)
+   * applies the conservative multi-evidence / specificity / broad-snippet
+   * re-ranking in ambiguous multi-pivot cases; `legacy` keeps the prior `final`
+   * ordering. See `pivotRankingV2.ts`. Never uses outcome as an input.
+   */
+  pivotRankingVersion?: PivotRankingVersion;
 }
 
 // The candidate pool retrieval ranks before role assignment. Generous so the
@@ -511,6 +524,49 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     );
   }
 
+  // Pivot-ranking v2 (conservative, additive, explainable). Score every surviving
+  // pivot from PRE-OUTCOME signals only (scorecard, kind, path, snippet size); the
+  // metadata is attached to the rendered pivots for the manifest/report. Re-order
+  // ONLY in the ambiguous "multiple edit targets, no strong anchor" case — when a
+  // line anchor / SQL-rendering / title-symbol / literal anchor fired, those strong
+  // tiers already ordered the pivots above and v2 defers to them entirely. This is
+  // exactly the noisy-retrieval scenario the Stage 5 Astropy diagnostic flagged.
+  const pivotRankingVersion = input.pivotRankingVersion ?? DEFAULT_PIVOT_RANKING_VERSION;
+  const pivotRankMeta = new Map<string, PivotRankResult>();
+  for (const entry of pivotCandidates) {
+    const source = loadFocusedSource(input.db, input.repoRoot, entry.candidate);
+    pivotRankMeta.set(
+      entry.candidate.symbolId,
+      scorePivot(
+        {
+          path: entry.candidate.filePath,
+          kind: entry.candidate.kind,
+          scorecard: toScorecard(entry.candidate.scores),
+          evidenceSources: entry.candidate.sources,
+          snippetTokens: source === undefined ? 0 : estimateTokens(source),
+          ...(entry.nonSourceExample?.isNonSourceExample ? { isNonSourceExample: true } : {}),
+        },
+        pivotRankingVersion,
+      ),
+    );
+  }
+  const noStrongAnchor =
+    anchorSymbolIds.size === 0
+    && !sqlRenderingTrigger.active
+    && titleSymbolIds.size === 0
+    && literalAnchorIds.size === 0;
+  if (pivotRankingVersion === "v2" && pivotCandidates.length >= 2 && noStrongAnchor) {
+    pivotCandidates.sort((left, right) => {
+      const ls = pivotRankMeta.get(left.candidate.symbolId)?.score ?? left.candidate.scores.final;
+      const rs = pivotRankMeta.get(right.candidate.symbolId)?.score ?? right.candidate.scores.final;
+      return (
+        rs - ls
+        || left.candidate.fqName.localeCompare(right.candidate.fqName)
+        || left.candidate.symbolId.localeCompare(right.candidate.symbolId)
+      );
+    });
+  }
+
   // No high-confidence edit target: emit an intentionally empty capsule rather
   // than a vague support-only pile. The discards still report what was generated,
   // and the no-context explanations say precisely why nothing cleared the gate.
@@ -556,6 +612,16 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     if (item === undefined) {
       discarded.push(toDiscarded(entry, "over budget: no room for this pivot"));
       return;
+    }
+    // Attach v2 ranking metadata (debug/report only — not rendered into the
+    // prompt, so token accounting is unaffected).
+    const rankMeta = pivotRankMeta.get(entry.candidate.symbolId);
+    if (rankMeta !== undefined) {
+      item.pivot_ranking_version = rankMeta.version;
+      item.pivot_rank_score = rankMeta.score;
+      item.pivot_rank_signals = rankMeta.signals;
+      item.pivot_rank_penalties = rankMeta.penalties;
+      item.pivot_rank_reason = rankMeta.reason;
     }
     usedTokens += item.estimated_tokens;
     pivots.push(item);
