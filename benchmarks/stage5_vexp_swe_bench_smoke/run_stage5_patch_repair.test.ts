@@ -3,14 +3,27 @@ import { test } from "bun:test";
 
 import type { PatchCriticReport } from "./stage5_patch_critic";
 import type { LiveCriticMeta } from "./stage5_patch_critic_live";
-import { type RepairCaller, DEFAULT_ALLOWED_DEFECT_CLASSES, evaluateRepairEligibility } from "./stage5_patch_repair";
+import {
+  type PatchMinimalityProbe,
+  type RepairCaller,
+  DEFAULT_ALLOWED_DEFECT_CLASSES,
+  GENERATED_PARSER_NARROW_REWRITE_GUIDANCE,
+  GENERATED_PARSER_REPAIR_CLASS,
+  GENERATED_PARSER_REPAIR_SOURCE,
+  evaluateGeneratedParserRepairEligibility,
+  evaluateRepairEligibility,
+  hasNarrowRewriteGuidance,
+  isGeneratedParserDefectClass,
+} from "./stage5_patch_repair";
 import { defectClassFor } from "./run_stage5_live_critic_high_risk_comparison";
 import {
   type RepairCandidate,
   type RepairGateConfig,
   DEFAULT_MAX_REPAIR_RUNS,
   DEFAULT_REPAIR_COST_CAP_USD,
+  GENERATED_PARSER_DRY_RUN_BOUNDARY,
   buildRepairReport,
+  loadPatchMinimalityProbe,
   loadRepairCandidates,
   parseArgs,
   renderJson,
@@ -93,6 +106,7 @@ function candidateFor(args: {
   firstPatch?: string | null;
   source?: "curated_existing" | "ad_hoc_run_label";
   allowed?: readonly ("wrong_scope" | "broad_rewrite_minimality" | "missing_failing_behavior" | "unknown")[];
+  patchMinimalityProbe?: PatchMinimalityProbe | null;
 }): RepairCandidate {
   const instanceId = args.instanceId ?? "sympy__sympy-16766";
   const meta = args.meta ?? metaFor();
@@ -115,7 +129,88 @@ function candidateFor(args: {
     firstPatch,
     issueText: null,
     eligibility,
+    patchMinimalityProbe: args.patchMinimalityProbe ?? null,
   };
+}
+
+// --------------------------------------------------------------------------
+// Generated-parser fixtures (the Astropy run that the agreement report covered).
+// --------------------------------------------------------------------------
+
+const GP_RUN_LABEL = "eval-strictv2-artifacts-protocol-vtrace-astropy-14369";
+const GP_INSTANCE = "astropy__astropy-14369";
+
+// A live-critic report mirroring the real Astropy generated-parser verdict: repair required, with
+// ACTIONABLE narrow-rewrite instructions (keep functions separate, reorder the division production,
+// do not delete generated tables).
+function gpReport(opts: { repairRequired?: boolean; instructions?: string } = {}): PatchCriticReport {
+  const repairRequired = opts.repairRequired ?? true;
+  return {
+    instanceId: GP_INSTANCE,
+    runLabel: GP_RUN_LABEL,
+    scope_ok: true,
+    scope_evidence: "edits astropy/units/format/cds.py.",
+    failing_behavior_handled: true,
+    failing_behavior_evidence: "added combined_units production.",
+    minimality_ok: false,
+    minimality_evidence: "broad generated-parser rewrite.",
+    test_evidence_ok: false,
+    test_evidence: "ad-hoc import check only.",
+    risk: "high",
+    repair_required: repairRequired,
+    repair_reason: repairRequired ? "Broad non-minimal rewrite of a generated parser." : "",
+    repair_instructions: repairRequired
+      ? (opts.instructions ??
+        "Keep p_product_of_units and p_division_of_units as separate functions and confine the fix to making the division production left-associative within p_division_of_units. Do not delete cds_lextab.py/cds_parsetab.py by hand; let PLY regenerate them.")
+      : "",
+    confidence: "high",
+    evidence_probe_ids: ["minimality_rewrite_risk"],
+  };
+}
+
+function gpProbe(overrides: Partial<PatchMinimalityProbe> = {}): PatchMinimalityProbe {
+  return {
+    patchMinimalityRepairRequired: true,
+    patchMinimalityDefectClass: GENERATED_PARSER_REPAIR_CLASS,
+    patchMinimalityRisk: "high",
+    patchMinimalityConfidence: "high",
+    patchMinimalityNarrowAlternativeHint:
+      "Narrower alternative likely exists: reorder the division_of_units grammar production within its own parser function.",
+    patchMinimalitySignals: ["generated_parser_table_deleted", "grammar_function_removed"],
+    ...overrides,
+  };
+}
+
+// A fully-valid generated-parser candidate (all artifact-side gates satisfied). Its DEFAULT-path
+// eligibility is still false (defect class `unknown`), so only the generated-parser path can make it
+// eligible — and only in dry-run with the explicit flag.
+function gpCandidate(args: {
+  meta?: LiveCriticMeta;
+  report?: PatchCriticReport;
+  firstPatch?: string | null;
+  probe?: PatchMinimalityProbe | null;
+} = {}): RepairCandidate {
+  return candidateFor({
+    runLabel: GP_RUN_LABEL,
+    instanceId: GP_INSTANCE,
+    source: "ad_hoc_run_label",
+    meta: args.meta ?? metaFor(),
+    report: args.report ?? gpReport(),
+    firstPatch: args.firstPatch === undefined ? FIRST_PATCH : args.firstPatch,
+    patchMinimalityProbe: args.probe === undefined ? gpProbe() : args.probe,
+  });
+}
+
+// The gate config for a generated-parser dry-run with the explicit flag and all operational gates.
+function gpGate(overrides: Partial<RepairGateConfig> = {}): RepairGateConfig {
+  return gateOf({
+    runLabels: [GP_RUN_LABEL],
+    maxRepairRuns: 1,
+    repairCostCapUsd: 0.25,
+    dryRun: true,
+    allowGeneratedParserRepair: true,
+    ...overrides,
+  });
 }
 
 function mockCaller(opts: { response?: string; costUsd?: number; throws?: boolean } = {}): {
@@ -551,4 +646,321 @@ test("generated-parser (astropy) run is NOT repair-eligible by default even with
     allowedDefectClasses: DEFAULT_ALLOWED_DEFECT_CLASSES,
   });
   assert.equal(noArtifacts.eligible, false);
+});
+
+// ===========================================================================
+// Generated-parser repair eligibility gate (DRY-RUN ONLY, explicit flag).
+// ===========================================================================
+
+// parseArgs default + flag.
+test("parseArgs: --allow-generated-parser-repair is off by default and opt-in", () => {
+  assert.equal(parseArgs([]).allowGeneratedParserRepair, false);
+  assert.equal(parseArgs(["--allow-generated-parser-repair"]).allowGeneratedParserRepair, true);
+});
+
+// Pure helpers.
+test("isGeneratedParserDefectClass recognizes the canonical label and equivalents", () => {
+  assert.equal(isGeneratedParserDefectClass(GENERATED_PARSER_REPAIR_CLASS), true);
+  assert.equal(isGeneratedParserDefectClass("generated_parser_broad_rewrite"), true);
+  assert.equal(isGeneratedParserDefectClass("grammar_patch_minimality"), true);
+  assert.equal(isGeneratedParserDefectClass("wrong_scope"), false);
+  assert.equal(isGeneratedParserDefectClass(null), false);
+});
+
+test("hasNarrowRewriteGuidance requires actionable instructions with a narrow marker", () => {
+  assert.equal(hasNarrowRewriteGuidance(gpReport(), gpProbe()), true);
+  // Vague / generic instruction ⇒ not narrow guidance.
+  assert.equal(
+    hasNarrowRewriteGuidance(gpReport({ instructions: "Fix the patch." }), gpProbe({ patchMinimalityNarrowAlternativeHint: null })),
+    false,
+  );
+});
+
+// 1. Blocked by default (no flag), even with every artifact-side gate satisfied.
+test("generated-parser repair is BLOCKED by default (no --allow-generated-parser-repair)", () => {
+  const e = evaluateGeneratedParserRepairEligibility({
+    runLabel: GP_RUN_LABEL,
+    allowGeneratedParserRepair: false,
+    dryRun: true,
+    runLabelProvided: true,
+    meta: metaFor(),
+    report: gpReport(),
+    firstPatch: FIRST_PATCH,
+    probe: gpProbe(),
+  });
+  assert.equal(e.allowed, false);
+  assert.equal(e.eligible, false);
+  assert.ok(e.blockedReasons.some((r) => /allow-generated-parser-repair/.test(r)));
+});
+
+// 7. Eligible in dry-run with the explicit flag and ALL gates satisfied.
+test("generated-parser repair is ELIGIBLE in dry-run with the flag and all gates satisfied", () => {
+  const e = evaluateGeneratedParserRepairEligibility({
+    runLabel: GP_RUN_LABEL,
+    allowGeneratedParserRepair: true,
+    dryRun: true,
+    runLabelProvided: true,
+    meta: metaFor(),
+    report: gpReport(),
+    firstPatch: FIRST_PATCH,
+    probe: gpProbe(),
+  });
+  assert.equal(e.allowed, true);
+  assert.equal(e.eligible, true);
+  assert.deepEqual(e.blockedReasons, []);
+  assert.equal(e.repairClass, GENERATED_PARSER_REPAIR_CLASS);
+  assert.equal(e.source, GENERATED_PARSER_REPAIR_SOURCE);
+  assert.deepEqual([...e.actionableNarrowRewriteGuidance], [...GENERATED_PARSER_NARROW_REWRITE_GUIDANCE]);
+});
+
+// 2. Blocked without an explicit run-label for this run.
+test("generated-parser repair is BLOCKED without an explicit run-label", () => {
+  const e = evaluateGeneratedParserRepairEligibility({
+    runLabel: GP_RUN_LABEL,
+    allowGeneratedParserRepair: true,
+    dryRun: true,
+    runLabelProvided: false,
+    meta: metaFor(),
+    report: gpReport(),
+    firstPatch: FIRST_PATCH,
+    probe: gpProbe(),
+  });
+  assert.equal(e.eligible, false);
+  assert.ok(e.blockedReasons.some((r) => /run-label/.test(r)));
+});
+
+// 3. Blocked without valid live-critic artifacts.
+test("generated-parser repair is BLOCKED without valid live-critic artifacts", () => {
+  const e = evaluateGeneratedParserRepairEligibility({
+    runLabel: GP_RUN_LABEL,
+    allowGeneratedParserRepair: true,
+    dryRun: true,
+    runLabelProvided: true,
+    meta: null,
+    report: null,
+    firstPatch: FIRST_PATCH,
+    probe: gpProbe(),
+  });
+  assert.equal(e.eligible, false);
+  assert.ok(e.blockedReasons.some((r) => /missing live critic artifacts/.test(r)));
+});
+
+// 4. Blocked when live critic repair_required=false.
+test("generated-parser repair is BLOCKED when live critic repair_required=false", () => {
+  const e = evaluateGeneratedParserRepairEligibility({
+    runLabel: GP_RUN_LABEL,
+    allowGeneratedParserRepair: true,
+    dryRun: true,
+    runLabelProvided: true,
+    meta: metaFor({ liveRepairRequired: false }),
+    report: gpReport({ repairRequired: false }),
+    firstPatch: FIRST_PATCH,
+    probe: gpProbe(),
+  });
+  assert.equal(e.eligible, false);
+  assert.ok(e.blockedReasons.some((r) => /did not require repair/.test(r)));
+});
+
+// 5. Blocked when deterministic/live agreement is false.
+test("generated-parser repair is BLOCKED when deterministic/live agreement is false", () => {
+  const e = evaluateGeneratedParserRepairEligibility({
+    runLabel: GP_RUN_LABEL,
+    allowGeneratedParserRepair: true,
+    dryRun: true,
+    runLabelProvided: true,
+    meta: metaFor({ agreementWithDeterministic: false }),
+    report: gpReport(),
+    firstPatch: FIRST_PATCH,
+    probe: gpProbe(),
+  });
+  assert.equal(e.eligible, false);
+  assert.ok(e.blockedReasons.some((r) => /agreement/.test(r)));
+});
+
+// 5b. Blocked when the deterministic probe did not require repair.
+test("generated-parser repair is BLOCKED when deterministic patchMinimalityRepairRequired!=true", () => {
+  const e = evaluateGeneratedParserRepairEligibility({
+    runLabel: GP_RUN_LABEL,
+    allowGeneratedParserRepair: true,
+    dryRun: true,
+    runLabelProvided: true,
+    meta: metaFor(),
+    report: gpReport(),
+    firstPatch: FIRST_PATCH,
+    probe: gpProbe({ patchMinimalityRepairRequired: false }),
+  });
+  assert.equal(e.eligible, false);
+  assert.ok(e.blockedReasons.some((r) => /patchMinimalityRepairRequired/.test(r)));
+});
+
+// 6. Blocked when the narrow-rewrite guidance is missing or vague.
+test("generated-parser repair is BLOCKED when narrow-rewrite guidance is missing or vague", () => {
+  const e = evaluateGeneratedParserRepairEligibility({
+    runLabel: GP_RUN_LABEL,
+    allowGeneratedParserRepair: true,
+    dryRun: true,
+    runLabelProvided: true,
+    meta: metaFor(),
+    report: gpReport({ instructions: "Fix the patch." }),
+    firstPatch: FIRST_PATCH,
+    probe: gpProbe({ patchMinimalityNarrowAlternativeHint: null }),
+  });
+  assert.equal(e.eligible, false);
+  assert.ok(e.blockedReasons.some((r) => /narrow-rewrite guidance/.test(r)));
+  assert.deepEqual([...e.actionableNarrowRewriteGuidance], []);
+});
+
+// 3 (dry-run-only). Blocked when NOT in dry-run — guarantees no live repair this milestone.
+test("generated-parser repair is BLOCKED when not in --dry-run (dry-run-only milestone)", () => {
+  const e = evaluateGeneratedParserRepairEligibility({
+    runLabel: GP_RUN_LABEL,
+    allowGeneratedParserRepair: true,
+    dryRun: false,
+    runLabelProvided: true,
+    meta: metaFor(),
+    report: gpReport(),
+    firstPatch: FIRST_PATCH,
+    probe: gpProbe(),
+  });
+  assert.equal(e.eligible, false);
+  assert.ok(e.blockedReasons.some((r) => /dry-run-only/.test(r)));
+});
+
+// End-to-end through the runner: eligible dry-run, no model call, repairExecuted=false.
+test("runGatedRepair: generated-parser run is would-repair in dry-run with the flag (no model)", async () => {
+  const m = mockCaller();
+  const { decisions, counters } = await runGatedRepair({
+    candidates: [gpCandidate()],
+    gate: gpGate(),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 0); // 11. no model/agent/live-repair call
+  assert.equal(counters.eligibleRuns, 1);
+  assert.equal(counters.repairCallsAttempted, 0);
+  const d = decisions[0]!;
+  assert.equal(d.wouldRepair, true);
+  assert.equal(d.repaired, false);
+  assert.equal(d.viaGeneratedParser, true);
+  assert.ok(d.generatedParser);
+  assert.equal(d.generatedParser?.eligible, true);
+});
+
+// End-to-end through the runner: blocked without the flag, eligibleRuns=0.
+test("runGatedRepair: generated-parser run stays blocked without the flag (no model)", async () => {
+  const m = mockCaller();
+  const { decisions, counters } = await runGatedRepair({
+    candidates: [gpCandidate()],
+    gate: gpGate({ allowGeneratedParserRepair: false }),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 0);
+  assert.equal(counters.eligibleRuns, 0);
+  assert.equal(counters.skippedIneligible, 1);
+  const d = decisions[0]!;
+  assert.equal(d.wouldRepair, false);
+  assert.equal(d.viaGeneratedParser, false);
+  assert.ok(d.generatedParser?.blockedReasons.some((r) => /allow-generated-parser-repair/.test(r)));
+});
+
+// 8 & 9. Dry-run report says repairExecuted=false and includes the narrow-rewrite guidance.
+test("buildRepairReport: generated-parser dry-run report carries repairExecuted=false and guidance", async () => {
+  const gate = gpGate();
+  const m = mockCaller();
+  const outcome = await runGatedRepair({ candidates: [gpCandidate()], gate, caller: m.caller, repairModel: null });
+  const report = buildRepairReport({ generatedAt: null, enabled: false, gate, outcome });
+
+  const parsed = JSON.parse(renderJson(report));
+  assert.equal(parsed.summary.repairExecuted, false);
+  assert.equal(parsed.gates.allowGeneratedParserRepair, true);
+  assert.equal(parsed.generatedParser.allowed, true);
+  assert.equal(parsed.generatedParser.eligibleRuns, 1);
+  assert.equal(parsed.generatedParser.wouldRepairRuns, 1);
+  assert.equal(parsed.generatedParser.repairExecuted, false);
+  assert.equal(parsed.generatedParser.boundary, GENERATED_PARSER_DRY_RUN_BOUNDARY);
+
+  const gpRun = parsed.generatedParser.runs[0];
+  for (const field of [
+    "generatedParserRepairAllowed",
+    "generatedParserRepairEligible",
+    "generatedParserRepairGateReasons",
+    "generatedParserRepairBlockedReasons",
+    "patchMinimalityRepairRequired",
+    "patchMinimalityDefectClass",
+    "liveCriticRepairRequired",
+    "liveCriticValid",
+    "agreementWithDeterministic",
+    "actionableNarrowRewriteGuidance",
+    "repairExecuted",
+  ]) {
+    assert.ok(field in gpRun, `missing generated-parser field ${field}`);
+  }
+  assert.equal(gpRun.generatedParserRepairEligible, true);
+  assert.equal(gpRun.repairExecuted, false);
+  assert.equal(gpRun.patchMinimalityRepairRequired, true);
+  assert.equal(gpRun.liveCriticRepairRequired, true);
+  assert.equal(gpRun.agreementWithDeterministic, true);
+  assert.deepEqual(gpRun.actionableNarrowRewriteGuidance, [...GENERATED_PARSER_NARROW_REWRITE_GUIDANCE]);
+
+  const md = renderMarkdown(report);
+  assert.ok(md.includes("## Generated-parser repair (dry-run eligibility)"));
+  assert.ok(md.includes(GENERATED_PARSER_DRY_RUN_BOUNDARY));
+  for (const line of GENERATED_PARSER_NARROW_REWRITE_GUIDANCE) assert.ok(md.includes(line), `missing guidance: ${line}`);
+});
+
+// 10. Existing wrong_scope / broad_rewrite_minimality eligibility behavior is unchanged: a
+// curated run with no probe still repairs via the default path (real model call) when not dry-run.
+test("default-path wrong_scope repair is unaffected by the generated-parser gate", async () => {
+  const m = mockCaller();
+  const { decisions, counters } = await runGatedRepair({
+    candidates: [candidateFor({ runLabel: "run-a" })], // no probe, defect class wrong_scope
+    gate: gateOf({ runLabels: ["run-a"], maxRepairRuns: 1, allowGeneratedParserRepair: true }),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 1); // default path still calls the model when eligible + not dry-run
+  assert.equal(counters.eligibleRuns, 1);
+  assert.equal(counters.repairCallsSucceeded, 1);
+  const d = decisions[0]!;
+  assert.equal(d.repaired, true);
+  assert.equal(d.viaGeneratedParser, false);
+  assert.equal(d.generatedParser, null); // no probe ⇒ no generated-parser detail
+});
+
+// loadPatchMinimalityProbe reads the deterministic probe row from the critic summary report.
+test("loadPatchMinimalityProbe reads the probe row from the live-critic summary report", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "stage5-gp-probe-"));
+  try {
+    const results = path.join(root, "results");
+    await mkdir(results, { recursive: true });
+    // The critic summary report shape: top-level `runs` array (NOT `.decisions`).
+    const summary = {
+      runs: [
+        { runLabel: "other", instanceId: "x", patchMinimalityRepairRequired: false },
+        {
+          runLabel: GP_RUN_LABEL,
+          instanceId: GP_INSTANCE,
+          patchMinimalityRepairRequired: true,
+          patchMinimalityDefectClass: GENERATED_PARSER_REPAIR_CLASS,
+          patchMinimalityRisk: "high",
+          patchMinimalityConfidence: "high",
+          patchMinimalityNarrowAlternativeHint: "reorder the division_of_units production.",
+          patchMinimalitySignals: ["generated_parser_table_deleted"],
+        },
+      ],
+    };
+    await writeFile(
+      path.join(results, "stage5_live_critic_generated_parser_astropy.json"),
+      JSON.stringify(summary),
+    );
+    const probe = await loadPatchMinimalityProbe(results, GP_RUN_LABEL);
+    assert.ok(probe);
+    assert.equal(probe?.patchMinimalityRepairRequired, true);
+    assert.equal(probe?.patchMinimalityDefectClass, GENERATED_PARSER_REPAIR_CLASS);
+    // A run absent from the summary yields null (fail-soft).
+    assert.equal(await loadPatchMinimalityProbe(results, "missing-run"), null);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

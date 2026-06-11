@@ -145,6 +145,207 @@ export function evaluateRepairEligibility(input: RepairEligibilityInput): Repair
 }
 
 // ---------------------------------------------------------------------------
+// Generated-parser repair eligibility (DRY-RUN ONLY, explicitly opted in)
+// ---------------------------------------------------------------------------
+//
+// SEPARATE, ADDITIVE path. Generated-parser (grammar / PLY-table) broad rewrites are NOT in
+// DEFAULT_ALLOWED_DEFECT_CLASSES and are NEVER repaired by the default path (their defect class is
+// `unknown`). This milestone proves that the Astropy generated-parser patch COULD become
+// repair-eligible — but ONLY in dry-run, ONLY behind an explicit `--allow-generated-parser-repair`
+// flag, and ONLY when every gate below holds. It NEVER produces a repaired patch, NEVER calls a
+// model, and adds NO defect class to the default allowlist. Because gate (dry-run) is required for
+// eligibility, a generated-parser run can never reach a live repair call in this milestone.
+
+// The defect-class label this path recognizes (the deterministic generated-parser minimality probe
+// emits this string). "or equivalent" is accepted via isGeneratedParserDefectClass.
+export const GENERATED_PARSER_REPAIR_CLASS = "generated_parser_broad_rewrite / grammar_patch_minimality";
+
+// The eligibility provenance recorded when all gates pass.
+export const GENERATED_PARSER_REPAIR_SOURCE = "valid_live_critic_and_patch_minimality_agreement";
+
+// The INTENDED narrow-rewrite guidance a future gated repair would follow, derived from the live
+// critic instructions + the deterministic probe's narrow-alternative hint. Surfaced for audit; NO
+// repaired patch is produced this milestone.
+export const GENERATED_PARSER_NARROW_REWRITE_GUIDANCE: readonly string[] = [
+  "Change the division_of_units production order narrowly.",
+  "Do not relocate productions into p_combined_units.",
+  "Do not delete generated parser tables.",
+  "Avoid broad grammar rewrites.",
+];
+
+// The deterministic generated-parser patch-minimality probe fields for one run, as recorded in the
+// live-critic summary report's per-run row (there is no per-run raw artifact for these).
+export interface PatchMinimalityProbe {
+  readonly patchMinimalityRepairRequired: boolean | null;
+  readonly patchMinimalityDefectClass: string | null;
+  readonly patchMinimalityRisk: string | null;
+  readonly patchMinimalityConfidence: string | null;
+  readonly patchMinimalityNarrowAlternativeHint: string | null;
+  readonly patchMinimalitySignals: readonly string[];
+}
+
+export interface GeneratedParserRepairInput {
+  readonly runLabel: string;
+  // The explicit opt-in flag (`--allow-generated-parser-repair`). Default false.
+  readonly allowGeneratedParserRepair: boolean;
+  // Dry-run mode. Generated-parser repair is dry-run-ONLY this milestone.
+  readonly dryRun: boolean;
+  // Whether this run is explicitly named by --run-label (the run-label gate already passed).
+  readonly runLabelProvided: boolean;
+  readonly meta: LiveCriticMeta | null;
+  readonly report: PatchCriticReport | null;
+  readonly firstPatch: string | null;
+  readonly probe: PatchMinimalityProbe | null;
+}
+
+export interface GeneratedParserRepairEligibility {
+  // The explicit flag was present.
+  readonly allowed: boolean;
+  // All gates pass (so the run WOULD be repair-eligible in dry-run).
+  readonly eligible: boolean;
+  readonly repairClass: string;
+  readonly source: string;
+  // Gates that PASSED, in evaluation order.
+  readonly gateReasons: readonly string[];
+  // Gates that FAILED, in evaluation order (empty ⇒ eligible).
+  readonly blockedReasons: readonly string[];
+  // Surfaced evidence fields (for the report).
+  readonly patchMinimalityRepairRequired: boolean | null;
+  readonly patchMinimalityDefectClass: string | null;
+  readonly liveCriticRepairRequired: boolean | null;
+  readonly liveCriticValid: boolean | null;
+  readonly agreementWithDeterministic: boolean | null;
+  readonly hasActionableNarrowRewriteGuidance: boolean;
+  // The intended narrow-rewrite guidance (populated only when the guidance gate passes).
+  readonly actionableNarrowRewriteGuidance: readonly string[];
+}
+
+// True when a defect-class string names the generated-parser / grammar-minimality class (the
+// canonical label or an equivalent that mentions a generated parser or grammar-patch minimality).
+export function isGeneratedParserDefectClass(defectClass: string | null): boolean {
+  if (defectClass === null) return false;
+  const s = defectClass.toLowerCase();
+  return s.includes("generated_parser") || s.includes("generated-parser") || s.includes("grammar_patch_minimality");
+}
+
+// True when the live critic's repair instructions (corroborated by the probe's narrow-alternative
+// hint) give ACTIONABLE narrow-rewrite guidance: a concrete/actionable instruction that names a
+// narrowing action (reorder a production, keep functions separate, do not delete generated tables,
+// etc.). A vague or generic instruction ("fix the patch") does NOT qualify.
+export function hasNarrowRewriteGuidance(
+  report: PatchCriticReport | null,
+  probe: PatchMinimalityProbe | null,
+): boolean {
+  const instructions = report?.repair_instructions ?? "";
+  const quality = classifyInstruction(report?.repair_required ?? null, instructions);
+  const actionable = quality === "actionable" || quality === "concrete";
+  const narrowMarker =
+    /\b(narrow|reorder|production order|left[- ]?assoc|division_of_units|without deleting|do not delete|separate function|do not relocate|do not collapse|minimal(?:ity)?)\b/i;
+  const hint = probe?.patchMinimalityNarrowAlternativeHint ?? "";
+  const hasMarker = narrowMarker.test(instructions) || narrowMarker.test(hint);
+  return actionable && hasMarker;
+}
+
+// Decide whether a run's artifacts + deterministic probe make it generated-parser-repair-eligible
+// IN DRY-RUN. STRICT: every gate must hold; `null`/absent is never a pass. The runner adds the
+// operational gates (max-runs, cost-cap) on top. This calls NO model and produces NO patch.
+export function evaluateGeneratedParserRepairEligibility(
+  input: GeneratedParserRepairInput,
+): GeneratedParserRepairEligibility {
+  const { meta, report, probe } = input;
+  const gateReasons: string[] = [];
+  const blockedReasons: string[] = [];
+  const gate = (pass: boolean, ok: string, fail: string): void => {
+    if (pass) gateReasons.push(ok);
+    else blockedReasons.push(fail);
+  };
+
+  // (4) explicit opt-in flag.
+  gate(
+    input.allowGeneratedParserRepair === true,
+    "generated-parser repair explicitly enabled (--allow-generated-parser-repair)",
+    "missing --allow-generated-parser-repair (generated-parser repair is off by default)",
+  );
+  // (1) explicit run-label provided for this run.
+  gate(
+    input.runLabelProvided === true,
+    "explicit --run-label provided for this run",
+    "no explicit --run-label for this run (generated-parser repair requires an explicit run label)",
+  );
+  // (3) dry-run only this milestone.
+  gate(
+    input.dryRun === true,
+    "dry-run mode enabled (generated-parser repair is dry-run-only this milestone)",
+    "not in --dry-run (generated-parser repair is dry-run-only this milestone)",
+  );
+  // (5) valid live-critic artifacts present.
+  gate(
+    meta !== null && report !== null,
+    "live critic artifacts present (_patch_critic.meta.json + _patch_critic_report.json)",
+    "missing live critic artifacts (_patch_critic.meta.json / _patch_critic_report.json)",
+  );
+  // (6) live-critic report valid (and not failed-open).
+  gate(
+    meta?.validReport === true && meta?.failedOpen !== true,
+    "live critic report valid (validReport=true, failedOpen=false)",
+    "live critic report not valid (validReport!=true or failedOpen=true)",
+  );
+  // (7) live critic required repair.
+  gate(
+    report?.repair_required === true && meta?.liveRepairRequired === true,
+    "live critic repair_required=true",
+    "live critic did not require repair (repair_required!=true / liveRepairRequired!=true)",
+  );
+  // (8) deterministic patch-minimality probe required repair.
+  gate(
+    probe?.patchMinimalityRepairRequired === true,
+    "deterministic patchMinimalityRepairRequired=true",
+    "deterministic patchMinimalityRepairRequired!=true (missing or false)",
+  );
+  // (9) deterministic/live agreement.
+  gate(
+    meta?.agreementWithDeterministic === true,
+    "deterministic/live agreement=true",
+    "deterministic/live agreement!=true",
+  );
+  // (11) defect class is the generated-parser / grammar-minimality class.
+  gate(
+    isGeneratedParserDefectClass(probe?.patchMinimalityDefectClass ?? null),
+    `patchMinimality defect class is generated-parser (${probe?.patchMinimalityDefectClass ?? "none"})`,
+    `patchMinimality defect class is not generated-parser (${probe?.patchMinimalityDefectClass ?? "none"})`,
+  );
+  // (10) actionable narrow-rewrite guidance present (not vague).
+  const narrow = hasNarrowRewriteGuidance(report, probe);
+  gate(
+    narrow,
+    "live critic includes actionable narrow-rewrite guidance",
+    "live critic narrow-rewrite guidance is missing or vague",
+  );
+  // First patch must be present to anchor a future repair.
+  gate(
+    input.firstPatch !== null && input.firstPatch.trim() !== "",
+    "first patch present (_first_patch.diff)",
+    "missing first patch (_first_patch.diff)",
+  );
+
+  return {
+    allowed: input.allowGeneratedParserRepair === true,
+    eligible: blockedReasons.length === 0,
+    repairClass: GENERATED_PARSER_REPAIR_CLASS,
+    source: GENERATED_PARSER_REPAIR_SOURCE,
+    gateReasons,
+    blockedReasons,
+    patchMinimalityRepairRequired: probe?.patchMinimalityRepairRequired ?? null,
+    patchMinimalityDefectClass: probe?.patchMinimalityDefectClass ?? null,
+    liveCriticRepairRequired: report?.repair_required ?? null,
+    liveCriticValid: meta?.validReport ?? null,
+    agreementWithDeterministic: meta?.agreementWithDeterministic ?? null,
+    hasActionableNarrowRewriteGuidance: narrow,
+    actionableNarrowRewriteGuidance: narrow ? [...GENERATED_PARSER_NARROW_REWRITE_GUIDANCE] : [],
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Repair prompt (deliberately narrow)
 // ---------------------------------------------------------------------------
 

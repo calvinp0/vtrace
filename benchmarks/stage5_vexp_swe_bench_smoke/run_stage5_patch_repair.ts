@@ -24,6 +24,8 @@ import { CRITIC_RUN_LABELS } from "./run_stage5_live_critic_high_risk_comparison
 import { RESULTS_REL } from "./run_stage5_patch_probe_report";
 import type { CandidateSource } from "./stage5_ad_hoc_candidates";
 import {
+  type GeneratedParserRepairEligibility,
+  type PatchMinimalityProbe,
   type PatchRepairInput,
   type PatchRepairMeta,
   type PatchRepairResult,
@@ -31,15 +33,26 @@ import {
   type RepairEligibility,
   type RunPatchRepairOutcome,
   DEFAULT_ALLOWED_DEFECT_CLASSES,
+  GENERATED_PARSER_NARROW_REWRITE_GUIDANCE,
   buildRepairArtifacts,
+  evaluateGeneratedParserRepairEligibility,
   evaluateRepairEligibility,
   makeClaudeRepairCaller,
   runPatchRepair,
 } from "./stage5_patch_repair";
+import { findRunRow } from "./run_stage5_generated_parser_critic_agreement_report";
 
 export const DEFAULT_OUT_NAME = "stage5_patch_repair";
 export const DEFAULT_MAX_REPAIR_RUNS = 1;
 export const DEFAULT_REPAIR_COST_CAP_USD = 0.25;
+
+// The live-critic summary report that carries the deterministic generated-parser patch-minimality
+// probe per run row (there is no per-run raw artifact for these fields). Read-only.
+export const GENERATED_PARSER_PROBE_SUMMARY_BASENAME = "stage5_live_critic_generated_parser_astropy";
+
+// The dry-run-only boundary the generated-parser report MUST state.
+export const GENERATED_PARSER_DRY_RUN_BOUNDARY =
+  "This is dry-run eligibility only. No repaired patch was generated, no patch was modified, and no Docker evaluation was run.";
 
 // The runs that may carry live-critic artifacts (the same six the high-risk observation produced).
 // The candidate set; the run-label gate narrows it further (and is REQUIRED for any repair).
@@ -67,6 +80,10 @@ export interface CliConfig {
   // Opt-in: also consider --run-label values outside the curated candidate universe (their live
   // critic artifacts must already exist on disk). Off by default; existing behavior is unchanged.
   readonly includeAdHocRunLabels: boolean;
+  // Opt-in: enable the SEPARATE generated-parser repair eligibility path (dry-run only). DEFAULT
+  // false. When false, generated-parser runs stay ineligible exactly as before. This adds NO defect
+  // class to the default allowlist and NEVER produces a repaired patch.
+  readonly allowGeneratedParserRepair: boolean;
 }
 
 const KNOWN_DEFECT_CLASSES: readonly DefectClass[] = [
@@ -88,6 +105,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
   let dryRun = false;
   let evaluateRepairedPatch = false;
   let includeAdHocRunLabels = false;
+  let allowGeneratedParserRepair = false;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
@@ -146,6 +164,9 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--include-ad-hoc-run-labels":
         includeAdHocRunLabels = true;
         break;
+      case "--allow-generated-parser-repair":
+        allowGeneratedParserRepair = true;
+        break;
       case "--help":
       case "-h":
         break;
@@ -167,6 +188,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
     dryRun,
     evaluateRepairedPatch,
     includeAdHocRunLabels,
+    allowGeneratedParserRepair,
   };
 }
 
@@ -208,6 +230,40 @@ export interface RepairCandidate {
   readonly firstPatch: string | null;
   readonly issueText: string | null;
   readonly eligibility: RepairEligibility;
+  // Deterministic generated-parser patch-minimality probe for this run (from the live-critic
+  // summary report), or null when no probe row exists. Only the generated-parser repair path reads
+  // it; null leaves the run ineligible for that path.
+  readonly patchMinimalityProbe: PatchMinimalityProbe | null;
+}
+
+// Read the deterministic generated-parser patch-minimality probe for one run from the live-critic
+// summary report. Read-only and fail-soft: returns null when the file or the run row is absent.
+export async function loadPatchMinimalityProbe(
+  resultsDir: string,
+  runLabel: string,
+  summaryBasename: string = GENERATED_PARSER_PROBE_SUMMARY_BASENAME,
+): Promise<PatchMinimalityProbe | null> {
+  const doc = await readJson<unknown>(path.join(resultsDir, `${summaryBasename}.json`));
+  const row = findRunRow(doc, runLabel);
+  if (row === null) return null;
+  const asBool = (v: unknown): boolean | null => (typeof v === "boolean" ? v : null);
+  const asStr = (v: unknown): string | null => (typeof v === "string" ? v : null);
+  const asStrArr = (v: unknown): string[] =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  // Only treat this as a probe row when a generated-parser minimality field is actually present.
+  const hasProbeFields =
+    "patchMinimalityRepairRequired" in row ||
+    "patchMinimalityDefectClass" in row ||
+    "patchMinimalitySignals" in row;
+  if (!hasProbeFields) return null;
+  return {
+    patchMinimalityRepairRequired: asBool(row.patchMinimalityRepairRequired),
+    patchMinimalityDefectClass: asStr(row.patchMinimalityDefectClass),
+    patchMinimalityRisk: asStr(row.patchMinimalityRisk),
+    patchMinimalityConfidence: asStr(row.patchMinimalityConfidence),
+    patchMinimalityNarrowAlternativeHint: asStr(row.patchMinimalityNarrowAlternativeHint),
+    patchMinimalitySignals: asStrArr(row.patchMinimalitySignals),
+  };
 }
 
 export async function loadRepairCandidate(
@@ -226,6 +282,7 @@ export async function loadRepairCandidate(
   // Prefer the canonical _first_patch.diff; fall back to the patch recorded in the critic input.
   const firstPatch = firstPatchDiff ?? inputDoc?.firstPatch ?? null;
   const eligibility = evaluateRepairEligibility({ runLabel, meta, report, firstPatch, allowedDefectClasses });
+  const patchMinimalityProbe = await loadPatchMinimalityProbe(resultsDir, runLabel);
   return {
     runLabel,
     instanceId: report?.instanceId ?? inputDoc?.instanceId ?? "unknown",
@@ -235,6 +292,7 @@ export async function loadRepairCandidate(
     firstPatch,
     issueText: inputDoc?.issueText ?? null,
     eligibility,
+    patchMinimalityProbe,
   };
 }
 
@@ -268,6 +326,8 @@ export interface RepairGateConfig {
   readonly allowedDefectClasses: readonly DefectClass[];
   readonly dryRun: boolean;
   readonly evaluateRepairedPatch: boolean;
+  // Opt-in generated-parser repair path (dry-run only). DEFAULT false ⇒ behavior unchanged.
+  readonly allowGeneratedParserRepair?: boolean;
 }
 
 export type RepairSkipReason =
@@ -298,6 +358,12 @@ export interface RepairRunDecision {
   readonly reason: string;
   readonly ineligibleReasons: readonly string[];
   readonly invocation: RepairInvocation | null;
+  // Whether this run became eligible via the generated-parser path (dry-run only) rather than the
+  // default allowlist path. False for every default-path decision.
+  readonly viaGeneratedParser: boolean;
+  // The generated-parser eligibility evaluation for this run, when its run-label gate passed and a
+  // probe/flag made it relevant; null otherwise. Carries the gate/blocked reasons for the report.
+  readonly generatedParser: GeneratedParserRepairEligibility | null;
 }
 
 export interface RepairCounters {
@@ -393,6 +459,56 @@ export async function runGatedRepair(args: {
       defectClass: candidate.eligibility.defectClass,
       instructionQuality: candidate.eligibility.instructionQuality,
     };
+
+    // --- run-label gate (REQUIRED) — generated-parser eligibility is N/A out of scope -----
+    const skipRunLabel = (skipReason: RepairSkipReason, reason: string): void => {
+      decisions.push({
+        ...base,
+        eligible: false,
+        repaired: false,
+        wouldRepair: false,
+        skipReason,
+        reason,
+        ineligibleReasons: candidate.eligibility.reasons,
+        invocation: null,
+        viaGeneratedParser: false,
+        generatedParser: null,
+      });
+    };
+    if (gate.runLabels.length === 0) {
+      skippedByRunLabel += 1;
+      skipRunLabel("run-label-required", "no --run-label provided; repair requires explicit run labels");
+      continue;
+    }
+    if (!gate.runLabels.includes(candidate.runLabel)) {
+      skippedByRunLabel += 1;
+      skipRunLabel("not-in-run-label", `not in --run-label set {${gate.runLabels.join(", ")}}`);
+      continue;
+    }
+
+    // --- generated-parser eligibility (SEPARATE, dry-run-only path) ---------
+    // Computed only for runs that carry a deterministic patch-minimality probe; null otherwise so
+    // default-path decisions stay clean. Eligibility here requires the explicit flag AND dry-run, so
+    // it can NEVER drive a live repair call.
+    const gpRelevant = candidate.patchMinimalityProbe != null;
+    const gpElig = gpRelevant
+      ? evaluateGeneratedParserRepairEligibility({
+          runLabel: candidate.runLabel,
+          allowGeneratedParserRepair: gate.allowGeneratedParserRepair === true,
+          dryRun: gate.dryRun,
+          runLabelProvided: true,
+          meta: candidate.meta,
+          report: candidate.report,
+          firstPatch: candidate.firstPatch,
+          probe: candidate.patchMinimalityProbe,
+        })
+      : null;
+    const generatedParser = gpElig;
+
+    const standardEligible = candidate.eligibility.eligible;
+    const eligibleViaGp = gpElig?.eligible === true; // implies dry-run (its own gate)
+    const viaGeneratedParser = !standardEligible && eligibleViaGp;
+
     const skip = (skipReason: RepairSkipReason, reason: string, eligible: boolean): void => {
       decisions.push({
         ...base,
@@ -401,27 +517,26 @@ export async function runGatedRepair(args: {
         wouldRepair: false,
         skipReason,
         reason,
-        ineligibleReasons: candidate.eligibility.reasons,
+        ineligibleReasons:
+          eligible || viaGeneratedParser
+            ? []
+            : gpElig !== null && !standardEligible
+              ? gpElig.blockedReasons
+              : candidate.eligibility.reasons,
         invocation: null,
+        viaGeneratedParser,
+        generatedParser,
       });
     };
 
-    // --- run-label gate (REQUIRED) -----------------------------------------
-    if (gate.runLabels.length === 0) {
-      skippedByRunLabel += 1;
-      skip("run-label-required", "no --run-label provided; repair requires explicit run labels", false);
-      continue;
-    }
-    if (!gate.runLabels.includes(candidate.runLabel)) {
-      skippedByRunLabel += 1;
-      skip("not-in-run-label", `not in --run-label set {${gate.runLabels.join(", ")}}`, false);
-      continue;
-    }
-
-    // --- artifact-derived eligibility --------------------------------------
-    if (!candidate.eligibility.eligible) {
+    // --- artifact-derived eligibility (default path) OR generated-parser path ----
+    if (!standardEligible && !eligibleViaGp) {
       skippedIneligible += 1;
-      skip("ineligible", `ineligible: ${candidate.eligibility.reasons.join("; ")}`, false);
+      const reason =
+        gpElig !== null
+          ? `ineligible (generated-parser): ${gpElig.blockedReasons.join("; ")}`
+          : `ineligible: ${candidate.eligibility.reasons.join("; ")}`;
+      skip("ineligible", reason, false);
       continue;
     }
 
@@ -452,14 +567,20 @@ export async function runGatedRepair(args: {
         repaired: false,
         wouldRepair: true,
         skipReason: null,
-        reason: "would attempt one repair (dry-run: model NOT invoked)",
+        reason: viaGeneratedParser
+          ? "would attempt one generated-parser repair (dry-run ONLY: model NOT invoked, no patch produced)"
+          : "would attempt one repair (dry-run: model NOT invoked)",
         ineligibleReasons: [],
         invocation: null,
+        viaGeneratedParser,
+        generatedParser,
       });
       continue;
     }
 
-    // --- the single bounded repair attempt ---------------------------------
+    // --- the single bounded repair attempt (default path only) -------------
+    // The generated-parser path can NEVER reach here: its eligibility requires dry-run, so a
+    // non-dry-run run is only here via the default allowlist path.
     const input = buildRepairInput(candidate);
     const outcome = await runPatchRepair({ enabled: true, input, caller, repairModel });
     repairCallsAttempted += 1;
@@ -481,6 +602,8 @@ export async function runGatedRepair(args: {
       reason: outcome.result.failedOpen ? "repair attempted; failed open (first patch preserved)" : "repair attempted",
       ineligibleReasons: [],
       invocation: { result: outcome.result, input, meta, artifacts },
+      viaGeneratedParser: false,
+      generatedParser,
     });
   }
 
@@ -516,6 +639,9 @@ export interface RepairSummary {
   readonly repairedPatchProduced: number;
   readonly changedPatchCount: number;
   readonly totalRepairCostUsd: number;
+  // Whether any live repair model call was actually executed. ALWAYS false in dry-run (and thus
+  // always false for the generated-parser path, which is dry-run-only).
+  readonly repairExecuted: boolean;
 }
 
 export interface RepairGateConfigReport {
@@ -526,6 +652,39 @@ export interface RepairGateConfigReport {
   readonly allowedDefectClasses: readonly DefectClass[];
   readonly dryRun: boolean;
   readonly evaluateRepairedPatch: boolean;
+  readonly allowGeneratedParserRepair: boolean;
+}
+
+// Per-run generated-parser repair eligibility, surfaced in the report. `repairExecuted` is ALWAYS
+// false (dry-run-only milestone).
+export interface GeneratedParserRunReport {
+  readonly runLabel: string;
+  readonly instanceId: string;
+  readonly generatedParserRepairAllowed: boolean;
+  readonly generatedParserRepairEligible: boolean;
+  readonly generatedParserRepairGateReasons: readonly string[];
+  readonly generatedParserRepairBlockedReasons: readonly string[];
+  readonly repairClass: string;
+  readonly source: string;
+  readonly patchMinimalityRepairRequired: boolean | null;
+  readonly patchMinimalityDefectClass: string | null;
+  readonly liveCriticRepairRequired: boolean | null;
+  readonly liveCriticValid: boolean | null;
+  readonly agreementWithDeterministic: boolean | null;
+  readonly actionableNarrowRewriteGuidance: readonly string[];
+  readonly wouldRepair: boolean;
+  readonly repairExecuted: false;
+}
+
+// Top-level generated-parser dry-run eligibility summary.
+export interface GeneratedParserReportSummary {
+  readonly allowed: boolean;
+  readonly eligibleRuns: number;
+  readonly wouldRepairRuns: number;
+  readonly repairExecuted: false;
+  readonly narrowRewriteGuidance: readonly string[];
+  readonly boundary: string;
+  readonly runs: readonly GeneratedParserRunReport[];
 }
 
 export interface RepairRunReportRow {
@@ -541,6 +700,10 @@ export interface RepairRunReportRow {
   readonly reason: string;
   readonly ineligibleReasons: readonly string[];
   readonly result: PatchRepairResult | null;
+  // True when the run became eligible via the generated-parser path (dry-run only).
+  readonly viaGeneratedParser: boolean;
+  // The generated-parser eligibility detail for this run, when relevant; null otherwise.
+  readonly generatedParser: GeneratedParserRunReport | null;
 }
 
 // Ad hoc audit trail: how many requested labels were outside the curated universe, and how many of
@@ -561,7 +724,32 @@ export interface RepairReport {
   readonly counters: RepairCounters;
   readonly adHoc: RepairAdHocCounters;
   readonly runs: readonly RepairRunReportRow[];
+  readonly generatedParser: GeneratedParserReportSummary;
   readonly nonClaims: readonly string[];
+}
+
+// Project a decision's generated-parser eligibility into its report row (or null when not relevant).
+function generatedParserRunReport(d: RepairRunDecision): GeneratedParserRunReport | null {
+  const gp = d.generatedParser;
+  if (gp === null) return null;
+  return {
+    runLabel: d.runLabel,
+    instanceId: d.instanceId,
+    generatedParserRepairAllowed: gp.allowed,
+    generatedParserRepairEligible: gp.eligible,
+    generatedParserRepairGateReasons: gp.gateReasons,
+    generatedParserRepairBlockedReasons: gp.blockedReasons,
+    repairClass: gp.repairClass,
+    source: gp.source,
+    patchMinimalityRepairRequired: gp.patchMinimalityRepairRequired,
+    patchMinimalityDefectClass: gp.patchMinimalityDefectClass,
+    liveCriticRepairRequired: gp.liveCriticRepairRequired,
+    liveCriticValid: gp.liveCriticValid,
+    agreementWithDeterministic: gp.agreementWithDeterministic,
+    actionableNarrowRewriteGuidance: gp.actionableNarrowRewriteGuidance,
+    wouldRepair: d.viaGeneratedParser && d.wouldRepair,
+    repairExecuted: false,
+  };
 }
 
 export const NON_CLAIMS: readonly string[] = [
@@ -573,6 +761,7 @@ export const NON_CLAIMS: readonly string[] = [
   "The original first patch, raw agent output, and workspace are never modified; repair artifacts live in an isolated repair/ subdir.",
   "No Docker / evaluation is run this milestone; a repaired patch artifact is produced and would be evaluated later. No resolution is claimed.",
   "This changes no retrieval / Capsule v2 / PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY / probe / deterministic-critic / live-critic behavior.",
+  "Generated-parser repair is a SEPARATE dry-run-only eligibility path behind --allow-generated-parser-repair; it is off by default, adds NO defect class to the default allowlist, and never produces a repaired patch.",
 ];
 
 export function buildRepairReport(args: {
@@ -585,6 +774,20 @@ export function buildRepairReport(args: {
   const { generatedAt, enabled, gate, outcome } = args;
   const adHoc = args.adHoc ?? EMPTY_REPAIR_AD_HOC_COUNTERS;
   const c = outcome.counters;
+
+  const gpRuns = outcome.decisions
+    .map(generatedParserRunReport)
+    .filter((r): r is GeneratedParserRunReport => r !== null);
+  const generatedParser: GeneratedParserReportSummary = {
+    allowed: gate.allowGeneratedParserRepair === true,
+    eligibleRuns: gpRuns.filter((r) => r.generatedParserRepairEligible).length,
+    wouldRepairRuns: gpRuns.filter((r) => r.wouldRepair).length,
+    repairExecuted: false,
+    narrowRewriteGuidance: [...GENERATED_PARSER_NARROW_REWRITE_GUIDANCE],
+    boundary: GENERATED_PARSER_DRY_RUN_BOUNDARY,
+    runs: gpRuns,
+  };
+
   return {
     generatedAt,
     enabled,
@@ -597,6 +800,7 @@ export function buildRepairReport(args: {
       repairedPatchProduced: c.repairedPatchProduced,
       changedPatchCount: c.changedPatchCount,
       totalRepairCostUsd: c.totalRepairCostUsd,
+      repairExecuted: c.repairCallsAttempted > 0,
     },
     gates: {
       enabled,
@@ -606,6 +810,7 @@ export function buildRepairReport(args: {
       allowedDefectClasses: gate.allowedDefectClasses,
       dryRun: gate.dryRun,
       evaluateRepairedPatch: gate.evaluateRepairedPatch,
+      allowGeneratedParserRepair: gate.allowGeneratedParserRepair === true,
     },
     counters: c,
     adHoc,
@@ -622,7 +827,10 @@ export function buildRepairReport(args: {
       reason: d.reason,
       ineligibleReasons: d.ineligibleReasons,
       result: d.invocation ? d.invocation.result : null,
+      viaGeneratedParser: d.viaGeneratedParser,
+      generatedParser: generatedParserRunReport(d),
     })),
+    generatedParser,
     nonClaims: NON_CLAIMS,
   };
 }
@@ -765,6 +973,67 @@ export function renderMarkdown(report: RepairReport): string {
   L.push(`| repair failed-open count | ${summary.repairCallsFailedOpen} |`);
   L.push("");
 
+  L.push("## Generated-parser repair (dry-run eligibility)");
+  L.push("");
+  L.push(
+    "SEPARATE, dry-run-ONLY eligibility path behind `--allow-generated-parser-repair`. Off by default; " +
+      "adds NO defect class to the default allowlist; produces NO repaired patch and runs NO model.",
+  );
+  L.push("");
+  L.push(`${report.generatedParser.boundary}`);
+  L.push("");
+  L.push(
+    `allowGeneratedParserRepair=${report.gates.allowGeneratedParserRepair}; ` +
+      `eligible run(s): ${report.generatedParser.eligibleRuns}; ` +
+      `would-repair run(s): ${report.generatedParser.wouldRepairRuns}; repairExecuted=${report.generatedParser.repairExecuted}.`,
+  );
+  L.push("");
+  if (report.generatedParser.runs.length === 0) {
+    L.push("_No generated-parser candidate runs were in scope this invocation._");
+    L.push("");
+  } else {
+    L.push(
+      "| run | instance | allowed | eligible | repairClass | det. minimality | live repair_required | agreement | narrow guidance | repairExecuted |",
+    );
+    L.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+    for (const r of report.generatedParser.runs) {
+      L.push(
+        `| ${r.runLabel} | ${r.instanceId} | ${r.generatedParserRepairAllowed} | ${r.generatedParserRepairEligible} | ` +
+          `${r.repairClass} | ${r.patchMinimalityRepairRequired} | ${r.liveCriticRepairRequired} | ` +
+          `${r.agreementWithDeterministic} | ${r.actionableNarrowRewriteGuidance.length > 0 ? "yes" : "no"} | ${r.repairExecuted} |`,
+      );
+    }
+    L.push("");
+    for (const r of report.generatedParser.runs) {
+      L.push(`### ${r.runLabel} — generated-parser eligibility`);
+      L.push("");
+      L.push(`- eligible: ${r.generatedParserRepairEligible}`);
+      L.push(`- wouldRepair: ${r.wouldRepair}`);
+      L.push(`- repairClass: ${r.repairClass}`);
+      L.push(`- source: ${r.source}`);
+      L.push(`- mode: dry-run`);
+      L.push(`- repairExecuted: ${r.repairExecuted}`);
+      L.push(`- patchMinimalityRepairRequired: ${r.patchMinimalityRepairRequired}`);
+      L.push(`- patchMinimalityDefectClass: ${r.patchMinimalityDefectClass ?? "none"}`);
+      L.push(`- liveCriticRepairRequired: ${r.liveCriticRepairRequired}`);
+      L.push(`- liveCriticValid: ${r.liveCriticValid}`);
+      L.push(`- agreementWithDeterministic: ${r.agreementWithDeterministic}`);
+      if (r.generatedParserRepairGateReasons.length > 0) {
+        L.push("- gates satisfied:");
+        for (const g of r.generatedParserRepairGateReasons) L.push(`  - ${g}`);
+      }
+      if (r.generatedParserRepairBlockedReasons.length > 0) {
+        L.push("- gates blocked:");
+        for (const b of r.generatedParserRepairBlockedReasons) L.push(`  - ${b}`);
+      }
+      if (r.actionableNarrowRewriteGuidance.length > 0) {
+        L.push("- intended narrow-rewrite guidance (dry-run only; NOT applied):");
+        for (const g of r.actionableNarrowRewriteGuidance) L.push(`  - ${g}`);
+      }
+      L.push("");
+    }
+  }
+
   L.push("## Non-claims");
   L.push("");
   for (const n of report.nonClaims) L.push(`- ${n}`);
@@ -778,10 +1047,14 @@ export function renderMarkdown(report: RepairReport): string {
 // ---------------------------------------------------------------------------
 
 async function main(config: CliConfig): Promise<void> {
-  if (!config.enablePatchRepair) {
+  // DISABLED unless --enable-patch-repair OR --dry-run. A dry run calls no model and writes no
+  // repair artifacts, so it is allowed to produce an eligibility report without --enable-patch-repair
+  // (this is how the generated-parser dry-run eligibility report is generated). Without either flag,
+  // nothing runs — existing disabled-by-default behavior is preserved.
+  if (!config.enablePatchRepair && !config.dryRun) {
     process.stdout.write(
       [
-        "Stage 5 gated patch repair is DISABLED (pass --enable-patch-repair to invoke it).",
+        "Stage 5 gated patch repair is DISABLED (pass --enable-patch-repair to invoke it, or --dry-run for an eligibility-only report).",
         "No model was called, no repair artifacts were written, and no run behavior changed.",
         "",
       ].join("\n"),
@@ -825,6 +1098,7 @@ async function main(config: CliConfig): Promise<void> {
     allowedDefectClasses: config.allowedDefectClasses,
     dryRun: config.dryRun,
     evaluateRepairedPatch: config.evaluateRepairedPatch,
+    allowGeneratedParserRepair: config.allowGeneratedParserRepair,
   };
   const outcome = await runGatedRepair({ candidates, gate, caller, repairModel: config.repairModel });
 
@@ -841,7 +1115,7 @@ async function main(config: CliConfig): Promise<void> {
     }
   }
 
-  const report = buildRepairReport({ generatedAt, enabled: true, gate, outcome, adHoc: adHocCounters });
+  const report = buildRepairReport({ generatedAt, enabled: config.enablePatchRepair, gate, outcome, adHoc: adHocCounters });
   await mkdir(config.resultsDir, { recursive: true });
   const mdPath = path.join(config.resultsDir, `${config.outName}.md`);
   const jsonPath = path.join(config.resultsDir, `${config.outName}.json`);
@@ -863,6 +1137,24 @@ async function main(config: CliConfig): Promise<void> {
       config.dryRun
         ? `Would repair: ${outcome.decisions.filter((d) => d.wouldRepair).length} run(s).`
         : `Repair calls — attempted: ${c.repairCallsAttempted}   succeeded: ${c.repairCallsSucceeded}   failed-open: ${c.repairCallsFailedOpen}   produced: ${c.repairedPatchProduced}   changed: ${c.changedPatchCount}   cost: $${c.totalRepairCostUsd.toFixed(4)}`,
+      "",
+      `Generated-parser repair — allowed: ${report.generatedParser.allowed}   eligible: ${report.generatedParser.eligibleRuns}   wouldRepair: ${report.generatedParser.wouldRepairRuns}   repairExecuted: ${report.generatedParser.repairExecuted}`,
+      ...report.generatedParser.runs.flatMap((r) =>
+        r.generatedParserRepairEligible
+          ? [
+              `  ${r.runLabel}:`,
+              `    eligible: ${r.generatedParserRepairEligible}`,
+              `    wouldRepair: ${r.wouldRepair}`,
+              `    repairClass: ${r.repairClass}`,
+              `    source: ${r.source}`,
+              `    mode: dry-run`,
+              `    repairExecuted: ${r.repairExecuted}`,
+              `    liveCriticRepairRequired: ${r.liveCriticRepairRequired}`,
+              `    agreementWithDeterministic: ${r.agreementWithDeterministic}`,
+            ]
+          : [`  ${r.runLabel}: blocked — ${r.generatedParserRepairBlockedReasons.join("; ")}`],
+      ),
+      report.generatedParser.runs.length > 0 ? `  ${GENERATED_PARSER_DRY_RUN_BOUNDARY}` : "",
       "",
     ].join("\n"),
   );
