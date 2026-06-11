@@ -143,6 +143,56 @@ function countHunks(patch: string): number {
 
 const CONTROL_FLOW_RE = /^\s*(if|elif|else|for|while|try|except|finally|with|def|class|return|raise|yield)\b/;
 
+// Unchanged context lines within a hunk (leading single space), with the marker removed.
+function contextLines(patch: string): string[] {
+  return patch
+    .split("\n")
+    .filter((l) => l.startsWith(" "))
+    .map((l) => l.slice(1));
+}
+
+// An added control-flow branch that opens a complementary / default validation path.
+const ADDED_BRANCH_OPENER_RE = /^\s*(else\s*:|elif\b.*:|except\b.*:)/;
+// A validation / conversion helper (IDNA host encoding) applied to a value.
+const VALIDATION_HELPER_RE = /_get_idna_encoded_host\s*\(|\bidna(?:_encoded?|_encode)\b/i;
+
+// Normalized `raise SomeError(...)` statements, for cross-branch duplicate detection.
+function raiseStatements(lines: readonly string[]): string[] {
+  return lines
+    .map((l) => l.trim().replace(/\s+/g, " "))
+    .filter((l) => /^raise\s+[A-Za-z_]/.test(l));
+}
+
+// Semantic (not size-based) minimality signal: an ADDITIVE patch that re-applies an existing
+// validation/conversion helper on the default/else path AND re-raises a validation error an existing
+// guard already raises — i.e. it widens validation across a guard the original code intentionally
+// scoped (a broad rewrite by behavior, not by deletion volume). The classic shape is the requests
+// IDNA bug: adding `else: try: self._get_idna_encoded_host(host) except UnicodeError: raise
+// InvalidURL(...)`, which forces every previously-valid ASCII host through IDNA encoding.
+//
+// Tuned narrowly so it never fires on a genuinely minimal additive fix: it requires (a) the patch
+// deletes nothing, (b) it adds a new else/elif/except branch, (c) that addition calls the validation
+// helper, and (d) it re-raises a validation error that ALSO appears in the surrounding unchanged
+// context. A size-based broad rewrite (with deletions) is already caught earlier by minimalityProbe.
+export function additiveValidationOverreach(patch: string): { matched: boolean; evidence: string } {
+  if (removedLines(patch).length > 0) return { matched: false, evidence: "" };
+  const added = addedText(patch);
+  const branch = added.find((l) => ADDED_BRANCH_OPENER_RE.test(l));
+  const callsHelper = added.some((l) => VALIDATION_HELPER_RE.test(l));
+  if (!branch || !callsHelper) return { matched: false, evidence: "" };
+  const addedRaises = new Set(raiseStatements(added));
+  if (addedRaises.size === 0) return { matched: false, evidence: "" };
+  const duplicated = raiseStatements(contextLines(patch)).find((r) => addedRaises.has(r));
+  if (!duplicated) return { matched: false, evidence: "" };
+  return {
+    matched: true,
+    evidence:
+      `Additive validation overreach: an added \`${branch.trim()}\` branch applies an IDNA host-validation ` +
+      `helper on the default path and re-raises a validation error an existing guard already raises ` +
+      `(\`${duplicated}\`), widening validation across the guard rather than adding a minimal guard.`,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Probe 1: edited files
 // ---------------------------------------------------------------------------
@@ -202,6 +252,14 @@ export function minimalityProbe(patch: string, opts: MinimalityOptions = {}): Pa
     if (deletedControlFlow >= 1) why.push(`${deletedControlFlow} deleted control-flow line`);
     if (dels >= 3 && dels >= adds) why.push(`deletions (${dels}) >= insertions (${adds})`);
     evidence.push(`Non-minimal indicators: ${why.join("; ")}.`);
+    return { probeId: "minimality_rewrite_risk", status: "warn", confidence: "medium", evidence };
+  }
+
+  // Semantic broad-rewrite signal: an additive patch that widens validation across an existing
+  // guard (deletion-based heuristics above cannot see this; it has no deletions).
+  const overreach = additiveValidationOverreach(patch);
+  if (overreach.matched) {
+    evidence.push(overreach.evidence);
     return { probeId: "minimality_rewrite_risk", status: "warn", confidence: "medium", evidence };
   }
 

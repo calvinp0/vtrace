@@ -125,7 +125,7 @@ interface RepairSignal {
 const REPAIR_TEMPLATES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   "psf__requests-5414": {
     minimality_rewrite_risk:
-      "Prefer a minimal additive validation for empty/invalid IDNA labels instead of restructuring the existing unicode_is_ascii control flow.",
+      "Restore the original non-ASCII IDNA branch guarded by `unicode_is_ascii`; do not IDNA-validate all ASCII hosts on the default/else path. Add only a narrow ASCII empty-label guard — e.g. extend the existing wildcard check to also reject leading-dot / empty-label hosts — instead of restructuring the existing control flow.",
   },
   "matplotlib__matplotlib-22719": {
     failing_behavior_pattern:
@@ -260,13 +260,18 @@ export function buildDeterministicPatchCriticReport(input: PatchCriticInput): Pa
       reason: "broad control-flow rewrite where a minimal additive change would suffice (high-confidence)",
     });
   } else {
-    // warn — non-minimal, medium repair signal.
+    // warn — non-minimal, medium repair signal. The warn can be either the deletion-based
+    // non-minimal heuristic or the semantic additive-validation-overreach signal; report the
+    // matching reason so it is not mislabeled as a deletion when the patch deletes nothing.
     minimality_ok = false;
     minimality_evidence = evidenceText(minimalityProbe, "Non-minimal indicators present.");
+    const isOverreach = minimality_evidence.toLowerCase().includes("overreach");
     signals.push({
       probeId: "minimality_rewrite_risk",
       strong: false,
-      reason: "non-minimal patch (deleted control-flow / net-negative hunk)",
+      reason: isOverreach
+        ? "validation widened across an existing guard (additive overreach where a minimal guard would suffice)"
+        : "non-minimal patch (deleted control-flow / net-negative hunk)",
     });
   }
 

@@ -10,11 +10,15 @@ import {
   DEFAULT_MAX_REPAIR_RUNS,
   DEFAULT_REPAIR_COST_CAP_USD,
   buildRepairReport,
+  loadRepairCandidates,
   parseArgs,
   renderJson,
   renderMarkdown,
   runGatedRepair,
 } from "./run_stage5_patch_repair";
+import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
 // ---------------------------------------------------------------------------
 // Fixtures — synthetic repair candidates (no filesystem, no agents, no model).
@@ -86,6 +90,7 @@ function candidateFor(args: {
   meta?: LiveCriticMeta;
   report?: PatchCriticReport;
   firstPatch?: string | null;
+  source?: "curated_existing" | "ad_hoc_run_label";
   allowed?: readonly ("wrong_scope" | "broad_rewrite_minimality" | "missing_failing_behavior" | "unknown")[];
 }): RepairCandidate {
   const instanceId = args.instanceId ?? "sympy__sympy-16766";
@@ -100,7 +105,16 @@ function candidateFor(args: {
     firstPatch,
     allowedDefectClasses: allowed,
   });
-  return { runLabel: args.runLabel, instanceId, meta, report, firstPatch, issueText: null, eligibility };
+  return {
+    runLabel: args.runLabel,
+    instanceId,
+    source: args.source ?? "curated_existing",
+    meta,
+    report,
+    firstPatch,
+    issueText: null,
+    eligibility,
+  };
 }
 
 function mockCaller(opts: { response?: string; costUsd?: number; throws?: boolean } = {}): {
@@ -152,8 +166,13 @@ test("parseArgs defaults are conservative and disabled-by-default", () => {
   assert.deepEqual(cfg.runLabels, []);
   assert.equal(cfg.dryRun, false);
   assert.equal(cfg.evaluateRepairedPatch, false);
+  assert.equal(cfg.includeAdHocRunLabels, false); // ad hoc inclusion is opt-in
   // missing_failing_behavior is NOT in the default allowed set.
   assert.deepEqual([...cfg.allowedDefectClasses].sort(), ["broad_rewrite_minimality", "wrong_scope"]);
+});
+
+test("parseArgs --include-ad-hoc-run-labels opts into ad hoc candidate inclusion", () => {
+  assert.equal(parseArgs(["--include-ad-hoc-run-labels"]).includeAdHocRunLabels, true);
 });
 
 test("parseArgs supports the smoke-target flags", () => {
@@ -430,4 +449,71 @@ test("buildRepairReport surfaces the required summary fields and renders without
   ]) {
     assert.ok(md.includes(section), `missing markdown section ${section}`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// 8. Repair dry-run can see an ad hoc candidate once its live-critic artifacts exist on disk.
+// ---------------------------------------------------------------------------
+test("an ad hoc run with live-critic artifacts loads as an eligible candidate (source ad_hoc_run_label)", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "stage5-repair-adhoc-"));
+  try {
+    const results = path.join(root, "results");
+    const runLabel = "eval-strictgated-vtrace-requests-5414";
+    const dir = path.join(results, "runs", runLabel, "raw", "vtrace");
+    await mkdir(dir, { recursive: true });
+    // The live-critic artifacts the critic runner would have written for this ad hoc run.
+    const report = reportFor("psf__requests-5414");
+    await writeFile(path.join(dir, "_patch_critic_report.json"), JSON.stringify(report));
+    await writeFile(path.join(dir, "_patch_critic.meta.json"), JSON.stringify(metaFor()));
+    await writeFile(
+      path.join(dir, "_patch_critic_input.json"),
+      JSON.stringify({ instanceId: "psf__requests-5414", issueText: null, firstPatch: FIRST_PATCH }),
+    );
+    await writeFile(path.join(dir, "_first_patch.diff"), FIRST_PATCH);
+
+    // Loaded as an ad hoc candidate (the runner builds this label set when --include-ad-hoc-run-labels).
+    const candidates = await loadRepairCandidates(
+      results,
+      [{ runLabel, source: "ad_hoc_run_label" }],
+      ["wrong_scope", "broad_rewrite_minimality"],
+    );
+    assert.equal(candidates.length, 1);
+    assert.equal(candidates[0]!.source, "ad_hoc_run_label");
+    assert.equal(candidates[0]!.eligibility.eligible, true);
+
+    // Dry-run sees it and would repair it — without calling any model.
+    const m = mockCaller();
+    const { decisions, counters } = await runGatedRepair({
+      candidates,
+      gate: gateOf({ runLabels: [runLabel], maxRepairRuns: 1, dryRun: true }),
+      caller: m.caller,
+      repairModel: null,
+    });
+    assert.equal(m.calls, 0);
+    assert.equal(counters.eligibleRuns, 1);
+    const d = decisions[0]!;
+    assert.equal(d.wouldRepair, true);
+    assert.equal(d.source, "ad_hoc_run_label");
+
+    // The report carries the source and an ad hoc audit trail.
+    const built = buildRepairReport({
+      generatedAt: null,
+      enabled: true,
+      gate: gateOf({ runLabels: [runLabel], maxRepairRuns: 1, dryRun: true }),
+      outcome: { decisions, counters },
+      adHoc: { adHocRequested: 1, adHocCandidates: 1 },
+    });
+    const parsed = JSON.parse(renderJson(built));
+    assert.equal(parsed.adHoc.adHocRequested, 1);
+    assert.equal(parsed.runs[0].source, "ad_hoc_run_label");
+    assert.ok(renderMarkdown(built).includes("ad_hoc_run_label"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// 9. Existing curated candidates still default to source=curated_existing.
+test("curated candidates are tagged source=curated_existing by default", async () => {
+  const candidates = [candidateFor({ runLabel: "run-a" })];
+  assert.equal(candidates[0]!.source, "curated_existing");
 });

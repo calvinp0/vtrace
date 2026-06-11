@@ -22,6 +22,7 @@ import {
 } from "./run_stage5_live_critic_high_risk_comparison";
 import { CRITIC_RUN_LABELS } from "./run_stage5_live_critic_high_risk_comparison";
 import { RESULTS_REL } from "./run_stage5_patch_probe_report";
+import type { CandidateSource } from "./stage5_ad_hoc_candidates";
 import {
   type PatchRepairInput,
   type PatchRepairMeta,
@@ -63,6 +64,9 @@ export interface CliConfig {
   // Optional, default false. This milestone does NOT run Docker: when set it only records intent
   // in metadata ("would be evaluated later"); no resolution is claimed or computed.
   readonly evaluateRepairedPatch: boolean;
+  // Opt-in: also consider --run-label values outside the curated candidate universe (their live
+  // critic artifacts must already exist on disk). Off by default; existing behavior is unchanged.
+  readonly includeAdHocRunLabels: boolean;
 }
 
 const KNOWN_DEFECT_CLASSES: readonly DefectClass[] = [
@@ -83,6 +87,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
   const allowedDefectClasses: DefectClass[] = [];
   let dryRun = false;
   let evaluateRepairedPatch = false;
+  let includeAdHocRunLabels = false;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
@@ -138,6 +143,9 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--evaluate-repaired-patch":
         evaluateRepairedPatch = true;
         break;
+      case "--include-ad-hoc-run-labels":
+        includeAdHocRunLabels = true;
+        break;
       case "--help":
       case "-h":
         break;
@@ -158,6 +166,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
     allowedDefectClasses: allowedDefectClasses.length > 0 ? allowedDefectClasses : DEFAULT_ALLOWED_DEFECT_CLASSES,
     dryRun,
     evaluateRepairedPatch,
+    includeAdHocRunLabels,
   };
 }
 
@@ -192,6 +201,8 @@ interface CriticInputDoc {
 export interface RepairCandidate {
   readonly runLabel: string;
   readonly instanceId: string;
+  // Whether this candidate came from the curated universe or an opt-in ad hoc run label.
+  readonly source: CandidateSource;
   readonly meta: LiveCriticMeta | null;
   readonly report: PatchCriticReport | null;
   readonly firstPatch: string | null;
@@ -203,6 +214,7 @@ export async function loadRepairCandidate(
   resultsDir: string,
   runLabel: string,
   allowedDefectClasses: readonly DefectClass[],
+  source: CandidateSource = "curated_existing",
 ): Promise<RepairCandidate> {
   const dir = path.join(resultsDir, "runs", runLabel, "raw", "vtrace");
   const [meta, report, inputDoc, firstPatchDiff] = await Promise.all([
@@ -217,6 +229,7 @@ export async function loadRepairCandidate(
   return {
     runLabel,
     instanceId: report?.instanceId ?? inputDoc?.instanceId ?? "unknown",
+    source,
     meta,
     report,
     firstPatch,
@@ -225,12 +238,23 @@ export async function loadRepairCandidate(
   };
 }
 
+// Each label paired with its provenance, so curated and ad hoc candidates are tagged consistently.
+export interface LabeledRunSource {
+  readonly runLabel: string;
+  readonly source: CandidateSource;
+}
+
 export async function loadRepairCandidates(
   resultsDir: string,
-  labels: readonly string[],
+  labels: readonly (string | LabeledRunSource)[],
   allowedDefectClasses: readonly DefectClass[],
 ): Promise<RepairCandidate[]> {
-  return Promise.all(labels.map((l) => loadRepairCandidate(resultsDir, l, allowedDefectClasses)));
+  return Promise.all(
+    labels.map((l) => {
+      const { runLabel, source } = typeof l === "string" ? { runLabel: l, source: "curated_existing" as const } : l;
+      return loadRepairCandidate(resultsDir, runLabel, allowedDefectClasses, source);
+    }),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -264,6 +288,7 @@ export interface RepairInvocation {
 export interface RepairRunDecision {
   readonly runLabel: string;
   readonly instanceId: string;
+  readonly source: CandidateSource;
   readonly defectClass: DefectClass;
   readonly instructionQuality: InstructionQuality;
   readonly eligible: boolean; // passed run-label + artifact eligibility
@@ -364,6 +389,7 @@ export async function runGatedRepair(args: {
     const base = {
       runLabel: candidate.runLabel,
       instanceId: candidate.instanceId,
+      source: candidate.source,
       defectClass: candidate.eligibility.defectClass,
       instructionQuality: candidate.eligibility.instructionQuality,
     };
@@ -505,6 +531,7 @@ export interface RepairGateConfigReport {
 export interface RepairRunReportRow {
   readonly runLabel: string;
   readonly instanceId: string;
+  readonly source: CandidateSource;
   readonly defectClass: DefectClass;
   readonly instructionQuality: InstructionQuality;
   readonly eligible: boolean;
@@ -516,12 +543,23 @@ export interface RepairRunReportRow {
   readonly result: PatchRepairResult | null;
 }
 
+// Ad hoc audit trail: how many requested labels were outside the curated universe, and how many of
+// those produced a candidate (always = requested here, since loadRepairCandidate is fail-soft and a
+// non-existent run still yields an ineligible candidate that is reported, not dropped).
+export interface RepairAdHocCounters {
+  readonly adHocRequested: number;
+  readonly adHocCandidates: number;
+}
+
+export const EMPTY_REPAIR_AD_HOC_COUNTERS: RepairAdHocCounters = { adHocRequested: 0, adHocCandidates: 0 };
+
 export interface RepairReport {
   readonly generatedAt: string | null;
   readonly enabled: boolean;
   readonly summary: RepairSummary;
   readonly gates: RepairGateConfigReport;
   readonly counters: RepairCounters;
+  readonly adHoc: RepairAdHocCounters;
   readonly runs: readonly RepairRunReportRow[];
   readonly nonClaims: readonly string[];
 }
@@ -542,8 +580,10 @@ export function buildRepairReport(args: {
   readonly enabled: boolean;
   readonly gate: RepairGateConfig;
   readonly outcome: GatedRepairOutcome;
+  readonly adHoc?: RepairAdHocCounters;
 }): RepairReport {
   const { generatedAt, enabled, gate, outcome } = args;
+  const adHoc = args.adHoc ?? EMPTY_REPAIR_AD_HOC_COUNTERS;
   const c = outcome.counters;
   return {
     generatedAt,
@@ -568,9 +608,11 @@ export function buildRepairReport(args: {
       evaluateRepairedPatch: gate.evaluateRepairedPatch,
     },
     counters: c,
+    adHoc,
     runs: outcome.decisions.map((d) => ({
       runLabel: d.runLabel,
       instanceId: d.instanceId,
+      source: d.source,
       defectClass: d.defectClass,
       instructionQuality: d.instructionQuality,
       eligible: d.eligible,
@@ -647,6 +689,7 @@ export function renderMarkdown(report: RepairReport): string {
   for (const [k, v] of Object.entries(counters)) {
     L.push(`| ${k} | ${k === "totalRepairCostUsd" ? `$${(v as number).toFixed(4)}` : v} |`);
   }
+  for (const [k, v] of Object.entries(report.adHoc)) L.push(`| ${k} | ${v} |`);
   L.push("");
 
   const repaired = report.runs.filter((r) => r.repaired || r.wouldRepair);
@@ -657,12 +700,12 @@ export function renderMarkdown(report: RepairReport): string {
   if (repaired.length === 0) {
     L.push("_No runs were repaired in this invocation._");
   } else {
-    L.push("| run | instance | defect class | instruction | decision | valid | changed | failed-open | cost |");
-    L.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+    L.push("| run | source | instance | defect class | instruction | decision | valid | changed | failed-open | cost |");
+    L.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
     for (const r of repaired) {
       const res = r.result;
       L.push(
-        `| ${r.runLabel} | ${r.instanceId} | ${r.defectClass} | ${r.instructionQuality} | ${decisionLabel(r)} | ` +
+        `| ${r.runLabel} | ${r.source} | ${r.instanceId} | ${r.defectClass} | ${r.instructionQuality} | ${decisionLabel(r)} | ` +
           `${res ? res.validPatch : "—"} | ${res ? res.changedPatch : "—"} | ${res ? res.failedOpen : "—"} | ` +
           `${res?.repairCostUsd != null ? `$${res.repairCostUsd.toFixed(4)}` : "—"} |`,
       );
@@ -675,10 +718,10 @@ export function renderMarkdown(report: RepairReport): string {
   if (skipped.length === 0) {
     L.push("_No runs were skipped._");
   } else {
-    L.push("| run | instance | defect class | skip reason | detail |");
-    L.push("| --- | --- | --- | --- | --- |");
+    L.push("| run | source | instance | defect class | skip reason | detail |");
+    L.push("| --- | --- | --- | --- | --- | --- |");
     for (const r of skipped) {
-      L.push(`| ${r.runLabel} | ${r.instanceId} | ${r.defectClass} | ${r.skipReason ?? "—"} | ${r.reason} |`);
+      L.push(`| ${r.runLabel} | ${r.source} | ${r.instanceId} | ${r.defectClass} | ${r.skipReason ?? "—"} | ${r.reason} |`);
     }
   }
   L.push("");
@@ -750,13 +793,28 @@ async function main(config: CliConfig): Promise<void> {
   const caller = makeClaudeRepairCaller();
 
   // --- Phase 1: load candidates (read-only; no model) ------------------------
-  const candidates = await loadRepairCandidates(config.resultsDir, REPAIR_CANDIDATE_LABELS, config.allowedDefectClasses);
+  // Curated candidates always; with opt-in, also any requested --run-label outside the curated set
+  // (its live-critic artifacts must already exist on disk — repair never invokes the critic).
+  const curated = new Set(REPAIR_CANDIDATE_LABELS);
+  const adHocLabels = config.includeAdHocRunLabels
+    ? config.runLabels.filter((l) => !curated.has(l))
+    : [];
+  const labeled: LabeledRunSource[] = [
+    ...REPAIR_CANDIDATE_LABELS.map((runLabel) => ({ runLabel, source: "curated_existing" as const })),
+    ...adHocLabels.map((runLabel) => ({ runLabel, source: "ad_hoc_run_label" as const })),
+  ];
+  const candidates = await loadRepairCandidates(config.resultsDir, labeled, config.allowedDefectClasses);
+  const adHocCounters: RepairAdHocCounters = {
+    adHocRequested: adHocLabels.length,
+    adHocCandidates: adHocLabels.length,
+  };
 
   // Surface a --run-label that matches no candidate (it would silently repair nothing).
   const known = new Set(candidates.map((c) => c.runLabel));
   const unknownLabels = config.runLabels.filter((l) => !known.has(l));
   if (unknownLabels.length > 0) {
-    process.stderr.write(`WARNING: --run-label not found among candidates: ${unknownLabels.join(", ")}\n`);
+    const hint = config.includeAdHocRunLabels ? "" : " (pass --include-ad-hoc-run-labels to include new runs)";
+    process.stderr.write(`WARNING: --run-label not found among candidates: ${unknownLabels.join(", ")}${hint}\n`);
   }
 
   // --- Phase 2: apply gates, attempt one repair per approved run -------------
@@ -783,7 +841,7 @@ async function main(config: CliConfig): Promise<void> {
     }
   }
 
-  const report = buildRepairReport({ generatedAt, enabled: true, gate, outcome });
+  const report = buildRepairReport({ generatedAt, enabled: true, gate, outcome, adHoc: adHocCounters });
   await mkdir(config.resultsDir, { recursive: true });
   const mdPath = path.join(config.resultsDir, `${config.outName}.md`);
   const jsonPath = path.join(config.resultsDir, `${config.outName}.json`);
@@ -798,6 +856,9 @@ async function main(config: CliConfig): Promise<void> {
       `  ${jsonPath}`,
       "",
       `Candidates: ${c.candidateRuns}   Eligible: ${c.eligibleRuns}`,
+      config.includeAdHocRunLabels
+        ? `Ad hoc — requested: ${adHocCounters.adHocRequested}   candidates: ${adHocCounters.adHocCandidates}${adHocLabels.length > 0 ? ` (${adHocLabels.join(", ")})` : ""}`
+        : "",
       `Skipped — runLabel: ${c.skippedByRunLabel}   ineligible: ${c.skippedIneligible}   maxRuns: ${c.skippedByMaxRuns}   costCap: ${c.stoppedByCostCap}`,
       config.dryRun
         ? `Would repair: ${outcome.decisions.filter((d) => d.wouldRepair).length} run(s).`

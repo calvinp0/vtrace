@@ -122,7 +122,9 @@ test("minimality fail maps to minimality_ok=false and forces repair at high conf
   assert.equal(report.repair_required, true);
   assert.equal(report.risk, "high");
   assert.equal(report.confidence, "high");
-  assert.ok(report.repair_instructions.toLowerCase().includes("additive"));
+  // The requests minimality instruction names the original guard and a narrow alternative.
+  assert.ok(report.repair_instructions.includes("unicode_is_ascii"));
+  assert.ok(report.repair_instructions.toLowerCase().includes("guard"));
 });
 
 // ---------------------------------------------------------------------------

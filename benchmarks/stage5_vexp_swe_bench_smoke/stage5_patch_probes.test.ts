@@ -5,6 +5,7 @@ import {
   INSTANCE_CONFIGS,
   type PythonParser,
   type RawToolCall,
+  additiveValidationOverreach,
   applyFilePatch,
   editedFilesProbe,
   extractParseableBlocks,
@@ -154,11 +155,25 @@ test("minimality probe flags a broad control-flow rewrite", () => {
 // ---------------------------------------------------------------------------
 // 3. Does not flag a small additive patch as a broad rewrite.
 // ---------------------------------------------------------------------------
-test("minimality probe passes a small additive patch", () => {
-  const r = minimalityProbe(REQ_ADDITIVE);
-  assert.equal(r.status, "pass");
-  // sympy additive insert is also minimal.
+test("minimality probe passes a benign additive patch but flags additive validation overreach", () => {
+  // A genuinely minimal additive insert (sympy `_print_*` method) stays a pass.
   assert.equal(minimalityProbe(SYMPY_SCOPE_OK).status, "pass");
+  // The requests IDNA-validation overreach (additive else/try/except that re-applies the idna
+  // helper on the default path and re-raises an existing guard's validation error) is a semantic
+  // broad-rewrite signal even with zero deletions → warn.
+  const req = minimalityProbe(REQ_ADDITIVE);
+  assert.equal(req.status, "warn");
+  assert.equal(req.confidence, "medium");
+  assert.ok(req.evidence.join(" ").toLowerCase().includes("overreach"));
+});
+
+test("additiveValidationOverreach matches the IDNA overreach shape only", () => {
+  // The requests overreach shape matches.
+  assert.equal(additiveValidationOverreach(REQ_ADDITIVE).matched, true);
+  // A benign additive insert (no validation helper / no duplicated raise) does not.
+  assert.equal(additiveValidationOverreach(SYMPY_SCOPE_OK).matched, false);
+  // A size-based broad rewrite (has deletions) is handled by the deletion heuristics, not here.
+  assert.equal(additiveValidationOverreach(REQ_BROAD_REWRITE).matched, false);
 });
 
 // ---------------------------------------------------------------------------

@@ -11,11 +11,15 @@ import {
   DEFAULT_MAX_CRITIC_RUNS,
   DEFAULT_ONLY_DETERMINISTIC_REPAIR_REQUIRED,
   buildLiveReport,
+  discoverAdHocCandidates,
   parseArgs,
   renderJson,
   renderMarkdown,
   runGatedCritic,
 } from "./run_stage5_patch_critic_live";
+import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
 // ---------------------------------------------------------------------------
 // Fixtures — synthetic candidates (no filesystem, no agents, no Docker, no model).
@@ -81,7 +85,13 @@ function candidateFor(
     treatmentMetadata: { pivotCheckInjected: true, editGuardInjected: false, patchVerifyInjected: null },
     contextSignals: { hiddenPivotsInspected: null, hiddenPivotsEdited: null, orderedToolLogPresent: true },
   };
-  return { runLabel, instanceId, input, deterministicReport: buildDeterministicPatchCriticReport(input) };
+  return {
+    runLabel,
+    instanceId,
+    source: "curated_existing",
+    input,
+    deterministicReport: buildDeterministicPatchCriticReport(input),
+  };
 }
 
 function highRisk(runLabel: string): CriticCandidate {
@@ -166,6 +176,11 @@ test("parseArgs defaults are conservative and disabled-by-default", () => {
   assert.equal(cfg.criticCostCapUsd, 0.25);
   assert.deepEqual(cfg.runLabels, []);
   assert.equal(cfg.dryRun, false);
+  assert.equal(cfg.includeAdHocRunLabels, false); // ad hoc materialization is opt-in
+});
+
+test("parseArgs --include-ad-hoc-run-labels opts into ad hoc materialization", () => {
+  assert.equal(parseArgs(["--include-ad-hoc-run-labels"]).includeAdHocRunLabels, true);
 });
 
 test("parseArgs supports the smoke-target flags (repeatable run-label, caps, dry-run)", () => {
@@ -406,4 +421,188 @@ test("invalid critic JSON fails open and is reported, but the run is still 'call
   });
   assert.equal(counters.liveCallsFailedOpen, 1);
   assert.equal(counters.liveCallsSucceeded, 0);
+});
+
+// ---------------------------------------------------------------------------
+// Ad hoc run-label materialization (filesystem fixtures only; no agents/Docker/model).
+// ---------------------------------------------------------------------------
+
+// Build a raw VTRACE run dir on disk. `dir: false` → no run dir at all; `jsonl: false` → dir but no
+// swebench row; `patch: null` → row with empty modelPatch.
+async function makeRun(
+  resultsDir: string,
+  runLabel: string,
+  opts: { instanceId?: string; patch?: string | null; jsonl?: boolean; dir?: boolean } = {},
+): Promise<void> {
+  if (opts.dir === false) return;
+  const dir = path.join(resultsDir, "runs", runLabel, "raw", "vtrace");
+  await mkdir(dir, { recursive: true });
+  if (opts.jsonl === false) return;
+  const row: Record<string, unknown> = {
+    instanceId: opts.instanceId ?? "psf__requests-5414",
+    repo: "psf/requests",
+    resolved: false,
+    modelPatch: opts.patch === null ? "" : opts.patch ?? REQ_BROAD_REWRITE,
+  };
+  await writeFile(path.join(dir, "swebench-2026-01-01.jsonl"), `${JSON.stringify(row)}\n`);
+}
+
+async function withTempResults(fn: (results: string) => Promise<void>): Promise<void> {
+  const root = await mkdtemp(path.join(tmpdir(), "stage5-adhoc-"));
+  try {
+    await fn(path.join(root, "results"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+// 2 & 3. An existing raw run with a modelPatch is materialized and tagged source=ad_hoc_run_label.
+test("discoverAdHocCandidates materializes an existing raw run and tags it ad_hoc_run_label", async () => {
+  await withTempResults(async (results) => {
+    await makeRun(results, "eval-strictgated-vtrace-requests-5414", { patch: REQ_BROAD_REWRITE });
+    const d = await discoverAdHocCandidates({
+      resultsDir: results,
+      requestedLabels: ["eval-strictgated-vtrace-requests-5414"],
+      knownLabels: new Set(),
+      parsePython: PARSE_OK,
+    });
+    assert.equal(d.candidates.length, 1);
+    const c = d.candidates[0]!;
+    assert.equal(c.source, "ad_hoc_run_label");
+    assert.equal(c.instanceId, "psf__requests-5414");
+    assert.equal(c.deterministicReport.repair_required, true);
+    assert.deepEqual(d.counters, {
+      adHocRequested: 1,
+      adHocFound: 1,
+      adHocMaterialized: 1,
+      adHocMissing: 0,
+    });
+    assert.equal(d.skips.length, 0);
+  });
+});
+
+// 4. Missing ad hoc run dir is reported clearly.
+test("discoverAdHocCandidates reports a missing run dir", async () => {
+  await withTempResults(async (results) => {
+    const d = await discoverAdHocCandidates({
+      resultsDir: results,
+      requestedLabels: ["eval-does-not-exist"],
+      knownLabels: new Set(),
+      parsePython: PARSE_OK,
+    });
+    assert.equal(d.candidates.length, 0);
+    assert.equal(d.skips.length, 1);
+    assert.equal(d.skips[0]!.skipReason, "ad-hoc-missing-run-dir");
+    assert.equal(d.counters.adHocMissing, 1);
+    assert.equal(d.counters.adHocMaterialized, 0);
+  });
+});
+
+// 5. Missing JSONL row is reported clearly.
+test("discoverAdHocCandidates reports a run dir with no JSONL row", async () => {
+  await withTempResults(async (results) => {
+    await makeRun(results, "eval-no-jsonl", { jsonl: false });
+    const d = await discoverAdHocCandidates({
+      resultsDir: results,
+      requestedLabels: ["eval-no-jsonl"],
+      knownLabels: new Set(),
+      parsePython: PARSE_OK,
+    });
+    assert.equal(d.skips[0]!.skipReason, "ad-hoc-missing-jsonl");
+    assert.equal(d.counters.adHocMissing, 1);
+  });
+});
+
+// 6. JSONL with empty modelPatch is not materialized.
+test("discoverAdHocCandidates does not materialize a run with an empty modelPatch", async () => {
+  await withTempResults(async (results) => {
+    await makeRun(results, "eval-empty-patch", { patch: null });
+    const d = await discoverAdHocCandidates({
+      resultsDir: results,
+      requestedLabels: ["eval-empty-patch"],
+      knownLabels: new Set(),
+      parsePython: PARSE_OK,
+    });
+    assert.equal(d.candidates.length, 0);
+    assert.equal(d.skips[0]!.skipReason, "ad-hoc-no-model-patch");
+    assert.equal(d.counters.adHocFound, 1); // dir+jsonl present...
+    assert.equal(d.counters.adHocMaterialized, 0); // ...but no candidate built
+  });
+});
+
+// 9. A label already in the curated set is not re-processed as ad hoc.
+test("discoverAdHocCandidates skips labels already in the curated known set", async () => {
+  await withTempResults(async (results) => {
+    await makeRun(results, "eval-editguard-before-requests-5414", { patch: REQ_BROAD_REWRITE });
+    const d = await discoverAdHocCandidates({
+      resultsDir: results,
+      requestedLabels: ["eval-editguard-before-requests-5414"],
+      knownLabels: new Set(["eval-editguard-before-requests-5414"]),
+      parsePython: PARSE_OK,
+    });
+    assert.equal(d.candidates.length, 0);
+    assert.equal(d.counters.adHocRequested, 0);
+  });
+});
+
+// 7. The live critic candidate table includes the ad hoc candidate, tagged ad_hoc_run_label.
+test("buildLiveReport includes a materialized ad hoc candidate in the run table with its source", async () => {
+  await withTempResults(async (results) => {
+    await makeRun(results, "eval-strictgated-vtrace-requests-5414", { patch: REQ_BROAD_REWRITE });
+    const d = await discoverAdHocCandidates({
+      resultsDir: results,
+      requestedLabels: ["eval-strictgated-vtrace-requests-5414"],
+      knownLabels: new Set(),
+      parsePython: PARSE_OK,
+    });
+    const gate = gateOf({ runLabels: ["eval-strictgated-vtrace-requests-5414"], maxCriticRuns: 1 });
+    const m = mockCaller();
+    const outcome = await runGatedCritic({ candidates: d.candidates, gate, caller: m.caller, criticModel: null });
+    const report = buildLiveReport({
+      generatedAt: "2026-01-01T00:00:00.000Z",
+      enabled: true,
+      gate,
+      outcome,
+      adHocSkips: d.skips,
+      adHoc: d.counters,
+    });
+    const row = report.runs.find((r) => r.runLabel === "eval-strictgated-vtrace-requests-5414")!;
+    assert.equal(row.source, "ad_hoc_run_label");
+    assert.equal(row.called, true);
+    assert.equal(report.adHoc.adHocMaterialized, 1);
+    // The report renders the source column and ad hoc counters.
+    const md = renderMarkdown(report);
+    assert.ok(md.includes("ad_hoc_run_label"));
+    assert.ok(md.includes("adHocMaterialized"));
+    // JSON is self-describing about the ad hoc audit trail.
+    const parsed = JSON.parse(renderJson(report));
+    assert.equal(parsed.adHoc.adHocRequested, 1);
+  });
+});
+
+// Non-materialized ad hoc labels appear as skip rows even when no candidate was built.
+test("buildLiveReport surfaces ad hoc skip rows for non-materialized labels", async () => {
+  await withTempResults(async (results) => {
+    const d = await discoverAdHocCandidates({
+      resultsDir: results,
+      requestedLabels: ["eval-missing"],
+      knownLabels: new Set(),
+      parsePython: PARSE_OK,
+    });
+    const gate = gateOf({ runLabels: ["eval-missing"], maxCriticRuns: 1 });
+    const m = mockCaller();
+    const outcome = await runGatedCritic({ candidates: d.candidates, gate, caller: m.caller, criticModel: null });
+    assert.equal(m.calls, 0); // nothing materialized → nothing called
+    const report = buildLiveReport({
+      generatedAt: null,
+      enabled: true,
+      gate,
+      outcome,
+      adHocSkips: d.skips,
+      adHoc: d.counters,
+    });
+    const row = report.runs.find((r) => r.runLabel === "eval-missing")!;
+    assert.equal(row.source, "ad_hoc_run_label");
+    assert.equal(row.skipReason, "ad-hoc-missing-run-dir");
+  });
 });

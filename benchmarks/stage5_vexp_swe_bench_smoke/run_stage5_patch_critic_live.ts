@@ -29,6 +29,11 @@ import {
 } from "./stage5_patch_critic_live";
 import { RESULTS_REL, RUN_LABELS, loadRun, makePythonParser } from "./run_stage5_patch_probe_report";
 import { buildCriticInput, loadRunMetaSignals } from "./run_stage5_patch_critic_dry_run";
+import {
+  type AdHocSkipReason,
+  type CandidateSource,
+  probeAdHocRun,
+} from "./stage5_ad_hoc_candidates";
 
 export const DEFAULT_OUT_NAME = "stage5_patch_critic_live_existing_runs";
 
@@ -68,6 +73,10 @@ export interface CliConfig {
   // deterministic critic, and report which runs WOULD be called and why. No model call, no live
   // critic artifacts.
   readonly dryRun: boolean;
+  // Opt-in: for every --run-label not already in the curated candidate universe, attempt to
+  // materialize an ad hoc candidate from results/runs/<runLabel>/raw/vtrace. Off by default, so
+  // unknown-run-label behavior is unchanged unless explicitly requested.
+  readonly includeAdHocRunLabels: boolean;
 }
 
 export function parseArgs(argv: readonly string[]): CliConfig {
@@ -80,6 +89,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
   let onlyDeterministicRepairRequired = DEFAULT_ONLY_DETERMINISTIC_REPAIR_REQUIRED;
   let criticCostCapUsd = DEFAULT_CRITIC_COST_CAP_USD;
   let dryRun = false;
+  let includeAdHocRunLabels = false;
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
     const next = (): string => {
@@ -129,6 +139,9 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--dry-run":
         dryRun = true;
         break;
+      case "--include-ad-hoc-run-labels":
+        includeAdHocRunLabels = true;
+        break;
       case "--help":
       case "-h":
         break;
@@ -146,6 +159,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
     onlyDeterministicRepairRequired,
     criticCostCapUsd,
     dryRun,
+    includeAdHocRunLabels,
   };
 }
 
@@ -160,22 +174,27 @@ export function parseArgs(argv: readonly string[]): CliConfig {
 export interface CriticCandidate {
   readonly runLabel: string;
   readonly instanceId: string;
+  // Whether this candidate came from the curated run universe or was materialized on demand from a
+  // requested ad hoc run label.
+  readonly source: CandidateSource;
   readonly input: PatchCriticInput;
   readonly deterministicReport: PatchCriticReport;
 }
 
 // Build a candidate from an already-loaded run. Pure given its arguments; touches no disk and
-// calls no model.
+// calls no model. `source` defaults to curated_existing so existing callers are unchanged.
 export function buildCandidate(args: {
   readonly probeSummary: PatchProbeSummary;
   readonly patch: string;
   readonly signals: Awaited<ReturnType<typeof loadRunMetaSignals>>;
+  readonly source?: CandidateSource;
 }): CriticCandidate {
   const input = buildCriticInput(args.probeSummary, args.patch, args.signals);
   const deterministicReport = buildDeterministicPatchCriticReport(input);
   return {
     runLabel: args.probeSummary.runLabel,
     instanceId: args.probeSummary.instanceId,
+    source: args.source ?? "curated_existing",
     input,
     deterministicReport,
   };
@@ -232,6 +251,10 @@ export interface GateConfig {
 export type SkipReason =
   | "not-in-run-label"
   | "low-risk-deterministic"
+  | "ad-hoc-probe-not-repair-required"
+  | "ad-hoc-missing-run-dir"
+  | "ad-hoc-missing-jsonl"
+  | "ad-hoc-no-model-patch"
   | "max-critic-runs"
   | "cost-cap";
 
@@ -240,6 +263,7 @@ export type SkipReason =
 export interface CriticRunDecision {
   readonly runLabel: string;
   readonly instanceId: string;
+  readonly source: CandidateSource;
   readonly deterministicRepairRequired: boolean;
   readonly eligible: boolean; // passed the static (run-label + risk) filters
   readonly called: boolean; // live critic actually invoked
@@ -267,6 +291,24 @@ export interface GatedCriticOutcome {
   readonly decisions: readonly CriticRunDecision[];
   readonly counters: GateCounters;
 }
+
+// Audit trail for opt-in ad hoc run-label materialization. `adHocRequested` counts requested
+// --run-label values outside the curated universe; `adHocFound` counts those whose run dir + JSONL
+// row were present (materialized OR empty-patch); `adHocMaterialized` counts those that produced a
+// candidate; `adHocMissing` counts those whose run dir or JSONL row was absent.
+export interface AdHocCounters {
+  readonly adHocRequested: number;
+  readonly adHocFound: number;
+  readonly adHocMaterialized: number;
+  readonly adHocMissing: number;
+}
+
+export const EMPTY_AD_HOC_COUNTERS: AdHocCounters = {
+  adHocRequested: 0,
+  adHocFound: 0,
+  adHocMaterialized: 0,
+  adHocMissing: 0,
+};
 
 // Walk the candidates IN ORDER, applying the safety gates, and invoke the live critic only on
 // approved runs. The gates are consulted strictly via the cheap deterministic verdict + running
@@ -300,6 +342,7 @@ export async function runGatedCritic(args: {
     const base = {
       runLabel: candidate.runLabel,
       instanceId: candidate.instanceId,
+      source: candidate.source,
       deterministicRepairRequired: detRepair,
     };
 
@@ -319,13 +362,16 @@ export async function runGatedCritic(args: {
     }
     if (gate.onlyDeterministicRepairRequired && !detRepair) {
       skippedLowRiskRuns += 1;
+      const adHoc = candidate.source === "ad_hoc_run_label";
       decisions.push({
         ...base,
         eligible: false,
         called: false,
         wouldCall: false,
-        skipReason: "low-risk-deterministic",
-        reason: "deterministic critic did not flag repair_required (low risk); --include-low-risk to process",
+        skipReason: adHoc ? "ad-hoc-probe-not-repair-required" : "low-risk-deterministic",
+        reason: adHoc
+          ? "ad hoc run materialized but its deterministic probe did not flag repair_required (low risk); --include-low-risk to process"
+          : "deterministic critic did not flag repair_required (low risk); --include-low-risk to process",
         result: null,
       });
       continue;
@@ -466,6 +512,7 @@ export interface GateConfigReport {
 export interface CriticLiveRunReportRow {
   readonly runLabel: string;
   readonly instanceId: string;
+  readonly source: CandidateSource;
   readonly deterministicRepairRequired: boolean;
   readonly eligible: boolean;
   readonly called: boolean;
@@ -482,6 +529,7 @@ export interface CriticLiveReport {
   readonly dryRun: boolean;
   readonly gates: GateConfigReport;
   readonly counters: GateCounters;
+  readonly adHoc: AdHocCounters;
   readonly summary: CriticLiveSummary;
   readonly runs: readonly CriticLiveRunReportRow[];
   readonly nonClaims: readonly string[];
@@ -502,11 +550,30 @@ export function buildLiveReport(args: {
   readonly enabled: boolean;
   readonly gate: GateConfig;
   readonly outcome: GatedCriticOutcome;
+  // Synthetic decision rows for ad hoc run labels that could NOT be materialized into candidates
+  // (missing run dir / JSONL / model patch). Appended to the per-run table so they are surfaced.
+  readonly adHocSkips?: readonly CriticRunDecision[];
+  readonly adHoc?: AdHocCounters;
 }): CriticLiveReport {
   const { generatedAt, enabled, gate, outcome } = args;
+  const adHocSkips = args.adHocSkips ?? [];
+  const adHoc = args.adHoc ?? EMPTY_AD_HOC_COUNTERS;
   const calledResults = outcome.decisions
     .map((d) => d.result)
     .filter((r): r is CriticLiveRunResult => r !== null);
+  const toRow = (d: CriticRunDecision): CriticLiveRunReportRow => ({
+    runLabel: d.runLabel,
+    instanceId: d.instanceId,
+    source: d.source,
+    deterministicRepairRequired: d.deterministicRepairRequired,
+    eligible: d.eligible,
+    called: d.called,
+    wouldCall: d.wouldCall,
+    skipReason: d.skipReason,
+    reason: d.reason,
+    meta: d.result ? d.result.meta : null,
+    liveReport: d.result ? d.result.report : null,
+  });
   return {
     generatedAt,
     enabled,
@@ -519,19 +586,9 @@ export function buildLiveReport(args: {
       dryRun: gate.dryRun,
     },
     counters: outcome.counters,
+    adHoc,
     summary: buildLiveSummary(enabled, calledResults),
-    runs: outcome.decisions.map((d) => ({
-      runLabel: d.runLabel,
-      instanceId: d.instanceId,
-      deterministicRepairRequired: d.deterministicRepairRequired,
-      eligible: d.eligible,
-      called: d.called,
-      wouldCall: d.wouldCall,
-      skipReason: d.skipReason,
-      reason: d.reason,
-      meta: d.result ? d.result.meta : null,
-      liveReport: d.result ? d.result.report : null,
-    })),
+    runs: [...outcome.decisions, ...adHocSkips].map(toRow),
     nonClaims: NON_CLAIMS,
   };
 }
@@ -571,6 +628,7 @@ export function renderMarkdown(report: CriticLiveReport): string {
   for (const [k, v] of Object.entries(counters)) {
     lines.push(`| ${k} | ${k === "totalCriticCostUsd" ? `$${(v as number).toFixed(4)}` : v} |`);
   }
+  for (const [k, v] of Object.entries(report.adHoc)) lines.push(`| ${k} | ${v} |`);
   lines.push("");
   lines.push("## Summary");
   lines.push("");
@@ -589,12 +647,12 @@ export function renderMarkdown(report: CriticLiveReport): string {
   lines.push("");
   lines.push("## Decisions by run");
   lines.push("");
-  lines.push("| run | det repair | decision | ran | valid | live repair | agreement | cost | reason |");
-  lines.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+  lines.push("| run | source | det repair | decision | ran | valid | live repair | agreement | cost | reason |");
+  lines.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
   for (const r of report.runs) {
     const m = r.meta;
     lines.push(
-      `| ${r.runLabel} | ${r.deterministicRepairRequired} | ${decisionLabel(r)} | ${m ? m.ran : "—"} | ` +
+      `| ${r.runLabel} | ${r.source} | ${r.deterministicRepairRequired} | ${decisionLabel(r)} | ${m ? m.ran : "—"} | ` +
         `${m ? m.validReport : "—"} | ${m?.liveRepairRequired ?? "—"} | ${m?.agreementWithDeterministic ?? "—"} | ` +
         `${m ? `$${m.criticCostUsd.toFixed(4)}` : "—"} | ${r.reason} |`,
     );
@@ -605,6 +663,99 @@ export function renderMarkdown(report: CriticLiveReport): string {
   for (const c of report.nonClaims) lines.push(`- ${c}`);
   lines.push("");
   return `${lines.join("\n")}\n`;
+}
+
+// ---------------------------------------------------------------------------
+// Ad hoc candidate discovery (cheap / read-only — no model)
+// ---------------------------------------------------------------------------
+
+export interface AdHocDiscovery {
+  readonly candidates: readonly CriticCandidate[];
+  readonly skips: readonly CriticRunDecision[];
+  readonly counters: AdHocCounters;
+}
+
+// A synthetic skip row for an ad hoc run label that could not be materialized into a candidate.
+function adHocSkipDecision(
+  runLabel: string,
+  instanceId: string | null,
+  skipReason: AdHocSkipReason,
+  detail: string,
+): CriticRunDecision {
+  return {
+    runLabel,
+    instanceId: instanceId ?? runLabel,
+    source: "ad_hoc_run_label",
+    deterministicRepairRequired: false,
+    eligible: false,
+    called: false,
+    wouldCall: false,
+    skipReason,
+    reason: detail,
+    result: null,
+  };
+}
+
+// Materialize ad hoc candidates for requested run labels OUTSIDE the curated `knownLabels` set. For
+// each: probe the raw run; on success build a candidate (source=ad_hoc_run_label) using the exact
+// same deterministic probe + critic logic as curated candidates; on failure record a synthetic skip
+// decision with the precise reason. Read-only; calls no model.
+export async function discoverAdHocCandidates(args: {
+  readonly resultsDir: string;
+  readonly requestedLabels: readonly string[];
+  readonly knownLabels: ReadonlySet<string>;
+  readonly parsePython: PythonParser;
+}): Promise<AdHocDiscovery> {
+  const { resultsDir, requestedLabels, knownLabels, parsePython } = args;
+  const candidates: CriticCandidate[] = [];
+  const skips: CriticRunDecision[] = [];
+  let adHocRequested = 0;
+  let adHocFound = 0;
+  let adHocMaterialized = 0;
+  let adHocMissing = 0;
+
+  for (const label of requestedLabels) {
+    if (knownLabels.has(label)) continue; // already a curated candidate
+    adHocRequested += 1;
+    const probe = await probeAdHocRun(resultsDir, label);
+
+    if (probe.status === "materialized") {
+      adHocFound += 1;
+      const loaded = await loadRun(resultsDir, label);
+      if (loaded === null || loaded.patch.trim() === "") {
+        // Defensive: the probe already confirmed a non-empty patch; stay fail-soft if it vanished.
+        adHocMissing += 1;
+        skips.push(adHocSkipDecision(label, probe.instanceId, "ad-hoc-missing-jsonl", probe.detail));
+        continue;
+      }
+      const probeSummary = summarizePatch({
+        instanceId: loaded.instanceId,
+        runLabel: loaded.runLabel,
+        patch: loaded.patch,
+        toolCalls: loaded.toolCalls,
+        stdout: loaded.stdout,
+        stderr: loaded.stderr,
+        parsePython,
+        reconstructedSources: loaded.reconstructedSources,
+        reconstruction: loaded.reconstruction,
+      });
+      const signals = await loadRunMetaSignals(resultsDir, label);
+      candidates.push(buildCandidate({ probeSummary, patch: loaded.patch, signals, source: "ad_hoc_run_label" }));
+      adHocMaterialized += 1;
+      continue;
+    }
+
+    // no-model-patch still means the run dir + JSONL row were found; missing-* means they were not.
+    if (probe.status === "no-model-patch") adHocFound += 1;
+    else adHocMissing += 1;
+    skips.push(adHocSkipDecision(label, probe.instanceId, probe.skipReason!, probe.detail));
+  }
+
+  return {
+    candidates,
+    skips,
+    counters: { adHocRequested, adHocFound, adHocMaterialized, adHocMissing },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -652,11 +803,28 @@ async function main(config: CliConfig): Promise<void> {
     candidates.push(buildCandidate({ probeSummary, patch: loaded.patch, signals }));
   }
 
+  // Opt-in: materialize ad hoc candidates for requested run labels outside the curated universe.
+  const curatedKnown = new Set(candidates.map((c) => c.runLabel));
+  const adHoc = config.includeAdHocRunLabels
+    ? await discoverAdHocCandidates({
+        resultsDir: config.resultsDir,
+        requestedLabels: config.runLabels,
+        knownLabels: curatedKnown,
+        parsePython,
+      })
+    : { candidates: [], skips: [], counters: EMPTY_AD_HOC_COUNTERS };
+  candidates.push(...adHoc.candidates);
+
   // A misspelled --run-label that matches no candidate would silently make zero calls; surface it.
-  const known = new Set(candidates.map((c) => c.runLabel));
-  const unknownLabels = config.runLabels.filter((l) => !known.has(l));
+  // Labels handled by ad hoc discovery (materialized OR reported as a skip) are NOT "unknown".
+  const handled = new Set<string>([
+    ...candidates.map((c) => c.runLabel),
+    ...adHoc.skips.map((s) => s.runLabel),
+  ]);
+  const unknownLabels = config.runLabels.filter((l) => !handled.has(l));
   if (unknownLabels.length > 0) {
-    process.stderr.write(`WARNING: --run-label not found among candidates: ${unknownLabels.join(", ")}\n`);
+    const hint = config.includeAdHocRunLabels ? "" : " (pass --include-ad-hoc-run-labels to materialize new runs)";
+    process.stderr.write(`WARNING: --run-label not found among candidates: ${unknownLabels.join(", ")}${hint}\n`);
   }
 
   // --- Phase 2: apply safety gates, invoke the live critic only when approved -
@@ -685,7 +853,14 @@ async function main(config: CliConfig): Promise<void> {
 
   // The comparison report (this is the runner's report, NOT a per-run live critic artifact) is
   // written in both real and dry-run modes; it is self-describing about the gates and decisions.
-  const report = buildLiveReport({ generatedAt, enabled: true, gate, outcome });
+  const report = buildLiveReport({
+    generatedAt,
+    enabled: true,
+    gate,
+    outcome,
+    adHocSkips: adHoc.skips,
+    adHoc: adHoc.counters,
+  });
   await mkdir(config.resultsDir, { recursive: true });
   const mdPath = path.join(config.resultsDir, `${config.outName}.md`);
   const jsonPath = path.join(config.resultsDir, `${config.outName}.json`);
@@ -702,6 +877,9 @@ async function main(config: CliConfig): Promise<void> {
       `  ${jsonPath}`,
       "",
       `Candidates: ${c.candidateRuns}${missing.length > 0 ? ` (missing: ${missing.join(", ")})` : ""}   Eligible: ${c.eligibleRuns}`,
+      config.includeAdHocRunLabels
+        ? `Ad hoc — requested: ${adHoc.counters.adHocRequested}   found: ${adHoc.counters.adHocFound}   materialized: ${adHoc.counters.adHocMaterialized}   missing: ${adHoc.counters.adHocMissing}`
+        : "",
       `Skipped — runLabel: ${c.skippedByRunLabel}   lowRisk: ${c.skippedLowRiskRuns}   maxRuns: ${c.skippedByMaxRuns}   costCap: ${c.stoppedByCostCap}`,
       `Live calls — attempted: ${c.liveCallsAttempted}   succeeded: ${c.liveCallsSucceeded}   failed-open: ${c.liveCallsFailedOpen}   cost: $${c.totalCriticCostUsd.toFixed(4)}`,
       config.dryRun
