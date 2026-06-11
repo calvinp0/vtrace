@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-06-11T21:15:01.758Z",
+  "sourceRunLabel": "eval-strictv2-artifacts-protocol-vtrace-astropy-14369",
+  "repairOutName": "stage5_generated_parser_astropy_repair_attempt_shape_gate",
+  "instanceId": "astropy__astropy-14369",
+  "sourcePatchResolved": false,
+  "repairedPatchResolved": true,
+  "convertedUnresolvedToResolved": true,
+  "evaluationRan": true,
+  "evaluationMethod": "isolated_derived_jsonl_external_evaluate",
+  "dockerUsed": true,
+  "evaluationError": null,
+  "repairCostUsd": 2.8185425,
+  "criticCostUsd": 0.18575950000000002,
+  "totalRecoveryCostUsd": 3.004302,
+  "repairCostCapUsd": 0.4,
+  "repairCostExceededCap": true,
+  "repairedPatchFilesChanged": [
+    "astropy/units/format/cds.py",
+    "astropy/units/format/cds_parsetab.py"
+  ],
+  "generatedParserTablesDeletedByRepair": false,
+  "generatedParserTablesUpdatedByRepair": [
+    "astropy/units/format/cds_parsetab.py"
+  ],
+  "broadGrammarRewriteDetectedInRepair": true,
+  "narrowGrammarReorderDetected": true,
+  "generatedParserRepairShapeAccepted": true,
+  "policyAccountingUpdated": false,
+  "headline": "Gated generated-parser repair CONVERTED the Astropy protocol run from unresolved to resolved (Docker resolved=true).",
+  "interpretation": "The accepted generated-parser repair converted astropy__astropy-14369 from unresolved to resolved. The successful repaired patch changed both cds.py and cds_parsetab.py, passed the generated-parser shape gate, and did not delete generated parser tables. This is a single-instance verified repair conversion, not an aggregate score and not a policy-accounting update.",
+  "repairedPatchHash": "467265ddf3855f72928bd3577804a9fd54a91ffcdb17dbf316a09428beb12e14",
+  "firstPatchHash": "f9038460cf149ef95604a6d8f7adb3d51d23f4d1f6bcf0fc9d73692969a22b00",
+  "repairValidPatch": true,
+  "repairChangedPatch": true,
+  "repairFailedOpen": false,
+  "liveCriticRepairRequired": true,
+  "agreementWithDeterministic": true,
+  "changedLineCount": 62,
+  "deletedFiles": [],
+  "derivedJsonlPath": "benchmarks/stage5_vexp_swe_bench_smoke/results/runs/eval-strictv2-artifacts-protocol-vtrace-astropy-14369/raw/vtrace/repair_eval/_repaired_eval_input.jsonl",
+  "evaluationCommand": "node dist/cli.js evaluate /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/runs/eval-strictv2-artifacts-protocol-vtrace-astropy-14369/raw/vtrace/repair_eval/_repaired_eval_input.jsonl --mode docker --timeout 1800 (cwd: /home/calvin/code/vexp-swe-bench)",
+  "nonClaims": [
+    "Single-instance evidence only; this does NOT prove aggregate improvement and is NOT a policy-accounting update.",
+    "No Stage 5 policy accounting row was added or modified by this report.",
+    "Docker is opt-in; without --run-evaluation no evaluator runs, resolved stays null, and NO resolution is claimed.",
+    "Evaluation runs ONLY against a derived JSONL whose sole change is modelPatch=repaired diff (resolved reset); the original JSONL, first patch, repaired patch, raw artifacts, and workspace are never modified.",
+    "The first patch is NOT re-evaluated here; its resolution is read from the existing original run JSONL row.",
+    "convertedUnresolvedToResolved is true ONLY when the first patch was observed unresolved AND the repaired patch observed resolved under Docker.",
+    "Recovery cost (critic + repair) is recorded separately and is NOT merged into policy accounting.",
+    "This runs no agent, no live critic, and no repair, and changes no retrieval / Capsule v2 / PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY / probe / critic / repair / evaluator / telemetry / policy-accounting behavior."
+  ]
+}

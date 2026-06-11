@@ -12,6 +12,8 @@ import {
   analyzeRepairedPatchShape,
   buildConversionReport,
   computeRecoveryCost,
+  computeRepairCostExceededCap,
+  extractShapeGateEvidence,
   parseArgs,
   renderJson,
   renderMarkdown,
@@ -67,6 +69,11 @@ const FIRST_DIFF = [
 
 const CRITIC_COST = 0.18575950000000002;
 const REPAIR_COST = 0.25599150000000004;
+// The shape-gated attempt's real repair cost and configured cap (cap is exceeded).
+const SHAPE_GATE_REPAIR_COST = 2.8185425;
+const REPAIR_COST_CAP = 0.4;
+const REPAIR_OUT_NAME = "stage5_generated_parser_astropy_repair_attempt_shape_gate";
+const CDS_PARSETAB = "astropy/units/format/cds_parsetab.py";
 
 // A process runner that simulates the external `evaluate` step: it finds the derived JSONL in the
 // args, rewrites every row's `resolved` to the configured verdict, and exits 0. NO Docker, NO model.
@@ -97,11 +104,17 @@ function mockEvaluator(verdict: boolean): {
 }
 
 // Build a temp results tree carrying the repair artifacts the runner reads. Returns the resultsDir.
-async function makeFixture(root: string, opts: { firstResolved?: boolean } = {}): Promise<string> {
+async function makeFixture(
+  root: string,
+  opts: { firstResolved?: boolean; repairCostUsd?: number; repairCostCapUsd?: number; shapeAccepted?: boolean } = {},
+): Promise<string> {
   const results = path.join(root, "results");
   const vtrace = path.join(results, "runs", RL, "raw", "vtrace");
   const repair = path.join(vtrace, "repair");
   await mkdir(repair, { recursive: true });
+
+  const repairCostUsd = opts.repairCostUsd ?? REPAIR_COST;
+  const shapeAccepted = opts.shapeAccepted ?? true;
 
   await writeFile(path.join(repair, "_repaired_patch.diff"), `${REPAIRED_DIFF}\n`);
   await writeFile(path.join(repair, "_first_patch.diff"), `${FIRST_DIFF}\n`);
@@ -112,8 +125,27 @@ async function makeFixture(root: string, opts: { firstResolved?: boolean } = {})
       instanceId: INSTANCE,
       defectClass: "unknown",
       instructionQuality: "actionable",
-      result: { validPatch: true, changedPatch: true, failedOpen: false, repairCostUsd: REPAIR_COST },
+      result: {
+        validPatch: true,
+        changedPatch: true,
+        failedOpen: false,
+        repairCostUsd,
+        // Post-repair shape-gate fields the conversion report surfaces (read-only).
+        generatedParserRepairShapeChecked: true,
+        generatedParserRepairShapeAccepted: shapeAccepted,
+        generatedParserRepairTablesUpdated: [CDS_PARSETAB],
+        generatedParserRepairDeletesGeneratedTables: false,
+        generatedParserRepairBroadRewriteDetected: false,
+      },
       generatedParserRepairSource: "generated_parser_minimality",
+    }),
+  );
+  // The repair-attempt report (read for the configured cost cap only).
+  await writeFile(
+    path.join(results, `${REPAIR_OUT_NAME}.json`),
+    JSON.stringify({
+      summary: { totalRepairCostUsd: repairCostUsd },
+      gates: { repairCostCapUsd: opts.repairCostCapUsd ?? REPAIR_COST_CAP },
     }),
   );
   await writeFile(
@@ -136,8 +168,8 @@ function cfg(resultsDir: string, overrides: Partial<CliConfig> = {}): CliConfig 
   return {
     resultsDir,
     runLabel: RL,
-    outName: "stage5_generated_parser_repair_conversion",
-    repairOutName: "stage5_generated_parser_astropy_repair_attempt",
+    outName: "stage5_generated_parser_repair_conversion_shape_gate",
+    repairOutName: REPAIR_OUT_NAME,
     runEvaluation: true,
     evalMode: "docker",
     evalTimeout: 1800,
@@ -269,14 +301,15 @@ test("renderMarkdown emits all required sections; renderJson emits all required 
 
     const md = renderMarkdown(report);
     for (const section of [
-      "# Stage 5 generated-parser repair conversion",
+      "# Stage 5 generated-parser repair conversion: shape-gated attempt",
       "## Summary",
       "## Source run",
       "## Repair attempt",
       "## Repaired patch shape",
       "## Docker evaluation",
       "## Conversion result",
-      "## Cost accounting",
+      "## Recovery cost",
+      "## Cost-cap caveat",
       "## Policy accounting boundary",
       "## Non-claims",
     ]) {
@@ -297,13 +330,17 @@ test("renderMarkdown emits all required sections; renderJson emits all required 
       "evaluationMethod",
       "dockerUsed",
       "evaluationError",
-      "repairCostUsd",
       "criticCostUsd",
+      "repairCostUsd",
       "totalRecoveryCostUsd",
+      "repairCostCapUsd",
+      "repairCostExceededCap",
       "repairedPatchFilesChanged",
       "generatedParserTablesDeletedByRepair",
+      "generatedParserTablesUpdatedByRepair",
       "broadGrammarRewriteDetectedInRepair",
       "narrowGrammarReorderDetected",
+      "generatedParserRepairShapeAccepted",
       "policyAccountingUpdated",
     ]) {
       assert.ok(field in parsed, `missing JSON field ${field}`);
@@ -311,6 +348,11 @@ test("renderMarkdown emits all required sections; renderJson emits all required 
     assert.equal(parsed.policyAccountingUpdated, false);
     assert.equal(parsed.sourceRunLabel, RL);
     assert.deepEqual(parsed.repairedPatchFilesChanged, ["astropy/units/format/cds.py"]);
+    // Shape-gate + cost-cap surfaced from the artifacts.
+    assert.equal(parsed.generatedParserRepairShapeAccepted, true);
+    assert.deepEqual(parsed.generatedParserTablesUpdatedByRepair, [CDS_PARSETAB]);
+    assert.equal(parsed.repairCostCapUsd, REPAIR_COST_CAP);
+    assert.equal(parsed.repairCostExceededCap, false); // default fixture cost (0.256) < cap (0.4)
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -368,9 +410,77 @@ test("buildConversionReport: conversion is strict (any unknown ⇒ not converted
       criticMeta: { criticCostUsd: CRITIC_COST },
       repairOutName: "r",
       derivedJsonlPath: "/x/repair_eval/_repaired_eval_input.jsonl",
+      shapeGate: { shapeAccepted: true, tablesUpdated: [CDS_PARSETAB] },
+      repairCostCapUsd: REPAIR_COST_CAP,
     });
   assert.equal(mk(false, true).convertedUnresolvedToResolved, true);
   assert.equal(mk(null, true).convertedUnresolvedToResolved, false);
   assert.equal(mk(false, null).convertedUnresolvedToResolved, false);
   assert.equal(mk(true, true).convertedUnresolvedToResolved, false);
+});
+
+// ---------------------------------------------------------------------------
+// Shape-gate evidence + cost-cap (the milestone additions).
+// ---------------------------------------------------------------------------
+// 2/3/4. Shape-gate evidence is read from the repair meta result.
+test("extractShapeGateEvidence: reads shapeAccepted + tablesUpdated; tolerates absent fields", () => {
+  const ev = extractShapeGateEvidence({
+    result: {
+      generatedParserRepairShapeAccepted: true,
+      generatedParserRepairTablesUpdated: [CDS_PARSETAB],
+      generatedParserRepairDeletesGeneratedTables: false,
+      generatedParserRepairBroadRewriteDetected: false,
+    },
+  });
+  assert.equal(ev.shapeAccepted, true);
+  assert.deepEqual([...ev.tablesUpdated], [CDS_PARSETAB]);
+  // Absent artifact ⇒ null / empty (graceful).
+  const none = extractShapeGateEvidence(null);
+  assert.equal(none.shapeAccepted, null);
+  assert.deepEqual([...none.tablesUpdated], []);
+});
+
+// 10. repairCostExceededCap is true only when both values are known and cost > cap.
+test("computeRepairCostExceededCap: true only when known cost exceeds known cap", () => {
+  assert.equal(computeRepairCostExceededCap(SHAPE_GATE_REPAIR_COST, REPAIR_COST_CAP), true); // 2.8185 > 0.4
+  assert.equal(computeRepairCostExceededCap(0.25, 0.4), false);
+  assert.equal(computeRepairCostExceededCap(null, 0.4), false); // unknown cost
+  assert.equal(computeRepairCostExceededCap(2.8, null), false); // unknown cap
+});
+
+// 1/2/3/4/8/9/10/11/13. End-to-end shape-gated attempt: shapeAccepted, parsetab updated, no deletion,
+// cap exceeded, conversion computed, policy accounting untouched.
+test("run: shape-gated attempt surfaces shape-gate acceptance, parsetab update, and cap exceedance", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "gp-conv-shapegate-"));
+  try {
+    const results = await makeFixture(root, {
+      repairCostUsd: SHAPE_GATE_REPAIR_COST,
+      repairCostCapUsd: REPAIR_COST_CAP,
+      shapeAccepted: true,
+    });
+    const report = await run(cfg(results), { runProcess: mockEvaluator(true).runProcess });
+
+    // 2/3. shape gate accepted + cds_parsetab.py updated.
+    assert.equal(report.generatedParserRepairShapeAccepted, true);
+    assert.deepEqual([...report.generatedParserTablesUpdatedByRepair], [CDS_PARSETAB]);
+    // 4. no generated parser table deletion, no broad rewrite.
+    assert.equal(report.generatedParserTablesDeletedByRepair, false);
+    assert.equal(report.broadGrammarRewriteDetectedInRepair, false);
+    // 8/9. recovery cost from critic + shape-gated repair cost.
+    assert.ok(Math.abs(report.totalRecoveryCostUsd! - (CRITIC_COST + SHAPE_GATE_REPAIR_COST)) < 1e-9);
+    // 10. cap exceeded.
+    assert.equal(report.repairCostCapUsd, REPAIR_COST_CAP);
+    assert.equal(report.repairCostExceededCap, true);
+    // 11. policy accounting untouched.
+    assert.equal(report.policyAccountingUpdated, false);
+
+    // 12/13. the Cost-cap caveat section + audit-only language is present.
+    const md = renderMarkdown(report);
+    assert.ok(md.includes("## Cost-cap caveat"));
+    assert.ok(md.includes("does not audit or fix cost-cap"));
+    assert.ok(md.includes("$0.4000"));
+    assert.ok(md.includes("$2.8185"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

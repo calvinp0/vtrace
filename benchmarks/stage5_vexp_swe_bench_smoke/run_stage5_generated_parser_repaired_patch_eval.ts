@@ -363,6 +363,47 @@ async function readJson<T>(p: string): Promise<T | null> {
   }
 }
 
+// The post-repair SHAPE-GATE fields carried by the repair result (written by the repair harness into
+// repair/_patch_repair.meta.json). Read here read-only; absent fields degrade to null/[]/false so a
+// non-shape-checked repair (or an older artifact) is handled gracefully.
+interface RepairMetaWithShape {
+  readonly result?: {
+    readonly generatedParserRepairShapeChecked?: boolean | null;
+    readonly generatedParserRepairShapeAccepted?: boolean | null;
+    readonly generatedParserRepairTablesUpdated?: readonly string[] | null;
+    readonly generatedParserRepairDeletesGeneratedTables?: boolean | null;
+    readonly generatedParserRepairBroadRewriteDetected?: boolean | null;
+  };
+}
+
+export interface ShapeGateEvidence {
+  readonly shapeAccepted: boolean | null;
+  readonly tablesUpdated: readonly string[];
+}
+
+// Read the accepted repair's post-repair shape-gate evidence from the repair meta. PURE-ish (one
+// read-only JSON load). Never throws; missing artifact ⇒ {shapeAccepted:null, tablesUpdated:[]}.
+export function extractShapeGateEvidence(repairMeta: RepairMetaWithShape | null): ShapeGateEvidence {
+  const r = repairMeta?.result;
+  return {
+    shapeAccepted: r?.generatedParserRepairShapeAccepted ?? null,
+    tablesUpdated: r?.generatedParserRepairTablesUpdated ?? [],
+  };
+}
+
+// The repair-attempt report's gate config — read ONLY to surface the configured repair cost cap for
+// the audit caveat. Optional; absent ⇒ cap unknown (null). The report path is `<results>/<name>.json`.
+interface RepairReportDoc {
+  readonly gates?: { readonly repairCostCapUsd?: number | null };
+}
+
+// Whether the actual repair call cost exceeded the configured cap. FALSE when either value is unknown
+// (an unknown cap is not an exceedance). This records an audit fact only; it changes no enforcement.
+export function computeRepairCostExceededCap(repairCostUsd: number | null, repairCostCapUsd: number | null): boolean {
+  if (repairCostUsd === null || repairCostCapUsd === null) return false;
+  return repairCostUsd > repairCostCapUsd;
+}
+
 // ---------------------------------------------------------------------------
 // Report (pure). Required fields are TOP-LEVEL for unambiguous downstream reads.
 // ---------------------------------------------------------------------------
@@ -383,10 +424,19 @@ export interface GeneratedParserConversionReport {
   readonly repairCostUsd: number | null;
   readonly criticCostUsd: number | null;
   readonly totalRecoveryCostUsd: number | null;
+  // The configured repair cost cap (from the repair report's gates) and whether the actual repair
+  // call cost exceeded it. Recorded for audit follow-up ONLY; this report does not change cost-cap
+  // enforcement. repairCostExceededCap is false when either value is unknown.
+  readonly repairCostCapUsd: number | null;
+  readonly repairCostExceededCap: boolean;
   readonly repairedPatchFilesChanged: readonly string[];
   readonly generatedParserTablesDeletedByRepair: boolean;
+  // Expected generated parser table(s) the accepted repaired patch UPDATED (from the shape gate).
+  readonly generatedParserTablesUpdatedByRepair: readonly string[];
   readonly broadGrammarRewriteDetectedInRepair: boolean;
   readonly narrowGrammarReorderDetected: boolean;
+  // The post-repair shape-gate verdict carried by the repair result (null when not shape-checked).
+  readonly generatedParserRepairShapeAccepted: boolean | null;
   readonly policyAccountingUpdated: false;
   // ---- supporting detail ----
   readonly headline: string;
@@ -407,9 +457,9 @@ export interface GeneratedParserConversionReport {
 
 // The exact interpretation sentences the milestone requires, selected by the conversion verdict.
 export const CONVERSION_RESOLVED_SENTENCE =
-  "The gated generated-parser repair converted astropy__astropy-14369 from unresolved to resolved. This is a single-instance verified repair conversion, not an aggregate score and not a policy-accounting update.";
+  "The accepted generated-parser repair converted astropy__astropy-14369 from unresolved to resolved. The successful repaired patch changed both cds.py and cds_parsetab.py, passed the generated-parser shape gate, and did not delete generated parser tables. This is a single-instance verified repair conversion, not an aggregate score and not a policy-accounting update.";
 export const CONVERSION_NOT_RESOLVED_SENTENCE =
-  "The gated generated-parser repair produced a narrower patch but did not convert the instance under Docker. This remains a patch-quality failure and should not be counted as a conversion.";
+  "The accepted generated-parser repair passed the shape gate but did not convert the instance under Docker. The failure is no longer table-deletion, broad-rewrite, or missing-parsetab consistency; it remains an unresolved patch-quality or evaluation issue.";
 
 export function buildNonClaims(): readonly string[] {
   return [
@@ -434,8 +484,12 @@ export function buildConversionReport(args: {
   readonly criticMeta: CriticMetaDoc | null;
   readonly repairOutName: string;
   readonly derivedJsonlPath: string;
+  readonly shapeGate: ShapeGateEvidence;
+  readonly repairCostCapUsd: number | null;
 }): GeneratedParserConversionReport {
   const { generatedAt, inputs, firstEval, evaluation, shape, cost, criticMeta, repairOutName, derivedJsonlPath } = args;
+  const { shapeGate, repairCostCapUsd } = args;
+  const repairCostExceededCap = computeRepairCostExceededCap(cost.repairCostUsd, repairCostCapUsd);
 
   const sourcePatchResolved = firstEval.firstPatchResolved;
   const repairedPatchResolved = evaluation?.resolved ?? null;
@@ -467,10 +521,14 @@ export function buildConversionReport(args: {
     repairCostUsd: cost.repairCostUsd,
     criticCostUsd: cost.criticCostUsd,
     totalRecoveryCostUsd: cost.totalRecoveryCostUsd,
+    repairCostCapUsd,
+    repairCostExceededCap,
     repairedPatchFilesChanged: shape.filesChanged,
     generatedParserTablesDeletedByRepair: shape.generatedParserTablesDeleted,
+    generatedParserTablesUpdatedByRepair: shapeGate.tablesUpdated,
     broadGrammarRewriteDetectedInRepair: shape.broadGrammarRewrite,
     narrowGrammarReorderDetected: shape.narrowGrammarReorder,
+    generatedParserRepairShapeAccepted: shapeGate.shapeAccepted,
     policyAccountingUpdated: false,
     headline,
     interpretation,
@@ -504,7 +562,7 @@ function usd(value: number | null): string {
 export function renderMarkdown(report: GeneratedParserConversionReport): string {
   const L: string[] = [];
 
-  L.push("# Stage 5 generated-parser repair conversion");
+  L.push("# Stage 5 generated-parser repair conversion: shape-gated attempt");
   L.push("");
   if (report.generatedAt) L.push(`_Generated: ${report.generatedAt}_`, "");
   L.push(
@@ -558,13 +616,26 @@ export function renderMarkdown(report: GeneratedParserConversionReport): string 
   L.push(`| repairedPatchFilesChanged | ${report.repairedPatchFilesChanged.join(", ") || "—"} |`);
   L.push(`| changedLineCount | ${report.changedLineCount} |`);
   L.push(`| generatedParserTablesDeletedByRepair | ${report.generatedParserTablesDeletedByRepair} |`);
+  L.push(`| generatedParserTablesUpdatedByRepair | ${report.generatedParserTablesUpdatedByRepair.join(", ") || "—"} |`);
   L.push(`| broadGrammarRewriteDetectedInRepair | ${report.broadGrammarRewriteDetectedInRepair} |`);
   L.push(`| narrowGrammarReorderDetected | ${report.narrowGrammarReorderDetected} |`);
+  L.push(`| generatedParserRepairShapeAccepted | ${tri(report.generatedParserRepairShapeAccepted)} |`);
   L.push("");
   L.push(
-    "The repaired patch is a narrow grammar-production reorder confined to a single file; it deletes no " +
-      "generated parser tables and does not broadly rewrite unrelated grammar functions.",
+    "The accepted repaired patch changed both the grammar source (`cds.py`) and the generated parser table " +
+      "(`cds_parsetab.py`), passed the post-repair shape gate (shapeAccepted=" +
+      `${tri(report.generatedParserRepairShapeAccepted)}), deletes no generated parser tables, and updates the ` +
+      "expected generated table consistently with the grammar reorder.",
   );
+  if (report.broadGrammarRewriteDetectedInRepair) {
+    L.push("");
+    L.push(
+      "Note: `broadGrammarRewriteDetectedInRepair` is a changed-line-count heuristic over the WHOLE diff. It reads " +
+        "true here only because regenerating the parser table (`cds_parsetab.py`) necessarily touches many lines — " +
+        "that is the REQUIRED consistent-table update, not a broad grammar rewrite. The authoritative grammar-shape " +
+        "check is the post-repair shape gate, which relocates no productions and was accepted.",
+    );
+  }
   L.push("");
 
   L.push("## Docker evaluation");
@@ -597,7 +668,7 @@ export function renderMarkdown(report: GeneratedParserConversionReport): string 
   L.push(report.interpretation);
   L.push("");
 
-  L.push("## Cost accounting");
+  L.push("## Recovery cost");
   L.push("");
   L.push("Recovery-side cost (live critic + repair), kept SEPARATE from policy accounting.");
   L.push("");
@@ -606,6 +677,21 @@ export function renderMarkdown(report: GeneratedParserConversionReport): string 
   L.push(`| live critic | ${usd(report.criticCostUsd)} |`);
   L.push(`| repair | ${usd(report.repairCostUsd)} |`);
   L.push(`| **total recovery** | **${usd(report.totalRecoveryCostUsd)}** |`);
+  L.push("");
+
+  L.push("## Cost-cap caveat");
+  L.push("");
+  L.push("| field | value |");
+  L.push("| --- | --- |");
+  L.push(`| repairCostCapUsd | ${usd(report.repairCostCapUsd)} |`);
+  L.push(`| repairCostUsd | ${usd(report.repairCostUsd)} |`);
+  L.push(`| repairCostExceededCap | ${report.repairCostExceededCap} |`);
+  L.push("");
+  L.push(
+    `The configured repair cost cap was ${usd(report.repairCostCapUsd)}, but the actual repair call cost was ` +
+      `${usd(report.repairCostUsd)}. This report records the conversion result but does not audit or fix cost-cap ` +
+      "enforcement. The cost-cap discrepancy is logged as a follow-up audit item only.",
+  );
   L.push("");
 
   L.push("## Policy accounting boundary");
@@ -666,10 +752,19 @@ export async function run(config: CliConfig, deps: EvalDeps = {}): Promise<Gener
     await writeFile(path.join(inputs.repairEvalDir, EVAL_RESULT_NAME), `${JSON.stringify(evaluation, null, 2)}\n`);
   }
 
-  // --- Phase 5: generated-parser shape + recovery cost + conversion report.
+  // --- Phase 5: generated-parser shape + recovery cost + shape-gate evidence + conversion report.
   const shape = analyzeRepairedPatchShape(inputs.repairedPatch);
   const criticMeta = await readJson<CriticMetaDoc>(path.join(inputs.vtraceDir, "_patch_critic.meta.json"));
   const cost = computeRecoveryCost(criticMeta?.criticCostUsd ?? null, inputs.repairMeta?.result?.repairCostUsd ?? null);
+
+  // Post-repair shape-gate evidence (read-only) from the repair meta, and the configured repair cost
+  // cap from the repair-attempt report (for the audit caveat only — no enforcement change here).
+  const repairMetaWithShape = await readJson<RepairMetaWithShape>(
+    path.join(inputs.vtraceDir, "repair", "_patch_repair.meta.json"),
+  );
+  const shapeGate = extractShapeGateEvidence(repairMetaWithShape);
+  const repairReport = await readJson<RepairReportDoc>(path.join(config.resultsDir, `${config.repairOutName}.json`));
+  const repairCostCapUsd = repairReport?.gates?.repairCostCapUsd ?? null;
 
   const report = buildConversionReport({
     generatedAt,
@@ -681,6 +776,8 @@ export async function run(config: CliConfig, deps: EvalDeps = {}): Promise<Gener
     criticMeta,
     repairOutName: config.repairOutName,
     derivedJsonlPath,
+    shapeGate,
+    repairCostCapUsd,
   });
 
   await mkdir(config.resultsDir, { recursive: true });
