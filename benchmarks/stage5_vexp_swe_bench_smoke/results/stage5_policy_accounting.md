@@ -1,6 +1,6 @@
 # Stage 5 policy accounting
 
-_Generated: 2026-06-11T14:39:29.428Z_
+_Generated: 2026-06-11T14:43:54.232Z_
 
 _Reporting/accounting only. Re-runs nothing (no agent, no live critic, no repair, no Docker); accounts for strict-gated first-pass runs, observed artifacts, and verified repaired-patch evaluations over the controlled task set._
 
@@ -112,7 +112,7 @@ strict_vtrace_first_patch uses fewer total tokens and lower total cost than base
 
 strict_vtrace_with_verified_repair reaches 8/10 by applying one strict-specific verified repair conversion: psf__requests-5414.
 
-This repair conversion is strict-specific. It is not transferred from old VTRACE repair evidence.
+This strict repair conversion is not transferred from old VTRACE repair evidence. It was generated from the strict first patch run eval-strictgated-vtrace-requests-5414.
 
 - added strict critic cost: $0.1909
 - added strict repair cost: $0.2241
@@ -122,7 +122,7 @@ This repair conversion is strict-specific. It is not transferred from old VTRACE
 
 strict_vtrace_with_verified_repair matches baseline resolved count in this controlled set (8/10 vs baseline 8/10), while cost/token totals must be read from the accounting table.
 
-strict_vtrace_with_verified_repair matches baseline resolution at lower total cost/tokens.
+strict_vtrace_with_verified_repair matches baseline resolution while using lower total cost and fewer total tokens.
 
 | metric | baseline | strict_vtrace_first_patch | strict_vtrace_with_verified_repair |
 | --- | --- | --- | --- |

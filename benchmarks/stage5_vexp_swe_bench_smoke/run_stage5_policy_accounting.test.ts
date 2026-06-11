@@ -256,8 +256,9 @@ test("recommends stopping repair experiments when strict+repair matches baseline
   const md = renderMarkdown(report);
   assert.ok(md.includes("## Recommended next step"));
   assert.ok(md.includes(STOP_REPAIR_STATEMENT));
-  assert.ok(md.includes("strict_vtrace_with_verified_repair matches baseline resolution at lower total cost/tokens."));
-  assert.ok(md.includes("This repair conversion is strict-specific. It is not transferred from old VTRACE repair evidence."));
+  assert.ok(md.includes("strict_vtrace_with_verified_repair matches baseline resolution while using lower total cost and fewer total tokens."));
+  // run-label provenance: strict conversion came from the strictgated run, not old VTRACE.
+  assert.ok(md.includes("This strict repair conversion is not transferred from old VTRACE repair evidence. It was generated from the strict first patch run eval-strictgated-vtrace-b."));
 });
 
 test("does NOT recommend stopping when strict+repair stays behind baseline", () => {

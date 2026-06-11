@@ -1348,6 +1348,10 @@ export function renderMarkdown(report: PolicyAccountingReport): string {
 
   L.push("## Strict repair accounting");
   L.push("");
+  // The strict run labels that produced the strict-specific conversions (provenance).
+  const strictConversionRunLabels = [
+    ...new Set(report.conversions.filter((c) => c.source === "strict" && c.convertedUnresolvedToResolved).map((c) => c.runLabel)),
+  ];
   if (sra.strictUniqueTaskConversions > 0) {
     L.push(
       `**strict_vtrace_with_verified_repair** starts from **strict_vtrace_first_patch** (${sra.strictFirstPassResolved}/${sra.taskCount}) and applies ` +
@@ -1359,7 +1363,9 @@ export function renderMarkdown(report: PolicyAccountingReport): string {
       `strict_vtrace_with_verified_repair reaches ${sra.strictWithRepairResolved}/${sra.taskCount} by applying one strict-specific verified repair conversion: ${report.strictUniqueTaskRecoveries.join(", ")}.`,
     );
     L.push("");
-    L.push("This repair conversion is strict-specific. It is not transferred from old VTRACE repair evidence.");
+    L.push(
+      `This strict repair conversion is not transferred from old VTRACE repair evidence. It was generated from the strict first patch run ${strictConversionRunLabels.join(", ")}.`,
+    );
     L.push("");
     L.push("- added strict critic cost: " + fmtUsd(sra.strictRepairCriticCostUsd));
     L.push("- added strict repair cost: " + fmtUsd(sra.strictRepairRepairCostUsd));
@@ -1373,7 +1379,7 @@ export function renderMarkdown(report: PolicyAccountingReport): string {
       );
       L.push("");
       if (sra.lowerCostThanBaseline && sra.fewerTokensThanBaseline) {
-        L.push("strict_vtrace_with_verified_repair matches baseline resolution at lower total cost/tokens.");
+        L.push("strict_vtrace_with_verified_repair matches baseline resolution while using lower total cost and fewer total tokens.");
         L.push("");
       }
     } else {
