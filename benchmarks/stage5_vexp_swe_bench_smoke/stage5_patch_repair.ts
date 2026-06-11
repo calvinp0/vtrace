@@ -22,6 +22,7 @@ import {
   classifyInstruction,
   defectClassFor,
 } from "./run_stage5_live_critic_high_risk_comparison";
+import { analyzeGeneratedParserConsistency } from "../../src/capsule/patchMinimalityProbes";
 
 export type { DefectClass, InstructionQuality };
 
@@ -60,6 +61,10 @@ export interface GeneratedParserRepairContext {
   readonly guidance: readonly string[]; // narrow-rewrite prompt lines (already includes critic/probe)
   readonly liveCriticInstruction: string;
   readonly narrowAlternativeHint: string | null;
+  // The artifact-derived generated-parser CONSISTENCY context (expected parser tables to keep in
+  // sync, flagged defect class, probe reasons), or null when the first patch is not a generated-parser
+  // grammar change. Surfaced so the prompt names the expected table and the report can audit it.
+  readonly consistency: GeneratedParserConsistencyContext | null;
 }
 
 export interface PatchRepairInput {
@@ -179,32 +184,110 @@ export const GENERATED_PARSER_REPAIR_SOURCE = "valid_live_critic_and_patch_minim
 // report row). Distinct from the eligibility provenance above; this names what the repaired patch is.
 export const GENERATED_PARSER_REPAIR_LIVE_SOURCE = "generated_parser_minimality";
 
-// The narrow-rewrite instruction block prepended to a generated-parser LIVE repair prompt. Kept
-// general (not Astropy-specific): the division_of_units / p_combined_units wording matches this
-// class of grammar-minimality defect; the live critic's actionable instruction and the deterministic
-// probe hint are appended per-run by buildGeneratedParserRepairGuidance so nothing is hardcoded.
-export const GENERATED_PARSER_REPAIR_PROMPT_GUIDANCE: readonly string[] = [
-  "The patch was flagged as a generated-parser broad rewrite. Repair narrowly:",
-  "- change the division_of_units grammar production order inside its parser function",
-  "- do not relocate productions into p_combined_units",
-  "- do not delete generated parser tables",
-  "- avoid broad grammar rewrites",
-  "- preserve generated parser artifacts unless they are intentionally regenerated consistently",
+// The named generated-parser CONSISTENCY failure mode the refined guidance guards against: a narrow
+// source grammar edit that leaves the generated parser table stale (the prior Astropy repair shape).
+// Matches the deterministic diagnostic in analyzeGeneratedParserConsistency.
+export const GENERATED_PARSER_CONSISTENCY_DEFECT_CLASS = "source_grammar_changed_without_generated_table_update";
+
+// MINIMALITY guidance: avoid broad rewrites and parser-table deletion. Kept general (not
+// Astropy-specific): the p_combined_units wording is an example of relocating productions into an
+// unrelated parser function.
+export const GENERATED_PARSER_REPAIR_MINIMALITY_GUIDANCE: readonly string[] = [
+  "Minimality guidance — avoid broad rewrite / table deletion:",
+  "- change the source grammar production inside the relevant parser function only",
+  "- do not relocate productions into unrelated parser functions such as p_combined_units",
+  "- do not broadly rewrite grammar structure",
+  "- preserve the smallest patch that changes runtime behavior",
 ];
 
-// Build the per-run generated-parser repair guidance: the general narrow-rewrite block above plus the
-// live critic's actionable instruction and the deterministic probe's narrow-alternative hint when
-// present. PURE; produces prompt lines only.
+// CONSISTENCY guidance: when the source grammar changes, the generated parser table must change with
+// it. This is the refinement over the previous (too-conservative) guidance, which forbade deletion /
+// broad rewrites but never required a consistent table update. Generic (the *_parsetab.py convention),
+// with Astropy/CDS named only as an example.
+export const GENERATED_PARSER_REPAIR_CONSISTENCY_GUIDANCE: readonly string[] = [
+  "Consistency guidance — update the generated parser table when the source grammar changes:",
+  "- if the source grammar changes, update/regenerate the corresponding generated parser table consistently",
+  "- for PLY parsers (e.g. Astropy/CDS this means cds.py and cds_parsetab.py) the source module and its generated *_parsetab.py table must stay in sync",
+  "- do not delete generated parser tables",
+  "- do not delete lextab/parsetab files",
+];
+
+// The full narrow-rewrite instruction block prepended to a generated-parser LIVE repair prompt. It
+// now combines BOTH the minimality block and the consistency block, so the repaired patch can make a
+// narrow source edit AND keep the generated parser table in sync. The live critic's actionable
+// instruction, the deterministic probe hint, and the artifact-derived expected tables are appended
+// per-run by buildGeneratedParserRepairGuidance so nothing is hardcoded.
+export const GENERATED_PARSER_REPAIR_PROMPT_GUIDANCE: readonly string[] = [
+  "The previous patch was flagged as a generated-parser repair consistency issue.",
+  "Repair narrowly:",
+  ...GENERATED_PARSER_REPAIR_MINIMALITY_GUIDANCE,
+  ...GENERATED_PARSER_REPAIR_CONSISTENCY_GUIDANCE,
+];
+
+// Build the per-run generated-parser repair guidance: the combined minimality + consistency block
+// above, the artifact-derived consistency context (flagged defect class + the exact generated tables
+// to keep in sync), the live critic's actionable instruction, and the deterministic probe's
+// narrow-alternative hint when present. PURE; produces prompt lines only.
 export function buildGeneratedParserRepairGuidance(
   report: PatchCriticReport | null,
   probe: PatchMinimalityProbe | null,
+  consistency: GeneratedParserConsistencyContext | null = null,
 ): string[] {
   const lines = [...GENERATED_PARSER_REPAIR_PROMPT_GUIDANCE];
+  // Artifact-derived hint: name the flagged consistency defect class and the exact generated parser
+  // table(s) that must be kept in sync, when the consistency probe identified them for this patch.
+  if (consistency !== null) {
+    lines.push("", `Flagged consistency defect class: ${consistency.defectClass}.`);
+    if (consistency.expectedGeneratedTables.length > 0) {
+      lines.push(
+        `When the source grammar changes, also update/regenerate the corresponding generated parser table(s): ${consistency.expectedGeneratedTables.join(", ")}.`,
+      );
+    }
+    for (const reason of consistency.reasons) lines.push(`Consistency probe: ${reason}`);
+  }
   const instruction = report?.repair_instructions?.trim() ?? "";
   if (instruction !== "") lines.push("", `Live critic actionable instruction: ${instruction}`);
   const hint = probe?.patchMinimalityNarrowAlternativeHint?.trim() ?? "";
   if (hint !== "") lines.push(`Deterministic narrow-alternative hint: ${hint}`);
   return lines;
+}
+
+// The artifact-derived generated-parser CONSISTENCY context for a repair attempt. Built from the
+// first patch via analyzeGeneratedParserConsistency. `defectClass` names the consistency failure mode
+// the guidance guards against (source_grammar_changed_without_generated_table_update); the expected
+// tables are read straight from the probe.
+export interface GeneratedParserConsistencyContext {
+  readonly consistencyRisk: boolean;
+  readonly defectClass: string;
+  readonly expectedGeneratedTables: readonly string[];
+  readonly reasons: readonly string[];
+  readonly sourceGrammarFilesChanged: readonly string[];
+}
+
+// Derive the consistency context for a generated-parser repair from the first patch. Returns null
+// when the first patch is NOT a generated-parser grammar change (no source grammar functions, no
+// expected generated table, no table deletion), so non-parser repairs are unaffected. PURE — runs the
+// deterministic analyzeGeneratedParserConsistency probe only; no agents / Docker / model.
+export function buildGeneratedParserConsistencyContext(
+  firstPatch: string | null,
+): GeneratedParserConsistencyContext | null {
+  if (firstPatch === null || firstPatch.trim() === "") return null;
+  const probe = analyzeGeneratedParserConsistency(firstPatch);
+  const relevant =
+    probe.sourceGrammarFilesChanged.length > 0 ||
+    probe.expectedGeneratedTables.length > 0 ||
+    probe.generatedParserTablesDeleted.length > 0;
+  if (!relevant) return null;
+  return {
+    consistencyRisk: probe.consistencyRisk,
+    // The forward-looking consistency failure mode the refined guidance addresses. The probe's own
+    // class on the first patch may be generated_table_deleted; either way the instruction is to keep
+    // the source grammar and the generated table in sync.
+    defectClass: GENERATED_PARSER_CONSISTENCY_DEFECT_CLASS,
+    expectedGeneratedTables: probe.expectedGeneratedTables,
+    reasons: probe.reasons,
+    sourceGrammarFilesChanged: probe.sourceGrammarFilesChanged,
+  };
 }
 
 // The INTENDED narrow-rewrite guidance a future gated repair would follow, derived from the live

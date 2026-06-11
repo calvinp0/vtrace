@@ -7,9 +7,14 @@ import {
   type PatchMinimalityProbe,
   type RepairCaller,
   DEFAULT_ALLOWED_DEFECT_CLASSES,
+  GENERATED_PARSER_CONSISTENCY_DEFECT_CLASS,
   GENERATED_PARSER_NARROW_REWRITE_GUIDANCE,
   GENERATED_PARSER_REPAIR_CLASS,
+  GENERATED_PARSER_REPAIR_CONSISTENCY_GUIDANCE,
+  GENERATED_PARSER_REPAIR_MINIMALITY_GUIDANCE,
   GENERATED_PARSER_REPAIR_SOURCE,
+  buildGeneratedParserConsistencyContext,
+  buildGeneratedParserRepairGuidance,
   evaluateGeneratedParserRepairEligibility,
   evaluateRepairEligibility,
   hasNarrowRewriteGuidance,
@@ -902,9 +907,11 @@ test("runGatedRepair: generated-parser live run calls the injected caller exactl
   assert.equal(d.invocation!.result.validPatch, true);
   // The repair input carried the generated-parser narrow-rewrite guidance and source marker.
   assert.equal(d.invocation!.input.generatedParserRepair?.source, "generated_parser_minimality");
-  assert.ok(
-    d.invocation!.input.generatedParserRepair!.guidance.some((g) => /generated-parser broad rewrite/.test(g)),
-  );
+  const gpGuidance = d.invocation!.input.generatedParserRepair!.guidance;
+  // Refined guidance: flags the consistency issue, keeps minimality + consistency blocks.
+  assert.ok(gpGuidance.some((g) => /generated-parser repair consistency issue/.test(g)));
+  assert.ok(gpGuidance.some((g) => /update\/regenerate the corresponding generated parser table/.test(g)));
+  assert.ok(gpGuidance.some((g) => /do not relocate productions into.*p_combined_units/.test(g)));
   // The meta marks the source as a generated-parser minimality repair.
   assert.equal(d.invocation!.meta.generatedParserRepairSource, "generated_parser_minimality");
   // A repaired patch artifact was produced.
@@ -1135,4 +1142,174 @@ test("loadPatchMinimalityProbe reads the probe row from the live-critic summary 
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+// ===========================================================================
+// Refined generated-parser repair CONSISTENCY guidance (table-consistency milestone).
+// ===========================================================================
+
+// A broad generated-parser first patch: narrow cds.py grammar edit AND deletes both generated
+// tables. The consistency probe derives expectedGeneratedTables = [cds_parsetab.py] from it.
+const GP_FIRST_PATCH_BROAD = [
+  "diff --git a/astropy/units/format/cds.py b/astropy/units/format/cds.py",
+  "--- a/astropy/units/format/cds.py",
+  "+++ b/astropy/units/format/cds.py",
+  "@@ -164,12 +164,8 @@ class CDS(Base):",
+  "         def p_combined_units(p):",
+  '             """',
+  "-            combined_units : product_of_units",
+  "-                           | division_of_units",
+  '-            """',
+  "-        def p_division_of_units(p):",
+  '-            """',
+  "-            division_of_units : DIVISION unit_expression",
+  "+            combined_units : combined_units DIVISION unit_expression",
+  "+                           | unit_expression",
+  '             """',
+  "diff --git a/astropy/units/format/cds_lextab.py b/astropy/units/format/cds_lextab.py",
+  "deleted file mode 100644",
+  "--- a/astropy/units/format/cds_lextab.py",
+  "+++ /dev/null",
+  "@@ -1,1 +0,0 @@",
+  "-# generated",
+  "diff --git a/astropy/units/format/cds_parsetab.py b/astropy/units/format/cds_parsetab.py",
+  "deleted file mode 100644",
+  "--- a/astropy/units/format/cds_parsetab.py",
+  "+++ /dev/null",
+  "@@ -1,1 +0,0 @@",
+  "-# generated",
+].join("\n");
+
+const GP_EXPECTED_TABLE = "astropy/units/format/cds_parsetab.py";
+
+// 1, 2, 3, 4, 5. The repair prompt guidance includes consistency guidance, names the expected
+// generated table, still forbids table deletion + broad rewrite/relocation, and distinguishes the
+// minimality block from the consistency block.
+test("buildGeneratedParserRepairGuidance includes consistency guidance + expected tables + minimality", () => {
+  const consistency = buildGeneratedParserConsistencyContext(GP_FIRST_PATCH_BROAD);
+  assert.ok(consistency, "consistency context should be derived from a generated-parser patch");
+  assert.equal(consistency!.defectClass, GENERATED_PARSER_CONSISTENCY_DEFECT_CLASS);
+  assert.deepEqual([...consistency!.expectedGeneratedTables], [GP_EXPECTED_TABLE]);
+
+  const guidance = buildGeneratedParserRepairGuidance(gpReport(), gpProbe(), consistency);
+  const text = guidance.join("\n");
+
+  // 1. Consistency guidance present and references the flagged consistency defect class.
+  assert.ok(/generated-parser repair consistency issue/.test(text));
+  assert.ok(text.includes(GENERATED_PARSER_CONSISTENCY_DEFECT_CLASS));
+  assert.ok(/update\/regenerate the corresponding generated parser table consistently/.test(text));
+  // 2. Names the expected generated parser table path (artifact-derived).
+  assert.ok(text.includes(GP_EXPECTED_TABLE));
+  // 3. Still forbids generated parser table deletion (parsetab + lextab).
+  assert.ok(/do not delete generated parser tables/.test(text));
+  assert.ok(/do not delete lextab\/parsetab files/.test(text));
+  // 4. Still forbids broad rewrites / production relocation into unrelated functions.
+  assert.ok(/do not relocate productions into unrelated parser functions such as p_combined_units/.test(text));
+  assert.ok(/do not broadly rewrite grammar structure/.test(text));
+  // 5. Distinguishes the minimality block from the consistency block.
+  assert.ok(text.includes("Minimality guidance"));
+  assert.ok(text.includes("Consistency guidance"));
+  // The two guidance constants are distinct and both fold into the prompt.
+  assert.notDeepEqual(
+    [...GENERATED_PARSER_REPAIR_MINIMALITY_GUIDANCE],
+    [...GENERATED_PARSER_REPAIR_CONSISTENCY_GUIDANCE],
+  );
+  for (const line of GENERATED_PARSER_REPAIR_CONSISTENCY_GUIDANCE) assert.ok(guidance.includes(line));
+  for (const line of GENERATED_PARSER_REPAIR_MINIMALITY_GUIDANCE) assert.ok(guidance.includes(line));
+});
+
+// A non-parser first patch yields no consistency context (default-path repairs are unaffected).
+test("buildGeneratedParserConsistencyContext returns null for a non-parser patch", () => {
+  assert.equal(buildGeneratedParserConsistencyContext(FIRST_PATCH), null);
+  assert.equal(buildGeneratedParserConsistencyContext(null), null);
+  assert.equal(buildGeneratedParserConsistencyContext(""), null);
+});
+
+// 1 (required behavior). A LIVE generated-parser repair on the broad patch carries, in its prompt,
+// the consistency defect class, the expected table, the update/regenerate instruction, and the
+// no-delete / no-relocate instructions.
+test("runGatedRepair: live generated-parser repair input carries the consistency guidance", async () => {
+  const m = mockCaller();
+  const { decisions } = await runGatedRepair({
+    candidates: [gpCandidate({ firstPatch: GP_FIRST_PATCH_BROAD })],
+    gate: gpGate({ dryRun: false, enablePatchRepair: true, allowGeneratedParserRepair: true }),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 1);
+  const d = decisions[0]!;
+  assert.equal(d.viaGeneratedParser, true);
+  const ctx = d.invocation!.input.generatedParserRepair!;
+  assert.equal(ctx.consistency?.defectClass, GENERATED_PARSER_CONSISTENCY_DEFECT_CLASS);
+  assert.deepEqual([...ctx.consistency!.expectedGeneratedTables], [GP_EXPECTED_TABLE]);
+  const text = ctx.guidance.join("\n");
+  assert.ok(text.includes(GENERATED_PARSER_CONSISTENCY_DEFECT_CLASS));
+  assert.ok(text.includes(GP_EXPECTED_TABLE));
+  assert.ok(/update\/regenerate the corresponding generated parser table/.test(text));
+  assert.ok(/do not delete generated parser tables/.test(text));
+  assert.ok(/do not relocate productions into unrelated parser functions such as p_combined_units/.test(text));
+});
+
+// 6 & 7. The report JSON includes the generatedParserConsistency* fields and the Markdown includes
+// the consistency guidance, when a live generated-parser repair ran on a parser patch.
+test("buildRepairReport: generated-parser consistency fields in JSON + consistency guidance in Markdown", async () => {
+  const gate = gpGate({ dryRun: false, enablePatchRepair: true, allowGeneratedParserRepair: true });
+  const m = mockCaller();
+  const outcome = await runGatedRepair({
+    candidates: [gpCandidate({ firstPatch: GP_FIRST_PATCH_BROAD })],
+    gate,
+    caller: m.caller,
+    repairModel: null,
+  });
+  const report = buildRepairReport({ generatedAt: null, enabled: true, gate, outcome });
+
+  // 6. JSON consistency fields.
+  const parsed = JSON.parse(renderJson(report));
+  const gpRun = parsed.generatedParser.runs[0];
+  for (const field of [
+    "generatedParserConsistencyRisk",
+    "generatedParserConsistencyDefectClass",
+    "generatedParserConsistencyExpectedTables",
+    "generatedParserConsistencyReasons",
+    "generatedParserConsistencyGuidanceIncluded",
+  ]) {
+    assert.ok(field in gpRun, `missing consistency field ${field}`);
+  }
+  assert.equal(gpRun.generatedParserConsistencyRisk, true);
+  assert.equal(gpRun.generatedParserConsistencyDefectClass, GENERATED_PARSER_CONSISTENCY_DEFECT_CLASS);
+  assert.deepEqual(gpRun.generatedParserConsistencyExpectedTables, [GP_EXPECTED_TABLE]);
+  assert.equal(gpRun.generatedParserConsistencyGuidanceIncluded, true);
+
+  // 7. Markdown consistency guidance.
+  const md = renderMarkdown(report);
+  assert.ok(md.includes("consistency guidance (update the generated parser table when the source grammar changes)"));
+  assert.ok(md.includes(GENERATED_PARSER_CONSISTENCY_DEFECT_CLASS));
+  assert.ok(md.includes(GP_EXPECTED_TABLE));
+});
+
+// 8 & 9. Existing dry-run eligibility and live gates remain unchanged when consistency context is
+// present: dry-run still calls no model and reports wouldRepair; live still runs EXACTLY ONE attempt.
+test("consistency context does not change dry-run eligibility or the one-attempt live gate", async () => {
+  // Dry-run: no model, wouldRepair=true (unchanged).
+  const mDry = mockCaller();
+  const dry = await runGatedRepair({
+    candidates: [gpCandidate({ firstPatch: GP_FIRST_PATCH_BROAD })],
+    gate: gpGate({ dryRun: true, allowGeneratedParserRepair: true }),
+    caller: mDry.caller,
+    repairModel: null,
+  });
+  assert.equal(mDry.calls, 0);
+  assert.equal(dry.decisions[0]!.wouldRepair, true);
+  assert.equal(dry.decisions[0]!.repaired, false);
+
+  // Live: exactly one bounded attempt (unchanged).
+  const mLive = mockCaller();
+  const live = await runGatedRepair({
+    candidates: [gpCandidate({ firstPatch: GP_FIRST_PATCH_BROAD })],
+    gate: gpGate({ dryRun: false, enablePatchRepair: true, allowGeneratedParserRepair: true }),
+    caller: mLive.caller,
+    repairModel: null,
+  });
+  assert.equal(mLive.calls, 1);
+  assert.equal(live.counters.repairCallsAttempted, 1);
 });

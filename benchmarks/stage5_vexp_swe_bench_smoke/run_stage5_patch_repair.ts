@@ -24,6 +24,7 @@ import { CRITIC_RUN_LABELS } from "./run_stage5_live_critic_high_risk_comparison
 import { RESULTS_REL } from "./run_stage5_patch_probe_report";
 import type { CandidateSource } from "./stage5_ad_hoc_candidates";
 import {
+  type GeneratedParserConsistencyContext,
   type GeneratedParserRepairEligibility,
   type PatchMinimalityProbe,
   type PatchRepairInput,
@@ -35,6 +36,7 @@ import {
   DEFAULT_ALLOWED_DEFECT_CLASSES,
   GENERATED_PARSER_NARROW_REWRITE_GUIDANCE,
   GENERATED_PARSER_REPAIR_LIVE_SOURCE,
+  buildGeneratedParserConsistencyContext,
   buildGeneratedParserRepairGuidance,
   buildRepairArtifacts,
   evaluateGeneratedParserRepairEligibility,
@@ -376,6 +378,10 @@ export interface RepairRunDecision {
   // The generated-parser eligibility evaluation for this run, when its run-label gate passed and a
   // probe/flag made it relevant; null otherwise. Carries the gate/blocked reasons for the report.
   readonly generatedParser: GeneratedParserRepairEligibility | null;
+  // The artifact-derived generated-parser CONSISTENCY context for this run (from the first patch via
+  // analyzeGeneratedParserConsistency), or null when the run is not a generated-parser grammar change.
+  // Surfaced so the report can audit which generated tables the repair guidance asked to keep in sync.
+  readonly generatedParserConsistency: GeneratedParserConsistencyContext | null;
 }
 
 export interface RepairCounters {
@@ -413,10 +419,14 @@ function buildRepairInput(candidate: RepairCandidate): PatchRepairInput {
 }
 
 // Build the LIVE repair input for a generated-parser candidate. Like buildRepairInput, but it
-// attaches the generated-parser narrow-rewrite guidance (folding in the live critic instruction and
-// the deterministic probe hint) and marks the source as generated_parser_minimality. Only called for
-// runs that became eligible via the generated-parser path in live mode.
-function buildGeneratedParserRepairInput(candidate: RepairCandidate): PatchRepairInput {
+// attaches the generated-parser narrow-rewrite guidance (folding in the live critic instruction, the
+// deterministic probe hint, and the artifact-derived consistency context) and marks the source as
+// generated_parser_minimality. Only called for runs that became eligible via the generated-parser
+// path in live mode.
+function buildGeneratedParserRepairInput(
+  candidate: RepairCandidate,
+  consistency: GeneratedParserConsistencyContext | null,
+): PatchRepairInput {
   const report = candidate.report!;
   const probe = candidate.patchMinimalityProbe;
   return {
@@ -429,9 +439,10 @@ function buildGeneratedParserRepairInput(candidate: RepairCandidate): PatchRepai
     repairInstructions: report.repair_instructions,
     generatedParserRepair: {
       source: GENERATED_PARSER_REPAIR_LIVE_SOURCE,
-      guidance: buildGeneratedParserRepairGuidance(report, probe),
+      guidance: buildGeneratedParserRepairGuidance(report, probe, consistency),
       liveCriticInstruction: report.repair_instructions,
       narrowAlternativeHint: probe?.patchMinimalityNarrowAlternativeHint ?? null,
+      consistency,
     },
   };
 }
@@ -511,6 +522,7 @@ export async function runGatedRepair(args: {
         invocation: null,
         viaGeneratedParser: false,
         generatedParser: null,
+        generatedParserConsistency: null,
       });
     };
     if (gate.runLabels.length === 0) {
@@ -528,6 +540,11 @@ export async function runGatedRepair(args: {
     // Computed only for runs that carry a deterministic patch-minimality probe; null otherwise so
     // default-path decisions stay clean. Eligibility requires the explicit flag, and either dry-run
     // (would-repair, no model) or --enable-patch-repair with dryRun=false (one bounded model call).
+    // Artifact-derived consistency context (from the first patch). Computed only for generated-parser
+    // candidates so the default path stays clean. Drives the refined repair guidance + report fields.
+    const gpConsistency: GeneratedParserConsistencyContext | null =
+      candidate.patchMinimalityProbe != null ? buildGeneratedParserConsistencyContext(candidate.firstPatch) : null;
+
     const gpRelevant = candidate.patchMinimalityProbe != null;
     const gpElig = gpRelevant
       ? evaluateGeneratedParserRepairEligibility({
@@ -565,6 +582,7 @@ export async function runGatedRepair(args: {
         invocation: null,
         viaGeneratedParser,
         generatedParser,
+        generatedParserConsistency: gpConsistency,
       });
     };
 
@@ -613,6 +631,7 @@ export async function runGatedRepair(args: {
         invocation: null,
         viaGeneratedParser,
         generatedParser,
+        generatedParserConsistency: gpConsistency,
       });
       continue;
     }
@@ -621,7 +640,9 @@ export async function runGatedRepair(args: {
     // Two live paths reach here: the default allowlist path, and the generated-parser path when it
     // became eligible in LIVE mode (--enable-patch-repair, dryRun=false). The generated-parser path
     // uses a dedicated narrow-rewrite input; both go through the same one-attempt, fail-open runner.
-    const input = viaGeneratedParser ? buildGeneratedParserRepairInput(candidate) : buildRepairInput(candidate);
+    const input = viaGeneratedParser
+      ? buildGeneratedParserRepairInput(candidate, gpConsistency)
+      : buildRepairInput(candidate);
     const outcome = await runPatchRepair({ enabled: true, input, caller, repairModel });
     repairCallsAttempted += 1;
     totalRepairCostUsd += outcome.result.repairCostUsd ?? 0;
@@ -647,6 +668,7 @@ export async function runGatedRepair(args: {
       invocation: { result: outcome.result, input, meta, artifacts },
       viaGeneratedParser,
       generatedParser,
+      generatedParserConsistency: gpConsistency,
     });
   }
 
@@ -720,6 +742,15 @@ export interface GeneratedParserRunReport {
   readonly liveCriticValid: boolean | null;
   readonly agreementWithDeterministic: boolean | null;
   readonly actionableNarrowRewriteGuidance: readonly string[];
+  // Generated-parser CONSISTENCY fields (the refinement): whether the first patch posed a consistency
+  // risk, the flagged consistency defect class, the expected generated parser tables to keep in sync,
+  // the probe reasons, and whether the consistency guidance was folded into the repair prompt. Null /
+  // empty / false when the run is not a generated-parser grammar change.
+  readonly generatedParserConsistencyRisk: boolean | null;
+  readonly generatedParserConsistencyDefectClass: string | null;
+  readonly generatedParserConsistencyExpectedTables: readonly string[];
+  readonly generatedParserConsistencyReasons: readonly string[];
+  readonly generatedParserConsistencyGuidanceIncluded: boolean;
   readonly wouldRepair: boolean;
   // The live one-attempt outcome (all false/null in dry-run or when no live attempt was made).
   readonly repairAttempted: boolean;
@@ -797,6 +828,7 @@ function generatedParserRunReport(d: RepairRunDecision): GeneratedParserRunRepor
   if (gp === null) return null;
   const executed = d.viaGeneratedParser && d.repaired;
   const result = executed ? d.invocation?.result ?? null : null;
+  const cons = d.generatedParserConsistency;
   return {
     runLabel: d.runLabel,
     instanceId: d.instanceId,
@@ -816,6 +848,13 @@ function generatedParserRunReport(d: RepairRunDecision): GeneratedParserRunRepor
     liveCriticValid: gp.liveCriticValid,
     agreementWithDeterministic: gp.agreementWithDeterministic,
     actionableNarrowRewriteGuidance: gp.actionableNarrowRewriteGuidance,
+    generatedParserConsistencyRisk: cons?.consistencyRisk ?? null,
+    generatedParserConsistencyDefectClass: cons?.defectClass ?? null,
+    generatedParserConsistencyExpectedTables: cons?.expectedGeneratedTables ?? [],
+    generatedParserConsistencyReasons: cons?.reasons ?? [],
+    // The consistency guidance block is folded into the generated-parser repair guidance whenever a
+    // consistency context was derived for the run.
+    generatedParserConsistencyGuidanceIncluded: cons !== null,
     wouldRepair: d.viaGeneratedParser && d.wouldRepair,
     repairAttempted: result !== null,
     repairSucceeded: result?.validPatch ?? false,
@@ -1107,6 +1146,21 @@ export function renderMarkdown(report: RepairReport): string {
       L.push(`- liveCriticRepairRequired: ${r.liveCriticRepairRequired}`);
       L.push(`- liveCriticValid: ${r.liveCriticValid}`);
       L.push(`- agreementWithDeterministic: ${r.agreementWithDeterministic}`);
+      L.push(`- generatedParserConsistencyRisk: ${r.generatedParserConsistencyRisk}`);
+      L.push(`- generatedParserConsistencyDefectClass: ${r.generatedParserConsistencyDefectClass ?? "none"}`);
+      L.push(
+        `- generatedParserConsistencyExpectedTables: ${r.generatedParserConsistencyExpectedTables.length > 0 ? r.generatedParserConsistencyExpectedTables.join(", ") : "none"}`,
+      );
+      L.push(`- generatedParserConsistencyGuidanceIncluded: ${r.generatedParserConsistencyGuidanceIncluded}`);
+      if (r.generatedParserConsistencyGuidanceIncluded) {
+        L.push("- consistency guidance (update the generated parser table when the source grammar changes):");
+        L.push("  - if the source grammar changes, update/regenerate the corresponding generated parser table consistently");
+        L.push("  - do not delete generated parser tables / lextab / parsetab files");
+        if (r.generatedParserConsistencyExpectedTables.length > 0) {
+          L.push(`  - keep in sync: ${r.generatedParserConsistencyExpectedTables.join(", ")}`);
+        }
+        for (const reason of r.generatedParserConsistencyReasons) L.push(`  - consistency probe: ${reason}`);
+      }
       if (r.generatedParserRepairGateReasons.length > 0) {
         L.push("- gates satisfied:");
         for (const g of r.generatedParserRepairGateReasons) L.push(`  - ${g}`);
