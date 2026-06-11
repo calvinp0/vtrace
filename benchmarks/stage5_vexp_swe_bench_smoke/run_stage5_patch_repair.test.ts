@@ -810,11 +810,13 @@ test("generated-parser repair is BLOCKED when narrow-rewrite guidance is missing
   assert.deepEqual([...e.actionableNarrowRewriteGuidance], []);
 });
 
-// 3 (dry-run-only). Blocked when NOT in dry-run — guarantees no live repair this milestone.
-test("generated-parser repair is BLOCKED when not in --dry-run (dry-run-only milestone)", () => {
+// Live mode requires --enable-patch-repair. Blocked when NOT in dry-run AND --enable-patch-repair
+// is absent (this is the boundary that prevents an accidental live repair).
+test("generated-parser repair is BLOCKED when not in --dry-run and --enable-patch-repair is absent", () => {
   const e = evaluateGeneratedParserRepairEligibility({
     runLabel: GP_RUN_LABEL,
     allowGeneratedParserRepair: true,
+    enablePatchRepair: false,
     dryRun: false,
     runLabelProvided: true,
     meta: metaFor(),
@@ -823,7 +825,177 @@ test("generated-parser repair is BLOCKED when not in --dry-run (dry-run-only mil
     probe: gpProbe(),
   });
   assert.equal(e.eligible, false);
-  assert.ok(e.blockedReasons.some((r) => /dry-run-only/.test(r)));
+  assert.equal(e.mode, "blocked");
+  assert.ok(e.blockedReasons.some((r) => /enable-patch-repair/.test(r)));
+});
+
+// ===========================================================================
+// Generated-parser LIVE repair execution (explicit gated path; injected caller).
+// ===========================================================================
+
+// 10. Eligible in LIVE mode with the flags and ALL gates satisfied; mode=live.
+test("generated-parser repair is ELIGIBLE in live mode with --enable-patch-repair + flag + all gates", () => {
+  const e = evaluateGeneratedParserRepairEligibility({
+    runLabel: GP_RUN_LABEL,
+    allowGeneratedParserRepair: true,
+    enablePatchRepair: true,
+    dryRun: false,
+    runLabelProvided: true,
+    meta: metaFor(),
+    report: gpReport(),
+    firstPatch: FIRST_PATCH,
+    probe: gpProbe(),
+  });
+  assert.equal(e.allowed, true);
+  assert.equal(e.eligible, true);
+  assert.equal(e.mode, "live");
+  assert.deepEqual(e.blockedReasons, []);
+});
+
+// 2. Live blocked without --enable-patch-repair (already covered above at the function level); here
+// end-to-end through the runner the run stays ineligible and the model is never called.
+test("runGatedRepair: generated-parser live run is BLOCKED without --enable-patch-repair (no model)", async () => {
+  const m = mockCaller();
+  const { decisions, counters } = await runGatedRepair({
+    candidates: [gpCandidate()],
+    gate: gpGate({ dryRun: false, enablePatchRepair: false, allowGeneratedParserRepair: true }),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 0);
+  assert.equal(counters.eligibleRuns, 0);
+  const d = decisions[0]!;
+  assert.equal(d.viaGeneratedParser, false);
+  assert.ok(d.generatedParser?.blockedReasons.some((r) => /enable-patch-repair/.test(r)));
+});
+
+// 3. Live blocked without --allow-generated-parser-repair (no model).
+test("runGatedRepair: generated-parser live run is BLOCKED without --allow-generated-parser-repair (no model)", async () => {
+  const m = mockCaller();
+  const { counters } = await runGatedRepair({
+    candidates: [gpCandidate()],
+    gate: gpGate({ dryRun: false, enablePatchRepair: true, allowGeneratedParserRepair: false }),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 0);
+  assert.equal(counters.eligibleRuns, 0);
+});
+
+// 10 & 14. Live mode with ALL gates satisfied invokes the injected caller EXACTLY ONCE.
+test("runGatedRepair: generated-parser live run calls the injected caller exactly once", async () => {
+  const m = mockCaller();
+  const { decisions, counters } = await runGatedRepair({
+    candidates: [gpCandidate()],
+    gate: gpGate({ dryRun: false, enablePatchRepair: true, allowGeneratedParserRepair: true }),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 1); // exactly one bounded attempt
+  assert.equal(counters.eligibleRuns, 1);
+  assert.equal(counters.repairCallsAttempted, 1);
+  assert.equal(counters.repairCallsSucceeded, 1);
+  assert.equal(counters.repairedPatchProduced, 1);
+  const d = decisions[0]!;
+  assert.equal(d.repaired, true);
+  assert.equal(d.viaGeneratedParser, true);
+  assert.equal(d.invocation!.result.validPatch, true);
+  // The repair input carried the generated-parser narrow-rewrite guidance and source marker.
+  assert.equal(d.invocation!.input.generatedParserRepair?.source, "generated_parser_minimality");
+  assert.ok(
+    d.invocation!.input.generatedParserRepair!.guidance.some((g) => /generated-parser broad rewrite/.test(g)),
+  );
+  // The meta marks the source as a generated-parser minimality repair.
+  assert.equal(d.invocation!.meta.generatedParserRepairSource, "generated_parser_minimality");
+  // A repaired patch artifact was produced.
+  assert.ok("_repaired_patch.diff" in d.invocation!.artifacts);
+});
+
+// 11. Live report surfaces the required generated-parser live-attempt fields with executed=true.
+test("buildRepairReport: generated-parser live report carries the live-attempt fields (executed=true)", async () => {
+  const gate = gpGate({ dryRun: false, enablePatchRepair: true, allowGeneratedParserRepair: true });
+  const m = mockCaller();
+  const outcome = await runGatedRepair({ candidates: [gpCandidate()], gate, caller: m.caller, repairModel: null });
+  const report = buildRepairReport({ generatedAt: null, enabled: true, gate, outcome });
+
+  const parsed = JSON.parse(renderJson(report));
+  assert.equal(parsed.generatedParser.mode, "live");
+  assert.equal(parsed.generatedParser.repairExecuted, true);
+  assert.equal(parsed.generatedParser.repairAttemptedRuns, 1);
+  assert.equal(parsed.generatedParser.repairSucceededRuns, 1);
+
+  const gpRun = parsed.generatedParser.runs[0];
+  for (const field of [
+    "generatedParserRepairAllowed",
+    "generatedParserRepairEligible",
+    "generatedParserRepairExecuted",
+    "generatedParserRepairSource",
+    "generatedParserRepairGuidance",
+    "patchMinimalityRepairRequired",
+    "patchMinimalityDefectClass",
+    "liveCriticRepairRequired",
+    "agreementWithDeterministic",
+    "repairAttempted",
+    "repairSucceeded",
+    "repairFailedOpen",
+    "repairCostUsd",
+  ]) {
+    assert.ok(field in gpRun, `missing generated-parser live field ${field}`);
+  }
+  assert.equal(gpRun.generatedParserRepairExecuted, true);
+  assert.equal(gpRun.generatedParserRepairSource, "generated_parser_minimality");
+  assert.equal(gpRun.repairAttempted, true);
+  assert.equal(gpRun.repairSucceeded, true);
+  assert.equal(gpRun.repairFailedOpen, false);
+  assert.equal(typeof gpRun.repairCostUsd, "number");
+
+  // The non-claim and the live boundary must both appear.
+  assert.ok(parsed.nonClaims.some((n: string) => /did not run Docker and does not claim a repair conversion/.test(n)));
+  const md = renderMarkdown(report);
+  assert.ok(md.includes("## Generated-parser repair (live execution)"));
+  assert.ok(md.includes("This generated a repaired patch only. It did not run Docker and does not claim a repair conversion."));
+});
+
+// 12. Fail-open: an invalid model response preserves the first patch and records the error, while
+// still being counted as a generated-parser attempt.
+test("runGatedRepair: generated-parser live fail-open preserves the first patch and records error", async () => {
+  const m = mockCaller({ response: "I will not emit a diff." });
+  const { decisions, counters } = await runGatedRepair({
+    candidates: [gpCandidate()],
+    gate: gpGate({ dryRun: false, enablePatchRepair: true, allowGeneratedParserRepair: true }),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 1);
+  assert.equal(counters.repairCallsAttempted, 1);
+  assert.equal(counters.repairCallsFailedOpen, 1);
+  assert.equal(counters.repairCallsSucceeded, 0);
+  const d = decisions[0]!;
+  assert.equal(d.viaGeneratedParser, true);
+  assert.equal(d.invocation!.result.failedOpen, true);
+  assert.equal(d.invocation!.result.repairedPatch, null);
+  assert.ok(d.invocation!.result.error);
+  // First-patch copy present; no repaired patch artifact on fail-open.
+  assert.ok("_first_patch.diff" in d.invocation!.artifacts);
+  assert.ok(!("_repaired_patch.diff" in d.invocation!.artifacts));
+});
+
+// 9 (dry-run preserved). With --allow-generated-parser-repair and --dry-run the run reports
+// wouldRepair=true and repairExecuted=false, and NO model is called — unchanged from before.
+test("generated-parser dry-run with the flag still reports wouldRepair=true / repairExecuted=false (no model)", async () => {
+  const m = mockCaller();
+  const { decisions, counters } = await runGatedRepair({
+    candidates: [gpCandidate()],
+    gate: gpGate({ dryRun: true, allowGeneratedParserRepair: true }),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 0);
+  assert.equal(counters.repairCallsAttempted, 0);
+  const d = decisions[0]!;
+  assert.equal(d.wouldRepair, true);
+  assert.equal(d.repaired, false); // dry-run never executes ⇒ generatedParserRepairExecuted stays false
+  assert.equal(d.generatedParser?.mode, "dry-run");
 });
 
 // End-to-end through the runner: eligible dry-run, no model call, repairExecuted=false.

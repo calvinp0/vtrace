@@ -52,6 +52,16 @@ export type RepairCaller = (prompt: string, opts: { readonly model: string | nul
 // Input / output contracts
 // ---------------------------------------------------------------------------
 
+// Extra context attached to a generated-parser LIVE repair input. When present, the repair prompt
+// uses the generated-parser narrow-rewrite guidance instead of the default per-defect-class guidance,
+// and `source` marks the attempt as a generated-parser minimality repair in the artifacts/report.
+export interface GeneratedParserRepairContext {
+  readonly source: string; // GENERATED_PARSER_REPAIR_LIVE_SOURCE
+  readonly guidance: readonly string[]; // narrow-rewrite prompt lines (already includes critic/probe)
+  readonly liveCriticInstruction: string;
+  readonly narrowAlternativeHint: string | null;
+}
+
 export interface PatchRepairInput {
   readonly instanceId: string;
   readonly runLabel: string;
@@ -61,6 +71,8 @@ export interface PatchRepairInput {
   readonly criticReport: PatchCriticReport;
   readonly repairInstructions: string;
   readonly relevantSnippets?: ReadonlyArray<{ readonly path: string; readonly content: string }>;
+  // Present ONLY for generated-parser live repair attempts; null/absent for default-path repairs.
+  readonly generatedParserRepair?: GeneratedParserRepairContext | null;
 }
 
 export interface PatchRepairResult {
@@ -163,6 +175,38 @@ export const GENERATED_PARSER_REPAIR_CLASS = "generated_parser_broad_rewrite / g
 // The eligibility provenance recorded when all gates pass.
 export const GENERATED_PARSER_REPAIR_SOURCE = "valid_live_critic_and_patch_minimality_agreement";
 
+// The repair-source label stamped on a generated-parser LIVE repair attempt (its artifacts and
+// report row). Distinct from the eligibility provenance above; this names what the repaired patch is.
+export const GENERATED_PARSER_REPAIR_LIVE_SOURCE = "generated_parser_minimality";
+
+// The narrow-rewrite instruction block prepended to a generated-parser LIVE repair prompt. Kept
+// general (not Astropy-specific): the division_of_units / p_combined_units wording matches this
+// class of grammar-minimality defect; the live critic's actionable instruction and the deterministic
+// probe hint are appended per-run by buildGeneratedParserRepairGuidance so nothing is hardcoded.
+export const GENERATED_PARSER_REPAIR_PROMPT_GUIDANCE: readonly string[] = [
+  "The patch was flagged as a generated-parser broad rewrite. Repair narrowly:",
+  "- change the division_of_units grammar production order inside its parser function",
+  "- do not relocate productions into p_combined_units",
+  "- do not delete generated parser tables",
+  "- avoid broad grammar rewrites",
+  "- preserve generated parser artifacts unless they are intentionally regenerated consistently",
+];
+
+// Build the per-run generated-parser repair guidance: the general narrow-rewrite block above plus the
+// live critic's actionable instruction and the deterministic probe's narrow-alternative hint when
+// present. PURE; produces prompt lines only.
+export function buildGeneratedParserRepairGuidance(
+  report: PatchCriticReport | null,
+  probe: PatchMinimalityProbe | null,
+): string[] {
+  const lines = [...GENERATED_PARSER_REPAIR_PROMPT_GUIDANCE];
+  const instruction = report?.repair_instructions?.trim() ?? "";
+  if (instruction !== "") lines.push("", `Live critic actionable instruction: ${instruction}`);
+  const hint = probe?.patchMinimalityNarrowAlternativeHint?.trim() ?? "";
+  if (hint !== "") lines.push(`Deterministic narrow-alternative hint: ${hint}`);
+  return lines;
+}
+
 // The INTENDED narrow-rewrite guidance a future gated repair would follow, derived from the live
 // critic instructions + the deterministic probe's narrow-alternative hint. Surfaced for audit; NO
 // repaired patch is produced this milestone.
@@ -188,7 +232,12 @@ export interface GeneratedParserRepairInput {
   readonly runLabel: string;
   // The explicit opt-in flag (`--allow-generated-parser-repair`). Default false.
   readonly allowGeneratedParserRepair: boolean;
-  // Dry-run mode. Generated-parser repair is dry-run-ONLY this milestone.
+  // The master repair enable flag (`--enable-patch-repair`). REQUIRED for LIVE execution; not
+  // required for dry-run eligibility (a dry run produces a report without calling any model).
+  // Default false.
+  readonly enablePatchRepair?: boolean;
+  // Dry-run mode. When true, this evaluates dry-run ELIGIBILITY (would-repair, no model). When
+  // false AND enablePatchRepair is true, this evaluates LIVE execution eligibility (one model call).
   readonly dryRun: boolean;
   // Whether this run is explicitly named by --run-label (the run-label gate already passed).
   readonly runLabelProvided: boolean;
@@ -201,8 +250,11 @@ export interface GeneratedParserRepairInput {
 export interface GeneratedParserRepairEligibility {
   // The explicit flag was present.
   readonly allowed: boolean;
-  // All gates pass (so the run WOULD be repair-eligible in dry-run).
+  // All gates pass (so the run WOULD be repair-eligible in this mode).
   readonly eligible: boolean;
+  // The execution mode the flags requested: "dry-run" eligibility, "live" execution, or "blocked"
+  // (neither — e.g. live without --enable-patch-repair). Eligibility can only hold for dry-run/live.
+  readonly mode: "dry-run" | "live" | "blocked";
   readonly repairClass: string;
   readonly source: string;
   // Gates that PASSED, in evaluation order.
@@ -272,11 +324,19 @@ export function evaluateGeneratedParserRepairEligibility(
     "explicit --run-label provided for this run",
     "no explicit --run-label for this run (generated-parser repair requires an explicit run label)",
   );
-  // (3) dry-run only this milestone.
+  // (1)+(3)+(5) execution mode. Generated-parser repair runs in exactly one of two modes:
+  //   - dry-run eligibility: dryRun=true (no --enable-patch-repair needed; no model is ever called).
+  //   - live execution:      dryRun=false AND --enable-patch-repair (one bounded model call).
+  // Any other combination (live without --enable-patch-repair) is blocked.
+  const dryRunMode = input.dryRun === true;
+  const liveMode = input.dryRun === false && input.enablePatchRepair === true;
+  const mode: "dry-run" | "live" | "blocked" = liveMode ? "live" : dryRunMode ? "dry-run" : "blocked";
   gate(
-    input.dryRun === true,
-    "dry-run mode enabled (generated-parser repair is dry-run-only this milestone)",
-    "not in --dry-run (generated-parser repair is dry-run-only this milestone)",
+    dryRunMode || liveMode,
+    liveMode
+      ? "live execution mode (--enable-patch-repair, dryRun=false)"
+      : "dry-run eligibility mode (no model called)",
+    "neither dry-run nor live-enabled (live generated-parser repair requires --enable-patch-repair with dryRun=false)",
   );
   // (5) valid live-critic artifacts present.
   gate(
@@ -331,6 +391,7 @@ export function evaluateGeneratedParserRepairEligibility(
   return {
     allowed: input.allowGeneratedParserRepair === true,
     eligible: blockedReasons.length === 0,
+    mode,
     repairClass: GENERATED_PARSER_REPAIR_CLASS,
     source: GENERATED_PARSER_REPAIR_SOURCE,
     gateReasons,
@@ -413,7 +474,9 @@ export function buildRepairPrompt(input: PatchRepairInput): string {
     "Do not add new files unless the first patch already did.",
     "Return only a unified diff.",
     "",
-    ...defectGuidance(input.defectClass),
+    // Generated-parser live repairs use the dedicated narrow-rewrite guidance (which already folds in
+    // the live critic instruction + deterministic probe hint); all other repairs use per-class guidance.
+    ...(input.generatedParserRepair ? input.generatedParserRepair.guidance : defectGuidance(input.defectClass)),
     "",
     `instance_id: ${input.instanceId}`,
     "",
@@ -610,6 +673,9 @@ export interface PatchRepairMeta {
   readonly defectClass: DefectClass;
   readonly instructionQuality: InstructionQuality;
   readonly result: PatchRepairResult;
+  // Set to GENERATED_PARSER_REPAIR_LIVE_SOURCE when this attempt was a generated-parser live repair;
+  // null for default-path repairs. Marks the source so artifacts are unambiguous.
+  readonly generatedParserRepairSource?: string | null;
   // Evaluation is NOT performed this milestone; this records intent only (no resolution claim).
   readonly evaluation: {
     readonly requested: boolean;
