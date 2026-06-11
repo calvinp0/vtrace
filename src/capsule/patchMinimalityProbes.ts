@@ -412,6 +412,218 @@ export function analyzePatchMinimality(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Generated-parser CONSISTENCY probe
+// ---------------------------------------------------------------------------
+//
+// SCOPE: analysis only, same boundary as analyzePatchMinimality — no agents, no Docker,
+// no model, no mutation, not a gate.
+//
+// This probe answers a DIFFERENT question than analyzePatchMinimality. The minimality
+// probe asks "is this patch too broad?" (relocations, table deletions). This probe asks
+// "is this patch CONSISTENT?" — when a PLY grammar production is edited in a source file
+// `<name>.py`, the generated LALR table `<name>_parsetab.py` encodes that grammar and must
+// be regenerated to match. A narrow, minimal source-grammar reorder that does NOT update
+// the sibling parsetab is *minimal but inconsistent*: the parser still runs the stale
+// table at import time, so the source edit has no effect.
+//
+// Motivation (astropy__astropy-14369): the gated generated-parser repair produced the
+// correct one-line `division_of_units` reorder in `cds.py` but did not update
+// `cds_parsetab.py`, and the Docker evaluation stayed unresolved. The earlier RESOLVED
+// strict run changed both `cds.py` AND `cds_parsetab.py`. This probe makes that
+// stale-generated-table shape a deterministic, explainable signal.
+//
+// `*_lextab.py` is deliberately NOT required for grammar-only changes — the lexer token
+// table is independent of grammar productions. Only the sibling `*_parsetab.py` matters.
+
+export type GeneratedParserConsistencyDefectClass =
+  | "source_grammar_changed_without_generated_table_update"
+  | "generated_table_deleted"
+  | "generated_table_updated_consistently"
+  | "none";
+
+export interface GeneratedParserConsistencyOptions {
+  // Override what counts as a generated parser table (basename match). Defaults to the
+  // same PLY patterns as the minimality probe.
+  readonly generatedParserFilePatterns?: readonly RegExp[];
+  // Override the grammar/parser function pattern. Defaults to PLY's `p_<rule>`.
+  readonly grammarFunctionPattern?: RegExp;
+  // Generated parser table paths known to have existed (e.g. read from the first patch or
+  // the earlier resolved patch). When the expected sibling table is among these, the probe
+  // emits a confirming signal — the stale-table inference no longer relies on PLY
+  // convention alone. Optional; the probe still flags the risk without it.
+  readonly knownGeneratedTables?: readonly string[];
+}
+
+export interface GeneratedParserConsistencyResult {
+  // True when the patch edits a source grammar but leaves its generated table stale/missing.
+  readonly consistencyRisk: boolean;
+  readonly defectClass: GeneratedParserConsistencyDefectClass;
+  readonly risk: RiskLevel;
+  readonly confidence: Confidence;
+  readonly reasons: string[];
+  readonly signals: string[];
+  readonly sourceGrammarFilesChanged: string[];
+  readonly generatedParserTablesChanged: string[];
+  readonly generatedParserTablesDeleted: string[];
+  // Sibling `<name>_parsetab.py` table(s) expected to be regenerated for the changed
+  // source grammar file(s), by PLY convention.
+  readonly expectedGeneratedTables: string[];
+  readonly narrowGrammarReorderDetected: boolean;
+}
+
+// The PLY parser table for source `<dir>/<name>.py` is `<dir>/<name>_parsetab.py`.
+function siblingParsetab(sourcePath: string): string {
+  const slash = sourcePath.lastIndexOf("/");
+  const dir = slash >= 0 ? sourcePath.slice(0, slash + 1) : "";
+  const base = basename(sourcePath).replace(/\.py$/, "");
+  return `${dir}${base}_parsetab.py`;
+}
+
+function hasHunkChanges(bodyLines: readonly string[]): boolean {
+  return bodyLines.some((l) => l.startsWith("+") || l.startsWith("-"));
+}
+
+export function analyzeGeneratedParserConsistency(
+  diff: string,
+  options: GeneratedParserConsistencyOptions = {},
+): GeneratedParserConsistencyResult {
+  const generatedPatterns = options.generatedParserFilePatterns ?? DEFAULT_GENERATED_PARSER_PATTERNS;
+  const grammarPattern = options.grammarFunctionPattern ?? DEFAULT_GRAMMAR_FUNCTION_PATTERN;
+  const isGrammarFn = (name: string): boolean => grammarPattern.test(name);
+  const known = new Set(options.knownGeneratedTables ?? []);
+
+  const files = parseDiffFiles(diff);
+
+  const generatedParserTablesDeleted = dedupe(
+    files.filter((f) => f.deleted && isGeneratedParserFile(f.path, generatedPatterns)).map((f) => f.path),
+  );
+  const generatedParserTablesChanged = dedupe(
+    files
+      .filter((f) => !f.deleted && isGeneratedParserFile(f.path, generatedPatterns) && hasHunkChanges(f.bodyLines))
+      .map((f) => f.path),
+  );
+
+  // Source grammar churn over non-deleted, non-generated files.
+  const sourceGrammarFiles = new Set<string>();
+  const changed = new Set<string>();
+  const removed = new Set<string>();
+  let removedProductionLines = 0;
+  let addedProductionLines = 0;
+  for (const file of files) {
+    if (file.deleted) continue;
+    if (isGeneratedParserFile(file.path, generatedPatterns)) continue;
+    const churn = analyzeGrammarChurn(file.bodyLines, isGrammarFn);
+    if (churn.changed.size > 0) sourceGrammarFiles.add(file.path);
+    for (const n of churn.changed) changed.add(n);
+    for (const n of churn.removed) removed.add(n);
+    removedProductionLines += churn.removedProductionLines;
+    addedProductionLines += churn.addedProductionLines;
+  }
+
+  const sourceGrammarFilesChanged = [...sourceGrammarFiles].sort();
+  const expectedGeneratedTables = dedupe(sourceGrammarFilesChanged.map(siblingParsetab)).sort();
+
+  // A narrow reorder: one (or few) production-line(s) swapped within an existing function,
+  // no function removed, no table deleted — exactly the repaired-patch shape.
+  const narrowGrammarReorderDetected =
+    changed.size >= 1 &&
+    removed.size === 0 &&
+    generatedParserTablesDeleted.length === 0 &&
+    removedProductionLines >= 1 &&
+    addedProductionLines >= 1 &&
+    removedProductionLines <= 2 &&
+    addedProductionLines <= 2;
+
+  const expectedUpdated = expectedGeneratedTables.filter((t) => generatedParserTablesChanged.includes(t));
+  const expectedMissing = expectedGeneratedTables.filter(
+    (t) => !generatedParserTablesChanged.includes(t) && !generatedParserTablesDeleted.includes(t),
+  );
+
+  const signals: string[] = [];
+  const reasons: string[] = [];
+
+  let defectClass: GeneratedParserConsistencyDefectClass;
+  let risk: RiskLevel;
+  let confidence: Confidence;
+  let consistencyRisk: boolean;
+
+  if (generatedParserTablesDeleted.length > 0) {
+    // Deleting the generated table (rather than regenerating it) is the broad-rewrite
+    // failure mode; the resolved patch never deletes. High risk either way.
+    defectClass = "generated_table_deleted";
+    consistencyRisk = true;
+    risk = "high";
+    confidence = "high";
+    signals.push("generated_parser_table_deleted");
+    reasons.push(
+      `Patch deletes generated parser table file(s): ${generatedParserTablesDeleted.join(", ")}. ` +
+        "The table must be regenerated to match the grammar, not deleted.",
+    );
+  } else if (sourceGrammarFilesChanged.length > 0 && expectedMissing.length > 0) {
+    defectClass = "source_grammar_changed_without_generated_table_update";
+    consistencyRisk = true;
+    risk = "high";
+    // High confidence on a clean narrow reorder (the Astropy fixture); medium when the
+    // source edit is broader and the inference about the sibling table is weaker.
+    confidence = narrowGrammarReorderDetected ? "high" : "medium";
+    signals.push("source_grammar_changed_without_generated_table_update");
+    reasons.push(
+      `Source grammar file(s) ${sourceGrammarFilesChanged.join(", ")} changed (functions: ` +
+        `${[...changed].sort().join(", ")}) but the expected generated parser table(s) ` +
+        `${expectedMissing.join(", ")} were not updated. PLY runs the stale generated table at import time, so the ` +
+        "source grammar edit has no runtime effect until the table is regenerated.",
+    );
+    if (narrowGrammarReorderDetected) {
+      signals.push("narrow_grammar_reorder_without_table_update");
+      reasons.push(
+        "The source edit is a narrow grammar-production reorder (minimal and well-localized) — the defect is " +
+          "generated-parser consistency, NOT localization and NOT broad-rewrite minimality.",
+      );
+    }
+    const knownPresent = expectedMissing.filter((t) => known.has(t));
+    if (knownPresent.length > 0) {
+      signals.push("expected_generated_table_known_present");
+      reasons.push(
+        `Expected generated table(s) ${knownPresent.join(", ")} are known to exist (observed in the first/resolved ` +
+          "patch), so the stale-table inference does not rely on PLY convention alone.",
+      );
+    }
+  } else if (sourceGrammarFilesChanged.length > 0 && expectedUpdated.length > 0) {
+    defectClass = "generated_table_updated_consistently";
+    consistencyRisk = false;
+    risk = "low";
+    confidence = "high";
+    signals.push("generated_table_updated_consistently");
+    reasons.push(
+      `Source grammar file(s) ${sourceGrammarFilesChanged.join(", ")} changed and the sibling generated parser ` +
+        `table(s) ${expectedUpdated.join(", ")} were updated in the same patch. ` +
+        "Generated-parser consistency is maintained (a missing *_lextab.py update is not required for grammar-only " +
+        "changes).",
+    );
+  } else {
+    defectClass = "none";
+    consistencyRisk = false;
+    risk = "low";
+    confidence = "high";
+    reasons.push("No source grammar change requiring a generated parser table update detected in the diff.");
+  }
+
+  return {
+    consistencyRisk,
+    defectClass,
+    risk,
+    confidence,
+    reasons,
+    signals,
+    sourceGrammarFilesChanged,
+    generatedParserTablesChanged,
+    generatedParserTablesDeleted,
+    expectedGeneratedTables,
+    narrowGrammarReorderDetected,
+  };
+}
+
 function dedupe(values: readonly string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
