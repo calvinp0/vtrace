@@ -11,8 +11,10 @@ import {
   type CriticObservation,
   POLICY_SPECS,
   REPAIR_BOUNDARY,
+  STOP_REPAIR_STATEMENT,
   buildReport,
   computePolicyMetrics,
+  conversionSourceForRunLabel,
   loadAccountingInputs,
   parseArgs,
   parseConversion,
@@ -20,6 +22,7 @@ import {
   parseCriticObservations,
   parseStrictResults,
   pickRecommendation,
+  pickStrictPolicyRecommendation,
   pickStrictRepairRecommendation,
   renderJson,
   renderMarkdown,
@@ -57,6 +60,7 @@ function verifiedConversion(): Conversion {
   return {
     runLabel: "eval-b-repair",
     instanceId: "b",
+    source: "old",
     firstPatchResolved: false,
     repairedPatchResolved: true,
     convertedUnresolvedToResolved: true,
@@ -67,6 +71,23 @@ function verifiedConversion(): Conversion {
     repairInputTokens: 6000,
     repairOutputTokens: 1400,
     totalRecoveryCostUsd: 0.32,
+  };
+}
+
+// A STRICT-specific verified conversion for instance b (its run label is strictgated, and
+// it carries source "strict"). Flows ONLY into strict_vtrace_with_verified_repair.
+function strictConversion(): Conversion {
+  return {
+    ...verifiedConversion(),
+    runLabel: "eval-strictgated-vtrace-b",
+    source: "strict",
+    criticCostUsd: 0.19,
+    repairCostUsd: 0.22,
+    criticInputTokens: 4343,
+    criticOutputTokens: 4327,
+    repairInputTokens: 6126,
+    repairOutputTokens: 1807,
+    totalRecoveryCostUsd: 0.41,
   };
 }
 
@@ -92,7 +113,15 @@ function policy(name: string, inp: AccountingInputs) {
 // ---------------------------------------------------------------------------
 test("adds strict_vtrace_first_patch as a policy row", () => {
   const names = POLICY_SPECS.map((s) => s.policyName);
-  for (const required of ["baseline", "old_vtrace_first_patch", "old_vtrace_with_verified_repair", "strict_vtrace_first_patch"]) {
+  for (const required of [
+    "baseline",
+    "old_vtrace_first_patch",
+    "strict_vtrace_first_patch",
+    "old_vtrace_with_observed_gated_repair",
+    "old_vtrace_with_live_critic_observation_cost",
+    "old_vtrace_with_verified_repair",
+    "strict_vtrace_with_verified_repair",
+  ]) {
     assert.ok(names.includes(required), `missing required policy ${required}`);
   }
   const strict = POLICY_SPECS.find((s) => s.policyName === "strict_vtrace_first_patch")!;
@@ -102,6 +131,64 @@ test("adds strict_vtrace_first_patch as a policy row", () => {
   assert.equal(strict.tokenBasis, "strict");
   assert.equal(strict.applyConversions, false);
   assert.equal(strict.addVerifiedRecoveryCost, false);
+});
+
+// ---------------------------------------------------------------------------
+// 1b. strict_vtrace_with_verified_repair is a first-class strict repair policy row.
+// ---------------------------------------------------------------------------
+test("adds strict_vtrace_with_verified_repair as a strict repair policy row", () => {
+  const spec = POLICY_SPECS.find((s) => s.policyName === "strict_vtrace_with_verified_repair")!;
+  assert.ok(spec, "strict_vtrace_with_verified_repair must exist");
+  // Strict basis throughout, applies strict-specific conversions, adds strict recovery cost.
+  assert.equal(spec.resolutionBasis, "strict");
+  assert.equal(spec.costBasis, "strict");
+  assert.equal(spec.tokenBasis, "strict");
+  assert.equal(spec.applyConversions, true);
+  assert.equal(spec.addVerifiedRecoveryCost, true);
+  assert.equal(spec.conversionSource, "strict");
+  // run-label source classification: strictgated → strict, anything else → old.
+  assert.equal(conversionSourceForRunLabel("eval-strictgated-vtrace-requests-5414"), "strict");
+  assert.equal(conversionSourceForRunLabel("eval-patchverify-before-requests-5414"), "old");
+});
+
+// ---------------------------------------------------------------------------
+// 1c. strict_vtrace_with_verified_repair applies ONLY strict conversions, computes its
+//     resolved count and strict critic/repair cost from strict conversion artifacts.
+// ---------------------------------------------------------------------------
+test("strict_vtrace_with_verified_repair applies only strict conversions and computes strict recovery cost", () => {
+  // b is unresolved under strict; a strict-specific conversion recovers it.
+  const inp = inputs({ conversions: [verifiedConversion(), strictConversion()] });
+  const swr = policy("strict_vtrace_with_verified_repair", inp);
+  // strict first pass resolves only a; the strict conversion flips b → 2 resolved.
+  assert.equal(swr.resolvedCount, 2);
+  assert.equal(swr.taskConversionCount, 1);
+  assert.equal(swr.artifactConversionCount, 1);
+  // strict recovery cost/tokens come from the STRICT conversion only (not the old one).
+  assert.equal(swr.criticCostUsd, 0.19);
+  assert.equal(swr.repairCostUsd, 0.22);
+  assert.equal(swr.criticInputTokens, 4343);
+  assert.equal(swr.repairOutputTokens, 1807);
+  // agent cost is the strict leg (0.25 + 0.2 + 0.15 = 0.6); total adds strict recovery.
+  assert.ok(Math.abs((swr.agentCostUsd ?? 0) - 0.6) < 1e-9);
+  assert.ok(Math.abs((swr.totalCostUsd ?? 0) - (0.6 + 0.19 + 0.22)) < 1e-9);
+});
+
+// ---------------------------------------------------------------------------
+// 1d. The boundary holds both ways: old conversions never reach strict repair, and
+//     strict conversions never reach old repair.
+// ---------------------------------------------------------------------------
+test("repair boundary: old conversions stay off strict, strict conversions stay off old", () => {
+  const inp = inputs({ conversions: [verifiedConversion(), strictConversion()] });
+  // strict_vtrace_with_verified_repair must NOT pick up the OLD conversion's cost.
+  const swr = policy("strict_vtrace_with_verified_repair", inp);
+  assert.equal(swr.criticCostUsd, 0.19); // strict conversion only, NOT 0.12+0.19
+  assert.equal(swr.repairCostUsd, 0.22);
+  // old_vtrace_with_verified_repair must NOT pick up the STRICT conversion's cost.
+  const oldRepair = policy("old_vtrace_with_verified_repair", inp);
+  assert.equal(oldRepair.criticCostUsd, 0.12); // old conversion only, NOT 0.12+0.19
+  assert.equal(oldRepair.repairCostUsd, 0.2);
+  assert.equal(oldRepair.artifactConversionCount, 1); // old artifact only
+  assert.equal(swr.artifactConversionCount, 1); // strict artifact only
 });
 
 // ---------------------------------------------------------------------------
@@ -119,6 +206,81 @@ test("computes strict cost/tokens per resolved from the strict leg", () => {
   // strict tokens = 1200 + 1000 + 900 = 3100; /1 resolved.
   assert.equal(strict.totalTokens, 3100);
   assert.equal(strict.tokensPerResolved, 3100);
+});
+
+// ---------------------------------------------------------------------------
+// 1e. A "stop" scenario: strict+repair matches baseline at lower cost AND fewer tokens.
+// strict resolves only a; a strict conversion recovers b → strict+repair matches baseline
+// (a, b) while costing less and using fewer tokens.
+// ---------------------------------------------------------------------------
+function stopTasks(): ControlledTask[] {
+  return [
+    { instanceId: "a", vtraceRunLabel: "eval-a", baselineResolved: true, vtraceResolved: true, baselineCostUsd: 1.0, vtraceCostUsd: 0.9, baselineTokens: 20000, vtraceTokens: 18000, strictRunLabel: "eval-strictgated-vtrace-a", strictResolved: true, strictCostUsd: 0.3, strictTokens: 6000 },
+    { instanceId: "b", vtraceRunLabel: "eval-b", baselineResolved: true, vtraceResolved: false, baselineCostUsd: 1.0, vtraceCostUsd: 0.9, baselineTokens: 20000, vtraceTokens: 18000, strictRunLabel: "eval-strictgated-vtrace-b", strictResolved: false, strictCostUsd: 0.3, strictTokens: 6000 },
+  ];
+}
+function stopInputs(): AccountingInputs {
+  return { tasks: stopTasks(), conversions: [strictConversion()], criticObservations: [] };
+}
+
+// 6. Computes strict_vtrace_with_verified_repair resolved count via the report.
+test("computes strict_vtrace_with_verified_repair resolved count and matches baseline", () => {
+  const report = buildReport({ generatedAt: "t", inputs: stopInputs() });
+  const sra = report.strictRepairAccounting;
+  assert.equal(sra.strictFirstPassResolved, 1); // a only under strict first pass
+  assert.equal(sra.strictWithRepairResolved, 2); // a + b (strict conversion)
+  assert.equal(sra.baselineResolved, 2); // a, b
+  assert.equal(sra.strictUniqueTaskConversions, 1);
+  assert.deepEqual(sra.strictUniqueTaskRecoveries, ["b"]);
+  assert.equal(sra.matchesBaselineResolved, true);
+  assert.equal(sra.lowerCostThanBaseline, true);
+  assert.equal(sra.fewerTokensThanBaseline, true);
+  assert.equal(sra.matchesBaselineAtLowerCostTokens, true);
+  // report summary surfaces strict+repair resolution
+  assert.equal(report.summary.strictVtraceWithRepairResolved, 2);
+});
+
+// 8. Recommends stopping repair experiments when strict+repair matches baseline at no
+// worse cost/tokens; otherwise it does not.
+test("recommends stopping repair experiments when strict+repair matches baseline without worse cost/tokens", () => {
+  const baseline = policy("baseline", stopInputs());
+  const strictWithRepair = policy("strict_vtrace_with_verified_repair", stopInputs());
+  const rec = pickStrictPolicyRecommendation({ baseline, strictWithRepair });
+  assert.equal(rec.stopRepairExperiments, true);
+  assert.equal(rec.statement, STOP_REPAIR_STATEMENT);
+  assert.ok(/productization/.test(rec.statement));
+
+  // via the report + markdown
+  const report = buildReport({ generatedAt: "t", inputs: stopInputs() });
+  assert.equal(report.strictPolicyRecommendation.stopRepairExperiments, true);
+  const md = renderMarkdown(report);
+  assert.ok(md.includes("## Recommended next step"));
+  assert.ok(md.includes(STOP_REPAIR_STATEMENT));
+  assert.ok(md.includes("strict_vtrace_with_verified_repair matches baseline resolution at lower total cost/tokens."));
+  assert.ok(md.includes("This repair conversion is strict-specific. It is not transferred from old VTRACE repair evidence."));
+});
+
+test("does NOT recommend stopping when strict+repair stays behind baseline", () => {
+  // inputs(): baseline resolves a,b (2); strict resolves only a and there is NO strict
+  // conversion → strict+repair stays at 1, behind baseline → do not stop.
+  const baseline = policy("baseline", inputs());
+  const strictWithRepair = policy("strict_vtrace_with_verified_repair", inputs());
+  const rec = pickStrictPolicyRecommendation({ baseline, strictWithRepair });
+  assert.equal(rec.stopRepairExperiments, false);
+  assert.ok(/not match/i.test(rec.statement) || /Do not stop/i.test(rec.statement));
+});
+
+// 7. Emits strict repair boundary text (old/strict separation, applies-to-first-patch).
+test("emits strict repair boundary text", () => {
+  assert.ok(REPAIR_BOUNDARY.some((s) => /separate evidence sets/.test(s)));
+  assert.ok(REPAIR_BOUNDARY.some((s) => /only applies to the first patch whose run label produced it/.test(s)));
+  assert.ok(REPAIR_BOUNDARY.some((s) => /strict_vtrace_with_verified_repair/.test(s)));
+  const md = renderMarkdown(buildReport({ generatedAt: "t", inputs: inputs({ conversions: [verifiedConversion(), strictConversion()] }) }));
+  assert.ok(md.includes("Old VTRACE repairs and strict VTRACE repairs are separate evidence sets."));
+  assert.ok(md.includes("A repaired patch only applies to the first patch whose run label produced it."));
+  // the conversions table tags each row with its source family
+  assert.ok(/\| eval-strictgated-vtrace-b \| b \| strict \|/.test(md));
+  assert.ok(/\| eval-b-repair \| b \| old \|/.test(md));
 });
 
 // ---------------------------------------------------------------------------
@@ -249,6 +411,7 @@ test("emits required Markdown sections", () => {
     "## Cost per resolved task",
     "## Token per resolved task",
     "## Strict-gated first-pass accounting",
+    "## Strict repair accounting",
     "## Repair accounting boundary",
     "## Recommended next step",
     "## Non-claims",
@@ -268,7 +431,7 @@ test("emits required JSON fields", () => {
   }
   // every required policy row is present by name
   const names = json.policies.map((p: { policyName: string }) => p.policyName);
-  for (const required of ["baseline", "old_vtrace_first_patch", "old_vtrace_with_verified_repair", "strict_vtrace_first_patch"]) {
+  for (const required of ["baseline", "old_vtrace_first_patch", "old_vtrace_with_verified_repair", "strict_vtrace_first_patch", "strict_vtrace_with_verified_repair"]) {
     assert.ok(names.includes(required), `policies missing ${required}`);
   }
   // policy entry fields: counts + per-resolved + the six deltas.
@@ -302,7 +465,24 @@ test("emits required JSON fields", () => {
   for (const key of ["recommend", "targets", "statement", "rationale"]) {
     assert.ok(key in json.strictRecommendation, `strictRecommendation missing ${key}`);
   }
-  assert.equal(json.policies.length, 6);
+  // strict-policy (stop) recommendation shape
+  for (const key of ["stopRepairExperiments", "statement", "rationale"]) {
+    assert.ok(key in json.strictPolicyRecommendation, `strictPolicyRecommendation missing ${key}`);
+  }
+  // strictRepairAccounting required quantities
+  for (const key of [
+    "strictFirstPassResolved", "strictWithRepairResolved", "baselineResolved",
+    "strictWithRepairTotalTokens", "strictWithRepairTotalCostUsd", "strictRepairCriticCostUsd", "strictRepairRepairCostUsd",
+    "strictRecoveryCostAddedUsd", "strictArtifactConversions", "strictUniqueTaskConversions", "strictUniqueTaskRecoveries",
+    "resolutionDeltaVsBaseline", "costDeltaVsBaseline", "tokensDeltaVsBaseline", "matchesBaselineAtLowerCostTokens",
+  ]) {
+    assert.ok(key in json.strictRepairAccounting, `strictRepairAccounting missing ${key}`);
+  }
+  // summary exposes strict+repair resolution
+  assert.ok("strictVtraceWithRepairResolved" in json.summary, "summary missing strictVtraceWithRepairResolved");
+  // conversion rows carry their source family
+  assert.ok("source" in json.conversions[0], "conversion missing source");
+  assert.equal(json.policies.length, 7);
 });
 
 // ---------------------------------------------------------------------------
@@ -466,6 +646,9 @@ test("parses conversion and critic observations from doc shapes", () => {
   const conv = parseConversion({ runLabel: "r", instanceId: "a", conversion: { firstPatchResolved: false, repairedPatchResolved: true, convertedUnresolvedToResolved: true }, costs: { criticCostUsd: 0.1, repairCostUsd: 0.2, totalCriticRepairCostUsd: 0.3 } });
   assert.equal(conv?.convertedUnresolvedToResolved, true);
   assert.equal(conv?.totalRecoveryCostUsd, 0.3);
+  assert.equal(conv?.source, "old"); // run label "r" is not strictgated → old
+  const strictConv = parseConversion({ runLabel: "eval-strictgated-vtrace-requests-5414", instanceId: "psf__requests-5414", conversion: { convertedUnresolvedToResolved: true } });
+  assert.equal(strictConv?.source, "strict");
 
   const obs = parseCriticObservations({ runs: [{ instanceId: "a", criticCostUsd: 0.1, criticInputTokens: 100, criticOutputTokens: 50 }, { instanceId: "a", criticCostUsd: 0.3, criticInputTokens: 300, criticOutputTokens: 150 }] });
   assert.equal(obs[0]!.runCount, 2);

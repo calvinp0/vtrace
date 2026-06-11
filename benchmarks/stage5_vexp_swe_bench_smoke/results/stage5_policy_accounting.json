@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-11T10:49:02.500Z",
+  "generatedAt": "2026-06-11T14:39:29.428Z",
   "summary": {
     "taskCount": 10,
     "verifiedRepairArtifacts": 4,
@@ -7,9 +7,11 @@
     "baselineResolved": 8,
     "oldVtraceFirstPatchResolved": 5,
     "strictVtraceFirstPatchResolved": 7,
+    "strictVtraceWithRepairResolved": 8,
     "gatedRepairResolved": 7,
     "recoveryCostAddedUsd": 0.5703705,
-    "headline": "strict_vtrace_first_patch (the internal Stage 5 default) resolved 7/10 using 12.53M tokens at $6.41, improving on old_vtrace_first_patch (5/10, 17.07M, $8.21) and remaining one resolved task behind baseline (8/10, 16.76M, $6.98). Verified OLD-VTRACE repair (4 artifact(s), 2 unique task recovery(ies)) is accounted separately and never transferred to strict."
+    "strictRecoveryCostAddedUsd": 0.41496749999999993,
+    "headline": "strict_vtrace_first_patch (the internal Stage 5 default) resolved 7/10 using 12.53M tokens at $6.41, improving on old_vtrace_first_patch (5/10, 17.07M, $8.21) and remaining one resolved task behind baseline (8/10, 16.76M, $6.98). Applying 1 strict-specific verified repair conversion(s) (psf__requests-5414), strict_vtrace_with_verified_repair reaches 8/10 at $6.82 / 12.54M, matching baseline resolution at lower total cost and fewer tokens. Verified OLD-VTRACE repair (4 artifact(s), 2 unique task recovery(ies)) is accounted separately and never transferred to strict."
   },
   "strictAccounting": {
     "taskCount": 10,
@@ -35,9 +37,40 @@
     "fewerTokensThanBaseline": true,
     "lowerCostThanBaseline": true
   },
+  "strictRepairAccounting": {
+    "taskCount": 10,
+    "strictFirstPassResolved": 7,
+    "strictWithRepairResolved": 8,
+    "baselineResolved": 8,
+    "strictWithRepairTotalTokens": 12543588,
+    "strictWithRepairTotalCostUsd": 6.823017000000002,
+    "baselineTotalTokens": 16756692,
+    "baselineTotalCostUsd": 6.97774825,
+    "strictWithRepairCostPerResolved": 0.8528771250000002,
+    "strictWithRepairTokensPerResolved": 1567948.5,
+    "strictRepairCriticCostUsd": 0.19085249999999998,
+    "strictRepairRepairCostUsd": 0.22411499999999998,
+    "strictRecoveryCostAddedUsd": 0.41496749999999993,
+    "strictArtifactConversions": 1,
+    "strictUniqueTaskConversions": 1,
+    "strictUniqueTaskRecoveries": [
+      "psf__requests-5414"
+    ],
+    "resolutionDeltaVsStrictFirstPass": 1,
+    "resolutionDeltaVsBaseline": 0,
+    "costDeltaVsBaseline": -0.15473124999999843,
+    "tokensDeltaVsBaseline": -4213104,
+    "matchesBaselineResolved": true,
+    "lowerCostThanBaseline": true,
+    "fewerTokensThanBaseline": true,
+    "matchesBaselineAtLowerCostTokens": true
+  },
   "uniqueTaskRecoveries": [
     "psf__requests-5414",
     "sympy__sympy-16766"
+  ],
+  "strictUniqueTaskRecoveries": [
+    "psf__requests-5414"
   ],
   "policies": [
     {
@@ -129,7 +162,7 @@
     },
     {
       "policyName": "old_vtrace_with_observed_gated_repair",
-      "description": "old_vtrace_first_patch with verified repaired-patch conversions applied to RESOLUTION only (recovery cost not added — optimistic ceiling).",
+      "description": "old_vtrace_first_patch with verified OLD-VTRACE repaired-patch conversions applied to RESOLUTION only (recovery cost not added — optimistic ceiling).",
       "taskCount": 10,
       "resolvedCount": 7,
       "unresolvedCount": 3,
@@ -187,7 +220,7 @@
     },
     {
       "policyName": "old_vtrace_with_verified_repair",
-      "description": "Realistic OLD-VTRACE gated repair: verified conversions change resolution AND add critic+repair cost only for those conversions. Tied to the old first patches, never strict.",
+      "description": "Realistic OLD-VTRACE gated repair: verified OLD-VTRACE conversions change resolution AND add critic+repair cost only for those conversions. Tied to the old first patches, never strict.",
       "taskCount": 10,
       "resolvedCount": 7,
       "unresolvedCount": 3,
@@ -213,6 +246,35 @@
       "resolutionDeltaVsOldVtrace": 2,
       "tokensDeltaVsOldVtrace": 27372,
       "costDeltaVsOldVtrace": 0.5703704999999992
+    },
+    {
+      "policyName": "strict_vtrace_with_verified_repair",
+      "description": "Realistic STRICT gated repair: starts from strict_vtrace_first_patch and applies ONLY strict-specific verified repaired-patch conversions, adding strict critic+repair cost only for those conversions. Never includes old-VTRACE repair conversions.",
+      "taskCount": 10,
+      "resolvedCount": 8,
+      "unresolvedCount": 2,
+      "unknownCount": 0,
+      "totalCostUsd": 6.823017000000002,
+      "meanCostUsd": 0.6823017000000002,
+      "costPerResolved": 0.8528771250000002,
+      "totalTokens": 12543588,
+      "meanTokens": 1254358.8,
+      "tokensPerResolved": 1567948.5,
+      "agentCostUsd": 6.4080495000000015,
+      "criticCostUsd": 0.19085249999999998,
+      "repairCostUsd": 0.22411499999999998,
+      "criticInputTokens": 4343,
+      "criticOutputTokens": 4327,
+      "repairInputTokens": 6126,
+      "repairOutputTokens": 1807,
+      "artifactConversionCount": 1,
+      "taskConversionCount": 1,
+      "resolutionDeltaVsBaseline": 0,
+      "tokensDeltaVsBaseline": -4213104,
+      "costDeltaVsBaseline": -0.15473124999999843,
+      "resolutionDeltaVsOldVtrace": 3,
+      "tokensDeltaVsOldVtrace": -4531393,
+      "costDeltaVsOldVtrace": -1.3858815
     }
   ],
   "tasks": [
@@ -228,7 +290,8 @@
       "baselineTokens": 432600,
       "vtraceTokens": 628051,
       "strictTokens": 523397,
-      "verifiedConversion": false
+      "verifiedConversion": false,
+      "strictVerifiedConversion": false
     },
     {
       "instanceId": "django__django-11095",
@@ -242,7 +305,8 @@
       "baselineTokens": 535997,
       "vtraceTokens": 999877,
       "strictTokens": 581178,
-      "verifiedConversion": false
+      "verifiedConversion": false,
+      "strictVerifiedConversion": false
     },
     {
       "instanceId": "django__django-11490",
@@ -256,7 +320,8 @@
       "baselineTokens": 4661640,
       "vtraceTokens": 3301462,
       "strictTokens": 1154475,
-      "verifiedConversion": false
+      "verifiedConversion": false,
+      "strictVerifiedConversion": false
     },
     {
       "instanceId": "django__django-11728",
@@ -270,7 +335,8 @@
       "baselineTokens": 1716132,
       "vtraceTokens": 1194127,
       "strictTokens": 1612163,
-      "verifiedConversion": false
+      "verifiedConversion": false,
+      "strictVerifiedConversion": false
     },
     {
       "instanceId": "django__django-11740",
@@ -284,7 +350,8 @@
       "baselineTokens": 2387415,
       "vtraceTokens": 1849882,
       "strictTokens": 2468980,
-      "verifiedConversion": false
+      "verifiedConversion": false,
+      "strictVerifiedConversion": false
     },
     {
       "instanceId": "astropy__astropy-14369",
@@ -298,7 +365,8 @@
       "baselineTokens": 3076313,
       "vtraceTokens": 3365366,
       "strictTokens": 2508804,
-      "verifiedConversion": false
+      "verifiedConversion": false,
+      "strictVerifiedConversion": false
     },
     {
       "instanceId": "matplotlib__matplotlib-22719",
@@ -312,7 +380,8 @@
       "baselineTokens": 1167993,
       "vtraceTokens": 2718398,
       "strictTokens": 1059041,
-      "verifiedConversion": false
+      "verifiedConversion": false,
+      "strictVerifiedConversion": false
     },
     {
       "instanceId": "psf__requests-5414",
@@ -326,7 +395,8 @@
       "baselineTokens": 736898,
       "vtraceTokens": 956785,
       "strictTokens": 805298,
-      "verifiedConversion": true
+      "verifiedConversion": true,
+      "strictVerifiedConversion": true
     },
     {
       "instanceId": "sphinx-doc__sphinx-7462",
@@ -340,7 +410,8 @@
       "baselineTokens": 627263,
       "vtraceTokens": 638586,
       "strictTokens": 1134164,
-      "verifiedConversion": false
+      "verifiedConversion": false,
+      "strictVerifiedConversion": false
     },
     {
       "instanceId": "sympy__sympy-16766",
@@ -354,13 +425,15 @@
       "baselineTokens": 1414441,
       "vtraceTokens": 1422447,
       "strictTokens": 679485,
-      "verifiedConversion": true
+      "verifiedConversion": true,
+      "strictVerifiedConversion": false
     }
   ],
   "conversions": [
     {
       "runLabel": "eval-patchverify-before-requests-5414",
       "instanceId": "psf__requests-5414",
+      "source": "old",
       "firstPatchResolved": false,
       "repairedPatchResolved": true,
       "convertedUnresolvedToResolved": true,
@@ -371,6 +444,7 @@
     {
       "runLabel": "eval-editguard-after-requests-5414",
       "instanceId": "psf__requests-5414",
+      "source": "old",
       "firstPatchResolved": false,
       "repairedPatchResolved": true,
       "convertedUnresolvedToResolved": true,
@@ -381,6 +455,7 @@
     {
       "runLabel": "eval-editguard-before-requests-5414",
       "instanceId": "psf__requests-5414",
+      "source": "old",
       "firstPatchResolved": false,
       "repairedPatchResolved": true,
       "convertedUnresolvedToResolved": true,
@@ -389,8 +464,20 @@
       "totalRecoveryCostUsd": 0.2409675
     },
     {
+      "runLabel": "eval-strictgated-vtrace-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "source": "strict",
+      "firstPatchResolved": false,
+      "repairedPatchResolved": true,
+      "convertedUnresolvedToResolved": true,
+      "criticCostUsd": 0.19085249999999998,
+      "repairCostUsd": 0.22411499999999998,
+      "totalRecoveryCostUsd": 0.41496749999999993
+    },
+    {
       "runLabel": "eval-patchverify-before-sympy-16766",
       "instanceId": "sympy__sympy-16766",
+      "source": "old",
       "firstPatchResolved": false,
       "repairedPatchResolved": true,
       "convertedUnresolvedToResolved": true,
@@ -402,25 +489,25 @@
   "costSources": [
     "old agentCostUsd ← stage5_controlled_10_task_plan.json selectedTasks (baselineCost / vtraceCost).",
     "strict agentCostUsd ← stage5_strictgated_10task_report.json tasks[].strict.costUsd (joined by instanceId).",
-    "criticCostUsd ← stage5_live_critic_high_risk_comparison.json (mean per-instance observation) and stage5_repair_conversion_*.json costs.criticCostUsd (verified OLD-VTRACE conversions).",
-    "repairCostUsd ← stage5_repair_conversion_*.json costs.repairCostUsd (verified OLD-VTRACE conversions only)."
+    "criticCostUsd ← stage5_live_critic_high_risk_comparison.json (mean per-instance observation) and stage5_repair_conversion_*.json costs.criticCostUsd (conversions matched to the policy family by run label).",
+    "repairCostUsd ← stage5_repair_conversion_*.json costs.repairCostUsd (OLD conversions → old_vtrace_with_verified_repair; strictgated conversions → strict_vtrace_with_verified_repair)."
   ],
   "tokenSources": [
     "old agent tokens ← stage5_controlled_10_task_plan.json selectedTasks (baselineTokens / vtraceTokens; total tokens incl. cache).",
     "strict agent tokens ← stage5_strictgated_10task_report.json tasks[].strict.totalTokens (joined by instanceId).",
-    "critic tokens ← stage5_live_critic_high_risk_comparison.json and stage5_repair_conversion_*.json costs.criticInput/OutputTokens.",
-    "repair tokens ← stage5_repair_conversion_*.json costs.repairInput/OutputTokens (verified OLD-VTRACE conversions only)."
+    "critic tokens ← stage5_live_critic_high_risk_comparison.json and stage5_repair_conversion_*.json costs.criticInput/OutputTokens (matched to the policy family by run label).",
+    "repair tokens ← stage5_repair_conversion_*.json costs.repairInput/OutputTokens (OLD conversions → old repair row; strictgated conversions → strict repair row)."
   ],
+  "strictPolicyRecommendation": {
+    "stopRepairExperiments": true,
+    "statement": "Stop Stage 5 repair experiments for now. Summarize the final Stage 5 policy story and move back to broader VTRACE productization/release hardening.",
+    "rationale": "strict_vtrace_with_verified_repair reaches 8/10, matching baseline (8/10) at no worse cost ($6.82 vs $6.98) and no more tokens (12.54M vs 16.76M). The strict policy story is complete for this controlled set, so further Stage 5 repair experiments are not warranted. Do NOT duplicate the verified strict Requests repair and do NOT trigger full reruns unless a specific regression is discovered."
+  },
   "strictRecommendation": {
-    "recommend": true,
-    "targets": [
-      {
-        "instanceId": "psf__requests-5414",
-        "strictRunLabel": "eval-strictgated-vtrace-requests-5414"
-      }
-    ],
-    "statement": "Run a strict-specific repair smoke/evaluation only for eval-strictgated-vtrace-requests-5414, because Requests remains unresolved under strict and prior old-VTRACE repair evidence suggests this defect class may be recoverable.",
-    "rationale": "Requests is unresolved under the strict first pass but was recovered by a verified OLD-VTRACE repaired patch, so a strict-specific repair smoke targets exactly the lost task. Do NOT transfer the old repair conversion to strict accounting, do NOT re-run already-recovered old repair experiments, and do NOT trigger a full 10-task rerun."
+    "recommend": false,
+    "targets": [],
+    "statement": "No strict-specific repair experiment is warranted: every controlled task that is still unresolved under the strict first pass lacks prior verified OLD-VTRACE repair evidence, so there is no defect-class signal that strict-specific repair would recover.",
+    "rationale": "A strict repair smoke is only justified when an unresolved-under-strict task already has a verified OLD-VTRACE repaired-patch conversion (evidence the defect class is recoverable). Do not duplicate old repair experiments or run full 10-task reruns."
   },
   "recommendation": {
     "choice": "D",
@@ -428,9 +515,10 @@
     "rationale": "4 verified repair artifacts improved cost-per-resolved (from $1.6418 to $1.2542 per resolved), but they cover only 2 unique controlled tasks; the extra artifacts re-ran repair on an already-recovered instance and added no new task recovery. Running more duplicate Requests repairs cannot raise the unique-task count, so stop duplicate runs and instead reduce default VTRACE first-pass tokens and/or add new unique high-risk tasks."
   },
   "repairBoundary": [
+    "Old VTRACE repairs and strict VTRACE repairs are separate evidence sets. A repaired patch only applies to the first patch whose run label produced it.",
     "Verified old repair conversions are tied to the old VTRACE first patches. They are not automatically counted as strict repairs unless strict-specific repaired-patch evaluation exists.",
-    "These conversions are accounted under `old_vtrace_with_verified_repair`, never under a `strict_with_repair` row.",
-    "No strict repair policy row exists because no strict repaired-patch artifacts exist. Strict resolution is read straight from the strict first-pass run artifacts."
+    "Old conversions are accounted ONLY under `old_vtrace_with_verified_repair`; strict-specific conversions are accounted ONLY under `strict_vtrace_with_verified_repair`. Neither is ever transferred across the boundary.",
+    "`strict_vtrace_with_verified_repair` starts from `strict_vtrace_first_patch` and applies only strict-specific verified repaired-patch evaluations produced from strict first patches; it carries no old-VTRACE repair recovery."
   ],
   "nonClaims": [
     "This is not a VEXP comparison.",
@@ -440,6 +528,7 @@
     "This does not change production behavior.",
     "This only accounts for observed artifacts and verified repaired-patch evaluations.",
     "strict_vtrace_first_patch using fewer total tokens and lower total cost than baseline does NOT imply a higher success rate — strict remains behind baseline on resolved count.",
-    "Verified old repair conversions are NOT transferred to strict accounting; strict carries no repair recovery."
+    "Verified old repair conversions are NOT transferred to strict accounting; strict carries only strict-specific repair recovery.",
+    "strict_vtrace_with_verified_repair matching baseline resolved count does NOT imply a higher success rate; it reflects one strict-specific verified repair conversion on this controlled set, not an aggregate benchmark."
   ]
 }

@@ -97,11 +97,26 @@ export interface StrictResult {
   readonly tokens: number | null;
 }
 
+// Which first-pass family a repaired-patch conversion belongs to. A conversion is
+// ONLY ever applied to the policy whose first patch produced it: "old" conversions
+// flow into the old_vtrace_with_* rows; "strict" conversions flow into
+// strict_vtrace_with_verified_repair. They are never cross-applied.
+export type ConversionSource = "old" | "strict";
+
+// A strict-gated first patch is identified by its run label (the strict-gated runs are
+// labelled `eval-strictgated-...`). Any other run label is an OLD VTRACE first patch.
+export function conversionSourceForRunLabel(runLabel: string): ConversionSource {
+  return /strictgated/i.test(runLabel) ? "strict" : "old";
+}
+
 // A repaired-patch evaluation conversion. Only those with
-// convertedUnresolvedToResolved===true are APPLIED to the gated-repair policies.
+// convertedUnresolvedToResolved===true are APPLIED to the gated-repair policies, and only
+// to the policy matching their `source` (the first patch whose run label produced them).
 export interface Conversion {
   readonly runLabel: string;
   readonly instanceId: string;
+  // Derived from runLabel: which first patch this repaired patch belongs to.
+  readonly source: ConversionSource;
   readonly firstPatchResolved: boolean | null;
   readonly repairedPatchResolved: boolean | null;
   readonly convertedUnresolvedToResolved: boolean;
@@ -237,9 +252,11 @@ export function parseConversion(doc: ConversionDoc | null): Conversion | null {
   if (doc === null || !doc.conversion) return null;
   const c = doc.conversion;
   const costs = doc.costs ?? {};
+  const runLabel = doc.runLabel ?? "unknown";
   return {
-    runLabel: doc.runLabel ?? "unknown",
+    runLabel,
     instanceId: doc.instanceId ?? "unknown",
+    source: conversionSourceForRunLabel(runLabel),
     firstPatchResolved: c.firstPatchResolved ?? null,
     repairedPatchResolved: c.repairedPatchResolved ?? null,
     convertedUnresolvedToResolved: c.convertedUnresolvedToResolved === true,
@@ -359,6 +376,11 @@ export interface PolicySpec {
   readonly addCriticObservation: boolean;
   // Add critic+repair cost+tokens ONLY for verified conversions.
   readonly addVerifiedRecoveryCost: boolean;
+  // Which conversion family this policy draws from. "old" policies apply only OLD-VTRACE
+  // conversions; "strict" policies apply only STRICT conversions. A conversion is never
+  // applied across the boundary, so a verified conversion that produced an old first patch
+  // can never resolve a strict task and vice-versa.
+  readonly conversionSource: ConversionSource;
 }
 
 // Policy rows. Names are explicit about the first-pass leg they account for:
@@ -368,8 +390,10 @@ export interface PolicySpec {
 //   old_vtrace_with_live_critic_observation_cost— old first patch + live-critic overhead, resolution unchanged.
 //   old_vtrace_with_verified_repair             — old first patch + verified critic+repair recovery (realistic gated repair).
 //   strict_vtrace_first_patch                   — STRICT-gated first pass (the internal Stage 5 default).
-// Repair conversions are tied to the OLD first patches and are NEVER applied to the
-// strict row (no strict repaired-patch artifacts exist).
+//   strict_vtrace_with_verified_repair          — STRICT first pass + STRICT-specific verified critic+repair recovery.
+// Repair conversions are tied to the first patch whose run label produced them: OLD
+// conversions flow only into the old_vtrace_with_* rows, STRICT conversions flow only into
+// strict_vtrace_with_verified_repair. They are NEVER cross-applied across the boundary.
 export const POLICY_SPECS: readonly PolicySpec[] = [
   {
     policyName: "baseline",
@@ -380,6 +404,7 @@ export const POLICY_SPECS: readonly PolicySpec[] = [
     applyConversions: false,
     addCriticObservation: false,
     addVerifiedRecoveryCost: false,
+    conversionSource: "old",
   },
   {
     policyName: "old_vtrace_first_patch",
@@ -390,6 +415,7 @@ export const POLICY_SPECS: readonly PolicySpec[] = [
     applyConversions: false,
     addCriticObservation: false,
     addVerifiedRecoveryCost: false,
+    conversionSource: "old",
   },
   {
     policyName: "strict_vtrace_first_patch",
@@ -400,16 +426,18 @@ export const POLICY_SPECS: readonly PolicySpec[] = [
     applyConversions: false,
     addCriticObservation: false,
     addVerifiedRecoveryCost: false,
+    conversionSource: "strict",
   },
   {
     policyName: "old_vtrace_with_observed_gated_repair",
-    description: "old_vtrace_first_patch with verified repaired-patch conversions applied to RESOLUTION only (recovery cost not added — optimistic ceiling).",
+    description: "old_vtrace_first_patch with verified OLD-VTRACE repaired-patch conversions applied to RESOLUTION only (recovery cost not added — optimistic ceiling).",
     resolutionBasis: "vtrace",
     costBasis: "vtrace",
     tokenBasis: "vtrace",
     applyConversions: true,
     addCriticObservation: false,
     addVerifiedRecoveryCost: false,
+    conversionSource: "old",
   },
   {
     policyName: "old_vtrace_with_live_critic_observation_cost",
@@ -420,16 +448,29 @@ export const POLICY_SPECS: readonly PolicySpec[] = [
     applyConversions: false,
     addCriticObservation: true,
     addVerifiedRecoveryCost: false,
+    conversionSource: "old",
   },
   {
     policyName: "old_vtrace_with_verified_repair",
-    description: "Realistic OLD-VTRACE gated repair: verified conversions change resolution AND add critic+repair cost only for those conversions. Tied to the old first patches, never strict.",
+    description: "Realistic OLD-VTRACE gated repair: verified OLD-VTRACE conversions change resolution AND add critic+repair cost only for those conversions. Tied to the old first patches, never strict.",
     resolutionBasis: "vtrace",
     costBasis: "vtrace",
     tokenBasis: "vtrace",
     applyConversions: true,
     addCriticObservation: false,
     addVerifiedRecoveryCost: true,
+    conversionSource: "old",
+  },
+  {
+    policyName: "strict_vtrace_with_verified_repair",
+    description: "Realistic STRICT gated repair: starts from strict_vtrace_first_patch and applies ONLY strict-specific verified repaired-patch conversions, adding strict critic+repair cost only for those conversions. Never includes old-VTRACE repair conversions.",
+    resolutionBasis: "strict",
+    costBasis: "strict",
+    tokenBasis: "strict",
+    applyConversions: true,
+    addCriticObservation: false,
+    addVerifiedRecoveryCost: true,
+    conversionSource: "strict",
   },
 ];
 
@@ -479,7 +520,13 @@ function div(numerator: number | null, denominator: number): number | null {
 }
 
 export function computePolicyMetrics(spec: PolicySpec, inputs: AccountingInputs): PolicyMetrics {
-  const verified = inputs.conversions.filter((c) => c.convertedUnresolvedToResolved);
+  // Only conversions whose first patch matches this policy's family are eligible: an OLD
+  // policy never sees STRICT conversions and vice-versa. This is the repair boundary in
+  // code — old repaired patches cannot resolve strict tasks, and strict repaired patches
+  // cannot resolve old tasks.
+  const verified = inputs.conversions.filter(
+    (c) => c.convertedUnresolvedToResolved && c.source === spec.conversionSource,
+  );
   const verifiedByInstance = new Map(verified.map((c) => [c.instanceId, c]));
   const criticByInstance = new Map(inputs.criticObservations.map((o) => [o.instanceId, o]));
   const taskInstanceIds = new Set(inputs.tasks.map((t) => t.instanceId));
@@ -641,11 +688,24 @@ export function pickStrictRepairRecommendation(args: {
   readonly tasks: readonly ControlledTask[];
   readonly conversions: readonly Conversion[];
 }): StrictRepairRecommendation {
-  const verifiedInstances = new Set(
-    args.conversions.filter((c) => c.convertedUnresolvedToResolved).map((c) => c.instanceId),
+  // Old-VTRACE verified evidence (the defect class is recoverable).
+  const oldVerifiedInstances = new Set(
+    args.conversions
+      .filter((c) => c.convertedUnresolvedToResolved && c.source === "old")
+      .map((c) => c.instanceId),
+  );
+  // Instances that ALREADY have a strict-specific verified conversion: a strict repair was
+  // already produced and accounted, so recommending another would be a duplicate run.
+  const strictConvertedInstances = new Set(
+    args.conversions
+      .filter((c) => c.convertedUnresolvedToResolved && c.source === "strict")
+      .map((c) => c.instanceId),
   );
   const candidates = args.tasks.filter(
-    (t) => t.strictResolved === false && verifiedInstances.has(t.instanceId),
+    (t) =>
+      t.strictResolved === false &&
+      oldVerifiedInstances.has(t.instanceId) &&
+      !strictConvertedInstances.has(t.instanceId),
   );
   if (candidates.length === 0) {
     return {
@@ -748,6 +808,66 @@ export function pickRecommendation(args: {
 }
 
 // ---------------------------------------------------------------------------
+// Strict policy-story recommendation (deterministic, data-driven)
+// ---------------------------------------------------------------------------
+
+// The top-level Stage 5 next step, driven by whether strict_vtrace_with_verified_repair
+// has closed the gap to baseline. Once strict+repair matches baseline resolved count at no
+// worse cost AND no worse tokens, the strict policy story is complete for this controlled
+// set and further repair experiments add no signal — stop them.
+export interface StrictPolicyRecommendation {
+  readonly stopRepairExperiments: boolean;
+  readonly statement: string;
+  readonly rationale: string;
+}
+
+export const STOP_REPAIR_STATEMENT =
+  "Stop Stage 5 repair experiments for now. Summarize the final Stage 5 policy story and move back to broader VTRACE productization/release hardening.";
+
+export function pickStrictPolicyRecommendation(args: {
+  readonly baseline: PolicyMetrics;
+  readonly strictWithRepair: PolicyMetrics;
+}): StrictPolicyRecommendation {
+  const { baseline, strictWithRepair } = args;
+  const matchesBaselineResolved = strictWithRepair.resolvedCount >= baseline.resolvedCount;
+  const notWorseCost =
+    strictWithRepair.totalCostUsd !== null &&
+    baseline.totalCostUsd !== null &&
+    strictWithRepair.totalCostUsd <= baseline.totalCostUsd;
+  const notWorseTokens =
+    strictWithRepair.totalTokens !== null &&
+    baseline.totalTokens !== null &&
+    strictWithRepair.totalTokens <= baseline.totalTokens;
+
+  if (matchesBaselineResolved && notWorseCost && notWorseTokens) {
+    return {
+      stopRepairExperiments: true,
+      statement: STOP_REPAIR_STATEMENT,
+      rationale:
+        `strict_vtrace_with_verified_repair reaches ${strictWithRepair.resolvedCount}/${strictWithRepair.taskCount}, ` +
+        `matching baseline (${baseline.resolvedCount}/${baseline.taskCount}) at no worse cost ` +
+        `(${fmtUsd2(strictWithRepair.totalCostUsd)} vs ${fmtUsd2(baseline.totalCostUsd)}) and no more tokens ` +
+        `(${fmtMillions(strictWithRepair.totalTokens)} vs ${fmtMillions(baseline.totalTokens)}). ` +
+        "The strict policy story is complete for this controlled set, so further Stage 5 repair experiments are not warranted. " +
+        "Do NOT duplicate the verified strict Requests repair and do NOT trigger full reruns unless a specific regression is discovered.",
+    };
+  }
+  const gap = baseline.resolvedCount - strictWithRepair.resolvedCount;
+  return {
+    stopRepairExperiments: false,
+    statement:
+      "Do not stop yet: strict_vtrace_with_verified_repair has not matched baseline resolution at no-worse cost/tokens in this controlled set; gather targeted strict-specific repair evidence before declaring the Stage 5 policy story complete.",
+    rationale:
+      `strict_vtrace_with_verified_repair resolved ${strictWithRepair.resolvedCount}/${strictWithRepair.taskCount} vs ` +
+      `baseline ${baseline.resolvedCount}/${baseline.taskCount}` +
+      (gap > 0 ? ` (still ${gap} behind)` : "") +
+      `; cost ${fmtUsd2(strictWithRepair.totalCostUsd)} vs ${fmtUsd2(baseline.totalCostUsd)}, ` +
+      `tokens ${fmtMillions(strictWithRepair.totalTokens)} vs ${fmtMillions(baseline.totalTokens)}. ` +
+      "Pursue only strict-specific repair targets; never transfer old repair conversions to strict.",
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Report (pure)
 // ---------------------------------------------------------------------------
 
@@ -762,8 +882,10 @@ export interface PolicyAccountingReport {
     readonly baselineResolved: number;
     readonly oldVtraceFirstPatchResolved: number;
     readonly strictVtraceFirstPatchResolved: number;
+    readonly strictVtraceWithRepairResolved: number;
     readonly gatedRepairResolved: number;
     readonly recoveryCostAddedUsd: number | null;
+    readonly strictRecoveryCostAddedUsd: number | null;
     readonly headline: string;
   };
   // Strict-gated first-pass accounting against the two reference policies.
@@ -791,8 +913,41 @@ export interface PolicyAccountingReport {
     readonly fewerTokensThanBaseline: boolean;
     readonly lowerCostThanBaseline: boolean;
   };
-  // Distinct controlled-task instances recovered by a verified conversion (sorted).
+  // Strict-specific repaired-patch accounting: strict_vtrace_with_verified_repair against
+  // baseline, fed ONLY by strict-specific conversions (never old-VTRACE repair evidence).
+  readonly strictRepairAccounting: {
+    readonly taskCount: number;
+    readonly strictFirstPassResolved: number;
+    readonly strictWithRepairResolved: number;
+    readonly baselineResolved: number;
+    readonly strictWithRepairTotalTokens: number | null;
+    readonly strictWithRepairTotalCostUsd: number | null;
+    readonly baselineTotalTokens: number | null;
+    readonly baselineTotalCostUsd: number | null;
+    readonly strictWithRepairCostPerResolved: number | null;
+    readonly strictWithRepairTokensPerResolved: number | null;
+    readonly strictRepairCriticCostUsd: number | null;
+    readonly strictRepairRepairCostUsd: number | null;
+    readonly strictRecoveryCostAddedUsd: number | null;
+    // Artifact-level strict conversions and unique strict task recoveries.
+    readonly strictArtifactConversions: number;
+    readonly strictUniqueTaskConversions: number;
+    readonly strictUniqueTaskRecoveries: readonly string[];
+    readonly resolutionDeltaVsStrictFirstPass: number;
+    readonly resolutionDeltaVsBaseline: number;
+    readonly costDeltaVsBaseline: number | null;
+    readonly tokensDeltaVsBaseline: number | null;
+    readonly matchesBaselineResolved: boolean;
+    readonly lowerCostThanBaseline: boolean;
+    readonly fewerTokensThanBaseline: boolean;
+    // True only when strict+repair both matches baseline resolution AND is no worse on
+    // cost AND no worse on tokens — the condition that lets us recommend stopping repair.
+    readonly matchesBaselineAtLowerCostTokens: boolean;
+  };
+  // Distinct controlled-task instances recovered by a verified OLD-VTRACE conversion (sorted).
   readonly uniqueTaskRecoveries: readonly string[];
+  // Distinct controlled-task instances recovered by a verified STRICT conversion (sorted).
+  readonly strictUniqueTaskRecoveries: readonly string[];
   readonly policies: readonly PolicyMetricsWithDeltas[];
   readonly tasks: ReadonlyArray<{
     readonly instanceId: string;
@@ -807,10 +962,12 @@ export interface PolicyAccountingReport {
     readonly vtraceTokens: number | null;
     readonly strictTokens: number | null;
     readonly verifiedConversion: boolean;
+    readonly strictVerifiedConversion: boolean;
   }>;
   readonly conversions: ReadonlyArray<{
     readonly runLabel: string;
     readonly instanceId: string;
+    readonly source: ConversionSource;
     readonly firstPatchResolved: boolean | null;
     readonly repairedPatchResolved: boolean | null;
     readonly convertedUnresolvedToResolved: boolean;
@@ -820,8 +977,11 @@ export interface PolicyAccountingReport {
   }>;
   readonly costSources: readonly string[];
   readonly tokenSources: readonly string[];
-  // The strict-specific repair recommendation drives the "Recommended next step"
-  // section; `recommendation` is retained for the OLD-VTRACE repair-experiment guidance.
+  // The top-level Stage 5 next step (drives "Recommended next step"): whether strict+repair
+  // has closed the gap to baseline and repair experiments should stop.
+  readonly strictPolicyRecommendation: StrictPolicyRecommendation;
+  // The strict-specific repair-target recommendation (which unresolved-under-strict task,
+  // if any, still warrants a strict-specific repair smoke).
   readonly strictRecommendation: StrictRepairRecommendation;
   readonly recommendation: Recommendation;
   readonly repairBoundary: readonly string[];
@@ -830,9 +990,10 @@ export interface PolicyAccountingReport {
 
 // The accounting boundary that separates verified OLD-VTRACE repair from strict first-pass.
 export const REPAIR_BOUNDARY: readonly string[] = [
+  "Old VTRACE repairs and strict VTRACE repairs are separate evidence sets. A repaired patch only applies to the first patch whose run label produced it.",
   "Verified old repair conversions are tied to the old VTRACE first patches. They are not automatically counted as strict repairs unless strict-specific repaired-patch evaluation exists.",
-  "These conversions are accounted under `old_vtrace_with_verified_repair`, never under a `strict_with_repair` row.",
-  "No strict repair policy row exists because no strict repaired-patch artifacts exist. Strict resolution is read straight from the strict first-pass run artifacts.",
+  "Old conversions are accounted ONLY under `old_vtrace_with_verified_repair`; strict-specific conversions are accounted ONLY under `strict_vtrace_with_verified_repair`. Neither is ever transferred across the boundary.",
+  "`strict_vtrace_with_verified_repair` starts from `strict_vtrace_first_patch` and applies only strict-specific verified repaired-patch evaluations produced from strict first patches; it carries no old-VTRACE repair recovery.",
 ];
 
 export const NON_CLAIMS: readonly string[] = [
@@ -843,21 +1004,22 @@ export const NON_CLAIMS: readonly string[] = [
   "This does not change production behavior.",
   "This only accounts for observed artifacts and verified repaired-patch evaluations.",
   "strict_vtrace_first_patch using fewer total tokens and lower total cost than baseline does NOT imply a higher success rate — strict remains behind baseline on resolved count.",
-  "Verified old repair conversions are NOT transferred to strict accounting; strict carries no repair recovery.",
+  "Verified old repair conversions are NOT transferred to strict accounting; strict carries only strict-specific repair recovery.",
+  "strict_vtrace_with_verified_repair matching baseline resolved count does NOT imply a higher success rate; it reflects one strict-specific verified repair conversion on this controlled set, not an aggregate benchmark.",
 ];
 
 export const COST_SOURCES: readonly string[] = [
   "old agentCostUsd ← stage5_controlled_10_task_plan.json selectedTasks (baselineCost / vtraceCost).",
   "strict agentCostUsd ← stage5_strictgated_10task_report.json tasks[].strict.costUsd (joined by instanceId).",
-  "criticCostUsd ← stage5_live_critic_high_risk_comparison.json (mean per-instance observation) and stage5_repair_conversion_*.json costs.criticCostUsd (verified OLD-VTRACE conversions).",
-  "repairCostUsd ← stage5_repair_conversion_*.json costs.repairCostUsd (verified OLD-VTRACE conversions only).",
+  "criticCostUsd ← stage5_live_critic_high_risk_comparison.json (mean per-instance observation) and stage5_repair_conversion_*.json costs.criticCostUsd (conversions matched to the policy family by run label).",
+  "repairCostUsd ← stage5_repair_conversion_*.json costs.repairCostUsd (OLD conversions → old_vtrace_with_verified_repair; strictgated conversions → strict_vtrace_with_verified_repair).",
 ];
 
 export const TOKEN_SOURCES: readonly string[] = [
   "old agent tokens ← stage5_controlled_10_task_plan.json selectedTasks (baselineTokens / vtraceTokens; total tokens incl. cache).",
   "strict agent tokens ← stage5_strictgated_10task_report.json tasks[].strict.totalTokens (joined by instanceId).",
-  "critic tokens ← stage5_live_critic_high_risk_comparison.json and stage5_repair_conversion_*.json costs.criticInput/OutputTokens.",
-  "repair tokens ← stage5_repair_conversion_*.json costs.repairInput/OutputTokens (verified OLD-VTRACE conversions only).",
+  "critic tokens ← stage5_live_critic_high_risk_comparison.json and stage5_repair_conversion_*.json costs.criticInput/OutputTokens (matched to the policy family by run label).",
+  "repair tokens ← stage5_repair_conversion_*.json costs.repairInput/OutputTokens (OLD conversions → old repair row; strictgated conversions → strict repair row).",
 ];
 
 function fmtUsd(v: number | null): string {
@@ -902,18 +1064,26 @@ export function buildReport(args: { readonly generatedAt: string | null; readonl
   const strictFirstPatch = rawByName.get("strict_vtrace_first_patch")!;
   const gatedRepair = rawByName.get("old_vtrace_with_observed_gated_repair")!;
   const verifiedRepair = rawByName.get("old_vtrace_with_verified_repair")!;
+  const strictWithRepair = rawByName.get("strict_vtrace_with_verified_repair")!;
 
   // Attach deltas vs the two reference policies (baseline, old first patch).
   const policies = withDeltas(rawPolicies, baseline, oldVtraceFirstPatch);
 
-  const verifiedConversions = inputs.conversions.filter((c) => c.convertedUnresolvedToResolved);
-  const verifiedByInstance = new Map(verifiedConversions.map((c) => [c.instanceId, c]));
   const taskInstanceIds = new Set(inputs.tasks.map((t) => t.instanceId));
-  const uniqueTaskRecoveries = [...new Set(verifiedConversions.filter((c) => taskInstanceIds.has(c.instanceId)).map((c) => c.instanceId))].sort();
+  // Verified conversions split by family — OLD conversions and STRICT conversions are
+  // tracked separately and never merged (the repair boundary).
+  const oldVerified = inputs.conversions.filter((c) => c.convertedUnresolvedToResolved && c.source === "old");
+  const strictVerified = inputs.conversions.filter((c) => c.convertedUnresolvedToResolved && c.source === "strict");
+  // The old gated-repair column on the task table flips only for OLD verified conversions.
+  const oldVerifiedByInstance = new Map(oldVerified.map((c) => [c.instanceId, c]));
+  const uniqueTaskRecoveries = [...new Set(oldVerified.filter((c) => taskInstanceIds.has(c.instanceId)).map((c) => c.instanceId))].sort();
+  const strictUniqueTaskRecoveries = [...new Set(strictVerified.filter((c) => taskInstanceIds.has(c.instanceId)).map((c) => c.instanceId))].sort();
 
   const recommendation = pickRecommendation({ vtraceFirstPatch: oldVtraceFirstPatch, verifiedRepair });
   const strictRecommendation = pickStrictRepairRecommendation({ tasks: inputs.tasks, conversions: inputs.conversions });
+  const strictPolicyRecommendation = pickStrictPolicyRecommendation({ baseline, strictWithRepair });
   const recoveryCostAddedUsd = addNullable(verifiedRepair.criticCostUsd, verifiedRepair.repairCostUsd);
+  const strictRecoveryCostAddedUsd = addNullable(strictWithRepair.criticCostUsd, strictWithRepair.repairCostUsd);
 
   const verifiedRepairArtifacts = verifiedRepair.artifactConversionCount;
   const uniqueTaskConversions = verifiedRepair.taskConversionCount;
@@ -946,15 +1116,61 @@ export function buildReport(args: { readonly generatedAt: string | null; readonl
       strictFirstPatch.totalCostUsd !== null && baseline.totalCostUsd !== null && strictFirstPatch.totalCostUsd < baseline.totalCostUsd,
   };
 
+  // Strict-specific repair accounting: strict_vtrace_with_verified_repair vs baseline, fed
+  // ONLY by strict-specific conversions. matchesBaselineAtLowerCostTokens is the gate that
+  // says strict+repair has reached baseline resolution without paying more.
+  const swrMatchesBaseline = strictWithRepair.resolvedCount >= baseline.resolvedCount;
+  const swrLowerCost =
+    strictWithRepair.totalCostUsd !== null && baseline.totalCostUsd !== null && strictWithRepair.totalCostUsd < baseline.totalCostUsd;
+  const swrFewerTokens =
+    strictWithRepair.totalTokens !== null && baseline.totalTokens !== null && strictWithRepair.totalTokens < baseline.totalTokens;
+  const strictRepairAccounting = {
+    taskCount: strictWithRepair.taskCount,
+    strictFirstPassResolved: strictFirstPatch.resolvedCount,
+    strictWithRepairResolved: strictWithRepair.resolvedCount,
+    baselineResolved: baseline.resolvedCount,
+    strictWithRepairTotalTokens: strictWithRepair.totalTokens,
+    strictWithRepairTotalCostUsd: strictWithRepair.totalCostUsd,
+    baselineTotalTokens: baseline.totalTokens,
+    baselineTotalCostUsd: baseline.totalCostUsd,
+    strictWithRepairCostPerResolved: strictWithRepair.costPerResolved,
+    strictWithRepairTokensPerResolved: strictWithRepair.tokensPerResolved,
+    strictRepairCriticCostUsd: strictWithRepair.criticCostUsd,
+    strictRepairRepairCostUsd: strictWithRepair.repairCostUsd,
+    strictRecoveryCostAddedUsd,
+    strictArtifactConversions: strictWithRepair.artifactConversionCount,
+    strictUniqueTaskConversions: strictWithRepair.taskConversionCount,
+    strictUniqueTaskRecoveries,
+    resolutionDeltaVsStrictFirstPass: strictWithRepair.resolvedCount - strictFirstPatch.resolvedCount,
+    resolutionDeltaVsBaseline: strictWithRepair.resolvedCount - baseline.resolvedCount,
+    costDeltaVsBaseline: diffNullable(strictWithRepair.totalCostUsd, baseline.totalCostUsd),
+    tokensDeltaVsBaseline: diffNullable(strictWithRepair.totalTokens, baseline.totalTokens),
+    matchesBaselineResolved: swrMatchesBaseline,
+    lowerCostThanBaseline: swrLowerCost,
+    fewerTokensThanBaseline: swrFewerTokens,
+    matchesBaselineAtLowerCostTokens: strictPolicyRecommendation.stopRepairExperiments,
+  };
+
   const headline = (() => {
     const sr = strictFirstPatch;
     const ov = oldVtraceFirstPatch;
+    const swr = strictWithRepair;
     const behind = behindBaselineBy === 1 ? "one resolved task behind" : `${behindBaselineBy} resolved tasks behind`;
+    const strictRepairClause =
+      strictRepairAccounting.strictUniqueTaskConversions > 0
+        ? `Applying ${strictRepairAccounting.strictUniqueTaskConversions} strict-specific verified repair conversion(s) ` +
+          `(${strictUniqueTaskRecoveries.join(", ")}), strict_vtrace_with_verified_repair reaches ${swr.resolvedCount}/${swr.taskCount} ` +
+          `at ${fmtUsd2(swr.totalCostUsd)} / ${fmtMillions(swr.totalTokens)}` +
+          (strictRepairAccounting.matchesBaselineAtLowerCostTokens
+            ? `, matching baseline resolution at lower total cost and fewer tokens.`
+            : `.`)
+        : `No strict-specific repair conversion is available, so strict_vtrace_with_verified_repair equals strict_vtrace_first_patch.`;
     return (
       `strict_vtrace_first_patch (the internal Stage 5 default) resolved ${sr.resolvedCount}/${sr.taskCount} using ` +
       `${fmtMillions(sr.totalTokens)} tokens at ${fmtUsd2(sr.totalCostUsd)}, improving on old_vtrace_first_patch ` +
       `(${ov.resolvedCount}/${ov.taskCount}, ${fmtMillions(ov.totalTokens)}, ${fmtUsd2(ov.totalCostUsd)}) and remaining ` +
       `${behind} baseline (${baseline.resolvedCount}/${baseline.taskCount}, ${fmtMillions(baseline.totalTokens)}, ${fmtUsd2(baseline.totalCostUsd)}). ` +
+      `${strictRepairClause} ` +
       `Verified OLD-VTRACE repair (${verifiedRepairArtifacts} artifact(s), ${uniqueTaskConversions} unique task recovery(ies)) is accounted separately and never transferred to strict.`
     );
   })();
@@ -968,33 +1184,40 @@ export function buildReport(args: { readonly generatedAt: string | null; readonl
       baselineResolved: baseline.resolvedCount,
       oldVtraceFirstPatchResolved: oldVtraceFirstPatch.resolvedCount,
       strictVtraceFirstPatchResolved: strictFirstPatch.resolvedCount,
+      strictVtraceWithRepairResolved: strictWithRepair.resolvedCount,
       gatedRepairResolved: gatedRepair.resolvedCount,
       recoveryCostAddedUsd,
+      strictRecoveryCostAddedUsd,
       headline,
     },
     strictAccounting,
+    strictRepairAccounting,
     uniqueTaskRecoveries,
+    strictUniqueTaskRecoveries,
     policies,
     tasks: inputs.tasks.map((t) => {
-      const verified = verifiedByInstance.has(t.instanceId);
+      const oldVerifiedHit = oldVerifiedByInstance.has(t.instanceId);
+      const strictVerifiedHit = strictVerified.some((c) => c.instanceId === t.instanceId);
       return {
         instanceId: t.instanceId,
         baselineResolved: t.baselineResolved,
         vtraceResolved: t.vtraceResolved,
         strictResolved: t.strictResolved,
-        gatedRepairResolved: verified ? true : t.vtraceResolved,
+        gatedRepairResolved: oldVerifiedHit ? true : t.vtraceResolved,
         baselineCostUsd: t.baselineCostUsd,
         vtraceCostUsd: t.vtraceCostUsd,
         strictCostUsd: t.strictCostUsd,
         baselineTokens: t.baselineTokens,
         vtraceTokens: t.vtraceTokens,
         strictTokens: t.strictTokens,
-        verifiedConversion: verified,
+        verifiedConversion: oldVerifiedHit,
+        strictVerifiedConversion: strictVerifiedHit,
       };
     }),
     conversions: inputs.conversions.map((c) => ({
       runLabel: c.runLabel,
       instanceId: c.instanceId,
+      source: c.source,
       firstPatchResolved: c.firstPatchResolved,
       repairedPatchResolved: c.repairedPatchResolved,
       convertedUnresolvedToResolved: c.convertedUnresolvedToResolved,
@@ -1004,6 +1227,7 @@ export function buildReport(args: { readonly generatedAt: string | null; readonl
     })),
     costSources: COST_SOURCES,
     tokenSources: TOKEN_SOURCES,
+    strictPolicyRecommendation,
     strictRecommendation,
     recommendation,
     repairBoundary: REPAIR_BOUNDARY,
@@ -1017,7 +1241,7 @@ export function renderJson(report: PolicyAccountingReport): string {
 
 export function renderMarkdown(report: PolicyAccountingReport): string {
   const L: string[] = [];
-  const { summary, policies, strictAccounting: sa } = report;
+  const { summary, policies, strictAccounting: sa, strictRepairAccounting: sra } = report;
   const byName = new Map(policies.map((p) => [p.policyName, p]));
   const oldVtrace = byName.get("old_vtrace_first_patch")!;
 
@@ -1032,10 +1256,12 @@ export function renderMarkdown(report: PolicyAccountingReport): string {
   L.push(summary.headline);
   L.push("");
   L.push(`- controlled tasks: **${summary.taskCount}**`);
-  L.push(`- resolved: baseline **${summary.baselineResolved}**, old_vtrace_first_patch **${summary.oldVtraceFirstPatchResolved}**, strict_vtrace_first_patch **${summary.strictVtraceFirstPatchResolved}**`);
+  L.push(`- resolved: baseline **${summary.baselineResolved}**, old_vtrace_first_patch **${summary.oldVtraceFirstPatchResolved}**, strict_vtrace_first_patch **${summary.strictVtraceFirstPatchResolved}**, strict_vtrace_with_verified_repair **${summary.strictVtraceWithRepairResolved}**`);
   L.push(`- strict vs old VTRACE: resolved **${fmtSigned(sa.resolutionDeltaVsOldVtrace)}**, tokens **${fmtMillionsDelta(sa.tokensDeltaVsOldVtrace)}**, cost **${fmtUsdDelta(sa.costDeltaVsOldVtrace)}**`);
   L.push(`- strict vs baseline: resolved **${fmtSigned(sa.resolutionDeltaVsBaseline)}**, tokens **${fmtMillionsDelta(sa.tokensDeltaVsBaseline)}**, cost **${fmtUsdDelta(sa.costDeltaVsBaseline)}**`);
+  L.push(`- strict+repair vs baseline: resolved **${fmtSigned(sra.resolutionDeltaVsBaseline)}**, tokens **${fmtMillionsDelta(sra.tokensDeltaVsBaseline)}**, cost **${fmtUsdDelta(sra.costDeltaVsBaseline)}**`);
   L.push(`- verified OLD-VTRACE repair artifacts: **${summary.verifiedRepairArtifacts}** (**${summary.uniqueTaskConversions}** unique task recoveries${report.uniqueTaskRecoveries.length > 0 ? `: ${report.uniqueTaskRecoveries.join(", ")}` : ""}) — accounted under \`old_vtrace_with_verified_repair\`, never transferred to strict`);
+  L.push(`- strict-specific repair conversions: **${sra.strictArtifactConversions}** artifact(s) (**${sra.strictUniqueTaskConversions}** unique task recoveries${report.strictUniqueTaskRecoveries.length > 0 ? `: ${report.strictUniqueTaskRecoveries.join(", ")}` : ""}) — accounted under \`strict_vtrace_with_verified_repair\` only`);
   L.push("");
 
   L.push("## Policies compared");
@@ -1120,26 +1346,87 @@ export function renderMarkdown(report: PolicyAccountingReport): string {
   L.push(`| tokens / resolved | ${fmtNum(byName.get("baseline")!.tokensPerResolved)} | ${fmtNum(oldVtrace.tokensPerResolved)} | ${fmtNum(sa.strictTokensPerResolved)} |`);
   L.push("");
 
+  L.push("## Strict repair accounting");
+  L.push("");
+  if (sra.strictUniqueTaskConversions > 0) {
+    L.push(
+      `**strict_vtrace_with_verified_repair** starts from **strict_vtrace_first_patch** (${sra.strictFirstPassResolved}/${sra.taskCount}) and applies ` +
+        `${sra.strictUniqueTaskConversions} strict-specific verified repair conversion(s) — ${report.strictUniqueTaskRecoveries.map((id) => `\`${id}\``).join(", ")} — ` +
+        `reaching **${sra.strictWithRepairResolved}/${sra.taskCount}** resolved.`,
+    );
+    L.push("");
+    L.push(
+      `strict_vtrace_with_verified_repair reaches ${sra.strictWithRepairResolved}/${sra.taskCount} by applying one strict-specific verified repair conversion: ${report.strictUniqueTaskRecoveries.join(", ")}.`,
+    );
+    L.push("");
+    L.push("This repair conversion is strict-specific. It is not transferred from old VTRACE repair evidence.");
+    L.push("");
+    L.push("- added strict critic cost: " + fmtUsd(sra.strictRepairCriticCostUsd));
+    L.push("- added strict repair cost: " + fmtUsd(sra.strictRepairRepairCostUsd));
+    L.push("- added strict recovery cost (critic + repair): " + fmtUsd(sra.strictRecoveryCostAddedUsd));
+    L.push("- strict first-pass total cost: " + fmtUsd(sa.strictTotalCostUsd));
+    L.push("- strict+repair total cost: " + fmtUsd(sra.strictWithRepairTotalCostUsd));
+    L.push("");
+    if (sra.matchesBaselineResolved) {
+      L.push(
+        `strict_vtrace_with_verified_repair matches baseline resolved count in this controlled set (${sra.strictWithRepairResolved}/${sra.taskCount} vs baseline ${sra.baselineResolved}/${sra.taskCount}), while cost/token totals must be read from the accounting table.`,
+      );
+      L.push("");
+      if (sra.lowerCostThanBaseline && sra.fewerTokensThanBaseline) {
+        L.push("strict_vtrace_with_verified_repair matches baseline resolution at lower total cost/tokens.");
+        L.push("");
+      }
+    } else {
+      L.push(
+        `strict_vtrace_with_verified_repair does not yet match baseline resolved count (${sra.strictWithRepairResolved}/${sra.taskCount} vs baseline ${sra.baselineResolved}/${sra.taskCount}).`,
+      );
+      L.push("");
+    }
+  } else {
+    L.push(
+      `No strict-specific verified repair conversion exists, so strict_vtrace_with_verified_repair equals strict_vtrace_first_patch (${sra.strictWithRepairResolved}/${sra.taskCount}). Strict carries no repair recovery.`,
+    );
+    L.push("");
+  }
+  L.push("| metric | baseline | strict_vtrace_first_patch | strict_vtrace_with_verified_repair |");
+  L.push("| --- | --- | --- | --- |");
+  L.push(`| resolved | ${sra.baselineResolved}/${sra.taskCount} | ${sra.strictFirstPassResolved}/${sra.taskCount} | ${sra.strictWithRepairResolved}/${sra.taskCount} |`);
+  L.push(`| total tokens | ${fmtNum(sra.baselineTotalTokens)} | ${fmtNum(sa.strictTotalTokens)} | ${fmtNum(sra.strictWithRepairTotalTokens)} |`);
+  L.push(`| total cost | ${fmtUsd(sra.baselineTotalCostUsd)} | ${fmtUsd(sa.strictTotalCostUsd)} | ${fmtUsd(sra.strictWithRepairTotalCostUsd)} |`);
+  L.push(`| cost / resolved | ${fmtUsd(byName.get("baseline")!.costPerResolved)} | ${fmtUsd(sa.strictCostPerResolved)} | ${fmtUsd(sra.strictWithRepairCostPerResolved)} |`);
+  L.push(`| tokens / resolved | ${fmtNum(byName.get("baseline")!.tokensPerResolved)} | ${fmtNum(sa.strictTokensPerResolved)} | ${fmtNum(sra.strictWithRepairTokensPerResolved)} |`);
+  L.push("");
+
   L.push("## Repair accounting boundary");
   L.push("");
   for (const line of report.repairBoundary) L.push(`- ${line}`);
   L.push("");
   const convertedArtifacts = report.conversions.filter((c) => c.convertedUnresolvedToResolved);
+  const oldConvertedArtifacts = convertedArtifacts.filter((c) => c.source === "old");
+  const strictConvertedArtifacts = convertedArtifacts.filter((c) => c.source === "strict");
   if (report.conversions.length === 0) {
     L.push("_No repair conversions found; no repair was counted for any policy._");
   } else {
-    L.push(`${convertedArtifacts.length} verified repaired-patch artifact(s) resolved under Docker, corresponding to ${summary.uniqueTaskConversions} unique controlled task recovery(ies) under \`old_vtrace_with_verified_repair\`. Each artifact row is an individual OLD-VTRACE repair run; multiple rows for one instance are still one task recovery.`);
+    L.push(
+      `${oldConvertedArtifacts.length} OLD-VTRACE verified repaired-patch artifact(s) (→ ${summary.uniqueTaskConversions} unique recovery(ies) under \`old_vtrace_with_verified_repair\`) and ` +
+        `${strictConvertedArtifacts.length} STRICT verified repaired-patch artifact(s) (→ ${sra.strictUniqueTaskConversions} unique recovery(ies) under \`strict_vtrace_with_verified_repair\`) resolved under Docker. ` +
+        `Each artifact row is an individual repair run, tagged by its first-patch family (source); multiple rows for one instance are still one task recovery, and old/strict rows are never merged.`,
+    );
     L.push("");
-    L.push("| run | instance | first resolved | repaired resolved | converted | critic $ | repair $ | recovery $ |");
-    L.push("| --- | --- | --- | --- | --- | --- | --- | --- |");
+    L.push("| run | instance | source | first resolved | repaired resolved | converted | critic $ | repair $ | recovery $ |");
+    L.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
     for (const c of report.conversions) {
       L.push(
-        `| ${c.runLabel} | ${c.instanceId} | ${tri(c.firstPatchResolved)} | ${tri(c.repairedPatchResolved)} | ${tri(c.convertedUnresolvedToResolved)} | ${fmtUsd(c.criticCostUsd)} | ${fmtUsd(c.repairCostUsd)} | ${fmtUsd(c.totalRecoveryCostUsd)} |`,
+        `| ${c.runLabel} | ${c.instanceId} | ${c.source} | ${tri(c.firstPatchResolved)} | ${tri(c.repairedPatchResolved)} | ${tri(c.convertedUnresolvedToResolved)} | ${fmtUsd(c.criticCostUsd)} | ${fmtUsd(c.repairCostUsd)} | ${fmtUsd(c.totalRecoveryCostUsd)} |`,
       );
     }
     L.push("");
     if (report.uniqueTaskRecoveries.length > 0) {
       L.push(`Unique OLD-VTRACE task recoveries (de-duplicated by instance): ${report.uniqueTaskRecoveries.map((id) => `\`${id}\``).join(", ")}. These belong to \`old_vtrace_with_verified_repair\`, not to strict.`);
+      L.push("");
+    }
+    if (report.strictUniqueTaskRecoveries.length > 0) {
+      L.push(`Unique STRICT task recoveries (de-duplicated by instance): ${report.strictUniqueTaskRecoveries.map((id) => `\`${id}\``).join(", ")}. These belong to \`strict_vtrace_with_verified_repair\`, not to old VTRACE.`);
       L.push("");
     }
   }
@@ -1152,9 +1439,11 @@ export function renderMarkdown(report: PolicyAccountingReport): string {
 
   L.push("## Recommended next step");
   L.push("");
-  L.push(report.strictRecommendation.statement);
+  L.push(report.strictPolicyRecommendation.statement);
   L.push("");
-  L.push(report.strictRecommendation.rationale);
+  L.push(report.strictPolicyRecommendation.rationale);
+  L.push("");
+  L.push(`_Strict repair-target guidance: ${report.strictRecommendation.statement}_`);
   L.push("");
   L.push(`_OLD-VTRACE repair-experiment guidance (separate track): Option ${report.recommendation.choice} — ${report.recommendation.statement}_`);
   L.push("");
@@ -1184,16 +1473,18 @@ export async function run(config: CliConfig): Promise<PolicyAccountingReport> {
 
   const old = report.policies.find((p) => p.policyName === "old_vtrace_first_patch")!;
   const strict = report.policies.find((p) => p.policyName === "strict_vtrace_first_patch")!;
+  const sra = report.strictRepairAccounting;
   process.stdout.write(
     [
       "Stage 5 policy accounting written:",
       `  ${mdPath}`,
       `  ${jsonPath}`,
       "",
-      `Tasks: ${report.summary.taskCount}   Verified OLD-VTRACE repair artifacts: ${report.summary.verifiedRepairArtifacts}   Unique task recoveries: ${report.summary.uniqueTaskConversions}`,
-      `Resolved — baseline: ${report.summary.baselineResolved}   old_vtrace_first_patch: ${report.summary.oldVtraceFirstPatchResolved}   strict_vtrace_first_patch: ${report.summary.strictVtraceFirstPatchResolved}`,
-      `Cost/resolved — old_vtrace_first_patch: ${fmtUsd(old.costPerResolved)}   strict_vtrace_first_patch: ${fmtUsd(strict.costPerResolved)}`,
-      `Strict next step: ${report.strictRecommendation.statement}`,
+      `Tasks: ${report.summary.taskCount}   OLD-VTRACE repair artifacts: ${report.summary.verifiedRepairArtifacts} (${report.summary.uniqueTaskConversions} unique)   STRICT repair artifacts: ${sra.strictArtifactConversions} (${sra.strictUniqueTaskConversions} unique)`,
+      `Resolved — baseline: ${report.summary.baselineResolved}   strict_vtrace_first_patch: ${report.summary.strictVtraceFirstPatchResolved}   strict_vtrace_with_verified_repair: ${report.summary.strictVtraceWithRepairResolved}`,
+      `Cost/resolved — old_vtrace_first_patch: ${fmtUsd(old.costPerResolved)}   strict_vtrace_first_patch: ${fmtUsd(strict.costPerResolved)}   strict_vtrace_with_verified_repair: ${fmtUsd(sra.strictWithRepairCostPerResolved)}`,
+      `Strict+repair total: ${fmtUsd(sra.strictWithRepairTotalCostUsd)} / ${fmtNum(sra.strictWithRepairTotalTokens)} tok   vs baseline ${fmtUsd(sra.baselineTotalCostUsd)} / ${fmtNum(sra.baselineTotalTokens)} tok`,
+      `Next step: ${report.strictPolicyRecommendation.statement}`,
       "",
     ].join("\n"),
   );
