@@ -4,9 +4,15 @@ import { test } from "bun:test";
 import type { PatchCriticReport } from "./stage5_patch_critic";
 import type { LiveCriticMeta } from "./stage5_patch_critic_live";
 import {
+  type PatchRepairInput,
   type RepairCaller,
+  ASTROPY_CDS_EXPECTED_GENERATED_TABLE,
   DEFAULT_ALLOWED_DEFECT_CLASSES,
+  buildGeneratedParserConsistencyContext,
+  buildGeneratedParserRepairGuidance,
   buildRepairArtifacts,
+  buildRepairPrompt,
+  checkGeneratedParserRepairShape,
   evaluateRepairEligibility,
   extractUnifiedDiff,
   runPatchRepair,
@@ -139,6 +145,48 @@ test("extractUnifiedDiff pulls a diff out of fenced and prose-wrapped responses"
   assert.equal(extractUnifiedDiff(prose), SYMPY_REPAIRED_PATCH);
   assert.equal(extractUnifiedDiff("no diff here, just refusing"), null);
   assert.equal(extractUnifiedDiff(""), null);
+});
+
+// Hardened extraction (the Astropy failure mode): a bare ``` fence wrapping reasoning followed by
+// the REAL diff outside it, prose on both sides, multiple fences, and no-diff responses.
+test("extractUnifiedDiff: a normal fenced ```diff block extracts correctly", () => {
+  const fenced = "Here is the fix:\n```diff\n" + SYMPY_REPAIRED_PATCH + "\n```\n";
+  assert.equal(extractUnifiedDiff(fenced), SYMPY_REPAIRED_PATCH);
+});
+
+test("extractUnifiedDiff: bare prose fence followed by a real diff OUTSIDE the fence extracts the outside diff", () => {
+  // The model wrapped its reasoning in a bare ``` fence and emitted the actual diff after it.
+  const response =
+    "```\n" +
+    "I considered the grammar and decided to reorder the division production.\n" +
+    "PLY would normally regenerate the table at import time.\n" +
+    "```\n\n" +
+    SYMPY_REPAIRED_PATCH +
+    "\n";
+  assert.equal(extractUnifiedDiff(response), SYMPY_REPAIRED_PATCH);
+});
+
+test("extractUnifiedDiff: prose before AND after the diff extracts only the diff", () => {
+  const response =
+    "Here is my reasoning before the patch.\n\n" +
+    SYMPY_REPAIRED_PATCH +
+    "\n\nThat should resolve the issue cleanly.\n";
+  assert.equal(extractUnifiedDiff(response), SYMPY_REPAIRED_PATCH);
+});
+
+test("extractUnifiedDiff: a response with no diff returns null", () => {
+  assert.equal(extractUnifiedDiff("I cannot produce a diff for this; here is some prose instead."), null);
+  assert.equal(extractUnifiedDiff("```\njust some fenced prose, no diff\n```"), null);
+  assert.equal(extractUnifiedDiff(""), null);
+});
+
+test("extractUnifiedDiff: multiple fences where only one contains the diff extracts the diff fence", () => {
+  const response =
+    "First, some reasoning:\n```\nthis fence is only prose\n```\n" +
+    "And the patch:\n```diff\n" +
+    SYMPY_REPAIRED_PATCH +
+    "\n```\n";
+  assert.equal(extractUnifiedDiff(response), SYMPY_REPAIRED_PATCH);
 });
 
 test("validateUnifiedDiff requires file + hunk headers", () => {
@@ -422,4 +470,276 @@ test("buildRepairArtifacts copies the first patch and includes the repaired patc
   });
   assert.ok("_first_patch.diff" in failed);
   assert.ok(!("_repaired_patch.diff" in failed)); // not written on fail-open
+});
+
+// ---------------------------------------------------------------------------
+// Generated-parser post-repair SHAPE gate + repair prompt OUTPUT CONTRACT
+// ---------------------------------------------------------------------------
+// Fixtures mirror the Astropy/CDS generated-parser case: a cds.py grammar source change whose
+// sibling generated table is astropy/units/format/cds_parsetab.py.
+
+const CDS_SOURCE_DIR = "astropy/units/format";
+
+// The first patch: a narrow cds.py grammar edit (used only to DERIVE the consistency context —
+// expected table = cds_parsetab.py). Its own table-update state is irrelevant to the repair gate.
+const CDS_FIRST_PATCH = [
+  `diff --git a/${CDS_SOURCE_DIR}/cds.py b/${CDS_SOURCE_DIR}/cds.py`,
+  `--- a/${CDS_SOURCE_DIR}/cds.py`,
+  `+++ b/${CDS_SOURCE_DIR}/cds.py`,
+  "@@ -198,6 +198,7 @@",
+  " def p_division_of_units(p):",
+  "     '''",
+  "     division_of_units : DIVISION unit_expression",
+  "                       | unit_expression DIVISION combined_units",
+  "+                      | combined_units DIVISION unit_expression",
+  "     '''",
+  "     pass",
+].join("\n");
+
+// ACCEPTED shape: narrow cds.py grammar edit AND a consistent cds_parsetab.py update.
+const CDS_REPAIRED_ACCEPT = [
+  `diff --git a/${CDS_SOURCE_DIR}/cds.py b/${CDS_SOURCE_DIR}/cds.py`,
+  `--- a/${CDS_SOURCE_DIR}/cds.py`,
+  `+++ b/${CDS_SOURCE_DIR}/cds.py`,
+  "@@ -198,6 +198,7 @@",
+  " def p_division_of_units(p):",
+  "     '''",
+  "     division_of_units : DIVISION unit_expression",
+  "                       | unit_expression DIVISION combined_units",
+  "+                      | combined_units DIVISION unit_expression",
+  "     '''",
+  "     pass",
+  `diff --git a/${CDS_SOURCE_DIR}/cds_parsetab.py b/${CDS_SOURCE_DIR}/cds_parsetab.py`,
+  `--- a/${CDS_SOURCE_DIR}/cds_parsetab.py`,
+  `+++ b/${CDS_SOURCE_DIR}/cds_parsetab.py`,
+  "@@ -1,3 +1,3 @@",
+  "-_lr_signature = 'OLDSIGNATURE'",
+  "+_lr_signature = 'NEWSIGNATURE'",
+  " _lr_action_items = {}",
+].join("\n");
+
+// REJECTED: cds.py grammar edit with NO generated-table update (the prior Astropy failure shape).
+const CDS_REPAIRED_SOURCE_ONLY = [
+  `diff --git a/${CDS_SOURCE_DIR}/cds.py b/${CDS_SOURCE_DIR}/cds.py`,
+  `--- a/${CDS_SOURCE_DIR}/cds.py`,
+  `+++ b/${CDS_SOURCE_DIR}/cds.py`,
+  "@@ -198,6 +198,7 @@",
+  " def p_division_of_units(p):",
+  "     '''",
+  "     division_of_units : DIVISION unit_expression",
+  "                       | unit_expression DIVISION combined_units",
+  "+                      | combined_units DIVISION unit_expression",
+  "     '''",
+  "     pass",
+].join("\n");
+
+// REJECTED: deletes the generated parser table.
+const CDS_REPAIRED_DELETES_TABLE = [
+  `diff --git a/${CDS_SOURCE_DIR}/cds.py b/${CDS_SOURCE_DIR}/cds.py`,
+  `--- a/${CDS_SOURCE_DIR}/cds.py`,
+  `+++ b/${CDS_SOURCE_DIR}/cds.py`,
+  "@@ -198,6 +198,7 @@",
+  " def p_division_of_units(p):",
+  "     '''",
+  "     division_of_units : DIVISION unit_expression",
+  "+                      | combined_units DIVISION unit_expression",
+  "     '''",
+  "     pass",
+  `diff --git a/${CDS_SOURCE_DIR}/cds_parsetab.py b/${CDS_SOURCE_DIR}/cds_parsetab.py`,
+  "deleted file mode 100644",
+  `--- a/${CDS_SOURCE_DIR}/cds_parsetab.py`,
+  "+++ /dev/null",
+  "@@ -1,3 +0,0 @@",
+  "-_lr_signature = 'X'",
+  "-_lr_action = {}",
+  "-_lr_goto = {}",
+].join("\n");
+
+// REJECTED: broad rewrite — one parser function removed, another rewritten (productions relocated).
+const CDS_REPAIRED_BROAD_REWRITE = [
+  `diff --git a/${CDS_SOURCE_DIR}/cds.py b/${CDS_SOURCE_DIR}/cds.py`,
+  `--- a/${CDS_SOURCE_DIR}/cds.py`,
+  `+++ b/${CDS_SOURCE_DIR}/cds.py`,
+  "@@ -150,10 +150,7 @@",
+  "-def p_product_of_units(p):",
+  "-    '''",
+  "-    product_of_units : unit_expression PRODUCT combined_units",
+  "-                     | unit_expression",
+  "-    '''",
+  "-    pass",
+  " def p_combined_units(p):",
+  "     '''",
+  "     combined_units : product_of_units",
+  "+                   | product_of_units PRODUCT combined_units",
+  "                    | division_of_units",
+  "     '''",
+].join("\n");
+
+const CDS_EXPECTED_TABLES = [`${CDS_SOURCE_DIR}/cds_parsetab.py`];
+
+test("buildGeneratedParserConsistencyContext: derives the expected cds_parsetab.py table for a cds.py grammar change", () => {
+  const cons = buildGeneratedParserConsistencyContext(CDS_FIRST_PATCH);
+  assert.ok(cons !== null);
+  assert.deepEqual([...cons!.expectedGeneratedTables], CDS_EXPECTED_TABLES);
+  assert.ok(cons!.expectedGeneratedTables.includes(ASTROPY_CDS_EXPECTED_GENERATED_TABLE));
+});
+
+test("shape gate ACCEPTS a narrow grammar source edit plus a consistent parsetab update", () => {
+  const shape = checkGeneratedParserRepairShape(CDS_REPAIRED_ACCEPT, CDS_EXPECTED_TABLES);
+  assert.equal(shape.checked, true);
+  assert.equal(shape.accepted, true, shape.rejectedReason ?? "");
+  assert.equal(shape.rejectedReason, null);
+  assert.deepEqual([...shape.missingExpectedTables], []);
+  assert.ok(shape.tablesUpdated.includes(ASTROPY_CDS_EXPECTED_GENERATED_TABLE));
+  assert.equal(shape.deletesGeneratedTables, false);
+  assert.equal(shape.broadRewriteDetected, false);
+});
+
+test("shape gate REJECTS a source grammar edit with no expected parsetab update", () => {
+  const shape = checkGeneratedParserRepairShape(CDS_REPAIRED_SOURCE_ONLY, CDS_EXPECTED_TABLES);
+  assert.equal(shape.accepted, false);
+  assert.ok(shape.missingExpectedTables.includes(ASTROPY_CDS_EXPECTED_GENERATED_TABLE));
+  assert.ok(shape.rejectedReason && /cds_parsetab\.py/.test(shape.rejectedReason));
+  assert.ok(shape.rejectedReason && /expected generated parser table/.test(shape.rejectedReason));
+});
+
+test("shape gate REJECTS a repaired patch that deletes the generated parser table", () => {
+  const shape = checkGeneratedParserRepairShape(CDS_REPAIRED_DELETES_TABLE, CDS_EXPECTED_TABLES);
+  assert.equal(shape.accepted, false);
+  assert.equal(shape.deletesGeneratedTables, true);
+  assert.ok(shape.rejectedReason && /delete/.test(shape.rejectedReason));
+});
+
+test("shape gate REJECTS a broad grammar rewrite / production relocation", () => {
+  const shape = checkGeneratedParserRepairShape(CDS_REPAIRED_BROAD_REWRITE, CDS_EXPECTED_TABLES);
+  assert.equal(shape.accepted, false);
+  assert.equal(shape.broadRewriteDetected, true);
+  assert.ok(shape.rejectedReason && /broadly relocates|rewrites/.test(shape.rejectedReason));
+});
+
+// Build a generated-parser repair input whose consistency context drives the post-repair shape gate.
+function gpRepairInputFor(): PatchRepairInput {
+  const consistency = buildGeneratedParserConsistencyContext(CDS_FIRST_PATCH);
+  assert.ok(consistency !== null);
+  const report = reportFor({
+    instanceId: "astropy__astropy-14369",
+    repairReason: "Broad non-minimal generated-parser rewrite.",
+    repairInstructions:
+      "Reorder the division_of_units production within p_division_of_units and update the generated parser table consistently; do not delete generated parser tables.",
+  });
+  return {
+    instanceId: "astropy__astropy-14369",
+    runLabel: "eval-strictv2-artifacts-protocol-vtrace-astropy-14369",
+    defectClass: "broad_rewrite_minimality",
+    issueText: null,
+    firstPatch: CDS_FIRST_PATCH,
+    criticReport: report,
+    repairInstructions: report.repair_instructions,
+    generatedParserRepair: {
+      source: "generated_parser_minimality",
+      guidance: buildGeneratedParserRepairGuidance(report, null, consistency),
+      liveCriticInstruction: report.repair_instructions,
+      narrowAlternativeHint: null,
+      consistency,
+    },
+  };
+}
+
+test("runPatchRepair: generated-parser repair with a consistent table update PASSES the shape gate", async () => {
+  const m = mockCaller({ response: CDS_REPAIRED_ACCEPT });
+  const { result } = await runPatchRepair({
+    enabled: true,
+    input: gpRepairInputFor(),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 1);
+  assert.equal(result.validPatch, true);
+  assert.equal(result.failedOpen, false);
+  assert.equal(result.repairedPatch, CDS_REPAIRED_ACCEPT);
+  assert.equal(result.generatedParserRepairShapeChecked, true);
+  assert.equal(result.generatedParserRepairShapeAccepted, true);
+  assert.ok(result.generatedParserRepairTablesUpdated.includes(ASTROPY_CDS_EXPECTED_GENERATED_TABLE));
+  assert.equal(result.rejectedRepairedPatch, null);
+});
+
+test("runPatchRepair: generated-parser repair that leaves the table stale is REJECTED and fails open", async () => {
+  const m = mockCaller({ response: CDS_REPAIRED_SOURCE_ONLY });
+  const { result } = await runPatchRepair({
+    enabled: true,
+    input: gpRepairInputFor(),
+    caller: m.caller,
+    repairModel: null,
+  });
+  assert.equal(m.calls, 1);
+  assert.equal(result.validPatch, false);
+  assert.equal(result.failedOpen, true); // original first patch preserved (repairedPatch=null)
+  assert.equal(result.repairedPatch, null);
+  assert.equal(result.generatedParserRepairShapeChecked, true);
+  assert.equal(result.generatedParserRepairShapeAccepted, false);
+  assert.ok(result.error && /generated-parser repair shape rejected/.test(result.error));
+  assert.ok(result.generatedParserRepairMissingExpectedTables.includes(ASTROPY_CDS_EXPECTED_GENERATED_TABLE));
+  // The rejected diff is preserved for diagnosis but is NOT the operative patch.
+  assert.equal(result.rejectedRepairedPatch, CDS_REPAIRED_SOURCE_ONLY);
+});
+
+test("repair result carries the generated-parser shape-gate report fields", async () => {
+  const m = mockCaller({ response: CDS_REPAIRED_ACCEPT });
+  const { result } = await runPatchRepair({
+    enabled: true,
+    input: gpRepairInputFor(),
+    caller: m.caller,
+    repairModel: null,
+  });
+  for (const field of [
+    "generatedParserRepairShapeChecked",
+    "generatedParserRepairShapeAccepted",
+    "generatedParserRepairShapeRejectedReason",
+    "generatedParserRepairMissingExpectedTables",
+    "generatedParserRepairTablesUpdated",
+    "generatedParserRepairDeletesGeneratedTables",
+    "generatedParserRepairBroadRewriteDetected",
+  ]) {
+    assert.ok(field in result, `missing shape-gate field ${field}`);
+  }
+});
+
+test("runPatchRepair: a non-generated-parser repair does NOT run the shape gate", async () => {
+  const m = mockCaller(); // default SYMPY_REPAIRED_PATCH; default input has no generatedParserRepair
+  const { result } = await runPatchRepair({ enabled: true, input: inputFor(), caller: m.caller, repairModel: null });
+  assert.equal(result.validPatch, true);
+  assert.equal(result.generatedParserRepairShapeChecked, false);
+  assert.equal(result.generatedParserRepairShapeAccepted, null);
+});
+
+// --- Prompt / output contract ----------------------------------------------
+test("generated-parser repair guidance includes the diff-only OUTPUT CONTRACT", () => {
+  const consistency = buildGeneratedParserConsistencyContext(CDS_FIRST_PATCH);
+  const guidance = buildGeneratedParserRepairGuidance(reportFor({ instanceId: "astropy__astropy-14369" }), null, consistency);
+  const text = guidance.join("\n");
+  assert.ok(text.includes("Output contract:"));
+  assert.ok(text.includes("Return only a unified diff."));
+  assert.ok(text.includes("Do not wrap reasoning in markdown fences."));
+});
+
+test("generated-parser repair guidance requires the diff to begin with `diff --git`", () => {
+  const consistency = buildGeneratedParserConsistencyContext(CDS_FIRST_PATCH);
+  const guidance = buildGeneratedParserRepairGuidance(reportFor({ instanceId: "astropy__astropy-14369" }), null, consistency);
+  assert.ok(guidance.join("\n").includes("The diff must begin with `diff --git`."));
+});
+
+test("generated-parser repair guidance states the expected generated table update is required (Astropy/CDS named)", () => {
+  const consistency = buildGeneratedParserConsistencyContext(CDS_FIRST_PATCH);
+  const guidance = buildGeneratedParserRepairGuidance(reportFor({ instanceId: "astropy__astropy-14369" }), null, consistency);
+  const text = guidance.join("\n");
+  assert.ok(text.includes("must update the expected generated parser table(s)"));
+  assert.ok(text.includes(ASTROPY_CDS_EXPECTED_GENERATED_TABLE));
+  assert.ok(text.includes(`This repair is incomplete unless ${ASTROPY_CDS_EXPECTED_GENERATED_TABLE} is updated`));
+});
+
+test("buildRepairPrompt threads the generated-parser output contract into the full prompt", () => {
+  const prompt = buildRepairPrompt(gpRepairInputFor());
+  assert.ok(prompt.includes("Output contract:"));
+  assert.ok(prompt.includes("The diff must begin with `diff --git`."));
+  assert.ok(prompt.includes(ASTROPY_CDS_EXPECTED_GENERATED_TABLE));
 });

@@ -758,6 +758,15 @@ export interface GeneratedParserRunReport {
   readonly repairFailedOpen: boolean;
   readonly repairCostUsd: number | null;
   readonly repairExecuted: boolean;
+  // Generated-parser post-repair SHAPE gate outcome (from the live attempt's PatchRepairResult).
+  // All default (checked=false / null / empty) in dry-run or when no live attempt was made.
+  readonly generatedParserRepairShapeChecked: boolean;
+  readonly generatedParserRepairShapeAccepted: boolean | null;
+  readonly generatedParserRepairShapeRejectedReason: string | null;
+  readonly generatedParserRepairMissingExpectedTables: readonly string[];
+  readonly generatedParserRepairTablesUpdated: readonly string[];
+  readonly generatedParserRepairDeletesGeneratedTables: boolean;
+  readonly generatedParserRepairBroadRewriteDetected: boolean;
 }
 
 // Top-level generated-parser eligibility + (live) outcome summary.
@@ -861,6 +870,13 @@ function generatedParserRunReport(d: RepairRunDecision): GeneratedParserRunRepor
     repairFailedOpen: result?.failedOpen ?? false,
     repairCostUsd: result?.repairCostUsd ?? null,
     repairExecuted: executed,
+    generatedParserRepairShapeChecked: result?.generatedParserRepairShapeChecked ?? false,
+    generatedParserRepairShapeAccepted: result?.generatedParserRepairShapeAccepted ?? null,
+    generatedParserRepairShapeRejectedReason: result?.generatedParserRepairShapeRejectedReason ?? null,
+    generatedParserRepairMissingExpectedTables: result?.generatedParserRepairMissingExpectedTables ?? [],
+    generatedParserRepairTablesUpdated: result?.generatedParserRepairTablesUpdated ?? [],
+    generatedParserRepairDeletesGeneratedTables: result?.generatedParserRepairDeletesGeneratedTables ?? false,
+    generatedParserRepairBroadRewriteDetected: result?.generatedParserRepairBroadRewriteDetected ?? false,
   };
 }
 

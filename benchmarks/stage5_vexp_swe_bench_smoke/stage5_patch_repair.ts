@@ -22,7 +22,7 @@ import {
   classifyInstruction,
   defectClassFor,
 } from "./run_stage5_live_critic_high_risk_comparison";
-import { analyzeGeneratedParserConsistency } from "../../src/capsule/patchMinimalityProbes";
+import { analyzeGeneratedParserConsistency, analyzePatchMinimality } from "../../src/capsule/patchMinimalityProbes";
 
 export type { DefectClass, InstructionQuality };
 
@@ -90,7 +90,36 @@ export interface PatchRepairResult {
   readonly repairCostUsd: number | null;
   readonly repairInputTokens: number | null;
   readonly repairOutputTokens: number | null;
+  // Generated-parser post-repair SHAPE gate fields. `Checked` is false for every non-generated-parser
+  // repair (and for generated-parser repairs without an artifact-derived consistency context). When
+  // checked, `Accepted` records the verdict and the remaining fields the evidence; a rejected repair
+  // is failed open with the original first patch preserved and its (extracted but rejected) diff kept
+  // in `rejectedRepairedPatch` for diagnosis. See checkGeneratedParserRepairShape.
+  readonly generatedParserRepairShapeChecked: boolean;
+  readonly generatedParserRepairShapeAccepted: boolean | null;
+  readonly generatedParserRepairShapeRejectedReason: string | null;
+  readonly generatedParserRepairMissingExpectedTables: readonly string[];
+  readonly generatedParserRepairTablesUpdated: readonly string[];
+  readonly generatedParserRepairDeletesGeneratedTables: boolean;
+  readonly generatedParserRepairBroadRewriteDetected: boolean;
+  // The extracted-but-rejected repaired diff, preserved for diagnosis ONLY when the shape gate
+  // rejected it (the original first patch is still the operative patch); null otherwise.
+  readonly rejectedRepairedPatch: string | null;
 }
+
+// The default (no shape gate ran) values for the generated-parser shape-gate fields. Spread into
+// every result that is not a checked generated-parser repair so the shape of PatchRepairResult is
+// uniform.
+export const NO_GENERATED_PARSER_SHAPE_FIELDS = {
+  generatedParserRepairShapeChecked: false,
+  generatedParserRepairShapeAccepted: null,
+  generatedParserRepairShapeRejectedReason: null,
+  generatedParserRepairMissingExpectedTables: [] as readonly string[],
+  generatedParserRepairTablesUpdated: [] as readonly string[],
+  generatedParserRepairDeletesGeneratedTables: false,
+  generatedParserRepairBroadRewriteDetected: false,
+  rejectedRepairedPatch: null as string | null,
+} as const;
 
 // The not-run result: disabled mode, or a run the gates declined before any model call.
 export const NOT_RUN_RESULT: PatchRepairResult = {
@@ -103,6 +132,7 @@ export const NOT_RUN_RESULT: PatchRepairResult = {
   repairCostUsd: null,
   repairInputTokens: null,
   repairOutputTokens: null,
+  ...NO_GENERATED_PARSER_SHAPE_FIELDS,
 };
 
 // ---------------------------------------------------------------------------
@@ -189,6 +219,12 @@ export const GENERATED_PARSER_REPAIR_LIVE_SOURCE = "generated_parser_minimality"
 // Matches the deterministic diagnostic in analyzeGeneratedParserConsistency.
 export const GENERATED_PARSER_CONSISTENCY_DEFECT_CLASS = "source_grammar_changed_without_generated_table_update";
 
+// The Astropy/CDS generated parser table that the resolved benchmark patch updates. When this table
+// is among the artifact-derived expected tables, both the repair prompt and the post-repair shape
+// gate require the repaired patch to change it consistently with the cds.py grammar edit. Named only
+// as the concrete Astropy example; everything else is driven by `expectedGeneratedTables`.
+export const ASTROPY_CDS_EXPECTED_GENERATED_TABLE = "astropy/units/format/cds_parsetab.py";
+
 // MINIMALITY guidance: avoid broad rewrites and parser-table deletion. Kept general (not
 // Astropy-specific): the p_combined_units wording is an example of relocating productions into an
 // unrelated parser function.
@@ -211,6 +247,39 @@ export const GENERATED_PARSER_REPAIR_CONSISTENCY_GUIDANCE: readonly string[] = [
   "- do not delete generated parser tables",
   "- do not delete lextab/parsetab files",
 ];
+
+// OUTPUT CONTRACT: a strict instruction block that makes the model emit a unified diff ONLY (no
+// markdown fences, no prose preamble) and forbids relying on runtime auto-regeneration of the
+// generated parser tables. This directly addresses the prior failure where the model wrapped its
+// reasoning in a bare ``` fence and reasoned that PLY would regenerate the tables at import time.
+export const GENERATED_PARSER_REPAIR_OUTPUT_CONTRACT: readonly string[] = [
+  "Output contract:",
+  "- Return only a unified diff.",
+  "- Do not wrap reasoning in markdown fences.",
+  "- Do not include prose before the diff.",
+  "- The diff must begin with `diff --git`.",
+  "- If the source grammar changes and expected generated parser tables are listed, the diff must update those table files too.",
+  "- Do not rely on runtime auto-regeneration unless the benchmark patch intentionally excludes generated tables; here, expected generated tables are part of the required patch shape.",
+];
+
+// Build the per-run OUTPUT CONTRACT lines for a generated-parser repair prompt: the strict
+// diff-only contract above, plus an artifact-derived line naming the exact expected generated parser
+// table(s) the repaired patch must update. When the Astropy/CDS table is among them, an explicit
+// CDS-specific incompleteness line is added. PURE; nothing is hardcoded beyond the contract text.
+export function buildGeneratedParserOutputContract(expectedGeneratedTables: readonly string[]): string[] {
+  const lines = [...GENERATED_PARSER_REPAIR_OUTPUT_CONTRACT];
+  if (expectedGeneratedTables.length > 0) {
+    lines.push(
+      `Required: the diff must update the expected generated parser table(s): ${expectedGeneratedTables.join(", ")}.`,
+    );
+  }
+  if (expectedGeneratedTables.includes(ASTROPY_CDS_EXPECTED_GENERATED_TABLE)) {
+    lines.push(
+      `This repair is incomplete unless ${ASTROPY_CDS_EXPECTED_GENERATED_TABLE} is updated consistently with the cds.py grammar change.`,
+    );
+  }
+  return lines;
+}
 
 // The full narrow-rewrite instruction block prepended to a generated-parser LIVE repair prompt. It
 // now combines BOTH the minimality block and the consistency block, so the repaired patch can make a
@@ -249,6 +318,10 @@ export function buildGeneratedParserRepairGuidance(
   if (instruction !== "") lines.push("", `Live critic actionable instruction: ${instruction}`);
   const hint = probe?.patchMinimalityNarrowAlternativeHint?.trim() ?? "";
   if (hint !== "") lines.push(`Deterministic narrow-alternative hint: ${hint}`);
+  // Strict output contract (diff-only, must begin with `diff --git`, must update the expected
+  // generated parser table(s) when the source grammar changes), with the expected tables named.
+  const expectedTables = consistency?.expectedGeneratedTables ?? [];
+  lines.push("", ...buildGeneratedParserOutputContract(expectedTables));
   return lines;
 }
 
@@ -584,17 +657,41 @@ export function buildRepairPrompt(input: PatchRepairInput): string {
 // Unified-diff extraction / validation
 // ---------------------------------------------------------------------------
 
-// Extract a unified diff from a model response, tolerating ```diff / ``` code fences and
-// surrounding prose. Returns the diff text (trimmed) or null if nothing diff-like is present.
-export function extractUnifiedDiff(raw: string): string | null {
-  if (typeof raw !== "string" || raw.trim() === "") return null;
+// True when a block of text contains real unified-diff content: a `diff --git` header or a
+// `--- `/`+++ ` file-header pair. A bare ``` fence wrapping prose (the failure mode that caused the
+// Astropy repair to fail open) does NOT satisfy this, so such a fence is never mistaken for a diff.
+function looksLikeUnifiedDiff(s: string): boolean {
+  return /^diff --git /m.test(s) || (/^--- /m.test(s) && /^\+\+\+ /m.test(s));
+}
 
-  // Prefer a fenced block if present (```diff … ``` or a bare ``` … ```).
-  const fence = raw.match(/```(?:diff|patch)?\s*\n([\s\S]*?)```/);
-  const candidate = fence ? fence[1]! : raw;
+// True when a line is part of a unified diff (a body line or a recognized git/diff header).
+function isDiffStructureLine(line: string): boolean {
+  if (line === "") return false;
+  const c = line[0]!;
+  if (c === " " || c === "+" || c === "-" || c === "\\") return true;
+  return (
+    line.startsWith("diff --git ") ||
+    line.startsWith("index ") ||
+    line.startsWith("--- ") ||
+    line.startsWith("+++ ") ||
+    line.startsWith("@@") ||
+    line.startsWith("new file mode") ||
+    line.startsWith("deleted file mode") ||
+    line.startsWith("old mode") ||
+    line.startsWith("new mode") ||
+    line.startsWith("similarity index") ||
+    line.startsWith("dissimilarity index") ||
+    line.startsWith("rename ") ||
+    line.startsWith("copy ") ||
+    line.startsWith("Binary files")
+  );
+}
 
-  // Find the first diff-like anchor: a `diff --git` line or a `--- ` file header.
-  const lines = candidate.split("\n");
+// Slice a unified diff out of a text block: from the first `diff --git`/`--- ` anchor to the end of
+// the diff, dropping any trailing prose (or a closing code fence) that follows the last hunk. Returns
+// null when there is no diff anchor at all.
+function sliceUnifiedDiff(text: string): string | null {
+  const lines = text.split("\n");
   let startIdx = -1;
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i]!;
@@ -604,8 +701,59 @@ export function extractUnifiedDiff(raw: string): string | null {
     }
   }
   if (startIdx < 0) return null;
-  const diff = lines.slice(startIdx).join("\n").trim();
+
+  // Walk forward to find where the diff ends. Once a hunk has begun, a non-blank line that is not
+  // diff structure (and not a new file header) marks the start of trailing prose. A closing fence
+  // always ends the diff. Blank lines are tolerated inside the body and trimmed off the ends.
+  let endIdx = lines.length;
+  let seenHunk = false;
+  for (let i = startIdx; i < lines.length; i += 1) {
+    const line = lines[i]!;
+    if (line.trimEnd() === "```") {
+      endIdx = i;
+      break;
+    }
+    if (line.startsWith("@@")) {
+      seenHunk = true;
+      continue;
+    }
+    if (!seenHunk) continue; // still in the per-file header preamble
+    if (isDiffStructureLine(line)) continue;
+    if (line.trim() === "") continue; // tolerate blank lines; trailing ones are trimmed below
+    endIdx = i; // first non-diff, non-blank line after a hunk → trailing prose begins here
+    break;
+  }
+
+  const diff = lines.slice(startIdx, endIdx).join("\n").trim();
   return diff.length > 0 ? diff : null;
+}
+
+// Extract a unified diff from a model response, tolerating ```diff / ``` code fences and surrounding
+// prose. Returns the diff text (trimmed) or null if no real unified diff is present anywhere.
+//
+// Hardened against the Astropy repair failure mode where the model wrapped its reasoning in a bare
+// ``` fence and emitted the ACTUAL diff outside it: a fenced block is only trusted as a diff when its
+// body actually contains diff content; otherwise we fall back to scanning the entire response. This
+// way a valid diff outside a prose fence is never missed, and a prose-only fence is never mistaken
+// for the diff.
+export function extractUnifiedDiff(raw: string): string | null {
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+
+  // 1. Prefer a fenced block that ACTUALLY contains a diff. Scan every ```diff / ```patch / bare ```
+  //    block (not just the first) and pick the first one whose body is diff-like.
+  const fenceRe = /```(?:[^\n]*)\n([\s\S]*?)```/g;
+  let m: RegExpExecArray | null;
+  while ((m = fenceRe.exec(raw)) !== null) {
+    const body = m[1]!;
+    if (looksLikeUnifiedDiff(body)) {
+      const diff = sliceUnifiedDiff(body);
+      if (diff !== null) return diff;
+    }
+  }
+
+  // 2. No diff-bearing fence (e.g. reasoning in a bare fence, real diff outside it): fall back to
+  //    scanning the whole response for a diff anchor.
+  return sliceUnifiedDiff(raw);
 }
 
 // Validate that a string is a plausible unified diff. Returns a list of violations (empty = ok).
@@ -625,6 +773,117 @@ export function validateUnifiedDiff(diff: string): string[] {
 
 function normalizePatch(s: string): string {
   return s.replace(/\r\n/g, "\n").trim();
+}
+
+// ---------------------------------------------------------------------------
+// Generated-parser post-repair SHAPE / CONSISTENCY gate
+// ---------------------------------------------------------------------------
+
+export interface GeneratedParserRepairShapeResult {
+  readonly checked: true;
+  readonly accepted: boolean;
+  // The joined rejection reason(s) (null when accepted).
+  readonly rejectedReason: string | null;
+  // Expected generated parser table(s) the repaired patch failed to update.
+  readonly missingExpectedTables: readonly string[];
+  // Generated parser table(s) the repaired patch actually changed.
+  readonly tablesUpdated: readonly string[];
+  readonly deletesGeneratedTables: boolean;
+  readonly broadRewriteDetected: boolean;
+}
+
+// Run the generated-parser post-repair shape/consistency gate on an EXTRACTED, already-structurally-
+// valid repaired diff. PURE — uses only the deterministic analyzePatchMinimality /
+// analyzeGeneratedParserConsistency probes; no Docker, no model, no agents.
+//
+// A generated-parser repair is accepted only when it:
+//   - does NOT delete generated parser tables,
+//   - does NOT broadly relocate/rewrite grammar productions,
+//   - DOES include the narrow grammar source edit,
+//   - updates at least one expected generated parser table (when any are expected), and
+//   - for Astropy/CDS, changes the expected cds_parsetab.py table specifically.
+// Anything else is rejected so a source-only grammar repair that leaves the generated table stale
+// (the prior Astropy failure shape) cannot be marked succeeded.
+export function checkGeneratedParserRepairShape(
+  repairedDiff: string,
+  expectedGeneratedTables: readonly string[],
+): GeneratedParserRepairShapeResult {
+  const minimality = analyzePatchMinimality(repairedDiff);
+  const consistency = analyzeGeneratedParserConsistency(repairedDiff, {
+    knownGeneratedTables: expectedGeneratedTables,
+  });
+
+  const tablesUpdated = consistency.generatedParserTablesChanged;
+  const deletesGeneratedTables =
+    minimality.generatedFilesDeleted.length > 0 || consistency.generatedParserTablesDeleted.length > 0;
+  const broadRewriteDetected = minimality.broadRewriteDetected;
+  const hasNarrowSourceGrammarEdit = consistency.sourceGrammarFilesChanged.length > 0;
+  const expectedUpdated = expectedGeneratedTables.filter((t) => tablesUpdated.includes(t));
+  const missingExpectedTables = expectedGeneratedTables.filter((t) => !tablesUpdated.includes(t));
+
+  const reasons: string[] = [];
+  if (deletesGeneratedTables) {
+    reasons.push("repaired patch deletes generated parser table(s); tables must be regenerated, not deleted");
+  }
+  if (broadRewriteDetected) {
+    reasons.push("repaired patch broadly relocates/rewrites grammar productions instead of a narrow source edit");
+  }
+  if (!hasNarrowSourceGrammarEdit) {
+    reasons.push("repaired patch does not include the narrow grammar source edit");
+  }
+  if (expectedGeneratedTables.length > 0 && expectedUpdated.length === 0) {
+    reasons.push(
+      `repaired patch updates no expected generated parser table (missing expected table update: ${missingExpectedTables.join(", ")})`,
+    );
+  }
+  // Astropy/CDS specific: the expected cds_parsetab.py table must be changed consistently with the
+  // cds.py grammar edit when that table is among the expected set.
+  if (
+    expectedGeneratedTables.includes(ASTROPY_CDS_EXPECTED_GENERATED_TABLE) &&
+    !tablesUpdated.includes(ASTROPY_CDS_EXPECTED_GENERATED_TABLE)
+  ) {
+    reasons.push(
+      `expected generated parser table ${ASTROPY_CDS_EXPECTED_GENERATED_TABLE} was not updated consistently with the cds.py grammar change`,
+    );
+  }
+
+  return {
+    checked: true,
+    accepted: reasons.length === 0,
+    rejectedReason: reasons.length > 0 ? reasons.join("; ") : null,
+    missingExpectedTables,
+    tablesUpdated,
+    deletesGeneratedTables,
+    broadRewriteDetected,
+  };
+}
+
+// Project a shape result into the PatchRepairResult shape-gate fields. `rejectedRepairedPatch` is
+// carried only on rejection (preserving the bad diff for diagnosis without making it operative).
+function shapeResultFields(
+  shape: GeneratedParserRepairShapeResult,
+  rejectedRepairedPatch: string | null,
+): Pick<
+  PatchRepairResult,
+  | "generatedParserRepairShapeChecked"
+  | "generatedParserRepairShapeAccepted"
+  | "generatedParserRepairShapeRejectedReason"
+  | "generatedParserRepairMissingExpectedTables"
+  | "generatedParserRepairTablesUpdated"
+  | "generatedParserRepairDeletesGeneratedTables"
+  | "generatedParserRepairBroadRewriteDetected"
+  | "rejectedRepairedPatch"
+> {
+  return {
+    generatedParserRepairShapeChecked: true,
+    generatedParserRepairShapeAccepted: shape.accepted,
+    generatedParserRepairShapeRejectedReason: shape.rejectedReason,
+    generatedParserRepairMissingExpectedTables: shape.missingExpectedTables,
+    generatedParserRepairTablesUpdated: shape.tablesUpdated,
+    generatedParserRepairDeletesGeneratedTables: shape.deletesGeneratedTables,
+    generatedParserRepairBroadRewriteDetected: shape.broadRewriteDetected,
+    rejectedRepairedPatch,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -669,6 +928,7 @@ export async function runPatchRepair(args: RunPatchRepairArgs): Promise<RunPatch
         repairCostUsd: null,
         repairInputTokens: null,
         repairOutputTokens: null,
+        ...NO_GENERATED_PARSER_SHAPE_FIELDS,
       },
       prompt,
       raw: null,
@@ -692,6 +952,7 @@ export async function runPatchRepair(args: RunPatchRepairArgs): Promise<RunPatch
         repairCostUsd: costUsd,
         repairInputTokens: inputTokens,
         repairOutputTokens: outputTokens,
+        ...NO_GENERATED_PARSER_SHAPE_FIELDS,
       },
       prompt,
       raw: call.raw,
@@ -711,6 +972,53 @@ export async function runPatchRepair(args: RunPatchRepairArgs): Promise<RunPatch
         repairCostUsd: costUsd,
         repairInputTokens: inputTokens,
         repairOutputTokens: outputTokens,
+        ...NO_GENERATED_PARSER_SHAPE_FIELDS,
+      },
+      prompt,
+      raw: call.raw,
+    };
+  }
+
+  // Generated-parser post-repair SHAPE gate: when the repair input carries an artifact-derived
+  // generated-parser consistency context, the structurally-valid repaired diff must additionally pass
+  // the shape/consistency gate before it can be marked succeeded. A source-only grammar repair that
+  // leaves the expected generated parser table stale (the prior Astropy failure shape) is rejected and
+  // failed open — the original first patch is preserved and the rejected diff kept for diagnosis. No
+  // Docker, no model: the gate is the deterministic minimality/consistency probes only.
+  const gpConsistency = args.input.generatedParserRepair?.consistency ?? null;
+  if (gpConsistency !== null) {
+    const shape = checkGeneratedParserRepairShape(diff, gpConsistency.expectedGeneratedTables);
+    if (!shape.accepted) {
+      return {
+        result: {
+          ran: true,
+          validPatch: false,
+          failedOpen: true,
+          error: `generated-parser repair shape rejected: ${shape.rejectedReason}`,
+          repairedPatch: null,
+          changedPatch: false,
+          repairCostUsd: costUsd,
+          repairInputTokens: inputTokens,
+          repairOutputTokens: outputTokens,
+          ...shapeResultFields(shape, diff),
+        },
+        prompt,
+        raw: call.raw,
+      };
+    }
+    const changedPatch = normalizePatch(diff) !== normalizePatch(args.input.firstPatch);
+    return {
+      result: {
+        ran: true,
+        validPatch: true,
+        failedOpen: false,
+        error: null,
+        repairedPatch: diff,
+        changedPatch,
+        repairCostUsd: costUsd,
+        repairInputTokens: inputTokens,
+        repairOutputTokens: outputTokens,
+        ...shapeResultFields(shape, null),
       },
       prompt,
       raw: call.raw,
@@ -729,6 +1037,7 @@ export async function runPatchRepair(args: RunPatchRepairArgs): Promise<RunPatch
       repairCostUsd: costUsd,
       repairInputTokens: inputTokens,
       repairOutputTokens: outputTokens,
+      ...NO_GENERATED_PARSER_SHAPE_FIELDS,
     },
     prompt,
     raw: call.raw,
