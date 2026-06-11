@@ -3,7 +3,8 @@ import { test } from "bun:test";
 
 import type { PatchCriticReport } from "./stage5_patch_critic";
 import type { LiveCriticMeta } from "./stage5_patch_critic_live";
-import { type RepairCaller, evaluateRepairEligibility } from "./stage5_patch_repair";
+import { type RepairCaller, DEFAULT_ALLOWED_DEFECT_CLASSES, evaluateRepairEligibility } from "./stage5_patch_repair";
+import { defectClassFor } from "./run_stage5_live_critic_high_risk_comparison";
 import {
   type RepairCandidate,
   type RepairGateConfig,
@@ -516,4 +517,38 @@ test("an ad hoc run with live-critic artifacts loads as an eligible candidate (s
 test("curated candidates are tagged source=curated_existing by default", async () => {
   const candidates = [candidateFor({ runLabel: "run-a" })];
   assert.equal(candidates[0]!.source, "curated_existing");
+});
+
+// 8 (this milestone). The repair runner does NOT automatically treat a generated-parser
+// (astropy) broad rewrite as repair-eligible: its defect class is `unknown`, which is excluded
+// from the default allowlist, so even WITH a valid live-critic artifact requesting repair the run
+// is ineligible. The patch-minimality milestone adds NO generated-parser class to the allowlist.
+test("generated-parser (astropy) run is NOT repair-eligible by default even with a valid critic artifact", () => {
+  // The repair allowlist is unchanged: only wrong_scope + broad_rewrite_minimality, no parser class.
+  assert.deepEqual([...DEFAULT_ALLOWED_DEFECT_CLASSES], ["wrong_scope", "broad_rewrite_minimality"]);
+  assert.equal(defectClassFor("astropy__astropy-14369"), "unknown");
+  assert.ok(!DEFAULT_ALLOWED_DEFECT_CLASSES.includes("unknown"));
+
+  // A fully-valid live-critic artifact (validReport, not failed-open, liveRepairRequired) that
+  // requests repair on the astropy run — still ineligible because its defect class is not allowed.
+  const eligibility = evaluateRepairEligibility({
+    runLabel: "eval-strictv2-artifacts-protocol-vtrace-astropy-14369",
+    meta: metaFor(),
+    report: reportFor("astropy__astropy-14369", { repairRequired: true }),
+    firstPatch: FIRST_PATCH,
+    allowedDefectClasses: DEFAULT_ALLOWED_DEFECT_CLASSES,
+  });
+  assert.equal(eligibility.defectClass, "unknown");
+  assert.equal(eligibility.eligible, false);
+  assert.ok(eligibility.reasons.some((r) => /not in the allowed set/.test(r)));
+
+  // And with NO critic artifacts at all, it is likewise ineligible (nothing to act on).
+  const noArtifacts = evaluateRepairEligibility({
+    runLabel: "eval-strictv2-artifacts-protocol-vtrace-astropy-14369",
+    meta: null,
+    report: null,
+    firstPatch: null,
+    allowedDefectClasses: DEFAULT_ALLOWED_DEFECT_CLASSES,
+  });
+  assert.equal(noArtifacts.eligible, false);
 });

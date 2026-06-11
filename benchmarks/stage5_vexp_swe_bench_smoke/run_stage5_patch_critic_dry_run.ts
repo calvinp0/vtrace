@@ -33,6 +33,7 @@ import {
   loadRun,
   makePythonParser,
 } from "./run_stage5_patch_probe_report";
+import { analyzePatchMinimality } from "../../src/capsule/patchMinimalityProbes";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -514,6 +515,9 @@ export function buildCriticInput(
     probeSummary,
     treatmentMetadata: signals.treatmentMetadata,
     contextSignals: signals.contextSignals,
+    // Deterministic generated-parser / grammar-minimality observation over the same patch.
+    // Pure; no model, no Docker. Drives LIVE critic eligibility only (never auto-repair).
+    patchMinimality: analyzePatchMinimality(patch),
   };
 }
 

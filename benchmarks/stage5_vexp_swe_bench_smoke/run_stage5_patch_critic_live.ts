@@ -18,7 +18,9 @@ import {
   type PatchCriticInput,
   type PatchCriticReport,
   buildDeterministicPatchCriticReport,
+  patchMinimalityDefectLabel,
 } from "./stage5_patch_critic";
+import type { PatchMinimalityProbeResult } from "../../src/capsule/patchMinimalityProbes";
 import {
   type CriticCaller,
   type LiveCriticMeta,
@@ -271,6 +273,9 @@ export interface CriticRunDecision {
   readonly skipReason: SkipReason | null;
   readonly reason: string; // human-readable include/exclude explanation
   readonly result: CriticLiveRunResult | null;
+  // Deterministic generated-parser / grammar-minimality observation for this candidate's patch
+  // (null when not computed, e.g. unit-test candidates / non-materialized ad hoc rows).
+  readonly patchMinimality: PatchMinimalityProbeResult | null;
 }
 
 // Counters mirrored into the comparison report (the gate audit trail).
@@ -339,11 +344,16 @@ export async function runGatedCritic(args: {
 
   for (const candidate of candidates) {
     const detRepair = candidate.deterministicReport.repair_required;
+    const patchMinimality = candidate.input.patchMinimality ?? null;
+    // Surfaced on eligible-run reasons so a candidate's eligibility basis is auditable.
+    const minimalityBasis =
+      patchMinimality && patchMinimality.repairRequired ? " [eligible: generated-parser-minimality]" : "";
     const base = {
       runLabel: candidate.runLabel,
       instanceId: candidate.instanceId,
       source: candidate.source,
       deterministicRepairRequired: detRepair,
+      patchMinimality,
     };
 
     // --- static filters (run-label, then deterministic risk) ----------------
@@ -388,7 +398,7 @@ export async function runGatedCritic(args: {
         called: false,
         wouldCall: false,
         skipReason: "max-critic-runs",
-        reason: `--max-critic-runs=${gate.maxCriticRuns} reached`,
+        reason: `--max-critic-runs=${gate.maxCriticRuns} reached${minimalityBasis}`,
         result: null,
       });
       continue;
@@ -418,7 +428,7 @@ export async function runGatedCritic(args: {
         called: false,
         wouldCall: true,
         skipReason: null,
-        reason: "would call live critic (dry-run: model NOT invoked)",
+        reason: `would call live critic (dry-run: model NOT invoked)${minimalityBasis}`,
         result: null,
       });
       continue;
@@ -435,7 +445,7 @@ export async function runGatedCritic(args: {
       called: true,
       wouldCall: false,
       skipReason: null,
-      reason: "live critic invoked",
+      reason: `live critic invoked${minimalityBasis}`,
       result,
     });
   }
@@ -521,6 +531,36 @@ export interface CriticLiveRunReportRow {
   readonly reason: string;
   readonly meta: LiveCriticMeta | null;
   readonly liveReport: PatchCriticReport | null;
+  // Deterministic generated-parser / grammar-minimality observation (flattened for the report).
+  readonly patchMinimalityRepairRequired: boolean | null;
+  readonly patchMinimalityDefectClass: string | null;
+  readonly patchMinimalityRisk: string | null;
+  readonly patchMinimalityConfidence: string | null;
+  readonly patchMinimalitySignals: readonly string[];
+  readonly patchMinimalityReasons: readonly string[];
+  readonly patchMinimalityNarrowAlternativeHint: string | null;
+}
+
+// Flatten a candidate's patch-minimality observation into report-row fields. `null` everywhere
+// when the observation was not computed (unit-test candidates / non-materialized ad hoc rows).
+function patchMinimalityRowFields(pm: PatchMinimalityProbeResult | null): {
+  readonly patchMinimalityRepairRequired: boolean | null;
+  readonly patchMinimalityDefectClass: string | null;
+  readonly patchMinimalityRisk: string | null;
+  readonly patchMinimalityConfidence: string | null;
+  readonly patchMinimalitySignals: readonly string[];
+  readonly patchMinimalityReasons: readonly string[];
+  readonly patchMinimalityNarrowAlternativeHint: string | null;
+} {
+  return {
+    patchMinimalityRepairRequired: pm ? pm.repairRequired : null,
+    patchMinimalityDefectClass: patchMinimalityDefectLabel(pm),
+    patchMinimalityRisk: pm ? pm.risk : null,
+    patchMinimalityConfidence: pm ? pm.confidence : null,
+    patchMinimalitySignals: pm ? pm.signals : [],
+    patchMinimalityReasons: pm ? pm.reasons : [],
+    patchMinimalityNarrowAlternativeHint: pm?.narrowAlternativeHint ?? null,
+  };
 }
 
 export interface CriticLiveReport {
@@ -542,6 +582,7 @@ export const NON_CLAIMS: readonly string[] = [
   "`repair_required = true` here is an OBSERVATION (what a critic would request); no repair is performed this milestone.",
   "Fail-open: a critic invocation error or invalid JSON is recorded and the original patch is preserved; the run is not failed.",
   "Agreement = (deterministicRepairRequired === liveRepairRequired); per-field agreement is not required for this milestone.",
+  "The generated-parser patch-minimality probe is an OBSERVATION-ONLY deterministic signal: it makes a run eligible for live critic observation but never triggers automatic repair, and adds no generated-parser class to the repair allowlist.",
   "This changes no retrieval / Capsule v2 / PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY behavior and runs no Docker.",
 ];
 
@@ -573,6 +614,7 @@ export function buildLiveReport(args: {
     reason: d.reason,
     meta: d.result ? d.result.meta : null,
     liveReport: d.result ? d.result.report : null,
+    ...patchMinimalityRowFields(d.patchMinimality),
   });
   return {
     generatedAt,
@@ -658,6 +700,42 @@ export function renderMarkdown(report: CriticLiveReport): string {
     );
   }
   lines.push("");
+  lines.push("## Patch minimality (generated-parser) signal");
+  lines.push("");
+  const pmRows = report.runs.filter((r) => r.patchMinimalityRepairRequired === true);
+  if (pmRows.length === 0) {
+    lines.push(
+      "_No run carried a generated-parser / grammar-minimality finding (the deterministic " +
+        "`analyzePatchMinimality` probe stayed silent)._",
+    );
+  } else {
+    lines.push(
+      "Runs the deterministic generated-parser probe flagged. This is an OBSERVATION-ONLY risk signal that makes a run " +
+        "eligible for live critic observation; it never triggers automatic repair.",
+    );
+    lines.push("");
+    lines.push("| run | patchMinimalityRepairRequired | patchMinimalityDefectClass | patchMinimalityRisk | patchMinimalityConfidence |");
+    lines.push("| --- | --- | --- | --- | --- |");
+    for (const r of pmRows) {
+      lines.push(
+        `| ${r.runLabel} | ${r.patchMinimalityRepairRequired} | ${r.patchMinimalityDefectClass} | ` +
+          `${r.patchMinimalityRisk} | ${r.patchMinimalityConfidence} |`,
+      );
+    }
+    lines.push("");
+    for (const r of pmRows) {
+      lines.push(`### ${r.runLabel} — generated-parser minimality`);
+      lines.push("");
+      lines.push(`- patchMinimalityRepairRequired: ${r.patchMinimalityRepairRequired}`);
+      lines.push(`- patchMinimalityDefectClass: ${r.patchMinimalityDefectClass}`);
+      lines.push(`- patchMinimalityRisk: ${r.patchMinimalityRisk}`);
+      lines.push(`- patchMinimalityConfidence: ${r.patchMinimalityConfidence}`);
+      lines.push(`- patchMinimalitySignals: ${r.patchMinimalitySignals.join(", ") || "(none)"}`);
+      for (const reason of r.patchMinimalityReasons) lines.push(`- patchMinimalityReason: ${reason}`);
+      lines.push(`- patchMinimalityNarrowAlternativeHint: ${r.patchMinimalityNarrowAlternativeHint ?? "(none)"}`);
+      lines.push("");
+    }
+  }
   lines.push("## Non-claims");
   lines.push("");
   for (const c of report.nonClaims) lines.push(`- ${c}`);
@@ -693,6 +771,7 @@ function adHocSkipDecision(
     skipReason,
     reason: detail,
     result: null,
+    patchMinimality: null,
   };
 }
 
@@ -870,6 +949,15 @@ async function main(config: CliConfig): Promise<void> {
   const c = outcome.counters;
   const s = report.summary;
   const moreEligible = c.skippedByMaxRuns > 0 || c.stoppedByCostCap > 0;
+  // Surface the generated-parser minimality basis for committed (called / would-call) runs so the
+  // dry-run is auditable without opening the report.
+  const pmLines = report.runs
+    .filter((r) => (r.called || r.wouldCall) && r.patchMinimalityRepairRequired === true)
+    .map(
+      (r) =>
+        `Patch minimality — ${r.runLabel} (${r.source}): patchMinimalityRepairRequired: true   ` +
+        `defectClass: ${r.patchMinimalityDefectClass}`,
+    );
   process.stdout.write(
     [
       `Stage 5 live patch critic report written${config.dryRun ? " (DRY RUN — no model called)" : ""}:`,
@@ -877,6 +965,7 @@ async function main(config: CliConfig): Promise<void> {
       `  ${jsonPath}`,
       "",
       `Candidates: ${c.candidateRuns}${missing.length > 0 ? ` (missing: ${missing.join(", ")})` : ""}   Eligible: ${c.eligibleRuns}`,
+      ...pmLines,
       config.includeAdHocRunLabels
         ? `Ad hoc — requested: ${adHoc.counters.adHocRequested}   found: ${adHoc.counters.adHocFound}   materialized: ${adHoc.counters.adHocMaterialized}   missing: ${adHoc.counters.adHocMissing}`
         : "",

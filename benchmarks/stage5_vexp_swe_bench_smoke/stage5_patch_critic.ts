@@ -22,6 +22,7 @@ import {
   type ProbeStatus,
   type RiskLevel,
 } from "./stage5_patch_probes";
+import type { PatchMinimalityProbeResult } from "../../src/capsule/patchMinimalityProbes";
 
 // ---------------------------------------------------------------------------
 // Input contract
@@ -56,6 +57,13 @@ export interface PatchCriticInput {
   readonly probeSummary: PatchProbeSummary;
   readonly treatmentMetadata: CriticTreatmentMetadata;
   readonly contextSignals: CriticContextSignals;
+  // Deterministic generated-parser / grammar-minimality observation over `firstPatch`
+  // (milestone: wire the patch-minimality probe into critic candidate selection). OBSERVATION
+  // ONLY: when it flags `repairRequired`, the deterministic critic adds a strong signal so the
+  // run becomes eligible for LIVE critic observation — it never triggers automatic repair.
+  // Optional so inputs built before this milestone (and unit-test literals) stay valid; absent →
+  // treated as "no generated-parser finding".
+  readonly patchMinimality?: PatchMinimalityProbeResult | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -148,9 +156,37 @@ function genericInstruction(probeId: string, input: PatchCriticInput, parseError
       return `Add an explicit handling path for the failing input named in the issue in ${files}, before the code path that assumes the non-failing case.`;
     case "python_parse":
       return `Fix the syntax error in the inserted Python block before re-evaluation: ${parseError}.`;
+    case "patch_minimality":
+      // Prefer the probe's own narrow-alternative hint (derived from the relocated/removed
+      // grammar production); fall back to a generic minimal-grammar-edit instruction.
+      return (
+        input.patchMinimality?.narrowAlternativeHint ??
+        `Prefer the narrowest grammar-rule edit in ${files} instead of deleting generated parser tables or relocating grammar productions across parser functions.`
+      );
     default:
       return `Make a minimal, targeted correction in ${files} addressing the flagged probe.`;
   }
+}
+
+// A deterministic, human-readable reason for a fired generated-parser/grammar-minimality
+// observation. Pure: composed only from the probe result's own fields.
+export function patchMinimalityReason(pm: PatchMinimalityProbeResult): string {
+  const parts = [`generated-parser minimality risk (${pm.defectClass})`];
+  if (pm.generatedFilesDeleted.length > 0) parts.push(`deletes generated parser table(s): ${pm.generatedFilesDeleted.join(", ")}`);
+  if (pm.grammarFunctionsRemoved.length > 0) parts.push(`relocates/removes parser function(s): ${pm.grammarFunctionsRemoved.join(", ")}`);
+  else if (pm.broadRewriteDetected && pm.grammarFunctionsChanged.length > 0) parts.push(`broadly rewrites parser function(s): ${pm.grammarFunctionsChanged.join(", ")}`);
+  return parts.join("; ");
+}
+
+// The presentation label for the probe's defect class. When the broad-rewrite class also carries
+// the grammar-minimality signal (productions relocated AND a narrower per-production edit exists),
+// render the combined `generated_parser_broad_rewrite / grammar_patch_minimality` label.
+export function patchMinimalityDefectLabel(pm: PatchMinimalityProbeResult | null | undefined): string | null {
+  if (!pm) return null;
+  if (pm.defectClass === "generated_parser_broad_rewrite" && pm.signals.includes("grammar_patch_minimality")) {
+    return "generated_parser_broad_rewrite / grammar_patch_minimality";
+  }
+  return pm.defectClass;
 }
 
 function instructionFor(probeId: string, input: PatchCriticInput, parseError: string): string {
@@ -303,6 +339,20 @@ export function buildDeterministicPatchCriticReport(input: PatchCriticInput): Pa
       probeId: "python_parse",
       strong: true,
       reason: "syntax error in inserted Python block (high-confidence parse fail)",
+    });
+  }
+
+  // --- generated-parser / grammar minimality (observation-only deterministic signal) -------
+  // When the patch-minimality probe flags a generated-parser broad rewrite / table deletion, add
+  // a strong signal so the run becomes eligible for LIVE critic observation. This never triggers
+  // automatic repair; it only enriches the deterministic verdict + repair instructions with the
+  // narrow-rewrite alternative for the live critic to agree or disagree with.
+  const pm = input.patchMinimality;
+  if (pm && pm.repairRequired) {
+    signals.push({
+      probeId: "patch_minimality",
+      strong: true,
+      reason: patchMinimalityReason(pm),
     });
   }
 

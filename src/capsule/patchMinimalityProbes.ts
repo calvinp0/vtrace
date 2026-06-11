@@ -201,14 +201,18 @@ function analyzeGrammarChurn(bodyLines: readonly string[], isGrammarFn: (name: s
   if (current.length > 0) hunks.push(current);
 
   for (const hunk of hunks) {
-    const contextDefs: string[] = [];
-    let hunkHasChange = false;
+    // Context grammar-function defs seen since the last change. A context def is attributed to
+    // `changed` only when a +/- line FOLLOWS it within the hunk (its body/docstring was edited) —
+    // so a trailing context def (e.g. the next function shown only as context after all changes)
+    // is NOT mislabeled as changed.
+    let pendingContextDefs: string[] = [];
     for (const line of hunk) {
       const marker = line[0] ?? " ";
       const content = line.slice(1);
+      const name = defName(content);
       if (marker === "+" || marker === "-") {
-        hunkHasChange = true;
-        const name = defName(content);
+        for (const d of pendingContextDefs) changed.add(d);
+        pendingContextDefs = [];
         if (name && isGrammarFn(name)) {
           changed.add(name);
           if (marker === "-") removed.add(name);
@@ -218,12 +222,10 @@ function analyzeGrammarChurn(bodyLines: readonly string[], isGrammarFn: (name: s
           if (marker === "-") removedProductionLines += 1;
           else addedProductionLines += 1;
         }
-      } else {
-        const name = defName(content);
-        if (name && isGrammarFn(name)) contextDefs.push(name);
+      } else if (name && isGrammarFn(name)) {
+        pendingContextDefs.push(name);
       }
     }
-    if (hunkHasChange) for (const name of contextDefs) changed.add(name);
   }
 
   return { changed, removed, added, removedProductionLines, addedProductionLines };

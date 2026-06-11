@@ -1,0 +1,355 @@
+{
+  "generatedAt": "2026-06-11T18:52:29.354Z",
+  "enabled": true,
+  "dryRun": true,
+  "gates": {
+    "runLabels": [
+      "eval-strictv2-artifacts-protocol-vtrace-astropy-14369"
+    ],
+    "maxCriticRuns": 1,
+    "onlyDeterministicRepairRequired": true,
+    "criticCostCapUsd": 0.25,
+    "dryRun": true
+  },
+  "counters": {
+    "candidateRuns": 13,
+    "eligibleRuns": 1,
+    "skippedLowRiskRuns": 0,
+    "skippedByRunLabel": 12,
+    "skippedByMaxRuns": 0,
+    "stoppedByCostCap": 0,
+    "liveCallsAttempted": 0,
+    "liveCallsSucceeded": 0,
+    "liveCallsFailedOpen": 0,
+    "totalCriticCostUsd": 0
+  },
+  "adHoc": {
+    "adHocRequested": 1,
+    "adHocFound": 1,
+    "adHocMaterialized": 1,
+    "adHocMissing": 0
+  },
+  "summary": {
+    "enabled": true,
+    "runsAnalyzed": 0,
+    "criticRan": 0,
+    "validReports": 0,
+    "failedOpen": 0,
+    "liveRepairRequired": 0,
+    "deterministicRepairRequired": 0,
+    "agreementCount": 0,
+    "disagreementCount": 0,
+    "totalCriticCostUsd": 0,
+    "totalCriticInputTokens": 0,
+    "totalCriticOutputTokens": 0
+  },
+  "runs": [
+    {
+      "runLabel": "eval-editguard-before-sympy-16766",
+      "instanceId": "sympy__sympy-16766",
+      "source": "curated_existing",
+      "deterministicRepairRequired": false,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-editguard-after-sympy-16766",
+      "instanceId": "sympy__sympy-16766",
+      "source": "curated_existing",
+      "deterministicRepairRequired": false,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-patchverify-before-sympy-16766",
+      "instanceId": "sympy__sympy-16766",
+      "source": "curated_existing",
+      "deterministicRepairRequired": true,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-patchverify-after-sympy-16766",
+      "instanceId": "sympy__sympy-16766",
+      "source": "curated_existing",
+      "deterministicRepairRequired": false,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-editguard-before-matplotlib-22719",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "source": "curated_existing",
+      "deterministicRepairRequired": true,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-editguard-after-matplotlib-22719",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "source": "curated_existing",
+      "deterministicRepairRequired": false,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-patchverify-before-matplotlib-22719",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "source": "curated_existing",
+      "deterministicRepairRequired": false,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-patchverify-after-matplotlib-22719",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "source": "curated_existing",
+      "deterministicRepairRequired": true,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-editguard-before-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "source": "curated_existing",
+      "deterministicRepairRequired": true,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-editguard-after-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "source": "curated_existing",
+      "deterministicRepairRequired": true,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-patchverify-before-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "source": "curated_existing",
+      "deterministicRepairRequired": true,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-patchverify-after-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "source": "curated_existing",
+      "deterministicRepairRequired": true,
+      "eligible": false,
+      "called": false,
+      "wouldCall": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": false,
+      "patchMinimalityDefectClass": "none",
+      "patchMinimalityRisk": "low",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [],
+      "patchMinimalityReasons": [
+        "No generated-parser / grammar-minimality risk shapes detected in the diff."
+      ],
+      "patchMinimalityNarrowAlternativeHint": null
+    },
+    {
+      "runLabel": "eval-strictv2-artifacts-protocol-vtrace-astropy-14369",
+      "instanceId": "astropy__astropy-14369",
+      "source": "ad_hoc_run_label",
+      "deterministicRepairRequired": true,
+      "eligible": true,
+      "called": false,
+      "wouldCall": true,
+      "skipReason": null,
+      "reason": "would call live critic (dry-run: model NOT invoked) [eligible: generated-parser-minimality]",
+      "meta": null,
+      "liveReport": null,
+      "patchMinimalityRepairRequired": true,
+      "patchMinimalityDefectClass": "generated_parser_broad_rewrite / grammar_patch_minimality",
+      "patchMinimalityRisk": "high",
+      "patchMinimalityConfidence": "high",
+      "patchMinimalitySignals": [
+        "generated_parser_table_deleted",
+        "grammar_function_removed",
+        "multiple_grammar_functions_changed",
+        "grammar_productions_relocated",
+        "narrow_alternative_available",
+        "grammar_patch_minimality"
+      ],
+      "patchMinimalityReasons": [
+        "Patch deletes generated parser table file(s): astropy/units/format/cds_lextab.py, astropy/units/format/cds_parsetab.py.",
+        "Parser function(s) removed entirely: p_division_of_units, p_product_of_units.",
+        "Multiple parser functions changed in one patch: p_combined_units, p_division_of_units, p_product_of_units.",
+        "Grammar productions appear relocated between parser functions (a function was removed while another was rewritten).",
+        "Narrower alternative likely exists: reorder the division_of_units grammar production within its own parser function rather than relocating productions across parser functions or deleting generated parser tables."
+      ],
+      "patchMinimalityNarrowAlternativeHint": "Narrower alternative likely exists: reorder the division_of_units grammar production within its own parser function rather than relocating productions across parser functions or deleting generated parser tables."
+    }
+  ],
+  "nonClaims": [
+    "Critic OBSERVATION ONLY: the live critic never modifies the patch, edited files, workspace, final patch, or evaluation input.",
+    "Disabled by default; with no --enable-patch-critic flag no model is called and no critic artifacts are written.",
+    "Cost/scope GATED: by default the live critic runs on at most --max-critic-runs run(s), only on deterministic repair_required runs, and stops at --critic-cost-cap-usd.",
+    "`repair_required = true` here is an OBSERVATION (what a critic would request); no repair is performed this milestone.",
+    "Fail-open: a critic invocation error or invalid JSON is recorded and the original patch is preserved; the run is not failed.",
+    "Agreement = (deterministicRepairRequired === liveRepairRequired); per-field agreement is not required for this milestone.",
+    "The generated-parser patch-minimality probe is an OBSERVATION-ONLY deterministic signal: it makes a run eligible for live critic observation but never triggers automatic repair, and adds no generated-parser class to the repair allowlist.",
+    "This changes no retrieval / Capsule v2 / PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY behavior and runs no Docker."
+  ]
+}

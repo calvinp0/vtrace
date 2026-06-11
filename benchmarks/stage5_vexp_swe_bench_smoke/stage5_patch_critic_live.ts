@@ -22,6 +22,7 @@ import {
   type PatchCriticReport,
   validatePatchCriticReport,
 } from "./stage5_patch_critic";
+import type { PatchMinimalityProbeResult } from "../../src/capsule/patchMinimalityProbes";
 
 // ---------------------------------------------------------------------------
 // Caller abstraction (mockable)
@@ -106,6 +107,27 @@ function probeLine(p: { probeId: string; status: ProbeStatus; confidence: Confid
   return `- ${p.probeId}: ${p.status} (${p.confidence}) — ${p.evidence.join(" ")}`;
 }
 
+// A concrete narrow-rewrite sentence built ONLY from the probe's own fields (no hardcoded
+// instance): names the production the patch relocated/removed and the surviving parser function it
+// was merged into. For the Astropy CDS grammar this reconstructs "change the division_of_units
+// production order rather than relocating productions into p_combined_units or deleting generated
+// parser tables."
+function patchMinimalityEmphasis(pm: PatchMinimalityProbeResult): string {
+  if (!pm.narrowAlternativeHint) {
+    return "Consider whether a narrower grammar-rule edit would suffice instead of this broad rewrite.";
+  }
+  const removedFn = pm.grammarFunctionsRemoved[0];
+  const production = removedFn ? (removedFn.startsWith("p_") ? removedFn.slice(2) : removedFn) : "the affected";
+  const surviving = pm.grammarFunctionsChanged.filter((f) => !pm.grammarFunctionsRemoved.includes(f));
+  const intoTarget = surviving.length > 0 ? surviving.join(", ") : "another parser function";
+  const tablesClause = pm.generatedFilesDeleted.length > 0 ? " or deleting generated parser tables" : "";
+  return (
+    `The patch ${pm.generatedFilesDeleted.length > 0 ? "deletes generated parser tables and " : ""}relocates grammar ` +
+    `productions across parser functions. A narrower alternative may exist: change the ${production} production order ` +
+    `rather than relocating productions into ${intoTarget}${tablesClause}.`
+  );
+}
+
 // Build the strict-JSON critic prompt from the bounded input. No repository dump: only the
 // issue text (capped), the first patch (capped), deterministic probe results, edited files,
 // and bounded treatment/context metadata.
@@ -116,6 +138,29 @@ export function buildCriticPrompt(input: PatchCriticInput): string {
     input.issueText && input.issueText.trim().length > 0
       ? truncate(input.issueText.trim(), ISSUE_TEXT_CHAR_CAP)
       : "(no issue text provided)";
+
+  // When the deterministic generated-parser / grammar-minimality probe fires, surface its facts
+  // so the live critic has enough context to AGREE or DISAGREE: which generated parser tables were
+  // deleted, which grammar functions changed/removed, the broad-rewrite signals, the affected
+  // files, and the narrow-rewrite alternative. Observation-only — the critic is still asked only to
+  // assess, never to repair.
+  const pm = input.patchMinimality;
+  const patchMinimalitySection =
+    pm && pm.repairRequired
+      ? [
+          "",
+          "Generated-parser / grammar-minimality observation (deterministic — agree or disagree):",
+          `- defect_class: ${pm.defectClass}`,
+          `- risk: ${pm.risk} (confidence ${pm.confidence})`,
+          `- generated parser files deleted: ${pm.generatedFilesDeleted.join(", ") || "(none)"}`,
+          `- parser grammar functions changed: ${pm.grammarFunctionsChanged.join(", ") || "(none)"}`,
+          `- parser grammar functions removed: ${pm.grammarFunctionsRemoved.join(", ") || "(none)"}`,
+          `- broad rewrite signals: ${pm.signals.join(", ") || "(none)"}`,
+          `- affected files: ${pm.affectedFiles.join(", ") || "(none)"}`,
+          `- narrow alternative hint: ${pm.narrowAlternativeHint ?? "(none)"}`,
+          patchMinimalityEmphasis(pm),
+        ]
+      : [];
 
   return [
     "You are a patch critic. You do NOT repair the patch and you do NOT propose a second edit.",
@@ -151,6 +196,7 @@ export function buildCriticPrompt(input: PatchCriticInput): string {
     "",
     "Deterministic probe results (facts to reason over, not guesses):",
     probes,
+    ...patchMinimalitySection,
     "",
     "First patch (unified diff):",
     truncate(input.firstPatch, FIRST_PATCH_CHAR_CAP),
