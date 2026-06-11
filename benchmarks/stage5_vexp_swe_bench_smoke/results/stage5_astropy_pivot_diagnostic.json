@@ -1,0 +1,318 @@
+{
+  "resultsDir": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results",
+  "capsuleTokenBudgetThreshold": 2000,
+  "runsAnalyzed": [
+    {
+      "runLabel": "eval-baseline-vs-vtrace-baseline-astropy-14369",
+      "condition": "baseline",
+      "instanceId": "astropy__astropy-14369",
+      "resolved": false,
+      "totalCostUsd": 1.5550305,
+      "totalTokens": 3076313,
+      "costTokenSource": "strictgated_report",
+      "orderedTelemetryAvailable": false,
+      "missingTelemetryReason": "no_tool_calls_artifact",
+      "toolCallSummary": null,
+      "capsuleAvailable": false,
+      "capsuleTokenEstimate": null,
+      "capsuleTokenBudget": null,
+      "capsuleSnippetTokenEstimateHeuristic": null,
+      "capsuleItemCount": null,
+      "pivotCount": null,
+      "pivotPaths": [],
+      "topPivotPath": null,
+      "topPivotInEditedFiles": null,
+      "largestSnippetPath": null,
+      "largestSnippetTokenEstimateHeuristic": null,
+      "deferredRefCount": null,
+      "deferredRefPaths": [],
+      "expandedDeferredRefCount": null,
+      "searchLogicFlowPresent": false,
+      "pivotCheckInjected": null,
+      "toolUseDisciplineInjected": null,
+      "editedFiles": [],
+      "firstPatchPaths": []
+    },
+    {
+      "runLabel": "eval-capsulev2-recovered-live-astropy-14369",
+      "condition": "vtrace",
+      "instanceId": "astropy__astropy-14369",
+      "resolved": true,
+      "totalCostUsd": null,
+      "totalTokens": null,
+      "costTokenSource": "unavailable",
+      "orderedTelemetryAvailable": false,
+      "missingTelemetryReason": "no_tool_calls_artifact",
+      "toolCallSummary": null,
+      "capsuleAvailable": true,
+      "capsuleTokenEstimate": 5086,
+      "capsuleTokenBudget": 8000,
+      "capsuleSnippetTokenEstimateHeuristic": 2740,
+      "capsuleItemCount": 2,
+      "pivotCount": 2,
+      "pivotPaths": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/vounit.py"
+      ],
+      "topPivotPath": "astropy/units/format/cds.py",
+      "topPivotInEditedFiles": null,
+      "largestSnippetPath": "astropy/units/format/cds.py",
+      "largestSnippetTokenEstimateHeuristic": 2536,
+      "deferredRefCount": 0,
+      "deferredRefPaths": [],
+      "expandedDeferredRefCount": null,
+      "searchLogicFlowPresent": false,
+      "pivotCheckInjected": null,
+      "toolUseDisciplineInjected": null,
+      "editedFiles": [],
+      "firstPatchPaths": []
+    },
+    {
+      "runLabel": "eval-controlled-vtrace-astropy-14369",
+      "condition": "vtrace",
+      "instanceId": "astropy__astropy-14369",
+      "resolved": false,
+      "totalCostUsd": 3.0284075,
+      "totalTokens": 3365366,
+      "costTokenSource": "strictgated_report",
+      "orderedTelemetryAvailable": true,
+      "missingTelemetryReason": null,
+      "toolCallSummary": {
+        "totalToolCalls": 23,
+        "bashToolCalls": 13,
+        "grepLikeToolCalls": 2,
+        "fileReadToolCalls": 5,
+        "fileWriteToolCalls": 3,
+        "uniqueFilesTouchedByTools": 5,
+        "longBashLoopHeuristic": true,
+        "repeatedSearchHeuristic": false,
+        "orderedTelemetryAvailable": true
+      },
+      "capsuleAvailable": true,
+      "capsuleTokenEstimate": 5086,
+      "capsuleTokenBudget": 8000,
+      "capsuleSnippetTokenEstimateHeuristic": 2553,
+      "capsuleItemCount": 2,
+      "pivotCount": 2,
+      "pivotPaths": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/vounit.py"
+      ],
+      "topPivotPath": "astropy/units/format/cds.py",
+      "topPivotInEditedFiles": true,
+      "largestSnippetPath": "astropy/units/format/cds.py",
+      "largestSnippetTokenEstimateHeuristic": 2536,
+      "deferredRefCount": 0,
+      "deferredRefPaths": [],
+      "expandedDeferredRefCount": 0,
+      "searchLogicFlowPresent": false,
+      "pivotCheckInjected": false,
+      "toolUseDisciplineInjected": null,
+      "editedFiles": [
+        "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds.py",
+        "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds_parsetab.py"
+      ],
+      "firstPatchPaths": [
+        "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds.py",
+        "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds_parsetab.py"
+      ]
+    },
+    {
+      "runLabel": "eval-riskgated-vtrace-astropy-14369",
+      "condition": "vtrace",
+      "instanceId": "astropy__astropy-14369",
+      "resolved": false,
+      "totalCostUsd": 1.7339875000000002,
+      "totalTokens": 3649897,
+      "costTokenSource": "strictgated_report",
+      "orderedTelemetryAvailable": true,
+      "missingTelemetryReason": null,
+      "toolCallSummary": {
+        "totalToolCalls": 30,
+        "bashToolCalls": 15,
+        "grepLikeToolCalls": 7,
+        "fileReadToolCalls": 7,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 7,
+        "longBashLoopHeuristic": true,
+        "repeatedSearchHeuristic": true,
+        "orderedTelemetryAvailable": true
+      },
+      "capsuleAvailable": true,
+      "capsuleTokenEstimate": 2772,
+      "capsuleTokenBudget": 8000,
+      "capsuleSnippetTokenEstimateHeuristic": 2482,
+      "capsuleItemCount": 4,
+      "pivotCount": 2,
+      "pivotPaths": [
+        "astropy/units/format/vounit.py",
+        "astropy/units/format/cds.py"
+      ],
+      "topPivotPath": "astropy/units/format/vounit.py",
+      "topPivotInEditedFiles": false,
+      "largestSnippetPath": "astropy/units/format/vounit.py",
+      "largestSnippetTokenEstimateHeuristic": 2191,
+      "deferredRefCount": 2,
+      "deferredRefPaths": [
+        "astropy/units/format/cds.py",
+        "astropy/coordinates/matching.py"
+      ],
+      "expandedDeferredRefCount": 0,
+      "searchLogicFlowPresent": false,
+      "pivotCheckInjected": true,
+      "toolUseDisciplineInjected": null,
+      "editedFiles": [
+        "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds.py"
+      ],
+      "firstPatchPaths": [
+        "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds.py"
+      ]
+    },
+    {
+      "runLabel": "eval-strictgated-vtrace-astropy-14369",
+      "condition": "vtrace",
+      "instanceId": "astropy__astropy-14369",
+      "resolved": false,
+      "totalCostUsd": 1.4102260000000002,
+      "totalTokens": 2508804,
+      "costTokenSource": "strictgated_report",
+      "orderedTelemetryAvailable": true,
+      "missingTelemetryReason": null,
+      "toolCallSummary": {
+        "totalToolCalls": 17,
+        "bashToolCalls": 5,
+        "grepLikeToolCalls": 4,
+        "fileReadToolCalls": 7,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 5,
+        "longBashLoopHeuristic": false,
+        "repeatedSearchHeuristic": false,
+        "orderedTelemetryAvailable": true
+      },
+      "capsuleAvailable": true,
+      "capsuleTokenEstimate": 2772,
+      "capsuleTokenBudget": 8000,
+      "capsuleSnippetTokenEstimateHeuristic": 2482,
+      "capsuleItemCount": 4,
+      "pivotCount": 2,
+      "pivotPaths": [
+        "astropy/units/format/vounit.py",
+        "astropy/units/format/cds.py"
+      ],
+      "topPivotPath": "astropy/units/format/vounit.py",
+      "topPivotInEditedFiles": false,
+      "largestSnippetPath": "astropy/units/format/vounit.py",
+      "largestSnippetTokenEstimateHeuristic": 2191,
+      "deferredRefCount": 2,
+      "deferredRefPaths": [
+        "astropy/units/format/cds.py",
+        "astropy/coordinates/matching.py"
+      ],
+      "expandedDeferredRefCount": 0,
+      "searchLogicFlowPresent": false,
+      "pivotCheckInjected": false,
+      "toolUseDisciplineInjected": null,
+      "editedFiles": [
+        "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds.py"
+      ],
+      "firstPatchPaths": [
+        "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds.py"
+      ]
+    }
+  ],
+  "focusRunLabel": "eval-strictgated-vtrace-astropy-14369",
+  "strictSetMedians": {
+    "taskCount": 10,
+    "capsuleTokenMedian": 1152.5,
+    "capsuleItemMedian": 6,
+    "deferredRefMedian": 4,
+    "perTask": [
+      {
+        "instanceId": "astropy-14369",
+        "capsuleTokens": 2772,
+        "capsuleItems": 4,
+        "deferredRefs": 2
+      },
+      {
+        "instanceId": "django-10880",
+        "capsuleTokens": 489,
+        "capsuleItems": 6,
+        "deferredRefs": 4
+      },
+      {
+        "instanceId": "django-11095",
+        "capsuleTokens": 731,
+        "capsuleItems": 6,
+        "deferredRefs": 4
+      },
+      {
+        "instanceId": "django-11490",
+        "capsuleTokens": 1148,
+        "capsuleItems": 6,
+        "deferredRefs": 4
+      },
+      {
+        "instanceId": "django-11728",
+        "capsuleTokens": 1217,
+        "capsuleItems": 6,
+        "deferredRefs": 4
+      },
+      {
+        "instanceId": "django-11740",
+        "capsuleTokens": 1157,
+        "capsuleItems": 6,
+        "deferredRefs": 4
+      },
+      {
+        "instanceId": "matplotlib-22719",
+        "capsuleTokens": 601,
+        "capsuleItems": 6,
+        "deferredRefs": 4
+      },
+      {
+        "instanceId": "requests-5414",
+        "capsuleTokens": 1282,
+        "capsuleItems": 6,
+        "deferredRefs": 4
+      },
+      {
+        "instanceId": "sphinx-7462",
+        "capsuleTokens": 1578,
+        "capsuleItems": 6,
+        "deferredRefs": 4
+      },
+      {
+        "instanceId": "sympy-16766",
+        "capsuleTokens": 914,
+        "capsuleItems": 6,
+        "deferredRefs": 4
+      }
+    ]
+  },
+  "classification": {
+    "primaryIssue": "noisy_pivot_ranking",
+    "secondaryIssues": [
+      "capsule_budget_too_large",
+      "deferred_refs_underused"
+    ],
+    "focusRunLabel": "eval-strictgated-vtrace-astropy-14369",
+    "rationale": [
+      "Top pivot `astropy/units/format/vounit.py` is not in the eventually edited file(s) [/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds.py].",
+      "Capsule budget 2772 tokens exceeds 2000.",
+      "Deferred refs 2 below strict-set median 4."
+    ]
+  },
+  "recommendedNextChange": {
+    "id": 1,
+    "title": "Pivot ranking fix",
+    "body": "Prefer implementation pivots that are referenced by multiple evidence types and down-rank broad/noisy paths, so the eventually-edited file is not demoted below an unrelated, large-snippet candidate."
+  },
+  "missingArtifacts": [],
+  "nonClaims": [
+    "This report does not re-run agents or Docker.",
+    "This report does not change retrieval, ranking, Capsule generation, or prompt behavior.",
+    "This report does not prove Astropy is representative of all noisy retrieval failures.",
+    "Missing telemetry is reported as missing, not reconstructed.",
+    "Per-snippet token figures are char-derived heuristics; only each Capsule's own budget line is treated as an authoritative token count."
+  ]
+}
