@@ -340,6 +340,35 @@ test("shapeSidecar pulls 3-task aggregate and token-audit categories, tolerating
   assert.equal(empty.tokenAuditDominantCategories, null);
 });
 
+test("an actual strict_risk_gated run is tolerated and surfaces its policy + suppression", () => {
+  // A run actually executed under strict_risk_gated that suppressed a hidden_pivot-only
+  // capsule: would-inject true, injected false, recorded policy "strict_risk_gated".
+  const strictRun: RawRunParts = {
+    runLabel: "eval-strict-vtrace-matplotlib-22719",
+    meta: {
+      vtracePivotCheckInjected: false,
+      vtracePivotCheckPolicy: "strict_risk_gated",
+      vtracePivotCheckPolicyReason: "strict_risk_gated: no strong risk signal (hidden_pivot alone is insufficient)",
+      vtracePivotCheckRiskSignals: ["hidden_pivot"],
+      vtracePivotCheckWouldInjectUnderMultiPivot: true,
+      vtraceCapsulePivots: [{}, {}],
+      vtraceCapsuleEditRiskDirectivesCount: 0,
+      vtracePivotCount: 2,
+      vtraceToolCallCount: 8,
+    },
+    evalMeta: {},
+    record: row({ instanceId: "matplotlib__matplotlib-22719", cost: 0.5, cacheReadTokens: 400_000, resolved: true }),
+    toolCalls: null,
+  };
+  assert.equal(hasPivotDecisionMetadata(strictRun), true);
+  const r = buildRunCalibration(strictRun);
+  assert.equal(r.vtracePivotCheckPolicy, "strict_risk_gated");
+  assert.equal(r.classification, "already_suppressed");
+  // strict_risk_gated is one of the simulated policies and would suppress this run.
+  assert.ok(POLICY_NAMES.includes("strict_risk_gated"));
+  assert.equal(r.simulated.strict_risk_gated.inject, false);
+});
+
 test("parseArgs honors overrides and defaults", () => {
   assert.equal(parseArgs([]).outName, "stage5_pivot_policy_calibration");
   const c = parseArgs(["--results", "d", "--out-name", "o"]);

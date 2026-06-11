@@ -188,6 +188,18 @@ test("classifyPivotCheckState distinguishes injected / disabled / risk-declined"
     }),
     "absent_no_multi_pivot",
   );
+  // strict_risk_gated that declined on a multi-pivot capsule is risk-declined too (not
+  // misread as "no multi-pivot"); old/unknown policy strings remain tolerated.
+  assert.equal(
+    classifyPivotCheckState({
+      ...base,
+      pivotCheckInjected: false,
+      pivotCheckDisabledByFlag: false,
+      pivotCheckPolicy: "strict_risk_gated",
+      pivotCheckWouldInjectUnderMultiPivot: true,
+    }),
+    "absent_risk_not_triggered",
+  );
 });
 
 test("patch-verify metadata is recorded when present and tolerated (null) when absent", () => {

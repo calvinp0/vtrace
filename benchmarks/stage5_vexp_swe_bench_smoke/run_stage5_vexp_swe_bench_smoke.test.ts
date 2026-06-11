@@ -27,6 +27,7 @@ import {
   buildPivotCheckBlock,
   decidePivotCheckInjection,
   pivotCheckRiskSignals,
+  strongRiskSignals,
   buildEditGuardBlock,
   detectEditGuardText,
   EDIT_GUARD_MARKER,
@@ -1660,6 +1661,116 @@ test("always injects whenever Capsule v2 context exists, including a single pivo
   });
   assert.match(single.markdown, /## PIVOT_CHECK/);
   assert.equal(single.pivotCheckInjected, true);
+});
+
+// ----- Stage 5: strict_risk_gated (hidden_pivot alone is insufficient) -----
+
+test("--pivot-check-policy accepts strict_risk_gated", () => {
+  assert.equal(
+    parseArgs(["--mode", "prepare", "--instances", "a__1", "--pivot-check-policy", "strict_risk_gated"]).pivotCheckPolicy,
+    "strict_risk_gated",
+  );
+});
+
+test("strongRiskSignals: hidden_pivot alone is not strong; corroboration / strong signals are", () => {
+  assert.deepEqual(strongRiskSignals([]), []);
+  assert.deepEqual(strongRiskSignals(["hidden_pivot"]), []);
+  assert.deepEqual(strongRiskSignals(["three_or_more_pivots"]), ["three_or_more_pivots"]);
+  assert.deepEqual(strongRiskSignals(["edit_risk_directives"]), ["edit_risk_directives"]);
+  assert.deepEqual(strongRiskSignals(["known_edit_relevant_hidden_pivot"]), ["known_edit_relevant_hidden_pivot"]);
+  // hidden_pivot + a known strong signal → that strong signal carries it (no redundant label).
+  assert.deepEqual(strongRiskSignals(["hidden_pivot", "edit_risk_directives"]), ["edit_risk_directives"]);
+  // hidden_pivot + some other (non-known) signal → the corroboration label fires.
+  assert.deepEqual(strongRiskSignals(["hidden_pivot", "some_future_signal"]), ["hidden_pivot+additional"]);
+});
+
+test("strict_risk_gated SUPPRESSES a hidden_pivot-only capsule with a clear reason", () => {
+  const cls = classificationWith({ pivots: PIVOT_CHECK_PIVOTS });
+  assert.deepEqual(pivotCheckRiskSignals(cls), ["hidden_pivot"]); // hidden only
+  const d = decidePivotCheckInjection("strict_risk_gated", cls);
+  assert.equal(d.inject, false);
+  assert.equal(d.wouldInjectUnderMultiPivot, true); // multi-pivot floor IS met
+  assert.match(d.reason, /strict_risk_gated: no strong risk signal/);
+  assert.match(d.reason, /hidden_pivot alone is insufficient/);
+  // And the rendered snapshot carries no checklist, but records the strict policy + reason.
+  const a = buildVtraceContextMarkdown([pivotSection(cls)], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "strict_risk_gated",
+  });
+  assert.doesNotMatch(a.markdown, /## PIVOT_CHECK/);
+  assert.equal(a.pivotCheckInjected, false);
+  assert.equal(a.pivotCheckPolicy, "strict_risk_gated");
+  assert.match(a.pivotCheckReason, /hidden_pivot alone is insufficient/);
+
+  // Contrast: risk_gated (unchanged) WOULD have injected on the same hidden-only capsule.
+  assert.equal(decidePivotCheckInjection("risk_gated", cls).inject, true);
+});
+
+test("strict_risk_gated injects for three_or_more_pivots", () => {
+  const cls = classificationWith({ pivots: THREE_STRONG_PIVOTS });
+  const d = decidePivotCheckInjection("strict_risk_gated", cls);
+  assert.equal(d.inject, true);
+  assert.match(d.reason, /strict_risk_gated: strong risk signals \[three_or_more_pivots\]/);
+  const a = buildVtraceContextMarkdown([pivotSection(cls)], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "strict_risk_gated",
+  });
+  assert.match(a.markdown, /## PIVOT_CHECK/);
+  assert.equal(a.pivotCheckInjected, true);
+});
+
+test("strict_risk_gated injects for edit_risk_directives", () => {
+  const cls = classificationWith({ pivots: TWO_ORDINARY_PIVOTS, editRiskDirectives: 2 });
+  const d = decidePivotCheckInjection("strict_risk_gated", cls);
+  assert.equal(d.inject, true);
+  assert.match(d.reason, /strong risk signals \[edit_risk_directives\]/);
+});
+
+test("strict_risk_gated injects for hidden_pivot PLUS another risk signal", () => {
+  // hidden pivot present AND an edit-risk directive → hidden_pivot corroborated.
+  const cls = classificationWith({ pivots: PIVOT_CHECK_PIVOTS, editRiskDirectives: 1 });
+  assert.deepEqual(pivotCheckRiskSignals(cls), ["hidden_pivot", "edit_risk_directives"]);
+  const d = decidePivotCheckInjection("strict_risk_gated", cls);
+  assert.equal(d.inject, true);
+  assert.match(d.reason, /strong risk signals/);
+});
+
+test("strict_risk_gated preserves the multi-pivot structural floor (no inject with < 2 pivots)", () => {
+  const single = decidePivotCheckInjection("strict_risk_gated", classificationWith({ pivots: [PIVOT_CHECK_PIVOTS[1]!] }));
+  assert.equal(single.inject, false);
+  assert.match(single.reason, /below multi-pivot floor/);
+  // Two ordinary pivots, no risk signal: floor met but no strong signal → suppress (no hidden note).
+  const ordinary = decidePivotCheckInjection("strict_risk_gated", classificationWith({ pivots: TWO_ORDINARY_PIVOTS }));
+  assert.equal(ordinary.inject, false);
+  assert.match(ordinary.reason, /no strong risk signal/);
+  assert.doesNotMatch(ordinary.reason, /hidden_pivot alone/);
+});
+
+test("disablePivotCheck still forces off even under strict_risk_gated", () => {
+  const a = buildVtraceContextMarkdown([pivotSection(classificationWith({ pivots: THREE_STRONG_PIVOTS }))], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "strict_risk_gated",
+    disablePivotCheck: true,
+  });
+  assert.doesNotMatch(a.markdown, /PIVOT_CHECK/);
+  assert.equal(a.pivotCheckInjected, false);
+  assert.equal(a.pivotCheckPolicy, "off");
+});
+
+test("risk_gated / multi_pivot / always are unchanged by the strict gate", () => {
+  const hiddenOnly = classificationWith({ pivots: PIVOT_CHECK_PIVOTS });
+  const ordinary = classificationWith({ pivots: TWO_ORDINARY_PIVOTS });
+  const single = classificationWith({ pivots: [TWO_ORDINARY_PIVOTS[0]!] });
+  // risk_gated still injects on hidden_pivot-only.
+  assert.equal(decidePivotCheckInjection("risk_gated", hiddenOnly).inject, true);
+  // multi_pivot still injects for any two pivots, stays quiet for one.
+  assert.equal(decidePivotCheckInjection("multi_pivot", ordinary).inject, true);
+  assert.equal(decidePivotCheckInjection("multi_pivot", single).inject, false);
+  // always still injects whenever a pivot exists.
+  assert.equal(decidePivotCheckInjection("always", single).inject, true);
 });
 
 test("buildVtraceContextMarkdown records policy, reason, risk signals, and would-inject", () => {

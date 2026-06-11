@@ -285,9 +285,13 @@ export function classifyPivotCheckState(
   if (run.pivotCheckInjected === true) return "injected";
   if (run.pivotCheckDisabledByFlag === true || run.pivotCheckPolicy === "off") return "absent_disabled";
   if (run.pivotCheckInjected === null) return "unknown";
-  // Not injected and not disabled: the policy declined. Under risk_gated, separate
-  // "a multi-pivot capsule lacked a risk signal" from "there was no multi-pivot case".
-  if (run.pivotCheckPolicy === "risk_gated" && run.pivotCheckWouldInjectUnderMultiPivot === true) {
+  // Not injected and not disabled: the policy declined. Under a risk-gated policy
+  // (risk_gated or the stricter strict_risk_gated), separate "a multi-pivot capsule
+  // lacked a (strong) risk signal" from "there was no multi-pivot case".
+  if (
+    (run.pivotCheckPolicy === "risk_gated" || run.pivotCheckPolicy === "strict_risk_gated") &&
+    run.pivotCheckWouldInjectUnderMultiPivot === true
+  ) {
     return "absent_risk_not_triggered";
   }
   return "absent_no_multi_pivot";

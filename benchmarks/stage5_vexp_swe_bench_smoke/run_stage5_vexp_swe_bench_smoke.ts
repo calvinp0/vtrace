@@ -66,14 +66,25 @@ export type CapsuleV2Intent = "auto" | "debug" | "refactor" | "impact" | "test-f
 // Deterministic PIVOT_CHECK injection policy (--pivot-check-policy). Controls WHEN
 // the compact PIVOT_CHECK localization checklist (and the EDIT_GUARD / PATCH_VERIFY
 // blocks that ride with it) is appended to a Capsule v2 section. A token-cost knob:
-//   off         -> never inject PIVOT_CHECK.
-//   multi_pivot -> legacy behaviour: inject whenever the capsule has >= 2 pivots.
-//   risk_gated  -> inject only when a deterministic high-risk signal is present
-//                  (DEFAULT) — two ordinary pivots alone no longer qualify.
-//   always      -> inject whenever Capsule v2 context exists (experiments only).
+//   off                -> never inject PIVOT_CHECK.
+//   multi_pivot        -> legacy behaviour: inject whenever the capsule has >= 2 pivots.
+//   risk_gated         -> inject only when a deterministic high-risk signal is present
+//                         (DEFAULT) — two ordinary pivots alone no longer qualify.
+//   strict_risk_gated  -> experimental token-reduction gate: keep the multi-pivot floor
+//                         but require a STRONG risk signal (>= 3 pivots, edit-risk
+//                         directives, a known edit-relevant hidden pivot, or hidden_pivot
+//                         corroborated by >= 1 additional signal). hidden_pivot ALONE is
+//                         not sufficient. Not the default; selectable for experiments.
+//   always             -> inject whenever Capsule v2 context exists (experiments only).
 // --disable-pivot-check forces `off` regardless of this policy (compatibility).
-export type PivotCheckPolicy = "off" | "multi_pivot" | "risk_gated" | "always";
-export const PIVOT_CHECK_POLICIES: readonly PivotCheckPolicy[] = ["off", "multi_pivot", "risk_gated", "always"];
+export type PivotCheckPolicy = "off" | "multi_pivot" | "risk_gated" | "strict_risk_gated" | "always";
+export const PIVOT_CHECK_POLICIES: readonly PivotCheckPolicy[] = [
+  "off",
+  "multi_pivot",
+  "risk_gated",
+  "strict_risk_gated",
+  "always",
+];
 // Stage 5C named protocols. A protocol selects which condition(s) to run and how:
 //   baseline       -> `run --no-vexp`
 //   vtrace-indexed -> `run --no-vexp` + vtrace indexed-context injection
@@ -3222,6 +3233,30 @@ export function pivotCheckRiskSignals(classification: CapsuleClassification | nu
   return signals;
 }
 
+// STRONG risk signals for the experimental `strict_risk_gated` policy, in which
+// hidden_pivot ALONE is not sufficient. Null-safe over the deterministic signal list:
+// it only reads signals that are actually present and never fabricates metadata.
+//   "three_or_more_pivots"             a genuinely multi-site fix.
+//   "edit_risk_directives"             the v2 engine attached edit-relevant evidence.
+//   "known_edit_relevant_hidden_pivot" a hidden pivot already KNOWN to be edit-relevant
+//                                      (only surfaced if such metadata is present — not
+//                                      produced today, but tolerated when it appears).
+//   "hidden_pivot+additional"          hidden_pivot corroborated by >= 1 other signal.
+// Returns the labels that fired (empty => no strong signal => suppress under strict).
+export function strongRiskSignals(riskSignals: readonly string[]): string[] {
+  const out: string[] = [];
+  if (riskSignals.includes("three_or_more_pivots")) out.push("three_or_more_pivots");
+  if (riskSignals.includes("edit_risk_directives")) out.push("edit_risk_directives");
+  if (riskSignals.includes("known_edit_relevant_hidden_pivot")) out.push("known_edit_relevant_hidden_pivot");
+  // hidden_pivot is strong ONLY when corroborated by >= 1 additional signal. When a
+  // strong signal was already captured above, that corroboration is implicit, so the
+  // extra label is added only when nothing else fired (hidden_pivot + some other signal).
+  if (out.length === 0 && riskSignals.includes("hidden_pivot") && riskSignals.length >= 2) {
+    out.push("hidden_pivot+additional");
+  }
+  return out;
+}
+
 // A PIVOT_CHECK injection decision under a deterministic policy, carrying the
 // rationale and risk signals so run metadata can distinguish "absent because
 // disabled" from "absent because risk_gated did not trigger" from "injected because
@@ -3240,7 +3275,9 @@ export interface PivotCheckDecision {
 // >= 2 pivots (PIVOT_CHECK is a multi-row localization checklist) applies to every
 // policy except `always`, which injects for any v2 context (single pivot included,
 // experiments only). `risk_gated` additionally requires >= 1 deterministic risk
-// signal; two ordinary pivots with no risk signal no longer qualify.
+// signal; two ordinary pivots with no risk signal no longer qualify. `strict_risk_gated`
+// is stricter still: it keeps the multi-pivot floor but requires a STRONG signal, so a
+// hidden_pivot-only capsule (the common case) is suppressed.
 export function decidePivotCheckInjection(
   policy: PivotCheckPolicy,
   classification: CapsuleClassification | null,
@@ -3264,6 +3301,21 @@ export function decidePivotCheckInjection(
       return riskSignals.length > 0
         ? { ...base, inject: true, reason: `risk_gated: risk signals [${riskSignals.join(", ")}]` }
         : { ...base, inject: false, reason: `risk_gated: ${pivotCount} pivots but no high-risk signal` };
+    case "strict_risk_gated": {
+      // Preserve the structural multi-pivot floor (the renderer needs >= 2 pivots), then
+      // require a STRONG risk signal — hidden_pivot alone never qualifies.
+      if (!multiPivot) {
+        return { ...base, inject: false, reason: `strict_risk_gated: ${pivotCount} pivot(s) (< 2 — below multi-pivot floor)` };
+      }
+      const strong = strongRiskSignals(riskSignals);
+      if (strong.length > 0) {
+        return { ...base, inject: true, reason: `strict_risk_gated: strong risk signals [${strong.join(", ")}]` };
+      }
+      const hiddenOnlyNote = riskSignals.includes("hidden_pivot")
+        ? " (hidden_pivot alone is insufficient)"
+        : "";
+      return { ...base, inject: false, reason: `strict_risk_gated: no strong risk signal${hiddenOnlyNote}` };
+    }
     case "always":
       return pivotCount >= 1
         ? { ...base, inject: true, reason: `always: Capsule v2 context exists (${pivotCount} pivot(s))` }
@@ -6639,7 +6691,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--pivot-check-policy": {
         const value = requireValue(argv, ++index, arg);
         if (!PIVOT_CHECK_POLICIES.includes(value as PivotCheckPolicy)) {
-          throw new Error("Invalid --pivot-check-policy (expected off|multi_pivot|risk_gated|always).");
+          throw new Error("Invalid --pivot-check-policy (expected off|multi_pivot|risk_gated|strict_risk_gated|always).");
         }
         config.pivotCheckPolicy = value as PivotCheckPolicy;
         break;
@@ -6703,7 +6755,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --capsule-engine legacy|v2                    capsule retrieval engine for indexed-context (default: legacy)",
       "  --capsule-intent auto|debug|refactor|impact|test-failure   Capsule v2 intent (default: auto; v2 only)",
       "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
-      "  --pivot-check-policy off|multi_pivot|risk_gated|always   when to inject PIVOT_CHECK (default: risk_gated — inject only on a high-risk signal, not merely for two pivots)",
+      "  --pivot-check-policy off|multi_pivot|risk_gated|strict_risk_gated|always   when to inject PIVOT_CHECK (default: risk_gated — inject only on a high-risk signal, not merely for two pivots; strict_risk_gated also rejects hidden_pivot-only)",
       "  --disable-pivot-check                         force PIVOT_CHECK policy off for a controlled before run (compatibility; equivalent to --pivot-check-policy off)",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
       "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",
