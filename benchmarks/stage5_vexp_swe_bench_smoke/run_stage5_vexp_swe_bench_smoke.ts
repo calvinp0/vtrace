@@ -25,6 +25,11 @@ import {
   summarizeOrderedToolCalls,
   type OrderedToolCallSummary,
 } from "../../src/capsule/toolCallLog";
+import {
+  DEFAULT_PRE_EDIT_BASH_BUDGET,
+  DEFAULT_PRE_EDIT_SEARCH_BUDGET,
+  DEFAULT_REPEATED_FILE_READ_LIMIT,
+} from "../../src/capsule/turnCountWaste";
 import { renderCapsuleV2Human } from "../../src/capsuleV2/renderHuman";
 import { CapsuleV2Mode, type CapsuleV2Result } from "../../src/capsuleV2/types";
 import {
@@ -255,6 +260,15 @@ export interface CliConfig {
   // it changes only the appended discipline text — retrieval, ranking, PIVOT_CHECK,
   // Capsule generation, critic, repair, and evaluation are untouched.
   readonly disableToolUseDiscipline: boolean;
+  // Benchmark/dev-only suppression of the vtrace-only STAGE5_TOKEN_DISCIPLINE block
+  // (--disable-token-discipline). Default false: the active turn-count reduction
+  // policy is injected on the live vtrace context path, conditional on per-section
+  // capsule confidence (strong => patch-first, weak => exploratory). When true, no
+  // token-discipline block is injected (a controlled "before" run). Like the
+  // tool-use-discipline flag this is a benchmark/dev override, NOT a product mode;
+  // it changes only the appended discipline text — retrieval, ranking, PIVOT_CHECK,
+  // Capsule generation, critic, repair, and evaluation are untouched.
+  readonly disableTokenDiscipline: boolean;
   readonly sweBenchDataFile: string | null;
   readonly runLabel: string | null;
   // Stage 5C aggregate-runs: the set of run-labels to combine into one report.
@@ -689,6 +703,9 @@ const DEFAULT_CONFIG: CliConfig = {
   // The shared anti-loop tool-use-discipline block is ON by default for both baseline
   // and vtrace; --disable-tool-use-discipline is a benchmark/dev-only override.
   disableToolUseDiscipline: false,
+  // The vtrace-only STAGE5_TOKEN_DISCIPLINE turn-count reduction policy is ON by
+  // default; --disable-token-discipline is a benchmark/dev-only override.
+  disableTokenDiscipline: false,
   sweBenchDataFile: null,
   runLabel: null,
   runLabels: null,
@@ -3577,6 +3594,168 @@ export function detectToolUseDisciplineText(text: string): boolean {
   return text.includes(TOOL_USE_DISCIPLINE_MARKER);
 }
 
+// ---------------------------------------------------------------------------
+// STAGE5_TOKEN_DISCIPLINE — active turn-count reduction policy (vtrace-only).
+//
+// The Stage 5 token-path audit found VTRACE's measured token overhead was
+// primarily a TURN-COUNT / cache-read amplification problem, not a capsule-size
+// problem: 96% of the positive token deltas were cache-read movement caused by
+// extra agent turns (repeated Read/Grep/Bash search loops re-reading the prefix).
+// matplotlib-22719 is the canonical blowup (+1.55M tokens, 30 tool calls, a
+// 16-deep Bash loop, repeated Read/Grep) and VTRACE even lost a baseline-resolved
+// task. This block converts that finding into an ACTIVE policy: when Capsule v2
+// supplies a strong lead pivot, instruct the agent to patch from the capsule
+// before broad rediscovery, with concrete pre-edit tool budgets.
+//
+// Unlike the generic, baseline+vtrace tool-use-discipline block, this rides the
+// VTRACE-ONLY context path (it references the capsule the baseline never sees) and
+// is conditional on capsule confidence. It changes NO retrieval, ranking, candidate
+// generation, or patch application — it is pure tool-use discipline text.
+// ---------------------------------------------------------------------------
+
+// Version of the token-discipline block. Bump when the wording/budgets change so
+// reports can tell which generation of the policy a run carried.
+export const STAGE5_TOKEN_DISCIPLINE_VERSION = "v1";
+
+// Marker uniquely identifying the injected token-discipline block. Distinct from
+// the PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY / tool-use-discipline markers so
+// detectors never cross-match.
+export const TOKEN_DISCIPLINE_MARKER = "## STAGE5_TOKEN_DISCIPLINE";
+
+// Pre-edit tool budgets for the strong-context patch-first policy. Re-exported
+// from the scorer module so the prose the agent reads and the budget the scorer
+// checks share one source of truth.
+export {
+  DEFAULT_PRE_EDIT_BASH_BUDGET,
+  DEFAULT_PRE_EDIT_SEARCH_BUDGET,
+  DEFAULT_REPEATED_FILE_READ_LIMIT,
+};
+
+// strong_context_patch_first: Capsule v2 gave a strong lead — patch-first, low-search.
+// weak_context_explore:      context is weak/absent — allow more exploration.
+// disabled:                  the policy was suppressed (no block injected).
+export type TokenDisciplineMode =
+  | "strong_context_patch_first"
+  | "weak_context_explore"
+  | "disabled";
+
+// The configurable budget numbers rendered into the block and recorded in metadata.
+export interface TokenDisciplineBudgets {
+  readonly preEditSearchBudget: number;
+  readonly preEditBashBudget: number;
+  readonly repeatedFileReadLimit: number;
+}
+
+export const DEFAULT_TOKEN_DISCIPLINE_BUDGETS: TokenDisciplineBudgets = {
+  preEditSearchBudget: DEFAULT_PRE_EDIT_SEARCH_BUDGET,
+  preEditBashBudget: DEFAULT_PRE_EDIT_BASH_BUDGET,
+  repeatedFileReadLimit: DEFAULT_REPEATED_FILE_READ_LIMIT,
+};
+
+// Capsule-confidence assessment for one section. strong_context requires ALL of:
+// a Capsule v2 lead pivot, that lead pivot naming a file, support snippets, and the
+// context having actually been injected (no error / non-empty body). Anything else
+// is weak context (more exploration allowed). Pure and null-safe.
+export interface ContextStrength {
+  readonly mode: TokenDisciplineMode;
+  readonly strongContext: boolean;
+  readonly leadPivotPresent: boolean;
+  readonly leadPivotFilePresent: boolean;
+  readonly supportSnippetsPresent: boolean;
+  readonly contextInjected: boolean;
+  readonly reason: string;
+}
+
+export function classifyContextStrength(section: VtraceContextSection): ContextStrength {
+  const contextInjected = section.error === null && section.rawContext.trim().length > 0;
+  const pivots = section.classification?.capsulePivots ?? null;
+  const support = section.classification?.capsuleSupport ?? null;
+  const leadPivot = pivots && pivots.length > 0 ? pivots[0] : null;
+  const leadPivotPresent = leadPivot !== null;
+  const leadPivotFilePresent = leadPivot !== null && (leadPivot.path ?? "").trim().length > 0;
+  const supportSnippetsPresent = support !== null && support.length > 0;
+  const strongContext =
+    contextInjected && leadPivotPresent && leadPivotFilePresent && supportSnippetsPresent;
+  const mode: TokenDisciplineMode = strongContext
+    ? "strong_context_patch_first"
+    : "weak_context_explore";
+  const missing: string[] = [];
+  if (!contextInjected) missing.push("context not injected");
+  if (!leadPivotPresent) missing.push("no lead pivot");
+  else if (!leadPivotFilePresent) missing.push("lead pivot has no file");
+  if (!supportSnippetsPresent) missing.push("no support snippets");
+  const reason = strongContext
+    ? "strong context: lead pivot + file + support + injected"
+    : `weak context: ${missing.join(", ")}`;
+  return {
+    mode,
+    strongContext,
+    leadPivotPresent,
+    leadPivotFilePresent,
+    supportSnippetsPresent,
+    contextInjected,
+    reason,
+  };
+}
+
+// Build the token-discipline block for a given mode. Returns null for "disabled".
+// The strong-context block is patch-first with concrete pre-edit budgets; the
+// weak-context block deliberately permits more exploration (the capsule is not a
+// reliable lead, so forcing patch-first would be wrong).
+export function buildTokenDisciplineBlock(
+  mode: TokenDisciplineMode,
+  budgets: TokenDisciplineBudgets = DEFAULT_TOKEN_DISCIPLINE_BUDGETS,
+): string | null {
+  if (mode === "disabled") return null;
+  if (mode === "weak_context_explore") {
+    return [
+      TOKEN_DISCIPLINE_MARKER,
+      "",
+      "The context capsule for this task is weak or incomplete: there is no strong, "
+        + "file-anchored lead pivot. More exploration is warranted here.",
+      "- Search to localize the failing behavior, but keep each search focused and state "
+        + "the next concrete file/function after each one.",
+      "- Avoid broad recursive grep loops and long Bash inspection loops; widen only when a "
+        + "focused search fails.",
+      "- Once the edit location is clear, stop searching and make the smallest patch.",
+    ].join("\n");
+  }
+  // strong_context_patch_first
+  return [
+    TOKEN_DISCIPLINE_MARKER,
+    "",
+    "The context capsule is precomputed and provides a strong lead pivot. Use it as the "
+      + "primary source of truth.",
+    "",
+    "Before calling tools:",
+    "1. Read the capsule pivots and support snippets.",
+    "2. Decide whether the edit target is already identified.",
+    "3. If the target file/function is present, patch first; do not rediscover it with grep.",
+    "",
+    "Tool budget:",
+    `- At most ${budgets.preEditSearchBudget} search/grep/read calls before the first edit when the capsule has a lead pivot.`,
+    `- At most ${budgets.preEditBashBudget} Bash inspection command before the first edit unless tests are being run.`,
+    "- Do not run broad recursive grep after the capsule already names a pivot file.",
+    `- Do not repeatedly read or grep the same file/symbol (at most ${budgets.repeatedFileReadLimit} re-read).`,
+    "- Do not use Bash loops to inspect many files unless the capsule lacks a plausible target.",
+    "- If you need more context, prefer one focused read around the lead pivot.",
+    "- If the capsule provides deferred refs, expand only the exact ref needed.",
+    "",
+    "Patch trigger:",
+    "- If the capsule lead pivot and support evidence identify a plausible edit location, make "
+      + "the minimal patch before doing more search.",
+    "",
+    "Stop condition:",
+    "- After two unsuccessful searches, stop searching and state the uncertainty rather than looping.",
+  ].join("\n");
+}
+
+// Does an assembled prompt/snapshot carry the token-discipline block? Independent
+// re-scan of the final text. Observability only.
+export function detectTokenDisciplineText(text: string): boolean {
+  return text.includes(TOKEN_DISCIPLINE_MARKER);
+}
+
 export function buildVtraceContextMarkdown(
   sections: readonly VtraceContextSection[],
   // `pivotCheckPolicy` (helper fallback "risk_gated"; the Stage 5 run path passes
@@ -3593,6 +3772,11 @@ export function buildVtraceContextMarkdown(
     disablePivotCheck?: boolean;
     disableEditGuard?: boolean;
     disablePatchVerify?: boolean;
+    // Opt-in: inject the STAGE5_TOKEN_DISCIPLINE block (vtrace-only turn-count
+    // reduction policy). Default false so existing callers/snapshots are unchanged;
+    // the live Stage 5 run path opts in. Budgets default to DEFAULT_TOKEN_DISCIPLINE_BUDGETS.
+    injectTokenDiscipline?: boolean;
+    tokenDisciplineBudgets?: TokenDisciplineBudgets;
   },
 ): {
   markdown: string;
@@ -3602,6 +3786,14 @@ export function buildVtraceContextMarkdown(
   pivotCheckInjected: boolean;
   editGuardInjected: boolean;
   patchVerifyInjected: boolean;
+  // Token-discipline policy outcome (representative across sections): whether the
+  // block was injected, the mode chosen, and the budgets rendered.
+  tokenDisciplineInjected: boolean;
+  tokenDisciplineMode: TokenDisciplineMode;
+  tokenDisciplineVersion: string;
+  preEditSearchBudget: number;
+  preEditBashBudget: number;
+  repeatedFileReadLimit: number;
   // The effective policy and the representative section's decision (the injecting
   // section when one qualified, else the first Capsule v2 section), so run metadata
   // can record the policy, its rationale, and the deterministic risk signals.
@@ -3633,6 +3825,14 @@ export function buildVtraceContextMarkdown(
   let pivotCheckInjected = false;
   let editGuardInjected = false;
   let patchVerifyInjected = false;
+  // Token-discipline policy state. The representative mode is the FIRST section's
+  // (a single-instance eval has exactly one); strong wins over weak when any
+  // section is strong, so a multi-instance context reports the strictest mode it
+  // applied. `disabled` when the caller did not opt in.
+  const tokenDisciplineBudgets = limits.tokenDisciplineBudgets ?? DEFAULT_TOKEN_DISCIPLINE_BUDGETS;
+  const tokenDisciplineOptIn = limits.injectTokenDiscipline === true;
+  let tokenDisciplineInjected = false;
+  let tokenDisciplineMode: TokenDisciplineMode = "disabled";
   for (const section of sections) {
     const { instance } = section;
     // NOTE: the full problem statement is intentionally NOT repeated here. The
@@ -3697,6 +3897,21 @@ export function buildVtraceContextMarkdown(
         }
       }
     }
+    // STAGE5_TOKEN_DISCIPLINE: active turn-count reduction policy, conditional on
+    // this section's capsule confidence. Strong context => patch-first/low-search;
+    // weak context => exploratory. Injected only when the caller opts in.
+    if (tokenDisciplineOptIn) {
+      const strength = classifyContextStrength(section);
+      const block = buildTokenDisciplineBlock(strength.mode, tokenDisciplineBudgets);
+      if (block !== null) {
+        lines.push(block, "");
+        tokenDisciplineInjected = true;
+        // Strong wins over weak when reporting a single representative mode.
+        if (strength.mode === "strong_context_patch_first" || tokenDisciplineMode === "disabled") {
+          tokenDisciplineMode = strength.mode;
+        }
+      }
+    }
     lines.push(
       "## Instruction",
       "",
@@ -3730,6 +3945,12 @@ export function buildVtraceContextMarkdown(
     pivotCheckReason: repDecision.reason,
     pivotCheckRiskSignals: repDecision.riskSignals,
     pivotCheckWouldInjectUnderMultiPivot: repDecision.wouldInjectUnderMultiPivot,
+    tokenDisciplineInjected,
+    tokenDisciplineMode: tokenDisciplineInjected ? tokenDisciplineMode : "disabled",
+    tokenDisciplineVersion: STAGE5_TOKEN_DISCIPLINE_VERSION,
+    preEditSearchBudget: tokenDisciplineBudgets.preEditSearchBudget,
+    preEditBashBudget: tokenDisciplineBudgets.preEditBashBudget,
+    repeatedFileReadLimit: tokenDisciplineBudgets.repeatedFileReadLimit,
   };
 }
 
@@ -4016,6 +4237,9 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     pivotCheckPolicy: effectivePivotCheckPolicy,
     disableEditGuard: config.disableEditGuard,
     disablePatchVerify: config.disablePatchVerify,
+    // Active turn-count reduction policy: inject STAGE5_TOKEN_DISCIPLINE on the
+    // live vtrace path (vtrace-only; conditional on per-section capsule confidence).
+    injectTokenDiscipline: !config.disableTokenDiscipline,
   });
   await writeFile(contextFile, assembled.markdown);
 
@@ -7034,6 +7258,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
+      case "--disable-token-discipline": config.disableTokenDiscipline = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
       case "--run-labels":
@@ -7095,6 +7320,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
       "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",
       "  --disable-tool-use-discipline                 benchmark/dev-only: suppress the shared anti-loop tool-use-discipline block injected into BOTH baseline and vtrace prompts (default: injected). Not a user-facing product mode",
+      "  --disable-token-discipline                    benchmark/dev-only: suppress the vtrace-only STAGE5_TOKEN_DISCIPLINE turn-count reduction policy (strong-context patch-first / weak-context explore) (default: injected). Not a user-facing product mode",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),

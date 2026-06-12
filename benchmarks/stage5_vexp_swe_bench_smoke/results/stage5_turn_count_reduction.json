@@ -1,0 +1,269 @@
+{
+  "budgets": {
+    "preEditSearchBudget": 2,
+    "preEditBashBudget": 1,
+    "repeatedFileReadLimit": 1
+  },
+  "cases": [
+    {
+      "instanceId": "django__django-10880",
+      "tokenDeltaPct": 45.18053629218678,
+      "isOverhead": true,
+      "hasTelemetry": false,
+      "risk": "unknown",
+      "waste": null,
+      "turnCountCaused": false,
+      "wouldGetPatchFirst": false,
+      "wouldBeCappedByBudget": false,
+      "needsRerun": true,
+      "reasons": [
+        "overhead case with no ordered tool-call telemetry — cause cannot be attributed; needs a paired rerun"
+      ]
+    },
+    {
+      "instanceId": "django__django-11095",
+      "tokenDeltaPct": 86.5452605145178,
+      "isOverhead": true,
+      "hasTelemetry": false,
+      "risk": "unknown",
+      "waste": null,
+      "turnCountCaused": false,
+      "wouldGetPatchFirst": false,
+      "wouldBeCappedByBudget": false,
+      "needsRerun": true,
+      "reasons": [
+        "overhead case with no ordered tool-call telemetry — cause cannot be attributed; needs a paired rerun"
+      ]
+    },
+    {
+      "instanceId": "django__django-11490",
+      "tokenDeltaPct": -29.178100411014153,
+      "isOverhead": false,
+      "hasTelemetry": false,
+      "risk": "unknown",
+      "waste": null,
+      "turnCountCaused": false,
+      "wouldGetPatchFirst": false,
+      "wouldBeCappedByBudget": false,
+      "needsRerun": false,
+      "reasons": [
+        "no ordered tool-call telemetry (not an overhead case)"
+      ]
+    },
+    {
+      "instanceId": "django__django-11728",
+      "tokenDeltaPct": -30.417531984719126,
+      "isOverhead": false,
+      "hasTelemetry": false,
+      "risk": "unknown",
+      "waste": null,
+      "turnCountCaused": false,
+      "wouldGetPatchFirst": false,
+      "wouldBeCappedByBudget": false,
+      "needsRerun": false,
+      "reasons": [
+        "no ordered tool-call telemetry (not an overhead case)"
+      ]
+    },
+    {
+      "instanceId": "django__django-11740",
+      "tokenDeltaPct": -22.51527279505239,
+      "isOverhead": false,
+      "hasTelemetry": false,
+      "risk": "unknown",
+      "waste": null,
+      "turnCountCaused": false,
+      "wouldGetPatchFirst": false,
+      "wouldBeCappedByBudget": false,
+      "needsRerun": false,
+      "reasons": [
+        "no ordered tool-call telemetry (not an overhead case)"
+      ]
+    },
+    {
+      "instanceId": "astropy__astropy-14369",
+      "tokenDeltaPct": 9.396085508854268,
+      "isOverhead": true,
+      "hasTelemetry": true,
+      "risk": "high",
+      "waste": {
+        "toolCallCount": 23,
+        "bashCount": 13,
+        "searchLikeCount": 2,
+        "repeatedFileReads": 1,
+        "repeatedSearches": 0,
+        "preEditToolCalls": 9,
+        "longBashLoopHeuristic": true,
+        "repeatedSearchHeuristic": false,
+        "strongContextOversearch": true,
+        "likelyCacheReadAmplification": true,
+        "tokenReductionRisk": "high",
+        "reasons": [
+          "long Bash loop: 13 Bash calls (>= 8)",
+          "cache-read amplification: 72% of the positive token delta is cache-read movement"
+        ]
+      },
+      "turnCountCaused": true,
+      "wouldGetPatchFirst": true,
+      "wouldBeCappedByBudget": true,
+      "needsRerun": false,
+      "reasons": [
+        "long Bash loop: 13 Bash calls (>= 8)",
+        "cache-read amplification: 72% of the positive token delta is cache-read movement",
+        "strong capsule context → strong_context_patch_first policy would apply",
+        "pre-edit budgets (search 2, bash 1) would have capped this run"
+      ]
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "tokenDeltaPct": 132.74094964610234,
+      "isOverhead": true,
+      "hasTelemetry": true,
+      "risk": "high",
+      "waste": {
+        "toolCallCount": 30,
+        "bashCount": 16,
+        "searchLikeCount": 4,
+        "repeatedFileReads": 5,
+        "repeatedSearches": 0,
+        "preEditToolCalls": 7,
+        "longBashLoopHeuristic": true,
+        "repeatedSearchHeuristic": false,
+        "strongContextOversearch": true,
+        "likelyCacheReadAmplification": true,
+        "tokenReductionRisk": "high",
+        "reasons": [
+          "long Bash loop: 16 Bash calls (>= 8)",
+          "cache-read amplification: 98% of the positive token delta is cache-read movement"
+        ]
+      },
+      "turnCountCaused": true,
+      "wouldGetPatchFirst": true,
+      "wouldBeCappedByBudget": true,
+      "needsRerun": false,
+      "reasons": [
+        "long Bash loop: 16 Bash calls (>= 8)",
+        "cache-read amplification: 98% of the positive token delta is cache-read movement",
+        "strong capsule context → strong_context_patch_first policy would apply",
+        "pre-edit budgets (search 2, bash 1) would have capped this run"
+      ]
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "tokenDeltaPct": 29.83954360033546,
+      "isOverhead": true,
+      "hasTelemetry": true,
+      "risk": "medium",
+      "waste": {
+        "toolCallCount": 9,
+        "bashCount": 3,
+        "searchLikeCount": 1,
+        "repeatedFileReads": 1,
+        "repeatedSearches": 0,
+        "preEditToolCalls": 4,
+        "longBashLoopHeuristic": false,
+        "repeatedSearchHeuristic": false,
+        "strongContextOversearch": false,
+        "likelyCacheReadAmplification": true,
+        "tokenReductionRisk": "medium",
+        "reasons": [
+          "1 repeated file read(s)",
+          "cache-read amplification: 100% of the positive token delta is cache-read movement"
+        ]
+      },
+      "turnCountCaused": true,
+      "wouldGetPatchFirst": true,
+      "wouldBeCappedByBudget": true,
+      "needsRerun": false,
+      "reasons": [
+        "1 repeated file read(s)",
+        "cache-read amplification: 100% of the positive token delta is cache-read movement",
+        "strong capsule context → strong_context_patch_first policy would apply",
+        "pre-edit budgets (search 2, bash 1) would have capped this run"
+      ]
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "tokenDeltaPct": 1.8051439348407288,
+      "isOverhead": true,
+      "hasTelemetry": true,
+      "risk": "low",
+      "waste": {
+        "toolCallCount": 7,
+        "bashCount": 2,
+        "searchLikeCount": 1,
+        "repeatedFileReads": 0,
+        "repeatedSearches": 0,
+        "preEditToolCalls": 2,
+        "longBashLoopHeuristic": false,
+        "repeatedSearchHeuristic": false,
+        "strongContextOversearch": false,
+        "likelyCacheReadAmplification": false,
+        "tokenReductionRisk": "low",
+        "reasons": [
+          "no turn-count waste signal"
+        ]
+      },
+      "turnCountCaused": false,
+      "wouldGetPatchFirst": true,
+      "wouldBeCappedByBudget": true,
+      "needsRerun": false,
+      "reasons": [
+        "no turn-count waste signal",
+        "strong capsule context → strong_context_patch_first policy would apply",
+        "pre-edit budgets (search 2, bash 1) would have capped this run"
+      ]
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "tokenDeltaPct": 0.5660186603753709,
+      "isOverhead": true,
+      "hasTelemetry": true,
+      "risk": "medium",
+      "waste": {
+        "toolCallCount": 12,
+        "bashCount": 4,
+        "searchLikeCount": 2,
+        "repeatedFileReads": 1,
+        "repeatedSearches": 0,
+        "preEditToolCalls": 5,
+        "longBashLoopHeuristic": false,
+        "repeatedSearchHeuristic": false,
+        "strongContextOversearch": false,
+        "likelyCacheReadAmplification": true,
+        "tokenReductionRisk": "medium",
+        "reasons": [
+          "1 repeated file read(s)",
+          "4 Bash calls (>= 4)",
+          "12 total tool calls (>= 12)",
+          "cache-read amplification (proxy): high tool-call count with a positive token delta"
+        ]
+      },
+      "turnCountCaused": true,
+      "wouldGetPatchFirst": true,
+      "wouldBeCappedByBudget": true,
+      "needsRerun": false,
+      "reasons": [
+        "1 repeated file read(s)",
+        "4 Bash calls (>= 4)",
+        "12 total tool calls (>= 12)",
+        "cache-read amplification (proxy): high tool-call count with a positive token delta",
+        "strong capsule context → strong_context_patch_first policy would apply",
+        "pre-edit budgets (search 2, bash 1) would have capped this run"
+      ]
+    }
+  ],
+  "summary": {
+    "caseCount": 10,
+    "overheadCount": 7,
+    "highRiskCount": 2,
+    "turnCountCausedCount": 4,
+    "patchFirstCount": 5,
+    "cappedCount": 5,
+    "needsRerunCount": 2,
+    "highRiskInstances": [
+      "astropy__astropy-14369",
+      "matplotlib__matplotlib-22719"
+    ]
+  }
+}

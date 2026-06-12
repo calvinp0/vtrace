@@ -189,6 +189,7 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     pivotCheckPolicy: "strict_risk_gated",
     disablePivotCheck: false,
     disableToolUseDiscipline: false,
+    disableTokenDiscipline: false,
     sweBenchDataFile: null,
     runLabel: null,
     runLabels: null,
