@@ -52,6 +52,7 @@ function improvedRerun(resolved: boolean): NewRerun {
       runLabel: "eval-token-discipline-pilot-matplotlib-22719",
       totalTokens: 1_300_000,
       cacheReadTokens: 1_100_000,
+      costUsd: 0.6,
       toolCallCount: 8,
       bashCount: 2,
       repeatedReadOrSearch: 0,
@@ -61,6 +62,7 @@ function improvedRerun(resolved: boolean): NewRerun {
       runLabel: "eval-token-discipline-pilot-matplotlib-22719",
       totalTokens: 1_150_000,
       cacheReadTokens: 1_080_000,
+      costUsd: 0.55,
       toolCallCount: 9,
       bashCount: 3,
       repeatedReadOrSearch: 0,
@@ -141,6 +143,66 @@ test("loadNewRerun reads tool-call stats, eval resolution, and ledger tokens", a
   assert.equal(n!.tokenDisciplineInjected, true);
 });
 
+// loadNewRerun reads token/cost from the swebench-*.jsonl row when _run.meta.json
+// carries no token totals (the real new-rerun path: tool counts in _run.meta.json,
+// token/cost only in the per-instance swebench results row).
+test("loadNewRerun reads token/cost from swebench-*.jsonl when _run.meta.json lacks token totals", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "pilot-jsonl-"));
+  const label = "eval-token-discipline-pilot-matplotlib-22719";
+  for (const condition of ["vtrace", "baseline"] as const) {
+    const raw = path.join(dir, "runs", label, "raw", condition);
+    await mkdir(raw, { recursive: true });
+    // _run.meta.json: ordered telemetry / tool counts, but NO token totals.
+    await writeFile(
+      path.join(raw, "_run.meta.json"),
+      JSON.stringify({ condition, vtraceToolCallCount: condition === "vtrace" ? 10 : 11, orderedTelemetryAvailable: true }),
+    );
+    await writeFile(
+      path.join(raw, "_tool_calls.json"),
+      JSON.stringify([
+        { tool: "Read", category: "read", path: "a.py" },
+        { tool: "Edit", category: "edit", path: "a.py" },
+        { tool: "Bash", category: "other", path: null },
+      ]),
+    );
+    await writeFile(path.join(raw, "_eval.meta.json"), JSON.stringify({ resolvedCount: 0 }));
+  }
+  // VTRACE swebench row: total = 230 + 56 + 1_120_119 + 67_260 = 1_187_665.
+  await writeFile(
+    path.join(dir, "runs", label, "raw", "vtrace", "swebench-2026-06-12.jsonl"),
+    JSON.stringify({
+      instanceId: INSTANCE,
+      inputTokens: 230,
+      outputTokens: 56,
+      cacheReadTokens: 1_120_119,
+      cacheCreationTokens: 67_260,
+      costUsd: 0.545993,
+      resolved: false,
+    }) + "\n",
+  );
+  // Baseline swebench row: total = 230 + 52 + 1_060_520 + 55_448 = 1_116_250.
+  await writeFile(
+    path.join(dir, "runs", label, "raw", "baseline", "swebench-2026-06-12.jsonl"),
+    JSON.stringify({
+      instanceId: INSTANCE,
+      inputTokens: 230,
+      outputTokens: 52,
+      cacheReadTokens: 1_060_520,
+      cacheCreationTokens: 55_448,
+      costUsd: 0.509173,
+      resolved: false,
+    }) + "\n",
+  );
+  const n = await loadNewRerun(dir, label, { injected: true, mode: "strong_context_patch_first", risk: "medium" });
+  assert.ok(n);
+  assert.equal(n!.vtrace.totalTokens, 1_187_665);
+  assert.equal(n!.vtrace.cacheReadTokens, 1_120_119);
+  assert.equal(n!.vtrace.costUsd, 0.545993);
+  assert.equal(n!.vtrace.resolved, false);
+  assert.equal(n!.baseline.totalTokens, 1_116_250);
+  assert.equal(n!.baseline.resolved, false);
+});
+
 // When no run is on disk, loadNewRerun returns null (the run has not happened).
 test("loadNewRerun returns null when no telemetry exists", async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), "pilot-empty-"));
@@ -219,6 +281,39 @@ test("buildPilotReport withholds readiness on a worse-than-historical regression
   });
   assert.equal(report.verdict.qualityWorseThanHistorical, true);
   assert.equal(report.readyForMoreOverheadCases, false);
+});
+
+// Readiness requires REAL token totals: if the new rerun's totalTokens is null,
+// readyForMoreOverheadCases is false regardless of any turn-count improvement.
+test("buildPilotReport withholds readiness when token totals are unavailable", () => {
+  const rerunNoTokens: NewRerun = {
+    ...improvedRerun(true),
+    vtrace: { ...improvedRerun(true).vtrace, totalTokens: null, cacheReadTokens: null },
+  };
+  const report = buildPilotReport({
+    generatedAt: null,
+    historical: historicalFixture(),
+    newRerun: rerunNoTokens,
+    newRunLabel: "eval-token-discipline-pilot-matplotlib-22719",
+    preflightPassed: true,
+  });
+  // Turn count still improved, but without token totals we are not ready.
+  assert.equal(report.turnCountImproved, true);
+  assert.equal(report.readyForMoreOverheadCases, false);
+});
+
+// New VTRACE total-token overhead vs the same-label baseline is surfaced.
+test("buildPilotReport computes new VTRACE overhead vs same-label baseline", () => {
+  const report = buildPilotReport({
+    generatedAt: null,
+    historical: historicalFixture(),
+    newRerun: improvedRerun(false),
+    newRunLabel: "eval-token-discipline-pilot-matplotlib-22719",
+    preflightPassed: true,
+  });
+  // (1,300,000 - 1,150,000) / 1,150,000 ≈ 0.1304
+  assert.ok(report.newVtraceOverheadVsBaselineFraction! > 0.12);
+  assert.ok(report.newVtraceOverheadVsBaselineFraction! < 0.14);
 });
 
 // Pending-state report (no live rerun) must say so unambiguously and honestly.

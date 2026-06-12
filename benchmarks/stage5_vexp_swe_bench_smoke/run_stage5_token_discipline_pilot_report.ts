@@ -14,7 +14,7 @@
 // `_eval.meta.json` resolution) or from an explicit summary file. When no new run
 // is present, the report says so and leaves the new-side fields null.
 
-import { readFile, mkdir, writeFile } from "node:fs/promises";
+import { readFile, readdir, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { computeToolCallStats, type RawToolCall } from "./run_stage5_token_path_audit";
 import { TURN_COUNT_LONG_BASH_LOOP_THRESHOLD } from "../../src/capsule/turnCountWaste";
@@ -39,6 +39,7 @@ export interface ArmTelemetry {
   readonly runLabel: string | null;
   readonly totalTokens: number | null;
   readonly cacheReadTokens: number | null;
+  readonly costUsd: number | null;
   readonly toolCallCount: number | null;
   readonly bashCount: number | null;
   readonly repeatedReadOrSearch: number | null;
@@ -110,6 +111,14 @@ function riskRank(risk: string | null): number | null {
 function reductionFraction(before: number | null, now: number | null): number | null {
   if (before === null || now === null || before <= 0) return null;
   return (before - now) / before;
+}
+
+// Relative overhead (can be negative) of `vtrace` vs its same-label `baseline`;
+// null when either is missing or `baseline` is non-positive. Positive = VTRACE
+// spent MORE tokens than the paired baseline.
+function overheadFraction(baseline: number | null, vtrace: number | null): number | null {
+  if (baseline === null || vtrace === null || baseline <= 0) return null;
+  return (vtrace - baseline) / baseline;
 }
 
 export function computeVerdict(historical: HistoricalOverhead, newRerun: NewRerun | null): PilotVerdict {
@@ -223,6 +232,12 @@ export interface PilotReport {
   readonly tokenDisciplineMode: string;
   readonly historicalVtraceTotalTokens: number | null;
   readonly newVtraceTotalTokens: number | null;
+  readonly newBaselineTotalTokens: number | null;
+  readonly newVtraceCacheReadTokens: number | null;
+  readonly newVtraceCostUsd: number | null;
+  readonly newBaselineCostUsd: number | null;
+  // VTRACE total-token overhead vs its own same-label baseline in the new rerun.
+  readonly newVtraceOverheadVsBaselineFraction: number | null;
   readonly historicalVtraceToolCalls: number | null;
   readonly newVtraceToolCalls: number | null;
   readonly historicalVtraceBashCount: number | null;
@@ -261,14 +276,24 @@ export function buildPilotReport(opts: {
   const { historical, newRerun } = opts;
   const verdict = computeVerdict(historical, newRerun);
 
-  // Readiness for MORE overhead cases: we need real evidence of an overhead win
-  // AND we must not have made resolution worse than the historical VTRACE run.
-  // (matplotlib-22719 was already a VTRACE loss; the bar for a pilot whose goal is
-  // overhead reduction is "cut the blowup without losing ground we held".) The
-  // baseline gap is reported separately as qualityRegressed, never hidden.
-  const overheadOrTurnImproved = verdict.tokenOverheadImproved === true || verdict.turnCountImproved === true;
+  // Readiness for MORE overhead cases. This requires REAL token numbers: if the new
+  // rerun's token totals are unavailable, we cannot claim an overhead win, so we are
+  // not ready regardless of any other signal. When token totals ARE available, we
+  // additionally require a turn-count improvement and that we did not lose resolution
+  // ground the historical VTRACE run held. (matplotlib-22719 was already a VTRACE
+  // loss; the bar for a pilot whose goal is overhead reduction is "cut the blowup
+  // without losing ground we held".) The baseline gap is reported separately as
+  // qualityRegressed, never hidden.
+  const tokenTotalsAvailable = newRerun !== null && newRerun.vtrace.totalTokens !== null;
   const readyForMoreOverheadCases =
-    newRerun !== null && overheadOrTurnImproved && verdict.qualityWorseThanHistorical !== true;
+    tokenTotalsAvailable &&
+    verdict.turnCountImproved === true &&
+    verdict.qualityWorseThanHistorical === false;
+
+  const newVtraceOverheadVsBaselineFraction = overheadFraction(
+    newRerun?.baseline.totalTokens ?? null,
+    newRerun?.vtrace.totalTokens ?? null,
+  );
 
   const recommendedNextStep = computeRecommendedNextStep(newRerun, verdict, readyForMoreOverheadCases);
 
@@ -283,6 +308,11 @@ export function buildPilotReport(opts: {
     tokenDisciplineMode: newRerun?.tokenDisciplineMode ?? "disabled",
     historicalVtraceTotalTokens: historical.vtraceTotalTokens,
     newVtraceTotalTokens: newRerun?.vtrace.totalTokens ?? null,
+    newBaselineTotalTokens: newRerun?.baseline.totalTokens ?? null,
+    newVtraceCacheReadTokens: newRerun?.vtrace.cacheReadTokens ?? null,
+    newVtraceCostUsd: newRerun?.vtrace.costUsd ?? null,
+    newBaselineCostUsd: newRerun?.baseline.costUsd ?? null,
+    newVtraceOverheadVsBaselineFraction,
     historicalVtraceToolCalls: historical.vtraceToolCallCount,
     newVtraceToolCalls: newRerun?.vtrace.toolCallCount ?? null,
     historicalVtraceBashCount: historical.vtraceBashCount,
@@ -339,6 +369,9 @@ function fmtBool(v: boolean | null): string {
 }
 function fmtPct(frac: number | null): string {
   return frac === null ? "n/a" : `${(frac * 100).toFixed(1)}%`;
+}
+function fmtUsd(v: number | null): string {
+  return v === null ? "n/a" : `$${v.toFixed(2)}`;
 }
 
 export function renderJson(report: PilotReport): string {
@@ -427,11 +460,17 @@ export function renderMarkdown(report: PilotReport): string {
     L.push("| --- | --- | --- |");
     L.push(`| total tokens | ${fmtNum(n.baseline.totalTokens)} | ${fmtNum(n.vtrace.totalTokens)} |`);
     L.push(`| cacheRead tokens | ${fmtNum(n.baseline.cacheReadTokens)} | ${fmtNum(n.vtrace.cacheReadTokens)} |`);
+    L.push(`| cost (USD) | ${fmtUsd(n.baseline.costUsd)} | ${fmtUsd(n.vtrace.costUsd)} |`);
     L.push(`| tool calls | ${fmtNum(n.baseline.toolCallCount)} | ${fmtNum(n.vtrace.toolCallCount)} |`);
     L.push(`| Bash calls | ${fmtNum(n.baseline.bashCount)} | ${fmtNum(n.vtrace.bashCount)} |`);
     L.push(`| repeated Read/Grep | ${fmtNum(n.baseline.repeatedReadOrSearch)} | ${fmtNum(n.vtrace.repeatedReadOrSearch)} |`);
     L.push(`| resolved | ${fmtBool(n.baseline.resolved)} | ${fmtBool(n.vtrace.resolved)} |`);
     L.push(`| token-reduction risk | n/a | ${n.tokenReductionRisk ?? "n/a"} |`);
+    L.push("");
+    L.push(
+      `new VTRACE total-token overhead vs the same-label baseline: **${fmtPct(report.newVtraceOverheadVsBaselineFraction)}** `
+        + `(${fmtNum(n.vtrace.totalTokens)} VTRACE vs ${fmtNum(n.baseline.totalTokens)} baseline).`,
+    );
   }
   L.push("");
 
@@ -516,6 +555,60 @@ async function readJson(filePath: string): Promise<unknown | null> {
   }
 }
 
+// Read the FIRST row of the first `swebench-*.jsonl` results file in `rawDir`.
+// This is the per-instance eval/telemetry record (one task per pilot run). Returns
+// null when the directory or file is absent or the row does not parse.
+async function readSwebenchRow(rawDir: string): Promise<Record<string, unknown> | null> {
+  let entries: string[];
+  try {
+    entries = await readdir(rawDir);
+  } catch {
+    return null;
+  }
+  const file = entries
+    .filter((f) => f.startsWith("swebench-") && f.endsWith(".jsonl"))
+    .sort()[0];
+  if (file === undefined) return null;
+  let text: string;
+  try {
+    text = await readFile(path.join(rawDir, file), "utf8");
+  } catch {
+    return null;
+  }
+  const firstLine = text.split("\n").find((l) => l.trim().length > 0);
+  if (firstLine === undefined) return null;
+  try {
+    const row = JSON.parse(firstLine);
+    return row !== null && typeof row === "object" ? (row as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Derive token totals + cost from a record that carries the raw token fields. The
+// total is inputTokens + outputTokens + cacheReadTokens + cacheCreationTokens when
+// all four are present; otherwise it falls back to a pre-aggregated `tokens.total`
+// / `totalTokens`. Returns all-null when no token totals are present at all.
+function tokenTotalsFrom(
+  row: Record<string, unknown> | null,
+): { total: number | null; cacheRead: number | null; cost: number | null } {
+  if (row === null) return { total: null, cacheRead: null, cost: null };
+  const input = asNum(row.inputTokens);
+  const output = asNum(row.outputTokens);
+  const cacheRead = asNum(row.cacheReadTokens);
+  const cacheCreation = asNum(row.cacheCreationTokens);
+  const haveAll = input !== null && output !== null && cacheRead !== null && cacheCreation !== null;
+  const aggregated = (row.tokens ?? {}) as Record<string, unknown>;
+  const total = haveAll
+    ? input! + output! + cacheRead! + cacheCreation!
+    : asNum(aggregated.total ?? row.totalTokens);
+  return {
+    total,
+    cacheRead: cacheRead ?? asNum(aggregated.cacheRead),
+    cost: asNum(row.costUsd ?? aggregated.costUsd),
+  };
+}
+
 interface AuditTask {
   instanceId?: string;
   baselineRunLabel?: string;
@@ -562,8 +655,12 @@ export async function loadHistoricalOverhead(
   };
 }
 
-// Read one arm's tool stats from a run label's `_tool_calls.json`, resolution from
-// `_eval.meta.json`, and tokens from the outcome ledger (keyed runLabel::condition).
+// Read one arm's telemetry for the pilot run:
+//   * ordered tool counts from `_run.meta.json` + the `_tool_calls.json` log,
+//   * resolution from `_eval.meta.json`,
+//   * token/cost from `_run.meta.json` when it carries token totals, otherwise from
+//     the first `raw/<condition>/swebench-*.jsonl` row (the new rerun path),
+//   * the outcome ledger only as a last-resort token fallback.
 async function loadArm(
   resultsDir: string,
   runLabel: string,
@@ -577,17 +674,38 @@ async function loadArm(
   const resolvedFromEval =
     evalMeta && typeof evalMeta.resolvedCount === "number" ? evalMeta.resolvedCount > 0 : null;
 
+  // `_run.meta.json` is the source for ordered telemetry / tool counts. It does not
+  // currently carry token totals, so token/cost fall through to the swebench row.
+  const runMeta = (await readJson(path.join(rawDir, "_run.meta.json"))) as Record<string, unknown> | null;
+
   const ledger = ledgerByKey.get(`${runLabel}::${condition}`) ?? null;
-  const tokens = (ledger?.tokens ?? {}) as Record<string, unknown>;
+  const ledgerTokens = (ledger?.tokens ?? {}) as Record<string, unknown>;
+
+  // Token/cost precedence: _run.meta.json token totals → swebench-*.jsonl row →
+  // outcome ledger. resolved from the swebench row is used when eval meta is absent.
+  let { total: totalTokens, cacheRead: cacheReadTokens, cost: costUsd } = tokenTotalsFrom(runMeta);
+  let resolvedFromRow: boolean | null = null;
+  if (totalTokens === null) {
+    const row = await readSwebenchRow(rawDir);
+    const rowTokens = tokenTotalsFrom(row);
+    totalTokens = rowTokens.total;
+    cacheReadTokens = rowTokens.cacheRead;
+    costUsd = rowTokens.cost;
+    resolvedFromRow = row === null ? null : asBool(row.resolved);
+  }
+  if (totalTokens === null) totalTokens = asNum(ledgerTokens.total);
+  if (cacheReadTokens === null) cacheReadTokens = asNum(ledgerTokens.cacheRead);
+  if (costUsd === null) costUsd = asNum(ledgerTokens.costUsd);
 
   return {
     runLabel,
-    totalTokens: asNum(tokens.total),
-    cacheReadTokens: asNum(tokens.cacheRead),
-    toolCallCount: stats ? stats.toolCallCount : asNum(ledger?.toolCallCount),
+    totalTokens,
+    cacheReadTokens,
+    costUsd,
+    toolCallCount: stats ? stats.toolCallCount : asNum(runMeta?.vtraceToolCallCount ?? ledger?.toolCallCount),
     bashCount: stats ? stats.bashCallCount : null,
     repeatedReadOrSearch: stats ? stats.repeatedReadOrSearchCalls : null,
-    resolved: resolvedFromEval ?? asBool(ledger?.resolved),
+    resolved: resolvedFromEval ?? resolvedFromRow ?? asBool(ledger?.resolved),
   };
 }
 
