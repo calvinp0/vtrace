@@ -3,12 +3,38 @@
 </p>
 
 <p align="center">
-  <strong>Repo-bound, local-first code indexing and MCP context for structural code exploration.</strong>
+  <strong>AST-aware code context capsules for lower-token coding agents.</strong>
+</p>
+
+<p align="center">
+  Repo-bound, local-first code indexing and MCP context for structural code exploration.
 </p>
 
 `vtrace` builds a deterministic index for a local repository, exposes CLI, MCP, and private/local VS Code surfaces, and gives you practical commands for setup, status, context packaging, skeleton views, impact graphs, and other bounded structural analysis.
 
 It is designed for coding agents and human operators that need compact, inspectable repository context without sending the project through a remote indexing service.
+
+## What VTRACE delivers
+
+VTRACE analyzes codebases at the AST/symbol level, combines hybrid search with lightweight code-graph context, and returns compressed context capsules with session memory. In benchmarked workflows, VTRACE reduces first-pass token usage by delivering the smallest useful code evidence instead of dumping whole files or broad grep results.
+
+The product surface, in one line: analyzes codebases at the AST level, identifies the most relevant code via hybrid search, and delivers compressed context capsules with session memory. Up to 74% fewer tokens in benchmarked workflows.
+
+What that means in practice:
+
+- AST/symbol-aware codebase analysis
+- hybrid search
+- compressed context capsules
+- session memory
+- token reduction in benchmarked workflows
+
+### Benchmark caveats
+
+- Token reduction is measured on benchmarked workflows, not guaranteed for every task.
+- First-pass token reduction and repair-side recovery cost are reported separately.
+- A verified generated-parser repair conversion is single-instance evidence, not an aggregate SWE-bench score.
+
+The "up to 74% in benchmarked workflows" phrasing points to the committed benchmark reports; it is a benchmarked-workflow figure, not a universal per-task guarantee. Measured per-stage reductions vary by workload — see the ARC evidence ladder and Stage 5 first-pass accounting in the [Stage 5 benchmark README](./benchmarks/stage5_vexp_swe_bench_smoke/README.md) for the specific committed numbers.
 
 ## What vtrace is for
 
@@ -184,6 +210,28 @@ The README uses the project artwork from [docs/assets/brand](./docs/assets/brand
 - [MCP Tools Reference](./docs/mcp_tools.md)
 - [MCP Tool Cheat Sheet](./docs/mcp_tool_cheat_sheet.md)
 - [Troubleshooting](./docs/troubleshooting.md)
+
+## Product vs engineering controls
+
+VTRACE's public product surface is the context-capsule system. The Stage 5 control-loop work is internal benchmark/engineering machinery, not a user-facing configuration story.
+
+Product surface:
+
+- index code
+- retrieve compact context
+- return context capsule
+- session memory
+- MCP/code-agent integration
+
+Engineering controls (benchmark/internal only):
+
+- ordered telemetry
+- patch-shape probes
+- gated critic/repair
+- Docker verification
+- policy accounting
+
+VTRACE's repair/control-loop experiments are internal benchmark controls, not the public product surface. They are used to avoid blind reruns when compact context was correct but an agent produced a known bad patch shape. Recovery costs are tracked separately from first-pass token-reduction measurements. For the deeper technical write-up, see the [Stage 5 benchmark README](./benchmarks/stage5_vexp_swe_bench_smoke/README.md).
 
 ## Current Boundaries
 

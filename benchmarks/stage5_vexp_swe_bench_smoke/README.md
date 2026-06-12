@@ -30,6 +30,23 @@ It only checks whether the benchmark workflow runs on a tiny subset, and whether
 | Stage 4 | Small autonomous ARC edit tasks           | 4/4 both-passed pairs, 36.45% mean token reduction                             |
 | Stage 5 | External vexp-swe-bench smoke integration | workflow smoke only (this stage)                                               |
 
+## Control loop (internal benchmark machinery)
+
+The Stage 5 repair/control-loop work is internal benchmark/engineering machinery, not the public product surface. It exists to avoid blind reruns when compact context was already correct but an agent produced a known bad patch shape.
+
+For benchmarked agent workflows, VTRACE can record ordered tool telemetry, classify patch-shape failures, use deterministic probes, gate critic/repair attempts, validate repaired patch shape, and keep recovery evidence separate from first-pass token accounting.
+
+Two measurements are kept strictly separate (`first-pass context/token reduction != repair-side recovery cost`):
+
+- **First-pass token reduction** — strict-risk-gated VTRACE first-pass vs baseline on the controlled 10-task set: 25.24% fewer tokens and 8.16% lower cost (7/10 vs 8/10 resolved; strict first-pass remains one resolved task behind baseline). See `results/stage5_token_reduction_vs_recovery.json`.
+- **Recovery-side cost** — one verified generated-parser repair conversion for `astropy__astropy-14369` (`sourcePatchResolved=false` → `repairedPatchResolved=true`), at a separately-tracked recovery cost of $3.0043 (critic $0.1858 + repair $2.8185).
+
+Caveats:
+
+- The verified Astropy generated-parser repair is single-instance evidence that the control loop can recover one patch-quality failure. It is **not** an aggregate SWE-bench score improvement and does **not** imply generated-parser repair generalizes beyond that case.
+- Recovery cost is never merged into first-pass token-reduction rows.
+- The repair/critic gating and its cost cap are internal benchmark controls; they are not user-facing settings and are not something product users configure.
+
 ## Suggested first manual workflow
 
 ```bash
