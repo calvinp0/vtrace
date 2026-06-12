@@ -10,6 +10,11 @@ import {
   type SymbolRecord,
 } from "../domain/types";
 import { detectLanguage } from "../fs/languageDetection";
+import {
+  SOURCE_EXCERPT_DEFAULTS,
+  buildSymbolSourceExcerpt,
+  type SourceExcerpt,
+} from "../source/sourceExcerpt";
 
 export const IMPACT_FORMATS = ["list", "tree", "mermaid"] as const;
 
@@ -19,6 +24,17 @@ export interface GetImpactGraphInput {
   readonly symbolFqn: string;
   readonly depth: number;
   readonly format: ImpactFormat;
+}
+
+/**
+ * Optional knobs that let the product/MCP layer enrich dependents with bounded
+ * inline source excerpts. The default (no `repoRoot`) path is byte-identical to
+ * the pure structural result, so engine tests and determinism are unaffected.
+ */
+export interface GetImpactGraphOptions {
+  readonly repoRoot?: string;
+  readonly includeSourceExcerpts?: boolean;
+  readonly maxExcerpts?: number;
 }
 
 export const IMPACT_GRAPH_ERROR_CODE = Object.freeze({
@@ -39,6 +55,15 @@ export interface ImpactSymbolSummary {
 
 export interface ImpactNode extends ImpactSymbolSummary {
   readonly distance: number;
+  /**
+   * Bounded signature-focused excerpt of the dependent symbol, showing why it
+   * depends on the focal symbol (the caller/referrer source). Present only when
+   * the product layer requested excerpts and source loaded freshly; null when
+   * source was unavailable or the response-wide excerpt budget was exhausted.
+   * Absent entirely on the pure structural (no-repoRoot) path, and never set on
+   * the focal root node (distance 0).
+   */
+  readonly sourceExcerpt?: SourceExcerpt | null;
 }
 
 export interface ImpactEdge {
@@ -113,6 +138,7 @@ const SUPPORTED_EDGE_TYPES = Object.freeze([
 export function getImpactGraph(
   db: Database,
   input: GetImpactGraphInput,
+  options?: GetImpactGraphOptions,
 ): ImpactGraphResult {
   const matches = listSymbolsByFqName(db, input.symbolFqn);
 
@@ -147,7 +173,15 @@ export function getImpactGraph(
 
   const resolvedSymbol = matches[0]!;
   const { distanceById, symbolsById } = discoverImpactSymbols(db, resolvedSymbol, input.depth);
-  const nodes = buildImpactNodes(distanceById, symbolsById);
+  const baseNodes = buildImpactNodes(distanceById, symbolsById);
+  const nodes = options?.repoRoot !== undefined && options.includeSourceExcerpts !== false
+    ? attachImpactSourceExcerpts(
+      db,
+      options.repoRoot,
+      baseNodes,
+      options.maxExcerpts ?? SOURCE_EXCERPT_DEFAULTS.maxImpactExcerpts,
+    )
+    : baseNodes;
   const edges = buildImpactEdges(db, distanceById, symbolsById);
   const primaryParentEdges = buildPrimaryParentEdges(edges, symbolsById);
   const dependentFiles = collectDependentFiles(nodes);
@@ -264,6 +298,37 @@ function buildImpactNodes(
       distance: distanceById.get(symbol.id) ?? 0,
     }))
     .sort(compareImpactNodes);
+}
+
+/**
+ * Attach a bounded signature-focused excerpt to the first `maxExcerpts`
+ * dependent nodes (distance > 0) in deterministic node order. The focal root
+ * node (distance 0) is never enriched. Dependents beyond the budget, or whose
+ * source could not be loaded freshly, get an explicit null marker.
+ */
+function attachImpactSourceExcerpts(
+  db: Database,
+  repoRoot: string,
+  nodes: readonly ImpactNode[],
+  maxExcerpts: number,
+): ImpactNode[] {
+  let emitted = 0;
+
+  return nodes.map((node) => {
+    if (node.distance === 0) {
+      return node;
+    }
+
+    if (emitted >= maxExcerpts) {
+      return { ...node, sourceExcerpt: null };
+    }
+
+    emitted += 1;
+    return {
+      ...node,
+      sourceExcerpt: buildSymbolSourceExcerpt(db, repoRoot, node.symbolId, { mode: "signature" }),
+    };
+  });
 }
 
 function buildImpactEdges(

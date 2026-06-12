@@ -1184,3 +1184,95 @@ test("contains/imports/references edges export canonical stored direction", asyn
     }
   });
 });
+
+test("dependents omit source excerpts unless the product layer requests them", async () => {
+  await withImpactFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = requireImpactGraph(db, {
+        symbolFqn: "src/base.ts::base",
+        depth: 2,
+        format: "list",
+      });
+
+      for (const node of result.nodes) {
+        assert.equal(node.sourceExcerpt, undefined);
+      }
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("dependents include bounded source excerpts when repoRoot is provided", async () => {
+  await withImpactFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = getImpactGraph(db, {
+        symbolFqn: "src/base.ts::base",
+        depth: 2,
+        format: "list",
+      }, { repoRoot });
+
+      assert.equal(result.ok, true);
+      if (!result.ok) {
+        throw new Error("expected success");
+      }
+
+      const root = result.output.nodes.find((node) => node.distance === 0);
+      assert.ok(root, "expected a focal root node");
+      assert.equal(root.sourceExcerpt, undefined);
+
+      const dependents = result.output.nodes.filter((node) => node.distance > 0);
+      assert.ok(dependents.length > 0, "expected at least one dependent");
+
+      const alpha = dependents.find((node) => node.fqName === "src/alpha.ts::alpha");
+      assert.ok(alpha, "expected the alpha dependent");
+      assert.ok(alpha.sourceExcerpt, "expected an excerpt for alpha");
+      assert.equal(alpha.sourceExcerpt.filePath, "src/alpha.ts");
+      assert.ok(alpha.sourceExcerpt.text.includes("alpha"));
+      assert.ok(
+        alpha.sourceExcerpt.text.split("\n").length <= 12,
+        "excerpt must respect the line ceiling",
+      );
+      assert.ok(
+        ["symbol_span", "signature", "fallback_symbol_window"].includes(alpha.sourceExcerpt.reason),
+      );
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("impact excerpts are capped at the response-wide budget", async () => {
+  await withImpactFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = getImpactGraph(db, {
+        symbolFqn: "src/base.ts::base",
+        depth: 5,
+        format: "list",
+      }, { repoRoot, maxExcerpts: 1 });
+
+      assert.equal(result.ok, true);
+      if (!result.ok) {
+        throw new Error("expected success");
+      }
+
+      const dependents = result.output.nodes.filter((node) => node.distance > 0);
+      const withExcerpt = dependents.filter((node) => node.sourceExcerpt != null);
+      const nulled = dependents.filter((node) => node.sourceExcerpt === null);
+
+      assert.equal(withExcerpt.length, 1, "only the budgeted dependent should carry an excerpt");
+      assert.ok(nulled.length > 0, "dependents beyond the budget should be explicitly nulled");
+    } finally {
+      db.close();
+    }
+  });
+});

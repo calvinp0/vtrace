@@ -11,11 +11,28 @@ import {
   type SymbolRecord,
 } from "../domain/types";
 import { detectLanguage } from "../fs/languageDetection";
+import {
+  SOURCE_EXCERPT_DEFAULTS,
+  buildSymbolSourceExcerpt,
+  type SourceExcerpt,
+} from "../source/sourceExcerpt";
 
 export interface SearchLogicFlowInput {
   readonly start: string;
   readonly end: string;
   readonly maxPaths: number;
+}
+
+/**
+ * Optional knobs that let the product/MCP layer enrich the structural result
+ * with bounded inline source excerpts. The default (no `repoRoot`) path is
+ * byte-identical to the pure structural result, so engine tests and determinism
+ * are unaffected.
+ */
+export interface SearchLogicFlowOptions {
+  readonly repoRoot?: string;
+  readonly includeSourceExcerpts?: boolean;
+  readonly maxExcerptsPerPath?: number;
 }
 
 export const LOGIC_FLOW_ERROR_CODE = Object.freeze({
@@ -43,6 +60,14 @@ export interface LogicFlowStep {
   readonly fromFqName: string;
   readonly toSymbolId: string;
   readonly toFqName: string;
+  /**
+   * Bounded excerpt around the edge source (the `from` symbol, where the
+   * call/import/reference originates). Present only when the product layer
+   * requested excerpts and source loaded freshly; null when source was
+   * unavailable or the per-path excerpt budget was exhausted. Absent entirely
+   * on the pure structural (no-repoRoot) path.
+   */
+  readonly sourceExcerpt?: SourceExcerpt | null;
 }
 
 export interface LogicFlowPath {
@@ -118,6 +143,7 @@ const SUPPORTED_EDGE_TYPES = Object.freeze([
 export function searchLogicFlow(
   db: Database,
   input: SearchLogicFlowInput,
+  options?: SearchLogicFlowOptions,
 ): LogicFlowResult {
   const resolvedStart = resolveExactSymbol(db, input.start, "start");
 
@@ -159,6 +185,15 @@ export function searchLogicFlow(
     returnedPaths = enumeratedStepPaths
       .slice(0, input.maxPaths)
       .map((steps, index) => toLogicFlowPath(index + 1, resolvedStart.symbol, steps, symbolsById));
+  }
+
+  if (options?.repoRoot !== undefined && options.includeSourceExcerpts !== false) {
+    returnedPaths = attachFlowSourceExcerpts(
+      db,
+      options.repoRoot,
+      returnedPaths,
+      options.maxExcerptsPerPath ?? SOURCE_EXCERPT_DEFAULTS.maxFlowExcerptsPerPath,
+    );
   }
 
   const observedEdgeTypes = collectObservedEdgeTypes(returnedPaths);
@@ -456,6 +491,41 @@ function toLogicFlowPath(
       toFqName: symbolsById.get(step.dstSymbolId)!.fqName,
     })),
   };
+}
+
+/**
+ * Attach a bounded excerpt of the edge source (the `from` symbol) to the first
+ * `maxExcerptsPerPath` steps of each path. Excerpts are memoized per symbol so a
+ * symbol shared across paths is loaded once. Steps beyond the budget, or whose
+ * source could not be loaded freshly, get an explicit null marker.
+ */
+function attachFlowSourceExcerpts(
+  db: Database,
+  repoRoot: string,
+  paths: readonly LogicFlowPath[],
+  maxExcerptsPerPath: number,
+): LogicFlowPath[] {
+  const excerptCache = new Map<string, SourceExcerpt | null>();
+
+  const excerptFor = (symbolId: string): SourceExcerpt | null => {
+    const cached = excerptCache.get(symbolId);
+
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    const excerpt = buildSymbolSourceExcerpt(db, repoRoot, symbolId, { mode: "span" });
+    excerptCache.set(symbolId, excerpt);
+    return excerpt;
+  };
+
+  return paths.map((path) => ({
+    ...path,
+    steps: path.steps.map((step, index) => ({
+      ...step,
+      sourceExcerpt: index < maxExcerptsPerPath ? excerptFor(step.fromSymbolId) : null,
+    })),
+  }));
 }
 
 function hasCrossLanguagePythonCythonStep(

@@ -154,6 +154,39 @@ test("flow is included with a directional cue resolving start and end", async ()
   });
 });
 
+test("flow paths render compact bounded source excerpts", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const out = runFormatted(db, repoRoot, { query: "trace the flow from beta to base", intent: "explore" });
+    const excerpts = out.flow.paths?.[0]?.sourceExcerpts ?? [];
+    assert.ok(excerpts.length >= 1, "expected at least one inline flow excerpt");
+
+    for (const excerpt of excerpts) {
+      assert.ok(typeof excerpt.filePath === "string" && excerpt.filePath.length > 0);
+      assert.ok(excerpt.startLine >= 1);
+      assert.ok(excerpt.endLine >= excerpt.startLine);
+      assert.ok(
+        excerpt.text.split("\n").length <= 12,
+        "rendered excerpt must stay within the line ceiling",
+      );
+    }
+  });
+});
+
+test("impact dependents render bounded source excerpts", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const out = runFormatted(db, repoRoot, { query: "refactor base function", intent: "refactor" });
+    const dependents = (out.impact.topDependents ?? []).filter((node) => node.distance > 0);
+    assert.ok(dependents.length >= 1, "expected at least one dependent");
+
+    const enriched = dependents.find((node) => node.sourceExcerpt != null);
+    assert.ok(enriched, "expected at least one dependent to carry an inline excerpt");
+    assert.ok(
+      enriched.sourceExcerpt!.text.split("\n").length <= 12,
+      "rendered excerpt must stay within the line ceiling",
+    );
+  });
+});
+
 test("flow falls back to bidirectional probing when no directional cue is present", async () => {
   await withFixture(({ db, repoRoot }) => {
     const out = runFormatted(db, repoRoot, { query: "show the link between beta and base", intent: "explore" });

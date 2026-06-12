@@ -513,3 +513,89 @@ function requireLogicFlow(
 
   return result.output;
 }
+
+test("path steps omit source excerpts unless the product layer requests them", async () => {
+  await withLogicFlowFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = requireLogicFlow(db, {
+        start: "src/beta.ts::beta",
+        end: "src/base.ts::base",
+        maxPaths: 1,
+      });
+
+      for (const path of result.paths) {
+        for (const step of path.steps) {
+          assert.equal(step.sourceExcerpt, undefined);
+        }
+      }
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("path steps include bounded edge-source excerpts when repoRoot is provided", async () => {
+  await withLogicFlowFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = searchLogicFlow(db, {
+        start: "src/beta.ts::beta",
+        end: "src/base.ts::base",
+        maxPaths: 1,
+      }, { repoRoot });
+
+      assert.equal(result.ok, true);
+      if (!result.ok) {
+        throw new Error("expected success");
+      }
+
+      const firstStep = result.output.paths[0]?.steps[0];
+      assert.ok(firstStep, "expected at least one step");
+      assert.ok(firstStep.sourceExcerpt, "expected an excerpt on the first step");
+      // The excerpt is the edge source (the `from` symbol, where the call lives).
+      assert.equal(firstStep.sourceExcerpt.filePath, "src/beta.ts");
+      assert.ok(firstStep.sourceExcerpt.text.includes("beta"));
+      assert.ok(
+        firstStep.sourceExcerpt.text.split("\n").length <= 12,
+        "excerpt must respect the line ceiling",
+      );
+      assert.ok(
+        ["symbol_span", "fallback_symbol_window"].includes(firstStep.sourceExcerpt.reason),
+      );
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("flow excerpts are capped at the per-path budget", async () => {
+  await withLogicFlowFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const result = searchLogicFlow(db, {
+        start: "src/beta.ts::beta",
+        end: "src/base.ts::base",
+        maxPaths: 1,
+      }, { repoRoot, maxExcerptsPerPath: 1 });
+
+      assert.equal(result.ok, true);
+      if (!result.ok) {
+        throw new Error("expected success");
+      }
+
+      const steps = result.output.paths[0]?.steps ?? [];
+      assert.ok(steps.length >= 2, "expected a multi-step path");
+      assert.ok(steps[0]?.sourceExcerpt, "first step within budget should carry an excerpt");
+      assert.equal(steps[1]?.sourceExcerpt, null, "step beyond budget should be explicitly nulled");
+    } finally {
+      db.close();
+    }
+  });
+});

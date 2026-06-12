@@ -440,6 +440,21 @@ const SYMBOL_RESULT_SCHEMA = objectProperty(
   ["symbolId", "filePath", "fqName", "localName", "kind"],
 );
 
+const SOURCE_EXCERPT_SCHEMA: McpSchemaProperty = {
+  type: ["object", "null"],
+  description: "Bounded inline source excerpt derived from an indexed symbol's own line span (never an exact edge/call-site line, since indexed edges carry no location). null when source could not be loaded freshly or the excerpt budget was exhausted.",
+  properties: {
+    filePath: stringProperty("Normalized repo-relative file path of the excerpt."),
+    startLine: integerProperty("1-based first line of the excerpt."),
+    endLine: integerProperty("1-based last line of the excerpt."),
+    text: stringProperty("Bounded excerpt text (never a whole file)."),
+    reason: stringProperty("Why this excerpt was chosen: symbol_span (full symbol fit the budget), signature (signature-focused head window), fallback_symbol_window (generic trimmed head window), or edge_site (reserved; exact edge-site lines are not currently available)."),
+    truncated: booleanProperty("Whether the excerpt was trimmed by the line or per-line character budget."),
+  },
+  required: ["filePath", "startLine", "endLine", "text", "reason", "truncated"],
+  additionalProperties: false,
+};
+
 const IMPACT_NODE_SCHEMA = objectProperty(
   "A symbol discovered in the bounded structural impact view.",
   {
@@ -449,6 +464,7 @@ const IMPACT_NODE_SCHEMA = objectProperty(
     localName: stringProperty("Local symbol name."),
     kind: stringProperty("Symbol kind."),
     distance: integerProperty("Shortest reverse-edge distance from the resolved symbol."),
+    sourceExcerpt: SOURCE_EXCERPT_SCHEMA,
   },
   ["symbolId", "filePath", "fqName", "localName", "kind", "distance"],
 );
@@ -528,6 +544,7 @@ const LOGIC_FLOW_STEP_SCHEMA = objectProperty(
     fromFqName: stringProperty("Source fully qualified symbol name for this step."),
     toSymbolId: stringProperty("Destination symbol id for this step."),
     toFqName: stringProperty("Destination fully qualified symbol name for this step."),
+    sourceExcerpt: SOURCE_EXCERPT_SCHEMA,
   },
   ["edgeId", "edgeType", "fromSymbolId", "fromFqName", "toSymbolId", "toFqName"],
 );
@@ -1617,6 +1634,10 @@ const RUN_PIPELINE_FLOW_PATH_SCHEMA = objectProperty(
     nodeFqNames: arrayProperty(
       "Ordered fully qualified symbol names along the path.",
       stringProperty("FQ name on the path."),
+    ),
+    sourceExcerpts: arrayProperty(
+      "Bounded inline excerpts around each step's edge source, so the relationship can be read without a follow-up Read. Null/absent step excerpts are dropped.",
+      SOURCE_EXCERPT_SCHEMA,
     ),
   },
   ["pathIndex", "edgeCount", "nodeFqNames"],
@@ -7966,6 +7987,8 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             symbolFqn,
             depth: depth ?? 5,
             format: resolvedFormat as ImpactFormat,
+          }, {
+            repoRoot: binding.repoRoot,
           });
 
           if (!result.ok) {
@@ -8065,6 +8088,8 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             start,
             end,
             maxPaths: maxPaths ?? 3,
+          }, {
+            repoRoot: binding.repoRoot,
           });
 
           if (!result.ok) {

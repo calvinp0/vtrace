@@ -307,8 +307,8 @@ export function runPipelineOrchestrator(
   // same way the v1 path does (resolvable by check_capsule_staleness).
   const capsuleV2Build = buildCapsuleV2Section(db, repoRoot, query, rawInput);
 
-  const impact = runImpactSection(db, context, intentDecision);
-  const flow = runFlowSection(db, context);
+  const impact = runImpactSection(db, repoRoot, context, intentDecision);
+  const flow = runFlowSection(db, repoRoot, context);
   const memory = runMemorySection(db, {
     query,
     sessionId: rawInput.sessionId ?? null,
@@ -612,6 +612,7 @@ function resolveContextSkipReason(
 
 function runImpactSection(
   db: Database,
+  repoRoot: string,
   context: OrchestrationContextSection,
   intentDecision: RunPipelineIntentDecision,
 ): OrchestrationImpactSection {
@@ -655,6 +656,8 @@ function runImpactSection(
     symbolFqn: focal.fqName,
     depth: RUN_PIPELINE_DEFAULTS.impactDepth,
     format: "list",
+  }, {
+    repoRoot,
   });
 
   if (!graph.ok) {
@@ -873,6 +876,7 @@ const EMPTY_FLOW_RESULT = Object.freeze({
 
 function runFlowSection(
   db: Database,
+  repoRoot: string,
   context: OrchestrationContextSection,
 ): OrchestrationFlowSection {
   const query = context.routedQuery.query;
@@ -940,6 +944,8 @@ function runFlowSection(
       start: start.fqName,
       end: end.fqName,
       maxPaths: RUN_PIPELINE_DEFAULTS.flowMaxPaths,
+    }, {
+      repoRoot,
     });
 
   const finalize = (

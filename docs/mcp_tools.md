@@ -307,6 +307,8 @@ Prefer this specialist tool over `run_pipeline` when you already know the exact 
 
 Use `get_impact_graph` when the user asks what breaks, blast radius, dependents, callers, references, or impact of changing a known symbol.
 
+Each dependent node may carry an optional bounded `sourceExcerpt` showing why it depends on the focal symbol (the dependent/caller source), so you can read the relationship inline instead of issuing a follow-up `Read`. See [Bounded source excerpts](#bounded-source-excerpts) for the field shape and bounds.
+
 Use `get_skeleton` when the relevant file path is already known and you need structural overview.
 
 Use `search_symbols` for exact symbol lookup or when the context result is weak.
@@ -336,7 +338,40 @@ Coverage is explicit. Each result reports:
 - `callFlowEvidenceAvailable` — whether any statically resolved `calls` edge existed in the indexed graph for the repo. When `false` (for example, a JavaScript-only repo), the result is honest structural containment/import traversal only and does not trace call flow
 - `callFlowEvidenceUsed` — whether a returned path actually traverses a `calls` edge
 
+Each path step may carry an optional bounded `sourceExcerpt` around the edge source (the `from` symbol, where the call/import/reference originates), so you can read the relationship inline instead of issuing a follow-up `Read`. See [Bounded source excerpts](#bounded-source-excerpts) for the field shape and bounds.
+
 Prefer this specialist tool over `run_pipeline` when you already know the exact start and end FQNs.
+
+### Bounded source excerpts
+
+`get_impact_graph` dependents and `search_logic_flow` path steps can include a small inline `sourceExcerpt` so an agent can see the relevant relationship without re-reading files. The same excerpts ride through `run_pipeline` / `get_code_context`: each `flow.paths[]` carries a compact `sourceExcerpts` array (non-null step excerpts only), and each `impact.topDependents[]` node carries its `sourceExcerpt`.
+
+Field shape:
+
+```ts
+interface SourceExcerpt {
+  filePath: string;
+  startLine: number;   // 1-based
+  endLine: number;     // 1-based
+  text: string;        // never a whole file
+  reason: "symbol_span" | "edge_site" | "signature" | "fallback_symbol_window";
+  truncated: boolean;
+}
+```
+
+`reason` is honest about precision:
+
+- `symbol_span` — the symbol's full indexed line span fit the budget and is shown verbatim.
+- `signature` — a signature-focused leading window of a larger symbol (impact dependents).
+- `fallback_symbol_window` — a generic leading window of a larger symbol (flow edge source).
+- `edge_site` — reserved. Indexed edges carry **no** call-site line, so excerpts are derived from a symbol's own span and `edge_site` is never emitted today; the tool never pretends a symbol-window snippet pinpoints an exact call/reference line.
+
+Bounds (defaults):
+
+- max 12 lines per excerpt (hard ceiling, even if a larger window is requested); signature-focused excerpts default to 6 lines.
+- per-line character cap (200 chars); longer lines are trimmed with `…` and `truncated` is set.
+- up to 6 excerpts per returned flow path; up to 10 dependent excerpts per impact response.
+- excerpts are best-effort: if source cannot be loaded freshly (missing file, content drift versus the index) the field is `null` and the tool still succeeds. The pure structural result (no bound repo root) omits the field entirely.
 
 ## Memory and Session Tools
 

@@ -82,6 +82,13 @@ export function formatRunPipelineOrchestrationOutput(
         pathIndex: path.pathIndex,
         edgeCount: path.edgeCount,
         nodeFqNames: path.nodes.map((node) => node.fqName),
+        // Compact inline excerpts around each step's edge source, so the agent
+        // can read the relevant relationship without a follow-up Read. Null and
+        // absent excerpts are dropped to keep the section small.
+        sourceExcerpts: path.steps
+          .map((step) => step.sourceExcerpt)
+          .filter((excerpt): excerpt is NonNullable<typeof excerpt> => excerpt != null)
+          .map((excerpt) => structuredClone(excerpt)),
       })),
     flowRef: flow.start === null || flow.end === null
       ? null
