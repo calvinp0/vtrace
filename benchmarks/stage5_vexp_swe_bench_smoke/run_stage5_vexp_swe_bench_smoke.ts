@@ -45,6 +45,12 @@ import {
   resolveVtraceDir,
   type IndexFreshness,
 } from "../../src/indexer/indexMeta";
+import {
+  buildProductV2RunPipelineArgs,
+  parseProductV2Response,
+  productV2ProbeDir,
+  productV2ProbeFilePath,
+} from "./stage5_product_v2_probe";
 
 // Stage 5 is a SMOKE integration harness around the external `vexp-swe-bench`
 // benchmark. It proves the baseline-vs-vtrace measurement workflow on a tiny
@@ -218,6 +224,11 @@ export interface CliConfig {
   readonly capsuleEngine: CapsuleEngine;
   readonly capsuleIntent: CapsuleV2Intent;
   readonly capsuleBudget: number;
+  // When true AND capsuleEngine === "v2", also probe the PRODUCT surface
+  // (`run-pipeline --capsule-engine v2`) per instance and persist its accounting /
+  // contextEngine / capsuleV2 signals. Default false: pure instrumentation for the
+  // product-v2 turn-reduction gate, never alters retrieval or the injected context.
+  readonly captureProductV2Accounting: boolean;
   // Operator override for the cost-aware context-injection gate (--context-policy).
   // "auto" (default) keeps decideContextPolicy in charge; the force-* values are
   // for Capsule v2 live validation. See ContextPolicyOverride.
@@ -683,6 +694,7 @@ const DEFAULT_CONFIG: CliConfig = {
   capsuleEngine: "legacy",
   capsuleIntent: "auto",
   capsuleBudget: CAPSULE_V2_DEFAULT_BUDGET,
+  captureProductV2Accounting: false,
   contextPolicyOverride: "auto",
   // PIVOT_CHECK is strict-risk-gated by default: it keeps the multi-pivot floor but
   // injects only on a STRONG risk signal (>= 3 pivots, edit-risk directives, a known
@@ -4152,6 +4164,50 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
           throw new Error(`vtrace index failed (exit ${indexResult.exitCode}): ${indexResult.stderr.trim() || "(no stderr)"}`);
         }
       }
+      // Product-path Capsule v2 accounting probe (instrumentation only). Runs as
+      // soon as the workspace index is ready and BEFORE the in-pipeline capsule
+      // query, so a capsule skip/error below can never suppress it — the whole
+      // point is to measure the PRODUCT surface (`run-pipeline --capsule-engine
+      // v2`) on its own. Retrieval is identical to the in-pipeline capsule (both
+      // call buildCapsuleV2); this only captures the product envelope
+      // (contextEngine / capsuleV2 / accounting) so the turn-reduction gate can
+      // confirm the first VTRACE call's accounting is observable. Persisted to the
+      // run LABEL dir (NOT raw/vtrace, which the external vexp `run` cleans at
+      // startup). Strictly best-effort — a probe failure never alters the run.
+      if (config.captureProductV2Accounting && config.capsuleEngine === "v2") {
+        try {
+          const [productCommand, ...productBase] = splitArgs(config.vtraceCommand);
+          if (productCommand !== undefined) {
+            const productArgs = buildProductV2RunPipelineArgs({
+              baseArgs: productBase,
+              workspace,
+              query: capsuleQueryTextFor(config, instance),
+              intent: config.capsuleIntent,
+              budgetTokens: config.capsuleBudget,
+            });
+            const productResult = await runProc(productCommand, [...productArgs]);
+            const signals = parseProductV2Response(productResult.stdout);
+            const probeDir = productV2ProbeDir(config.out, config.runLabel);
+            await mkdir(probeDir, { recursive: true });
+            const probeFile = productV2ProbeFilePath(probeDir, instance.instanceId);
+            await writeFile(probeFile, `${JSON.stringify(signals, null, 2)}\n`);
+            process.stderr.write(
+              `[stage5] product-v2 probe wrote ${probeFile} ` +
+                `(exit=${productResult.exitCode} engineV2=${signals.contextEngineIsV2} ` +
+                `capsuleV2=${signals.capsuleV2Present} accounting=${signals.accounting !== null})\n`,
+            );
+          } else {
+            process.stderr.write("[stage5] product-v2 probe skipped: empty --vtrace-command\n");
+          }
+        } catch (error) {
+          // The probe is observability, not a treatment — never fail the run. But
+          // surface the reason so a missing probe is debuggable, not silent.
+          process.stderr.write(
+            `[stage5] product-v2 probe FAILED (non-fatal): ${error instanceof Error ? error.message : String(error)}\n`,
+          );
+        }
+      }
+
       // v2 ignores `mode` (it sizes from --budget); legacy uses it. The task/query
       // text also differs per engine (clean task for v2, packed query for legacy).
       const mode = capsuleModeForInstance(instance);
@@ -4175,6 +4231,9 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
       // A workspace-prep failure is recorded distinctly for observability; the run
       // still aborts before spawn via the empty-context check in runVtrace.
       if (error instanceof WorkspacePreparationError) workspacePrepError = sectionError;
+      // Surface the section failure on stderr. A swallowed context-prep error (e.g.
+      // a failed clone/index) otherwise reads as a silent no-capsule run.
+      process.stderr.write(`[stage5] context-prep section FAILED for ${instance.instanceId}: ${sectionError}\n`);
       classification = null;
     }
     sections.push({
@@ -7237,6 +7296,9 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         config.capsuleEngine = value as CapsuleEngine;
         break;
       }
+      case "--capture-product-v2-accounting":
+        config.captureProductV2Accounting = true;
+        break;
       case "--capsule-intent": {
         const value = requireValue(argv, ++index, arg);
         if (!["auto", "debug", "refactor", "impact", "test-failure"].includes(value)) {
