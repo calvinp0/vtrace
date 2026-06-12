@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-06-12T00:00:00Z",
+  "instanceId": "matplotlib__matplotlib-22719",
+  "historicalVtraceRunLabel": "eval-controlled-vtrace-matplotlib-22719",
+  "sectionSource": "run-meta",
+  "result": {
+    "instanceId": "matplotlib__matplotlib-22719",
+    "tokenDisciplineInjected": true,
+    "tokenDisciplineMode": "strong_context_patch_first",
+    "tokenDisciplineVersion": "v1",
+    "baselineTokenDisciplineInjected": false,
+    "leadPivotPresent": true,
+    "leadPivotFilePresent": true,
+    "supportSnippetsPresent": true,
+    "contextInjected": true,
+    "strongContext": true,
+    "contextStrengthReason": "strong context: lead pivot + file + support + injected",
+    "preEditSearchBudget": 2,
+    "preEditBashBudget": 1,
+    "repeatedFileReadLimit": 1,
+    "markerPresent": true,
+    "searchBudgetDirectivePresent": true,
+    "bashBudgetDirectivePresent": true,
+    "patchFirstDirectivePresent": true,
+    "injectedBlock": "## STAGE5_TOKEN_DISCIPLINE\n\nThe context capsule is precomputed and provides a strong lead pivot. Use it as the primary source of truth.\n\nBefore calling tools:\n1. Read the capsule pivots and support snippets.\n2. Decide whether the edit target is already identified.\n3. If the target file/function is present, patch first; do not rediscover it with grep.\n\nTool budget:\n- At most 2 search/grep/read calls before the first edit when the capsule has a lead pivot.\n- At most 1 Bash inspection command before the first edit unless tests are being run.\n- Do not run broad recursive grep after the capsule already names a pivot file.\n- Do not repeatedly read or grep the same file/symbol (at most 1 re-read).\n- Do not use Bash loops to inspect many files unless the capsule lacks a plausible target.\n- If you need more context, prefer one focused read around the lead pivot.\n- If the capsule provides deferred refs, expand only the exact ref needed.\n\nPatch trigger:\n- If the capsule lead pivot and support evidence identify a plausible edit location, make the minimal patch before doing more search.\n\nStop condition:\n- After two unsuccessful searches, stop searching and state the uncertainty rather than looping.",
+    "reasons": [
+      "strong context: lead pivot + file + support + injected",
+      "token-discipline block injected in strong_context_patch_first mode",
+      "baseline-shaped prompt carries no token-discipline block (expected)"
+    ]
+  },
+  "preflightPassed": true,
+  "failedAssertions": [],
+  "nonClaims": [
+    "This preflight does not run the live agent and does not measure token savings.",
+    "This preflight does not establish the 100-task token-reduction number.",
+    "This preflight does not prove the policy reduces overhead — only that it is injected.",
+    "This preflight does not change Stage 5 policy accounting."
+  ]
+}

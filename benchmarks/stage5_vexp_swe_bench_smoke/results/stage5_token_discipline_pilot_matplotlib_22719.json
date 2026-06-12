@@ -1,0 +1,61 @@
+{
+  "liveRerunPending": true,
+  "preflightMode": "strong_context_patch_first",
+  "generatedAt": "2026-06-12T00:00:00Z",
+  "pilotInstanceId": "matplotlib__matplotlib-22719",
+  "historicalRunLabel": "eval-controlled-vtrace-matplotlib-22719",
+  "newRunLabel": "eval-token-discipline-pilot-matplotlib-22719",
+  "tokenDisciplineInjected": false,
+  "tokenDisciplineMode": "disabled",
+  "historicalVtraceTotalTokens": 2718398,
+  "newVtraceTotalTokens": null,
+  "historicalVtraceToolCalls": 30,
+  "newVtraceToolCalls": null,
+  "historicalVtraceBashCount": 16,
+  "newVtraceBashCount": null,
+  "historicalTokenReductionRisk": "high",
+  "newTokenReductionRisk": null,
+  "historicalResolved": false,
+  "newResolved": null,
+  "tokenOverheadImproved": null,
+  "turnCountImproved": null,
+  "qualityRegressed": null,
+  "readyForMoreOverheadCases": false,
+  "readyFor100TaskBenchmark": false,
+  "historical": {
+    "vtraceRunLabel": "eval-controlled-vtrace-matplotlib-22719",
+    "baselineRunLabel": "eval-localization-gap-baseline-matplotlib-22719",
+    "vtraceTotalTokens": 2718398,
+    "baselineTotalTokens": 1167993,
+    "cacheReadTokens": 2632899,
+    "tokenDeltaPct": 132.74094964610234,
+    "vtraceToolCallCount": 30,
+    "vtraceBashCount": 16,
+    "vtraceRepeatedReadOrSearch": 9,
+    "vtraceResolved": false,
+    "baselineResolved": true,
+    "tokenReductionRisk": "high"
+  },
+  "newRerun": null,
+  "verdict": {
+    "tokenOverheadImproved": null,
+    "totalTokenReductionFraction": null,
+    "cacheReadReductionFraction": null,
+    "turnCountImproved": null,
+    "bashDroppedBelowHighRisk": null,
+    "riskTierImproved": null,
+    "qualityRegressed": null,
+    "qualityWorseThanHistorical": null,
+    "reasons": [
+      "no new paired rerun on disk yet — overhead effect not measured"
+    ]
+  },
+  "preflightPassed": true,
+  "recommendedNextStep": "Do a deliberate, SUPERVISED live paired rerun of matplotlib-22719 (label `eval-token-discipline-pilot-matplotlib-22719`) with token discipline enabled — baseline and VTRACE arms — then regenerate this report to measure the overhead effect. This is a billable Docker solve and should be launched intentionally, not as part of CI.",
+  "nonClaims": [
+    "This pilot does not establish the 100-task token-reduction number.",
+    "This pilot does not prove the policy generalizes.",
+    "This pilot does not change Stage 5 policy accounting.",
+    "This pilot does not enable generated-parser repair broadly."
+  ]
+}
