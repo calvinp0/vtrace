@@ -1,0 +1,200 @@
+{
+  "report": "stage5_vtrace_vs_vexp_feature_parity_audit",
+  "generatedAt": "2026-06-12",
+  "scope": {
+    "kind": "read_only_feature_parity_audit",
+    "repo": "/home/calvin/code/vtrace",
+    "branch": "main",
+    "benchmarksRerun": false,
+    "liveAgentsRun": false,
+    "vexpModelSource": "product/website capability descriptions provided to the audit; VEXP internals were not inspected"
+  },
+  "executiveSummary": {
+    "interpretation": "The central VEXP advantage is not just a smaller prompt. It is a productized single-call context system: pivots, skeletons, impact, flow, memory, token accounting, and intent-aware retrieval are exposed as simple deterministic tools. VTRACE has several internal pieces, especially Capsule v2 and Stage 5 telemetry, but some are benchmark-only or not yet exposed as robust product tools. The highest-priority work should turn existing internal capabilities into first-class deterministic tools that reduce agent search turns.",
+    "surprisesVsStartingHypothesis": [
+      "11 of the 12 audited tool names exist as registered, tested, documented MCP product tools; only submit_lsp_edges is missing entirely (src/mcp/tools.ts:7911-7917, src/mcp/mcp.test.ts:58-71)",
+      "search_logic_flow does traverse statically resolved calls edges (src/logicFlow/searchLogicFlow.ts:112-116); the root-level VTRACE_TOOLING_AUDIT.md claim to the contrary is outdated",
+      "capsule manifests are now persisted by get_context_capsule/run_pipeline (src/mcp/tools.ts:7414-7419), so check_capsule_staleness is functional"
+    ],
+    "topGaps": [
+      "Capsule v2 (token-budgeted, best-ranked engine) is not on the MCP path; MCP capsules use v1 with a ~2,000-char budget",
+      "No tokens-saved or latency accounting in any product tool response; both are benchmark-only",
+      "Logic-flow and impact outputs lack per-hop/per-caller code excerpts, forcing follow-up Read turns",
+      "Turn-count/cache-read amplification, not capsule size, is the measured token problem (96% of positive deltas)",
+      "Language/content coverage: JS detected but unparsed, Go/Rust enum-only, Markdown not in index/FTS",
+      "LSP bridge and feedback-loop budget expansion missing; memory scoring lacks recency/graph-proximity signals"
+    ]
+  },
+  "coreAuditAnswers": {
+    "q1_single_call_vexp_style_capsule": "Partial. run_pipeline composes capsule v1 + gated impact + gated flow + memory + rules + deferred refs in one call, but with char budget, no full-source pivots in compact output, no tokens-saved, no latency. Capsule v2 (CLI only) has full-source pivots + token budget but no impact/memory/latency.",
+    "q2_skeletons": "Raw material (signatures/docstrings/spans) precomputed into SQLite at index time; skeleton document assembled on demand (src/skeleton/getSkeleton.ts). Exposed as first-class MCP tool get_skeleton and used in capsule v1; capsule v2 skeleton mode is name-only. Py/TS/Cython only; no return-type field.",
+    "q3_get_context_capsule": "True product tool (src/mcp/tools.ts:7256-7427): intent-aware pipeline, pivots/supports/memories/rules/budget, manifest persistence, auto-capture, tested and documented. Not a benchmark wrapper — but it runs capsule v1, not v2.",
+    "q4_get_impact_graph": "Complete traversal tool: layered reverse BFS over stored Contains/Imports/Calls/References edges with depth bound, three views, honest coverage notes (src/impact/getImpactGraph.ts:207-461). Not report metadata.",
+    "q5_search_logic_flow": "Partial: real bidirectional BFS + all-shortest-paths enumeration over Contains/Imports/Calls with hop-by-hop edge steps, but no per-hop code lines/line spans/snippets; shortest paths only; exact-FQN endpoints.",
+    "q6_search_ranking": "Complete: real FTS5 (two virtual tables, src/db/schema.ts:331-347), hand-rolled Okapi BM25 (src/retrieval/hybridScoring.ts:672-744), in-degree centrality with hub penalty. No embeddings, no network.",
+    "q7_intent_detection": "Complete but split across two systems: src/intent (Debug/Refactor/Explain/Feature routing profiles changing backend/pool/weights) and src/capsuleV2/intent.ts (debug/modify/impact/explain/refactor/test-failure strategies changing candidate generators/roles/budgets). MCP impact section additionally gated by trigger phrases.",
+    "q8_lsp_bridge": "Missing. Zero hits for submit_lsp_edges/language server/type-resolved; vscode-extension is a thin CLI shell.",
+    "q9_session_memory": "Partial-to-complete: auto-capture (src/observations/autoCapture.ts), stale flags (staleness.ts:22-80), consolidation, anti-patterns, nudges, automatic inclusion in run_pipeline memory section and capsule v1 memories. Scoring is fixed-weight substring/overlap with stalePenalty; no BM25/TF-IDF, recency decay, or graph proximity.",
+    "q10_passive_observation": "Partial: 1s polling watcher (sha256, not blake3), structural symbol diffs (Added/Removed/Modified; no Renamed, no sig-vs-body split), file-thrashing anti-patterns, promotion into project rules surfaced in capsules.",
+    "q11_product_vs_benchmark_tools": "Product surface is real: 12 visible MCP tools + 9 hidden + 25 CLI commands + thin VS Code shell, documented in docs/mcp_tools.md. Benchmark-only pieces: ordered tool telemetry, turn-count waste scorer, tokens-saved accounting, latency measurement, repair/critic control loop, cost caps.",
+    "q13_gaps_explaining_token_shortfall": "Turn-count amplification (96% of positive token deltas are cache reads from extra turns) caused by thin per-call output: v1 char-budgeted capsules, gated impact/flow, no per-hop/per-caller code, no token/latency feedback. Measured first-pass reduction 25.24% vs 74% headline.",
+    "q14_before_100_task": "Milestones 1-4: capsule v2 on MCP with VEXP-shaped output, product token/latency accounting, per-hop/per-caller excerpts, then turn-reduction validation on the 4 known overhead cases (incl. capturing the missing django-10880/11095 telemetry)."
+  },
+  "toolParity": [
+    {
+      "vexpTool": "get_context_capsule",
+      "vtraceEquivalent": "MCP get_context_capsule (also get_code_context/run_pipeline)",
+      "status": "partial",
+      "evidence": ["src/mcp/tools.ts:7256-7427", "src/runPipeline/runPipelineOrchestrator.ts:241-311"],
+      "missingBehavior": "Capsule v2 not on MCP (v1 char budget used); no tokens-saved/latency; impact/flow sections gated by narrow trigger conditions",
+      "tokenImpact": "high",
+      "priority": "P0"
+    },
+    {
+      "vexpTool": "get_impact_graph",
+      "vtraceEquivalent": "MCP get_impact_graph / CLI impact-graph",
+      "status": "complete",
+      "evidence": ["src/impact/getImpactGraph.ts:207-255", "src/impact/getImpactGraph.ts:404-461", "src/mcp/tools.ts:7432"],
+      "missingBehavior": "No per-caller source excerpts; exact-FQN-only resolution; static-only (documented)",
+      "tokenImpact": "medium",
+      "priority": "P1"
+    },
+    {
+      "vexpTool": "search_logic_flow",
+      "vtraceEquivalent": "MCP search_logic_flow",
+      "status": "partial",
+      "evidence": ["src/logicFlow/searchLogicFlow.ts:112-116", "src/logicFlow/searchLogicFlow.ts:319-431"],
+      "missingBehavior": "No per-hop code lines/line spans/snippets; shortest paths only; exact-FQN endpoints",
+      "tokenImpact": "medium",
+      "priority": "P1"
+    },
+    {
+      "vexpTool": "get_skeleton",
+      "vtraceEquivalent": "MCP get_skeleton / CLI skeleton",
+      "status": "partial",
+      "evidence": ["src/skeleton/getSkeleton.ts:102-228", "src/mcp/tools.ts:7637"],
+      "missingBehavior": "On-demand assembly (no persisted artifact); Python/TS/Cython only; no explicit return-type field",
+      "tokenImpact": "medium",
+      "priority": "P1"
+    },
+    {
+      "vexpTool": "index_status",
+      "vtraceEquivalent": "MCP index_status / CLI status",
+      "status": "complete",
+      "evidence": ["src/mcp/tools.ts:7706", "src/indexer/indexProject.ts:200-218", "src/cli/formatters.ts:175-188"],
+      "missingBehavior": "No daemon-uptime/indexing-rate metrics; no P95 query latency",
+      "tokenImpact": "low",
+      "priority": "P3"
+    },
+    {
+      "vexpTool": "workspace_setup",
+      "vtraceEquivalent": "MCP workspace_setup / CLI setup",
+      "status": "partial",
+      "evidence": ["src/mcp/tools.ts:7800-7890"],
+      "missingBehavior": "No git-hook installation; agent detection limited to Claude Code config; per-repo registration",
+      "tokenImpact": "low",
+      "priority": "P3"
+    },
+    {
+      "vexpTool": "submit_lsp_edges",
+      "vtraceEquivalent": null,
+      "status": "missing",
+      "evidence": ["zero hits repo-wide for submit_lsp_edges / language server / type-resolved", "vscode-extension/package.json:5"],
+      "missingBehavior": "Entire capability: no LSP client, no external-edge ingestion path",
+      "tokenImpact": "medium on TS-heavy repos, low on Python-centric benchmark set",
+      "priority": "P2"
+    },
+    {
+      "vexpTool": "get_session_context",
+      "vtraceEquivalent": "MCP get_session_context",
+      "status": "complete",
+      "evidence": ["src/mcp/tools.ts:6431", "src/mcp/tools.ts:7893", "src/observations/staleness.ts:22-80"],
+      "missingBehavior": "Stale reasons from index-run diffs, not live; no cross-session focus learning",
+      "tokenImpact": "low-medium",
+      "priority": "P2"
+    },
+    {
+      "vexpTool": "search_memory",
+      "vtraceEquivalent": "MCP search_memory",
+      "status": "partial",
+      "evidence": ["src/mcp/tools.ts:6276", "src/observations/searchMemory.ts:21-34"],
+      "missingBehavior": "Scoring lacks BM25/TF-IDF, recency decay, graph proximity (breakdown exists but with a weaker model; stalePenalty present)",
+      "tokenImpact": "low-medium",
+      "priority": "P2"
+    },
+    {
+      "vexpTool": "save_observation",
+      "vtraceEquivalent": "MCP save_observation",
+      "status": "complete",
+      "evidence": ["src/mcp/tools.ts:6149", "src/mcp/tools.ts:6184-6193", "src/observations/consolidation.ts:17", "src/observations/observationNudges.ts:167-184"],
+      "missingBehavior": null,
+      "tokenImpact": "low",
+      "priority": "P3"
+    }
+  ],
+  "architectureParity": [
+    {"capability": "AST parser/index", "vexpBehavior": "tree-sitter, 5k files <15s", "vtraceStatus": "partial", "evidence": ["src/parsers/typescriptParser.ts:3-4", "src/parsers/pythonParser.ts:173", "src/parsers/pythonParser.ts:761"], "gap": "Python/Cython via per-file CPython ast subprocess; no throughput instrumentation; JS/Go/Rust unparsed", "whyItMatters": "Indexing speed and language reach bound applicability", "priority": "P2"},
+    {"capability": "graph edges: calls/imports/implementations", "vexpBehavior": "all three edge classes", "vtraceStatus": "partial", "evidence": ["src/db/schema.ts:309-329", "src/domain/types.ts:23-27"], "gap": "contains/imports/calls/references; no implements/extends edge type (folded into references kind inheritance)", "whyItMatters": "Blast radius for interface changes under-reports", "priority": "P3"},
+    {"capability": "Markdown section indexing", "vexpBehavior": "indexed by section", "vtraceStatus": "missing", "evidence": ["src/capsuleV2/docRetrieval.ts:1-26"], "gap": "query-time bounded scan (50 files/200KB) only, not in SQLite/FTS", "whyItMatters": "Docs-heavy tasks fall back to agent file reads", "priority": "P2"},
+    {"capability": "local DB / manifest", "vexpBehavior": "local SQLite, manifest in git", "vtraceStatus": "partial", "evidence": ["src/db/sqlite.ts:1-10", "src/setup/types.ts:6-9", "src/db/schema.ts:71-103"], "gap": "SQLite yes; manifest in-DB, nothing committed to git", "whyItMatters": "Team-shared index bootstrap not possible", "priority": "P3"},
+    {"capability": "hybrid FTS + TF-IDF", "vexpBehavior": "FTS5 + TF-IDF", "vtraceStatus": "complete", "evidence": ["src/db/schema.ts:331-347", "src/retrieval/hybridScoring.ts:672-744"], "gap": "BM25 pool-scoped, not corpus-scoped (acceptable)", "whyItMatters": null, "priority": null},
+    {"capability": "graph centrality", "vexpBehavior": "centrality in ranking", "vtraceStatus": "partial", "evidence": ["src/retrieval/graphExpansion.ts:254-273", "src/retrieval/hybridScoring.ts:195-255"], "gap": "in-degree only, weakest weight, hub-penalized (deliberate)", "whyItMatters": "Likely adequate; revisit with data", "priority": "P3"},
+    {"capability": "intent detection", "vexpBehavior": "debug/blast-radius/modify routing", "vtraceStatus": "complete-but-split", "evidence": ["src/intent/classifier.ts:34-131", "src/intent/profile.ts:21-73", "src/capsuleV2/intent.ts:57-248"], "gap": "two unmerged systems; MCP impact section additionally gated by trigger phrases", "whyItMatters": "First-call strategy mismatch multiplies turns", "priority": "P1"},
+    {"capability": "capsule budget enforcement", "vexpBehavior": "token-bounded", "vtraceStatus": "partial", "evidence": ["src/capsuleV2/budgetAllocator.ts:37-57", "src/capsuleV2/buildCapsuleV2.ts:600-673", "src/capsule/budget.ts:15-24"], "gap": "MCP path char-budgeted v1; v2 token budget CLI-only; chars/4 estimator", "whyItMatters": "Budget semantics differ between product and best engine", "priority": "P0"},
+    {"capability": "skeleton precomputation", "vexpBehavior": "precomputed at index time", "vtraceStatus": "partial", "evidence": ["src/skeleton/getSkeleton.ts:102-228", "src/indexer/indexProject.ts:221-244"], "gap": "raw material indexed, document assembled on demand; 3 languages; no return-type field", "whyItMatters": "Skeletons are the main 70-90% reduction lever", "priority": "P1"},
+    {"capability": "deferred refs", "vexpBehavior": "(VEXP: bounded capsule)", "vtraceStatus": "complete", "evidence": ["src/runPipeline/runPipelineOrchestrator.ts:1133-1354", "src/mcp/tools.ts:5291"], "gap": "absent from capsule v2 result type", "whyItMatters": "Pay-per-expansion context is a real token saver; VTRACE-specific advantage", "priority": "P2"},
+    {"capability": "session memory", "vexpBehavior": "auto-capture, stale flags, consolidation, anti-patterns", "vtraceStatus": "partial", "evidence": ["src/observations/autoCapture.ts:24", "src/observations/staleness.ts:22-80", "src/observations/consolidation.ts:17", "src/observations/antiPatterns.ts:19-22"], "gap": "scoring lacks BM25/recency/graph proximity; no feedback-loop budget expansion", "whyItMatters": "Memory exists; relevance ranking is the weak half", "priority": "P2"},
+    {"capability": "passive observation", "vexpBehavior": "blake3 hashing, AST diffs incl. renamed/signature/body, change-tool correlation, rule promotion", "vtraceStatus": "partial", "evidence": ["src/runtime/fileWatcher.ts:24-32", "src/memory/computeSymbolDiff.ts:153-168", "src/projectRules/projectRules.ts:37-49"], "gap": "sha256 polling; no Renamed type; no signature-vs-body split; correlation limited to anti-patterns", "whyItMatters": "Polish, not a token lever", "priority": "P3"},
+    {"capability": "LSP bridge", "vexpBehavior": "type-resolved edges from VS Code", "vtraceStatus": "missing", "evidence": ["vscode-extension/package.json:5"], "gap": "entire capability", "whyItMatters": "Conservative TS call graph under-powers impact/flow on TS repos", "priority": "P2"},
+    {"capability": "token accounting", "vexpBehavior": "tokens used/saved per call", "vtraceStatus": "partial", "evidence": ["src/capsuleV2/tokens.ts:1-20"], "gap": "no tokens-saved in product; chars/4 estimator; benchmark-only otherwise", "whyItMatters": "Cannot attribute savings or drive discipline without it", "priority": "P0"},
+    {"capability": "latency measurement", "vexpBehavior": "latency per call, P95 <500ms", "vtraceStatus": "missing", "evidence": ["zero timing instrumentation in src/mcp, src/runPipeline, src/capsule, src/capsuleV2"], "gap": "entire capability in product path", "whyItMatters": "No latency claims possible; no regression detection", "priority": "P1"}
+  ],
+  "benchmarkContext": {
+    "measuredFirstPassTokenReduction": 0.2524,
+    "headlineClaim": "up to 74% fewer tokens",
+    "resolution": {"strictVtrace": "7/10", "baseline": "8/10", "oldVtrace": "5/10"},
+    "turnCountFinding": "96% of summed positive token deltas were cache-read amplification from extra agent turns; injected context maxed ~3,007 tokens",
+    "knownOverheadCases": ["matplotlib__matplotlib-22719", "astropy__astropy-14369", "django__django-10880 (telemetry missing)", "django__django-11095 (telemetry missing)"],
+    "sources": [
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_token_path_audit.md",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_turn_count_reduction.md",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_token_reduction_vs_recovery.md",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_control_loop_status.md",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_policy_accounting.md"
+    ]
+  },
+  "roadmap": [
+    {"rank": 1, "milestone": "Wire capsule v2 into MCP get_context_capsule/run_pipeline (token-budgeted full-source pivots + signature supports + structured skeletons + impact/memory in one response)", "expectedTokenImpact": "high", "expectedResolutionImpact": "positive", "filesLikelyTouched": ["src/mcp/tools.ts", "src/runPipeline/runPipelineOrchestrator.ts", "src/capsuleV2/buildCapsuleV2.ts", "src/capsuleV2/types.ts"], "validation": "mcp.test.ts golden outputs; replay 4 known overhead cases counting tool turns", "whyBefore100Task": "The 100-task run would otherwise measure the v1 path already shown regressing"},
+    {"rank": 2, "milestone": "Tokens used/saved + latency in every product tool response", "expectedTokenImpact": "medium direct, high indirect", "expectedResolutionImpact": "neutral", "filesLikelyTouched": ["src/mcp/tools.ts", "src/capsuleV2/tokens.ts", "src/runPipeline/formatRunPipelineOutput.ts"], "validation": "unit tests on accounting math; field-presence assertions on all visible tools", "whyBefore100Task": "Without per-call accounting the run cannot attribute savings to tools vs agent behavior"},
+    {"rank": 3, "milestone": "Per-hop code excerpts in search_logic_flow and per-caller excerpts in get_impact_graph", "expectedTokenImpact": "medium", "expectedResolutionImpact": "positive", "filesLikelyTouched": ["src/logicFlow/searchLogicFlow.ts", "src/impact/getImpactGraph.ts", "src/runPipeline/formatRunPipelineOutput.ts"], "validation": "extend searchLogicFlow/impact tests with snippet assertions", "whyBefore100Task": "Flow/impact answers without code trigger the measured re-read loops"},
+    {"rank": 4, "milestone": "Turn-reduction validation on 4 known overhead cases with milestones 1-3 active + ordered telemetry for all runs", "expectedTokenImpact": "validation", "expectedResolutionImpact": "validation", "filesLikelyTouched": ["benchmarks/stage5_vexp_swe_bench_smoke/ runner config"], "validation": "paired reruns; compare tool-call counts and cache-read tokens vs stage5_token_path_audit rows", "whyBefore100Task": "Cheapest falsification of 'richer single call -> fewer turns' before paying for 100 tasks"},
+    {"rank": 5, "milestone": "Unify intent routing (src/intent profiles + capsuleV2 strategies) end-to-end on MCP; ungate impact for refactor intent", "expectedTokenImpact": "medium", "expectedResolutionImpact": "positive", "filesLikelyTouched": ["src/intent/", "src/capsuleV2/intent.ts", "src/runPipeline/runPipelineOrchestrator.ts"], "validation": "intent classifier tests + golden run_pipeline outputs per intent", "whyBefore100Task": "Intent-mismatched first calls are a silent turn multiplier"},
+    {"rank": 6, "milestone": "Register JS parser (tree-sitter-typescript) and index Markdown sections into FTS", "expectedTokenImpact": "low on smoke set, medium on real repos", "expectedResolutionImpact": "positive on JS/docs-heavy tasks", "filesLikelyTouched": ["src/indexer/indexProject.ts", "src/parsers/", "src/db/schema.ts", "src/capsuleV2/docRetrieval.ts"], "validation": "parser unit tests; index counts on a JS fixture repo", "whyBefore100Task": "100-task sets include non-Python repos; JS currently fails unregistered_language"},
+    {"rank": 7, "milestone": "Memory scoring upgrade: recency decay + graph proximity + reuse existing BM25", "expectedTokenImpact": "low-medium", "expectedResolutionImpact": "slightly positive", "filesLikelyTouched": ["src/observations/searchMemory.ts", "src/retrieval/hybridScoring.ts"], "validation": "observations.test.ts scoring-breakdown tests", "whyBefore100Task": "Not blocking; after milestones 1-5"}
+  ],
+  "recommendations": {
+    "vexpShapedCapsuleOutput": {"implementBefore100Task": true, "note": "Milestone 1; tool exists, gap is v2 wiring and output shape"},
+    "getSkeletonTool": {"implementBefore100Task": false, "note": "already a product tool; fold structured skeletons into v2 supports as part of Milestone 1"},
+    "getImpactGraphTool": {"implementBefore100Task": false, "note": "traversal complete; add caller excerpts (Milestone 3)"},
+    "betterSearchLogicFlowOutput": {"implementBefore100Task": true, "note": "Milestone 3; engine sound, per-hop code lines missing"},
+    "memoryProductTools": {"implementBefore100Task": false, "note": "already exist; scoring upgrade after validation (Milestone 7)"},
+    "lspBridge": {"implementBefore100Task": false, "note": "defer; highest cost, lowest evidence for current task population"},
+    "passiveObservationStructuralDiff": {"implementBefore100Task": false, "note": "defer; subsystem exists, remaining items are polish"},
+    "tokenSavedLatencyAccounting": {"implementBefore100Task": true, "note": "Milestone 2; prerequisite for attribution"},
+    "strongerIntentRouting": {"implementBefore100Task": true, "note": "Milestone 5, scoped to unifying/ungating existing systems"},
+    "toolTurnReductionValidation": {"implementBefore100Task": true, "note": "Milestone 4; mandatory gate, also fills django-10880/11095 telemetry hole"}
+  },
+  "whatNotToDoYet": [
+    "Do not run the 100-task benchmark until product-surface gaps are addressed and the 4-case turn-reduction validation passes",
+    "Do not optimize only around the 10-task smoke set",
+    "Do not make repair/cost controls user-facing (userFacingRepairCostControls stays false)",
+    "Do not claim VEXP parity from internal benchmark reports alone"
+  ],
+  "nonClaims": [
+    "No head-to-head VTRACE-vs-VEXP run was performed; the VEXP model audited is from product/website descriptions",
+    "No new benchmark numbers were produced; quantitative statements quote existing Stage 5 reports",
+    "Status labels reflect the 2026-06-12 working tree; root-level VTRACE_TOOLING_AUDIT.md is partially outdated and was not relied on where it conflicts with source",
+    "Complete labels are scoped to the audited VEXP behavior list, not general production-readiness",
+    "No claim about whether VEXP's tokens-saved baseline methodology is comparable to anything VTRACE could report"
+  ]
+}
