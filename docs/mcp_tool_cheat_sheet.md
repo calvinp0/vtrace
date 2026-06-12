@@ -10,6 +10,8 @@ For broad coding, debugging, refactor, and repo-understanding tasks, start with 
 
 Both `get_code_context` and `run_pipeline` can additionally surface the experimental Capsule v2 section with `capsule_engine: "v2"` (alias `capsuleEngine`; optional `capsule_intent` and `capsule_budget_tokens`). When opted in they add a top-level `contextEngine: "v2"` discriminator, a `capsuleV2` block, and a `capsuleV2ManifestId` while keeping every v1 section. The default omits the flag and is unchanged. Single-repo only.
 
+Single-repo `get_code_context`, `run_pipeline`, and `get_context_capsule` responses also carry an additive `accounting` block: deterministic, **estimated** (`chars / 4`, not a tokenizer) token + latency figures comparing the emitted context against the naive baseline of reading the full contents of the unique files it touched (`estimatedOutputTokens`, `estimatedNaiveFullFileTokens`, `estimatedTokensSavedVsNaiveFullFile`, `estimatedSavingsPercentVsNaiveFullFile`, `uniqueFilesCounted`, `latencyMs`). Best-effort: omitted on failure or for multi-repo; never affects retrieval.
+
 Prefer product-facing input names for new callers:
 
 - `task`

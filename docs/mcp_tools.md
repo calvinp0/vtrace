@@ -221,9 +221,27 @@ When opted in, the orchestration result is **augmented** (not replaced):
 - a top-level `contextEngine: "v2"` discriminator and a `capsuleV2` block (the same shape `get_context_capsule` returns under `capsuleV2`), plus a persisted `capsuleV2ManifestId`.
 - all existing sections — `context`, `impact`, `flow`, `memory`, `rules`, `diagnostics`, and `deferred` refs — are preserved unchanged.
 
-The default (no `capsule_engine`) path is byte-compatible with prior behavior; the v2 section is omitted entirely. As with `get_context_capsule`, the v2 section is single-repo only — a multi-repo workspace request with `capsule_engine=v2` is rejected — and persists a deterministic manifest that resolves via `check_capsule_staleness`. Making v2 the default, and token-saved / latency accounting, are intentionally deferred.
+The default (no `capsule_engine`) path is byte-compatible with prior behavior except for the additive `accounting` block (see below); the v2 section is omitted entirely. As with `get_context_capsule`, the v2 section is single-repo only — a multi-repo workspace request with `capsule_engine=v2` is rejected — and persists a deterministic manifest that resolves via `check_capsule_staleness`. Making v2 the default is intentionally deferred.
 
 The CLI mirrors the opt-in: `vtrace run-pipeline <repo> <query> --capsule-engine v2 [--capsule-intent <intent>] [--capsule-budget-tokens N]`.
+
+#### Context accounting (estimated, deterministic)
+
+Single-repo `run_pipeline` / `get_code_context` responses (both the default v1 path and the v2 opt-in) carry an additive top-level `accounting` block so a caller can see how compact the emitted context is relative to the naive alternative — reading the full contents of every source file the context touched. The same block is on `get_context_capsule` (v1 and v2). It is **estimated and deterministic, not exact tokenizer truth**: every token figure is `chars / 4` (`method: "chars_div_4"`), the same approximation that sizes Capsule v2.
+
+Fields:
+
+- `latencyMs`: wall-clock latency of the measured orchestrator/handler path.
+- `estimatedOutputTokens`: `chars / 4` of the actual emitted product response.
+- `estimatedNaiveFullFileTokens`: `chars / 4` summed over the **full contents** of each unique file represented in the emitted context items (the `baseline`).
+- `estimatedTokensSavedVsNaiveFullFile`: naive estimate minus emitted estimate, clamped at `0`.
+- `estimatedSavingsPercentVsNaiveFullFile`: percent reduction vs. the naive baseline; `null` when no files were counted.
+- `uniqueFilesCounted`: number of unique files actually read for the baseline.
+- `method`: always `"chars_div_4"`.
+- `baseline`: explicit wording of the naive comparison.
+- `skippedFiles` (optional): files that could not be counted (missing/unreadable/outside the repo), with a reason.
+
+The baseline reads **only** the unique files the capsule/context already selected — it never scans the repo, refuses paths that escape the repo root, and treats any missing/unreadable file as a recorded skip. Accounting is best-effort: if it fails, the `accounting` field is simply omitted and the request still succeeds. It does not affect retrieval, ranking, or capsule assembly. Multi-repo responses omit accounting. Exact tokenizer support and model-specific token accounting remain intentionally deferred.
 
 ### `get_context_capsule`
 
@@ -259,6 +277,7 @@ Notes / current scope:
 - Single-repo only: a multi-repo workspace request with `capsule_engine=v2` is rejected (use the default v1 path for multi-repo).
 - Manifest persistence is consistent with the v1 path — a deterministic `capsuleManifestId` is persisted and resolves via `check_capsule_staleness`. Because v2 items carry no DB `symbolId`, the manifest uses each item's `fqName` as the symbol-identity surrogate, so file-level staleness is exact while symbol-level staleness compares against the fqName surrogate (an intended difference from v1).
 - Auto-capture of a `tool_call` observation is deferred for the v2 path (capture is keyed on the v1 capsule structure).
+- Both the v1 and v2 single-repo responses carry the additive, estimated `accounting` block described under `run_pipeline` (deterministic `chars / 4`, not exact tokenizer truth).
 - `get_code_context` remains the default "start here" tool; Capsule v2 is opt-in/experimental.
 
 ## Structural Tools

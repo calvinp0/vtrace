@@ -822,12 +822,17 @@ test("get_context_capsule is a thin visible wrapper over the existing capsule pi
     assert.equal(visible.result.ok, true);
     assert.equal(legacy.result.ok, true);
     // get_context_capsule additionally persists a capsule manifest and surfaces
-    // its id; build_capsule does not. Aside from that field the visible tool is
-    // still a thin wrapper over the same pipeline output.
-    const { capsuleManifestId, ...visibleWithoutManifest } = visible.result.output;
-    assert.deepEqual(visibleWithoutManifest, legacy.result.output);
+    // its id (plus the additive, estimated `accounting` block); build_capsule
+    // does neither. Aside from those fields the visible tool is still a thin
+    // wrapper over the same pipeline output.
+    const { capsuleManifestId, accounting, ...visibleWithoutExtras } = visible.result.output;
+    assert.deepEqual(visibleWithoutExtras, legacy.result.output);
     assert.equal(typeof capsuleManifestId, "string");
     assert.equal((capsuleManifestId as string).length > 0, true);
+    // Accounting is present on the visible product tool and well-formed.
+    assert.notEqual(accounting, undefined);
+    assert.equal(accounting.method, "chars_div_4");
+    assert.equal(typeof accounting.estimatedOutputTokens, "number");
   });
 });
 
@@ -954,8 +959,18 @@ test("get_context_capsule capsule_engine=v2 returns the bounded Capsule v2 produ
     const second = await server.handleRequest({ ...request, requestId: "req-capsule-v2-again" });
 
     assert.equal(first.result.ok, true);
-    // Output is deterministic across repeated calls.
-    assert.deepEqual(second.result.output, first.result.output);
+    // Output is deterministic across repeated calls, except for the additive
+    // `accounting` block whose `latencyMs` is wall-clock and inherently varies.
+    const { accounting: firstAccounting, ...firstStable } = first.result.output;
+    const { accounting: secondAccounting, ...secondStable } = second.result.output;
+    assert.deepEqual(secondStable, firstStable);
+    // Everything in accounting except latency is deterministic too.
+    assert.notEqual(firstAccounting, undefined);
+    assert.notEqual(secondAccounting, undefined);
+    assert.deepEqual(
+      { ...secondAccounting, latencyMs: 0 },
+      { ...firstAccounting, latencyMs: 0 },
+    );
 
     const output = first.result.output;
     assert.equal(output.engine, "v2");
@@ -1173,6 +1188,148 @@ test("get_code_context inherits capsule_engine=v2 by delegating to run_pipeline"
     assert.equal(output.contextEngine, "v2");
     assert.equal(output.capsuleV2.engine, "v2");
     assert.equal(output.capsuleV2.pivots.length >= 1, true);
+    assertOutputConformsToToolSchema(McpToolId.GetCodeContext, output);
+  });
+});
+
+// A well-formed `accounting` block: deterministic chars/4 figures, a measured
+// latency, and the explicit naive-full-file baseline. Shared by the tests below.
+function assertWellFormedAccounting(accounting: unknown): void {
+  assert.notEqual(accounting, undefined);
+  const block = accounting as Record<string, unknown>;
+  assert.equal(block.method, "chars_div_4");
+  assert.equal(typeof block.baseline, "string");
+  assert.equal((block.baseline as string).length > 0, true);
+  assert.equal(typeof block.latencyMs, "number");
+  assert.equal((block.latencyMs as number) >= 0, true);
+  assert.equal(typeof block.estimatedOutputTokens, "number");
+  assert.equal((block.estimatedOutputTokens as number) > 0, true);
+  assert.equal(typeof block.estimatedNaiveFullFileTokens, "number");
+  assert.equal(typeof block.estimatedTokensSavedVsNaiveFullFile, "number");
+  // Savings are clamped at 0 (never negative).
+  assert.equal((block.estimatedTokensSavedVsNaiveFullFile as number) >= 0, true);
+  assert.equal(typeof block.uniqueFilesCounted, "number");
+}
+
+test("get_context_capsule v1 includes the deterministic accounting block", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-capsule-v1-accounting",
+      toolId: McpToolId.GetContextCapsule,
+      input: { query: "Session", maxBudgetCharacters: 5_000 },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    // v1 shape is preserved; accounting is additive.
+    assert.notEqual(output.capsule, undefined);
+    assertWellFormedAccounting(output.accounting);
+    // The naive baseline reflects the real fixture files the capsule touched.
+    assert.equal(output.accounting.estimatedNaiveFullFileTokens > 0, true);
+    assert.equal(output.accounting.uniqueFilesCounted >= 1, true);
+    assertOutputConformsToToolSchema(McpToolId.GetContextCapsule, output);
+  });
+});
+
+test("get_context_capsule v2 includes the deterministic accounting block", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-capsule-v2-accounting",
+      toolId: McpToolId.GetContextCapsule,
+      input: {
+        query: "modify createSession in SessionManager to accept a label",
+        capsule_engine: "v2",
+        capsule_intent: "modify",
+      },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    assert.equal(output.engine, "v2");
+    assertWellFormedAccounting(output.accounting);
+    assert.equal(output.accounting.uniqueFilesCounted >= 1, true);
+    assertOutputConformsToToolSchema(McpToolId.GetContextCapsule, output);
+  });
+});
+
+test("run_pipeline default path includes the deterministic accounting block", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-accounting",
+      toolId: McpToolId.RunPipeline,
+      input: { query: V2_PIPELINE_QUERY },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    // Default (v1-only) path: no v2 section, but accounting is present.
+    assert.equal(output.contextEngine, undefined);
+    assertWellFormedAccounting(output.accounting);
+    assertOutputConformsToToolSchema(McpToolId.RunPipeline, output);
+  });
+});
+
+test("run_pipeline v2 opt-in includes the deterministic accounting block", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-v2-accounting",
+      toolId: McpToolId.RunPipeline,
+      input: {
+        query: V2_PIPELINE_QUERY,
+        capsule_engine: "v2",
+        capsule_intent: "modify",
+      },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    assert.equal(output.contextEngine, "v2");
+    assertWellFormedAccounting(output.accounting);
+    assertOutputConformsToToolSchema(McpToolId.RunPipeline, output);
+  });
+});
+
+test("get_code_context returns accounting through delegation to run_pipeline", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-get-code-context-accounting",
+      toolId: McpToolId.GetCodeContext,
+      input: { task: "where is createSession", maxBudgetCharacters: 5_000 },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    assertWellFormedAccounting(output.accounting);
     assertOutputConformsToToolSchema(McpToolId.GetCodeContext, output);
   });
 });
@@ -1553,6 +1710,7 @@ test("run_pipeline vNext returns a compact orchestration result that differs mat
     assert.deepEqual(
       Object.keys(pipeline.result.output).sort(),
       [
+        "accounting",
         "context",
         "deferred",
         "diagnostics",
@@ -1604,7 +1762,16 @@ test("get_code_context delegates to the same implementation and output as run_pi
 
     assert.equal(getCodeContext.result.ok, true);
     assert.equal(runPipeline.result.ok, true);
-    assert.deepEqual(getCodeContext.result, runPipeline.result);
+    // Same implementation, so outputs match modulo the additive `accounting`
+    // block whose `latencyMs` is wall-clock and varies between the two calls.
+    const normalizeAccounting = (result: typeof getCodeContext.result) => ({
+      ...result,
+      output: {
+        ...result.output,
+        accounting: { ...result.output.accounting, latencyMs: 0 },
+      },
+    });
+    assert.deepEqual(normalizeAccounting(getCodeContext.result), normalizeAccounting(runPipeline.result));
     assert.equal(getCodeContext.result.output.diagnostics.indexFreshness.status, "fresh");
     assert.equal(getCodeContext.result.output.diagnostics.indexFreshness.action, "none");
   });
@@ -3745,7 +3912,14 @@ test("get_context_capsule auto-captures one deduped tool-call observation on hap
 
     try {
       assert.equal(first.result.ok, true);
-      assert.deepEqual(second.result.output, first.result.output);
+      // Deterministic across calls except the additive `accounting.latencyMs`.
+      const { accounting: firstAccounting, ...firstStable } = first.result.output;
+      const { accounting: secondAccounting, ...secondStable } = second.result.output;
+      assert.deepEqual(secondStable, firstStable);
+      assert.deepEqual(
+        { ...secondAccounting, latencyMs: 0 },
+        { ...firstAccounting, latencyMs: 0 },
+      );
       assert.equal(countObservations(db), 1);
       const memory = await server.handleRequest({
         schema: MCP_SERVER_SCHEMA,

@@ -21,6 +21,11 @@ import {
 } from "../capsuleV2/productAdapter";
 import { CapsuleIntent, parseCapsuleIntent } from "../capsuleV2/types";
 import {
+  buildContextAccounting,
+  runPipelineOutputFilePathGroups,
+  type ContextAccounting,
+} from "../metrics/contextAccounting";
+import {
   getCapsuleManifestById,
   getCapsuleStaleness,
   persistCapsuleManifestBestEffort,
@@ -4527,6 +4532,18 @@ function formatContextCapsulePipelineOutput(
   };
 }
 
+// Best-effort wrapper: accounting is additive and must never fail the tool
+// response, so any error collapses to `undefined` (the field is then omitted).
+async function buildContextAccountingBestEffort(
+  input: Parameters<typeof buildContextAccounting>[0],
+): Promise<ContextAccounting | undefined> {
+  try {
+    return await buildContextAccounting(input);
+  } catch {
+    return undefined;
+  }
+}
+
 interface MultiRepoRetrievalSummary {
   readonly repoAlias: string;
   readonly repoRoot: string;
@@ -6751,6 +6768,49 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
 // Capsule v2 product item (pivot or support) as the MCP surface reports it.
 // Declared here (above RUN_PIPELINE_TOOL_DEFINITION) so the opt-in v2 sections of
 // both run_pipeline/get_code_context and get_context_capsule share one schema.
+
+// Deterministic product-path accounting. Additive and optional: present when the
+// best-effort accounting succeeds, omitted on the rare failure or on multi-repo
+// paths. Every figure is an estimate (chars/4), never a tokenizer count. Shared
+// by run_pipeline/get_code_context and get_context_capsule (v1 and v2).
+const CONTEXT_ACCOUNTING_SCHEMA = objectProperty(
+  "Deterministic, estimated (chars/4) token + latency accounting for the emitted context. Not exact tokenizer truth.",
+  {
+    latencyMs: numberProperty("Wall-clock latency of the measured tool/orchestrator path, in milliseconds."),
+    estimatedOutputTokens: integerProperty("Estimated token cost (chars/4) of the actual emitted product response."),
+    estimatedNaiveFullFileTokens: integerProperty("Estimated token cost (chars/4) of reading the full contents of every unique file the emitted context represents."),
+    estimatedTokensSavedVsNaiveFullFile: integerProperty("Naive full-file estimate minus emitted estimate, clamped at 0."),
+    estimatedSavingsPercentVsNaiveFullFile: {
+      type: ["number", "null"],
+      description: "Percent reduction vs. the naive full-file baseline; null when no files were counted.",
+    },
+    uniqueFilesCounted: integerProperty("Count of unique files actually read for the naive baseline."),
+    method: stringProperty("Estimation method. Always `chars_div_4` — an approximation, not a tokenizer."),
+    baseline: stringProperty("Explicit wording of the naive comparison baseline."),
+    skippedFiles: arrayProperty(
+      "Files that could not be counted (missing/unreadable/outside repo), when any.",
+      objectProperty(
+        "A file skipped while computing the naive baseline.",
+        {
+          path: stringProperty("Repo-relative file path."),
+          reason: stringProperty("Why the file was skipped."),
+        },
+        ["path", "reason"],
+      ),
+    ),
+  },
+  [
+    "latencyMs",
+    "estimatedOutputTokens",
+    "estimatedNaiveFullFileTokens",
+    "estimatedTokensSavedVsNaiveFullFile",
+    "estimatedSavingsPercentVsNaiveFullFile",
+    "uniqueFilesCounted",
+    "method",
+    "baseline",
+  ],
+);
+
 const CAPSULE_V2_PRODUCT_ITEM_SCHEMA = objectProperty(
   "A Capsule v2 pivot or support item.",
   {
@@ -6968,6 +7028,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             ],
           ),
           contextEngine: stringProperty("Context engine discriminator. `v2` only when the caller opted into Capsule v2; absent on the default v1-only path."),
+          accounting: CONTEXT_ACCOUNTING_SCHEMA,
           capsuleV2: CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA,
           capsuleV2ManifestId: {
             type: ["string", "null"],
@@ -7176,6 +7237,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           const preexistingSessionStatus = sessionId === undefined
             ? undefined
             : getSessionById(db, sessionId)?.status;
+          const accountingStartedAt = performance.now();
           const orchestration = runPipelineOrchestrator(db, binding.repoRoot, {
             query,
             maxResults,
@@ -7271,21 +7333,34 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
               : {}),
           });
 
+          const assembledOutput = {
+            ...output,
+            diagnostics: {
+              ...output.diagnostics,
+              freshness,
+              indexFreshness: formatIndexFreshnessDiagnostic({
+                freshness,
+                latestRunId: getLatestIndexRun(db)?.id ?? null,
+              }),
+              nudge,
+            },
+            savedObservation,
+          };
+
+          // Deterministic, best-effort accounting over the emitted response.
+          // Counts the unique files the v1 context (and any v2 section) touched.
+          const accounting = await buildContextAccountingBestEffort({
+            repoRoot: binding.repoRoot,
+            emittedValue: assembledOutput,
+            filePathGroups: runPipelineOutputFilePathGroups(assembledOutput),
+            latencyMs: performance.now() - accountingStartedAt,
+          });
+
           return {
             ok: true,
-            output: {
-              ...output,
-              diagnostics: {
-                ...output.diagnostics,
-                freshness,
-                indexFreshness: formatIndexFreshnessDiagnostic({
-                  freshness,
-                  latestRunId: getLatestIndexRun(db)?.id ?? null,
-                }),
-                nudge,
-              },
-              savedObservation,
-            },
+            output: accounting === undefined
+              ? assembledOutput
+              : { ...assembledOutput, accounting },
           };
         },
       );
@@ -7512,6 +7587,7 @@ interface CapsuleV2ToolOutput {
   engine: typeof CAPSULE_ENGINE_V2;
   capsuleManifestId: string | null;
   capsuleV2: CapsuleV2ProductResponse;
+  accounting?: ContextAccounting;
 }
 
 const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
@@ -7566,6 +7642,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           query: stringProperty("Original query text."),
           intent: stringProperty("Selected intent."),
           engine: stringProperty("Capsule engine for this response. `v2` only when the caller opted into Capsule v2; absent on the default v1 path."),
+          accounting: CONTEXT_ACCOUNTING_SCHEMA,
           classification: CLASSIFICATION_SCHEMA,
           routingProfile: ROUTING_PROFILE_SCHEMA,
           capsuleProfile: CAPSULE_PROFILE_SCHEMA,
@@ -7717,6 +7794,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         McpToolId.GetContextCapsule,
         async (binding, db) => {
           const sourceRunId = getLatestIndexRun(db)?.id ?? null;
+          const accountingStartedAt = performance.now();
 
           // Opt-in Capsule v2 path: build the bounded, intent-aware v2 capsule,
           // project it to the stable product response, and persist a manifest the
@@ -7745,6 +7823,16 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               capsuleManifestId,
               capsuleV2,
             };
+            // Deterministic, best-effort accounting over the emitted v2 response.
+            const accounting = await buildContextAccountingBestEffort({
+              repoRoot: binding.repoRoot,
+              emittedValue: output,
+              filePathGroups: [capsuleV2.pivots, capsuleV2.support],
+              latencyMs: performance.now() - accountingStartedAt,
+            });
+            if (accounting !== undefined) {
+              output.accounting = accounting;
+            }
             return { ok: true, output };
           }
 
@@ -7776,9 +7864,19 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             pipeline.capsule,
             sourceRunId,
           );
+          const v1Output = formatContextCapsulePipelineOutput(pipeline, capsuleManifestId);
+          // Deterministic, best-effort accounting over the emitted v1 capsule.
+          const accounting = await buildContextAccountingBestEffort({
+            repoRoot: binding.repoRoot,
+            emittedValue: v1Output,
+            filePathGroups: [v1Output.capsule.pivots, v1Output.capsule.supportingItems],
+            latencyMs: performance.now() - accountingStartedAt,
+          });
           return {
             ok: true,
-            output: formatContextCapsulePipelineOutput(pipeline, capsuleManifestId),
+            output: accounting === undefined
+              ? v1Output
+              : { ...v1Output, accounting },
           };
         },
       );

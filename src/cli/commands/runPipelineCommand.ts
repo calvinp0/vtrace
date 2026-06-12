@@ -8,6 +8,10 @@ import {
 } from "../../runPipeline/types";
 import { isRunPipelinePresetIntent } from "../../runPipeline/selectIntent";
 import { CapsuleIntent, parseCapsuleIntent } from "../../capsuleV2/types";
+import {
+  buildContextAccounting,
+  runPipelineOutputFilePathGroups,
+} from "../../metrics/contextAccounting";
 import { RUN_PIPELINE_CAPSULE_ENGINE_V2 } from "../../runPipeline/runPipelineOrchestrator";
 import type { CliOptions, CommandResult } from "../types";
 import { failure, resolveOptions, resolveRepoCommandPaths, success } from "./helpers";
@@ -57,6 +61,7 @@ export async function runRunPipelineCommand(
       if (!hasIndexedFiles(db)) {
         return failure(`Repo not indexed: ${resolvedRepo.repoRoot}`);
       }
+      const accountingStartedAt = performance.now();
       const orchestration = runPipelineOrchestrator(db, resolvedRepo.repoRoot, {
         query: parsed.query,
         ...(parsed.maxResults === undefined ? {} : { maxResults: parsed.maxResults }),
@@ -69,7 +74,22 @@ export async function runRunPipelineCommand(
         ...(parsed.capsuleBudgetTokens === undefined ? {} : { capsuleBudgetTokens: parsed.capsuleBudgetTokens }),
       });
       const formatted = formatRunPipelineOrchestrationOutput(orchestration);
-      return success(`${JSON.stringify(formatted)}\n`);
+      // Deterministic, best-effort accounting over the emitted response. Mirrors
+      // the MCP run_pipeline path so the CLI and tool surfaces report the same
+      // estimated compactness. Accounting failure must never fail the command.
+      let withAccounting: unknown = formatted;
+      try {
+        const accounting = await buildContextAccounting({
+          repoRoot: resolvedRepo.repoRoot,
+          emittedValue: formatted,
+          filePathGroups: runPipelineOutputFilePathGroups(formatted),
+          latencyMs: performance.now() - accountingStartedAt,
+        });
+        withAccounting = { ...formatted, accounting };
+      } catch {
+        withAccounting = formatted;
+      }
+      return success(`${JSON.stringify(withAccounting)}\n`);
     } finally {
       db.close();
     }
