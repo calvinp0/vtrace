@@ -10,6 +10,13 @@ import {
 } from "../capsule/types";
 import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
 import type { PreparedCapsuleAssembly } from "../capsuleProfiles/types";
+import { buildCapsuleV2 } from "../capsuleV2/buildCapsuleV2";
+import {
+  capsuleV2ToManifestItemFields,
+  toCapsuleV2ProductResponse,
+  type CapsuleV2ProductResponse,
+} from "../capsuleV2/productAdapter";
+import { CapsuleIntent } from "../capsuleV2/types";
 import { getImpactGraph, type ImpactGraphOutput } from "../impact/getImpactGraph";
 import {
   searchLogicFlow,
@@ -36,7 +43,10 @@ import { createCharacterBudget } from "../capsule/budget";
 import { createSourceBackedCapsuleBuilder } from "../capsule/buildCapsule";
 import { computeVisibleCapsuleObservationDedupeKey } from "../observations/autoCapture";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
-import { persistCapsuleManifestBestEffort } from "../db/repositories/capsuleManifestsRepository";
+import {
+  persistCapsuleManifestBestEffort,
+  persistCapsuleV2ManifestBestEffort,
+} from "../db/repositories/capsuleManifestsRepository";
 import { persistDeferredVexpRef } from "../db/repositories/deferredVexpRefsRepository";
 import {
   selectRelevantProjectRules,
@@ -77,7 +87,21 @@ export interface RunPipelineOrchestratorInput {
   readonly includeMemory?: boolean;
   readonly includeTests?: boolean;
   readonly includeFileContent?: boolean;
+  /**
+   * Opt-in context engine. When set to `v2` (case-insensitive) the orchestration
+   * additionally builds a bounded Capsule v2 product section alongside the
+   * unchanged v1 sections. Any other value (or omission) keeps the v1-only path.
+   */
+  readonly capsuleEngine?: string;
+  /** Capsule v2 token budget. Only used when `capsuleEngine=v2`. */
+  readonly capsuleBudgetTokens?: number;
+  /** Capsule v2 intent. Only used when `capsuleEngine=v2`. Defaults to auto. */
+  readonly capsuleIntent?: CapsuleIntent;
 }
+
+// The opt-in discriminator value for the Capsule v2 context engine. The default
+// (unset) path stays byte-identical to the v1-only orchestration.
+export const RUN_PIPELINE_CAPSULE_ENGINE_V2 = "v2";
 
 export const RUN_PIPELINE_DEFAULTS = Object.freeze({
   maxResults: 6,
@@ -87,6 +111,10 @@ export const RUN_PIPELINE_DEFAULTS = Object.freeze({
   impactDepth: 2,
   impactMaxTopDependents: 4,
   flowMaxPaths: 3,
+  // Capsule v2 token budget when the caller opts in without an explicit budget.
+  // Matches the get_context_capsule v2 default so both product paths size the
+  // same first-call context.
+  capsuleV2BudgetTokens: 8_000,
 });
 
 export interface OrchestrationRetrievalDiagnostics {
@@ -207,6 +235,19 @@ export interface RunPipelineOrchestration {
    * feed the id straight into check_capsule_staleness / `vtrace check-capsule`.
    */
   readonly capsuleManifestId: string | null;
+  /**
+   * Bounded Capsule v2 product section, or null on the default v1-only path.
+   * Built through the shared `toCapsuleV2ProductResponse` adapter so the
+   * projection logic is never duplicated. Present only when the caller opts in
+   * with `capsuleEngine=v2`.
+   */
+  readonly capsuleV2: CapsuleV2ProductResponse | null;
+  /**
+   * Persisted Capsule v2 manifest id, or null when v2 was not requested or no
+   * manifest could be persisted. Resolves through check_capsule_staleness the
+   * same way the v1 `capsuleManifestId` does.
+   */
+  readonly capsuleV2ManifestId: string | null;
 }
 
 interface ImpactCandidate {
@@ -259,6 +300,13 @@ export function runPipelineOrchestrator(
     getLatestIndexRun(db)?.id ?? null,
   );
 
+  // Opt-in Capsule v2 section. The default (no `capsuleEngine`) path leaves both
+  // fields null and the v1 sections untouched, so existing output is byte
+  // identical. When opted in we build the bounded, intent-aware v2 capsule,
+  // project it through the shared product adapter, and persist a manifest the
+  // same way the v1 path does (resolvable by check_capsule_staleness).
+  const capsuleV2Build = buildCapsuleV2Section(db, repoRoot, query, rawInput);
+
   const impact = runImpactSection(db, context, intentDecision);
   const flow = runFlowSection(db, context);
   const memory = runMemorySection(db, {
@@ -308,7 +356,48 @@ export function runPipelineOrchestrator(
     rules,
     deferred,
     capsuleManifestId,
+    capsuleV2: capsuleV2Build.capsuleV2,
+    capsuleV2ManifestId: capsuleV2Build.capsuleV2ManifestId,
   };
+}
+
+interface CapsuleV2SectionResult {
+  readonly capsuleV2: CapsuleV2ProductResponse | null;
+  readonly capsuleV2ManifestId: string | null;
+}
+
+// Build the opt-in Capsule v2 product section. Returns nulls on the default path
+// (no `capsuleEngine`, or any value other than `v2`). Reuses the shared product
+// adapter and manifest persistence so no projection logic is duplicated here and
+// the persisted manifest resolves through check_capsule_staleness exactly like
+// the get_context_capsule v2 path.
+function buildCapsuleV2Section(
+  db: Database,
+  repoRoot: string,
+  query: string,
+  rawInput: RunPipelineOrchestratorInput,
+): CapsuleV2SectionResult {
+  const useCapsuleV2 =
+    (rawInput.capsuleEngine ?? "").toLowerCase() === RUN_PIPELINE_CAPSULE_ENGINE_V2;
+  if (!useCapsuleV2) {
+    return { capsuleV2: null, capsuleV2ManifestId: null };
+  }
+
+  const result = buildCapsuleV2({
+    db,
+    repoRoot,
+    task: query,
+    intent: rawInput.capsuleIntent ?? CapsuleIntent.Auto,
+    maxTokens: rawInput.capsuleBudgetTokens ?? RUN_PIPELINE_DEFAULTS.capsuleV2BudgetTokens,
+  });
+  const capsuleV2 = toCapsuleV2ProductResponse(result);
+  const capsuleV2ManifestId = persistCapsuleV2ManifestBestEffort(
+    db,
+    query,
+    capsuleV2ToManifestItemFields(result),
+    getLatestIndexRun(db)?.id ?? null,
+  );
+  return { capsuleV2, capsuleV2ManifestId };
 }
 
 function runReliableContextRetrieval(

@@ -8,6 +8,8 @@ For broad coding, debugging, refactor, and repo-understanding tasks, start with 
 
 `run_pipeline` remains available as the stable/internal equivalent. If you already know the exact workflow you need, call the narrower tool directly.
 
+Both `get_code_context` and `run_pipeline` can additionally surface the experimental Capsule v2 section with `capsule_engine: "v2"` (alias `capsuleEngine`; optional `capsule_intent` and `capsule_budget_tokens`). When opted in they add a top-level `contextEngine: "v2"` discriminator, a `capsuleV2` block, and a `capsuleV2ManifestId` while keeping every v1 section. The default omits the flag and is unchanged. Single-repo only.
+
 Prefer product-facing input names for new callers:
 
 - `task`

@@ -1055,6 +1055,216 @@ test("get_context_capsule v2 persists a manifest that check_capsule_staleness re
   });
 });
 
+const V2_PIPELINE_QUERY = "modify createSession in SessionManager to accept a label";
+
+test("run_pipeline default path stays on the v1-only engine (no contextEngine/capsuleV2)", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-default-v1",
+      toolId: McpToolId.RunPipeline,
+      input: { query: V2_PIPELINE_QUERY },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    // The default response carries no v2 discriminator and no v2 product block.
+    assert.equal(output.contextEngine, undefined);
+    assert.equal(output.capsuleV2, undefined);
+    assert.equal(output.capsuleV2ManifestId, undefined);
+    // The v1 sections are all present.
+    assert.notEqual(output.context, undefined);
+    assert.notEqual(output.impact, undefined);
+    assert.notEqual(output.flow, undefined);
+    assert.notEqual(output.memory, undefined);
+    assert.notEqual(output.rules, undefined);
+    assert.notEqual(output.deferred, undefined);
+    assertOutputConformsToToolSchema(McpToolId.RunPipeline, output);
+  });
+});
+
+test("run_pipeline capsule_engine=v2 returns a bounded Capsule v2 section and preserves the v1 sections", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-v2",
+      toolId: McpToolId.RunPipeline,
+      input: {
+        query: V2_PIPELINE_QUERY,
+        capsule_engine: "v2",
+        capsule_intent: "modify",
+        capsule_budget_tokens: 8_000,
+      },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+
+    // v2 discriminator + product block are present.
+    assert.equal(output.contextEngine, "v2");
+    const capsuleV2 = output.capsuleV2;
+    assert.notEqual(capsuleV2, undefined);
+    assert.equal(capsuleV2.engine, "v2");
+    assert.equal(capsuleV2.experimental, true);
+    assert.equal(capsuleV2.intent, "modify");
+    assert.equal(capsuleV2.budget.maxTokens, 8_000);
+
+    // At least one pivot on the TS fixture, carrying the product fields.
+    assert.equal(capsuleV2.pivots.length >= 1, true);
+    const pivot = capsuleV2.pivots[0];
+    assert.equal(pivot.role, "pivot");
+    assert.equal(typeof pivot.fqName, "string");
+    assert.equal(pivot.evidence.length > 0, true);
+
+    // Output is bounded: nothing exceeds the requested budget.
+    const totalTokens = [...capsuleV2.pivots, ...capsuleV2.support]
+      .reduce((sum, item) => sum + item.estimatedTokens, 0);
+    assert.equal(totalTokens <= capsuleV2.budget.maxTokens, true);
+
+    // The v1 sections are not accidentally removed by the v2 opt-in.
+    assert.notEqual(output.context, undefined);
+    assert.notEqual(output.impact, undefined);
+    assert.notEqual(output.flow, undefined);
+    assert.notEqual(output.memory, undefined);
+    assert.notEqual(output.rules, undefined);
+    assert.notEqual(output.deferred, undefined);
+
+    // Manifest persistence is consistent with the v1 path: a deterministic id.
+    assert.equal(typeof output.capsuleV2ManifestId, "string");
+    assert.equal((output.capsuleV2ManifestId as string).length > 0, true);
+
+    assertOutputConformsToToolSchema(McpToolId.RunPipeline, output);
+  });
+});
+
+test("get_code_context inherits capsule_engine=v2 by delegating to run_pipeline", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-get-code-context-v2",
+      toolId: McpToolId.GetCodeContext,
+      input: {
+        query: V2_PIPELINE_QUERY,
+        capsule_engine: "v2",
+        capsule_intent: "modify",
+      },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    assert.equal(output.contextEngine, "v2");
+    assert.equal(output.capsuleV2.engine, "v2");
+    assert.equal(output.capsuleV2.pivots.length >= 1, true);
+    assertOutputConformsToToolSchema(McpToolId.GetCodeContext, output);
+  });
+});
+
+test("run_pipeline accepts the camelCase capsuleEngine alias and is deterministic across calls", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    const request = {
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-v2-camel",
+      toolId: McpToolId.RunPipeline,
+      input: {
+        query: V2_PIPELINE_QUERY,
+        capsuleEngine: "v2",
+        capsuleIntent: "modify",
+      },
+    } as const;
+
+    const first = await server.handleRequest(request);
+    const second = await server.handleRequest({ ...request, requestId: "req-run-pipeline-v2-camel-again" });
+
+    assert.equal(first.result.ok, true);
+    assert.equal(second.result.ok, true);
+    assert.equal(first.result.output.contextEngine, "v2");
+    assert.equal(first.result.output.capsuleV2.engine, "v2");
+    // The v2 product section is deterministic across repeated calls.
+    assert.deepEqual(second.result.output.capsuleV2, first.result.output.capsuleV2);
+    assert.equal(second.result.output.capsuleV2ManifestId, first.result.output.capsuleV2ManifestId);
+  });
+});
+
+test("run_pipeline capsule_engine=v2 persists a manifest resolvable by check_capsule_staleness", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    const pipeline = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-v2-manifest",
+      toolId: McpToolId.RunPipeline,
+      input: {
+        query: V2_PIPELINE_QUERY,
+        capsule_engine: "v2",
+        capsule_intent: "modify",
+      },
+    });
+    assert.equal(pipeline.result.ok, true);
+    const manifestId = pipeline.result.output.capsuleV2ManifestId;
+    assert.equal(typeof manifestId, "string");
+    assert.equal((manifestId as string).length > 0, true);
+
+    const fresh = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-v2-staleness",
+      toolId: McpToolId.CheckCapsuleStaleness,
+      input: { manifestId, comparisonRunId: 1 },
+    });
+    assert.equal(fresh.result.ok, true);
+    assert.equal(fresh.result.output.status, "fresh");
+  });
+});
+
+test("run_pipeline capsule_engine=v2 is rejected for a multi-repo workspace", async () => {
+  await withTwoRepoWorkspace(async ({ alphaRoot }) => {
+    const server = createMcpServer({
+      context: { repoRoot: alphaRoot },
+    });
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-run-pipeline-v2-multi-repo",
+      toolId: McpToolId.RunPipeline,
+      input: {
+        query: V2_PIPELINE_QUERY,
+        capsule_engine: "v2",
+      },
+    });
+
+    assert.equal(response.result.ok, false);
+    assert.equal(response.result.error.code, McpErrorCode.InvalidRequest);
+    assert.match(response.result.error.message, /single-repo only/);
+  });
+});
+
 test("run_pipeline persists a manifest surfaced in context.capsuleManifestId and resolvable by check_capsule_staleness", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);

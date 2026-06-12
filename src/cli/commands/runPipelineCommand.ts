@@ -7,6 +7,8 @@ import {
   RunPipelinePresetIntent,
 } from "../../runPipeline/types";
 import { isRunPipelinePresetIntent } from "../../runPipeline/selectIntent";
+import { CapsuleIntent, parseCapsuleIntent } from "../../capsuleV2/types";
+import { RUN_PIPELINE_CAPSULE_ENGINE_V2 } from "../../runPipeline/runPipelineOrchestrator";
 import type { CliOptions, CommandResult } from "../types";
 import { failure, resolveOptions, resolveRepoCommandPaths, success } from "./helpers";
 
@@ -18,6 +20,9 @@ interface ParsedRunPipelineArgs {
   readonly intent?: RunPipelinePresetIntent;
   readonly sessionId?: string;
   readonly includeMemory?: boolean;
+  readonly capsuleEngine?: string;
+  readonly capsuleIntent?: CapsuleIntent;
+  readonly capsuleBudgetTokens?: number;
 }
 
 export async function runRunPipelineCommand(
@@ -59,6 +64,9 @@ export async function runRunPipelineCommand(
         ...(parsed.intent === undefined ? {} : { intent: parsed.intent }),
         ...(parsed.sessionId === undefined ? {} : { sessionId: parsed.sessionId }),
         ...(parsed.includeMemory === undefined ? {} : { includeMemory: parsed.includeMemory }),
+        ...(parsed.capsuleEngine === undefined ? {} : { capsuleEngine: parsed.capsuleEngine }),
+        ...(parsed.capsuleIntent === undefined ? {} : { capsuleIntent: parsed.capsuleIntent }),
+        ...(parsed.capsuleBudgetTokens === undefined ? {} : { capsuleBudgetTokens: parsed.capsuleBudgetTokens }),
       });
       const formatted = formatRunPipelineOrchestrationOutput(orchestration);
       return success(`${JSON.stringify(formatted)}\n`);
@@ -70,7 +78,7 @@ export async function runRunPipelineCommand(
   }
 }
 
-const USAGE = "Usage: run-pipeline <repo> <query> [--max-results N] [--max-budget-characters N] [--intent <auto|explore|debug|modify|refactor>] [--session-id ID] [--include-memory]";
+const USAGE = "Usage: run-pipeline <repo> <query> [--max-results N] [--max-budget-characters N] [--intent <auto|explore|debug|modify|refactor>] [--session-id ID] [--include-memory] [--capsule-engine v2] [--capsule-intent <auto|debug|refactor|modify|explain|impact|test-failure>] [--capsule-budget-tokens N]";
 
 function parseArgs(args: readonly string[]): ParsedRunPipelineArgs {
   const repo = args[0]!;
@@ -80,6 +88,9 @@ function parseArgs(args: readonly string[]): ParsedRunPipelineArgs {
   let intent: RunPipelinePresetIntent | undefined;
   let sessionId: string | undefined;
   let includeMemory: boolean | undefined;
+  let capsuleEngine: string | undefined;
+  let capsuleIntent: CapsuleIntent | undefined;
+  let capsuleBudgetTokens: number | undefined;
 
   let cursor = 1;
   while (cursor < args.length) {
@@ -106,6 +117,21 @@ function parseArgs(args: readonly string[]): ParsedRunPipelineArgs {
       sessionId = value;
     } else if (token === "--include-memory") {
       includeMemory = true;
+    } else if (token === "--capsule-engine") {
+      const value = args[++cursor];
+      if (value === undefined || value.toLowerCase() !== RUN_PIPELINE_CAPSULE_ENGINE_V2) {
+        throw new Error(`--capsule-engine only supports '${RUN_PIPELINE_CAPSULE_ENGINE_V2}'`);
+      }
+      capsuleEngine = value.toLowerCase();
+    } else if (token === "--capsule-intent") {
+      const value = args[++cursor];
+      const parsedIntent = value === undefined ? undefined : parseCapsuleIntent(value);
+      if (parsedIntent === undefined) {
+        throw new Error("--capsule-intent must be one of: auto, debug, refactor, modify, explain, impact, test-failure");
+      }
+      capsuleIntent = parsedIntent;
+    } else if (token === "--capsule-budget-tokens") {
+      capsuleBudgetTokens = parsePositiveInt(args[++cursor], "--capsule-budget-tokens");
     } else {
       queryParts.push(token);
     }
@@ -125,6 +151,9 @@ function parseArgs(args: readonly string[]): ParsedRunPipelineArgs {
     ...(intent === undefined ? {} : { intent }),
     ...(sessionId === undefined ? {} : { sessionId }),
     ...(includeMemory === undefined ? {} : { includeMemory }),
+    ...(capsuleEngine === undefined ? {} : { capsuleEngine }),
+    ...(capsuleIntent === undefined ? {} : { capsuleIntent }),
+    ...(capsuleBudgetTokens === undefined ? {} : { capsuleBudgetTokens }),
   };
 }
 

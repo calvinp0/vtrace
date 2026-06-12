@@ -281,3 +281,54 @@ test("repeated runs produce identical formatted output", async () => {
     assert.deepEqual(second, first);
   });
 });
+
+test("default orchestration omits the Capsule v2 section entirely", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const out = runFormatted(db, repoRoot, { query: "modify base function", intent: "modify" });
+    // No opt-in => no v2 discriminator and no v2 product block (v1 byte-compatible).
+    assert.equal((out as Record<string, unknown>).contextEngine, undefined);
+    assert.equal((out as Record<string, unknown>).capsuleV2, undefined);
+    assert.equal((out as Record<string, unknown>).capsuleV2ManifestId, undefined);
+  });
+});
+
+test("capsuleEngine=v2 adds the v2 section while preserving the v1 sections", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const out = runFormatted(db, repoRoot, {
+      query: "modify base function to accept a label",
+      intent: "modify",
+      capsuleEngine: "v2",
+    });
+
+    // v2 discriminator + product block are present and self-describing.
+    assert.equal((out as Record<string, unknown>).contextEngine, "v2");
+    const capsuleV2 = (out as Record<string, unknown>).capsuleV2 as { engine: string; experimental: boolean };
+    assert.notEqual(capsuleV2, undefined);
+    assert.equal(capsuleV2.engine, "v2");
+    assert.equal(capsuleV2.experimental, true);
+
+    // The v1 sections survive the v2 opt-in.
+    assert.notEqual(out.context, undefined);
+    assert.notEqual(out.impact, undefined);
+    assert.notEqual(out.flow, undefined);
+    assert.notEqual(out.memory, undefined);
+    assert.notEqual(out.rules, undefined);
+    assert.notEqual(out.deferred, undefined);
+  });
+});
+
+test("capsuleEngine=v2 orchestration is deterministic across repeated runs", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const input: RunPipelineOrchestratorInput = {
+      query: "modify base function to accept a label",
+      intent: "modify",
+      capsuleEngine: "v2",
+    };
+    const first = runFormatted(db, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
+    const second = runFormatted(db, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
+    assert.deepEqual(
+      (second as Record<string, unknown>).capsuleV2,
+      (first as Record<string, unknown>).capsuleV2,
+    );
+  });
+});

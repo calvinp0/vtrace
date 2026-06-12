@@ -205,6 +205,26 @@ Backward-compatible aliases are still accepted:
 
 Internal/stable name for the same default Vtrace repo-context pipeline exposed as `get_code_context`.
 
+#### Opt-in Capsule v2 section (experimental)
+
+By default `run_pipeline` (and therefore `get_code_context`, which delegates to it) returns the unchanged v1-only orchestration. Callers can additionally request the **Capsule v2** product section — the same bounded, intent-aware, evidence-scored primitive offered by `get_context_capsule` — without losing any v1 section:
+
+- `capsule_engine: "v2"` (or the camelCase alias `capsuleEngine: "v2"`)
+
+Optional v2-only inputs (ignored unless `capsule_engine=v2`):
+
+- `capsule_intent` / `capsuleIntent`: `auto` (default) | `debug` | `refactor` | `modify` | `explain` | `impact` | `test-failure`
+- `capsule_budget_tokens` / `capsuleBudgetTokens`: positive integer token budget (default `8000`)
+
+When opted in, the orchestration result is **augmented** (not replaced):
+
+- a top-level `contextEngine: "v2"` discriminator and a `capsuleV2` block (the same shape `get_context_capsule` returns under `capsuleV2`), plus a persisted `capsuleV2ManifestId`.
+- all existing sections — `context`, `impact`, `flow`, `memory`, `rules`, `diagnostics`, and `deferred` refs — are preserved unchanged.
+
+The default (no `capsule_engine`) path is byte-compatible with prior behavior; the v2 section is omitted entirely. As with `get_context_capsule`, the v2 section is single-repo only — a multi-repo workspace request with `capsule_engine=v2` is rejected — and persists a deterministic manifest that resolves via `check_capsule_staleness`. Making v2 the default, and token-saved / latency accounting, are intentionally deferred.
+
+The CLI mirrors the opt-in: `vtrace run-pipeline <repo> <query> --capsule-engine v2 [--capsule-intent <intent>] [--capsule-budget-tokens N]`.
+
 ### `get_context_capsule`
 
 Return the compact context package directly, without the fuller orchestration role of `run_pipeline`.

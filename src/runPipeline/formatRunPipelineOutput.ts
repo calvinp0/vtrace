@@ -174,6 +174,18 @@ export function formatRunPipelineOrchestrationOutput(
     suggestedInput: structuredClone(placeholder.suggestedInput),
   }));
 
+  // Opt-in Capsule v2 section. Emitted only when the caller requested
+  // `capsuleEngine=v2`; the default path omits these keys entirely so the v1
+  // output stays byte identical. `contextEngine` is a self-describing
+  // discriminator so a consumer can route on the response alone.
+  const capsuleV2Fields = orchestration.capsuleV2 === null
+    ? {}
+    : {
+      contextEngine: "v2" as const,
+      capsuleV2: structuredClone(orchestration.capsuleV2),
+      capsuleV2ManifestId: orchestration.capsuleV2ManifestId,
+    };
+
   return {
     schemaVersion: orchestration.schemaVersion,
     request: {
@@ -181,6 +193,7 @@ export function formatRunPipelineOrchestrationOutput(
       task: orchestration.request.query,
       presetRequested: orchestration.request.intentRequested,
     },
+    ...capsuleV2Fields,
     intent: {
       requestedPreset: orchestration.intentDecision.requested,
       selectedPreset: orchestration.intentDecision.selected,

@@ -214,6 +214,12 @@ interface RunPipelineInput extends BuildCapsuleInput {
   readonly sessionId?: string;
   readonly saveObservation?: boolean;
   readonly includeMemory?: boolean;
+  readonly capsule_engine?: string;
+  readonly capsuleEngine?: string;
+  readonly capsule_intent?: string;
+  readonly capsuleIntent?: string;
+  readonly capsule_budget_tokens?: number;
+  readonly capsuleBudgetTokens?: number;
 }
 
 const RUN_PIPELINE_DIAGNOSTIC_REASON = Object.freeze({
@@ -3082,6 +3088,21 @@ function parseOptionalIntegerAlias(
   }
 
   return parseOptionalInteger(toolId, input, legacyField);
+}
+
+function parseOptionalStringFieldAlias(
+  toolId: McpToolId,
+  input: Record<string, unknown>,
+  preferredField: string,
+  legacyField: string,
+): string | undefined | McpToolExecutionResult<never> {
+  const preferred = parseOptionalStringField(toolId, input, preferredField);
+
+  if (preferred !== undefined) {
+    return preferred;
+  }
+
+  return parseOptionalStringField(toolId, input, legacyField);
 }
 
 function parseRequiredStringField(
@@ -6727,6 +6748,134 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
   }),
 ] satisfies McpToolDefinition[];
 
+// Capsule v2 product item (pivot or support) as the MCP surface reports it.
+// Declared here (above RUN_PIPELINE_TOOL_DEFINITION) so the opt-in v2 sections of
+// both run_pipeline/get_code_context and get_context_capsule share one schema.
+const CAPSULE_V2_PRODUCT_ITEM_SCHEMA = objectProperty(
+  "A Capsule v2 pivot or support item.",
+  {
+    role: stringProperty("`pivot` or `support`."),
+    path: stringProperty("Repo-relative file path."),
+    symbol: stringProperty("Local symbol name."),
+    fqName: stringProperty("Fully qualified symbol name."),
+    kind: stringProperty("Symbol kind."),
+    roleReason: stringProperty("Decisive reason this item landed in its role."),
+    contentMode: stringProperty("`full`, `signature`, or `skeleton`."),
+    source: { type: ["string", "null"], description: "Focused source body — present only in `full` content mode." },
+    signature: { type: ["string", "null"], description: "Signature / class line when available." },
+    evidence: arrayProperty("Ordered evidence: why this item was selected.", stringProperty("Evidence line.")),
+    estimatedTokens: integerProperty("Estimated token cost of the rendered block."),
+    isNonSourceExample: booleanProperty("True when the item is a docs/examples/fixture file."),
+  },
+  [
+    "role",
+    "path",
+    "symbol",
+    "fqName",
+    "kind",
+    "roleReason",
+    "contentMode",
+    "source",
+    "signature",
+    "evidence",
+    "estimatedTokens",
+    "isNonSourceExample",
+  ],
+);
+
+// The Capsule v2 product response surfaced under `capsuleV2` when a caller opts
+// into the v2 engine. Bounded and deterministic (see productAdapter.ts).
+const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
+  "Capsule v2 product response (experimental, opt-in). Present only when capsule_engine=v2.",
+  {
+    engine: stringProperty("Always `v2` here."),
+    experimental: booleanProperty("Capsule v2 is opt-in/experimental on the product surface."),
+    intent: stringProperty("The resolved intent the capsule was built for."),
+    actualMode: stringProperty("Realised sizing tier, or `no_context` when no pivot was found."),
+    reason: { type: ["string", "null"], description: "Human-readable reason — present only on the no_context path." },
+    budget: objectProperty(
+      "Token-budget accounting.",
+      {
+        maxTokens: integerProperty("Requested token budget."),
+        estimatedTokens: integerProperty("Estimated tokens used by the assembled capsule."),
+        usedPercent: numberProperty("Percent of the budget used."),
+      },
+      ["maxTokens", "estimatedTokens", "usedPercent"],
+    ),
+    pivots: arrayProperty("Pivot items (focused edit targets).", CAPSULE_V2_PRODUCT_ITEM_SCHEMA),
+    support: arrayProperty("Support items (compact context).", CAPSULE_V2_PRODUCT_ITEM_SCHEMA),
+    discarded: arrayProperty(
+      "Bounded near-miss list (see discardedTotal for the true count).",
+      objectProperty(
+        "A candidate that did not make the capsule.",
+        {
+          path: stringProperty("Repo-relative file path."),
+          symbol: stringProperty("Local symbol name."),
+          kind: stringProperty("Symbol kind."),
+          discardReason: stringProperty("Why this candidate was dropped."),
+        },
+        ["path", "symbol", "kind", "discardReason"],
+      ),
+    ),
+    discardedTotal: integerProperty("Total discarded candidates the engine produced (before the product cap)."),
+    diagnostics: objectProperty(
+      "Bounded diagnostics summary — the auditable why without the full internals.",
+      {
+        intentReason: arrayProperty("Ordered signals behind the intent decision.", stringProperty("Reason line.")),
+        intentConfidence: stringProperty("Planner confidence: high/medium/low."),
+        rolePolicy: stringProperty("The role-assignment policy the strategy selected."),
+        candidateCount: integerProperty("Candidates the role gate ran over."),
+        pivotCount: integerProperty("Pivot count."),
+        supportCount: integerProperty("Support count."),
+        discardedCount: integerProperty("Discarded count."),
+        tier: stringProperty("Allocator tier (micro/standard/full/no_context)."),
+        likelyFiles: arrayProperty("Shaped likely files.", stringProperty("Repo-relative file path.")),
+        likelySymbols: arrayProperty("Shaped likely symbols.", stringProperty("Symbol name.")),
+        failingTests: arrayProperty("Shaped failing tests.", stringProperty("Test id.")),
+        editRiskDirectives: arrayProperty(
+          "Deterministic patch-planning hints derived from the selected pivots.",
+          objectProperty(
+            "An edit-risk / patch-planning hint.",
+            {
+              kind: stringProperty("Edit-risk kind."),
+              confidence: stringProperty("high/medium/low."),
+              directive: stringProperty("The human-readable hint."),
+            },
+            ["kind", "confidence", "directive"],
+          ),
+        ),
+      },
+      [
+        "intentReason",
+        "intentConfidence",
+        "rolePolicy",
+        "candidateCount",
+        "pivotCount",
+        "supportCount",
+        "discardedCount",
+        "tier",
+        "likelyFiles",
+        "likelySymbols",
+        "failingTests",
+        "editRiskDirectives",
+      ],
+    ),
+  },
+  [
+    "engine",
+    "experimental",
+    "intent",
+    "actualMode",
+    "reason",
+    "budget",
+    "pivots",
+    "support",
+    "discarded",
+    "discardedTotal",
+    "diagnostics",
+  ],
+);
+
 type RunPipelineMcpOutput = ReturnType<typeof formatRunPipelineOrchestrationOutput> & {
   savedObservation: {
     observation: ReturnType<typeof formatObservation>;
@@ -6761,6 +6910,12 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           saveObservation: booleanProperty("When true, persist a compact tool-call observation for this pipeline run."),
           observation: stringProperty("Optional durable observation text to save after the pipeline completes."),
           repos: arrayProperty("Optional workspace repo aliases to query. Defaults to all enabled repos when a workspace config is present.", stringProperty("Repo alias.")),
+          capsule_engine: stringProperty("Optional context engine. Set to `v2` to additionally build the experimental, opt-in Capsule v2 product section (bounded, intent-aware, evidence-scored) alongside the unchanged v1 sections. Omit (or any other value) keeps the default v1-only output. Single-repo only."),
+          capsuleEngine: stringProperty("Alias of `capsule_engine` (camelCase)."),
+          capsule_intent: stringProperty("Optional Capsule v2 intent: auto|debug|refactor|modify|explain|impact|test-failure. Only used when capsule_engine=v2. Defaults to auto."),
+          capsuleIntent: stringProperty("Alias of `capsule_intent` (camelCase)."),
+          capsule_budget_tokens: integerProperty("Optional Capsule v2 token budget. Only used when capsule_engine=v2. Defaults to 8000."),
+          capsuleBudgetTokens: integerProperty("Alias of `capsule_budget_tokens` (camelCase)."),
         },
         [],
       ),
@@ -6812,6 +6967,12 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
               "sessionId",
             ],
           ),
+          contextEngine: stringProperty("Context engine discriminator. `v2` only when the caller opted into Capsule v2; absent on the default v1-only path."),
+          capsuleV2: CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA,
+          capsuleV2ManifestId: {
+            type: ["string", "null"],
+            description: "Persisted Capsule v2 manifest id when capsule_engine=v2. Pass to check_capsule_staleness or `vtrace check-capsule`. Absent on the default v1-only path; null when no manifest could be persisted.",
+          },
           intent: RUN_PIPELINE_INTENT_DECISION_SCHEMA,
           taskSummary: RUN_PIPELINE_TASK_SUMMARY_SCHEMA,
           context: RUN_PIPELINE_CONTEXT_SECTION_SCHEMA,
@@ -6874,6 +7035,24 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
       const intentRequested = presetRequested ?? legacyIntentRequested;
       const repos = parseOptionalStringArrayField(McpToolId.RunPipeline, input, "repos");
 
+      // Capsule v2 opt-in. The default (no `capsule_engine`) path stays on the v1
+      // orchestration and is byte-identical to before. Accept both snake_case and
+      // camelCase aliases, mirroring get_context_capsule.
+      const engineSnake = parseOptionalStringField(McpToolId.RunPipeline, input, "capsule_engine");
+      const engineCamel = parseOptionalStringField(McpToolId.RunPipeline, input, "capsuleEngine");
+      const capsuleIntentRaw = parseOptionalStringFieldAlias(
+        McpToolId.RunPipeline,
+        input,
+        "capsule_intent",
+        "capsuleIntent",
+      );
+      const capsuleBudgetTokens = parseOptionalIntegerAlias(
+        McpToolId.RunPipeline,
+        input,
+        "capsule_budget_tokens",
+        "capsuleBudgetTokens",
+      );
+
       if (typeof query !== "string") {
         return query;
       }
@@ -6913,6 +7092,40 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
       if (repos !== undefined && !Array.isArray(repos)) {
         return repos;
       }
+      if (engineSnake !== undefined && typeof engineSnake !== "string") {
+        return engineSnake;
+      }
+      if (engineCamel !== undefined && typeof engineCamel !== "string") {
+        return engineCamel;
+      }
+      if (capsuleIntentRaw !== undefined && typeof capsuleIntentRaw !== "string") {
+        return capsuleIntentRaw;
+      }
+      if (capsuleBudgetTokens !== undefined && typeof capsuleBudgetTokens !== "number") {
+        return capsuleBudgetTokens;
+      }
+
+      const useCapsuleV2 = (engineSnake ?? engineCamel)?.toLowerCase() === CAPSULE_ENGINE_V2;
+
+      let capsuleV2Intent = CapsuleIntent.Auto;
+      if (useCapsuleV2 && capsuleIntentRaw !== undefined) {
+        const parsedIntent = parseCapsuleIntent(capsuleIntentRaw);
+        if (parsedIntent === undefined) {
+          return invalidRequest(
+            McpToolId.RunPipeline,
+            "MCP tool run_pipeline requires capsule_intent to be one of auto|debug|refactor|modify|explain|impact|test-failure.",
+            { capsule_intent: capsuleIntentRaw },
+          );
+        }
+        capsuleV2Intent = parsedIntent;
+      }
+      if (useCapsuleV2 && capsuleBudgetTokens !== undefined && capsuleBudgetTokens <= 0) {
+        return invalidRequest(
+          McpToolId.RunPipeline,
+          "MCP tool run_pipeline requires capsule_budget_tokens to be a positive integer.",
+          { capsule_budget_tokens: capsuleBudgetTokens },
+        );
+      }
 
       if (intentRequested !== undefined && !isRunPipelinePresetIntent(intentRequested)) {
         return invalidRequest(
@@ -6926,6 +7139,17 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
 
       if (!selection.ok) {
         return selection.result;
+      }
+
+      // Capsule v2 is single-repo only in this milestone, matching
+      // get_context_capsule: a multi-repo workspace request with the v2 opt-in is
+      // rejected rather than silently downgraded.
+      if (useCapsuleV2 && hasMultiRepoRequest(selection.selection, repos)) {
+        return invalidRequest(
+          McpToolId.RunPipeline,
+          "MCP tool run_pipeline capsule_engine=v2 is single-repo only; omit repos or select exactly one.",
+          {},
+        );
       }
 
       if (hasMultiRepoRequest(selection.selection, repos)) {
@@ -6961,6 +7185,13 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             includeMemory,
             includeTests,
             includeFileContent,
+            ...(useCapsuleV2
+              ? {
+                capsuleEngine: CAPSULE_ENGINE_V2,
+                capsuleIntent: capsuleV2Intent,
+                ...(capsuleBudgetTokens === undefined ? {} : { capsuleBudgetTokens }),
+              }
+              : {}),
           });
 
           // Auto-capture is a best-effort post-success side effect shared with
@@ -7268,131 +7499,9 @@ const GET_CODE_CONTEXT_TOOL_DEFINITION = Object.freeze({
   handler: handleGetCodeContextRequest,
 }) satisfies McpToolDefinition<RunPipelineInput, GetCodeContextOutput>;
 
-// Capsule v2 product item (pivot or support) as the MCP surface reports it.
-const CAPSULE_V2_PRODUCT_ITEM_SCHEMA = objectProperty(
-  "A Capsule v2 pivot or support item.",
-  {
-    role: stringProperty("`pivot` or `support`."),
-    path: stringProperty("Repo-relative file path."),
-    symbol: stringProperty("Local symbol name."),
-    fqName: stringProperty("Fully qualified symbol name."),
-    kind: stringProperty("Symbol kind."),
-    roleReason: stringProperty("Decisive reason this item landed in its role."),
-    contentMode: stringProperty("`full`, `signature`, or `skeleton`."),
-    source: { type: ["string", "null"], description: "Focused source body — present only in `full` content mode." },
-    signature: { type: ["string", "null"], description: "Signature / class line when available." },
-    evidence: arrayProperty("Ordered evidence: why this item was selected.", stringProperty("Evidence line.")),
-    estimatedTokens: integerProperty("Estimated token cost of the rendered block."),
-    isNonSourceExample: booleanProperty("True when the item is a docs/examples/fixture file."),
-  },
-  [
-    "role",
-    "path",
-    "symbol",
-    "fqName",
-    "kind",
-    "roleReason",
-    "contentMode",
-    "source",
-    "signature",
-    "evidence",
-    "estimatedTokens",
-    "isNonSourceExample",
-  ],
-);
-
-// The Capsule v2 product response surfaced under `capsuleV2` when a caller opts
-// into the v2 engine. Bounded and deterministic (see productAdapter.ts).
-const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
-  "Capsule v2 product response (experimental, opt-in). Present only when capsule_engine=v2.",
-  {
-    engine: stringProperty("Always `v2` here."),
-    experimental: booleanProperty("Capsule v2 is opt-in/experimental on the product surface."),
-    intent: stringProperty("The resolved intent the capsule was built for."),
-    actualMode: stringProperty("Realised sizing tier, or `no_context` when no pivot was found."),
-    reason: { type: ["string", "null"], description: "Human-readable reason — present only on the no_context path." },
-    budget: objectProperty(
-      "Token-budget accounting.",
-      {
-        maxTokens: integerProperty("Requested token budget."),
-        estimatedTokens: integerProperty("Estimated tokens used by the assembled capsule."),
-        usedPercent: numberProperty("Percent of the budget used."),
-      },
-      ["maxTokens", "estimatedTokens", "usedPercent"],
-    ),
-    pivots: arrayProperty("Pivot items (focused edit targets).", CAPSULE_V2_PRODUCT_ITEM_SCHEMA),
-    support: arrayProperty("Support items (compact context).", CAPSULE_V2_PRODUCT_ITEM_SCHEMA),
-    discarded: arrayProperty(
-      "Bounded near-miss list (see discardedTotal for the true count).",
-      objectProperty(
-        "A candidate that did not make the capsule.",
-        {
-          path: stringProperty("Repo-relative file path."),
-          symbol: stringProperty("Local symbol name."),
-          kind: stringProperty("Symbol kind."),
-          discardReason: stringProperty("Why this candidate was dropped."),
-        },
-        ["path", "symbol", "kind", "discardReason"],
-      ),
-    ),
-    discardedTotal: integerProperty("Total discarded candidates the engine produced (before the product cap)."),
-    diagnostics: objectProperty(
-      "Bounded diagnostics summary — the auditable why without the full internals.",
-      {
-        intentReason: arrayProperty("Ordered signals behind the intent decision.", stringProperty("Reason line.")),
-        intentConfidence: stringProperty("Planner confidence: high/medium/low."),
-        rolePolicy: stringProperty("The role-assignment policy the strategy selected."),
-        candidateCount: integerProperty("Candidates the role gate ran over."),
-        pivotCount: integerProperty("Pivot count."),
-        supportCount: integerProperty("Support count."),
-        discardedCount: integerProperty("Discarded count."),
-        tier: stringProperty("Allocator tier (micro/standard/full/no_context)."),
-        likelyFiles: arrayProperty("Shaped likely files.", stringProperty("Repo-relative file path.")),
-        likelySymbols: arrayProperty("Shaped likely symbols.", stringProperty("Symbol name.")),
-        failingTests: arrayProperty("Shaped failing tests.", stringProperty("Test id.")),
-        editRiskDirectives: arrayProperty(
-          "Deterministic patch-planning hints derived from the selected pivots.",
-          objectProperty(
-            "An edit-risk / patch-planning hint.",
-            {
-              kind: stringProperty("Edit-risk kind."),
-              confidence: stringProperty("high/medium/low."),
-              directive: stringProperty("The human-readable hint."),
-            },
-            ["kind", "confidence", "directive"],
-          ),
-        ),
-      },
-      [
-        "intentReason",
-        "intentConfidence",
-        "rolePolicy",
-        "candidateCount",
-        "pivotCount",
-        "supportCount",
-        "discardedCount",
-        "tier",
-        "likelyFiles",
-        "likelySymbols",
-        "failingTests",
-        "editRiskDirectives",
-      ],
-    ),
-  },
-  [
-    "engine",
-    "experimental",
-    "intent",
-    "actualMode",
-    "reason",
-    "budget",
-    "pivots",
-    "support",
-    "discarded",
-    "discardedTotal",
-    "diagnostics",
-  ],
-);
+// CAPSULE_V2_PRODUCT_ITEM_SCHEMA and CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA are
+// declared above RUN_PIPELINE_TOOL_DEFINITION so both run_pipeline/get_code_context
+// and get_context_capsule can reference the same shared v2 product schema.
 
 // The opt-in Capsule v2 envelope `get_context_capsule` returns instead of the v1
 // shape when `capsule_engine=v2`. Self-contained: it carries the persisted
