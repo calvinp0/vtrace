@@ -215,6 +215,32 @@ Use it when you want:
 - a smaller manual retrieval flow
 - a compact structural/task package without extra orchestration
 
+#### Opt-in Capsule v2 engine (experimental)
+
+By default `get_context_capsule` builds the **v1** capsule and returns the unchanged v1 output shape. Callers can opt into the **Capsule v2** engine — the bounded, intent-aware, evidence-scored context primitive otherwise used on the CLI/Stage-5 surface — by passing an explicit engine field:
+
+- `capsule_engine: "v2"` (or the camelCase alias `capsuleEngine: "v2"`)
+
+Optional v2-only inputs (ignored unless `capsule_engine=v2`):
+
+- `capsule_intent`: `auto` (default) | `debug` | `refactor` | `modify` | `explain` | `impact` | `test-failure`
+- `capsule_budget_tokens`: positive integer token budget (default `8000`)
+
+When opted in, the response is a v2-native envelope instead of the v1 capsule:
+
+- `engine: "v2"` and a `capsuleV2` block; the v1-only sections (`classification`, `routingProfile`, `capsuleProfile`, `capsule`) are omitted.
+- `capsuleV2` contains: `engine`, `experimental: true`, `intent` (the resolved intent), `actualMode` (sizing tier or `no_context`), `reason` (only on `no_context`), a `budget` summary (`maxTokens` / `estimatedTokens` / `usedPercent`), `pivots` and `support` items (each with `path`, `symbol`, `fqName`, `kind`, `roleReason`, `contentMode`, `source`/`signature` content, `evidence`, `estimatedTokens`, `isNonSourceExample`), a bounded `discarded` list with `discardedTotal`, and a `diagnostics` summary (intent reason/confidence, role policy, counts, tier, likely files/symbols, failing tests, edit-risk directives).
+- Output is bounded: the v2 engine budgets pivot/support content; the product surface additionally caps the discarded list. No unbounded file contents are emitted.
+
+The default (no `capsule_engine`) path is byte-compatible with prior behavior; the v2 engine never affects it.
+
+Notes / current scope:
+
+- Single-repo only: a multi-repo workspace request with `capsule_engine=v2` is rejected (use the default v1 path for multi-repo).
+- Manifest persistence is consistent with the v1 path — a deterministic `capsuleManifestId` is persisted and resolves via `check_capsule_staleness`. Because v2 items carry no DB `symbolId`, the manifest uses each item's `fqName` as the symbol-identity surrogate, so file-level staleness is exact while symbol-level staleness compares against the fqName surrogate (an intended difference from v1).
+- Auto-capture of a `tool_call` observation is deferred for the v2 path (capture is keyed on the v1 capsule structure).
+- `get_code_context` remains the default "start here" tool; Capsule v2 is opt-in/experimental.
+
 ## Structural Tools
 
 ### `get_skeleton`

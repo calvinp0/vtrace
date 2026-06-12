@@ -48,7 +48,7 @@ Rules use template summaries, exact file/FQN/term/tool/intent links, determinist
 
 ## Direct Tool Choices
 
-- `get_context_capsule`: use when you only need the compact context capsule and do not need orchestration, impact, memory, or task-summary sections.
+- `get_context_capsule`: use when you only need the compact context capsule and do not need orchestration, impact, memory, or task-summary sections. Opt into the experimental Capsule v2 engine with `capsule_engine: "v2"` (alias `capsuleEngine`); optional `capsule_intent` (auto|debug|refactor|modify|explain|impact|test-failure) and `capsule_budget_tokens` (default 8000). v2 returns an `engine: "v2"` + `capsuleV2` envelope (intent, budget, pivots/support, bounded discarded + diagnostics); the default omits the flag and is unchanged. Single-repo only.
 - `get_impact_graph`: use when the user asks what breaks, blast radius, dependents, callers, references, or impact of changing a known symbol.
 - `get_skeleton`: use when the relevant file path is already known and you need structural overview.
 - `search_symbols`: use for exact symbol lookup or when the context result is weak.

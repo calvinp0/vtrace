@@ -45,12 +45,51 @@ export function persistCapsuleManifest(
   db: Database,
   input: PersistCapsuleManifestInput,
 ): CapsuleManifest {
+  return persistCapsuleManifestFromItems(db, {
+    sourceRunId: input.sourceRunId,
+    query: input.capsule.query,
+    items: capsuleToManifestItems(input.capsule),
+    ...(input.createdAtMs === undefined ? {} : { createdAtMs: input.createdAtMs }),
+  });
+}
+
+// The manifest-item identity fields needed to hash + persist a manifest. Plain
+// strings so callers (the v1 `Capsule` path and the Capsule v2 product-adapter
+// path) can supply structurally-compatible records without enum coupling. A full
+// `CapsuleManifestItemRecord` is assignable to this shape.
+export interface CapsuleManifestItemFields {
+  symbolId: string;
+  filePath: string;
+  fqName: string;
+  symbolKind: string;
+  role: string;
+  contentMode: string;
+  sourceBacked: boolean;
+}
+
+export interface PersistCapsuleManifestFromItemsInput {
+  sourceRunId: number;
+  query: string;
+  items: readonly CapsuleManifestItemFields[];
+  createdAtMs?: number;
+}
+
+/**
+ * Persist a capsule manifest from pre-built manifest-item records. Shared core of
+ * the v1 (`Capsule`-derived) and Capsule v2 (product-adapter-derived) paths so
+ * both compute the same deterministic id and write identical row shapes. Item
+ * ordinals are reassigned from array order so callers need not pre-number them.
+ */
+export function persistCapsuleManifestFromItems(
+  db: Database,
+  input: PersistCapsuleManifestFromItemsInput,
+): CapsuleManifest {
   if (getIndexRunById(db, input.sourceRunId) === undefined) {
     throw new Error(`Index run not found: ${input.sourceRunId}`);
   }
 
-  const items = capsuleToManifestItems(input.capsule);
-  const manifestId = computeCapsuleManifestId(input.sourceRunId, input.capsule.query, items);
+  const items = input.items.map((item, itemOrdinal) => ({ ...item, itemOrdinal }));
+  const manifestId = computeCapsuleManifestId(input.sourceRunId, input.query, items);
   const createdAtMs = input.createdAtMs ?? Date.now();
   const existing = getCapsuleManifestById(db, manifestId);
 
@@ -69,7 +108,7 @@ export function persistCapsuleManifest(
         )
         VALUES (?, ?, ?, ?)
       `,
-      [manifestId, input.sourceRunId, input.capsule.query, createdAtMs],
+      [manifestId, input.sourceRunId, input.query, createdAtMs],
     );
 
     for (const item of items) {
@@ -131,6 +170,40 @@ export function persistCapsuleManifestBestEffort(
 
   try {
     return persistCapsuleManifest(db, { sourceRunId, capsule }).id;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Persist a Capsule v2 manifest as a best-effort side effect of a v2
+ * `get_context_capsule` build, mirroring `persistCapsuleManifestBestEffort` for
+ * the v1 path. Returns the deterministic manifest id, or null when none could be
+ * persisted (no index run yet, the capsule has no items, or persistence failed).
+ *
+ * Capsule v2 items carry no DB `symbolId`, so the product adapter uses each item's
+ * `fqName` as the stable symbol-identity surrogate for manifest hashing. The
+ * manifest id therefore stays deterministic and `check_capsule_staleness` resolves
+ * it; file-level staleness is exact, while symbol-level staleness compares against
+ * the fqName surrogate rather than the persisted symbol id (a documented, intended
+ * difference from the v1 path). Never throws.
+ */
+export function persistCapsuleV2ManifestBestEffort(
+  db: Database,
+  query: string,
+  items: readonly CapsuleManifestItemFields[],
+  sourceRunId: number | null,
+): string | null {
+  if (sourceRunId === null) {
+    return null;
+  }
+
+  if (items.length === 0) {
+    return null;
+  }
+
+  try {
+    return persistCapsuleManifestFromItems(db, { sourceRunId, query, items }).id;
   } catch {
     return null;
   }
@@ -252,7 +325,7 @@ function listComparisonSteps(
 function computeCapsuleManifestId(
   sourceRunId: number,
   query: string,
-  items: readonly CapsuleManifestItemRecord[],
+  items: readonly (CapsuleManifestItemFields & { itemOrdinal: number })[],
 ): string {
   const hash = createHash("sha256");
   hash.update(sourceRunId.toString(10));
