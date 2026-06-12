@@ -236,6 +236,7 @@ export function runPipelineOutputFilePathGroups(
   output: {
     context?: { pivots?: ContextFileBearer[]; supports?: ContextFileBearer[] } | null;
     capsuleV2?: { pivots?: ContextFileBearer[]; support?: ContextFileBearer[] } | null;
+    pivotNeighborhood?: ReadonlyArray<{ excerpts?: ReadonlyArray<ContextFileBearer> }> | null;
   },
 ): Array<ReadonlyArray<ContextFileBearer> | undefined> {
   return [
@@ -243,5 +244,10 @@ export function runPipelineOutputFilePathGroups(
     output.context?.supports,
     output.capsuleV2?.pivots,
     output.capsuleV2?.support,
+    // The pivot-neighborhood excerpts represent additional nearby files; count
+    // them in the naive-baseline denominator so savings stay honest.
+    ...(Array.isArray(output.pivotNeighborhood)
+      ? output.pivotNeighborhood.map((neighborhood) => neighborhood.excerpts)
+      : []),
   ];
 }

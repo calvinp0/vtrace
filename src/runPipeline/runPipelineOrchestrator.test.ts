@@ -322,6 +322,78 @@ test("default orchestration omits the Capsule v2 section entirely", async () => 
     assert.equal((out as Record<string, unknown>).contextEngine, undefined);
     assert.equal((out as Record<string, unknown>).capsuleV2, undefined);
     assert.equal((out as Record<string, unknown>).capsuleV2ManifestId, undefined);
+    // The pivot-neighborhood enrichment is v2-only; the v1 path omits it entirely.
+    assert.equal((out as Record<string, unknown>).pivotNeighborhood, undefined);
+  });
+});
+
+test("capsuleEngine=v2 adds bounded pivot-neighborhood excerpts", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const out = runFormatted(db, repoRoot, {
+      query: "base in src/base.ts#L1-L3 returns wrong value",
+      intent: "debug",
+      capsuleEngine: "v2",
+    });
+
+    const neighborhood = (out as Record<string, unknown>).pivotNeighborhood as Array<{
+      pivot: { fqName: string | null };
+      excerpts: Array<{ filePath: string; text: string; reason: string; startLine: number; endLine: number; truncated: boolean }>;
+    }>;
+
+    assert.notEqual(neighborhood, undefined);
+    assert.ok(Array.isArray(neighborhood));
+    // At most the top-2 pivots are seeded.
+    assert.ok(neighborhood.length <= 2);
+
+    const enriched = neighborhood.find((n) => n.excerpts.length > 0);
+    assert.ok(enriched, "expected at least one pivot to carry neighbor excerpts");
+
+    for (const ctx of neighborhood) {
+      assert.ok(ctx.excerpts.length <= 4, "per-pivot excerpt budget enforced");
+      for (const e of ctx.excerpts) {
+        assert.ok(e.text.split("\n").length <= 12, "12-line ceiling enforced");
+        assert.ok(e.startLine >= 1 && e.endLine >= e.startLine);
+        assert.ok(
+          ["caller", "callee", "importer", "imported", "reference", "support", "sibling", "fallback_symbol_window"]
+            .includes(e.reason),
+        );
+      }
+    }
+  });
+});
+
+test("pivot-neighborhood enrichment leaves flow and impact sections unchanged", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const withV2 = runFormatted(db, repoRoot, {
+      query: "trace the flow from beta to base",
+      intent: "explore",
+      capsuleEngine: "v2",
+    });
+    const withoutV2 = runFormatted(db, repoRoot, {
+      query: "trace the flow from beta to base",
+      intent: "explore",
+    });
+
+    // The flow/impact sections are identical with and without the v2 opt-in;
+    // pivot-neighborhood is purely additive.
+    assert.deepEqual(withV2.flow, withoutV2.flow);
+    assert.deepEqual(withV2.impact, withoutV2.impact);
+  });
+});
+
+test("pivot-neighborhood is deterministic across repeated v2 runs", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const input: RunPipelineOrchestratorInput = {
+      query: "base in src/base.ts#L1-L3 returns wrong value",
+      intent: "debug",
+      capsuleEngine: "v2",
+    };
+    const first = runFormatted(db, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
+    const second = runFormatted(db, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
+    assert.deepEqual(
+      (second as Record<string, unknown>).pivotNeighborhood,
+      (first as Record<string, unknown>).pivotNeighborhood,
+    );
   });
 });
 

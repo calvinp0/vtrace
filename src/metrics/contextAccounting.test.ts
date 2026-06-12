@@ -159,3 +159,19 @@ test("runPipelineOutputFilePathGroups gathers v1 context and v2 section files", 
   });
   assert.deepEqual(collectUniqueContextFilePaths(v1Only), ["src/a.ts"]);
 });
+
+test("runPipelineOutputFilePathGroups counts pivot-neighborhood excerpt files", () => {
+  const groups = runPipelineOutputFilePathGroups({
+    capsuleV2: { pivots: [{ path: "src/pivot.ts" }], support: [] },
+    pivotNeighborhood: [
+      { excerpts: [{ filePath: "src/neighbor1.ts" }, { filePath: "src/neighbor2.ts" }] },
+      { excerpts: [{ filePath: "src/neighbor1.ts" }] },
+    ],
+  });
+  // Pivot file plus the two unique neighbor files (deduped) enter the naive baseline.
+  assert.deepEqual(collectUniqueContextFilePaths(groups), [
+    "src/pivot.ts",
+    "src/neighbor1.ts",
+    "src/neighbor2.ts",
+  ]);
+});

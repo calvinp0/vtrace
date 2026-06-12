@@ -17,6 +17,10 @@ import {
   type CapsuleV2ProductResponse,
 } from "../capsuleV2/productAdapter";
 import { CapsuleIntent } from "../capsuleV2/types";
+import {
+  buildPivotNeighborhoods,
+  type PivotNeighborhoodContext,
+} from "./pivotNeighborhood";
 import { getImpactGraph, type ImpactGraphOutput } from "../impact/getImpactGraph";
 import {
   searchLogicFlow,
@@ -248,6 +252,14 @@ export interface RunPipelineOrchestration {
    * same way the v1 `capsuleManifestId` does.
    */
   readonly capsuleV2ManifestId: string | null;
+  /**
+   * Bounded pivot-neighborhood excerpts derived from the Capsule v2 pivots, or
+   * null on the default v1-only path. Gives normal debug/modify queries useful
+   * nearby relationship source without an explicit flow/impact trigger. Additive
+   * and best-effort: never fails the run, may be an empty array when no pivot
+   * symbol identity resolves.
+   */
+  readonly pivotNeighborhood: PivotNeighborhoodContext[] | null;
 }
 
 interface ImpactCandidate {
@@ -358,12 +370,14 @@ export function runPipelineOrchestrator(
     capsuleManifestId,
     capsuleV2: capsuleV2Build.capsuleV2,
     capsuleV2ManifestId: capsuleV2Build.capsuleV2ManifestId,
+    pivotNeighborhood: capsuleV2Build.pivotNeighborhood,
   };
 }
 
 interface CapsuleV2SectionResult {
   readonly capsuleV2: CapsuleV2ProductResponse | null;
   readonly capsuleV2ManifestId: string | null;
+  readonly pivotNeighborhood: PivotNeighborhoodContext[] | null;
 }
 
 // Build the opt-in Capsule v2 product section. Returns nulls on the default path
@@ -380,7 +394,7 @@ function buildCapsuleV2Section(
   const useCapsuleV2 =
     (rawInput.capsuleEngine ?? "").toLowerCase() === RUN_PIPELINE_CAPSULE_ENGINE_V2;
   if (!useCapsuleV2) {
-    return { capsuleV2: null, capsuleV2ManifestId: null };
+    return { capsuleV2: null, capsuleV2ManifestId: null, pivotNeighborhood: null };
   }
 
   const result = buildCapsuleV2({
@@ -397,7 +411,10 @@ function buildCapsuleV2Section(
     capsuleV2ToManifestItemFields(result),
     getLatestIndexRun(db)?.id ?? null,
   );
-  return { capsuleV2, capsuleV2ManifestId };
+  // Additive debug-oriented enrichment: bounded source excerpts from the
+  // neighborhood of the top pivot(s). Best-effort and never fails the run.
+  const pivotNeighborhood = buildPivotNeighborhoods(db, repoRoot, capsuleV2);
+  return { capsuleV2, capsuleV2ManifestId, pivotNeighborhood };
 }
 
 function runReliableContextRetrieval(

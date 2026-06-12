@@ -6957,6 +6957,53 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
   ],
 );
 
+const PIVOT_NEIGHBORHOOD_EXCERPT_SCHEMA = objectProperty(
+  "A bounded symbol-window excerpt of a neighbor of a Capsule v2 pivot. The excerpt is the neighbor symbol's own indexed line span, never an exact call/reference line (indexed edges carry no call-site location).",
+  {
+    filePath: stringProperty("Normalized repo-relative file path of the neighbor."),
+    symbol: { type: ["string", "null"], description: "Local symbol name of the neighbor, when known." },
+    fqName: { type: ["string", "null"], description: "Fully qualified name of the neighbor, when known." },
+    startLine: integerProperty("1-based first line of the excerpt."),
+    endLine: integerProperty("1-based last line of the excerpt."),
+    text: stringProperty("Bounded excerpt text (never a whole file)."),
+    reason: stringProperty("Structural relationship the neighbor was reached through: caller, callee, importer, imported, reference, support, sibling, or fallback_symbol_window (same-file neighbor reached through no edge). The relationship names the edge; the snippet is still a symbol-window, not an exact edge site."),
+    truncated: booleanProperty("Whether the excerpt was trimmed by the line or per-line character budget."),
+  },
+  ["filePath", "symbol", "fqName", "startLine", "endLine", "text", "reason", "truncated"],
+);
+
+const PIVOT_NEIGHBORHOOD_SCHEMA: McpSchemaProperty = {
+  type: "array",
+  description: "Bounded nearby relationship source around the top Capsule v2 pivot(s), so normal debug/modify queries get useful inline neighbor source without an explicit flow/impact trigger. Present only when capsule_engine=v2; may be empty when no pivot symbol identity resolved.",
+  items: objectProperty(
+    "The bounded neighborhood of one Capsule v2 pivot.",
+    {
+      pivot: objectProperty(
+        "The anchoring pivot.",
+        {
+          path: stringProperty("Repo-relative file path of the pivot."),
+          symbol: { type: ["string", "null"], description: "Local symbol name of the pivot, when known." },
+          fqName: { type: ["string", "null"], description: "Fully qualified name of the pivot, when known." },
+        },
+        ["path", "symbol", "fqName"],
+      ),
+      excerpts: arrayProperty("Bounded neighbor excerpts in deterministic relationship-priority order.", PIVOT_NEIGHBORHOOD_EXCERPT_SCHEMA),
+      skipped: arrayProperty(
+        "Neighbors that could not be excerpted (unresolved symbol identity or unavailable/stale source).",
+        objectProperty(
+          "A skipped neighbor target.",
+          {
+            target: stringProperty("The neighbor identity (fqName or path) that was skipped."),
+            reason: stringProperty("Why it was skipped."),
+          },
+          ["target", "reason"],
+        ),
+      ),
+    },
+    ["pivot", "excerpts"],
+  ),
+};
+
 type RunPipelineMcpOutput = ReturnType<typeof formatRunPipelineOrchestrationOutput> & {
   savedObservation: {
     observation: ReturnType<typeof formatObservation>;
@@ -7055,6 +7102,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             type: ["string", "null"],
             description: "Persisted Capsule v2 manifest id when capsule_engine=v2. Pass to check_capsule_staleness or `vtrace check-capsule`. Absent on the default v1-only path; null when no manifest could be persisted.",
           },
+          pivotNeighborhood: PIVOT_NEIGHBORHOOD_SCHEMA,
           intent: RUN_PIPELINE_INTENT_DECISION_SCHEMA,
           taskSummary: RUN_PIPELINE_TASK_SUMMARY_SCHEMA,
           context: RUN_PIPELINE_CONTEXT_SECTION_SCHEMA,

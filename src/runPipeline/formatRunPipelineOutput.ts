@@ -191,6 +191,10 @@ export function formatRunPipelineOrchestrationOutput(
       contextEngine: "v2" as const,
       capsuleV2: structuredClone(orchestration.capsuleV2),
       capsuleV2ManifestId: orchestration.capsuleV2ManifestId,
+      // Additive debug-oriented enrichment: bounded nearby relationship source
+      // around the top Capsule v2 pivots. Always an array on the v2 path (may be
+      // empty when no pivot symbol identity resolved); absent on the v1 path.
+      pivotNeighborhood: structuredClone(orchestration.pivotNeighborhood ?? []),
     };
 
   return {

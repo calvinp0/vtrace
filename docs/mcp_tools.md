@@ -225,6 +225,34 @@ The default (no `capsule_engine`) path is byte-compatible with prior behavior ex
 
 The CLI mirrors the opt-in: `vtrace run-pipeline <repo> <query> --capsule-engine v2 [--capsule-intent <intent>] [--capsule-budget-tokens N]`.
 
+#### Pivot-neighborhood excerpts (v2 only)
+
+The `impact` and `flow` sections only carry source excerpts when the query resolves two flow endpoints (`flow`) or carries refactor-like intent (`impact`). Normal debug/modify queries trigger neither, so they would otherwise get no inline relationship source even when Capsule v2 already pinned the right pivots. The **`pivotNeighborhood`** section closes that gap.
+
+When `capsule_engine=v2`, the response carries an additive `pivotNeighborhood` array: for the **top 1–2 pivots**, a small set of bounded source excerpts from the pivot's neighborhood, so a debug query gets useful nearby source without an explicit flow/impact trigger. Each entry is:
+
+```ts
+interface PivotNeighborhoodContext {
+  pivot: { path: string; symbol: string | null; fqName: string | null };
+  excerpts: Array<{
+    filePath: string;
+    symbol: string | null;
+    fqName: string | null;
+    startLine: number;   // 1-based
+    endLine: number;     // 1-based
+    text: string;        // never a whole file
+    reason: "caller" | "callee" | "importer" | "imported"
+          | "reference" | "support" | "sibling" | "fallback_symbol_window";
+    truncated: boolean;
+  }>;
+  skipped?: Array<{ target: string; reason: string }>;
+}
+```
+
+`reason` names the structural relationship the neighbor was reached through, in priority order: `support` (a Capsule v2 support item in the pivot's file/directory), `caller`/`callee` (calls edges), `importer`/`imported` (imports edges), `reference` (references edges), `sibling` (same parent scope/class), then `fallback_symbol_window` (a same-file neighbor reached through no edge). **The relationship names the edge; the snippet is still the neighbor symbol's own indexed line span (a symbol-window), never an exact call/reference line** — indexed edges carry no call-site location, so we never pretend a window is an exact edge site.
+
+Bounds (defaults): top **2** pivots; max **4** excerpts per pivot; max **12** lines per excerpt (signature-focused neighbors use a tighter 6-line window); 200 chars per line (longer lines trimmed with `…`, `truncated` set). Best-effort: a neighbor whose source cannot be loaded freshly (missing/stale relative to the index) or whose symbol identity does not resolve is recorded under `skipped` rather than failing the run. The section is present only on the `capsule_engine=v2` path and may be an empty array when no pivot symbol identity resolves; the v1 path omits it entirely. Its excerpt files are counted in the `accounting` naive-file baseline. Retrieval, Capsule v2 ranking/scoring, and the `impact`/`flow` sections are unchanged — this is purely additive debug enrichment.
+
 #### Context accounting (estimated, deterministic)
 
 Single-repo `run_pipeline` / `get_code_context` responses (both the default v1 path and the v2 opt-in) carry an additive top-level `accounting` block so a caller can see how compact the emitted context is relative to the naive alternative — reading the full contents of every source file the context touched. The same block is on `get_context_capsule` (v1 and v2). It is **estimated and deterministic, not exact tokenizer truth**: every token figure is `chars / 4` (`method: "chars_div_4"`), the same approximation that sizes Capsule v2.
