@@ -61,6 +61,11 @@ export interface ProductV2CaseRecord {
   // Product-path accounting / engine signals, when the probe ran. Null when the
   // product probe was not captured (the gate still reports from the run metrics).
   readonly productSignals: ProductV2Signals | null;
+  // The PRIOR condition's product-path probe signals, when available. Used only
+  // to compute the first-call token delta (prior first-response size vs the
+  // neighborhood-enabled first-response size). Optional/null when the prior run
+  // had no probe (e.g. a non-product prior); the gate still reports run metrics.
+  readonly priorSignals?: ProductV2Signals | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,6 +112,20 @@ export interface ProductV2CaseAnalysis {
   readonly grepCalls: MetricDelta;
   readonly bashCalls: MetricDelta;
   readonly followupCalls: MetricDelta;
+  // ---- pivot-neighborhood observability (the new response shape) ----
+  // Whether the product first response carried the additive pivotNeighborhood
+  // section (the discriminator that proves the new shape reached the live run).
+  readonly pivotNeighborhoodPresent: boolean;
+  readonly pivotNeighborhoodExcerptCount: number;
+  readonly pivotNeighborhoodPivotsEnriched: number;
+  // First-call token delta: the prior first-response size vs the neighborhood
+  // first-response size (product - prior), from each side's accounting block.
+  // A positive delta is the ~1k investment the neighborhood adds up front.
+  readonly firstCallTokens: MetricDelta;
+  // Diagnostic (NOT part of strict AND): true when the measured TOTAL token
+  // reduction exceeded the first-call token increase — i.e. the richer first
+  // response more than paid for itself. Null when either side is not measurable.
+  readonly firstResponseInvestmentPaidOff: boolean | null;
   // Strict-AND per-case PASS (see classifyCasePass).
   readonly pass: boolean;
   // Why the case did not pass (empty when it passed).
@@ -182,6 +201,20 @@ export function analyzeProductV2Case(record: ProductV2CaseRecord): ProductV2Case
     cacheReadTokens,
     followupCalls,
   });
+  // First-call token investment: prior vs product first-response size (chars/4
+  // of the serialized run-pipeline response, from each side's accounting block).
+  const firstCallTokens = delta(
+    record.priorSignals?.accounting?.estimatedOutputTokens ?? null,
+    record.productSignals?.accounting?.estimatedOutputTokens ?? null,
+  );
+  // Paid off when the measured total-token reduction exceeded the first-call
+  // increase. totalTokens.delta is product - prior (negative = saved), so the
+  // reduction magnitude is -totalTokens.delta.
+  const firstResponseInvestmentPaidOff =
+    totalTokens.measurable && firstCallTokens.measurable
+      && totalTokens.delta !== null && firstCallTokens.delta !== null
+      ? -totalTokens.delta > firstCallTokens.delta
+      : null;
   return {
     instanceId: record.instanceId,
     priorEngine: record.prior.contextEngine,
@@ -213,6 +246,11 @@ export function analyzeProductV2Case(record: ProductV2CaseRecord): ProductV2Case
       productCounts.available ? productCounts.bash : null,
     ),
     followupCalls,
+    pivotNeighborhoodPresent: record.productSignals?.pivotNeighborhoodPresent ?? false,
+    pivotNeighborhoodExcerptCount: record.productSignals?.pivotNeighborhoodExcerptCount ?? 0,
+    pivotNeighborhoodPivotsEnriched: record.productSignals?.pivotNeighborhoodPivotsEnriched ?? 0,
+    firstCallTokens,
+    firstResponseInvestmentPaidOff,
     pass,
     failedCriteria,
   };
@@ -417,6 +455,15 @@ export function renderMarkdown(report: ProductV2TurnReductionReport): string {
       "in the accounting block does NOT by itself pass a case.",
   );
   lines.push("");
+  lines.push(
+    "Because the prior condition here is **product-v2 before pivotNeighborhood** and the product " +
+      "condition is **product-v2 + pivotNeighborhood**, the question is whether the richer first " +
+      "response (the ~1k-token neighborhood investment) buys back more than its cost in follow-up " +
+      "turns. Each case therefore also reports a NON-gating diagnostic — **first-response investment " +
+      "paid off** = total token reduction exceeded the first-call token increase — so the experiment " +
+      "stays interpretable even when strict AND fails.",
+  );
+  lines.push("");
 
   // Experiment verdict
   lines.push("## Experiment verdict");
@@ -475,6 +522,23 @@ export function renderMarkdown(report: ProductV2TurnReductionReport): string {
     );
     lines.push(
       `- Telemetry available: prior=${c.priorCounts.available ? "yes" : "no"}, product=${c.productCounts.available ? "yes" : "no"}`,
+    );
+    // Pivot-neighborhood observability: did the new response shape reach this run?
+    lines.push(
+      `- pivotNeighborhood: present=${c.pivotNeighborhoodPresent ? "yes" : "no"}, ` +
+        `excerpts=${c.pivotNeighborhoodExcerptCount}, pivots enriched=${c.pivotNeighborhoodPivotsEnriched}`,
+    );
+    // The interpretive diagnostic the experiment hinges on.
+    const reduction = c.totalTokens.measurable && c.totalTokens.delta !== null ? -c.totalTokens.delta : null;
+    lines.push(
+      `- First-call token delta (neighborhood investment): ${deltaCell(c.firstCallTokens)}`,
+    );
+    lines.push(
+      `- Total token reduction: ${reduction === null ? "n/a" : fmtSigned(reduction)} ` +
+        `(saved follow-up tokens ${reduction === null ? "n/a" : reduction > 0 ? "exceed" : "do not exceed"} 0)`,
+    );
+    lines.push(
+      `- First-response investment paid off (total reduction > first-call increase): ${fmtBool(c.firstResponseInvestmentPaidOff)}`,
     );
     lines.push("");
   }
@@ -685,6 +749,11 @@ async function loadProductSignals(
     contextEngine: asString(parsed.contextEngine),
     contextEngineIsV2: parsed.contextEngineIsV2 === true,
     capsuleV2Present: parsed.capsuleV2Present === true,
+    // The neighborhood fields are absent on a pre-neighborhood probe; default to
+    // honest negatives so an older baseline reads as "no neighborhood".
+    pivotNeighborhoodPresent: parsed.pivotNeighborhoodPresent === true,
+    pivotNeighborhoodExcerptCount: asNumber(parsed.pivotNeighborhoodExcerptCount) ?? 0,
+    pivotNeighborhoodPivotsEnriched: asNumber(parsed.pivotNeighborhoodPivotsEnriched) ?? 0,
     accounting: isRecord(parsed.accounting)
       ? (parsed.accounting as unknown as ProductV2Signals["accounting"])
       : null,
@@ -705,11 +774,18 @@ export async function loadProductV2CaseInputs(
     // requested id when no row matched.
     const probeId = productV2.matchedInstanceId ?? instanceId;
     const productSignals = await loadProductSignals(config.resultsDir, productLabel, probeId);
+    // The prior probe (if the prior run was itself a product-v2 run) gives the
+    // pre-neighborhood first-response size for the first-call token delta.
+    const priorProbeId = prior.matchedInstanceId ?? instanceId;
+    const priorSignals = priorLabel === null
+      ? null
+      : await loadProductSignals(config.resultsDir, priorLabel, priorProbeId);
     records.push({
       instanceId,
       prior: prior.metrics,
       productV2: productV2.metrics,
       productSignals,
+      priorSignals,
     });
   }
   return records;

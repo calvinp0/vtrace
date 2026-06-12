@@ -50,6 +50,14 @@ export interface ProductV2Signals {
   readonly contextEngineIsV2: boolean;
   // Whether a non-null `capsuleV2` object was present on the response.
   readonly capsuleV2Present: boolean;
+  // Whether the additive `pivotNeighborhood` array was present on the response.
+  // This is the discriminator that proves the new debug-enrichment response shape
+  // reached the live product surface (absent on a pre-neighborhood build).
+  readonly pivotNeighborhoodPresent: boolean;
+  // Total bounded neighbor excerpts emitted across all pivot neighborhoods.
+  readonly pivotNeighborhoodExcerptCount: number;
+  // How many pivots carried at least one neighbor excerpt.
+  readonly pivotNeighborhoodPivotsEnriched: number;
   // The deterministic accounting block, when present and shaped correctly.
   readonly accounting: ContextAccounting | null;
 }
@@ -59,6 +67,9 @@ const EMPTY_SIGNALS: ProductV2Signals = {
   contextEngine: null,
   contextEngineIsV2: false,
   capsuleV2Present: false,
+  pivotNeighborhoodPresent: false,
+  pivotNeighborhoodExcerptCount: 0,
+  pivotNeighborhoodPivotsEnriched: 0,
   accounting: null,
 };
 
@@ -145,11 +156,39 @@ export function parseProductV2Response(stdout: string): ProductV2Signals {
   }
   if (!isRecord(parsed)) return { ...EMPTY_SIGNALS, parseOk: true };
   const contextEngine = typeof parsed.contextEngine === "string" ? parsed.contextEngine : null;
+  const neighborhood = summarizePivotNeighborhood(parsed.pivotNeighborhood);
   return {
     parseOk: true,
     contextEngine,
     contextEngineIsV2: contextEngine?.toLowerCase() === PRODUCT_V2_ENGINE,
     capsuleV2Present: isRecord(parsed.capsuleV2),
+    pivotNeighborhoodPresent: neighborhood.present,
+    pivotNeighborhoodExcerptCount: neighborhood.excerptCount,
+    pivotNeighborhoodPivotsEnriched: neighborhood.pivotsEnriched,
     accounting: asContextAccounting(parsed.accounting),
   };
+}
+
+// Summarize the additive `pivotNeighborhood` array (present only on the
+// neighborhood-enabled v2 build). Tolerant: a missing/malformed field degrades to
+// "absent with zero counts" rather than throwing, so an older build reads as a
+// clean negative.
+function summarizePivotNeighborhood(value: unknown): {
+  present: boolean;
+  excerptCount: number;
+  pivotsEnriched: number;
+} {
+  if (!Array.isArray(value)) {
+    return { present: false, excerptCount: 0, pivotsEnriched: 0 };
+  }
+  let excerptCount = 0;
+  let pivotsEnriched = 0;
+  for (const entry of value) {
+    const excerpts = isRecord(entry) && Array.isArray(entry.excerpts) ? entry.excerpts : [];
+    if (excerpts.length > 0) {
+      pivotsEnriched += 1;
+    }
+    excerptCount += excerpts.length;
+  }
+  return { present: true, excerptCount, pivotsEnriched };
 }

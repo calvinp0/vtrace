@@ -77,6 +77,9 @@ function passingRecord(instanceId: string): ProductV2CaseRecord {
       contextEngine: "v2",
       contextEngineIsV2: true,
       capsuleV2Present: true,
+      pivotNeighborhoodPresent: true,
+      pivotNeighborhoodExcerptCount: 8,
+      pivotNeighborhoodPivotsEnriched: 2,
       accounting: null,
     },
   };
@@ -94,6 +97,43 @@ test("strict AND passes only when all four criteria improve", () => {
   assert.equal(c.readCalls.delta, -3);
   assert.equal(c.contextEngineIsV2, true);
   assert.equal(c.capsuleV2Present, true);
+});
+
+test("first-call token delta and investment-paid-off diagnostic are computed from the probes", () => {
+  const rec = passingRecord("django-10880");
+  // prior first response ~3000 tokens, neighborhood first response ~4000 (+1000);
+  // total tokens dropped 6000 (20000 -> 14000) -> reduction 6000 > 1000 -> paid off.
+  const withProbes: ProductV2CaseRecord = {
+    ...rec,
+    priorSignals: { ...rec.productSignals!, pivotNeighborhoodPresent: false, accounting: { estimatedOutputTokens: 3000 } as never },
+    productSignals: { ...rec.productSignals!, accounting: { estimatedOutputTokens: 4000 } as never },
+  };
+  const c = analyzeProductV2Case(withProbes);
+  assert.equal(c.pivotNeighborhoodPresent, true);
+  assert.equal(c.pivotNeighborhoodExcerptCount, 8);
+  assert.equal(c.firstCallTokens.delta, 1000); // 4000 - 3000
+  assert.equal(c.firstResponseInvestmentPaidOff, true); // reduction 6000 > increase 1000
+});
+
+test("investment-paid-off is false when the first-call increase outweighs the total reduction", () => {
+  const rec = passingRecord("x");
+  // Tiny total reduction (20000 -> 19900 = 100) but a big +2000 first-call increase.
+  const skewed: ProductV2CaseRecord = {
+    ...rec,
+    productV2: { ...rec.productV2, totalTokens: 19900 },
+    priorSignals: { ...rec.productSignals!, accounting: { estimatedOutputTokens: 3000 } as never },
+    productSignals: { ...rec.productSignals!, accounting: { estimatedOutputTokens: 5000 } as never },
+  };
+  const c = analyzeProductV2Case(skewed);
+  assert.equal(c.firstCallTokens.delta, 2000);
+  assert.equal(c.firstResponseInvestmentPaidOff, false); // reduction 100 < increase 2000
+});
+
+test("investment-paid-off is null when a probe side is unmeasurable", () => {
+  const rec = passingRecord("x");
+  const c = analyzeProductV2Case({ ...rec, priorSignals: null });
+  assert.equal(c.firstResponseInvestmentPaidOff, null);
+  assert.equal(c.firstCallTokens.measurable, false);
 });
 
 test("a token win with MORE turns does not pass strict AND", () => {

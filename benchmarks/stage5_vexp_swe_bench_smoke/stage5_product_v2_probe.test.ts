@@ -90,12 +90,38 @@ test("parseProductV2Response reads contextEngine, capsuleV2, and accounting", ()
   assert.equal(signals.accounting?.estimatedTokensSavedVsNaiveFullFile, 800);
 });
 
+test("parseProductV2Response detects and summarizes the pivotNeighborhood section", () => {
+  const stdout = JSON.stringify({
+    contextEngine: "v2",
+    capsuleV2: { pivots: [{ path: "x.py" }] },
+    pivotNeighborhood: [
+      { pivot: { fqName: "x.py::A" }, excerpts: [{ filePath: "y.py" }, { filePath: "z.py" }] },
+      { pivot: { fqName: "x.py::B" }, excerpts: [{ filePath: "w.py" }] },
+      { pivot: { fqName: "x.py::C" }, excerpts: [] },
+    ],
+  });
+  const signals = parseProductV2Response(stdout);
+  assert.equal(signals.pivotNeighborhoodPresent, true);
+  assert.equal(signals.pivotNeighborhoodExcerptCount, 3);
+  assert.equal(signals.pivotNeighborhoodPivotsEnriched, 2);
+});
+
+test("parseProductV2Response reports a pre-neighborhood response as no neighborhood", () => {
+  const signals = parseProductV2Response(
+    JSON.stringify({ contextEngine: "v2", capsuleV2: { pivots: [] } }),
+  );
+  assert.equal(signals.pivotNeighborhoodPresent, false);
+  assert.equal(signals.pivotNeighborhoodExcerptCount, 0);
+  assert.equal(signals.pivotNeighborhoodPivotsEnriched, 0);
+});
+
 test("parseProductV2Response treats a v1 (no-engine) response as honest negatives", () => {
   const signals = parseProductV2Response(JSON.stringify({ schemaVersion: 1, context: {} }));
   assert.equal(signals.parseOk, true);
   assert.equal(signals.contextEngine, null);
   assert.equal(signals.contextEngineIsV2, false);
   assert.equal(signals.capsuleV2Present, false);
+  assert.equal(signals.pivotNeighborhoodPresent, false);
   assert.equal(signals.accounting, null);
 });
 
