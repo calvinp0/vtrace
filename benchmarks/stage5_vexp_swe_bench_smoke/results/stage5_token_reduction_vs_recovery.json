@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-06-12T06:59:29.166Z",
+  "status": "first_pass_and_recovery_separated",
+  "firstPassEvidenceAvailable": true,
+  "firstPassTokenReductionPercent": 25.241897386429258,
+  "firstPassCostReductionPercent": 8.164507081492927,
+  "baselineResolvedCount": 8,
+  "vtraceFirstPassResolvedCount": 7,
+  "recoveryEvidenceAvailable": true,
+  "recoveryInstanceId": "astropy__astropy-14369",
+  "sourcePatchResolved": false,
+  "repairedPatchResolved": true,
+  "convertedUnresolvedToResolved": true,
+  "criticCostUsd": 0.18575950000000002,
+  "repairCostUsd": 2.8185425,
+  "totalRecoveryCostUsd": 3.004302,
+  "historicalRepairCostCapExceeded": true,
+  "repairCostCapHardened": true,
+  "repairCostCapBlockProofPassed": true,
+  "recoveryMergedIntoFirstPass": false,
+  "aggregateComparable": false,
+  "userFacingRepairCostControls": false,
+  "headlineClaim": "VTRACE analyzes codebases at the AST level, identifies the most relevant code via hybrid search, and delivers compressed context capsules with session memory. Up to 74% fewer tokens in benchmarked workflows.",
+  "technicalControlLoopSummary": "The generated-parser repair loop is an internal bounded recovery mechanism — gated, off by default, one-shot, fail-open, shape-validated, and cost-capped. The verified Astropy generated-parser repair is evidence that the control loop can recover one patch-quality failure, not evidence of aggregate SWE-bench improvement or broad generated-parser generalization.",
+  "canClaim": [
+    "VTRACE can reduce first-pass token usage by delivering compact, symbol-aware context capsules in benchmarked workflows.",
+    "The Stage 5 control loop has one verified generated-parser repair conversion.",
+    "The repair loop is gated, off by default, one-shot, fail-open, shape-validated, and cost-capped.",
+    "Recovery evidence is tracked separately from first-pass token-reduction evidence."
+  ],
+  "cannotClaim": [
+    "Do not claim the generated-parser repair result improves the aggregate Stage 5 score.",
+    "Do not merge Astropy recovery cost into first-pass token-reduction rows.",
+    "Do not claim generated-parser repair generalizes beyond the verified Astropy case.",
+    "Do not claim users should configure repair cost caps.",
+    "Do not present repair as the public headline product feature."
+  ],
+  "recommendedNextMilestones": [
+    "Produce a small user-facing README/marketing wording update that keeps token reduction as the headline and mentions control-loop recovery only in deeper technical docs.",
+    "Define an expected-value policy for repair: run repair only when a defect class has observed conversion evidence and estimated cost fits the cap.",
+    "Run one additional real generated-parser-like case only if a natural candidate appears.",
+    "Add a product/engineering split in docs: user-facing context capsules vs internal benchmark-only repair controls."
+  ],
+  "nonClaims": [
+    "This report does not run agents, repair, live critic, or Docker.",
+    "This report does not change Stage 5 policy accounting or mutate any aggregate policy row.",
+    "This report does not merge repair recovery cost into first-pass token-reduction rows.",
+    "This report does not claim aggregate SWE-bench improvement.",
+    "This report does not claim generated-parser repair generalizes beyond the verified Astropy case.",
+    "First-pass numbers are READ from committed reports; when a source is unavailable the value is marked unavailable and NOT invented."
+  ],
+  "interpretation": "VTRACE's primary token-reduction claim should be based on first-pass context delivery: AST/symbol-aware retrieval, hybrid search, Capsule v2 ranking, and compressed context capsules. The generated-parser repair loop is not the headline product feature; it is an internal bounded recovery mechanism for cases where compact context was good but the agent wrote a bad patch. Recovery costs must be tracked separately so a successful repair does not obscure the first-pass token-reduction measurement.",
+  "firstPass": {
+    "available": true,
+    "baselineResolvedCount": 8,
+    "vtraceFirstPassResolvedCount": 7,
+    "baselineTotalTokens": 16756692,
+    "vtraceFirstPassTotalTokens": 12526985,
+    "baselineTotalCostUsd": 6.97774825,
+    "vtraceFirstPassTotalCostUsd": 6.4080495000000015,
+    "tokenReductionPercent": 25.241897386429258,
+    "costReductionPercent": 8.164507081492927
+  },
+  "sourceReports": [
+    {
+      "name": "stage5_policy_accounting",
+      "available": true
+    },
+    {
+      "name": "stage5_control_loop_status",
+      "available": true
+    },
+    {
+      "name": "stage5_generated_parser_repair_accounting",
+      "available": true
+    },
+    {
+      "name": "stage5_generated_parser_repair_conversion_shape_gate",
+      "available": true
+    },
+    {
+      "name": "stage5_repair_cost_cap_audit",
+      "available": true
+    },
+    {
+      "name": "stage5_repair_cost_cap_block_proof",
+      "available": true
+    }
+  ]
+}
