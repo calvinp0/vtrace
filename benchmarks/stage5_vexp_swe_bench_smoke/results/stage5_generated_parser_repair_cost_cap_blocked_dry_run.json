@@ -1,0 +1,345 @@
+{
+  "generatedAt": "2026-06-12T06:44:13.726Z",
+  "enabled": false,
+  "summary": {
+    "candidateRuns": 7,
+    "eligibleRuns": 1,
+    "repairCallsAttempted": 0,
+    "repairCallsSucceeded": 0,
+    "repairCallsFailedOpen": 0,
+    "repairedPatchProduced": 0,
+    "changedPatchCount": 0,
+    "totalRepairCostUsd": 0,
+    "repairExecuted": false
+  },
+  "gates": {
+    "enabled": false,
+    "runLabels": [
+      "eval-strictv2-artifacts-protocol-vtrace-astropy-14369"
+    ],
+    "maxRepairRuns": 1,
+    "repairCostCapUsd": 0.4,
+    "allowedDefectClasses": [
+      "wrong_scope",
+      "broad_rewrite_minimality"
+    ],
+    "dryRun": true,
+    "evaluateRepairedPatch": false,
+    "allowGeneratedParserRepair": true
+  },
+  "costCapEnforcement": {
+    "repairCostCapUsd": 0.4,
+    "repairCostCapEnforcementMode": "pre_call_estimated_max",
+    "repairEstimatedMaxCallCostUsd": 3,
+    "singleCallMayExceedCap": false,
+    "repairPreCallCumulativeCostUsd": 0,
+    "repairActualCostUsd": 0,
+    "repairExceededCap": false,
+    "repairStoppedByCostCap": 0
+  },
+  "counters": {
+    "candidateRuns": 7,
+    "eligibleRuns": 1,
+    "skippedByRunLabel": 6,
+    "skippedIneligible": 0,
+    "skippedByMaxRuns": 0,
+    "stoppedByCostCap": 0,
+    "repairCallsAttempted": 0,
+    "repairCallsSucceeded": 0,
+    "repairCallsFailedOpen": 0,
+    "repairedPatchProduced": 0,
+    "changedPatchCount": 0,
+    "totalRepairCostUsd": 0
+  },
+  "adHoc": {
+    "adHocRequested": 1,
+    "adHocCandidates": 1
+  },
+  "runs": [
+    {
+      "runLabel": "eval-patchverify-before-sympy-16766",
+      "instanceId": "sympy__sympy-16766",
+      "source": "curated_existing",
+      "defectClass": "wrong_scope",
+      "instructionQuality": "actionable",
+      "eligible": false,
+      "repaired": false,
+      "wouldRepair": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "ineligibleReasons": [],
+      "result": null,
+      "viaGeneratedParser": false,
+      "generatedParser": null
+    },
+    {
+      "runLabel": "eval-editguard-before-matplotlib-22719",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "source": "curated_existing",
+      "defectClass": "missing_failing_behavior",
+      "instructionQuality": "none",
+      "eligible": false,
+      "repaired": false,
+      "wouldRepair": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "ineligibleReasons": [
+        "live critic did not require repair (liveRepairRequired!=true)",
+        "report repair_required is not true",
+        "report repair_reason is empty",
+        "report repair_instructions is empty",
+        "defectClass missing_failing_behavior is not in the allowed set {wrong_scope, broad_rewrite_minimality}",
+        "instructionQuality none is not concrete/actionable"
+      ],
+      "result": null,
+      "viaGeneratedParser": false,
+      "generatedParser": null
+    },
+    {
+      "runLabel": "eval-patchverify-after-matplotlib-22719",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "source": "curated_existing",
+      "defectClass": "missing_failing_behavior",
+      "instructionQuality": "none",
+      "eligible": false,
+      "repaired": false,
+      "wouldRepair": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "ineligibleReasons": [
+        "live critic did not require repair (liveRepairRequired!=true)",
+        "report repair_required is not true",
+        "report repair_reason is empty",
+        "report repair_instructions is empty",
+        "defectClass missing_failing_behavior is not in the allowed set {wrong_scope, broad_rewrite_minimality}",
+        "instructionQuality none is not concrete/actionable"
+      ],
+      "result": null,
+      "viaGeneratedParser": false,
+      "generatedParser": null
+    },
+    {
+      "runLabel": "eval-editguard-before-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "source": "curated_existing",
+      "defectClass": "broad_rewrite_minimality",
+      "instructionQuality": "actionable",
+      "eligible": false,
+      "repaired": false,
+      "wouldRepair": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "ineligibleReasons": [],
+      "result": null,
+      "viaGeneratedParser": false,
+      "generatedParser": null
+    },
+    {
+      "runLabel": "eval-editguard-after-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "source": "curated_existing",
+      "defectClass": "broad_rewrite_minimality",
+      "instructionQuality": "actionable",
+      "eligible": false,
+      "repaired": false,
+      "wouldRepair": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "ineligibleReasons": [],
+      "result": null,
+      "viaGeneratedParser": false,
+      "generatedParser": null
+    },
+    {
+      "runLabel": "eval-patchverify-before-requests-5414",
+      "instanceId": "psf__requests-5414",
+      "source": "curated_existing",
+      "defectClass": "broad_rewrite_minimality",
+      "instructionQuality": "actionable",
+      "eligible": false,
+      "repaired": false,
+      "wouldRepair": false,
+      "skipReason": "not-in-run-label",
+      "reason": "not in --run-label set {eval-strictv2-artifacts-protocol-vtrace-astropy-14369}",
+      "ineligibleReasons": [],
+      "result": null,
+      "viaGeneratedParser": false,
+      "generatedParser": null
+    },
+    {
+      "runLabel": "eval-strictv2-artifacts-protocol-vtrace-astropy-14369",
+      "instanceId": "astropy__astropy-14369",
+      "source": "ad_hoc_run_label",
+      "defectClass": "unknown",
+      "instructionQuality": "actionable",
+      "eligible": true,
+      "repaired": false,
+      "wouldRepair": true,
+      "skipReason": null,
+      "reason": "would attempt one generated-parser repair (dry-run ONLY: model NOT invoked, no patch produced)",
+      "ineligibleReasons": [],
+      "result": null,
+      "viaGeneratedParser": true,
+      "generatedParser": {
+        "runLabel": "eval-strictv2-artifacts-protocol-vtrace-astropy-14369",
+        "instanceId": "astropy__astropy-14369",
+        "generatedParserRepairAllowed": true,
+        "generatedParserRepairEligible": true,
+        "generatedParserRepairExecuted": false,
+        "generatedParserRepairSource": "generated_parser_minimality",
+        "generatedParserRepairGuidance": [
+          "Change the division_of_units production order narrowly.",
+          "Do not relocate productions into p_combined_units.",
+          "Do not delete generated parser tables.",
+          "Avoid broad grammar rewrites."
+        ],
+        "generatedParserRepairGateReasons": [
+          "generated-parser repair explicitly enabled (--allow-generated-parser-repair)",
+          "explicit --run-label provided for this run",
+          "dry-run eligibility mode (no model called)",
+          "live critic artifacts present (_patch_critic.meta.json + _patch_critic_report.json)",
+          "live critic report valid (validReport=true, failedOpen=false)",
+          "live critic repair_required=true",
+          "deterministic patchMinimalityRepairRequired=true",
+          "deterministic/live agreement=true",
+          "patchMinimality defect class is generated-parser (generated_parser_broad_rewrite / grammar_patch_minimality)",
+          "live critic includes actionable narrow-rewrite guidance",
+          "first patch present (_first_patch.diff)"
+        ],
+        "generatedParserRepairBlockedReasons": [],
+        "repairClass": "generated_parser_broad_rewrite / grammar_patch_minimality",
+        "source": "valid_live_critic_and_patch_minimality_agreement",
+        "mode": "dry-run",
+        "patchMinimalityRepairRequired": true,
+        "patchMinimalityDefectClass": "generated_parser_broad_rewrite / grammar_patch_minimality",
+        "liveCriticRepairRequired": true,
+        "liveCriticValid": true,
+        "agreementWithDeterministic": true,
+        "actionableNarrowRewriteGuidance": [
+          "Change the division_of_units production order narrowly.",
+          "Do not relocate productions into p_combined_units.",
+          "Do not delete generated parser tables.",
+          "Avoid broad grammar rewrites."
+        ],
+        "generatedParserConsistencyRisk": true,
+        "generatedParserConsistencyDefectClass": "source_grammar_changed_without_generated_table_update",
+        "generatedParserConsistencyExpectedTables": [
+          "astropy/units/format/cds_parsetab.py"
+        ],
+        "generatedParserConsistencyReasons": [
+          "Patch deletes generated parser table file(s): astropy/units/format/cds_lextab.py, astropy/units/format/cds_parsetab.py. The table must be regenerated to match the grammar, not deleted."
+        ],
+        "generatedParserConsistencyGuidanceIncluded": true,
+        "wouldRepair": true,
+        "repairAttempted": false,
+        "repairSucceeded": false,
+        "repairFailedOpen": false,
+        "repairCostUsd": null,
+        "repairExecuted": false,
+        "generatedParserRepairShapeChecked": false,
+        "generatedParserRepairShapeAccepted": null,
+        "generatedParserRepairShapeRejectedReason": null,
+        "generatedParserRepairMissingExpectedTables": [],
+        "generatedParserRepairTablesUpdated": [],
+        "generatedParserRepairDeletesGeneratedTables": false,
+        "generatedParserRepairBroadRewriteDetected": false
+      }
+    }
+  ],
+  "generatedParser": {
+    "allowed": true,
+    "mode": "dry-run",
+    "eligibleRuns": 1,
+    "wouldRepairRuns": 1,
+    "repairAttemptedRuns": 0,
+    "repairSucceededRuns": 0,
+    "repairFailedOpenRuns": 0,
+    "repairExecuted": false,
+    "narrowRewriteGuidance": [
+      "Change the division_of_units production order narrowly.",
+      "Do not relocate productions into p_combined_units.",
+      "Do not delete generated parser tables.",
+      "Avoid broad grammar rewrites."
+    ],
+    "boundary": "This is dry-run eligibility only. No repaired patch was generated, no patch was modified, and no Docker evaluation was run.",
+    "liveBoundary": "This generated a repaired patch only. It did not run Docker and does not claim a repair conversion.",
+    "runs": [
+      {
+        "runLabel": "eval-strictv2-artifacts-protocol-vtrace-astropy-14369",
+        "instanceId": "astropy__astropy-14369",
+        "generatedParserRepairAllowed": true,
+        "generatedParserRepairEligible": true,
+        "generatedParserRepairExecuted": false,
+        "generatedParserRepairSource": "generated_parser_minimality",
+        "generatedParserRepairGuidance": [
+          "Change the division_of_units production order narrowly.",
+          "Do not relocate productions into p_combined_units.",
+          "Do not delete generated parser tables.",
+          "Avoid broad grammar rewrites."
+        ],
+        "generatedParserRepairGateReasons": [
+          "generated-parser repair explicitly enabled (--allow-generated-parser-repair)",
+          "explicit --run-label provided for this run",
+          "dry-run eligibility mode (no model called)",
+          "live critic artifacts present (_patch_critic.meta.json + _patch_critic_report.json)",
+          "live critic report valid (validReport=true, failedOpen=false)",
+          "live critic repair_required=true",
+          "deterministic patchMinimalityRepairRequired=true",
+          "deterministic/live agreement=true",
+          "patchMinimality defect class is generated-parser (generated_parser_broad_rewrite / grammar_patch_minimality)",
+          "live critic includes actionable narrow-rewrite guidance",
+          "first patch present (_first_patch.diff)"
+        ],
+        "generatedParserRepairBlockedReasons": [],
+        "repairClass": "generated_parser_broad_rewrite / grammar_patch_minimality",
+        "source": "valid_live_critic_and_patch_minimality_agreement",
+        "mode": "dry-run",
+        "patchMinimalityRepairRequired": true,
+        "patchMinimalityDefectClass": "generated_parser_broad_rewrite / grammar_patch_minimality",
+        "liveCriticRepairRequired": true,
+        "liveCriticValid": true,
+        "agreementWithDeterministic": true,
+        "actionableNarrowRewriteGuidance": [
+          "Change the division_of_units production order narrowly.",
+          "Do not relocate productions into p_combined_units.",
+          "Do not delete generated parser tables.",
+          "Avoid broad grammar rewrites."
+        ],
+        "generatedParserConsistencyRisk": true,
+        "generatedParserConsistencyDefectClass": "source_grammar_changed_without_generated_table_update",
+        "generatedParserConsistencyExpectedTables": [
+          "astropy/units/format/cds_parsetab.py"
+        ],
+        "generatedParserConsistencyReasons": [
+          "Patch deletes generated parser table file(s): astropy/units/format/cds_lextab.py, astropy/units/format/cds_parsetab.py. The table must be regenerated to match the grammar, not deleted."
+        ],
+        "generatedParserConsistencyGuidanceIncluded": true,
+        "wouldRepair": true,
+        "repairAttempted": false,
+        "repairSucceeded": false,
+        "repairFailedOpen": false,
+        "repairCostUsd": null,
+        "repairExecuted": false,
+        "generatedParserRepairShapeChecked": false,
+        "generatedParserRepairShapeAccepted": null,
+        "generatedParserRepairShapeRejectedReason": null,
+        "generatedParserRepairMissingExpectedTables": [],
+        "generatedParserRepairTablesUpdated": [],
+        "generatedParserRepairDeletesGeneratedTables": false,
+        "generatedParserRepairBroadRewriteDetected": false
+      }
+    ]
+  },
+  "nonClaims": [
+    "Benchmark-only and DISABLED by default; without --enable-patch-repair no model is called and no repair artifacts are written.",
+    "Repair requires an explicit --run-label; with none provided nothing is repaired.",
+    "EXACTLY ONE bounded repair attempt per eligible run — never a loop and never a retry.",
+    "Only wrong_scope and broad_rewrite_minimality are repaired by default; missing_failing_behavior is excluded (undecided class).",
+    "Fail-open: any invocation error or invalid diff preserves the original first patch (repairedPatch=null, failedOpen=true).",
+    "The original first patch, raw agent output, and workspace are never modified; repair artifacts live in an isolated repair/ subdir.",
+    "No Docker / evaluation is run this milestone; a repaired patch artifact is produced and would be evaluated later. No resolution is claimed.",
+    "This changes no retrieval / Capsule v2 / PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY / probe / deterministic-critic / live-critic behavior.",
+    "Generated-parser repair is a SEPARATE eligibility path behind --allow-generated-parser-repair; it is off by default and adds NO defect class to the default allowlist. Dry-run reports eligibility only; live execution additionally requires --enable-patch-repair with dryRun=false and runs exactly one bounded attempt.",
+    "A generated-parser live attempt generates a repaired patch only. It did not run Docker and does not claim a repair conversion."
+  ]
+}

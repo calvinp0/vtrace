@@ -1,0 +1,32 @@
+{
+  "generatedAt": "2026-06-12T06:47:32.894Z",
+  "sourceRunLabel": "eval-strictv2-artifacts-protocol-vtrace-astropy-14369",
+  "historicalRepairOutName": "stage5_generated_parser_astropy_repair_attempt_shape_gate",
+  "dryRunOutName": "stage5_generated_parser_repair_cost_cap_blocked_dry_run",
+  "repairCostCapUsd": 0.4,
+  "repairEstimatedMaxCallCostUsd": 3,
+  "repairCostCapEnforcementMode": "pre_call_estimated_max",
+  "priorCumulativeCostUsd": 0,
+  "estimatedTotalIfCalledUsd": 3,
+  "blockedBeforeModelCall": true,
+  "repairStoppedByCostCap": true,
+  "repairCallsAttempted": 0,
+  "repairExecuted": false,
+  "wouldRepair": true,
+  "modelCalled": false,
+  "generatedParserRepairAllowed": true,
+  "generatedParserRepairEligibleBeforeCostCap": true,
+  "singleCallMayExceedCap": false,
+  "proofPassed": true,
+  "historicalRepairCostUsd": 2.8185425,
+  "interpretation": "The hardened repair cost cap now blocks the historical generated-parser repair before a model call under a $0.40 cap. With pre_call_estimated_max enforcement, the estimated maximum call cost of $3.00 cannot fit inside the remaining $0.40 cap, so the runner performs no repair call. This proves the historical over-cap path is now blocked in no-model dry-run form.",
+  "recommendedNextStep": "Add a first-pass-vs-recovery-cost report that keeps strict-v2 first-pass token/cost reduction separate from critic/repair recovery cost.",
+  "nonClaims": [
+    "This proof does not run a model, repair, critic, agent, or Docker.",
+    "This proof does not evaluate any patch.",
+    "This proof does not change the historical conversion evidence.",
+    "This proof does not enable broader generated-parser repair usage.",
+    "This proof does not change Stage 5 policy accounting."
+  ],
+  "dryRunReportAvailable": true
+}
