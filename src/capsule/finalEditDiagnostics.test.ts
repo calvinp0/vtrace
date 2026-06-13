@@ -2,11 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "bun:test";
 
 import {
+  checklistToolAgreement,
   classifyPivotInspection,
   contextMentionsFile,
   contextMentionsSymbol,
   editedFilesFromPatch,
   editedSymbolsFromPatch,
+  parsePivotCheckRows,
   primaryEditedFile,
   primaryEditedSymbol,
   type PivotForInspection,
@@ -234,4 +236,63 @@ test("8. classifier does not leak gold labels", () => {
     "status",
     "symbol",
   ]);
+});
+
+test("parsePivotCheckRows extracts filled rows and skips header/separator/template", () => {
+  const text = [
+    "Here is my analysis.",
+    "## PIVOT_CHECK",
+    "| pivot | symbol | inspected | relevant | edit_needed | reason |",
+    "|---|---|---:|---:|---:|---|",
+    "| lib/a.py | foo | yes | yes | yes | root cause |",
+    "| lib/b.py | bar | no | no | no | unrelated helper |",
+    "| lib/c.py | baz | yes/no | yes/no | yes/no | ... |",
+  ].join("\n");
+  const rows = parsePivotCheckRows(text);
+  assert.equal(rows.length, 2); // header, separator, and unfilled template row dropped
+  assert.deepEqual(rows[0], { path: "lib/a.py", inspected: true, editNeeded: true, reason: "root cause" });
+  assert.deepEqual(rows[1], { path: "lib/b.py", inspected: false, editNeeded: false, reason: "unrelated helper" });
+});
+
+test("checklistToolAgreement flags a claimed-inspected pivot the tools never opened", () => {
+  const rows = parsePivotCheckRows(
+    [
+      "| pivot | symbol | inspected | relevant | edit_needed | reason |",
+      "|---|---|---:|---:|---:|---|",
+      "| lib/a.py | foo | yes | yes | yes | edited it |",
+      "| lib/b.py | bar | yes | no | no | claims inspected but never opened |",
+    ].join("\n"),
+  );
+  const pivots: PivotForInspection[] = [
+    { path: "lib/a.py", symbol: "foo", role: "pivot", hidden: false },
+    { path: "lib/b.py", symbol: "bar", role: "pivot", hidden: true },
+  ];
+  // Tools: opened+edited a.py; never opened b.py.
+  const records = classifyPivotInspection(
+    pivots,
+    [{ tool: "read", target: "lib/a.py" }],
+    ["lib/a.py"],
+  );
+  const agreement = checklistToolAgreement(rows, records);
+  assert.equal(agreement.rowsMatched, 2);
+  assert.equal(agreement.inspectedClaims, 2);
+  assert.equal(agreement.inspectedAgreements, 1); // a.py honest; b.py false claim
+  assert.equal(agreement.claimedInspectedButNot, 1);
+  assert.equal(agreement.agreement, 0.5);
+});
+
+test("checklistToolAgreement is null when no rows match a pivot", () => {
+  const rows = parsePivotCheckRows(
+    [
+      "| pivot | symbol | inspected | relevant | edit_needed | reason |",
+      "|---|---|---:|---:|---:|---|",
+      "| unrelated/x.py | x | yes | yes | no | ... reason here |",
+    ].join("\n"),
+  );
+  const records = classifyPivotInspection(
+    [{ path: "lib/a.py", symbol: "foo", role: "pivot", hidden: false }],
+    [],
+    [],
+  );
+  assert.equal(checklistToolAgreement(rows, records).agreement, null);
 });

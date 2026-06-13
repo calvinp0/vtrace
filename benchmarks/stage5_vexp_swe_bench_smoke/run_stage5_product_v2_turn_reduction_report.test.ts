@@ -8,6 +8,11 @@ import path from "node:path";
 import { test } from "bun:test";
 
 import type { OrderedToolCall } from "../../src/capsule/toolCallLog";
+import {
+  classifyPivotInspection,
+  parsePivotCheckRows,
+  type PivotForInspection,
+} from "../../src/capsule/finalEditDiagnostics";
 import { productV2ProbeDir, productV2ProbeFilePath } from "./stage5_product_v2_probe";
 import {
   analyzeProductV2Case,
@@ -134,6 +139,56 @@ test("investment-paid-off is null when a probe side is unmeasurable", () => {
   const c = analyzeProductV2Case({ ...rec, priorSignals: null });
   assert.equal(c.firstResponseInvestmentPaidOff, null);
   assert.equal(c.firstCallTokens.measurable, false);
+});
+
+test("context-to-action enforcement fields are computed from the product run", () => {
+  const pivots: PivotForInspection[] = [
+    { path: "lib/a.py", symbol: "f", role: "pivot", hidden: false },
+    { path: "lib/b.py", symbol: "g", role: "pivot", hidden: true },
+  ];
+  // Tools opened+edited a.py; never opened the hidden b.py.
+  const records = classifyPivotInspection(
+    pivots,
+    [{ tool: "read", target: "lib/a.py" }],
+    ["lib/a.py"],
+  );
+  // Agent's checklist claimed it inspected BOTH (b.py claim is false).
+  const pivotCheckRows = parsePivotCheckRows(
+    [
+      "| pivot | symbol | inspected | relevant | edit_needed | reason |",
+      "|---|---|---:|---:|---:|---|",
+      "| lib/a.py | f | yes | yes | yes | edited |",
+      "| lib/b.py | g | yes | no | no | claimed but never opened |",
+    ].join("\n"),
+  );
+  const rec = passingRecord("matplotlib-22719");
+  const withEnforcement: ProductV2CaseRecord = {
+    ...rec,
+    productV2: {
+      ...rec.productV2,
+      enforcement: {
+        checklistEmitted: true,
+        neighborhoodMentioned: true,
+        records,
+        pivotCheckRows,
+      },
+    },
+  };
+  const c = analyzeProductV2Case(withEnforcement);
+  assert.equal(c.checklistEmitted, true);
+  assert.equal(c.neighborhoodMentioned, true);
+  assert.equal(c.pivotsInspected, 1); // only a.py opened
+  assert.equal(c.pivotsEdited, 1); // a.py edited
+  assert.equal(c.hiddenPivotsIgnored, 1); // hidden b.py never engaged
+  assert.equal(c.checklistVsToolAgreement, 0.5); // a.py claim honest, b.py false
+});
+
+test("enforcement fields are null when the run carried no enforcement telemetry", () => {
+  const c = analyzeProductV2Case(passingRecord("x")); // no enforcement on the fixture
+  assert.equal(c.checklistEmitted, null);
+  assert.equal(c.neighborhoodMentioned, null);
+  assert.equal(c.pivotsInspected, null);
+  assert.equal(c.checklistVsToolAgreement, null);
 });
 
 test("a token win with MORE turns does not pass strict AND", () => {

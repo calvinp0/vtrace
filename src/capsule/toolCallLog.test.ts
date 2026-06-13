@@ -4,6 +4,7 @@ import { test } from "bun:test";
 import { classifyPivotInspection, type PivotForInspection } from "./finalEditDiagnostics";
 import {
   assistantTextFromStream,
+  detectNeighborhoodMention,
   detectPivotChecklistEmitted,
   inspectionCallsFromLog,
   parseOrderedToolCalls,
@@ -163,4 +164,31 @@ test("detectPivotChecklistEmitted is true only when the AGENT emits PIVOT_CHECK"
 
   // Empty stream → false.
   assert.equal(detectPivotChecklistEmitted(""), false);
+});
+
+test("detectNeighborhoodMention catches keyword and identifier references in agent text", () => {
+  const keyword = JSON.stringify({
+    type: "assistant",
+    message: { content: [{ type: "text", text: "neighborhood_use: used the caller excerpt" }] },
+  });
+  assert.equal(detectNeighborhoodMention(keyword), true);
+
+  // No keyword, but the agent names a provided neighborhood identifier.
+  const byIdentifier = JSON.stringify({
+    type: "assistant",
+    message: { content: [{ type: "text", text: "the caller in lib/matplotlib/axis.py looks relevant" }] },
+  });
+  assert.equal(detectNeighborhoodMention(byIdentifier, ["lib/matplotlib/axis.py"]), true);
+
+  // Agent ignored the neighborhood entirely → false.
+  const ignored = JSON.stringify({
+    type: "assistant",
+    message: { content: [{ type: "text", text: "I will just patch the traceback file." }] },
+  });
+  assert.equal(detectNeighborhoodMention(ignored, ["lib/matplotlib/axis.py"]), false);
+
+  // Input-echo guard: the injected user prompt mentioning it does not count.
+  const promptOnly = JSON.stringify({ type: "user", message: { content: "## Pivot neighborhood ..." } });
+  assert.equal(detectNeighborhoodMention(promptOnly), false);
+  assert.equal(detectNeighborhoodMention(""), false);
 });

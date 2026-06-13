@@ -314,6 +314,111 @@ export function classifyPivotInspection(
   });
 }
 
+// ----- PIVOT_CHECK row parsing + checklist-vs-tool agreement -------------------
+//
+// The injected PIVOT_CHECK block asks the agent to fill a table:
+//   | pivot | symbol | inspected | relevant | edit_needed | reason |
+// These helpers parse the agent's FILLED rows from its assistant text, then check
+// each claimed `inspected` against tool-derived inspection (classifyPivotInspection)
+// — catching the failure mode where the agent claims to have inspected a pivot it
+// never opened. Pure: no gold patch, no I/O.
+
+// One parsed checklist row the agent emitted. `inspected`/`editNeeded` are null
+// when the cell was left as the `yes/no` template or was otherwise unparseable.
+export interface PivotCheckRow {
+  readonly path: string;
+  readonly inspected: boolean | null;
+  readonly editNeeded: boolean | null;
+  readonly reason: string;
+}
+
+// Parse a yes/no-ish cell. The injected template literal `yes/no` (unfilled) and
+// anything ambiguous return null so an unfilled row never counts as a claim.
+function parseYesNoCell(cell: string): boolean | null {
+  const value = cell.trim().toLowerCase();
+  if (value === "yes" || value === "y" || value === "true" || value === "✓") return true;
+  if (value === "no" || value === "n" || value === "false") return false;
+  return null;
+}
+
+// Extract the agent's filled PIVOT_CHECK rows from its assistant text. Scans for
+// Markdown table rows with at least the 6 checklist columns; the header
+// (`| pivot | symbol | ...`) and separator (`|---|`) rows and the unfilled
+// `yes/no` template rows are skipped. Tolerant of extra whitespace.
+export function parsePivotCheckRows(assistantText: string): PivotCheckRow[] {
+  const rows: PivotCheckRow[] = [];
+  for (const rawLine of assistantText.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line.startsWith("|") || !line.endsWith("|")) continue;
+    // Split interior cells (drop the leading/trailing empty splits from the pipes).
+    const cells = line.slice(1, -1).split("|").map((cell) => cell.trim());
+    if (cells.length < 6) continue;
+    const [path, , inspectedCell, , editNeededCell, ...reasonParts] = cells;
+    if (path === undefined || path.length === 0) continue;
+    // Skip the header row and the separator row.
+    if (path.toLowerCase() === "pivot") continue;
+    if (/^:?-{2,}:?$/.test(path)) continue;
+    const inspected = parseYesNoCell(inspectedCell ?? "");
+    const editNeeded = parseYesNoCell(editNeededCell ?? "");
+    // An entirely-template row (both cells still `yes/no`) is not a real claim.
+    if (inspected === null && editNeeded === null && (inspectedCell ?? "").includes("/")) continue;
+    rows.push({
+      path,
+      inspected,
+      editNeeded,
+      reason: reasonParts.join("|").trim(),
+    });
+  }
+  return rows;
+}
+
+// Agreement between the agent's CLAIMED inspection and the tool-derived truth.
+// `agreement` is the fraction of matched rows whose claimed `inspected` equals the
+// classifier's `inspected` (the load-bearing honesty check). `null` when no row
+// could be matched to a pivot record or carried a parseable inspected-claim.
+export interface ChecklistToolAgreement {
+  readonly rowsParsed: number;
+  readonly rowsMatched: number;
+  readonly inspectedClaims: number;
+  readonly inspectedAgreements: number;
+  // Rows where the agent claimed inspected=yes but tools show it never opened the
+  // pivot — the dishonest-claim count the gate most wants to surface.
+  readonly claimedInspectedButNot: number;
+  readonly agreement: number | null;
+}
+
+export function checklistToolAgreement(
+  rows: readonly PivotCheckRow[],
+  records: readonly PivotInspectionRecord[],
+): ChecklistToolAgreement {
+  let rowsMatched = 0;
+  let inspectedClaims = 0;
+  let inspectedAgreements = 0;
+  let claimedInspectedButNot = 0;
+
+  for (const row of rows) {
+    const record = records.find((entry) => samePath(entry.path, row.path));
+    if (record === undefined) continue;
+    rowsMatched += 1;
+    if (row.inspected === null) continue;
+    inspectedClaims += 1;
+    if (row.inspected === record.inspected) {
+      inspectedAgreements += 1;
+    } else if (row.inspected && !record.inspected) {
+      claimedInspectedButNot += 1;
+    }
+  }
+
+  return {
+    rowsParsed: rows.length,
+    rowsMatched,
+    inspectedClaims,
+    inspectedAgreements,
+    claimedInspectedButNot,
+    agreement: inspectedClaims > 0 ? inspectedAgreements / inspectedClaims : null,
+  };
+}
+
 function dedupe(values: readonly string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];

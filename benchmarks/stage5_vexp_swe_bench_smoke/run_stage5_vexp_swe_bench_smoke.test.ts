@@ -1760,6 +1760,86 @@ test("buildPivotCheckBlock omits the hidden note when every pivot is source-anch
   assert.match(block!, /Search\/Grep does NOT count as inspection/);
 });
 
+// A classification carrying a single pivot plus a pivot_neighborhood (the
+// product-v2 `--pivot-neighborhood` shape) — the new OR-trigger case.
+function classificationWithNeighborhood(
+  pivots: CapsuleAuditItem[],
+  neighborhoodExcerpts: number,
+): CapsuleClassification {
+  const excerpts = Array.from({ length: neighborhoodExcerpts }, (_unused, i) => ({
+    filePath: `lib/neighbor${i}.py`, symbol: `n${i}`, fqName: `lib/neighbor${i}.py::n${i}`,
+    startLine: 1, endLine: 3, text: "def n():\n    return 1", reason: "caller", truncated: false,
+  }));
+  const pivot_neighborhood = [{ pivot: { path: pivots[0]!.path, symbol: pivots[0]!.symbol, fqName: null }, excerpts }];
+  return {
+    capsulePivots: pivots,
+    capsuleV2Result: { pivot_neighborhood },
+  } as unknown as CapsuleClassification;
+}
+
+test("decidePivotCheckInjection triggers on pivotNeighborhood excerpts even with a single pivot", () => {
+  const single: CapsuleAuditItem[] = [
+    { path: "lib/a.py", symbol: "f", roleReason: "symbol-name match", estimatedTokens: 50 },
+  ];
+  // Single pivot + neighborhood under strict_risk_gated (which would otherwise
+  // suppress) → injected because neighborhood excerpts are present.
+  const withNbhd = decidePivotCheckInjection(
+    "strict_risk_gated",
+    classificationWithNeighborhood(single, 4),
+  );
+  assert.equal(withNbhd.inject, true);
+  assert.match(withNbhd.reason, /neighborhood_excerpts_present/);
+
+  // Same single pivot, no neighborhood → not injected (below the multi-pivot floor).
+  const noNbhd = decidePivotCheckInjection("strict_risk_gated", classificationWithPivots(single));
+  assert.equal(noNbhd.inject, false);
+
+  // policy=off still never injects, even with neighborhood excerpts.
+  const off = decidePivotCheckInjection("off", classificationWithNeighborhood(single, 4));
+  assert.equal(off.inject, false);
+});
+
+test("buildPivotCheckBlock renders for a single pivot + neighborhood and adds the neighborhood_use line", () => {
+  const single: CapsuleAuditItem[] = [
+    { path: "lib/a.py", symbol: "f", roleReason: "symbol-name match", estimatedTokens: 50 },
+  ];
+  const neighborhood = [
+    {
+      pivot: { path: "lib/a.py", symbol: "f", fqName: null },
+      excerpts: [
+        { filePath: "lib/b.py", symbol: "g", fqName: "lib/b.py::g", startLine: 1, endLine: 2, text: "x", reason: "caller" as const, truncated: false },
+      ],
+    },
+  ];
+  // Single pivot would normally be below the floor; the neighborhood relaxes it.
+  const block = buildPivotCheckBlock(single, 2, neighborhood);
+  assert.ok(block !== null, "single pivot + neighborhood must still emit a checklist");
+  assert.match(block!, /## PIVOT_CHECK/);
+  assert.match(block!, /\| lib\/a\.py \|/);
+  assert.match(block!, /neighborhood_use: 1 pivot-neighborhood excerpt\(s\)/);
+  assert.match(block!, /ground each rule-out in source you inspected/);
+
+  // No neighborhood and single pivot → still null (multi-pivot floor holds).
+  assert.equal(buildPivotCheckBlock(single, 2, []), null);
+});
+
+test("buildVtraceContextMarkdown injects PIVOT_CHECK for a single-pivot v2 section carrying a neighborhood", () => {
+  const single: CapsuleAuditItem[] = [
+    { path: "lib/a.py", symbol: "f", roleReason: "symbol-name match", estimatedTokens: 50 },
+  ];
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n## pivots\n...",
+    error: null,
+    classification: classificationWithNeighborhood(single, 3),
+    preformatted: true,
+  };
+  const assembled = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8 });
+  assert.match(assembled.markdown, /## PIVOT_CHECK/);
+  assert.match(assembled.markdown, /neighborhood_use:/);
+  assert.equal(assembled.pivotCheckInjected, true);
+});
+
 test("buildVtraceContextMarkdown injects PIVOT_CHECK for a multi-pivot Capsule v2 section", () => {
   const section = {
     instance: sampleInstance(),

@@ -23,7 +23,14 @@ import {
   OrderedToolCall,
   parseOrderedToolCalls,
   summarizeOrderedToolCalls,
+  toInspectionToolCalls,
 } from "../../src/capsule/toolCallLog";
+import {
+  checklistToolAgreement,
+  type PivotCheckRow,
+  type PivotInspectionRecord,
+} from "../../src/capsule/finalEditDiagnostics";
+import { buildPivotInspection } from "./run_stage5_capsule_v2_validation_report";
 import {
   PRODUCT_V2_CONDITION,
   PRODUCT_V2_DEFAULT_INSTANCES,
@@ -51,6 +58,20 @@ export interface ConditionMetrics {
   readonly contextEngine: string | null;
   // The ordered tool-call log, or null when telemetry was unavailable.
   readonly toolCalls: readonly OrderedToolCall[] | null;
+  // Context-to-action enforcement signals (product side only; null on the prior
+  // side or when the run predates enforcement telemetry). Optional so existing
+  // record fixtures stay valid.
+  readonly enforcement?: PivotEnforcementMetrics | null;
+}
+
+// Context-to-action enforcement telemetry for one run: did the agent emit the
+// PIVOT_CHECK checklist, engage the neighborhood, and do its tool-derived pivot
+// inspection match its claimed rows?
+export interface PivotEnforcementMetrics {
+  readonly checklistEmitted: boolean | null;
+  readonly neighborhoodMentioned: boolean | null;
+  readonly records: readonly PivotInspectionRecord[];
+  readonly pivotCheckRows: readonly PivotCheckRow[];
 }
 
 // One instance's prior-vs-product-v2 pairing plus the product-path probe signals.
@@ -126,6 +147,21 @@ export interface ProductV2CaseAnalysis {
   // reduction exceeded the first-call token increase — i.e. the richer first
   // response more than paid for itself. Null when either side is not measurable.
   readonly firstResponseInvestmentPaidOff: boolean | null;
+  // ---- context-to-action enforcement (product side) ----
+  // Did the agent emit the PIVOT_CHECK checklist it was asked for?
+  readonly checklistEmitted: boolean | null;
+  // Hidden (non-traceback) pivots the agent never engaged with (status=ignored).
+  readonly hiddenPivotsIgnored: number | null;
+  // Pivots the agent directly inspected (Read/open), tool-derived.
+  readonly pivotsInspected: number | null;
+  // Pivots the final patch actually edited.
+  readonly pivotsEdited: number | null;
+  // Did the agent reference the injected pivot-neighborhood excerpts at all?
+  readonly neighborhoodMentioned: boolean | null;
+  // Fraction of the agent's checklist `inspected` claims that match tool evidence
+  // (1 = every claim honest; <1 = claimed inspection the tools do not support).
+  // Null when no checklist rows could be matched to a pivot.
+  readonly checklistVsToolAgreement: number | null;
   // Strict-AND per-case PASS (see classifyCasePass).
   readonly pass: boolean;
   // Why the case did not pass (empty when it passed).
@@ -215,6 +251,21 @@ export function analyzeProductV2Case(record: ProductV2CaseRecord): ProductV2Case
       && totalTokens.delta !== null && firstCallTokens.delta !== null
       ? -totalTokens.delta > firstCallTokens.delta
       : null;
+  // Context-to-action enforcement (product side). Null fields when the run carried
+  // no enforcement telemetry (legacy run / pre-enforcement build).
+  const enforcement = record.productV2.enforcement ?? null;
+  const records = enforcement?.records ?? [];
+  const hasRecords = records.length > 0;
+  const checklistEmitted = enforcement?.checklistEmitted ?? null;
+  const neighborhoodMentioned = enforcement?.neighborhoodMentioned ?? null;
+  const pivotsInspected = hasRecords ? records.filter((r) => r.inspected).length : null;
+  const pivotsEdited = hasRecords ? records.filter((r) => r.edited).length : null;
+  const hiddenPivotsIgnored = hasRecords
+    ? records.filter((r) => r.hidden && r.status === "ignored").length
+    : null;
+  const checklistVsToolAgreement = enforcement
+    ? checklistToolAgreement(enforcement.pivotCheckRows, records).agreement
+    : null;
   return {
     instanceId: record.instanceId,
     priorEngine: record.prior.contextEngine,
@@ -251,6 +302,12 @@ export function analyzeProductV2Case(record: ProductV2CaseRecord): ProductV2Case
     pivotNeighborhoodPivotsEnriched: record.productSignals?.pivotNeighborhoodPivotsEnriched ?? 0,
     firstCallTokens,
     firstResponseInvestmentPaidOff,
+    checklistEmitted,
+    hiddenPivotsIgnored,
+    pivotsInspected,
+    pivotsEdited,
+    neighborhoodMentioned,
+    checklistVsToolAgreement,
     pass,
     failedCriteria,
   };
@@ -540,6 +597,19 @@ export function renderMarkdown(report: ProductV2TurnReductionReport): string {
     lines.push(
       `- First-response investment paid off (total reduction > first-call increase): ${fmtBool(c.firstResponseInvestmentPaidOff)}`,
     );
+    // Context-to-action enforcement: did the agent account for the pivots/neighborhood?
+    lines.push(
+      `- Context-to-action: checklist emitted=${fmtBool(c.checklistEmitted)}, `
+        + `neighborhood mentioned=${fmtBool(c.neighborhoodMentioned)}`,
+    );
+    lines.push(
+      `- Pivots: inspected=${fmtNum(c.pivotsInspected)}, edited=${fmtNum(c.pivotsEdited)}, `
+        + `hidden ignored=${fmtNum(c.hiddenPivotsIgnored)}`,
+    );
+    lines.push(
+      `- Checklist vs tool agreement (claimed inspection matches tool evidence): `
+        + `${c.checklistVsToolAgreement === null ? "n/a" : c.checklistVsToolAgreement.toFixed(2)}`,
+    );
     lines.push("");
   }
 
@@ -727,8 +797,38 @@ async function loadConditionMetrics(
     durationMs: asNumber(r.durationMs),
     contextEngine: asString(m.vtraceCapsuleEngine) ?? asString(m.capsuleEngine),
     toolCalls,
+    enforcement: buildEnforcementMetrics(m, row, toolCalls),
   };
   return { metrics, matchedInstanceId: asString(r.instanceId) };
+}
+
+// Derive context-to-action enforcement metrics for a run from its meta + record +
+// ordered tool calls. Returns null when the run carried no enforcement telemetry
+// (no `vtracePivotChecklistEmitted` / `vtraceNeighborhoodMentioned` keys — a
+// legacy / pre-enforcement build), so the report shows n/a rather than fabricated
+// values. Reuses the shared pivot-inspection classifier.
+function buildEnforcementMetrics(
+  meta: Record<string, unknown>,
+  row: Record<string, unknown> | null,
+  toolCalls: readonly OrderedToolCall[] | null,
+): PivotEnforcementMetrics | null {
+  const hasTelemetry =
+    "vtracePivotChecklistEmitted" in meta || "vtraceNeighborhoodMentioned" in meta;
+  if (!hasTelemetry) return null;
+  const inspection = buildPivotInspection(
+    meta,
+    row,
+    toolCalls === null ? null : toInspectionToolCalls(toolCalls),
+  );
+  const pivotCheckRows = Array.isArray(meta.vtracePivotCheckRows)
+    ? (meta.vtracePivotCheckRows as PivotCheckRow[])
+    : [];
+  return {
+    checklistEmitted: asBool(meta.vtracePivotChecklistEmitted),
+    neighborhoodMentioned: asBool(meta.vtraceNeighborhoodMentioned),
+    records: inspection.records,
+    pivotCheckRows,
+  };
 }
 
 // The harness persists the already-parsed ProductV2Signals object (not the raw

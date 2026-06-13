@@ -16,10 +16,13 @@ import { shapeSweQuery } from "../../src/capsule/sweQueryShaping";
 import {
   contextMentionsFile,
   contextMentionsSymbol,
+  parsePivotCheckRows,
   primaryEditedFile,
   primaryEditedSymbol,
 } from "../../src/capsule/finalEditDiagnostics";
 import {
+  assistantTextFromStream,
+  detectNeighborhoodMention,
   detectPivotChecklistEmitted,
   parseOrderedToolCalls,
   summarizeOrderedToolCalls,
@@ -2836,6 +2839,20 @@ function readPivotNeighborhood(result: CapsuleV2Result): PivotNeighborhoodContex
   return Array.isArray(raw) ? (raw as PivotNeighborhoodContext[]) : [];
 }
 
+// Total pivot-neighborhood excerpts carried by a classification's Capsule v2
+// result (0 on the legacy engine, on a pre-neighborhood result, or when the
+// `--pivot-neighborhood` opt-in was not used). Used as a PIVOT_CHECK trigger:
+// neighborhood excerpts are context the agent must account for even for a
+// single-pivot capsule.
+function neighborhoodExcerptCountOf(classification: CapsuleClassification | null): number {
+  const result = classification?.capsuleV2Result ?? null;
+  if (result === null) return 0;
+  return readPivotNeighborhood(result).reduce(
+    (sum, context) => sum + (Array.isArray(context.excerpts) ? context.excerpts.length : 0),
+    0,
+  );
+}
+
 // Reduce Capsule v2 items to the audit-relevant fields, tolerating partially
 // shaped JSON (a missing path/symbol degrades to "" rather than throwing).
 function toCapsuleAuditItems(items: unknown): CapsuleAuditItem[] {
@@ -3433,6 +3450,19 @@ export function decidePivotCheckInjection(
   const multiPivot = pivotCount >= 2;
   const riskSignals = pivotCheckRiskSignals(classification);
   const base = { policy, riskSignals, wouldInjectUnderMultiPivot: multiPivot } as const;
+  // Pivot-neighborhood excerpts are extra nearby source the agent must account for.
+  // Their presence is a qualifying trigger on its own (single-pivot capsules
+  // included): "multiple pivots OR pivotNeighborhood excerpts". This fires only on
+  // the Capsule v2 product path that opts into `--pivot-neighborhood`, and never
+  // under policy=off, so non-neighborhood runs keep their existing behaviour.
+  const neighborhoodExcerpts = neighborhoodExcerptCountOf(classification);
+  if (policy !== "off" && neighborhoodExcerpts > 0 && pivotCount >= 1) {
+    return {
+      ...base,
+      inject: true,
+      reason: `neighborhood_excerpts_present (${neighborhoodExcerpts} excerpt(s) over ${pivotCount} pivot(s))`,
+    };
+  }
   switch (policy) {
     case "off":
       return { ...base, inject: false, reason: "policy=off: PIVOT_CHECK never injected" };
@@ -3481,8 +3511,17 @@ export function decidePivotCheckInjection(
 export function buildPivotCheckBlock(
   pivots: readonly CapsuleAuditItem[] | null,
   minPivots = 2,
+  neighborhood: readonly PivotNeighborhoodContext[] = [],
 ): string | null {
-  if (pivots === null || pivots.length < minPivots) return null;
+  const neighborhoodExcerpts = neighborhood.reduce(
+    (sum, context) => sum + (Array.isArray(context.excerpts) ? context.excerpts.length : 0),
+    0,
+  );
+  // Neighborhood excerpts are themselves accountable context, so a single-pivot
+  // capsule that carries them still gets a checklist (one pivot row + the
+  // neighborhood-use line). Otherwise the multi-row floor applies.
+  const effectiveMin = neighborhoodExcerpts > 0 ? Math.min(minPivots, 1) : minPivots;
+  if (pivots === null || pivots.length < effectiveMin) return null;
   const anyHidden = pivots.some((pivot) => pivotIsHidden(pivot.roleReason));
 
   const lines: string[] = [
@@ -3510,6 +3549,16 @@ export function buildPivotCheckBlock(
   lines.push("|---|---|---:|---:|---:|---|");
   for (const pivot of pivots) {
     lines.push(`| ${pivot.path} | ${pivot.symbol || "?"} | yes/no | yes/no | yes/no | ... |`);
+  }
+  // Neighborhood-use line: the nearby relationship excerpts VTRACE supplied must be
+  // accounted for too — which the agent used, and which it ruled out (with a
+  // source-grounded reason). Rule-outs must cite inspected source, never a guess.
+  if (neighborhoodExcerpts > 0) {
+    lines.push("");
+    lines.push(
+      `neighborhood_use: ${neighborhoodExcerpts} pivot-neighborhood excerpt(s) were provided above. `
+        + "State which you used and which you ruled out; ground each rule-out in source you inspected.",
+    );
   }
   return lines.join("\n");
 }
@@ -3906,8 +3955,15 @@ export function buildVtraceContextMarkdown(
       if (firstDecision === null && section.classification !== null) firstDecision = decision;
       // `always` lowers the render floor to a single pivot (experiments); every other
       // policy keeps the >= 2 multi-row checklist floor.
+      const sectionNeighborhood = section.classification?.capsuleV2Result
+        ? readPivotNeighborhood(section.classification.capsuleV2Result)
+        : [];
       const pivotCheck = decision.inject
-        ? buildPivotCheckBlock(section.classification?.capsulePivots ?? null, effectivePolicy === "always" ? 1 : 2)
+        ? buildPivotCheckBlock(
+          section.classification?.capsulePivots ?? null,
+          effectivePolicy === "always" ? 1 : 2,
+          sectionNeighborhood,
+        )
         : null;
       if (pivotCheck !== null) {
         if (injectedDecision === null) injectedDecision = decision;
@@ -4961,6 +5017,8 @@ export async function persistOrderedToolCalls(
       vtraceToolCallError: null,
       // No stream → cannot observe whether the agent emitted a PIVOT_CHECK section.
       vtracePivotChecklistEmitted: null,
+      vtracePivotCheckRows: [],
+      vtraceNeighborhoodMentioned: null,
       vtraceToolCallSummaryFile: summaryPath,
       orderedTelemetryAvailable: false,
       orderedTelemetryMissingReason: TELEMETRY_MISSING_LEGACY,
@@ -4981,6 +5039,8 @@ export async function persistOrderedToolCalls(
       vtraceToolCallError:
         "adapter stream sentinel: the stream patch executed but rawOutput was not a usable string (no stream-json captured).",
       vtracePivotChecklistEmitted: null,
+      vtracePivotCheckRows: [],
+      vtraceNeighborhoodMentioned: null,
       vtraceToolCallSummaryFile: summaryPath,
       orderedTelemetryAvailable: false,
       orderedTelemetryMissingReason: TELEMETRY_MISSING_SENTINEL,
@@ -4990,6 +5050,13 @@ export async function persistOrderedToolCalls(
   // only; see detectPivotChecklistEmitted). Recorded even if tool-call parsing
   // below fails — checklist telemetry must never fail a run.
   const pivotChecklistEmitted = detectPivotChecklistEmitted(stream);
+  // Context-to-action verification telemetry (stream-derived; never fails a run).
+  // The agent's filled PIVOT_CHECK rows are persisted so the report can check the
+  // claims against tool evidence; neighborhood mention records whether the agent
+  // engaged with the injected pivot-neighborhood excerpts at all.
+  const assistantText = assistantTextFromStream(stream);
+  const pivotCheckRows = parsePivotCheckRows(assistantText);
+  const neighborhoodMentioned = detectNeighborhoodMention(stream);
   try {
     const calls = parseOrderedToolCalls(stream);
     const logPath = toolCallLogFilePath(rawDir);
@@ -5008,6 +5075,8 @@ export async function persistOrderedToolCalls(
       vtraceToolCallCount: calls.length,
       vtraceToolCallError: null,
       vtracePivotChecklistEmitted: pivotChecklistEmitted,
+      vtracePivotCheckRows: pivotCheckRows,
+      vtraceNeighborhoodMentioned: neighborhoodMentioned,
       vtraceToolCallSummaryFile: summaryPath,
       orderedTelemetryAvailable: true,
       orderedTelemetryMissingReason: null,
@@ -5026,6 +5095,8 @@ export async function persistOrderedToolCalls(
       vtraceToolCallCount: null,
       vtraceToolCallError: error instanceof Error ? error.message : String(error),
       vtracePivotChecklistEmitted: pivotChecklistEmitted,
+      vtracePivotCheckRows: pivotCheckRows,
+      vtraceNeighborhoodMentioned: neighborhoodMentioned,
       vtraceToolCallSummaryFile: summaryPath,
       orderedTelemetryAvailable: false,
       orderedTelemetryMissingReason: TELEMETRY_MISSING_PARSE_ERROR,

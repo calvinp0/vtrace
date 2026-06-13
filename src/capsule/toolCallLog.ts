@@ -271,6 +271,26 @@ export function detectPivotChecklistEmitted(streamJson: string): boolean {
   return assistantTextFromStream(streamJson).includes(PIVOT_CHECK_MARKER);
 }
 
+// Did the agent's response engage with the injected pivot-neighborhood excerpts?
+// True when the assistant text references the neighborhood explicitly (a
+// `neighborhood` mention or a `neighborhood_use` line) or names any of the
+// provided neighborhood excerpt identifiers (file paths / fqNames / symbols).
+// Scans assistant text only; presence detector, not a use-quality judge.
+export function detectNeighborhoodMention(
+  streamJson: string,
+  identifiers: readonly string[] = [],
+): boolean {
+  const text = assistantTextFromStream(streamJson);
+  if (text.length === 0) return false;
+  const lower = text.toLowerCase();
+  if (lower.includes("neighborhood_use") || lower.includes("neighborhood use")) return true;
+  if (lower.includes("pivot neighborhood") || lower.includes("pivotneighborhood")) return true;
+  for (const identifier of identifiers) {
+    if (identifier.length > 0 && text.includes(identifier)) return true;
+  }
+  return false;
+}
+
 // Map ordered calls into the classifier's `InspectionToolCall` shape. `output`
 // carries the search result (or the query as a fallback) so a grep that surfaces
 // a pivot path/symbol is detected as `discovered` rather than `inspected`.
