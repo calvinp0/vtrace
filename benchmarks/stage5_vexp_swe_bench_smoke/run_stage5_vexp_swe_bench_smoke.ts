@@ -399,6 +399,15 @@ export interface IndexedContextFields {
   readonly vtraceCapsuleEngine: CapsuleEngine | "unknown" | null;
   readonly vtraceCapsuleIntent: string | null;
   readonly vtraceCapsuleBudget: number | null;
+  // Engine-default migration audit. `vtraceCapsuleEngine` above is the EFFECTIVE
+  // engine (kept for backward compatibility). These distinguish what was requested
+  // (default v2) from what effectively produced the context after any v2 → legacy
+  // fallback, the fallback reason, and whether compact inspect-first was the render
+  // path. All null/"unknown" on older runs that predate these fields.
+  readonly vtraceRequestedCapsuleEngine: CapsuleEngine | "unknown" | null;
+  readonly vtraceEffectiveCapsuleEngine: CapsuleEngine | "unknown" | null;
+  readonly vtraceCapsuleEngineFallbackReason: string | null;
+  readonly vtraceCompactInspectFirst: boolean | null;
   // Capsule v2 selected-item audit (Requirement 2): the exact injected pivots /
   // support, the lead pivot file/symbol, the realised actual_mode, and the
   // capsule's token estimate. Empty/null off the v2 engine and on baseline rows.
@@ -746,9 +755,14 @@ const DEFAULT_CONFIG: CliConfig = {
   showVtraceIndexLog: false,
   vtraceContextMaxChars: 12000,
   vtraceContextMaxItems: 8,
-  // Default to the legacy engine to preserve existing Stage 5 behaviour; pass
-  // --capsule-engine v2 to validate Capsule v2 retrieval live.
-  capsuleEngine: "legacy",
+  // Capsule v2 (compact inspect-first) is the DEFAULT injected engine: the
+  // product-level validation showed large token/turn reductions with no
+  // resolution loss where context is injected. Capsule v1 (legacy) is a fallback,
+  // forced via `--capsule-engine v1` (alias `legacy`) and used automatically when
+  // a v2 build fails. This is an engine-default migration only — it does NOT make
+  // the hard pivot-check gate default (that stays diagnostic/off) and does NOT
+  // change retrieval scoring/ranking or auto-policy thresholds.
+  capsuleEngine: "v2",
   capsuleIntent: "auto",
   capsuleBudget: CAPSULE_V2_DEFAULT_BUDGET,
   captureProductV2Accounting: false,
@@ -2583,10 +2597,22 @@ export interface IndexedContextResult {
   readonly expectedContextValue: ExpectedLevel | null;
   readonly expectedOverheadRisk: ExpectedLevel | null;
   // Which capsule engine produced the query. intent/budget are null on the legacy
-  // engine (they are v2-only knobs).
+  // engine (they are v2-only knobs). `capsuleEngine` is retained for backward
+  // compatibility and equals the EFFECTIVE engine; the migration audit below
+  // distinguishes requested vs effective and records any fallback reason.
   readonly capsuleEngine: CapsuleEngine;
   readonly capsuleIntent: CapsuleV2Intent | null;
   readonly capsuleBudget: number | null;
+  // Engine-default migration audit. `requestedCapsuleEngine` is what the run asked
+  // for (default v2); `effectiveCapsuleEngine` is what actually produced the
+  // injected context after any v2 → legacy fallback; `capsuleEngineFallbackReason`
+  // is the v2 failure message (null when no fallback occurred);
+  // `compactInspectFirst` is true when the effective engine is v2 (the v2 injected
+  // render uses compact inspect-first).
+  readonly requestedCapsuleEngine: CapsuleEngine;
+  readonly effectiveCapsuleEngine: CapsuleEngine;
+  readonly capsuleEngineFallbackReason: string | null;
+  readonly compactInspectFirst: boolean;
   // Capsule v2 selected-item audit: the exact pivots/support injected, the lead
   // pivot file/symbol, the realised actual_mode, and the capsule's token estimate.
   // Empty/null on the legacy engine and on no-context runs.
@@ -3683,6 +3709,23 @@ export interface VtraceContextSection {
   // per-item line cap would decapitate a multi-line focused source body — only a
   // char-cap safety net applies. Legacy/undefined sections keep line truncation.
   readonly preformatted?: boolean;
+  // Engine migration audit: the requested engine (config default is v2) and the
+  // engine that EFFECTIVELY produced this section's context after any v2 → legacy
+  // fallback, plus the fallback reason. Absent/legacy on older callers.
+  readonly requestedEngine?: CapsuleEngine;
+  readonly effectiveEngine?: CapsuleEngine;
+  readonly engineFallbackReason?: string | null;
+}
+
+// Raised when a capsule query for a specific engine fails (non-zero exit or an
+// unusable/empty classification). Distinct from workspace/index-prep failures so
+// the v2 → legacy fallback only triggers on a genuine engine-query failure, never
+// masking a clone/index error.
+class EngineQueryError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "EngineQueryError";
+  }
 }
 
 // Assemble the full _vtrace_instructions.md content (one section per instance)
@@ -4426,6 +4469,10 @@ export function indexedContextMetaFields(result: IndexedContextResult): IndexedC
     vtraceCapsuleEngine: result.capsuleEngine,
     vtraceCapsuleIntent: result.capsuleIntent,
     vtraceCapsuleBudget: result.capsuleBudget,
+    vtraceRequestedCapsuleEngine: result.requestedCapsuleEngine,
+    vtraceEffectiveCapsuleEngine: result.effectiveCapsuleEngine,
+    vtraceCapsuleEngineFallbackReason: result.capsuleEngineFallbackReason,
+    vtraceCompactInspectFirst: result.compactInspectFirst,
     vtraceCapsulePivots: result.capsulePivots,
     vtraceCapsuleSupport: result.capsuleSupport,
     vtraceCapsuleTopPivotFile: result.capsuleTopPivotFile,
@@ -4505,6 +4552,12 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     let rawContext = "";
     let sectionError: string | null = null;
     let classification: CapsuleClassification | null = null;
+    // Engine migration bookkeeping: the engine that was REQUESTED (config default
+    // is now v2) vs the engine that EFFECTIVELY produced the injected context after
+    // any v2 → legacy fallback, plus the fallback reason. Reset per instance.
+    const requestedEngine: CapsuleEngine = config.capsuleEngine;
+    let effectiveEngine: CapsuleEngine = requestedEngine;
+    let engineFallbackReason: string | null = null;
     try {
       workspacePrep = await prepareWorkspaceForInstance({ instance, workspace, runProc, sleep });
       const indexSpec = buildVtraceIndexCommand(config, workspace);
@@ -4615,20 +4668,57 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
       // v2 ignores `mode` (it sizes from --budget); legacy uses it. The task/query
       // text also differs per engine (clean task for v2, packed query for legacy).
       const mode = capsuleModeForInstance(instance);
-      const querySpec = buildVtraceQueryCommand(config, workspace, capsuleQueryTextFor(config, instance), mode);
-      queryCommand = renderCommand(querySpec);
-      const queryResult = await runProc(querySpec.command, querySpec.args);
-      if (queryResult.exitCode !== 0) {
-        throw new Error(`vtrace query failed (exit ${queryResult.exitCode}): ${queryResult.stderr.trim() || "(no stderr)"}`);
+
+      // Run the capsule query for a given engine, classifying the policy. A SKIP
+      // (no high-confidence target) is a VALID policy decision, not an error; only
+      // a non-zero exit or a genuinely unusable output (empty WITHOUT skip
+      // diagnostics) raises an EngineQueryError. The engine is threaded through a
+      // shallow config clone so the legacy fallback uses legacy query text + args
+      // (the workspace/index were already prepared above and are engine-agnostic).
+      const runEngineQuery = async (engine: CapsuleEngine): Promise<{
+        classification: CapsuleClassification;
+        rawContext: string;
+        command: string;
+      }> => {
+        const engineConfig = engine === config.capsuleEngine ? config : { ...config, capsuleEngine: engine };
+        const spec = buildVtraceQueryCommand(engineConfig, workspace, capsuleQueryTextFor(engineConfig, instance), mode);
+        const command = renderCommand(spec);
+        const result = await runProc(spec.command, spec.args);
+        if (result.exitCode !== 0) {
+          throw new EngineQueryError(`vtrace query failed (exit ${result.exitCode}): ${result.stderr.trim() || "(no stderr)"}`);
+        }
+        const classified = classifyCapsuleOutput(result.stdout);
+        if (classified.policyAction === "error") {
+          throw new EngineQueryError(classified.error ?? "vtrace query returned empty context.");
+        }
+        return { classification: classified, rawContext: classified.context, command };
+      };
+
+      try {
+        const attempt = await runEngineQuery(config.capsuleEngine);
+        queryCommand = attempt.command;
+        classification = attempt.classification;
+        rawContext = attempt.rawContext;
+      } catch (engineError) {
+        // Legacy fallback: ONLY when the requested engine was v2 and the failure was
+        // the v2 query itself (an EngineQueryError) — a v2 build failure or a missing
+        // v2 prerequisite. Workspace/index prep failures throw before this block and
+        // are never masked. If the legacy retry also fails, it propagates to the
+        // section-level catch as a genuine error (no silent empty-context run).
+        if (effectiveEngine === "v2" && engineError instanceof EngineQueryError) {
+          engineFallbackReason = engineError instanceof Error ? engineError.message : String(engineError);
+          effectiveEngine = "legacy";
+          process.stderr.write(
+            `[stage5] Capsule v2 query failed for ${instance.instanceId}; falling back to legacy v1: ${engineFallbackReason}\n`,
+          );
+          const fallback = await runEngineQuery("legacy");
+          queryCommand = fallback.command;
+          classification = fallback.classification;
+          rawContext = fallback.rawContext;
+        } else {
+          throw engineError;
+        }
       }
-      // Classify the policy. A SKIP (no high-confidence target) is recorded as a
-      // valid policy decision, not an error — only a genuinely unusable output
-      // (empty WITHOUT skip diagnostics) throws and fails the section.
-      classification = classifyCapsuleOutput(queryResult.stdout);
-      if (classification.policyAction === "error") {
-        throw new Error(classification.error ?? "vtrace query returned empty context.");
-      }
-      rawContext = classification.context;
     } catch (error) {
       sectionError = error instanceof Error ? error.message : String(error);
       errors.push(`${instance.instanceId}: ${sectionError}`);
@@ -4646,8 +4736,12 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
       error: sectionError,
       classification,
       // Capsule v2 renders are budget-shaped already; keep their focused source
-      // bodies intact through assembly (no per-item line truncation).
-      preformatted: config.capsuleEngine === "v2",
+      // bodies intact through assembly (no per-item line truncation). Keyed off the
+      // EFFECTIVE engine so a v2→legacy fallback section is line-truncated like v1.
+      preformatted: effectiveEngine === "v2",
+      requestedEngine,
+      effectiveEngine,
+      engineFallbackReason,
     });
   }
 
@@ -4786,6 +4880,16 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
       contextMarkdown: section.classification!.context,
     }));
 
+  // Aggregate the per-section engine migration audit. A section that fell back to
+  // legacy carries effectiveEngine === "legacy"; the run's effective engine is v2
+  // when any section produced v2 context, else legacy. (Stage 5 runs are typically
+  // single-instance, so this is usually exact.) The fallback reason is the first
+  // recorded v2 failure across sections.
+  const effectiveCapsuleEngine: CapsuleEngine =
+    sections.some((s) => (s.effectiveEngine ?? config.capsuleEngine) === "v2") ? "v2" : "legacy";
+  const capsuleEngineFallbackReason: string | null =
+    sections.find((s) => s.engineFallbackReason != null)?.engineFallbackReason ?? null;
+
   return {
     indexedContext,
     indexCommand,
@@ -4831,9 +4935,13 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     contextPolicyDecisionSignals: repDecision?.decisionSignals ?? null,
     expectedContextValue: repDecision?.expectedContextValue ?? null,
     expectedOverheadRisk: repDecision?.expectedOverheadRisk ?? null,
-    capsuleEngine: config.capsuleEngine,
-    capsuleIntent: config.capsuleEngine === "v2" ? config.capsuleIntent : null,
-    capsuleBudget: config.capsuleEngine === "v2" ? config.capsuleBudget : null,
+    capsuleEngine: effectiveCapsuleEngine,
+    capsuleIntent: effectiveCapsuleEngine === "v2" ? config.capsuleIntent : null,
+    capsuleBudget: effectiveCapsuleEngine === "v2" ? config.capsuleBudget : null,
+    requestedCapsuleEngine: config.capsuleEngine,
+    effectiveCapsuleEngine,
+    capsuleEngineFallbackReason,
+    compactInspectFirst: effectiveCapsuleEngine === "v2",
     capsulePivots,
     capsuleSupport,
     capsuleTopPivotFile: topPivot?.path ?? null,
@@ -5912,6 +6020,10 @@ export function combineRunEvidence(perRun: readonly Stage5RunEvidence[]): Stage5
     vtraceCapsuleEngine: unanimous((e) => e.vtraceCapsuleEngine, null),
     vtraceCapsuleIntent: unanimous((e) => e.vtraceCapsuleIntent, null),
     vtraceCapsuleBudget: unanimous((e) => e.vtraceCapsuleBudget, null),
+    vtraceRequestedCapsuleEngine: unanimous((e) => e.vtraceRequestedCapsuleEngine, null),
+    vtraceEffectiveCapsuleEngine: unanimous((e) => e.vtraceEffectiveCapsuleEngine, null),
+    vtraceCapsuleEngineFallbackReason: unanimous((e) => e.vtraceCapsuleEngineFallbackReason, null),
+    vtraceCompactInspectFirst: unanimous((e) => e.vtraceCompactInspectFirst, null),
     // Selected-item audit is per-instance, so it collapses to null/empty here;
     // the authoritative per-instance items live on each row.
     vtraceCapsulePivots: null,
@@ -6526,6 +6638,10 @@ function nullIndexedContextFields(): IndexedContextFields {
     vtraceCapsuleEngine: null,
     vtraceCapsuleIntent: null,
     vtraceCapsuleBudget: null,
+    vtraceRequestedCapsuleEngine: null,
+    vtraceEffectiveCapsuleEngine: null,
+    vtraceCapsuleEngineFallbackReason: null,
+    vtraceCompactInspectFirst: null,
     vtraceCapsulePivots: null,
     vtraceCapsuleSupport: null,
     vtraceCapsuleTopPivotFile: null,
@@ -6808,7 +6924,7 @@ async function collectRunEvidence(outDir: string, runLabel: string | null = null
 }
 
 // Read the Stage 5B indexed-context fields out of a recorded vtrace _run.meta.json.
-function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedContextFields {
+export function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedContextFields {
   const bool = (value: unknown): boolean | null => (typeof value === "boolean" ? value : null);
   const str = (value: unknown): string | null => (isString(value) ? value : null);
   const num = (value: unknown): number | null => (isNumber(value) ? value : null);
@@ -6825,7 +6941,9 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
       ? (value as ContextPolicyOverride | "unknown")
       : null;
   const capsuleEngine = (value: unknown): CapsuleEngine | "unknown" | null =>
-    value === "legacy" || value === "v2" || value === "unknown" ? (value as CapsuleEngine | "unknown") : null;
+    // `v1` is read as its `legacy` alias; older runs may carry either spelling.
+    value === "v1" ? "legacy"
+      : value === "legacy" || value === "v2" || value === "unknown" ? (value as CapsuleEngine | "unknown") : null;
   const level = (value: unknown): ExpectedLevel | null =>
     value === "low" || value === "medium" || value === "high" ? (value as ExpectedLevel) : null;
   const pivotSourceMode = (value: unknown): CapsulePivotSourceMode | null =>
@@ -6876,6 +6994,20 @@ function readIndexedContextFromMeta(meta: Record<string, unknown>): IndexedConte
     vtraceCapsuleEngine: capsuleEngine(meta.vtraceCapsuleEngine),
     vtraceCapsuleIntent: str(meta.vtraceCapsuleIntent),
     vtraceCapsuleBudget: num(meta.vtraceCapsuleBudget),
+    // Engine-migration audit fields. Old runs lack them: requested/effective fall
+    // back to the recorded (effective) engine when present, fallback reason to null,
+    // and compact-inspect-first to null (unknown) rather than a fabricated boolean.
+    vtraceRequestedCapsuleEngine:
+      meta.vtraceRequestedCapsuleEngine === undefined
+        ? capsuleEngine(meta.vtraceCapsuleEngine)
+        : capsuleEngine(meta.vtraceRequestedCapsuleEngine),
+    vtraceEffectiveCapsuleEngine:
+      meta.vtraceEffectiveCapsuleEngine === undefined
+        ? capsuleEngine(meta.vtraceCapsuleEngine)
+        : capsuleEngine(meta.vtraceEffectiveCapsuleEngine),
+    vtraceCapsuleEngineFallbackReason: str(meta.vtraceCapsuleEngineFallbackReason),
+    vtraceCompactInspectFirst:
+      typeof meta.vtraceCompactInspectFirst === "boolean" ? meta.vtraceCompactInspectFirst : null,
     vtraceCapsulePivots: auditItems(meta.vtraceCapsulePivots),
     vtraceCapsuleSupport: auditItems(meta.vtraceCapsuleSupport),
     vtraceCapsuleTopPivotFile: str(meta.vtraceCapsuleTopPivotFile),
@@ -7751,8 +7883,11 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       }
       case "--capsule-engine": {
         const value = requireValue(argv, ++index, arg);
-        if (!["legacy", "v2"].includes(value)) throw new Error("Invalid --capsule-engine.");
-        config.capsuleEngine = value as CapsuleEngine;
+        // `v1` is an explicit alias for the `legacy` engine so callers can force
+        // the legacy fallback with the same v1/v2 vocabulary. `v2` is the default.
+        const normalized = value === "v1" ? "legacy" : value;
+        if (!["legacy", "v2"].includes(normalized)) throw new Error("Invalid --capsule-engine (expected v2, v1, or legacy).");
+        config.capsuleEngine = normalized as CapsuleEngine;
         break;
       }
       case "--capture-product-v2-accounting":

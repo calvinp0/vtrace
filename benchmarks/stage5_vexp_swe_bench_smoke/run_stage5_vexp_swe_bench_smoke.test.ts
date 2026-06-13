@@ -83,6 +83,7 @@ import {
   hasStreamPatch,
   persistOrderedToolCalls,
   indexedContextMetaFields,
+  readIndexedContextFromMeta,
   loadSmokeInstances,
   loadSweBenchData,
   normalizeEvaluationEvidence,
@@ -1592,11 +1593,15 @@ test("--capsule-engine v2 never passes a legacy --mode flag", () => {
 });
 
 test("--capsule-engine and capsule v2 knobs parse and reject bad values", () => {
-  assert.equal(parseArgs(["--mode", "prepare"]).capsuleEngine, "legacy");
+  // Migration: Capsule v2 is the DEFAULT injected engine.
+  assert.equal(parseArgs(["--mode", "prepare"]).capsuleEngine, "v2");
   const cfg = parseArgs(["--capsule-engine", "v2", "--capsule-intent", "debug", "--capsule-budget", "6000"]);
   assert.equal(cfg.capsuleEngine, "v2");
   assert.equal(cfg.capsuleIntent, "debug");
   assert.equal(cfg.capsuleBudget, 6000);
+  // Legacy can be forced explicitly via either `legacy` or the `v1` alias.
+  assert.equal(parseArgs(["--capsule-engine", "legacy"]).capsuleEngine, "legacy");
+  assert.equal(parseArgs(["--capsule-engine", "v1"]).capsuleEngine, "legacy");
   assert.throws(() => parseArgs(["--capsule-engine", "bogus"]), /Invalid --capsule-engine/);
   assert.throws(() => parseArgs(["--capsule-intent", "bogus"]), /Invalid --capsule-intent/);
   assert.throws(() => parseArgs(["--capsule-budget", "0"]), /--capsule-budget requires a positive integer/);
@@ -2813,6 +2818,80 @@ test("--disable-patch-verify records disabled state in result + meta; EDIT_GUARD
   assert.equal(meta.vtracePatchVerifyEnabled, false);
   assert.equal(meta.vtracePatchVerifyDisabledByFlag, true);
   assert.equal(meta.vtracePatchVerifyInjected, false);
+});
+
+test("default config selects Capsule v2 and hard pivot-check gate stays off", () => {
+  const cfg = parseArgs(["--mode", "run-protocol"]);
+  // Engine-default migration: v2 is the default injected engine...
+  assert.equal(cfg.capsuleEngine, "v2");
+  // ...and the hard pivot-check gate is NOT made default by this migration.
+  assert.equal(cfg.pivotCheckGate, "off");
+});
+
+test("default v2 injected path records effective engine v2 + compact inspect-first", async () => {
+  const { result } = await v2InjectionResult(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
+  assert.equal(result.requestedCapsuleEngine, "v2");
+  assert.equal(result.effectiveCapsuleEngine, "v2");
+  assert.equal(result.capsuleEngineFallbackReason, null);
+  assert.equal(result.compactInspectFirst, true);
+
+  // The migration audit is exposed in the run meta and distinguishes requested vs
+  // effective engine.
+  const meta = indexedContextMetaFields(result);
+  assert.equal(meta.vtraceRequestedCapsuleEngine, "v2");
+  assert.equal(meta.vtraceEffectiveCapsuleEngine, "v2");
+  assert.equal(meta.vtraceCapsuleEngineFallbackReason, null);
+  assert.equal(meta.vtraceCompactInspectFirst, true);
+});
+
+test("a v2 query failure falls back to the legacy v1 engine and records the reason", async () => {
+  const out = path.join(await tmpDir("v2-fallback"), "results");
+  const dataDir = await tmpDir("v2-fallback-data");
+  const dataFile = await writeSweBenchData(dataDir, [NAV_RECORD]);
+  // The v2 capsule query (carries --pivot-neighborhood) fails; the legacy retry
+  // (--mode, no --pivot-neighborhood) succeeds with a real injectable capsule.
+  const { run, calls } = scriptedRunner([
+    { match: "--pivot-neighborhood", result: { exitCode: 1, stderr: "v2 capsule build failed" } },
+    { match: "capsule", result: { stdout: injectCapsuleJson("symbol: get_combinator_sql\nfile: django/db/models/sql/compiler.py") } },
+  ]);
+  const config = baseConfig({
+    out,
+    instances: ["django__django-11490"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+    capsuleEngine: "v2",
+    contextPolicyOverride: "force-inject",
+  });
+  const result = await prepareIndexedContext(config, { runProcess: run });
+
+  // Fallback happened: requested v2, effective legacy, reason recorded, compact
+  // inspect-first off (legacy render), but context was still injected.
+  assert.equal(result.requestedCapsuleEngine, "v2");
+  assert.equal(result.effectiveCapsuleEngine, "legacy");
+  assert.match(result.capsuleEngineFallbackReason ?? "", /v2 capsule build failed/);
+  assert.equal(result.compactInspectFirst, false);
+  assert.equal(result.indexedContext, true);
+  assert.equal(result.capsuleEngine, "legacy"); // backward-compat field = effective
+
+  // Both queries actually ran: the failing v2 one, then a legacy --mode retry.
+  assert.ok(calls.some((c) => c.includes("capsule") && c.includes("--pivot-neighborhood")));
+  assert.ok(calls.some((c) => c.includes("capsule") && c.includes("--mode") && !c.includes("--pivot-neighborhood")));
+});
+
+test("readIndexedContextFromMeta tolerates old runs lacking the engine-migration fields", () => {
+  // An old run meta (recorded only the legacy single engine field, no migration audit).
+  const old = readIndexedContextFromMeta({ vtraceCapsuleEngine: "legacy" });
+  // Requested/effective default to the recorded engine; fallback null; compact unknown.
+  assert.equal(old.vtraceRequestedCapsuleEngine, "legacy");
+  assert.equal(old.vtraceEffectiveCapsuleEngine, "legacy");
+  assert.equal(old.vtraceCapsuleEngineFallbackReason, null);
+  assert.equal(old.vtraceCompactInspectFirst, null);
+
+  // A fully empty meta degrades to nulls without throwing.
+  const empty = readIndexedContextFromMeta({});
+  assert.equal(empty.vtraceRequestedCapsuleEngine, null);
+  assert.equal(empty.vtraceEffectiveCapsuleEngine, null);
+  assert.equal(empty.vtraceCompactInspectFirst, null);
 });
 
 test("prepareIndexedContext with v2 issues a v2 query and records the engine metadata", async () => {

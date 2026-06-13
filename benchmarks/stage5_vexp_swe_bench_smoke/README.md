@@ -205,17 +205,52 @@ The report gains a `## Vtrace indexed context evidence` table (`vtrace_method`, 
 
 > **Per-run overwrite.** The `raw/baseline` and `raw/vtrace` output dirs and `results/_vtrace_instructions.md` are overwritten on each run. That is fine for single-instance smoke. Use `--run-label <label>` to isolate the reproduced workspaces (`results/workspaces/<label>/<instance_id>/`) across multiple instance runs. The injected instructions are also snapshotted immutably per run to `results/runs/<label>/_vtrace_instructions.snapshot.md` (`vtraceInstructionsSnapshotFile` + `vtraceInstructionsSha256` in the meta), so a later run cannot clobber an earlier run's audit record.
 
-### Capsule engine (`--capsule-engine legacy|v2`)
+### Capsule engine (`--capsule-engine v2|v1`)
 
-The indexed-context query can run against either capsule engine. `--capsule-engine legacy` (default) uses the original `vtrace capsule <workspace> <query> --mode <micro|standard|full> --json` path. `--capsule-engine v2` exercises **Capsule v2** so live runs validate the v2 retrieval product:
+**Capsule v2 (compact inspect-first) is the DEFAULT injected engine.** The
+product-level validation showed that, where context is injected, the compact
+inspect-first v2 path gives large token/turn reductions with no resolution loss
+(`stage5_compact_inspectfirst_canary_matplotlib.md`,
+`stage5_compact_inspectfirst_product_validation.md`). The default query is:
 
 ```bash
-vtrace capsule <workspace> "<task>" --intent <auto|debug|…> --budget <tokens> --json
+vtrace capsule <workspace> "<task>" --intent <auto|debug|…> --budget <tokens> --pivot-neighborhood --json
 ```
 
-The `--mode` flags are **never** passed to v2 (it sizes from `--budget`). v2 also receives a clean task string (instance id, repo, problem statement, failing tests, hints) rather than the packed legacy query, and `--capsule-intent` (default `auto`) / `--capsule-budget` (default `8000`) select the intent and budget.
+**Capsule v1 is the legacy fallback.** Force it with `--capsule-engine v1` (alias
+`--capsule-engine legacy`), which uses the original `vtrace capsule <workspace>
+<query> --mode <micro|standard|full> --json` path. v1 is **also** used
+automatically when a v2 query fails (a v2 build failure or a missing v2
+prerequisite): the harness retries the legacy engine and records the reason — see
+the migration audit fields below. The `--mode` flags are **never** passed to v2 (it
+sizes from `--budget`); v2 receives a clean task string (instance id, repo, problem
+statement, failing tests, hints) rather than the packed legacy query, and
+`--capsule-intent` (default `auto`) / `--capsule-budget` (default `8000`) select the
+intent and budget.
 
-**Capsule v2 audit metadata.** A v2 run records, in `_run.meta.json`, exactly which capsule was injected — not just counts: `vtraceCapsuleEngine`, `vtraceCapsuleIntent`, `vtraceCapsuleBudget`, `vtraceCapsuleActualMode`, `vtraceCapsuleEstimatedTokens`, `vtraceCapsuleTopPivotFile`/`vtraceCapsuleTopPivotSymbol`, and the full selected items `vtraceCapsulePivots` / `vtraceCapsuleSupport` (each `{ path, symbol, roleReason, estimatedTokens }`).
+This is an **engine-default migration only**. It does **not** change retrieval
+scoring/ranking, candidate generation, or the cost-aware auto-policy thresholds —
+small/local tasks where the policy returns `no_context` still inject nothing. It
+also does **not** make the hard pivot-check gate (`--pivot-check-gate hard`)
+default; that two-phase path remains **diagnostic-only / off by default** and must
+not back headline comparisons.
+
+**Capsule v2 audit metadata.** A v2 run records, in `_run.meta.json`, exactly which
+capsule was injected — not just counts: `vtraceCapsuleEngine`, `vtraceCapsuleIntent`,
+`vtraceCapsuleBudget`, `vtraceCapsuleActualMode`, `vtraceCapsuleEstimatedTokens`,
+`vtraceCapsuleTopPivotFile`/`vtraceCapsuleTopPivotSymbol`, and the full selected
+items `vtraceCapsulePivots` / `vtraceCapsuleSupport` (each `{ path, symbol,
+roleReason, estimatedTokens }`).
+
+**Engine-migration audit fields.** To distinguish what was requested from what
+effectively ran (after any v2 → v1 fallback), `_run.meta.json` also records
+`vtraceRequestedCapsuleEngine` (default `v2`), `vtraceEffectiveCapsuleEngine` (the
+engine that produced the injected context), `vtraceCapsuleEngineFallbackReason`
+(the v2 failure message, or null), and `vtraceCompactInspectFirst` (true when the
+effective engine is v2). `vtraceCapsuleEngine` is retained for backward
+compatibility and equals the effective engine. Older runs that predate these fields
+are read with safe defaults (requested/effective fall back to the recorded engine;
+fallback reason null; compact-inspect-first unknown).
 
 > **Key casing.** `_run.meta.json` uses **camelCase** keys throughout (`vtraceCapsuleEngine`, not `vtrace_capsule_engine`) — the same path writes and reads them, so grep the camelCase name. The CSV columns and the markdown report expose the same facts under their **snake_case** display names (`vtrace_capsule_engine`, `vtrace_capsule_actual_mode`, `vtrace_capsule_top_pivot`, …); the report also lists the injected pivots/support under a **`### Capsule v2 selected items`** block.
 
