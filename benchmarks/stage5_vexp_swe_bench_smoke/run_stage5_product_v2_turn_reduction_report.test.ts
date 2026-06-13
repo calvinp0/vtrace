@@ -214,6 +214,38 @@ test("resolution loss fails the case even with token/turn wins", () => {
   assert.ok(c.failedCriteria.includes("resolution-lost-or-unknown"));
 });
 
+test("a gate_failed product side is an enforcement BLOCK, not a failed patch", () => {
+  const rec = passingRecord("x");
+  // Phase 2 never ran: no solve row → product resolved/tokens are null, and the
+  // run meta carries pivotCheckGateStatus=gate_failed with fail reasons.
+  const blocked: ProductV2CaseRecord = {
+    ...rec,
+    productV2: {
+      ...rec.productV2,
+      resolved: null,
+      totalTokens: null,
+      hardGateStatus: "gate_failed",
+      hardGateFailReasons: ["checklist_not_emitted", "neighborhood_not_mentioned"],
+    },
+  };
+  const c = analyzeProductV2Case(blocked);
+  assert.equal(c.productGateBlocked, true);
+  assert.equal(c.pass, false);
+  // The single criterion is the enforcement block — NOT the patch-failure reasons.
+  assert.deepEqual(c.failedCriteria, ["enforcement-gate-blocked"]);
+  assert.ok(!c.failedCriteria.includes("resolution-lost-or-unknown"));
+  assert.ok(!c.failedCriteria.includes("total-tokens-not-lower"));
+  assert.match(c.hardGateOutcome ?? "", /enforcement gate BLOCKED the solve/);
+  assert.match(c.hardGateOutcome ?? "", /not a failed patch/);
+});
+
+test("a normal single-shot run records no hard-gate status", () => {
+  const c = analyzeProductV2Case(passingRecord("x"));
+  assert.equal(c.productHardGateStatus, null);
+  assert.equal(c.productGateBlocked, false);
+  assert.equal(c.hardGateOutcome, null);
+});
+
 test("classifyCasePass is strict AND of the four signals", () => {
   const good = {
     resolvedPreserved: true,

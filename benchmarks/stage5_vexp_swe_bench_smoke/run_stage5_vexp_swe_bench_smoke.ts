@@ -16,9 +16,11 @@ import { shapeSweQuery } from "../../src/capsule/sweQueryShaping";
 import {
   contextMentionsFile,
   contextMentionsSymbol,
+  editedFilesFromPatch,
   parsePivotCheckRows,
   primaryEditedFile,
   primaryEditedSymbol,
+  type PivotForInspection,
 } from "../../src/capsule/finalEditDiagnostics";
 import {
   assistantTextFromStream,
@@ -26,8 +28,16 @@ import {
   detectPivotChecklistEmitted,
   parseOrderedToolCalls,
   summarizeOrderedToolCalls,
+  toInspectionToolCalls,
   type OrderedToolCallSummary,
 } from "../../src/capsule/toolCallLog";
+import {
+  describeHardGateOutcome,
+  hardGateMetaFields,
+  orchestrateHardGate,
+  type HardGatePhase1Outcome,
+  type HardGatePhase2Outcome,
+} from "./pivotCheckGateRunner";
 import {
   DEFAULT_PRE_EDIT_BASH_BUDGET,
   DEFAULT_PRE_EDIT_SEARCH_BUDGET,
@@ -114,6 +124,16 @@ export const PIVOT_CHECK_POLICIES: readonly PivotCheckPolicy[] = [
   "strict_risk_gated",
   "always",
 ];
+// Hard context-to-action gate mode (opt-in, default off). The matplotlib canary
+// proved a SOFT injected PIVOT_CHECK is insufficient: the block reached the agent
+// but it emitted no checklist. "hard" turns the injection into a deterministic
+// two-phase gate — a Phase 1 inspect-only preflight whose checklist is verified
+// before any Phase 2 solve runs (Phase 2 is skipped entirely on a failed gate, so
+// no solve and no Docker evaluation happen). "off" preserves the existing
+// single-shot path exactly. Orthogonal to --pivot-check-policy, which only governs
+// the soft block's injection.
+export type PivotCheckGateMode = "off" | "hard";
+export const PIVOT_CHECK_GATE_MODES: readonly PivotCheckGateMode[] = ["off", "hard"];
 // Stage 5C named protocols. A protocol selects which condition(s) to run and how:
 //   baseline       -> `run --no-vexp`
 //   vtrace-indexed -> `run --no-vexp` + vtrace indexed-context injection
@@ -253,6 +273,11 @@ export interface CliConfig {
   // the PIVOT_CHECK block; normal VTRACE context, telemetry, and ordered tool-call
   // capture are untouched. Retained for compatibility alongside --pivot-check-policy.
   readonly disablePivotCheck: boolean;
+  // Hard context-to-action gate (--pivot-check-gate). Default "off" — the existing
+  // single-shot run path is unchanged. "hard" runs the two-phase enforcement
+  // (Phase 1 inspect-only preflight → gate → Phase 2 solve only on pass) for the
+  // vtrace-indexed Capsule v2 condition. See PivotCheckGateMode.
+  readonly pivotCheckGate: PivotCheckGateMode;
   // Benchmark-only EDIT_GUARD suppression (--disable-edit-guard). Default false:
   // the compact EDIT_GUARD edit-discipline block rides with PIVOT_CHECK for
   // multi-pivot Capsule v2 runs (injected right after it). When true, EDIT_GUARD is
@@ -711,6 +736,8 @@ const DEFAULT_CONFIG: CliConfig = {
   // 10-task comparison. Override with --pivot-check-policy (off|multi_pivot|risk_gated|
   // strict_risk_gated|always) for experiments.
   pivotCheckPolicy: "strict_risk_gated",
+  // Hard gate is OFF by default: the standard single-shot run path is unchanged.
+  pivotCheckGate: "off",
   // --disable-pivot-check forces the effective policy to "off" (compatibility).
   disablePivotCheck: false,
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
@@ -1836,6 +1863,219 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
   await runCondition(config, "vtrace", deps, extraVtraceMeta, injectContext, capsuleV2Bundles);
 }
 
+// Map Capsule v2 audit items to the inspection-shaped pivots the hard gate checks.
+// `hidden` reuses the harness's own pivotIsHidden classification so the gate's
+// "every pivot accounted for" requirement covers exactly the pivots the report
+// already counts as hidden/visible.
+function pivotsForInspection(
+  items: readonly CapsuleAuditItem[],
+  role: "pivot" | "support",
+): PivotForInspection[] {
+  return items.map((item) => ({
+    path: item.path,
+    symbol: item.symbol,
+    role,
+    hidden: pivotIsHidden(item.roleReason),
+  }));
+}
+
+// Total injected neighborhood excerpts + the identifiers used to detect whether
+// the Phase-1 agent engaged the neighborhood (excerpt fq-name/symbol/path and the
+// owning pivot path), derived from the injected Capsule v2 bundles.
+function neighborhoodFromBundles(bundles: readonly CapsuleV2ArtifactBundle[]): {
+  count: number;
+  identifiers: string[];
+} {
+  const identifiers = new Set<string>();
+  let count = 0;
+  for (const bundle of bundles) {
+    for (const context of readPivotNeighborhood(bundle.result)) {
+      if (context.pivot?.path) identifiers.add(context.pivot.path);
+      for (const excerpt of context.excerpts ?? []) {
+        count += 1;
+        if (excerpt.fqName) identifiers.add(excerpt.fqName);
+        if (excerpt.symbol) identifiers.add(excerpt.symbol);
+        if (excerpt.filePath) identifiers.add(excerpt.filePath);
+      }
+    }
+  }
+  return { count, identifiers: [...identifiers] };
+}
+
+// Read the patch text emitted in a phase's canonical results JSONL (the agent's
+// final diff). "" when no results file or no diff — used to detect a Phase-1
+// edit-before-gate violation and to confirm a Phase-2 solve produced a patch.
+async function readPhasePatchText(resultsFile: string | null): Promise<string> {
+  if (resultsFile === null) return "";
+  const content = await readFile(resultsFile, "utf8").catch(() => "");
+  for (const record of parseJsonlRecords(content)) {
+    const value = pick(record, FIELD_ALIASES.patch!);
+    if (typeof value === "string" && value.includes("diff --git")) return value;
+  }
+  return "";
+}
+
+// Best-effort total tokens from a phase's results JSONL (null when unavailable).
+async function readPhaseTokens(resultsFile: string | null): Promise<number | null> {
+  if (resultsFile === null) return null;
+  const content = await readFile(resultsFile, "utf8").catch(() => "");
+  for (const record of parseJsonlRecords(content)) {
+    const value = asUnknownableNumber(pick(record, FIELD_ALIASES.totalTokens!));
+    if (typeof value === "number") return value;
+  }
+  return null;
+}
+
+// Spawn one phase of the hard gate: a single external `run` (vexp disabled), with
+// the instructions-file and stream-file env pointed at this phase's OWN paths so
+// the two phases never share a transcript. Returns the exit/stream/results so the
+// caller can parse the phase outcome.
+async function spawnHardGatePhase(
+  config: CliConfig,
+  deps: RunDeps,
+  args: {
+    instances: readonly string[];
+    outputDir: string;
+    instructionsFile: string;
+    streamFile: string;
+    label: string;
+  },
+): Promise<{ exitCode: number; resultsFile: string | null; streamContent: string }> {
+  await mkdir(args.outputDir, { recursive: true });
+  const env = {
+    ...vtraceEnv(config, true),
+    VTRACE_AGENT_INSTRUCTIONS_FILE: args.instructionsFile,
+    VTRACE_AGENT_STREAM_FILE: args.streamFile,
+  };
+  const runArgs = buildRunArgs(config, args.instances, args.outputDir, false);
+  process.stderr.write(
+    `\n[stage5] hard-gate ${args.label}: running agent for ${config.runLabel ?? args.instances.join(",")} …\n`,
+  );
+  const result = await (deps.runProcess ?? runProcess)(config.nodeCommand, runArgs, {
+    cwd: config.vexpSweBenchDir ?? undefined,
+    env,
+    streamToTerminal: true,
+  });
+  const resultsFile = await findCanonicalResultsFile(args.outputDir);
+  const streamContent = await readFile(args.streamFile, "utf8").catch(() => "");
+  return { exitCode: result.exitCode, resultsFile, streamContent };
+}
+
+// Stage 5: the LIVE two-phase hard context-to-action gate (opt-in via
+// --pivot-check-gate hard). Phase 1 is an inspect-only preflight whose checklist
+// the gate verifies; Phase 2 (the solve) runs ONLY on a passing gate. On a failed
+// gate, Phase 2 never spawns — no solve, no Docker evaluation — and the run meta
+// records the enforcement block so the report does not read it as a failed patch.
+// Two separate `claude -p` invocations by design (clean, deterministic hard stop).
+export async function runVtraceHardGate(config: CliConfig, deps: RunDeps = {}): Promise<void> {
+  if (config.capsuleEngine !== "v2") {
+    throw new Error("--pivot-check-gate hard requires the Capsule v2 engine (--capsule-engine v2).");
+  }
+  if (config.vtraceMethod !== "indexed-context") {
+    throw new Error("--pivot-check-gate hard requires the indexed-context vtrace method.");
+  }
+  await ensureOutputTree(config.out);
+  await assertVtracePatchInstalled(config);
+
+  // Phase 0: build the normal Capsule v2 injected context (incl. pivotNeighborhood)
+  // exactly as a standard vtrace-indexed run would; this writes _vtrace_instructions.md.
+  const indexed = await prepareIndexedContext(config, deps);
+  const baseExtraMeta = { ...indexedContextMetaFields(indexed), ...indexRunMetaFields(indexed) };
+  if (indexed.policyAction === "skip" || !indexed.indexedContext) {
+    throw new Error(
+      "--pivot-check-gate hard requires injected Capsule v2 context, but none was produced " +
+        `(${indexed.policyReason ?? indexed.skipReason ?? indexed.contextError ?? "no actionable target"}). ` +
+        "Re-run without the hard gate, or on an instance that yields context.",
+    );
+  }
+
+  const instances = await resolveInstances(config);
+  const contextFile = vtraceInstructionsFilePath(config.out);
+  const baseContext = await readFile(contextFile, "utf8");
+  const pivots = pivotsForInspection(indexed.capsulePivots, "pivot");
+  const neighborhood = neighborhoodFromBundles(indexed.capsuleV2Bundles);
+
+  // Distinct phase artifacts at the results ROOT (survive vexp's --output wipe) so
+  // the two transcripts/prompts are never mixed. Phase 1 writes its results to a
+  // SIBLING dir (not nested under raw/vtrace) so ingest never picks up the
+  // inspect-only run as the condition's solve.
+  const preflightFile = path.join(config.out, "_vtrace_pivot_check_preflight.md");
+  const phase1StreamFile = path.join(config.out, "_agent_phase1_pivot_check_stream.jsonl");
+  const phase2StreamFile = path.join(config.out, "_agent_phase2_solve_stream.jsonl");
+  const phase2Dir = rawConditionDir(config.out, "vtrace", config.runLabel);
+  const phase1Dir = path.join(path.dirname(phase2Dir), "vtrace_pivot_check_phase1");
+
+  const runPhase1 = async (preflightPrompt: string): Promise<HardGatePhase1Outcome> => {
+    await writeFile(preflightFile, `${baseContext}\n\n${preflightPrompt}\n`);
+    const phase = await spawnHardGatePhase(config, deps, {
+      instances,
+      outputDir: phase1Dir,
+      instructionsFile: preflightFile,
+      streamFile: phase1StreamFile,
+      label: "phase1 pivot-check (inspect-only)",
+    });
+    return {
+      assistantText: assistantTextFromStream(phase.streamContent),
+      toolCalls: toInspectionToolCalls(parseOrderedToolCalls(phase.streamContent)),
+      editedFiles: editedFilesFromPatch(await readPhasePatchText(phase.resultsFile)),
+      phase1Tokens: await readPhaseTokens(phase.resultsFile),
+      streamFile: phase1StreamFile,
+      promptFile: preflightFile,
+    };
+  };
+
+  const runPhase2 = async (approvedChecklistSummary: string): Promise<HardGatePhase2Outcome> => {
+    // Re-inject the normal context PLUS the approved checklist into the active
+    // instructions file the patched adapter reads for the solve phase.
+    await writeFile(contextFile, `${baseContext}\n\n${approvedChecklistSummary}\n`);
+    const phase = await spawnHardGatePhase(config, deps, {
+      instances,
+      outputDir: phase2Dir,
+      instructionsFile: contextFile,
+      streamFile: phase2StreamFile,
+      label: "phase2 solve",
+    });
+    const patch = await readPhasePatchText(phase.resultsFile);
+    return {
+      streamFile: phase2StreamFile,
+      promptFile: contextFile,
+      solveCompleted: phase.exitCode === 0 && patch.length > 0,
+      // Docker evaluation stays the separate `--mode evaluate` step (Stage 5 always
+      // separates run from evaluate); ingest flips resolved on the phase-2 JSONL.
+      dockerEvaluated: false,
+      resolved: null,
+    };
+  };
+
+  const result = await orchestrateHardGate({
+    pivots,
+    neighborhoodExcerptCount: neighborhood.count,
+    neighborhoodIdentifiers: neighborhood.identifiers,
+    runPhase1,
+    runPhase2,
+  });
+
+  // Persist the gate evidence + phase outcomes into the vtrace condition's run meta
+  // so ingest/report can read it. On a FAILED gate, Phase 2 never ran — the vtrace
+  // condition dir holds no solve JSONL, so ingest sees no patch and never counts it
+  // as an unresolved solve; the meta records the enforcement block explicitly.
+  const gateMeta = hardGateMetaFields(result);
+  const meta = {
+    condition: "vtrace" as const,
+    instances,
+    vtraceMethod: config.vtraceMethod,
+    ...baseExtraMeta,
+    ...gateMeta,
+  };
+  await mkdir(phase2Dir, { recursive: true });
+  await writeFile(path.join(phase2Dir, "_run.meta.json"), `${JSON.stringify(meta, null, 2)}\n`);
+  await writeFile(
+    path.join(phase2Dir, "_pivot_check_gate.json"),
+    `${JSON.stringify({ ...gateMeta, failReasons: result.gate.failReasons, rows: result.gate.rows }, null, 2)}\n`,
+  );
+  process.stdout.write(`\n[stage5] hard-gate outcome: ${describeHardGateOutcome(gateMeta)}\n`);
+}
+
 // Stage 5C: run the EXTERNAL benchmark with vexp ENABLED. This is the only
 // condition that turns vexp on, so it is hard-gated behind --allow-vexp. The
 // guard fires BEFORE any spawn so an accidental vexp run is impossible.
@@ -1864,10 +2104,18 @@ export async function runProtocol(config: CliConfig, deps: RunDeps = {}): Promis
     case "baseline":
       await runBaseline(config, deps);
       return;
-    case "vtrace-indexed":
-      // The vtrace-indexed protocol always means the indexed-context method.
-      await runVtrace({ ...config, vtraceMethod: "indexed-context" }, deps);
+    case "vtrace-indexed": {
+      // The vtrace-indexed protocol always means the indexed-context method. With
+      // the hard gate opted in, the two-phase enforcement runner replaces the
+      // single-shot run; otherwise the standard path is unchanged.
+      const vtraceConfig = { ...config, vtraceMethod: "indexed-context" as const };
+      if (config.pivotCheckGate === "hard") {
+        await runVtraceHardGate(vtraceConfig, deps);
+      } else {
+        await runVtrace(vtraceConfig, deps);
+      }
       return;
+    }
     case "vexp":
       await runVexp(config, deps);
       return;
@@ -7410,6 +7658,14 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         config.pivotCheckPolicy = value as PivotCheckPolicy;
         break;
       }
+      case "--pivot-check-gate": {
+        const value = requireValue(argv, ++index, arg);
+        if (!PIVOT_CHECK_GATE_MODES.includes(value as PivotCheckGateMode)) {
+          throw new Error("Invalid --pivot-check-gate (expected off|hard).");
+        }
+        config.pivotCheckGate = value as PivotCheckGateMode;
+        break;
+      }
       case "--disable-pivot-check": config.disablePivotCheck = true; break;
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
@@ -7472,6 +7728,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --capsule-intent auto|debug|refactor|impact|test-failure   Capsule v2 intent (default: auto; v2 only)",
       "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
       "  --pivot-check-policy off|multi_pivot|risk_gated|strict_risk_gated|always   when to inject PIVOT_CHECK (default: strict_risk_gated — inject only on a STRONG risk signal, rejecting hidden_pivot-only and two ordinary pivots; risk_gated injects on any high-risk signal)",
+      "  --pivot-check-gate off|hard                   opt-in HARD two-phase context-to-action gate (default: off). 'hard' runs an inspect-only Phase-1 preflight whose checklist is verified before any Phase-2 solve; on a failed gate Phase 2 never runs (no solve, no Docker). v2 indexed-context only; orthogonal to --pivot-check-policy",
       "  --disable-pivot-check                         force PIVOT_CHECK policy off for a controlled before run (compatibility; equivalent to --pivot-check-policy off)",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
       "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",
@@ -7488,7 +7745,10 @@ async function main(config: CliConfig): Promise<void> {
   switch (config.mode) {
     case "prepare": await runPrepare(config); break;
     case "run-baseline": await runBaseline(config); break;
-    case "run-vtrace": await runVtrace(config); break;
+    case "run-vtrace":
+      if (config.pivotCheckGate === "hard") await runVtraceHardGate(config);
+      else await runVtrace(config);
+      break;
     case "run-vexp": await runVexp(config); break;
     case "run-protocol": await runProtocol(config); break;
     case "evaluate": {

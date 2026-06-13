@@ -31,6 +31,7 @@ import {
   type PivotInspectionRecord,
 } from "../../src/capsule/finalEditDiagnostics";
 import { buildPivotInspection } from "./run_stage5_capsule_v2_validation_report";
+import { describeHardGateOutcome } from "./pivotCheckGateRunner";
 import {
   PRODUCT_V2_CONDITION,
   PRODUCT_V2_DEFAULT_INSTANCES,
@@ -62,6 +63,16 @@ export interface ConditionMetrics {
   // side or when the run predates enforcement telemetry). Optional so existing
   // record fixtures stay valid.
   readonly enforcement?: PivotEnforcementMetrics | null;
+  // Hard two-phase gate status from `_run.meta.json` (pivotCheckGateStatus), when
+  // the run used --pivot-check-gate hard: gate_failed | solve_started |
+  // solve_completed | docker_evaluated. Null on a normal single-shot run. A
+  // "gate_failed" product side is an ENFORCEMENT BLOCK, not a failed patch.
+  readonly hardGateStatus?: string | null;
+  // The raw fail reasons recorded when the gate blocked (empty/absent otherwise),
+  // surfaced verbatim so the report can explain WHY the solve was blocked.
+  readonly hardGateFailReasons?: readonly string[] | null;
+  // Whether Docker flipped resolved on the phase-2 solve (null until evaluated).
+  readonly hardGatePhase2Resolved?: boolean | null;
 }
 
 // Context-to-action enforcement telemetry for one run: did the agent emit the
@@ -162,6 +173,15 @@ export interface ProductV2CaseAnalysis {
   // (1 = every claim honest; <1 = claimed inspection the tools do not support).
   // Null when no checklist rows could be matched to a pivot.
   readonly checklistVsToolAgreement: number | null;
+  // ---- hard two-phase gate (product side; null on a normal single-shot run) ----
+  // The gate status (gate_failed | solve_started | solve_completed |
+  // docker_evaluated) and a human phrasing. When the gate BLOCKED the solve, the
+  // case is NOT a failed patch — `productGateBlocked` is true and the strict-AND
+  // criteria are replaced with a single "enforcement-gate-blocked" reason so the
+  // report never tallies a blocked solve as an unresolved/lost patch.
+  readonly productHardGateStatus: string | null;
+  readonly productGateBlocked: boolean;
+  readonly hardGateOutcome: string | null;
   // Strict-AND per-case PASS (see classifyCasePass).
   readonly pass: boolean;
   // Why the case did not pass (empty when it passed).
@@ -231,12 +251,29 @@ export function analyzeProductV2Case(record: ProductV2CaseRecord): ProductV2Case
     priorCounts.available ? priorCounts.followups : null,
     productCounts.available ? productCounts.followups : null,
   );
-  const { pass, failedCriteria } = classifyCasePass({
+  const base = classifyCasePass({
     resolvedPreserved,
     totalTokens,
     cacheReadTokens,
     followupCalls,
   });
+  // Hard-gate awareness: a "gate_failed" product side is an ENFORCEMENT BLOCK
+  // (Phase 2 never ran), NOT a failed patch solve. When blocked, override the
+  // strict-AND criteria with a single enforcement reason so the report does not
+  // mislabel the absent solve as resolution loss / token regression.
+  const productHardGateStatus = record.productV2.hardGateStatus ?? null;
+  const productGateBlocked = productHardGateStatus === "gate_failed";
+  const hardGateOutcome =
+    productHardGateStatus === null
+      ? null
+      : describeHardGateOutcome({
+          pivotCheckGateStatus: productHardGateStatus,
+          pivotCheckGateFailReasons: record.productV2.hardGateFailReasons ?? [],
+          phase2Resolved: record.productV2.hardGatePhase2Resolved ?? null,
+        });
+  const { pass, failedCriteria } = productGateBlocked
+    ? { pass: false, failedCriteria: ["enforcement-gate-blocked"] }
+    : base;
   // First-call token investment: prior vs product first-response size (chars/4
   // of the serialized run-pipeline response, from each side's accounting block).
   const firstCallTokens = delta(
@@ -308,6 +345,9 @@ export function analyzeProductV2Case(record: ProductV2CaseRecord): ProductV2Case
     pivotsEdited,
     neighborhoodMentioned,
     checklistVsToolAgreement,
+    productHardGateStatus,
+    productGateBlocked,
+    hardGateOutcome,
     pass,
     failedCriteria,
   };
@@ -572,6 +612,11 @@ export function renderMarkdown(report: ProductV2TurnReductionReport): string {
     lines.push(`### ${c.instanceId}`);
     lines.push("");
     lines.push(`- Verdict: ${c.pass ? "PASS" : `NOT-PASS (${c.failedCriteria.join(", ")})`}`);
+    // Hard two-phase gate outcome (only when --pivot-check-gate hard ran). A
+    // gate_failed run is phrased as an enforcement BLOCK, not a failed patch.
+    if (c.productHardGateStatus !== null) {
+      lines.push(`- Hard gate [${c.productHardGateStatus}]: ${c.hardGateOutcome ?? "n/a"}`);
+    }
     lines.push(
       `- Read ${fmtNum(c.priorCounts.available ? c.priorCounts.read : null)}→${fmtNum(c.productCounts.available ? c.productCounts.read : null)}, ` +
         `Grep ${fmtNum(c.priorCounts.available ? c.priorCounts.grep : null)}→${fmtNum(c.productCounts.available ? c.productCounts.grep : null)}, ` +
@@ -798,6 +843,11 @@ async function loadConditionMetrics(
     contextEngine: asString(m.vtraceCapsuleEngine) ?? asString(m.capsuleEngine),
     toolCalls,
     enforcement: buildEnforcementMetrics(m, row, toolCalls),
+    hardGateStatus: asString(m.pivotCheckGateStatus),
+    hardGateFailReasons: Array.isArray(m.pivotCheckGateFailReasons)
+      ? (m.pivotCheckGateFailReasons as unknown[]).filter((r): r is string => typeof r === "string")
+      : null,
+    hardGatePhase2Resolved: typeof m.phase2Resolved === "boolean" ? m.phase2Resolved : null,
   };
   return { metrics, matchedInstanceId: asString(r.instanceId) };
 }
