@@ -114,6 +114,44 @@ export interface BuildPivotNeighborhoodsOptions {
   readonly maxExcerptsPerPivot?: number;
 }
 
+/**
+ * Render the pivot-neighborhood contexts as a compact, deterministic text block
+ * suitable for inlining into injected agent context (the Stage 5 product-v2
+ * capsule `.context`). Returns "" when no neighborhood carried excerpts. The
+ * excerpts are already bounded by `buildPivotNeighborhoods`, so this never emits
+ * a whole file; each excerpt is honestly labeled by its relationship reason and a
+ * file:line range, never presented as an exact edge-site line.
+ */
+export function renderPivotNeighborhoodsText(
+  contexts: readonly PivotNeighborhoodContext[],
+): string {
+  const enriched = contexts.filter((context) => context.excerpts.length > 0);
+
+  if (enriched.length === 0) {
+    return "";
+  }
+
+  const lines: string[] = [
+    "## Pivot neighborhood (bounded nearby source)",
+    "Symbol-window excerpts around the top pivot(s), labeled by structural relationship. These are nearby source windows, not exact edge-site lines.",
+  ];
+
+  for (const context of enriched) {
+    lines.push("");
+    lines.push(`### ${context.pivot.fqName ?? context.pivot.path}`);
+    for (const excerpt of context.excerpts) {
+      const id = excerpt.fqName ?? excerpt.symbol ?? excerpt.filePath;
+      const range = `${excerpt.filePath}:${excerpt.startLine}-${excerpt.endLine}`;
+      lines.push(`- ${excerpt.reason}: ${id} (${range})${excerpt.truncated ? " [truncated]" : ""}`);
+      lines.push("```");
+      lines.push(excerpt.text);
+      lines.push("```");
+    }
+  }
+
+  return lines.join("\n");
+}
+
 interface NeighborCandidate {
   readonly symbol: SymbolRecord;
   readonly reason: PivotNeighborhoodReason;

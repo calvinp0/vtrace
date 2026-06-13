@@ -1511,7 +1511,7 @@ test("--capsule-engine v2 builds a capsule command with --intent and --budget", 
   // The legacy `mode` argument is supplied but MUST be ignored under v2.
   const query = buildVtraceQueryCommand(config, "/ws", "fix the bug", "full");
   assert.deepEqual(query.args, [
-    "src/cli/index.ts", "capsule", "/ws", "fix the bug", "--intent", "auto", "--budget", "8000", "--json",
+    "src/cli/index.ts", "capsule", "/ws", "fix the bug", "--intent", "auto", "--budget", "8000", "--pivot-neighborhood", "--json",
   ]);
 });
 
@@ -1566,6 +1566,36 @@ test("classifyCapsuleV2Output injects rendered context for a pivot and skips no_
   assert.equal(skip.contextInjected, false);
   assert.equal(skip.actualCapsuleMode, "no_context");
   assert.match(skip.skipReason ?? "", /no pivot/);
+});
+
+test("classifyCapsuleV2Output appends the pivot-neighborhood block to injected context", () => {
+  // Simulate the `--pivot-neighborhood` capsule output: the result carries a
+  // bounded pivot_neighborhood array, which must be rendered into the injected
+  // context so the agent actually receives the neighbor excerpts.
+  const result = JSON.parse(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
+  result.pivot_neighborhood = [
+    {
+      pivot: { path: "django/db/models/sql/compiler.py", symbol: "get_combinator_sql", fqName: "SQLCompiler.get_combinator_sql" },
+      excerpts: [
+        {
+          filePath: "django/db/models/sql/query.py", symbol: "Query", fqName: "Query.combine",
+          startLine: 10, endLine: 14, text: "def combine(self, other):\n    return other", reason: "caller", truncated: false,
+        },
+      ],
+    },
+  ];
+  const inject = classifyCapsuleV2Output(result);
+  assert.equal(inject.policyAction, "inject");
+  // The neighborhood header and the neighbor excerpt are present in the injected text.
+  assert.match(inject.context, /Pivot neighborhood/);
+  assert.match(inject.context, /caller: Query\.combine/);
+  assert.match(inject.context, /def combine/);
+});
+
+test("classifyCapsuleV2Output omits the neighborhood block when none was emitted", () => {
+  // A pre-neighborhood result (no pivot_neighborhood field) injects no block.
+  const inject = classifyCapsuleV2Output(JSON.parse(capsuleV2Json({ pivotSymbol: "get_combinator_sql" })));
+  assert.doesNotMatch(inject.context, /Pivot neighborhood/);
 });
 
 test("classifyCapsuleOutput routes a Capsule v2 payload to the v2 classifier", () => {
@@ -2660,7 +2690,7 @@ test("prepareIndexedContext with v2 issues a v2 query and records the engine met
   assert.equal(result.capsuleEngine, "v2");
   assert.equal(result.capsuleIntent, "debug");
   assert.equal(result.capsuleBudget, 8000);
-  assert.match(result.queryCommand ?? "", /--intent debug --budget 8000 --json/);
+  assert.match(result.queryCommand ?? "", /--intent debug --budget 8000 --pivot-neighborhood --json/);
 
   // The metadata + report carry the engine.
   const written = await readFile(result.contextFile, "utf8");

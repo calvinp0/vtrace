@@ -39,6 +39,11 @@ import {
 import { buildCapsuleV2 } from "../../capsuleV2/buildCapsuleV2";
 import { parsePivotRankingVersion, type PivotRankingVersion } from "../../capsuleV2/pivotRankingV2";
 import { renderCapsuleV2Human } from "../../capsuleV2/renderHuman";
+import { toCapsuleV2ProductResponse } from "../../capsuleV2/productAdapter";
+import {
+  buildPivotNeighborhoods,
+  renderPivotNeighborhoodsText,
+} from "../../runPipeline/pivotNeighborhood";
 import {
   CapsuleIntent,
   parseCapsuleIntent,
@@ -61,7 +66,7 @@ import {
 
 const CAPSULE_USAGE =
   "Usage: capsule <repo> <query> [--intent <auto|debug|refactor|impact|test-failure>] [--budget <tokens>]"
-  + " [--mode <micro|standard|full>] [--max-items <n>] [--max-chars <n>] [--pivot-ranking-version <legacy|v2>] [--json]";
+  + " [--mode <micro|standard|full>] [--max-items <n>] [--max-chars <n>] [--pivot-ranking-version <legacy|v2>] [--pivot-neighborhood] [--json]";
 
 // The Capsule v2 product surface (`--intent`/`--budget`) defaults to an 8,000
 // token budget — generous enough for a couple of pivots plus a ring of support.
@@ -129,6 +134,26 @@ export async function runCapsuleCommand(
           maxTokens: parsed.budget ?? CAPSULE_V2_DEFAULT_BUDGET,
           ...(parsed.pivotRankingVersion === undefined ? {} : { pivotRankingVersion: parsed.pivotRankingVersion }),
         });
+
+        // Opt-in (`--pivot-neighborhood`, default off): enrich with the SAME
+        // bounded pivot-neighborhood excerpts the run_pipeline product path emits,
+        // so the Stage 5 product-v2 injected `.context` carries them too. Building
+        // it never fails the command. Reuses buildPivotNeighborhoods/sourceExcerpt;
+        // does not touch retrieval or v2 ranking.
+        if (parsed.pivotNeighborhood) {
+          const neighborhood = buildPivotNeighborhoods(
+            db,
+            repoRoot,
+            toCapsuleV2ProductResponse(result),
+          );
+          if (json) {
+            return success(formatJson({ ...result, pivot_neighborhood: neighborhood }));
+          }
+          const human = renderCapsuleV2Human(result);
+          const neighborhoodText = renderPivotNeighborhoodsText(neighborhood);
+          return success(neighborhoodText.length > 0 ? `${human}\n\n${neighborhoodText}` : human);
+        }
+
         return success(json ? formatJson(result) : renderCapsuleV2Human(result));
       }
 
@@ -542,6 +567,12 @@ interface ParsedCapsuleArgs {
   budget?: number;
   /** Capsule v2 pivot-ranking version (dev/benchmark lever). */
   pivotRankingVersion?: PivotRankingVersion;
+  /**
+   * Capsule v2 only: also emit bounded pivot-neighborhood excerpts (the same ones
+   * the run_pipeline product path attaches). Default off so existing capsule CLI
+   * output is unchanged; the Stage 5 product-v2 injection opts in.
+   */
+  pivotNeighborhood: boolean;
 }
 
 function parseCapsuleArgs(
@@ -554,6 +585,7 @@ function parseCapsuleArgs(
   let budget: number | undefined;
   let pivotRankingVersion: PivotRankingVersion | undefined;
   let json = false;
+  let pivotNeighborhood = false;
   const positional: string[] = [];
 
   for (let index = 0; index < args.length; index += 1) {
@@ -561,6 +593,11 @@ function parseCapsuleArgs(
 
     if (argument === "--json") {
       json = true;
+      continue;
+    }
+
+    if (argument === "--pivot-neighborhood") {
+      pivotNeighborhood = true;
       continue;
     }
 
@@ -648,6 +685,7 @@ function parseCapsuleArgs(
     ...(budget === undefined ? {} : { budget }),
     ...(pivotRankingVersion === undefined ? {} : { pivotRankingVersion }),
     json,
+    pivotNeighborhood,
   };
 }
 

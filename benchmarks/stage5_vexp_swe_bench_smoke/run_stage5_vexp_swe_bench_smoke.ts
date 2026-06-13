@@ -31,6 +31,10 @@ import {
   DEFAULT_REPEATED_FILE_READ_LIMIT,
 } from "../../src/capsule/turnCountWaste";
 import { renderCapsuleV2Human } from "../../src/capsuleV2/renderHuman";
+import {
+  renderPivotNeighborhoodsText,
+  type PivotNeighborhoodContext,
+} from "../../src/runPipeline/pivotNeighborhood";
 import { CapsuleV2Mode, type CapsuleV2Result } from "../../src/capsuleV2/types";
 import {
   type CapsuleV2ArtifactBundle,
@@ -2472,7 +2476,10 @@ export function buildVtraceQueryCommand(
   // and passing --mode would route the CLI back to the legacy path.
   const engineArgs =
     config.capsuleEngine === "v2"
-      ? ["--intent", config.capsuleIntent, "--budget", String(config.capsuleBudget), "--json"]
+      // `--pivot-neighborhood` makes the injected v2 `.context` carry the same
+      // bounded neighborhood excerpts the run_pipeline product probe detects, so
+      // the agent actually receives them (not just the report).
+      ? ["--intent", config.capsuleIntent, "--budget", String(config.capsuleBudget), "--pivot-neighborhood", "--json"]
       // Legacy: when a mode is chosen, request the compact JSON capsule
       // (`--mode <m> --json`) so retrieved context — not the issue — is injected.
       : mode === undefined
@@ -2806,11 +2813,27 @@ export function classifyCapsuleV2Output(result: CapsuleV2Result): CapsuleClassif
     return skipClassification(result.reason ?? null, null, actualMode, pivotCount, supportCount, null, null, v2);
   }
 
-  const context = renderCapsuleV2Human(result).trim();
+  // Append the bounded pivot-neighborhood block when the capsule CLI emitted one
+  // (the `--pivot-neighborhood` opt-in the Stage 5 v2 query passes). This is the
+  // ONLY way the neighborhood excerpts reach the agent — the injected context is
+  // re-rendered here from the capsule result, not from run_pipeline.
+  const neighborhood = readPivotNeighborhood(result);
+  const neighborhoodText = renderPivotNeighborhoodsText(neighborhood);
+  const rendered = renderCapsuleV2Human(result).trim();
+  const context = neighborhoodText.length > 0 ? `${rendered}\n\n${neighborhoodText}` : rendered;
   if (context.length === 0) {
     return errorClassification("Capsule v2 returned no renderable context.");
   }
   return injectClassification(context, null, actualMode, pivotCount, supportCount, null, null, v2);
+}
+
+// Defensively read the optional `pivot_neighborhood` array the capsule CLI
+// attaches under `--pivot-neighborhood`. The core CapsuleV2Result type does not
+// carry it, so read it as an untyped record; a missing/malformed value degrades
+// to an empty list (no neighborhood block injected).
+function readPivotNeighborhood(result: CapsuleV2Result): PivotNeighborhoodContext[] {
+  const raw = (result as unknown as Record<string, unknown>).pivot_neighborhood;
+  return Array.isArray(raw) ? (raw as PivotNeighborhoodContext[]) : [];
 }
 
 // Reduce Capsule v2 items to the audit-relevant fields, tolerating partially

@@ -1149,6 +1149,37 @@ test("init followed by capsule succeeds on the same repo and resolution remains 
   });
 });
 
+test("capsule v2 --pivot-neighborhood --json emits a bounded pivot_neighborhood array", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["init", repoRoot]);
+
+    const withFlag = await runCli([
+      "capsule", repoRoot, "createSession in src/session.ts#L4-L6 returns wrong value",
+      "--intent", "auto", "--budget", "8000", "--pivot-neighborhood", "--json",
+    ]);
+    assert.equal(withFlag.exitCode, 0);
+    const out = JSON.parse(withFlag.stdout);
+    // The flag threads through end-to-end: the v2 result carries the additive
+    // pivot_neighborhood array (empty when no pivot symbol identity resolves).
+    assert.ok(Array.isArray(out.pivot_neighborhood), "expected a pivot_neighborhood array");
+    for (const ctx of out.pivot_neighborhood) {
+      assert.ok(ctx.excerpts.length <= 4, "per-pivot excerpt budget enforced");
+      for (const e of ctx.excerpts) {
+        assert.ok(e.text.split("\n").length <= 12, "12-line ceiling enforced");
+      }
+    }
+
+    // Default (no flag): the field is absent, so existing capsule v2 output is unchanged.
+    const withoutFlag = await runCli([
+      "capsule", repoRoot, "createSession in src/session.ts#L4-L6 returns wrong value",
+      "--intent", "auto", "--budget", "8000", "--json",
+    ]);
+    assert.equal(withoutFlag.exitCode, 0);
+    assert.equal(JSON.parse(withoutFlag.stdout).pivot_neighborhood, undefined);
+  });
+});
+
 test("capsule --mode micro --json returns a skip directive (not empty context) when no pivot is recovered", async () => {
   await withFixture(async ({ repoRoot }) => {
     await writeCapsuleFixtureRepo(repoRoot);
