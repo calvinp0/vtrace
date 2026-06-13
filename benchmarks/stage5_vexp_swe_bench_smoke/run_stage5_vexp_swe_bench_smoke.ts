@@ -1916,12 +1916,22 @@ async function readPhasePatchText(resultsFile: string | null): Promise<string> {
 }
 
 // Best-effort total tokens from a phase's results JSONL (null when unavailable).
+// Sums input/output/cache components the SAME way accountTokens does for the
+// condition rows — the swebench row carries components, not an explicit
+// total_tokens, so a naive total-only lookup would (and did) record null and
+// hide the phase's real spend (cache-read dominates).
 async function readPhaseTokens(resultsFile: string | null): Promise<number | null> {
   if (resultsFile === null) return null;
   const content = await readFile(resultsFile, "utf8").catch(() => "");
   for (const record of parseJsonlRecords(content)) {
-    const value = asUnknownableNumber(pick(record, FIELD_ALIASES.totalTokens!));
-    if (typeof value === "number") return value;
+    const { totalTokens } = accountTokens(
+      asUnknownableNumber(pick(record, FIELD_ALIASES.inputTokens!)),
+      asUnknownableNumber(pick(record, FIELD_ALIASES.outputTokens!)),
+      asUnknownableNumber(pick(record, FIELD_ALIASES.cacheReadTokens!)),
+      asUnknownableNumber(pick(record, FIELD_ALIASES.cacheCreationTokens!)),
+      asUnknownableNumber(pick(record, FIELD_ALIASES.totalTokens!)),
+    );
+    if (typeof totalTokens === "number") return totalTokens;
   }
   return null;
 }
