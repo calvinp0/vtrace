@@ -419,6 +419,69 @@ export function checklistToolAgreement(
   };
 }
 
+// The agent's `neighborhood_use` accounting (which provided neighborhood excerpts
+// it used, and which it ruled out). Parsed from the agent's response so the gate
+// can require the agent to have addressed the neighborhood, not just the pivots.
+export interface NeighborhoodUse {
+  // The agent emitted a `neighborhood_use` accounting at all.
+  readonly present: boolean;
+  // Excerpt identifiers (paths/symbols) the agent said it used.
+  readonly used: readonly string[];
+  // Excerpt identifiers the agent said it ruled out.
+  readonly ruledOut: readonly string[];
+}
+
+// Pull comma/semicolon-separated identifier tokens after a `field:` label on one
+// line, dropping `none`/`n/a` placeholders. Tolerant of surrounding prose.
+function valuesAfterLabel(line: string): string[] {
+  const colon = line.indexOf(":");
+  const rest = (colon === -1 ? line : line.slice(colon + 1)).trim();
+  if (rest.length === 0) return [];
+  return rest
+    .split(/[,;]/)
+    .map((token) => token.trim())
+    .filter((token) => token.length > 0 && !/^(none|n\/a|n\.a\.)$/i.test(token));
+}
+
+// Parse the agent's `neighborhood_use` block from its response text. `present` is
+// true when the agent emitted a `neighborhood_use` header AND at least one
+// used/ruled-out line under it. Tolerant of inline (`used: ...`) and bulleted
+// (`- used: ...`) forms. Pure; assistant text in, structured accounting out.
+export function parseNeighborhoodUse(text: string): NeighborhoodUse {
+  const lines = text.split(/\r?\n/);
+  let headerIndex = -1;
+  for (let index = 0; index < lines.length; index += 1) {
+    if (/neighborhood_use\b/i.test(lines[index]!)) {
+      headerIndex = index;
+      break;
+    }
+  }
+  if (headerIndex === -1) return { present: false, used: [], ruledOut: [] };
+
+  const used: string[] = [];
+  const ruledOut: string[] = [];
+  let sawField = false;
+  // The header line itself may carry `used:`/`ruled_out:` inline; otherwise scan a
+  // small window of following lines for the two sub-fields.
+  for (let index = headerIndex; index < Math.min(lines.length, headerIndex + 8); index += 1) {
+    const line = lines[index]!;
+    const lower = line.toLowerCase();
+    if (index > headerIndex && /neighborhood_use\b/i.test(line) === false && line.trim() === "") {
+      // blank line ends a bulleted block only after we have seen a field
+      if (sawField) break;
+    }
+    if (/\bused\b\s*:/.test(lower) && !/ruled/.test(lower)) {
+      used.push(...valuesAfterLabel(line));
+      sawField = true;
+    }
+    if (/ruled[_ ]?out\b\s*:/.test(lower)) {
+      ruledOut.push(...valuesAfterLabel(line));
+      sawField = true;
+    }
+  }
+  return { present: sawField, used: dedupe(used), ruledOut: dedupe(ruledOut) };
+}
+
 function dedupe(values: readonly string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];

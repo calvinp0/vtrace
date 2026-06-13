@@ -8,6 +8,7 @@ import {
   contextMentionsSymbol,
   editedFilesFromPatch,
   editedSymbolsFromPatch,
+  parseNeighborhoodUse,
   parsePivotCheckRows,
   primaryEditedFile,
   primaryEditedSymbol,
@@ -295,4 +296,32 @@ test("checklistToolAgreement is null when no rows match a pivot", () => {
     [],
   );
   assert.equal(checklistToolAgreement(rows, records).agreement, null);
+});
+
+test("parseNeighborhoodUse extracts used/ruled-out excerpts from a bulleted block", () => {
+  const text = [
+    "## PIVOT_CHECK",
+    "...",
+    "neighborhood_use:",
+    "- used: lib/c.py::helper, lib/e.py::g",
+    "- ruled_out: lib/d.py::unrelated",
+  ].join("\n");
+  const use = parseNeighborhoodUse(text);
+  assert.equal(use.present, true);
+  assert.deepEqual([...use.used], ["lib/c.py::helper", "lib/e.py::g"]);
+  assert.deepEqual([...use.ruledOut], ["lib/d.py::unrelated"]);
+});
+
+test("parseNeighborhoodUse reports absent when no neighborhood_use block is present", () => {
+  const use = parseNeighborhoodUse("just some prose with no accounting");
+  assert.equal(use.present, false);
+  assert.deepEqual([...use.used], []);
+  assert.deepEqual([...use.ruledOut], []);
+});
+
+test("parseNeighborhoodUse drops none/n-a placeholders", () => {
+  const use = parseNeighborhoodUse("neighborhood_use:\n- used: none\n- ruled_out: lib/d.py");
+  assert.equal(use.present, true);
+  assert.deepEqual([...use.used], []);
+  assert.deepEqual([...use.ruledOut], ["lib/d.py"]);
 });

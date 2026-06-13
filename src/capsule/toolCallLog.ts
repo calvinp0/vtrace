@@ -280,7 +280,15 @@ export function detectNeighborhoodMention(
   streamJson: string,
   identifiers: readonly string[] = [],
 ): boolean {
-  const text = assistantTextFromStream(streamJson);
+  return neighborhoodMentionInText(assistantTextFromStream(streamJson), identifiers);
+}
+
+// Text-only variant of {@link detectNeighborhoodMention}, for callers that have
+// already extracted the agent's assistant text (e.g. the two-phase gate).
+export function neighborhoodMentionInText(
+  text: string,
+  identifiers: readonly string[] = [],
+): boolean {
   if (text.length === 0) return false;
   const lower = text.toLowerCase();
   if (lower.includes("neighborhood_use") || lower.includes("neighborhood use")) return true;
