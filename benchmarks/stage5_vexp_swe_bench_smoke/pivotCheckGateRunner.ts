@@ -33,6 +33,10 @@ export interface HardGatePhase1Outcome {
   readonly assistantText: string;
   readonly toolCalls: readonly InspectionToolCall[];
   readonly editedFiles: readonly string[];
+  // Mutation/unsafe tool names observed in the Phase-1 telemetry. With a read-only
+  // policy these should be EMPTY (the tools are denied); a non-empty list fails the
+  // gate `mutation_before_gate`.
+  readonly mutationToolNames: readonly string[];
   readonly phase1Tokens: number | null;
   readonly streamFile: string;
   readonly promptFile: string;
@@ -50,24 +54,45 @@ export interface HardGatePhase2Outcome {
   readonly resolved: boolean | null;
 }
 
+// The Phase-1 tool policy. "read-only" denies all mutation/unsafe tools so the
+// preflight is INCAPABLE of editing; "full" leaves the solve tool-set (used only
+// if a future caller wants a soft preflight — the hard gate always uses read-only).
+export type Phase1ToolPolicy = "read-only" | "full";
+
 export interface HardGateOrchestrationDeps {
   readonly pivots: readonly PivotForInspection[];
   readonly neighborhoodExcerptCount: number;
   readonly neighborhoodIdentifiers: readonly string[];
+  // The Phase-1 tool policy and the concrete denied tool list, recorded into the
+  // run meta so the report can show Phase 1 was incapable of mutation.
+  readonly phase1ToolPolicy: Phase1ToolPolicy;
+  readonly phase1DisallowedTools: readonly string[];
+  // Phase-1-only mode: evaluate the gate and STOP — never run Phase 2 even on a
+  // pass. Used for the read-only-preflight canary (prove it can pass without
+  // editing) before committing to the full two-phase solve.
+  readonly phase1Only?: boolean;
   // Run Phase 1 (inspect-only): the orchestrator hands over the preflight prompt;
   // the caller injects it alongside the normal Capsule v2 context, spawns the
-  // agent against a phase-1-only stream file, and returns the parsed transcript.
+  // agent against a phase-1-only stream file UNDER THE READ-ONLY TOOL POLICY, and
+  // returns the parsed transcript (incl. any mutation tools that slipped through).
   readonly runPhase1: (preflightPrompt: string) => Promise<HardGatePhase1Outcome>;
-  // Run Phase 2 (solve): invoked ONLY on a passing gate. The caller injects the
-  // normal context + the approved checklist summary, spawns against a
-  // phase-2-only stream file, solves, and (when configured) runs Docker eval.
+  // Run Phase 2 (solve): invoked ONLY on a passing gate (and not in phase1-only
+  // mode). The caller injects the normal context + the approved checklist summary,
+  // spawns against a phase-2-only stream file with the FULL solve tool-set, and
+  // (when configured) runs Docker eval.
   readonly runPhase2: (approvedChecklistSummary: string) => Promise<HardGatePhase2Outcome>;
 }
 
 // The run's coarse outcome, ordered from earliest stop to fullest completion. The
 // report uses this to phrase a gate_failed run as an ENFORCEMENT BLOCK rather than
-// a failed patch solve.
-export type HardGateStatus = "gate_failed" | "solve_started" | "solve_completed" | "docker_evaluated";
+// a failed patch solve. `gate_passed_phase1_only` is a passing read-only preflight
+// that intentionally stopped before the solve (canary mode).
+export type HardGateStatus =
+  | "gate_failed"
+  | "gate_passed_phase1_only"
+  | "solve_started"
+  | "solve_completed"
+  | "docker_evaluated";
 
 export interface HardGateRunResult {
   readonly status: HardGateStatus;
@@ -76,6 +101,8 @@ export interface HardGateRunResult {
   readonly phase2SkippedReason: string | null;
   readonly approvedChecklistSummary: string | null;
   readonly preflightPrompt: string;
+  readonly phase1ToolPolicy: Phase1ToolPolicy;
+  readonly phase1DisallowedTools: readonly string[];
   readonly phase1: HardGatePhase1Outcome;
   readonly phase2: HardGatePhase2Outcome | null;
 }
@@ -93,6 +120,7 @@ export async function orchestrateHardGate(deps: HardGateOrchestrationDeps): Prom
     assistantText: phase1.assistantText,
     toolCalls: phase1.toolCalls,
     editedFiles: phase1.editedFiles,
+    mutationToolNames: phase1.mutationToolNames,
     pivots: deps.pivots,
     neighborhoodExcerptCount: deps.neighborhoodExcerptCount,
     neighborhoodIdentifiers: deps.neighborhoodIdentifiers,
@@ -107,6 +135,24 @@ export async function orchestrateHardGate(deps: HardGateOrchestrationDeps): Prom
       phase2SkippedReason: decision.phase2SkippedReason,
       approvedChecklistSummary: null,
       preflightPrompt,
+      phase1ToolPolicy: deps.phase1ToolPolicy,
+      phase1DisallowedTools: deps.phase1DisallowedTools,
+      phase1,
+      phase2: null,
+    };
+  }
+  // Phase-1-only canary: the gate PASSED, but we intentionally stop before the
+  // solve. Build the approved summary as evidence, but never call runPhase2.
+  if (deps.phase1Only) {
+    return {
+      status: "gate_passed_phase1_only",
+      gate,
+      phase2Started: false,
+      phase2SkippedReason: "phase1_only_mode",
+      approvedChecklistSummary: buildApprovedChecklistSummary(gate),
+      preflightPrompt,
+      phase1ToolPolicy: deps.phase1ToolPolicy,
+      phase1DisallowedTools: deps.phase1DisallowedTools,
       phase1,
       phase2: null,
     };
@@ -125,6 +171,8 @@ export async function orchestrateHardGate(deps: HardGateOrchestrationDeps): Prom
     phase2SkippedReason: null,
     approvedChecklistSummary,
     preflightPrompt,
+    phase1ToolPolicy: deps.phase1ToolPolicy,
+    phase1DisallowedTools: deps.phase1DisallowedTools,
     phase1,
     phase2,
   };
@@ -147,6 +195,13 @@ export interface HardGateMetaFields {
   readonly neighborhoodUseParsed: boolean;
   readonly phase1ToolCalls: number;
   readonly phase1Tokens: number | null;
+  // Phase-1 tool policy: "read-only" means mutation tools were denied; the agent
+  // was incapable of editing during the preflight.
+  readonly phase1ToolPolicy: Phase1ToolPolicy;
+  readonly phase1MutationToolsAllowed: boolean;
+  // Mutation/unsafe tools that appeared in Phase-1 telemetry DESPITE being denied
+  // (empty when the read-only policy held). A non-empty list is a gate failure.
+  readonly phase1DeniedMutationToolAttempted: readonly string[];
   readonly phase2Started: boolean;
   readonly phase2SkippedReason: string | null;
   readonly pivotCheckGateFailReasons: readonly string[];
@@ -172,6 +227,9 @@ export function hardGateMetaFields(result: HardGateRunResult): HardGateMetaField
     neighborhoodUseParsed: result.gate.neighborhoodUseParsed,
     phase1ToolCalls: result.gate.phase1ToolCalls,
     phase1Tokens: result.gate.phase1Tokens,
+    phase1ToolPolicy: result.phase1ToolPolicy,
+    phase1MutationToolsAllowed: result.phase1ToolPolicy !== "read-only",
+    phase1DeniedMutationToolAttempted: result.gate.mutationToolsUsed,
     phase2Started: result.phase2Started,
     phase2SkippedReason: result.phase2SkippedReason,
     pivotCheckGateFailReasons: result.gate.failReasons,
@@ -204,6 +262,8 @@ export function describeHardGateOutcome(meta: HardGateOutcomeMeta): string {
       const why = reasons.length > 0 ? `: ${reasons.join("; ")}` : "";
       return `enforcement gate BLOCKED the solve${why} (not a failed patch — Phase 2 never ran, no Docker evaluation)`;
     }
+    case "gate_passed_phase1_only":
+      return "read-only preflight PASSED the gate; Phase 2 intentionally not run (phase1-only mode)";
     case "solve_started":
       return "gate passed; solve started (no completion signal captured)";
     case "solve_completed":

@@ -649,6 +649,7 @@ export function buildPrecheckConfig(opts: {
     contextPolicyOverride: "force-inject",
     pivotCheckPolicy: "risk_gated",
     pivotCheckGate: "off",
+    pivotCheckGatePhase1Only: false,
     disablePivotCheck: false,
     disableEditGuard: false,
     disablePatchVerify: false,

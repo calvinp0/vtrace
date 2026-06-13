@@ -48,6 +48,10 @@ import {
   buildVtraceIndexCommand,
   buildVtracePatchBlock,
   buildVtraceStreamPatchBlock,
+  buildVtraceDisallowedToolsPatchBlock,
+  hasDisallowedToolsPatch,
+  STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER,
+  PHASE1_READONLY_DISALLOWED_TOOLS,
   buildVtraceQueryCommand,
   decideIndexPolicy,
   buildVtraceCommand,
@@ -574,6 +578,68 @@ test("applyVtracePatch skips the optional stream block when its anchor is absent
   // Instructions block still installed (required); stream block silently skipped.
   assert.ok(content.includes(STAGE5_VTRACE_PATCH_MARKER));
   assert.ok(!content.includes(STAGE5_VTRACE_STREAM_MARKER));
+});
+
+// ---- Phase-1 read-only enforcement (disallowed-tools patch block) ----
+
+// A realistic adapter carrying the "Tool whitelist" anchor + the args array, so
+// the disallowed-tools block has somewhere to insert.
+const ADAPTER_WITH_TOOL_WHITELIST = [
+  "export class ClaudeCodeAdapter {",
+  '    name = "claude-code";',
+  "    async run(opts) {",
+  "        const startMs = Date.now();",
+  "        const args = [",
+  '            "-p", opts.prompt,',
+  '            "--output-format", "stream-json",',
+  "        ];",
+  "        // Tool whitelist for SWE-bench (agent needs to write code)",
+  "        if (opts.allowedTools && opts.allowedTools.length > 0) {",
+  '            args.push("--allowedTools", opts.allowedTools.join(","));',
+  "        }",
+  '        const rawOutput = await spawnAgent("claude", args);',
+  "        const durationMs = Date.now() - startMs;",
+  "        return { args, rawOutput, durationMs };",
+  "    }",
+  "}",
+  "",
+].join("\n");
+
+test("buildVtraceDisallowedToolsPatchBlock pushes --disallowedTools gated on the env var", () => {
+  const block = buildVtraceDisallowedToolsPatchBlock();
+  assert.ok(block.includes(STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER));
+  assert.ok(block.includes("process.env.VTRACE_AGENT_DISALLOWED_TOOLS"));
+  assert.ok(block.includes('args.push("--disallowedTools"'));
+});
+
+test("applyVtracePatch inserts the disallowed-tools block after its anchor", () => {
+  const { content, changed } = applyVtracePatch(ADAPTER_WITH_TOOL_WHITELIST);
+  assert.equal(changed, true);
+  assert.ok(hasDisallowedToolsPatch(content));
+  // The block sits AFTER the "Tool whitelist" anchor (so `args` already exists).
+  const anchorIdx = content.indexOf("// Tool whitelist for SWE-bench");
+  const blockIdx = content.indexOf(STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER);
+  assert.ok(anchorIdx !== -1 && anchorIdx < blockIdx);
+  // It is idempotent — re-applying does not duplicate the block.
+  const twice = applyVtracePatch(content);
+  assert.equal(twice.content, content);
+});
+
+test("applyVtracePatch skips the disallowed-tools block when its anchor is absent", () => {
+  // FAKE_CLAUDE_ADAPTER has the instructions/stream anchors but no Tool-whitelist line.
+  const { content } = applyVtracePatch(FAKE_CLAUDE_ADAPTER);
+  assert.ok(content.includes(STAGE5_VTRACE_PATCH_MARKER));
+  assert.ok(!hasDisallowedToolsPatch(content));
+});
+
+test("PHASE1_READONLY_DISALLOWED_TOOLS denies the mutation/unsafe tools", () => {
+  for (const tool of ["Edit", "MultiEdit", "Write", "NotebookEdit", "Bash"]) {
+    assert.ok(PHASE1_READONLY_DISALLOWED_TOOLS.includes(tool), `expected ${tool} denied in Phase 1`);
+  }
+  // Read/search tools are NOT denied (they remain available to the preflight).
+  for (const tool of ["Read", "Grep", "Glob"]) {
+    assert.ok(!PHASE1_READONLY_DISALLOWED_TOOLS.includes(tool), `${tool} must stay allowed in Phase 1`);
+  }
 });
 
 // An adapter patched by an OLDER harness: instructions block present, stream

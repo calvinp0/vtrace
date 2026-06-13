@@ -8,12 +8,35 @@ import {
   contextMentionsSymbol,
   editedFilesFromPatch,
   editedSymbolsFromPatch,
+  mutationToolCallsIn,
   parseNeighborhoodUse,
   parsePivotCheckRows,
   primaryEditedFile,
   primaryEditedSymbol,
   type PivotForInspection,
 } from "./finalEditDiagnostics";
+
+test("mutationToolCallsIn detects mutation/unsafe tools and ignores read/search tools", () => {
+  const calls = [
+    { tool: "Read", target: "a.py" },
+    { tool: "Grep", target: "x" },
+    { tool: "Edit", target: "a.py" },
+    { tool: "write", target: "b.py" }, // case-insensitive
+    { tool: "Bash", output: "ls" },
+    { tool: "Glob", target: "**/*.py" },
+  ];
+  // De-duplicated, sorted, original casing preserved; Read/Grep/Glob excluded.
+  assert.deepEqual(mutationToolCallsIn(calls), ["Bash", "Edit", "write"]);
+});
+
+test("mutationToolCallsIn returns [] for a purely read-only tool stream", () => {
+  const calls = [
+    { tool: "Read", target: "a.py" },
+    { tool: "Grep", target: "x" },
+    { tool: "Glob", target: "**/*.py" },
+  ];
+  assert.deepEqual(mutationToolCallsIn(calls), []);
+});
 
 const PATCH = `diff --git a/django/contrib/admin/options.py b/django/contrib/admin/options.py
 --- a/django/contrib/admin/options.py

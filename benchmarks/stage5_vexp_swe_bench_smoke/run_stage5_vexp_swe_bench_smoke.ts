@@ -17,6 +17,7 @@ import {
   contextMentionsFile,
   contextMentionsSymbol,
   editedFilesFromPatch,
+  mutationToolCallsIn,
   parsePivotCheckRows,
   primaryEditedFile,
   primaryEditedSymbol,
@@ -134,6 +135,19 @@ export const PIVOT_CHECK_POLICIES: readonly PivotCheckPolicy[] = [
 // the soft block's injection.
 export type PivotCheckGateMode = "off" | "hard";
 export const PIVOT_CHECK_GATE_MODES: readonly PivotCheckGateMode[] = ["off", "hard"];
+// The mutation/unsafe tools denied during the Phase-1 read-only preflight. Passed
+// to the patched adapter via VTRACE_AGENT_DISALLOWED_TOOLS; Claude Code deny rules
+// take precedence over the orchestrator's hardcoded allow-list, so with these
+// denied the preflight agent can Read/Grep/Glob but cannot Edit/Write/Bash. Bash
+// is denied because a read-only preflight cannot cheaply prove a shell command is
+// non-mutating (treat-as-unsafe). Phase 2 (the solve) is unaffected.
+export const PHASE1_READONLY_DISALLOWED_TOOLS: readonly string[] = [
+  "Edit",
+  "MultiEdit",
+  "Write",
+  "NotebookEdit",
+  "Bash",
+];
 // Stage 5C named protocols. A protocol selects which condition(s) to run and how:
 //   baseline       -> `run --no-vexp`
 //   vtrace-indexed -> `run --no-vexp` + vtrace indexed-context injection
@@ -278,6 +292,12 @@ export interface CliConfig {
   // (Phase 1 inspect-only preflight → gate → Phase 2 solve only on pass) for the
   // vtrace-indexed Capsule v2 condition. See PivotCheckGateMode.
   readonly pivotCheckGate: PivotCheckGateMode;
+  // Phase-1-only canary (--pivot-check-gate-phase1-only). Default false. When true
+  // (and --pivot-check-gate hard), the harness runs the read-only Phase-1 preflight,
+  // evaluates the gate, writes the result, and STOPS — Phase 2 never runs even on a
+  // pass. Used to prove the read-only preflight can pass without editing before
+  // committing to the full two-phase solve. No effect unless the hard gate is on.
+  readonly pivotCheckGatePhase1Only: boolean;
   // Benchmark-only EDIT_GUARD suppression (--disable-edit-guard). Default false:
   // the compact EDIT_GUARD edit-discipline block rides with PIVOT_CHECK for
   // multi-pivot Capsule v2 runs (injected right after it). When true, EDIT_GUARD is
@@ -738,6 +758,7 @@ const DEFAULT_CONFIG: CliConfig = {
   pivotCheckPolicy: "strict_risk_gated",
   // Hard gate is OFF by default: the standard single-shot run path is unchanged.
   pivotCheckGate: "off",
+  pivotCheckGatePhase1Only: false,
   // --disable-pivot-check forces the effective policy to "off" (compatibility).
   disablePivotCheck: false,
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
@@ -868,6 +889,16 @@ export const STAGE5_VTRACE_STREAM_MARKER = "STAGE5_VTRACE_STREAM_PATCH";
 // already carrying the earlier patches migrates this one in cleanly.
 export const STAGE5_TOOL_USE_DISCIPLINE_MARKER = "STAGE5_TOOL_USE_DISCIPLINE_PATCH";
 
+// Marker for the FOURTH patch block: it pushes `--disallowedTools` into the
+// `claude` invocation when VTRACE_AGENT_DISALLOWED_TOOLS is set, so the Phase-1
+// read-only preflight is INCAPABLE of mutating files (Claude Code deny rules take
+// precedence over the orchestrator's hardcoded --allowedTools). Independent of the
+// other blocks (own marker + anchor) so an already-patched adapter migrates it in.
+export const STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER = "STAGE5_VTRACE_DISALLOWED_TOOLS_PATCH";
+
+// Stderr line the patched adapter logs when it denies the Phase-1 mutation tools.
+export const STAGE5_VTRACE_DISALLOWED_TOOLS_LOG = "Stage5 vtrace phase-1 read-only: --disallowedTools";
+
 // Stderr line the patched adapter logs when it appends the tool-use-discipline
 // block at runtime. Purely observational (not load-bearing for treatment validity).
 export const STAGE5_TOOL_USE_DISCIPLINE_LOG = "Stage5 tool-use-discipline injected from";
@@ -902,6 +933,12 @@ const VTRACE_PATCH_ANCHOR = "const startMs = Date.now();";
 // the agent emitted) is in scope, so the block can dump it. Optional — if the
 // adapter layout changed and this line is absent, the stream block is skipped.
 const VTRACE_STREAM_ANCHOR = "const durationMs = Date.now() - startMs;";
+
+// Anchor for the disallowed-tools block: a stable comment in the adapter that sits
+// AFTER the `args` array is declared and BEFORE the agent is spawned, so the block
+// can push `--disallowedTools` onto `args`. Optional — skipped if the layout
+// changed and the line is absent (Phase-1 read-only enforcement then unavailable).
+const VTRACE_DISALLOWED_TOOLS_ANCHOR = "// Tool whitelist for SWE-bench (agent needs to write code)";
 
 // Stderr line the patched adapter logs when it writes the raw stream for tool-call
 // telemetry. Not load-bearing for treatment validity (purely observational).
@@ -1949,14 +1986,21 @@ async function spawnHardGatePhase(
     instructionsFile: string;
     streamFile: string;
     label: string;
+    // When non-empty, the Phase's `claude` invocation denies these tools (read-only
+    // preflight). The patched adapter reads VTRACE_AGENT_DISALLOWED_TOOLS; Phase 2
+    // passes [] so the solve keeps the full tool-set.
+    disallowedTools?: readonly string[];
   },
 ): Promise<{ exitCode: number; resultsFile: string | null; streamContent: string }> {
   await mkdir(args.outputDir, { recursive: true });
-  const env = {
+  const env: Record<string, string> = {
     ...vtraceEnv(config, true),
     VTRACE_AGENT_INSTRUCTIONS_FILE: args.instructionsFile,
     VTRACE_AGENT_STREAM_FILE: args.streamFile,
   };
+  if (args.disallowedTools && args.disallowedTools.length > 0) {
+    env.VTRACE_AGENT_DISALLOWED_TOOLS = args.disallowedTools.join(",");
+  }
   const runArgs = buildRunArgs(config, args.instances, args.outputDir, false);
   process.stderr.write(
     `\n[stage5] hard-gate ${args.label}: running agent for ${config.runLabel ?? args.instances.join(",")} …\n`,
@@ -2022,12 +2066,17 @@ export async function runVtraceHardGate(config: CliConfig, deps: RunDeps = {}): 
       outputDir: phase1Dir,
       instructionsFile: preflightFile,
       streamFile: phase1StreamFile,
-      label: "phase1 pivot-check (inspect-only)",
+      label: "phase1 pivot-check (inspect-only, read-only)",
+      // Read-only enforcement: deny mutation/unsafe tools so the preflight cannot edit.
+      disallowedTools: PHASE1_READONLY_DISALLOWED_TOOLS,
     });
+    const toolCalls = toInspectionToolCalls(parseOrderedToolCalls(phase.streamContent));
     return {
       assistantText: assistantTextFromStream(phase.streamContent),
-      toolCalls: toInspectionToolCalls(parseOrderedToolCalls(phase.streamContent)),
+      toolCalls,
       editedFiles: editedFilesFromPatch(await readPhasePatchText(phase.resultsFile)),
+      // Any mutation/unsafe tool that slipped through the deny-list (should be none).
+      mutationToolNames: mutationToolCallsIn(toolCalls),
       phase1Tokens: await readPhaseTokens(phase.resultsFile),
       streamFile: phase1StreamFile,
       promptFile: preflightFile,
@@ -2061,6 +2110,9 @@ export async function runVtraceHardGate(config: CliConfig, deps: RunDeps = {}): 
     pivots,
     neighborhoodExcerptCount: neighborhood.count,
     neighborhoodIdentifiers: neighborhood.identifiers,
+    phase1ToolPolicy: "read-only",
+    phase1DisallowedTools: PHASE1_READONLY_DISALLOWED_TOOLS,
+    phase1Only: config.pivotCheckGatePhase1Only,
     runPhase1,
     runPhase2,
   });
@@ -5966,11 +6018,34 @@ export function buildToolUseDisciplinePatchBlock(): string {
   ].join("\n");
 }
 
+// The FOURTH inserted block: after the `args` array is built (anchored on the
+// "Tool whitelist" comment) and before the agent spawns, push `--disallowedTools`
+// when VTRACE_AGENT_DISALLOWED_TOOLS is set. This is what makes the Phase-1
+// read-only preflight INCAPABLE of editing — Claude Code deny rules take
+// precedence over the orchestrator's hardcoded --allowedTools, so even though the
+// allow-list still names Edit/Write/Bash, the deny-list wins. Logs to STDERR.
+export function buildVtraceDisallowedToolsPatchBlock(): string {
+  return [
+    `        // ${STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER} begin — local Stage 5 smoke patch (Phase-1`,
+    "        // read-only enforcement: deny mutation/unsafe tools so the preflight cannot edit; vexp stays disabled).",
+    "        if (process.env.VTRACE_AGENT_DISALLOWED_TOOLS) {",
+    "            args.push(\"--disallowedTools\", process.env.VTRACE_AGENT_DISALLOWED_TOOLS);",
+    `            console.error(\`${STAGE5_VTRACE_DISALLOWED_TOOLS_LOG} \${process.env.VTRACE_AGENT_DISALLOWED_TOOLS}\`);`,
+    "        }",
+    `        // ${STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER} end`,
+    "",
+  ].join("\n");
+}
+
 // Independent per-block presence checks. A given adapter may carry the
 // instructions patch but not the (later-introduced) stream patch — these let the
 // patcher migrate one without re-installing the other.
 export function hasInstructionsPatch(content: string): boolean {
   return content.includes(STAGE5_VTRACE_PATCH_MARKER);
+}
+
+export function hasDisallowedToolsPatch(content: string): boolean {
+  return content.includes(STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER);
 }
 
 export function hasStreamPatch(content: string): boolean {
@@ -6025,6 +6100,15 @@ export function applyVtracePatch(content: string): { content: string; changed: b
   // so if we got here it is present.
   if (!hasToolUseDisciplinePatch(next) && next.indexOf(VTRACE_PATCH_ANCHOR) !== -1) {
     next = insertAfterAnchor(next, VTRACE_PATCH_ANCHOR, buildToolUseDisciplinePatchBlock());
+    changed = true;
+  }
+
+  // The disallowed-tools block (Phase-1 read-only enforcement) is OPTIONAL like the
+  // stream block: inserted only when its own anchor is present. An adapter whose
+  // layout lacks the "Tool whitelist" comment still patches cleanly (just without
+  // read-only Phase-1 enforcement, which the harness then surfaces honestly).
+  if (!hasDisallowedToolsPatch(next) && next.indexOf(VTRACE_DISALLOWED_TOOLS_ANCHOR) !== -1) {
+    next = insertAfterAnchor(next, VTRACE_DISALLOWED_TOOLS_ANCHOR, buildVtraceDisallowedToolsPatchBlock());
     changed = true;
   }
 
@@ -6187,33 +6271,41 @@ async function assertVtracePatchInstalled(config: CliConfig): Promise<void> {
         "before run-vtrace so the vtrace condition is real and no tokens are wasted on a no-op run.",
     );
   }
-  await migrateStreamPatchIfMissing(target, content);
+  await migrateOptionalPatchesIfMissing(target, content);
 }
 
-// Best-effort, idempotent migration of the stream-telemetry block into an adapter
-// that already carries the instructions patch. Writes a backup only if none
-// exists (the pristine original from the instructions install is preserved).
-// Never throws — telemetry must not fail the Stage 5 run.
-async function migrateStreamPatchIfMissing(target: string, content: string): Promise<void> {
-  if (hasStreamPatch(content)) return;
+// Best-effort, idempotent migration of the OPTIONAL later-introduced patch blocks
+// (stream telemetry + Phase-1 disallowed-tools) into an adapter that already
+// carries the instructions patch. Re-applies whenever ANY optional block is
+// missing — so an adapter patched before the disallowed-tools block existed gets
+// it migrated in on the next run. Writes a backup only if none exists (the
+// pristine original from the instructions install is preserved). Never throws —
+// telemetry / read-only enforcement must not fail the Stage 5 run.
+async function migrateOptionalPatchesIfMissing(target: string, content: string): Promise<void> {
+  if (hasStreamPatch(content) && hasDisallowedToolsPatch(content)) return;
   try {
     const { content: patched, changed } = applyVtracePatch(content);
-    if (!changed || !hasStreamPatch(patched)) {
+    if (!changed) {
       process.stderr.write(
-        `Stage5 vtrace: stream-telemetry patch could not be migrated (anchor "${VTRACE_STREAM_ANCHOR}" not found); ` +
-          "tool-call telemetry will be unavailable for this run.\n",
+        "Stage5 vtrace: optional patch blocks could not be migrated (anchors not found); " +
+          "tool-call telemetry and/or Phase-1 read-only enforcement may be unavailable for this run.\n",
       );
       return;
     }
     const backupPath = `${target}${VTRACE_PATCH_BACKUP_SUFFIX}`;
     if (!(await pathExists(backupPath))) await writeFile(backupPath, content);
     await writeFile(target, patched);
+    const migrated: string[] = [];
+    if (!hasStreamPatch(content) && hasStreamPatch(patched)) migrated.push(STAGE5_VTRACE_STREAM_MARKER);
+    if (!hasDisallowedToolsPatch(content) && hasDisallowedToolsPatch(patched)) {
+      migrated.push(STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER);
+    }
     process.stderr.write(
-      `Stage5 vtrace: migrated stream-telemetry patch (${STAGE5_VTRACE_STREAM_MARKER}) into ${target}.\n`,
+      `Stage5 vtrace: migrated optional patch block(s) [${migrated.join(", ")}] into ${target}.\n`,
     );
   } catch (error) {
     process.stderr.write(
-      `Stage5 vtrace: stream-telemetry patch migration skipped: ${error instanceof Error ? error.message : String(error)}\n`,
+      `Stage5 vtrace: optional patch migration skipped: ${error instanceof Error ? error.message : String(error)}\n`,
     );
   }
 }
@@ -7676,6 +7768,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         config.pivotCheckGate = value as PivotCheckGateMode;
         break;
       }
+      case "--pivot-check-gate-phase1-only": config.pivotCheckGatePhase1Only = true; break;
       case "--disable-pivot-check": config.disablePivotCheck = true; break;
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
@@ -7738,7 +7831,8 @@ function printUsageAndExit(exitCode: number): never {
       "  --capsule-intent auto|debug|refactor|impact|test-failure   Capsule v2 intent (default: auto; v2 only)",
       "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
       "  --pivot-check-policy off|multi_pivot|risk_gated|strict_risk_gated|always   when to inject PIVOT_CHECK (default: strict_risk_gated — inject only on a STRONG risk signal, rejecting hidden_pivot-only and two ordinary pivots; risk_gated injects on any high-risk signal)",
-      "  --pivot-check-gate off|hard                   opt-in HARD two-phase context-to-action gate (default: off). 'hard' runs an inspect-only Phase-1 preflight whose checklist is verified before any Phase-2 solve; on a failed gate Phase 2 never runs (no solve, no Docker). v2 indexed-context only; orthogonal to --pivot-check-policy",
+      "  --pivot-check-gate off|hard                   opt-in HARD two-phase context-to-action gate (default: off). 'hard' runs a READ-ONLY inspect-only Phase-1 preflight (mutation tools denied) whose checklist is verified before any Phase-2 solve; on a failed gate Phase 2 never runs (no solve, no Docker). v2 indexed-context only; orthogonal to --pivot-check-policy",
+      "  --pivot-check-gate-phase1-only                 (with --pivot-check-gate hard) run only the read-only Phase-1 preflight + gate, then STOP — Phase 2 never runs even on a pass. Canary to prove the read-only preflight can pass without editing",
       "  --disable-pivot-check                         force PIVOT_CHECK policy off for a controlled before run (compatibility; equivalent to --pivot-check-policy off)",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
       "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",

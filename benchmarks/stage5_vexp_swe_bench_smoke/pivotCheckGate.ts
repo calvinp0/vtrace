@@ -45,6 +45,13 @@ export interface PivotCheckGateInput {
   readonly neighborhoodExcerptCount: number;
   readonly neighborhoodIdentifiers?: readonly string[];
   readonly phase1Tokens?: number | null;
+  // Mutation/unsafe tool names observed in the Phase-1 telemetry (Edit, Write,
+  // MultiEdit, NotebookEdit, Bash, …). With a read-only preflight these should be
+  // EMPTY — the tools are denied — so a non-empty list means the read-only policy
+  // was not enforced (or the agent attempted a mutation), and the gate fails
+  // `mutation_before_gate`. Complementary to `editedFiles` (which detects a
+  // produced diff): this detects the tool USE even if no diff was captured.
+  readonly mutationToolNames?: readonly string[];
 }
 
 // Deterministic gate verdict. Field names mirror the report fields the spec asks
@@ -61,6 +68,9 @@ export interface PivotCheckGateResult {
   readonly neighborhoodUseParsed: boolean;
   readonly phase1ToolCalls: number;
   readonly phase1Tokens: number | null;
+  // Mutation/unsafe tools observed in the Phase-1 telemetry (empty when the
+  // read-only policy held). Non-empty ⇒ `mutation_before_gate`.
+  readonly mutationToolsUsed: readonly string[];
   // Ordered, human-readable reasons the gate failed (empty when it passed).
   readonly failReasons: readonly string[];
   // The parsed checklist + neighborhood-use, carried so a passing gate can build
@@ -120,6 +130,13 @@ export function evaluatePivotCheckGate(input: PivotCheckGateInput): PivotCheckGa
   if (input.editedFiles.length > 0) {
     failReasons.push(`edit_before_gate (${input.editedFiles.length} file(s) patched in preflight)`);
   }
+  // A read-only preflight denies mutation/unsafe tools; if any appear in the
+  // telemetry, the read-only policy did not hold (or the agent attempted to
+  // mutate), which fails the gate independently of whether a diff was captured.
+  const mutationToolsUsed = input.mutationToolNames ?? [];
+  if (mutationToolsUsed.length > 0) {
+    failReasons.push(`mutation_before_gate (${mutationToolsUsed.join(", ")})`);
+  }
   if (input.neighborhoodExcerptCount > 0) {
     if (!neighborhoodMentioned) failReasons.push("neighborhood_not_mentioned");
     if (!neighborhoodUse.present) failReasons.push("neighborhood_use_not_parsed");
@@ -141,6 +158,7 @@ export function evaluatePivotCheckGate(input: PivotCheckGateInput): PivotCheckGa
     neighborhoodUseParsed: neighborhoodUse.present,
     phase1ToolCalls: input.toolCalls.length,
     phase1Tokens: input.phase1Tokens ?? null,
+    mutationToolsUsed,
     failReasons,
     rows,
     records,

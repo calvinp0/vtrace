@@ -30,6 +30,35 @@ export function editedFilesFromPatch(patch: string): string[] {
   return files;
 }
 
+// Tool names that MUTATE the workspace (file edits + shell). Used to enforce a
+// read-only preflight: any of these appearing in Phase-1 telemetry is a gate
+// violation. Bash is treated as unsafe-by-default — a read-only preflight cannot
+// cheaply prove a shell command is non-mutating, so its mere use fails the gate.
+// Names are matched case-insensitively against the agent's tool-call stream.
+export const MUTATION_TOOL_NAMES: ReadonlySet<string> = new Set([
+  "edit",
+  "multiedit",
+  "write",
+  "notebookedit",
+  "applypatch",
+  "apply_patch",
+  "str_replace_editor",
+  "str_replace_based_edit_tool",
+  "bash",
+]);
+
+// The mutation/unsafe tool names that appear in a tool-call stream, de-duplicated
+// and sorted, preserving the ORIGINAL casing of the first occurrence so the report
+// shows what the agent actually invoked. Pure.
+export function mutationToolCallsIn(toolCalls: readonly InspectionToolCall[]): string[] {
+  const seen = new Map<string, string>();
+  for (const call of toolCalls) {
+    const norm = call.tool.toLowerCase().trim();
+    if (MUTATION_TOOL_NAMES.has(norm) && !seen.has(norm)) seen.set(norm, call.tool);
+  }
+  return [...seen.values()].sort();
+}
+
 // The "final edited file" is the primary edit target: prefer the first non-test
 // source file, falling back to the first file when a patch only touches tests.
 export function primaryEditedFile(patch: string): string | null {

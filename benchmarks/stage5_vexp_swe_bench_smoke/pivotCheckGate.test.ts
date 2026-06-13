@@ -108,6 +108,19 @@ test("neighborhood not mentioned fails when excerpts were provided", () => {
   assert.equal(noNbhd.pivotCheckGatePassed, true);
 });
 
+test("a mutation tool in Phase-1 telemetry fails the gate (mutation_before_gate)", () => {
+  const gate = evaluatePivotCheckGate(input({ mutationToolNames: ["Edit", "Bash"] }));
+  assert.equal(gate.pivotCheckGatePassed, false);
+  assert.deepEqual(gate.mutationToolsUsed, ["Edit", "Bash"]);
+  assert.ok(gate.failReasons.some((r) => r.startsWith("mutation_before_gate")));
+});
+
+test("no mutation tools leaves mutationToolsUsed empty and does not fail on that axis", () => {
+  const gate = evaluatePivotCheckGate(input());
+  assert.deepEqual(gate.mutationToolsUsed, []);
+  assert.ok(!gate.failReasons.some((r) => r.startsWith("mutation_before_gate")));
+});
+
 test("editing a file during the inspect-only phase is a gate violation", () => {
   const gate = evaluatePivotCheckGate(input({ editedFiles: ["lib/a.py"] }));
   assert.equal(gate.pivotCheckGatePassed, false);

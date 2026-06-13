@@ -73,6 +73,12 @@ export interface ConditionMetrics {
   readonly hardGateFailReasons?: readonly string[] | null;
   // Whether Docker flipped resolved on the phase-2 solve (null until evaluated).
   readonly hardGatePhase2Resolved?: boolean | null;
+  // Phase-1 tool policy ("read-only" | "full"), whether mutation tools were
+  // allowed in Phase 1, and any denied mutation tools that still appeared in the
+  // Phase-1 telemetry. Null on a normal single-shot run.
+  readonly phase1ToolPolicy?: string | null;
+  readonly phase1MutationToolsAllowed?: boolean | null;
+  readonly phase1DeniedMutationToolAttempted?: readonly string[] | null;
 }
 
 // Context-to-action enforcement telemetry for one run: did the agent emit the
@@ -182,6 +188,10 @@ export interface ProductV2CaseAnalysis {
   readonly productHardGateStatus: string | null;
   readonly productGateBlocked: boolean;
   readonly hardGateOutcome: string | null;
+  // Phase-1 read-only tool policy signals (null on a normal single-shot run).
+  readonly phase1ToolPolicy: string | null;
+  readonly phase1MutationToolsAllowed: boolean | null;
+  readonly phase1DeniedMutationToolAttempted: readonly string[];
   // Strict-AND per-case PASS (see classifyCasePass).
   readonly pass: boolean;
   // Why the case did not pass (empty when it passed).
@@ -348,6 +358,9 @@ export function analyzeProductV2Case(record: ProductV2CaseRecord): ProductV2Case
     productHardGateStatus,
     productGateBlocked,
     hardGateOutcome,
+    phase1ToolPolicy: record.productV2.phase1ToolPolicy ?? null,
+    phase1MutationToolsAllowed: record.productV2.phase1MutationToolsAllowed ?? null,
+    phase1DeniedMutationToolAttempted: record.productV2.phase1DeniedMutationToolAttempted ?? [],
     pass,
     failedCriteria,
   };
@@ -616,6 +629,13 @@ export function renderMarkdown(report: ProductV2TurnReductionReport): string {
     // gate_failed run is phrased as an enforcement BLOCK, not a failed patch.
     if (c.productHardGateStatus !== null) {
       lines.push(`- Hard gate [${c.productHardGateStatus}]: ${c.hardGateOutcome ?? "n/a"}`);
+      if (c.phase1ToolPolicy !== null) {
+        const denied = c.phase1DeniedMutationToolAttempted;
+        lines.push(
+          `- Phase-1 tool policy: ${c.phase1ToolPolicy} (mutation tools allowed=${fmtBool(c.phase1MutationToolsAllowed)}; `
+            + `denied-but-attempted=${denied.length === 0 ? "none" : denied.join(", ")})`,
+        );
+      }
     }
     lines.push(
       `- Read ${fmtNum(c.priorCounts.available ? c.priorCounts.read : null)}→${fmtNum(c.productCounts.available ? c.productCounts.read : null)}, ` +
@@ -848,6 +868,11 @@ async function loadConditionMetrics(
       ? (m.pivotCheckGateFailReasons as unknown[]).filter((r): r is string => typeof r === "string")
       : null,
     hardGatePhase2Resolved: typeof m.phase2Resolved === "boolean" ? m.phase2Resolved : null,
+    phase1ToolPolicy: asString(m.phase1ToolPolicy),
+    phase1MutationToolsAllowed: typeof m.phase1MutationToolsAllowed === "boolean" ? m.phase1MutationToolsAllowed : null,
+    phase1DeniedMutationToolAttempted: Array.isArray(m.phase1DeniedMutationToolAttempted)
+      ? (m.phase1DeniedMutationToolAttempted as unknown[]).filter((r): r is string => typeof r === "string")
+      : null,
   };
   return { metrics, matchedInstanceId: asString(r.instanceId) };
 }

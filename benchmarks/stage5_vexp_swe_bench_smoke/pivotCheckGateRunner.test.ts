@@ -41,12 +41,15 @@ function phase1(over: Partial<HardGatePhase1Outcome> = {}): HardGatePhase1Outcom
     assistantText: compliantText(),
     toolCalls: reads(["lib/a.py", "lib/b.py"]),
     editedFiles: [],
+    mutationToolNames: [],
     phase1Tokens: 1200,
     streamFile: "/out/_agent_phase1_pivot_check_stream.jsonl",
     promptFile: "/out/_vtrace_pivot_check_preflight.md",
     ...over,
   };
 }
+
+const READONLY_DENIED = ["Edit", "MultiEdit", "Write", "NotebookEdit", "Bash"];
 
 function phase2(over: Partial<HardGatePhase2Outcome> = {}): HardGatePhase2Outcome {
   return {
@@ -60,7 +63,11 @@ function phase2(over: Partial<HardGatePhase2Outcome> = {}): HardGatePhase2Outcom
 }
 
 // A spy harness: records whether each phase ran and what Phase 2 received.
-function spyDeps(p1: HardGatePhase1Outcome, p2: HardGatePhase2Outcome = phase2()) {
+function spyDeps(
+  p1: HardGatePhase1Outcome,
+  p2: HardGatePhase2Outcome = phase2(),
+  extra: { phase1Only?: boolean } = {},
+) {
   const calls = { phase1Ran: false, phase2Ran: false, approvedSummary: null as string | null };
   return {
     calls,
@@ -68,6 +75,9 @@ function spyDeps(p1: HardGatePhase1Outcome, p2: HardGatePhase2Outcome = phase2()
       pivots: PIVOTS,
       neighborhoodExcerptCount: 3,
       neighborhoodIdentifiers: ["lib/c.py"],
+      phase1ToolPolicy: "read-only" as const,
+      phase1DisallowedTools: READONLY_DENIED,
+      phase1Only: extra.phase1Only,
       runPhase1: async () => {
         calls.phase1Ran = true;
         return p1;
@@ -160,6 +170,59 @@ test("the default Stage 5 run path is unchanged (hard gate is opt-in)", () => {
   const hard = parseArgs([...base, "--pivot-check-gate", "hard"]);
   assert.equal(hard.pivotCheckGate, "hard");
   assert.throws(() => parseArgs([...base, "--pivot-check-gate", "bogus"]), /Invalid --pivot-check-gate/);
+});
+
+test("Phase 1 runs under a read-only tool policy recorded in the meta", () => {
+  // The deps carry the read-only policy + denied tools; the meta surfaces them.
+  const { deps } = spyDeps(phase1());
+  return orchestrateHardGate(deps).then((result) => {
+    const meta = hardGateMetaFields(result);
+    assert.equal(meta.phase1ToolPolicy, "read-only");
+    assert.equal(meta.phase1MutationToolsAllowed, false);
+    assert.deepEqual(result.phase1DisallowedTools, READONLY_DENIED);
+    // Edit/Write/MultiEdit are in the denied set handed to Phase 1.
+    for (const t of ["Edit", "Write", "MultiEdit"]) assert.ok(result.phase1DisallowedTools.includes(t));
+  });
+});
+
+test("a mutation tool appearing in Phase-1 telemetry fails the gate (mutation_before_gate)", async () => {
+  // The read-only deny-list should prevent this, but if a mutation tool slips
+  // through, the gate must catch it and skip Phase 2.
+  const { calls, deps } = spyDeps(
+    phase1({ toolCalls: [...reads(["lib/a.py", "lib/b.py"]), { tool: "Edit", target: "lib/a.py" }], mutationToolNames: ["Edit"] }),
+  );
+  const result = await orchestrateHardGate(deps);
+  assert.equal(result.status, "gate_failed");
+  assert.equal(calls.phase2Ran, false);
+  assert.ok(result.gate.failReasons.some((r) => r.startsWith("mutation_before_gate")));
+  const meta = hardGateMetaFields(result);
+  assert.deepEqual(meta.phase1DeniedMutationToolAttempted, ["Edit"]);
+});
+
+test("Phase 2 still receives the full solve config (no denied tools)", () => {
+  // The orchestrator passes ONLY the approved summary to runPhase2 — it never
+  // hands Phase 2 a deny-list, so the solve keeps the full tool-set. The read-only
+  // policy lives solely on the Phase-1 side of the deps.
+  const { deps } = spyDeps(phase1());
+  assert.equal(deps.phase1ToolPolicy, "read-only");
+  // runPhase2's signature takes only the summary string — there is no tool-policy arg.
+  assert.equal(deps.runPhase2.length, 1);
+});
+
+test("phase1-only mode passes the gate but never starts Phase 2", async () => {
+  const { calls, deps } = spyDeps(phase1(), phase2(), { phase1Only: true });
+  const result = await orchestrateHardGate(deps);
+  assert.equal(result.gate.pivotCheckGatePassed, true);
+  assert.equal(result.status, "gate_passed_phase1_only");
+  assert.equal(result.phase2Started, false);
+  assert.equal(calls.phase2Ran, false); // Phase 2 must not run in phase1-only mode
+  assert.equal(result.phase2SkippedReason, "phase1_only_mode");
+  // The approved summary is still built as evidence the gate would have passed.
+  assert.match(result.approvedChecklistSummary ?? "", /APPROVED_PIVOT_CHECK/);
+  assert.match(
+    describeHardGateOutcome({ pivotCheckGateStatus: result.status }),
+    /read-only preflight PASSED/,
+  );
 });
 
 test("the report phrases a gate_failed run as an enforcement block, not a failed patch", () => {
