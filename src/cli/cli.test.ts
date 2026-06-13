@@ -1203,6 +1203,75 @@ test("capsule v2 --pivot-neighborhood human output leads with an inspect-first b
   });
 });
 
+test("run-pipeline --capsule-engine v2 emits the v2 section and records effective=v2", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["init", repoRoot]);
+
+    const result = await runCli([
+      "run-pipeline", repoRoot,
+      "modify createSession in SessionManager to accept a label",
+      "--capsule-engine", "v2", "--capsule-intent", "modify",
+    ]);
+    assert.equal(result.exitCode, 0);
+
+    const output = JSON.parse(result.stdout);
+    assert.equal(output.contextEngine, "v2");
+    assert.equal(output.capsuleV2.engine, "v2");
+    assert.equal(output.capsuleEngine.requested, "v2");
+    assert.equal(output.capsuleEngine.effective, "v2");
+    assert.equal(output.capsuleEngine.fallbackReason, null);
+    // Same shared inspect-first projection the MCP/Stage-5 paths use.
+    assert.equal(output.capsuleEngine.compactInspectFirst, true);
+    assert.notEqual(output.inspectFirst, null);
+  });
+});
+
+test("run-pipeline --capsule-engine v1 and legacy stay on v1 but record the request", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["init", repoRoot]);
+
+    for (const requested of ["v1", "legacy"]) {
+      const result = await runCli([
+        "run-pipeline", repoRoot, "Session", "--capsule-engine", requested,
+      ]);
+      assert.equal(result.exitCode, 0);
+      const output = JSON.parse(result.stdout);
+      assert.equal(output.contextEngine, undefined);
+      assert.equal(output.capsuleV2, undefined);
+      assert.equal(output.capsuleEngine.requested, requested);
+      assert.equal(output.capsuleEngine.effective, "v1");
+      assert.equal(output.capsuleEngine.fallbackReason, null);
+      assert.equal(output.capsuleEngine.compactInspectFirst, false);
+    }
+  });
+});
+
+test("run-pipeline default records effective=v1 and rejects an unknown engine", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["init", repoRoot]);
+
+    const def = await runCli(["run-pipeline", repoRoot, "Session"]);
+    assert.equal(def.exitCode, 0);
+    const output = JSON.parse(def.stdout);
+    assert.deepEqual(output.capsuleEngine, {
+      requested: "default",
+      effective: "v1",
+      fallbackReason: null,
+      compactInspectFirst: false,
+    });
+
+    // An unrecognized engine is a usage error, not a silent downgrade.
+    const bogus = await runCli([
+      "run-pipeline", repoRoot, "Session", "--capsule-engine", "v9",
+    ]);
+    assert.notEqual(bogus.exitCode, 0);
+    assert.match(bogus.stderr + bogus.stdout, /capsule-engine must be one of/);
+  });
+});
+
 test("capsule --mode micro --json returns a skip directive (not empty context) when no pivot is recovered", async () => {
   await withFixture(async ({ repoRoot }) => {
     await writeCapsuleFixtureRepo(repoRoot);

@@ -21,6 +21,14 @@ import {
 } from "../capsuleV2/productAdapter";
 import { CapsuleIntent, parseCapsuleIntent } from "../capsuleV2/types";
 import {
+  parseRequestedCapsuleEngine,
+  requestWantsCapsuleV2,
+  v1EngineSelection,
+  v2EngineSelection,
+  type CapsuleEngineSelection,
+} from "../capsuleV2/engineSelection";
+import { buildInspectFirst, type InspectFirst } from "../runPipeline/inspectFirst";
+import {
   buildContextAccounting,
   runPipelineOutputFilePathGroups,
   type ContextAccounting,
@@ -7004,6 +7012,49 @@ const PIVOT_NEIGHBORHOOD_SCHEMA: McpSchemaProperty = {
   ),
 };
 
+// Resolved capsule-engine selection — emitted on every single-repo product
+// response so the requested vs effective engine (and any v2 -> v1 fallback) is
+// auditable, ending the split-brain where one surface saw v1 and another v2.
+const CAPSULE_ENGINE_SELECTION_SCHEMA = objectProperty(
+  "Resolved capsule-engine selection: what the caller requested, which engine actually produced the context, and (only on a genuine v2 build failure) the fallback reason.",
+  {
+    requested: stringProperty("Requested engine: default | v1 | v2 | legacy. Unrecognized/omitted normalizes to default."),
+    effective: stringProperty("Engine that actually produced the context: v1 | v2 | none."),
+    fallbackReason: {
+      type: ["string", "null"],
+      description: "Non-null only when a v2 request fell back to v1 because the v2 build threw. Workspace/index-preparation failures and no_context are never represented here.",
+    },
+    compactInspectFirst: booleanProperty("True when v2 compact inspect-first guidance was produced for this response."),
+  },
+  ["requested", "effective", "fallbackReason", "compactInspectFirst"],
+);
+
+const INSPECT_FIRST_ITEM_SCHEMA = objectProperty(
+  "One named inspection target with a short, deterministic explanation.",
+  {
+    path: stringProperty("Repo-relative file path."),
+    symbol: { type: ["string", "null"], description: "Local symbol name, when known." },
+    why: stringProperty("Short deterministic reason this target is worth inspecting first."),
+    isSurface: booleanProperty("True when this is the traceback/error surface rather than the likely edit site."),
+  },
+  ["path", "symbol", "why", "isSurface"],
+);
+
+// Compact inspect-first guidance (guidance, not enforcement) projected from the
+// Capsule v2 pivots. Same shared projection the Stage 5 injected path consumes.
+const INSPECT_FIRST_SCHEMA: McpSchemaProperty = {
+  type: ["object", "null"],
+  description: "Compact inspect-first guidance projected from the Capsule v2 pivots (guidance, not enforcement). Present only when capsule_engine=v2; null when the v2 result has no actionable pivot.",
+  properties: {
+    confidence: stringProperty("How specific the lead signal is: high | medium | low."),
+    likelyFirst: INSPECT_FIRST_ITEM_SCHEMA,
+    related: arrayProperty("At most two related-context items.", INSPECT_FIRST_ITEM_SCHEMA),
+    avoidFirst: { type: ["string", "null"], description: "At most one avoid-first hint, or null." },
+  },
+  required: ["confidence", "likelyFirst", "related", "avoidFirst"],
+  additionalProperties: false,
+};
+
 type RunPipelineMcpOutput = ReturnType<typeof formatRunPipelineOrchestrationOutput> & {
   savedObservation: {
     observation: ReturnType<typeof formatObservation>;
@@ -7096,6 +7147,8 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             ],
           ),
           contextEngine: stringProperty("Context engine discriminator. `v2` only when the caller opted into Capsule v2; absent on the default v1-only path."),
+          capsuleEngine: CAPSULE_ENGINE_SELECTION_SCHEMA,
+          inspectFirst: INSPECT_FIRST_SCHEMA,
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
           capsuleV2: CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA,
           capsuleV2ManifestId: {
@@ -7316,9 +7369,14 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             includeMemory,
             includeTests,
             includeFileContent,
+            // Pass the raw requested engine string through always so the
+            // orchestration records requested=default|v1|v2|legacy faithfully
+            // (not just on the v2 path). The orchestrator normalizes it.
+            ...((engineSnake ?? engineCamel) === undefined
+              ? {}
+              : { capsuleEngine: engineSnake ?? engineCamel }),
             ...(useCapsuleV2
               ? {
-                capsuleEngine: CAPSULE_ENGINE_V2,
                 capsuleIntent: capsuleV2Intent,
                 ...(capsuleBudgetTokens === undefined ? {} : { capsuleBudgetTokens }),
               }
@@ -7654,6 +7712,8 @@ interface CapsuleV2ToolOutput {
   query: string;
   intent: string;
   engine: typeof CAPSULE_ENGINE_V2;
+  capsuleEngine: CapsuleEngineSelection;
+  inspectFirst: InspectFirst | null;
   capsuleManifestId: string | null;
   capsuleV2: CapsuleV2ProductResponse;
   accounting?: ContextAccounting;
@@ -7711,6 +7771,8 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           query: stringProperty("Original query text."),
           intent: stringProperty("Selected intent."),
           engine: stringProperty("Capsule engine for this response. `v2` only when the caller opted into Capsule v2; absent on the default v1 path."),
+          capsuleEngine: CAPSULE_ENGINE_SELECTION_SCHEMA,
+          inspectFirst: INSPECT_FIRST_SCHEMA,
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
           classification: CLASSIFICATION_SCHEMA,
           routingProfile: ROUTING_PROFILE_SCHEMA,
@@ -7799,7 +7861,11 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       if (engineCamel !== undefined && typeof engineCamel !== "string") {
         return engineCamel;
       }
-      const useCapsuleV2 = (engineSnake ?? engineCamel)?.toLowerCase() === CAPSULE_ENGINE_V2;
+      // Normalize through the shared selection model so explicit v1/legacy are
+      // recorded distinctly from an unset default, and v2 is the only value that
+      // engages the Capsule v2 engine.
+      const requestedCapsuleEngine = parseRequestedCapsuleEngine(engineSnake ?? engineCamel);
+      const useCapsuleV2 = requestWantsCapsuleV2(requestedCapsuleEngine);
 
       const capsuleIntentRaw = parseOptionalStringField(McpToolId.GetContextCapsule, input, "capsule_intent");
       if (capsuleIntentRaw !== undefined && typeof capsuleIntentRaw !== "string") {
@@ -7870,39 +7936,58 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           // same way the v1 path does (so check_capsule_staleness still resolves).
           // Auto-capture is intentionally deferred for v2 — the observation capture
           // is keyed on the v1 capsule structure; see docs/mcp_tools.md.
+          //
+          // A genuine v2 query/render failure falls back to the v1 pipeline below
+          // and records the reason. The DB is already open and indexed at this
+          // point (withReadyRepoDb prepared it), so workspace/index-preparation
+          // failures happen before this try and are never masked as a fallback.
+          let engineFallbackReason: string | null = null;
           if (useCapsuleV2) {
-            const result = buildCapsuleV2({
-              db,
-              repoRoot: binding.repoRoot,
-              task: query,
-              intent: capsuleV2Intent,
-              maxTokens: capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
-            });
-            const capsuleV2 = toCapsuleV2ProductResponse(result);
-            const capsuleManifestId = persistCapsuleV2ManifestBestEffort(
-              db,
-              query,
-              capsuleV2ToManifestItemFields(result),
-              sourceRunId,
-            );
-            const output: CapsuleV2ToolOutput = {
-              query,
-              intent: capsuleV2.intent,
-              engine: CAPSULE_ENGINE_V2,
-              capsuleManifestId,
-              capsuleV2,
-            };
-            // Deterministic, best-effort accounting over the emitted v2 response.
-            const accounting = await buildContextAccountingBestEffort({
-              repoRoot: binding.repoRoot,
-              emittedValue: output,
-              filePathGroups: [capsuleV2.pivots, capsuleV2.support],
-              latencyMs: performance.now() - accountingStartedAt,
-            });
-            if (accounting !== undefined) {
-              output.accounting = accounting;
+            try {
+              const result = buildCapsuleV2({
+                db,
+                repoRoot: binding.repoRoot,
+                task: query,
+                intent: capsuleV2Intent,
+                maxTokens: capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
+              });
+              const capsuleV2 = toCapsuleV2ProductResponse(result);
+              const capsuleManifestId = persistCapsuleV2ManifestBestEffort(
+                db,
+                query,
+                capsuleV2ToManifestItemFields(result),
+                sourceRunId,
+              );
+              // Compact inspect-first guidance — the same shared projection the
+              // run_pipeline v2 section and the Stage 5 injected path use. Null
+              // when the v2 result has no actionable pivot (e.g. no_context).
+              const inspectFirst = buildInspectFirst(capsuleV2);
+              const output: CapsuleV2ToolOutput = {
+                query,
+                intent: capsuleV2.intent,
+                engine: CAPSULE_ENGINE_V2,
+                capsuleEngine: v2EngineSelection(requestedCapsuleEngine, inspectFirst !== null),
+                inspectFirst,
+                capsuleManifestId,
+                capsuleV2,
+              };
+              // Deterministic, best-effort accounting over the emitted v2 response.
+              const accounting = await buildContextAccountingBestEffort({
+                repoRoot: binding.repoRoot,
+                emittedValue: output,
+                filePathGroups: [capsuleV2.pivots, capsuleV2.support],
+                latencyMs: performance.now() - accountingStartedAt,
+              });
+              if (accounting !== undefined) {
+                output.accounting = accounting;
+              }
+              return { ok: true, output };
+            } catch (error) {
+              // Fall through to the v1 pipeline, recording why v2 did not produce
+              // the context. no_context is a normal v2 return value, not a throw,
+              // so it never reaches here and never triggers a fallback.
+              engineFallbackReason = `v2_build_failed: ${error instanceof Error ? error.message : String(error)}`;
             }
-            return { ok: true, output };
           }
 
           const pipeline = runIntentAwareCapsulePipeline(db, binding.repoRoot, {
@@ -7933,7 +8018,14 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             pipeline.capsule,
             sourceRunId,
           );
-          const v1Output = formatContextCapsulePipelineOutput(pipeline, capsuleManifestId);
+          // Record the engine selection on the v1 path too — `default`/`v1`/
+          // `legacy`, or a v2 request that fell back here with a reason. inspectFirst
+          // is null on v1 (it is a v2-only projection).
+          const v1Output = {
+            ...formatContextCapsulePipelineOutput(pipeline, capsuleManifestId),
+            capsuleEngine: v1EngineSelection(requestedCapsuleEngine, engineFallbackReason),
+            inspectFirst: null,
+          };
           // Deterministic, best-effort accounting over the emitted v1 capsule.
           const accounting = await buildContextAccountingBestEffort({
             repoRoot: binding.repoRoot,

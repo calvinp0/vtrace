@@ -437,3 +437,109 @@ test("capsuleEngine=v2 orchestration is deterministic across repeated runs", asy
     );
   });
 });
+
+// --- Unified capsule-engine selection (requested / effective / fallback) ---
+
+test("default path records requested=default, effective=v1 with no fallback", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const out = runFormatted(db, repoRoot, { query: "modify base function", intent: "modify" });
+    assert.deepEqual((out as Record<string, unknown>).capsuleEngine, {
+      requested: "default",
+      effective: "v1",
+      fallbackReason: null,
+      compactInspectFirst: false,
+    });
+    // No v2 discriminator and no inspect-first on the default path.
+    assert.equal((out as Record<string, unknown>).contextEngine, undefined);
+    assert.equal((out as Record<string, unknown>).inspectFirst, undefined);
+  });
+});
+
+test("explicit v1 and legacy stay on v1 but are recorded distinctly", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    for (const requested of ["v1", "legacy"] as const) {
+      const out = runFormatted(db, repoRoot, {
+        query: "modify base function",
+        intent: "modify",
+        capsuleEngine: requested,
+      });
+      const engine = (out as Record<string, unknown>).capsuleEngine as {
+        requested: string;
+        effective: string;
+        fallbackReason: string | null;
+        compactInspectFirst: boolean;
+      };
+      assert.equal(engine.requested, requested);
+      assert.equal(engine.effective, "v1");
+      assert.equal(engine.fallbackReason, null);
+      assert.equal(engine.compactInspectFirst, false);
+      // Explicit v1/legacy never builds the v2 section.
+      assert.equal((out as Record<string, unknown>).contextEngine, undefined);
+      assert.equal((out as Record<string, unknown>).capsuleV2, undefined);
+    }
+  });
+});
+
+test("capsuleEngine=v2 records effective=v2 and emits compact inspect-first guidance", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const out = runFormatted(db, repoRoot, {
+      query: "base in src/base.ts#L1-L3 returns wrong value",
+      intent: "debug",
+      capsuleEngine: "v2",
+    });
+    const engine = (out as Record<string, unknown>).capsuleEngine as {
+      requested: string;
+      effective: string;
+      fallbackReason: string | null;
+      compactInspectFirst: boolean;
+    };
+    assert.equal(engine.requested, "v2");
+    assert.equal(engine.effective, "v2");
+    assert.equal(engine.fallbackReason, null);
+
+    // When v2 found an actionable pivot, the compact inspect-first block is
+    // emitted and compactInspectFirst tracks it.
+    const inspectFirst = (out as Record<string, unknown>).inspectFirst as {
+      confidence: string;
+      likelyFirst: { path: string };
+    } | null;
+    if (inspectFirst !== null) {
+      assert.equal(engine.compactInspectFirst, true);
+      assert.ok(["high", "medium", "low"].includes(inspectFirst.confidence));
+      assert.ok(typeof inspectFirst.likelyFirst.path === "string");
+    } else {
+      assert.equal(engine.compactInspectFirst, false);
+    }
+  });
+});
+
+test("a genuine v2 build failure falls back to v1 with a fallback reason, preserving v1 sections", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const orchestration = runPipelineOrchestrator(
+      db,
+      repoRoot,
+      { query: "modify base function to accept a label", intent: "modify", capsuleEngine: "v2" },
+      {
+        capsuleV2Builder: () => {
+          throw new Error("synthetic v2 render failure");
+        },
+      },
+    );
+
+    // Fell back to v1, recorded the reason, and emitted no v2 section.
+    assert.equal(orchestration.capsuleEngine.requested, "v2");
+    assert.equal(orchestration.capsuleEngine.effective, "v1");
+    assert.equal(orchestration.capsuleEngine.compactInspectFirst, false);
+    assert.ok(orchestration.capsuleEngine.fallbackReason?.startsWith("v2_build_failed: "));
+    assert.equal(orchestration.capsuleV2, null);
+    assert.equal(orchestration.inspectFirst, null);
+
+    // The v1 sections still assembled — the fallback did not drop context.
+    assert.ok(orchestration.context.included || orchestration.context.skipReason !== null);
+
+    const out = formatRunPipelineOrchestrationOutput(orchestration);
+    assert.equal((out as Record<string, unknown>).contextEngine, undefined);
+    assert.equal((out as Record<string, unknown>).capsuleEngine.effective, "v1");
+    assert.ok((out as Record<string, unknown>).capsuleEngine.fallbackReason.startsWith("v2_build_failed: "));
+  });
+});

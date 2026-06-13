@@ -195,6 +195,12 @@ export function formatRunPipelineOrchestrationOutput(
       // around the top Capsule v2 pivots. Always an array on the v2 path (may be
       // empty when no pivot symbol identity resolved); absent on the v1 path.
       pivotNeighborhood: structuredClone(orchestration.pivotNeighborhood ?? []),
+      // Compact, action-oriented inspect-first guidance projected from the v2
+      // pivots — the same shared projection the Stage 5 injected path uses. Null
+      // when the v2 result has no actionable pivot; absent on the v1 path.
+      inspectFirst: orchestration.inspectFirst === null
+        ? null
+        : structuredClone(orchestration.inspectFirst),
     };
 
   return {
@@ -205,6 +211,15 @@ export function formatRunPipelineOrchestrationOutput(
       presetRequested: orchestration.request.intentRequested,
     },
     ...capsuleV2Fields,
+    // Always emitted so every run records which context engine ran. The default
+    // and explicit-v1/legacy paths report effective=v1; the v2 path reports
+    // effective=v2; a v2 build failure reports effective=v1 with a fallbackReason.
+    capsuleEngine: {
+      requested: orchestration.capsuleEngine.requested,
+      effective: orchestration.capsuleEngine.effective,
+      fallbackReason: orchestration.capsuleEngine.fallbackReason,
+      compactInspectFirst: orchestration.capsuleEngine.compactInspectFirst,
+    },
     intent: {
       requestedPreset: orchestration.intentDecision.requested,
       selectedPreset: orchestration.intentDecision.selected,

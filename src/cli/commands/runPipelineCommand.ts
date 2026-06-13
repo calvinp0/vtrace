@@ -12,7 +12,18 @@ import {
   buildContextAccounting,
   runPipelineOutputFilePathGroups,
 } from "../../metrics/contextAccounting";
-import { RUN_PIPELINE_CAPSULE_ENGINE_V2 } from "../../runPipeline/runPipelineOrchestrator";
+import { CAPSULE_ENGINE } from "../../capsuleV2/engineSelection";
+
+// Accepted `--capsule-engine` values, normalized lowercase. The orchestrator
+// normalizes the string through the shared selection model; only `v2` engages
+// Capsule v2, while `v1`/`legacy`/`default` keep the v1 path but are recorded
+// distinctly in the emitted `capsuleEngine.requested`.
+const ACCEPTED_CAPSULE_ENGINES: readonly string[] = [
+  CAPSULE_ENGINE.Default,
+  CAPSULE_ENGINE.V1,
+  CAPSULE_ENGINE.V2,
+  CAPSULE_ENGINE.Legacy,
+];
 import type { CliOptions, CommandResult } from "../types";
 import { failure, resolveOptions, resolveRepoCommandPaths, success } from "./helpers";
 
@@ -98,7 +109,7 @@ export async function runRunPipelineCommand(
   }
 }
 
-const USAGE = "Usage: run-pipeline <repo> <query> [--max-results N] [--max-budget-characters N] [--intent <auto|explore|debug|modify|refactor>] [--session-id ID] [--include-memory] [--capsule-engine v2] [--capsule-intent <auto|debug|refactor|modify|explain|impact|test-failure>] [--capsule-budget-tokens N]";
+const USAGE = "Usage: run-pipeline <repo> <query> [--max-results N] [--max-budget-characters N] [--intent <auto|explore|debug|modify|refactor>] [--session-id ID] [--include-memory] [--capsule-engine <default|v1|v2|legacy>] [--capsule-intent <auto|debug|refactor|modify|explain|impact|test-failure>] [--capsule-budget-tokens N]";
 
 function parseArgs(args: readonly string[]): ParsedRunPipelineArgs {
   const repo = args[0]!;
@@ -139,10 +150,11 @@ function parseArgs(args: readonly string[]): ParsedRunPipelineArgs {
       includeMemory = true;
     } else if (token === "--capsule-engine") {
       const value = args[++cursor];
-      if (value === undefined || value.toLowerCase() !== RUN_PIPELINE_CAPSULE_ENGINE_V2) {
-        throw new Error(`--capsule-engine only supports '${RUN_PIPELINE_CAPSULE_ENGINE_V2}'`);
+      const normalized = value?.toLowerCase();
+      if (normalized === undefined || !ACCEPTED_CAPSULE_ENGINES.includes(normalized)) {
+        throw new Error(`--capsule-engine must be one of: ${ACCEPTED_CAPSULE_ENGINES.join(", ")}`);
       }
-      capsuleEngine = value.toLowerCase();
+      capsuleEngine = normalized;
     } else if (token === "--capsule-intent") {
       const value = args[++cursor];
       const parsedIntent = value === undefined ? undefined : parseCapsuleIntent(value);

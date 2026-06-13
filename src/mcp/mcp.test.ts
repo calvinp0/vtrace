@@ -825,10 +825,25 @@ test("get_context_capsule is a thin visible wrapper over the existing capsule pi
     // its id (plus the additive, estimated `accounting` block); build_capsule
     // does neither. Aside from those fields the visible tool is still a thin
     // wrapper over the same pipeline output.
-    const { capsuleManifestId, accounting, ...visibleWithoutExtras } = visible.result.output;
+    const {
+      capsuleManifestId,
+      accounting,
+      capsuleEngine,
+      inspectFirst,
+      ...visibleWithoutExtras
+    } = visible.result.output;
     assert.deepEqual(visibleWithoutExtras, legacy.result.output);
     assert.equal(typeof capsuleManifestId, "string");
     assert.equal((capsuleManifestId as string).length > 0, true);
+    // The visible product tool also records the engine selection on the default
+    // v1 path; build_capsule (legacy) does not.
+    assert.deepEqual(capsuleEngine, {
+      requested: "default",
+      effective: "v1",
+      fallbackReason: null,
+      compactInspectFirst: false,
+    });
+    assert.equal(inspectFirst, null);
     // Accounting is present on the visible product tool and well-formed.
     assert.notEqual(accounting, undefined);
     assert.equal(accounting.method, "chars_div_4");
@@ -1034,6 +1049,99 @@ test("get_context_capsule accepts the camelCase capsuleEngine alias for v2", asy
   });
 });
 
+test("get_context_capsule explicit v2 records effectiveCapsuleEngine=v2 and inspect-first", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-capsule-v2-selection",
+      toolId: McpToolId.GetContextCapsule,
+      input: {
+        query: "modify createSession in SessionManager to accept a label",
+        capsule_engine: "v2",
+        capsule_intent: "modify",
+      },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    assert.equal(output.engine, "v2");
+    assert.equal(output.capsuleEngine.requested, "v2");
+    assert.equal(output.capsuleEngine.effective, "v2");
+    assert.equal(output.capsuleEngine.fallbackReason, null);
+    // The fixture has at least one pivot, so inspect-first is produced and tracked.
+    assert.notEqual(output.inspectFirst, null);
+    assert.equal(output.capsuleEngine.compactInspectFirst, true);
+    assert.ok(["high", "medium", "low"].includes(output.inspectFirst.confidence));
+    assert.equal(typeof output.inspectFirst.likelyFirst.path, "string");
+    assertOutputConformsToToolSchema(McpToolId.GetContextCapsule, output);
+  });
+});
+
+test("get_context_capsule explicit v1 and legacy resolve to effectiveCapsuleEngine=v1", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+
+    for (const requested of ["v1", "legacy"] as const) {
+      const response = await server.handleRequest({
+        schema: MCP_SERVER_SCHEMA,
+        requestId: `req-capsule-${requested}`,
+        toolId: McpToolId.GetContextCapsule,
+        input: { query: "Session", capsule_engine: requested },
+      });
+
+      assert.equal(response.result.ok, true);
+      const output = response.result.output;
+      // Explicit v1/legacy stays on the backward-compatible v1 shape (no `engine`
+      // discriminator, the flat capsule) but records the request distinctly.
+      assert.equal(output.engine, undefined);
+      assert.notEqual(output.capsule, undefined);
+      assert.equal(output.capsuleEngine.requested, requested);
+      assert.equal(output.capsuleEngine.effective, "v1");
+      assert.equal(output.capsuleEngine.fallbackReason, null);
+      assert.equal(output.capsuleEngine.compactInspectFirst, false);
+      assert.equal(output.inspectFirst, null);
+      assertOutputConformsToToolSchema(McpToolId.GetContextCapsule, output);
+    }
+  });
+});
+
+test("get_context_capsule v2 no_context stays v2 and does not trigger a fallback", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-capsule-v2-nocontext",
+      toolId: McpToolId.GetContextCapsule,
+      input: {
+        // A query with no plausible pivot in the fixture, to exercise the v2
+        // no_context path. The invariant holds regardless of what the engine finds.
+        query: "zzqqx nonexistent unrelated gibberish symbol wXyZ",
+        capsule_engine: "v2",
+      },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    // no_context is a real v2 result, never a fallback: effective stays v2 and
+    // there is no fallback reason.
+    assert.equal(output.capsuleEngine.effective, "v2");
+    assert.equal(output.capsuleEngine.fallbackReason, null);
+    if (output.capsuleV2.actualMode === "no_context") {
+      assert.equal(typeof output.capsuleV2.reason, "string");
+      assert.equal(output.capsuleEngine.compactInspectFirst, false);
+      assert.equal(output.inspectFirst, null);
+    }
+    assertOutputConformsToToolSchema(McpToolId.GetContextCapsule, output);
+  });
+});
+
 test("get_context_capsule v2 persists a manifest that check_capsule_staleness resolves", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);
@@ -1160,6 +1268,15 @@ test("run_pipeline capsule_engine=v2 returns a bounded Capsule v2 section and pr
     assert.equal(typeof output.capsuleV2ManifestId, "string");
     assert.equal((output.capsuleV2ManifestId as string).length > 0, true);
 
+    // The unified engine selection records requested/effective and compact
+    // inspect-first; the v2 section also carries the inspect-first guidance block.
+    assert.equal(output.capsuleEngine.requested, "v2");
+    assert.equal(output.capsuleEngine.effective, "v2");
+    assert.equal(output.capsuleEngine.fallbackReason, null);
+    assert.equal(output.capsuleEngine.compactInspectFirst, true);
+    assert.notEqual(output.inspectFirst, null);
+    assert.ok(["high", "medium", "low"].includes(output.inspectFirst.confidence));
+
     assertOutputConformsToToolSchema(McpToolId.RunPipeline, output);
   });
 });
@@ -1188,6 +1305,35 @@ test("get_code_context inherits capsule_engine=v2 by delegating to run_pipeline"
     assert.equal(output.contextEngine, "v2");
     assert.equal(output.capsuleV2.engine, "v2");
     assert.equal(output.capsuleV2.pivots.length >= 1, true);
+    // The v2 engine selection passes through the run_pipeline delegation intact.
+    assert.equal(output.capsuleEngine.requested, "v2");
+    assert.equal(output.capsuleEngine.effective, "v2");
+    assert.equal(output.capsuleEngine.compactInspectFirst, true);
+    assertOutputConformsToToolSchema(McpToolId.GetCodeContext, output);
+  });
+});
+
+test("get_code_context default delegation records effectiveCapsuleEngine=v1", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-get-code-context-default-engine",
+      toolId: McpToolId.GetCodeContext,
+      input: { query: "where is createSession" },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    assert.equal(output.contextEngine, undefined);
+    assert.deepEqual(output.capsuleEngine, {
+      requested: "default",
+      effective: "v1",
+      fallbackReason: null,
+      compactInspectFirst: false,
+    });
     assertOutputConformsToToolSchema(McpToolId.GetCodeContext, output);
   });
 });
@@ -1711,6 +1857,7 @@ test("run_pipeline vNext returns a compact orchestration result that differs mat
       Object.keys(pipeline.result.output).sort(),
       [
         "accounting",
+        "capsuleEngine",
         "context",
         "deferred",
         "diagnostics",
@@ -1725,6 +1872,14 @@ test("run_pipeline vNext returns a compact orchestration result that differs mat
         "taskSummary",
       ],
     );
+    // The engine selection is recorded on every run, including the default
+    // v1-only path, so the engine choice is never silent.
+    assert.deepEqual(pipeline.result.output.capsuleEngine, {
+      requested: "default",
+      effective: "v1",
+      fallbackReason: null,
+      compactInspectFirst: false,
+    });
     assert.equal(pipeline.result.output.schemaVersion, "run_pipeline.vnext/1");
     assert.equal("capsule" in pipeline.result.output, false);
     assert.equal("classification" in pipeline.result.output, false);
