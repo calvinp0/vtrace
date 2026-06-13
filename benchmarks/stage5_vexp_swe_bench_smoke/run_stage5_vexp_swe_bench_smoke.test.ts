@@ -1652,10 +1652,18 @@ test("classifyCapsuleV2Output appends the pivot-neighborhood block to injected c
   ];
   const inject = classifyCapsuleV2Output(result);
   assert.equal(inject.policyAction, "inject");
-  // The neighborhood header and the neighbor excerpt are present in the injected text.
+  // The compact, guidance-only inspect-first block leads the injected context.
+  assert.match(inject.context, /VTRACE inspect-first/);
+  assert.ok(
+    inject.context.indexOf("VTRACE inspect-first") < inject.context.indexOf("intent:"),
+    "inspect-first leads the injected context",
+  );
+  // The neighborhood header and the neighbor REFERENCE line are present...
   assert.match(inject.context, /Pivot neighborhood/);
   assert.match(inject.context, /caller: Query\.combine/);
-  assert.match(inject.context, /def combine/);
+  // ...but the excerpt BODY is no longer inlined (compacted; full body stays in
+  // the structured pivotNeighborhood data for reporting).
+  assert.doesNotMatch(inject.context, /def combine/);
 });
 
 test("classifyCapsuleV2Output omits the neighborhood block when none was emitted", () => {

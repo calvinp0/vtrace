@@ -45,6 +45,10 @@ import {
   renderPivotNeighborhoodsText,
 } from "../../runPipeline/pivotNeighborhood";
 import {
+  buildInspectFirst,
+  renderInspectFirstText,
+} from "../../runPipeline/inspectFirst";
+import {
   CapsuleIntent,
   parseCapsuleIntent,
 } from "../../capsuleV2/types";
@@ -141,17 +145,23 @@ export async function runCapsuleCommand(
         // it never fails the command. Reuses buildPivotNeighborhoods/sourceExcerpt;
         // does not touch retrieval or v2 ranking.
         if (parsed.pivotNeighborhood) {
-          const neighborhood = buildPivotNeighborhoods(
-            db,
-            repoRoot,
-            toCapsuleV2ProductResponse(result),
-          );
+          const product = toCapsuleV2ProductResponse(result);
+          const neighborhood = buildPivotNeighborhoods(db, repoRoot, product);
           if (json) {
+            // Full structured neighborhood (with excerpt bodies) is preserved for
+            // JSON/reporting; the human render below compacts it.
             return success(formatJson({ ...result, pivot_neighborhood: neighborhood }));
           }
+          // Compact, action-oriented inspect-first guidance at the top, then the
+          // human capsule, then the compact neighborhood reference list.
+          const inspectFirstText = renderInspectFirstText(buildInspectFirst(product, neighborhood));
           const human = renderCapsuleV2Human(result);
           const neighborhoodText = renderPivotNeighborhoodsText(neighborhood);
-          return success(neighborhoodText.length > 0 ? `${human}\n\n${neighborhoodText}` : human);
+          const composed = [inspectFirstText, human, neighborhoodText]
+            .map((part) => part.trim())
+            .filter((part) => part.length > 0)
+            .join("\n\n");
+          return success(composed);
         }
 
         return success(json ? formatJson(result) : renderCapsuleV2Human(result));

@@ -1180,6 +1180,29 @@ test("capsule v2 --pivot-neighborhood --json emits a bounded pivot_neighborhood 
   });
 });
 
+test("capsule v2 --pivot-neighborhood human output leads with an inspect-first block; v1/default does not", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeCapsuleFixtureRepo(repoRoot);
+    await runCli(["init", repoRoot]);
+
+    // Capsule v2 + neighborhood (human, no --json): the compact, guidance-only
+    // inspect-first block leads the injected context.
+    const v2 = await runCli([
+      "capsule", repoRoot, "createSession in src/session.ts#L4-L6 returns wrong value",
+      "--intent", "auto", "--budget", "8000", "--pivot-neighborhood",
+    ]);
+    assert.equal(v2.exitCode, 0);
+    assert.ok(v2.stdout.includes("VTRACE inspect-first"), "v2 human output carries the inspect-first block");
+    assert.ok(v2.stdout.includes("guidance, not enforcement"), "block is explicitly guidance, not enforcement");
+    assert.ok(v2.stdout.indexOf("VTRACE inspect-first") < v2.stdout.indexOf("intent:"), "inspect-first leads the context");
+
+    // v1/default path (legacy mode, no --intent/--budget): no inspect-first block.
+    const v1 = await runCli(["capsule", repoRoot, "createSession in src/session.ts returns wrong value"]);
+    assert.equal(v1.exitCode, 0);
+    assert.ok(!v1.stdout.includes("VTRACE inspect-first"), "v1/default path must not emit the inspect-first block");
+  });
+});
+
 test("capsule --mode micro --json returns a skip directive (not empty context) when no pivot is recovered", async () => {
   await withFixture(async ({ repoRoot }) => {
     await writeCapsuleFixtureRepo(repoRoot);

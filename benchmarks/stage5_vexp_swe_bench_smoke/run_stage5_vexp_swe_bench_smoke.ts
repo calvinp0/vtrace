@@ -45,10 +45,15 @@ import {
   DEFAULT_REPEATED_FILE_READ_LIMIT,
 } from "../../src/capsule/turnCountWaste";
 import { renderCapsuleV2Human } from "../../src/capsuleV2/renderHuman";
+import { toCapsuleV2ProductResponse } from "../../src/capsuleV2/productAdapter";
 import {
   renderPivotNeighborhoodsText,
   type PivotNeighborhoodContext,
 } from "../../src/runPipeline/pivotNeighborhood";
+import {
+  buildInspectFirst,
+  renderInspectFirstText,
+} from "../../src/runPipeline/inspectFirst";
 import { CapsuleV2Mode, type CapsuleV2Result } from "../../src/capsuleV2/types";
 import {
   type CapsuleV2ArtifactBundle,
@@ -3131,9 +3136,19 @@ export function classifyCapsuleV2Output(result: CapsuleV2Result): CapsuleClassif
   // ONLY way the neighborhood excerpts reach the agent — the injected context is
   // re-rendered here from the capsule result, not from run_pipeline.
   const neighborhood = readPivotNeighborhood(result);
+  // Compact, action-oriented guidance at the TOP of the injected context: the
+  // single most likely first file + at most two related items + one avoid-first
+  // hint. Guidance only (no checklist, no gate); built from the already-assembled
+  // v2 product response + neighborhood, never failing the run.
+  const inspectFirstText = renderInspectFirstText(
+    buildInspectFirst(toCapsuleV2ProductResponse(result), neighborhood),
+  );
   const neighborhoodText = renderPivotNeighborhoodsText(neighborhood);
   const rendered = renderCapsuleV2Human(result).trim();
-  const context = neighborhoodText.length > 0 ? `${rendered}\n\n${neighborhoodText}` : rendered;
+  const context = [inspectFirstText, rendered, neighborhoodText]
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+    .join("\n\n");
   if (context.length === 0) {
     return errorClassification("Capsule v2 returned no renderable context.");
   }

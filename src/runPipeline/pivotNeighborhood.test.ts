@@ -10,6 +10,8 @@ import type { CapsuleV2ProductResponse } from "../capsuleV2/productAdapter";
 import {
   PIVOT_NEIGHBORHOOD_DEFAULTS,
   buildPivotNeighborhoods,
+  renderPivotNeighborhoodsText,
+  type PivotNeighborhoodContext,
 } from "./pivotNeighborhood";
 
 // A minimal product response carrying only the fields buildPivotNeighborhoods
@@ -55,6 +57,35 @@ test("pivot neighborhood surfaces caller/importer excerpts for a resolved pivot"
       db.close();
     }
   });
+});
+
+test("renderPivotNeighborhoodsText is compact: reference lines only, no inlined excerpt bodies", () => {
+  const contexts: PivotNeighborhoodContext[] = [
+    {
+      pivot: { path: "src/a.ts", symbol: "a", fqName: "src/a.ts::a" },
+      excerpts: [
+        {
+          filePath: "src/caller.ts",
+          symbol: "caller",
+          fqName: "src/caller.ts::caller",
+          startLine: 4,
+          endLine: 9,
+          text: "function caller() {\n  return a();\n}",
+          reason: "caller",
+          truncated: false,
+        },
+      ],
+    },
+  ];
+
+  const text = renderPivotNeighborhoodsText(contexts);
+  // The compact render keeps the relationship + file:line pointer...
+  assert.ok(text.includes("caller: src/caller.ts::caller (src/caller.ts:4-9)"));
+  // ...but it must NOT dump the excerpt body or wrap it in a code fence.
+  assert.ok(!text.includes("```"), "compact render must not inline a code fence");
+  assert.ok(!text.includes("return a()"), "compact render must not inline the excerpt body");
+  // The full body still lives in the structured data the caller holds.
+  assert.equal(contexts[0]!.excerpts[0]!.text.includes("return a()"), true);
 });
 
 test("max pivots and max excerpts per pivot are enforced", async () => {

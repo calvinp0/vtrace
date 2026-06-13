@@ -115,12 +115,17 @@ export interface BuildPivotNeighborhoodsOptions {
 }
 
 /**
- * Render the pivot-neighborhood contexts as a compact, deterministic text block
- * suitable for inlining into injected agent context (the Stage 5 product-v2
- * capsule `.context`). Returns "" when no neighborhood carried excerpts. The
- * excerpts are already bounded by `buildPivotNeighborhoods`, so this never emits
- * a whole file; each excerpt is honestly labeled by its relationship reason and a
- * file:line range, never presented as an exact edge-site line.
+ * Render the pivot-neighborhood contexts as a COMPACT, deterministic reference
+ * list for inlining into injected agent context (the Stage 5 product-v2 capsule
+ * `.context`). Returns "" when no neighborhood carried excerpts.
+ *
+ * Compaction (intentional): the agent-facing text lists each neighbor as a single
+ * `reason: id (file:line)` line and does NOT dump the excerpt body. The full
+ * bounded excerpt text stays available in the structured `pivotNeighborhood`
+ * array for JSON/reporting; dumping every body inline was ~1k tokens of first-call
+ * context that the one clean canary showed the agent did not act on. Each line is
+ * still honestly labeled by its relationship reason and a file:line range, never
+ * presented as an exact edge-site line.
  */
 export function renderPivotNeighborhoodsText(
   contexts: readonly PivotNeighborhoodContext[],
@@ -132,8 +137,8 @@ export function renderPivotNeighborhoodsText(
   }
 
   const lines: string[] = [
-    "## Pivot neighborhood (bounded nearby source)",
-    "Symbol-window excerpts around the top pivot(s), labeled by structural relationship. These are nearby source windows, not exact edge-site lines.",
+    "## Pivot neighborhood (nearby symbols, compact)",
+    "Symbols structurally adjacent to the top pivot(s), labeled by relationship. Full source windows are in the structured pivotNeighborhood data, not inlined here; these are reference pointers, not exact edge-site lines.",
   ];
 
   for (const context of enriched) {
@@ -143,9 +148,6 @@ export function renderPivotNeighborhoodsText(
       const id = excerpt.fqName ?? excerpt.symbol ?? excerpt.filePath;
       const range = `${excerpt.filePath}:${excerpt.startLine}-${excerpt.endLine}`;
       lines.push(`- ${excerpt.reason}: ${id} (${range})${excerpt.truncated ? " [truncated]" : ""}`);
-      lines.push("```");
-      lines.push(excerpt.text);
-      lines.push("```");
     }
   }
 
