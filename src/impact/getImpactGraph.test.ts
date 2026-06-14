@@ -1276,3 +1276,53 @@ test("impact excerpts are capped at the response-wide budget", async () => {
     }
   });
 });
+
+test("a dependent with stale source yields a null excerpt without failing the impact graph", async () => {
+  await withImpactFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+
+      // Mutate one dependent's file after indexing so its content hash and size no
+      // longer match the indexed file state. The freshness-gated source loader must
+      // refuse the stale bytes, degrading that dependent's excerpt to null while the
+      // impact graph itself still succeeds and other dependents keep their excerpts.
+      await writeFile(
+        path.join(repoRoot, "src", "alpha.ts"),
+        [
+          "import { base } from \"./base\";",
+          "",
+          "// edited after indexing so the indexed file state is now stale",
+          "export function alpha(): string {",
+          "  return base() + \"-edited\";",
+          "}",
+          "",
+        ].join("\n"),
+      );
+
+      const result = getImpactGraph(db, {
+        symbolFqn: "src/base.ts::base",
+        depth: 5,
+        format: "list",
+      }, { repoRoot });
+
+      assert.equal(result.ok, true, "stale source must not fail the impact graph");
+      if (!result.ok) {
+        throw new Error("expected success");
+      }
+
+      const alpha = result.output.nodes.find((node) => node.fqName === "src/alpha.ts::alpha");
+      assert.ok(alpha, "expected the alpha dependent");
+      assert.equal(alpha.sourceExcerpt, null, "stale dependent source must degrade to null");
+
+      // A dependent whose file was untouched still loads freshly and carries an excerpt,
+      // proving the null is scoped to the stale file rather than a blanket failure.
+      const zeta = result.output.nodes.find((node) => node.fqName === "src/zeta.ts::zeta");
+      assert.ok(zeta, "expected the zeta dependent");
+      assert.ok(zeta.sourceExcerpt, "untouched dependent source should still load freshly");
+    } finally {
+      db.close();
+    }
+  });
+});

@@ -1338,6 +1338,50 @@ test("get_code_context default delegation records effectiveCapsuleEngine=v1", as
   });
 });
 
+test("get_code_context inherits run_pipeline impact source excerpts when the impact section fires", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    // A refactor task naming one focal symbol with indexed reverse dependents
+    // fires the run_pipeline impact section. get_code_context delegates to
+    // run_pipeline, so the bounded per-dependent excerpts must come through the
+    // delegation intact rather than forcing the agent into follow-up Reads.
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-get-code-context-impact-excerpts",
+      toolId: McpToolId.GetCodeContext,
+      input: {
+        query: "refactor createSession",
+        intent: "refactor",
+      },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    assert.equal(output.impact.included, true, "expected the impact section to fire");
+
+    const dependents = (output.impact.topDependents ?? []).filter(
+      (node: { distance: number }) => node.distance > 0,
+    );
+    assert.equal(dependents.length >= 1, true, "expected at least one impact dependent");
+    const enriched = dependents.find(
+      (node: { sourceExcerpt?: unknown }) => node.sourceExcerpt != null,
+    ) as { sourceExcerpt: { text: string; reason: string; filePath: string } } | undefined;
+    assert.ok(enriched, "expected at least one dependent to carry an inherited inline excerpt");
+    assert.equal(enriched.sourceExcerpt.text.split("\n").length <= 12, true);
+    assert.equal(
+      ["symbol_span", "signature", "fallback_symbol_window"].includes(enriched.sourceExcerpt.reason),
+      true,
+      `inherited excerpt reason must never claim an exact edge site: ${enriched.sourceExcerpt.reason}`,
+    );
+    assertOutputConformsToToolSchema(McpToolId.GetCodeContext, output);
+  });
+});
+
 // A well-formed `accounting` block: deterministic chars/4 figures, a measured
 // latency, and the explicit naive-full-file baseline. Shared by the tests below.
 function assertWellFormedAccounting(accounting: unknown): void {
@@ -3330,6 +3374,26 @@ test("search_logic_flow returns a real bounded structural path view for exact in
     // result must honestly report that call-flow evidence was unavailable.
     assert.equal(response.result.output.coverage.callFlowEvidenceAvailable, false);
     assert.equal(response.result.output.coverage.callFlowEvidenceUsed, false);
+    // The product layer attaches a bounded inline excerpt around each step's
+    // edge source so the relationship can be read without a follow-up Read. At
+    // least one step must carry one, and it must be honestly labelled — never an
+    // exact `edge_site` (indexed edges carry no call-site line) and never a whole
+    // file.
+    const flowSteps = response.result.output.paths.flatMap((flowPath) => flowPath.steps);
+    const stepExcerpts = flowSteps
+      .map((step) => step.sourceExcerpt)
+      .filter((excerpt): excerpt is NonNullable<typeof excerpt> => excerpt != null);
+    assert.equal(stepExcerpts.length >= 1, true, "expected at least one inline step excerpt");
+    for (const excerpt of stepExcerpts) {
+      assert.equal(typeof excerpt.filePath === "string" && excerpt.filePath.length > 0, true);
+      assert.equal(excerpt.startLine >= 1 && excerpt.endLine >= excerpt.startLine, true);
+      assert.equal(excerpt.text.split("\n").length <= 12, true, "excerpt must respect the line ceiling");
+      assert.equal(
+        ["symbol_span", "signature", "fallback_symbol_window"].includes(excerpt.reason),
+        true,
+        `excerpt reason must never claim an exact edge site without edge-site data: ${excerpt.reason}`,
+      );
+    }
     // The emitted output (including the new coverage fields) must still conform
     // to the tool's additionalProperties:false schema.
     assertOutputConformsToToolSchema(McpToolId.SearchLogicFlow, response.result.output);
@@ -3408,10 +3472,22 @@ test("get_impact_graph returns a real bounded structural impact view for an exac
     assert.equal(response.result.output.accounting.uniqueFilesCounted, 2);
     assert.equal(response.result.output.accounting.estimatedNaiveFullFileTokens > 0, true);
     // The dependent files (where the counted excerpts come from) are in the set.
-    assert.equal(
-      response.result.output.nodes.some((node) => node.distance > 0 && node.sourceExcerpt != null),
-      true,
-    );
+    const dependentExcerpts = response.result.output.nodes
+      .filter((node) => node.distance > 0)
+      .map((node) => node.sourceExcerpt)
+      .filter((excerpt): excerpt is NonNullable<typeof excerpt> => excerpt != null);
+    assert.equal(dependentExcerpts.length >= 1, true, "expected at least one dependent excerpt");
+    for (const excerpt of dependentExcerpts) {
+      assert.equal(typeof excerpt.filePath === "string" && excerpt.filePath.length > 0, true);
+      assert.equal(excerpt.text.split("\n").length <= 12, true, "excerpt must respect the line ceiling");
+      // Honesty: indexed edges carry no call-site line, so a dependent excerpt is
+      // always derived from the symbol's own span and must never claim edge_site.
+      assert.equal(
+        ["symbol_span", "signature", "fallback_symbol_window"].includes(excerpt.reason),
+        true,
+        `dependent excerpt reason must never claim an exact edge site: ${excerpt.reason}`,
+      );
+    }
     assertOutputConformsToToolSchema(McpToolId.GetImpactGraph, response.result.output);
   });
 });

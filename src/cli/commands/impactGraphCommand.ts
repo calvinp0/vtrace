@@ -41,10 +41,16 @@ export async function runImpactGraphCommand(
 
     try {
       const accountingStartedAt = performance.now();
+      // Pass repoRoot so the engine attaches bounded per-dependent source
+      // excerpts, matching the MCP get_impact_graph tool. Without repoRoot the
+      // engine returns the pure structural result with no inline excerpts, which
+      // forced the agent into follow-up Reads on the same files.
       const result = getImpactGraph(db, {
         symbolFqn: parsed.symbolFqn,
         depth: parsed.depth,
         format: parsed.format,
+      }, {
+        repoRoot: paths.repoRoot,
       });
 
       // JSON parity with the MCP get_impact_graph tool: attach the same
