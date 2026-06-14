@@ -12,6 +12,8 @@ All eight live steps (4x `run-protocol`, 4x Docker `evaluate`) exited 0; every c
 
 ## Gate verdict: **NOT CLEARED**
 
+> **Update (2026-06-14):** the matplotlib-22719 regression below was root-caused as trajectory stochasticity, not an implementation regression — see `stage5_m4_matplotlib_regression_audit.md`. The passing compact inspect-first canary (646k tok) and this current-default run (1.28M tok) have byte-identical injected context and identical patch-first localization; the delta is post-edit Bash self-verification depth (4 vs 10). Re-decide the gate on an n>=3 matched-baseline rerun, not single draws.
+
 The strict PASS for an injected-context case requires resolution preserved/improved **AND** total tokens down **AND** cache-read tokens down **AND** Read+Grep+Bash down **AND** cost down. No injected-context case meets it:
 
 - **matplotlib-22719 - PARTIAL/FAIL on efficiency.** Resolution preserved (resolved true -> true, gold file edited both arms), but total tokens **+58.5%**, cache-read **+61.3%**, Read+Grep+Bash 7 -> 11, cost **+41.5%**. This is a regression on every efficiency axis, the opposite of the required direction. Driver: Bash turns 6 -> 10, numTurns 23 -> 34 - extra agent turns, the exact cache-read amplification the token-path audit identified.
