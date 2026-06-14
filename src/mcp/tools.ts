@@ -6986,7 +6986,15 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
           relatedFile: stringProperty("The paired artifact that may also need regenerating/updating."),
           confidence: stringProperty("low/medium/high."),
           evidence: arrayProperty("Up to 2 short evidence bullets.", stringProperty("Evidence line.")),
-          hint: stringProperty("The compact call to action."),
+          hint: stringProperty("The compact call to action (regenerate/update the artifact)."),
+          patchObligation: objectProperty(
+            "Follow-through obligation: ensure the regenerated/updated artifact reaches the submitted diff (not just a local side effect). Present for generated-artifact hints.",
+            {
+              kind: stringProperty("Always `ensure_related_artifact_in_final_diff`."),
+              text: stringProperty("The compact final-diff reminder."),
+            },
+            ["kind", "text"],
+          ),
         },
         ["kind", "sourceFile", "relatedFile", "confidence", "evidence", "hint"],
       ),

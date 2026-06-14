@@ -221,6 +221,14 @@ export function toCapsuleV2ProductResponse(
         confidence: hint.confidence,
         evidence: Array.isArray(hint.evidence) ? [...hint.evidence] : [],
         hint: hint.hint,
+        ...(hint.patchObligation
+          ? {
+              patchObligation: {
+                kind: hint.patchObligation.kind,
+                text: hint.patchObligation.text,
+              },
+            }
+          : {}),
       })),
   };
 }

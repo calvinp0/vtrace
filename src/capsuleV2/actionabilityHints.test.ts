@@ -20,7 +20,7 @@ import { detectActionabilityHints } from "./actionabilityHints";
 import { buildCapsuleV2 } from "./buildCapsuleV2";
 import { renderCapsuleV2Human } from "./renderHuman";
 import { toCapsuleV2ProductResponse } from "./productAdapter";
-import { CapsuleIntent } from "./types";
+import { CapsuleIntent, CapsuleV2ContentMode, type CapsuleV2Result } from "./types";
 import { seedCustomFixture } from "./__fixtures__/capsuleV2Fixture";
 import { SymbolKind } from "../domain/types";
 import { buildContextAccounting, runPipelineOutputFilePathGroups } from "../metrics/contextAccounting";
@@ -81,7 +81,12 @@ test("grammar source with an adjacent _parsetab.py emits a generated_artifact hi
     assert.equal(hint.sourceFile, "astropy/units/format/cds.py");
     assert.equal(hint.relatedFile, "astropy/units/format/cds_parsetab.py");
     assert.equal(hint.confidence, "high");
-    assert.ok(hint.hint.length > 0);
+    assert.ok(/regenerate|update/i.test(hint.hint), "hint must carry regenerate/update semantics");
+    // Follow-through obligation: the regenerated artifact must reach the SUBMITTED diff.
+    assert.equal(hint.patchObligation?.kind, "ensure_related_artifact_in_final_diff");
+    assert.match(hint.patchObligation!.text, /final|submitted|diff/i);
+    assert.match(hint.patchObligation!.text, /tracked/i);
+    assert.ok(hint.patchObligation!.text.includes("cds_parsetab.py"), "obligation names the artifact");
   } finally {
     db.close();
   }
@@ -104,6 +109,10 @@ test("grammar source with an adjacent _lextab.py emits a hint", () => {
     });
     assert.equal(hints.length, 1);
     assert.equal(hints[0]!.relatedFile, "astropy/units/format/cds_lextab.py");
+    // Same final-diff follow-through semantics for the lextab artifact.
+    assert.equal(hints[0]!.patchObligation?.kind, "ensure_related_artifact_in_final_diff");
+    assert.match(hints[0]!.patchObligation!.text, /final|submitted|diff/i);
+    assert.ok(hints[0]!.patchObligation!.text.includes("cds_lextab.py"), "obligation names the lextab artifact");
   } finally {
     db.close();
   }
@@ -215,13 +224,14 @@ test("Capsule v2 product response includes the cds.py -> cds_parsetab.py hint", 
     );
     const product = toCapsuleV2ProductResponse(result);
     assert.ok(Array.isArray(product.actionabilityHints));
-    assert.ok(
-      product.actionabilityHints.some(
-        (h) => h.sourceFile === "astropy/units/format/cds.py"
-          && h.relatedFile === "astropy/units/format/cds_parsetab.py",
-      ),
-      `expected product hint, got ${JSON.stringify(product.actionabilityHints)}`,
+    const productHint = product.actionabilityHints.find(
+      (h) => h.sourceFile === "astropy/units/format/cds.py"
+        && h.relatedFile === "astropy/units/format/cds_parsetab.py",
     );
+    assert.ok(productHint, `expected product hint, got ${JSON.stringify(product.actionabilityHints)}`);
+    // The strengthened follow-through obligation survives the product projection.
+    assert.equal(productHint!.patchObligation?.kind, "ensure_related_artifact_in_final_diff");
+    assert.match(productHint!.patchObligation!.text, /final|submitted|diff/i);
     // Always-present field (empty array when none) so consumers can rely on it.
     assert.ok("actionabilityHints" in product);
   } finally {
@@ -249,6 +259,11 @@ test("renderCapsuleV2Human surfaces an Actionability hints section", () => {
     const text = renderCapsuleV2Human(result);
     assert.ok(text.includes("## Actionability hints"), "missing hints heading");
     assert.ok(text.includes("cds_parsetab.py"), "missing related artifact in render");
+    // The strengthened follow-through obligation renders into the injected context:
+    // regenerate/update wording AND the final-submitted-diff reminder.
+    assert.match(text, /regenerate|update/i);
+    assert.ok(text.includes("ensure-in-diff:"), "missing rendered final-diff obligation line");
+    assert.match(text, /final|submitted/i);
     // The compact hint must render BEFORE the bulky pivot source bodies so a
     // downstream char-budget truncation (e.g. Stage 5's bounded injected context)
     // cannot strand it after large pivots and drop it from the agent's view.
@@ -259,6 +274,8 @@ test("renderCapsuleV2Human surfaces an Actionability hints section", () => {
         hintsIdx < firstPivotIdx,
         `hints (${hintsIdx}) must precede the first pivot body (${firstPivotIdx})`,
       );
+      // The obligation line also precedes the first pivot body.
+      assert.ok(text.indexOf("ensure-in-diff:") < firstPivotIdx, "obligation must precede pivots too");
     }
   } finally {
     db.close();
@@ -278,10 +295,20 @@ test("get_context_capsule output schema documents capsuleV2.actionabilityHints",
     };
   };
   const capsuleV2 = schema.properties?.capsuleV2;
-  assert.ok(capsuleV2?.properties?.actionabilityHints, "schema missing actionabilityHints");
+  const hintsSchema = capsuleV2?.properties?.actionabilityHints as
+    | { items?: { properties?: Record<string, { properties?: Record<string, unknown> }> } }
+    | undefined;
+  assert.ok(hintsSchema, "schema missing actionabilityHints");
   assert.ok(
     capsuleV2?.required?.includes("actionabilityHints"),
     "actionabilityHints not in capsuleV2 required list",
+  );
+  // The strengthened follow-through obligation is documented on the item schema.
+  const itemProps = hintsSchema!.items?.properties;
+  assert.ok(itemProps?.patchObligation, "item schema missing patchObligation");
+  assert.ok(
+    itemProps!.patchObligation.properties?.text,
+    "patchObligation schema missing text",
   );
 });
 
@@ -312,6 +339,13 @@ test("a run-pipeline-shaped output carries actionabilityHints inside capsuleV2",
       product.actionabilityHints,
     );
     assert.ok(runPipelineOutput.capsuleV2.actionabilityHints.length > 0);
+    // The strengthened follow-through obligation survives the run_pipeline clone.
+    assert.ok(
+      runPipelineOutput.capsuleV2.actionabilityHints.some(
+        (h) => h.patchObligation?.kind === "ensure_related_artifact_in_final_diff",
+      ),
+      "patchObligation lost in run_pipeline clone",
+    );
   } finally {
     db.close();
   }
@@ -369,4 +403,51 @@ test("hint text counts toward estimatedOutputTokens without inflating the naive 
     accWith.estimatedNaiveFullFileTokens,
     accWithout.estimatedNaiveFullFileTokens,
   );
+});
+
+// --- (11) long-pivot truncation regression: hint survives the 12000-char cutoff -
+
+test("a long pivot body does not push the hint past the Stage 5 truncation cutoff", () => {
+  const { db, repoRoot } = grammarFixture([
+    {
+      relPath: "astropy/units/format/cds_parsetab.py",
+      specs: [{ localName: "_tabversion", kind: SymbolKind.ModuleVariable, body: PARSETAB_BODY }],
+    },
+  ]);
+  try {
+    const result = buildCapsuleV2({
+      db,
+      repoRoot,
+      task: "CDS format parsing fails when reading a units header.",
+      intent: CapsuleIntent.Auto,
+      maxTokens: 8_000,
+    });
+    assert.ok((result.actionability_hints ?? []).length > 0, "expected a hint");
+    assert.ok(result.pivots.length >= 1, "expected at least one pivot to inflate");
+    // Simulate a real instance where a selected pivot carries a very large source
+    // body (astropy-14369's VOUnit pivot was ~240 lines, which is exactly what
+    // pushed the M4.3 hint past Stage 5's truncation in M4.4). The hint must still
+    // land before Stage 5's 12000-char injected-context cutoff.
+    const HUGE = "        # parser table padding line\n".repeat(600); // ~21k chars
+    const inflated: CapsuleV2Result = {
+      ...result,
+      pivots: result.pivots.map((pivot, index) =>
+        index === 0
+          ? { ...pivot, content_mode: CapsuleV2ContentMode.Full, source: HUGE }
+          : pivot),
+    };
+    const text = renderCapsuleV2Human(inflated);
+    const STAGE5_TRUNC = 12_000;
+    assert.ok(text.length > STAGE5_TRUNC, "test invalid unless the inflated render exceeds the cutoff");
+    const hintIdx = text.indexOf("## Actionability hints");
+    assert.ok(hintIdx >= 0 && hintIdx < STAGE5_TRUNC, `hint at ${hintIdx} must be < ${STAGE5_TRUNC}`);
+    // The truncated prefix the agent actually receives still carries the hint, its
+    // related artifact, and the final-diff obligation.
+    const injected = text.slice(0, STAGE5_TRUNC);
+    assert.ok(injected.includes("## Actionability hints"), "hint dropped by truncation");
+    assert.ok(injected.includes("cds_parsetab.py"), "related artifact dropped by truncation");
+    assert.ok(injected.includes("ensure-in-diff:"), "final-diff obligation dropped by truncation");
+  } finally {
+    db.close();
+  }
 });

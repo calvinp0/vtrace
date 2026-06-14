@@ -100,6 +100,11 @@ export function renderCapsuleV2Human(result: CapsuleV2Result): string {
         lines.push(`  why: ${hint.evidence.join("; ")}`);
       }
       lines.push(`  action: ${hint.hint}`);
+      // Follow-through obligation on its own line so it stands out: regenerating the
+      // artifact locally is not enough — it must land in the submitted diff.
+      if (hint.patchObligation) {
+        lines.push(`  ensure-in-diff: ${hint.patchObligation.text}`);
+      }
     }
   }
 

@@ -26,6 +26,20 @@ import type { Database } from "bun:sqlite";
 import { listAllFilePaths } from "../db/repositories/filesRepository";
 
 /**
+ * A follow-through obligation that the hint must drive the agent past mere
+ * awareness: regenerating/updating the artifact LOCALLY is not enough — if the
+ * artifact is part of the tracked repo state, the regenerated/updated version has
+ * to land in the SUBMITTED diff, or the change never reaches review/CI. This is the
+ * gap M4.4 observed on a real parser-table case: the agent deleted/regenerated the
+ * table in the workspace, but the submitted patch still only touched the source.
+ */
+export interface ActionabilityPatchObligation {
+  kind: "ensure_related_artifact_in_final_diff";
+  /** Compact, rendered reminder of the final-diff obligation. */
+  text: string;
+}
+
+/**
  * A single actionability hint: a likely generated / co-edit artifact paired with
  * the source file the agent is editing. Product-shaped (camelCase) so it projects
  * onto the MCP/CLI surface unchanged.
@@ -44,8 +58,14 @@ export interface ActionabilityHint {
   confidence: "low" | "medium" | "high";
   /** Up to 2 short evidence bullets (why this relation was inferred). */
   evidence: string[];
-  /** The compact, rendered call to action. */
+  /** The compact, rendered call to action (regenerate/update the artifact). */
   hint: string;
+  /**
+   * Follow-through obligation: ensure the regenerated/updated artifact reaches the
+   * submitted diff (not just a local side effect). Present for generated-artifact
+   * hints, where the related file is part of the tracked repo state.
+   */
+  patchObligation?: ActionabilityPatchObligation;
 }
 
 export interface DetectActionabilityHintsInput {
@@ -180,6 +200,7 @@ export function detectActionabilityHints(
       const confidence: ActionabilityHint["confidence"] =
         strongSource && strongArtifact ? "high" : strongSource || strongArtifact ? "medium" : "low";
 
+      const relatedBase = splitPath(candidate.rel).base;
       hints.push({
         kind: "generated_artifact",
         sourceFile: sourcePath,
@@ -187,8 +208,18 @@ export function detectActionabilityHints(
         confidence,
         evidence: evidence.slice(0, MAX_EVIDENCE_PER_HINT),
         hint:
-          "If you change parser/grammar rules here, check whether the generated "
-          + "parser table must be regenerated or updated.",
+          "If you change parser/grammar rules here, regenerate or update the generated "
+          + "parser table.",
+        // Follow-through: the regenerated table is part of the tracked repo state
+        // (it was found in the workspace index), so it must be in the SUBMITTED diff
+        // — a local delete/regenerate is a side effect that never reaches the patch.
+        patchObligation: {
+          kind: "ensure_related_artifact_in_final_diff",
+          text:
+            `Ensure the regenerated/updated ${relatedBase} is included in your final `
+            + "submitted diff if it is tracked — a local delete/regenerate alone does not "
+            + "reach the patch.",
+        },
       });
       seen.add(dedupeKey);
     }
