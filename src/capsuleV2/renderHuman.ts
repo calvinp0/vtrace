@@ -81,6 +81,28 @@ export function renderCapsuleV2Human(result: CapsuleV2Result): string {
     lines.push("4. Prefer the smallest patch that fixes the behavior without broad rewrites.");
   }
 
+  // Actionability hints: a compact reminder that an edited source file likely has
+  // a paired generated/co-edit artifact (e.g. a parser table) needing regeneration.
+  // Rendered HERE — before the bulky pivot/support source bodies — for two reasons:
+  // (1) it is the highest-signal, most compact advisory, so the agent should see it
+  // before diving into source; (2) downstream consumers truncate the rendered capsule
+  // to a char budget (Stage 5 injects a bounded prefix), and a hint stranded after
+  // large pivot bodies would be cut off and never reach the agent.
+  const actionabilityHints = result.actionability_hints ?? [];
+  if (actionabilityHints.length > 0) {
+    lines.push("");
+    lines.push("## Actionability hints");
+    for (const hint of actionabilityHints) {
+      lines.push("");
+      lines.push(`- generated/co-edit artifact: ${hint.relatedFile} (${hint.confidence} confidence)`);
+      lines.push(`  source: ${hint.sourceFile}`);
+      if (hint.evidence.length > 0) {
+        lines.push(`  why: ${hint.evidence.join("; ")}`);
+      }
+      lines.push(`  action: ${hint.hint}`);
+    }
+  }
+
   for (const pivot of result.pivots) {
     lines.push("");
     lines.push(itemBlockText(pivot));
@@ -108,24 +130,6 @@ export function renderCapsuleV2Human(result: CapsuleV2Result): string {
     lines.push(editRiskHeading(directive.kind));
     lines.push("");
     lines.push(directive.directive);
-  }
-
-  // Actionability hints: a compact reminder that an edited source file likely has
-  // a paired generated/co-edit artifact (e.g. a parser table) needing regeneration.
-  // One or two lines per hint, after the edit-risk warnings, before support.
-  const actionabilityHints = result.actionability_hints ?? [];
-  if (actionabilityHints.length > 0) {
-    lines.push("");
-    lines.push("## Actionability hints");
-    for (const hint of actionabilityHints) {
-      lines.push("");
-      lines.push(`- generated/co-edit artifact: ${hint.relatedFile} (${hint.confidence} confidence)`);
-      lines.push(`  source: ${hint.sourceFile}`);
-      if (hint.evidence.length > 0) {
-        lines.push(`  why: ${hint.evidence.join("; ")}`);
-      }
-      lines.push(`  action: ${hint.hint}`);
-    }
   }
 
   for (const item of result.support) {

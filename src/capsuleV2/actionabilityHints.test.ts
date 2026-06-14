@@ -249,6 +249,17 @@ test("renderCapsuleV2Human surfaces an Actionability hints section", () => {
     const text = renderCapsuleV2Human(result);
     assert.ok(text.includes("## Actionability hints"), "missing hints heading");
     assert.ok(text.includes("cds_parsetab.py"), "missing related artifact in render");
+    // The compact hint must render BEFORE the bulky pivot source bodies so a
+    // downstream char-budget truncation (e.g. Stage 5's bounded injected context)
+    // cannot strand it after large pivots and drop it from the agent's view.
+    const hintsIdx = text.indexOf("## Actionability hints");
+    const firstPivotIdx = text.indexOf("● pivot");
+    if (firstPivotIdx >= 0) {
+      assert.ok(
+        hintsIdx < firstPivotIdx,
+        `hints (${hintsIdx}) must precede the first pivot body (${firstPivotIdx})`,
+      );
+    }
   } finally {
     db.close();
   }
