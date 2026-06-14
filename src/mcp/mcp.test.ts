@@ -3333,6 +3333,12 @@ test("search_logic_flow returns a real bounded structural path view for exact in
     // The emitted output (including the new coverage fields) must still conform
     // to the tool's additionalProperties:false schema.
     assertOutputConformsToToolSchema(McpToolId.SearchLogicFlow, response.result.output);
+    // The flow output carries the deterministic accounting block. Its naive
+    // baseline counts the start/end files plus every file the path nodes and
+    // per-step excerpts represent — here src/controller.ts + src/session.ts.
+    assertWellFormedAccounting(response.result.output.accounting);
+    assert.equal(response.result.output.accounting.uniqueFilesCounted, 2);
+    assert.equal(response.result.output.accounting.estimatedNaiveFullFileTokens > 0, true);
   });
 });
 
@@ -3394,6 +3400,19 @@ test("get_impact_graph returns a real bounded structural impact view for an exac
       ),
       true,
     );
+    // The impact view carries the deterministic accounting block. Its naive
+    // baseline counts every file the nodes (root + dependents) and their inline
+    // excerpts represent — here the two fixture files (src/session.ts +
+    // src/controller.ts) the dependents and their source excerpts live in.
+    assertWellFormedAccounting(response.result.output.accounting);
+    assert.equal(response.result.output.accounting.uniqueFilesCounted, 2);
+    assert.equal(response.result.output.accounting.estimatedNaiveFullFileTokens > 0, true);
+    // The dependent files (where the counted excerpts come from) are in the set.
+    assert.equal(
+      response.result.output.nodes.some((node) => node.distance > 0 && node.sourceExcerpt != null),
+      true,
+    );
+    assertOutputConformsToToolSchema(McpToolId.GetImpactGraph, response.result.output);
   });
 });
 
@@ -3480,7 +3499,20 @@ test("get_skeleton returns real minimal, standard, and detailed structural outpu
     assert.equal(minimal.result.ok, true);
     assert.equal(standard.result.ok, true);
     assert.equal(detailed.result.ok, true);
-    assert.deepEqual(standardRepeat.result.output, standard.result.output);
+    // Skeletons are deterministic modulo the additive `accounting` block, whose
+    // `latencyMs` is wall-clock and inherently varies between calls.
+    const { accounting: standardAccounting, ...standardStable } = standard.result.output;
+    const { accounting: repeatAccounting, ...repeatStable } = standardRepeat.result.output;
+    assert.deepEqual(repeatStable, standardStable);
+    assert.deepEqual(
+      { ...repeatAccounting, latencyMs: 0 },
+      { ...standardAccounting, latencyMs: 0 },
+    );
+    // The skeleton carries the deterministic accounting block: both fixture files
+    // are real, so the naive baseline counts them and reports positive savings.
+    assertWellFormedAccounting(standardAccounting);
+    assert.equal(standardAccounting.uniqueFilesCounted, 2);
+    assert.equal(standardAccounting.estimatedNaiveFullFileTokens > 0, true);
     assert.equal(
       RESERVED_MCP_TOOL_DEFINITIONS.find((tool) => tool.metadata.toolId === McpToolId.GetSkeleton)?.metadata.description,
       "Return token-efficient structural skeletons for one or more indexed files.",

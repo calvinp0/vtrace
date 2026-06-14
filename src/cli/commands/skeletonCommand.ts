@@ -1,5 +1,9 @@
 // @ts-nocheck
 import { openIndexerDatabase } from "../../db/sqlite";
+import {
+  buildContextAccounting,
+  skeletonOutputFilePathGroups,
+} from "../../metrics/contextAccounting";
 import { formatJson } from "../formatters";
 import type { CliOptions, CommandResult } from "../types";
 import {
@@ -36,13 +40,27 @@ export async function runSkeletonCommand(
     const db = openIndexerDatabase(paths.dbPath);
 
     try {
+      const accountingStartedAt = performance.now();
       const output = await getSkeleton(db, {
         repoRoot: paths.repoRoot,
         files: [parsed.filePath],
         detail: parsed.detail,
       });
 
-      return success(formatJson(output));
+      // JSON parity with the MCP get_skeleton tool: attach the same deterministic,
+      // best-effort accounting block. Accounting failure must never fail the
+      // command (best-effort, additive).
+      try {
+        const accounting = await buildContextAccounting({
+          repoRoot: paths.repoRoot,
+          emittedValue: output,
+          filePathGroups: skeletonOutputFilePathGroups(output),
+          latencyMs: performance.now() - accountingStartedAt,
+        });
+        return success(formatJson({ ...output, accounting }));
+      } catch {
+        return success(formatJson(output));
+      }
     } finally {
       db.close();
     }

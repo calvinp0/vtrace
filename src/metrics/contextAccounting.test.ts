@@ -8,7 +8,10 @@ import {
   buildContextAccounting,
   collectUniqueContextFilePaths,
   estimateTokensFromText,
+  impactGraphOutputFilePathGroups,
+  logicFlowOutputFilePathGroups,
   runPipelineOutputFilePathGroups,
+  skeletonOutputFilePathGroups,
 } from "./contextAccounting";
 
 async function withTempRepo(run: (repoRoot: string) => Promise<void>): Promise<void> {
@@ -158,6 +161,76 @@ test("runPipelineOutputFilePathGroups gathers v1 context and v2 section files", 
     context: { pivots: [{ filePath: "src/a.ts" }], supports: [] },
   });
   assert.deepEqual(collectUniqueContextFilePaths(v1Only), ["src/a.ts"]);
+});
+
+test("impactGraphOutputFilePathGroups counts the focal file, node files, and excerpt files", () => {
+  const groups = impactGraphOutputFilePathGroups({
+    resolvedSymbol: { filePath: "src/session.ts" },
+    nodes: [
+      // Root node (distance 0) — same file as the focal symbol.
+      { filePath: "src/session.ts" },
+      // A dependent whose inline excerpt names a second file.
+      { filePath: "src/controller.ts", sourceExcerpt: { filePath: "src/controller.ts" } },
+      // A dependent whose excerpt names a file not otherwise present as a node.
+      { filePath: "src/controller.ts", sourceExcerpt: { filePath: "src/helper.ts" } },
+    ],
+  });
+  // Deduped across resolvedSymbol, nodes, and excerpts.
+  assert.deepEqual(collectUniqueContextFilePaths(groups), [
+    "src/session.ts",
+    "src/controller.ts",
+    "src/helper.ts",
+  ]);
+
+  // An impactless symbol (no dependents) still counts its own focal file.
+  const focalOnly = impactGraphOutputFilePathGroups({
+    resolvedSymbol: { filePath: "src/only.ts" },
+    nodes: [{ filePath: "src/only.ts" }],
+  });
+  assert.deepEqual(collectUniqueContextFilePaths(focalOnly), ["src/only.ts"]);
+});
+
+test("logicFlowOutputFilePathGroups counts endpoint, node, and per-step excerpt files", () => {
+  const groups = logicFlowOutputFilePathGroups({
+    resolvedStart: { filePath: "src/controller.ts" },
+    resolvedEnd: { filePath: "src/session.ts" },
+    paths: [
+      {
+        nodes: [{ filePath: "src/controller.ts" }, { filePath: "src/session.ts" }],
+        steps: [
+          { sourceExcerpt: { filePath: "src/controller.ts" } },
+          { sourceExcerpt: { filePath: "src/middleware.ts" } },
+        ],
+      },
+    ],
+  });
+  assert.deepEqual(collectUniqueContextFilePaths(groups), [
+    "src/controller.ts",
+    "src/session.ts",
+    "src/middleware.ts",
+  ]);
+
+  // An unreachable result (no paths) still reports the two endpoint files.
+  const unreachable = logicFlowOutputFilePathGroups({
+    resolvedStart: { filePath: "src/a.ts" },
+    resolvedEnd: { filePath: "src/b.ts" },
+    paths: [],
+  });
+  assert.deepEqual(collectUniqueContextFilePaths(unreachable), ["src/a.ts", "src/b.ts"]);
+});
+
+test("skeletonOutputFilePathGroups counts each skeletonized file once", () => {
+  const groups = skeletonOutputFilePathGroups({
+    files: [
+      { filePath: "src/a.ts" },
+      { filePath: "src/b.ts" },
+      { filePath: "src/a.ts" },
+    ],
+  });
+  assert.deepEqual(collectUniqueContextFilePaths(groups), ["src/a.ts", "src/b.ts"]);
+
+  // Tolerates a missing/empty files array.
+  assert.deepEqual(collectUniqueContextFilePaths(skeletonOutputFilePathGroups({})), []);
 });
 
 test("runPipelineOutputFilePathGroups counts pivot-neighborhood excerpt files", () => {

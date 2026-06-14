@@ -1176,7 +1176,13 @@ test("capsule v2 --pivot-neighborhood --json emits a bounded pivot_neighborhood 
       "--intent", "auto", "--budget", "8000", "--json",
     ]);
     assert.equal(withoutFlag.exitCode, 0);
-    assert.equal(JSON.parse(withoutFlag.stdout).pivot_neighborhood, undefined);
+    const withoutFlagOutput = JSON.parse(withoutFlag.stdout);
+    assert.equal(withoutFlagOutput.pivot_neighborhood, undefined);
+    // JSON parity with the MCP get_context_capsule (v2) tool: both the plain and
+    // the --pivot-neighborhood v2 JSON paths carry the same accounting block.
+    assert.equal(withoutFlagOutput.accounting.method, "chars_div_4");
+    assert.equal(typeof withoutFlagOutput.accounting.latencyMs, "number");
+    assert.equal(out.accounting.method, "chars_div_4");
   });
 });
 
@@ -1520,6 +1526,11 @@ test("skeleton command returns structural output for an indexed file", async () 
     assert.equal(output.files[0].status, "ok");
     assert.equal(output.files[0].filePath, "src/service.ts");
     assert.equal(output.files[0].declarations[0].name, "readUser");
+    // JSON parity with the MCP get_skeleton tool: the same accounting block.
+    assert.equal(output.accounting.method, "chars_div_4");
+    assert.equal(output.accounting.uniqueFilesCounted, 1);
+    assert.equal(typeof output.accounting.latencyMs, "number");
+    assert.equal(output.accounting.latencyMs >= 0, true);
   });
 });
 
@@ -1547,6 +1558,10 @@ test("impact-graph command returns the deterministic structural graph for an ind
     assert.equal(output.output.requested.format, "tree");
     assert.deepEqual(output.output.dependentFiles, ["src/service.ts"]);
     assert.equal(output.output.view.lines.some((line: string) => line.includes("src/service.ts::readUser")), true);
+    // JSON parity with the MCP get_impact_graph tool: the same accounting block.
+    assert.equal(output.output.accounting.method, "chars_div_4");
+    assert.equal(output.output.accounting.uniqueFilesCounted >= 1, true);
+    assert.equal(output.output.accounting.estimatedNaiveFullFileTokens > 0, true);
   });
 });
 

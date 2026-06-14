@@ -53,6 +53,10 @@ import {
   parseCapsuleIntent,
 } from "../../capsuleV2/types";
 import { prepareCapsuleAssembly } from "../../capsuleProfiles/orchestrator";
+import {
+  buildContextAccounting,
+  runPipelineOutputFilePathGroups,
+} from "../../metrics/contextAccounting";
 import { hasIndexedFiles } from "../../db/repositories/filesRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
 import { routeQuery } from "../../intent/routeQuery";
@@ -130,6 +134,7 @@ export async function runCapsuleCommand(
       // Capsule v2 product surface: selected by `--intent` or `--budget`. The
       // legacy `--mode` path below is left untouched for existing callers.
       if (parsed.intent !== undefined || parsed.budget !== undefined) {
+        const accountingStartedAt = performance.now();
         const result = buildCapsuleV2({
           db,
           repoRoot,
@@ -149,8 +154,12 @@ export async function runCapsuleCommand(
           const neighborhood = buildPivotNeighborhoods(db, repoRoot, product);
           if (json) {
             // Full structured neighborhood (with excerpt bodies) is preserved for
-            // JSON/reporting; the human render below compacts it.
-            return success(formatJson({ ...result, pivot_neighborhood: neighborhood }));
+            // JSON/reporting; the human render below compacts it. The emitted JSON
+            // carries the same deterministic accounting block as the MCP tools.
+            const emitted = { ...result, pivot_neighborhood: neighborhood };
+            return success(formatJson(
+              await attachCapsuleV2Accounting(repoRoot, emitted, product, neighborhood, accountingStartedAt),
+            ));
           }
           // Compact, action-oriented inspect-first guidance at the top, then the
           // human capsule, then the compact neighborhood reference list.
@@ -164,7 +173,13 @@ export async function runCapsuleCommand(
           return success(composed);
         }
 
-        return success(json ? formatJson(result) : renderCapsuleV2Human(result));
+        if (json) {
+          const product = toCapsuleV2ProductResponse(result);
+          return success(formatJson(
+            await attachCapsuleV2Accounting(repoRoot, { ...result }, product, undefined, accountingStartedAt),
+          ));
+        }
+        return success(renderCapsuleV2Human(result));
       }
 
       const routedQuery = routeQuery(db, query, { maxResults: limits.maxItems });
@@ -758,6 +773,34 @@ function collectUniqueInOrder<T>(values: readonly T[]): T[] {
 
 function collectSortedUnique(values: readonly string[]): string[] {
   return [...new Set(values)].sort();
+}
+
+// JSON parity with the MCP get_context_capsule (v2) tool: attach the same
+// deterministic, best-effort accounting block to the emitted v2 JSON. The naive
+// baseline counts the product pivots/support (and any pivot-neighborhood excerpt
+// files). Accounting failure must never fail the command — on error the emitted
+// value is returned unchanged.
+async function attachCapsuleV2Accounting(
+  repoRoot: string,
+  emitted: Record<string, unknown>,
+  product: ReturnType<typeof toCapsuleV2ProductResponse>,
+  neighborhood: ReturnType<typeof buildPivotNeighborhoods> | undefined,
+  accountingStartedAt: number,
+): Promise<Record<string, unknown>> {
+  try {
+    const accounting = await buildContextAccounting({
+      repoRoot,
+      emittedValue: emitted,
+      filePathGroups: runPipelineOutputFilePathGroups({
+        capsuleV2: { pivots: product.pivots, support: product.support },
+        ...(neighborhood === undefined ? {} : { pivotNeighborhood: neighborhood }),
+      }),
+      latencyMs: performance.now() - accountingStartedAt,
+    });
+    return { ...emitted, accounting };
+  } catch {
+    return emitted;
+  }
 }
 
 function formatCommandError(prefix: string, error: unknown): string {

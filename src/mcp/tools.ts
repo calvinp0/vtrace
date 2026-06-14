@@ -30,7 +30,10 @@ import {
 import { buildInspectFirst, type InspectFirst } from "../runPipeline/inspectFirst";
 import {
   buildContextAccounting,
+  impactGraphOutputFilePathGroups,
+  logicFlowOutputFilePathGroups,
   runPipelineOutputFilePathGroups,
+  skeletonOutputFilePathGroups,
   type ContextAccounting,
 } from "../metrics/contextAccounting";
 import {
@@ -8072,6 +8075,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           nodes: arrayProperty("Discovered impact nodes including the resolved root node.", IMPACT_NODE_SCHEMA),
           edges: arrayProperty("Shortest-layer outward impact edges retained from indexed structural data.", IMPACT_EDGE_SCHEMA),
           view: IMPACT_VIEW_SCHEMA,
+          accounting: CONTEXT_ACCOUNTING_SCHEMA,
         },
         ["requested", "resolvedSymbol", "coverage", "summary", "dependentFiles", "nodes", "edges", "view"],
       ),
@@ -8123,6 +8127,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         context,
         McpToolId.GetImpactGraph,
         async (binding, db) => {
+          const accountingStartedAt = performance.now();
           const result = getImpactGraph(db, {
             symbolFqn,
             depth: depth ?? 5,
@@ -8143,9 +8148,21 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             toolName: McpToolId.GetImpactGraph,
           });
 
+          // Deterministic, best-effort accounting over the emitted impact view.
+          // The naive baseline reads every file the nodes (root + dependents) and
+          // any inline dependent excerpts represent.
+          const accounting = await buildContextAccountingBestEffort({
+            repoRoot: binding.repoRoot,
+            emittedValue: result.output,
+            filePathGroups: impactGraphOutputFilePathGroups(result.output),
+            latencyMs: performance.now() - accountingStartedAt,
+          });
+
           return {
             ok: true,
-            output: result.output,
+            output: accounting === undefined
+              ? result.output
+              : { ...result.output, accounting },
           };
         },
       );
@@ -8175,6 +8192,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           coverage: LOGIC_FLOW_COVERAGE_SCHEMA,
           summary: LOGIC_FLOW_SUMMARY_SCHEMA,
           paths: arrayProperty("Deterministically ordered returned shortest structural paths.", LOGIC_FLOW_PATH_SCHEMA),
+          accounting: CONTEXT_ACCOUNTING_SCHEMA,
         },
         ["requested", "resolvedStart", "resolvedEnd", "coverage", "summary", "paths"],
       ),
@@ -8224,6 +8242,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         context,
         McpToolId.SearchLogicFlow,
         async (binding, db) => {
+          const accountingStartedAt = performance.now();
           const result = searchLogicFlow(db, {
             start,
             end,
@@ -8244,9 +8263,21 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             toolName: McpToolId.SearchLogicFlow,
           });
 
+          // Deterministic, best-effort accounting over the emitted flow output.
+          // The naive baseline reads the start/end files plus every file the
+          // returned path nodes and per-step excerpts represent.
+          const accounting = await buildContextAccountingBestEffort({
+            repoRoot: binding.repoRoot,
+            emittedValue: result.output,
+            filePathGroups: logicFlowOutputFilePathGroups(result.output),
+            latencyMs: performance.now() - accountingStartedAt,
+          });
+
           return {
             ok: true,
-            output: result.output,
+            output: accounting === undefined
+              ? result.output
+              : { ...result.output, accounting },
           };
         },
       );
@@ -8273,6 +8304,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         {
           detail: GET_SKELETON_OUTPUT_SCHEMA.properties.detail!,
           files: GET_SKELETON_OUTPUT_SCHEMA.properties.files!,
+          accounting: CONTEXT_ACCOUNTING_SCHEMA,
         },
         GET_SKELETON_OUTPUT_SCHEMA.required ?? [],
       ),
@@ -8298,6 +8330,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         context,
         McpToolId.GetSkeleton,
         async (binding, db) => {
+          const accountingStartedAt = performance.now();
           const output = await getSkeleton(db, {
             repoRoot: binding.repoRoot,
             files,
@@ -8313,9 +8346,21 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             requestedFiles: files,
           });
 
+          // Deterministic, best-effort accounting over the emitted skeletons. The
+          // naive baseline reads the full contents of each skeletonized file;
+          // files missing on disk are skipped, not counted.
+          const accounting = await buildContextAccountingBestEffort({
+            repoRoot: binding.repoRoot,
+            emittedValue: output,
+            filePathGroups: skeletonOutputFilePathGroups(output),
+            latencyMs: performance.now() - accountingStartedAt,
+          });
+
           return {
             ok: true,
-            output,
+            output: accounting === undefined
+              ? output
+              : { ...output, accounting },
           };
         },
       );

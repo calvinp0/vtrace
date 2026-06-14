@@ -4,6 +4,10 @@ import {
   IMPACT_FORMATS,
   getImpactGraph,
 } from "../../impact/getImpactGraph";
+import {
+  buildContextAccounting,
+  impactGraphOutputFilePathGroups,
+} from "../../metrics/contextAccounting";
 import { formatJson } from "../formatters";
 import type { CliOptions, CommandResult } from "../types";
 import {
@@ -36,11 +40,29 @@ export async function runImpactGraphCommand(
     const db = openIndexerDatabase(paths.dbPath);
 
     try {
+      const accountingStartedAt = performance.now();
       const result = getImpactGraph(db, {
         symbolFqn: parsed.symbolFqn,
         depth: parsed.depth,
         format: parsed.format,
       });
+
+      // JSON parity with the MCP get_impact_graph tool: attach the same
+      // deterministic, best-effort accounting block to a successful result.
+      // Accounting failure must never fail the command (best-effort, additive).
+      if (result.ok) {
+        try {
+          const accounting = await buildContextAccounting({
+            repoRoot: paths.repoRoot,
+            emittedValue: result.output,
+            filePathGroups: impactGraphOutputFilePathGroups(result.output),
+            latencyMs: performance.now() - accountingStartedAt,
+          });
+          return success(formatJson({ ...result, output: { ...result.output, accounting } }));
+        } catch {
+          return success(formatJson(result));
+        }
+      }
 
       return success(formatJson(result));
     } finally {

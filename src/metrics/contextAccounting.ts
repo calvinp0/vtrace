@@ -226,6 +226,100 @@ function safeSerialize(value: unknown): string {
   }
 }
 
+/** An emitted item that carries a bounded inline source excerpt naming its file. */
+export interface SourceExcerptBearer {
+  /** Present on impact dependents / flow steps when the product layer attached one. */
+  sourceExcerpt?: { filePath?: string | null } | null;
+}
+
+/**
+ * Collect the file-path bearers named by a list of items' inline source excerpts.
+ * An excerpt's `filePath` is the same file the item's structural `filePath` points
+ * at, so these are usually redundant with the item paths — counting them here keeps
+ * the naive baseline correct even if a future excerpt ever names a different file.
+ * Items without an excerpt (or with a blank path) contribute nothing.
+ */
+function excerptFilePathBearers(
+  items: ReadonlyArray<SourceExcerptBearer> | undefined,
+): ContextFileBearer[] {
+  if (items === undefined) {
+    return [];
+  }
+  const bearers: ContextFileBearer[] = [];
+  for (const item of items) {
+    const filePath = item?.sourceExcerpt?.filePath;
+    if (typeof filePath === "string" && filePath.trim().length > 0) {
+      bearers.push({ filePath });
+    }
+  }
+  return bearers;
+}
+
+/**
+ * Derive the file-path groups for an emitted `get_impact_graph` output. The naive
+ * baseline is the full contents of every file the impact view represents: the
+ * resolved focal symbol's file plus each impact node's file (root + dependents).
+ * Inline dependent excerpts are counted explicitly too. Deduplication happens in
+ * {@link collectUniqueContextFilePaths}; counting the focal file keeps the baseline
+ * honest even when the symbol has no indexed reverse dependents.
+ */
+export function impactGraphOutputFilePathGroups(
+  output: {
+    resolvedSymbol?: ContextFileBearer | null;
+    nodes?: ReadonlyArray<ContextFileBearer & SourceExcerptBearer> | null;
+  },
+): Array<ReadonlyArray<ContextFileBearer> | undefined> {
+  const nodes = Array.isArray(output.nodes) ? output.nodes : [];
+  return [
+    output.resolvedSymbol ? [output.resolvedSymbol] : undefined,
+    nodes,
+    excerptFilePathBearers(nodes),
+  ];
+}
+
+/**
+ * Derive the file-path groups for an emitted `search_logic_flow` output. The naive
+ * baseline is the full contents of every file the flow represents: the resolved
+ * start/end symbol files plus each node along every returned path, and each step's
+ * inline source excerpt. Start/end files are counted even when no path connects
+ * them, so an unreachable result still reports an honest two-file baseline.
+ */
+export function logicFlowOutputFilePathGroups(
+  output: {
+    resolvedStart?: ContextFileBearer | null;
+    resolvedEnd?: ContextFileBearer | null;
+    paths?: ReadonlyArray<{
+      nodes?: ReadonlyArray<ContextFileBearer> | null;
+      steps?: ReadonlyArray<SourceExcerptBearer> | null;
+    }> | null;
+  },
+): Array<ReadonlyArray<ContextFileBearer> | undefined> {
+  const endpointBearers = [output.resolvedStart, output.resolvedEnd].filter(
+    (bearer): bearer is ContextFileBearer => bearer !== null && bearer !== undefined,
+  );
+  const groups: Array<ReadonlyArray<ContextFileBearer> | undefined> = [endpointBearers];
+  const paths = Array.isArray(output.paths) ? output.paths : [];
+  for (const flowPath of paths) {
+    groups.push(Array.isArray(flowPath.nodes) ? flowPath.nodes : undefined);
+    groups.push(excerptFilePathBearers(Array.isArray(flowPath.steps) ? flowPath.steps : undefined));
+  }
+  return groups;
+}
+
+/**
+ * Derive the file-path groups for an emitted `get_skeleton` output. The naive
+ * baseline is the full contents of every file the skeleton represents (one entry
+ * per requested file). Files that are missing on disk are skipped by the reader,
+ * not counted, so the baseline reflects only files that actually exist.
+ */
+export function skeletonOutputFilePathGroups(
+  output: {
+    files?: ReadonlyArray<ContextFileBearer> | null;
+  },
+): Array<ReadonlyArray<ContextFileBearer> | undefined> {
+  return [Array.isArray(output.files) ? output.files : undefined];
+}
+
 /**
  * Derive the file-path groups for a formatted `run_pipeline` output. The default
  * (v1) path contributes its compact context pivots/supports; an opt-in Capsule v2
