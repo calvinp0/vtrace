@@ -392,16 +392,17 @@ test("run_pipeline impact section includes evidence for a refactor query naming 
   });
 });
 
-test("run_pipeline skips impact with non_refactor_intent reason for a non-refactor query", async () => {
+test("run_pipeline skips impact with not_requested_by_intent reason for a non-refactor query", async () => {
   await withParityRepo(async ({ db, repoRoot }) => {
     const out = runPipelineOrchestrator(db, repoRoot, {
       query: "explore do_work module",
       intent: "explore",
     });
     assert.equal(out.impact.included, false);
-    // not_refactor_like is the implemented name for the non_refactor_intent concept.
-    assert.equal(out.impact.skipReason, RunPipelineImpactSkipReason.NotRefactorLike);
-    assert.equal(out.impact.skipReason, "not_refactor_like");
+    // not_requested_by_intent is the intent-driven skip: the resolved intent did
+    // not request impact (distinct from no_focal_symbol / multiple_focal_symbols).
+    assert.equal(out.impact.skipReason, RunPipelineImpactSkipReason.NotRequestedByIntent);
+    assert.equal(out.impact.skipReason, "not_requested_by_intent");
     assert.equal(out.impact.focalSymbol, null);
   });
 });
@@ -435,7 +436,7 @@ test("run_pipeline skips impact with multiple_focal_symbols reason when several 
 test("impact skip taxonomy is complete and impact_error maps to an honest get_impact_graph failure", async () => {
   // Requirement: skipped impact is never silent and the taxonomy includes at
   // least these reasons.
-  assert.equal(RunPipelineImpactSkipReason.NotRefactorLike, "not_refactor_like");
+  assert.equal(RunPipelineImpactSkipReason.NotRequestedByIntent, "not_requested_by_intent");
   assert.equal(RunPipelineImpactSkipReason.NoFocalSymbol, "no_focal_symbol");
   assert.equal(RunPipelineImpactSkipReason.MultipleFocalSymbols, "multiple_focal_symbols");
   assert.equal(RunPipelineImpactSkipReason.ImpactError, "impact_error");

@@ -14,6 +14,7 @@ import {
 } from "./runPipelineOrchestrator";
 import { formatRunPipelineOrchestrationOutput } from "./formatRunPipelineOutput";
 import { createDeferredVexpStore, type DeferredVexpStore } from "./deferredVexpStore";
+import { CapsuleIntent } from "../capsuleV2/types";
 
 // The orchestrator wires real leaf engines (routing, capsule assembly, impact,
 // logic flow, memory) together. These tests pin the orchestration-only
@@ -134,8 +135,74 @@ test("impact is skipped with an explicit reason for an explore task", async () =
   await withFixture(({ db, repoRoot }) => {
     const out = runFormatted(db, repoRoot, { query: "explore base module", intent: "explore" });
     assert.equal(out.impact.included, false);
-    assert.equal(out.impact.skipReason, "not_refactor_like");
+    assert.equal(out.impact.skipReason, "not_requested_by_intent");
     assert.equal(out.impact.focalSymbol, null);
+  });
+});
+
+test("explicit capsule impact intent ungates impact for a non-refactor query", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    // The preset auto-resolves away from refactor, but an explicit impact intent
+    // drives the run_pipeline impact section the same way it drives Capsule v2 —
+    // no phrase hack required.
+    const out = runFormatted(db, repoRoot, {
+      query: "inspect base function",
+      intent: "debug",
+      capsuleIntent: CapsuleIntent.Impact,
+    });
+    assert.equal(out.intent.resolvedIntent, "impact");
+    assert.equal(out.intent.impactEligible, true);
+    assert.equal(out.impact.included, true);
+    assert.equal(out.impact.skipReason, null);
+    assert.equal(out.impact.triggerReason, "impact_intent");
+    assert.equal(out.impact.focalSymbol?.localName, "base");
+  });
+});
+
+test("explicit impact phrasing ungates impact without the refactor preset", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const out = runFormatted(db, repoRoot, { query: "what is the impact of base" });
+    assert.equal(out.intent.resolvedIntent, "impact");
+    assert.equal(out.intent.intentSource, "phrase");
+    assert.equal(out.impact.included, true);
+    assert.equal(out.impact.triggerReason, "impact_phrase");
+    assert.equal(out.impact.focalSymbol?.localName, "base");
+  });
+});
+
+test("debug intent stays clear of impact and reports the intent-level skip reason", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const out = runFormatted(db, repoRoot, { query: "fix base function", intent: "debug" });
+    assert.equal(out.intent.resolvedIntent, "debug");
+    assert.equal(out.intent.impactEligible, false);
+    assert.equal(out.impact.included, false);
+    assert.equal(out.impact.skipReason, "not_requested_by_intent");
+  });
+});
+
+test("impact intent with no resolvable focal symbol reports no_focal_symbol, not a non-intent skip", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const out = runFormatted(db, repoRoot, {
+      query: "what is the impact of nonexistent_symbol_zzz",
+    });
+    assert.equal(out.intent.resolvedIntent, "impact");
+    assert.equal(out.intent.impactEligible, true);
+    assert.equal(out.impact.included, false);
+    // Intent DID request impact; the skip is about resolving a focal symbol.
+    assert.equal(out.impact.skipReason, "no_focal_symbol");
+  });
+});
+
+test("impact intent mentioning multiple symbols reports multiple_focal_symbols", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const out = runFormatted(db, repoRoot, {
+      query: "trace the impact across alpha and base",
+      capsuleIntent: CapsuleIntent.Impact,
+    });
+    assert.equal(out.intent.resolvedIntent, "impact");
+    assert.equal(out.impact.included, false);
+    assert.equal(out.impact.skipReason, "multiple_focal_symbols");
+    assert.ok(out.impact.matchedCandidates >= 2);
   });
 });
 

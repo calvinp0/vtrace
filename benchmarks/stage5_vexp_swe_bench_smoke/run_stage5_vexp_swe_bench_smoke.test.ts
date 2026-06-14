@@ -1602,9 +1602,24 @@ test("--capsule-engine and capsule v2 knobs parse and reject bad values", () => 
   // Legacy can be forced explicitly via either `legacy` or the `v1` alias.
   assert.equal(parseArgs(["--capsule-engine", "legacy"]).capsuleEngine, "legacy");
   assert.equal(parseArgs(["--capsule-engine", "v1"]).capsuleEngine, "legacy");
+  assert.equal(parseArgs(["--capsule-engine", "v1"]).capsuleEngine, "legacy");
   assert.throws(() => parseArgs(["--capsule-engine", "bogus"]), /Invalid --capsule-engine/);
   assert.throws(() => parseArgs(["--capsule-intent", "bogus"]), /Invalid --capsule-intent/);
   assert.throws(() => parseArgs(["--capsule-budget", "0"]), /--capsule-budget requires a positive integer/);
+});
+
+test("--capsule-intent maps through the shared normalized vocabulary (incl. modify/explain)", () => {
+  // Every concrete intent the shared model supports must parse and flow through to
+  // the spawned `capsule --intent` command verbatim — the Stage 5 flag is not a
+  // narrower, drifting whitelist.
+  for (const intent of ["auto", "debug", "modify", "refactor", "impact", "explain", "test-failure"] as const) {
+    const cfg = parseArgs(["--capsule-engine", "v2", "--capsule-intent", intent]);
+    assert.equal(cfg.capsuleIntent, intent, `--capsule-intent ${intent} must parse`);
+    const query = buildVtraceQueryCommand(baseConfig({ ...cfg }), "/ws", "task", "full");
+    const idx = query.args.indexOf("--intent");
+    assert.ok(idx >= 0, `expected --intent in command for ${intent}`);
+    assert.equal(query.args[idx + 1], intent, `--intent value must match for ${intent}`);
+  }
 });
 
 test("capsuleQueryTextFor returns a clean task for v2 and the packed query for legacy", () => {

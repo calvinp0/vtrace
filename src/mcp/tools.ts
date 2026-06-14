@@ -1472,6 +1472,19 @@ const RUN_PIPELINE_INTENT_DECISION_SCHEMA = objectProperty(
     mappedQueryIntent: stringProperty("Internal QueryIntent the preset maps to for retrieval and capsule profile selection."),
     editGoal: stringProperty("Normalized edit goal implied by the selected preset."),
     fallbackApplied: booleanProperty("Whether auto-selection required falling back because no strong signal existed."),
+    requestedIntent: stringProperty("Raw intent requested by the caller (preset, capsule intent, or auto), as fed to the shared normalized model."),
+    resolvedIntent: stringProperty("Unified normalized intent shared with Capsule v2: debug, modify, refactor, impact, explain, or test_failure."),
+    intentSource: stringProperty("How the normalized intent was decided: explicit, phrase, classifier, or default."),
+    impactEligible: booleanProperty("Whether the resolved intent makes the impact section eligible (refactor or impact intent)."),
+    impactSkipReason: {
+      type: ["string", "null"],
+      description: "Intent-level reason impact is ineligible (not_requested_by_intent), or null when eligible.",
+    },
+    flowEligible: booleanProperty("Whether the query shape makes the logic-flow section eligible."),
+    flowSkipReason: {
+      type: ["string", "null"],
+      description: "Intent-level reason flow is ineligible (unsupported_query_shape), or null when eligible.",
+    },
   },
   [
     "requested",
@@ -1486,6 +1499,13 @@ const RUN_PIPELINE_INTENT_DECISION_SCHEMA = objectProperty(
     "mappedQueryIntent",
     "editGoal",
     "fallbackApplied",
+    "requestedIntent",
+    "resolvedIntent",
+    "intentSource",
+    "impactEligible",
+    "impactSkipReason",
+    "flowEligible",
+    "flowSkipReason",
   ],
 );
 
@@ -1933,8 +1953,12 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
         selected: stringProperty("Preset resolved by the orchestrator."),
         source: stringProperty("How the preset was resolved."),
         fallbackApplied: booleanProperty("Whether auto-selection fell back to a default."),
+        resolvedIntent: stringProperty("Unified normalized intent shared with Capsule v2."),
+        intentSource: stringProperty("How the normalized intent was decided: explicit, phrase, classifier, or default."),
+        impactEligible: booleanProperty("Whether the resolved intent makes the impact section eligible."),
+        flowEligible: booleanProperty("Whether the query shape makes the flow section eligible."),
       },
-      ["requested", "selected", "source", "fallbackApplied"],
+      ["requested", "selected", "source", "fallbackApplied", "resolvedIntent", "intentSource", "impactEligible", "flowEligible"],
     ),
     retrieval: RUN_PIPELINE_DIAGNOSTICS_SCHEMA,
     impact: objectProperty(
@@ -4955,7 +4979,7 @@ function resolveMultiRepoImpactOutput(
     return {
       ...baseImpact,
       included: false,
-      skipReason: "not_refactor_like",
+      skipReason: "not_requested_by_intent",
       selectionSource: null,
       focalSymbol: null,
       summary: null,

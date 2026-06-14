@@ -69,6 +69,12 @@ import {
   mapPresetToQueryIntent,
   selectRunPipelineIntent,
 } from "./selectIntent";
+import { resolveNormalizedIntent } from "./resolveNormalizedIntent";
+import {
+  NormalizedIntent,
+  NormalizedIntentSource,
+  type NormalizedIntentDecision,
+} from "../intent/normalizedIntent";
 import {
   RUN_PIPELINE_SCHEMA_VERSION,
   RunPipelineContextSkipReason,
@@ -235,6 +241,12 @@ export interface RunPipelineOrchestration {
     readonly includeFileContent: boolean;
   };
   readonly intentDecision: RunPipelineIntentDecision;
+  /**
+   * The unified, normalized intent decision shared with Capsule v2. Reconciles
+   * the preset decision, any explicit `capsuleIntent`, and explicit impact
+   * phrasing into one model, and is what drives impact-section eligibility.
+   */
+  readonly normalizedIntent: NormalizedIntentDecision;
   readonly context: OrchestrationContextSection;
   readonly impact: OrchestrationImpactSection;
   readonly flow: OrchestrationFlowSection;
@@ -326,6 +338,17 @@ export function runPipelineOrchestrator(
     classification,
     query,
   });
+  // The single shared intent decision: reconcile the preset (retrieval routing)
+  // with any explicit Capsule v2 intent and explicit impact phrasing. This is the
+  // bridge between src/intent and capsuleV2 intent — impact eligibility reads from
+  // it, so run_pipeline and Capsule v2 can no longer disagree about impact.
+  const normalizedIntent = resolveNormalizedIntent({
+    presetDecision: intentDecision,
+    capsuleIntentRequested: rawInput.capsuleIntent,
+    query,
+    flowSupported:
+      normalizeSearchQuery(query).length > 0 && hasSupportedQueryShape(query),
+  });
 
   const context = runReliableContextRetrieval(db, repoRoot, {
     query,
@@ -350,7 +373,7 @@ export function runPipelineOrchestrator(
     builder: options.capsuleV2Builder ?? buildCapsuleV2,
   });
 
-  const impact = runImpactSection(db, repoRoot, context, intentDecision);
+  const impact = runImpactSection(db, repoRoot, context, normalizedIntent);
   const flow = runFlowSection(db, repoRoot, context);
   const memory = runMemorySection(db, {
     query,
@@ -392,6 +415,7 @@ export function runPipelineOrchestrator(
       includeFileContent: rawInput.includeFileContent ?? true,
     },
     intentDecision,
+    normalizedIntent,
     context,
     impact,
     flow,
@@ -702,17 +726,21 @@ function runImpactSection(
   db: Database,
   repoRoot: string,
   context: OrchestrationContextSection,
-  intentDecision: RunPipelineIntentDecision,
+  normalizedIntent: NormalizedIntentDecision,
 ): OrchestrationImpactSection {
   const triggerReason = resolveImpactTriggerReason(
     context.routedQuery.query,
-    intentDecision,
+    normalizedIntent,
   );
 
   if (triggerReason === null) {
     return {
       included: false,
-      skipReason: RunPipelineImpactSkipReason.NotRefactorLike,
+      // Intent-level skip: the resolved intent did not request impact. Distinct
+      // from no_focal_symbol / multiple_focal_symbols below, which mean the intent
+      // DID request impact but a single focal symbol could not be pinned down.
+      skipReason: normalizedIntent.impactSkipReason
+        ?? RunPipelineImpactSkipReason.NotRequestedByIntent,
       triggerReason: null,
       selectionSource: null,
       focalSymbol: null,
@@ -806,41 +834,33 @@ function runImpactSection(
 
 function resolveImpactTriggerReason(
   query: string,
-  intentDecision: RunPipelineIntentDecision,
+  normalizedIntent: NormalizedIntentDecision,
 ): string | null {
-  const normalized = normalizeIntentQuery(query);
-  const terms = new Set(normalized.split(/\s+/).filter((term) => term.length > 0));
-
-  if (intentDecision.selected === RunPipelinePresetIntent.Refactor) {
+  // Impact eligibility is INTENT-DRIVEN. A refactor or impact intent ungates the
+  // impact section, full stop — no magic phrase required. The trigger reason
+  // records which intent and how it resolved, for debuggability.
+  if (normalizedIntent.resolvedIntent === NormalizedIntent.Impact) {
+    return normalizedIntent.intentSource === NormalizedIntentSource.Explicit
+      ? "impact_intent"
+      : "impact_phrase";
+  }
+  if (normalizedIntent.resolvedIntent === NormalizedIntent.Refactor) {
+    // Historical reason name kept for refactor-resolved impact (explicit preset,
+    // refactor phrase trigger, or classifier all resolve to refactor intent).
     return "refactor_preset";
   }
-  if (normalized.includes("blast radius")) {
-    return "blast_radius_phrase";
-  }
-  if (normalized.includes("what breaks")) {
-    return "what_breaks_phrase";
-  }
-  if (terms.has("dependent") || terms.has("dependents")) {
-    return "dependents_keyword";
-  }
-  if (
-    normalized.includes("public api")
-    && (terms.has("change")
-      || terms.has("changes")
-      || terms.has("rename")
-      || terms.has("refactor")
-      || terms.has("break")
-      || terms.has("breaks"))
-  ) {
-    return "public_api_change_phrase";
-  }
-  // Debug preset triggers impact only when the user explicitly asks what is
-  // affected by a failing symbol — otherwise impact is noise for debugging.
-  if (
-    intentDecision.selected === RunPipelinePresetIntent.Debug
-    && (terms.has("affects") || terms.has("affect") || terms.has("breaks") || terms.has("break"))
-  ) {
-    return "debug_affect_phrase";
+  // Debug deliberately avoids impact UNLESS the query explicitly asks what a
+  // failing symbol affects — a narrow, query-level opt-in so blast-radius work
+  // labelled debug is still served, without making impact the noisy default for
+  // ordinary edit-site debugging. (`impactEligible` stays false; this is a query
+  // override beyond the intent gate, recorded by the trigger reason.)
+  if (normalizedIntent.resolvedIntent === NormalizedIntent.Debug) {
+    const terms = new Set(
+      normalizeIntentQuery(query).split(/\s+/).filter((term) => term.length > 0),
+    );
+    if (terms.has("affects") || terms.has("affect") || terms.has("breaks") || terms.has("break")) {
+      return "debug_affect_phrase";
+    }
   }
   return null;
 }

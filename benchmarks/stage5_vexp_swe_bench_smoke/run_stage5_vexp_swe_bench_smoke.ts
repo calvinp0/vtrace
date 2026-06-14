@@ -54,7 +54,7 @@ import {
   buildInspectFirst,
   renderInspectFirstText,
 } from "../../src/runPipeline/inspectFirst";
-import { CapsuleV2Mode, type CapsuleV2Result } from "../../src/capsuleV2/types";
+import { CapsuleV2Mode, parseCapsuleIntent, type CapsuleV2Result } from "../../src/capsuleV2/types";
 import {
   type CapsuleV2ArtifactBundle,
   type CapsuleV2ArtifactMeta,
@@ -106,8 +106,18 @@ export type Stage5IndexPolicy = "auto" | "always" | "reuse";
 // surface (`--intent <i> --budget <n>`), so live Stage 5 runs actually validate
 // Capsule v2 retrieval. The legacy `--mode` flags are NEVER passed to v2.
 export type CapsuleEngine = "legacy" | "v2";
-// Capsule v2 intents, matching the `capsule --intent` CLI surface.
-export type CapsuleV2Intent = "auto" | "debug" | "refactor" | "impact" | "test-failure";
+// Capsule v2 intents, matching the `capsule --intent` CLI surface and the shared
+// normalized intent model (debug/modify/refactor/impact/explain/test-failure +
+// auto). Validated through `parseCapsuleIntent` so this never drifts from the
+// canonical `CapsuleIntent` vocabulary.
+export type CapsuleV2Intent =
+  | "auto"
+  | "debug"
+  | "modify"
+  | "refactor"
+  | "impact"
+  | "explain"
+  | "test-failure";
 // Deterministic PIVOT_CHECK injection policy (--pivot-check-policy). Controls WHEN
 // the compact PIVOT_CHECK localization checklist (and the EDIT_GUARD / PATCH_VERIFY
 // blocks that ride with it) is appended to a Capsule v2 section. A token-cost knob:
@@ -7895,10 +7905,13 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         break;
       case "--capsule-intent": {
         const value = requireValue(argv, ++index, arg);
-        if (!["auto", "debug", "refactor", "impact", "test-failure"].includes(value)) {
+        // Route through the canonical parser so the harness flag maps through the
+        // exact same normalized vocabulary every other surface uses.
+        const parsed = parseCapsuleIntent(value);
+        if (parsed === undefined) {
           throw new Error("Invalid --capsule-intent.");
         }
-        config.capsuleIntent = value as CapsuleV2Intent;
+        config.capsuleIntent = parsed as CapsuleV2Intent;
         break;
       }
       case "--capsule-budget": config.capsuleBudget = requirePositiveInt(argv, ++index, arg); break;
@@ -7978,7 +7991,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --show-vtrace-index-log                       print the vtrace index log to the terminal (drops --quiet)",
       "  --context-policy auto|force-inject|force-no-context   override the cost-aware context gate (default: auto)",
       "  --capsule-engine legacy|v2                    capsule retrieval engine for indexed-context (default: legacy)",
-      "  --capsule-intent auto|debug|refactor|impact|test-failure   Capsule v2 intent (default: auto; v2 only)",
+      "  --capsule-intent auto|debug|modify|refactor|impact|explain|test-failure   Capsule v2 intent (default: auto; v2 only)",
       "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
       "  --pivot-check-policy off|multi_pivot|risk_gated|strict_risk_gated|always   when to inject PIVOT_CHECK (default: strict_risk_gated — inject only on a STRONG risk signal, rejecting hidden_pivot-only and two ordinary pivots; risk_gated injects on any high-risk signal)",
       "  --pivot-check-gate off|hard                   opt-in HARD two-phase context-to-action gate (default: off). 'hard' runs a READ-ONLY inspect-only Phase-1 preflight (mutation tools denied) whose checklist is verified before any Phase-2 solve; on a failed gate Phase 2 never runs (no solve, no Docker). v2 indexed-context only; orthogonal to --pivot-check-policy",

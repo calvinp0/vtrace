@@ -63,7 +63,10 @@ export type RunPipelineContextSkipReason =
   (typeof RunPipelineContextSkipReason)[keyof typeof RunPipelineContextSkipReason];
 
 export const RunPipelineImpactSkipReason = Object.freeze({
-  NotRefactorLike: "not_refactor_like",
+  // The intent did not request impact (distinct from "a focal symbol could not be
+  // resolved" and "too many focal symbols matched"). Driven by the resolved
+  // normalized intent, not by the presence/absence of magic phrasing.
+  NotRequestedByIntent: "not_requested_by_intent",
   NoFocalSymbol: "no_focal_symbol",
   MultipleFocalSymbols: "multiple_focal_symbols",
   NoDependents: "no_dependents",

@@ -1382,6 +1382,45 @@ test("get_code_context inherits run_pipeline impact source excerpts when the imp
   });
 });
 
+test("get_code_context inherits unified intent metadata and impact ungating from run_pipeline", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({
+      context: { repoRoot: initialized.repoRoot },
+    });
+
+    // Explicit impact phrasing (no refactor preset, no magic "what breaks") must
+    // ungate impact through the shared normalized intent — and get_code_context,
+    // being a thin run_pipeline alias, must surface the same decision and the new
+    // metadata fields, schema-conformant.
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-get-code-context-impact-intent",
+      toolId: McpToolId.GetCodeContext,
+      input: { query: "what is the impact of changing createSession" },
+    });
+
+    assert.equal(response.result.ok, true);
+    const output = response.result.output;
+    assert.equal(output.intent.resolvedIntent, "impact");
+    assert.equal(output.intent.intentSource, "phrase");
+    assert.equal(output.intent.impactEligible, true);
+    assert.equal(output.intent.impactSkipReason, null);
+    assert.equal(typeof output.intent.flowEligible, "boolean");
+    assert.equal(
+      output.intent.flowEligible
+        ? output.intent.flowSkipReason === null
+        : output.intent.flowSkipReason === "unsupported_query_shape",
+      true,
+    );
+    assert.equal(output.diagnostics.intent.resolvedIntent, "impact");
+    assert.equal(output.impact.included, true);
+    assert.equal(output.impact.triggerReason, "impact_phrase");
+    assertOutputConformsToToolSchema(McpToolId.GetCodeContext, output);
+  });
+});
+
 // A well-formed `accounting` block: deterministic chars/4 figures, a measured
 // latency, and the explicit naive-full-file baseline. Shared by the tests below.
 function assertWellFormedAccounting(accounting: unknown): void {
@@ -2071,16 +2110,16 @@ test("run_pipeline presets materially change capsule profile, include-tests defa
 
     const explore = byPreset.get("explore")!.result.output.impact;
     assert.equal(explore.included, false);
-    assert.equal(explore.skipReason, "not_refactor_like");
+    assert.equal(explore.skipReason, "not_requested_by_intent");
     assert.equal(explore.focalSymbol, null);
 
     const modify = byPreset.get("modify")!.result.output.impact;
     assert.equal(modify.included, false);
-    assert.equal(modify.skipReason, "not_refactor_like");
+    assert.equal(modify.skipReason, "not_requested_by_intent");
 
     const debug = byPreset.get("debug")!.result.output.impact;
     assert.equal(debug.included, false);
-    assert.equal(debug.skipReason, "not_refactor_like");
+    assert.equal(debug.skipReason, "not_requested_by_intent");
   });
 });
 

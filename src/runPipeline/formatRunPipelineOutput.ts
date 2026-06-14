@@ -233,6 +233,16 @@ export function formatRunPipelineOrchestrationOutput(
       mappedQueryIntent: orchestration.intentDecision.mappedQueryIntent,
       editGoal: orchestration.intentDecision.editGoal,
       fallbackApplied: orchestration.intentDecision.fallbackApplied,
+      // Unified normalized intent shared with Capsule v2 — the single decision
+      // model that drives impact/flow eligibility across run_pipeline,
+      // get_code_context, get_context_capsule, and Stage 5.
+      requestedIntent: orchestration.normalizedIntent.requestedIntent,
+      resolvedIntent: orchestration.normalizedIntent.resolvedIntent,
+      intentSource: orchestration.normalizedIntent.intentSource,
+      impactEligible: orchestration.normalizedIntent.impactEligible,
+      impactSkipReason: orchestration.normalizedIntent.impactSkipReason,
+      flowEligible: orchestration.normalizedIntent.flowEligible,
+      flowSkipReason: orchestration.normalizedIntent.flowSkipReason,
     },
     taskSummary: {
       query: orchestration.request.query,
@@ -250,6 +260,10 @@ export function formatRunPipelineOrchestrationOutput(
         selected: orchestration.intentDecision.selected,
         source: orchestration.intentDecision.source,
         fallbackApplied: orchestration.intentDecision.fallbackApplied,
+        resolvedIntent: orchestration.normalizedIntent.resolvedIntent,
+        intentSource: orchestration.normalizedIntent.intentSource,
+        impactEligible: orchestration.normalizedIntent.impactEligible,
+        flowEligible: orchestration.normalizedIntent.flowEligible,
       },
       retrieval: {
         initialReason: context.retrievalDiagnostics.initialReason,
