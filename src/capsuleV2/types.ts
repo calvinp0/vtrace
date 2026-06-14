@@ -12,6 +12,7 @@
 // from the internal capsule builder types so the product surface can evolve
 // without churning the retrieval/scoring internals.
 
+import type { ActionabilityHint } from "./actionabilityHints";
 import type { HybridScoreComponents } from "../retrieval/hybridScoring";
 
 /**
@@ -525,4 +526,12 @@ export interface CapsuleV2Result {
   support: CapsuleV2Item[];
   discarded: CapsuleV2Discarded[];
   diagnostics: CapsuleV2Diagnostics;
+  /**
+   * Bounded, evidence-backed reminders that a selected source file likely has a
+   * paired generated / co-edit artifact (e.g. a PLY parser table) that must be
+   * regenerated or updated alongside the source. Advisory only — derived from the
+   * final selection + workspace file map, never from retrieval scoring or gold
+   * patches. Present only when at least one hint fired. See `actionabilityHints.ts`.
+   */
+  actionability_hints?: ActionabilityHint[];
 }

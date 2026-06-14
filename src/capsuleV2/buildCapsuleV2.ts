@@ -40,6 +40,7 @@ import {
   type ClassMethodExpansion,
   type RefinedRoledCandidate,
 } from "./debugRoles";
+import { detectActionabilityHints } from "./actionabilityHints";
 import { retrieveDocSections, type DocSection } from "./docRetrieval";
 import { detectEditRiskDirectives } from "./editRiskDirectives";
 import {
@@ -686,6 +687,16 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     debugRefinement,
   });
 
+  // Actionability hints: advisory reminders that a selected SOURCE file likely has
+  // a paired generated/co-edit artifact (e.g. a PLY parser table) that must be
+  // regenerated alongside it. Derived ONLY from the final selection's paths + the
+  // workspace file map — never from retrieval scoring, ranking, or gold patches.
+  const actionabilityHints = detectActionabilityHints({
+    db: input.db,
+    repoRoot: input.repoRoot,
+    candidatePaths: [...pivots, ...support].map((item) => item.path),
+  });
+
   return {
     intent,
     actual_mode: allocation.tier,
@@ -722,6 +733,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...genericLexicalDecoyDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
     },
+    ...(actionabilityHints.length > 0 ? { actionability_hints: actionabilityHints } : {}),
   };
 }
 

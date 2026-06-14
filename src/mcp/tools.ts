@@ -6976,6 +6976,21 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
         "editRiskDirectives",
       ],
     ),
+    actionabilityHints: arrayProperty(
+      "Bounded, evidence-backed reminders that a selected source file likely has a paired generated/co-edit artifact (e.g. a PLY parser table) the agent must regenerate or update alongside its edit. Advisory only; never derived from retrieval scoring or gold patches.",
+      objectProperty(
+        "A generated/co-edit artifact actionability hint.",
+        {
+          kind: stringProperty("`generated_artifact` or `co_edit_dependency`."),
+          sourceFile: stringProperty("The selected source file the agent is likely to edit."),
+          relatedFile: stringProperty("The paired artifact that may also need regenerating/updating."),
+          confidence: stringProperty("low/medium/high."),
+          evidence: arrayProperty("Up to 2 short evidence bullets.", stringProperty("Evidence line.")),
+          hint: stringProperty("The compact call to action."),
+        },
+        ["kind", "sourceFile", "relatedFile", "confidence", "evidence", "hint"],
+      ),
+    ),
   },
   [
     "engine",
@@ -6989,6 +7004,7 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
     "discarded",
     "discardedTotal",
     "diagnostics",
+    "actionabilityHints",
   ],
 );
 

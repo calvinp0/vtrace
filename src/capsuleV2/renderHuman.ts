@@ -110,6 +110,24 @@ export function renderCapsuleV2Human(result: CapsuleV2Result): string {
     lines.push(directive.directive);
   }
 
+  // Actionability hints: a compact reminder that an edited source file likely has
+  // a paired generated/co-edit artifact (e.g. a parser table) needing regeneration.
+  // One or two lines per hint, after the edit-risk warnings, before support.
+  const actionabilityHints = result.actionability_hints ?? [];
+  if (actionabilityHints.length > 0) {
+    lines.push("");
+    lines.push("## Actionability hints");
+    for (const hint of actionabilityHints) {
+      lines.push("");
+      lines.push(`- generated/co-edit artifact: ${hint.relatedFile} (${hint.confidence} confidence)`);
+      lines.push(`  source: ${hint.sourceFile}`);
+      if (hint.evidence.length > 0) {
+        lines.push(`  why: ${hint.evidence.join("; ")}`);
+      }
+      lines.push(`  action: ${hint.hint}`);
+    }
+  }
+
   for (const item of result.support) {
     lines.push("");
     lines.push(itemBlockText(item));

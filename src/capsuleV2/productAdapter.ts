@@ -14,6 +14,7 @@
 // through the tool handlers. It is pure and deterministic: same result in, same
 // response out (no clocks, no randomness, no IO).
 
+import type { ActionabilityHint } from "./actionabilityHints";
 import {
   CapsuleV2ContentMode,
   type CapsuleV2Discarded,
@@ -30,6 +31,10 @@ const MAX_PRODUCT_DISCARDED = 12;
 // Bound on edit-risk directives surfaced (there are at most a couple in practice;
 // the cap is a backstop so the product surface stays bounded).
 const MAX_PRODUCT_EDIT_RISK_DIRECTIVES = 4;
+
+// Bound on actionability hints surfaced. The detector already caps at 3; this is a
+// defensive backstop so the product surface stays compact.
+const MAX_PRODUCT_ACTIONABILITY_HINTS = 3;
 
 /** A pivot or support item as the product/MCP surface reports it. */
 export interface CapsuleV2ProductItem {
@@ -117,6 +122,13 @@ export interface CapsuleV2ProductResponse {
   /** Total discarded candidates the engine produced (before the product cap). */
   discardedTotal: number;
   diagnostics: CapsuleV2ProductDiagnostics;
+  /**
+   * Bounded, evidence-backed reminders that a selected source file likely has a
+   * paired generated / co-edit artifact (e.g. a PLY parser table) the agent must
+   * regenerate or update alongside its edit. Advisory only; never derived from
+   * retrieval scoring or gold patches. Always present (empty when none fired).
+   */
+  actionabilityHints: ActionabilityHint[];
 }
 
 function projectItem(item: CapsuleV2Item): CapsuleV2ProductItem {
@@ -161,6 +173,9 @@ export function toCapsuleV2ProductResponse(
   const editRiskDirectives = Array.isArray(diagnostics.edit_risk_directives)
     ? diagnostics.edit_risk_directives
     : [];
+  const actionabilityHints = Array.isArray(result.actionability_hints)
+    ? result.actionability_hints
+    : [];
 
   return {
     engine: "v2",
@@ -197,6 +212,16 @@ export function toCapsuleV2ProductResponse(
           directive: directive.directive,
         })),
     },
+    actionabilityHints: actionabilityHints
+      .slice(0, MAX_PRODUCT_ACTIONABILITY_HINTS)
+      .map((hint) => ({
+        kind: hint.kind,
+        sourceFile: hint.sourceFile,
+        relatedFile: hint.relatedFile,
+        confidence: hint.confidence,
+        evidence: Array.isArray(hint.evidence) ? [...hint.evidence] : [],
+        hint: hint.hint,
+      })),
   };
 }
 
