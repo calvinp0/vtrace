@@ -13,6 +13,7 @@
 // without churning the retrieval/scoring internals.
 
 import type { ActionabilityHint } from "./actionabilityHints";
+import type { LocalizationSignals } from "./localizationSignals";
 import type { HybridScoreComponents } from "../retrieval/hybridScoring";
 
 /**
@@ -390,6 +391,15 @@ export interface CapsuleV2Diagnostics {
    * was suppressed.
    */
   generic_lexical_decoys_suppressed?: GenericLexicalDecoyDiagnostic[];
+  /**
+   * How strongly the issue text itself already localizes the edit site (resolved
+   * against the indexed repo). Drives the cost-aware context policy's conservative
+   * skip: an already-localized task (traceback frame / explicit file / symbol that
+   * resolves) is one a baseline agent localizes for free, so injecting oriented
+   * context is net overhead. Derived ONLY from issue text + index — never from
+   * gold patches. Always present on a built capsule (including no_context).
+   */
+  localization_signals?: LocalizationSignals;
 }
 
 /** One candidate whose generic-infrastructure lexical match was weakened. */

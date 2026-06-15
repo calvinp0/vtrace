@@ -55,6 +55,7 @@ import {
   renderInspectFirstText,
 } from "../../src/runPipeline/inspectFirst";
 import { CapsuleV2Mode, parseCapsuleIntent, type CapsuleV2Result } from "../../src/capsuleV2/types";
+import { pathIsUserLocalized, type LocalizationSignals } from "../../src/capsuleV2/localizationSignals";
 import {
   type CapsuleV2ArtifactBundle,
   type CapsuleV2ArtifactMeta,
@@ -3339,6 +3340,13 @@ export interface ContextPolicyDecision {
   // auditable down to the exact evidence — never just an opaque action+reason.
   // Empty when the decider computed no named signals (the legacy gate).
   readonly decisionSignals: readonly string[];
+  // The issue-localization evidence the conservative skip weighed (M7). Present on
+  // Capsule v2 auto decisions; omitted by the legacy gate / overrides.
+  readonly localizationSignals?: LocalizationSignals;
+  // The vtrace-advantage signals that justified injecting OVER an already-localized
+  // task (actionability hint, hidden pivot, multi-candidate). Empty/omitted when no
+  // advantage was needed or the task was not localized.
+  readonly vtraceAdvantageSignals?: readonly string[];
 }
 
 // A short problem statement is one cheap/local signal (mirrors the capsule
@@ -3505,6 +3513,13 @@ export interface CapsuleV2PolicyDiagnostics {
   readonly lineAnchorResolutionUsed: boolean;
   /** A SQL-rendering backfill recovered compiler/renderer candidates. */
   readonly sqlRenderingBackfillUsed: boolean;
+  // --- M7 conservative-localization inputs (all optional; default to no-skip) ---
+  /** Generated/co-edit actionability obligations the capsule attached (inject win). */
+  readonly actionabilityHintCount?: number;
+  /** The lead pivot's file path — compared against issue-localized files. */
+  readonly topPivotPath?: string | null;
+  /** How strongly the issue text already localizes the edit site (resolved). */
+  readonly localization?: LocalizationSignals;
 }
 
 // A focused source body of at least this many chars is "meaningful" — enough that
@@ -3550,6 +3565,34 @@ export function decideCapsuleV2ContextPolicy(
   const internalSubsystemNav = signals.touchesComplexInternals && navigationHeavy && capsule.topPivotHasSource;
   // A broader navigation-heavy task that still carries a meaningful pivot body.
   const navHeavyWithSource = navigationHeavy && meaningfulSource;
+  const strongCapsuleEvidence =
+    editRisk || lineAnchorWithSource || sqlBackfill || internalSubsystemNav || navHeavyWithSource;
+
+  // M7 vtrace-advantage signals — the evidence that injecting STILL pays off even
+  // when the issue text already localizes the edit site. Derived from the issue's
+  // localization confidence (resolved against the index, never gold) and the
+  // capsule's own selection.
+  const localization = capsule.localization;
+  const strongLocalization = localization?.confidence === "strong";
+  // Whether the lead pivot is a file the issue itself already names. When it is,
+  // injecting only re-surfaces what a baseline agent localizes for free.
+  const topPivotUserLocalized =
+    localization !== undefined && pathIsUserLocalized(capsule.topPivotPath, localization.resolvedFiles);
+  const actionabilityHintCount = capsule.actionabilityHintCount ?? 0;
+  const actionabilityAdvantage = actionabilityHintCount > 0;
+  // A hidden pivot: the issue strongly localizes elsewhere, yet the capsule's lead
+  // edit site (with a real source body) is NOT a file the issue named — vtrace
+  // surfaced a site the agent would not reach from the issue text alone.
+  const hiddenPivotAdvantage =
+    strongLocalization && capsule.topPivotHasSource && !topPivotUserLocalized;
+
+  // The advantage signals that justify injecting OVER an already-localized task.
+  // These BLOCK the conservative localization downgrade below — they are recorded
+  // even when no downgrade was at stake, so a decision is auditable to its evidence.
+  const advantageSignals: string[] = [];
+  if (actionabilityAdvantage) advantageSignals.push("inject_actionability_hint");
+  if (hiddenPivotAdvantage) advantageSignals.push("inject_hidden_pivot");
+  if (editRisk || lineAnchorWithSource || sqlBackfill) advantageSignals.push("inject_edit_changing_evidence");
 
   const fired: string[] = [];
   if (editRisk) fired.push("edit_risk_directive_present");
@@ -3562,11 +3605,57 @@ export function decideCapsuleV2ContextPolicy(
   if (capsule.topPivotHasSource) fired.push("top_pivot_has_source");
   if (meaningfulSource) fired.push("meaningful_pivot_source");
   if ((capsule.supportCount ?? 0) > 0) fired.push("support_present");
+  if (localization !== undefined) fired.push(`localization_${localization.confidence}`);
+  if (topPivotUserLocalized) fired.push("top_pivot_user_localized");
+  if (actionabilityAdvantage) fired.push("actionability_hint_present");
+  if (hiddenPivotAdvantage) fired.push("hidden_pivot_advantage");
 
-  // 2. Strong inject evidence: the capsule's own diagnostics say context prevents
-  //    a wrong edit (edit-risk / line-anchor / SQL backfill), OR the task is
-  //    internal-subsystem navigation / navigation-heavy with a real pivot body.
-  if (editRisk || lineAnchorWithSource || sqlBackfill || internalSubsystemNav || navHeavyWithSource) {
+  // M7 conservative localization downgrade. An inject-bound decision is turned to
+  // no_context ONLY when the issue text TRACEBACK-localizes the edit site (a
+  // `File "...", line N, in symbol` frame whose path resolves AND the capsule's lead
+  // pivot is that named file), with NO vtrace advantage that changes the edit
+  // itself: no actionability obligation, no hidden pivot, no edit-risk / line-anchor
+  // / SQL-rendering evidence. A stack trace pointing at the lead edit site is the
+  // strongest "a baseline agent localizes this for free" signal, so injecting
+  // oriented context is the M6 inject-without-benefit overhead.
+  //
+  // Restricted to the TRACEBACK channel on purpose: M6 showed file-/symbol-named
+  // localization does NOT separate inject-without-benefit cases (requests-5414,
+  // astropy-14539) from genuine wins (matplotlib-25960, django-11728) on the
+  // localization signal alone — so downgrading those would risk dropping useful
+  // context. The downgrade is purely SUBTRACTIVE (only inject→no_context, never the
+  // reverse), so it can never weaken an existing no_context / safe-skip decision.
+  const localizationDowngrade =
+    strongLocalization
+    && localization?.kind === "traceback"
+    && topPivotUserLocalized
+    && !actionabilityAdvantage
+    && !editRisk
+    && !lineAnchorWithSource
+    && !sqlBackfill;
+
+  // Apply the downgrade to an inject decision (and ONLY an inject decision).
+  const guardInject = (decision: ContextPolicyDecision): ContextPolicyDecision => {
+    if (!localizationDowngrade) return decision;
+    return {
+      action: "no_context",
+      reason:
+        "Issue traceback-localizes the edit site (a resolved `File \"...\", in symbol` frame whose lead "
+        + "pivot the issue already names) with no actionability / hidden-pivot / edit-changing advantage; "
+        + "a baseline agent localizes it for free, so injected context is net overhead.",
+      expectedContextValue: "low",
+      expectedOverheadRisk: "high",
+      decisionSignals: [...decision.decisionSignals, "skip_traceback_localized"],
+      localizationSignals: localization,
+      vtraceAdvantageSignals: [],
+    };
+  };
+
+  // 2. Strong inject evidence: the capsule's own diagnostics say context prevents a
+  //    wrong edit (edit-risk / line-anchor / SQL backfill), or the task is internal-
+  //    subsystem navigation / navigation-heavy with a real pivot body. Subject to
+  //    the conservative localization downgrade above.
+  if (strongCapsuleEvidence) {
     const drivers = [
       editRisk ? "edit-risk directive" : null,
       lineAnchorWithSource ? "line-anchor resolution" : null,
@@ -3574,7 +3663,7 @@ export function decideCapsuleV2ContextPolicy(
       internalSubsystemNav ? "internal-subsystem navigation" : null,
       navHeavyWithSource && !internalSubsystemNav ? "navigation-heavy task" : null,
     ].filter((d): d is string => d !== null);
-    return {
+    return guardInject({
       action: "inject",
       reason:
         `High-value context: ${drivers.join(" + ")} with a focused pivot source; `
@@ -3582,7 +3671,9 @@ export function decideCapsuleV2ContextPolicy(
       expectedContextValue: "high",
       expectedOverheadRisk: "low",
       decisionSignals: fired,
-    };
+      localizationSignals: localization,
+      vtraceAdvantageSignals: advantageSignals,
+    });
   }
 
   // 3. Cheap/local task: a micro capsule on a non-internal, non-cross-module task
@@ -3619,20 +3710,25 @@ export function decideCapsuleV2ContextPolicy(
       expectedContextValue: "low",
       expectedOverheadRisk: "high",
       decisionSignals: fired,
+      localizationSignals: localization,
+      vtraceAdvantageSignals: advantageSignals,
     };
   }
 
   // 4. Moderate task that retrieved real context but lacks both strong inject
   //    evidence and a clear cheap/local shape → a standard injection is worthwhile.
+  //    Subject to the same conservative localization downgrade.
   fired.push("moderate_task", "retrieved_context");
-  return {
+  return guardInject({
     action: "inject",
     reason:
       "Moderate task with retrieved context and no strong cheap/local signal; a standard Capsule v2 is worthwhile.",
     expectedContextValue: "medium",
     expectedOverheadRisk: "medium",
     decisionSignals: fired,
-  };
+    localizationSignals: localization,
+    vtraceAdvantageSignals: advantageSignals,
+  });
 }
 
 // Apply the operator's --context-policy override to a per-section gate decision.
@@ -4780,6 +4876,11 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
             editRiskDirectiveCount: section.classification.capsuleEditRiskDirectivesCount,
             lineAnchorResolutionUsed: section.classification.capsuleLineAnchorResolutionUsed,
             sqlRenderingBackfillUsed: section.classification.capsuleSqlRenderingBackfillUsed,
+            // M7 conservative-localization inputs, read from the engine's own v2
+            // result (null on a legacy fallback → the gate keeps prior behaviour).
+            actionabilityHintCount: section.classification.capsuleV2Result?.actionability_hints?.length ?? 0,
+            topPivotPath: section.classification.capsuleV2Result?.pivots[0]?.path ?? null,
+            localization: section.classification.capsuleV2Result?.diagnostics.localization_signals,
           })
         : decideContextPolicy(policySignals, {
             capsuleAction: section.classification.policyAction,

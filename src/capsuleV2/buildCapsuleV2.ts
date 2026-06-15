@@ -41,6 +41,7 @@ import {
   type RefinedRoledCandidate,
 } from "./debugRoles";
 import { detectActionabilityHints } from "./actionabilityHints";
+import { detectLocalizationSignals, type LocalizationSignals } from "./localizationSignals";
 import { retrieveDocSections, type DocSection } from "./docRetrieval";
 import { detectEditRiskDirectives } from "./editRiskDirectives";
 import {
@@ -131,6 +132,11 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // budget). The strategy's `role_policy` is the real lever — `debug_refinement`
   // runs the caller/helper/infra refinement + production backfill; the others use
   // the base role gate. test-failure shares the debug strategy.
+  // How strongly the issue text alone already localizes the edit site (resolved
+  // against this repo's index). Independent of retrieval scoring; consumed by the
+  // cost-aware context policy to skip injection for already-localized tasks. Always
+  // computed so the diagnostic is present on both the inject and no_context paths.
+  const localizationSignals = detectLocalizationSignals(input.db, input.task);
   const plan = planIntent(input.intent, input.task, shaped);
   const intent = plan.intent;
   const weights = plan.weights;
@@ -584,6 +590,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ],
       weights: weightsRecord,
       shaped,
+      localizationSignals,
       explanations: buildNoContextExplanations(refined, shaped),
       debugDiagnostics: {
         ...debugDiagnostics,
@@ -732,6 +739,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...graphNeighborDiagnostics,
       ...genericLexicalDecoyDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
+      localization_signals: localizationSignals,
     },
     ...(actionabilityHints.length > 0 ? { actionability_hints: actionabilityHints } : {}),
   };
@@ -993,6 +1001,7 @@ interface NoContextInput {
   discarded: CapsuleV2Discarded[];
   weights: Record<string, number>;
   shaped: ShapedSweQuery;
+  localizationSignals: LocalizationSignals;
   explanations: NoContextExplanation[];
   debugDiagnostics: Partial<CapsuleV2Result["diagnostics"]>;
 }
@@ -1022,6 +1031,7 @@ function noContextResult(input: NoContextInput): CapsuleV2Result {
       ...filteredSignalDiagnostics(input.shaped),
       ...lexicalScoringDiagnostics(input.shaped.query),
       ...input.debugDiagnostics,
+      localization_signals: input.localizationSignals,
       ...(input.explanations.length > 0 ? { no_context_explanations: input.explanations } : {}),
     },
   };
