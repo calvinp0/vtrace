@@ -94,6 +94,28 @@ export function renderCapsuleV2Human(result: CapsuleV2Result): string {
     lines.push("## Actionability hints");
     for (const hint of actionabilityHints) {
       lines.push("");
+      if (hint.kind === "multi_file_coedit") {
+        // A coordinated multi-file fix: name the lead pivot and every co-edit
+        // candidate, then a short inspect/rule-out checklist so the agent does not
+        // finalize after editing only the lead file. Kept compact (checklist is
+        // emitted ONLY for this kind, so single-file/generated hints stay terse).
+        const related = hint.relatedFiles ?? [hint.relatedFile];
+        lines.push(`- multi-file co-edit likely (${hint.confidence} confidence):`);
+        lines.push(`  Lead pivot: ${hint.sourceFile}`);
+        lines.push(`  Related edit candidate(s): ${related.join(", ")}`);
+        if (hint.evidence.length > 0) {
+          lines.push(`  Why: ${hint.evidence.join("; ")}`);
+        }
+        if (hint.patchObligation) {
+          lines.push(`  Obligation: ${hint.patchObligation.text}`);
+        }
+        lines.push("  Co-edit checklist:");
+        lines.push("    [ ] inspect lead pivot");
+        lines.push("    [ ] inspect related candidate(s)");
+        lines.push("    [ ] decide edit vs rule-out for each");
+        lines.push("    [ ] ensure all required co-edits are in the final diff");
+        continue;
+      }
       lines.push(`- generated/co-edit artifact: ${hint.relatedFile} (${hint.confidence} confidence)`);
       lines.push(`  source: ${hint.sourceFile}`);
       if (hint.evidence.length > 0) {

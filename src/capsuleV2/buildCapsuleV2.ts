@@ -41,6 +41,10 @@ import {
   type RefinedRoledCandidate,
 } from "./debugRoles";
 import { detectActionabilityHints } from "./actionabilityHints";
+import {
+  detectMultiFileCoeditHints,
+  type CoeditCandidateItem,
+} from "./multiFileCoeditHints";
 import { detectLocalizationSignals, type LocalizationSignals } from "./localizationSignals";
 import { retrieveDocSections, type DocSection } from "./docRetrieval";
 import { detectEditRiskDirectives } from "./editRiskDirectives";
@@ -698,11 +702,30 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // a paired generated/co-edit artifact (e.g. a PLY parser table) that must be
   // regenerated alongside it. Derived ONLY from the final selection's paths + the
   // workspace file map — never from retrieval scoring, ranking, or gold patches.
-  const actionabilityHints = detectActionabilityHints({
+  const generatedArtifactHints = detectActionabilityHints({
     db: input.db,
     repoRoot: input.repoRoot,
     candidatePaths: [...pivots, ...support].map((item) => item.path),
   });
+
+  // Multi-file co-edit hints: an explicit obligation when the SELECTION shape implies
+  // a coordinated fix across several surfaced files (cross-module pivots, or sibling
+  // pivots plus coupled caller/handler support). Derived ONLY from the final
+  // selection's roles/paths/symbols + the task prose — never from retrieval scoring,
+  // ranking, or gold patches. Files already covered by a more-specific
+  // generated-artifact hint are excluded so the two never duplicate or override.
+  const generatedArtifactFiles = generatedArtifactHints.flatMap((hint) => [
+    hint.sourceFile,
+    hint.relatedFile,
+  ]);
+  const coeditHints = detectMultiFileCoeditHints({
+    task: input.task,
+    pivots: pivots.map(toCoeditCandidate),
+    support: support.map(toCoeditCandidate),
+    generatedArtifactFiles,
+  });
+  // Generated-artifact hints first (more specific), then the multi-file co-edit hints.
+  const actionabilityHints = [...generatedArtifactHints, ...coeditHints];
 
   return {
     intent,
@@ -742,6 +765,20 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       localization_signals: localizationSignals,
     },
     ...(actionabilityHints.length > 0 ? { actionability_hints: actionabilityHints } : {}),
+  };
+}
+
+// Project an assembled capsule item onto the minimal view the multi-file co-edit
+// detector reads (role/path/symbol/kind + the non-source-example flag). Structurally
+// identical to the persisted Stage-5 manifest item, so the detector behaves the same
+// at build time and in the offline audit.
+function toCoeditCandidate(item: CapsuleV2Item): CoeditCandidateItem {
+  return {
+    role: item.role,
+    path: item.path,
+    symbol: item.symbol,
+    kind: item.kind,
+    isNonSourceExample: item.is_non_source_example === true,
   };
 }
 

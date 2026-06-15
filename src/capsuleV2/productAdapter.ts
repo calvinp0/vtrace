@@ -218,6 +218,9 @@ export function toCapsuleV2ProductResponse(
         kind: hint.kind,
         sourceFile: hint.sourceFile,
         relatedFile: hint.relatedFile,
+        // The full co-edit candidate set (multi_file_coedit only). Passed through so
+        // the product/MCP surface preserves every related file, not just the first.
+        ...(Array.isArray(hint.relatedFiles) ? { relatedFiles: [...hint.relatedFiles] } : {}),
         confidence: hint.confidence,
         evidence: Array.isArray(hint.evidence) ? [...hint.evidence] : [],
         hint: hint.hint,

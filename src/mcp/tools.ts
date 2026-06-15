@@ -6981,16 +6981,20 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
       objectProperty(
         "A generated/co-edit artifact actionability hint.",
         {
-          kind: stringProperty("`generated_artifact` or `co_edit_dependency`."),
-          sourceFile: stringProperty("The selected source file the agent is likely to edit."),
-          relatedFile: stringProperty("The paired artifact that may also need regenerating/updating."),
+          kind: stringProperty("`generated_artifact`, `co_edit_dependency`, or `multi_file_coedit`."),
+          sourceFile: stringProperty("The selected source / lead-pivot file the agent is likely to edit."),
+          relatedFile: stringProperty("The paired artifact that may also need regenerating/updating (the first co-edit candidate for `multi_file_coedit`)."),
+          relatedFiles: arrayProperty(
+            "The full co-edit candidate set (present for `multi_file_coedit`); each should be inspected and either edited or ruled out.",
+            stringProperty("A co-edit candidate file path."),
+          ),
           confidence: stringProperty("low/medium/high."),
           evidence: arrayProperty("Up to 2 short evidence bullets.", stringProperty("Evidence line.")),
-          hint: stringProperty("The compact call to action (regenerate/update the artifact)."),
+          hint: stringProperty("The compact call to action (regenerate the artifact, or coordinate the multi-file edit)."),
           patchObligation: objectProperty(
-            "Follow-through obligation: ensure the regenerated/updated artifact reaches the submitted diff (not just a local side effect). Present for generated-artifact hints.",
+            "Follow-through obligation: for generated-artifact hints, ensure the regenerated/updated artifact reaches the submitted diff; for multi-file co-edit hints, inspect every candidate and include all required edits in the final diff.",
             {
-              kind: stringProperty("Always `ensure_related_artifact_in_final_diff`."),
+              kind: stringProperty("`ensure_related_artifact_in_final_diff` or `consider_coedit_files_in_final_diff`."),
               text: stringProperty("The compact final-diff reminder."),
             },
             ["kind", "text"],

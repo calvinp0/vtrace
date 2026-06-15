@@ -34,7 +34,14 @@ import { listAllFilePaths } from "../db/repositories/filesRepository";
  * table in the workspace, but the submitted patch still only touched the source.
  */
 export interface ActionabilityPatchObligation {
-  kind: "ensure_related_artifact_in_final_diff";
+  /**
+   * `ensure_related_artifact_in_final_diff` — the generated/co-edit artifact must
+   * land in the submitted diff (regenerating it locally is not enough).
+   * `consider_coedit_files_in_final_diff` — a multi-file fix shape: inspect each
+   * co-edit candidate and either edit it or rule it out, and include every required
+   * edit in the final diff (do not finalize after editing only the lead pivot).
+   */
+  kind: "ensure_related_artifact_in_final_diff" | "consider_coedit_files_in_final_diff";
   /** Compact, rendered reminder of the final-diff obligation. */
   text: string;
 }
@@ -49,12 +56,26 @@ export interface ActionabilityHint {
    * `generated_artifact` — the related file is a recognised generated/compiled
    * artifact (parser table, "do not edit" header). `co_edit_dependency` — the
    * relation is by name/adjacency only (weaker; "consider also updating").
+   * `multi_file_coedit` — the selected context suggests a coordinated fix across
+   * several surfaced files (cross-module pivots, or sibling pivots plus coupled
+   * caller/handler support); see `relatedFiles` for the full co-edit candidate set.
    */
-  kind: "generated_artifact" | "co_edit_dependency";
-  /** The source file in the capsule the agent is likely to edit. */
+  kind: "generated_artifact" | "co_edit_dependency" | "multi_file_coedit";
+  /** The source / lead-pivot file in the capsule the agent is likely to edit. */
   sourceFile: string;
-  /** The paired artifact that may also need regenerating/updating. */
+  /**
+   * The paired artifact that may also need regenerating/updating. For
+   * `multi_file_coedit` this is the FIRST co-edit candidate (kept for back-compat);
+   * the complete candidate list is in `relatedFiles`.
+   */
   relatedFile: string;
+  /**
+   * The full set of co-edit candidate files (present for `multi_file_coedit`). The
+   * agent should inspect each and either edit it or rule it out. `relatedFile`
+   * always equals `relatedFiles[0]` when this is set, so single-file consumers stay
+   * unchanged. Absent for `generated_artifact` / `co_edit_dependency`.
+   */
+  relatedFiles?: string[];
   confidence: "low" | "medium" | "high";
   /** Up to 2 short evidence bullets (why this relation was inferred). */
   evidence: string[];

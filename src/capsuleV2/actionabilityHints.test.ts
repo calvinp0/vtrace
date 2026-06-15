@@ -239,6 +239,43 @@ test("Capsule v2 product response includes the cds.py -> cds_parsetab.py hint", 
   }
 });
 
+// --- (6b) the new multi-file co-edit detector does not replace generated hints --
+
+test("generated_artifact hint survives alongside the multi-file co-edit detector", () => {
+  const { db, repoRoot } = grammarFixture([
+    {
+      relPath: "astropy/units/format/cds_parsetab.py",
+      specs: [{ localName: "_tabversion", kind: SymbolKind.ModuleVariable, body: PARSETAB_BODY }],
+    },
+  ]);
+  try {
+    const result = buildCapsuleV2({
+      db,
+      repoRoot,
+      task: "CDS format parsing fails when reading a units header.",
+      intent: CapsuleIntent.Auto,
+      maxTokens: 8_000,
+    });
+    const hints = result.actionability_hints ?? [];
+    // The generated-artifact hint still fires (it is the more specific obligation)...
+    assert.ok(
+      hints.some(
+        (h) => h.kind === "generated_artifact"
+          && h.relatedFile === "astropy/units/format/cds_parsetab.py",
+      ),
+      `expected generated_artifact hint to survive, got ${JSON.stringify(hints)}`,
+    );
+    // ...and the multi-file detector adds NO co-edit for cds.py: it is suppressed as a
+    // generated-artifact-covered file, so the more specific hint is never overridden.
+    assert.ok(
+      !hints.some((h) => h.kind === "multi_file_coedit" && h.sourceFile.includes("cds.py")),
+      "generated-artifact-covered file must not also get a multi_file_coedit hint",
+    );
+  } finally {
+    db.close();
+  }
+});
+
 // --- (7) hints render into the human / Stage 5 injected context ----------------
 
 test("renderCapsuleV2Human surfaces an Actionability hints section", () => {
