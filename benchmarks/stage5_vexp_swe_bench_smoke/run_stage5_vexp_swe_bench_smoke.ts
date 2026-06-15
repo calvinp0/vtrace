@@ -3530,9 +3530,26 @@ const MEANINGFUL_PIVOT_SOURCE_CHARS = 800;
 // Decide the context policy for a Capsule v2 section. Same shape as
 // decideContextPolicy, but driven by Capsule v2's richer evidence. Returns the
 // named signals that fired so the decision is fully auditable.
+/** Options for the v2 context-policy gate. */
+export interface ContextPolicyOptions {
+  /**
+   * Enable the M7 conservative traceback-localized `inject -> no_context`
+   * downgrade. DISABLED BY DEFAULT (M7.3): the clean-Docker M6 re-baseline
+   * (`stage5_m7_clean_docker_rebaseline.md`) showed the downgrade fires on
+   * exactly the two cases whose original "regression" was Docker contamination
+   * (sympy-13372, xarray-3677) -- corrected, both are useful injections, so the
+   * downgrade removed useful context with no resolution gain. The localization
+   * detector + diagnostics are retained; only the skip ACTION is gated off.
+   * Re-enable explicitly via this option or
+   * `VTRACE_ENABLE_TRACEBACK_LOCALIZED_SKIP=1`.
+   */
+  enableTracebackLocalizedSkip?: boolean;
+}
+
 export function decideCapsuleV2ContextPolicy(
   signals: ContextPolicySignals,
   capsule: CapsuleV2PolicyDiagnostics,
+  options: ContextPolicyOptions = {},
 ): ContextPolicyDecision {
   // 1. The capsule recovered nothing actionable (no pivot / no_context mode) →
   //    there is no context to inject; declining is free.
@@ -3625,7 +3642,11 @@ export function decideCapsuleV2ContextPolicy(
   // localization signal alone — so downgrading those would risk dropping useful
   // context. The downgrade is purely SUBTRACTIVE (only inject→no_context, never the
   // reverse), so it can never weaken an existing no_context / safe-skip decision.
-  const localizationDowngrade =
+  // A traceback-localized skip CANDIDATE: the conditions under which the M7
+  // downgrade WOULD fire. Recorded as telemetry (decisionSignals) regardless of
+  // whether the skip is enabled, so future policy work can see where a skip was
+  // available without the gate having to act on it.
+  const localizationSkipCandidate =
     strongLocalization
     && localization?.kind === "traceback"
     && topPivotUserLocalized
@@ -3633,6 +3654,16 @@ export function decideCapsuleV2ContextPolicy(
     && !editRisk
     && !lineAnchorWithSource
     && !sqlBackfill;
+  if (localizationSkipCandidate) fired.push("traceback_localized_skip_candidate");
+  // M7.3: the downgrade is DISABLED BY DEFAULT (see ContextPolicyOptions). It
+  // only acts when explicitly enabled via the option or
+  // VTRACE_ENABLE_TRACEBACK_LOCALIZED_SKIP=1. Corrected clean-Docker M6 evidence
+  // showed the skip removed useful injection (sympy-13372, xarray-3677) with no
+  // resolution gain, so the lead-pivot traceback signal alone is not a safe skip.
+  const tracebackLocalizedSkipEnabled =
+    options.enableTracebackLocalizedSkip
+    ?? process.env.VTRACE_ENABLE_TRACEBACK_LOCALIZED_SKIP === "1";
+  const localizationDowngrade = localizationSkipCandidate && tracebackLocalizedSkipEnabled;
 
   // Apply the downgrade to an inject decision (and ONLY an inject decision).
   const guardInject = (decision: ContextPolicyDecision): ContextPolicyDecision => {

@@ -3,8 +3,10 @@
 // These are PURE: they exercise `decideCapsuleV2ContextPolicy` directly with
 // constructed task-shape signals + capsule diagnostics (no DB, no agents). They
 // lock in the M7 behaviour:
-//   - an inject-bound decision is DOWNGRADED to no_context only when the issue
-//     TRACEBACK-localizes the lead pivot with no vtrace advantage;
+//   - M7.3: the traceback-localized inject -> no_context downgrade is DISABLED
+//     BY DEFAULT (corrected clean-Docker M6 showed it removes useful injection);
+//     by default such a task stays inject and records a skip CANDIDATE signal,
+//     and the downgrade only acts behind the explicit experimental flag;
 //   - file-/symbol-named localization is deliberately NOT downgraded (the offline
 //     M6 audit showed it cannot separate inject-without-benefit cases from genuine
 //     wins — e.g. django-11728 — on localization signal alone, so a conservative
@@ -83,11 +85,27 @@ function loc(
   };
 }
 
-// 7. Auto SKIPS a traceback-localized task with no advantage.
-test("auto skips a traceback-localized task with no advantage", () => {
+// 7. By DEFAULT (M7.3) a traceback-localized task with no advantage is NOT
+//    downgraded -- it stays inject, but records the skip CANDIDATE as telemetry
+//    and retains the localization diagnostics.
+test("default auto does NOT downgrade a traceback-localized task (M7.3)", () => {
   const decision = decideCapsuleV2ContextPolicy(moderateSignals(), diag({ localization: loc("traceback") }));
+  assert.equal(decision.action, "inject");
+  assert.ok(!decision.decisionSignals.includes("skip_traceback_localized"));
+  assert.ok(decision.decisionSignals.includes("traceback_localized_skip_candidate"));
+  assert.equal(decision.localizationSignals?.kind, "traceback");
+});
+
+// 7b. The downgrade still works behind the explicit experimental flag.
+test("experimental flag enables the traceback-localized skip", () => {
+  const decision = decideCapsuleV2ContextPolicy(
+    moderateSignals(),
+    diag({ localization: loc("traceback") }),
+    { enableTracebackLocalizedSkip: true },
+  );
   assert.equal(decision.action, "no_context");
   assert.ok(decision.decisionSignals.includes("skip_traceback_localized"));
+  assert.ok(decision.decisionSignals.includes("traceback_localized_skip_candidate"));
 });
 
 // 8. Auto does NOT skip an explicit file-named task (conservative; see header).
@@ -136,9 +154,13 @@ test("a resolved line anchor blocks the localization downgrade", () => {
   assert.ok(!decision.decisionSignals.includes("skip_traceback_localized"));
 });
 
-// 12. force-inject still injects (over a localization skip).
+// 12. force-inject still injects (over a localization skip; flag enabled).
 test("force-inject overrides the localization skip", () => {
-  const skip = decideCapsuleV2ContextPolicy(moderateSignals(), diag({ localization: loc("traceback") }));
+  const skip = decideCapsuleV2ContextPolicy(
+    moderateSignals(),
+    diag({ localization: loc("traceback") }),
+    { enableTracebackLocalizedSkip: true },
+  );
   assert.equal(skip.action, "no_context");
   const forced = applyContextPolicyOverride(skip, "force-inject", true);
   assert.equal(forced.action, "inject");
@@ -152,19 +174,28 @@ test("force-no-context overrides an inject", () => {
   assert.equal(forced.action, "no_context");
 });
 
-// 14. The no_context decision carries the skip reason AND the localization signals.
+// 14. The no_context decision (flag enabled) carries the skip reason AND the
+//     localization signals.
 test("localization skip decision carries skip reason + localization signals", () => {
-  const decision = decideCapsuleV2ContextPolicy(moderateSignals(), diag({ localization: loc("traceback") }));
+  const decision = decideCapsuleV2ContextPolicy(
+    moderateSignals(),
+    diag({ localization: loc("traceback") }),
+    { enableTracebackLocalizedSkip: true },
+  );
   assert.equal(decision.action, "no_context");
   assert.ok(decision.decisionSignals.includes("skip_traceback_localized"));
   assert.equal(decision.localizationSignals?.kind, "traceback");
   assert.deepEqual(decision.vtraceAdvantageSignals, []);
 });
 
-// 15. The Stage 5 harness records the new policy reason + decision signals in the
-//     run metadata (the offline-readable provenance of a skip).
+// 15. The Stage 5 harness records the policy reason + decision signals in the
+//     run metadata. Flag enabled: the skip provenance is recorded.
 test("harness run metadata records the new policy reason + decision signals", () => {
-  const decision = decideCapsuleV2ContextPolicy(moderateSignals(), diag({ localization: loc("traceback") }));
+  const decision = decideCapsuleV2ContextPolicy(
+    moderateSignals(),
+    diag({ localization: loc("traceback") }),
+    { enableTracebackLocalizedSkip: true },
+  );
   const meta = indexedContextMetaFields({
     policyReason: decision.reason,
     contextPolicyDecisionSignals: decision.decisionSignals,
@@ -173,6 +204,21 @@ test("harness run metadata records the new policy reason + decision signals", ()
   } as unknown as IndexedContextResult);
   assert.equal(meta.vtracePolicyReason, decision.reason);
   assert.ok((meta.vtraceContextPolicyDecisionSignals ?? []).includes("skip_traceback_localized"));
+});
+
+// 15b. DEFAULT (no flag): run metadata still records the localization decision
+//      signals (skip candidate present) without a skip having occurred.
+test("default run metadata records localization signals without a skip", () => {
+  const decision = decideCapsuleV2ContextPolicy(moderateSignals(), diag({ localization: loc("traceback") }));
+  const meta = indexedContextMetaFields({
+    policyReason: decision.reason,
+    contextPolicyDecisionSignals: decision.decisionSignals,
+    policyAction: "inject",
+    contextPolicyAction: "inject",
+  } as unknown as IndexedContextResult);
+  const sigs = meta.vtraceContextPolicyDecisionSignals ?? [];
+  assert.ok(sigs.includes("traceback_localized_skip_candidate"));
+  assert.ok(!sigs.includes("skip_traceback_localized"));
 });
 
 // 16. Existing no_context behaviour is unchanged: a capsule that recovered nothing
