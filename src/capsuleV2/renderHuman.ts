@@ -6,6 +6,10 @@
 // exact text the budget accounting counted. Deterministic — no locale-dependent
 // formatting.
 
+import {
+  buildPivotInspectionContract,
+  renderPivotInspectionContractText,
+} from "./pivotInspectionContract";
 import { itemBlockText } from "./renderItem";
 import {
   CapsuleV2Mode,
@@ -79,6 +83,23 @@ export function renderCapsuleV2Human(result: CapsuleV2Result): string {
       + "behavior, inspect it as a possible root-cause file.",
     );
     lines.push("4. Prefer the smallest patch that fixes the behavior without broad rewrites.");
+  }
+
+  // Pivot inspection contract: a compact, STRUCTURED checklist that makes every
+  // non-lead pivot actionable. M10.1 live validation found the multi-file co-edit
+  // hint helps when a related file is a concrete support caller, but the agent still
+  // ignores non-lead pivots already in context (it edits the lead pivot and stops).
+  // This contract names the lead pivot as inspect-first, then requires inspect-or-
+  // rule-out for each additional pivot (and each related co-edit candidate, with a
+  // final-diff obligation, when a co-edit hint fired). Rendered HERE — before the
+  // bulky pivot/support bodies — so it survives the Stage 5 char-budget truncation.
+  // Null (and silent) for single-pivot capsules with no co-edit hint: no bloat.
+  const inspectionContract = buildPivotInspectionContract(
+    result.pivots,
+    result.actionability_hints ?? [],
+  );
+  for (const line of renderPivotInspectionContractText(inspectionContract)) {
+    lines.push(line);
   }
 
   // Actionability hints: a compact reminder that an edited source file likely has
