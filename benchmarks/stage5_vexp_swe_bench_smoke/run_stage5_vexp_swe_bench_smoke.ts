@@ -33,6 +33,11 @@ import {
   type OrderedToolCallSummary,
 } from "../../src/capsule/toolCallLog";
 import {
+  parseEnrichedToolCalls,
+  deriveTestCommands,
+  type RunPhase,
+} from "../../src/capsule/toolOutputCapture";
+import {
   describeHardGateOutcome,
   hardGateMetaFields,
   orchestrateHardGate,
@@ -2183,6 +2188,9 @@ async function maybeRunPivotRevisionPass(
     });
     const revisedPatch = await readPhasePatchText(phase.resultsFile);
     const revisionResponse = assistantTextFromStream(phase.streamContent);
+    // M21 (additive, best-effort): stable revision-phase stream copy + enriched tool calls
+    // + derived test commands, written next to the other `_pivot_revision_*` artifacts.
+    await persistPhaseToolTelemetry(dir, phase.streamContent, "pivot_revision");
     const revisedEdited = editedFilesFromPatch(revisedPatch);
     const complianceAfter = computePivotInspectionCompliance({
       enabled: config.pivotInspectionEnforcement,
@@ -6148,6 +6156,80 @@ function buildSummaryArtifact(
   };
 }
 
+// M21 — per-phase enriched tool/test telemetry artifact names. ADDITIVE: these never
+// replace `_tool_calls.json` (kept byte-stable for old consumers). All "_"-prefixed so
+// none is mistaken for a canonical results JSONL and none is git-staged.
+export const PHASE_TELEMETRY_FILES = {
+  first_pass: {
+    stream: "_agent_stream.first_pass.jsonl",
+    toolCalls: "_tool_calls_with_outputs.json",
+    testCommands: "_test_commands.json",
+  },
+  pivot_revision: {
+    stream: "_agent_stream.pivot_revision.jsonl",
+    toolCalls: "_pivot_revision_tool_calls.json",
+    testCommands: "_pivot_revision_test_commands.json",
+  },
+} as const;
+
+export interface PhaseToolTelemetryMeta {
+  phase: RunPhase;
+  phaseStreamFile: string | null;
+  toolCallsFile: string | null;
+  testCommandsFile: string | null;
+  toolCallCount: number;
+  testCommandCount: number;
+  // Honest capture accounting: how many calls came back with any captured output.
+  toolCallsWithOutput: number;
+}
+
+// Persist a stable per-phase copy of the raw agent stream plus the enriched tool-call and
+// derived test-command artifacts. ADDITIVE + best-effort: never throws (telemetry must not
+// fail a run), never touches `_tool_calls.json`, and writes the stream copy FIRST so a
+// later phase/run cannot clobber the per-label evidence. Returns a small meta summary.
+export async function persistPhaseToolTelemetry(
+  rawDir: string,
+  streamContent: string,
+  phase: RunPhase,
+): Promise<PhaseToolTelemetryMeta> {
+  const names = PHASE_TELEMETRY_FILES[phase];
+  const empty: PhaseToolTelemetryMeta = {
+    phase,
+    phaseStreamFile: null,
+    toolCallsFile: null,
+    testCommandsFile: null,
+    toolCallCount: 0,
+    testCommandCount: 0,
+    toolCallsWithOutput: 0,
+  };
+  try {
+    if (streamContent.length === 0) return empty;
+    await mkdir(rawDir, { recursive: true });
+    // 1) Stable per-phase stream copy (before any later phase can overwrite the shared one).
+    const phaseStreamFile = path.join(rawDir, names.stream);
+    await writeFile(phaseStreamFile, streamContent);
+    // 2) Enriched ordered tool calls with bounded outputs.
+    const calls = parseEnrichedToolCalls(streamContent, phase);
+    const toolCallsFile = path.join(rawDir, names.toolCalls);
+    await writeFile(toolCallsFile, `${JSON.stringify(calls, null, 2)}\n`);
+    // 3) Derived test-command events.
+    const testCommands = deriveTestCommands(calls);
+    const testCommandsFile = path.join(rawDir, names.testCommands);
+    await writeFile(testCommandsFile, `${JSON.stringify(testCommands, null, 2)}\n`);
+    return {
+      phase,
+      phaseStreamFile,
+      toolCallsFile,
+      testCommandsFile,
+      toolCallCount: calls.length,
+      testCommandCount: testCommands.length,
+      toolCallsWithOutput: calls.filter((c) => c.output !== null).length,
+    };
+  } catch {
+    return empty;
+  }
+}
+
 export async function persistOrderedToolCalls(
   config: CliConfig,
   rawDir: string,
@@ -6224,6 +6306,9 @@ export async function persistOrderedToolCalls(
     const logPath = toolCallLogFilePath(rawDir);
     await mkdir(path.dirname(logPath), { recursive: true });
     await writeFile(logPath, `${JSON.stringify(calls, null, 2)}\n`);
+    // M21 (additive, best-effort): stable first-pass stream copy + enriched tool calls
+    // (with bounded outputs) + derived test-command events. Never touches `_tool_calls.json`.
+    const firstPassTelemetry = await persistPhaseToolTelemetry(rawDir, stream, "first_pass");
     await writeSummary(
       buildSummaryArtifact(summarizeOrderedToolCalls(calls, true), condition, instances, config.runLabel, {
         toolCallLogFile: logPath,
@@ -6236,6 +6321,11 @@ export async function persistOrderedToolCalls(
       vtraceToolCallLogFile: logPath,
       vtraceToolCallCount: calls.length,
       vtraceToolCallError: null,
+      vtraceFirstPassStreamFile: firstPassTelemetry.phaseStreamFile,
+      vtraceFirstPassToolCallsFile: firstPassTelemetry.toolCallsFile,
+      vtraceFirstPassTestCommandsFile: firstPassTelemetry.testCommandsFile,
+      vtraceFirstPassTestCommandCount: firstPassTelemetry.testCommandCount,
+      vtraceFirstPassToolCallsWithOutput: firstPassTelemetry.toolCallsWithOutput,
       vtracePivotChecklistEmitted: pivotChecklistEmitted,
       vtracePivotCheckRows: pivotCheckRows,
       vtraceNeighborhoodMentioned: neighborhoodMentioned,
