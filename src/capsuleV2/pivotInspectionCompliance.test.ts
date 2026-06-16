@@ -323,3 +323,56 @@ test("parsePivotDecisionMarkers returns [] for text without markers", () => {
   assert.deepEqual(parsePivotDecisionMarkers("no markers here\njust prose"), []);
   assert.deepEqual(parsePivotDecisionMarkers(""), []);
 });
+
+// --- (M15) edited file wins over a RULED_OUT marker -------------------------------
+
+test("an edited candidate is `edited` even if a RULED_OUT marker is present", () => {
+  const decisions: PivotDecisionMarker[] = [
+    { path: "a/other.py", decision: "RULED_OUT", evidence: "the join handles empty input safely so no edit is required" },
+  ];
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: buildPivotInspectionContract(
+      [{ path: "a/lead.py", symbol: "lead" }, { path: "a/other.py", symbol: "other" }],
+      [],
+    ),
+    editedFiles: ["a/lead.py", "a/other.py"],
+    inspectedFiles: ["a/other.py"],
+    decisions,
+  });
+  assert.deepEqual(out.edited, ["a/other.py::other"]);
+  assert.deepEqual(out.ruledOut, []);
+  assert.deepEqual(out.unclear, []);
+});
+
+// --- (M15) a grounded first-pass RULED_OUT marker suppresses the false trigger -----
+
+test("a grounded first-pass RULED_OUT marker suppresses the corrective trigger", () => {
+  const contract = buildPivotInspectionContract(
+    [{ path: "a/lead.py", symbol: "lead" }, { path: "a/other.py", symbol: "other" }],
+    [],
+  );
+  // Without a marker: inspected-but-not-edited ⇒ unclear ⇒ corrective fires.
+  const before = computePivotInspectionCompliance({
+    enabled: true,
+    contract,
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["a/other.py"],
+  });
+  assert.deepEqual(before.unclear, ["a/other.py::other"]);
+  assert.equal(before.correctivePromptSent, true);
+
+  // With a grounded first-pass RULED_OUT marker: ruledOut ⇒ corrective suppressed.
+  const after = computePivotInspectionCompliance({
+    enabled: true,
+    contract,
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["a/other.py"],
+    decisions: [
+      { path: "a/other.py", decision: "RULED_OUT", evidence: "scatterplot is not on the changed legend code path; the offset fix lives in scales.py" },
+    ],
+  });
+  assert.deepEqual(after.ruledOut, ["a/other.py::other"]);
+  assert.deepEqual(after.unclear, []);
+  assert.equal(after.correctivePromptSent, false);
+});

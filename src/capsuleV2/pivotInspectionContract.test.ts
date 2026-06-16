@@ -370,3 +370,29 @@ test("the rendered enforcement block leaks no evaluation-only / gold labels", ()
     assert.ok(!text.includes(leak), `enforcement block must not contain "${leak}"`);
   }
 });
+
+// --- (M15) enforcement block requests machine-readable PIVOT_DECISION markers -----
+
+test("the enforcement block includes the machine-readable PIVOT_DECISION marker format", () => {
+  const contract = buildPivotInspectionContract(
+    [{ path: "a/lead.py", symbol: "lead" }, { path: "a/other.py", symbol: "other" }],
+    [],
+  );
+  const text = renderPivotInspectionEnforcementText(contract).join("\n");
+  assert.match(text, /PIVOT_DECISION:/);
+  assert.match(text, /path: <file>/);
+  assert.match(text, /decision: EDITED \| RULED_OUT/);
+  assert.match(text, /evidence: <one sentence grounded in source or test behavior>/);
+  assert.match(text, /RULED_OUT requires concrete source-grounded evidence/);
+});
+
+// --- (M15) the advisory contract block does NOT request markers (gated to enforcement) -
+
+test("the advisory contract block does not include PIVOT_DECISION markers", () => {
+  const contract = buildPivotInspectionContract(
+    [{ path: "a/lead.py", symbol: "lead" }, { path: "a/other.py", symbol: "other" }],
+    [],
+  );
+  const advisory = renderPivotInspectionContractText(contract).join("\n");
+  assert.doesNotMatch(advisory, /PIVOT_DECISION/);
+});

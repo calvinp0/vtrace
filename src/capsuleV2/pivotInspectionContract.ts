@@ -274,6 +274,21 @@ export function renderPivotInspectionEnforcementText(
   );
   lines.push("  - If the behavior crosses files, include all required co-edits in the final diff.");
   lines.push("");
+  lines.push(
+    "Machine-readable decision (REQUIRED): in your final answer, emit ONE PIVOT_DECISION block "
+    + "per non-lead pivot / co-edit candidate listed above, using exactly this format:",
+  );
+  lines.push("  PIVOT_DECISION:");
+  lines.push("  path: <file>");
+  lines.push("  decision: EDITED | RULED_OUT");
+  lines.push("  evidence: <one sentence grounded in source or test behavior>");
+  lines.push(
+    "  - EDITED is valid only when <file> appears in your final diff.",
+  );
+  lines.push(
+    "  - RULED_OUT requires concrete source-grounded evidence; a generic \"not needed\" is not enough.",
+  );
+  lines.push("");
   lines.push("Final diff check:");
   lines.push(
     "  Every non-lead pivot / co-edit candidate must be either edited or ruled out with a "

@@ -52,17 +52,21 @@ import {
 import {
   computePivotInspectionCompliance,
   parsePivotDecisionMarkers,
+  type PivotDecisionMarker,
   type PivotInspectionCompliance,
 } from "../../src/capsuleV2/pivotInspectionCompliance";
 import {
   decideRevisionPass,
   buildRevisionPrompt,
+  buildTestExpectation,
+  boundExcerpts,
   decideReplacement,
   noRunRecord,
   REVISION_ARTIFACT_FILES,
   type PivotRevisionRecord,
   type RevisionPassDecisionInput,
   type RevisionSourceExcerpt,
+  type RevisionTestExpectation,
 } from "../../src/capsuleV2/pivotRevisionPass";
 import { toCapsuleV2ProductResponse } from "../../src/capsuleV2/productAdapter";
 import {
@@ -73,7 +77,7 @@ import {
   buildInspectFirst,
   renderInspectFirstText,
 } from "../../src/runPipeline/inspectFirst";
-import { CapsuleV2Mode, parseCapsuleIntent, type CapsuleV2Result } from "../../src/capsuleV2/types";
+import { CapsuleV2Mode, parseCapsuleIntent, type CapsuleV2Item, type CapsuleV2Result } from "../../src/capsuleV2/types";
 import { pathIsUserLocalized, type LocalizationSignals } from "../../src/capsuleV2/localizationSignals";
 import {
   type CapsuleV2ArtifactBundle,
@@ -2022,6 +2026,10 @@ export interface RevisionPassContext {
   // Directory the revision artifacts are written into (the vtrace raw dir).
   outputDir: string;
   sourceExcerpts?: readonly RevisionSourceExcerpt[];
+  // M15 evidence enrichment, threaded into the prompt + persisted record.
+  testExpectation?: RevisionTestExpectation;
+  firstPassAssistantTextPath?: string | null;
+  firstPassPivotDecisions?: PivotDecisionMarker[];
   // Live: spawn the second harness run; returns the revised patch + prose + after-verdict.
   runSecondPass: (prompt: string) => Promise<{
     revisedPatch: string | null;
@@ -2036,8 +2044,13 @@ export interface RevisionPassContext {
 
 export async function executePivotRevisionPass(ctx: RevisionPassContext): Promise<PivotRevisionRecord> {
   const decision = decideRevisionPass(ctx.decisionInput);
+  const extras = {
+    firstPassAssistantTextPath: ctx.firstPassAssistantTextPath ?? null,
+    firstPassPivotDecisions: ctx.firstPassPivotDecisions ?? [],
+    testExpectation: ctx.testExpectation,
+  };
   if (!decision.run) {
-    const rec = noRunRecord(decision.reason, ctx.originalPatch, ctx.decisionInput.complianceBefore);
+    const rec = noRunRecord(decision.reason, ctx.originalPatch, ctx.decisionInput.complianceBefore, extras);
     await persistRevisionRecord(ctx.outputDir, rec);
     return rec;
   }
@@ -2045,6 +2058,7 @@ export async function executePivotRevisionPass(ctx: RevisionPassContext): Promis
     complianceBefore: ctx.decisionInput.complianceBefore,
     currentPatch: ctx.originalPatch,
     sourceExcerpts: ctx.sourceExcerpts,
+    testExpectation: ctx.testExpectation,
   });
   const second = await ctx.runSecondPass(prompt);
   const replaced = decideReplacement(
@@ -2065,6 +2079,7 @@ export async function executePivotRevisionPass(ctx: RevisionPassContext): Promis
     complianceBefore: ctx.decisionInput.complianceBefore,
     complianceAfter: second.complianceAfter,
     replacedFinalPatch: replaced,
+    ...extras,
   };
   await persistRevisionRecord(ctx.outputDir, rec);
   return rec;
@@ -2088,15 +2103,44 @@ async function maybeRunPivotRevisionPass(
     .filter((h) => h.kind === "generated_artifact")
     .map((h) => h.relatedFile);
   const inspectedFiles = await readInspectedFiles(toolCallLogFilePath(dir));
+
+  // M15: persist first-pass assistant prose (recoverable from the per-run stream that
+  // still holds the first pass here — the revision phase writes a SEPARATE stream file)
+  // and parse its PIVOT_DECISION markers. A grounded first-pass rule-out is then credited
+  // in the BEFORE verdict, which suppresses false triggers (a non-gold pivot the first
+  // pass legitimately decided not to edit no longer counts as unclear).
+  const firstPassText = assistantTextFromStream(
+    await readFile(vtraceAgentStreamFilePath(config.out), "utf8").catch(() => ""),
+  );
+  let firstPassAssistantTextPath: string | null = null;
+  if (firstPassText.trim().length > 0) {
+    firstPassAssistantTextPath = path.join(dir, REVISION_ARTIFACT_FILES.firstPassAssistant);
+    await mkdir(dir, { recursive: true });
+    await writeFile(firstPassAssistantTextPath, `${firstPassText}\n`);
+  }
+  const firstPassPivotDecisions = parsePivotDecisionMarkers(firstPassText);
+
   const complianceBefore = computePivotInspectionCompliance({
     enabled: config.pivotInspectionEnforcement,
     contract,
     editedFiles: editedFilesFromPatch(originalPatch),
     inspectedFiles,
     generatedArtifactFiles,
+    decisions: firstPassPivotDecisions,
   });
 
   const instances = await resolveInstances(config);
+  const instance = await loadInstanceMetadata(config, instances[0] ?? null);
+  // M15: feed FAIL_TO_PASS / problem-statement context + bounded source excerpts for the
+  // outstanding candidates into the revision prompt, so the second pass is informed.
+  const testExpectation = buildTestExpectation(
+    instance?.failToPass ?? [],
+    instance?.problemStatement ?? null,
+  );
+  const sourceExcerpts = buildRevisionExcerpts(
+    [...complianceBefore.missing, ...complianceBefore.unclear],
+    result?.pivots ?? [],
+  );
   const baseContext = await readFile(vtraceInstructionsFilePath(config.out), "utf8").catch(() => "");
   const revisionPromptFile = path.join(config.out, "_pivot_revision_prompt.active.md");
   const revisionStream = path.join(config.out, "_agent_pivot_revision_stream.jsonl");
@@ -2141,8 +2185,58 @@ async function maybeRunPivotRevisionPass(
     },
     originalPatch,
     outputDir: dir,
+    sourceExcerpts,
+    testExpectation,
+    firstPassAssistantTextPath,
+    firstPassPivotDecisions,
     runSecondPass,
   });
+}
+
+// M15: load the SweBench instance metadata (FAIL_TO_PASS, problem statement) for the
+// revision prompt's test-expectation context. Best-effort: null when unavailable.
+async function loadInstanceMetadata(
+  config: CliConfig,
+  instanceId: string | null,
+): Promise<SweBenchInstance | null> {
+  if (!instanceId) return null;
+  const records = await loadSweBenchData(sweBenchDataPath(config)).catch(
+    () => [] as Record<string, unknown>[],
+  );
+  for (const record of records) {
+    const inst = toSweBenchInstance(record);
+    if (inst.instanceId === instanceId) return inst;
+  }
+  return null;
+}
+
+// M15: build bounded source excerpts for the outstanding (missing/unclear) candidates
+// from the capsule's already-selected pivots — focused body (or signature), plus up to
+// two evidence bullets (why VTRACE surfaced it). Strictly bounded by `boundExcerpts`
+// (<=3 candidates, <=12 lines, <=2 bullets); never whole files. Pure read of the
+// existing capsule result — no retrieval, ranking, or selection change.
+function buildRevisionExcerpts(
+  outstandingIds: readonly string[],
+  pivots: readonly CapsuleV2Item[],
+): RevisionSourceExcerpt[] {
+  const excerpts: RevisionSourceExcerpt[] = [];
+  for (const id of outstandingIds) {
+    const candPath = id.split("::")[0] ?? id;
+    const pivot = pivots.find(
+      (p) =>
+        p.path === candPath
+        || candPath.endsWith(`/${p.path}`)
+        || p.path.endsWith(`/${candPath}`),
+    );
+    if (!pivot) continue;
+    const body = (pivot.source ?? pivot.signature ?? "").trim();
+    const evidence: string[] = [];
+    const firstEvidence = (pivot.evidence ?? []).find((e) => e.trim().length > 0)
+      ?? (pivot.role_reason && pivot.role_reason.trim().length > 0 ? pivot.role_reason : undefined);
+    if (firstEvidence) evidence.push(`why surfaced: ${firstEvidence.replace(/\s+/g, " ").trim()}`);
+    excerpts.push({ path: candPath, symbol: pivot.symbol, excerpt: body, evidence });
+  }
+  return boundExcerpts(excerpts);
 }
 
 // Map Capsule v2 audit items to the inspection-shaped pivots the hard gate checks.

@@ -1,4 +1,9 @@
 // M14 corrective pivot-revision pass — planning + prompt + record assembly.
+// M15 — evidence enrichment: the revision prompt now carries FAIL_TO_PASS / test
+// expectation context and bounded source excerpts for the outstanding candidates, and
+// the record carries the first-pass assistant-text pointer + parsed first-pass
+// PIVOT_DECISION markers, so the second pass is informed enough to make a real patch
+// decision (M14.1 found it was under-informed: it ruled out a gold-required pivot).
 //
 // SCOPE: this module is PURE (no fs, no spawn, no model, no Docker). It decides
 // whether a second corrective patch pass should run, builds the revision prompt, and
@@ -27,15 +32,41 @@
 
 import {
   buildCorrectivePrompt,
+  type PivotDecisionMarker,
   type PivotInspectionCompliance,
 } from "./pivotInspectionCompliance";
+
+/** Strict bounds so the revision prompt stays compact (never whole files / huge lists). */
+export const MAX_EXCERPT_CANDIDATES = 3;
+export const MAX_EXCERPT_LINES = 12;
+export const MAX_EXCERPT_BULLETS = 2;
+const MAX_FAIL_TO_PASS = 6;
+const MAX_PROBLEM_STATEMENT_CHARS = 600;
 
 /** A compact source excerpt for a missing/unclear candidate, included in the prompt. */
 export interface RevisionSourceExcerpt {
   /** Repo-relative file path of the candidate. */
   path: string;
-  /** A SHORT excerpt (already bounded by the caller — never a whole file). */
+  /** Candidate symbol, when known (for a clearer header). */
+  symbol?: string;
+  /** A SHORT excerpt (bounded to MAX_EXCERPT_LINES — never a whole file). */
   excerpt: string;
+  /** Up to MAX_EXCERPT_BULLETS evidence bullets (why surfaced / co-edit relation). */
+  evidence?: readonly string[];
+}
+
+/**
+ * Where the revision prompt's test-expectation context came from, in priority order:
+ *   instance_metadata  — FAIL_TO_PASS names from the dataset / instance record
+ *   eval_artifact      — failing-test summary from an evaluation artifact
+ *   problem_statement  — issue text excerpt (no test names available)
+ *   unavailable        — none of the above
+ */
+export interface RevisionTestExpectation {
+  failToPass: readonly string[];
+  /** Compact problem-statement excerpt, used when no test names are available. */
+  problemStatementExcerpt?: string;
+  source: "instance_metadata" | "eval_artifact" | "problem_statement" | "unavailable";
 }
 
 export interface RevisionPassDecisionInput {
@@ -78,15 +109,79 @@ export function decideRevisionPass(input: RevisionPassDecisionInput): RevisionPa
   return { run: true, reason: `${outstanding} missing/unclear candidate(s)` };
 }
 
-const REVISION_INTRO = "You previously produced this patch:";
+const REVISION_INTRO = "You previously produced this patch.";
+const REVISION_VERIFY_LINE = "VTRACE could not verify the required pivot decision(s).";
 const REVISION_RULES = [
   "Rules:",
   "  - Do not edit a file merely because it is listed.",
   "  - Prefer the minimal final diff.",
   "  - Preserve already-correct changes.",
-  "  - If you rule a candidate out, cite concrete source evidence.",
-  "  - Return a unified diff only.",
+  "  - Only add a co-edit file when source/test evidence requires it.",
+  "  - If you rule a candidate out, cite concrete source evidence in a PIVOT_DECISION block.",
 ];
+
+/**
+ * Bound a list of source excerpts to the strict prompt limits: at most
+ * MAX_EXCERPT_CANDIDATES candidates, each excerpt clipped to MAX_EXCERPT_LINES lines
+ * and each evidence list clipped to MAX_EXCERPT_BULLETS bullets. Pure; never throws.
+ */
+export function boundExcerpts(
+  excerpts: readonly RevisionSourceExcerpt[],
+): RevisionSourceExcerpt[] {
+  return excerpts.slice(0, MAX_EXCERPT_CANDIDATES).map((ex) => {
+    const lines = ex.excerpt.replace(/\s+$/g, "").split(/\r?\n/).slice(0, MAX_EXCERPT_LINES);
+    const evidence = (ex.evidence ?? [])
+      .map((e) => e.trim())
+      .filter((e) => e.length > 0)
+      .slice(0, MAX_EXCERPT_BULLETS);
+    return { path: ex.path, symbol: ex.symbol, excerpt: lines.join("\n"), evidence };
+  });
+}
+
+/**
+ * Build a `RevisionTestExpectation` from the available instance metadata, preferring
+ * FAIL_TO_PASS test names, then a compact problem-statement excerpt, else unavailable.
+ * Pure; safe with empty / undefined inputs.
+ */
+export function buildTestExpectation(
+  failToPass: readonly string[] = [],
+  problemStatement: string | null | undefined = null,
+): RevisionTestExpectation {
+  const tests = failToPass.map((t) => t.trim()).filter((t) => t.length > 0);
+  if (tests.length > 0) {
+    return { failToPass: tests.slice(0, MAX_FAIL_TO_PASS), source: "instance_metadata" };
+  }
+  const problem = (problemStatement ?? "").replace(/\s+/g, " ").trim();
+  if (problem.length > 0) {
+    const excerpt =
+      problem.length > MAX_PROBLEM_STATEMENT_CHARS
+        ? `${problem.slice(0, MAX_PROBLEM_STATEMENT_CHARS - 1)}…`
+        : problem;
+    return { failToPass: [], problemStatementExcerpt: excerpt, source: "problem_statement" };
+  }
+  return { failToPass: [], source: "unavailable" };
+}
+
+function renderTestExpectation(expectation: RevisionTestExpectation | undefined): string[] {
+  if (!expectation || expectation.source === "unavailable") return [];
+  const lines: string[] = ["", "## Test expectation", ""];
+  if (expectation.failToPass.length > 0) {
+    lines.push("FAIL_TO_PASS:");
+    for (const t of expectation.failToPass) lines.push(`- ${t}`);
+    lines.push("");
+    lines.push(
+      "Use these tests to decide whether the missing/unclear pivot affects the required behavior.",
+    );
+  } else if (expectation.problemStatementExcerpt) {
+    lines.push("No FAIL_TO_PASS test names were available. Problem statement (excerpt):");
+    lines.push(expectation.problemStatementExcerpt);
+    lines.push("");
+    lines.push(
+      "Use the described failing behavior to decide whether the missing/unclear pivot is involved.",
+    );
+  }
+  return lines;
+}
 
 export interface BuildRevisionPromptInput {
   complianceBefore: PivotInspectionCompliance;
@@ -94,15 +189,20 @@ export interface BuildRevisionPromptInput {
   currentPatch: string;
   /** Optional compact excerpts for missing/unclear candidates (never whole files). */
   sourceExcerpts?: readonly RevisionSourceExcerpt[];
+  /** Optional FAIL_TO_PASS / test expectation context. */
+  testExpectation?: RevisionTestExpectation;
 }
 
 /**
  * Build the corrective revision prompt for the second pass. Uses the M13
  * `buildCorrectivePrompt` as the decision core (it lists ONLY the missing/unclear
- * candidates and carries the anti-over-edit / minimal-diff guardrails), and wraps it
- * with the current patch, optional bounded source excerpts, and the "return a unified
- * diff only" framing. Returns a stable prompt even if the verdict is somehow
- * compliant (callers gate with `decideRevisionPass` first, so that is defensive).
+ * candidates and carries the anti-over-edit / minimal-diff guardrails), then wraps it
+ * with the current patch, the FAIL_TO_PASS / test-expectation context, optional bounded
+ * source excerpts, and the "revise only if evidence requires it" framing. The wording
+ * asks the model to either return a non-empty diff OR explain the rule-out with a
+ * PIVOT_DECISION marker — so a no-op pass is observable, not silent. Returns a stable
+ * prompt even if the verdict is somehow compliant (callers gate with
+ * `decideRevisionPass` first, so that is defensive).
  */
 export function buildRevisionPrompt(input: BuildRevisionPromptInput): string {
   const core = buildCorrectivePrompt(input.complianceBefore);
@@ -113,18 +213,23 @@ export function buildRevisionPrompt(input: BuildRevisionPromptInput): string {
   lines.push(input.currentPatch.trimEnd());
   lines.push("```");
   lines.push("");
+  lines.push(REVISION_VERIFY_LINE);
+  lines.push("");
   if (core !== null) {
     lines.push(core);
   } else {
     // Defensive: no outstanding candidates. Keep the wording aligned anyway.
     lines.push("VTRACE found no outstanding pivot decisions; keep the patch as-is.");
   }
-  if (input.sourceExcerpts && input.sourceExcerpts.length > 0) {
+  lines.push(...renderTestExpectation(input.testExpectation));
+  const excerpts = boundExcerpts(input.sourceExcerpts ?? []);
+  if (excerpts.length > 0) {
     lines.push("");
     lines.push("Source excerpts for the outstanding candidates:");
-    for (const ex of input.sourceExcerpts) {
+    for (const ex of excerpts) {
       lines.push("");
-      lines.push(`- ${ex.path}`);
+      lines.push(`- ${ex.symbol && ex.symbol.length > 0 ? `${ex.path}::${ex.symbol}` : ex.path}`);
+      for (const bullet of ex.evidence ?? []) lines.push(`  ${bullet}`);
       lines.push("```");
       lines.push(ex.excerpt.trimEnd());
       lines.push("```");
@@ -132,8 +237,14 @@ export function buildRevisionPrompt(input: BuildRevisionPromptInput): string {
   }
   lines.push("");
   lines.push("Task:");
-  lines.push("  Revise the patch only if source evidence shows a listed pivot/co-edit candidate must change.");
-  lines.push("  Otherwise explicitly rule it out with concrete source evidence.");
+  lines.push(
+    "  Use the FAIL_TO_PASS/test expectation and source excerpts above to decide whether the patch "
+    + "must be revised.",
+  );
+  lines.push("  Return a non-empty unified diff only if source/test evidence requires a change.");
+  lines.push(
+    "  Otherwise return no diff and include PIVOT_DECISION markers explaining the rule-out.",
+  );
   lines.push("");
   lines.push(...REVISION_RULES);
   return lines.join("\n");
@@ -142,6 +253,7 @@ export function buildRevisionPrompt(input: BuildRevisionPromptInput): string {
 /** The separate artifact files the revision pass persists (all "_"-prefixed: never
  *  picked up as a canonical results JSONL, and not staged in git). */
 export const REVISION_ARTIFACT_FILES = {
+  firstPassAssistant: "_pivot_first_pass_assistant.txt",
   originalPatch: "_pivot_revision_original.patch",
   prompt: "_pivot_revision_prompt.md",
   response: "_pivot_revision_response.txt",
@@ -169,6 +281,12 @@ export interface PivotRevisionRecord {
   complianceAfter: PivotInspectionCompliance | null;
   /** Whether the revised patch became the final patch for evaluation. */
   replacedFinalPatch: boolean;
+  /** Path to the persisted first-pass assistant text, or null when unavailable (M15). */
+  firstPassAssistantTextPath?: string | null;
+  /** First-pass PIVOT_DECISION markers parsed from the first-pass assistant text (M15). */
+  firstPassPivotDecisions?: PivotDecisionMarker[];
+  /** The test-expectation context fed into the revision prompt (M15). */
+  testExpectation?: RevisionTestExpectation;
 }
 
 /** Count of outstanding (missing + unclear) candidates in a verdict. */
@@ -193,11 +311,19 @@ export function decideReplacement(
   return outstandingCount(after) < outstandingCount(before);
 }
 
+/** Optional extra fields (M15) attachable to a record without changing call sites. */
+export interface RevisionRecordExtras {
+  firstPassAssistantTextPath?: string | null;
+  firstPassPivotDecisions?: PivotDecisionMarker[];
+  testExpectation?: RevisionTestExpectation;
+}
+
 /** Assemble a "did not run" record (gate failed). Keeps the original patch as final. */
 export function noRunRecord(
   decisionReason: string,
   originalPatch: string,
   complianceBefore: PivotInspectionCompliance,
+  extras: RevisionRecordExtras = {},
 ): PivotRevisionRecord {
   return {
     ran: false,
@@ -209,5 +335,6 @@ export function noRunRecord(
     complianceBefore,
     complianceAfter: null,
     replacedFinalPatch: false,
+    ...extras,
   };
 }

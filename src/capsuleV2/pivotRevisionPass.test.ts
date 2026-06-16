@@ -1,11 +1,13 @@
-// Tests for the M14 corrective pivot-revision pass (planning + prompt + record).
+// Tests for the M14 corrective pivot-revision pass (planning + prompt + record),
+// extended for M15 evidence enrichment (FAIL_TO_PASS / test expectation context,
+// bounded source excerpts, graceful fallback).
 //
 // Pure-function tests over `decideRevisionPass`, `buildRevisionPrompt`,
-// `decideReplacement`, and the record helpers. They pin the activation gates (both
-// flags + injected v2 + model patch + non-compliant verdict), the no-run cases
-// (compliant / no model patch), the revision prompt shape (current patch, only
-// missing/unclear candidates, anti-over-edit wording), the separate-artifact layout,
-// and the conservative replacement rule. No fs, no spawn, no model.
+// `buildTestExpectation`, `boundExcerpts`, `decideReplacement`, and the record
+// helpers. They pin the activation gates, the no-run cases, the revision prompt shape
+// (current patch, only missing/unclear candidates, test expectation, bounded excerpts,
+// anti-over-edit wording), the separate-artifact layout, and the conservative
+// replacement rule. No fs, no spawn, no model.
 
 import assert from "node:assert/strict";
 import { test } from "bun:test";
@@ -18,10 +20,15 @@ import { computePivotInspectionCompliance } from "./pivotInspectionCompliance";
 import {
   decideRevisionPass,
   buildRevisionPrompt,
+  buildTestExpectation,
+  boundExcerpts,
   decideReplacement,
   outstandingCount,
   noRunRecord,
   REVISION_ARTIFACT_FILES,
+  MAX_EXCERPT_CANDIDATES,
+  MAX_EXCERPT_LINES,
+  MAX_EXCERPT_BULLETS,
 } from "./pivotRevisionPass";
 
 function pv(filePath: string, symbol: string): ContractPivotView {
@@ -116,7 +123,8 @@ test("revision pass does not run when there is no model patch", () => {
 // 4 — revision prompt includes the current patch.
 test("revision prompt includes the current patch", () => {
   const prompt = buildRevisionPrompt({ complianceBefore: nonCompliant(), currentPatch: PATCH });
-  assert.match(prompt, /You previously produced this patch:/);
+  assert.match(prompt, /You previously produced this patch\./);
+  assert.match(prompt, /VTRACE could not verify the required pivot decision/);
   assert.match(prompt, /diff --git a\/a\/lead\.py/);
 });
 
@@ -136,13 +144,16 @@ test("revision prompt lists only outstanding candidates, never edited ones", () 
   assert.doesNotMatch(prompt, /a\/edited\.py/);
 });
 
-// 6 — revision prompt carries anti-over-edit / minimal-diff wording.
+// 12 — revision prompt carries anti-over-edit / minimal-diff wording (M15 wording).
 test("revision prompt carries anti-over-edit and minimal-diff guardrails", () => {
   const prompt = buildRevisionPrompt({ complianceBefore: nonCompliant(), currentPatch: PATCH });
   assert.match(prompt, /Do not edit a file merely because it is listed/);
   assert.match(prompt, /Prefer the minimal final diff/);
   assert.match(prompt, /Preserve already-correct changes/);
-  assert.match(prompt, /Return a unified diff only/);
+  assert.match(prompt, /Only add a co-edit file when source\/test evidence requires it/);
+  // The model is asked for a non-empty diff only when evidence requires it.
+  assert.match(prompt, /Return a non-empty unified diff only if source\/test evidence requires a change/);
+  assert.match(prompt, /Otherwise return no diff and include PIVOT_DECISION markers/);
   assert.doesNotMatch(prompt, /edit all pivots/i);
 });
 
@@ -151,28 +162,100 @@ test("revision prompt includes provided source excerpts", () => {
   const prompt = buildRevisionPrompt({
     complianceBefore: nonCompliant(),
     currentPatch: PATCH,
-    sourceExcerpts: [{ path: "a/other.py", excerpt: "def other():\n    return forward(value)" }],
+    sourceExcerpts: [
+      { path: "a/other.py", symbol: "other", excerpt: "def other():\n    return forward(value)", evidence: ["why surfaced: caller of lead"] },
+    ],
   });
   assert.match(prompt, /Source excerpts for the outstanding candidates/);
+  assert.match(prompt, /a\/other\.py::other/);
+  assert.match(prompt, /why surfaced: caller of lead/);
   assert.match(prompt, /def other\(\)/);
+});
+
+// 9 — FAIL_TO_PASS names are included in the revision prompt when available.
+test("revision prompt includes FAIL_TO_PASS test names when available", () => {
+  const expectation = buildTestExpectation(
+    ["tests/test_x.py::test_empty_tuple", "tests/test_y.py::test_unparse"],
+    "some problem",
+  );
+  assert.equal(expectation.source, "instance_metadata");
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: expectation,
+  });
+  assert.match(prompt, /## Test expectation/);
+  assert.match(prompt, /FAIL_TO_PASS:/);
+  assert.match(prompt, /tests\/test_x\.py::test_empty_tuple/);
+  assert.match(prompt, /decide whether the missing\/unclear pivot affects the required behavior/);
+});
+
+// 10 — revision prompt falls back gracefully when FAIL_TO_PASS is unavailable.
+test("revision prompt falls back to problem statement, then to nothing, when no FAIL_TO_PASS", () => {
+  const fromProblem = buildTestExpectation([], "Empty tuple annotation crashes unparse with IndexError");
+  assert.equal(fromProblem.source, "problem_statement");
+  const p1 = buildRevisionPrompt({ complianceBefore: nonCompliant(), currentPatch: PATCH, testExpectation: fromProblem });
+  assert.match(p1, /## Test expectation/);
+  assert.match(p1, /No FAIL_TO_PASS test names were available/);
+  assert.match(p1, /Empty tuple annotation crashes/);
+
+  const none = buildTestExpectation([], "");
+  assert.equal(none.source, "unavailable");
+  // Prompt still builds and omits the section entirely (no crash, no empty header).
+  const p2 = buildRevisionPrompt({ complianceBefore: nonCompliant(), currentPatch: PATCH, testExpectation: none });
+  assert.doesNotMatch(p2, /## Test expectation/);
+  // Without a testExpectation at all, the prompt also builds cleanly.
+  const p3 = buildRevisionPrompt({ complianceBefore: nonCompliant(), currentPatch: PATCH });
+  assert.match(p3, /You previously produced this patch\./);
+});
+
+// 11 — candidate excerpts are strictly bounded (count / lines / bullets).
+test("source excerpts are bounded to count, lines, and bullets", () => {
+  const many = Array.from({ length: 6 }, (_, i) => ({
+    path: `a/f${i}.py`,
+    symbol: `s${i}`,
+    excerpt: Array.from({ length: 30 }, (_, l) => `line${l}`).join("\n"),
+    evidence: ["b1", "b2", "b3", "b4"],
+  }));
+  const bounded = boundExcerpts(many);
+  assert.equal(bounded.length, MAX_EXCERPT_CANDIDATES);
+  for (const ex of bounded) {
+    assert.ok(ex.excerpt.split("\n").length <= MAX_EXCERPT_LINES, "excerpt line bound");
+    assert.ok((ex.evidence ?? []).length <= MAX_EXCERPT_BULLETS, "evidence bullet bound");
+  }
 });
 
 // 7 — revised patch is persisted SEPARATELY (distinct artifact files + record fields).
 test("artifact layout keeps original and revised patches in separate files", () => {
   assert.notEqual(REVISION_ARTIFACT_FILES.originalPatch, REVISION_ARTIFACT_FILES.revisedPatch);
+  assert.ok(REVISION_ARTIFACT_FILES.firstPassAssistant.startsWith("_pivot_first_pass"));
   const files = new Set(Object.values(REVISION_ARTIFACT_FILES));
   assert.equal(files.size, Object.keys(REVISION_ARTIFACT_FILES).length); // all distinct
   // All artifact files are "_"-prefixed so they are never picked up as a canonical JSONL.
   for (const f of files) assert.ok(f.startsWith("_"), `${f} must be _-prefixed`);
 });
 
-// 8 — original patch is preserved (no-run record + replacement rule).
-test("no-run record preserves the original patch and does not replace", () => {
-  const rec = noRunRecord("patch already compliant", PATCH, compliant());
+// 8 — original patch is preserved (no-run record + replacement rule), extras carried.
+test("no-run record preserves the original patch and carries M15 extras", () => {
+  const rec = noRunRecord("patch already compliant", PATCH, compliant(), {
+    firstPassAssistantTextPath: "/x/_pivot_first_pass_assistant.txt",
+    firstPassPivotDecisions: [{ path: "a/other.py", decision: "RULED_OUT", evidence: "join is empty-safe" }],
+    testExpectation: { failToPass: ["t1"], source: "instance_metadata" },
+  });
   assert.equal(rec.ran, false);
   assert.equal(rec.originalPatch, PATCH);
   assert.equal(rec.revisedPatch, null);
   assert.equal(rec.replacedFinalPatch, false);
+  assert.equal(rec.firstPassAssistantTextPath, "/x/_pivot_first_pass_assistant.txt");
+  assert.equal(rec.firstPassPivotDecisions?.[0]?.decision, "RULED_OUT");
+  assert.equal(rec.testExpectation?.source, "instance_metadata");
+});
+
+// no-run record without extras still builds (graceful).
+test("no-run record works without M15 extras", () => {
+  const rec = noRunRecord("revision-pass flag off", PATCH, compliant());
+  assert.equal(rec.ran, false);
+  assert.equal(rec.originalPatch, PATCH);
 });
 
 // replacement is conservative: only when the revised patch strictly improves compliance.

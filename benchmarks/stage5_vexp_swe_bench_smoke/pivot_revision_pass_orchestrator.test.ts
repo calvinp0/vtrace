@@ -71,7 +71,7 @@ test("non-compliant + improving revision ⇒ runs, persists separately, replaces
     },
     originalPatch: ORIGINAL, outputDir: dir,
     runSecondPass: async (prompt) => {
-      assert.match(prompt, /You previously produced this patch:/); // prompt carries patch
+      assert.match(prompt, /You previously produced this patch\./); // prompt carries patch
       return { revisedPatch: REVISED, revisionResponse: "revised: edited a/other.py", complianceAfter: compliant() };
     },
     installFinalPatch: async (p) => { installed = p; },
@@ -105,4 +105,41 @@ test("non-compliant but non-improving revision ⇒ runs but keeps original", asy
   assert.equal(rec.replacedFinalPatch, false);
   assert.equal(installed, 0); // never installed when not improving
   assert.equal(rec.originalPatch, ORIGINAL); // original preserved
+});
+
+test("M15: first-pass assistant text path + markers + test expectation are persisted in the record", async () => {
+  const dir = await tmp();
+  const rec = await executePivotRevisionPass({
+    decisionInput: {
+      revisionPassEnabled: true, enforcementEnabled: true, capsuleV2Injected: true,
+      hasModelPatch: true, complianceBefore: nonCompliant(),
+    },
+    originalPatch: ORIGINAL, outputDir: dir,
+    testExpectation: { failToPass: ["tests/test_x.py::test_empty"], source: "instance_metadata" },
+    firstPassAssistantTextPath: path.join(dir, REVISION_ARTIFACT_FILES.firstPassAssistant),
+    firstPassPivotDecisions: [{ path: "a/other.py", decision: "RULED_OUT", evidence: "off the changed code path" }],
+    runSecondPass: async () => ({ revisedPatch: null, revisionResponse: null, complianceAfter: nonCompliant() }),
+  });
+  assert.equal(rec.ran, true);
+  const persisted = JSON.parse(await readFile(path.join(dir, REVISION_ARTIFACT_FILES.record), "utf8"));
+  assert.ok(String(persisted.firstPassAssistantTextPath).endsWith(REVISION_ARTIFACT_FILES.firstPassAssistant));
+  assert.equal(persisted.firstPassPivotDecisions[0].decision, "RULED_OUT");
+  assert.equal(persisted.testExpectation.source, "instance_metadata");
+  assert.equal(persisted.testExpectation.failToPass[0], "tests/test_x.py::test_empty");
+});
+
+test("M15: missing first-pass assistant text is handled gracefully (null path)", async () => {
+  const dir = await tmp();
+  const rec = await executePivotRevisionPass({
+    decisionInput: {
+      revisionPassEnabled: true, enforcementEnabled: true, capsuleV2Injected: true,
+      hasModelPatch: true, complianceBefore: nonCompliant(),
+    },
+    originalPatch: ORIGINAL, outputDir: dir,
+    firstPassAssistantTextPath: null,
+    runSecondPass: async () => ({ revisedPatch: null, revisionResponse: null, complianceAfter: nonCompliant() }),
+  });
+  const persisted = JSON.parse(await readFile(path.join(dir, REVISION_ARTIFACT_FILES.record), "utf8"));
+  assert.equal(persisted.firstPassAssistantTextPath, null);
+  assert.deepEqual(persisted.firstPassPivotDecisions, []);
 });
