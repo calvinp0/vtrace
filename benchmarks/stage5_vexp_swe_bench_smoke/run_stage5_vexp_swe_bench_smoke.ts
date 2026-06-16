@@ -72,9 +72,11 @@ import {
   prepareRevisedShadowEval,
   classifyShadowEval,
   skipReasonToClassification,
+  decideRevisionAdoption,
   REVISED_SHADOW_ARTIFACT_FILES,
   type ShadowClassification,
   type ShadowSkipReason,
+  type RevisionAdoptionDecision,
 } from "./revisedPatchShadowEval";
 import { toCapsuleV2ProductResponse } from "../../src/capsuleV2/productAdapter";
 import {
@@ -2070,13 +2072,21 @@ export async function executePivotRevisionPass(ctx: RevisionPassContext): Promis
     testExpectation: ctx.testExpectation,
   });
   const second = await ctx.runSecondPass(prompt);
-  const replaced = decideReplacement(
+  // M18: compliance improvement only makes the revised patch a CANDIDATE. Whether it is
+  // SAFE TO ADOPT requires shadow-eval verification (`--mode evaluate-revised-patch`),
+  // which has not run at this point — so `replacementRecommended` stays false here.
+  const revisionCandidate = decideReplacement(
     ctx.decisionInput.complianceBefore,
     second.complianceAfter,
     second.revisedPatch,
   );
-  if (replaced && second.revisedPatch !== null && ctx.installFinalPatch) {
+  // Only the live wiring that actually swaps the canonical patch passes installFinalPatch.
+  // It is omitted today, so `canonicalReplaced` stays false even for a candidate — fixing
+  // the legacy bug where `replacedFinalPatch` tracked compliance, not real replacement.
+  let canonicalReplaced = false;
+  if (revisionCandidate && second.revisedPatch !== null && ctx.installFinalPatch) {
     await ctx.installFinalPatch(second.revisedPatch);
+    canonicalReplaced = true;
   }
   const rec: PivotRevisionRecord = {
     ran: true,
@@ -2087,7 +2097,11 @@ export async function executePivotRevisionPass(ctx: RevisionPassContext): Promis
     revisedPatch: second.revisedPatch,
     complianceBefore: ctx.decisionInput.complianceBefore,
     complianceAfter: second.complianceAfter,
-    replacedFinalPatch: replaced,
+    revisionCandidate,
+    replacementRecommended: false,
+    replacementReason: "not_verified",
+    replacedFinalPatch: canonicalReplaced,
+    canonicalReplaced,
     ...extras,
   };
   await persistRevisionRecord(ctx.outputDir, rec);
@@ -2783,6 +2797,8 @@ export interface RevisedShadowEvalEvidence {
     readonly status: "evaluated" | "skipped";
     readonly skipReason: ShadowSkipReason | null;
     readonly classification: ShadowClassification;
+    // M18: the adoption/replacement guardrail decision derived from this shadow eval.
+    readonly adoption: RevisionAdoptionDecision;
   };
 }
 
@@ -2822,6 +2838,37 @@ function resolvedFromRecords(records: ReadonlyArray<Record<string, unknown>>): {
   return { resolved, resolvedCount };
 }
 
+// M18: did the revision improve compliance? Prefer the record's `revisionCandidate`
+// (written by the corrected revision pass); fall back to recomputing strict-outstanding
+// reduction for records written before M18. Read-only; missing/garbled record ⇒ false.
+async function readComplianceImproved(dir: string): Promise<boolean> {
+  const recordPath = path.join(dir, REVISION_ARTIFACT_FILES.record);
+  const content = await readFile(recordPath, "utf8").catch(() => null);
+  if (content === null) return false;
+  try {
+    const rec = JSON.parse(content) as Record<string, unknown>;
+    if (typeof rec.revisionCandidate === "boolean") return rec.revisionCandidate;
+    const before = rec.complianceBefore as { missing?: unknown[]; unclear?: unknown[] } | null;
+    const after = rec.complianceAfter as { missing?: unknown[]; unclear?: unknown[] } | null;
+    if (before === null || after === null) return false;
+    const out = (c: { missing?: unknown[]; unclear?: unknown[] }) =>
+      (c.missing?.length ?? 0) + (c.unclear?.length ?? 0);
+    const revised = typeof rec.revisedPatch === "string" && rec.revisedPatch.includes("diff --git");
+    return revised && out(after) < out(before);
+  } catch {
+    return false;
+  }
+}
+
+// M18: a revised patch "over-edits" when it touches a file the original patch did not.
+// Adding a co-edit can be legitimate, so this is only consulted for the preserves-
+// resolution case (where there is no new resolution to justify the extra surface).
+function revisionOverEdited(originalPatch: string, revisedPatch: string | null): boolean {
+  if (revisedPatch === null) return false;
+  const originalFiles = new Set(editedFilesFromPatch(originalPatch));
+  return editedFilesFromPatch(revisedPatch).some((f) => !originalFiles.has(f));
+}
+
 // Shadow-evaluate the revised patch for every condition under the run label that has one.
 // Read-only with respect to canonical artifacts (proven by the before/after hash check).
 export async function runEvaluateRevisedPatch(config: CliConfig, deps: RunDeps = {}): Promise<RevisedShadowEvalEvidence[]> {
@@ -2846,8 +2893,14 @@ export async function runEvaluateRevisedPatch(config: CliConfig, deps: RunDeps =
 
     const prep = prepareRevisedShadowEval({ canonicalRecords, revisedPatch });
     const before = await hashCanonicalArtifacts(dir, canonicalResultsFile);
+    const complianceImproved = await readComplianceImproved(dir);
 
     if (prep.status === "skipped") {
+      const skipClassification = skipReasonToClassification(prep.reason);
+      const adoption = decideRevisionAdoption({
+        complianceImproved,
+        shadow: { classification: skipClassification },
+      });
       const evidence: RevisedShadowEvalEvidence = {
         condition,
         shadowEval: {
@@ -2868,7 +2921,8 @@ export async function runEvaluateRevisedPatch(config: CliConfig, deps: RunDeps =
           canonicalArtifactsUntouched: (await hashCanonicalArtifacts(dir, canonicalResultsFile)) === before,
           status: "skipped",
           skipReason: prep.reason,
-          classification: skipReasonToClassification(prep.reason),
+          classification: skipClassification,
+          adoption,
         },
       };
       await writeFile(path.join(dir, REVISED_SHADOW_ARTIFACT_FILES.meta), `${JSON.stringify(evidence, null, 2)}\n`);
@@ -2892,6 +2946,17 @@ export async function runEvaluateRevisedPatch(config: CliConfig, deps: RunDeps =
     const norm = normalizeEvaluationEvidence(shadowRecords[0] ?? {}, prep.instanceId ?? "", config.evalMode);
 
     const after = await hashCanonicalArtifacts(dir, canonicalResultsFile);
+    const classification = classifyShadowEval({ ran, evaluationError, originalResolved: originalCanonicalResolved, revisedResolved });
+    const toBool = (v: Unknownable<boolean>): boolean | undefined => (v === "unknown" ? undefined : v);
+    const adoption = decideRevisionAdoption({
+      complianceImproved,
+      shadow: {
+        classification,
+        originalResolved: toBool(originalCanonicalResolved),
+        revisedResolved: toBool(revisedResolved),
+      },
+      overEdited: revisionOverEdited(prep.originalPatch, prep.revisedPatch),
+    });
     const evidence: RevisedShadowEvalEvidence = {
       condition,
       shadowEval: {
@@ -2912,7 +2977,8 @@ export async function runEvaluateRevisedPatch(config: CliConfig, deps: RunDeps =
         canonicalArtifactsUntouched: after === before,
         status: "evaluated",
         skipReason: null,
-        classification: classifyShadowEval({ ran, evaluationError, originalResolved: originalCanonicalResolved, revisedResolved }),
+        classification,
+        adoption,
       },
     };
     await writeFile(path.join(dir, REVISED_SHADOW_ARTIFACT_FILES.meta), `${JSON.stringify(evidence, null, 2)}\n`);

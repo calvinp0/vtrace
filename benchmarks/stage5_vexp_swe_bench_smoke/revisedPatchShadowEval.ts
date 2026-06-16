@@ -162,3 +162,119 @@ export function classifyShadowEval(input: {
   if (!original && !revised) return "shadow_no_effect";
   return "shadow_harm"; // original resolved, revised failed
 }
+
+// M18 — replacement/adoption guardrail.
+//
+// M17.1 proved that compliance improvement is NOT a safe adoption signal: sphinx r1
+// and r2 both improved compliance (unclear[ast.py] → edited[ast.py]) and both had the
+// legacy `replacedFinalPatch=true`, yet only r2's revised patch actually RESOLVED in a
+// shadow Docker eval — r1's stayed unresolved. So this guardrail draws a hard line:
+//
+//   - compliance improvement ⇒ a revised patch is at most a `revisionCandidate`.
+//   - adoption (`replacementRecommended`) requires a VERIFICATION outcome, and for now
+//     the only accepted verification is a shadow Docker eval that either newly resolves
+//     the instance or preserves an already-resolved instance without over-editing.
+//   - `canonicalReplaced` stays false here: this function only recommends; it never
+//     wires a patch into canonical evaluation.
+//
+// PURE: no fs, no Docker. Decides from a shadow classification (or its absence).
+
+export type RevisionAdoptionEvidenceKind =
+  | "shadow_eval"
+  | "not_verified"
+  | "skipped_empty_or_identical";
+
+export interface RevisionAdoptionEvidence {
+  readonly kind: RevisionAdoptionEvidenceKind;
+  readonly originalResolved?: boolean;
+  readonly revisedResolved?: boolean;
+}
+
+export interface RevisionAdoptionDecision {
+  /** Compliance improved ⇒ the revised patch is a candidate (NOT yet adoptable). */
+  readonly revisionCandidate: boolean;
+  /** Verified safe to adopt/evaluate as the final patch (requires shadow eval). */
+  readonly replacementRecommended: boolean;
+  /** The single signal that decided `replacementRecommended` (telemetry/report). */
+  readonly replacementReason: string;
+  /** What evidence backs the decision. */
+  readonly replacementEvidence: RevisionAdoptionEvidence;
+  /** Whether canonical artifacts were ACTUALLY replaced. Always false here (recommend-only). */
+  readonly canonicalReplaced: boolean;
+}
+
+/**
+ * Decide whether a revised patch is merely a candidate or actually safe to adopt.
+ *
+ * `complianceImproved` is the OLD signal (M14 `decideReplacement`): it can mark a
+ * candidate but, on its own, can NEVER recommend replacement. Recommendation is gated
+ * on a shadow-eval classification:
+ *
+ *   shadow_resolution_success           → recommend (original unresolved, revised resolved)
+ *   shadow_preserves_resolution         → recommend, UNLESS over-edited
+ *   shadow_no_effect / shadow_harm      → reject
+ *   shadow_skipped_empty_or_identical   → reject (nothing meaningful to evaluate)
+ *   shadow_inconclusive                 → reject (not verified)
+ *   no shadow eval (shadow === null)    → reject (not verified)
+ *
+ * PURE; `canonicalReplaced` is always false — this only recommends.
+ */
+export function decideRevisionAdoption(input: {
+  readonly complianceImproved: boolean;
+  readonly shadow: {
+    readonly classification: ShadowClassification;
+    readonly originalResolved?: boolean;
+    readonly revisedResolved?: boolean;
+  } | null;
+  readonly overEdited?: boolean;
+}): RevisionAdoptionDecision {
+  const revisionCandidate = input.complianceImproved;
+  const canonicalReplaced = false;
+
+  if (input.shadow === null) {
+    return {
+      revisionCandidate,
+      replacementRecommended: false,
+      replacementReason: "no_shadow_eval",
+      replacementEvidence: { kind: "not_verified" },
+      canonicalReplaced,
+    };
+  }
+
+  const { classification, originalResolved, revisedResolved } = input.shadow;
+  const resolutions: { originalResolved?: boolean; revisedResolved?: boolean } = {};
+  if (originalResolved !== undefined) resolutions.originalResolved = originalResolved;
+  if (revisedResolved !== undefined) resolutions.revisedResolved = revisedResolved;
+
+  const recommend = (reason: string): RevisionAdoptionDecision => ({
+    revisionCandidate,
+    replacementRecommended: true,
+    replacementReason: reason,
+    replacementEvidence: { kind: "shadow_eval", ...resolutions },
+    canonicalReplaced,
+  });
+  const reject = (reason: string, kind: RevisionAdoptionEvidenceKind): RevisionAdoptionDecision => ({
+    revisionCandidate,
+    replacementRecommended: false,
+    replacementReason: reason,
+    replacementEvidence: { kind, ...resolutions },
+    canonicalReplaced,
+  });
+
+  switch (classification) {
+    case "shadow_resolution_success":
+      return recommend("shadow_resolution_success");
+    case "shadow_preserves_resolution":
+      return input.overEdited === true
+        ? reject("shadow_preserves_resolution_over_edit", "shadow_eval")
+        : recommend("shadow_preserves_resolution");
+    case "shadow_no_effect":
+      return reject("shadow_no_effect", "shadow_eval");
+    case "shadow_harm":
+      return reject("shadow_harm", "shadow_eval");
+    case "shadow_skipped_empty_or_identical":
+      return reject("shadow_skipped_empty_or_identical", "skipped_empty_or_identical");
+    case "shadow_inconclusive":
+      return reject("shadow_inconclusive", "not_verified");
+  }
+}

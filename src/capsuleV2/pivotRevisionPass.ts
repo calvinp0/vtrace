@@ -279,8 +279,29 @@ export interface PivotRevisionRecord {
   complianceBefore: PivotInspectionCompliance;
   /** M13 verdict for the revised patch (null when the pass did not run). */
   complianceAfter: PivotInspectionCompliance | null;
-  /** Whether the revised patch became the final patch for evaluation. */
+  /**
+   * M18: compliance improved ⇒ the revised patch is a CANDIDATE. This is the old
+   * `decideReplacement` signal — necessary for adoption but NOT sufficient (M17.1).
+   */
+  revisionCandidate: boolean;
+  /**
+   * M18: verified safe to adopt as the final patch. Requires a verification outcome
+   * (shadow eval); compliance improvement alone never sets this true. Defaults false
+   * at first-pass time (no shadow eval has run yet) and is upgraded by the shadow-eval
+   * stage. See `decideRevisionAdoption` in `revisedPatchShadowEval.ts`.
+   */
+  replacementRecommended: boolean;
+  /** M18: the single signal behind `replacementRecommended` (e.g. "not_verified"). */
+  replacementReason: string;
+  /**
+   * M18 (corrected semantics): TRUE only when the canonical artifacts were ACTUALLY
+   * replaced (an `installFinalPatch` happened). The live wiring omits `installFinalPatch`,
+   * so this stays false there — fixing the misleading legacy behavior where it tracked
+   * compliance improvement instead of real replacement. Mirrors `canonicalReplaced`.
+   */
   replacedFinalPatch: boolean;
+  /** M18: alias for `replacedFinalPatch` — whether canonical artifacts were replaced. */
+  canonicalReplaced: boolean;
   /** Path to the persisted first-pass assistant text, or null when unavailable (M15). */
   firstPassAssistantTextPath?: string | null;
   /** First-pass PIVOT_DECISION markers parsed from the first-pass assistant text (M15). */
@@ -295,11 +316,15 @@ export function outstandingCount(c: PivotInspectionCompliance): number {
 }
 
 /**
- * Decide whether the revised patch should REPLACE the original as the final patch.
- * Conservative: replace only when the revised patch is non-empty AND it strictly
+ * Decide whether the revised patch is a REPLACEMENT CANDIDATE on the compliance axis.
+ * Conservative: candidate only when the revised patch is non-empty AND it strictly
  * reduces the number of outstanding (missing/unclear) candidates. A revision that
- * does not improve compliance — or produces no diff — keeps the original patch, so
- * the pass can never make the submitted diff worse on the compliance axis.
+ * does not improve compliance — or produces no diff — keeps the original patch.
+ *
+ * M18: a true result here marks `revisionCandidate`, NOT `replacementRecommended`.
+ * Compliance improvement is necessary but NOT sufficient for adoption (M17.1 proved a
+ * compliance-improving revision can still fail to resolve). Adoption is gated on a
+ * shadow-eval verification — see `decideRevisionAdoption` in `revisedPatchShadowEval.ts`.
  */
 export function decideReplacement(
   before: PivotInspectionCompliance,
@@ -334,7 +359,11 @@ export function noRunRecord(
     revisedPatch: null,
     complianceBefore,
     complianceAfter: null,
+    revisionCandidate: false,
+    replacementRecommended: false,
+    replacementReason: "not_verified",
     replacedFinalPatch: false,
+    canonicalReplaced: false,
     ...extras,
   };
 }
