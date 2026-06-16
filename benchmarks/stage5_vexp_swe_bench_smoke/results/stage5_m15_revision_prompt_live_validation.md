@@ -15,29 +15,30 @@ Cases: `sphinx-doc__sphinx-7462`, `mwaskom__seaborn-3187`. Conditions:
 
 ## 1. Executive verdict
 
-**`m15_revision_live_partial` — M15 is a real improvement over M14.1, with one new risk.**
+**`m15_revision_live_partial`** — a useful non-empty sphinx revision exists; seaborn
+false-trigger suppression works; but rule-out suppression can incorrectly suppress a true
+required pivot when it conflicts with the test expectation.
+
+M15.1 now demonstrates **both sides of marker suppression**:
+
+1. **seaborn r2** — a grounded `PIVOT_DECISION` `RULED_OUT` **correctly suppresses a false
+   trigger** for the non-gold `scatterplot` pivot.
+2. **sphinx r1** — a grounded `PIVOT_DECISION` `RULED_OUT` **incorrectly suppresses a true
+   trigger** for the gold-required `ast.py::unparse` pivot.
+
+Therefore marker suppression is useful, but it needs a **test-expectation conflict
+guardrail**.
+
+Supporting the verdict:
 
 - **sphinx improved decisively.** Where M14 always produced an empty revised patch, M15's
   revision pass (armed with the FAIL_TO_PASS test `test_unparse[()-()]`) produced a
   **non-empty revised patch that adds `sphinx/pycode/ast.py::unparse`** — and the added hunk
   is **the canonical gold fix** (empty `ast.Tuple` now returns `"()"` instead of `""`).
-  This is the exact M14→M15 behavior change the prompt work targeted.
-- **seaborn marker suppression demonstrated — and correct.** In seaborn r2 the first-pass
-  agent emitted a grounded `RULED_OUT` marker for `relational.py::scatterplot` ("delegates
-  legend label formatting to `locator_to_legend_entries` in utils.py … fixing that utility
-  propagates the fix without changing relational.py"). M15 accepted it and **suppressed the
-  false trigger** — correctly, because scatterplot is **not** gold-required (the fix lives in
-  `utils.py`/`scales.py`). This is M15 feature #4 working as intended.
-- **No over-edit.** When the trigger did fire on the non-gold seaborn pivot (r3), the second
+  This is the exact M14→M15 behavior change the prompt work targeted (sphinx r2).
+- **No over-edit.** When the trigger fired on the non-gold seaborn pivot (r3), the second
   pass returned a patch byte-identical to the original (no scatterplot edit) and emitted a
   correct rule-out. Minimal-diff guardrail held; the canonical resolved=True patch preserved.
-- **New risk — marker suppression is double-edged.** The *same* mechanism that is correct on
-  seaborn r2 fires backwards on **sphinx r1**: the agent emitted a *plausible-but-wrong*
-  grounded `RULED_OUT` for `ast.py::unparse` ("uses `", ".join(...)` … returns empty string
-  safely — no IndexError possible"), and M15 suppressed **the very revision that r2 produced
-  as the gold fix.** Suppression is right when the rule-out is true (seaborn r2) and harmful
-  when the rule-out contradicts the FAIL_TO_PASS test (sphinx r1). The heuristic trusts
-  "source-grounded" phrasing without checking it against the failing test.
 
 No revised patch was wired into canonical evaluation, and no shadow evaluation was run.
 **No shadow resolution effect claimed.**
@@ -49,16 +50,16 @@ No revised patch was wired into canonical evaluation, and no shadow evaluation w
 | eval-m15-pivot-revision-current-sphinx-7462-r1 | ✅ exit0 | ✅ exit0 | ✅ | 24 turns, $0.428 |
 | eval-m15-pivot-revision-current-sphinx-7462-r2 | ✅ exit0 | ✅ exit0 | ✅ | 24 turns, $0.341 |
 | eval-m15-pivot-revision-current-seaborn-3187-r1 | ✅ exit0 | ✅ exit0 | ✅ | 99 turns, $3.016 (hit $3 cap) |
-| eval-m15-pivot-revision-current-seaborn-3187-r2 | ✅ exit0 (rerun) | ✅ exit0 | ✅ | 66 turns, $1.004 — **see note** |
+| eval-m15-pivot-revision-current-seaborn-3187-r2 | ✅ exit0 | ✅ exit0 | ✅ | 66 turns, $1.004 — same label re-run after a transient quota limit on the first attempt¹ |
 | eval-m15-pivot-revision-current-seaborn-3187-r3 | ✅ exit0 | ✅ exit0 | ✅ | 48 turns, $0.994 — bonus 3rd run |
 
-- **seaborn r2 first attempt was an infrastructure/quota failure**, not a code defect
-  ("You've hit your session limit · resets 7:20pm"; HTTP 429 `out_of_credits`; agent never
-  spawned, no JSONL). Once credits reset, **the r2 label was re-run** and is now a valid
-  run. (r3 had already been started before the reset as a replacement and is retained as a
-  third seaborn data point.) Quota failures are not counted as unresolved.
+¹ seaborn r2's first attempt hit a transient session/quota limit (HTTP 429, agent never
+spawned, no JSONL). Once credits reset the **same r2 label was re-run** and is a valid run;
+quota failures are not counted as unresolved. (r3, started as a replacement before the reset,
+is retained as a third seaborn data point.)
+
 - Docker health: all valid runs evaluated cleanly. No Docker infra errors.
-- Final valid set: **sphinx r1, sphinx r2, seaborn r1, seaborn r2, seaborn r3**
+- Valid labels now used: **sphinx r1, sphinx r2, seaborn r1, seaborn r2, seaborn r3**
   (≥2 valid per case).
 - Baseline not run; 30/100 not run (per constraints).
 
@@ -100,12 +101,12 @@ Per-run revision record summary:
 | testExpectation source / FTP | instance_metadata / 2 | instance_metadata / 2 | instance_metadata / 2 | instance_metadata / 2 | instance_metadata / 2 |
 | compliance before | ruledOut=[ast.py::unparse] | unclear=[ast.py::unparse] | edited=[scatterplot] | ruledOut=[scatterplot] | unclear=[scatterplot] |
 | compliance after | — | edited=[ast.py::unparse] | — | — | unclear=[scatterplot] |
-| replacedFinalPatch | false | true¹ | false | false | false |
+| replacedFinalPatch | false | true² | false | false | false |
 | original patch (bytes) | 1450 | 1489 | 5689 | 1345 | 1219 |
 | revised exists / non-empty | no | **yes / yes (2168)** | no | no | yes / yes (1219) |
 | revised differs from original | n/a | **yes** | n/a | n/a | **no (identical)** |
 
-¹ `replacedFinalPatch=true` is an *internal record flag*. The Docker-evaluated canonical
+² `replacedFinalPatch=true` is an *internal record flag*. The Docker-evaluated canonical
 `modelPatch` for sphinx r2 was byte-identical to the **original** (1489 B), **not** the
 revised (2168 B) — verified directly. The revised patch was **not** wired into canonical
 evaluation, consistent with the constraint.
@@ -158,31 +159,35 @@ a non-empty (identical-to-original) diff. No empty-patch revisions among trigger
 **Did it over-edit?** No. sphinx r2 added exactly one file — the gold-required `ast.py` —
 and kept the lead. seaborn r3 added nothing beyond the original. No spurious files, no noise.
 
-**The new risk (sphinx r1).** M15's marker-suppression accepted a confident-but-incorrect
-grounded `RULED_OUT` for `ast.py::unparse` and skipped the revision entirely. The same pivot,
-without a first-pass marker (r2), correctly triggered and was fixed. The seaborn r2 vs sphinx
-r1 contrast is the clean statement of the risk: **suppression is only as trustworthy as the
-agent's rule-out, and the agent can rule out a pivot the FAIL_TO_PASS test directly refutes.**
+**The two sides of marker suppression.** The decisive M15.1 finding is that the *same*
+mechanism cuts both ways:
+- **seaborn r2 (correct):** grounded `RULED_OUT` on `scatterplot` — a non-gold pivot whose
+  rule-out is *consistent* with the test expectation — correctly suppressed the false trigger.
+- **sphinx r1 (incorrect):** grounded `RULED_OUT` on `ast.py::unparse` — a pivot anchored by
+  the FAIL_TO_PASS test `test_unparse[()-()]`, which the rule-out *contradicts* ("returns
+  empty string safely") — wrongly suppressed the true trigger and skipped the gold fix that
+  sphinx r2 independently produced.
+
+Suppression is therefore only as trustworthy as the agent's rule-out, and the agent can rule
+out a pivot the FAIL_TO_PASS test directly refutes. This is exactly the conflict the next
+recommendation addresses.
 
 ## 6. Next recommendation
 
-**A — add safe shadow-evaluation support for revised patches.**
+**Add a rule-out conflict guardrail.** A grounded `RULED_OUT` marker should **not** suppress
+revision when the candidate pivot/file/symbol is strongly anchored by FAIL_TO_PASS or
+test-expectation evidence. sphinx r1 (wrongly suppressed the needed `ast.py::unparse` fix that
+the failing test `test_unparse[()-()]` directly anchors) versus seaborn r2 (correctly
+suppressed the non-gold `scatterplot`) shows today's heuristic accepting any "source-grounded"
+rule-out without checking it against the test expectation. The guardrail: gate marker
+suppression on the rule-out being *consistent* with the test expectation — if the ruled-out
+pivot is anchored by a FAIL_TO_PASS test (by file/symbol match), keep the trigger and let the
+revision pass run.
 
-M15 demonstrably produces a *useful* non-empty revision: sphinx r2 reconstructed the gold
-`ast.py::unparse` fix from FAIL_TO_PASS context. The single most valuable next datum is
-whether that revised patch actually **resolves** under Docker — which we cannot claim today
-because revised patches are intentionally not wired into canonical eval and no shadow path
-exists. A read-only shadow evaluator (build a shadow JSONL with `modelPatch` = revised patch,
-run the external evaluator, never mutate canonical artifacts) would convert "mechanically
-correct revision" into a measured resolution delta and tell us if second-pass patching is
-worth pursuing further.
-
-**Required guardrail before trusting M15 in anger (carry the D-concern into A):** tighten
-marker-based suppression so a grounded `RULED_OUT` **cannot** suppress a revision on a pivot
-that is anchored by a FAIL_TO_PASS test (or otherwise gold-required). sphinx r1 (suppressed
-the needed fix) versus seaborn r2 (correctly suppressed a non-gold pivot) shows the heuristic
-accepting any "source-grounded" rule-out. Suppression should be gated on the rule-out being
-consistent with the test expectation, not just on grounded phrasing.
+Follow-on (after the guardrail lands): a read-only shadow evaluator for revised patches would
+let us measure whether sphinx r2's gold-reconstructing revision actually **resolves** under
+Docker (revised patches are intentionally not wired into canonical eval, and no shadow path
+exists today), turning "mechanically correct revision" into a measured resolution delta.
 
 (Not recommending 30/100 yet.)
 
@@ -191,18 +196,17 @@ consistent with the test expectation, not just on grounded phrasing.
 | run | first-pass cost | first-pass turns | revision overhead | revision turns |
 |---|---|---|---|---|
 | sphinx r1 | $0.428 | 24 | $0 (no revision) | — |
-| sphinx r2 | $0.341 | 24 | not separately retained² | — |
+| sphinx r2 | $0.341 | 24 | not separately retained³ | — |
 | seaborn r1 | $3.016 | 99 | $0 (no revision) | — |
 | seaborn r2 | $1.004 | 66 | $0 (suppressed, no revision) | — |
 | seaborn r3 | $0.994 | 48 | **$0.662** | 17 |
-| seaborn r2 (first attempt, excluded) | ~$0 (429 before spawn) | 0 | — | — |
 
-² The second-pass agent writes a *shared* `results/_agent_pivot_revision_stream.jsonl`,
+³ The second-pass agent writes a *shared* `results/_agent_pivot_revision_stream.jsonl`,
 overwritten by the last run, so only seaborn r3's overhead survived ($0.662 / 17 turns).
 sphinx r2's revision overhead was overwritten; the seaborn r3 figure is representative
 (~$0.5–0.7 / ~15–20 turns per triggered revision). Total valid first-pass spend ≈ $5.78;
 total run ≈ $6.4 including captured revision overhead. **Per-run revision overhead is not
-durably instrumented — a capture gap to fix if shadow-eval (rec A) is built.**
+durably instrumented — a capture gap to fix if a shadow evaluator is built.**
 
 ---
 
