@@ -45,6 +45,10 @@ import {
   DEFAULT_REPEATED_FILE_READ_LIMIT,
 } from "../../src/capsule/turnCountWaste";
 import { renderCapsuleV2Human } from "../../src/capsuleV2/renderHuman";
+import {
+  buildPivotInspectionContract,
+  renderPivotInspectionEnforcementText,
+} from "../../src/capsuleV2/pivotInspectionContract";
 import { toCapsuleV2ProductResponse } from "../../src/capsuleV2/productAdapter";
 import {
   renderPivotNeighborhoodsText,
@@ -303,6 +307,14 @@ export interface CliConfig {
   // the PIVOT_CHECK block; normal VTRACE context, telemetry, and ordered tool-call
   // capture are untouched. Retained for compatibility alongside --pivot-check-policy.
   readonly disablePivotCheck: boolean;
+  // M12 narrow pivot-check ENFORCEMENT mode (--pivot-inspection-enforcement). Default
+  // false. When true AND a Capsule v2 section carries a pivot inspection contract with
+  // non-lead pivots / co-edit candidates, inject the "## Required pivot check before
+  // final patch" block (explicit EDITED / RULED OUT decision per non-lead pivot, with
+  // anti-over-edit guardrails) BEFORE the capsule body. This is a separate, narrow mode
+  // — it does NOT re-enable the legacy PIVOT_CHECK/EDIT_GUARD/PATCH_VERIFY policy and is
+  // independent of --disable-pivot-check. Off by default; the M12 live validation opts in.
+  readonly pivotInspectionEnforcement: boolean;
   // Hard context-to-action gate (--pivot-check-gate). Default "off" — the existing
   // single-shot run path is unchanged. "hard" runs the two-phase enforcement
   // (Phase 1 inspect-only preflight → gate → Phase 2 solve only on pass) for the
@@ -791,6 +803,7 @@ const DEFAULT_CONFIG: CliConfig = {
   pivotCheckGatePhase1Only: false,
   // --disable-pivot-check forces the effective policy to "off" (compatibility).
   disablePivotCheck: false,
+  pivotInspectionEnforcement: false,
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
   // off only the guard block).
   disableEditGuard: false,
@@ -4361,6 +4374,10 @@ export function buildVtraceContextMarkdown(
     disablePivotCheck?: boolean;
     disableEditGuard?: boolean;
     disablePatchVerify?: boolean;
+    // M12: when true, inject the narrow pivot-check enforcement block (before the
+    // capsule body) for v2 sections that carry a pivot inspection contract. Default
+    // false (off); independent of the legacy PIVOT_CHECK policy.
+    pivotInspectionEnforcement?: boolean;
     // Opt-in: inject the STAGE5_TOKEN_DISCIPLINE block (vtrace-only turn-count
     // reduction policy). Default false so existing callers/snapshots are unchanged;
     // the live Stage 5 run path opts in. Budgets default to DEFAULT_TOKEN_DISCIPLINE_BUDGETS.
@@ -4375,6 +4392,8 @@ export function buildVtraceContextMarkdown(
   pivotCheckInjected: boolean;
   editGuardInjected: boolean;
   patchVerifyInjected: boolean;
+  // M12: whether the narrow pivot-check enforcement block was injected for any section.
+  pivotInspectionEnforcementInjected: boolean;
   // Token-discipline policy outcome (representative across sections): whether the
   // block was injected, the mode chosen, and the budgets rendered.
   tokenDisciplineInjected: boolean;
@@ -4414,6 +4433,7 @@ export function buildVtraceContextMarkdown(
   let pivotCheckInjected = false;
   let editGuardInjected = false;
   let patchVerifyInjected = false;
+  let pivotInspectionEnforcementInjected = false;
   // Token-discipline policy state. The representative mode is the FIRST section's
   // (a single-instance eval has exactly one); strong wins over weak when any
   // section is strong, so a multi-instance context reports the strictest mode it
@@ -4441,6 +4461,23 @@ export function buildVtraceContextMarkdown(
     if (section.error !== null || section.rawContext.trim().length === 0) {
       lines.push(`(vtrace context unavailable: ${section.error ?? "empty output"})`, "");
     } else {
+      // M12 pivot-check enforcement (opt-in). Rendered BEFORE the capsule body (and thus
+      // before the pivot bodies and before the body's 12k char-budget truncation) so the
+      // required EDITED / RULED OUT decision table always reaches the agent. Built from
+      // the section's structured v2 result (pivots + actionability hints), so generated
+      // tables are never listed as co-edit pivots (they are not in the contract). Narrow
+      // and independent of the legacy PIVOT_CHECK policy / --disable-pivot-check.
+      if (limits.pivotInspectionEnforcement === true) {
+        const v2 = section.classification?.capsuleV2Result ?? null;
+        if (v2 !== null) {
+          const contract = buildPivotInspectionContract(v2.pivots, v2.actionability_hints ?? []);
+          const enforcement = renderPivotInspectionEnforcementText(contract);
+          if (enforcement.length > 0) {
+            lines.push(...enforcement, "");
+            pivotInspectionEnforcementInjected = true;
+          }
+        }
+      }
       // Capsule v2 context is already budget-shaped: skip the per-item line cap
       // (which would chop a multi-line focused source body off the snapshot) and
       // apply only the char-budget safety net.
@@ -4537,6 +4574,7 @@ export function buildVtraceContextMarkdown(
     pivotCheckInjected,
     editGuardInjected,
     patchVerifyInjected,
+    pivotInspectionEnforcementInjected,
     pivotCheckPolicy: effectivePolicy,
     pivotCheckReason: repDecision.reason,
     pivotCheckRiskSignals: repDecision.riskSignals,
@@ -4936,6 +4974,7 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     pivotCheckPolicy: effectivePivotCheckPolicy,
     disableEditGuard: config.disableEditGuard,
     disablePatchVerify: config.disablePatchVerify,
+    pivotInspectionEnforcement: config.pivotInspectionEnforcement,
     // Active turn-count reduction policy: inject STAGE5_TOKEN_DISCIPLINE on the
     // live vtrace path (vtrace-only; conditional on per-section capsule confidence).
     injectTokenDiscipline: !config.disableTokenDiscipline,
@@ -8065,6 +8104,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       }
       case "--pivot-check-gate-phase1-only": config.pivotCheckGatePhase1Only = true; break;
       case "--disable-pivot-check": config.disablePivotCheck = true; break;
+      case "--pivot-inspection-enforcement": config.pivotInspectionEnforcement = true; break;
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
@@ -8129,6 +8169,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --pivot-check-gate off|hard                   opt-in HARD two-phase context-to-action gate (default: off). 'hard' runs a READ-ONLY inspect-only Phase-1 preflight (mutation tools denied) whose checklist is verified before any Phase-2 solve; on a failed gate Phase 2 never runs (no solve, no Docker). v2 indexed-context only; orthogonal to --pivot-check-policy",
       "  --pivot-check-gate-phase1-only                 (with --pivot-check-gate hard) run only the read-only Phase-1 preflight + gate, then STOP — Phase 2 never runs even on a pass. Canary to prove the read-only preflight can pass without editing",
       "  --disable-pivot-check                         force PIVOT_CHECK policy off for a controlled before run (compatibility; equivalent to --pivot-check-policy off)",
+      "  --pivot-inspection-enforcement                M12 narrow enforcement: inject the '## Required pivot check before final patch' block (explicit EDITED/RULED OUT decision per non-lead pivot + co-edit candidate, with anti-over-edit guardrails) before the capsule body when a v2 pivot inspection contract exists. Off by default; independent of the legacy PIVOT_CHECK policy and --disable-pivot-check",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
       "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",
       "  --disable-tool-use-discipline                 benchmark/dev-only: suppress the shared anti-loop tool-use-discipline block injected into BOTH baseline and vtrace prompts (default: injected). Not a user-facing product mode",

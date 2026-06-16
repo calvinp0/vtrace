@@ -19,6 +19,8 @@ import { test } from "bun:test";
 import {
   buildPivotInspectionContract,
   renderPivotInspectionContractText,
+  renderPivotInspectionEnforcementText,
+  PIVOT_ENFORCEMENT_HEADING,
   type ContractPivotView,
 } from "./pivotInspectionContract";
 import type { ActionabilityHint } from "./actionabilityHints";
@@ -269,4 +271,102 @@ test("the why-surfaced reason uses evidence, then role_reason, then a generic fa
 
   const bare = buildPivotInspectionContract([pv("a.py", "x"), { path: "b.py", symbol: "y" }], []);
   assert.equal(bare!.requiredInspections[0]!.reason, "surfaced as an edit-capable pivot");
+});
+
+// ================================================================================
+// M12 — pivot-check enforcement block (renderPivotInspectionEnforcementText)
+// ================================================================================
+
+// --- (E1) enforcement block lists lead + every non-lead pivot -------------------
+
+test("the enforcement block lists the lead pivot and every non-lead pivot", () => {
+  const contract = buildPivotInspectionContract(
+    [pv("pkg/lead.py", "lead"), pv("pkg/two.py", "second"), pv("pkg/three.py", "third")],
+    [],
+  );
+  const text = renderPivotInspectionEnforcementText(contract).join("\n");
+  assert.match(text, /## Required pivot check before final patch/);
+  assert.equal(text.split("\n")[0], PIVOT_ENFORCEMENT_HEADING);
+  assert.match(text, /Lead pivot:\n {2}pkg\/lead\.py::lead/);
+  assert.match(text, /Non-lead pivot:\n {2}pkg\/two\.py::second/);
+  assert.match(text, /Non-lead pivot:\n {2}pkg\/three\.py::third/);
+});
+
+// --- (E2) enforcement block lists related co-edit candidates --------------------
+
+test("the enforcement block lists related co-edit candidates", () => {
+  const coedit: ActionabilityHint = {
+    ...COEDIT_HINT,
+    sourceFile: "app/http/response.py",
+    relatedFile: "app/sessions/middleware.py",
+    relatedFiles: ["app/sessions/middleware.py", "app/storage/cookie.py"],
+    confidence: "medium",
+  };
+  const contract = buildPivotInspectionContract(
+    [pv("app/http/response.py", "set_cookie"), pv("app/http/response.py", "delete_cookie")],
+    [coedit],
+  );
+  const text = renderPivotInspectionEnforcementText(contract).join("\n");
+  assert.match(text, /Co-edit candidate:\n {2}app\/sessions\/middleware\.py/);
+  assert.match(text, /Co-edit candidate:\n {2}app\/storage\/cookie\.py/);
+});
+
+// --- (E3) enforcement block includes EDITED / RULED OUT decision language --------
+
+test("the enforcement block includes EDITED / RULED OUT decision language", () => {
+  const text = renderPivotInspectionEnforcementText(
+    buildPivotInspectionContract([pv("a.py", "x"), pv("b.py", "y")], []),
+  ).join("\n");
+  assert.match(text, /Required decision for each non-lead pivot/);
+  assert.match(text, /- EDITED: I changed this file because/);
+  assert.match(text, /- RULED OUT: I inspected this file and did not change it because/);
+  assert.match(text, /Final diff check:/);
+  assert.match(text, /must be either edited or ruled out/);
+});
+
+// --- (E4) enforcement block includes anti-over-edit / minimal-diff wording -------
+
+test("the enforcement block includes anti-over-edit / minimal-diff guardrails", () => {
+  const text = renderPivotInspectionEnforcementText(
+    buildPivotInspectionContract([pv("a.py", "x"), pv("b.py", "y")], []),
+  ).join("\n");
+  assert.match(text, /Do not add files to the final diff merely because they are listed/);
+  assert.match(text, /Prefer the minimal final diff/);
+  assert.match(text, /may be ruled out, but only after inspecting it and citing concrete source evidence/);
+  assert.match(text, /Do not ignore non-lead pivots/);
+});
+
+// --- (E5) single-pivot / no-coedit capsules render no enforcement block ----------
+
+test("a single-pivot capsule with no co-edit hint renders no enforcement block", () => {
+  assert.deepEqual(renderPivotInspectionEnforcementText(buildPivotInspectionContract([pv("a.py", "x")], [])), []);
+  assert.deepEqual(renderPivotInspectionEnforcementText(null), []);
+});
+
+// --- (E6) generated-artifact hints are NOT treated as co-edit candidates ---------
+
+test("generated-artifact hints are not listed as enforcement co-edit candidates", () => {
+  const contract = buildPivotInspectionContract(
+    [pv("pkg/format/cds.py", "to_string"), pv("pkg/format/vounit.py", "VOUnit")],
+    [GENERATED_HINT],
+  );
+  const text = renderPivotInspectionEnforcementText(contract).join("\n");
+  // The generated table is never listed as a co-edit candidate.
+  assert.ok(!text.includes("cds_parsetab.py"), "generated table must not be a co-edit candidate");
+  assert.ok(!text.includes("Co-edit candidate:"), "no co-edit candidates without a multi_file_coedit hint");
+  // The non-lead source pivot is still listed for inspect-or-rule-out.
+  assert.match(text, /Non-lead pivot:\n {2}pkg\/format\/vounit\.py::VOUnit/);
+  // A generated_artifact hint does not turn the contract into a co-edit obligation.
+  assert.equal(contract!.hasCoedit, false);
+});
+
+// --- (E7) the enforcement block leaks no evaluation-only labels ------------------
+
+test("the rendered enforcement block leaks no evaluation-only / gold labels", () => {
+  const text = renderPivotInspectionEnforcementText(
+    buildPivotInspectionContract([pv("a.py", "x"), pv("b.py", "y")], [COEDIT_HINT]),
+  ).join("\n").toLowerCase();
+  for (const leak of ["gold", "expected_file", "fail_to_pass", "decoy"]) {
+    assert.ok(!text.includes(leak), `enforcement block must not contain "${leak}"`);
+  }
 });

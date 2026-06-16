@@ -1981,6 +1981,110 @@ test("buildVtraceContextMarkdown suppresses PIVOT_CHECK under disablePivotCheck 
   assert.equal(disabled.markdown, withoutBlock);
 });
 
+// ----- Stage 5: M12 pivot-check ENFORCEMENT mode (--pivot-inspection-enforcement) -----
+
+// A classification carrying a structured Capsule v2 result with pivots + actionability
+// hints — the only fields the enforcement injection reads. `pivotCheckPolicy: "off"` is
+// used in these tests so the enforcement block is isolated from the legacy PIVOT_CHECK.
+function classificationWithV2(
+  pivots: Array<{ path: string; symbol: string; evidence?: string[]; role_reason?: string }>,
+  hints: unknown[] = [],
+): CapsuleClassification {
+  return {
+    capsulePivots: null,
+    capsuleV2Result: { pivots, actionability_hints: hints },
+  } as unknown as CapsuleClassification;
+}
+
+// Body simulating the rendered capsule: the M11 advisory contract + a pivot body.
+const ENFORCE_BODY =
+  "intent: debug\n\n## Pivot inspection contract\nVTRACE surfaced multiple pivots.\n\n● pivot pkg/lead.py::lead\n<source body>";
+const ENFORCE_PIVOTS = [
+  { path: "pkg/lead.py", symbol: "lead", evidence: ["source line anchor"], role_reason: "lead" },
+  { path: "pkg/other.py", symbol: "second", evidence: ["symbol-name match"], role_reason: "hidden" },
+];
+
+test("enforcement block renders ONLY when --pivot-inspection-enforcement is enabled", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: ENFORCE_BODY,
+    error: null,
+    classification: classificationWithV2(ENFORCE_PIVOTS),
+    preformatted: true,
+  };
+  const off = buildVtraceContextMarkdown([section], { maxChars: 12000, maxItems: 8, pivotCheckPolicy: "off" });
+  const on = buildVtraceContextMarkdown([section], {
+    maxChars: 12000, maxItems: 8, pivotCheckPolicy: "off", pivotInspectionEnforcement: true,
+  });
+  // Off by default: no enforcement block, but the advisory body survives.
+  assert.doesNotMatch(off.markdown, /## Required pivot check before final patch/);
+  assert.equal(off.pivotInspectionEnforcementInjected, false);
+  assert.match(off.markdown, /## Pivot inspection contract/);
+  // On: enforcement block injected.
+  assert.match(on.markdown, /## Required pivot check before final patch/);
+  assert.match(on.markdown, /- EDITED: I changed this file because/);
+  assert.match(on.markdown, /pkg\/other\.py::second/);
+  assert.equal(on.pivotInspectionEnforcementInjected, true);
+});
+
+test("enforcement block renders BEFORE the pivot bodies and before the 12k cutoff", () => {
+  const huge = `${ENFORCE_BODY}\n${"# pad line to inflate the capsule body\n".repeat(800)}`; // >12k
+  const section = {
+    instance: sampleInstance(),
+    rawContext: huge,
+    error: null,
+    classification: classificationWithV2(ENFORCE_PIVOTS),
+    preformatted: true,
+  };
+  const on = buildVtraceContextMarkdown([section], {
+    maxChars: 12000, maxItems: 8, pivotCheckPolicy: "off", pivotInspectionEnforcement: true,
+  });
+  const enforceIdx = on.markdown.indexOf("## Required pivot check before final patch");
+  const bodyIdx = on.markdown.indexOf("● pivot pkg/lead.py::lead");
+  assert.ok(enforceIdx >= 0, "enforcement block missing");
+  assert.ok(bodyIdx >= 0, "pivot body missing");
+  assert.ok(enforceIdx < bodyIdx, `enforcement (${enforceIdx}) must precede pivot body (${bodyIdx})`);
+  assert.ok(enforceIdx < 12000, `enforcement (${enforceIdx}) must be before the 12k cutoff`);
+});
+
+test("enforcement lists related co-edit candidates and stays independent of --disable-pivot-check", () => {
+  const coeditHint = {
+    kind: "multi_file_coedit", sourceFile: "pkg/lead.py", relatedFile: "pkg/coupled.py",
+    relatedFiles: ["pkg/coupled.py"], confidence: "high",
+    evidence: ["cross-module pivots"], hint: "co-edit", patchObligation: { kind: "consider_coedit_files_in_final_diff", text: "x" },
+  };
+  const section = {
+    instance: sampleInstance(),
+    rawContext: ENFORCE_BODY,
+    error: null,
+    classification: classificationWithV2(ENFORCE_PIVOTS, [coeditHint]),
+    preformatted: true,
+  };
+  // --disable-pivot-check forces the legacy policy off; enforcement is a SEPARATE mode.
+  const assembled = buildVtraceContextMarkdown([section], {
+    maxChars: 12000, maxItems: 8, disablePivotCheck: true, pivotInspectionEnforcement: true,
+  });
+  assert.doesNotMatch(assembled.markdown, /## PIVOT_CHECK/); // legacy block stays off
+  assert.match(assembled.markdown, /## Required pivot check before final patch/);
+  assert.match(assembled.markdown, /Co-edit candidate:\n {2}pkg\/coupled\.py/);
+  assert.equal(assembled.pivotInspectionEnforcementInjected, true);
+});
+
+test("enforcement does NOT render for a single-pivot capsule even when enabled", () => {
+  const section = {
+    instance: sampleInstance(),
+    rawContext: "intent: debug\n\n● pivot pkg/lead.py::lead\n<body>",
+    error: null,
+    classification: classificationWithV2([ENFORCE_PIVOTS[0]!]),
+    preformatted: true,
+  };
+  const on = buildVtraceContextMarkdown([section], {
+    maxChars: 12000, maxItems: 8, pivotCheckPolicy: "off", pivotInspectionEnforcement: true,
+  });
+  assert.doesNotMatch(on.markdown, /## Required pivot check before final patch/);
+  assert.equal(on.pivotInspectionEnforcementInjected, false);
+});
+
 test("buildVtraceContextMarkdown does not inject PIVOT_CHECK for a single-pivot capsule", () => {
   const section = {
     instance: sampleInstance(),

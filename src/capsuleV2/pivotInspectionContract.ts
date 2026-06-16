@@ -214,3 +214,70 @@ export function renderPivotInspectionContractText(
 
   return lines;
 }
+
+// The marker heading for the M12 enforcement block, exported so the Stage 5 runner and
+// post-hoc tooling can detect injection without re-parsing the body.
+export const PIVOT_ENFORCEMENT_HEADING = "## Required pivot check before final patch";
+
+/**
+ * Render the M12 pivot-check ENFORCEMENT block — a stronger, "required response"
+ * sibling of the advisory contract. It demands an explicit, source-grounded EDITED /
+ * RULED OUT decision for every non-lead pivot and co-edit candidate before finalizing,
+ * with anti-over-edit / minimal-diff guardrails so it never degrades into "edit every
+ * pivot". This is injected by the Stage 5 runner ONLY when the enforcement mode is
+ * explicitly enabled (off by default); the advisory `renderPivotInspectionContractText`
+ * keeps rendering independently.
+ *
+ * Returns an empty array when there is nothing to enforce (single-pivot, no co-edit) so
+ * the runner never injects an empty block.
+ */
+export function renderPivotInspectionEnforcementText(
+  contract: PivotInspectionContract | null,
+): string[] {
+  if (contract === null || contract.requiredInspections.length === 0) return [];
+
+  const nonLead = contract.requiredInspections.filter((e) => e.role === "pivot");
+  const coedit = contract.requiredInspections.filter((e) => e.role === "related_coedit");
+
+  const lines: string[] = [];
+  lines.push(PIVOT_ENFORCEMENT_HEADING);
+  lines.push("");
+  lines.push("Before finalizing your patch, complete this check:");
+  lines.push("");
+  lines.push("- Lead pivot:");
+  lines.push(`  ${contract.leadPivot}`);
+  for (const entry of nonLead) {
+    lines.push("");
+    lines.push("- Non-lead pivot:");
+    lines.push(`  ${pivotId(entry.file, entry.symbol)}`);
+    lines.push(`  why surfaced: ${entry.reason}`);
+  }
+  for (const entry of coedit) {
+    lines.push("");
+    lines.push("- Co-edit candidate:");
+    lines.push(`  ${entry.file}`);
+    lines.push(`  why surfaced: ${entry.reason}`);
+  }
+  lines.push("");
+  lines.push("Required decision for each non-lead pivot / co-edit candidate:");
+  lines.push("  - EDITED: I changed this file because <source-grounded reason>.");
+  lines.push(
+    "  - RULED OUT: I inspected this file and did not change it because <source-grounded reason>.",
+  );
+  lines.push("");
+  lines.push("Rules:");
+  lines.push("  - Do not ignore non-lead pivots.");
+  lines.push("  - Do not add files to the final diff merely because they are listed.");
+  lines.push("  - Prefer the minimal final diff that satisfies the failing behavior.");
+  lines.push(
+    "  - A pivot may be ruled out, but only after inspecting it and citing concrete source evidence.",
+  );
+  lines.push("  - If the behavior crosses files, include all required co-edits in the final diff.");
+  lines.push("");
+  lines.push("Final diff check:");
+  lines.push(
+    "  Every non-lead pivot / co-edit candidate must be either edited or ruled out with a "
+    + "source-grounded reason.",
+  );
+  return lines;
+}

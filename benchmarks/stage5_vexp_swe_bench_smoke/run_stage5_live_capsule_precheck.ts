@@ -651,6 +651,7 @@ export function buildPrecheckConfig(opts: {
     pivotCheckGate: "off",
     pivotCheckGatePhase1Only: false,
     disablePivotCheck: false,
+    pivotInspectionEnforcement: false,
     disableEditGuard: false,
     disablePatchVerify: false,
     disableToolUseDiscipline: false,
