@@ -2120,6 +2120,16 @@ async function maybeRunPivotRevisionPass(
   }
   const firstPassPivotDecisions = parsePivotDecisionMarkers(firstPassText);
 
+  const instances = await resolveInstances(config);
+  const instance = await loadInstanceMetadata(config, instances[0] ?? null);
+  // M15: FAIL_TO_PASS / problem-statement context. Built BEFORE the compliance check so
+  // it also drives the M16 rule-out conflict guardrail (a grounded rule-out for a
+  // test-anchored pivot is not credited), and feeds the revision prompt below.
+  const testExpectation = buildTestExpectation(
+    instance?.failToPass ?? [],
+    instance?.problemStatement ?? null,
+  );
+
   const complianceBefore = computePivotInspectionCompliance({
     enabled: config.pivotInspectionEnforcement,
     contract,
@@ -2127,16 +2137,9 @@ async function maybeRunPivotRevisionPass(
     inspectedFiles,
     generatedArtifactFiles,
     decisions: firstPassPivotDecisions,
+    testExpectation,
   });
 
-  const instances = await resolveInstances(config);
-  const instance = await loadInstanceMetadata(config, instances[0] ?? null);
-  // M15: feed FAIL_TO_PASS / problem-statement context + bounded source excerpts for the
-  // outstanding candidates into the revision prompt, so the second pass is informed.
-  const testExpectation = buildTestExpectation(
-    instance?.failToPass ?? [],
-    instance?.problemStatement ?? null,
-  );
   const sourceExcerpts = buildRevisionExcerpts(
     [...complianceBefore.missing, ...complianceBefore.unclear],
     result?.pivots ?? [],
@@ -2167,6 +2170,8 @@ async function maybeRunPivotRevisionPass(
       generatedArtifactFiles,
       // Option C folded in: a marker-emitting revision can record grounded rule-outs.
       decisions: parsePivotDecisionMarkers(revisionResponse),
+      // M16: a revision that again rules out a test-anchored pivot is not credited.
+      testExpectation,
     });
     return {
       revisedPatch: revisedPatch.length > 0 ? revisedPatch : null,

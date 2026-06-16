@@ -59,6 +59,24 @@ export interface PivotDecisionMarker {
   evidence: string;
 }
 
+/** Minimal test-expectation shape the M16 conflict detector reads — a structural
+ *  subset of the revision pass's RevisionTestExpectation, declared here to avoid a
+ *  circular import (pivotRevisionPass imports FROM this module). */
+export interface ComplianceTestExpectation {
+  failToPass?: readonly string[];
+  problemStatementExcerpt?: string;
+}
+
+/** Detail for a grounded RULED_OUT the M16 guardrail refused to credit (test-anchored). */
+export interface RuleOutConflict {
+  /** `path::symbol` of the conflicted candidate. */
+  id: string;
+  path: string;
+  kind: "test_expectation_conflict";
+  /** Human-readable bullets naming the matched test(s) / why it conflicts. */
+  evidence: string[];
+}
+
 /** The structured compliance verdict (the M13 `pivotInspectionCompliance` field). */
 export interface PivotInspectionCompliance {
   /** True only when --pivot-inspection-enforcement was enabled for the run. */
@@ -72,6 +90,12 @@ export interface PivotInspectionCompliance {
   missing: string[];
   /** Required candidates inspected (or with a non-grounded rule-out) but not edited — can't confirm handling. */
   unclear: string[];
+  /**
+   * Grounded RULED_OUT markers the M16 guardrail refused to credit because the
+   * candidate is test-anchored. These are ALSO placed in `unclear` (so the run stays
+   * revision-triggering); the detail is carried here for the corrective prompt + report.
+   */
+  ruleOutConflicts: RuleOutConflict[];
   /**
    * Whether a corrective prompt would fire for this run (i.e. there is at least one
    * missing/unclear candidate). Named to match the M13 telemetry field. This module
@@ -98,6 +122,12 @@ export interface ComputeComplianceInput {
   generatedArtifactFiles?: readonly string[];
   /** Parsed machine-readable PIVOT_DECISION markers, when available (Option C). */
   decisions?: readonly PivotDecisionMarker[];
+  /**
+   * FAIL_TO_PASS / problem-statement context (M16). When present, a grounded RULED_OUT
+   * for a test-anchored candidate is NOT credited as `ruledOut` — it stays revision-
+   * triggering. Absent ⇒ rule-out behavior is exactly as before.
+   */
+  testExpectation?: ComplianceTestExpectation;
 }
 
 // Generic, non-source-grounded rule-out phrasings. A RULED_OUT marker whose evidence
@@ -166,6 +196,107 @@ function hasNonGroundedRuleOut(
   );
 }
 
+// ── M16: rule-out conflict guardrail ─────────────────────────────────────────
+// A grounded RULED_OUT normally counts as compliant `ruledOut` (and suppresses the
+// revision pass). M15.1 found this can backfire: an agent can emit a plausible but
+// WRONG grounded rule-out for a pivot the failing test directly exercises (sphinx
+// ruled out `ast.py::unparse`, which `test_unparse[()-()]` anchors). The detector
+// below refuses to credit a rule-out when the candidate is STRONGLY test-anchored;
+// the candidate then stays revision-triggering (a conflicted `unclear`).
+//
+// Conservative by design: a conflict fires only on a SPECIFIC lexical anchor — the
+// candidate's symbol or file stem appearing in a FAIL_TO_PASS test's METHOD name (the
+// leaf after `::`, a leading `test_` stripped) — never the test file path or class. A
+// test file is commonly named after its source module, which is far too coarse: it
+// would wrongly flag seaborn's non-gold `relational.py::scatterplot` against
+// `test_relational.py`, when the failing method is `test_legend_has_no_offset`.
+// Generic tokens are stopworded out. Better to miss a subtle conflict than to override
+// every rule-out.
+const CONFLICT_STOPWORDS = new Set([
+  "test", "tests", "py", "python", "utils", "core", "common", "base",
+  "helpers", "support", "api",
+]);
+const MIN_CONFLICT_TOKEN_CHARS = 3;
+
+function conflictTokens(text: string): string[] {
+  return text
+    .split(/[^A-Za-z0-9]+/)
+    .map((t) => t.toLowerCase())
+    .filter((t) => t.length >= MIN_CONFLICT_TOKEN_CHARS && !CONFLICT_STOPWORDS.has(t));
+}
+
+function fileStem(p: string): string {
+  const base = p.split("/").pop() ?? p;
+  return base.replace(/\.[^.]+$/, "");
+}
+
+/** Tokens from a FAIL_TO_PASS's METHOD leaf only (after the last `::`, params + a
+ *  leading `test_` stripped). Deliberately excludes the test file path and class name. */
+function testMethodTokens(failToPass: string): string[] {
+  const leaf = (failToPass.split("::").pop() ?? failToPass).replace(/\[.*$/, "");
+  return conflictTokens(leaf.replace(/^test[_-]?/i, ""));
+}
+
+/** A short, readable test name for prompts/reporting (drops the file-path segment). */
+function shortTestName(failToPass: string): string {
+  const parts = failToPass.split("::");
+  return parts.length > 1 ? parts.slice(1).join("::") : failToPass;
+}
+
+/**
+ * Detect whether crediting a grounded RULED_OUT for `candidate` would CONFLICT with the
+ * test expectation — i.e. the candidate is strongly anchored by a FAIL_TO_PASS test (or,
+ * only when no test names exist, the problem statement). Returns the conflict detail or
+ * null. Pure; conservative (specific lexical anchors, generic tokens excluded).
+ */
+export function detectRuleOutConflict(
+  candidate: RequiredPivotCandidate,
+  expectation: ComplianceTestExpectation | undefined,
+): RuleOutConflict | null {
+  if (!expectation) return null;
+  const symbolToks = candidate.symbol ? conflictTokens(candidate.symbol) : [];
+  const stemToks = conflictTokens(fileStem(candidate.path));
+  const symbolSet = new Set(symbolToks);
+  const candToks = new Set([...symbolToks, ...stemToks]);
+  if (candToks.size === 0) return null;
+
+  const evidence: string[] = [];
+  const failToPass = expectation.failToPass ?? [];
+  for (const ftp of failToPass) {
+    const methodToks = new Set(testMethodTokens(ftp));
+    for (const ct of candToks) {
+      if (methodToks.has(ct)) {
+        const what = symbolSet.has(ct) ? "symbol" : "file";
+        evidence.push(`${what} "${ct}" matches FAIL_TO_PASS test ${shortTestName(ftp)}`);
+        break;
+      }
+    }
+  }
+
+  // Problem-statement fallback (symbol-only, conservative) only when no test names exist.
+  if (
+    evidence.length === 0
+    && failToPass.length === 0
+    && expectation.problemStatementExcerpt
+  ) {
+    const psToks = new Set(conflictTokens(expectation.problemStatementExcerpt));
+    for (const ct of symbolToks) {
+      if (psToks.has(ct)) {
+        evidence.push(`symbol "${ct}" appears in the problem statement`);
+        break;
+      }
+    }
+  }
+
+  if (evidence.length === 0) return null;
+  return {
+    id: inspectionId(candidate.path, candidate.symbol),
+    path: candidate.path,
+    kind: "test_expectation_conflict",
+    evidence: evidence.slice(0, 3),
+  };
+}
+
 /**
  * Derive the required non-lead pivot / co-edit candidate list from the M11/M12
  * contract, dropping any file covered by a generated-artifact obligation (those are
@@ -195,6 +326,7 @@ const EMPTY_COMPLIANCE: PivotInspectionCompliance = {
   ruledOut: [],
   missing: [],
   unclear: [],
+  ruleOutConflicts: [],
   correctivePromptSent: false,
 };
 
@@ -225,13 +357,22 @@ export function computePivotInspectionCompliance(
   const ruledOut: string[] = [];
   const missing: string[] = [];
   const unclear: string[] = [];
+  const ruleOutConflicts: RuleOutConflict[] = [];
 
   for (const c of required) {
     const id = inspectionId(c.path, c.symbol);
     if (fileInSet(c.path, input.editedFiles)) {
       edited.push(id);
     } else if (hasSourceGroundedRuleOut(c.path, decisions)) {
-      ruledOut.push(id);
+      const conflict = detectRuleOutConflict(c, input.testExpectation);
+      if (conflict) {
+        // M16: the rule-out conflicts with the test expectation — do NOT credit it.
+        // Keep the candidate revision-triggering (a conflicted `unclear`).
+        unclear.push(id);
+        ruleOutConflicts.push(conflict);
+      } else {
+        ruledOut.push(id);
+      }
     } else if (
       hasNonGroundedRuleOut(c.path, decisions)
       || fileInSet(c.path, input.inspectedFiles)
@@ -249,6 +390,7 @@ export function computePivotInspectionCompliance(
     ruledOut,
     missing,
     unclear,
+    ruleOutConflicts,
     correctivePromptSent: missing.length > 0 || unclear.length > 0,
   };
 }
@@ -321,6 +463,21 @@ export function buildCorrectivePrompt(
   lines.push("Do not add files merely because they are listed. Inspect it and decide.");
   lines.push("Prefer the minimal diff.");
   lines.push("If you rule it out, cite concrete source evidence.");
+  if (compliance.ruleOutConflicts.length > 0) {
+    lines.push("");
+    lines.push(
+      "The first pass ruled out the following pivot(s), but that rule-out conflicts "
+      + "with the FAIL_TO_PASS/test expectation:",
+    );
+    for (const conflict of compliance.ruleOutConflicts) {
+      lines.push(`  - Candidate: ${conflict.id}`);
+      for (const e of conflict.evidence) lines.push(`    - Conflict evidence: ${e}`);
+    }
+    lines.push("");
+    lines.push("Reconsider these pivots using the source excerpt and test expectation.");
+    lines.push("If one still should be ruled out, provide a stronger source-grounded reason.");
+    lines.push("Otherwise revise the patch. Prefer the minimal diff; only revise if source/test evidence requires it.");
+  }
   return lines.join("\n");
 }
 

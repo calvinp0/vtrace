@@ -21,7 +21,9 @@ import {
   hasSourceGroundedRuleOut,
   buildCorrectivePrompt,
   wouldFireCorrectivePrompt,
+  detectRuleOutConflict,
   type PivotDecisionMarker,
+  type ComplianceTestExpectation,
 } from "./pivotInspectionCompliance";
 
 function pv(filePath: string, symbol: string, evidence?: string[]): ContractPivotView {
@@ -375,4 +377,185 @@ test("a grounded first-pass RULED_OUT marker suppresses the corrective trigger",
   assert.deepEqual(after.ruledOut, ["a/other.py::other"]);
   assert.deepEqual(after.unclear, []);
   assert.equal(after.correctivePromptSent, false);
+});
+
+
+// ── M16: rule-out conflict guardrail ──────────────────────────────────────────────
+// A grounded RULED_OUT must not be credited (suppress revision) when the candidate is
+// strongly anchored by FAIL_TO_PASS / test-expectation evidence. Matching is against the
+// test METHOD leaf only, so a test file named after a source module does NOT collide.
+
+function te(
+  failToPass: readonly string[],
+  problemStatementExcerpt?: string,
+): ComplianceTestExpectation {
+  return { failToPass, problemStatementExcerpt };
+}
+
+const GROUNDED = "the join handles empty input safely so no edit is required";
+
+function contractWith(path: string, symbol: string) {
+  return buildPivotInspectionContract(
+    [pv("a/lead.py", "lead"), pv(path, symbol)],
+    [],
+  );
+}
+
+test("M16: grounded rule-out with symbol-vs-test-method overlap is not ruledOut (conflict)", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("sphinx/pycode/ast.py", "unparse"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["sphinx/pycode/ast.py"],
+    decisions: [{ path: "sphinx/pycode/ast.py", decision: "RULED_OUT", evidence: GROUNDED }],
+    testExpectation: te(["tests/test_pycode_ast.py::test_unparse[()-()]"]),
+  });
+  assert.deepEqual(out.ruledOut, []);
+  assert.deepEqual(out.unclear, ["sphinx/pycode/ast.py::unparse"]);
+  assert.equal(out.ruleOutConflicts.length, 1);
+  assert.equal(out.ruleOutConflicts[0]!.kind, "test_expectation_conflict");
+  assert.match(out.ruleOutConflicts[0]!.evidence.join(" "), /symbol "unparse"/);
+});
+
+test("M16: grounded rule-out with file-stem-vs-test-method overlap is not ruledOut (conflict)", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("pkg/widget.py", "render"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["pkg/widget.py"],
+    decisions: [{ path: "pkg/widget.py", decision: "RULED_OUT", evidence: GROUNDED }],
+    testExpectation: te(["tests/test_ui.py::test_widget_visible"]),
+  });
+  assert.deepEqual(out.ruledOut, []);
+  assert.deepEqual(out.unclear, ["pkg/widget.py::render"]);
+  assert.match(out.ruleOutConflicts[0]!.evidence.join(" "), /file "widget"/);
+});
+
+test("M16: a conflicted rule-out remains revision-triggering", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("sphinx/pycode/ast.py", "unparse"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["sphinx/pycode/ast.py"],
+    decisions: [{ path: "sphinx/pycode/ast.py", decision: "RULED_OUT", evidence: GROUNDED }],
+    testExpectation: te(["tests/test_pycode_ast.py::test_unparse[()-()]"]),
+  });
+  assert.equal(out.correctivePromptSent, true);
+  assert.equal(wouldFireCorrectivePrompt(out), true);
+});
+
+test("M16: corrective prompt carries the conflict evidence and keeps anti-over-edit wording", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("sphinx/pycode/ast.py", "unparse"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["sphinx/pycode/ast.py"],
+    decisions: [{ path: "sphinx/pycode/ast.py", decision: "RULED_OUT", evidence: GROUNDED }],
+    testExpectation: te(["tests/test_pycode_ast.py::test_unparse[()-()]"]),
+  });
+  const prompt = buildCorrectivePrompt(out)!;
+  assert.match(prompt, /rule-out conflicts with the FAIL_TO_PASS\/test expectation/);
+  assert.match(prompt, /Candidate: sphinx\/pycode\/ast\.py::unparse/);
+  assert.match(prompt, /Conflict evidence:/);
+  assert.match(prompt, /Do not add files merely because they are listed/);
+  assert.match(prompt, /Prefer the minimal diff/);
+});
+
+test("M16: grounded rule-out with no test conflict still suppresses (ruledOut)", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("a/other.py", "other"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["a/other.py"],
+    decisions: [{ path: "a/other.py", decision: "RULED_OUT", evidence: GROUNDED }],
+    testExpectation: te(["tests/test_unrelated.py::test_something_else"]),
+  });
+  assert.deepEqual(out.ruledOut, ["a/other.py::other"]);
+  assert.deepEqual(out.unclear, []);
+  assert.deepEqual(out.ruleOutConflicts, []);
+  assert.equal(out.correctivePromptSent, false);
+});
+
+test("M16: seaborn-style non-gold rule-out stays suppressed despite a test_relational file", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("seaborn/relational.py", "scatterplot"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["seaborn/relational.py"],
+    decisions: [{ path: "seaborn/relational.py", decision: "RULED_OUT", evidence: "fix lives in utils.py::locator_to_legend_entries which scatterplot delegates to" }],
+    testExpectation: te([
+      "tests/_core/test_plot.py::TestLegend::test_legend_has_no_offset",
+      "tests/test_relational.py::TestRelationalPlotter::test_legend_has_no_offset",
+    ]),
+  });
+  assert.deepEqual(out.ruledOut, ["seaborn/relational.py::scatterplot"]);
+  assert.deepEqual(out.ruleOutConflicts, []);
+  assert.equal(out.correctivePromptSent, false);
+});
+
+test("M16: generic token overlaps do not create a conflict", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("pkg/core.py", "utils"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["pkg/core.py"],
+    decisions: [{ path: "pkg/core.py", decision: "RULED_OUT", evidence: GROUNDED }],
+    testExpectation: te(["tests/test_core.py::test_utils_helper"]),
+  });
+  assert.deepEqual(out.ruledOut, ["pkg/core.py::utils"]);
+  assert.deepEqual(out.ruleOutConflicts, []);
+  assert.equal(detectRuleOutConflict({ path: "pkg/core.py", symbol: "utils", role: "non_lead_pivot" }, te(["tests/test_core.py::test_utils_helper"])), null);
+});
+
+test("M16: an edited candidate is edited, never a conflict, even with a test-anchored marker", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("sphinx/pycode/ast.py", "unparse"),
+    editedFiles: ["a/lead.py", "sphinx/pycode/ast.py"],
+    inspectedFiles: ["sphinx/pycode/ast.py"],
+    decisions: [{ path: "sphinx/pycode/ast.py", decision: "RULED_OUT", evidence: GROUNDED }],
+    testExpectation: te(["tests/test_pycode_ast.py::test_unparse[()-()]"]),
+  });
+  assert.deepEqual(out.edited, ["sphinx/pycode/ast.py::unparse"]);
+  assert.deepEqual(out.unclear, []);
+  assert.deepEqual(out.ruleOutConflicts, []);
+});
+
+test("M16: no test expectation means existing grounded rule-out behavior preserved", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("sphinx/pycode/ast.py", "unparse"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["sphinx/pycode/ast.py"],
+    decisions: [{ path: "sphinx/pycode/ast.py", decision: "RULED_OUT", evidence: GROUNDED }],
+  });
+  assert.deepEqual(out.ruledOut, ["sphinx/pycode/ast.py::unparse"]);
+  assert.deepEqual(out.ruleOutConflicts, []);
+  assert.equal(out.correctivePromptSent, false);
+});
+
+test("M16: problem-statement fallback flags a symbol conflict only when no FAIL_TO_PASS exists", () => {
+  const cand = { path: "sphinx/pycode/ast.py", symbol: "unparse", role: "non_lead_pivot" } as const;
+  assert.equal(
+    detectRuleOutConflict(cand, te(["tests/test_x.py::test_y"], "the unparse helper drops the empty tuple")),
+    null,
+  );
+  const c = detectRuleOutConflict(cand, te([], "the unparse helper drops the empty tuple"));
+  assert.ok(c !== null);
+  assert.match(c!.evidence.join(" "), /problem statement/);
+});
+
+test("M16: compliance with a test expectation is deterministic", () => {
+  const input = {
+    enabled: true,
+    contract: contractWith("sphinx/pycode/ast.py", "unparse"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["sphinx/pycode/ast.py"],
+    decisions: [{ path: "sphinx/pycode/ast.py", decision: "RULED_OUT", evidence: GROUNDED }],
+    testExpectation: te(["tests/test_pycode_ast.py::test_unparse[()-()]"]),
+  } as const;
+  assert.deepEqual(
+    computePivotInspectionCompliance(input),
+    computePivotInspectionCompliance(input),
+  );
 });
