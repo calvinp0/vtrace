@@ -68,6 +68,14 @@ import {
   type RevisionSourceExcerpt,
   type RevisionTestExpectation,
 } from "../../src/capsuleV2/pivotRevisionPass";
+import {
+  prepareRevisedShadowEval,
+  classifyShadowEval,
+  skipReasonToClassification,
+  REVISED_SHADOW_ARTIFACT_FILES,
+  type ShadowClassification,
+  type ShadowSkipReason,
+} from "./revisedPatchShadowEval";
 import { toCapsuleV2ProductResponse } from "../../src/capsuleV2/productAdapter";
 import {
   renderPivotNeighborhoodsText,
@@ -111,6 +119,7 @@ export type Stage5Mode =
   | "run-vexp"
   | "run-protocol"
   | "evaluate"
+  | "evaluate-revised-patch"
   | "ingest"
   | "report"
   | "aggregate-runs"
@@ -2741,6 +2750,178 @@ export async function runEvaluate(config: CliConfig, deps: RunDeps = {}): Promis
     throw new Error(`No condition results were evaluable. Per-condition diagnosis:\n${detail}`);
   }
   return evaluations;
+}
+
+// ----- M17: read-only shadow evaluation of the revised pivot patch ---------------
+//
+// Evaluates `_pivot_revision_revised.patch` SEPARATELY from the canonical first-pass
+// modelPatch, to answer "would the revised patch pass Docker if evaluated on its own?".
+// It NEVER replaces the canonical patch, mutates the canonical JSONL/`_eval.meta.json`,
+// or wires the revised patch into normal evaluation: it writes a distinctly-named shadow
+// JSONL (a copy of the canonical row with the model patch swapped), runs the evaluator on
+// THAT copy, and persists `_pivot_revision_shadow_eval.meta.json`. Canonical artifacts are
+// hashed before and after to prove they were untouched.
+
+export interface RevisedShadowEvalEvidence {
+  readonly condition: Stage5Condition;
+  readonly shadowEval: {
+    readonly sourceRunLabel: string | null;
+    readonly sourcePatch: "pivot_revision_revised";
+    readonly instanceId: string | null;
+    readonly originalPatchHash: string | null;
+    readonly revisedPatchHash: string | null;
+    readonly revisedPatchPath: string | null;
+    readonly dockerUsed: boolean;
+    readonly evaluationRan: boolean;
+    readonly originalCanonicalResolved: Unknownable<boolean> | null;
+    readonly resolved: Unknownable<boolean> | null;
+    readonly resolvedCount: number;
+    readonly evaluationError: string | null;
+    readonly failToPassResult: Unknownable<boolean> | null;
+    readonly passToPassResult: Unknownable<boolean> | null;
+    readonly canonicalArtifactsUntouched: boolean;
+    readonly status: "evaluated" | "skipped";
+    readonly skipReason: ShadowSkipReason | null;
+    readonly classification: ShadowClassification;
+  };
+}
+
+// The canonical artifacts a shadow eval must never disturb. Hashing their concatenated
+// contents before/after the shadow run is a cheap tamper check.
+const CANONICAL_GUARDED_ARTIFACTS = [
+  "_eval.meta.json",
+  REVISION_ARTIFACT_FILES.record,
+  REVISION_ARTIFACT_FILES.originalPatch,
+  REVISION_ARTIFACT_FILES.revisedPatch,
+] as const;
+
+async function hashCanonicalArtifacts(dir: string, canonicalResultsFile: string | null): Promise<string> {
+  const hash = createHash("sha256");
+  const paths = [canonicalResultsFile, ...CANONICAL_GUARDED_ARTIFACTS.map((name) => path.join(dir, name))];
+  for (const filePath of paths) {
+    if (filePath === null) {
+      hash.update(" <absent> ");
+      continue;
+    }
+    const content = await readFile(filePath, "utf8").catch(() => null);
+    hash.update(` ${filePath} `);
+    hash.update(content ?? "<absent>");
+  }
+  return hash.digest("hex");
+}
+
+function resolvedFromRecords(records: ReadonlyArray<Record<string, unknown>>): { resolved: Unknownable<boolean>; resolvedCount: number } {
+  let resolved: Unknownable<boolean> = "unknown";
+  let resolvedCount = 0;
+  for (const record of records) {
+    const flag = asUnknownableBoolean(pick(record, FIELD_ALIASES.resolved!));
+    if (flag === "unknown") continue;
+    resolved = flag;
+    if (flag === true) resolvedCount += 1;
+  }
+  return { resolved, resolvedCount };
+}
+
+// Shadow-evaluate the revised patch for every condition under the run label that has one.
+// Read-only with respect to canonical artifacts (proven by the before/after hash check).
+export async function runEvaluateRevisedPatch(config: CliConfig, deps: RunDeps = {}): Promise<RevisedShadowEvalEvidence[]> {
+  if (config.vexpSweBenchDir === null) throw new Error("--mode evaluate-revised-patch requires --vexp-swe-bench-dir.");
+  const cliPath = path.join(config.vexpSweBenchDir, config.cliEntry);
+  if (!(await pathExists(cliPath))) {
+    throw new Error(`vexp-swe-bench CLI not found at ${cliPath}. Run ./setup.sh in the external checkout first.`);
+  }
+  await ensureOutputTree(config.out);
+  const out: RevisedShadowEvalEvidence[] = [];
+  for (const condition of STAGE5_CONDITIONS) {
+    const dir = rawConditionDir(config.out, condition, config.runLabel);
+    const revisedPatchPath = path.join(dir, REVISION_ARTIFACT_FILES.revisedPatch);
+    const canonicalResultsFile = await findCanonicalResultsFile(dir);
+    const revisedExists = await pathExists(revisedPatchPath);
+    // Nothing to do for this condition: no canonical results AND no revised patch.
+    if (canonicalResultsFile === null && !revisedExists) continue;
+
+    const canonicalContent = canonicalResultsFile === null ? "" : await readFile(canonicalResultsFile, "utf8").catch(() => "");
+    const canonicalRecords = parseJsonlRecords(canonicalContent);
+    const revisedPatch = revisedExists ? await readFile(revisedPatchPath, "utf8").catch(() => null) : null;
+
+    const prep = prepareRevisedShadowEval({ canonicalRecords, revisedPatch });
+    const before = await hashCanonicalArtifacts(dir, canonicalResultsFile);
+
+    if (prep.status === "skipped") {
+      const evidence: RevisedShadowEvalEvidence = {
+        condition,
+        shadowEval: {
+          sourceRunLabel: config.runLabel,
+          sourcePatch: "pivot_revision_revised",
+          instanceId: prep.instanceId,
+          originalPatchHash: prep.originalPatchHash,
+          revisedPatchHash: prep.revisedPatchHash,
+          revisedPatchPath: revisedExists ? revisedPatchPath : null,
+          dockerUsed: false,
+          evaluationRan: false,
+          originalCanonicalResolved: resolvedFromRecords(canonicalRecords).resolved,
+          resolved: null,
+          resolvedCount: 0,
+          evaluationError: null,
+          failToPassResult: null,
+          passToPassResult: null,
+          canonicalArtifactsUntouched: (await hashCanonicalArtifacts(dir, canonicalResultsFile)) === before,
+          status: "skipped",
+          skipReason: prep.reason,
+          classification: skipReasonToClassification(prep.reason),
+        },
+      };
+      await writeFile(path.join(dir, REVISED_SHADOW_ARTIFACT_FILES.meta), `${JSON.stringify(evidence, null, 2)}\n`);
+      out.push(evidence);
+      continue;
+    }
+
+    const originalCanonicalResolved = resolvedFromRecords(canonicalRecords).resolved;
+    // Write the shadow JSONL (copy of the canonical row, revised patch swapped in). The
+    // evaluator mutates resolved IN-PLACE in THIS file — never the canonical JSONL.
+    const shadowJsonlPath = path.join(dir, REVISED_SHADOW_ARTIFACT_FILES.shadowJsonl);
+    await writeFile(shadowJsonlPath, prep.shadowJsonl);
+    const spec = buildEvaluateCommand(config, shadowJsonlPath);
+    const result = await (deps.runProcess ?? runProcess)(spec.command, spec.args, { cwd: spec.cwd ?? undefined });
+    const ran = result.exitCode === 0;
+    const evaluationError = ran ? null : `evaluate exited ${result.exitCode}: ${result.stderr.trim() || "(no stderr)"}`;
+
+    const shadowContent = await readFile(shadowJsonlPath, "utf8").catch(() => "");
+    const shadowRecords = parseJsonlRecords(shadowContent);
+    const { resolved: revisedResolved, resolvedCount } = resolvedFromRecords(shadowRecords);
+    const norm = normalizeEvaluationEvidence(shadowRecords[0] ?? {}, prep.instanceId ?? "", config.evalMode);
+
+    const after = await hashCanonicalArtifacts(dir, canonicalResultsFile);
+    const evidence: RevisedShadowEvalEvidence = {
+      condition,
+      shadowEval: {
+        sourceRunLabel: config.runLabel,
+        sourcePatch: "pivot_revision_revised",
+        instanceId: prep.instanceId,
+        originalPatchHash: prep.originalPatchHash,
+        revisedPatchHash: prep.revisedPatchHash,
+        revisedPatchPath,
+        dockerUsed: config.evalMode === "docker" ? ran : false,
+        evaluationRan: ran,
+        originalCanonicalResolved,
+        resolved: revisedResolved,
+        resolvedCount,
+        evaluationError,
+        failToPassResult: norm.failToPassPassed,
+        passToPassResult: norm.passToPassPassed,
+        canonicalArtifactsUntouched: after === before,
+        status: "evaluated",
+        skipReason: null,
+        classification: classifyShadowEval({ ran, evaluationError, originalResolved: originalCanonicalResolved, revisedResolved }),
+      },
+    };
+    await writeFile(path.join(dir, REVISED_SHADOW_ARTIFACT_FILES.meta), `${JSON.stringify(evidence, null, 2)}\n`);
+    out.push(evidence);
+  }
+  if (out.length === 0) {
+    throw new Error("No revised pivot patch found to shadow-evaluate. Run --mode run-protocol with --pivot-revision-pass first.");
+  }
+  return out;
 }
 
 // Normalize one instance's evaluation evidence out of a SWE-bench per-instance
@@ -8305,6 +8486,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
             "run-vexp",
             "run-protocol",
             "evaluate",
+            "evaluate-revised-patch",
             "ingest",
             "report",
             "aggregate-runs",
@@ -8497,6 +8679,11 @@ async function main(config: CliConfig): Promise<void> {
     case "evaluate": {
       const evaluations = await runEvaluate(config);
       process.stdout.write(`${JSON.stringify(evaluations, null, 2)}\n`);
+      break;
+    }
+    case "evaluate-revised-patch": {
+      const shadow = await runEvaluateRevisedPatch(config);
+      process.stdout.write(`${JSON.stringify(shadow, null, 2)}\n`);
       break;
     }
     case "ingest": await runIngest(config); break;
