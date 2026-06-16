@@ -49,6 +49,21 @@ import {
   buildPivotInspectionContract,
   renderPivotInspectionEnforcementText,
 } from "../../src/capsuleV2/pivotInspectionContract";
+import {
+  computePivotInspectionCompliance,
+  parsePivotDecisionMarkers,
+  type PivotInspectionCompliance,
+} from "../../src/capsuleV2/pivotInspectionCompliance";
+import {
+  decideRevisionPass,
+  buildRevisionPrompt,
+  decideReplacement,
+  noRunRecord,
+  REVISION_ARTIFACT_FILES,
+  type PivotRevisionRecord,
+  type RevisionPassDecisionInput,
+  type RevisionSourceExcerpt,
+} from "../../src/capsuleV2/pivotRevisionPass";
 import { toCapsuleV2ProductResponse } from "../../src/capsuleV2/productAdapter";
 import {
   renderPivotNeighborhoodsText,
@@ -315,6 +330,14 @@ export interface CliConfig {
   // — it does NOT re-enable the legacy PIVOT_CHECK/EDIT_GUARD/PATCH_VERIFY policy and is
   // independent of --disable-pivot-check. Off by default; the M12 live validation opts in.
   readonly pivotInspectionEnforcement: boolean;
+  // M14 corrective pivot-revision pass (--pivot-revision-pass). Default false. When true
+  // AND --pivot-inspection-enforcement is set AND Capsule v2 context was injected AND the
+  // M13 compliance checker finds missing/unclear candidates for the first patch, run ONE
+  // more external-harness `run` (the same VTRACE_AGENT_* seam the hard gate uses — no
+  // external internals touched) with a corrective revision prompt, then read back the
+  // revised patch + prose and persist both. Off by default; a separate experimental
+  // condition, never the product default.
+  readonly pivotRevisionPass: boolean;
   // Hard context-to-action gate (--pivot-check-gate). Default "off" — the existing
   // single-shot run path is unchanged. "hard" runs the two-phase enforcement
   // (Phase 1 inspect-only preflight → gate → Phase 2 solve only on pass) for the
@@ -804,6 +827,7 @@ const DEFAULT_CONFIG: CliConfig = {
   // --disable-pivot-check forces the effective policy to "off" (compatibility).
   disablePivotCheck: false,
   pivotInspectionEnforcement: false,
+  pivotRevisionPass: false,
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
   // off only the guard block).
   disableEditGuard: false,
@@ -1941,6 +1965,184 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
     extraVtraceMeta = { ...extraVtraceMeta, ...(await snapshotVtraceInstructions(config)) };
   }
   await runCondition(config, "vtrace", deps, extraVtraceMeta, injectContext, capsuleV2Bundles);
+
+  // M14 corrective pivot-revision pass (opt-in: --pivot-revision-pass + the M13
+  // enforcement flag). Gated so the default suite never reaches it; reuses the
+  // hard-gate spawn seam for the second `run` (no external harness internals touched).
+  if (config.pivotRevisionPass && config.pivotInspectionEnforcement) {
+    await maybeRunPivotRevisionPass(config, deps, injectContext, capsuleV2Bundles);
+  }
+}
+
+// Read the repo-relative-ish file paths the agent inspected (read/searched) from a
+// persisted ordered `_tool_calls.json`. Best-effort; "" / missing ⇒ no inspected files.
+async function readInspectedFiles(toolCallsJson: string): Promise<string[]> {
+  const content = await readFile(toolCallsJson, "utf8").catch(() => "");
+  if (content.trim().length === 0) return [];
+  try {
+    const calls = JSON.parse(content) as Array<{ category?: string; path?: string }>;
+    const files = new Set<string>();
+    for (const c of calls) {
+      if ((c.category === "read" || c.category === "search") && typeof c.path === "string" && c.path.length > 0) {
+        files.add(c.path);
+      }
+    }
+    return [...files];
+  } catch {
+    return [];
+  }
+}
+
+// Persist the revision-pass artifacts SEPARATELY (all "_"-prefixed so none is ever
+// picked up as a canonical results JSONL, and all gitignored). Never mutates the
+// canonical run JSONL — replacement is recorded, not (yet) swapped into evaluation.
+async function persistRevisionRecord(dir: string, rec: PivotRevisionRecord): Promise<void> {
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, REVISION_ARTIFACT_FILES.originalPatch), rec.originalPatch);
+  if (rec.revisionPrompt !== null) {
+    await writeFile(path.join(dir, REVISION_ARTIFACT_FILES.prompt), `${rec.revisionPrompt}\n`);
+  }
+  if (rec.revisionResponse !== null) {
+    await writeFile(path.join(dir, REVISION_ARTIFACT_FILES.response), `${rec.revisionResponse}\n`);
+  }
+  if (rec.revisedPatch !== null) {
+    await writeFile(path.join(dir, REVISION_ARTIFACT_FILES.revisedPatch), rec.revisedPatch);
+  }
+  await writeFile(path.join(dir, REVISION_ARTIFACT_FILES.record), `${JSON.stringify(rec, null, 2)}\n`);
+}
+
+// The revision-pass orchestrator: PURE of model/spawn details — they arrive via
+// `runSecondPass`, so the sequencing + persistence + replacement decision are
+// unit-testable with a stub (no live agents, no Docker). The runner supplies a live
+// `runSecondPass` built on spawnHardGatePhase; the default suite never sets the flag,
+// so this only runs when --pivot-revision-pass is explicitly passed.
+export interface RevisionPassContext {
+  decisionInput: RevisionPassDecisionInput;
+  originalPatch: string;
+  // Directory the revision artifacts are written into (the vtrace raw dir).
+  outputDir: string;
+  sourceExcerpts?: readonly RevisionSourceExcerpt[];
+  // Live: spawn the second harness run; returns the revised patch + prose + after-verdict.
+  runSecondPass: (prompt: string) => Promise<{
+    revisedPatch: string | null;
+    revisionResponse: string | null;
+    complianceAfter: PivotInspectionCompliance | null;
+  }>;
+  // Optional: install the revised patch as the canonical final patch when it replaces.
+  // Omitted by the live wiring for now (replacement is recorded, not swapped) so the
+  // pass can never corrupt the canonical results JSONL before live validation.
+  installFinalPatch?: (revisedPatch: string) => Promise<void>;
+}
+
+export async function executePivotRevisionPass(ctx: RevisionPassContext): Promise<PivotRevisionRecord> {
+  const decision = decideRevisionPass(ctx.decisionInput);
+  if (!decision.run) {
+    const rec = noRunRecord(decision.reason, ctx.originalPatch, ctx.decisionInput.complianceBefore);
+    await persistRevisionRecord(ctx.outputDir, rec);
+    return rec;
+  }
+  const prompt = buildRevisionPrompt({
+    complianceBefore: ctx.decisionInput.complianceBefore,
+    currentPatch: ctx.originalPatch,
+    sourceExcerpts: ctx.sourceExcerpts,
+  });
+  const second = await ctx.runSecondPass(prompt);
+  const replaced = decideReplacement(
+    ctx.decisionInput.complianceBefore,
+    second.complianceAfter,
+    second.revisedPatch,
+  );
+  if (replaced && second.revisedPatch !== null && ctx.installFinalPatch) {
+    await ctx.installFinalPatch(second.revisedPatch);
+  }
+  const rec: PivotRevisionRecord = {
+    ran: true,
+    decisionReason: decision.reason,
+    originalPatch: ctx.originalPatch,
+    revisionPrompt: prompt,
+    revisionResponse: second.revisionResponse,
+    revisedPatch: second.revisedPatch,
+    complianceBefore: ctx.decisionInput.complianceBefore,
+    complianceAfter: second.complianceAfter,
+    replacedFinalPatch: replaced,
+  };
+  await persistRevisionRecord(ctx.outputDir, rec);
+  return rec;
+}
+
+// Live glue: build the M13 before-verdict for the first patch, then run the corrective
+// second pass through the hard-gate spawn seam and persist the record. Reachable ONLY
+// behind both flags. Best-effort: any missing artifact degrades to a recorded no-run.
+async function maybeRunPivotRevisionPass(
+  config: CliConfig,
+  deps: RunDeps,
+  injectContext: boolean,
+  capsuleV2Bundles: readonly CapsuleV2ArtifactBundle[],
+): Promise<void> {
+  const dir = rawConditionDir(config.out, "vtrace", config.runLabel);
+  const result = capsuleV2Bundles[0]?.result ?? null;
+  const originalPatch = await readPhasePatchText(await findCanonicalResultsFile(dir));
+  const contract =
+    result === null ? null : buildPivotInspectionContract(result.pivots, result.actionability_hints ?? []);
+  const generatedArtifactFiles = (result?.actionability_hints ?? [])
+    .filter((h) => h.kind === "generated_artifact")
+    .map((h) => h.relatedFile);
+  const inspectedFiles = await readInspectedFiles(toolCallLogFilePath(dir));
+  const complianceBefore = computePivotInspectionCompliance({
+    enabled: config.pivotInspectionEnforcement,
+    contract,
+    editedFiles: editedFilesFromPatch(originalPatch),
+    inspectedFiles,
+    generatedArtifactFiles,
+  });
+
+  const instances = await resolveInstances(config);
+  const baseContext = await readFile(vtraceInstructionsFilePath(config.out), "utf8").catch(() => "");
+  const revisionPromptFile = path.join(config.out, "_pivot_revision_prompt.active.md");
+  const revisionStream = path.join(config.out, "_agent_pivot_revision_stream.jsonl");
+  const revisionDir = path.join(path.dirname(dir), "vtrace_pivot_revision");
+
+  const runSecondPass = async (prompt: string) => {
+    await writeFile(revisionPromptFile, `${baseContext}\n\n${prompt}\n`);
+    const phase = await spawnHardGatePhase(config, deps, {
+      instances,
+      outputDir: revisionDir,
+      instructionsFile: revisionPromptFile,
+      streamFile: revisionStream,
+      label: "pivot-revision second pass",
+    });
+    const revisedPatch = await readPhasePatchText(phase.resultsFile);
+    const revisionResponse = assistantTextFromStream(phase.streamContent);
+    const revisedEdited = editedFilesFromPatch(revisedPatch);
+    const complianceAfter = computePivotInspectionCompliance({
+      enabled: config.pivotInspectionEnforcement,
+      contract,
+      editedFiles: revisedEdited,
+      // Carry over the first pass's inspections plus anything the revision edited.
+      inspectedFiles: [...inspectedFiles, ...revisedEdited],
+      generatedArtifactFiles,
+      // Option C folded in: a marker-emitting revision can record grounded rule-outs.
+      decisions: parsePivotDecisionMarkers(revisionResponse),
+    });
+    return {
+      revisedPatch: revisedPatch.length > 0 ? revisedPatch : null,
+      revisionResponse: revisionResponse.length > 0 ? revisionResponse : null,
+      complianceAfter,
+    };
+  };
+
+  await executePivotRevisionPass({
+    decisionInput: {
+      revisionPassEnabled: config.pivotRevisionPass,
+      enforcementEnabled: config.pivotInspectionEnforcement,
+      capsuleV2Injected: injectContext && result !== null,
+      hasModelPatch: originalPatch.length > 0,
+      complianceBefore,
+    },
+    originalPatch,
+    outputDir: dir,
+    runSecondPass,
+  });
 }
 
 // Map Capsule v2 audit items to the inspection-shaped pivots the hard gate checks.
@@ -8105,6 +8307,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--pivot-check-gate-phase1-only": config.pivotCheckGatePhase1Only = true; break;
       case "--disable-pivot-check": config.disablePivotCheck = true; break;
       case "--pivot-inspection-enforcement": config.pivotInspectionEnforcement = true; break;
+      case "--pivot-revision-pass": config.pivotRevisionPass = true; break;
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
@@ -8170,6 +8373,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --pivot-check-gate-phase1-only                 (with --pivot-check-gate hard) run only the read-only Phase-1 preflight + gate, then STOP — Phase 2 never runs even on a pass. Canary to prove the read-only preflight can pass without editing",
       "  --disable-pivot-check                         force PIVOT_CHECK policy off for a controlled before run (compatibility; equivalent to --pivot-check-policy off)",
       "  --pivot-inspection-enforcement                M12 narrow enforcement: inject the '## Required pivot check before final patch' block (explicit EDITED/RULED OUT decision per non-lead pivot + co-edit candidate, with anti-over-edit guardrails) before the capsule body when a v2 pivot inspection contract exists. Off by default; independent of the legacy PIVOT_CHECK policy and --disable-pivot-check",
+      "  --pivot-revision-pass                         M14 experimental: after the first patch, if --pivot-inspection-enforcement is on and the M13 compliance checker finds missing/unclear non-lead pivot / co-edit candidates, run ONE corrective second-pass `run` (same VTRACE_AGENT_* seam as the hard gate; no external harness internals touched) with a revision prompt, then persist the original + revised patch, prompt, response, and before/after compliance. Off by default; requires --pivot-inspection-enforcement; never the product default",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
       "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",
       "  --disable-tool-use-discipline                 benchmark/dev-only: suppress the shared anti-loop tool-use-discipline block injected into BOTH baseline and vtrace prompts (default: injected). Not a user-facing product mode",
