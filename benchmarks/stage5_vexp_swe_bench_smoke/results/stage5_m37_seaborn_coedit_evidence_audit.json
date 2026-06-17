@@ -1,0 +1,89 @@
+{
+  "milestone": "M37",
+  "instance": "mwaskom__seaborn-3187",
+  "mode": "offline_audit_report_only",
+  "liveAgents": false,
+  "docker": false,
+  "codeChanged": false,
+  "goldFiles": ["seaborn/_core/scales.py", "seaborn/utils.py"],
+  "goldCoeditSymbol": {
+    "file": "seaborn/utils.py",
+    "topLevelSymbol": "locator_to_legend_entries",
+    "startLine": 687,
+    "kind": "function",
+    "note": "git hunk-header symbols get_view_interval (nested method) and spacer (nested in scales.py::_setup) are NOT the real top-level edit symbols"
+  },
+  "surfaced": {
+    "pivots": ["seaborn/_core/scales.py::_setup", "seaborn/relational.py::scatterplot"],
+    "support": [
+      "seaborn/utils.py::load_dataset",
+      "seaborn/_core/plot.py::Plot",
+      "examples/grouped_barplot.py::penguins",
+      "examples/joint_kde.py::penguins"
+    ],
+    "utilsPySymbolSurfaced": "load_dataset",
+    "goldCoeditSymbolSurfaced": false,
+    "goldCoeditSymbolInAnyBucket": false,
+    "consistentAcrossRuns": ["eval-m32-product-vtrace-seaborn-3187-r1", "eval-m32-product-vtrace-seaborn-3187-r2", "eval-m36-control-seaborn-3187-r1"]
+  },
+  "coeditHint": {
+    "fired": true,
+    "kind": "multi_file_coedit",
+    "path": "A_cross_module_pivots",
+    "confidence": "high",
+    "relatedFiles": ["seaborn/relational.py"],
+    "targetsGoldCoedit": false,
+    "note": "fired but mis-directed at non-gold relational.py; can only reference items already in candidate set"
+  },
+  "indexEvidence": {
+    "goldSymbolIndexed": true,
+    "goldSymbolRow": "seaborn/utils.py:687 function locator_to_legend_entries",
+    "callersOfGoldSymbol": ["seaborn/relational.py::add_legend_data (method, line 193)", "tests/test_utils.py::test_locator_to_legend_entries"],
+    "surfacedPivotHasDirectEdgeToGold": false,
+    "surfacedPivot": "seaborn/relational.py::scatterplot (function, line 732, thin wrapper)",
+    "graphExpansionMaxDepth": 1,
+    "utilsPyIsLikelyEditFile": false,
+    "loadDatasetWinningEvidence": "verbatim issue-text lexical match (sns.load_dataset(\"Penguins\"))"
+  },
+  "rootCause": {
+    "classification": "candidate_generation_reference_edge_reach_miss",
+    "contributingFactor": "no_lexical_signal_for_gold_symbol",
+    "ruledOut": {
+      "parser_index_miss": "symbol indexed",
+      "reference_edge_miss": "calls edge add_legend_data->locator_to_legend_entries exists",
+      "ranking_miss": "never a candidate to rank",
+      "symbol_selection_miss": "no per-file representative-symbol selector; retrieval is per-symbol",
+      "coedit_hint_synthesis_miss": "hint fired; cannot reference a non-candidate symbol"
+    },
+    "summary": "gold co-edit symbol is indexed and graph-connected but only reachable via a 2-hop reference chain through an unsurfaced intermediary (add_legend_data) and has no issue-text lexical signal; depth-1 candidate generation never proposes it"
+  },
+  "decision": {
+    "codeChange": false,
+    "reason": "every candidate fix is either ineffective (surfaces wrong symbol load_dataset) or a broad high-blast-radius retrieval-reach change (maxDepth 1->2 / intermediary seeding / concept matching) disallowed without a precise low-risk bug; near-zero resolution payoff because seaborn already resolves 3/3 in M36 control unaided",
+    "candidateFixesEvaluated": {
+      "A_B_promote_support_to_coedit_hint": "rejected: surfaces wrong symbol load_dataset",
+      "C_parser_reference_edge_fix": "rejected: no edge bug; reach fix is broad retrieval change",
+      "D_symbol_selection": "n/a: gold symbol not a candidate",
+      "E_no_change_document": "chosen"
+    }
+  },
+  "validationBeforeAfter": {
+    "utilsPySurfaced": {"before": "support (load_dataset)", "after": "unchanged"},
+    "goldSymbolSurfaced": {"before": false, "after": false},
+    "promotedToPivot": false,
+    "promotedToCoeditHint": false,
+    "justifiableWithCurrentEvidence": false,
+    "finalState": "support_only_wrong_symbol_known_limitation"
+  },
+  "retrievalSafety": {
+    "sourceCodeChanged": false,
+    "retrievalEvalRequired": false,
+    "csvsByteIdenticalByConstruction": true,
+    "verification": "git diff --check only"
+  },
+  "recommendation": {
+    "choice": "D",
+    "text": "evidence insufficient to justify a low-risk fix; leave seaborn-3187 as documented known limitation and return to sphinx-doc__sphinx-7462 edit-sufficiency bottleneck",
+    "higherValueTarget": "sphinx-doc__sphinx-7462 edit-sufficiency (0/3 both arms in M36; ast.py::unparse surfaced and inspected but not edited)"
+  }
+}
