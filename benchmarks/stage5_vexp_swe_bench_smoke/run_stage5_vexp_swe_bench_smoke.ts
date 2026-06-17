@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { CapsuleMode, type CapsuleMode as CapsuleModeT } from "../../src/capsule/capsuleModes";
 import {
@@ -50,6 +51,15 @@ import {
   type CommandSource,
   type PlanCommandCandidate,
 } from "../../src/capsule/agentTestCommandPlanner";
+import {
+  VERIFY_MODE,
+  canonicalizeCommand,
+  decideVerificationEligibility,
+  buildSkippedVerification,
+  buildAgentCommandVerification,
+  type VerifyArtifact,
+  type AgentCommandExecutionResult,
+} from "../../src/capsule/agentTestCommandVerifier";
 import {
   describeHardGateOutcome,
   hardGateMetaFields,
@@ -145,7 +155,8 @@ export type Stage5Mode =
   | "aggregate-runs"
   | "install-vtrace-patch"
   | "verify-vtrace-patch"
-  | "plan-agent-test-command";
+  | "plan-agent-test-command"
+  | "verify-agent-test-command";
 export type Stage5Condition = "baseline" | "vtrace" | "vexp";
 export type VtraceMethod = "instructions-file" | "mcp" | "local-patch" | "indexed-context";
 // Index-reuse policy for the vtrace `index` step (--index-policy):
@@ -384,6 +395,11 @@ export interface CliConfig {
   // candidate command from. Read-only: the planner runs NO Docker and executes NO command.
   readonly patchSource: PatchSource;
   readonly commandSource: CommandSource;
+  // M27 diagnostic verifier (--mode verify-agent-test-command). OFF by default: even when the
+  // M26 plan is eligible, the verifier writes a `docker_not_authorized` skip rather than start a
+  // container. `--allow-docker-verify` is the explicit future opt-in to the isolated container
+  // execution (NEVER oracle grading). Default false.
+  readonly allowDockerVerify: boolean;
   // Hard context-to-action gate (--pivot-check-gate). Default "off" — the existing
   // single-shot run path is unchanged. "hard" runs the two-phase enforcement
   // (Phase 1 inspect-only preflight → gate → Phase 2 solve only on pass) for the
@@ -878,6 +894,8 @@ const DEFAULT_CONFIG: CliConfig = {
   // M26 planner defaults: the revised pivot patch + the revision-phase test commands.
   patchSource: "pivot_revision_revised",
   commandSource: "pivot_revision_test_commands",
+  // M27: diagnostic verifier never starts Docker unless explicitly authorized.
+  allowDockerVerify: false,
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
   // off only the guard block).
   disableEditGuard: false,
@@ -3122,13 +3140,27 @@ async function resolvePlanPatch(
   return { patchText: null, patchPath: null };
 }
 
-// Build the dry-run plan for one source run label. PURE decision-making is delegated to
-// `buildAgentTestCommandPlan`; this glue only LOADS captured artifacts and WRITES the plan json.
-// It reads no gold labels beyond the already-injected FAIL_TO_PASS (which only ever disallows),
-// runs no Docker, and executes no command. It also tamper-checks the canonical artifacts.
-export async function runPlanAgentTestCommand(config: CliConfig): Promise<AgentTestCommandPlan> {
+// The plan plus the source-run context needed to verify (or skip) it: the raw dir, the canonical
+// results file (for tamper checks), the resolved patch path, and the SAME provenance context the
+// planner used (so a later fair re-assessment recomputes provenance identically).
+interface AgentTestCommandPlanContext {
+  plan: AgentTestCommandPlan;
+  dir: string;
+  canonicalResultsFile: string | null;
+  patchPath: string | null;
+  injectedTestNames: string[] | null;
+  priorCommandTextForSelected: string[];
+}
+
+// Compute the M26 plan for one source run label by LOADING captured artifacts only. PURE
+// decision-making is delegated to `buildAgentTestCommandPlan`; this does no Docker and runs no
+// command. Shared by `runPlanAgentTestCommand` (writes the plan) and `runVerifyAgentTestCommand`.
+async function computeAgentTestCommandPlan(
+  config: CliConfig,
+  flagModeName: string,
+): Promise<AgentTestCommandPlanContext> {
   if (config.runLabel === null) {
-    throw new Error("--mode plan-agent-test-command requires --run-label <existing source label>.");
+    throw new Error(`--mode ${flagModeName} requires --run-label <existing source label>.`);
   }
   const dir = rawConditionDir(config.out, "vtrace", config.runLabel);
   if (!(await pathExists(dir))) {
@@ -3176,7 +3208,7 @@ export async function runPlanAgentTestCommand(config: CliConfig): Promise<AgentT
   // 4) Expected SWE-bench image / testbed identity (derived from the documented TestSpec format).
   const imagePlan = deriveExpectedImageKey({ instanceId });
 
-  // 5) Planned artifacts: the dry-run plan json (written below) + the would-be future logs.
+  // 5) Planned artifacts: the dry-run plan json (written by the planner) + the would-be future logs.
   const plannedArtifacts = [
     path.join(dir, AGENT_TEST_COMMAND_PLAN_FILE),
     ...FUTURE_EXECUTION_ARTIFACT_FILES.map((name) => path.join(dir, name)),
@@ -3194,14 +3226,231 @@ export async function runPlanAgentTestCommand(config: CliConfig): Promise<AgentT
     plannedArtifacts,
   });
 
-  // 6) Write the dry-run plan, tamper-checking the canonical artifacts around the write.
-  const before = await hashCanonicalArtifacts(dir, canonicalResultsFile);
-  await writeFile(path.join(dir, AGENT_TEST_COMMAND_PLAN_FILE), `${JSON.stringify(plan, null, 2)}\n`);
-  const after = await hashCanonicalArtifacts(dir, canonicalResultsFile);
+  // The prior-exploration context of the SELECTED command (the first test command), so a later
+  // fair re-assessment recomputes provenance identically to the plan.
+  const selectedRow = verificationRows.find((row) => classifyTestFramework(row.command) !== "unknown");
+  const priorCommandTextForSelected = selectedRow ? [...selectedRow.priorCommandText] : [];
+
+  return { plan, dir, canonicalResultsFile, patchPath, injectedTestNames, priorCommandTextForSelected };
+}
+
+// Build the dry-run plan for one source run label and WRITE it. Tamper-checks the canonical
+// artifacts around the write. Runs no Docker and executes no command.
+export async function runPlanAgentTestCommand(config: CliConfig): Promise<AgentTestCommandPlan> {
+  const ctx = await computeAgentTestCommandPlan(config, PLAN_MODE);
+  const before = await hashCanonicalArtifacts(ctx.dir, ctx.canonicalResultsFile);
+  await writeFile(path.join(ctx.dir, AGENT_TEST_COMMAND_PLAN_FILE), `${JSON.stringify(ctx.plan, null, 2)}\n`);
+  const after = await hashCanonicalArtifacts(ctx.dir, ctx.canonicalResultsFile);
   if (after !== before) {
     throw new Error("plan-agent-test-command mutated canonical artifacts — aborting (this is a bug).");
   }
-  return plan;
+  return ctx.plan;
+}
+
+// ===========================================================================================
+// M27 — diagnostic-only isolated agent-command verifier glue (NO oracle grading).
+//
+// Runs the M26 planner first. If the plan is ineligible (injected_metadata / shell pipeline /
+// unsafe / missing patch / …) it writes a `skipped` artifact and exits WITHOUT starting Docker.
+// If eligible, it derives a canonical safe command and — ONLY when `--allow-docker-verify` is
+// set (the explicit future opt-in) — invokes the injected container runner, which shells the
+// SWE-bench NON-ORACLE seam (make_test_spec → build_container → copy_to_container → GIT_APPLY_CMDS
+// → exec_run_with_timeout → cleanup_container; STOPPING before grading.py / get_eval_report).
+// By default `--allow-docker-verify` is off, so this mode never starts a container.
+// ===========================================================================================
+
+// Diagnostic verifier artifact filenames (under raw/vtrace). "_"-prefixed ⇒ never git-staged,
+// never mistaken for a canonical results JSONL, and disjoint from every canonical artifact.
+export const VERIFY_ARTIFACT_FILES = {
+  meta: "_agent_test_command_verify.meta.json",
+  stdout: "_agent_test_command_verify.stdout.txt",
+  stderr: "_agent_test_command_verify.stderr.txt",
+} as const;
+
+// Canonical artifacts the verifier must never disturb (in ADDITION to those guarded by
+// `hashCanonicalArtifacts`): the pivot revision record and the shadow-eval meta.
+const VERIFY_PROTECTED_EXTRA = [
+  REVISION_ARTIFACT_FILES.record,
+  REVISED_SHADOW_ARTIFACT_FILES.meta,
+] as const;
+
+export interface AgentCommandRunInput {
+  instanceId: string;
+  patchPath: string;
+  command: string;
+  timeoutSec: number;
+  outputPath: string;
+  vexpSweBenchDir: string;
+  pythonCommand: string;
+}
+
+// Injectable container runner. The DEFAULT shells the Python seam script; tests pass a stub.
+export type AgentCommandRunnerFn = (input: AgentCommandRunInput) => Promise<AgentCommandExecutionResult>;
+
+export interface VerifyDeps {
+  readonly runAgentCommand?: AgentCommandRunnerFn;
+  readonly runProcess?: ProcessRunner;
+}
+
+// Default container runner: shells `verify_agent_test_command.py` (the non-oracle seam) and reads
+// back its JSON. NEVER invoked in M27 (the mode is off by default); present for the future opt-in.
+const defaultAgentCommandRunner: AgentCommandRunnerFn = async (input) => {
+  const seamScript = fileURLToPath(new URL("verify_agent_test_command.py", import.meta.url));
+  const args = [
+    seamScript,
+    "--instance-id", input.instanceId,
+    "--patch", input.patchPath,
+    "--command", input.command,
+    "--timeout", String(input.timeoutSec),
+    "--output", input.outputPath,
+  ];
+  await runProcess(input.pythonCommand, args, { cwd: input.vexpSweBenchDir });
+  const raw = await readJsonArtifact(input.outputPath);
+  const r = isRecordObject(raw) ? raw : {};
+  const str = (v: unknown): string => (typeof v === "string" ? v : "");
+  const numOrNull = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
+  const boolOrNull = (v: unknown): boolean | null => (typeof v === "boolean" ? v : null);
+  return {
+    dockerStarted: r.dockerStarted === true,
+    patchApplied: r.patchApplied === true,
+    appliedPatchSha256: typeof r.appliedPatchSha256 === "string" ? r.appliedPatchSha256 : null,
+    commandRan: r.commandRan === true,
+    exitCode: numOrNull(r.exitCode),
+    rawToolSuccess: boolOrNull(r.rawToolSuccess),
+    stdout: str(r.stdout),
+    stderr: str(r.stderr),
+    ...(typeof r.worktreeDiffHashBeforeCommand === "string"
+      ? { worktreeDiffHashBeforeCommand: r.worktreeDiffHashBeforeCommand }
+      : {}),
+    ...(typeof r.worktreeDiffHashAfterCommand === "string"
+      ? { worktreeDiffHashAfterCommand: r.worktreeDiffHashAfterCommand }
+      : {}),
+  };
+};
+
+// Hash the canonical artifacts a verify run must never disturb (the shadow-eval guarded set plus
+// the pivot revision record + shadow-eval meta). Used for a before/after tamper check.
+async function hashVerifyProtectedArtifacts(dir: string, canonicalResultsFile: string | null): Promise<string> {
+  const base = await hashCanonicalArtifacts(dir, canonicalResultsFile);
+  const hash = createHash("sha256");
+  hash.update(base);
+  for (const name of VERIFY_PROTECTED_EXTRA) {
+    const content = await readFile(path.join(dir, name), "utf8").catch(() => "<absent>");
+    hash.update(` ${name} `);
+    hash.update(content);
+  }
+  return hash.digest("hex");
+}
+
+// Run the diagnostic-only verifier for one source run label. Writes `_agent_test_command_verify.*`
+// and (for traceability) the M26 plan json; NEVER overwrites a canonical artifact (tamper-checked
+// before/after every write) and NEVER calls oracle grading.
+export async function runVerifyAgentTestCommand(
+  config: CliConfig,
+  deps: VerifyDeps = {},
+): Promise<VerifyArtifact> {
+  const ctx = await computeAgentTestCommandPlan(config, VERIFY_MODE);
+  const { plan, dir, canonicalResultsFile } = ctx;
+  const before = await hashVerifyProtectedArtifacts(dir, canonicalResultsFile);
+
+  // Persist the M26 plan alongside the verify artifact (traceability; tamper-checked below).
+  await writeFile(path.join(dir, AGENT_TEST_COMMAND_PLAN_FILE), `${JSON.stringify(plan, null, 2)}\n`);
+
+  // Finalize a verify artifact: write meta (+ optional stdout/stderr), assert canonical untouched.
+  const finalize = async (
+    artifact: VerifyArtifact,
+    outputs?: { stdout: string; stderr: string },
+  ): Promise<VerifyArtifact> => {
+    if (outputs !== undefined) {
+      await writeFile(path.join(dir, VERIFY_ARTIFACT_FILES.stdout), outputs.stdout);
+      await writeFile(path.join(dir, VERIFY_ARTIFACT_FILES.stderr), outputs.stderr);
+    }
+    await writeFile(path.join(dir, VERIFY_ARTIFACT_FILES.meta), `${JSON.stringify(artifact, null, 2)}\n`);
+    const after = await hashVerifyProtectedArtifacts(dir, canonicalResultsFile);
+    if (after !== before) {
+      throw new Error("verify-agent-test-command mutated canonical artifacts — aborting (this is a bug).");
+    }
+    return artifact;
+  };
+
+  // Gate 1: plan ineligible ⇒ skip without Docker.
+  const decision = decideVerificationEligibility(plan);
+  if (!decision.eligible) {
+    return finalize(
+      buildSkippedVerification({ plan, reason: "plan_ineligible", blockers: decision.blockers }),
+    );
+  }
+
+  // Gate 2: derive a canonical safe command (never the raw shell-piped capture).
+  const canonicalization = canonicalizeCommand({
+    capturedCommand: plan.selectedCommand ?? "",
+    framework: plan.commandFramework ?? "unknown",
+    selectedTests: plan.selectedTests,
+  });
+  if (!canonicalization.commandCanonicalized) {
+    return finalize(
+      buildSkippedVerification({
+        plan,
+        reason: "command_not_canonicalizable",
+        blockers: [canonicalization.canonicalizationReason],
+        canonicalization,
+      }),
+    );
+  }
+
+  // Gate 3: need an on-disk patch FILE to copy into the testbed.
+  if (ctx.patchPath === null) {
+    return finalize(
+      buildSkippedVerification({
+        plan,
+        reason: "patch_file_unavailable",
+        blockers: ["no on-disk patch file for the requested patch source"],
+        canonicalization,
+      }),
+    );
+  }
+
+  // Gate 4: Docker execution must be explicitly authorized. Default OFF ⇒ skip, never start Docker.
+  if (!config.allowDockerVerify) {
+    return finalize(
+      buildSkippedVerification({
+        plan,
+        reason: "docker_not_authorized",
+        blockers: [
+          "isolated container execution not authorized; pass --allow-docker-verify to run the non-oracle seam",
+        ],
+        canonicalization,
+      }),
+    );
+  }
+
+  // Authorized: run the isolated container (non-oracle seam). NEVER reached in M27.
+  if (config.vexpSweBenchDir === null) {
+    throw new Error("--mode verify-agent-test-command --allow-docker-verify requires --vexp-swe-bench-dir.");
+  }
+  const runner = deps.runAgentCommand ?? defaultAgentCommandRunner;
+  const execution = await runner({
+    instanceId: plan.instanceId,
+    patchPath: ctx.patchPath,
+    command: canonicalization.executedCommand!,
+    timeoutSec: config.evalTimeout,
+    outputPath: path.join(dir, "_agent_test_command_verify.exec.json"),
+    vexpSweBenchDir: config.vexpSweBenchDir,
+    pythonCommand: "python",
+  });
+  const verification = buildAgentCommandVerification({
+    plan,
+    canonicalization,
+    execution,
+    provenanceContext: {
+      injectedTestNames: ctx.injectedTestNames,
+      priorCommandText: ctx.priorCommandTextForSelected,
+    },
+  });
+  return finalize(verification, {
+    stdout: execution.stdout,
+    stderr: execution.stderr,
+  });
 }
 
 // Normalize one instance's evaluation evidence out of a SWE-bench per-instance
@@ -8886,6 +9135,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
             "install-vtrace-patch",
             "verify-vtrace-patch",
             "plan-agent-test-command",
+            "verify-agent-test-command",
           ].includes(value)
         )
           throw new Error("Invalid --mode.");
@@ -9018,6 +9268,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         config.commandSource = value;
         break;
       }
+      case "--allow-docker-verify": config.allowDockerVerify = true; break;
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
@@ -9061,7 +9312,7 @@ function printUsageAndExit(exitCode: number): never {
   process.stdout.write(
     [
       "Usage: bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\",
-      "  --mode prepare|run-baseline|run-vtrace|run-vexp|run-protocol|evaluate|ingest|report|aggregate-runs|install-vtrace-patch|verify-vtrace-patch|plan-agent-test-command \\",
+      "  --mode prepare|run-baseline|run-vtrace|run-vexp|run-protocol|evaluate|ingest|report|aggregate-runs|install-vtrace-patch|verify-vtrace-patch|plan-agent-test-command|verify-agent-test-command \\",
       "  --vexp-swe-bench-dir /path/to/vexp-swe-bench --instances id1,id2,id3 --out benchmarks/stage5_vexp_swe_bench_smoke/results",
       "",
       "Stage 5C protocol/evaluation flags:",
@@ -9072,7 +9323,8 @@ function printUsageAndExit(exitCode: number): never {
       "  --eval-timeout <seconds>                      per-instance evaluation timeout",
       "  --run-label <label>                           isolate runs under results/runs/<label>/",
       "  --patch-source original_model_patch|pivot_revision_revised   (with --mode plan-agent-test-command) which captured patch to plan a fair verification of (default: pivot_revision_revised)",
-      "  --command-source first_pass_test_commands|pivot_revision_test_commands   (with --mode plan-agent-test-command) which captured agent-selected test commands to draw the single candidate from (default: pivot_revision_test_commands)",
+      "  --command-source first_pass_test_commands|pivot_revision_test_commands   (with --mode plan-agent-test-command|verify-agent-test-command) which captured agent-selected test commands to draw the single candidate from (default: pivot_revision_test_commands)",
+      "  --allow-docker-verify                         (with --mode verify-agent-test-command) explicitly authorize the isolated container execution of the canonical safe command (non-oracle seam only — NEVER SWE-bench grading). default: off ⇒ the verifier writes a docker_not_authorized skip and never starts Docker",
       "  --reuse-workspace                             reuse an existing labeled workspace by RESETTING it to the SWE-bench base commit and running git clean -fdx (never pulls main; reuses a fresh index per --index-policy) instead of redownloading the repo",
       "  --index-policy auto|always|reuse              reuse a fingerprint-fresh index (auto), force rebuild (always), or keep a stale index (reuse). default: auto",
       "  --show-vtrace-index-log                       print the vtrace index log to the terminal (drops --quiet)",
@@ -9121,6 +9373,11 @@ async function main(config: CliConfig): Promise<void> {
     case "plan-agent-test-command": {
       const plan = await runPlanAgentTestCommand(config);
       process.stdout.write(`${JSON.stringify(plan, null, 2)}\n`);
+      break;
+    }
+    case "verify-agent-test-command": {
+      const verification = await runVerifyAgentTestCommand(config);
+      process.stdout.write(`${JSON.stringify(verification, null, 2)}\n`);
       break;
     }
     case "ingest": await runIngest(config); break;

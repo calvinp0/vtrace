@@ -656,6 +656,7 @@ export function buildPrecheckConfig(opts: {
     revisionVerificationPolicy: "none",
     patchSource: "pivot_revision_revised",
     commandSource: "pivot_revision_test_commands",
+    allowDockerVerify: false,
     disableEditGuard: false,
     disablePatchVerify: false,
     disableToolUseDiscipline: false,
