@@ -346,6 +346,142 @@ test("M28: fair policy prompt suppresses literal FAIL_TO_PASS test names and lab
   assert.match(prompt, /Prefer the minimal final diff\./);
 });
 
+// ===== M28.5 — hardened fair test-discovery requirements / checklist / telemetry marker =====
+
+// M28.5-1. Default / no-policy revision prompt is byte-identical to the pre-M28.5 default and
+// carries none of the M28.5 scaffold (requirements list, checklist, FAIR_TEST_DISCOVERY marker).
+test("M28.5: default/no-policy revision prompt remains unchanged (no M28.5 scaffold)", () => {
+  const expectation = buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem");
+  const base = buildRevisionPrompt({ complianceBefore: nonCompliant(), currentPatch: PATCH, testExpectation: expectation });
+  const explicitNone = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: expectation,
+    verificationPolicy: "none",
+  });
+  assert.equal(base, explicitNone);
+  assert.doesNotMatch(base, /For a test command to count as fair verification/);
+  assert.doesNotMatch(base, /Fair test discovery checklist/);
+  assert.doesNotMatch(base, /FAIR_TEST_DISCOVERY:/);
+});
+
+// M28.5-2. The fair-policy prompt states the explicit numbered requirements: search/list, then
+// read/open the relevant test file BEFORE running, then a canonical command.
+test("M28.5: fair-policy prompt requires search/list + read/open before running the test", () => {
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem"),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.match(prompt, /For a test command to count as fair verification, you must:/);
+  assert.match(prompt, /Search or list repository test files related to the touched module\/function\./);
+  assert.match(prompt, /Read\/open the relevant test file before running the test\./);
+  // Read requirement precedes the canonical-command requirement in the rendered prompt.
+  assert.ok(
+    prompt.indexOf("Read/open the relevant test file before running the test.")
+      < prompt.indexOf("Run a canonical focused test command"),
+    "read requirement must come before the run requirement",
+  );
+});
+
+// M28.5-3. The fair-policy prompt explicitly says a grep/search result alone is not enough, and a
+// guessed name is not enough.
+test("M28.5: fair-policy prompt says grep/search alone (and a guessed name) is not enough", () => {
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem"),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.match(prompt, /A grep\/search result alone is not enough\./);
+  assert.match(prompt, /A guessed test name from a function name is not enough\./);
+});
+
+// M28.5-4. The fair-policy prompt forbids pipes / redirection / head/tail truncation and shows the
+// disqualified command shapes as concrete "not eligible" examples.
+test("M28.5: fair-policy prompt forbids pipes/redirection/head/tail with concrete examples", () => {
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem"),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.match(prompt, /no pipes, no redirection, no head\/tail truncation/);
+  assert.match(prompt, /A piped\/truncated command is not fair-verification eligible\./);
+  assert.match(prompt, /Not fair-verification eligible:/);
+  assert.match(prompt, /2>&1 \| head -60/);
+  assert.match(prompt, /<discovered test node> 2>&1$/m);
+});
+
+// M28.5-5. The fair-policy prompt gives a canonical pytest example AND uses only neutral placeholder
+// node names — never a real evaluator test node (no hidden-label leak via the static example).
+test("M28.5: fair-policy prompt gives a canonical pytest example with neutral placeholders", () => {
+  const ftp = ["tests/test_domain_py.py::test_parse_annotation"];
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: buildTestExpectation(ftp, "some problem"),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.match(prompt, /Good \(fair-verification eligible\):/);
+  assert.match(prompt, /python -m pytest <discovered test node>/);
+  assert.match(prompt, /pytest tests\/test_<module>\.py::test_<behavior>/);
+  // The example must NOT be a real benchmark node (the withheld FAIL_TO_PASS leaf).
+  assert.doesNotMatch(prompt, /test_parse_annotation/);
+});
+
+// M28.5-6. The fair-policy prompt carries the visible checklist (all four items).
+test("M28.5: fair-policy prompt includes the four-item discovery checklist", () => {
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem"),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.match(prompt, /Fair test discovery checklist:/);
+  assert.match(prompt, /- \[ \] I searched\/listed repository test files\./);
+  assert.match(prompt, /- \[ \] I read\/opened the relevant test file\./);
+  assert.match(prompt, /- \[ \] I ran a canonical unpiped test command\./);
+  assert.match(prompt, /- \[ \] I did not use benchmark\/evaluator labels\./);
+});
+
+// M28.5-7. The optional FAIR_TEST_DISCOVERY telemetry marker instruction renders ONLY under the
+// fair policy (never in the default/none prompt).
+test("M28.5: FAIR_TEST_DISCOVERY marker instruction renders only under the fair policy", () => {
+  const expectation = buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem");
+  const fair = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: expectation,
+    verificationPolicy: "agent_discovered",
+  });
+  const none = buildRevisionPrompt({ complianceBefore: nonCompliant(), currentPatch: PATCH, testExpectation: expectation, verificationPolicy: "none" });
+  assert.match(fair, /FAIR_TEST_DISCOVERY:/);
+  assert.match(fair, /searched: <command or none>/);
+  assert.match(fair, /result: <passed\/failed\/env-error\/not-run>/);
+  assert.doesNotMatch(none, /FAIR_TEST_DISCOVERY:/);
+});
+
+// M28.5-8. Even with the strengthened static scaffold, the fair policy still suppresses withheld
+// evaluator labels and the assertion guard passes (the new examples use placeholders only).
+test("M28.5: strengthened fair scaffold still suppresses withheld labels and passes the guard", () => {
+  const ftp = [
+    "tests/test_pycode_ast.py::test_unparse[()-()]",
+    "tests/test_domain_py.py::test_parse_annotation",
+  ];
+  const prompt = buildRevisionPrompt({
+    complianceBefore: conflictedCompliance(ftp),
+    currentPatch: PATCH,
+    testExpectation: expectationOf(ftp),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.doesNotMatch(prompt, /test_unparse/);
+  assert.doesNotMatch(prompt, /test_parse_annotation/);
+  assert.ok(!prompt.includes("FAIL_TO_PASS"));
+  assert.doesNotThrow(() => assertNoWithheldTestLabels(prompt, ftp));
+});
+
 // 11 — candidate excerpts are strictly bounded (count / lines / bullets).
 test("source excerpts are bounded to count, lines, and bullets", () => {
   const many = Array.from({ length: 6 }, (_, i) => ({

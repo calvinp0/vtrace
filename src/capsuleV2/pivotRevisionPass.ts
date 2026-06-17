@@ -201,14 +201,21 @@ function renderTestExpectation(
   return lines;
 }
 
-// M23 / M28 — opt-in fair verification instruction block. Asks the agent to discover/run the
-// smallest relevant repository test that it can JUSTIFY from its own exploration, never one
-// chosen merely because a hidden benchmark label named it. M28 strengthens this into an explicit
-// DISCOVERY PROTOCOL: the agent must search/list/read the repository's tests first, pick the
-// smallest test it actually found, and run it with a CANONICAL (un-piped, un-truncated) command —
-// so a later provenance check can credit the test as agent-discovered rather than guessed/injected.
-// Conservative + honest by design: it requires the agent to say so when no trustworthy test
-// exists, to report environment failures as such, and to never claim verification without output.
+// M23 / M28 / M28.5 — opt-in fair verification instruction block. Asks the agent to discover/run
+// the smallest relevant repository test that it can JUSTIFY from its own exploration, never one
+// chosen merely because a hidden benchmark label named it. M28 introduced an explicit DISCOVERY
+// PROTOCOL; M28.5 strengthens it into hard, numbered REQUIREMENTS (search/list → read/open →
+// canonical un-piped command), spells out the disqualifiers (grep-only, guessed-from-name,
+// piped/truncated), gives concrete good/bad command examples, and adds a visible checklist plus an
+// optional FAIR_TEST_DISCOVERY telemetry marker — so a later provenance check can credit the test
+// as agent-discovered rather than guessed/injected. Conservative + honest by design: it requires
+// the agent to say so when no trustworthy test exists, to report environment failures as such, and
+// to never claim verification without output.
+//
+// NOTE: the command examples use NEUTRAL placeholders (<discovered test node>, tests/test_<module>.py
+// ::test_<behavior>) on purpose. We must never hardcode a real benchmark test node here — the static
+// block renders into every fair-policy prompt, so a literal evaluator label would leak unconditionally
+// and would trip `assertNoWithheldTestLabels`. The placeholder still conveys the canonical shape.
 const FAIR_VERIFICATION_BLOCK: readonly string[] = [
   "",
   "## Fair verification (agent-discovered focused test)",
@@ -217,21 +224,48 @@ const FAIR_VERIFICATION_BLOCK: readonly string[] = [
   "Do not run a test merely because a hidden benchmark/evaluator label says so.",
   "Do not guess a test name from the edited function name alone.",
   "",
+  "For a test command to count as fair verification, you must:",
+  "",
+  "  1. Search or list repository test files related to the touched module/function.",
+  "  2. Read/open the relevant test file before running the test.",
+  "  3. Run a canonical focused test command with no pipes, no redirection, no head/tail truncation.",
+  "",
+  "A grep/search result alone is not enough.",
+  "A guessed test name from a function name is not enough.",
+  "A piped/truncated command is not fair-verification eligible.",
+  "",
   "Discovery protocol (follow it before running any focused test):",
   "  1. Search/list/read the repository test files related to the touched module/function",
   "     (grep/ripgrep/find/ls over the test directories, then read the candidate test file).",
   "  2. Choose the smallest focused test you actually discovered from that exploration.",
   "  3. Run it with a canonical command — never a piped or truncated one.",
   "",
-  "Prefer:",
+  "Good (fair-verification eligible):",
   "  python -m pytest <discovered test node>",
-  "or:",
-  "  pytest <discovered test node>",
+  "  pytest tests/test_<module>.py::test_<behavior>",
+  "",
+  "Not fair-verification eligible:",
+  "  python -m pytest <discovered test node> 2>&1 | head -60",
+  "  python -m pytest <discovered test node> 2>&1",
   "",
   "Avoid:",
   '  - piping or truncating the test command (e.g. "... | head", "2>&1 | head")',
   "  - grep-only evidence without reading the test file",
   "  - test names copied from benchmark/evaluator labels (they are withheld here)",
+  "",
+  "Fair test discovery checklist:",
+  "  - [ ] I searched/listed repository test files.",
+  "  - [ ] I read/opened the relevant test file.",
+  "  - [ ] I ran a canonical unpiped test command.",
+  "  - [ ] I did not use benchmark/evaluator labels.",
+  "",
+  "After verifying, include this telemetry marker in your response (best-effort; it does not",
+  "replace the diff, and adoption does not depend on it):",
+  "  FAIR_TEST_DISCOVERY:",
+  "    searched: <command or none>",
+  "    read: <file or none>",
+  "    command: <test command or none>",
+  "    result: <passed/failed/env-error/not-run>",
   "",
   "If no focused test is discoverable, state that no fair focused test was discovered.",
   "If the environment fails before the test runs, report it as an environment/import/dependency failure.",
