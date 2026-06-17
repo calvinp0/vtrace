@@ -14,8 +14,10 @@ import { test } from "bun:test";
 
 import type { ActionabilityHint } from "./actionabilityHints";
 import {
+  MULTI_PIVOT_ACTION_PLAN_ENV,
   MULTI_PIVOT_ACTION_PLAN_HEADING,
   buildMultiPivotActionPlan,
+  multiPivotActionPlanEnabled,
   renderMultiPivotActionPlanText,
 } from "./multiPivotActionPlan";
 import type { ContractPivotView } from "./pivotInspectionContract";
@@ -184,4 +186,27 @@ test("11. co-edit file that is already a pivot is not duplicated", () => {
   const plan = buildMultiPivotActionPlan(pivots, [coeditHint("a/lead.py", ["b/second.py"])])!;
   const occurrences = plan.entries.filter((e) => e.file === "b/second.py").length;
   assert.equal(occurrences, 1);
+});
+
+// --- M36.1 env toggle (isolated via an injected env map; no process.env mutation) ---
+
+const ON = MULTI_PIVOT_ACTION_PLAN_ENV;
+
+// 12. Unset env → enabled (default ON, preserves M35 behavior).
+test("12. toggle: unset env is enabled (default ON)", () => {
+  assert.equal(multiPivotActionPlanEnabled({}), true);
+});
+
+// 13. Explicit falsy values suppress (0 / false / off, case- and space-insensitive).
+test("13. toggle: 0 / false / off (any case, trimmed) suppress", () => {
+  for (const v of ["0", "false", "off", "FALSE", "Off", "  0 ", "OFF"]) {
+    assert.equal(multiPivotActionPlanEnabled({ [ON]: v }), false, `"${v}" should disable`);
+  }
+});
+
+// 14. Truthy / unrecognized values preserve rendering.
+test("14. toggle: truthy/unrecognized values stay enabled", () => {
+  for (const v of ["1", "true", "on", "yes", "enabled", ""]) {
+    assert.equal(multiPivotActionPlanEnabled({ [ON]: v }), true, `"${v}" should stay enabled`);
+  }
 });

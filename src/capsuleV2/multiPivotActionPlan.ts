@@ -61,6 +61,27 @@ const MAX_REASON_CHARS = 90;
  *  and attribute this section without re-parsing the body. */
 export const MULTI_PIVOT_ACTION_PLAN_HEADING = "## Multi-Pivot Action Plan";
 
+/** Env var that gates the action-plan section (M36.1). Default ON; set to a falsy
+ *  string to suppress the section for the A/B control arm. Rendering-only. */
+export const MULTI_PIVOT_ACTION_PLAN_ENV = "VTRACE_ENABLE_MULTI_PIVOT_ACTION_PLAN";
+
+/**
+ * Whether the Multi-Pivot Action Plan section should render. Default ON — only an
+ * explicit falsy value (`0`, `false`, `off`, case-insensitive, trimmed) suppresses
+ * it; unset or any other value preserves the M35 default. This gates RENDERING ONLY:
+ * it changes no retrieval, ranking, pivot selection, co-edit detection, or scoring.
+ *
+ * Env is read via an injectable map so tests stay isolated (no process.env mutation).
+ */
+export function multiPivotActionPlanEnabled(
+  env: { [key: string]: string | undefined } = process.env,
+): boolean {
+  const raw = env[MULTI_PIVOT_ACTION_PLAN_ENV];
+  if (raw === undefined) return true;
+  const normalized = raw.trim().toLowerCase();
+  return !(normalized === "0" || normalized === "false" || normalized === "off");
+}
+
 function pivotId(path: string, symbol: string | undefined): string {
   return symbol && symbol.length > 0 ? `${path}::${symbol}` : path;
 }

@@ -8,6 +8,7 @@
 
 import {
   buildMultiPivotActionPlan,
+  multiPivotActionPlanEnabled,
   renderMultiPivotActionPlanText,
 } from "./multiPivotActionPlan";
 import {
@@ -43,8 +44,23 @@ function isSourceAnchoredPivot(item: CapsuleV2Item): boolean {
   return item.evidence.some((reason) => reason.startsWith("source anchor "));
 }
 
-export function renderCapsuleV2Human(result: CapsuleV2Result): string {
+/** Rendering-only options for {@link renderCapsuleV2Human}. */
+export interface RenderCapsuleV2HumanOptions {
+  /**
+   * Whether to render the M35 Multi-Pivot Action Plan section (M36.1 toggle).
+   * Defaults to the `VTRACE_ENABLE_MULTI_PIVOT_ACTION_PLAN` env (default ON). This
+   * gates RENDERING ONLY — it changes no retrieval, ranking, pivots, or scoring.
+   */
+  enableMultiPivotActionPlan?: boolean;
+}
+
+export function renderCapsuleV2Human(
+  result: CapsuleV2Result,
+  options?: RenderCapsuleV2HumanOptions,
+): string {
   const lines: string[] = [];
+  const actionPlanEnabled =
+    options?.enableMultiPivotActionPlan ?? multiPivotActionPlanEnabled();
   lines.push(`intent: ${result.intent} (${result.diagnostics.intent_confidence} confidence)`);
   if (result.diagnostics.intent_reason.length > 0) {
     lines.push(`intent_reason: ${result.diagnostics.intent_reason.join("; ")}`);
@@ -71,12 +87,14 @@ export function renderCapsuleV2Human(result: CapsuleV2Result): string {
   // without adding evidence, changing retrieval, or enabling enforcement. It reuses
   // the pivot inspection contract's gate, so it fires only when there is a real
   // secondary inspection obligation (≥2 pivots or a multi-file co-edit hint).
-  const actionPlan = buildMultiPivotActionPlan(
-    result.pivots,
-    result.actionability_hints ?? [],
-  );
-  for (const line of renderMultiPivotActionPlanText(actionPlan)) {
-    lines.push(line);
+  if (actionPlanEnabled) {
+    const actionPlan = buildMultiPivotActionPlan(
+      result.pivots,
+      result.actionability_hints ?? [],
+    );
+    for (const line of renderMultiPivotActionPlanText(actionPlan)) {
+      lines.push(line);
+    }
   }
 
   // Multi-pivot guidance. A traceback usually names the file where the error
