@@ -1,0 +1,1674 @@
+{
+  "generatedFromArtifactsOnly": true,
+  "dockerExecutedByThisScript": false,
+  "liveAgentsByThisScript": false,
+  "design": {
+    "instances": [
+      {
+        "short": "sphinx-7462",
+        "instanceId": "sphinx-doc__sphinx-7462",
+        "kind": "multi-pivot"
+      },
+      {
+        "short": "django-13195",
+        "instanceId": "django__django-13195",
+        "kind": "multi-file"
+      },
+      {
+        "short": "seaborn-3187",
+        "instanceId": "mwaskom__seaborn-3187",
+        "kind": "multi-file"
+      },
+      {
+        "short": "django-11728",
+        "instanceId": "django__django-11728",
+        "kind": "single-pivot"
+      },
+      {
+        "short": "django-10880",
+        "instanceId": "django__django-10880",
+        "kind": "single-pivot"
+      },
+      {
+        "short": "xarray-3677",
+        "instanceId": "pydata__xarray-3677",
+        "kind": "single-file/no-inject"
+      }
+    ],
+    "conditions": [
+      "baseline",
+      "vtrace"
+    ],
+    "replicates": [
+      "r1",
+      "r2",
+      "r3"
+    ]
+  },
+  "records": [
+    {
+      "label": "eval-m32-product-baseline-sphinx-7462-r1",
+      "short": "sphinx-7462",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "kind": "multi-pivot",
+      "condition": "baseline",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "goldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": false,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "6aca9946519543a6235fae2b3ccd4b706ed8ea4ea633d17e923fd6bd9914539f",
+      "tools": {
+        "totalToolCalls": 6,
+        "bashToolCalls": 3,
+        "grepLikeToolCalls": 0,
+        "fileReadToolCalls": 2,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 146,
+      "outputTokens": 53,
+      "cacheReadTokens": 559032,
+      "costUsd": 0.3009325,
+      "numTurns": 20,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-sphinx-7462-r1",
+      "short": "sphinx-7462",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "kind": "multi-pivot",
+      "condition": "vtrace",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "goldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": false,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "37bbde11b1e34b539d179eb4c14c6038e210cd6e7d4674c92b5af3925708ad83",
+      "tools": {
+        "totalToolCalls": 10,
+        "bashToolCalls": 3,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 4,
+        "fileWriteToolCalls": 2,
+        "uniqueFilesTouchedByTools": 2,
+        "source": "summary"
+      },
+      "inputTokens": 202,
+      "outputTokens": 65,
+      "cacheReadTokens": 945584,
+      "costUsd": 0.512634,
+      "numTurns": 28,
+      "capsuleEstimatedTokens": 1578,
+      "classification": "context_to_action_gap"
+    },
+    {
+      "label": "eval-m32-product-baseline-sphinx-7462-r2",
+      "short": "sphinx-7462",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "kind": "multi-pivot",
+      "condition": "baseline",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "goldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": false,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "07c5bf238b9fffa0227c24971bb4bd5b8293dc481c9f1aa8d6710bc4b658c917",
+      "tools": {
+        "totalToolCalls": 7,
+        "bashToolCalls": 2,
+        "grepLikeToolCalls": 0,
+        "fileReadToolCalls": 3,
+        "fileWriteToolCalls": 2,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 153,
+      "outputTokens": 67,
+      "cacheReadTokens": 622773,
+      "costUsd": 0.24376400000000004,
+      "numTurns": 21,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-sphinx-7462-r2",
+      "short": "sphinx-7462",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "kind": "multi-pivot",
+      "condition": "vtrace",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "goldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": false,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "ec96de0e3a8ae8564c7daf5456e78e26b70210d2bf5fd8f1e7aee1dcc6da90cd",
+      "tools": {
+        "totalToolCalls": 8,
+        "bashToolCalls": 3,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 2,
+        "fileWriteToolCalls": 2,
+        "uniqueFilesTouchedByTools": 2,
+        "source": "summary"
+      },
+      "inputTokens": 174,
+      "outputTokens": 39,
+      "cacheReadTokens": 822015,
+      "costUsd": 0.3173225,
+      "numTurns": 24,
+      "capsuleEstimatedTokens": 1578,
+      "classification": "context_to_action_gap"
+    },
+    {
+      "label": "eval-m32-product-baseline-sphinx-7462-r3",
+      "short": "sphinx-7462",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "kind": "multi-pivot",
+      "condition": "baseline",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "goldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": false,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "6aca9946519543a6235fae2b3ccd4b706ed8ea4ea633d17e923fd6bd9914539f",
+      "tools": {
+        "totalToolCalls": 5,
+        "bashToolCalls": 2,
+        "grepLikeToolCalls": 0,
+        "fileReadToolCalls": 2,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 125,
+      "outputTokens": 65,
+      "cacheReadTokens": 495765,
+      "costUsd": 0.2045305,
+      "numTurns": 17,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-sphinx-7462-r3",
+      "short": "sphinx-7462",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "kind": "multi-pivot",
+      "condition": "vtrace",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "goldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": false,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "1f5e48d6a5f390e1ff655bc66c311a2ade012493ae4f11efc76f2ce44267c849",
+      "tools": {
+        "totalToolCalls": 7,
+        "bashToolCalls": 3,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 1,
+        "fileWriteToolCalls": 2,
+        "uniqueFilesTouchedByTools": 2,
+        "source": "summary"
+      },
+      "inputTokens": 153,
+      "outputTokens": 31,
+      "cacheReadTokens": 713066,
+      "costUsd": 0.2875835,
+      "numTurns": 21,
+      "capsuleEstimatedTokens": 1578,
+      "classification": "context_to_action_gap"
+    },
+    {
+      "label": "eval-m32-product-baseline-django-13195-r1",
+      "short": "django-13195",
+      "instanceId": "django__django-13195",
+      "kind": "multi-file",
+      "condition": "baseline",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "django/http/response.py"
+      ],
+      "goldFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": false,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "605d49c452c8184d375d8b38b24969f81c6e9418eb2cb0564e221e77b8985c98",
+      "tools": {
+        "totalToolCalls": 10,
+        "bashToolCalls": 0,
+        "grepLikeToolCalls": 4,
+        "fileReadToolCalls": 5,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 3,
+        "source": "summary"
+      },
+      "inputTokens": 209,
+      "outputTokens": 76,
+      "cacheReadTokens": 850589,
+      "costUsd": 0.40392600000000006,
+      "numTurns": 29,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-django-13195-r1",
+      "short": "django-13195",
+      "instanceId": "django__django-13195",
+      "kind": "multi-file",
+      "condition": "vtrace",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "django/http/response.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "e98d15c2a8c94fad6556309a259d0d984240afe4f27247434f2020a65af0d1a1",
+      "tools": {
+        "totalToolCalls": 11,
+        "bashToolCalls": 0,
+        "grepLikeToolCalls": 3,
+        "fileReadToolCalls": 3,
+        "fileWriteToolCalls": 5,
+        "uniqueFilesTouchedByTools": 4,
+        "source": "summary"
+      },
+      "inputTokens": 188,
+      "outputTokens": 72,
+      "cacheReadTokens": 824498,
+      "costUsd": 0.44650749999999995,
+      "numTurns": 26,
+      "capsuleEstimatedTokens": 881,
+      "classification": "actionability_success"
+    },
+    {
+      "label": "eval-m32-product-baseline-django-13195-r2",
+      "short": "django-13195",
+      "instanceId": "django__django-13195",
+      "kind": "multi-file",
+      "condition": "baseline",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "e98d15c2a8c94fad6556309a259d0d984240afe4f27247434f2020a65af0d1a1",
+      "tools": {
+        "totalToolCalls": 14,
+        "bashToolCalls": 0,
+        "grepLikeToolCalls": 4,
+        "fileReadToolCalls": 7,
+        "fileWriteToolCalls": 3,
+        "uniqueFilesTouchedByTools": 4,
+        "source": "summary"
+      },
+      "inputTokens": 272,
+      "outputTokens": 115,
+      "cacheReadTokens": 1159691,
+      "costUsd": 0.380284,
+      "numTurns": 38,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-django-13195-r2",
+      "short": "django-13195",
+      "instanceId": "django__django-13195",
+      "kind": "multi-file",
+      "condition": "vtrace",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "django/http/response.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "e98d15c2a8c94fad6556309a259d0d984240afe4f27247434f2020a65af0d1a1",
+      "tools": {
+        "totalToolCalls": 11,
+        "bashToolCalls": 1,
+        "grepLikeToolCalls": 4,
+        "fileReadToolCalls": 3,
+        "fileWriteToolCalls": 3,
+        "uniqueFilesTouchedByTools": 5,
+        "source": "summary"
+      },
+      "inputTokens": 223,
+      "outputTokens": 49,
+      "cacheReadTokens": 1037087,
+      "costUsd": 0.38136899999999996,
+      "numTurns": 31,
+      "capsuleEstimatedTokens": 881,
+      "classification": "actionability_success"
+    },
+    {
+      "label": "eval-m32-product-baseline-django-13195-r3",
+      "short": "django-13195",
+      "instanceId": "django__django-13195",
+      "kind": "multi-file",
+      "condition": "baseline",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "6bc500aa53c4ac11d3c1673ff422458d7cf1031e644b309d55bd9b0db9567cf6",
+      "tools": {
+        "totalToolCalls": 16,
+        "bashToolCalls": 3,
+        "grepLikeToolCalls": 2,
+        "fileReadToolCalls": 8,
+        "fileWriteToolCalls": 3,
+        "uniqueFilesTouchedByTools": 4,
+        "source": "summary"
+      },
+      "inputTokens": 293,
+      "outputTokens": 60,
+      "cacheReadTokens": 1297262,
+      "costUsd": 0.4699955,
+      "numTurns": 41,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-django-13195-r3",
+      "short": "django-13195",
+      "instanceId": "django__django-13195",
+      "kind": "multi-file",
+      "condition": "vtrace",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "django/http/response.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "e98d15c2a8c94fad6556309a259d0d984240afe4f27247434f2020a65af0d1a1",
+      "tools": {
+        "totalToolCalls": 12,
+        "bashToolCalls": 1,
+        "grepLikeToolCalls": 3,
+        "fileReadToolCalls": 3,
+        "fileWriteToolCalls": 5,
+        "uniqueFilesTouchedByTools": 4,
+        "source": "summary"
+      },
+      "inputTokens": 216,
+      "outputTokens": 39,
+      "cacheReadTokens": 999555,
+      "costUsd": 0.33196900000000007,
+      "numTurns": 30,
+      "capsuleEstimatedTokens": 881,
+      "classification": "actionability_success"
+    },
+    {
+      "label": "eval-m32-product-baseline-seaborn-3187-r1",
+      "short": "seaborn-3187",
+      "instanceId": "mwaskom__seaborn-3187",
+      "kind": "multi-file",
+      "condition": "baseline",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "seaborn/_core/scales.py"
+      ],
+      "goldFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": false,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "a5bef1e2bc34c326f00f814b3f253cc138cdbefdc45f4078082210ac32c02602",
+      "tools": {
+        "totalToolCalls": 13,
+        "bashToolCalls": 6,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 5,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 3,
+        "source": "summary"
+      },
+      "inputTokens": 258,
+      "outputTokens": 63,
+      "cacheReadTokens": 1186625,
+      "costUsd": 0.6358464999999999,
+      "numTurns": 36,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-seaborn-3187-r1",
+      "short": "seaborn-3187",
+      "instanceId": "mwaskom__seaborn-3187",
+      "kind": "multi-file",
+      "condition": "vtrace",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "seaborn/_core/scales.py"
+      ],
+      "goldFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": false,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/relational.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "a3fc6d95cb1f4811882aa1e81a1e38876139088c3f5621dc19a833ed35b8d8f6",
+      "tools": {
+        "totalToolCalls": 5,
+        "bashToolCalls": 0,
+        "grepLikeToolCalls": 3,
+        "fileReadToolCalls": 1,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 3,
+        "source": "summary"
+      },
+      "inputTokens": 125,
+      "outputTokens": 44,
+      "cacheReadTokens": 511108,
+      "costUsd": 0.32352650000000005,
+      "numTurns": 17,
+      "capsuleEstimatedTokens": 1079,
+      "classification": "context_to_action_gap"
+    },
+    {
+      "label": "eval-m32-product-baseline-seaborn-3187-r2",
+      "short": "seaborn-3187",
+      "instanceId": "mwaskom__seaborn-3187",
+      "kind": "multi-file",
+      "condition": "baseline",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "goldFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "a86528f22abe50b6693c1de86f2515fcd389554cbcf7fa1bfa0d1c4068af3596",
+      "tools": {
+        "totalToolCalls": 20,
+        "bashToolCalls": 8,
+        "grepLikeToolCalls": 4,
+        "fileReadToolCalls": 6,
+        "fileWriteToolCalls": 2,
+        "uniqueFilesTouchedByTools": 5,
+        "source": "summary"
+      },
+      "inputTokens": 405,
+      "outputTokens": 154,
+      "cacheReadTokens": 2008255,
+      "costUsd": 0.7516685000000001,
+      "numTurns": 57,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-seaborn-3187-r2",
+      "short": "seaborn-3187",
+      "instanceId": "mwaskom__seaborn-3187",
+      "kind": "multi-file",
+      "condition": "vtrace",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "goldFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/relational.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "d02fc8a2def144c68be7b9d48cd916f0b8ad526cc06223a57bc3527218335b26",
+      "tools": {
+        "totalToolCalls": 28,
+        "bashToolCalls": 16,
+        "grepLikeToolCalls": 3,
+        "fileReadToolCalls": 3,
+        "fileWriteToolCalls": 6,
+        "uniqueFilesTouchedByTools": 5,
+        "source": "summary"
+      },
+      "inputTokens": 545,
+      "outputTokens": 131,
+      "cacheReadTokens": 3790420,
+      "costUsd": 1.4969004999999997,
+      "numTurns": 77,
+      "capsuleEstimatedTokens": 1079,
+      "classification": "actionability_success"
+    },
+    {
+      "label": "eval-m32-product-baseline-seaborn-3187-r3",
+      "short": "seaborn-3187",
+      "instanceId": "mwaskom__seaborn-3187",
+      "kind": "multi-file",
+      "condition": "baseline",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "seaborn/_core/plot.py",
+        "seaborn/_core/scales.py"
+      ],
+      "goldFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": false,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "a3447d8e647478e39df2abef4fd4c58b9453985d1d34c76395ebc841cb6de66b",
+      "tools": {
+        "totalToolCalls": 22,
+        "bashToolCalls": 10,
+        "grepLikeToolCalls": 3,
+        "fileReadToolCalls": 5,
+        "fileWriteToolCalls": 4,
+        "uniqueFilesTouchedByTools": 5,
+        "source": "summary"
+      },
+      "inputTokens": 412,
+      "outputTokens": 65,
+      "cacheReadTokens": 2329558,
+      "costUsd": 0.9546789999999999,
+      "numTurns": 58,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-seaborn-3187-r3",
+      "short": "seaborn-3187",
+      "instanceId": "mwaskom__seaborn-3187",
+      "kind": "multi-file",
+      "condition": "vtrace",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": false,
+      "modelPatchFiles": [
+        "seaborn/_core/scales.py"
+      ],
+      "goldFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": false,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/relational.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "6049fd954088446891663cc7b900d4e84cde734896129e14cd9af77d9120278e",
+      "tools": {
+        "totalToolCalls": 7,
+        "bashToolCalls": 3,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 2,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 2,
+        "source": "summary"
+      },
+      "inputTokens": 167,
+      "outputTokens": 38,
+      "cacheReadTokens": 776593,
+      "costUsd": 0.3518455000000001,
+      "numTurns": 23,
+      "capsuleEstimatedTokens": 1079,
+      "classification": "context_to_action_gap"
+    },
+    {
+      "label": "eval-m32-product-baseline-django-11728-r1",
+      "short": "django-11728",
+      "instanceId": "django__django-11728",
+      "kind": "single-pivot",
+      "condition": "baseline",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "cfd1b5980b2719eef2eeccc3cacfe6632cb874ddc27352dad9c26418b3eb9ab2",
+      "tools": {
+        "totalToolCalls": 9,
+        "bashToolCalls": 4,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 2,
+        "fileWriteToolCalls": 2,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 195,
+      "outputTokens": 36,
+      "cacheReadTokens": 803600,
+      "costUsd": 0.4145665,
+      "numTurns": 27,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-django-11728-r1",
+      "short": "django-11728",
+      "instanceId": "django__django-11728",
+      "kind": "single-pivot",
+      "condition": "vtrace",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "6c1da4d8bbbfd5f340c32b4b3ecc10ad33f0bd9a06780ff9e919b7404f0eaa81",
+      "tools": {
+        "totalToolCalls": 18,
+        "bashToolCalls": 8,
+        "grepLikeToolCalls": 3,
+        "fileReadToolCalls": 4,
+        "fileWriteToolCalls": 3,
+        "uniqueFilesTouchedByTools": 3,
+        "source": "summary"
+      },
+      "inputTokens": 328,
+      "outputTokens": 59,
+      "cacheReadTokens": 1739670,
+      "costUsd": 0.9375245,
+      "numTurns": 46,
+      "capsuleEstimatedTokens": 1217,
+      "classification": "actionability_success"
+    },
+    {
+      "label": "eval-m32-product-baseline-django-11728-r2",
+      "short": "django-11728",
+      "instanceId": "django__django-11728",
+      "kind": "single-pivot",
+      "condition": "baseline",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "8f12f50ee93210db778399a00e97da11420d1898b2616896c04ce373fe3d0daf",
+      "tools": {
+        "totalToolCalls": 10,
+        "bashToolCalls": 4,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 3,
+        "fileWriteToolCalls": 2,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 209,
+      "outputTokens": 48,
+      "cacheReadTokens": 895514,
+      "costUsd": 0.39365700000000003,
+      "numTurns": 29,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-django-11728-r2",
+      "short": "django-11728",
+      "instanceId": "django__django-11728",
+      "kind": "single-pivot",
+      "condition": "vtrace",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "fdde1471be2b8f4a1511c88423a29d4e9eb61cc977232ecbe90e924a295b862c",
+      "tools": {
+        "totalToolCalls": 9,
+        "bashToolCalls": 5,
+        "grepLikeToolCalls": 0,
+        "fileReadToolCalls": 2,
+        "fileWriteToolCalls": 2,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 181,
+      "outputTokens": 37,
+      "cacheReadTokens": 807471,
+      "costUsd": 0.4567005,
+      "numTurns": 25,
+      "capsuleEstimatedTokens": 1217,
+      "classification": "actionability_success"
+    },
+    {
+      "label": "eval-m32-product-baseline-django-11728-r3",
+      "short": "django-11728",
+      "instanceId": "django__django-11728",
+      "kind": "single-pivot",
+      "condition": "baseline",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "45bb7fe0786460b1500b3773b3decfb3d5112169403e3b2f22df2478a03cd3d9",
+      "tools": {
+        "totalToolCalls": 15,
+        "bashToolCalls": 8,
+        "grepLikeToolCalls": 3,
+        "fileReadToolCalls": 2,
+        "fileWriteToolCalls": 2,
+        "uniqueFilesTouchedByTools": 2,
+        "source": "summary"
+      },
+      "inputTokens": 286,
+      "outputTokens": 74,
+      "cacheReadTokens": 1314117,
+      "costUsd": 0.5274274999999999,
+      "numTurns": 40,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-django-11728-r3",
+      "short": "django-11728",
+      "instanceId": "django__django-11728",
+      "kind": "single-pivot",
+      "condition": "vtrace",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "4cc861ea327dca1da2f08369900953049a7dbcf4de185626982b0cbc3b58f7d6",
+      "tools": {
+        "totalToolCalls": 8,
+        "bashToolCalls": 4,
+        "grepLikeToolCalls": 0,
+        "fileReadToolCalls": 2,
+        "fileWriteToolCalls": 2,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 174,
+      "outputTokens": 36,
+      "cacheReadTokens": 836913,
+      "costUsd": 0.40444899999999995,
+      "numTurns": 24,
+      "capsuleEstimatedTokens": 1217,
+      "classification": "actionability_success"
+    },
+    {
+      "label": "eval-m32-product-baseline-django-10880-r1",
+      "short": "django-10880",
+      "instanceId": "django__django-10880",
+      "kind": "single-pivot",
+      "condition": "baseline",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "61545b8e0bfe78faf54efbb35350dd4436544bc38f782cccf78f28d44143179a",
+      "tools": {
+        "totalToolCalls": 4,
+        "bashToolCalls": 1,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 1,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 2,
+        "source": "summary"
+      },
+      "inputTokens": 104,
+      "outputTokens": 29,
+      "cacheReadTokens": 370696,
+      "costUsd": 0.23096499999999998,
+      "numTurns": 14,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-django-10880-r1",
+      "short": "django-10880",
+      "instanceId": "django__django-10880",
+      "kind": "single-pivot",
+      "condition": "vtrace",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": false,
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": false,
+      "pivotCount": 2,
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "61545b8e0bfe78faf54efbb35350dd4436544bc38f782cccf78f28d44143179a",
+      "tools": {
+        "totalToolCalls": 10,
+        "bashToolCalls": 6,
+        "grepLikeToolCalls": 2,
+        "fileReadToolCalls": 1,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 190,
+      "outputTokens": 46,
+      "cacheReadTokens": 785729,
+      "costUsd": 0.2869755,
+      "numTurns": 26,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "safe_no_context"
+    },
+    {
+      "label": "eval-m32-product-baseline-django-10880-r2",
+      "short": "django-10880",
+      "instanceId": "django__django-10880",
+      "kind": "single-pivot",
+      "condition": "baseline",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "61545b8e0bfe78faf54efbb35350dd4436544bc38f782cccf78f28d44143179a",
+      "tools": {
+        "totalToolCalls": 4,
+        "bashToolCalls": 0,
+        "grepLikeToolCalls": 2,
+        "fileReadToolCalls": 1,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 3,
+        "source": "summary"
+      },
+      "inputTokens": 97,
+      "outputTokens": 32,
+      "cacheReadTokens": 370088,
+      "costUsd": 0.1534305,
+      "numTurns": 13,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-django-10880-r2",
+      "short": "django-10880",
+      "instanceId": "django__django-10880",
+      "kind": "single-pivot",
+      "condition": "vtrace",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": false,
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": false,
+      "pivotCount": 2,
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "61545b8e0bfe78faf54efbb35350dd4436544bc38f782cccf78f28d44143179a",
+      "tools": {
+        "totalToolCalls": 4,
+        "bashToolCalls": 1,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 1,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 2,
+        "source": "summary"
+      },
+      "inputTokens": 97,
+      "outputTokens": 34,
+      "cacheReadTokens": 368546,
+      "costUsd": 0.15983499999999998,
+      "numTurns": 13,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "safe_no_context"
+    },
+    {
+      "label": "eval-m32-product-baseline-django-10880-r3",
+      "short": "django-10880",
+      "instanceId": "django__django-10880",
+      "kind": "single-pivot",
+      "condition": "baseline",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "61545b8e0bfe78faf54efbb35350dd4436544bc38f782cccf78f28d44143179a",
+      "tools": {
+        "totalToolCalls": 7,
+        "bashToolCalls": 0,
+        "grepLikeToolCalls": 4,
+        "fileReadToolCalls": 2,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 4,
+        "source": "summary"
+      },
+      "inputTokens": 139,
+      "outputTokens": 33,
+      "cacheReadTokens": 553666,
+      "costUsd": 0.2149705,
+      "numTurns": 19,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-django-10880-r3",
+      "short": "django-10880",
+      "instanceId": "django__django-10880",
+      "kind": "single-pivot",
+      "condition": "vtrace",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": false,
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "goldEdited": true,
+      "goldEditedComplete": true,
+      "goldSurfaced": false,
+      "pivotCount": 2,
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "61545b8e0bfe78faf54efbb35350dd4436544bc38f782cccf78f28d44143179a",
+      "tools": {
+        "totalToolCalls": 5,
+        "bashToolCalls": 2,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 1,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 2,
+        "source": "summary"
+      },
+      "inputTokens": 118,
+      "outputTokens": 33,
+      "cacheReadTokens": 461533,
+      "costUsd": 0.1876295,
+      "numTurns": 16,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "safe_no_context"
+    },
+    {
+      "label": "eval-m32-product-baseline-xarray-3677-r1",
+      "short": "xarray-3677",
+      "instanceId": "pydata__xarray-3677",
+      "kind": "single-file/no-inject",
+      "condition": "baseline",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "xarray/core/merge.py"
+      ],
+      "goldFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "goldEdited": false,
+      "goldEditedComplete": false,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "e43f38018cee59505fc2249f7e79b487dcc23f1de47486db9ae8658c1c79c50a",
+      "tools": {
+        "totalToolCalls": 12,
+        "bashToolCalls": 4,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 6,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 239,
+      "outputTokens": 87,
+      "cacheReadTokens": 1029311,
+      "costUsd": 0.46469299999999997,
+      "numTurns": 33,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-xarray-3677-r1",
+      "short": "xarray-3677",
+      "instanceId": "pydata__xarray-3677",
+      "kind": "single-file/no-inject",
+      "condition": "vtrace",
+      "replicate": "r1",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "xarray/core/merge.py"
+      ],
+      "goldFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "goldEdited": false,
+      "goldEditedComplete": false,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/merge.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "e43f38018cee59505fc2249f7e79b487dcc23f1de47486db9ae8658c1c79c50a",
+      "tools": {
+        "totalToolCalls": 6,
+        "bashToolCalls": 2,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 1,
+        "fileWriteToolCalls": 2,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 132,
+      "outputTokens": 40,
+      "cacheReadTokens": 569722,
+      "costUsd": 0.36675700000000006,
+      "numTurns": 18,
+      "capsuleEstimatedTokens": 2560,
+      "classification": "context_to_action_gap"
+    },
+    {
+      "label": "eval-m32-product-baseline-xarray-3677-r2",
+      "short": "xarray-3677",
+      "instanceId": "pydata__xarray-3677",
+      "kind": "single-file/no-inject",
+      "condition": "baseline",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "xarray/core/merge.py"
+      ],
+      "goldFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "goldEdited": false,
+      "goldEditedComplete": false,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "e43f38018cee59505fc2249f7e79b487dcc23f1de47486db9ae8658c1c79c50a",
+      "tools": {
+        "totalToolCalls": 9,
+        "bashToolCalls": 3,
+        "grepLikeToolCalls": 2,
+        "fileReadToolCalls": 3,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 176,
+      "outputTokens": 63,
+      "cacheReadTokens": 722808,
+      "costUsd": 0.2646685,
+      "numTurns": 24,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-xarray-3677-r2",
+      "short": "xarray-3677",
+      "instanceId": "pydata__xarray-3677",
+      "kind": "single-file/no-inject",
+      "condition": "vtrace",
+      "replicate": "r2",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "xarray/core/merge.py"
+      ],
+      "goldFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "goldEdited": false,
+      "goldEditedComplete": false,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/merge.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "e43f38018cee59505fc2249f7e79b487dcc23f1de47486db9ae8658c1c79c50a",
+      "tools": {
+        "totalToolCalls": 7,
+        "bashToolCalls": 3,
+        "grepLikeToolCalls": 2,
+        "fileReadToolCalls": 1,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 167,
+      "outputTokens": 44,
+      "cacheReadTokens": 786629,
+      "costUsd": 0.272806,
+      "numTurns": 23,
+      "capsuleEstimatedTokens": 2560,
+      "classification": "context_to_action_gap"
+    },
+    {
+      "label": "eval-m32-product-baseline-xarray-3677-r3",
+      "short": "xarray-3677",
+      "instanceId": "pydata__xarray-3677",
+      "kind": "single-file/no-inject",
+      "condition": "baseline",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": "unknown",
+      "contextInjected": "unknown",
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "xarray/core/merge.py"
+      ],
+      "goldFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "goldEdited": false,
+      "goldEditedComplete": false,
+      "goldSurfaced": "unknown",
+      "pivotCount": "unknown",
+      "pivotFiles": [],
+      "pivotInspected": "unknown",
+      "pivotEdited": "unknown",
+      "patchSha": "e43f38018cee59505fc2249f7e79b487dcc23f1de47486db9ae8658c1c79c50a",
+      "tools": {
+        "totalToolCalls": 7,
+        "bashToolCalls": 3,
+        "grepLikeToolCalls": 0,
+        "fileReadToolCalls": 3,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 1,
+        "source": "summary"
+      },
+      "inputTokens": 160,
+      "outputTokens": 45,
+      "cacheReadTokens": 659328,
+      "costUsd": 0.25033799999999995,
+      "numTurns": 22,
+      "capsuleEstimatedTokens": "unknown",
+      "classification": "unknown"
+    },
+    {
+      "label": "eval-m32-product-vtrace-xarray-3677-r3",
+      "short": "xarray-3677",
+      "instanceId": "pydata__xarray-3677",
+      "kind": "single-file/no-inject",
+      "condition": "vtrace",
+      "replicate": "r3",
+      "hasResult": true,
+      "treatmentValid": true,
+      "contextInjected": true,
+      "patchProduced": true,
+      "resolved": true,
+      "modelPatchFiles": [
+        "xarray/core/merge.py"
+      ],
+      "goldFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "goldEdited": false,
+      "goldEditedComplete": false,
+      "goldSurfaced": true,
+      "pivotCount": 2,
+      "pivotFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/merge.py"
+      ],
+      "pivotInspected": true,
+      "pivotEdited": true,
+      "patchSha": "e43f38018cee59505fc2249f7e79b487dcc23f1de47486db9ae8658c1c79c50a",
+      "tools": {
+        "totalToolCalls": 6,
+        "bashToolCalls": 3,
+        "grepLikeToolCalls": 1,
+        "fileReadToolCalls": 1,
+        "fileWriteToolCalls": 1,
+        "uniqueFilesTouchedByTools": 2,
+        "source": "summary"
+      },
+      "inputTokens": 146,
+      "outputTokens": 55,
+      "cacheReadTokens": 683026,
+      "costUsd": 0.24505299999999997,
+      "numTurns": 20,
+      "capsuleEstimatedTokens": 2560,
+      "classification": "context_to_action_gap"
+    }
+  ]
+}
