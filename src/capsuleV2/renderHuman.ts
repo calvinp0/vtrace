@@ -7,6 +7,10 @@
 // formatting.
 
 import {
+  buildMultiPivotActionPlan,
+  renderMultiPivotActionPlanText,
+} from "./multiPivotActionPlan";
+import {
   buildPivotInspectionContract,
   renderPivotInspectionContractText,
 } from "./pivotInspectionContract";
@@ -56,6 +60,23 @@ export function renderCapsuleV2Human(result: CapsuleV2Result): string {
     lines.push(`actual_mode: ${CapsuleV2Mode.NoContext}`);
     lines.push(`reason: ${result.reason ?? "no high-confidence edit target recovered"}`);
     return lines.join("\n");
+  }
+
+  // Multi-Pivot Action Plan (M35): a compact, FIRST-PASS summary of the required
+  // inspection set, rendered at the very TOP of the capsule — before the verbose
+  // multi-pivot guidance and the bulky pivot bodies. M34 found the genuine failure
+  // on multi-pivot tasks is context-to-action: the secondary co-edit pivot is already
+  // in the block but framed as "supporting / inspect-or-rule-out" and buried, so the
+  // agent edits the lead and stops. This raises the SALIENCE of the secondary pivot
+  // without adding evidence, changing retrieval, or enabling enforcement. It reuses
+  // the pivot inspection contract's gate, so it fires only when there is a real
+  // secondary inspection obligation (≥2 pivots or a multi-file co-edit hint).
+  const actionPlan = buildMultiPivotActionPlan(
+    result.pivots,
+    result.actionability_hints ?? [],
+  );
+  for (const line of renderMultiPivotActionPlanText(actionPlan)) {
+    lines.push(line);
   }
 
   // Multi-pivot guidance. A traceback usually names the file where the error

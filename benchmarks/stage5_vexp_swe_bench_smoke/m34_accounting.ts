@@ -30,6 +30,7 @@ export type InjectedComponent =
   | "pivotContract"
   | "actionabilityHints"
   | "coeditHint"
+  | "multiPivotActionPlan"
   | "benchmarkWrapper"
   | "unclassified";
 
@@ -62,6 +63,8 @@ export interface ProductV2Accounting {
   pivotContractTokens: number | null;
   actionabilityHintsTokens: number | null;
   coeditHintTokens: number | null;
+  /** chars/4 of the M35 Multi-Pivot Action Plan section (0 when it did not render). */
+  multiPivotActionPlanTokens: number | null;
   productAccountingTokens: number | null;
   manifestReferenceTokens: number | null;
   benchmarkWrapperTokens: number | null;
@@ -82,6 +85,9 @@ interface SectionChunk {
 export function classifyInjectedHeading(headingRaw: string): InjectedComponent {
   const h = headingRaw.trim().toLowerCase();
   if (h.includes("stage5_token_discipline") || h.includes("token discipline")) return "benchmarkWrapper";
+  // M35 action plan: check before the broad "co-edit" phrase test below so the
+  // dedicated section is attributed to its own bucket, not folded into coeditHint.
+  if (h.includes("multi-pivot action plan")) return "multiPivotActionPlan";
   if (h.includes("pivot neighborhood")) return "capsuleBody";
   if (h.includes("pivot inspection contract")) return "pivotContract";
   if (h.includes("actionability hint")) return "actionabilityHints";
@@ -161,6 +167,7 @@ export function buildProductV2Accounting(
       pivotContractTokens: null,
       actionabilityHintsTokens: null,
       coeditHintTokens: null,
+      multiPivotActionPlanTokens: null,
       productAccountingTokens: null,
       manifestReferenceTokens: null,
       benchmarkWrapperTokens: null,
@@ -178,6 +185,7 @@ export function buildProductV2Accounting(
     pivotContractTokens: sumTokensFor(chunks, "pivotContract"),
     actionabilityHintsTokens: sumTokensFor(chunks, "actionabilityHints"),
     coeditHintTokens: sumTokensFor(chunks, "coeditHint"),
+    multiPivotActionPlanTokens: sumTokensFor(chunks, "multiPivotActionPlan"),
     // No product-accounting or manifest text is injected into the prompt; these
     // live in side-car artifacts (`_product_v2_probe`, `_capsule_v2_manifest`),
     // so they contribute zero injected prompt tokens. Recorded explicitly.

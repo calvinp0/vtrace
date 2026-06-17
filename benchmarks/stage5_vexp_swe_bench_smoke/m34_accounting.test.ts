@@ -28,6 +28,11 @@ const SNAPSHOT = [
   "## VTRACE inspect-first (guidance, not enforcement; confidence: medium)",
   "Read the pivots before editing.",
   "",
+  "## Multi-Pivot Action Plan",
+  "Required inspection set:",
+  "1. django/http/response.py::delete_cookie (lead pivot) — surfaced as the lead edit site",
+  "2. django/http/response.py::set_cookie (pivot) — coupled cookie helper",
+  "",
   "## Multiple edit targets",
   "This task likely needs more than one file edited.",
   "",
@@ -78,6 +83,7 @@ describe("injected-context component accounting", () => {
       acc.pivotContractTokens! +
       acc.actionabilityHintsTokens! +
       acc.coeditHintTokens! +
+      acc.multiPivotActionPlanTokens! +
       acc.benchmarkWrapperTokens! +
       acc.unclassifiedTokens!;
     // Per-section ceil rounding lets the component sum exceed the whole-block
@@ -93,8 +99,23 @@ describe("injected-context component accounting", () => {
     expect(classifyInjectedHeading("Pivot inspection contract")).toBe("pivotContract");
     expect(classifyInjectedHeading("Actionability hints")).toBe("actionabilityHints");
     expect(classifyInjectedHeading("Multiple edit targets")).toBe("coeditHint");
+    // M35 action plan attributes to its own bucket, not coeditHint.
+    expect(classifyInjectedHeading("Multi-Pivot Action Plan")).toBe("multiPivotActionPlan");
     expect(classifyInjectedHeading("STAGE5_TOKEN_DISCIPLINE")).toBe("benchmarkWrapper");
     expect(classifyInjectedHeading("Some future section")).toBe("unclassified");
+  });
+
+  it("3c. the M35 action-plan section is attributed its own (non-zero) tokens", () => {
+    const acc = buildProductV2Accounting(SNAPSHOT, 50);
+    // The section is present in SNAPSHOT, so it must carry positive tokens, and those
+    // tokens must NOT be folded into the coedit / multiple-edit-targets bucket.
+    expect(acc.multiPivotActionPlanTokens!).toBeGreaterThan(0);
+    // A snapshot WITHOUT the section attributes zero (additive / backward compatible).
+    const noPlan = buildProductV2Accounting(
+      ["# vtrace indexed context", "", "## Instruction", "Now implement the fix."].join("\n"),
+      50,
+    );
+    expect(noPlan.multiPivotActionPlanTokens).toBe(0);
   });
 
   it("4. undercount ratio is computed when both fields exist (and >1 here)", () => {

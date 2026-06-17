@@ -1,0 +1,69 @@
+{
+  "schema": "stage5_m35_multi_pivot_actionability/1",
+  "results": [
+    {
+      "instance": "sphinx-doc__sphinx-7462",
+      "label": "eval-m32-product-vtrace-sphinx-7462-r1",
+      "missedGoldPivot": "sphinx/pycode/ast.py",
+      "presentBefore": true,
+      "beforeLine": 20,
+      "beforeSection": "VTRACE inspect-first (guidance, not enforcement; confidence: high)",
+      "afterIncludesMissed": true,
+      "afterRole": "pivot",
+      "afterReason": "base 3.67; +[multi-evidence(3) +0.2, strong-exact +0.1, specific-impl(function) +0.08] =>…",
+      "addedChars": 640,
+      "addedTokens": 160,
+      "planEntries": [
+        {
+          "index": 1,
+          "file": "sphinx/domains/python.py",
+          "symbol": "_parse_annotation",
+          "role": "lead",
+          "reason": "base 3; +[multi-evidence(3) +0.2, strong-exact +0.1, specific-impl(function) +0.08] => 3.…"
+        },
+        {
+          "index": 2,
+          "file": "sphinx/pycode/ast.py",
+          "symbol": "unparse",
+          "role": "pivot",
+          "reason": "base 3.67; +[multi-evidence(3) +0.2, strong-exact +0.1, specific-impl(function) +0.08] =>…"
+        }
+      ],
+      "renderedPlan": "\n## Multi-Pivot Action Plan\n\nThis task likely requires checking more than one location before finalizing.\n\nRequired inspection set:\n1. sphinx/domains/python.py::_parse_annotation (lead pivot) — base 3; +[multi-evidence(3) +0.2, strong-exact +0.1, specific-impl(function) +0.08] => 3.…\n2. sphinx/pycode/ast.py::unparse (pivot) — base 3.67; +[multi-evidence(3) +0.2, strong-exact +0.1, specific-impl(function) +0.08] =>…\n\nBefore final answer:\n- inspect each required pivot,\n- either edit it, or rule it out with a source-grounded reason it is not needed,\n- do not stop after the first plausible file while a required pivot is still unchecked.",
+      "targetsActionabilityGap": true,
+      "note": "Missed gold co-edit is a ranked pivot — the action plan promotes it to the top-level required inspection set with edit-or-rule-out wording."
+    },
+    {
+      "instance": "mwaskom__seaborn-3187",
+      "label": "eval-m32-product-vtrace-seaborn-3187-r1",
+      "missedGoldPivot": "seaborn/utils.py",
+      "presentBefore": true,
+      "beforeLine": 22,
+      "beforeSection": "VTRACE inspect-first (guidance, not enforcement; confidence: medium)",
+      "afterIncludesMissed": false,
+      "afterRole": null,
+      "afterReason": null,
+      "addedChars": 632,
+      "addedTokens": 158,
+      "planEntries": [
+        {
+          "index": 1,
+          "file": "seaborn/_core/scales.py",
+          "symbol": "_setup",
+          "role": "lead",
+          "reason": "base 3; +[multi-evidence(3) +0.2, strong-exact +0.1, specific-impl(method) +0.08] => 3.38"
+        },
+        {
+          "index": 2,
+          "file": "seaborn/relational.py",
+          "symbol": "scatterplot",
+          "role": "pivot",
+          "reason": "base 3.657; +[multi-evidence(3) +0.2, strong-exact +0.1, specific-impl(function) +0.08] =…"
+        }
+      ],
+      "renderedPlan": "\n## Multi-Pivot Action Plan\n\nThis task likely requires checking more than one location before finalizing.\n\nRequired inspection set:\n1. seaborn/_core/scales.py::_setup (lead pivot) — base 3; +[multi-evidence(3) +0.2, strong-exact +0.1, specific-impl(method) +0.08] => 3.38\n2. seaborn/relational.py::scatterplot (pivot) — base 3.657; +[multi-evidence(3) +0.2, strong-exact +0.1, specific-impl(function) +0.08] =…\n\nBefore final answer:\n- inspect each required pivot,\n- either edit it, or rule it out with a source-grounded reason it is not needed,\n- do not stop after the first plausible file while a required pivot is still unchecked.",
+      "targetsActionabilityGap": false,
+      "note": "Missed gold co-edit (seaborn/utils.py) is NOT a VTRACE-ranked pivot here (the ranked secondary is a different file), so the action plan cannot surface it without a retrieval/ranking change — out of M35 scope."
+    }
+  ]
+}

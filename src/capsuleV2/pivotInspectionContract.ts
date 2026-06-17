@@ -72,8 +72,9 @@ function compact(text: string): string {
 }
 
 // The most informative compact "why surfaced" line for a pivot: its first evidence
-// entry, else its role reason, else a generic fallback. Never empty.
-function pivotReason(pivot: ContractPivotView): string {
+// entry, else its role reason, else a generic fallback. Never empty. Exported so the
+// M35 multi-pivot action plan derives the lead pivot's reason with identical logic.
+export function pivotReason(pivot: ContractPivotView): string {
   const firstEvidence = (pivot.evidence ?? []).find((e) => e.trim().length > 0);
   if (firstEvidence) return compact(firstEvidence);
   if (pivot.role_reason && pivot.role_reason.trim().length > 0) return compact(pivot.role_reason);
