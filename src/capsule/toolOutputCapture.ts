@@ -383,6 +383,54 @@ export interface TestProvenance {
   evidence: string[];
 }
 
+// M28 — structured same-phase discovery evidence for the STRICT `agent_discovered` gate.
+//
+// The legacy `priorCommandText` heuristic credited a test as discovered the moment its
+// file/leaf appeared in ANY prior command — so a lone `grep test_name` (or even a guessed
+// name echoed into a bash line) looked "discovered". That over-credits: a fair, deployable
+// run must reach the test through a real SEARCH→READ chain, not a guess. This evidence
+// separates a SEARCH over repository test paths from a subsequent READ of the test file (or
+// an OUTPUT that surfaced the node), so the gate can require BOTH. The string lists are
+// pre-filtered to entries that reference a SELECTED test, so the classifier only checks
+// presence. Additive + backward-compatible: when this is absent the legacy heuristic is used.
+export interface DiscoveryEvidence {
+  /** Prior search commands (grep/rg/find/ls/glob) that referenced a selected test path/leaf. */
+  priorSearchCommands: string[];
+  /** Prior read calls (cat/sed/open/Read, or a Read tool path) that referenced a selected test file. */
+  priorReadCommands: string[];
+  /** Prior tool OUTPUTS that surfaced a selected test node/leaf (e.g. a grep hit, an ls listing). */
+  priorOutputsWithTestNode: string[];
+  /** Selected-test files referenced by a prior search/read/output. */
+  matchedTestFiles: string[];
+  /** Selected-test names referenced by a prior search/read/output. */
+  matchedTestNames: string[];
+}
+
+// One prior same-phase tool call's signals, the raw input to `computeDiscoveryEvidence`.
+export interface PriorCallSignal {
+  command: string | null;
+  path: string | null;
+  category: ToolCategory;
+  output: string | null;
+}
+
+// Shell tokens that constitute a repository SEARCH / file READ. Word-boundary matched so a
+// flag or substring (e.g. `grepping`, `findall`) does not misfire — these are the conventional
+// CLI search/read tools an agent uses to discover and inspect a test file.
+const SEARCH_COMMAND_RE = /\b(grep|egrep|rg|ag|ack|find|fd|ls|glob)\b/;
+const READ_COMMAND_RE = /\b(cat|sed|head|tail|less|more|nl|awk|open|view)\b/;
+
+// Clip a captured output snippet so the evidence artifact stays compact.
+const DISCOVERY_OUTPUT_SNIPPET_MAX = 200;
+
+// Decompose a selected test node id into the matchable fragments: its file, the file's base
+// name, and the test leaf (function/method). Each is what a search/read/output might mention.
+function testReferenceParts(test: string): { file: string; base: string; leaf: string } {
+  const file = test.includes("::") ? test.slice(0, test.indexOf("::")) : test;
+  const base = file.split("/").pop() ?? file;
+  return { file, base, leaf: testLeaf(test) };
+}
+
 // Normalize a pytest node id for matching: drop a trailing `[params]` and keep the leaf.
 function testLeaf(nodeId: string): string {
   const afterColons = nodeId.includes("::") ? nodeId.slice(nodeId.lastIndexOf("::") + 2) : nodeId;
@@ -396,13 +444,71 @@ function sameTest(a: string, b: string): boolean {
   return la.length > 0 && la === lb;
 }
 
+// Build structured discovery evidence from the SELECTED tests + the prior same-phase calls
+// (in order). A call counts as evidence only when it both (a) is a search/read category or
+// a search/read shell command, and (b) references a selected test's file base or leaf. Outputs
+// are scanned independently: a grep/ls output that surfaced the node is read/output evidence even
+// without a separate `cat`. PURE; reads no gold labels (the selected tests are the only input).
+export function computeDiscoveryEvidence(input: {
+  selectedTests: readonly string[];
+  priorCalls: readonly PriorCallSignal[];
+}): DiscoveryEvidence {
+  const refs = input.selectedTests.map(testReferenceParts);
+  const priorSearchCommands: string[] = [];
+  const priorReadCommands: string[] = [];
+  const priorOutputsWithTestNode: string[] = [];
+  const matchedTestFiles = new Set<string>();
+  const matchedTestNames = new Set<string>();
+
+  const refMatch = (text: string): { matched: boolean } => {
+    let matched = false;
+    for (const r of refs) {
+      if (r.base.length > 2 && text.includes(r.base)) { matchedTestFiles.add(r.file); matched = true; }
+      if (r.leaf.length > 2 && text.includes(r.leaf)) { matchedTestNames.add(r.leaf); matched = true; }
+    }
+    return { matched };
+  };
+
+  for (const call of input.priorCalls) {
+    const cmd = call.command ?? "";
+    const isSearch = call.category === "search" || (cmd.length > 0 && SEARCH_COMMAND_RE.test(cmd));
+    const isRead = call.category === "read" || (cmd.length > 0 && READ_COMMAND_RE.test(cmd));
+    const label = cmd.length > 0 ? cmd : call.path ?? "";
+    // (a) the command/path itself references a selected test ⇒ search and/or read evidence.
+    const cmdText = `${cmd} ${call.path ?? ""}`.trim();
+    if (cmdText.length > 0 && label.length > 0 && refMatch(cmdText).matched) {
+      if (isSearch) priorSearchCommands.push(label);
+      if (isRead) priorReadCommands.push(label);
+    }
+    // (b) the call OUTPUT surfaced a selected test node ⇒ output evidence (independent of how it ran).
+    if (call.output && call.output.length > 0 && refMatch(call.output).matched) {
+      priorOutputsWithTestNode.push(call.output.slice(0, DISCOVERY_OUTPUT_SNIPPET_MAX));
+    }
+  }
+  return {
+    priorSearchCommands,
+    priorReadCommands,
+    priorOutputsWithTestNode,
+    matchedTestFiles: [...matchedTestFiles],
+    matchedTestNames: [...matchedTestNames],
+  };
+}
+
 // Classify why a selected test appeared. `injectedTestNames` = FAIL_TO_PASS / testExpectation
 // names VTRACE injected (null when that telemetry is unavailable). `priorCommandText` =
 // the text of grep/find/read/bash calls observed BEFORE the test command in the same phase.
+//
+// M28: when `discoveryEvidence` is supplied (the real pipeline always supplies it via
+// `buildFairVerificationReport`), the STRICT gate replaces the legacy single-list heuristic —
+// `agent_discovered` now requires a prior SEARCH over the repository test paths AND a subsequent
+// READ of the test file OR an OUTPUT that surfaced the selected node. A lone search (or a lone
+// read) is only `ambiguous`. An exact injected match always disallows. When `discoveryEvidence`
+// is absent the legacy heuristic is preserved (backward-compatible for existing call sites).
 export function classifyTestProvenance(input: {
   selectedTests: readonly string[];
   injectedTestNames: readonly string[] | null;
   priorCommandText: readonly string[];
+  discoveryEvidence?: DiscoveryEvidence;
 }): TestProvenance {
   const evidence: string[] = [];
   if (input.selectedTests.length === 0) {
@@ -413,11 +519,39 @@ export function classifyTestProvenance(input: {
     input.selectedTests.some((t) => input.injectedTestNames!.some((i) => sameTest(t, i)));
   if (injectedMatch) evidence.push("selected test matches injected FAIL_TO_PASS/testExpectation");
 
-  // "Discovered" = the test file/leaf shows up in earlier exploration commands (not the test run).
+  // M28 STRICT gate — structured search→read/output discovery chain.
+  const de = input.discoveryEvidence;
+  if (de !== undefined) {
+    const searched = de.priorSearchCommands.length > 0;
+    const readEvidence = de.priorReadCommands.length > 0;
+    const outputEvidence = de.priorOutputsWithTestNode.length > 0;
+    const strongDiscovery = searched && (readEvidence || outputEvidence);
+    if (searched) evidence.push("prior search command referenced the selected test path/name");
+    if (readEvidence) evidence.push("prior read of the selected test file");
+    if (outputEvidence) evidence.push("prior output surfaced the selected test node");
+
+    if (injectedMatch && strongDiscovery) return { classification: "ambiguous", evidence };
+    if (injectedMatch) return { classification: "injected_metadata", evidence };
+    if (strongDiscovery) return { classification: "agent_discovered", evidence };
+    // Some exploration, but no full search→read/output chain ⇒ could still be guessed/injected.
+    if (searched || readEvidence || outputEvidence || input.priorCommandText.length > 0) {
+      return {
+        classification: "ambiguous",
+        evidence: [...evidence, "exploration present but no search→read/output discovery chain"],
+      };
+    }
+    if (input.injectedTestNames === null) {
+      return { classification: "unknown", evidence: ["insufficient telemetry"] };
+    }
+    return {
+      classification: "ambiguous",
+      evidence: [...evidence, "no discovery evidence and no injected match — origin unclear"],
+    };
+  }
+
+  // Legacy heuristic (no structured evidence): a file/leaf appearing in any prior command counts.
   const discovered = input.selectedTests.some((t) => {
-    const leaf = testLeaf(t);
-    const file = t.includes("::") ? t.slice(0, t.indexOf("::")) : t;
-    const base = file.split("/").pop() ?? file;
+    const { base, leaf } = testReferenceParts(t);
     return input.priorCommandText.some((c) => (leaf.length > 2 && c.includes(leaf)) || (base.length > 2 && c.includes(base)));
   });
   if (discovered) evidence.push("test file/name appears in prior exploration commands");
@@ -713,6 +847,8 @@ export function assessFairVerification(input: {
   finalPatchProof?: { applied: boolean; evidence?: readonly string[] };
   /** Fuller captured output (≤8k) for environment classification; falls back to outputSummary. */
   fullOutput?: string | null;
+  /** M28: structured search→read/output discovery evidence; enables the strict provenance gate. */
+  discoveryEvidence?: DiscoveryEvidence;
 }): FairVerificationAssessment {
   const { policy, event } = input;
   const provenance = fairProvenance(
@@ -720,6 +856,7 @@ export function assessFairVerification(input: {
       selectedTests: event.selectedTests,
       injectedTestNames: input.injectedTestNames,
       priorCommandText: input.priorCommandText,
+      discoveryEvidence: input.discoveryEvidence,
     }),
   );
   const patchState = classifyVerificationPatchState({
@@ -780,6 +917,8 @@ export interface TestCommandVerification {
   parsedOutcome: ParsedTestOutcome;
   priorCommandText: string[];
   editToolBeforeTest: boolean;
+  /** M28: the structured search→read/output evidence the provenance verdict was computed from. */
+  discoveryEvidence: DiscoveryEvidence;
   assessment: FairVerificationAssessment;
 }
 
@@ -799,6 +938,7 @@ export function buildFairVerificationReport(input: {
     const event = deriveTestCommandEvent(call);
     if (event === null) continue;
     const priorCommandText: string[] = [];
+    const priorCalls: PriorCallSignal[] = [];
     let editToolBeforeTest = false;
     for (let j = 0; j < i; j++) {
       const prior = input.calls[j]!;
@@ -806,7 +946,15 @@ export function buildFairVerificationReport(input: {
       if (prior.command !== null) priorCommandText.push(prior.command);
       if (prior.path !== null) priorCommandText.push(prior.path);
       if (prior.category === "edit") editToolBeforeTest = true;
+      priorCalls.push({
+        command: prior.command,
+        path: prior.path,
+        category: prior.category,
+        output: prior.output,
+      });
     }
+    // M28: structured search→read/output evidence drives the strict provenance gate.
+    const discoveryEvidence = computeDiscoveryEvidence({ selectedTests: event.selectedTests, priorCalls });
     const assessment = assessFairVerification({
       policy: input.policy,
       event,
@@ -814,6 +962,7 @@ export function buildFairVerificationReport(input: {
       priorCommandText,
       editToolBeforeTest,
       fullOutput: call.output,
+      discoveryEvidence,
     });
     rows.push({
       phase: event.phase,
@@ -822,6 +971,7 @@ export function buildFairVerificationReport(input: {
       parsedOutcome: event.parsedOutcome,
       priorCommandText,
       editToolBeforeTest,
+      discoveryEvidence,
       assessment,
     });
   }

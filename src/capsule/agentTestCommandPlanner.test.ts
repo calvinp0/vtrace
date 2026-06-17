@@ -230,3 +230,45 @@ describe("agentTestCommandPlanner — image key + honesty invariants", () => {
     expect(plan.blockers.some((b) => b.includes("needs explicit test selectors"))).toBe(true);
   });
 });
+
+describe("agentTestCommandPlanner — M28 fair discovery eligibility", () => {
+  // M28-10. A synthetic agent-discovered, canonically-formed pytest command is planner-eligible.
+  it("10. a safe agent_discovered pytest command is eligible for future execution", () => {
+    const plan = buildAgentTestCommandPlan(
+      planInput({
+        candidates: [
+          candidate({
+            command: "python -m pytest tests/test_domain_py.py::test_parse_annotation",
+            selectedTests: ["tests/test_domain_py.py::test_parse_annotation"],
+            provenance: provenance("agent_discovered", true),
+          }),
+        ],
+      }),
+    );
+    expect(plan.fairProvenance.classification).toBe("agent_discovered");
+    expect(plan.fairProvenance.allowedForFairVerification).toBe(true);
+    expect(plan.commandSafety.allowed).toBe(true);
+    expect(plan.blockers).toEqual([]);
+    expect(plan.eligibleForFutureExecution).toBe(true);
+  });
+
+  // M28-11. The same agent_discovered command, but shell-piped/truncated, is rejected: a fair
+  // re-run never executes a captured pipeline as-is.
+  it("11. an agent_discovered command wrapped in a shell pipe is rejected", () => {
+    const plan = buildAgentTestCommandPlan(
+      planInput({
+        candidates: [
+          candidate({
+            command: "python -m pytest tests/test_domain_py.py::test_parse_annotation 2>&1 | head -50",
+            selectedTests: ["tests/test_domain_py.py::test_parse_annotation"],
+            provenance: provenance("agent_discovered", true),
+          }),
+        ],
+      }),
+    );
+    expect(plan.commandSafety.allowed).toBe(false);
+    expect(plan.commandSafety.diagnosticOnly).toBe(true);
+    expect(plan.eligibleForFutureExecution).toBe(false);
+    expect(plan.blockers.some((b) => b.includes("not fair-executable as captured"))).toBe(true);
+  });
+});

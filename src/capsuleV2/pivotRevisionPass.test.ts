@@ -265,6 +265,85 @@ test("M23: fair policy keeps the public problem-statement excerpt", () => {
   assert.match(prompt, /## Fair verification/);
 });
 
+// ===== M28 — strengthened fair test-discovery scaffold in the revision prompt =====
+
+// M28-1. Default / no-policy revision prompt is byte-identical to the pre-M28 default: omitting
+// the policy and passing "none" produce the same prompt, the fair-verification/discovery block is
+// absent, and literal FAIL_TO_PASS names still appear (default behavior unchanged).
+test("M28: default/no-policy revision prompt remains unchanged", () => {
+  const expectation = buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem");
+  const base = buildRevisionPrompt({ complianceBefore: nonCompliant(), currentPatch: PATCH, testExpectation: expectation });
+  const explicitNone = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: expectation,
+    verificationPolicy: "none",
+  });
+  assert.equal(base, explicitNone);
+  assert.doesNotMatch(base, /## Fair verification/);
+  assert.doesNotMatch(base, /Discovery protocol/);
+  assert.match(base, /FAIL_TO_PASS:/);
+  assert.match(base, /tests\/test_x\.py::test_unparse/);
+});
+
+// M28-2. The fair policy prompt carries an explicit search/list/read repository-test discovery
+// instruction (the M28 protocol), not just the generic "discover a test" sentence.
+test("M28: fair policy prompt includes explicit search/list/read repository-test discovery protocol", () => {
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem"),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.match(prompt, /Discovery protocol/);
+  assert.match(prompt, /Search\/list\/read the repository test files related to the touched module\/function/);
+  assert.match(prompt, /grep\/ripgrep\/find\/ls over the test directories, then read the candidate test file/);
+  assert.match(prompt, /Choose the smallest focused test you actually discovered/);
+});
+
+// M28-3. The fair policy prompt tells the agent not to guess a test from the function name alone.
+test("M28: fair policy prompt forbids guessing a test from the function name alone", () => {
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem"),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.match(prompt, /Do not guess a test name from the edited function name alone/);
+});
+
+// M28-4. The fair policy prompt tells the agent to avoid piped/truncated test commands and prefer
+// a canonical `python -m pytest` / `pytest` invocation.
+test("M28: fair policy prompt tells the agent to avoid piped/truncated commands", () => {
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem"),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.match(prompt, /Run it with a canonical command — never a piped or truncated one/);
+  assert.match(prompt, /piping or truncating the test command/);
+  assert.match(prompt, /python -m pytest <discovered test node>/);
+});
+
+// M28-5. The fair policy prompt suppresses literal FAIL_TO_PASS test names — including the static
+// "FAIL_TO_PASS" task label that M23.1 left behind (the only "FAIL_TO_PASS" token allowed is none).
+test("M28: fair policy prompt suppresses literal FAIL_TO_PASS test names and label", () => {
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem"),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.doesNotMatch(prompt, /FAIL_TO_PASS:/);
+  assert.doesNotMatch(prompt, /tests\/test_x\.py::test_unparse/);
+  // The cosmetic static "FAIL_TO_PASS" task label is gone under the fair policy (M28 cleanup).
+  assert.ok(!prompt.includes("FAIL_TO_PASS"));
+  assert.match(prompt, /labels are withheld under the fair verification policy/);
+  // Minimal-diff guardrails are still preserved.
+  assert.match(prompt, /Prefer the minimal final diff\./);
+});
+
 // 11 — candidate excerpts are strictly bounded (count / lines / bullets).
 test("source excerpts are bounded to count, lines, and bullets", () => {
   const many = Array.from({ length: 6 }, (_, i) => ({

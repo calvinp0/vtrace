@@ -448,6 +448,162 @@ test("M23: buildFairVerificationReport derives prior-exploration context per pha
 const _policyTypeCheck: VerificationPolicy = "agent_discovered";
 void _policyTypeCheck;
 
+// ===== M28 — strict search→read/output discovery gate =====
+import {
+  computeDiscoveryEvidence,
+  type DiscoveryEvidence,
+  type PriorCallSignal,
+} from "./toolOutputCapture";
+
+const SELECTED = ["tests/test_z.py::test_w"];
+
+// Helper: classify provenance with structured discovery evidence (the M28 strict path).
+function classifyWithDiscovery(
+  discoveryEvidence: DiscoveryEvidence,
+  injectedTestNames: readonly string[] | null = null,
+): ReturnType<typeof classifyTestProvenance> {
+  return classifyTestProvenance({
+    selectedTests: SELECTED,
+    injectedTestNames,
+    priorCommandText: [],
+    discoveryEvidence,
+  });
+}
+
+const NO_DISCOVERY: DiscoveryEvidence = {
+  priorSearchCommands: [],
+  priorReadCommands: [],
+  priorOutputsWithTestNode: [],
+  matchedTestFiles: [],
+  matchedTestNames: [],
+};
+
+// M28-6. The M23.1 signature — the agent ran a test it never discovered (no prior search of the
+// repo tests) — must NOT classify as agent_discovered under the strict gate.
+test("M28: a test command with no test-file discovery is not agent_discovered", () => {
+  // No structured discovery at all, but some unrelated exploration happened.
+  const p = classifyTestProvenance({
+    selectedTests: SELECTED,
+    injectedTestNames: ["tests/other.py::test_other"],
+    priorCommandText: ["Read sphinx/domains/python.py", "git diff"],
+    discoveryEvidence: NO_DISCOVERY,
+  });
+  assert.notEqual(p.classification, "agent_discovered");
+  assert.equal(p.classification, "ambiguous");
+  assert.equal(fairProvenance(p).allowedForFairVerification, false);
+});
+
+// M28-7. A prior SEARCH over the repo tests followed by a READ of the discovered test file
+// classifies as agent_discovered when the selected test is not injected.
+test("M28: prior search + read of the relevant test file classifies as agent_discovered", () => {
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      { command: "grep -rn test_w tests/", path: null, category: "other", output: "tests/test_z.py:10:def test_w" },
+      { command: "cat tests/test_z.py", path: null, category: "other", output: "def test_w(): ..." },
+    ],
+  });
+  assert.ok(evidence.priorSearchCommands.length > 0);
+  assert.ok(evidence.priorReadCommands.length > 0);
+  const p = classifyWithDiscovery(evidence, ["tests/other.py::test_other"]);
+  assert.equal(p.classification, "agent_discovered");
+  assert.equal(fairProvenance(p).allowedForFairVerification, true);
+});
+
+// M28-7b. A Read TOOL (category "read") of the test file, after a search, also satisfies the gate.
+test("M28: prior search + Read-tool of the test file classifies as agent_discovered", () => {
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      { command: "rg test_w", path: null, category: "search", output: null },
+      { command: null, path: "tests/test_z.py", category: "read", output: null },
+    ],
+  });
+  const p = classifyWithDiscovery(evidence);
+  assert.equal(p.classification, "agent_discovered");
+});
+
+// M28-8. A lone weak grep (a search with no subsequent read and no output that surfaced the node)
+// stays ambiguous — never agent_discovered, never allowed for fair verification.
+test("M28: a weak grep without read/output evidence is ambiguous, not agent_discovered", () => {
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      // A grep that mentions the test but returned no captured output (no read either).
+      { command: "grep -rn test_w tests/test_z.py", path: null, category: "other", output: null },
+    ],
+  });
+  assert.ok(evidence.priorSearchCommands.length > 0);
+  assert.equal(evidence.priorReadCommands.length, 0);
+  assert.equal(evidence.priorOutputsWithTestNode.length, 0);
+  const p = classifyWithDiscovery(evidence);
+  assert.equal(p.classification, "ambiguous");
+  assert.equal(fairProvenance(p).allowedForFairVerification, false);
+});
+
+// M28-9. An exact injected-metadata match is disallowed even when a full discovery chain exists.
+test("M28: injected exact match stays disallowed even with discovery evidence", () => {
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      { command: "grep -rn test_w tests/", path: null, category: "other", output: "tests/test_z.py:10:def test_w" },
+      { command: "cat tests/test_z.py", path: null, category: "other", output: "def test_w(): ..." },
+    ],
+  });
+  const p = classifyWithDiscovery(evidence, ["tests/test_z.py::test_w"]); // injected exact match
+  assert.notEqual(p.classification, "agent_discovered");
+  assert.equal(fairProvenance(p).allowedForFairVerification, false);
+});
+
+// M28: buildFairVerificationReport attaches the structured discovery evidence and the strict gate
+// credits a search whose OUTPUT surfaced the node (no separate read needed).
+test("M28: buildFairVerificationReport attaches discoveryEvidence and credits search+output", () => {
+  const lines = [
+    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id: "g1", name: "Bash", input: { command: "grep -rn test_w tests/test_z.py" } }] } }),
+    JSON.stringify({ type: "user", message: { content: [{ type: "tool_result", tool_use_id: "g1", content: "tests/test_z.py:10:def test_w" }] } }),
+    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id: "t1", name: "Bash", input: { command: "pytest tests/test_z.py::test_w -xvs" } }] } }),
+    JSON.stringify({ type: "user", message: { content: [{ type: "tool_result", tool_use_id: "t1", content: "1 passed in 0.1s" }] } }),
+  ].join("\n");
+  const calls = parseEnrichedToolCalls(lines, "pivot_revision");
+  const report = buildFairVerificationReport({ calls, policy: "agent_discovered", injectedTestNames: null });
+  assert.equal(report.length, 1);
+  assert.equal(report[0]!.assessment.verificationProvenance.classification, "agent_discovered");
+  assert.ok(report[0]!.discoveryEvidence.priorSearchCommands.length > 0);
+  assert.ok(report[0]!.discoveryEvidence.priorOutputsWithTestNode.length > 0);
+});
+
+// M28-12. Backward compatibility: a captured calls array with NO output fields (legacy artifact)
+// still derives test commands and a report — discoveryEvidence is simply empty, not a crash.
+test("M28: backward compatibility for legacy captured calls without outputs", () => {
+  const lines = [
+    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id: "t1", name: "Bash", input: { command: "pytest tests/test_x.py::test_y" } }] } }),
+  ].join("\n");
+  const calls = parseEnrichedToolCalls(lines, "first_pass");
+  // deriveTestCommands shape unchanged (no discovery fields leak into the event).
+  const events = deriveTestCommands(calls);
+  assert.deepEqual(
+    Object.keys(events[0]!).sort(),
+    ["command", "exitCode", "outputSummary", "parsedOutcome", "patchState", "phase", "selectedTests", "success", "testFramework"],
+  );
+  // The report builds, with an (empty) discoveryEvidence object present.
+  const report = buildFairVerificationReport({ calls, policy: "agent_discovered", injectedTestNames: null });
+  assert.equal(report.length, 1);
+  const de: DiscoveryEvidence = report[0]!.discoveryEvidence;
+  assert.equal(de.priorSearchCommands.length, 0);
+  assert.notEqual(report[0]!.assessment.verificationProvenance.classification, "agent_discovered");
+  // A legacy direct call with no discoveryEvidence keeps the lenient heuristic (backward compat).
+  const legacy = classifyTestProvenance({
+    selectedTests: ["tests/test_z.py::test_w"],
+    injectedTestNames: null,
+    priorCommandText: ["grep -rn test_w tests/test_z.py"],
+  });
+  assert.equal(legacy.classification, "agent_discovered");
+});
+
+// M28: a PriorCallSignal type smoke check (additive shape).
+const _priorCallType: PriorCallSignal = { command: null, path: null, category: "other", output: null };
+void _priorCallType;
+
 // ===== M24 — explicit in-loop test environment classification =====
 
 // The real sphinx-7462 head: pytest loads a plugin, whose import chain breaks on a host

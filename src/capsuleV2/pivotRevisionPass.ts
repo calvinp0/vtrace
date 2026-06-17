@@ -200,23 +200,39 @@ function renderTestExpectation(
   return lines;
 }
 
-// M23 — opt-in fair verification instruction block. Asks the agent to discover/run the
+// M23 / M28 — opt-in fair verification instruction block. Asks the agent to discover/run the
 // smallest relevant repository test that it can JUSTIFY from its own exploration, never one
-// chosen merely because a hidden benchmark label named it. Conservative + honest by design:
-// it requires the agent to say so when no trustworthy test exists, to report environment
-// failures as such, and to never claim verification without passing command output.
+// chosen merely because a hidden benchmark label named it. M28 strengthens this into an explicit
+// DISCOVERY PROTOCOL: the agent must search/list/read the repository's tests first, pick the
+// smallest test it actually found, and run it with a CANONICAL (un-piped, un-truncated) command —
+// so a later provenance check can credit the test as agent-discovered rather than guessed/injected.
+// Conservative + honest by design: it requires the agent to say so when no trustworthy test
+// exists, to report environment failures as such, and to never claim verification without output.
 const FAIR_VERIFICATION_BLOCK: readonly string[] = [
   "",
   "## Fair verification (agent-discovered focused test)",
   "",
   "If feasible, discover and run the smallest relevant repository test after making the revision.",
   "Do not run a test merely because a hidden benchmark/evaluator label says so.",
-  "Prefer tests you can justify from repository exploration:",
-  "  - test files you found",
-  "  - test names you searched/read",
-  "  - behavior described in source/docs/problem statement",
-  "  - nearby existing tests for the touched function/module",
-  "If no trustworthy focused test is discoverable, say so.",
+  "Do not guess a test name from the edited function name alone.",
+  "",
+  "Discovery protocol (follow it before running any focused test):",
+  "  1. Search/list/read the repository test files related to the touched module/function",
+  "     (grep/ripgrep/find/ls over the test directories, then read the candidate test file).",
+  "  2. Choose the smallest focused test you actually discovered from that exploration.",
+  "  3. Run it with a canonical command — never a piped or truncated one.",
+  "",
+  "Prefer:",
+  "  python -m pytest <discovered test node>",
+  "or:",
+  "  pytest <discovered test node>",
+  "",
+  "Avoid:",
+  '  - piping or truncating the test command (e.g. "... | head", "2>&1 | head")',
+  "  - grep-only evidence without reading the test file",
+  "  - test names copied from benchmark/evaluator labels (they are withheld here)",
+  "",
+  "If no focused test is discoverable, state that no fair focused test was discovered.",
   "If the environment fails before the test runs, report it as an environment/import/dependency failure.",
   "Do not claim the patch is verified unless the command output shows the test actually passed.",
 ];
@@ -286,8 +302,11 @@ export function buildRevisionPrompt(input: BuildRevisionPromptInput): string {
   lines.push("");
   lines.push("Task:");
   lines.push(
-    "  Use the FAIL_TO_PASS/test expectation and source excerpts above to decide whether the patch "
-    + "must be revised.",
+    fairPolicy
+      ? "  Use the test expectation and source excerpts above to decide whether the patch "
+        + "must be revised."
+      : "  Use the FAIL_TO_PASS/test expectation and source excerpts above to decide whether the patch "
+        + "must be revised.",
   );
   lines.push("  Return a non-empty unified diff only if source/test evidence requires a change.");
   lines.push(
