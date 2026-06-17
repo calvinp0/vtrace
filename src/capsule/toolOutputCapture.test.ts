@@ -248,6 +248,7 @@ import {
   hasEnvironmentFailureMarkers,
   assessFairVerification,
   buildFairVerificationReport,
+  classifyTestEnvironmentOutcome,
   type TestCommandEvent,
   type VerificationPolicy,
 } from "./toolOutputCapture";
@@ -446,3 +447,117 @@ test("M23: buildFairVerificationReport derives prior-exploration context per pha
 
 const _policyTypeCheck: VerificationPolicy = "agent_discovered";
 void _policyTypeCheck;
+
+// ===== M24 — explicit in-loop test environment classification =====
+
+// The real sphinx-7462 head: pytest loads a plugin, whose import chain breaks on a host
+// jinja2 that lacks `environmentfilter` — all BEFORE any test is collected.
+const SPHINX_IMPORT_HEAD = [
+  "Traceback (most recent call last):",
+  '  File "/home/calvin/miniforge3/lib/python3.12/site-packages/_pytest/config/__init__.py", line 879, in import_plugin',
+  "    __import__(importspec)",
+  '  File ".../sphinx/util/rst.py", line 22, in <module>',
+  "    from jinja2 import environmentfilter",
+  "ImportError: cannot import name 'environmentfilter' from 'jinja2'",
+].join("\n");
+
+// M24-1. A plugin/import traceback BEFORE collection ⇒ test_error_environment (no signal).
+test("M24: import/plugin traceback before collection => test_error_environment", () => {
+  const c = classifyTestEnvironmentOutcome({
+    parsedOutcome: parsePytestOutcome(SPHINX_IMPORT_HEAD),
+    output: SPHINX_IMPORT_HEAD,
+  });
+  assert.equal(c.classification, "test_error_environment");
+  assert.equal(c.targetTestExecuted, false);
+});
+
+// M24-2. A selected test's assertion failure (it ran) ⇒ test_failed.
+test("M24: selected test assertion failure => test_failed", () => {
+  const out = [
+    "collected 1 item",
+    "tests/test_z.py::test_w FAILED",
+    "=================================== FAILURES ===================================",
+    "____ test_w ____",
+    "    assert 1 == 2",
+    "E   assert 1 == 2",
+    "1 failed in 0.05s",
+  ].join("\n");
+  const c = classifyTestEnvironmentOutcome({ parsedOutcome: parsePytestOutcome(out), output: out });
+  assert.equal(c.classification, "test_failed");
+  assert.equal(c.targetTestExecuted, true);
+});
+
+// M24-3. The selected test is collected/runs, then ERRORS in its body/fixture ⇒ test_error_target.
+test("M24: selected test errors after collection => test_error_target", () => {
+  const out = [
+    "collected 1 item",
+    "tests/test_z.py::test_w ERROR",
+    "==================================== ERRORS ====================================",
+    "_________________ ERROR at setup of test_w _________________",
+    "Traceback (most recent call last):",
+    "  File \"tests/test_z.py\", line 10, in fixture",
+    "    raise RuntimeError('boom')",
+    "RuntimeError: boom",
+    "ERROR tests/test_z.py::test_w - RuntimeError: boom",
+    "1 error in 0.05s",
+  ].join("\n");
+  const c = classifyTestEnvironmentOutcome({ parsedOutcome: parsePytestOutcome(out), output: out });
+  assert.equal(c.classification, "test_error_target");
+  assert.equal(c.targetTestExecuted, true);
+});
+
+// M24-4. No tests collected (e.g. all deselected) ⇒ test_not_run.
+test("M24: no tests collected => test_not_run", () => {
+  const out = "collected 0 items\n\nno tests ran in 0.01s";
+  const c = classifyTestEnvironmentOutcome({ parsedOutcome: parsePytestOutcome(out), output: out });
+  assert.equal(c.classification, "test_not_run");
+  assert.equal(c.targetTestExecuted, false);
+});
+
+// M24-4b. A clean pass ⇒ test_passed.
+test("M24: passing run => test_passed", () => {
+  const out = "collected 1 item\ntests/test_z.py::test_w PASSED\n1 passed in 0.10s";
+  const c = classifyTestEnvironmentOutcome({ parsedOutcome: parsePytestOutcome(out), output: out });
+  assert.equal(c.classification, "test_passed");
+  assert.equal(c.targetTestExecuted, true);
+});
+
+// M24-4c. Output with no recognizable pytest runner evidence ⇒ unknown.
+test("M24: command failure with no runner evidence => unknown", () => {
+  const out = "bash: pytest: command not found";
+  const c = classifyTestEnvironmentOutcome({ parsedOutcome: parsePytestOutcome(out), output: out });
+  assert.equal(c.classification, "unknown");
+});
+
+// M24-5. An environment failure blocks fairVerificationUsable and is surfaced as the explicit
+// test_error_environment classification on the assessment.
+test("M24: environment failure blocks fairVerificationUsable and is classified", () => {
+  const importErr = eventOf({
+    selectedTests: ["tests/test_z.py::test_w"],
+    outputSummary: SPHINX_IMPORT_HEAD.slice(0, 1024),
+    parsedOutcome: parsePytestOutcome(SPHINX_IMPORT_HEAD),
+  });
+  const a = assessFairVerification({
+    policy: "agent_discovered",
+    event: importErr,
+    injectedTestNames: null,
+    priorCommandText: ["grep -rn test_w tests/test_z.py"], // discovered ⇒ provenance not the blocker
+    editToolBeforeTest: true,
+    fullOutput: SPHINX_IMPORT_HEAD,
+  });
+  assert.equal(a.environmentClassification.classification, "test_error_environment");
+  assert.equal(a.environmentClassification.targetTestExecuted, false);
+  assert.equal(a.fairVerificationUsable, false);
+});
+
+// M24-6. The raw parsedOutcome is preserved separately and unchanged by the classification.
+test("M24: raw parsedOutcome remains separate from environment classification", () => {
+  const parsed = parsePytestOutcome(SPHINX_IMPORT_HEAD);
+  const c = classifyTestEnvironmentOutcome({ parsedOutcome: parsed, output: SPHINX_IMPORT_HEAD });
+  // classifier does not mutate the parsed outcome…
+  assert.equal(parsed.status, "error");
+  assert.deepEqual(parsePytestOutcome(SPHINX_IMPORT_HEAD), parsed);
+  // …and reports a DIFFERENT, more specific label than the raw status.
+  assert.equal(c.classification, "test_error_environment");
+  assert.notEqual(c.classification, parsed.status);
+});

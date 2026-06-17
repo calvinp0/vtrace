@@ -524,6 +524,8 @@ export interface FairVerificationAssessment {
   verificationPolicy: VerificationPolicy;
   verificationProvenance: VerificationProvenance;
   verificationPatchState: VerificationPatchState;
+  /** M24: explicit environment classification of the captured test outcome (additive). */
+  environmentClassification: TestEnvironmentAssessment;
   fairVerificationUsable: boolean;
   fairVerificationBlockers: string[];
 }
@@ -586,6 +588,117 @@ export function hasEnvironmentFailureMarkers(text: string | null): { found: bool
   return { found: markers.length > 0, markers };
 }
 
+// -------------------------------------------------------------------------------------------
+// M24 — explicit environment classification of a captured test command.
+//
+// `parsePytestOutcome` is deliberately failure-biased but collapses two CATEGORICALLY
+// different failures into one `status: "error"`:
+//   (a) the pytest/plugin/dependency import chain broke BEFORE the selected target test was
+//       ever collected (e.g. sphinx-7462's `ImportError: cannot import name 'environmentfilter'`
+//       from a host jinja2 that does not match the instance's pinned deps), and
+//   (b) the target test WAS collected and executed, then errored in its body/fixture.
+// Only (b) carries a real signal about the patch; (a) carries none and must NOT count as
+// verification. The discriminator is whether the target test was provably collected/executed,
+// which pytest's own output exposes (`collected N items`, node-result lines, a FAILURES header).
+//
+// The classification is ADDITIVE: the raw `parsedOutcome` is preserved separately and never
+// rewritten by this layer.
+// -------------------------------------------------------------------------------------------
+
+export type TestEnvironmentClassification =
+  | "test_passed"
+  | "test_failed"
+  | "test_error_target"
+  | "test_error_environment"
+  | "test_not_run"
+  | "unknown";
+
+export interface TestEnvironmentAssessment {
+  classification: TestEnvironmentClassification;
+  /** True only when there is positive evidence the target test was collected/executed. */
+  targetTestExecuted: boolean;
+  evidence: string[];
+}
+
+// Positive evidence that pytest got past plugin/import loading and actually collected/ran a
+// test: a non-zero `collected N items`, a per-node result line (`::name PASSED|FAILED|ERROR`),
+// a `FAILURES` section (only printed for tests that ran), or an `N passed/failed` summary.
+function detectTargetTestExecuted(text: string): { executed: boolean; evidence: string[] } {
+  const evidence: string[] = [];
+  const collected = text.match(/collected\s+(\d+)\s+items?/i);
+  if (collected && Number(collected[1]) > 0) evidence.push(`collected ${collected[1]} item(s)`);
+  if (/::[^\s]+\s+(PASSED|FAILED|ERROR)\b/.test(text)) evidence.push("per-node result line");
+  if (/={3,}\s*FAILURES\s*={3,}/.test(text)) evidence.push("= FAILURES = section");
+  const ranSummary = text.match(/(\d+)\s+(passed|failed)\b/);
+  if (ranSummary && Number(ranSummary[1]) > 0) evidence.push(`${ranSummary[1]} ${ranSummary[2]} in summary`);
+  return { executed: evidence.length > 0, evidence };
+}
+
+// Map a parsed outcome + raw output to one of the six explicit environment classifications.
+// PURE; reads no fs/Docker/oracle. The rules mirror the M24 audit:
+//   - passed                              => test_passed
+//   - failed (assertion/FAILURES)         => test_failed
+//   - error AND target executed           => test_error_target
+//   - error AND target NOT executed       => test_error_environment (import/plugin/dep failure
+//                                            before the selected test ran)
+//   - ran nothing (collected 0 / no tests)=> test_not_run
+//   - no recognizable runner evidence     => unknown
+export function classifyTestEnvironmentOutcome(input: {
+  parsedOutcome: ParsedTestOutcome;
+  output: string | null;
+  truncated?: boolean;
+}): TestEnvironmentAssessment {
+  const text = input.output ?? "";
+  const status = input.parsedOutcome.status;
+  const { executed, evidence: execEvidence } = detectTargetTestExecuted(text);
+  const noTests = /no tests ran/i.test(text) || /collected 0 items/i.test(text);
+
+  if (status === "passed") {
+    return { classification: "test_passed", targetTestExecuted: true, evidence: ["parsed outcome passed"] };
+  }
+  if (status === "failed") {
+    return {
+      classification: "test_failed",
+      targetTestExecuted: true,
+      evidence: ["parsed outcome failed (assertion/FAILURES)", ...execEvidence],
+    };
+  }
+  if (status === "error") {
+    if (executed) {
+      return {
+        classification: "test_error_target",
+        targetTestExecuted: true,
+        evidence: ["target test was collected/executed before the error", ...execEvidence],
+      };
+    }
+    const env = hasEnvironmentFailureMarkers(text);
+    return {
+      classification: "test_error_environment",
+      targetTestExecuted: false,
+      evidence: [
+        "errored before the selected target test executed (import/plugin/dependency failure)",
+        ...(env.found ? [`markers: ${env.markers.join(", ")}`] : []),
+      ],
+    };
+  }
+  if (noTests) {
+    return {
+      classification: "test_not_run",
+      targetTestExecuted: false,
+      evidence: ["no tests ran / collected 0 items"],
+    };
+  }
+  // status unknown / failed_or_error with no execution evidence: cannot attribute to env vs target.
+  return {
+    classification: "unknown",
+    targetTestExecuted: executed,
+    evidence:
+      text.trim().length === 0
+        ? ["no output captured"]
+        : ["no recognizable pytest runner evidence", ...execEvidence],
+  };
+}
+
 // Compose the three M22 sub-judgments + the policy into one fair-verification verdict.
 // `fairVerificationUsable` is true ONLY when ALL hold: the opt-in policy is enabled, the test
 // provenance is agent_discovered, the parsed outcome is `passed`, the patch state proves
@@ -598,6 +711,8 @@ export function assessFairVerification(input: {
   priorCommandText: readonly string[];
   editToolBeforeTest: boolean;
   finalPatchProof?: { applied: boolean; evidence?: readonly string[] };
+  /** Fuller captured output (≤8k) for environment classification; falls back to outputSummary. */
+  fullOutput?: string | null;
 }): FairVerificationAssessment {
   const { policy, event } = input;
   const provenance = fairProvenance(
@@ -612,9 +727,15 @@ export function assessFairVerification(input: {
     editToolBeforeTest: input.editToolBeforeTest,
     finalPatchProof: input.finalPatchProof,
   });
-  const env = hasEnvironmentFailureMarkers(
-    [event.outputSummary ?? "", ...event.parsedOutcome.evidence].join("\n"),
-  );
+  const classificationText = [
+    input.fullOutput ?? event.outputSummary ?? "",
+    ...event.parsedOutcome.evidence,
+  ].join("\n");
+  const env = hasEnvironmentFailureMarkers(classificationText);
+  const environmentClassification = classifyTestEnvironmentOutcome({
+    parsedOutcome: event.parsedOutcome,
+    output: classificationText,
+  });
 
   const blockers: string[] = [];
   if (policy !== "agent_discovered") {
@@ -632,11 +753,19 @@ export function assessFairVerification(input: {
   if (env.found) {
     blockers.push(`environment/import failure markers present: ${env.markers.join(", ")}`);
   }
+  // M24: an environment failure (import/plugin/dep error before the target test ran) is an
+  // explicit, standalone blocker — even when the truncated head carried no literal marker.
+  if (environmentClassification.classification === "test_error_environment" && !env.found) {
+    blockers.push(
+      "test environment failed before the target test executed (test_error_environment)",
+    );
+  }
 
   return {
     verificationPolicy: policy,
     verificationProvenance: provenance,
     verificationPatchState: patchState,
+    environmentClassification,
     fairVerificationUsable: blockers.length === 0,
     fairVerificationBlockers: blockers,
   };
@@ -684,6 +813,7 @@ export function buildFairVerificationReport(input: {
       injectedTestNames: input.injectedTestNames,
       priorCommandText,
       editToolBeforeTest,
+      fullOutput: call.output,
     });
     rows.push({
       phase: event.phase,
