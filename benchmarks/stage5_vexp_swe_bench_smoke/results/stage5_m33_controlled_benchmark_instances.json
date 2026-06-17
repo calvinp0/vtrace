@@ -1,0 +1,151 @@
+{
+  "milestone": "M33",
+  "purpose": "Controlled 10-instance paired benchmark design (6 M32 instances + 4 additions chosen to cover missing failure shapes). DESIGN ONLY — not yet executed. No live agents, no Docker, no SWE-bench evaluation were run to produce this file; all 'historical' fields are read from captured artifacts and prior committed reports.",
+  "design": {
+    "conditions": ["baseline", "vtrace-indexed (v2 capsule, --capsule-intent auto, --disable-pivot-check)"],
+    "replicates": 3,
+    "not_enabled": ["--pivot-revision-pass", "--pivot-inspection-enforcement", "--allow-docker-verify", "diagnostic verifier"],
+    "resolution_source": "canonical SWE-bench Docker evaluate (separate step), NOT diagnostic verifier",
+    "total_runs_if_executed": 60
+  },
+  "failure_shape_coverage": {
+    "1_localized_single_file": ["django-11728", "django-10880", "sympy-12419", "sympy-13372"],
+    "2_multi_file_co_edit": ["django-13195", "seaborn-3187", "astropy-14369", "pylint-8898"],
+    "3_multi_pivot": ["sphinx-7462", "pylint-8898", "astropy-14369"],
+    "4_generated_artifact_parser_serialization": ["astropy-14369"],
+    "5_no_context_traceback_localized": ["xarray-3677", "django-10880", "sympy-13372"],
+    "6_search_heavy_should_reduce_wandering": ["seaborn-3187", "sympy-12419"]
+  },
+  "instances": [
+    {
+      "instance_id": "sphinx-doc__sphinx-7462",
+      "source": "M32",
+      "shape": "multi-pivot / multi-file co-edit",
+      "why_selected": "M32's hardest context-to-action case: 2 gold pivots, agent edits only the lead pivot in all 3 replicates.",
+      "expected_difficulty": "hard",
+      "gold_changed_files": ["sphinx/domains/python.py", "sphinx/pycode/ast.py"],
+      "fail_to_pass_count": 2,
+      "vtrace_surfaced_gold_or_pivot": "yes (both gold surfaced as pivots, both inspected)",
+      "historical_resolution_baseline": "0/3 (M32)",
+      "historical_resolution_vtrace": "0/3 (M32)",
+      "known_behavior": "context_to_action_gap x3; edits sphinx/domains/python.py only, never sphinx/pycode/ast.py. Tool usage WORSENS vs baseline (6->8). Listed as inject-without-benefit historically."
+    },
+    {
+      "instance_id": "django__django-13195",
+      "source": "M32",
+      "shape": "multi-file co-edit",
+      "why_selected": "3-file co-edit; VTRACE achieves actionability_success (edits all 3 gold) yet resolves 0/3 — isolates synthesis vs actionability.",
+      "expected_difficulty": "hard",
+      "gold_changed_files": ["django/contrib/messages/storage/cookie.py", "django/contrib/sessions/middleware.py", "django/http/response.py"],
+      "fail_to_pass_count": 5,
+      "vtrace_surfaced_gold_or_pivot": "yes (lead pivot delete_cookie + set_cookie; 3 support edit-sites surfaced)",
+      "historical_resolution_baseline": "0/3 (M32)",
+      "historical_resolution_vtrace": "0/3 (M32)",
+      "known_behavior": "actionability_success x3 (edits all 3 gold) but unresolved; identical patch sha across vtrace + 1 baseline run -> deterministic synthesis miss, not actionability. Reduced tools -21%, reads -57%, tokens -21%."
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3187",
+      "source": "M32",
+      "shape": "multi-file co-edit / search-heavy",
+      "why_selected": "Largest baseline search burden (20 tool calls); 2 gold files; mixed actionability across replicates.",
+      "expected_difficulty": "hard",
+      "gold_changed_files": ["seaborn/_core/scales.py", "seaborn/utils.py"],
+      "fail_to_pass_count": 2,
+      "vtrace_surfaced_gold_or_pivot": "yes (both gold surfaced)",
+      "historical_resolution_baseline": "0/3 (M32)",
+      "historical_resolution_vtrace": "1/3 (M32)",
+      "known_behavior": "r2 edits both gold -> resolved; r1/r3 edit 1 of 2 -> context_to_action_gap. Strongest efficiency win when it works (median tools 20->7, tokens 405->167)."
+    },
+    {
+      "instance_id": "django__django-11728",
+      "source": "M32",
+      "shape": "localized / single-pivot",
+      "why_selected": "Clean single-pivot success case; VTRACE control for 'already-localized, capsule actionable'.",
+      "expected_difficulty": "easy-medium",
+      "gold_changed_files": ["django/contrib/admindocs/utils.py"],
+      "fail_to_pass_count": 2,
+      "vtrace_surfaced_gold_or_pivot": "yes",
+      "historical_resolution_baseline": "3/3 (M32)",
+      "historical_resolution_vtrace": "3/3 (M32)",
+      "known_behavior": "actionability_success x3, resolved 3/3 both arms. grep 1->0, tokens 209->181 median. Stable positive control."
+    },
+    {
+      "instance_id": "django__django-10880",
+      "source": "M32",
+      "shape": "localized / no-context (policy skip)",
+      "why_selected": "Policy correctly declines to inject (safe_no_context); control for no-context-policy correctness.",
+      "expected_difficulty": "easy",
+      "gold_changed_files": ["django/db/models/aggregates.py"],
+      "fail_to_pass_count": 1,
+      "vtrace_surfaced_gold_or_pivot": "no (context not injected by policy)",
+      "historical_resolution_baseline": "3/3 (M32)",
+      "historical_resolution_vtrace": "3/3 (M32)",
+      "known_behavior": "safe_no_context x3, resolved 3/3. Note: real task edits aggregates.py (Count+distinct). vtrace r1 first-turn cache_creation anomalously low (557) -> cache-reuse contamination; flag for accounting audit."
+    },
+    {
+      "instance_id": "pydata__xarray-3677",
+      "source": "M32",
+      "shape": "no-context / single-file (benchmark-oracle hard case)",
+      "why_selected": "Resolves 3/3 by editing a NON-gold file (merge.py, not gold dataset.py) -> exposes gold-file-proxy oracle mismatch.",
+      "expected_difficulty": "medium",
+      "gold_changed_files": ["xarray/core/dataset.py"],
+      "fail_to_pass_count": 1,
+      "vtrace_surfaced_gold_or_pivot": "yes (gold surfaced as pivot, inspected, NOT edited)",
+      "historical_resolution_baseline": "3/3 (M32)",
+      "historical_resolution_vtrace": "3/3 (M32)",
+      "known_behavior": "context_to_action_gap x3 BUT resolved 3/3 — agent fixes via merge.py. Pure oracle artifact, not a functional failure. Traceback-leaky; under clean Docker re-baseline (M7.1) inject is a useful injection at lower tokens."
+    },
+    {
+      "instance_id": "astropy__astropy-14369",
+      "source": "M33-new",
+      "shape": "generated-artifact / parser / serialization (multi-file co-edit)",
+      "why_selected": "Fills the missing generated-artifact/parser shape: gold edits a hand source AND a PLY-generated parser table (cds_parsetab.py). Heavy historical VTRACE work in this repo.",
+      "expected_difficulty": "hard",
+      "gold_changed_files": ["astropy/units/format/cds.py", "astropy/units/format/cds_parsetab.py"],
+      "fail_to_pass_count": 3,
+      "vtrace_surfaced_gold_or_pivot": "historically: cds.py surfaced; generated cds_parsetab.py is the hard-to-surface co-edit (see stage5_generated_parser_astropy_* reports)",
+      "historical_resolution_baseline": "unknown (not in M32; appears in prior astropy parser-repair diagnostics)",
+      "historical_resolution_vtrace": "listed as 'useful injection' in M8 bounded-20",
+      "known_behavior": "Generated parser table is the canonical 'context surfaced but generated artifact not editable/edited' shape; motivated the generated-parser repair experiments. Tests whether VTRACE can surface a generated co-edit obligation."
+    },
+    {
+      "instance_id": "pylint-dev__pylint-8898",
+      "source": "M33-new",
+      "shape": "multi-file co-edit / multi-pivot (known regression)",
+      "why_selected": "3-file gold co-edit and a confirmed genuine VTRACE regression (2/3->0/3). Stresses multi-pivot follow-through + wrong-sibling line-anchor.",
+      "expected_difficulty": "hard",
+      "gold_changed_files": ["pylint/config/argument.py", "pylint/utils/__init__.py", "pylint/utils/utils.py"],
+      "fail_to_pass_count": 1,
+      "vtrace_surfaced_gold_or_pivot": "partial: argument.py surfaced; line-anchor resolved to WRONG sibling (_regexp_paths_csv_transfomer); utils/utils.py + utils/__init__.py NOT surfaced",
+      "historical_resolution_baseline": "2/3 (M6/M8 bounded-20)",
+      "historical_resolution_vtrace": "0/3 (M6/M8 bounded-20)",
+      "known_behavior": "Planned no_context but auto-injected; edited 1 of 3 gold files. Reclassified patch_synthesis_bound (inline single-file route is viable; baseline resolves 2/3 with argument.py alone). Exercises retrieval_wrong_target + multi_file_coedit + synthesis-lottery all at once."
+    },
+    {
+      "instance_id": "sympy__sympy-13372",
+      "source": "M33-new",
+      "shape": "no-context / traceback-localized (policy test)",
+      "why_selected": "Fills the traceback-localized no-context-policy shape: UnboundLocalError in evalf self-localizes from the traceback. The M7 conservative-localization downgrade fires here.",
+      "expected_difficulty": "medium",
+      "gold_changed_files": ["sympy/core/evalf.py"],
+      "fail_to_pass_count": 1,
+      "vtrace_surfaced_gold_or_pivot": "yes (evalf.py surfaced)",
+      "historical_resolution_baseline": "3/3 (clean-Docker re-baseline)",
+      "historical_resolution_vtrace": "3/3 (clean-Docker re-baseline; was a false 2/3 under contaminated eval)",
+      "known_behavior": "Traceback-leaky: baseline localizes for free. Under clean Docker, inject preserves 3/3 at -23% tokens -> useful injection, NOT a regression. Tests whether the (default-OFF) traceback-localized skip would wrongly suppress a useful injection."
+    },
+    {
+      "instance_id": "sympy__sympy-12419",
+      "source": "M33-new",
+      "shape": "search-heavy / hard-localization single-file (known regression)",
+      "why_selected": "Math-semantics localization (sum of identity-matrix elements) is hard to grep; a confirmed genuine regression and a pure synthesis-bound case.",
+      "expected_difficulty": "hard",
+      "gold_changed_files": ["sympy/matrices/expressions/matexpr.py"],
+      "fail_to_pass_count": 1,
+      "vtrace_surfaced_gold_or_pivot": "no — gold matexpr.py::Identity._entry NOT surfaced (pivots chase KroneckerDelta; _entry anchor resolved to adjoint.py/blockmatrix.py siblings). Harmless: issue text self-localizes.",
+      "historical_resolution_baseline": "3/3 (M6/M8)",
+      "historical_resolution_vtrace": "2/3 (M6/M8)",
+      "known_behavior": "All runs edit exact gold file+symbol; the one failing run hand-wrote Python `==` instead of gold's `Eq(...) is S.true` -> synthesis miss, not retrieval/actionability. n=3 single-run dip. Good search-heavy + retrieval-miss-but-harmless + synthesis-bound probe."
+    }
+  ]
+}
