@@ -36,9 +36,20 @@ import {
   parseEnrichedToolCalls,
   deriveTestCommands,
   buildFairVerificationReport,
+  classifyTestFramework,
   type RunPhase,
   type VerificationPolicy,
+  type EnrichedToolCall,
 } from "../../src/capsule/toolOutputCapture";
+import {
+  PLAN_MODE,
+  buildAgentTestCommandPlan,
+  deriveExpectedImageKey,
+  type AgentTestCommandPlan,
+  type PatchSource,
+  type CommandSource,
+  type PlanCommandCandidate,
+} from "../../src/capsule/agentTestCommandPlanner";
 import {
   describeHardGateOutcome,
   hardGateMetaFields,
@@ -133,7 +144,8 @@ export type Stage5Mode =
   | "report"
   | "aggregate-runs"
   | "install-vtrace-patch"
-  | "verify-vtrace-patch";
+  | "verify-vtrace-patch"
+  | "plan-agent-test-command";
 export type Stage5Condition = "baseline" | "vtrace" | "vexp";
 export type VtraceMethod = "instructions-file" | "mcp" | "local-patch" | "indexed-context";
 // Index-reuse policy for the vtrace `index` step (--index-policy):
@@ -367,6 +379,11 @@ export interface CliConfig {
   // prompt, and emits a per-test-command fair-verification provenance artifact. SCAFFOLDING
   // ONLY: it never adopts/rejects a patch and never makes the revision pass run.
   readonly revisionVerificationPolicy: VerificationPolicy;
+  // M26 dry-run planner (--mode plan-agent-test-command). Which captured patch to plan a fair
+  // verification of, and which captured set of agent-selected test commands to draw the single
+  // candidate command from. Read-only: the planner runs NO Docker and executes NO command.
+  readonly patchSource: PatchSource;
+  readonly commandSource: CommandSource;
   // Hard context-to-action gate (--pivot-check-gate). Default "off" — the existing
   // single-shot run path is unchanged. "hard" runs the two-phase enforcement
   // (Phase 1 inspect-only preflight → gate → Phase 2 solve only on pass) for the
@@ -858,6 +875,9 @@ const DEFAULT_CONFIG: CliConfig = {
   pivotInspectionEnforcement: false,
   pivotRevisionPass: false,
   revisionVerificationPolicy: "none",
+  // M26 planner defaults: the revised pivot patch + the revision-phase test commands.
+  patchSource: "pivot_revision_revised",
+  commandSource: "pivot_revision_test_commands",
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
   // off only the guard block).
   disableEditGuard: false,
@@ -3020,6 +3040,168 @@ export async function runEvaluateRevisedPatch(config: CliConfig, deps: RunDeps =
     throw new Error("No revised pivot patch found to shadow-evaluate. Run --mode run-protocol with --pivot-revision-pass first.");
   }
   return out;
+}
+
+// ===========================================================================================
+// M26 — dry-run agent-test-command planner glue (NO Docker, NO command execution, NO grading).
+//
+// Reads the EXISTING captured artifacts of a source run label and produces a single, honest
+// `_agent_test_command_plan.json` describing whether one agent-selected test command could be
+// FAIRLY and SAFELY re-run against a chosen patch in an isolated SWE-bench testbed — without
+// running anything. All decision logic lives in the PURE `buildAgentTestCommandPlan`.
+// ===========================================================================================
+
+// The dry-run plan artifact (under raw/vtrace). "_"-prefixed so it is never git-staged and never
+// mistaken for a canonical results JSONL.
+export const AGENT_TEST_COMMAND_PLAN_FILE = "_agent_test_command_plan.json";
+
+// Artifacts a FUTURE isolated executor would emit (named here so the plan is self-describing).
+// The dry run produces ONLY the plan json itself — never these.
+const FUTURE_EXECUTION_ARTIFACT_FILES = [
+  "_agent_test_command_result.json",
+  "_agent_test_command_stdout.txt",
+  "_agent_test_command_apply_patch.log",
+] as const;
+
+// Enriched tool-call capture file per command source phase (written by persistPhaseToolTelemetry).
+function toolCallsFileForCommandSource(source: CommandSource): { phase: RunPhase; file: string } {
+  return source === "first_pass_test_commands"
+    ? { phase: "first_pass", file: PHASE_TELEMETRY_FILES.first_pass.toolCalls }
+    : { phase: "pivot_revision", file: PHASE_TELEMETRY_FILES.pivot_revision.toolCalls };
+}
+
+async function readJsonArtifact(filePath: string): Promise<unknown | null> {
+  const content = await readFile(filePath, "utf8").catch(() => null);
+  if (content === null) return null;
+  try {
+    return JSON.parse(content) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+// FAIL_TO_PASS names VTRACE injected for this instance — read back from the captured pivot
+// revision record (`testExpectation.failToPass`). Only ever used to DISALLOW (an injected match
+// means the test name is not provably agent-owned). Null when the telemetry is absent.
+async function readInjectedTestNames(dir: string): Promise<string[] | null> {
+  const record = await readJsonArtifact(path.join(dir, REVISION_ARTIFACT_FILES.record));
+  if (!isRecordObject(record)) return null;
+  const expectation = record.testExpectation;
+  if (!isRecordObject(expectation)) return null;
+  const names = expectation.failToPass;
+  if (!Array.isArray(names)) return null;
+  const out = names.filter((n): n is string => typeof n === "string" && n.length > 0);
+  return out.length > 0 ? out : null;
+}
+
+function isRecordObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+// Resolve the requested patch (text + on-disk path) from captured artifacts. Returns text=null
+// when the artifact is missing so the planner can emit a graceful blocker.
+async function resolvePlanPatch(
+  dir: string,
+  source: PatchSource,
+  canonicalRecords: ReadonlyArray<Record<string, unknown>>,
+): Promise<{ patchText: string | null; patchPath: string | null }> {
+  if (source === "pivot_revision_revised") {
+    const p = path.join(dir, REVISION_ARTIFACT_FILES.revisedPatch);
+    const text = await readFile(p, "utf8").catch(() => null);
+    return text === null ? { patchText: null, patchPath: null } : { patchText: text, patchPath: p };
+  }
+  // original_model_patch: prefer the on-disk `_pivot_revision_original.patch`; fall back to the
+  // canonical results row's `modelPatch`.
+  const originalPath = path.join(dir, REVISION_ARTIFACT_FILES.originalPatch);
+  const onDisk = await readFile(originalPath, "utf8").catch(() => null);
+  if (onDisk !== null) return { patchText: onDisk, patchPath: originalPath };
+  for (const record of canonicalRecords) {
+    const patch = pick(record, ["modelPatch", "model_patch", "prediction", "patch"]);
+    if (typeof patch === "string" && patch.length > 0) return { patchText: patch, patchPath: null };
+  }
+  return { patchText: null, patchPath: null };
+}
+
+// Build the dry-run plan for one source run label. PURE decision-making is delegated to
+// `buildAgentTestCommandPlan`; this glue only LOADS captured artifacts and WRITES the plan json.
+// It reads no gold labels beyond the already-injected FAIL_TO_PASS (which only ever disallows),
+// runs no Docker, and executes no command. It also tamper-checks the canonical artifacts.
+export async function runPlanAgentTestCommand(config: CliConfig): Promise<AgentTestCommandPlan> {
+  if (config.runLabel === null) {
+    throw new Error("--mode plan-agent-test-command requires --run-label <existing source label>.");
+  }
+  const dir = rawConditionDir(config.out, "vtrace", config.runLabel);
+  if (!(await pathExists(dir))) {
+    throw new Error(`Source run label not found: ${dir}. Provide an existing --run-label.`);
+  }
+
+  // 1) Canonical results row → instanceId (+ fallback model patch source).
+  const canonicalResultsFile = await findCanonicalResultsFile(dir);
+  const canonicalContent = canonicalResultsFile === null ? "" : await readFile(canonicalResultsFile, "utf8").catch(() => "");
+  const canonicalRecords = parseJsonlRecords(canonicalContent);
+  let instanceId = "";
+  for (const record of canonicalRecords) {
+    const id = pick(record, FIELD_ALIASES.instanceId!);
+    if (typeof id === "string" && id.length > 0) { instanceId = id; break; }
+  }
+  if (instanceId.length === 0) {
+    // Fallback to the run meta's single instance.
+    const meta = await readJsonArtifact(path.join(dir, "_run.meta.json"));
+    if (isRecordObject(meta) && Array.isArray(meta.instances) && typeof meta.instances[0] === "string") {
+      instanceId = meta.instances[0];
+    }
+  }
+
+  // 2) Patch resolution for the requested source.
+  const { patchText, patchPath } = await resolvePlanPatch(dir, config.patchSource, canonicalRecords);
+
+  // 3) Candidate test commands from the requested source, with fair-verification provenance.
+  const { phase, file } = toolCallsFileForCommandSource(config.commandSource);
+  const enriched = await readJsonArtifact(path.join(dir, file));
+  const calls: EnrichedToolCall[] = Array.isArray(enriched) ? (enriched as EnrichedToolCall[]) : [];
+  const injectedTestNames = await readInjectedTestNames(dir);
+  const verificationRows = buildFairVerificationReport({
+    calls,
+    policy: "agent_discovered",
+    injectedTestNames,
+  }).filter((row) => row.phase === phase);
+  const candidates: PlanCommandCandidate[] = verificationRows.map((row) => ({
+    command: row.command,
+    framework: classifyTestFramework(row.command),
+    selectedTests: row.selectedTests,
+    provenance: row.assessment.verificationProvenance,
+    parsedOutcomeStatus: row.parsedOutcome.status,
+  }));
+
+  // 4) Expected SWE-bench image / testbed identity (derived from the documented TestSpec format).
+  const imagePlan = deriveExpectedImageKey({ instanceId });
+
+  // 5) Planned artifacts: the dry-run plan json (written below) + the would-be future logs.
+  const plannedArtifacts = [
+    path.join(dir, AGENT_TEST_COMMAND_PLAN_FILE),
+    ...FUTURE_EXECUTION_ARTIFACT_FILES.map((name) => path.join(dir, name)),
+  ];
+
+  const plan = buildAgentTestCommandPlan({
+    sourceRunLabel: config.runLabel,
+    instanceId,
+    patchSource: config.patchSource,
+    patchPath,
+    patchText,
+    commandSource: config.commandSource,
+    candidates,
+    imagePlan,
+    plannedArtifacts,
+  });
+
+  // 6) Write the dry-run plan, tamper-checking the canonical artifacts around the write.
+  const before = await hashCanonicalArtifacts(dir, canonicalResultsFile);
+  await writeFile(path.join(dir, AGENT_TEST_COMMAND_PLAN_FILE), `${JSON.stringify(plan, null, 2)}\n`);
+  const after = await hashCanonicalArtifacts(dir, canonicalResultsFile);
+  if (after !== before) {
+    throw new Error("plan-agent-test-command mutated canonical artifacts — aborting (this is a bug).");
+  }
+  return plan;
 }
 
 // Normalize one instance's evaluation evidence out of a SWE-bench per-instance
@@ -8703,6 +8885,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
             "aggregate-runs",
             "install-vtrace-patch",
             "verify-vtrace-patch",
+            "plan-agent-test-command",
           ].includes(value)
         )
           throw new Error("Invalid --mode.");
@@ -8815,6 +8998,26 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         }
         break;
       }
+      case "--patch-source": {
+        const value = requireValue(argv, ++index, arg);
+        if (value !== "original_model_patch" && value !== "pivot_revision_revised") {
+          throw new Error(
+            `--patch-source must be 'original_model_patch' or 'pivot_revision_revised' (got '${value}')`,
+          );
+        }
+        config.patchSource = value;
+        break;
+      }
+      case "--command-source": {
+        const value = requireValue(argv, ++index, arg);
+        if (value !== "first_pass_test_commands" && value !== "pivot_revision_test_commands") {
+          throw new Error(
+            `--command-source must be 'first_pass_test_commands' or 'pivot_revision_test_commands' (got '${value}')`,
+          );
+        }
+        config.commandSource = value;
+        break;
+      }
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
@@ -8858,7 +9061,7 @@ function printUsageAndExit(exitCode: number): never {
   process.stdout.write(
     [
       "Usage: bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts \\",
-      "  --mode prepare|run-baseline|run-vtrace|run-vexp|run-protocol|evaluate|ingest|report|aggregate-runs|install-vtrace-patch|verify-vtrace-patch \\",
+      "  --mode prepare|run-baseline|run-vtrace|run-vexp|run-protocol|evaluate|ingest|report|aggregate-runs|install-vtrace-patch|verify-vtrace-patch|plan-agent-test-command \\",
       "  --vexp-swe-bench-dir /path/to/vexp-swe-bench --instances id1,id2,id3 --out benchmarks/stage5_vexp_swe_bench_smoke/results",
       "",
       "Stage 5C protocol/evaluation flags:",
@@ -8868,6 +9071,8 @@ function printUsageAndExit(exitCode: number): never {
       "  --eval-dataset <jsonl-or-hf-name>             full SWE-bench dataset for docker evaluation",
       "  --eval-timeout <seconds>                      per-instance evaluation timeout",
       "  --run-label <label>                           isolate runs under results/runs/<label>/",
+      "  --patch-source original_model_patch|pivot_revision_revised   (with --mode plan-agent-test-command) which captured patch to plan a fair verification of (default: pivot_revision_revised)",
+      "  --command-source first_pass_test_commands|pivot_revision_test_commands   (with --mode plan-agent-test-command) which captured agent-selected test commands to draw the single candidate from (default: pivot_revision_test_commands)",
       "  --reuse-workspace                             reuse an existing labeled workspace by RESETTING it to the SWE-bench base commit and running git clean -fdx (never pulls main; reuses a fresh index per --index-policy) instead of redownloading the repo",
       "  --index-policy auto|always|reuse              reuse a fingerprint-fresh index (auto), force rebuild (always), or keep a stale index (reuse). default: auto",
       "  --show-vtrace-index-log                       print the vtrace index log to the terminal (drops --quiet)",
@@ -8911,6 +9116,11 @@ async function main(config: CliConfig): Promise<void> {
     case "evaluate-revised-patch": {
       const shadow = await runEvaluateRevisedPatch(config);
       process.stdout.write(`${JSON.stringify(shadow, null, 2)}\n`);
+      break;
+    }
+    case "plan-agent-test-command": {
+      const plan = await runPlanAgentTestCommand(config);
+      process.stdout.write(`${JSON.stringify(plan, null, 2)}\n`);
       break;
     }
     case "ingest": await runIngest(config); break;
