@@ -768,6 +768,172 @@ test("M28.4: prompt-sanitization evidence flips a discovered hidden match from i
   assert.equal(fairProvenance(unknown).allowedForFairVerification, false);
 });
 
+// ===== M28.7 — output-grounded repo-test search discovery =====
+
+// M28.7-1. A broad search whose PATH does not name the file, but whose OUTPUT surfaced the test
+// FILE, followed by a later READ of that file, credits the searched leg ⇒ agent_discovered.
+test("M28.7: output-grounded search (file in output) + later read credits searched=true", () => {
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      { command: null, path: "tests", category: "search", output: "tests/test_z.py:10:def test_w" },
+      { command: null, path: "tests/test_z.py", category: "read", output: "def test_w(): ..." },
+    ],
+  });
+  assert.equal(evidence.priorSearchCommands.length, 0); // not a file-named search command
+  assert.ok((evidence.outputGroundedSearches ?? []).length > 0);
+  const p = classifyWithDiscovery(evidence);
+  assert.equal(p.classification, "agent_discovered");
+  assert.equal(fairProvenance(p).allowedForFairVerification, true);
+});
+
+// M28.7-2. The same output-grounded search WITHOUT a later read stays searched=false ⇒ disallowed.
+test("M28.7: output-grounded search without a later read stays ineligible", () => {
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      { command: null, path: "tests", category: "search", output: "tests/test_z.py:10:def test_w" },
+    ],
+  });
+  assert.equal((evidence.outputGroundedSearches ?? []).length, 0);
+  assert.equal(evidence.priorSearchCommands.length, 0);
+  const p = classifyWithDiscovery(evidence);
+  assert.notEqual(p.classification, "agent_discovered");
+  assert.equal(fairProvenance(p).allowedForFairVerification, false);
+});
+
+// M28.7-3. An unrelated search/read pair (output names a SOURCE file, not the selected test) does
+// not credit the searched leg — no over-crediting.
+test("M28.7: unrelated grep output + read does not credit searched=true", () => {
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      { command: null, path: "src", category: "search", output: "src/foo.py:1:def bar()" },
+      { command: null, path: "src/foo.py", category: "read", output: "def bar(): ..." },
+    ],
+  });
+  assert.equal((evidence.outputGroundedSearches ?? []).length, 0);
+  assert.equal(evidence.priorReadCommands.length, 0);
+  const p = classifyWithDiscovery(evidence);
+  assert.notEqual(p.classification, "agent_discovered");
+});
+
+// M28.7-4. The selected test NODE/leaf surfacing in the search OUTPUT (file path not printed) +
+// a later read of that file also credits searched=true.
+test("M28.7: test node in search output + later read credits searched=true", () => {
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      { command: "grep -rn def tests/", path: null, category: "search", output: "100:    def test_w():" },
+      { command: null, path: "tests/test_z.py", category: "read", output: "def test_w(): ..." },
+    ],
+  });
+  assert.equal(evidence.priorSearchCommands.length, 0); // command names neither file nor leaf literally
+  assert.ok((evidence.outputGroundedSearches ?? []).length > 0);
+  assert.equal(classifyWithDiscovery(evidence).classification, "agent_discovered");
+});
+
+// M28.7-5. The selected test FILE surfacing in the search OUTPUT + a later read credits searched=true.
+test("M28.7: test file in search output + later read credits searched=true", () => {
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      { command: "ls tests/", path: null, category: "search", output: "conftest.py\ntest_z.py\ntest_a.py" },
+      { command: "sed -n '1,40p' tests/test_z.py", path: null, category: "read", output: "def test_w(): ..." },
+    ],
+  });
+  assert.ok((evidence.outputGroundedSearches ?? []).length > 0);
+  assert.equal(classifyWithDiscovery(evidence).classification, "agent_discovered");
+});
+
+// M28.7-6. A prompt-EXPOSED hidden label stays injected_metadata/disallowed even with a full
+// output-grounded discovery chain (exposure dominates, unchanged from M28.4 Case A).
+test("M28.7: prompt-exposed hidden label stays injected even with output-grounded discovery", () => {
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: HIDDEN,
+    priorCalls: [
+      { command: null, path: "tests", category: "search", output: "tests/test_z.py:10:def test_w" },
+      { command: null, path: "tests/test_z.py", category: "read", output: "def test_w(): ..." },
+    ],
+  });
+  assert.ok((evidence.outputGroundedSearches ?? []).length > 0);
+  const p = classifyTestProvenance({
+    selectedTests: HIDDEN,
+    injectedTestNames: HIDDEN,
+    priorCommandText: [],
+    discoveryEvidence: evidence,
+    promptExposedTestNames: HIDDEN, // exposed in prompt ⇒ contamination
+  });
+  assert.equal(p.classification, "injected_metadata");
+  assert.equal(fairProvenance(p).allowedForFairVerification, false);
+});
+
+// M28.7-7. The M28.3-style broad-grep-ONLY shape (output surfaced the node, but NO read) stays
+// ineligible for a hidden match — the discriminator from M28.6 is the later read.
+test("M28.7: M28.3-style broad grep with no read stays ineligible", () => {
+  const sel = ["tests/test_domain_py.py::test_parse_annotation"];
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: sel,
+    priorCalls: [
+      { command: null, path: "tests", category: "search", output: "tests/test_domain_py.py:239:def test_parse_annotation():" },
+    ],
+  });
+  assert.equal((evidence.outputGroundedSearches ?? []).length, 0);
+  const p = classifyTestProvenance({
+    selectedTests: sel,
+    injectedTestNames: sel,
+    priorCommandText: [],
+    discoveryEvidence: evidence,
+    promptExposedTestNames: [],
+  });
+  assert.notEqual(p.classification, "agent_discovered_hidden_match");
+  assert.equal(fairProvenance(p).allowedForFairVerification, false);
+});
+
+// M28.7-8. End-to-end M28.6 trace through buildFairVerificationReport: a Grep (path-only, output
+// surfaced the file) → Read TOOL of that file → canonical pytest. With the hidden label injected
+// but NOT exposed, provenance is agent_discovered_hidden_match and the output-grounded leg is credited.
+test("M28.7: M28.6-style Grep(output)+Read+canonical command becomes agent_discovered_hidden_match", () => {
+  const lines = [
+    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id: "g1", name: "Grep", input: { pattern: "test.*parse_annotation", path: "tests" } }] } }),
+    JSON.stringify({ type: "user", message: { content: [{ type: "tool_result", tool_use_id: "g1", content: "Found 1 file\ntests/test_domain_py.py" }] } }),
+    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id: "r1", name: "Read", input: { file_path: "tests/test_domain_py.py" } }] } }),
+    JSON.stringify({ type: "user", message: { content: [{ type: "tool_result", tool_use_id: "r1", content: "def test_parse_annotation(): ..." }] } }),
+    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id: "t1", name: "Bash", input: { command: "python -m pytest tests/test_domain_py.py::test_parse_annotation -v" } }] } }),
+    JSON.stringify({ type: "user", message: { content: [{ type: "tool_result", tool_use_id: "t1", content: "1 passed in 0.1s" }] } }),
+  ].join("\n");
+  const calls = parseEnrichedToolCalls(lines, "pivot_revision");
+  const report = buildFairVerificationReport({
+    calls,
+    policy: "agent_discovered",
+    injectedTestNames: ["tests/test_domain_py.py::test_parse_annotation"],
+    promptExposedTestNames: [], // sanitized prompt
+  });
+  assert.equal(report.length, 1);
+  assert.equal(report[0]!.assessment.verificationProvenance.classification, "agent_discovered_hidden_match");
+  assert.ok((report[0]!.discoveryEvidence.outputGroundedSearches ?? []).length > 0);
+  assert.equal(fairProvenance(report[0]!.assessment.verificationProvenance).allowedForFairVerification, true);
+});
+
+// M28.7-10. Enriched Grep tool-call capture: a non-Bash search tool's `pattern` is captured into
+// `query`, with `command` null and `path` preserved (the M28.6 telemetry gap closed).
+test("M28.7: parseEnrichedToolCalls captures Grep pattern into query (command null, path kept)", () => {
+  const lines = JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id: "g1", name: "Grep", input: { pattern: "test_w", path: "tests" } }] } });
+  const calls = parseEnrichedToolCalls(lines, "first_pass");
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0]!.tool, "Grep");
+  assert.equal(calls[0]!.query, "test_w");
+  assert.equal(calls[0]!.command, null);
+  assert.equal(calls[0]!.path, "tests");
+  // A Bash call still has its command captured and query null (no regression).
+  const bash = parseEnrichedToolCalls(
+    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id: "b1", name: "Bash", input: { command: "grep -rn test_w tests/" } }] } }),
+    "first_pass",
+  );
+  assert.equal(bash[0]!.command, "grep -rn test_w tests/");
+  assert.equal(bash[0]!.query, null);
+});
+
 // ===== M24 — explicit in-loop test environment classification =====
 
 // The real sphinx-7462 head: pytest loads a plugin, whose import chain breaks on a host

@@ -49,6 +49,12 @@ export interface EnrichedToolCall {
   command: string | null;
   /** Conventional file target, when present. */
   path: string | null;
+  /**
+   * M28.7 — the search pattern/query for non-shell search tools (Grep `pattern`, Glob `pattern`,
+   * etc.), or null. Captured so a pattern-based search (whose `command` is null and `path` is only
+   * a directory) is still visible to the discovery-evidence matcher. Mirrors `OrderedToolCall.query`.
+   */
+  query: string | null;
   /** Bounded captured output (≤ OUTPUT_MAX_BYTES), or null when the stream had none. */
   output: string | null;
   /** Bounded head summary (≤ OUTPUT_SUMMARY_MAX_BYTES), or null. */
@@ -81,6 +87,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 const PATH_KEYS = ["file_path", "filePath", "path", "file", "filename", "notebook_path"];
 const COMMAND_KEYS = ["command", "cmd", "script", "command_line"];
+// M28.7 — search-pattern keys for non-shell search tools (Grep/Glob/etc.). Mirrors the
+// `QUERY_KEYS` in toolCallLog.ts so the enriched calls expose the same pattern signal.
+const QUERY_KEYS = ["pattern", "query", "regex", "search", "glob"];
 
 function firstString(input: Record<string, unknown>, keys: readonly string[]): string | null {
   for (const key of keys) {
@@ -135,6 +144,7 @@ function pushToolUse(calls: PendingCall[], block: Record<string, unknown>, phase
     category: toolCategory(tool),
     command: isBashTool(tool) ? firstString(args, COMMAND_KEYS) : null,
     path: firstString(args, PATH_KEYS),
+    query: isBashTool(tool) ? null : firstString(args, QUERY_KEYS),
     output: null,
     outputSummary: null,
     exitCode: null,
@@ -414,6 +424,13 @@ export interface DiscoveryEvidence {
   matchedTestFiles: string[];
   /** Selected-test names referenced by a prior search/read/output. */
   matchedTestNames: string[];
+  /**
+   * M28.7 — labels of repo-test SEARCH/list calls whose OUTPUT surfaced a selected test file/node
+   * AND whose surfaced file was READ by a LATER prior call (output-grounded discovery). Credits the
+   * `searched` leg even when the search command/path did not literally name the file (e.g. a broad
+   * `grep PATTERN tests/` whose hit appears only in the output). Optional/back-compatible.
+   */
+  outputGroundedSearches?: string[];
 }
 
 // One prior same-phase tool call's signals, the raw input to `computeDiscoveryEvidence`.
@@ -422,6 +439,8 @@ export interface PriorCallSignal {
   path: string | null;
   category: ToolCategory;
   output: string | null;
+  /** M28.7 — search pattern/query for non-shell search tools (Grep/Glob), when captured. */
+  query?: string | null;
 }
 
 // Shell tokens that constitute a repository SEARCH / file READ. Word-boundary matched so a
@@ -479,28 +498,72 @@ export function computeDiscoveryEvidence(input: {
     return { matched };
   };
 
+  // M28.7 — the SELECTED-test files a piece of text implicates (by base name OR by leaf/node name).
+  // Used to pair an output-grounded search with a LATER read of the same surfaced test file.
+  const filesIn = (text: string): Set<string> => {
+    const found = new Set<string>();
+    for (const r of refs) {
+      if (r.base.length > 2 && text.includes(r.base)) found.add(r.file);
+      if (r.leaf.length > 2 && text.includes(r.leaf)) found.add(r.file);
+    }
+    return found;
+  };
+
+  // M28.7 — ordered bookkeeping: search/list calls whose OUTPUT surfaced selected-test files, and
+  // read calls that referenced selected-test files. A surfaced file later read ⇒ output-grounded.
+  const searchOutputSurfaced: Array<{ index: number; label: string; files: Set<string> }> = [];
+  const readFileRefs: Array<{ index: number; files: Set<string> }> = [];
+
+  let index = 0;
   for (const call of input.priorCalls) {
     const cmd = call.command ?? "";
     const isSearch = call.category === "search" || (cmd.length > 0 && SEARCH_COMMAND_RE.test(cmd));
     const isRead = call.category === "read" || (cmd.length > 0 && READ_COMMAND_RE.test(cmd));
-    const label = cmd.length > 0 ? cmd : call.path ?? "";
-    // (a) the command/path itself references a selected test ⇒ search and/or read evidence.
-    const cmdText = `${cmd} ${call.path ?? ""}`.trim();
+    const query = call.query ?? "";
+    const label = cmd.length > 0 ? cmd : (call.path ?? (query.length > 0 ? query : ""));
+    // (a) the command/path/query itself references a selected test ⇒ search and/or read evidence.
+    const cmdText = [cmd, call.path ?? "", query].filter((t) => t.length > 0).join(" ").trim();
     if (cmdText.length > 0 && label.length > 0 && refMatch(cmdText).matched) {
       if (isSearch) priorSearchCommands.push(label);
       if (isRead) priorReadCommands.push(label);
     }
+    // Track read calls' referenced selected-test files (for output-grounded search pairing).
+    if (isRead && cmdText.length > 0) {
+      const rf = filesIn(cmdText);
+      if (rf.size > 0) readFileRefs.push({ index, files: rf });
+    }
     // (b) the call OUTPUT surfaced a selected test node ⇒ output evidence (independent of how it ran).
     if (call.output && call.output.length > 0 && refMatch(call.output).matched) {
       priorOutputsWithTestNode.push(call.output.slice(0, DISCOVERY_OUTPUT_SNIPPET_MAX));
+      // A repo-test SEARCH/list whose OUTPUT surfaced a selected-test file: record the files so a
+      // LATER read of one of them can credit the search leg (M28.7 output-grounded discovery).
+      if (isSearch) {
+        const surfaced = filesIn(call.output);
+        if (surfaced.size > 0) {
+          searchOutputSurfaced.push({ index, label: label.length > 0 ? label : "search", files: surfaced });
+        }
+      }
     }
+    index++;
   }
+
+  // M28.7 — credit an output-grounded search leg: a search/list call surfaced a selected test file
+  // in its OUTPUT AND a LATER read referenced that same file. Ordering (read after search) enforced.
+  const outputGroundedSearches: string[] = [];
+  for (const s of searchOutputSurfaced) {
+    const laterRead = readFileRefs.some(
+      (r) => r.index > s.index && [...r.files].some((f) => s.files.has(f)),
+    );
+    if (laterRead) outputGroundedSearches.push(s.label);
+  }
+
   return {
     priorSearchCommands,
     priorReadCommands,
     priorOutputsWithTestNode,
     matchedTestFiles: [...matchedTestFiles],
     matchedTestNames: [...matchedTestNames],
+    outputGroundedSearches,
   };
 }
 
@@ -558,11 +621,19 @@ export function classifyTestProvenance(input: {
   // M28 STRICT gate — structured search→read/output discovery chain.
   const de = input.discoveryEvidence;
   if (de !== undefined) {
-    const searched = de.priorSearchCommands.length > 0;
+    // M28.7 — the `searched` leg is credited either by a search command/path/query that named the
+    // test file/leaf, OR by an output-grounded search (a repo-test search whose OUTPUT surfaced the
+    // file and which a LATER read then opened). Both are real repo discovery; neither uses gold.
+    const namedSearch = de.priorSearchCommands.length > 0;
+    const outputGroundedSearch = (de.outputGroundedSearches?.length ?? 0) > 0;
+    const searched = namedSearch || outputGroundedSearch;
     const readEvidence = de.priorReadCommands.length > 0;
     const outputEvidence = de.priorOutputsWithTestNode.length > 0;
     const strongDiscovery = searched && (readEvidence || outputEvidence);
-    if (searched) evidence.push("prior search command referenced the selected test path/name");
+    if (namedSearch) evidence.push("prior search command referenced the selected test path/name");
+    else if (outputGroundedSearch) {
+      evidence.push("output-grounded search surfaced the test file and a later read opened it");
+    }
     if (readEvidence) evidence.push("prior read of the selected test file");
     if (outputEvidence) evidence.push("prior output surfaced the selected test node");
 
@@ -1023,6 +1094,7 @@ export function buildFairVerificationReport(input: {
         path: prior.path,
         category: prior.category,
         output: prior.output,
+        query: prior.query,
       });
     }
     // M28: structured search→read/output evidence drives the strict provenance gate.
