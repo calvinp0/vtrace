@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { createHash } from "node:crypto";
 import {
   buildAgentTestCommandPlan,
+  canonicalizeFairCommand,
   classifyCommandSafety,
   deriveExpectedImageKey,
   type BuildPlanInput,
@@ -293,14 +294,15 @@ describe("agentTestCommandPlanner — M28 fair discovery eligibility", () => {
     expect(plan.eligibleForFutureExecution).toBe(true);
   });
 
-  // M28.4-9. The same discovered-hidden-match, but with a shell pipe/redirect, is still rejected:
-  // command safety is independent of the provenance upgrade.
-  it("M28.4: discovered-hidden-match with a pipe/redirect is still rejected", () => {
+  // M28.4-9. The same discovered-hidden-match, but with a shell PIPE, is still rejected:
+  // command safety is independent of the provenance upgrade. (A bare trailing `2>&1` is now
+  // canonicalized away — see the M29.4 suite below — but a pipe is not.)
+  it("M28.4: discovered-hidden-match with a pipe is still rejected", () => {
     const plan = buildAgentTestCommandPlan(
       planInput({
         candidates: [
           candidate({
-            command: "python -m pytest tests/test_domain_py.py::test_parse_annotation -xvs 2>&1",
+            command: "python -m pytest tests/test_domain_py.py::test_parse_annotation -xvs 2>&1 | head -50",
             selectedTests: ["tests/test_domain_py.py::test_parse_annotation"],
             provenance: provenance("agent_discovered_hidden_match", true),
           }),
@@ -312,5 +314,185 @@ describe("agentTestCommandPlanner — M28 fair discovery eligibility", () => {
     expect(plan.commandSafety.diagnosticOnly).toBe(true);
     expect(plan.eligibleForFutureExecution).toBe(false);
     expect(plan.blockers.some((b) => b.includes("not fair-executable as captured"))).toBe(true);
+    // The pipe is NOT a trailing stderr-merge ⇒ nothing is canonicalized away.
+    expect(plan.commandCanonicalized).toBe(false);
+  });
+});
+
+describe("agentTestCommandPlanner — M29.4 trailing stderr-merge canonicalization", () => {
+  // The exact M29.3 candidate shape: discovered-hidden-match + canonical pytest + a trailing
+  // `2>&1`. The redirect is canonicalized away and the command becomes planner-eligible.
+  it("1. trailing 2>&1 is canonicalized away and the pytest command becomes eligible", () => {
+    const canon = canonicalizeFairCommand(
+      "python -m pytest tests/test_domain_py.py::test_parse_annotation -v 2>&1",
+    );
+    expect(canon.commandCanonicalized).toBe(true);
+    expect(canon.canonicalizationReason).toBe("removed_trailing_stderr_merge");
+    expect(canon.canonicalCommand).toBe(
+      "python -m pytest tests/test_domain_py.py::test_parse_annotation -v",
+    );
+
+    const plan = buildAgentTestCommandPlan(
+      planInput({
+        instanceId: "sphinx-doc__sphinx-7462",
+        imagePlan: deriveExpectedImageKey({ instanceId: "sphinx-doc__sphinx-7462" }),
+        candidates: [
+          candidate({
+            command: "python -m pytest tests/test_domain_py.py::test_parse_annotation -v 2>&1",
+            selectedTests: ["tests/test_domain_py.py::test_parse_annotation"],
+            provenance: provenance("agent_discovered_hidden_match", true),
+          }),
+        ],
+      }),
+    );
+    expect(plan.commandSafety.allowed).toBe(true);
+    expect(plan.commandSafety.diagnosticOnly).toBeUndefined();
+    expect(plan.commandCanonicalized).toBe(true);
+    expect(plan.canonicalizationReason).toBe("removed_trailing_stderr_merge");
+    expect(plan.eligibleForFutureExecution).toBe(true);
+    expect(plan.blockers).toEqual([]);
+  });
+
+  it("2. trailing '2> &1' (whitespace variant) is also canonicalized away", () => {
+    const canon = canonicalizeFairCommand("pytest tests/test_x.py::test_y 2> &1");
+    expect(canon.commandCanonicalized).toBe(true);
+    expect(canon.canonicalCommand).toBe("pytest tests/test_x.py::test_y");
+  });
+
+  it("3. canonicalized command preserves the selected test node(s)", () => {
+    const tests = ["tests/test_a.py::test_one", "tests/test_b.py::test_two"];
+    const plan = buildAgentTestCommandPlan(
+      planInput({
+        candidates: [
+          candidate({ command: `pytest ${tests.join(" ")} 2>&1`, selectedTests: tests }),
+        ],
+      }),
+    );
+    expect(plan.selectedTests).toEqual(tests);
+    expect(plan.canonicalCommand).toBe(`pytest ${tests.join(" ")}`);
+    expect(plan.canonicalCommand).toContain("tests/test_a.py::test_one");
+    expect(plan.canonicalCommand).toContain("tests/test_b.py::test_two");
+  });
+
+  it("4. canonicalized command preserves ordinary pytest flags (-v -x -s)", () => {
+    const canon = canonicalizeFairCommand("python -m pytest tests/test_x.py::test_y -v -x -s 2>&1");
+    expect(canon.canonicalCommand).toBe("python -m pytest tests/test_x.py::test_y -v -x -s");
+  });
+
+  it("5. a pipe is still rejected even when a 2>&1 appears before it", () => {
+    const canon = canonicalizeFairCommand("pytest tests/test_x.py::test_y 2>&1 | head -60");
+    // The 2>&1 is not the trailing token ⇒ nothing is stripped.
+    expect(canon.commandCanonicalized).toBe(false);
+    const plan = buildAgentTestCommandPlan(
+      planInput({
+        candidates: [
+          candidate({ command: "pytest tests/test_x.py::test_y 2>&1 | head -60" }),
+        ],
+      }),
+    );
+    expect(plan.commandSafety.allowed).toBe(false);
+    expect(plan.eligibleForFutureExecution).toBe(false);
+  });
+
+  it("6. an output-file redirect is still rejected", () => {
+    const canon = canonicalizeFairCommand("pytest tests/test_x.py::test_y > out.txt");
+    expect(canon.commandCanonicalized).toBe(false);
+    expect(classifyCommandSafety(canon.canonicalCommand).allowed).toBe(false);
+    const plan = buildAgentTestCommandPlan(
+      planInput({ candidates: [candidate({ command: "pytest tests/test_x.py::test_y > out.txt" })] }),
+    );
+    expect(plan.eligibleForFutureExecution).toBe(false);
+  });
+
+  it("7. a stderr redirect to a FILE is still rejected (only 2>&1 is benign)", () => {
+    const canon = canonicalizeFairCommand("pytest tests/test_x.py::test_y 2> err.txt");
+    expect(canon.commandCanonicalized).toBe(false);
+    expect(classifyCommandSafety(canon.canonicalCommand).allowed).toBe(false);
+  });
+
+  it("8. command chaining is still rejected", () => {
+    for (const cmd of [
+      "pytest tests/test_x.py::test_y 2>&1 && echo ok",
+      "pytest tests/test_x.py::test_y 2>&1; echo ok",
+    ]) {
+      const canon = canonicalizeFairCommand(cmd);
+      // The 2>&1 is mid-command (chaining follows) ⇒ not stripped.
+      expect(canon.commandCanonicalized).toBe(false);
+      expect(classifyCommandSafety(canon.canonicalCommand).allowed).toBe(false);
+    }
+  });
+
+  it("9. eligibility flips for the M29.3-style command only when provenance is allowed", () => {
+    const cmd = "python -m pytest tests/test_domain_py.py::test_parse_annotation -v 2>&1";
+    const allowed = buildAgentTestCommandPlan(
+      planInput({
+        candidates: [
+          candidate({
+            command: cmd,
+            selectedTests: ["tests/test_domain_py.py::test_parse_annotation"],
+            provenance: provenance("agent_discovered_hidden_match", true),
+          }),
+        ],
+      }),
+    );
+    expect(allowed.eligibleForFutureExecution).toBe(true);
+    // Same canonicalization, but disallowed provenance still blocks (canonicalization ≠ provenance).
+    const disallowed = buildAgentTestCommandPlan(
+      planInput({
+        candidates: [
+          candidate({
+            command: cmd,
+            selectedTests: ["tests/test_domain_py.py::test_parse_annotation"],
+            provenance: provenance("ambiguous", false),
+          }),
+        ],
+      }),
+    );
+    expect(disallowed.commandSafety.allowed).toBe(true);
+    expect(disallowed.commandCanonicalized).toBe(true);
+    expect(disallowed.eligibleForFutureExecution).toBe(false);
+    expect(disallowed.blockers).toContain(
+      'provenance "ambiguous" is not allowed for fair verification',
+    );
+  });
+
+  it("10. the plan reports both the raw captured command and the canonical command", () => {
+    const plan = buildAgentTestCommandPlan(
+      planInput({
+        candidates: [
+          candidate({
+            command: "python -m pytest tests/test_x.py::test_y -v 2>&1",
+            selectedTests: ["tests/test_x.py::test_y"],
+          }),
+        ],
+      }),
+    );
+    expect(plan.capturedCommand).toBe("python -m pytest tests/test_x.py::test_y -v 2>&1");
+    expect(plan.canonicalCommand).toBe("python -m pytest tests/test_x.py::test_y -v");
+    expect(plan.selectedCommand).toBe("python -m pytest tests/test_x.py::test_y -v 2>&1");
+    expect(plan.commandCanonicalized).toBe(true);
+  });
+
+  it("11. an already-clean command is not marked canonicalized", () => {
+    const canon = canonicalizeFairCommand("python -m pytest tests/test_x.py::test_y -v");
+    expect(canon.commandCanonicalized).toBe(false);
+    expect(canon.canonicalizationReason).toBeNull();
+    expect(canon.canonicalCommand).toBe("python -m pytest tests/test_x.py::test_y -v");
+
+    const plan = buildAgentTestCommandPlan(
+      planInput({
+        candidates: [
+          candidate({
+            command: "python -m pytest tests/test_x.py::test_y -v",
+            selectedTests: ["tests/test_x.py::test_y"],
+          }),
+        ],
+      }),
+    );
+    expect(plan.commandCanonicalized).toBe(false);
+    expect(plan.canonicalizationReason).toBeNull();
+    expect(plan.capturedCommand).toBe("python -m pytest tests/test_x.py::test_y -v");
+    expect(plan.canonicalCommand).toBe("python -m pytest tests/test_x.py::test_y -v");
+    expect(plan.eligibleForFutureExecution).toBe(true);
   });
 });

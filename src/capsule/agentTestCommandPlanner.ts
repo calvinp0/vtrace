@@ -107,6 +107,57 @@ export function classifyCommandSafety(command: string): CommandSafety {
 }
 
 // -------------------------------------------------------------------------------------------
+// Conservative command canonicalization (PURE).
+//
+// The ONLY rewrite we perform is stripping a benign TRAILING stderr-merge redirect (`2>&1`):
+// it merely folds stderr into stdout and has no bearing on which tests run, so an otherwise
+// canonical fair test command should not be rejected for it. We do NOT touch pipes, output- or
+// input-file redirects, command chaining, substitution, or any other shell syntax — those stay
+// rejected by `classifyCommandSafety`. The stderr-merge must be the LAST token (anchored at end
+// of string), so `… 2>&1 | head -60` keeps its pipe and `… 2>&1 > out.txt` keeps its redirect,
+// and both remain rejected.
+// -------------------------------------------------------------------------------------------
+
+export const CANONICALIZE_STDERR_MERGE_REASON = "removed_trailing_stderr_merge" as const;
+
+// A trailing stderr-merge redirect: `2>&1`, `2> &1`, and whitespace-equivalent variants, anchored
+// at end of string and preceded by whitespace (a standalone trailing token). Because of the `$`
+// anchor it never matches a `2>&1` that is followed by a pipe/redirect/chained command.
+const TRAILING_STDERR_MERGE_RE = /\s+2\s*>\s*&\s*1\s*$/;
+
+export interface FairCommandCanonicalization {
+  /** The raw agent-captured command, preserved verbatim for audit. */
+  capturedCommand: string;
+  /** The command after stripping a benign trailing stderr-merge (== captured when not rewritten). */
+  canonicalCommand: string;
+  commandCanonicalized: boolean;
+  /** `removed_trailing_stderr_merge` when rewritten; null otherwise. */
+  canonicalizationReason: string | null;
+}
+
+// Canonicalize a captured fair test command by removing a single benign trailing stderr-merge
+// redirect. PURE: only ever drops a trailing `2>&1`; never adds, reorders, or alters any other
+// token, and leaves every non-stderr-merge command (incl. pipes/redirects) byte-identical.
+export function canonicalizeFairCommand(command: string): FairCommandCanonicalization {
+  const trimmed = command.replace(/\s+$/, "");
+  if (TRAILING_STDERR_MERGE_RE.test(trimmed)) {
+    const canonicalCommand = trimmed.replace(TRAILING_STDERR_MERGE_RE, "").replace(/\s+$/, "");
+    return {
+      capturedCommand: command,
+      canonicalCommand,
+      commandCanonicalized: true,
+      canonicalizationReason: CANONICALIZE_STDERR_MERGE_REASON,
+    };
+  }
+  return {
+    capturedCommand: command,
+    canonicalCommand: command,
+    commandCanonicalized: false,
+    canonicalizationReason: null,
+  };
+}
+
+// -------------------------------------------------------------------------------------------
 // Expected SWE-bench image / testbed identity (PURE; derived from the documented TestSpec).
 // -------------------------------------------------------------------------------------------
 
@@ -190,6 +241,14 @@ export interface AgentTestCommandPlan {
   patchSha256: string | null;
   commandSource: CommandSource;
   selectedCommand: string | null;
+  /** The raw agent-captured command, preserved verbatim for audit (== selectedCommand). */
+  capturedCommand: string | null;
+  /** The command the safety gate was applied to / the verifier would run: the captured command
+   *  with a benign trailing stderr-merge stripped (== capturedCommand when not canonicalized). */
+  canonicalCommand: string | null;
+  commandCanonicalized: boolean;
+  /** `removed_trailing_stderr_merge` when canonicalized; null otherwise. */
+  canonicalizationReason: string | null;
   selectedTests: string[];
   commandFramework: TestFramework | null;
   commandSafety: CommandSafety;
@@ -250,13 +309,17 @@ export function buildAgentTestCommandPlan(input: BuildPlanInput): AgentTestComma
 
   let commandSafety: CommandSafety;
   let fairProvenance: AgentTestCommandPlan["fairProvenance"];
+  let canonicalization: FairCommandCanonicalization | null = null;
 
   if (selected === null) {
     blockers.push("no test command found in command source");
     commandSafety = { allowed: false, reason: "no command selected" };
     fairProvenance = { classification: null, allowedForFairVerification: false, evidence: [] };
   } else {
-    commandSafety = classifyCommandSafety(selected.command);
+    // Canonicalize away a benign trailing stderr-merge BEFORE the safety gate, then gate on the
+    // canonical form (so `… -v 2>&1` is judged as `… -v`). Pipes/redirects/chaining are untouched.
+    canonicalization = canonicalizeFairCommand(selected.command);
+    commandSafety = classifyCommandSafety(canonicalization.canonicalCommand);
     fairProvenance = {
       classification: selected.provenance.classification,
       allowedForFairVerification: selected.provenance.allowedForFairVerification,
@@ -301,6 +364,10 @@ export function buildAgentTestCommandPlan(input: BuildPlanInput): AgentTestComma
     patchSha256,
     commandSource: input.commandSource,
     selectedCommand: selected?.command ?? null,
+    capturedCommand: canonicalization?.capturedCommand ?? null,
+    canonicalCommand: canonicalization?.canonicalCommand ?? null,
+    commandCanonicalized: canonicalization?.commandCanonicalized ?? false,
+    canonicalizationReason: canonicalization?.canonicalizationReason ?? null,
     selectedTests: selected ? [...selected.selectedTests] : [],
     commandFramework: selected?.framework ?? null,
     commandSafety,
