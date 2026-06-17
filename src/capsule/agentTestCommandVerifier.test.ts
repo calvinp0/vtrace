@@ -259,6 +259,66 @@ describe("verifier — diagnostic record (no grading)", () => {
     expect(typeof v.agentCommandVerification.fairVerificationUsable).toBe("boolean");
   });
 
+  it("13. inherits the planner's hidden-match provenance instead of recomputing to ambiguous (M29.1)", () => {
+    // Plan-time provenance was `agent_discovered_hidden_match` (allowed), derived from the full
+    // discovery/prompt-exposure context. The verify-time context here would recompute to
+    // `ambiguous` (the selected test is an injected/hidden match with no prior exploration), which
+    // pre-M29.1 silently downgraded the verdict. The verifier must inherit the plan's verdict.
+    const hiddenMatchContext = {
+      injectedTestNames: ["tests/test_x.py::test_y"], // hidden match...
+      priorCommandText: [], // ...with NO discovery chain ⇒ standalone recompute = ambiguous
+    };
+    const v = buildAgentCommandVerification({
+      plan: eligiblePlan({
+        fairProvenance: {
+          classification: "agent_discovered_hidden_match",
+          allowedForFairVerification: true,
+          evidence: ["hidden-label match upgraded: strong repo discovery and no prompt exposure"],
+        },
+      }),
+      canonicalization: canonicalizeCommand({
+        capturedCommand: "pytest tests/test_x.py::test_y",
+        framework: "pytest",
+        selectedTests: ["tests/test_x.py::test_y"],
+      }),
+      execution: exec(),
+      provenanceContext: hiddenMatchContext,
+    });
+    // No provenance blocker, and (passed + final-patch verified) ⇒ fair verification is usable.
+    expect(
+      v.agentCommandVerification.fairVerificationBlockers.some((b) => b.includes("provenance")),
+    ).toBe(false);
+    expect(v.agentCommandVerification.fairVerificationUsable).toBe(true);
+    expect(v.verificationPatchState.classification).toBe("final_patch_verified");
+  });
+
+  it("14. a disallowed planner provenance is still inherited (verifier never UPGRADES it)", () => {
+    // Symmetric guard: inheritance reuses the plan verdict verbatim, so a disallowed plan stays a
+    // provenance blocker even if the verify-time context alone might have looked agent-discovered.
+    const v = buildAgentCommandVerification({
+      plan: eligiblePlan({
+        fairProvenance: {
+          classification: "injected_metadata",
+          allowedForFairVerification: false,
+          evidence: ["withheld label was exposed in the prompt"],
+        },
+      }),
+      canonicalization: canonicalizeCommand({
+        capturedCommand: "pytest tests/test_x.py::test_y",
+        framework: "pytest",
+        selectedTests: ["tests/test_x.py::test_y"],
+      }),
+      execution: exec(),
+      provenanceContext: agentDiscoveredContext,
+    });
+    expect(
+      v.agentCommandVerification.fairVerificationBlockers.some((b) =>
+        b.includes('provenance "injected_metadata"'),
+      ),
+    ).toBe(true);
+    expect(v.agentCommandVerification.fairVerificationUsable).toBe(false);
+  });
+
   it("12. the mode is diagnostic-only — never sets replacementRecommended/canonicalReplaced", () => {
     const verified = buildAgentCommandVerification({
       plan: eligiblePlan(),

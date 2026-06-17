@@ -984,17 +984,29 @@ export function assessFairVerification(input: {
   discoveryEvidence?: DiscoveryEvidence;
   /** M28.4: withheld labels actually exposed in the prompt (enables hidden-match upgrade). */
   promptExposedTestNames?: readonly string[] | null;
+  /**
+   * M29.1: a provenance verdict already computed upstream (e.g. the M26 planner's `fairProvenance`,
+   * derived from the FULL discovery/prompt-exposure context). When supplied it is used verbatim
+   * instead of recomputing here — recomputation at verify time only ever sees `injectedTestNames`
+   * + `priorCommandText` (no `discoveryEvidence`/`promptExposedTestNames`) and would therefore
+   * silently DOWNGRADE an upstream `agent_discovered_hidden_match` to `ambiguous`. Provenance is a
+   * historical property of how the agent reached the test, so inheriting it is correct; the other
+   * (genuinely verify-time) blockers — patch state, environment, parsed outcome — stay independent.
+   */
+  inheritedProvenance?: VerificationProvenance;
 }): FairVerificationAssessment {
   const { policy, event } = input;
-  const provenance = fairProvenance(
-    classifyTestProvenance({
-      selectedTests: event.selectedTests,
-      injectedTestNames: input.injectedTestNames,
-      priorCommandText: input.priorCommandText,
-      discoveryEvidence: input.discoveryEvidence,
-      promptExposedTestNames: input.promptExposedTestNames,
-    }),
-  );
+  const provenance =
+    input.inheritedProvenance ??
+    fairProvenance(
+      classifyTestProvenance({
+        selectedTests: event.selectedTests,
+        injectedTestNames: input.injectedTestNames,
+        priorCommandText: input.priorCommandText,
+        discoveryEvidence: input.discoveryEvidence,
+        promptExposedTestNames: input.promptExposedTestNames,
+      }),
+    );
   const patchState = classifyVerificationPatchState({
     phase: event.phase,
     editToolBeforeTest: input.editToolBeforeTest,

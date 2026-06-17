@@ -30,6 +30,7 @@ import {
   type TestEnvironmentAssessment,
   type TestFramework,
   type VerificationPatchStateClass,
+  type VerificationProvenance,
 } from "./toolOutputCapture";
 import type {
   AgentTestCommandPlan,
@@ -347,6 +348,24 @@ export function buildAgentCommandVerification(input: {
     parsedOutcome,
   };
 
+  // M29.1: inherit the planner's provenance verdict rather than recomputing it here. The M26
+  // planner classified provenance from the FULL discovery/prompt-exposure context; the verifier
+  // only has `injectedTestNames` + `priorCommandText`, so a fresh recompute can only DISALLOW
+  // (it would downgrade `agent_discovered_hidden_match` → `ambiguous`). Provenance is historical
+  // (how the agent reached the test), so it does not change at verify time; the genuinely
+  // verify-time blockers (patch state / environment / parsed outcome) are still computed below.
+  const inheritedProvenance: VerificationProvenance = {
+    classification: plan.fairProvenance.classification ?? "unknown",
+    allowedForFairVerification: plan.fairProvenance.allowedForFairVerification,
+    evidence: [
+      ...plan.fairProvenance.evidence,
+      "provenance inherited from the M26 plan (verify-time recompute lacks discovery/prompt-exposure context and can only DISALLOW)",
+    ],
+    ...(plan.fairProvenance.allowedForFairVerification
+      ? {}
+      : { disallowReason: `provenance "${plan.fairProvenance.classification}" is not allowed for fair verification` }),
+  };
+
   const assessment = assessFairVerification({
     policy: "agent_discovered",
     event,
@@ -355,6 +374,7 @@ export function buildAgentCommandVerification(input: {
     editToolBeforeTest: false,
     finalPatchProof: { applied: finalApplied, evidence },
     fullOutput: execution.stdout,
+    inheritedProvenance,
   });
 
   const finalPatchVerified = assessment.verificationPatchState.canVerifyFinalPatch;
