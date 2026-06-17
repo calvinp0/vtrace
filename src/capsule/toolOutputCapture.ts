@@ -376,7 +376,17 @@ export function outcomeMismatch(rawToolSuccess: boolean | null, parsed: ParsedTe
 // FAIL_TO_PASS / capsule metadata it would not have in a deployed run?
 // -------------------------------------------------------------------------------------------
 
-export type TestProvenanceClass = "agent_discovered" | "injected_metadata" | "ambiguous" | "unknown";
+// M28.4 — `agent_discovered_hidden_match` is added so a test that COINCIDES with a withheld
+// FAIL_TO_PASS node but was provably reached through the agent's own repo search→read/output
+// chain (and was NOT exposed in the prompt) can still be fair. It is treated exactly like
+// `agent_discovered` by the fairness gate. The plain `injected_metadata` class is reserved for
+// REAL contamination (the label was exposed in the prompt) or hidden matches without discovery.
+export type TestProvenanceClass =
+  | "agent_discovered"
+  | "agent_discovered_hidden_match"
+  | "injected_metadata"
+  | "ambiguous"
+  | "unknown";
 
 export interface TestProvenance {
   classification: TestProvenanceClass;
@@ -509,6 +519,18 @@ export function classifyTestProvenance(input: {
   injectedTestNames: readonly string[] | null;
   priorCommandText: readonly string[];
   discoveryEvidence?: DiscoveryEvidence;
+  /**
+   * M28.4 — the withheld test labels that were ACTUALLY exposed in the prompt/injected context
+   * shown to the agent before the command (a subset of `injectedTestNames`). This is the only
+   * signal that distinguishes real injection contamination from a mere hidden-metadata
+   * coincidence. Semantics:
+   *   - `undefined` / `null` ⇒ exposure UNKNOWN ⇒ conservative pre-M28.4 behavior (a hidden
+   *     match is never upgraded; it stays `ambiguous`/`injected_metadata`).
+   *   - an array (possibly empty) ⇒ exposure KNOWN ⇒ a selected test that matches an entry is
+   *     `injected_metadata`; a hidden match NOT in the array may be upgraded to
+   *     `agent_discovered_hidden_match` when a strong discovery chain exists.
+   */
+  promptExposedTestNames?: readonly string[] | null;
 }): TestProvenance {
   const evidence: string[] = [];
   if (input.selectedTests.length === 0) {
@@ -518,6 +540,20 @@ export function classifyTestProvenance(input: {
     input.injectedTestNames !== null &&
     input.selectedTests.some((t) => input.injectedTestNames!.some((i) => sameTest(t, i)));
   if (injectedMatch) evidence.push("selected test matches injected FAIL_TO_PASS/testExpectation");
+
+  // M28.4 — was the matching label actually EXPOSED in the prompt (real contamination), or does
+  // the selected test merely COINCIDE with a withheld label (hidden metadata only)? Exposure is
+  // only "known" when the caller supplies the (possibly empty) exposed-label list.
+  const exposureKnown =
+    input.promptExposedTestNames !== undefined && input.promptExposedTestNames !== null;
+  const exposedMatch =
+    exposureKnown &&
+    input.selectedTests.some((t) => input.promptExposedTestNames!.some((e) => sameTest(t, e)));
+  if (exposedMatch) {
+    evidence.push("selected test label was exposed in the prompt/injected context");
+  } else if (injectedMatch && exposureKnown) {
+    evidence.push("hidden-label match but the label was NOT exposed in the prompt (sanitized)");
+  }
 
   // M28 STRICT gate — structured search→read/output discovery chain.
   const de = input.discoveryEvidence;
@@ -530,8 +566,31 @@ export function classifyTestProvenance(input: {
     if (readEvidence) evidence.push("prior read of the selected test file");
     if (outputEvidence) evidence.push("prior output surfaced the selected test node");
 
-    if (injectedMatch && strongDiscovery) return { classification: "ambiguous", evidence };
-    if (injectedMatch) return { classification: "injected_metadata", evidence };
+    // Case A — the label was exposed in the prompt ⇒ real injection contamination. Never fair,
+    // regardless of any discovery the agent also performed.
+    if (exposedMatch) return { classification: "injected_metadata", evidence };
+
+    if (injectedMatch) {
+      // The selected test coincides with a withheld FAIL_TO_PASS but was NOT exposed.
+      // Case D — provably reached via the agent's own repo search→read/output chain.
+      if (strongDiscovery && exposureKnown) {
+        return {
+          classification: "agent_discovered_hidden_match",
+          evidence: [
+            ...evidence,
+            "hidden-label match upgraded: strong repo discovery and no prompt exposure",
+          ],
+        };
+      }
+      // Exposure UNKNOWN but strong discovery ⇒ cannot rule out contamination (pre-M28.4 behavior).
+      if (strongDiscovery) return { classification: "ambiguous", evidence };
+      // Weak/no discovery ⇒ disallowed. When exposure is KNOWN-and-sanitized, the label was not
+      // injected into the prompt, so this is a hidden-metadata coincidence we simply cannot prove
+      // was discovered ⇒ `ambiguous` (not contamination). When exposure is UNKNOWN, keep the
+      // pre-M28.4 `injected_metadata` label so existing captures/behavior are unchanged.
+      return { classification: exposureKnown ? "ambiguous" : "injected_metadata", evidence };
+    }
+
     if (strongDiscovery) return { classification: "agent_discovered", evidence };
     // Some exploration, but no full search→read/output chain ⇒ could still be guessed/injected.
     if (searched || readEvidence || outputEvidence || input.priorCommandText.length > 0) {
@@ -664,12 +723,15 @@ export interface FairVerificationAssessment {
   fairVerificationBlockers: string[];
 }
 
-// Wrap a raw provenance classification with the fairness verdict. Only `agent_discovered`
-// (the agent reached the test through its own exploration) is allowed; everything else —
-// injected_metadata, ambiguous, unknown — is disallowed with a reason. In particular an exact
-// FAIL_TO_PASS match classifies as injected_metadata ⇒ allowedForFairVerification=false.
+// Wrap a raw provenance classification with the fairness verdict. The agent must have reached
+// the test through its own exploration: `agent_discovered` (a non-hidden discovered test) OR
+// `agent_discovered_hidden_match` (M28.4 — the test coincides with a withheld FAIL_TO_PASS but
+// was reached via a strong repo discovery chain and was NOT exposed in the prompt). Everything
+// else — injected_metadata (label exposed, or a hidden match without discovery), ambiguous,
+// unknown — is disallowed with a reason.
 export function fairProvenance(p: TestProvenance): VerificationProvenance {
-  const allowed = p.classification === "agent_discovered";
+  const allowed =
+    p.classification === "agent_discovered" || p.classification === "agent_discovered_hidden_match";
   return {
     classification: p.classification,
     evidence: [...p.evidence],
@@ -849,6 +911,8 @@ export function assessFairVerification(input: {
   fullOutput?: string | null;
   /** M28: structured search→read/output discovery evidence; enables the strict provenance gate. */
   discoveryEvidence?: DiscoveryEvidence;
+  /** M28.4: withheld labels actually exposed in the prompt (enables hidden-match upgrade). */
+  promptExposedTestNames?: readonly string[] | null;
 }): FairVerificationAssessment {
   const { policy, event } = input;
   const provenance = fairProvenance(
@@ -857,6 +921,7 @@ export function assessFairVerification(input: {
       injectedTestNames: input.injectedTestNames,
       priorCommandText: input.priorCommandText,
       discoveryEvidence: input.discoveryEvidence,
+      promptExposedTestNames: input.promptExposedTestNames,
     }),
   );
   const patchState = classifyVerificationPatchState({
@@ -931,6 +996,13 @@ export function buildFairVerificationReport(input: {
   calls: readonly EnrichedToolCall[];
   policy: VerificationPolicy;
   injectedTestNames: readonly string[] | null;
+  /**
+   * M28.4: withheld labels actually exposed in the prompt/injected context (a subset of
+   * `injectedTestNames`). When provided (even empty), the strict gate can distinguish real
+   * injection (exposed) from a hidden-metadata coincidence and may upgrade a discovered
+   * hidden match to `agent_discovered_hidden_match`. Omitted ⇒ conservative pre-M28.4 behavior.
+   */
+  promptExposedTestNames?: readonly string[] | null;
 }): TestCommandVerification[] {
   const rows: TestCommandVerification[] = [];
   for (let i = 0; i < input.calls.length; i++) {
@@ -963,6 +1035,7 @@ export function buildFairVerificationReport(input: {
       editToolBeforeTest,
       fullOutput: call.output,
       discoveryEvidence,
+      promptExposedTestNames: input.promptExposedTestNames,
     });
     rows.push({
       phase: event.phase,

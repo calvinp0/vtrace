@@ -271,4 +271,46 @@ describe("agentTestCommandPlanner — M28 fair discovery eligibility", () => {
     expect(plan.eligibleForFutureExecution).toBe(false);
     expect(plan.blockers.some((b) => b.includes("not fair-executable as captured"))).toBe(true);
   });
+
+  // M28.4-8. A discovered hidden-match (provenance allowed) with a canonical unpiped pytest
+  // command is planner-eligible — the hidden-label coincidence no longer blocks it.
+  it("M28.4: discovered-hidden-match + canonical unpiped pytest is eligible", () => {
+    const plan = buildAgentTestCommandPlan(
+      planInput({
+        candidates: [
+          candidate({
+            command: "python -m pytest tests/test_domain_py.py::test_parse_annotation",
+            selectedTests: ["tests/test_domain_py.py::test_parse_annotation"],
+            provenance: provenance("agent_discovered_hidden_match", true),
+          }),
+        ],
+      }),
+    );
+    expect(plan.fairProvenance.classification).toBe("agent_discovered_hidden_match");
+    expect(plan.fairProvenance.allowedForFairVerification).toBe(true);
+    expect(plan.commandSafety.allowed).toBe(true);
+    expect(plan.blockers).toEqual([]);
+    expect(plan.eligibleForFutureExecution).toBe(true);
+  });
+
+  // M28.4-9. The same discovered-hidden-match, but with a shell pipe/redirect, is still rejected:
+  // command safety is independent of the provenance upgrade.
+  it("M28.4: discovered-hidden-match with a pipe/redirect is still rejected", () => {
+    const plan = buildAgentTestCommandPlan(
+      planInput({
+        candidates: [
+          candidate({
+            command: "python -m pytest tests/test_domain_py.py::test_parse_annotation -xvs 2>&1",
+            selectedTests: ["tests/test_domain_py.py::test_parse_annotation"],
+            provenance: provenance("agent_discovered_hidden_match", true),
+          }),
+        ],
+      }),
+    );
+    expect(plan.fairProvenance.allowedForFairVerification).toBe(true);
+    expect(plan.commandSafety.allowed).toBe(false);
+    expect(plan.commandSafety.diagnosticOnly).toBe(true);
+    expect(plan.eligibleForFutureExecution).toBe(false);
+    expect(plan.blockers.some((b) => b.includes("not fair-executable as captured"))).toBe(true);
+  });
 });

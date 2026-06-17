@@ -3112,6 +3112,31 @@ async function readInjectedTestNames(dir: string): Promise<string[] | null> {
   return out.length > 0 ? out : null;
 }
 
+// M28.4 — which of the withheld `injectedTestNames` were ACTUALLY exposed in the rendered
+// revision prompt. Returns null (exposure UNKNOWN) when the prompt artifact is missing or there
+// are no injected names — so the provenance classifier stays conservative. Otherwise returns the
+// (possibly empty) subset that literally appears in the prompt: a full node id, or the node leaf
+// (with or without a trailing `[params]`). Conservative toward DETECTING exposure: a false
+// "exposed" only disallows; a false "not-exposed" must never happen for a label that is present.
+async function readPromptExposedTestNames(
+  dir: string,
+  injectedTestNames: readonly string[] | null,
+): Promise<string[] | null> {
+  if (injectedTestNames === null || injectedTestNames.length === 0) return null;
+  const promptText = await readFile(path.join(dir, REVISION_ARTIFACT_FILES.prompt), "utf8").catch(
+    () => null,
+  );
+  if (promptText === null) return null; // exposure unknown — no prompt to inspect
+  const exposed: string[] = [];
+  for (const label of injectedTestNames) {
+    const afterColons = label.includes("::") ? label.slice(label.lastIndexOf("::") + 2) : label;
+    const leafNoParams = afterColons.replace(/\[.*\]$/, "").trim();
+    const candidates = [label, afterColons, leafNoParams].filter((s) => s.length > 2);
+    if (candidates.some((c) => promptText.includes(c))) exposed.push(label);
+  }
+  return exposed;
+}
+
 function isRecordObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -3192,10 +3217,14 @@ async function computeAgentTestCommandPlan(
   const enriched = await readJsonArtifact(path.join(dir, file));
   const calls: EnrichedToolCall[] = Array.isArray(enriched) ? (enriched as EnrichedToolCall[]) : [];
   const injectedTestNames = await readInjectedTestNames(dir);
+  // M28.4: only labels the prompt actually exposed count as injection contamination; a withheld
+  // label that merely coincides with a discovered test must not be treated as injected.
+  const promptExposedTestNames = await readPromptExposedTestNames(dir, injectedTestNames);
   const verificationRows = buildFairVerificationReport({
     calls,
     policy: "agent_discovered",
     injectedTestNames,
+    promptExposedTestNames,
   }).filter((row) => row.phase === phase);
   const candidates: PlanCommandCandidate[] = verificationRows.map((row) => ({
     command: row.command,

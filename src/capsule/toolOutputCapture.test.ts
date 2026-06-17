@@ -604,6 +604,170 @@ test("M28: backward compatibility for legacy captured calls without outputs", ()
 const _priorCallType: PriorCallSignal = { command: null, path: null, category: "other", output: null };
 void _priorCallType;
 
+// ===== M28.4 — discovered hidden-match provenance (selected test coincides with a withheld label) =====
+
+const HIDDEN = ["tests/test_z.py::test_w"]; // SELECTED is exactly this node
+
+// Strong discovery: a file-targeted search (references the node) + a read of the test file.
+function strongDiscoveryEvidence(): DiscoveryEvidence {
+  return computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      { command: "grep -rn test_w tests/", path: null, category: "search", output: "tests/test_z.py:10:def test_w" },
+      { command: "cat tests/test_z.py", path: null, category: "read", output: "def test_w(): ..." },
+    ],
+  });
+}
+
+// M28.4-1 / Case A. A prompt-EXPOSED exact label match is injection contamination ⇒ disallowed,
+// even when the agent also performed a full discovery chain.
+test("M28.4: a prompt-exposed exact label match is injected_metadata and disallowed", () => {
+  const p = classifyTestProvenance({
+    selectedTests: SELECTED,
+    injectedTestNames: HIDDEN,
+    priorCommandText: [],
+    discoveryEvidence: strongDiscoveryEvidence(),
+    promptExposedTestNames: HIDDEN, // the label WAS shown to the agent
+  });
+  assert.equal(p.classification, "injected_metadata");
+  assert.equal(fairProvenance(p).allowedForFairVerification, false);
+});
+
+// M28.4-2 / Case B. Hidden match, sanitized (not exposed), NO discovery ⇒ disallowed.
+test("M28.4: a sanitized hidden match with no discovery is disallowed", () => {
+  const p = classifyTestProvenance({
+    selectedTests: SELECTED,
+    injectedTestNames: HIDDEN,
+    priorCommandText: [],
+    discoveryEvidence: NO_DISCOVERY,
+    promptExposedTestNames: [], // sanitized: not exposed
+  });
+  assert.notEqual(p.classification, "agent_discovered_hidden_match");
+  assert.equal(fairProvenance(p).allowedForFairVerification, false);
+});
+
+// M28.4-3 / Case C. Hidden match, sanitized, broad grep only (searched=false, output only) ⇒ disallowed.
+test("M28.4: a sanitized hidden match with broad grep-only discovery stays disallowed", () => {
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      // Broad grep over a directory: the COMMAND/PATH does not name the node, only the OUTPUT does.
+      { command: null, path: "tests", category: "search", output: "tests/test_z.py:10:def test_w" },
+    ],
+  });
+  assert.equal(evidence.priorSearchCommands.length, 0); // not a file-targeted search
+  assert.ok(evidence.priorOutputsWithTestNode.length > 0);
+  const p = classifyTestProvenance({
+    selectedTests: SELECTED,
+    injectedTestNames: HIDDEN,
+    priorCommandText: [],
+    discoveryEvidence: evidence,
+    promptExposedTestNames: [],
+  });
+  assert.notEqual(p.classification, "agent_discovered_hidden_match");
+  assert.equal(fairProvenance(p).allowedForFairVerification, false);
+});
+
+// M28.4-4 / Case D. Hidden match, sanitized, strong search+read ⇒ agent_discovered_hidden_match, ALLOWED.
+test("M28.4: a sanitized hidden match with repo search + test-file read becomes agent_discovered_hidden_match", () => {
+  const p = classifyTestProvenance({
+    selectedTests: SELECTED,
+    injectedTestNames: HIDDEN,
+    priorCommandText: [],
+    discoveryEvidence: strongDiscoveryEvidence(),
+    promptExposedTestNames: [], // sanitized: not exposed
+  });
+  assert.equal(p.classification, "agent_discovered_hidden_match");
+  assert.equal(fairProvenance(p).allowedForFairVerification, true);
+});
+
+// M28.4-5. Allowed via search+OUTPUT evidence (strong), but NOT via output alone (weak).
+test("M28.4: a sanitized hidden match is allowed only when discovery is strong", () => {
+  const strong = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      { command: "grep -rn test_w tests/", path: null, category: "search", output: "tests/test_z.py:10:def test_w" },
+    ],
+  });
+  const pStrong = classifyTestProvenance({
+    selectedTests: SELECTED, injectedTestNames: HIDDEN, priorCommandText: [],
+    discoveryEvidence: strong, promptExposedTestNames: [],
+  });
+  assert.equal(pStrong.classification, "agent_discovered_hidden_match");
+  assert.equal(fairProvenance(pStrong).allowedForFairVerification, true);
+
+  const weak = computeDiscoveryEvidence({
+    selectedTests: SELECTED,
+    priorCalls: [
+      { command: null, path: "tests", category: "search", output: "tests/test_z.py:10:def test_w" },
+    ],
+  });
+  const pWeak = classifyTestProvenance({
+    selectedTests: SELECTED, injectedTestNames: HIDDEN, priorCommandText: [],
+    discoveryEvidence: weak, promptExposedTestNames: [],
+  });
+  assert.equal(fairProvenance(pWeak).allowedForFairVerification, false);
+});
+
+// M28.4-6 / Case E. A non-hidden discovered test stays agent_discovered and allowed.
+test("M28.4: a non-hidden discovered test stays agent_discovered and allowed", () => {
+  const p = classifyTestProvenance({
+    selectedTests: SELECTED,
+    injectedTestNames: ["tests/other.py::test_other"], // does not match SELECTED
+    priorCommandText: [],
+    discoveryEvidence: strongDiscoveryEvidence(),
+    promptExposedTestNames: [],
+  });
+  assert.equal(p.classification, "agent_discovered");
+  assert.equal(fairProvenance(p).allowedForFairVerification, true);
+});
+
+// M28.4-7. The M28.3 real-artifact shape (broad grep, output surfaced node, no read, exact hidden
+// match) stays ineligible — for exposure UNKNOWN (null) and exposure KNOWN-and-sanitized ([]).
+test("M28.4: an M28.3-style broad-grep-only hidden match stays ineligible (exposure null and [])", () => {
+  const sel = ["tests/test_domain_py.py::test_parse_annotation"];
+  const evidence = computeDiscoveryEvidence({
+    selectedTests: sel,
+    priorCalls: [
+      { command: null, path: "tests", category: "search", output: "tests/test_domain_py.py:239:def test_parse_annotation():" },
+    ],
+  });
+  for (const exposure of [null, [] as string[]]) {
+    const p = classifyTestProvenance({
+      selectedTests: sel,
+      injectedTestNames: sel,
+      priorCommandText: [],
+      discoveryEvidence: evidence,
+      promptExposedTestNames: exposure,
+    });
+    assert.notEqual(p.classification, "agent_discovered_hidden_match");
+    assert.equal(fairProvenance(p).allowedForFairVerification, false);
+  }
+});
+
+// M28.4-10. The prompt-sanitization signal is what flips the verdict: same strong-discovery hidden
+// match is fair when sanitized, injected when exposed, and conservatively ambiguous when unknown.
+test("M28.4: prompt-sanitization evidence flips a discovered hidden match from injected to fair", () => {
+  const base = {
+    selectedTests: SELECTED,
+    injectedTestNames: HIDDEN,
+    priorCommandText: [] as string[],
+    discoveryEvidence: strongDiscoveryEvidence(),
+  };
+  const sanitized = classifyTestProvenance({ ...base, promptExposedTestNames: [] });
+  assert.equal(sanitized.classification, "agent_discovered_hidden_match");
+  assert.equal(fairProvenance(sanitized).allowedForFairVerification, true);
+
+  const exposed = classifyTestProvenance({ ...base, promptExposedTestNames: HIDDEN });
+  assert.equal(exposed.classification, "injected_metadata");
+  assert.equal(fairProvenance(exposed).allowedForFairVerification, false);
+
+  // Exposure UNKNOWN ⇒ conservative pre-M28.4 behavior (ambiguous, disallowed).
+  const unknown = classifyTestProvenance({ ...base });
+  assert.equal(unknown.classification, "ambiguous");
+  assert.equal(fairProvenance(unknown).allowedForFairVerification, false);
+});
+
 // ===== M24 — explicit in-loop test environment classification =====
 
 // The real sphinx-7462 head: pytest loads a plugin, whose import chain breaks on a host
