@@ -133,3 +133,110 @@ test("tool_result is matched to tool_use by id", () => {
   assert.equal(bash.output, "PYTEST OUT");
   assert.equal(calls.find((c) => c.tool === "Read")!.output, null);
 });
+
+// ===== M22 — test-output semantics, provenance, patch-state =====
+import {
+  parsePytestOutcome,
+  outcomeMismatch,
+  classifyTestProvenance,
+  classifyTestPatchState,
+} from "./toolOutputCapture";
+
+// 1. FAILURES section ⇒ failed.
+test("pytest output with FAILURES parses as failed", () => {
+  const out = "test session starts\n=================================== FAILURES ===================================\n_ test_x _\nassert 1 == 2\n=========================== 1 failed in 0.10s ============================";
+  const r = parsePytestOutcome(out);
+  assert.equal(r.status, "failed");
+  assert.equal(r.confidence, "high");
+});
+
+// 2. ERRORS section / N errors ⇒ error.
+test("pytest output with ERRORS parses as error", () => {
+  const out = "==================================== ERRORS ====================================\n_ ERROR collecting test_x.py _\n=========================== 1 error in 0.05s ============================";
+  assert.equal(parsePytestOutcome(out).status, "error");
+});
+
+// 3. Traceback / ImportError ⇒ error (the M21.1 real case).
+test("pytest output with Traceback/ImportError parses as error", () => {
+  const out = "Traceback (most recent call last):\n  ...\nImportError: cannot import name 'environmentfilter' from 'jinja2'";
+  const r = parsePytestOutcome(out);
+  assert.equal(r.status, "error");
+  assert.equal(r.confidence, "high");
+  assert.ok(r.evidence.some((e) => e.includes("ImportError") || e.includes("Traceback")));
+});
+
+// 4. "passed" summary ⇒ passed.
+test("pytest output with passed summary parses as passed", () => {
+  const out = "tests/test_x.py::test_y PASSED\n=========================== 1 passed in 0.20s ============================";
+  assert.equal(parsePytestOutcome(out).status, "passed");
+});
+
+// 5. Pipeline-masked: raw success=true but failure output ⇒ classified failed/error + mismatch.
+test("pipeline-masked success=true with failure output is classified failed/error", () => {
+  const out = "Traceback (most recent call last):\nImportError: boom";
+  const parsed = parsePytestOutcome(out);
+  assert.ok(parsed.status === "error" || parsed.status === "failed");
+  assert.equal(outcomeMismatch(true, parsed), true); // raw success disagrees
+  assert.equal(outcomeMismatch(false, parsed), false); // no mismatch when raw already failing
+});
+
+// 6. Truncated ambiguous output ⇒ unknown or failed_or_error (never pass).
+test("truncated ambiguous output is not a pass", () => {
+  const r1 = parsePytestOutcome("collecting ... an error occurred while", { truncated: true });
+  assert.ok(r1.status === "failed_or_error" || r1.status === "unknown");
+  assert.notEqual(r1.status, "passed");
+  const r2 = parsePytestOutcome("some neutral text with no summary", { truncated: true });
+  assert.equal(r2.status, "unknown");
+});
+
+// 7. Raw success is preserved separately from parsed outcome.
+test("raw success is preserved separately from parsed outcome", () => {
+  // parser never reads success; outcomeMismatch is the only bridge, and both inputs are explicit.
+  const parsed = parsePytestOutcome("1 passed in 0.1s");
+  assert.equal(parsed.status, "passed");
+  assert.equal(outcomeMismatch(true, parsed), false);
+  // a null raw success never fabricates a mismatch
+  assert.equal(outcomeMismatch(null, parsePytestOutcome("1 failed in 0.1s")), false);
+});
+
+// 8. Provenance: exact FAIL_TO_PASS match ⇒ injected_metadata (or ambiguous if also discovered).
+test("provenance marks exact FAIL_TO_PASS match as injected_metadata or ambiguous", () => {
+  const injected = classifyTestProvenance({
+    selectedTests: ["tests/test_domain_py.py::test_parse_annotation"],
+    injectedTestNames: ["tests/test_domain_py.py::test_parse_annotation"],
+    priorCommandText: ["Read sphinx/domains/python.py", "git diff"],
+  });
+  assert.equal(injected.classification, "injected_metadata");
+
+  const both = classifyTestProvenance({
+    selectedTests: ["tests/test_domain_py.py::test_parse_annotation"],
+    injectedTestNames: ["tests/test_domain_py.py::test_parse_annotation"],
+    priorCommandText: ["grep -rn test_parse_annotation tests/"],
+  });
+  assert.equal(both.classification, "ambiguous");
+
+  const discovered = classifyTestProvenance({
+    selectedTests: ["tests/test_z.py::test_w"],
+    injectedTestNames: ["tests/other.py::test_other"],
+    priorCommandText: ["grep -rn test_w tests/test_z.py"],
+  });
+  assert.equal(discovered.classification, "agent_discovered");
+
+  const none = classifyTestProvenance({ selectedTests: ["a::b"], injectedTestNames: null, priorCommandText: [] });
+  assert.equal(none.classification, "unknown");
+});
+
+// 9. Patch-state never claims final-patch verification without proof.
+test("patch-state classifier never claims final-patch verification", () => {
+  const pre = classifyTestPatchState({ phase: "first_pass", editToolBeforeTest: false });
+  assert.equal(pre.patchState, "pre_patch_state");
+  assert.equal(pre.canVerifyFinalPatch, false);
+
+  const afterEdit = classifyTestPatchState({ phase: "first_pass", editToolBeforeTest: true });
+  assert.equal(afterEdit.patchState, "after_observed_edit_state");
+  assert.equal(afterEdit.canVerifyFinalPatch, false); // edit observed, still NOT proven final
+
+  const rev = classifyTestPatchState({ phase: "pivot_revision", editToolBeforeTest: true });
+  assert.equal(rev.patchState, "revision_phase_state");
+  assert.equal(rev.canVerifyFinalPatch, false);
+});

@@ -68,8 +68,11 @@ export interface TestCommandEvent {
   selectedTests: string[];
   outputSummary: string | null;
   exitCode: number | null;
+  /** RAW tool success from the stream `is_error` — unreliable behind `... | head` pipelines. */
   success: boolean | null;
   patchState: PatchState;
+  /** M22: outcome parsed from the OUTPUT TEXT (trustworthy where `success` is masked). */
+  parsedOutcome: ParsedTestOutcome;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -250,6 +253,10 @@ export function deriveTestCommands(calls: readonly EnrichedToolCall[]): TestComm
     if (call.command === null || !isBashTool(call.tool)) continue;
     const framework = classifyTestFramework(call.command);
     if (framework === "unknown") continue;
+    const parsedOutcome =
+      framework === "pytest"
+        ? parsePytestOutcome(call.output, { truncated: call.truncated })
+        : { framework, status: "unknown" as const, evidence: ["no parser for framework"], confidence: "low" as const };
     events.push({
       phase: call.phase,
       command: call.command,
@@ -259,7 +266,207 @@ export function deriveTestCommands(calls: readonly EnrichedToolCall[]): TestComm
       exitCode: call.exitCode,
       success: call.success,
       patchState: patchStateForPhase(call.phase),
+      parsedOutcome,
     });
   }
   return events;
+}
+
+// ===========================================================================================
+// M22 — semantic analysis of captured test outputs (PURE, no fs/Docker/oracle).
+//
+// M21.1 found three gaps that must be closed before captured tests can inform a FAIR
+// adoption decision: (1) `success` from `is_error` is defeated by `... | head` pipelines,
+// (2) the selected test name may come from injected FAIL_TO_PASS metadata rather than the
+// agent's own exploration, and (3) the patch state is conservative and never proves a test
+// ran against the FINAL patch. These analyzers make those three things explicit and honest.
+// ===========================================================================================
+
+export type ParsedTestStatus = "passed" | "failed" | "error" | "failed_or_error" | "unknown";
+
+export interface ParsedTestOutcome {
+  framework: TestFramework;
+  status: ParsedTestStatus;
+  evidence: string[];
+  confidence: "low" | "medium" | "high";
+}
+
+const PYTEST_ERROR_MARKERS = [
+  "Traceback (most recent call last)",
+  "INTERNALERROR",
+  "ImportError",
+  "ModuleNotFoundError",
+  "errors during collection",
+];
+
+// Parse a pytest run's OUTPUT TEXT into an outcome. Conservative + failure-biased: any
+// error/traceback/failure marker overrides a stray "passed" substring, so a pipeline-masked
+// `success=true` cannot launder a failing run into a pass. Never consults shell exit status.
+export function parsePytestOutcome(
+  output: string | null,
+  opts: { truncated?: boolean } = {},
+): ParsedTestOutcome {
+  const framework: TestFramework = "pytest";
+  if (output === null || output.trim().length === 0) {
+    return { framework, status: "unknown", evidence: ["no output captured"], confidence: "low" };
+  }
+  const text = output;
+  const evidence: string[] = [];
+
+  const hasErrorsHeader = /={3,}\s*ERRORS\s*={3,}/.test(text);
+  const hasFailuresHeader = /={3,}\s*FAILURES\s*={3,}/.test(text);
+  const errorMarker = PYTEST_ERROR_MARKERS.find((m) => text.includes(m));
+  const passedMatch = text.match(/(\d+)\s+passed/);
+  const failedMatch = text.match(/(\d+)\s+failed/);
+  const errorMatch = text.match(/(\d+)\s+errors?\b/);
+  const noTests = /no tests ran/.test(text) || /collected 0 items/.test(text);
+  const failedLine = /(^|\n)FAILED\s+\S/.test(text);
+
+  // 1) Hard error signals (a traceback / import error / ERRORS section / N errors).
+  if (errorMarker || hasErrorsHeader || (errorMatch && Number(errorMatch[1]) > 0)) {
+    if (errorMarker) evidence.push(errorMarker);
+    if (hasErrorsHeader) evidence.push("= ERRORS = section");
+    if (errorMatch && Number(errorMatch[1]) > 0) evidence.push(`${errorMatch[1]} error(s) in summary`);
+    return { framework, status: "error", evidence, confidence: "high" };
+  }
+  // 2) Failures (FAILURES section, "N failed" summary, or a FAILED line).
+  if (hasFailuresHeader || (failedMatch && Number(failedMatch[1]) > 0) || failedLine) {
+    if (hasFailuresHeader) evidence.push("= FAILURES = section");
+    if (failedMatch && Number(failedMatch[1]) > 0) evidence.push(`${failedMatch[1]} failed in summary`);
+    if (failedLine) evidence.push("FAILED line");
+    return { framework, status: "failed", evidence, confidence: "high" };
+  }
+  // 3) Clean pass: a positive passed-count and no failure/error signals above.
+  if (passedMatch && Number(passedMatch[1]) > 0) {
+    evidence.push(`${passedMatch[1]} passed in summary`);
+    return { framework, status: "passed", evidence, confidence: "high" };
+  }
+  // 4) Ran but verified nothing.
+  if (noTests) {
+    evidence.push("no tests ran / collected 0 items");
+    return { framework, status: "unknown", evidence, confidence: "medium" };
+  }
+  // 5) Truncated before a summary, with a weak failure hint ⇒ cannot call it a pass.
+  const weakFailHint = /\bassert\b/i.test(text) || /\berror\b/i.test(text) || /\bfailed\b/i.test(text);
+  if (opts.truncated && weakFailHint) {
+    evidence.push("truncated output with failure-ish hint");
+    return { framework, status: "failed_or_error", evidence, confidence: "low" };
+  }
+  // 6) Nothing conclusive.
+  evidence.push("no recognizable pytest summary");
+  return { framework, status: "unknown", evidence, confidence: "low" };
+}
+
+// True when raw tool success disagrees with the parsed outcome — the M21.1 masking signature.
+export function outcomeMismatch(rawToolSuccess: boolean | null, parsed: ParsedTestOutcome): boolean {
+  if (rawToolSuccess !== true) return false;
+  return parsed.status === "failed" || parsed.status === "error" || parsed.status === "failed_or_error";
+}
+
+// -------------------------------------------------------------------------------------------
+// Provenance: did the test NAME come from the agent's own exploration, or from injected
+// FAIL_TO_PASS / capsule metadata it would not have in a deployed run?
+// -------------------------------------------------------------------------------------------
+
+export type TestProvenanceClass = "agent_discovered" | "injected_metadata" | "ambiguous" | "unknown";
+
+export interface TestProvenance {
+  classification: TestProvenanceClass;
+  evidence: string[];
+}
+
+// Normalize a pytest node id for matching: drop a trailing `[params]` and keep the leaf.
+function testLeaf(nodeId: string): string {
+  const afterColons = nodeId.includes("::") ? nodeId.slice(nodeId.lastIndexOf("::") + 2) : nodeId;
+  return afterColons.replace(/\[.*\]$/, "").trim();
+}
+
+function sameTest(a: string, b: string): boolean {
+  if (a === b) return true;
+  const la = testLeaf(a);
+  const lb = testLeaf(b);
+  return la.length > 0 && la === lb;
+}
+
+// Classify why a selected test appeared. `injectedTestNames` = FAIL_TO_PASS / testExpectation
+// names VTRACE injected (null when that telemetry is unavailable). `priorCommandText` =
+// the text of grep/find/read/bash calls observed BEFORE the test command in the same phase.
+export function classifyTestProvenance(input: {
+  selectedTests: readonly string[];
+  injectedTestNames: readonly string[] | null;
+  priorCommandText: readonly string[];
+}): TestProvenance {
+  const evidence: string[] = [];
+  if (input.selectedTests.length === 0) {
+    return { classification: "unknown", evidence: ["no selected tests"] };
+  }
+  const injectedMatch =
+    input.injectedTestNames !== null &&
+    input.selectedTests.some((t) => input.injectedTestNames!.some((i) => sameTest(t, i)));
+  if (injectedMatch) evidence.push("selected test matches injected FAIL_TO_PASS/testExpectation");
+
+  // "Discovered" = the test file/leaf shows up in earlier exploration commands (not the test run).
+  const discovered = input.selectedTests.some((t) => {
+    const leaf = testLeaf(t);
+    const file = t.includes("::") ? t.slice(0, t.indexOf("::")) : t;
+    const base = file.split("/").pop() ?? file;
+    return input.priorCommandText.some((c) => (leaf.length > 2 && c.includes(leaf)) || (base.length > 2 && c.includes(base)));
+  });
+  if (discovered) evidence.push("test file/name appears in prior exploration commands");
+
+  if (injectedMatch && discovered) return { classification: "ambiguous", evidence };
+  if (injectedMatch) return { classification: "injected_metadata", evidence };
+  if (discovered) return { classification: "agent_discovered", evidence };
+  // No injection telemetry and no discovery evidence ⇒ cannot prove fairness.
+  if (input.injectedTestNames === null && input.priorCommandText.length === 0) {
+    return { classification: "unknown", evidence: ["insufficient telemetry"] };
+  }
+  return { classification: "ambiguous", evidence: [...evidence, "no discovery evidence and no injected match — origin unclear"] };
+}
+
+// -------------------------------------------------------------------------------------------
+// Patch state: can this test command verify a particular patch? Never claims final-patch
+// verification without proof (which the in-loop stream cannot provide today).
+// -------------------------------------------------------------------------------------------
+
+export type RefinedPatchState =
+  | "pre_patch_state"
+  | "after_observed_edit_state"
+  | "revision_phase_state"
+  | "unknown";
+
+export interface PatchStateAssessment {
+  patchState: RefinedPatchState;
+  /** Always false unless the artifact PROVES the test ran after the final patch was applied. */
+  canVerifyFinalPatch: boolean;
+  evidence: string[];
+}
+
+// Assess what a test command at `testIndex` could verify, from the ordered calls of its
+// phase. `editToolBeforeTest` = an edit/write happened earlier in the phase. We never set
+// `canVerifyFinalPatch` true: the stream does not prove the working tree at test time equals
+// the extracted final/revised patch (the agent may edit further; extraction happens later).
+export function classifyTestPatchState(input: {
+  phase: RunPhase;
+  editToolBeforeTest: boolean;
+}): PatchStateAssessment {
+  if (input.phase === "pivot_revision") {
+    return {
+      patchState: "revision_phase_state",
+      canVerifyFinalPatch: false,
+      evidence: ["ran during revision phase before the revised patch was extracted"],
+    };
+  }
+  if (input.editToolBeforeTest) {
+    return {
+      patchState: "after_observed_edit_state",
+      canVerifyFinalPatch: false,
+      evidence: ["an edit/write occurred before the test, but final modelPatch is extracted after the loop"],
+    };
+  }
+  return {
+    patchState: "pre_patch_state",
+    canVerifyFinalPatch: false,
+    evidence: ["no edit observed before the test; cannot verify any patched state"],
+  };
 }
