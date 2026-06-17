@@ -32,6 +32,7 @@
 
 import {
   buildCorrectivePrompt,
+  shortTestName,
   type PivotDecisionMarker,
   type PivotInspectionCompliance,
 } from "./pivotInspectionCompliance";
@@ -267,7 +268,8 @@ export interface BuildRevisionPromptInput {
  * `decideRevisionPass` first, so that is defensive).
  */
 export function buildRevisionPrompt(input: BuildRevisionPromptInput): string {
-  const core = buildCorrectivePrompt(input.complianceBefore);
+  const fairPolicy = input.verificationPolicy === "agent_discovered";
+  const core = buildCorrectivePrompt(input.complianceBefore, { fairPolicy });
   const lines: string[] = [];
   lines.push(REVISION_INTRO);
   lines.push("");
@@ -283,7 +285,6 @@ export function buildRevisionPrompt(input: BuildRevisionPromptInput): string {
     // Defensive: no outstanding candidates. Keep the wording aligned anyway.
     lines.push("VTRACE found no outstanding pivot decisions; keep the patch as-is.");
   }
-  const fairPolicy = input.verificationPolicy === "agent_discovered";
   lines.push(...renderTestExpectation(input.testExpectation, { omitInjectedTestNames: fairPolicy }));
   if (fairPolicy) lines.push(...FAIR_VERIFICATION_BLOCK);
   const excerpts = boundExcerpts(input.sourceExcerpts ?? []);
@@ -314,7 +315,39 @@ export function buildRevisionPrompt(input: BuildRevisionPromptInput): string {
   );
   lines.push("");
   lines.push(...REVISION_RULES);
-  return lines.join("\n");
+  const prompt = lines.join("\n");
+  // M28.2 defensive guard: under the fair policy NO literal evaluator test label may
+  // survive into the rendered prompt. This catches any future prompt path (conflict
+  // evidence, excerpts, …) that forgets to sanitize. No-op when no labels are withheld.
+  if (fairPolicy) {
+    assertNoWithheldTestLabels(prompt, input.testExpectation?.failToPass ?? []);
+  }
+  return prompt;
+}
+
+/**
+ * M28.2: assert the rendered fair-policy revision prompt contains NO literal evaluator
+ * test label. Throws when any FAIL_TO_PASS node id — either the full `path::node` id or
+ * its `::`-leaf short form (e.g. `test_unparse[()-()]`) — appears in `prompt`. Pure;
+ * a no-op when `failToPass` is empty. Use as a belt-and-suspenders check after building
+ * a fair-policy prompt; the structured rendering should already prevent leaks.
+ */
+export function assertNoWithheldTestLabels(
+  prompt: string,
+  failToPass: readonly string[],
+): void {
+  for (const ftp of failToPass) {
+    const full = ftp.trim();
+    if (full.length === 0) continue;
+    const short = shortTestName(full).trim();
+    for (const label of short.length > 0 && short !== full ? [full, short] : [full]) {
+      if (prompt.includes(label)) {
+        throw new Error(
+          `fair-policy revision prompt leaked a withheld test label: ${JSON.stringify(label)}`,
+        );
+      }
+    }
+  }
 }
 
 /** The separate artifact files the revision pass persists (all "_"-prefixed: never

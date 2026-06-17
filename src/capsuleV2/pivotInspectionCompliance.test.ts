@@ -461,6 +461,71 @@ test("M16: corrective prompt carries the conflict evidence and keeps anti-over-e
   assert.match(prompt, /Prefer the minimal diff/);
 });
 
+// M28.2 — default (no fairPolicy) corrective prompt still leaks the literal test label
+// (existing behavior preserved exactly); the detector still carries the literal evidence.
+test("M28.2: default corrective prompt keeps the literal FAIL_TO_PASS conflict evidence", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("sphinx/pycode/ast.py", "unparse"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["sphinx/pycode/ast.py"],
+    decisions: [{ path: "sphinx/pycode/ast.py", decision: "RULED_OUT", evidence: GROUNDED }],
+    testExpectation: te(["tests/test_pycode_ast.py::test_unparse[()-()]"]),
+  });
+  const def = buildCorrectivePrompt(out)!;
+  const explicitFalse = buildCorrectivePrompt(out, { fairPolicy: false })!;
+  assert.equal(def, explicitFalse);
+  assert.match(def, /Conflict evidence: symbol "unparse" matches FAIL_TO_PASS test test_unparse\[\(\)-\(\)\]/);
+  // The internal detector keeps both the literal evidence and the structured overlaps.
+  assert.match(out.ruleOutConflicts[0]!.evidence.join(" "), /test_unparse/);
+  assert.deepEqual(out.ruleOutConflicts[0]!.overlaps, [
+    { what: "symbol", token: "unparse", against: "test_expectation" },
+  ]);
+});
+
+// M28.2 — fair-policy corrective prompt withholds the literal test node but keeps the
+// candidate symbol overlap and the fact a conflict exists. The M16 detector is unchanged.
+test("M28.2: fair-policy corrective prompt withholds the literal test label", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("sphinx/pycode/ast.py", "unparse"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["sphinx/pycode/ast.py"],
+    decisions: [{ path: "sphinx/pycode/ast.py", decision: "RULED_OUT", evidence: GROUNDED }],
+    testExpectation: te(["tests/test_pycode_ast.py::test_unparse[()-()]"]),
+  });
+  const fair = buildCorrectivePrompt(out, { fairPolicy: true })!;
+  // Withheld: the literal evaluator test node never appears.
+  assert.doesNotMatch(fair, /test_unparse/);
+  assert.doesNotMatch(fair, /matches FAIL_TO_PASS test/);
+  // Kept: candidate identity, the candidate-symbol overlap, the conflict, the withholding note.
+  assert.match(fair, /Candidate: sphinx\/pycode\/ast\.py::unparse/);
+  assert.match(fair, /candidate symbol "unparse" overlaps withheld benchmark test-expectation metadata/);
+  assert.match(fair, /rule-out conflicts with the \(withheld\) benchmark test expectation/);
+  assert.match(fair, /The exact evaluator test label is withheld under the fair verification policy/);
+  // M16 guardrail unaffected: still a conflict, still revision-triggering.
+  assert.equal(out.ruleOutConflicts.length, 1);
+  assert.equal(out.correctivePromptSent, true);
+});
+
+// M28.2 — file-stem overlaps are also rendered label-free under the fair policy.
+test("M28.2: fair-policy corrective prompt renders a file-stem overlap without the test label", () => {
+  const out = computePivotInspectionCompliance({
+    enabled: true,
+    contract: contractWith("pkg/widget.py", "render"),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["pkg/widget.py"],
+    decisions: [{ path: "pkg/widget.py", decision: "RULED_OUT", evidence: GROUNDED }],
+    testExpectation: te(["tests/test_ui.py::test_widget_visible"]),
+  });
+  const fair = buildCorrectivePrompt(out, { fairPolicy: true })!;
+  assert.doesNotMatch(fair, /test_widget_visible/);
+  assert.match(fair, /candidate file "widget" overlaps withheld benchmark test-expectation metadata/);
+  assert.deepEqual(out.ruleOutConflicts[0]!.overlaps, [
+    { what: "file", token: "widget", against: "test_expectation" },
+  ]);
+});
+
 test("M16: grounded rule-out with no test conflict still suppresses (ruledOut)", () => {
   const out = computePivotInspectionCompliance({
     enabled: true,

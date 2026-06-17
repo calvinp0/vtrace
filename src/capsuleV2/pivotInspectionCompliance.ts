@@ -67,14 +67,40 @@ export interface ComplianceTestExpectation {
   problemStatementExcerpt?: string;
 }
 
+/**
+ * A single label-free overlap fact behind a rule-out conflict: which candidate token
+ * (the candidate's own symbol or file-stem) overlapped, and against what KIND of
+ * withheld evidence. This carries NO evaluator test label, so it is safe to render into
+ * a fair-verification prompt (M28.2). The literal test label lives only in `evidence`.
+ */
+export interface RuleOutConflictOverlap {
+  /** Whether the candidate's symbol or its file-stem produced the overlap. */
+  what: "symbol" | "file";
+  /** The overlapping candidate token (e.g. "unparse") — a candidate symbol, NOT a test label. */
+  token: string;
+  /** Whether the overlap was against a (withheld) FAIL_TO_PASS test or the public problem statement. */
+  against: "test_expectation" | "problem_statement";
+}
+
 /** Detail for a grounded RULED_OUT the M16 guardrail refused to credit (test-anchored). */
 export interface RuleOutConflict {
   /** `path::symbol` of the conflicted candidate. */
   id: string;
   path: string;
   kind: "test_expectation_conflict";
-  /** Human-readable bullets naming the matched test(s) / why it conflicts. */
+  /**
+   * Human-readable bullets naming the matched test(s) / why it conflicts. These MAY
+   * contain literal evaluator test labels (e.g. `test_unparse[()-()]`) and are for
+   * internal report/telemetry only — NOT prompt-safe under the fair verification policy.
+   * Render prompts from `overlaps` (label-free) when fair policy is enabled. See M28.2.
+   */
   evidence: string[];
+  /**
+   * Structured, label-free overlap facts mirroring `evidence` (M28.2). Safe to render
+   * into a fair-policy prompt: keeps the candidate symbol/path overlap and the fact a
+   * conflict exists, without revealing the evaluator-selected test node.
+   */
+  overlaps: RuleOutConflictOverlap[];
 }
 
 /** The structured compliance verdict (the M13 `pivotInspectionCompliance` field). */
@@ -238,7 +264,7 @@ function testMethodTokens(failToPass: string): string[] {
 }
 
 /** A short, readable test name for prompts/reporting (drops the file-path segment). */
-function shortTestName(failToPass: string): string {
+export function shortTestName(failToPass: string): string {
   const parts = failToPass.split("::");
   return parts.length > 1 ? parts.slice(1).join("::") : failToPass;
 }
@@ -261,6 +287,7 @@ export function detectRuleOutConflict(
   if (candToks.size === 0) return null;
 
   const evidence: string[] = [];
+  const overlaps: RuleOutConflictOverlap[] = [];
   const failToPass = expectation.failToPass ?? [];
   for (const ftp of failToPass) {
     const methodToks = new Set(testMethodTokens(ftp));
@@ -268,6 +295,7 @@ export function detectRuleOutConflict(
       if (methodToks.has(ct)) {
         const what = symbolSet.has(ct) ? "symbol" : "file";
         evidence.push(`${what} "${ct}" matches FAIL_TO_PASS test ${shortTestName(ftp)}`);
+        overlaps.push({ what, token: ct, against: "test_expectation" });
         break;
       }
     }
@@ -283,6 +311,7 @@ export function detectRuleOutConflict(
     for (const ct of symbolToks) {
       if (psToks.has(ct)) {
         evidence.push(`symbol "${ct}" appears in the problem statement`);
+        overlaps.push({ what: "symbol", token: ct, against: "problem_statement" });
         break;
       }
     }
@@ -294,6 +323,7 @@ export function detectRuleOutConflict(
     path: candidate.path,
     kind: "test_expectation_conflict",
     evidence: evidence.slice(0, 3),
+    overlaps: overlaps.slice(0, 3),
   };
 }
 
@@ -435,6 +465,51 @@ export function parsePivotDecisionMarkers(text: string): PivotDecisionMarker[] {
 
 const CORRECTIVE_INTRO = "You have not completed the required pivot check.";
 
+/** Options for `buildCorrectivePrompt`. */
+export interface CorrectivePromptOptions {
+  /**
+   * M28.2: when true (the `agent-discovered-tests` fair verification policy), the
+   * rule-out conflict section is rendered WITHOUT literal evaluator test labels — it
+   * keeps the candidate symbol/path overlap and the fact a conflict exists, but the
+   * exact FAIL_TO_PASS test node is withheld. Default (false) preserves the prior
+   * diagnostic wording verbatim (the M16 conflict guardrail itself is unaffected).
+   */
+  fairPolicy?: boolean;
+}
+
+/**
+ * Render a single rule-out conflict's evidence bullets for the corrective prompt.
+ * Default: the literal `evidence` strings (which may name the evaluator test). Under
+ * the fair verification policy: label-free bullets derived from `overlaps`, plus an
+ * explicit "the exact evaluator test label is withheld" line. Never emits a test node
+ * under fair policy. Pure.
+ */
+function renderConflictEvidence(conflict: RuleOutConflict, fairPolicy: boolean): string[] {
+  if (!fairPolicy) {
+    return conflict.evidence.map((e) => `    - Conflict evidence: ${e}`);
+  }
+  const lines: string[] = [];
+  const seen = new Set<string>();
+  for (const o of conflict.overlaps ?? []) {
+    const where =
+      o.against === "problem_statement"
+        ? "the problem statement"
+        : "withheld benchmark test-expectation metadata";
+    const line = `    - Conflict evidence: candidate ${o.what} "${o.token}" overlaps ${where}.`;
+    if (!seen.has(line)) {
+      seen.add(line);
+      lines.push(line);
+    }
+  }
+  if (lines.length === 0) {
+    lines.push(
+      "    - Conflict evidence: candidate overlaps withheld benchmark test-expectation metadata.",
+    );
+  }
+  lines.push("    - The exact evaluator test label is withheld under the fair verification policy.");
+  return lines;
+}
+
 /**
  * Build the corrective follow-up prompt for a non-compliant run, listing ONLY the
  * missing/unclear candidates (never the edited/ruled-out ones). Returns `null` when
@@ -442,14 +517,20 @@ const CORRECTIVE_INTRO = "You have not completed the required pivot check.";
  *
  * The wording preserves the M11/M12 anti-over-edit guardrail — it must NEVER say
  * "edit all pivots". This protects against the seaborn-r1 over-edit failure mode.
+ *
+ * M28.2: pass `{ fairPolicy: true }` to withhold literal evaluator test labels from the
+ * rule-out conflict section (the M16 guardrail still detects + reports the conflict; only
+ * the PROMPT rendering is sanitized).
  */
 export function buildCorrectivePrompt(
   compliance: PivotInspectionCompliance,
+  opts: CorrectivePromptOptions = {},
 ): string | null {
   if (!compliance.enabled) return null;
   const outstanding = [...compliance.missing, ...compliance.unclear];
   if (outstanding.length === 0) return null;
 
+  const fairPolicy = opts.fairPolicy === true;
   const lines: string[] = [];
   lines.push(CORRECTIVE_INTRO);
   lines.push("");
@@ -466,12 +547,15 @@ export function buildCorrectivePrompt(
   if (compliance.ruleOutConflicts.length > 0) {
     lines.push("");
     lines.push(
-      "The first pass ruled out the following pivot(s), but that rule-out conflicts "
-      + "with the FAIL_TO_PASS/test expectation:",
+      fairPolicy
+        ? "The first pass ruled out the following pivot(s), but that rule-out conflicts "
+          + "with the (withheld) benchmark test expectation:"
+        : "The first pass ruled out the following pivot(s), but that rule-out conflicts "
+          + "with the FAIL_TO_PASS/test expectation:",
     );
     for (const conflict of compliance.ruleOutConflicts) {
       lines.push(`  - Candidate: ${conflict.id}`);
-      for (const e of conflict.evidence) lines.push(`    - Conflict evidence: ${e}`);
+      for (const line of renderConflictEvidence(conflict, fairPolicy)) lines.push(line);
     }
     lines.push("");
     lines.push("Reconsider these pivots using the source excerpt and test expectation.");

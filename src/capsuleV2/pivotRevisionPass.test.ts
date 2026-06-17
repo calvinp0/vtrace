@@ -25,10 +25,12 @@ import {
   decideReplacement,
   outstandingCount,
   noRunRecord,
+  assertNoWithheldTestLabels,
   REVISION_ARTIFACT_FILES,
   MAX_EXCERPT_CANDIDATES,
   MAX_EXCERPT_LINES,
   MAX_EXCERPT_BULLETS,
+  type RevisionTestExpectation,
 } from "./pivotRevisionPass";
 
 function pv(filePath: string, symbol: string): ContractPivotView {
@@ -391,6 +393,130 @@ test("no-run record works without M15 extras", () => {
   const rec = noRunRecord("revision-pass flag off", PATCH, compliant());
   assert.equal(rec.ran, false);
   assert.equal(rec.originalPatch, PATCH);
+});
+
+// ===== M28.2 — fair-policy revision prompt withholds literal evaluator test labels =====
+
+// A conflicted verdict: the agent ruled out a STRONGLY test-anchored pivot, which the M16
+// guardrail refuses to credit (so the conflict, with a literal test label internally, is
+// carried into the corrective prompt). Mirrors the live sphinx-7462 leak.
+function conflictedCompliance(failToPass: readonly string[]) {
+  return computePivotInspectionCompliance({
+    enabled: true,
+    contract: buildPivotInspectionContract(
+      [pv("a/lead.py", "lead"), pv("sphinx/pycode/ast.py", "unparse")],
+      [],
+    ),
+    editedFiles: ["a/lead.py"],
+    inspectedFiles: ["sphinx/pycode/ast.py"],
+    decisions: [
+      { path: "sphinx/pycode/ast.py", decision: "RULED_OUT", evidence: "the join is empty-safe so no edit is required" },
+    ],
+    testExpectation: { failToPass },
+  });
+}
+
+function expectationOf(failToPass: readonly string[]): RevisionTestExpectation {
+  return buildTestExpectation(failToPass, null);
+}
+
+// M28.2-1. Default / "none" policy still leaks the literal label (existing behavior unchanged).
+test("M28.2: default revision prompt still contains the literal conflict test label", () => {
+  const ftp = ["tests/test_pycode_ast.py::test_unparse[()-()]"];
+  const prompt = buildRevisionPrompt({
+    complianceBefore: conflictedCompliance(ftp),
+    currentPatch: PATCH,
+    testExpectation: expectationOf(ftp),
+  });
+  assert.match(prompt, /test_unparse\[\(\)-\(\)\]/);
+  assert.match(prompt, /FAIL_TO_PASS:/);
+});
+
+// M28.2-2. Fair policy suppresses the FAIL_TO_PASS list AND the conflict-evidence test node.
+test("M28.2: fair-policy revision prompt suppresses test_unparse[()-()] and the FAIL_TO_PASS list", () => {
+  const ftp = ["tests/test_pycode_ast.py::test_unparse[()-()]"];
+  const prompt = buildRevisionPrompt({
+    complianceBefore: conflictedCompliance(ftp),
+    currentPatch: PATCH,
+    testExpectation: expectationOf(ftp),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.doesNotMatch(prompt, /test_unparse/);
+  assert.doesNotMatch(prompt, /test_unparse\[\(\)-\(\)\]/);
+  assert.doesNotMatch(prompt, /^FAIL_TO_PASS:/m);
+  assert.doesNotMatch(prompt, /matches FAIL_TO_PASS test/);
+});
+
+// M28.2-3. Fair policy still includes the candidate symbol/path and the fact a conflict exists.
+test("M28.2: fair-policy revision prompt keeps candidate symbol/path and conflict existence", () => {
+  const ftp = ["tests/test_pycode_ast.py::test_unparse[()-()]"];
+  const prompt = buildRevisionPrompt({
+    complianceBefore: conflictedCompliance(ftp),
+    currentPatch: PATCH,
+    testExpectation: expectationOf(ftp),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.match(prompt, /Candidate: sphinx\/pycode\/ast\.py::unparse/);
+  assert.match(prompt, /candidate symbol "unparse" overlaps withheld benchmark test-expectation metadata/);
+  assert.match(prompt, /rule-out conflicts with the \(withheld\) benchmark test expectation/);
+  assert.match(prompt, /labels are withheld under the fair verification policy/);
+});
+
+// M28.2-4. The other withheld node id family (test_parse_annotation) is also absent under fair policy.
+test("M28.2: fair-policy revision prompt suppresses test_parse_annotation", () => {
+  const ftp = [
+    "tests/test_domain_py.py::test_parse_annotation",
+    "tests/test_pycode_ast.py::test_unparse[()-()]",
+  ];
+  const prompt = buildRevisionPrompt({
+    complianceBefore: conflictedCompliance(ftp),
+    currentPatch: PATCH,
+    testExpectation: expectationOf(ftp),
+    verificationPolicy: "agent_discovered",
+  });
+  assert.doesNotMatch(prompt, /test_parse_annotation/);
+  assert.doesNotMatch(prompt, /test_unparse/);
+});
+
+// M28.2-5. assertNoWithheldTestLabels passes for a sanitized prompt and throws for a leaky one.
+test("M28.2: assertNoWithheldTestLabels guards full id and short ::leaf forms", () => {
+  const ftp = ["tests/test_pycode_ast.py::test_unparse[()-()]"];
+  const sanitized = buildRevisionPrompt({
+    complianceBefore: conflictedCompliance(ftp),
+    currentPatch: PATCH,
+    testExpectation: expectationOf(ftp),
+    verificationPolicy: "agent_discovered",
+  });
+  // The fair-policy build itself ran the assertion without throwing.
+  assert.doesNotThrow(() => assertNoWithheldTestLabels(sanitized, ftp));
+  // A prompt that leaks either the full id or the short leaf must throw.
+  assert.throws(() => assertNoWithheldTestLabels("ran tests/test_pycode_ast.py::test_unparse[()-()]", ftp), /leaked a withheld test label/);
+  assert.throws(() => assertNoWithheldTestLabels("ran test_unparse[()-()]", ftp), /leaked a withheld test label/);
+  // No withheld labels ⇒ no-op.
+  assert.doesNotThrow(() => assertNoWithheldTestLabels("anything", []));
+});
+
+// M28.2-6. Multiple withheld tests are all sanitized; unrelated repo paths/symbols are kept.
+test("M28.2: fair policy handles multiple withheld tests and preserves unrelated paths/symbols", () => {
+  const ftp = [
+    "tests/test_pycode_ast.py::test_unparse[()-()]",
+    "tests/test_domain_py.py::test_parse_annotation",
+  ];
+  const prompt = buildRevisionPrompt({
+    complianceBefore: conflictedCompliance(ftp),
+    currentPatch: PATCH,
+    testExpectation: expectationOf(ftp),
+    verificationPolicy: "agent_discovered",
+    sourceExcerpts: [
+      { path: "sphinx/pycode/ast.py", symbol: "unparse", excerpt: "def unparse(node):\n    return None", evidence: ["why surfaced: symbol match"] },
+    ],
+  });
+  // Withheld evaluator labels gone.
+  assert.doesNotMatch(prompt, /test_unparse/);
+  assert.doesNotMatch(prompt, /test_parse_annotation/);
+  // Unrelated repository path + candidate symbol still present (not over-sanitized).
+  assert.match(prompt, /sphinx\/pycode\/ast\.py/);
+  assert.match(prompt, /unparse/);
 });
 
 // replacement is conservative: only when the revised patch strictly improves compliance.
