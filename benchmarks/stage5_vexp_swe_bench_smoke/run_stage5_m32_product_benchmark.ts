@@ -185,7 +185,7 @@ function boolOrUnknown(v: unknown): Maybe<boolean> {
 // --- I/O ----------------------------------------------------------------------
 
 const RESULTS_DIR = path.join(import.meta.dir, "results");
-const RUNS_DIR = path.join(RESULTS_DIR, "runs");
+export const RUNS_DIR = path.join(RESULTS_DIR, "runs");
 const DEFAULT_DATASET =
   process.env.VEXP_DATA ?? "/home/calvin/code/vexp-swe-bench/data/swe-bench-100.jsonl";
 
@@ -222,7 +222,7 @@ async function readCanonicalResult(condDir: string): Promise<Record<string, unkn
   return rows.length ? rows[rows.length - 1] : null;
 }
 
-async function loadGold(datasetPath: string): Promise<Map<string, string[]>> {
+export async function loadGold(datasetPath: string): Promise<Map<string, string[]>> {
   const map = new Map<string, string[]>();
   if (!existsSync(datasetPath)) return map;
   const text = await readFile(datasetPath, "utf8").catch(() => "");
@@ -241,7 +241,7 @@ async function loadGold(datasetPath: string): Promise<Map<string, string[]>> {
   return map;
 }
 
-async function buildRecord(
+export async function buildRecord(
   short: string,
   instanceId: string,
   kind: string,
