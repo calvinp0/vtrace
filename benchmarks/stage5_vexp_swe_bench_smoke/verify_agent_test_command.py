@@ -62,6 +62,11 @@ def main() -> int:
     parser.add_argument("--timeout", type=int, default=900)
     parser.add_argument("--output", required=True, help="Path to write the JSON result.")
     parser.add_argument("--dataset", default="princeton-nlp/SWE-bench", help="Dataset name or path for make_test_spec.")
+    # Namespace selects the PREBUILT instance image on Docker Hub (TestSpec.is_remote_image ⇒
+    # build_container PULLS swebench/sweb.eval.<arch>.<id __→_1776_>:<tag> instead of building the
+    # base→env→instance chain locally). "swebench" matches the planner's derived expectedImageKey;
+    # pass "" to force a local build instead.
+    parser.add_argument("--namespace", default="swebench", help="Docker Hub namespace for the prebuilt instance image; empty string ⇒ build locally.")
     args = parser.parse_args()
 
     result: dict = {
@@ -91,10 +96,20 @@ def main() -> int:
             DOCKER_PATCH,
             DOCKER_USER,
             DOCKER_WORKDIR,
-            GIT_APPLY_CMDS,
             KEY_INSTANCE_ID,
             UTF8,
         )
+
+        # GIT_APPLY_CMDS moved out of `swebench.harness.constants` (it now lives in
+        # `swebench.harness.run_evaluation`, swebench >=4.x). We INLINE it rather than import
+        # from run_evaluation on purpose: that module transitively imports the grading path
+        # (get_eval_report / resolution scoring), which would violate this seam's non-oracle
+        # guarantee. The value is a stable 3-element ordered list of patch-apply fallbacks.
+        GIT_APPLY_CMDS = [
+            "git apply --verbose",
+            "git apply --verbose --reject",
+            "patch --batch --fuzz=5 -p1 -i",
+        ]
         from swebench.harness.docker_build import build_container  # type: ignore
         from swebench.harness.docker_utils import (  # type: ignore
             cleanup_container,
@@ -108,7 +123,8 @@ def main() -> int:
         # Resolve the instance + build its TestSpec (image/testbed identity). No grading data read.
         instances = load_swebench_dataset(args.dataset, instance_ids=[args.instance_id])
         instance = next(i for i in instances if i[KEY_INSTANCE_ID] == args.instance_id)
-        test_spec = make_test_spec(instance)
+        namespace = args.namespace or None
+        test_spec = make_test_spec(instance, namespace=namespace)
 
         run_id = f"vtrace-verify-{args.instance_id}"
         log_dir = Path("logs") / "verify" / args.instance_id
