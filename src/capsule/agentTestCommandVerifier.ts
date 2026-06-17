@@ -41,6 +41,46 @@ import type {
 export const VERIFY_MODE = "verify-agent-test-command" as const;
 
 // -------------------------------------------------------------------------------------------
+// Python interpreter resolution for the diagnostic seam.
+//
+// The seam script (`verify_agent_test_command.py`) imports the `docker` SDK, which is installed
+// in the vexp-swe-bench virtualenv — NOT necessarily in whatever bare `python` is first on PATH.
+// Prefer the venv interpreter when present so the seam imports resolve; otherwise fall back to
+// bare `python` (current behavior). PURE: path existence is supplied by the caller (no I/O here),
+// which keeps this unit-testable without Docker or a real filesystem.
+// -------------------------------------------------------------------------------------------
+
+export type PythonResolvedFrom = "vexp_venv" | "fallback_python";
+
+export interface ResolvedVerifierPython {
+  pythonCommand: string;
+  pythonCommandResolvedFrom: PythonResolvedFrom;
+}
+
+// Candidate interpreters under a vexp-swe-bench checkout, in preference order: POSIX venv first,
+// then the Windows layout. Joined with "/" — POSIX-correct here; the Windows candidate is a
+// best-effort convenience, not over-engineered cross-platform path handling.
+export function vexpVenvPythonCandidates(vexpSweBenchDir: string): string[] {
+  const base = vexpSweBenchDir.replace(/[/\\]+$/, "");
+  return [`${base}/.venv/bin/python`, `${base}/.venv/Scripts/python.exe`];
+}
+
+export function resolveVerifierPythonCommand(input: {
+  vexpSweBenchDir: string | null;
+  candidateExists: (absPath: string) => boolean;
+}): ResolvedVerifierPython {
+  const { vexpSweBenchDir, candidateExists } = input;
+  if (vexpSweBenchDir !== null && vexpSweBenchDir.length > 0) {
+    for (const candidate of vexpVenvPythonCandidates(vexpSweBenchDir)) {
+      if (candidateExists(candidate)) {
+        return { pythonCommand: candidate, pythonCommandResolvedFrom: "vexp_venv" };
+      }
+    }
+  }
+  return { pythonCommand: "python", pythonCommandResolvedFrom: "fallback_python" };
+}
+
+// -------------------------------------------------------------------------------------------
 // Command canonicalization: derive a SAFE command from the parsed framework + selected tests.
 // We NEVER execute the raw captured shell command (it may contain pipes/redirects/quirks).
 // -------------------------------------------------------------------------------------------
@@ -211,6 +251,10 @@ export interface AgentCommandVerification {
   commandCanonicalized: boolean;
   canonicalizationReason: string;
   expectedImageKey: string | null;
+  // Which Python interpreter shelled the seam, and how it was resolved (makes future
+  // ModuleNotFoundError-style seam failures explainable from the artifact alone).
+  pythonCommand: string;
+  pythonCommandResolvedFrom: PythonResolvedFrom;
   dockerStarted: boolean;
   commandExecuted: boolean;
   agentCommandVerification: AgentCommandVerificationDetail;
@@ -298,8 +342,13 @@ export function buildAgentCommandVerification(input: {
   canonicalization: CommandCanonicalization;
   execution: AgentCommandExecutionResult;
   provenanceContext: { injectedTestNames: readonly string[] | null; priorCommandText: readonly string[] };
+  // How the seam interpreter was resolved. Defaults to the bare-`python` fallback when the
+  // caller does not resolve one (keeps pure unit tests that don't care about it unchanged).
+  python?: ResolvedVerifierPython;
 }): AgentCommandVerification {
   const { plan, canonicalization, execution } = input;
+  const python: ResolvedVerifierPython =
+    input.python ?? { pythonCommand: "python", pythonCommandResolvedFrom: "fallback_python" };
   const framework = plan.commandFramework ?? "unknown";
   const phase = phaseForCommandSource(plan.commandSource);
 
@@ -392,6 +441,8 @@ export function buildAgentCommandVerification(input: {
     commandCanonicalized: canonicalization.commandCanonicalized,
     canonicalizationReason: canonicalization.canonicalizationReason,
     expectedImageKey: plan.imagePlan.expectedImageKey,
+    pythonCommand: python.pythonCommand,
+    pythonCommandResolvedFrom: python.pythonCommandResolvedFrom,
     dockerStarted: execution.dockerStarted,
     commandExecuted: execution.commandRan,
     agentCommandVerification: {

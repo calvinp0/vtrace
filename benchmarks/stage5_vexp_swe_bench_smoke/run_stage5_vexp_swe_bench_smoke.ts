@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -57,6 +58,7 @@ import {
   decideVerificationEligibility,
   buildSkippedVerification,
   buildAgentCommandVerification,
+  resolveVerifierPythonCommand,
   type VerifyArtifact,
   type AgentCommandExecutionResult,
 } from "../../src/capsule/agentTestCommandVerifier";
@@ -3458,6 +3460,12 @@ export async function runVerifyAgentTestCommand(
     throw new Error("--mode verify-agent-test-command --allow-docker-verify requires --vexp-swe-bench-dir.");
   }
   const runner = deps.runAgentCommand ?? defaultAgentCommandRunner;
+  // Prefer the vexp-swe-bench venv interpreter (it has the `docker` SDK the seam imports); fall
+  // back to bare `python` when the venv is absent. Recorded in the artifact for explainability.
+  const python = resolveVerifierPythonCommand({
+    vexpSweBenchDir: config.vexpSweBenchDir,
+    candidateExists: existsSync,
+  });
   const execution = await runner({
     instanceId: plan.instanceId,
     patchPath: ctx.patchPath,
@@ -3465,7 +3473,7 @@ export async function runVerifyAgentTestCommand(
     timeoutSec: config.evalTimeout,
     outputPath: path.join(dir, "_agent_test_command_verify.exec.json"),
     vexpSweBenchDir: config.vexpSweBenchDir,
-    pythonCommand: "python",
+    pythonCommand: python.pythonCommand,
   });
   const verification = buildAgentCommandVerification({
     plan,
@@ -3475,6 +3483,7 @@ export async function runVerifyAgentTestCommand(
       injectedTestNames: ctx.injectedTestNames,
       priorCommandText: ctx.priorCommandTextForSelected,
     },
+    python,
   });
   return finalize(verification, {
     stdout: execution.stdout,

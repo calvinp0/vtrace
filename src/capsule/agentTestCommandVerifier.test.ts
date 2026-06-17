@@ -4,6 +4,8 @@ import {
   buildSkippedVerification,
   canonicalizeCommand,
   decideVerificationEligibility,
+  resolveVerifierPythonCommand,
+  vexpVenvPythonCandidates,
   type AgentCommandExecutionResult,
 } from "./agentTestCommandVerifier";
 import type { AgentTestCommandPlan } from "./agentTestCommandPlanner";
@@ -338,6 +340,141 @@ describe("verifier — diagnostic record (no grading)", () => {
     for (const artifact of [verified, skipped]) {
       expect(artifact.replacementRecommended).toBe(false);
       expect(artifact.canonicalReplaced).toBe(false);
+    }
+  });
+});
+
+describe("verifier — Python interpreter resolution (M30.1)", () => {
+  const VEXP = "/home/calvin/code/vexp-swe-bench";
+  const venvPython = `${VEXP}/.venv/bin/python`;
+  const winPython = `${VEXP}/.venv/Scripts/python.exe`;
+
+  it("1. resolves <vexp-dir>/.venv/bin/python when it exists", () => {
+    const r = resolveVerifierPythonCommand({
+      vexpSweBenchDir: VEXP,
+      candidateExists: (p) => p === venvPython,
+    });
+    expect(r.pythonCommand).toBe(venvPython);
+    expect(r.pythonCommandResolvedFrom).toBe("vexp_venv");
+  });
+
+  it("1b. falls back to the Windows venv layout when only it exists", () => {
+    const r = resolveVerifierPythonCommand({
+      vexpSweBenchDir: VEXP,
+      candidateExists: (p) => p === winPython,
+    });
+    expect(r.pythonCommand).toBe(winPython);
+    expect(r.pythonCommandResolvedFrom).toBe("vexp_venv");
+    // POSIX candidate is preferred when both exist.
+    expect(vexpVenvPythonCandidates(VEXP)).toEqual([venvPython, winPython]);
+  });
+
+  it("2. falls back to bare \"python\" when no venv interpreter exists", () => {
+    const r = resolveVerifierPythonCommand({
+      vexpSweBenchDir: VEXP,
+      candidateExists: () => false,
+    });
+    expect(r.pythonCommand).toBe("python");
+    expect(r.pythonCommandResolvedFrom).toBe("fallback_python");
+  });
+
+  it("2b. falls back when the vexp dir is null/empty (never probes existence)", () => {
+    for (const dir of [null, ""]) {
+      const r = resolveVerifierPythonCommand({
+        vexpSweBenchDir: dir,
+        candidateExists: () => {
+          throw new Error("must not probe when no vexp dir");
+        },
+      });
+      expect(r.pythonCommand).toBe("python");
+      expect(r.pythonCommandResolvedFrom).toBe("fallback_python");
+    }
+  });
+
+  it("3. the verification artifact records pythonCommand + pythonCommandResolvedFrom", () => {
+    const resolved = resolveVerifierPythonCommand({
+      vexpSweBenchDir: VEXP,
+      candidateExists: (p) => p === venvPython,
+    });
+    const v = buildAgentCommandVerification({
+      plan: eligiblePlan(),
+      canonicalization: canonicalizeCommand({
+        capturedCommand: "pytest tests/test_x.py::test_y",
+        framework: "pytest",
+        selectedTests: ["tests/test_x.py::test_y"],
+      }),
+      execution: exec(),
+      provenanceContext: agentDiscoveredContext,
+      python: resolved,
+    });
+    expect(v.pythonCommand).toBe(venvPython);
+    expect(v.pythonCommandResolvedFrom).toBe("vexp_venv");
+
+    // Default when the caller resolves nothing: the bare-python fallback.
+    const dflt = buildAgentCommandVerification({
+      plan: eligiblePlan(),
+      canonicalization: canonicalizeCommand({
+        capturedCommand: "pytest tests/test_x.py::test_y",
+        framework: "pytest",
+        selectedTests: ["tests/test_x.py::test_y"],
+      }),
+      execution: exec(),
+      provenanceContext: agentDiscoveredContext,
+    });
+    expect(dflt.pythonCommand).toBe("python");
+    expect(dflt.pythonCommandResolvedFrom).toBe("fallback_python");
+  });
+
+  it("4. command construction is unchanged except for the interpreter fields", () => {
+    const args = {
+      plan: eligiblePlan(),
+      canonicalization: canonicalizeCommand({
+        capturedCommand: "pytest tests/test_x.py::test_y",
+        framework: "pytest",
+        selectedTests: ["tests/test_x.py::test_y"],
+      }),
+      execution: exec(),
+      provenanceContext: agentDiscoveredContext,
+    };
+    const fallback = buildAgentCommandVerification(args);
+    const venv = buildAgentCommandVerification({
+      ...args,
+      python: { pythonCommand: venvPython, pythonCommandResolvedFrom: "vexp_venv" },
+    });
+    // The executed/captured command and every non-interpreter field are identical.
+    expect(venv.executedCommand).toBe(fallback.executedCommand);
+    expect(venv.capturedCommand).toBe(fallback.capturedCommand);
+    const strip = (x: typeof venv) => {
+      const { pythonCommand, pythonCommandResolvedFrom, ...rest } = x;
+      return rest;
+    };
+    expect(strip(venv)).toEqual(strip(fallback));
+  });
+
+  it("5. introduces no oracle/grading tokens via the interpreter fields", () => {
+    const v = buildAgentCommandVerification({
+      plan: eligiblePlan(),
+      canonicalization: canonicalizeCommand({
+        capturedCommand: "pytest tests/test_x.py::test_y",
+        framework: "pytest",
+        selectedTests: ["tests/test_x.py::test_y"],
+      }),
+      execution: exec(),
+      provenanceContext: agentDiscoveredContext,
+      python: { pythonCommand: venvPython, pythonCommandResolvedFrom: "vexp_venv" },
+    });
+    const serialized = JSON.stringify(v);
+    for (const forbidden of [
+      "resolved",
+      "failToPass",
+      "passToPass",
+      "getEvalReport",
+      "get_eval_report",
+      "get_resolution_status",
+      "PASS_TO_PASS",
+      "FAIL_TO_PASS",
+    ]) {
+      expect(serialized.includes(forbidden)).toBe(false);
     }
   });
 });
