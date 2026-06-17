@@ -240,3 +240,209 @@ test("patch-state classifier never claims final-patch verification", () => {
   assert.equal(rev.patchState, "revision_phase_state");
   assert.equal(rev.canVerifyFinalPatch, false);
 });
+
+// ===== M23 — fair revision verification policy =====
+import {
+  fairProvenance,
+  classifyVerificationPatchState,
+  hasEnvironmentFailureMarkers,
+  assessFairVerification,
+  buildFairVerificationReport,
+  type TestCommandEvent,
+  type VerificationPolicy,
+} from "./toolOutputCapture";
+
+// A passing pytest event over a discovered test, used as the "best case" baseline.
+function eventOf(over: Partial<TestCommandEvent> = {}): TestCommandEvent {
+  return {
+    phase: "pivot_revision",
+    command: "pytest tests/test_z.py::test_w -xvs",
+    testFramework: "pytest",
+    selectedTests: ["tests/test_z.py::test_w"],
+    outputSummary: "1 passed in 0.10s",
+    exitCode: null,
+    success: true,
+    patchState: "revision_phase_before_revised_patch",
+    parsedOutcome: parsePytestOutcome("1 passed in 0.10s"),
+    ...over,
+  };
+}
+
+// M23-3 / M23-4. Exact FAIL_TO_PASS match ⇒ injected_metadata ⇒ NOT allowed for fair
+// verification, even under the opt-in policy.
+test("M23: FAIL_TO_PASS-matching selected test is injected_metadata and not fair", () => {
+  const a = assessFairVerification({
+    policy: "agent_discovered",
+    event: eventOf({ selectedTests: ["tests/test_domain_py.py::test_parse_annotation"] }),
+    injectedTestNames: ["tests/test_domain_py.py::test_parse_annotation"],
+    priorCommandText: ["Read sphinx/domains/python.py", "git diff"], // no discovery of the test
+    editToolBeforeTest: true,
+  });
+  assert.equal(a.verificationProvenance.classification, "injected_metadata");
+  assert.equal(a.verificationProvenance.allowedForFairVerification, false);
+  assert.ok(typeof a.verificationProvenance.disallowReason === "string");
+  assert.equal(a.fairVerificationUsable, false);
+  assert.ok(a.fairVerificationBlockers.some((b) => b.includes("injected_metadata")));
+});
+
+// M23-4 (unit). fairProvenance maps the four classes to the right allow flag.
+test("M23: fairProvenance allows only agent_discovered", () => {
+  assert.equal(
+    fairProvenance({ classification: "agent_discovered", evidence: [] }).allowedForFairVerification,
+    true,
+  );
+  for (const c of ["injected_metadata", "ambiguous", "unknown"] as const) {
+    const p = fairProvenance({ classification: c, evidence: [] });
+    assert.equal(p.allowedForFairVerification, false);
+    assert.ok(p.disallowReason && p.disallowReason.length > 0);
+  }
+});
+
+// M23-5. A test discovered via prior grep/read of the repo classifies as agent_discovered.
+test("M23: test discovered by prior repo exploration classifies as agent_discovered", () => {
+  const a = assessFairVerification({
+    policy: "agent_discovered",
+    event: eventOf({ selectedTests: ["tests/test_z.py::test_w"] }),
+    injectedTestNames: ["tests/other.py::test_other"], // does NOT match the selected test
+    priorCommandText: ["grep -rn test_w tests/test_z.py"], // discovery evidence
+    editToolBeforeTest: true,
+  });
+  assert.equal(a.verificationProvenance.classification, "agent_discovered");
+  assert.equal(a.verificationProvenance.allowedForFairVerification, true);
+  assert.ok(a.verificationProvenance.evidence.length > 0);
+});
+
+// M23-6. Ambiguous provenance (matches injected AND discovered) ⇒ not allowed.
+test("M23: ambiguous provenance is not allowed for fair verification", () => {
+  const a = assessFairVerification({
+    policy: "agent_discovered",
+    event: eventOf({ selectedTests: ["tests/test_z.py::test_w"] }),
+    injectedTestNames: ["tests/test_z.py::test_w"], // matches
+    priorCommandText: ["grep -rn test_w tests/test_z.py"], // also discovered ⇒ ambiguous
+    editToolBeforeTest: true,
+  });
+  assert.equal(a.verificationProvenance.classification, "ambiguous");
+  assert.equal(a.verificationProvenance.allowedForFairVerification, false);
+  assert.equal(a.fairVerificationUsable, false);
+});
+
+// M23-7. Parsed outcome passed + agent_discovered, but patch-state cannot verify the final
+// patch (no proof) ⇒ still NOT usable.
+test("M23: passed + agent_discovered but unverifiable patch-state is not usable", () => {
+  const a = assessFairVerification({
+    policy: "agent_discovered",
+    event: eventOf(), // 1 passed, discovered below
+    injectedTestNames: null,
+    priorCommandText: ["grep -rn test_w tests/test_z.py"],
+    editToolBeforeTest: true,
+  });
+  assert.equal(a.verificationProvenance.classification, "agent_discovered");
+  assert.equal(a.verificationPatchState.canVerifyFinalPatch, false);
+  assert.equal(a.fairVerificationUsable, false);
+  assert.ok(a.fairVerificationBlockers.some((b) => b.includes("cannot verify the final patch")));
+});
+
+// M23-8. A failing/error parsed outcome blocks fair verification.
+test("M23: failing/error parsed outcome blocks fair verification", () => {
+  const failing = eventOf({
+    outputSummary: "1 failed in 0.10s",
+    parsedOutcome: parsePytestOutcome("=== FAILURES ===\n1 failed in 0.10s"),
+  });
+  const a = assessFairVerification({
+    policy: "agent_discovered",
+    event: failing,
+    injectedTestNames: null,
+    priorCommandText: ["grep -rn test_w tests/test_z.py"],
+    editToolBeforeTest: true,
+  });
+  assert.equal(a.fairVerificationUsable, false);
+  assert.ok(a.fairVerificationBlockers.some((b) => b.includes('not "passed"')));
+});
+
+// M23-9. Environment/import failure markers block fair verification.
+test("M23: env/import failure evidence blocks fair verification", () => {
+  assert.equal(hasEnvironmentFailureMarkers("ImportError: boom").found, true);
+  assert.equal(hasEnvironmentFailureMarkers("1 passed in 0.1s").found, false);
+  const importErr = eventOf({
+    outputSummary: "Traceback (most recent call last):\nImportError: cannot import name 'environmentfilter'",
+    parsedOutcome: parsePytestOutcome("Traceback (most recent call last):\nImportError: x"),
+  });
+  const a = assessFairVerification({
+    policy: "agent_discovered",
+    event: importErr,
+    injectedTestNames: null,
+    priorCommandText: ["grep -rn test_w tests/test_z.py"],
+    editToolBeforeTest: true,
+  });
+  assert.equal(a.fairVerificationUsable, false);
+  assert.ok(a.fairVerificationBlockers.some((b) => b.includes("environment/import")));
+});
+
+// M23-10. final_patch_verified is NEVER emitted without explicit proof+evidence.
+test("M23: final_patch_verified requires explicit proof", () => {
+  const noProof = classifyVerificationPatchState({ phase: "pivot_revision", editToolBeforeTest: true });
+  assert.equal(noProof.classification, "revision_phase_state");
+  assert.equal(noProof.canVerifyFinalPatch, false);
+
+  const emptyEvidence = classifyVerificationPatchState({
+    phase: "pivot_revision",
+    editToolBeforeTest: true,
+    finalPatchProof: { applied: true, evidence: ["  "] },
+  });
+  assert.notEqual(emptyEvidence.classification, "final_patch_verified");
+  assert.equal(emptyEvidence.canVerifyFinalPatch, false);
+
+  const proven = classifyVerificationPatchState({
+    phase: "pivot_revision",
+    editToolBeforeTest: true,
+    finalPatchProof: { applied: true, evidence: ["installed revised patch, then ran the test"] },
+  });
+  assert.equal(proven.classification, "final_patch_verified");
+  assert.equal(proven.canVerifyFinalPatch, true);
+});
+
+// M23-11. Existing additive test-command artifacts stay backward compatible: deriveTestCommands
+// output shape is unchanged (no fair-verification fields leaked into it).
+test("M23: deriveTestCommands output shape is unchanged (backward compatible)", () => {
+  const calls = parseEnrichedToolCalls(streamWith("pytest tests/test_x.py::test_y", "1 passed", false), "first_pass");
+  const events = deriveTestCommands(calls);
+  assert.equal(events.length, 1);
+  assert.deepEqual(
+    Object.keys(events[0]!).sort(),
+    ["command", "exitCode", "outputSummary", "parsedOutcome", "patchState", "phase", "selectedTests", "success", "testFramework"],
+  );
+});
+
+// M23: policy=none always blocks (default behavior carries no fair-verification claim).
+test("M23: policy=none yields a not-enabled blocker and is never usable", () => {
+  const a = assessFairVerification({
+    policy: "none",
+    event: eventOf(),
+    injectedTestNames: null,
+    priorCommandText: ["grep -rn test_w tests/test_z.py"],
+    editToolBeforeTest: true,
+  });
+  assert.equal(a.verificationPolicy, "none");
+  assert.equal(a.fairVerificationUsable, false);
+  assert.ok(a.fairVerificationBlockers.some((b) => b.includes("policy not enabled")));
+});
+
+// M23: buildFairVerificationReport wires prior in-phase exploration into provenance.
+test("M23: buildFairVerificationReport derives prior-exploration context per phase", () => {
+  const lines = [
+    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id: "g1", name: "Bash", input: { command: "grep -rn test_w tests/test_z.py" } }] } }),
+    JSON.stringify({ type: "user", message: { content: [{ type: "tool_result", tool_use_id: "g1", content: "tests/test_z.py:10:def test_w" }] } }),
+    JSON.stringify({ type: "assistant", message: { content: [{ type: "tool_use", id: "t1", name: "Bash", input: { command: "pytest tests/test_z.py::test_w -xvs" } }] } }),
+    JSON.stringify({ type: "user", message: { content: [{ type: "tool_result", tool_use_id: "t1", content: "1 passed in 0.1s" }] } }),
+  ].join("\n");
+  const calls = parseEnrichedToolCalls(lines, "pivot_revision");
+  const report = buildFairVerificationReport({ calls, policy: "agent_discovered", injectedTestNames: null });
+  assert.equal(report.length, 1);
+  assert.equal(report[0]!.assessment.verificationProvenance.classification, "agent_discovered");
+  assert.ok(report[0]!.priorCommandText.some((c) => c.includes("grep")));
+  // Patch-state still cannot verify the final patch ⇒ not usable today.
+  assert.equal(report[0]!.assessment.fairVerificationUsable, false);
+});
+
+const _policyTypeCheck: VerificationPolicy = "agent_discovered";
+void _policyTypeCheck;

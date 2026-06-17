@@ -162,16 +162,33 @@ export function buildTestExpectation(
   return { failToPass: [], source: "unavailable" };
 }
 
-function renderTestExpectation(expectation: RevisionTestExpectation | undefined): string[] {
+// M23: under the opt-in agent-discovered fair test policy we must NOT inject the literal
+// FAIL_TO_PASS test names into the prompt (they are hidden evaluator labels the agent would
+// not have in a deployed run). `omitInjectedTestNames` suppresses the literal name list while
+// keeping the public problem-statement excerpt, which is legitimate context.
+function renderTestExpectation(
+  expectation: RevisionTestExpectation | undefined,
+  opts: { omitInjectedTestNames?: boolean } = {},
+): string[] {
   if (!expectation || expectation.source === "unavailable") return [];
   const lines: string[] = ["", "## Test expectation", ""];
   if (expectation.failToPass.length > 0) {
-    lines.push("FAIL_TO_PASS:");
-    for (const t of expectation.failToPass) lines.push(`- ${t}`);
-    lines.push("");
-    lines.push(
-      "Use these tests to decide whether the missing/unclear pivot affects the required behavior.",
-    );
+    if (opts.omitInjectedTestNames) {
+      lines.push(
+        "Benchmark/evaluator test labels are withheld under the fair verification policy.",
+      );
+      lines.push(
+        "Decide which behavior the missing/unclear pivot affects from the source/problem statement, "
+        + "and justify any test you run from your own repository exploration (see Fair verification below).",
+      );
+    } else {
+      lines.push("FAIL_TO_PASS:");
+      for (const t of expectation.failToPass) lines.push(`- ${t}`);
+      lines.push("");
+      lines.push(
+        "Use these tests to decide whether the missing/unclear pivot affects the required behavior.",
+      );
+    }
   } else if (expectation.problemStatementExcerpt) {
     lines.push("No FAIL_TO_PASS test names were available. Problem statement (excerpt):");
     lines.push(expectation.problemStatementExcerpt);
@@ -183,6 +200,27 @@ function renderTestExpectation(expectation: RevisionTestExpectation | undefined)
   return lines;
 }
 
+// M23 — opt-in fair verification instruction block. Asks the agent to discover/run the
+// smallest relevant repository test that it can JUSTIFY from its own exploration, never one
+// chosen merely because a hidden benchmark label named it. Conservative + honest by design:
+// it requires the agent to say so when no trustworthy test exists, to report environment
+// failures as such, and to never claim verification without passing command output.
+const FAIR_VERIFICATION_BLOCK: readonly string[] = [
+  "",
+  "## Fair verification (agent-discovered focused test)",
+  "",
+  "If feasible, discover and run the smallest relevant repository test after making the revision.",
+  "Do not run a test merely because a hidden benchmark/evaluator label says so.",
+  "Prefer tests you can justify from repository exploration:",
+  "  - test files you found",
+  "  - test names you searched/read",
+  "  - behavior described in source/docs/problem statement",
+  "  - nearby existing tests for the touched function/module",
+  "If no trustworthy focused test is discoverable, say so.",
+  "If the environment fails before the test runs, report it as an environment/import/dependency failure.",
+  "Do not claim the patch is verified unless the command output shows the test actually passed.",
+];
+
 export interface BuildRevisionPromptInput {
   complianceBefore: PivotInspectionCompliance;
   /** The first-pass unified diff. */
@@ -191,6 +229,14 @@ export interface BuildRevisionPromptInput {
   sourceExcerpts?: readonly RevisionSourceExcerpt[];
   /** Optional FAIL_TO_PASS / test expectation context. */
   testExpectation?: RevisionTestExpectation;
+  /**
+   * M23 opt-in fair verification policy. "none" (default / undefined) keeps M15/M16 prompt
+   * behavior unchanged. "agent_discovered" appends the fair-verification instruction block
+   * AND suppresses literal injected FAIL_TO_PASS test names (they are hidden evaluator labels).
+   * The M16 conflict guardrail in `buildCorrectivePrompt` still consults FAIL_TO_PASS to TRIGGER
+   * a revision — that is a trigger, not a verification claim — and is left intact.
+   */
+  verificationPolicy?: "none" | "agent_discovered";
 }
 
 /**
@@ -221,7 +267,9 @@ export function buildRevisionPrompt(input: BuildRevisionPromptInput): string {
     // Defensive: no outstanding candidates. Keep the wording aligned anyway.
     lines.push("VTRACE found no outstanding pivot decisions; keep the patch as-is.");
   }
-  lines.push(...renderTestExpectation(input.testExpectation));
+  const fairPolicy = input.verificationPolicy === "agent_discovered";
+  lines.push(...renderTestExpectation(input.testExpectation, { omitInjectedTestNames: fairPolicy }));
+  if (fairPolicy) lines.push(...FAIR_VERIFICATION_BLOCK);
   const excerpts = boundExcerpts(input.sourceExcerpts ?? []);
   if (excerpts.length > 0) {
     lines.push("");

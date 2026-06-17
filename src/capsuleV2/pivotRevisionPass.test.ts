@@ -209,6 +209,62 @@ test("revision prompt falls back to problem statement, then to nothing, when no 
   assert.match(p3, /You previously produced this patch\./);
 });
 
+// M23-1 — default mode (no policy / "none") leaves the revision prompt unchanged: FAIL_TO_PASS
+// names still appear and the fair-verification block is absent.
+test("M23: default mode leaves revision prompt behavior unchanged", () => {
+  const expectation = buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem");
+  const base = buildRevisionPrompt({ complianceBefore: nonCompliant(), currentPatch: PATCH, testExpectation: expectation });
+  const explicitNone = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: expectation,
+    verificationPolicy: "none",
+  });
+  // Omitting the policy and passing "none" produce the identical prompt.
+  assert.equal(base, explicitNone);
+  // FAIL_TO_PASS names are still injected; the fair-verification block is absent.
+  assert.match(base, /FAIL_TO_PASS:/);
+  assert.match(base, /tests\/test_x\.py::test_unparse/);
+  assert.doesNotMatch(base, /Fair verification/);
+});
+
+// M23-2 — the opt-in policy renders the discovery-based instruction AND suppresses literal
+// injected FAIL_TO_PASS test names (Option 1: do not put hidden evaluator labels in the prompt).
+test("M23: opt-in fair test policy renders discovery instruction and hides FAIL_TO_PASS names", () => {
+  const expectation = buildTestExpectation(["tests/test_x.py::test_unparse"], "some problem");
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: expectation,
+    verificationPolicy: "agent_discovered",
+  });
+  // The fair-verification discovery instruction is present.
+  assert.match(prompt, /## Fair verification \(agent-discovered focused test\)/);
+  assert.match(prompt, /discover and run the smallest relevant repository test/);
+  assert.match(prompt, /Do not run a test merely because a hidden benchmark\/evaluator label says so/);
+  assert.match(prompt, /Do not claim the patch is verified unless the command output shows the test actually passed/);
+  // Literal FAIL_TO_PASS names are NOT injected under the fair policy (Option 1).
+  assert.doesNotMatch(prompt, /FAIL_TO_PASS:/);
+  assert.doesNotMatch(prompt, /tests\/test_x\.py::test_unparse/);
+  assert.match(prompt, /labels are withheld under the fair verification policy/);
+  // Anti-over-edit guardrails (REVISION_RULES) are preserved.
+  assert.match(prompt, /Prefer the minimal final diff\./);
+});
+
+// M23 — the public problem-statement excerpt is legitimate context and is NOT suppressed by the
+// fair policy (only hidden FAIL_TO_PASS labels are).
+test("M23: fair policy keeps the public problem-statement excerpt", () => {
+  const fromProblem = buildTestExpectation([], "Empty tuple annotation crashes unparse with IndexError");
+  const prompt = buildRevisionPrompt({
+    complianceBefore: nonCompliant(),
+    currentPatch: PATCH,
+    testExpectation: fromProblem,
+    verificationPolicy: "agent_discovered",
+  });
+  assert.match(prompt, /Empty tuple annotation crashes/);
+  assert.match(prompt, /## Fair verification/);
+});
+
 // 11 — candidate excerpts are strictly bounded (count / lines / bullets).
 test("source excerpts are bounded to count, lines, and bullets", () => {
   const many = Array.from({ length: 6 }, (_, i) => ({

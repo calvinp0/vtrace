@@ -244,30 +244,38 @@ function patchStateForPhase(phase: RunPhase): PatchState {
     : "revision_phase_before_revised_patch";
 }
 
+// Derive a single structured test-command event from one enriched call, or null when the
+// call is not a known test command. Shared by `deriveTestCommands` and the M23 fair-
+// verification report so the event shape stays identical across both.
+function deriveTestCommandEvent(call: EnrichedToolCall): TestCommandEvent | null {
+  if (call.command === null || !isBashTool(call.tool)) return null;
+  const framework = classifyTestFramework(call.command);
+  if (framework === "unknown") return null;
+  const parsedOutcome =
+    framework === "pytest"
+      ? parsePytestOutcome(call.output, { truncated: call.truncated })
+      : { framework, status: "unknown" as const, evidence: ["no parser for framework"], confidence: "low" as const };
+  return {
+    phase: call.phase,
+    command: call.command,
+    testFramework: framework,
+    selectedTests: extractSelectedTests(call.command, framework),
+    outputSummary: call.outputSummary,
+    exitCode: call.exitCode,
+    success: call.success,
+    patchState: patchStateForPhase(call.phase),
+    parsedOutcome,
+  };
+}
+
 // Derive structured test-command events from enriched tool calls. One event per shell
 // call whose command classifies as a known test framework. patchState is conservative
 // (phase-derived "before" label) — we never assert a test ran against a final patch.
 export function deriveTestCommands(calls: readonly EnrichedToolCall[]): TestCommandEvent[] {
   const events: TestCommandEvent[] = [];
   for (const call of calls) {
-    if (call.command === null || !isBashTool(call.tool)) continue;
-    const framework = classifyTestFramework(call.command);
-    if (framework === "unknown") continue;
-    const parsedOutcome =
-      framework === "pytest"
-        ? parsePytestOutcome(call.output, { truncated: call.truncated })
-        : { framework, status: "unknown" as const, evidence: ["no parser for framework"], confidence: "low" as const };
-    events.push({
-      phase: call.phase,
-      command: call.command,
-      testFramework: framework,
-      selectedTests: extractSelectedTests(call.command, framework),
-      outputSummary: call.outputSummary,
-      exitCode: call.exitCode,
-      success: call.success,
-      patchState: patchStateForPhase(call.phase),
-      parsedOutcome,
-    });
+    const event = deriveTestCommandEvent(call);
+    if (event !== null) events.push(event);
   }
   return events;
 }
@@ -469,4 +477,223 @@ export function classifyTestPatchState(input: {
     canVerifyFinalPatch: false,
     evidence: ["no edit observed before the test; cannot verify any patched state"],
   };
+}
+
+// ===========================================================================================
+// M23 — fair revision verification policy (PURE, no fs/Docker/oracle).
+//
+// M22 left three honest sub-judgments (outcome / provenance / patch-state). This layer is the
+// opt-in `--revision-verification-policy agent-discovered-tests` decision surface: it composes
+// those sub-judgments into a SINGLE verdict (`fairVerificationUsable`) with an explicit blocker
+// list, and — crucially — refuses to treat injected FAIL_TO_PASS-matched tests as fair evidence.
+// It is SCAFFOLDING ONLY: it never adopts/rejects a patch and never makes the revision pass
+// run. On today's captures every event is expected to come back `fairVerificationUsable=false`.
+// ===========================================================================================
+
+// Which verification policy was in force for the run. "none" = default (M15/M16/M21/M22
+// behavior unchanged). "agent_discovered" = opt-in fair test policy (the prompt asked the
+// agent to discover/run a focused test from repo exploration, not injected labels).
+export type VerificationPolicy = "none" | "agent_discovered";
+
+// Provenance classification (from `classifyTestProvenance`) plus the fairness verdict: a test
+// only counts as fair evidence when the agent provably chose it itself.
+export interface VerificationProvenance {
+  classification: TestProvenanceClass;
+  evidence: string[];
+  allowedForFairVerification: boolean;
+  disallowReason?: string;
+}
+
+// Patch-state classification with the proof-gated `final_patch_verified` member. That member
+// is NEVER emitted from in-loop stream data alone — only when an explicit artifact proves the
+// command ran after the exact candidate/final patch was installed.
+export type VerificationPatchStateClass =
+  | "pre_patch_state"
+  | "after_observed_edit_state"
+  | "revision_phase_state"
+  | "final_patch_verified"
+  | "unknown";
+
+export interface VerificationPatchState {
+  classification: VerificationPatchStateClass;
+  canVerifyFinalPatch: boolean;
+  evidence: string[];
+}
+
+export interface FairVerificationAssessment {
+  verificationPolicy: VerificationPolicy;
+  verificationProvenance: VerificationProvenance;
+  verificationPatchState: VerificationPatchState;
+  fairVerificationUsable: boolean;
+  fairVerificationBlockers: string[];
+}
+
+// Wrap a raw provenance classification with the fairness verdict. Only `agent_discovered`
+// (the agent reached the test through its own exploration) is allowed; everything else —
+// injected_metadata, ambiguous, unknown — is disallowed with a reason. In particular an exact
+// FAIL_TO_PASS match classifies as injected_metadata ⇒ allowedForFairVerification=false.
+export function fairProvenance(p: TestProvenance): VerificationProvenance {
+  const allowed = p.classification === "agent_discovered";
+  return {
+    classification: p.classification,
+    evidence: [...p.evidence],
+    allowedForFairVerification: allowed,
+    ...(allowed
+      ? {}
+      : { disallowReason: `provenance "${p.classification}" is not provably agent-owned` }),
+  };
+}
+
+// Patch-state for fair verification. Defaults to the conservative M22 classifier; promotes to
+// `final_patch_verified` ONLY when `finalPatchProof.applied` is true AND carries evidence (an
+// artifact proving the test ran against the installed final/revised patch). Without that proof
+// the state stays "before"/phase-derived and `canVerifyFinalPatch=false` — no overclaiming.
+export function classifyVerificationPatchState(input: {
+  phase: RunPhase;
+  editToolBeforeTest: boolean;
+  finalPatchProof?: { applied: boolean; evidence?: readonly string[] };
+}): VerificationPatchState {
+  const proof = input.finalPatchProof;
+  if (proof?.applied === true) {
+    const evidence = proof.evidence ? proof.evidence.filter((e) => e.trim().length > 0) : [];
+    if (evidence.length > 0) {
+      return { classification: "final_patch_verified", canVerifyFinalPatch: true, evidence: [...evidence] };
+    }
+    // Claimed but unproven (no evidence) ⇒ refuse to emit final_patch_verified; fall through.
+  }
+  const base = classifyTestPatchState({ phase: input.phase, editToolBeforeTest: input.editToolBeforeTest });
+  return {
+    classification: base.patchState,
+    canVerifyFinalPatch: base.canVerifyFinalPatch,
+    evidence: [...base.evidence],
+  };
+}
+
+// Environment/import/dependency failure markers — a test that never executed (import error,
+// failed collection, internal error) yields no verification signal regardless of exit status.
+const ENVIRONMENT_FAILURE_MARKERS = [
+  "ImportError",
+  "ModuleNotFoundError",
+  "No module named",
+  "errors during collection",
+  "INTERNALERROR",
+  "Traceback (most recent call last)",
+];
+
+export function hasEnvironmentFailureMarkers(text: string | null): { found: boolean; markers: string[] } {
+  if (text === null || text.trim().length === 0) return { found: false, markers: [] };
+  const markers = ENVIRONMENT_FAILURE_MARKERS.filter((m) => text.includes(m));
+  return { found: markers.length > 0, markers };
+}
+
+// Compose the three M22 sub-judgments + the policy into one fair-verification verdict.
+// `fairVerificationUsable` is true ONLY when ALL hold: the opt-in policy is enabled, the test
+// provenance is agent_discovered, the parsed outcome is `passed`, the patch state proves
+// final/revised-patch verification, and no environment/import failure markers are present.
+// Each failing condition appends a human-readable blocker; an empty blocker list ⇒ usable.
+export function assessFairVerification(input: {
+  policy: VerificationPolicy;
+  event: TestCommandEvent;
+  injectedTestNames: readonly string[] | null;
+  priorCommandText: readonly string[];
+  editToolBeforeTest: boolean;
+  finalPatchProof?: { applied: boolean; evidence?: readonly string[] };
+}): FairVerificationAssessment {
+  const { policy, event } = input;
+  const provenance = fairProvenance(
+    classifyTestProvenance({
+      selectedTests: event.selectedTests,
+      injectedTestNames: input.injectedTestNames,
+      priorCommandText: input.priorCommandText,
+    }),
+  );
+  const patchState = classifyVerificationPatchState({
+    phase: event.phase,
+    editToolBeforeTest: input.editToolBeforeTest,
+    finalPatchProof: input.finalPatchProof,
+  });
+  const env = hasEnvironmentFailureMarkers(
+    [event.outputSummary ?? "", ...event.parsedOutcome.evidence].join("\n"),
+  );
+
+  const blockers: string[] = [];
+  if (policy !== "agent_discovered") {
+    blockers.push("fair verification policy not enabled (policy=none)");
+  }
+  if (!provenance.allowedForFairVerification) {
+    blockers.push(`provenance "${provenance.classification}" is not allowed for fair verification`);
+  }
+  if (event.parsedOutcome.status !== "passed") {
+    blockers.push(`parsed outcome is "${event.parsedOutcome.status}" (not "passed")`);
+  }
+  if (!patchState.canVerifyFinalPatch) {
+    blockers.push(`patch state "${patchState.classification}" cannot verify the final patch`);
+  }
+  if (env.found) {
+    blockers.push(`environment/import failure markers present: ${env.markers.join(", ")}`);
+  }
+
+  return {
+    verificationPolicy: policy,
+    verificationProvenance: provenance,
+    verificationPatchState: patchState,
+    fairVerificationUsable: blockers.length === 0,
+    fairVerificationBlockers: blockers,
+  };
+}
+
+// Per-test-command fair-verification report row: the derived event plus its assessment and
+// the in-phase context the assessment was computed from (so the artifact is self-describing).
+export interface TestCommandVerification {
+  phase: RunPhase;
+  command: string;
+  selectedTests: string[];
+  parsedOutcome: ParsedTestOutcome;
+  priorCommandText: string[];
+  editToolBeforeTest: boolean;
+  assessment: FairVerificationAssessment;
+}
+
+// Build per-test-command fair-verification assessments from the ORDERED enriched calls.
+// For each test command, `priorCommandText` = the commands/paths of calls BEFORE it in the
+// SAME phase (the agent's exploration the test name could legitimately have come from), and
+// `editToolBeforeTest` = any edit/write-category call before it in the same phase. PURE; reads
+// no gold labels beyond the explicitly-passed `injectedTestNames` (which only ever DISALLOW).
+export function buildFairVerificationReport(input: {
+  calls: readonly EnrichedToolCall[];
+  policy: VerificationPolicy;
+  injectedTestNames: readonly string[] | null;
+}): TestCommandVerification[] {
+  const rows: TestCommandVerification[] = [];
+  for (let i = 0; i < input.calls.length; i++) {
+    const call = input.calls[i]!;
+    const event = deriveTestCommandEvent(call);
+    if (event === null) continue;
+    const priorCommandText: string[] = [];
+    let editToolBeforeTest = false;
+    for (let j = 0; j < i; j++) {
+      const prior = input.calls[j]!;
+      if (prior.phase !== call.phase) continue;
+      if (prior.command !== null) priorCommandText.push(prior.command);
+      if (prior.path !== null) priorCommandText.push(prior.path);
+      if (prior.category === "edit") editToolBeforeTest = true;
+    }
+    const assessment = assessFairVerification({
+      policy: input.policy,
+      event,
+      injectedTestNames: input.injectedTestNames,
+      priorCommandText,
+      editToolBeforeTest,
+    });
+    rows.push({
+      phase: event.phase,
+      command: event.command,
+      selectedTests: event.selectedTests,
+      parsedOutcome: event.parsedOutcome,
+      priorCommandText,
+      editToolBeforeTest,
+      assessment,
+    });
+  }
+  return rows;
 }

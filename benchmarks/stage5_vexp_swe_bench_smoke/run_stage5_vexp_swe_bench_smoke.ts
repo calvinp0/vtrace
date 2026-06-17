@@ -35,7 +35,9 @@ import {
 import {
   parseEnrichedToolCalls,
   deriveTestCommands,
+  buildFairVerificationReport,
   type RunPhase,
+  type VerificationPolicy,
 } from "../../src/capsule/toolOutputCapture";
 import {
   describeHardGateOutcome,
@@ -358,6 +360,13 @@ export interface CliConfig {
   // revised patch + prose and persist both. Off by default; a separate experimental
   // condition, never the product default.
   readonly pivotRevisionPass: boolean;
+  // M23 opt-in fair revision verification policy (--revision-verification-policy). Default
+  // "none" — M15/M16/M21/M22 behavior unchanged. "agent_discovered" makes the revision prompt
+  // ask the agent to discover/run a focused test it can JUSTIFY from repo exploration (not
+  // hidden FAIL_TO_PASS labels), suppresses literal injected FAIL_TO_PASS names from the
+  // prompt, and emits a per-test-command fair-verification provenance artifact. SCAFFOLDING
+  // ONLY: it never adopts/rejects a patch and never makes the revision pass run.
+  readonly revisionVerificationPolicy: VerificationPolicy;
   // Hard context-to-action gate (--pivot-check-gate). Default "off" — the existing
   // single-shot run path is unchanged. "hard" runs the two-phase enforcement
   // (Phase 1 inspect-only preflight → gate → Phase 2 solve only on pass) for the
@@ -848,6 +857,7 @@ const DEFAULT_CONFIG: CliConfig = {
   disablePivotCheck: false,
   pivotInspectionEnforcement: false,
   pivotRevisionPass: false,
+  revisionVerificationPolicy: "none",
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
   // off only the guard block).
   disableEditGuard: false,
@@ -2044,6 +2054,8 @@ export interface RevisionPassContext {
   sourceExcerpts?: readonly RevisionSourceExcerpt[];
   // M15 evidence enrichment, threaded into the prompt + persisted record.
   testExpectation?: RevisionTestExpectation;
+  // M23 opt-in fair verification policy; default "none" keeps the prompt unchanged.
+  verificationPolicy?: VerificationPolicy;
   firstPassAssistantTextPath?: string | null;
   firstPassPivotDecisions?: PivotDecisionMarker[];
   // Live: spawn the second harness run; returns the revised patch + prose + after-verdict.
@@ -2075,6 +2087,7 @@ export async function executePivotRevisionPass(ctx: RevisionPassContext): Promis
     currentPatch: ctx.originalPatch,
     sourceExcerpts: ctx.sourceExcerpts,
     testExpectation: ctx.testExpectation,
+    verificationPolicy: ctx.verificationPolicy ?? "none",
   });
   const second = await ctx.runSecondPass(prompt);
   // M18: compliance improvement only makes the revised patch a CANDIDATE. Whether it is
@@ -2190,7 +2203,17 @@ async function maybeRunPivotRevisionPass(
     const revisionResponse = assistantTextFromStream(phase.streamContent);
     // M21 (additive, best-effort): stable revision-phase stream copy + enriched tool calls
     // + derived test commands, written next to the other `_pivot_revision_*` artifacts.
-    await persistPhaseToolTelemetry(dir, phase.streamContent, "pivot_revision");
+    // M23: under the opt-in fair policy, also emit the fair-verification companion artifact.
+    // FAIL_TO_PASS names are passed only as DISALLOW evidence (an exact match ⇒ injected_
+    // metadata ⇒ not fair), never as an allowed verification basis.
+    await persistPhaseToolTelemetry(
+      dir,
+      phase.streamContent,
+      "pivot_revision",
+      config.revisionVerificationPolicy === "agent_discovered"
+        ? { policy: config.revisionVerificationPolicy, injectedTestNames: instance?.failToPass ?? null }
+        : undefined,
+    );
     const revisedEdited = editedFilesFromPatch(revisedPatch);
     const complianceAfter = computePivotInspectionCompliance({
       enabled: config.pivotInspectionEnforcement,
@@ -2223,6 +2246,7 @@ async function maybeRunPivotRevisionPass(
     outputDir: dir,
     sourceExcerpts,
     testExpectation,
+    verificationPolicy: config.revisionVerificationPolicy,
     firstPassAssistantTextPath,
     firstPassPivotDecisions,
     runSecondPass,
@@ -6164,11 +6188,14 @@ export const PHASE_TELEMETRY_FILES = {
     stream: "_agent_stream.first_pass.jsonl",
     toolCalls: "_tool_calls_with_outputs.json",
     testCommands: "_test_commands.json",
+    // M23 companion (only written when a fair verification policy context is supplied).
+    verification: "_first_pass_verification_policy.json",
   },
   pivot_revision: {
     stream: "_agent_stream.pivot_revision.jsonl",
     toolCalls: "_pivot_revision_tool_calls.json",
     testCommands: "_pivot_revision_test_commands.json",
+    verification: "_revision_verification_policy.json",
   },
 } as const;
 
@@ -6181,6 +6208,9 @@ export interface PhaseToolTelemetryMeta {
   testCommandCount: number;
   // Honest capture accounting: how many calls came back with any captured output.
   toolCallsWithOutput: number;
+  // M23 fair-verification companion artifact (null unless a policy context was supplied).
+  verificationFile: string | null;
+  fairVerificationUsableCount: number;
 }
 
 // Persist a stable per-phase copy of the raw agent stream plus the enriched tool-call and
@@ -6191,6 +6221,10 @@ export async function persistPhaseToolTelemetry(
   rawDir: string,
   streamContent: string,
   phase: RunPhase,
+  // M23 (optional, additive): when supplied, also emit a fair-verification companion artifact
+  // classifying each captured test command's provenance / patch-state / usability. Omitting it
+  // keeps the existing `_test_commands.json` artifacts byte-for-byte unchanged (default path).
+  fairVerification?: { policy: VerificationPolicy; injectedTestNames: readonly string[] | null },
 ): Promise<PhaseToolTelemetryMeta> {
   const names = PHASE_TELEMETRY_FILES[phase];
   const empty: PhaseToolTelemetryMeta = {
@@ -6201,6 +6235,8 @@ export async function persistPhaseToolTelemetry(
     toolCallCount: 0,
     testCommandCount: 0,
     toolCallsWithOutput: 0,
+    verificationFile: null,
+    fairVerificationUsableCount: 0,
   };
   try {
     if (streamContent.length === 0) return empty;
@@ -6216,6 +6252,23 @@ export async function persistPhaseToolTelemetry(
     const testCommands = deriveTestCommands(calls);
     const testCommandsFile = path.join(rawDir, names.testCommands);
     await writeFile(testCommandsFile, `${JSON.stringify(testCommands, null, 2)}\n`);
+    // 4) M23 fair-verification companion (only under an explicit policy context). NEVER mutates
+    // the artifacts above; written as a separate file so old consumers stay unaffected.
+    let verificationFile: string | null = null;
+    let fairVerificationUsableCount = 0;
+    if (fairVerification !== undefined) {
+      const report = buildFairVerificationReport({
+        calls,
+        policy: fairVerification.policy,
+        injectedTestNames: fairVerification.injectedTestNames,
+      });
+      fairVerificationUsableCount = report.filter((r) => r.assessment.fairVerificationUsable).length;
+      verificationFile = path.join(rawDir, names.verification);
+      await writeFile(
+        verificationFile,
+        `${JSON.stringify({ phase, policy: fairVerification.policy, report }, null, 2)}\n`,
+      );
+    }
     return {
       phase,
       phaseStreamFile,
@@ -6224,6 +6277,8 @@ export async function persistPhaseToolTelemetry(
       toolCallCount: calls.length,
       testCommandCount: testCommands.length,
       toolCallsWithOutput: calls.filter((c) => c.output !== null).length,
+      verificationFile,
+      fairVerificationUsableCount,
     };
   } catch {
     return empty;
@@ -8745,6 +8800,21 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--disable-pivot-check": config.disablePivotCheck = true; break;
       case "--pivot-inspection-enforcement": config.pivotInspectionEnforcement = true; break;
       case "--pivot-revision-pass": config.pivotRevisionPass = true; break;
+      case "--revision-verification-policy": {
+        const value = requireValue(argv, ++index, arg);
+        // Accept the canonical token, a hyphenated alias, and "none". Internal policy uses
+        // an underscore ("agent_discovered"); the CLI surface stays hyphenated.
+        if (value === "none") {
+          config.revisionVerificationPolicy = "none";
+        } else if (value === "agent-discovered-tests" || value === "agent-discovered") {
+          config.revisionVerificationPolicy = "agent_discovered";
+        } else {
+          throw new Error(
+            `--revision-verification-policy must be 'none' or 'agent-discovered-tests' (got '${value}')`,
+          );
+        }
+        break;
+      }
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
@@ -8811,6 +8881,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --disable-pivot-check                         force PIVOT_CHECK policy off for a controlled before run (compatibility; equivalent to --pivot-check-policy off)",
       "  --pivot-inspection-enforcement                M12 narrow enforcement: inject the '## Required pivot check before final patch' block (explicit EDITED/RULED OUT decision per non-lead pivot + co-edit candidate, with anti-over-edit guardrails) before the capsule body when a v2 pivot inspection contract exists. Off by default; independent of the legacy PIVOT_CHECK policy and --disable-pivot-check",
       "  --pivot-revision-pass                         M14 experimental: after the first patch, if --pivot-inspection-enforcement is on and the M13 compliance checker finds missing/unclear non-lead pivot / co-edit candidates, run ONE corrective second-pass `run` (same VTRACE_AGENT_* seam as the hard gate; no external harness internals touched) with a revision prompt, then persist the original + revised patch, prompt, response, and before/after compliance. Off by default; requires --pivot-inspection-enforcement; never the product default",
+      "  --revision-verification-policy none|agent-discovered-tests   M23 opt-in fair revision verification (default: none, unchanged behavior). 'agent-discovered-tests' makes the revision prompt ask the agent to discover/run a focused test it can justify from repo exploration (NOT hidden FAIL_TO_PASS labels), suppresses literal injected FAIL_TO_PASS names from the prompt, and emits a _revision_verification_policy.json provenance artifact. Scaffolding only — never adopts/rejects a patch and never makes the revision pass run",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",
       "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",
       "  --disable-tool-use-discipline                 benchmark/dev-only: suppress the shared anti-loop tool-use-discipline block injected into BOTH baseline and vtrace prompts (default: injected). Not a user-facing product mode",
