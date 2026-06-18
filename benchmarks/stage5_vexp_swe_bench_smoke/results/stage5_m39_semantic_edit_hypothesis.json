@@ -1,0 +1,84 @@
+{
+  "milestone": "M39",
+  "feature": "semantic edit hypothesis for same-name multi-module pivots",
+  "rendering_only": true,
+  "default_off": true,
+  "env_flag": "VTRACE_ENABLE_SEMANTIC_EDIT_HYPOTHESIS",
+  "env_truthy_values": ["1", "true", "on", "yes"],
+  "heading": "## Semantic Edit Hypothesis",
+  "code_changed": true,
+  "live_agents_run": false,
+  "docker_run": false,
+  "canonical_eval_run": false,
+  "triggering_rule": {
+    "operation_like_name": "transformation/serialization/round-trip lexicon or to_/from_/as_ shape; dunders excluded",
+    "min_distinct_files": 2,
+    "defined_names_source": "candidate symbol + def/class scanned from inlined source body (catches nested def unparse)",
+    "requires_pivot_file": true,
+    "requires_second_distinct_file": true,
+    "relevance_gate": "operation-like name OR context text mentions output/parse/render/serialization/round-trip",
+    "non_oracle": true,
+    "uses_gold_or_test_labels": false
+  },
+  "bounds": {
+    "max_groups": 2,
+    "max_files_per_group": 3,
+    "max_words": 150,
+    "no_source_excerpts": true
+  },
+  "sphinx_triggers": true,
+  "sphinx_targets": ["sphinx/domains/python.py::unparse", "sphinx/pycode/ast.py::unparse"],
+  "sphinx_empty_container_sentence": true,
+  "false_positive_audit": [
+    {"instance": "sphinx-doc__sphinx-7462", "triggers": true, "reason": "unparse defined in 2 files (one nested), operation-like, both pivots"},
+    {"instance": "mwaskom__seaborn-3187", "triggers": false, "reason": "no operation-like same-name across files"},
+    {"instance": "django-13195", "triggers": false, "reason": "same-file pivots; names differ"},
+    {"instance": "no-context/single-localized", "triggers": false, "reason": "NoContext early-return; single pivot / no second file -> null"}
+  ],
+  "accounting": {
+    "fields_added": ["semanticEditHypothesisTokens", "semanticEditHypothesisChars"],
+    "component_bucket": "semanticEditHypothesis",
+    "classifier_keyed_on": "## Semantic Edit Hypothesis",
+    "additive_only": true,
+    "rendered_sphinx_section_chars": 456,
+    "rendered_sphinx_section_est_tokens": 114,
+    "rendered_sphinx_section_words": 60,
+    "cost_when_absent": 0
+  },
+  "default_behavior_unchanged": true,
+  "retrieval_unchanged": true,
+  "candidates_unchanged": true,
+  "retrieval_eval": {
+    "stage5_retrieval_eval_expanded_csv": "byte-identical",
+    "stage5_retrieval_eval_cross_repo_30_csv": "byte-identical"
+  },
+  "verification": {
+    "typecheck_src": "pass",
+    "typecheck_benchmarks": "pass",
+    "bun_test": "2945 pass / 0 fail",
+    "git_diff_check": "clean",
+    "new_feature_tests": "15 pass"
+  },
+  "recommended_next_milestone": "A — M40 tiny live A/B on sphinx-7462 only (control=off, treatment=on; no revision/verifier/enforcement; canonical Docker eval after protocol; explicit approval required)",
+  "efficacy_caveat": "Agent's wrong rule-out was confident/source-grounded; only the oracle-leaking revision pass ever flipped it. M40 may show no behavior change; fallback is the gated revision branch, not more first-pass text.",
+  "files_changed": [
+    "src/capsuleV2/semanticEditHypothesis.ts (new)",
+    "src/capsuleV2/semanticEditHypothesis.test.ts (new)",
+    "src/capsuleV2/renderHuman.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m34_accounting.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m34_accounting_and_functional_actionability.ts"
+  ],
+  "constraints_respected": {
+    "stayed_on_main": true,
+    "no_productize": true,
+    "no_live_agents": true,
+    "no_docker": true,
+    "no_canonical_eval": true,
+    "no_pivot_revision_enabled": true,
+    "no_enforcement_enabled": true,
+    "no_retrieval_ranking_scoring_change": true,
+    "no_candidate_generation_change": true,
+    "no_raw_artifacts_staged": true
+  }
+}
+</content>

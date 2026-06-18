@@ -31,6 +31,7 @@ export type InjectedComponent =
   | "actionabilityHints"
   | "coeditHint"
   | "multiPivotActionPlan"
+  | "semanticEditHypothesis"
   | "benchmarkWrapper"
   | "unclassified";
 
@@ -65,6 +66,10 @@ export interface ProductV2Accounting {
   coeditHintTokens: number | null;
   /** chars/4 of the M35 Multi-Pivot Action Plan section (0 when it did not render). */
   multiPivotActionPlanTokens: number | null;
+  /** chars/4 of the M39 Semantic Edit Hypothesis section (0 when it did not render). */
+  semanticEditHypothesisTokens: number | null;
+  /** Raw character length of the M39 Semantic Edit Hypothesis section (0 when absent). */
+  semanticEditHypothesisChars: number | null;
   productAccountingTokens: number | null;
   manifestReferenceTokens: number | null;
   benchmarkWrapperTokens: number | null;
@@ -88,6 +93,9 @@ export function classifyInjectedHeading(headingRaw: string): InjectedComponent {
   // M35 action plan: check before the broad "co-edit" phrase test below so the
   // dedicated section is attributed to its own bucket, not folded into coeditHint.
   if (h.includes("multi-pivot action plan")) return "multiPivotActionPlan";
+  // M39 semantic edit hypothesis: check before the broad "co-edit" phrase test so the
+  // dedicated section is attributed to its own bucket, not folded into coeditHint.
+  if (h.includes("semantic edit hypothesis")) return "semanticEditHypothesis";
   if (h.includes("pivot neighborhood")) return "capsuleBody";
   if (h.includes("pivot inspection contract")) return "pivotContract";
   if (h.includes("actionability hint")) return "actionabilityHints";
@@ -147,6 +155,12 @@ function sumTokensFor(chunks: SectionChunk[], component: InjectedComponent): num
     .reduce((acc, c) => acc + estimateTokens(c.text), 0);
 }
 
+function sumCharsFor(chunks: SectionChunk[], component: InjectedComponent): number {
+  return chunks
+    .filter((c) => c.component === component)
+    .reduce((acc, c) => acc + c.text.length, 0);
+}
+
 /**
  * Build {@link ProductV2Accounting} from the captured injected snapshot text and
  * the legacy `capsuleEstimatedTokens`. `snapshot === null` means the policy did
@@ -168,6 +182,8 @@ export function buildProductV2Accounting(
       actionabilityHintsTokens: null,
       coeditHintTokens: null,
       multiPivotActionPlanTokens: null,
+      semanticEditHypothesisTokens: null,
+      semanticEditHypothesisChars: null,
       productAccountingTokens: null,
       manifestReferenceTokens: null,
       benchmarkWrapperTokens: null,
@@ -186,6 +202,8 @@ export function buildProductV2Accounting(
     actionabilityHintsTokens: sumTokensFor(chunks, "actionabilityHints"),
     coeditHintTokens: sumTokensFor(chunks, "coeditHint"),
     multiPivotActionPlanTokens: sumTokensFor(chunks, "multiPivotActionPlan"),
+    semanticEditHypothesisTokens: sumTokensFor(chunks, "semanticEditHypothesis"),
+    semanticEditHypothesisChars: sumCharsFor(chunks, "semanticEditHypothesis"),
     // No product-accounting or manifest text is injected into the prompt; these
     // live in side-car artifacts (`_product_v2_probe`, `_capsule_v2_manifest`),
     // so they contribute zero injected prompt tokens. Recorded explicitly.

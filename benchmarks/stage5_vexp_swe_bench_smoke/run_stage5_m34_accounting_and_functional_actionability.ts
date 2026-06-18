@@ -78,6 +78,7 @@ function uncountedComponents(a: ProductV2Accounting): string {
     ["actionabilityHints", a.actionabilityHintsTokens],
     ["coeditHint", a.coeditHintTokens],
     ["multiPivotActionPlan", a.multiPivotActionPlanTokens],
+    ["semanticEditHypothesis", a.semanticEditHypothesisTokens],
     ["benchmarkWrapper", a.benchmarkWrapperTokens],
   ];
   return parts

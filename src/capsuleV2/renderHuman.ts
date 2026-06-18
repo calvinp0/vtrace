@@ -15,6 +15,11 @@ import {
   buildPivotInspectionContract,
   renderPivotInspectionContractText,
 } from "./pivotInspectionContract";
+import {
+  buildSemanticEditHypothesis,
+  renderSemanticEditHypothesisText,
+  semanticEditHypothesisEnabled,
+} from "./semanticEditHypothesis";
 import { itemBlockText } from "./renderItem";
 import {
   CapsuleV2Mode,
@@ -52,6 +57,13 @@ export interface RenderCapsuleV2HumanOptions {
    * gates RENDERING ONLY — it changes no retrieval, ranking, pivots, or scoring.
    */
   enableMultiPivotActionPlan?: boolean;
+  /**
+   * Whether to render the M39 Semantic Edit Hypothesis section. Defaults to the
+   * `VTRACE_ENABLE_SEMANTIC_EDIT_HYPOTHESIS` env (DEFAULT OFF — opt-in until
+   * validated). Gates RENDERING ONLY — it changes no retrieval, ranking, pivots,
+   * co-edit detection, or scoring.
+   */
+  enableSemanticEditHypothesis?: boolean;
 }
 
 export function renderCapsuleV2Human(
@@ -61,6 +73,8 @@ export function renderCapsuleV2Human(
   const lines: string[] = [];
   const actionPlanEnabled =
     options?.enableMultiPivotActionPlan ?? multiPivotActionPlanEnabled();
+  const semanticHypothesisEnabled =
+    options?.enableSemanticEditHypothesis ?? semanticEditHypothesisEnabled();
   lines.push(`intent: ${result.intent} (${result.diagnostics.intent_confidence} confidence)`);
   if (result.diagnostics.intent_reason.length > 0) {
     lines.push(`intent_reason: ${result.diagnostics.intent_reason.join("; ")}`);
@@ -93,6 +107,24 @@ export function renderCapsuleV2Human(
       result.actionability_hints ?? [],
     );
     for (const line of renderMultiPivotActionPlanText(actionPlan)) {
+      lines.push(line);
+    }
+  }
+
+  // Semantic Edit Hypothesis (M39, DEFAULT OFF): when two surfaced candidates define
+  // the SAME operation-like name in DIFFERENT files, name them as paired
+  // implementations and warn that the second may avoid the crash yet still produce
+  // wrong output — verify output correctness, not crash avoidance. M38 found the
+  // sphinx-7462 failure is `seen_but_deemed_unnecessary`: the agent rules out the
+  // second `unparse` because `', '.join()` does not crash, missing that it renders
+  // the wrong text for an empty tuple. Generic obligation text (already saturated)
+  // did not help; this targets the faulty inference. Rendered in the top advisory
+  // cluster (before the bulky pivot bodies) so it survives char-budget truncation.
+  // Non-oracle: derived from candidate symbols + inlined source only. Gated OFF by
+  // default; changes no retrieval, ranking, pivots, or scoring.
+  if (semanticHypothesisEnabled) {
+    const hypothesis = buildSemanticEditHypothesis(result.pivots, result.support);
+    for (const line of renderSemanticEditHypothesisText(hypothesis)) {
       lines.push(line);
     }
   }
