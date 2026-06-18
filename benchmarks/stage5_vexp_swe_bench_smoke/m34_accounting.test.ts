@@ -101,8 +101,37 @@ describe("injected-context component accounting", () => {
     expect(classifyInjectedHeading("Multiple edit targets")).toBe("coeditHint");
     // M35 action plan attributes to its own bucket, not coeditHint.
     expect(classifyInjectedHeading("Multi-Pivot Action Plan")).toBe("multiPivotActionPlan");
+    // M39 / M41 sections each attribute to their own bucket, not coeditHint.
+    expect(classifyInjectedHeading("Semantic Edit Hypothesis")).toBe("semanticEditHypothesis");
+    expect(classifyInjectedHeading("Final Edit-Sufficiency Check")).toBe("editSufficiencyChecklist");
     expect(classifyInjectedHeading("STAGE5_TOKEN_DISCIPLINE")).toBe("benchmarkWrapper");
     expect(classifyInjectedHeading("Some future section")).toBe("unclassified");
+  });
+
+  it("3d. the M41 edit-sufficiency checklist is attributed its own (non-zero) tokens/chars", () => {
+    const withChecklist = [
+      "# vtrace indexed context",
+      "",
+      "## vtrace context",
+      "pivot: sphinx/domains/python.py::unparse",
+      "",
+      "## Final Edit-Sufficiency Check",
+      "Before finalizing the patch, revisit the semantic co-edit hypothesis.",
+      "- sphinx/domains/python.py::unparse",
+      "- sphinx/pycode/ast.py::unparse",
+      "- check whether it returns the correct output.",
+      "",
+      "## Instruction",
+      "Now implement the fix.",
+    ].join("\n");
+    const acc = buildProductV2Accounting(withChecklist, 50);
+    expect(acc.editSufficiencyChecklistTokens!).toBeGreaterThan(0);
+    expect(acc.editSufficiencyChecklistChars!).toBeGreaterThan(0);
+    // The dedicated bucket is NOT folded into coedit / multiple-edit-targets.
+    expect(acc.coeditHintTokens).toBe(0);
+    // A snapshot WITHOUT the section attributes zero (additive / backward compatible).
+    expect(buildProductV2Accounting(SNAPSHOT, 50).editSufficiencyChecklistTokens).toBe(0);
+    expect(buildProductV2Accounting(SNAPSHOT, 50).editSufficiencyChecklistChars).toBe(0);
   });
 
   it("3c. the M35 action-plan section is attributed its own (non-zero) tokens", () => {

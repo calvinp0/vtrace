@@ -40,6 +40,16 @@ export const SEMANTIC_EDIT_HYPOTHESIS_HEADING = "## Semantic Edit Hypothesis";
  *  flag is an explicit truthy value. Rendering-only; changes no retrieval/ranking. */
 export const SEMANTIC_EDIT_HYPOTHESIS_ENV = "VTRACE_ENABLE_SEMANTIC_EDIT_HYPOTHESIS";
 
+/** Heading marker for the M41 end-of-context edit-sufficiency checklist — exported so
+ *  the runner and the M34 accounting split can detect and attribute it. */
+export const EDIT_SUFFICIENCY_CHECKLIST_HEADING = "## Final Edit-Sufficiency Check";
+
+/** Env var that gates the M41 checklist. DEFAULT OFF — renders only on an explicit
+ *  truthy value. Rendering-only; changes no retrieval/ranking. SEPARATE from the M39
+ *  flag: the checklist reuses the SAME hypothesis builder output, so it can render
+ *  even when the top {@link SEMANTIC_EDIT_HYPOTHESIS_HEADING} section is disabled. */
+export const EDIT_SUFFICIENCY_CHECKLIST_ENV = "VTRACE_ENABLE_EDIT_SUFFICIENCY_CHECKLIST";
+
 // Bounds (M39 requirement): keep the whole section to a handful of lines.
 const MAX_GROUPS = 2; // at most 2 same-name symbol groups
 const MAX_FILES_PER_GROUP = 3; // at most 3 file::symbol targets per group
@@ -56,7 +66,25 @@ const MAX_FILES_PER_GROUP = 3; // at most 3 file::symbol targets per group
 export function semanticEditHypothesisEnabled(
   env: { [key: string]: string | undefined } = process.env,
 ): boolean {
-  const raw = env[SEMANTIC_EDIT_HYPOTHESIS_ENV];
+  return envFlagEnabled(env, SEMANTIC_EDIT_HYPOTHESIS_ENV);
+}
+
+/**
+ * Whether the M41 end-of-context edit-sufficiency checklist should render. DEFAULT
+ * OFF: only an explicit truthy value enables it. Gates RENDERING ONLY. This is the
+ * gate for the checklist section; the section additionally requires a buildable
+ * semantic hypothesis (≥1 paired-symbol group) — see {@link renderEditSufficiencyChecklistText}.
+ */
+export function editSufficiencyChecklistEnabled(
+  env: { [key: string]: string | undefined } = process.env,
+): boolean {
+  return envFlagEnabled(env, EDIT_SUFFICIENCY_CHECKLIST_ENV);
+}
+
+/** Shared default-off env-flag parse: true only for `1`/`true`/`on`/`yes` (case- and
+ *  whitespace-insensitive). Unset or anything else is false. */
+function envFlagEnabled(env: { [key: string]: string | undefined }, key: string): boolean {
+  const raw = env[key];
   if (raw === undefined) return false;
   const normalized = raw.trim().toLowerCase();
   return normalized === "1" || normalized === "true" || normalized === "on" || normalized === "yes";
@@ -276,6 +304,66 @@ export function renderSemanticEditHypothesisText(
   if (hyp.emptyContainerSignal) {
     lines.push(
       "For empty-container cases, a path can avoid crashing but still render the wrong text.",
+    );
+  }
+  return lines;
+}
+
+/**
+ * Render the M41 end-of-context edit-sufficiency checklist (decision-point wording),
+ * placed near the FINAL patch guidance — after the bulky pivot/support bodies, in
+ * contrast to {@link renderSemanticEditHypothesisText} which sits in the top advisory
+ * cluster. M40 found the top-placed hypothesis raised inspection but did not convert
+ * into the paired edit: the agent inspected the second implementation, then re-applied
+ * "no crash ⇒ no fix" at decision time. This checklist re-surfaces the same hypothesis
+ * at the moment the agent finalizes its edit set and forces an explicit edit-or-justify
+ * decision for the paired implementation — NON-ENFORCING (no machine-readable markers,
+ * no gate, no revision pass).
+ *
+ * Reuses the SAME {@link SemanticEditHypothesis} object as the top section — it does
+ * NOT re-detect. Returns an empty array when `hyp` is null (no paired-symbol group),
+ * so the checklist never renders on single-pivot / non-paired / no-context capsules.
+ *
+ * Non-oracle: keyed only off the operation name and `file::name` targets the builder
+ * derived from candidate symbols + inlined source. No gold files, no FAIL_TO_PASS /
+ * PASS_TO_PASS, no benchmark labels, no test names.
+ */
+export function renderEditSufficiencyChecklistText(
+  hyp: SemanticEditHypothesis | null,
+): string[] {
+  if (hyp === null) return [];
+
+  const operations = hyp.groups.map((group) => `\`${group.name}\``).join(", ");
+  const lines: string[] = [];
+  lines.push("");
+  lines.push(EDIT_SUFFICIENCY_CHECKLIST_HEADING);
+  lines.push("");
+  lines.push(
+    "Before finalizing the patch, revisit the semantic co-edit hypothesis. The surfaced "
+    + "pivots include same-name implementations across files:",
+  );
+  lines.push("");
+  for (const group of hyp.groups) {
+    for (const target of group.targets) {
+      lines.push(`- ${target}`);
+    }
+  }
+  lines.push("");
+  lines.push(
+    `- If you changed one implementation of ${operations}, decide whether the paired `
+    + "implementation(s) above also need an edit.",
+  );
+  lines.push(
+    "- Do not rule out a paired implementation only because it avoids the crash; check "
+    + "whether it returns the correct output.",
+  );
+  lines.push(
+    "- If a paired implementation is left unedited, state the concrete output-preserving reason.",
+  );
+  if (hyp.emptyContainerSignal) {
+    lines.push(
+      "- For empty-container inputs, a path can avoid crashing yet still render the wrong "
+      + 'text (e.g. an empty sequence rendering as "" instead of the correct token).',
     );
   }
   return lines;

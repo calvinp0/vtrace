@@ -17,6 +17,8 @@ import {
 } from "./pivotInspectionContract";
 import {
   buildSemanticEditHypothesis,
+  editSufficiencyChecklistEnabled,
+  renderEditSufficiencyChecklistText,
   renderSemanticEditHypothesisText,
   semanticEditHypothesisEnabled,
 } from "./semanticEditHypothesis";
@@ -64,6 +66,15 @@ export interface RenderCapsuleV2HumanOptions {
    * co-edit detection, or scoring.
    */
   enableSemanticEditHypothesis?: boolean;
+  /**
+   * Whether to render the M41 end-of-context edit-sufficiency checklist. Defaults to
+   * the `VTRACE_ENABLE_EDIT_SUFFICIENCY_CHECKLIST` env (DEFAULT OFF). SEPARATE from
+   * the M39 flag: when enabled the checklist renders near the FINAL patch guidance
+   * (after the pivot/support bodies) whenever the semantic hypothesis builder produces
+   * a paired-symbol group — even if the top M39 section is disabled. Gates RENDERING
+   * ONLY — it changes no retrieval, ranking, pivots, co-edit detection, or scoring.
+   */
+  enableEditSufficiencyChecklist?: boolean;
 }
 
 export function renderCapsuleV2Human(
@@ -75,6 +86,15 @@ export function renderCapsuleV2Human(
     options?.enableMultiPivotActionPlan ?? multiPivotActionPlanEnabled();
   const semanticHypothesisEnabled =
     options?.enableSemanticEditHypothesis ?? semanticEditHypothesisEnabled();
+  const checklistEnabled =
+    options?.enableEditSufficiencyChecklist ?? editSufficiencyChecklistEnabled();
+  // Build the semantic hypothesis at most ONCE, reused by both the top M39 section
+  // and the M41 end-of-context checklist (they must agree on the paired implementations).
+  // Skipped entirely when both flags are off, so default-off output is byte-identical.
+  const semanticHypothesis =
+    semanticHypothesisEnabled || checklistEnabled
+      ? buildSemanticEditHypothesis(result.pivots, result.support)
+      : null;
   lines.push(`intent: ${result.intent} (${result.diagnostics.intent_confidence} confidence)`);
   if (result.diagnostics.intent_reason.length > 0) {
     lines.push(`intent_reason: ${result.diagnostics.intent_reason.join("; ")}`);
@@ -123,8 +143,7 @@ export function renderCapsuleV2Human(
   // Non-oracle: derived from candidate symbols + inlined source only. Gated OFF by
   // default; changes no retrieval, ranking, pivots, or scoring.
   if (semanticHypothesisEnabled) {
-    const hypothesis = buildSemanticEditHypothesis(result.pivots, result.support);
-    for (const line of renderSemanticEditHypothesisText(hypothesis)) {
+    for (const line of renderSemanticEditHypothesisText(semanticHypothesis)) {
       lines.push(line);
     }
   }
@@ -254,6 +273,19 @@ export function renderCapsuleV2Human(
   for (const item of result.support) {
     lines.push("");
     lines.push(itemBlockText(item));
+  }
+
+  // M41 end-of-context edit-sufficiency checklist (DEFAULT OFF): rendered LAST — after
+  // the bulky pivot/support bodies, near the final patch decision — so it re-surfaces
+  // the semantic co-edit hypothesis at the moment the agent finalizes its edit set.
+  // M40 found the top-placed M39 hypothesis (above) raised inspection of the paired
+  // implementation but did not convert into the edit; this targets that decision point.
+  // Reuses the SAME hypothesis object; renders only when a paired-symbol group exists.
+  // Non-enforcing (no markers, no gate). Gated OFF by default; changes no retrieval.
+  if (checklistEnabled) {
+    for (const line of renderEditSufficiencyChecklistText(semanticHypothesis)) {
+      lines.push(line);
+    }
   }
 
   return lines.join("\n");

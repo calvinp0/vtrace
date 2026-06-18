@@ -32,6 +32,7 @@ export type InjectedComponent =
   | "coeditHint"
   | "multiPivotActionPlan"
   | "semanticEditHypothesis"
+  | "editSufficiencyChecklist"
   | "benchmarkWrapper"
   | "unclassified";
 
@@ -70,6 +71,10 @@ export interface ProductV2Accounting {
   semanticEditHypothesisTokens: number | null;
   /** Raw character length of the M39 Semantic Edit Hypothesis section (0 when absent). */
   semanticEditHypothesisChars: number | null;
+  /** chars/4 of the M41 Final Edit-Sufficiency Check section (0 when it did not render). */
+  editSufficiencyChecklistTokens: number | null;
+  /** Raw character length of the M41 Final Edit-Sufficiency Check section (0 when absent). */
+  editSufficiencyChecklistChars: number | null;
   productAccountingTokens: number | null;
   manifestReferenceTokens: number | null;
   benchmarkWrapperTokens: number | null;
@@ -96,6 +101,9 @@ export function classifyInjectedHeading(headingRaw: string): InjectedComponent {
   // M39 semantic edit hypothesis: check before the broad "co-edit" phrase test so the
   // dedicated section is attributed to its own bucket, not folded into coeditHint.
   if (h.includes("semantic edit hypothesis")) return "semanticEditHypothesis";
+  // M41 end-of-context edit-sufficiency checklist: check before the "edit targets" /
+  // "co-edit" phrase tests so it lands in its own bucket, not coeditHint.
+  if (h.includes("final edit-sufficiency check")) return "editSufficiencyChecklist";
   if (h.includes("pivot neighborhood")) return "capsuleBody";
   if (h.includes("pivot inspection contract")) return "pivotContract";
   if (h.includes("actionability hint")) return "actionabilityHints";
@@ -184,6 +192,8 @@ export function buildProductV2Accounting(
       multiPivotActionPlanTokens: null,
       semanticEditHypothesisTokens: null,
       semanticEditHypothesisChars: null,
+      editSufficiencyChecklistTokens: null,
+      editSufficiencyChecklistChars: null,
       productAccountingTokens: null,
       manifestReferenceTokens: null,
       benchmarkWrapperTokens: null,
@@ -204,6 +214,8 @@ export function buildProductV2Accounting(
     multiPivotActionPlanTokens: sumTokensFor(chunks, "multiPivotActionPlan"),
     semanticEditHypothesisTokens: sumTokensFor(chunks, "semanticEditHypothesis"),
     semanticEditHypothesisChars: sumCharsFor(chunks, "semanticEditHypothesis"),
+    editSufficiencyChecklistTokens: sumTokensFor(chunks, "editSufficiencyChecklist"),
+    editSufficiencyChecklistChars: sumCharsFor(chunks, "editSufficiencyChecklist"),
     // No product-accounting or manifest text is injected into the prompt; these
     // live in side-car artifacts (`_product_v2_probe`, `_capsule_v2_manifest`),
     // so they contribute zero injected prompt tokens. Recorded explicitly.
