@@ -1,0 +1,298 @@
+{
+  "milestone": "M48",
+  "generatedAt": "2026-06-18T16:41:03.377Z",
+  "validatorPass": true,
+  "executiveVerdict": {
+    "canFireFairlyOnSphinx": true,
+    "staysSilentOnNegatives": true,
+    "shouldM49Implement": true,
+    "recommendation": "A. M49 implement rule-out sufficiency checker, default-off, corrective-prompt-only."
+  },
+  "checkerInputPolicy": {
+    "allowed": [
+      "captured capsule context/manifest",
+      "first-pass patch",
+      "captured tool reads",
+      "captured first-pass assistant text"
+    ],
+    "forbidden": [
+      "gold files or patches",
+      "FAIL_TO_PASS",
+      "PASS_TO_PASS",
+      "hidden test names",
+      "benchmark resolved status",
+      "benchmark labels as decision input"
+    ]
+  },
+  "capturedRows": [
+    {
+      "label": "eval-m46-control-sphinx-7462-r1",
+      "instance": "sphinx-doc__sphinx-7462",
+      "shouldFire": true,
+      "fired": true,
+      "decision": "fire",
+      "triggerKind": "cross_implementation_output_ruleout_insufficient",
+      "pairedOperation": "unparse",
+      "editedImplementation": "sphinx/domains/python.py::unparse",
+      "ruledOutImplementation": "sphinx/pycode/ast.py::unparse",
+      "evidence": [
+        "paired operation: unparse",
+        "edited implementation: sphinx/domains/python.py::unparse",
+        "paired implementation surfaced/read/mentioned: sphinx/pycode/ast.py::unparse",
+        "rule-out is crash-shaped: Fixing both `ast.List` and `ast.Tuple` handlers to guard against empty element lists: Now let me verify the second pivot (`sphinx/pycode/ast.py::unparse`) doesn't need a fix. From the vtrace context, it uses `\", \".join()` which handles empt",
+        "no concrete output-preserving repository evidence found"
+      ],
+      "missingEvidence": [],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      },
+      "correctivePromptPreview": "Your first-pass patch edited one implementation of `unparse` (sphinx/domains/python.py::unparse) but left the paired implementation unedited (sphinx/pycode/ast.py::unparse).\nYour rule-out explains why the paired implementation may not crash, but it does not explain why its output is correct for the same edge case.\nEither revise the patch or provide concrete repository evidence that the paired implementation preserves the intended behavior."
+    },
+    {
+      "label": "eval-m46-control-sphinx-7462-r2",
+      "instance": "sphinx-doc__sphinx-7462",
+      "shouldFire": true,
+      "fired": true,
+      "decision": "fire",
+      "triggerKind": "cross_implementation_output_ruleout_insufficient",
+      "pairedOperation": "unparse",
+      "editedImplementation": "sphinx/domains/python.py::unparse",
+      "ruledOutImplementation": "sphinx/pycode/ast.py::unparse",
+      "evidence": [
+        "paired operation: unparse",
+        "edited implementation: sphinx/domains/python.py::unparse",
+        "paired implementation surfaced/read/mentioned: sphinx/pycode/ast.py::unparse",
+        "rule-out is crash-shaped: I'll fix both the `ast.Tuple` and `ast.List` branches to guard against empty element lists before calling `pop()`. Now let me check the second pivot (`sphinx/pycode/ast.py::unparse`) to rule it out or confirm it needs a fix too. The `sphinx",
+        "no concrete output-preserving repository evidence found"
+      ],
+      "missingEvidence": [],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      },
+      "correctivePromptPreview": "Your first-pass patch edited one implementation of `unparse` (sphinx/domains/python.py::unparse) but left the paired implementation unedited (sphinx/pycode/ast.py::unparse).\nYour rule-out explains why the paired implementation may not crash, but it does not explain why its output is correct for the same edge case.\nEither revise the patch or provide concrete repository evidence that the paired implementation preserves the intended behavior."
+    },
+    {
+      "label": "eval-m46-control-sphinx-7462-r3",
+      "instance": "sphinx-doc__sphinx-7462",
+      "shouldFire": true,
+      "fired": true,
+      "decision": "fire",
+      "triggerKind": "cross_implementation_output_ruleout_insufficient",
+      "pairedOperation": "unparse",
+      "editedImplementation": "sphinx/domains/python.py::unparse",
+      "ruledOutImplementation": "sphinx/pycode/ast.py::unparse",
+      "evidence": [
+        "paired operation: unparse",
+        "edited implementation: sphinx/domains/python.py::unparse",
+        "paired implementation surfaced/read/mentioned: sphinx/pycode/ast.py::unparse",
+        "rule-out is crash-shaped: I'll fix both cases by only calling `pop()` when elements were actually added. Now let me verify the other pivot `sphinx/pycode/ast.py::unparse` can be ruled out. **Ruled out:** `sphinx/pycode/ast.py::unparse` uses `\", \".join(...)` which sa",
+        "no concrete output-preserving repository evidence found"
+      ],
+      "missingEvidence": [],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      },
+      "correctivePromptPreview": "Your first-pass patch edited one implementation of `unparse` (sphinx/domains/python.py::unparse) but left the paired implementation unedited (sphinx/pycode/ast.py::unparse).\nYour rule-out explains why the paired implementation may not crash, but it does not explain why its output is correct for the same edge case.\nEither revise the patch or provide concrete repository evidence that the paired implementation preserves the intended behavior."
+    },
+    {
+      "label": "eval-m46-treatment-sphinx-7462-r1",
+      "instance": "sphinx-doc__sphinx-7462",
+      "shouldFire": true,
+      "fired": true,
+      "decision": "fire",
+      "triggerKind": "cross_implementation_output_ruleout_insufficient",
+      "pairedOperation": "unparse",
+      "editedImplementation": "sphinx/domains/python.py::unparse",
+      "ruledOutImplementation": "sphinx/pycode/ast.py::unparse",
+      "evidence": [
+        "paired operation: unparse",
+        "edited implementation: sphinx/domains/python.py::unparse",
+        "paired implementation surfaced/read/mentioned: sphinx/pycode/ast.py::unparse",
+        "rule-out is crash-shaped: I'll fix both the `ast.Tuple` and `ast.List` handlers to only pop when there are elements to pop. Now let me verify `sphinx/pycode/ast.py::unparse` to rule it out as needing edits (vtrace flagged it as a potential co-edit). `★ Insight ─────",
+        "no concrete output-preserving repository evidence found"
+      ],
+      "missingEvidence": [],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      },
+      "correctivePromptPreview": "Your first-pass patch edited one implementation of `unparse` (sphinx/domains/python.py::unparse) but left the paired implementation unedited (sphinx/pycode/ast.py::unparse).\nYour rule-out explains why the paired implementation may not crash, but it does not explain why its output is correct for the same edge case.\nEither revise the patch or provide concrete repository evidence that the paired implementation preserves the intended behavior."
+    },
+    {
+      "label": "eval-m46-treatment-sphinx-7462-r2",
+      "instance": "sphinx-doc__sphinx-7462",
+      "shouldFire": true,
+      "fired": true,
+      "decision": "fire",
+      "triggerKind": "cross_implementation_output_ruleout_insufficient",
+      "pairedOperation": "unparse",
+      "editedImplementation": "sphinx/domains/python.py::unparse",
+      "ruledOutImplementation": "sphinx/pycode/ast.py::unparse",
+      "evidence": [
+        "paired operation: unparse",
+        "edited implementation: sphinx/domains/python.py::unparse",
+        "paired implementation surfaced/read/mentioned: sphinx/pycode/ast.py::unparse",
+        "rule-out is crash-shaped: Making the fix now - adding guards to only pop when elements were added: Now let me verify the other pivot (`sphinx/pycode/ast.py::unparse`) as required by the checklist. The vtrace showed its Tuple handling: The `sphinx/pycode/ast.py::unpa",
+        "no concrete output-preserving repository evidence found"
+      ],
+      "missingEvidence": [],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      },
+      "correctivePromptPreview": "Your first-pass patch edited one implementation of `unparse` (sphinx/domains/python.py::unparse) but left the paired implementation unedited (sphinx/pycode/ast.py::unparse).\nYour rule-out explains why the paired implementation may not crash, but it does not explain why its output is correct for the same edge case.\nEither revise the patch or provide concrete repository evidence that the paired implementation preserves the intended behavior."
+    },
+    {
+      "label": "eval-m46-treatment-sphinx-7462-r3",
+      "instance": "sphinx-doc__sphinx-7462",
+      "shouldFire": true,
+      "fired": true,
+      "decision": "fire",
+      "triggerKind": "cross_implementation_output_ruleout_insufficient",
+      "pairedOperation": "unparse",
+      "editedImplementation": "sphinx/domains/python.py::unparse",
+      "ruledOutImplementation": "sphinx/pycode/ast.py::unparse",
+      "evidence": [
+        "paired operation: unparse",
+        "edited implementation: sphinx/domains/python.py::unparse",
+        "paired implementation surfaced/read/mentioned: sphinx/pycode/ast.py::unparse",
+        "rule-out is crash-shaped: 2. **Line 103 (`ast.List`)**: Would incorrectly pop the `[` bracket if elements are empty The fix is to guard both `pop()` calls with a check for non-empty elements. Let me also quickly verify the `sphinx/pycode/ast.py` pivot doesn't need a",
+        "no concrete output-preserving repository evidence found"
+      ],
+      "missingEvidence": [],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      },
+      "correctivePromptPreview": "Your first-pass patch edited one implementation of `unparse` (sphinx/domains/python.py::unparse) but left the paired implementation unedited (sphinx/pycode/ast.py::unparse).\nYour rule-out explains why the paired implementation may not crash, but it does not explain why its output is correct for the same edge case.\nEither revise the patch or provide concrete repository evidence that the paired implementation preserves the intended behavior."
+    },
+    {
+      "label": "eval-m32-product-vtrace-seaborn-3187-r1",
+      "instance": "mwaskom__seaborn-3187",
+      "shouldFire": false,
+      "fired": false,
+      "decision": "no_fire",
+      "evidence": [],
+      "missingEvidence": [
+        "paired same-operation hypothesis group"
+      ],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      }
+    },
+    {
+      "label": "eval-m32-product-vtrace-django-13195-r1",
+      "instance": "django__django-13195",
+      "shouldFire": false,
+      "fired": false,
+      "decision": "no_fire",
+      "evidence": [],
+      "missingEvidence": [
+        "paired same-operation hypothesis group"
+      ],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      }
+    },
+    {
+      "label": "eval-m32-product-vtrace-xarray-3677-r1",
+      "instance": "pydata__xarray-3677",
+      "shouldFire": false,
+      "fired": false,
+      "decision": "no_fire",
+      "evidence": [],
+      "missingEvidence": [
+        "paired same-operation hypothesis group"
+      ],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      }
+    },
+    {
+      "label": "eval-m32-product-vtrace-django-10880-r1",
+      "instance": "django__django-10880",
+      "shouldFire": false,
+      "fired": false,
+      "decision": "no_fire",
+      "evidence": [],
+      "missingEvidence": [
+        "paired same-operation hypothesis group"
+      ],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      }
+    }
+  ],
+  "syntheticRows": [
+    {
+      "label": "synthetic-crash-ruleout",
+      "instance": "synthetic",
+      "shouldFire": true,
+      "fired": true,
+      "decision": "fire",
+      "triggerKind": "cross_implementation_output_ruleout_insufficient",
+      "pairedOperation": "render",
+      "editedImplementation": "a.py::render",
+      "ruledOutImplementation": "b.py::render",
+      "evidence": [
+        "paired operation: render",
+        "edited implementation: a.py::render",
+        "paired implementation surfaced/read/mentioned: b.py::render",
+        "rule-out is crash-shaped: Ruled out b.py::render: join([]) is safe and returns an empty string, so okay. No fix needed.",
+        "no concrete output-preserving repository evidence found"
+      ],
+      "missingEvidence": [],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      },
+      "correctivePromptPreview": "Your first-pass patch edited one implementation of `render` (a.py::render) but left the paired implementation unedited (b.py::render).\nYour rule-out explains why the paired implementation may not crash, but it does not explain why its output is correct for the same edge case.\nEither revise the patch or provide concrete repository evidence that the paired implementation preserves the intended behavior."
+    },
+    {
+      "label": "synthetic-accepted-ruleout",
+      "instance": "synthetic",
+      "shouldFire": false,
+      "fired": false,
+      "decision": "no_fire",
+      "evidence": [],
+      "missingEvidence": [
+        "rule-out for b.py::render contains concrete output-preserving evidence"
+      ],
+      "leakageCheck": {
+        "usedGold": false,
+        "usedFailToPass": false,
+        "usedPassToPass": false,
+        "usedBenchmarkLabel": false
+      }
+    }
+  ]
+}
