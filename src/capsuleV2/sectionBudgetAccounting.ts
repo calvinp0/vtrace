@@ -240,3 +240,169 @@ export function analyzeSectionTruncation(text: string, maxChars: number): Sectio
     optionalSectionsRetained,
   };
 }
+
+// ---------------------------------------------------------------------------------
+// M45: section-priority truncation.
+//
+// Reducing an over-budget render WITHOUT clipping essential evidence. Instead of the
+// section-blind head-preserving slice, drop whole non-essential sections — diagnostic
+// first, then optional, then important — until the render fits, replacing each dropped
+// section with a one-line omission marker. Essential sections (framing, pivot/support
+// source, pivot-neighborhood) are preserved as long as possible; only if the essential
+// sections ALONE still exceed the budget does it fall back to the legacy slice, and it
+// reports `essentialSectionsEvicted=true` when that happens. The invariant: an optional
+// section is never retained in full while an essential section is clipped.
+
+/** Section-level budget telemetry for the injected VTRACE context (additive). */
+export interface VtraceContextBudget {
+  readonly maxChars: number;
+  readonly preTruncationChars: number;
+  /** Length of the ACTUAL injected text after reduction (incl. any markers). */
+  readonly postTruncationChars: number;
+  /** Net chars removed (`preTruncationChars - postTruncationChars`). */
+  readonly truncatedChars: number;
+  readonly truncationOccurred: boolean;
+  readonly truncationMode: "none" | "section_priority" | "legacy_slice_fallback";
+  /** Sections dropped whole and replaced by an omission marker, in render order. */
+  readonly droppedSectionNames: readonly string[];
+  /** Sections clipped mid-block by the legacy-slice fallback (empty otherwise). */
+  readonly truncatedSectionNames: readonly string[];
+  /** True only when the fallback clipped an essential section. */
+  readonly essentialSectionsEvicted: boolean;
+  readonly optionalSectionsDropped: boolean;
+  /** Optional sections retained in full (should be empty whenever essential evicted). */
+  readonly optionalSectionsRetained: readonly string[];
+}
+
+export interface SectionPriorityTruncation {
+  /** The actual text to inject (reduced when over budget, unchanged otherwise). */
+  readonly text: string;
+  /** Non-empty line count of `text` (mirrors truncateContext's item notion). */
+  readonly items: number;
+  readonly budget: VtraceContextBudget;
+}
+
+// Lowest-value sections are sacrificed first. Essential is never in this list.
+const DROP_ORDER: readonly SectionPriority[] = ["diagnostic", "optional", "important"];
+
+function omissionMarker(section: RenderedSection): string {
+  return `[omitted ${section.priority} section: ${section.name} (${section.chars} chars)]`;
+}
+
+function countNonEmptyLines(text: string): number {
+  return text.split("\n").filter((line) => line.trim().length > 0).length;
+}
+
+/**
+ * Reduce `text` to fit `maxChars` by dropping whole non-essential sections in priority
+ * order (diagnostic → optional → important, largest-first within a class), preserving
+ * essential evidence. Falls back to a head-preserving slice (with the legacy
+ * `[truncated to N chars]` marker) only when the essential sections alone exceed the
+ * budget. PURE: no retrieval/ranking/scoring/render-content change.
+ */
+export function truncateContextByPriority(text: string, maxChars: number): SectionPriorityTruncation {
+  const cut = Math.max(0, maxChars);
+  const preTruncationChars = text.length;
+
+  const noop = (mode: VtraceContextBudget["truncationMode"]): SectionPriorityTruncation => ({
+    text,
+    items: countNonEmptyLines(text),
+    budget: {
+      maxChars: cut,
+      preTruncationChars,
+      postTruncationChars: preTruncationChars,
+      truncatedChars: 0,
+      truncationOccurred: false,
+      truncationMode: mode,
+      droppedSectionNames: [],
+      truncatedSectionNames: [],
+      essentialSectionsEvicted: false,
+      optionalSectionsDropped: false,
+      optionalSectionsRetained: [],
+    },
+  });
+
+  if (preTruncationChars <= cut) return noop("none");
+
+  const sections = inventorySections(text);
+  const kept = sections.map(() => true);
+  const sliceOf = (i: number): string =>
+    text.slice(sections[i].startChar, sections[i].startChar + sections[i].chars);
+  const markerOf = (i: number): string => `${omissionMarker(sections[i])}\n`;
+
+  // Project the post-reduction length as we drop sections (kept→chars, dropped→marker).
+  let projected = preTruncationChars;
+  for (const cls of DROP_ORDER) {
+    if (projected <= cut) break;
+    const candidates = sections
+      .map((section, index) => ({ section, index }))
+      .filter(({ section }) => section.priority === cls)
+      .sort((a, b) => b.section.chars - a.section.chars || a.section.startChar - b.section.startChar)
+      .map(({ index }) => index);
+    for (const index of candidates) {
+      if (projected <= cut) break;
+      kept[index] = false;
+      projected = projected - sections[index].chars + markerOf(index).length;
+    }
+  }
+
+  // Rebuild, tracking each section's span in the rebuilt text (for fallback reporting).
+  const parts: string[] = [];
+  const spans: Array<{ name: string; priority: SectionPriority; start: number; end: number; kept: boolean }> = [];
+  let pos = 0;
+  for (let i = 0; i < sections.length; i += 1) {
+    const piece = kept[i] ? sliceOf(i) : markerOf(i);
+    parts.push(piece);
+    spans.push({ name: sections[i].name, priority: sections[i].priority, start: pos, end: pos + piece.length, kept: kept[i] });
+    pos += piece.length;
+  }
+  const rebuilt = parts.join("");
+
+  const droppedSectionNames = sections.filter((_s, i) => !kept[i]).map((s) => s.name);
+  const optionalSectionsDropped = sections.some((s, i) => !kept[i] && s.priority === "optional");
+  const optionalSectionsRetained = sections.filter((s, i) => kept[i] && s.priority === "optional").map((s) => s.name);
+
+  if (rebuilt.length <= cut) {
+    return {
+      text: rebuilt,
+      items: countNonEmptyLines(rebuilt),
+      budget: {
+        maxChars: cut,
+        preTruncationChars,
+        postTruncationChars: rebuilt.length,
+        truncatedChars: preTruncationChars - rebuilt.length,
+        truncationOccurred: true,
+        truncationMode: "section_priority",
+        droppedSectionNames,
+        truncatedSectionNames: [],
+        essentialSectionsEvicted: false,
+        optionalSectionsDropped,
+        optionalSectionsRetained,
+      },
+    };
+  }
+
+  // Fallback: essentials alone still exceed the budget — head-preserving slice, with
+  // the same legacy marker the old truncateContext emitted. Essential evidence is clipped.
+  const finalText = `${rebuilt.slice(0, cut)}\n[truncated to ${cut} chars]`;
+  const truncatedSectionNames = spans.filter((sp) => sp.kept && sp.end > cut).map((sp) => sp.name);
+  const essentialSectionsEvicted = spans.some((sp) => sp.kept && sp.priority === "essential" && sp.end > cut);
+  return {
+    text: finalText,
+    items: countNonEmptyLines(finalText),
+    budget: {
+      maxChars: cut,
+      preTruncationChars,
+      postTruncationChars: finalText.length,
+      truncatedChars: preTruncationChars - finalText.length,
+      truncationOccurred: true,
+      truncationMode: "legacy_slice_fallback",
+      droppedSectionNames,
+      truncatedSectionNames,
+      essentialSectionsEvicted,
+      optionalSectionsDropped,
+      // After fallback every non-essential is dropped, so nothing optional is "retained".
+      optionalSectionsRetained: [],
+    },
+  };
+}

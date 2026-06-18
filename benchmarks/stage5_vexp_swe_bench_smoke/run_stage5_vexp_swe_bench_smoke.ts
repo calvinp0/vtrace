@@ -118,6 +118,10 @@ import {
   renderInspectFirstText,
 } from "../../src/runPipeline/inspectFirst";
 import { CapsuleV2Mode, parseCapsuleIntent, type CapsuleV2Item, type CapsuleV2Result } from "../../src/capsuleV2/types";
+import {
+  truncateContextByPriority,
+  type VtraceContextBudget,
+} from "../../src/capsuleV2/sectionBudgetAccounting";
 import { pathIsUserLocalized, type LocalizationSignals } from "../../src/capsuleV2/localizationSignals";
 import {
   type CapsuleV2ArtifactBundle,
@@ -3648,6 +3652,10 @@ export interface IndexedContextResult {
   readonly contextChars: number;
   readonly contextItems: number;
   readonly contextTruncated: boolean;
+  // M45: section-level budget/truncation telemetry for the injected context. Optional
+  // + additive; null on legacy-only / no-context / error paths. Surfaced into
+  // _run.meta.json as `vtraceContextBudget`.
+  readonly contextBudget?: VtraceContextBudget | null;
   readonly contextError: string | null;
   // Run-level vtrace policy: "inject" when any real context was produced, "skip"
   // when none was AND every empty result was an intentional capsule skip (no hard
@@ -5407,6 +5415,33 @@ export function detectTokenDisciplineText(text: string): boolean {
   return text.includes(TOKEN_DISCIPLINE_MARKER);
 }
 
+// M45: merge per-section budget telemetry into one run-level aggregate. Returns null
+// when no preformatted (Capsule v2) section contributed a budget.
+export function aggregateContextBudgets(
+  budgets: readonly VtraceContextBudget[],
+  maxChars: number,
+): VtraceContextBudget | null {
+  if (budgets.length === 0) return null;
+  const mode: VtraceContextBudget["truncationMode"] = budgets.some((b) => b.truncationMode === "legacy_slice_fallback")
+    ? "legacy_slice_fallback"
+    : budgets.some((b) => b.truncationMode === "section_priority")
+      ? "section_priority"
+      : "none";
+  return {
+    maxChars,
+    preTruncationChars: budgets.reduce((sum, b) => sum + b.preTruncationChars, 0),
+    postTruncationChars: budgets.reduce((sum, b) => sum + b.postTruncationChars, 0),
+    truncatedChars: budgets.reduce((sum, b) => sum + b.truncatedChars, 0),
+    truncationOccurred: budgets.some((b) => b.truncationOccurred),
+    truncationMode: mode,
+    droppedSectionNames: budgets.flatMap((b) => b.droppedSectionNames),
+    truncatedSectionNames: budgets.flatMap((b) => b.truncatedSectionNames),
+    essentialSectionsEvicted: budgets.some((b) => b.essentialSectionsEvicted),
+    optionalSectionsDropped: budgets.some((b) => b.optionalSectionsDropped),
+    optionalSectionsRetained: budgets.flatMap((b) => b.optionalSectionsRetained),
+  };
+}
+
 export function buildVtraceContextMarkdown(
   sections: readonly VtraceContextSection[],
   // `pivotCheckPolicy` (helper fallback "risk_gated"; the Stage 5 run path passes
@@ -5438,6 +5473,11 @@ export function buildVtraceContextMarkdown(
   chars: number;
   items: number;
   truncated: boolean;
+  // M45: section-priority truncation telemetry, aggregated across preformatted
+  // (Capsule v2) sections. null when no preformatted section was assembled (e.g.
+  // legacy-only context). Additive; the flat vtraceContextChars/Truncated still
+  // describe the actual injected text.
+  contextBudget: VtraceContextBudget | null;
   pivotCheckInjected: boolean;
   editGuardInjected: boolean;
   patchVerifyInjected: boolean;
@@ -5479,6 +5519,8 @@ export function buildVtraceContextMarkdown(
   let totalChars = 0;
   let totalItems = 0;
   let anyTruncated = false;
+  // M45: collect per-(preformatted)-section budget telemetry to aggregate at the end.
+  const sectionBudgets: VtraceContextBudget[] = [];
   let pivotCheckInjected = false;
   let editGuardInjected = false;
   let patchVerifyInjected = false;
@@ -5527,15 +5569,34 @@ export function buildVtraceContextMarkdown(
           }
         }
       }
-      // Capsule v2 context is already budget-shaped: skip the per-item line cap
-      // (which would chop a multi-line focused source body off the snapshot) and
-      // apply only the char-budget safety net.
-      const maxItems = section.preformatted ? Number.POSITIVE_INFINITY : limits.maxItems;
-      const truncatedContext = truncateContext(section.rawContext, limits.maxChars, maxItems);
-      lines.push(truncatedContext.text, "");
-      totalChars += truncatedContext.chars;
-      totalItems += truncatedContext.items;
-      anyTruncated = anyTruncated || truncatedContext.truncated;
+      // Capsule v2 context is already budget-shaped and section-structured: use M45
+      // section-priority truncation — drop optional/diagnostic advisory sections before
+      // ever clipping essential pivot/source/neighborhood evidence (M44-ACCT showed the
+      // old section-blind head slice evicted the tail pivot-neighborhood while retaining
+      // optional advisories). Legacy (non-preformatted) sections keep the per-item line
+      // cap + char slice unchanged.
+      let truncText: string;
+      let truncChars: number;
+      let truncItems: number;
+      let truncTruncated: boolean;
+      if (section.preformatted) {
+        const reduced = truncateContextByPriority(section.rawContext, limits.maxChars);
+        truncText = reduced.text;
+        truncChars = reduced.budget.postTruncationChars;
+        truncItems = reduced.items;
+        truncTruncated = reduced.budget.truncationOccurred;
+        sectionBudgets.push(reduced.budget);
+      } else {
+        const truncatedContext = truncateContext(section.rawContext, limits.maxChars, limits.maxItems);
+        truncText = truncatedContext.text;
+        truncChars = truncatedContext.chars;
+        truncItems = truncatedContext.items;
+        truncTruncated = truncatedContext.truncated;
+      }
+      lines.push(truncText, "");
+      totalChars += truncChars;
+      totalItems += truncItems;
+      anyTruncated = anyTruncated || truncTruncated;
       // Capsule v2: decide PIVOT_CHECK injection under the effective policy, seeded
       // from this section's actual pivots so hidden pivots are never silently omitted.
       // risk_gated (default) injects only on a deterministic high-risk signal; the
@@ -5615,11 +5676,17 @@ export function buildVtraceContextMarkdown(
     riskSignals: [],
     wouldInjectUnderMultiPivot: false,
   };
+  // M45: aggregate per-section budget telemetry. Single-instance evals have exactly
+  // one preformatted section, so the aggregate equals that section; the merge keeps it
+  // correct for multi-section contexts (sums sizes, ORs the danger flags, concatenates
+  // names; mode escalates none → section_priority → legacy_slice_fallback).
+  const contextBudget = aggregateContextBudgets(sectionBudgets, limits.maxChars);
   return {
     markdown: `${lines.join("\n")}\n`,
     chars: totalChars,
     items: totalItems,
     truncated: anyTruncated,
+    contextBudget,
     pivotCheckInjected,
     editGuardInjected,
     patchVerifyInjected,
@@ -5664,6 +5731,8 @@ function indexRunMetaFields(result: IndexedContextResult): Record<string, unknow
     vtraceIndexFreshnessReason: result.vtraceIndexFreshnessReason,
     vtraceIndexMismatches: result.vtraceIndexMismatches,
     vtraceIndexMetaFile: result.vtraceIndexMetaFile,
+    // M45: section-priority truncation telemetry (null on legacy/no-context paths).
+    vtraceContextBudget: result.contextBudget ?? null,
   };
 }
 
@@ -6148,6 +6217,7 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     contextChars: assembled.chars,
     contextItems: assembled.items,
     contextTruncated: assembled.truncated,
+    contextBudget: assembled.contextBudget,
     contextError: errors.length > 0 ? errors.join("; ") : null,
     policyAction,
     contextInjected: indexedContext,

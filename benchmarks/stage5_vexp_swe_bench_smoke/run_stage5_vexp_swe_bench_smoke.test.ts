@@ -45,6 +45,7 @@ import {
   stage5ToolUseDisciplineFilePath,
   toolCallSummaryFilePath,
   buildVtraceContextMarkdown,
+  type VtraceContextSection,
   buildVtraceIndexCommand,
   buildVtracePatchBlock,
   buildVtraceStreamPatchBlock,
@@ -1788,6 +1789,93 @@ test("buildVtraceContextMarkdown keeps a multi-line body when the section is pre
   const capped = buildVtraceContextMarkdown([{ ...section, preformatted: true }], { maxChars: 60, maxItems: 8 });
   assert.equal(capped.truncated, true);
   assert.match(capped.markdown, /\[truncated to 60 chars\]/);
+});
+
+// ----- M45: section-priority truncation telemetry in buildVtraceContextMarkdown -----
+
+// A structured, section-shaped capsule (mirrors the live Capsule v2 render order): an
+// optional advisory section ahead of the essential pivot/neighborhood evidence. Sized
+// so the essential set fits a budget but the full render does not.
+const M45_FILL = (tag: string, n: number) =>
+  Array.from({ length: n }, (_, i) => `  # ${tag} body line ${i} carrying real content`).join("\n");
+const M45_STRUCTURED = [
+  "## VTRACE inspect-first (guidance, not enforcement; confidence: high)",
+  "intent: test-failure (high confidence)",
+  "strategy: debug_refinement",
+  "budget: 1,578 / 8,000 tokens used",
+  "",
+  "## Semantic Edit Hypothesis",
+  "Two implementations define `unparse`; no crash does not mean correct output.",
+  M45_FILL("semantic-hypothesis", 12),
+  "",
+  "## Multi-Pivot Action Plan",
+  "1. Inspect a.py::foo, then b.py::bar.",
+  M45_FILL("action-plan", 12),
+  "",
+  "● pivot a.py::foo",
+  "  source:",
+  "  def foo():",
+  M45_FILL("foo-source", 16),
+  "",
+  "## Pivot neighborhood (nearby symbols, compact)",
+  "- caller: a.py::handle",
+  M45_FILL("neighborhood", 16),
+  "- excerpt: ESSENTIAL_NEIGHBORHOOD_MARKER must survive section-priority truncation.",
+].join("\n");
+
+function m45Section(): VtraceContextSection {
+  return {
+    instance: sampleInstance(),
+    rawContext: M45_STRUCTURED,
+    error: null,
+    classification: null,
+    preformatted: true,
+  };
+}
+
+test("M45-11/12. preformatted over-budget: section-priority drop, chars reflect injected text", () => {
+  const budget = M45_STRUCTURED.length - 1; // just over → minimal drop, essential preserved
+  const assembled = buildVtraceContextMarkdown([m45Section()], { maxChars: budget, maxItems: 1_000 });
+  const b = assembled.contextBudget;
+  assert.ok(b !== null, "preformatted section must produce contextBudget telemetry");
+  assert.equal(b!.truncationMode, "section_priority");
+  assert.equal(b!.truncationOccurred, true);
+  assert.equal(b!.essentialSectionsEvicted, false);
+  assert.ok(b!.droppedSectionNames.length > 0, "an advisory section must be dropped");
+  // (11) the flat char count equals the ACTUAL injected (post-truncation) text size.
+  assert.equal(assembled.chars, b!.postTruncationChars);
+  assert.ok(b!.postTruncationChars < b!.preTruncationChars);
+  // (12) the legacy truncated flag stays meaningful.
+  assert.equal(assembled.truncated, true);
+  // Essential neighborhood evidence survives; an optional advisory is omitted.
+  assert.ok(assembled.markdown.includes("ESSENTIAL_NEIGHBORHOOD_MARKER"), "essential evidence evicted");
+  assert.ok(assembled.markdown.includes("[omitted "), "no omission marker emitted");
+});
+
+test("M45-12b. under-budget preformatted context is mode=none and not truncated", () => {
+  const assembled = buildVtraceContextMarkdown([m45Section()], { maxChars: 100_000, maxItems: 1_000 });
+  assert.ok(assembled.contextBudget !== null);
+  assert.equal(assembled.contextBudget!.truncationMode, "none");
+  assert.equal(assembled.contextBudget!.truncationOccurred, false);
+  assert.equal(assembled.truncated, false);
+  // Nothing dropped; every section body present.
+  assert.equal(assembled.contextBudget!.droppedSectionNames.length, 0);
+  assert.ok(assembled.markdown.includes("## Semantic Edit Hypothesis"));
+  assert.ok(assembled.markdown.includes("ESSENTIAL_NEIGHBORHOOD_MARKER"));
+});
+
+test("M45-13. contextBudget is additive; legacy (non-preformatted) context reports null", () => {
+  // Legacy section (preformatted falsy) keeps the old line-cap path and emits no budget.
+  const legacy = buildVtraceContextMarkdown(
+    [{ instance: sampleInstance(), rawContext: PIVOT_BODY, error: null, classification: null }],
+    { maxChars: 12_000, maxItems: 8 },
+  );
+  assert.equal(legacy.contextBudget, null);
+  // The pre-existing return fields are all still present (backward compatible).
+  assert.equal(typeof legacy.chars, "number");
+  assert.equal(typeof legacy.items, "number");
+  assert.equal(typeof legacy.truncated, "boolean");
+  assert.equal(typeof legacy.pivotCheckInjected, "boolean");
 });
 
 // ----- Stage 5: PIVOT_CHECK enforcement (multi-pivot Capsule v2) -----

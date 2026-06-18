@@ -20,6 +20,7 @@ import {
   analyzeSectionTruncation,
   classifyHeading,
   inventorySections,
+  truncateContextByPriority,
 } from "./sectionBudgetAccounting";
 import {
   CapsuleIntent,
@@ -34,6 +35,10 @@ import { INLINES_TASK, seedCapsuleV2Fixture } from "./__fixtures__/capsuleV2Fixt
 // block at the TAIL (the M42 shape — neighborhood is last, so the head-preserving cut
 // reaches it first).
 function syntheticCapsule(): string {
+  // Sized so essential/optional BODIES dominate the per-section omission markers,
+  // giving a wide section-priority window (mirrors a real ~12k capsule, not a toy).
+  const fill = (tag: string, n: number) =>
+    Array.from({ length: n }, (_, i) => `  # ${tag} body line ${i} carrying real content`);
   return [
     "## VTRACE inspect-first (guidance, not enforcement; confidence: high)",
     "intent: test-failure (high confidence)",
@@ -42,30 +47,37 @@ function syntheticCapsule(): string {
     "",
     "## Multi-Pivot Action Plan",
     "1. Inspect pkg/a.py::foo, then pkg/b.py::bar.",
+    ...fill("action-plan", 12),
     "",
     "## Semantic Edit Hypothesis",
     "Two implementations define `bar`; no crash does not mean correct output.",
+    ...fill("semantic-hypothesis", 12),
     "",
     "## Pivot inspection contract",
     "- inspect pkg/a.py::foo (lead)",
     "- inspect or rule out pkg/b.py::bar",
+    ...fill("contract", 8),
     "",
     "● pivot pkg/a.py::foo",
     "  source:",
     "  def foo():",
     "      return bar()",
+    ...fill("foo-source", 20),
     "",
     "● pivot pkg/b.py::bar",
     "  source:",
     "  def bar():",
     "      return ', '.join(parts)",
+    ...fill("bar-source", 20),
     "",
     "## Final Edit-Sufficiency Check",
     "[ ] confirm both foo and bar are edited if behavior spans both",
+    ...fill("checklist", 12),
     "",
     "## Pivot neighborhood (nearby symbols, compact)",
     "- caller: pkg/a.py::handle (pkg/a.py:1091-1096)",
     "- caller: pkg/b.py::render (pkg/b.py:40-52)",
+    ...fill("neighborhood", 18),
     "- excerpt: def handle(): ... long neighborhood body that carries the essential",
     "  source evidence the capsule exists to preserve and must not be silently lost.",
   ].join("\n");
@@ -311,4 +323,158 @@ test("10. analysis of a rendered capsule leaks no gold/hidden-test/benchmark lab
   for (const leak of ["FAIL_TO_PASS", "expected_file", "gold patch", "resolved=", "decoy"]) {
     assert.ok(!blob.includes(leak), `analysis leaked: ${leak}`);
   }
+});
+
+// === M45: section-priority truncation =============================================
+
+// Section sizes for the synthetic capsule, derived from the parser so the budget
+// thresholds in these tests track the fixture rather than magic numbers.
+function sizes() {
+  const text = syntheticCapsule();
+  const sections = inventorySections(text);
+  const sumBy = (p: string) => sections.filter((s) => s.priority === p).reduce((a, s) => a + s.chars, 0);
+  return { text, total: text.length, essential: sumBy("essential"), optional: sumBy("optional"), important: sumBy("important") };
+}
+
+// --- (M45-1) no truncation under budget --------------------------------------------
+
+test("M45-1. under budget → mode none, text unchanged, no drops", () => {
+  const { text, total } = sizes();
+  const r = truncateContextByPriority(text, total);
+  assert.equal(r.text, text);
+  assert.equal(r.budget.truncationMode, "none");
+  assert.equal(r.budget.truncationOccurred, false);
+  assert.equal(r.budget.droppedSectionNames.length, 0);
+  assert.equal(r.budget.postTruncationChars, total);
+  // Slack above budget is also a no-op.
+  assert.equal(truncateContextByPriority(text, total + 5_000).text, text);
+});
+
+// --- (M45-2) drops optional before essential; essential preserved ------------------
+
+// Generous headroom above the essential set for the per-section omission markers the
+// reducer substitutes for dropped sections (a handful of short lines).
+const MARKER_SLACK = 600;
+
+test("M45-2. over budget drops optional/diagnostic before essential evidence", () => {
+  const { text, essential } = sizes();
+  // A budget that comfortably holds the essential set but not the full render → the
+  // reducer must shed optional sections and keep every essential one.
+  const budget = essential + MARKER_SLACK;
+  const r = truncateContextByPriority(text, budget);
+  assert.equal(r.budget.truncationMode, "section_priority");
+  assert.equal(r.budget.essentialSectionsEvicted, false);
+  assert.ok(r.budget.optionalSectionsDropped, "an optional section must be dropped");
+  assert.ok(r.budget.postTruncationChars <= budget, "must fit the budget");
+  // Essential evidence survives intact in the injected text.
+  assert.ok(r.text.includes("## Pivot neighborhood"));
+  assert.ok(r.text.includes("source evidence the capsule exists to preserve"));
+  assert.ok(r.text.includes("● pivot pkg/a.py::foo"));
+  assert.ok(r.text.includes("● pivot pkg/b.py::bar"));
+});
+
+// --- (M45-3/4/5/6) section classification used by the reducer ----------------------
+
+test("M45-3/4/5/6. advisory sections classify optional; neighborhood essential", () => {
+  assert.equal(classifyHeading("Semantic Edit Hypothesis"), "optional"); // M39
+  assert.equal(classifyHeading("Final Edit-Sufficiency Check"), "optional"); // M41
+  assert.equal(classifyHeading("Multi-Pivot Action Plan"), "optional"); // M35
+  assert.equal(classifyHeading("Pivot neighborhood (nearby symbols, compact)"), "essential");
+});
+
+// --- (M45-7) essential preserved when dropping optional is enough ------------------
+
+test("M45-7. essential pivot/source fully preserved when optional drops suffice", () => {
+  const { text, essential, important } = sizes();
+  const budget = essential + important + MARKER_SLACK; // room for essential + important, not optional
+  const r = truncateContextByPriority(text, budget);
+  assert.equal(r.budget.essentialSectionsEvicted, false);
+  assert.equal(r.budget.truncatedSectionNames.length, 0, "no mid-section clip in section_priority mode");
+  // No essential section name appears in the dropped list.
+  for (const name of r.budget.droppedSectionNames) {
+    assert.ok(!name.startsWith("pivot source:"), `dropped an essential pivot: ${name}`);
+    assert.ok(!name.startsWith("Pivot neighborhood"), `dropped the neighborhood: ${name}`);
+  }
+});
+
+// --- (M45-8) dropped optional sections get omission markers ------------------------
+
+test("M45-8. dropped sections are replaced by an omission marker", () => {
+  const { text, essential } = sizes();
+  const r = truncateContextByPriority(text, essential + MARKER_SLACK);
+  assert.ok(r.budget.droppedSectionNames.length > 0);
+  assert.ok(r.text.includes("[omitted "), "omission marker missing");
+  for (const name of r.budget.droppedSectionNames) {
+    // Dropped sections are always headings (essential item bodies are never dropped),
+    // so the marker carries the heading's own priority class.
+    const pri = classifyHeading(name);
+    assert.ok(r.text.includes(`[omitted ${pri} section: ${name}`), `no marker for ${name}`);
+    assert.ok(!r.text.includes(`## ${name}\n\n`), "dropped section body still present");
+  }
+});
+
+// --- (M45-9) essentialSectionsEvicted=false when essential survives ----------------
+
+test("M45-9. essentialSectionsEvicted=false whenever essential content survives", () => {
+  const { text, essential } = sizes();
+  const r = truncateContextByPriority(text, essential + MARKER_SLACK);
+  assert.equal(r.budget.essentialSectionsEvicted, false);
+  // Every essential section's body is still in the injected text.
+  assert.ok(r.text.includes("source evidence the capsule exists to preserve"));
+});
+
+// --- (M45-10) fallback evicts essentials only when essentials alone exceed budget --
+
+test("M45-10. essentials-exceed-budget → legacy slice fallback reports eviction", () => {
+  const { text } = sizes();
+  const r = truncateContextByPriority(text, 200); // far below the essential floor
+  assert.equal(r.budget.truncationMode, "legacy_slice_fallback");
+  assert.equal(r.budget.essentialSectionsEvicted, true);
+  assert.ok(r.budget.truncatedSectionNames.length > 0, "must name the clipped essential section");
+  assert.match(r.text, /\[truncated to 200 chars\]/);
+  // Invariant: when essential is evicted, no optional section is retained in full.
+  assert.equal(r.budget.optionalSectionsRetained.length, 0);
+});
+
+// --- invariant: optional never retained while essential clipped --------------------
+
+test("M45. invariant — optional sections are dropped before essential is clipped", () => {
+  const { text, total } = sizes();
+  // Sweep budgets across the whole range; the invariant must hold at every point.
+  for (let budget = 50; budget <= total; budget += 137) {
+    const r = truncateContextByPriority(text, budget);
+    if (r.budget.essentialSectionsEvicted) {
+      assert.equal(
+        r.budget.optionalSectionsRetained.length, 0,
+        `optional retained while essential evicted at budget=${budget}`,
+      );
+    }
+  }
+});
+
+// --- postTruncationChars equals the actual injected text length --------------------
+
+test("M45. postTruncationChars equals the actual injected text length", () => {
+  const { text, essential, total } = sizes();
+  for (const budget of [total, essential + MARKER_SLACK, 200]) {
+    const r = truncateContextByPriority(text, budget);
+    assert.equal(r.budget.postTruncationChars, r.text.length);
+    assert.ok(r.budget.preTruncationChars >= r.budget.postTruncationChars);
+    assert.equal(r.budget.truncatedChars, r.budget.preTruncationChars - r.budget.postTruncationChars);
+  }
+});
+
+// --- M42 reconstruction: optional dropped, neighborhood preserved ------------------
+
+test("M45. M42-shaped capsule: optional advisory dropped, pivot-neighborhood preserved", () => {
+  // The synthetic capsule mirrors the M42 ordering: optional Final Edit-Sufficiency
+  // Check sits just before the essential Pivot neighborhood at the tail. Under a budget
+  // that the legacy head-slice would have used to clip the neighborhood, M45 instead
+  // drops the optional advisory and keeps the neighborhood whole.
+  const { text } = sizes();
+  const overBy = 120;
+  const r = truncateContextByPriority(text, text.length - overBy);
+  assert.equal(r.budget.essentialSectionsEvicted, false);
+  assert.ok(r.budget.droppedSectionNames.some((n) => classifyHeading(n) === "optional"));
+  assert.ok(r.text.includes("source evidence the capsule exists to preserve"), "neighborhood tail evicted");
 });
