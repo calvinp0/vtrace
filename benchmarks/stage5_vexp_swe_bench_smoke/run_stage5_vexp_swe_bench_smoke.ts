@@ -85,6 +85,15 @@ import {
   type PivotDecisionMarker,
   type PivotInspectionCompliance,
 } from "../../src/capsuleV2/pivotInspectionCompliance";
+import { buildSemanticEditHypothesis } from "../../src/capsuleV2/semanticEditHypothesis";
+import {
+  RULEOUT_SUFFICIENCY_ARTIFACT,
+  RULEOUT_SUFFICIENCY_PROMPT_ARTIFACT,
+  applyRuleOutSufficiencyToCompliance,
+  evaluateRuleOutSufficiency,
+  sanitizeRuleOutAssistantText,
+  type RuleOutSufficiencyCheck,
+} from "../../src/capsuleV2/ruleoutSufficiency";
 import {
   decideRevisionPass,
   buildRevisionPrompt,
@@ -381,6 +390,10 @@ export interface CliConfig {
   // — it does NOT re-enable the legacy PIVOT_CHECK/EDIT_GUARD/PATCH_VERIFY policy and is
   // independent of --disable-pivot-check. Off by default; the M12 live validation opts in.
   readonly pivotInspectionEnforcement: boolean;
+  // M49 default-off fair/static rule-out sufficiency checker. It may reclassify a
+  // crash-only paired-implementation rule-out as unclear and write a corrective
+  // prompt artifact. It never adopts or installs a revised patch.
+  readonly ruleoutSufficiencyCheck: boolean;
   // M14 corrective pivot-revision pass (--pivot-revision-pass). Default false. When true
   // AND --pivot-inspection-enforcement is set AND Capsule v2 context was injected AND the
   // M13 compliance checker finds missing/unclear candidates for the first patch, run ONE
@@ -895,6 +908,7 @@ const DEFAULT_CONFIG: CliConfig = {
   // --disable-pivot-check forces the effective policy to "off" (compatibility).
   disablePivotCheck: false,
   pivotInspectionEnforcement: false,
+  ruleoutSufficiencyCheck: false,
   pivotRevisionPass: false,
   revisionVerificationPolicy: "none",
   // M26 planner defaults: the revised pivot patch + the revision-phase test commands.
@@ -2040,11 +2054,21 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
   }
   await runCondition(config, "vtrace", deps, extraVtraceMeta, injectContext, capsuleV2Bundles);
 
+  const ruleoutSufficiency = config.ruleoutSufficiencyCheck
+    ? await maybeRunRuleOutSufficiencyCheck(config, capsuleV2Bundles)
+    : null;
+
   // M14 corrective pivot-revision pass (opt-in: --pivot-revision-pass + the M13
   // enforcement flag). Gated so the default suite never reaches it; reuses the
   // hard-gate spawn seam for the second `run` (no external harness internals touched).
   if (config.pivotRevisionPass && config.pivotInspectionEnforcement) {
-    await maybeRunPivotRevisionPass(config, deps, injectContext, capsuleV2Bundles);
+    await maybeRunPivotRevisionPass(
+      config,
+      deps,
+      injectContext,
+      capsuleV2Bundles,
+      ruleoutSufficiency,
+    );
   }
 }
 
@@ -2065,6 +2089,51 @@ async function readInspectedFiles(toolCallsJson: string): Promise<string[]> {
   } catch {
     return [];
   }
+}
+
+// M49 post-first-pass fair/static checker. Reads only the already-built Capsule v2
+// result, canonical first-pass patch, tool reads, and sanitized first-pass prose.
+// It writes additive "_" artifacts and never runs a model or mutates the canonical patch.
+async function maybeRunRuleOutSufficiencyCheck(
+  config: CliConfig,
+  capsuleV2Bundles: readonly CapsuleV2ArtifactBundle[],
+): Promise<RuleOutSufficiencyCheck> {
+  const dir = rawConditionDir(config.out, "vtrace", config.runLabel);
+  const result = capsuleV2Bundles[0]?.result ?? null;
+  const patch = await readPhasePatchText(await findCanonicalResultsFile(dir));
+  const inspectedPaths = await readInspectedFiles(toolCallLogFilePath(dir));
+  const assistantText = sanitizeRuleOutAssistantText(assistantTextFromStream(
+    await readFile(vtraceAgentStreamFilePath(config.out), "utf8").catch(() => ""),
+  ));
+  const hypothesis = result === null
+    ? null
+    : buildSemanticEditHypothesis(result.pivots, result.support);
+  const check = evaluateRuleOutSufficiency({
+    enabled: true,
+    semanticGroups: hypothesis?.groups ?? [],
+    patch,
+    surfacedTargets: hypothesis?.groups.flatMap((group) => group.targets) ?? [],
+    inspectedPaths,
+    assistantText,
+    pivotDecisions: parsePivotDecisionMarkers(assistantText),
+  });
+  const record: RuleOutSufficiencyCheck = {
+    ...check,
+    correctivePromptWritten:
+      check.triggered && check.correctivePromptPreview !== undefined,
+  };
+  await mkdir(dir, { recursive: true });
+  await writeFile(
+    path.join(dir, RULEOUT_SUFFICIENCY_ARTIFACT),
+    `${JSON.stringify(record, null, 2)}\n`,
+  );
+  if (record.correctivePromptWritten && record.correctivePromptPreview !== undefined) {
+    await writeFile(
+      path.join(dir, RULEOUT_SUFFICIENCY_PROMPT_ARTIFACT),
+      `${record.correctivePromptPreview}\n`,
+    );
+  }
+  return record;
 }
 
 // Persist the revision-pass artifacts SEPARATELY (all "_"-prefixed so none is ever
@@ -2178,6 +2247,7 @@ async function maybeRunPivotRevisionPass(
   deps: RunDeps,
   injectContext: boolean,
   capsuleV2Bundles: readonly CapsuleV2ArtifactBundle[],
+  ruleoutSufficiency: RuleOutSufficiencyCheck | null = null,
 ): Promise<void> {
   const dir = rawConditionDir(config.out, "vtrace", config.runLabel);
   const result = capsuleV2Bundles[0]?.result ?? null;
@@ -2206,16 +2276,22 @@ async function maybeRunPivotRevisionPass(
   const firstPassPivotDecisions = parsePivotDecisionMarkers(firstPassText);
 
   const instances = await resolveInstances(config);
-  const instance = await loadInstanceMetadata(config, instances[0] ?? null);
+  // M49 is explicitly oracle-free. When its checker is active, do not even load
+  // evaluator test metadata for this compliance/corrective path.
+  const instance = ruleoutSufficiency === null
+    ? await loadInstanceMetadata(config, instances[0] ?? null)
+    : null;
   // M15: FAIL_TO_PASS / problem-statement context. Built BEFORE the compliance check so
   // it also drives the M16 rule-out conflict guardrail (a grounded rule-out for a
   // test-anchored pivot is not credited), and feeds the revision prompt below.
-  const testExpectation = buildTestExpectation(
-    instance?.failToPass ?? [],
-    instance?.problemStatement ?? null,
-  );
+  const testExpectation = instance === null
+    ? undefined
+    : buildTestExpectation(
+        instance.failToPass ?? [],
+        instance.problemStatement ?? null,
+      );
 
-  const complianceBefore = computePivotInspectionCompliance({
+  const baseComplianceBefore = computePivotInspectionCompliance({
     enabled: config.pivotInspectionEnforcement,
     contract,
     editedFiles: editedFilesFromPatch(originalPatch),
@@ -2224,6 +2300,12 @@ async function maybeRunPivotRevisionPass(
     decisions: firstPassPivotDecisions,
     testExpectation,
   });
+  const complianceBefore = ruleoutSufficiency === null
+    ? baseComplianceBefore
+    : applyRuleOutSufficiencyToCompliance(
+        baseComplianceBefore,
+        ruleoutSufficiency,
+      );
 
   const sourceExcerpts = buildRevisionExcerpts(
     [...complianceBefore.missing, ...complianceBefore.unclear],
@@ -9340,6 +9422,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--pivot-check-gate-phase1-only": config.pivotCheckGatePhase1Only = true; break;
       case "--disable-pivot-check": config.disablePivotCheck = true; break;
       case "--pivot-inspection-enforcement": config.pivotInspectionEnforcement = true; break;
+      case "--ruleout-sufficiency-check": config.ruleoutSufficiencyCheck = true; break;
       case "--pivot-revision-pass": config.pivotRevisionPass = true; break;
       case "--revision-verification-policy": {
         const value = requireValue(argv, ++index, arg);
@@ -9445,6 +9528,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --pivot-check-gate-phase1-only                 (with --pivot-check-gate hard) run only the read-only Phase-1 preflight + gate, then STOP — Phase 2 never runs even on a pass. Canary to prove the read-only preflight can pass without editing",
       "  --disable-pivot-check                         force PIVOT_CHECK policy off for a controlled before run (compatibility; equivalent to --pivot-check-policy off)",
       "  --pivot-inspection-enforcement                M12 narrow enforcement: inject the '## Required pivot check before final patch' block (explicit EDITED/RULED OUT decision per non-lead pivot + co-edit candidate, with anti-over-edit guardrails) before the capsule body when a v2 pivot inspection contract exists. Off by default; independent of the legacy PIVOT_CHECK policy and --disable-pivot-check",
+      "  --ruleout-sufficiency-check                    M49 experimental fair/static checker: after the first patch, reclassify a crash-only rule-out of a surfaced paired same-operation implementation as unclear and write additive check/corrective-prompt artifacts. Off by default; never replaces the canonical patch",
       "  --pivot-revision-pass                         M14 experimental: after the first patch, if --pivot-inspection-enforcement is on and the M13 compliance checker finds missing/unclear non-lead pivot / co-edit candidates, run ONE corrective second-pass `run` (same VTRACE_AGENT_* seam as the hard gate; no external harness internals touched) with a revision prompt, then persist the original + revised patch, prompt, response, and before/after compliance. Off by default; requires --pivot-inspection-enforcement; never the product default",
       "  --revision-verification-policy none|agent-discovered-tests   M23 opt-in fair revision verification (default: none, unchanged behavior). 'agent-discovered-tests' makes the revision prompt ask the agent to discover/run a focused test it can justify from repo exploration (NOT hidden FAIL_TO_PASS labels), suppresses literal injected FAIL_TO_PASS names from the prompt, and emits a _revision_verification_policy.json provenance artifact. Scaffolding only — never adopts/rejects a patch and never makes the revision pass run",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",

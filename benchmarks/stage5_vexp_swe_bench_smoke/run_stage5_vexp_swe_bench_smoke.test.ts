@@ -233,6 +233,21 @@ test("--disable-pivot-check is off by default and opt-in only", () => {
   );
 });
 
+test("--ruleout-sufficiency-check is default-off and opt-in only", () => {
+  const base = parseArgs(["--mode", "prepare", "--instances", "a__1"]);
+  assert.equal(base.ruleoutSufficiencyCheck, false);
+  const enabled = parseArgs([
+    "--mode",
+    "prepare",
+    "--instances",
+    "a__1",
+    "--ruleout-sufficiency-check",
+  ]);
+  assert.equal(enabled.ruleoutSufficiencyCheck, true);
+  assert.equal(enabled.pivotRevisionPass, false);
+  assert.equal(enabled.pivotInspectionEnforcement, false);
+});
+
 test("--disable-edit-guard is off by default and opt-in only", () => {
   // Default: EDIT_GUARD stays enabled (flag absent), independent of PIVOT_CHECK.
   const base = parseArgs(["--mode", "prepare", "--instances", "a__1"]);

@@ -652,6 +652,7 @@ export function buildPrecheckConfig(opts: {
     pivotCheckGatePhase1Only: false,
     disablePivotCheck: false,
     pivotInspectionEnforcement: false,
+    ruleoutSufficiencyCheck: false,
     pivotRevisionPass: false,
     revisionVerificationPolicy: "none",
     patchSource: "pivot_revision_revised",
