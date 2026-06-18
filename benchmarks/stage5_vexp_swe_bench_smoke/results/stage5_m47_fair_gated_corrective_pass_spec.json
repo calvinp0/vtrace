@@ -1,0 +1,113 @@
+{
+  "milestone": "M47",
+  "type": "design_spec",
+  "predecessor_commit": "bc7d2f3",
+  "case_under_study": "sphinx-doc__sphinx-7462",
+  "code_changed": false,
+  "live_agents_run": false,
+  "docker_run": false,
+  "canonical_eval_run": false,
+  "executive_verdict": {
+    "implement_fair_gated_corrective_pass_next": true,
+    "as": "detector_plus_corrective_prompt_not_resolver_not_autoadopter",
+    "best_option": "B",
+    "best_option_name": "rule_out_sufficiency_checker",
+    "diagnostic_only": [
+      "shadow_eval_M17",
+      "isolated_in_loop_verifier_M27_M29",
+      "any_fail_to_pass_or_pass_to_pass_derived_signal",
+      "M16_conflict_detector_in_current_oracle_adjacent_form",
+      "canonical_patch_replacement"
+    ],
+    "honest_ceiling": "fair mechanism cannot supply the hidden \"()\" fact; it can only force explicit behavior-correctness evidence or revision"
+  },
+  "first_pass_text_exhausted": {
+    "conclusion": "stop first-pass text-prompt approaches for sphinx; return to gated revision/enforcement/verification branch",
+    "evidence": {
+      "M40_semantic_hypothesis_ab": {"ast_py_edit": "0/3 both", "resolved": "0/3 both"},
+      "M42_edit_sufficiency_ab": {"ast_py_edit": "0/3 both", "resolved": "0/3 both", "note": "checklist reframed rule-out to output-correctness; agent answered wrong every time"},
+      "M44_acct": "truncation was section-blind; essential pivot-neighborhood evicted (confound)",
+      "M45": "section-priority truncation; essentialSectionsEvicted=false; under-budget byte-identical",
+      "M46": {"ast_py_edit": "0/3 both", "resolved": "0/3 both", "note": "even with essentials preserved 3/3; checklist itself budget-dropped; Rec C confirmed"}
+    }
+  },
+  "options": {
+    "A": {"name": "compliance_only_corrective_prompt", "fair": true, "helps_sphinx": false, "reason": "grounded rule-out credited as ruledOut, does not fire without oracle-adjacent M16", "complexity": "near-zero", "generalizes": true},
+    "B": {"name": "rule_out_sufficiency_checker", "fair": true, "helps_sphinx": "fires_correctly_resolution_bounded_by_hidden_fact", "reason": "only fair option that fires on sphinx grounded-but-wrong crash-shaped rule-out", "complexity": "low_medium", "generalizes": true, "recommended": true, "relation_to_cross_impl_guardrail": "narrower precursor; cross-implementation guardrail NOT built here"},
+    "C": {"name": "fair_test_discovery_gated_revision", "fair": true, "helps_sphinx": false, "reason": "M30 already got non_discriminative_both_pass; agent does not pick discriminating test", "complexity": "high", "generalizes": "partial"},
+    "D": {"name": "diagnostic_only_revision_branch", "fair": "n/a_diagnostic", "helps_sphinx": false, "role": "fallback_if_B_fails_offline_validation"},
+    "E": {"name": "stop_branch", "premature": true, "reason": "B viable as detector"}
+  },
+  "recommended_architecture": {
+    "mechanism": "fair static non-oracle rule-out sufficiency gate routing to corrective prompt",
+    "built_on": ["M12_enforcement_block", "PIVOT_DECISION_markers", "M13_computePivotInspectionCompliance", "M39_semanticEditHypothesis"],
+    "is_resolver": false,
+    "is_autoadopter": false,
+    "trigger_conditions": [
+      "pivot-inspection-enforcement on AND new --ruleout-sufficiency-check on (default-off)",
+      "capsule v2 injected",
+      "required non-lead pivot unedited with grounded RULED_OUT marker",
+      "classifyRuleOutSufficiency(evidence, semanticEditHypothesis) == insufficient (crash-avoidance-shaped, silent on output correctness)",
+      "no FAIL_TO_PASS / PASS_TO_PASS / gold patch / label consulted"
+    ],
+    "inputs": ["M13 compliance verdict", "parsed first-pass PIVOT_DECISION evidence", "semanticEditHypothesis", "edited/inspected file lists"],
+    "outputs": ["reclassify candidate ruledOut->unclear reason=insufficient_ruleout", "corrective prompt", "no patch", "no adoption decision"],
+    "artifact_outputs": ["_ruleout_sufficiency.json", "reuse REVISION_ARTIFACT_FILES (underscore-prefixed, never staged)"],
+    "default_flags": {"ruleout_sufficiency_check": "off", "requires": "pivot-inspection-enforcement", "pivot_revision_pass": "not_enabled", "docker": "never", "allow_docker_verify": false},
+    "fairness_boundary": "asserts the rule-out does not address output correctness; never asserts the correct output; cannot resolve sphinx alone"
+  },
+  "corrective_prompt": {
+    "allowed_language": [
+      "edited one implementation but left a surfaced paired pivot unedited",
+      "rule-out explains why it may not crash but not why its output/behavior is correct",
+      "revise the patch or provide a concrete behavior-preserving reason based only on repository evidence"
+    ],
+    "forbidden_language": ["hidden tests", "FAIL_TO_PASS", "PASS_TO_PASS", "test_unparse[()-()]", "gold patch", "expected output from benchmark"],
+    "leak_guard": "assertNoWithheldTestLabels over rendered prompt"
+  },
+  "verification_adoption_policy": {
+    "automatic_canonical_replacement_default": false,
+    "canonicalReplaced": false,
+    "revised_patch": "recorded_as_candidate_telemetry_only",
+    "adoption_requires_fair_evidence_one_of": [
+      "agent_discovered_discriminating_test (rare per M30)",
+      "static_repo_evidence_cited",
+      "explicit_user_approval"
+    ],
+    "shadow_eval": "diagnostic_only",
+    "isolated_verifier": "diagnostic_only",
+    "M18_boundary_preserved": true
+  },
+  "metadata_fields": {
+    "correctivePassTriggered": "boolean",
+    "triggerKind": "insufficient_ruleout",
+    "triggerEvidence": "string[] label-free",
+    "oracleFree": true,
+    "revisedPatchProduced": "boolean",
+    "canonicalReplaced": false,
+    "adoptionEligible": "boolean",
+    "adoptionReason": "string optional"
+  },
+  "offline_validation_plan": [
+    "replay M38-M46 sphinx artifacts through classifyRuleOutSufficiency",
+    "confirm trigger fires on insufficient ast.py rule-out",
+    "confirm no hidden labels leak (assertNoWithheldTestLabels + code-path test)",
+    "confirm no trigger on accepted concrete rule-out fixture",
+    "confirm no trigger on no-context / traceback-localized cases",
+    "confirm budget metadata unaffected (retrieval byte-identical if src changes)"
+  ],
+  "constraints_from_evidence": [
+    "sphinx-7462 may remain unsolved fairly: decisive () fact is hidden-test-only",
+    "a fair corrective pass is still useful if it detects insufficient rule-outs and asks for explicit evidence",
+    "must not claim hidden expected output",
+    "must not auto-adopt unverified revised patches",
+    "must preserve M18 boundary: diagnostic/shadow success is not product success"
+  ],
+  "next_milestone": {
+    "choice": "E",
+    "statement": "M48 build offline validator before any implementation",
+    "target_architecture": "Option B rule-out sufficiency checker",
+    "then": "M49 implement Option B behind default-off --ruleout-sufficiency-check, corrective-prompt-only, no auto-adoption",
+    "fallback": "D keep revision diagnostic-only and return to broader benchmark if B cannot fire fairly"
+  }
+}
