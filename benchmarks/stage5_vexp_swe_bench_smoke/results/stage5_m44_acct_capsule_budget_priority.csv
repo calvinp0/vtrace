@@ -1,0 +1,9 @@
+label,arm,preTruncationChars,postTruncationChars,truncatedChars,truncationOccurred,metaContextChars,metaContextTruncated,probeNeighborhoodPresent,probeEstimatedOutputTokens,essentialSectionsEvicted,optionalSectionsRetained
+eval-m42-control-sphinx-7462-r1,control,11562,11562,0,false,11561,false,true,7915,,
+eval-m42-control-sphinx-7462-r2,control,11562,11562,0,false,11561,false,true,7915,,
+eval-m42-control-sphinx-7462-r3,control,11562,11562,0,false,11561,false,true,7915,,
+eval-m42-treatment-sphinx-7462-r1,treatment,12752,12000,752,true,12027,true,true,7915,"Pivot neighborhood (nearby symbols, compact)",Multi-Pivot Action Plan | Semantic Edit Hypothesis | Final Edit-Sufficiency Check
+eval-m42-treatment-sphinx-7462-r2,treatment,12752,12000,752,true,12027,true,true,7915,"Pivot neighborhood (nearby symbols, compact)",Multi-Pivot Action Plan | Semantic Edit Hypothesis | Final Edit-Sufficiency Check
+eval-m42-treatment-sphinx-7462-r3,treatment,12752,12000,752,true,12027,true,true,7915,"Pivot neighborhood (nearby symbols, compact)",Multi-Pivot Action Plan | Semantic Edit Hypothesis | Final Edit-Sufficiency Check
+eval-m40-control-sphinx-7462-r1,control,11562,11562,0,false,11561,false,true,7915,,
+eval-m40-treatment-sphinx-7462-r1,treatment,12019,12000,19,true,12027,true,true,7915,"Pivot neighborhood (nearby symbols, compact)",Multi-Pivot Action Plan | Semantic Edit Hypothesis

@@ -1,0 +1,184 @@
+{
+  "milestone": "M44-ACCT",
+  "generatedFrom": "captured run artifacts (offline, read-only)",
+  "vtraceContextMaxChars": 12000,
+  "truncationModel": "global, head-preserving, section-blind (truncateContext slice-to-maxChars)",
+  "runs": [
+    {
+      "label": "eval-m42-control-sphinx-7462-r1",
+      "arm": "control",
+      "preTruncationChars": 11562,
+      "postTruncationChars": 11562,
+      "truncatedChars": 0,
+      "truncationOccurred": false,
+      "truncatedSectionNames": [],
+      "essentialSectionsEvicted": [],
+      "optionalSectionsRetained": [],
+      "fullyEvictedSectionNames": [],
+      "metaContextChars": 11561,
+      "metaContextTruncated": false,
+      "probeNeighborhoodPresent": true,
+      "probeNeighborhoodExcerptCount": 8,
+      "probeEstimatedOutputTokens": 7915
+    },
+    {
+      "label": "eval-m42-control-sphinx-7462-r2",
+      "arm": "control",
+      "preTruncationChars": 11562,
+      "postTruncationChars": 11562,
+      "truncatedChars": 0,
+      "truncationOccurred": false,
+      "truncatedSectionNames": [],
+      "essentialSectionsEvicted": [],
+      "optionalSectionsRetained": [],
+      "fullyEvictedSectionNames": [],
+      "metaContextChars": 11561,
+      "metaContextTruncated": false,
+      "probeNeighborhoodPresent": true,
+      "probeNeighborhoodExcerptCount": 8,
+      "probeEstimatedOutputTokens": 7915
+    },
+    {
+      "label": "eval-m42-control-sphinx-7462-r3",
+      "arm": "control",
+      "preTruncationChars": 11562,
+      "postTruncationChars": 11562,
+      "truncatedChars": 0,
+      "truncationOccurred": false,
+      "truncatedSectionNames": [],
+      "essentialSectionsEvicted": [],
+      "optionalSectionsRetained": [],
+      "fullyEvictedSectionNames": [],
+      "metaContextChars": 11561,
+      "metaContextTruncated": false,
+      "probeNeighborhoodPresent": true,
+      "probeNeighborhoodExcerptCount": 8,
+      "probeEstimatedOutputTokens": 7915
+    },
+    {
+      "label": "eval-m42-treatment-sphinx-7462-r1",
+      "arm": "treatment",
+      "preTruncationChars": 12752,
+      "postTruncationChars": 12000,
+      "truncatedChars": 752,
+      "truncationOccurred": true,
+      "truncatedSectionNames": [
+        "Pivot neighborhood (nearby symbols, compact)"
+      ],
+      "essentialSectionsEvicted": [
+        "Pivot neighborhood (nearby symbols, compact)"
+      ],
+      "optionalSectionsRetained": [
+        "Multi-Pivot Action Plan",
+        "Semantic Edit Hypothesis",
+        "Final Edit-Sufficiency Check"
+      ],
+      "fullyEvictedSectionNames": [],
+      "metaContextChars": 12027,
+      "metaContextTruncated": true,
+      "probeNeighborhoodPresent": true,
+      "probeNeighborhoodExcerptCount": 8,
+      "probeEstimatedOutputTokens": 7915
+    },
+    {
+      "label": "eval-m42-treatment-sphinx-7462-r2",
+      "arm": "treatment",
+      "preTruncationChars": 12752,
+      "postTruncationChars": 12000,
+      "truncatedChars": 752,
+      "truncationOccurred": true,
+      "truncatedSectionNames": [
+        "Pivot neighborhood (nearby symbols, compact)"
+      ],
+      "essentialSectionsEvicted": [
+        "Pivot neighborhood (nearby symbols, compact)"
+      ],
+      "optionalSectionsRetained": [
+        "Multi-Pivot Action Plan",
+        "Semantic Edit Hypothesis",
+        "Final Edit-Sufficiency Check"
+      ],
+      "fullyEvictedSectionNames": [],
+      "metaContextChars": 12027,
+      "metaContextTruncated": true,
+      "probeNeighborhoodPresent": true,
+      "probeNeighborhoodExcerptCount": 8,
+      "probeEstimatedOutputTokens": 7915
+    },
+    {
+      "label": "eval-m42-treatment-sphinx-7462-r3",
+      "arm": "treatment",
+      "preTruncationChars": 12752,
+      "postTruncationChars": 12000,
+      "truncatedChars": 752,
+      "truncationOccurred": true,
+      "truncatedSectionNames": [
+        "Pivot neighborhood (nearby symbols, compact)"
+      ],
+      "essentialSectionsEvicted": [
+        "Pivot neighborhood (nearby symbols, compact)"
+      ],
+      "optionalSectionsRetained": [
+        "Multi-Pivot Action Plan",
+        "Semantic Edit Hypothesis",
+        "Final Edit-Sufficiency Check"
+      ],
+      "fullyEvictedSectionNames": [],
+      "metaContextChars": 12027,
+      "metaContextTruncated": true,
+      "probeNeighborhoodPresent": true,
+      "probeNeighborhoodExcerptCount": 8,
+      "probeEstimatedOutputTokens": 7915
+    },
+    {
+      "label": "eval-m40-control-sphinx-7462-r1",
+      "arm": "control",
+      "preTruncationChars": 11562,
+      "postTruncationChars": 11562,
+      "truncatedChars": 0,
+      "truncationOccurred": false,
+      "truncatedSectionNames": [],
+      "essentialSectionsEvicted": [],
+      "optionalSectionsRetained": [],
+      "fullyEvictedSectionNames": [],
+      "metaContextChars": 11561,
+      "metaContextTruncated": false,
+      "probeNeighborhoodPresent": true,
+      "probeNeighborhoodExcerptCount": 8,
+      "probeEstimatedOutputTokens": 7915
+    },
+    {
+      "label": "eval-m40-treatment-sphinx-7462-r1",
+      "arm": "treatment",
+      "preTruncationChars": 12019,
+      "postTruncationChars": 12000,
+      "truncatedChars": 19,
+      "truncationOccurred": true,
+      "truncatedSectionNames": [
+        "Pivot neighborhood (nearby symbols, compact)"
+      ],
+      "essentialSectionsEvicted": [
+        "Pivot neighborhood (nearby symbols, compact)"
+      ],
+      "optionalSectionsRetained": [
+        "Multi-Pivot Action Plan",
+        "Semantic Edit Hypothesis"
+      ],
+      "fullyEvictedSectionNames": [],
+      "metaContextChars": 12027,
+      "metaContextTruncated": true,
+      "probeNeighborhoodPresent": true,
+      "probeNeighborhoodExcerptCount": 8,
+      "probeEstimatedOutputTokens": 7915
+    }
+  ],
+  "summary": {
+    "anyEssentialEvicted": true,
+    "evictedRuns": [
+      "eval-m42-treatment-sphinx-7462-r1",
+      "eval-m42-treatment-sphinx-7462-r2",
+      "eval-m42-treatment-sphinx-7462-r3",
+      "eval-m40-treatment-sphinx-7462-r1"
+    ]
+  }
+}
