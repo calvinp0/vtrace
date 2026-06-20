@@ -1,0 +1,33 @@
+{
+  "milestone": "M55V",
+  "subject_commit": "14bb847",
+  "verdict": "INVALID",
+  "verdict_reason": "m55_digest_not_present_in_live_injection_path",
+  "live_runs_performed": 0,
+  "valid_digest_runs": 0,
+  "activation_path": {
+    "get_context_capsule_requires_v2": true,
+    "run_pipeline_requires_v2": true,
+    "auto_v2_default": false,
+    "stage5_runner_capsule_engine_default": "legacy",
+    "digest_field_location": "MCP capsuleV2.digest (productAdapter.toCapsuleV2ProductResponse)",
+    "stage5_live_injection_uses_digest": false,
+    "stage5_live_injection_source": "renderInspectFirstText + renderCapsuleV2Human + renderPivotNeighborhoodsText (run_stage5_vexp_swe_bench_smoke.ts:4509-4517)",
+    "preexisting_render_already_emits_glyphs": true,
+    "preexisting_glyph_source": "src/capsuleV2/renderItem.ts:roleBullet (●/○) + renderCapsuleV2Human budget line",
+    "accounting_location": "MCP envelope output.accounting (src/metrics/contextAccounting.ts)",
+    "ordered_tool_calls_location": "runs/<label>/raw/vtrace/_tool_calls.json (+ _tool_calls.summary.json)"
+  },
+  "cases": [
+    {"instance_id": "sphinx-doc__sphinx-7462", "reason": "context-to-action / hidden non-traceback pivot (pycode/ast.py::unparse)", "prior_artifacts": true, "digest_run": false},
+    {"instance_id": "matplotlib__matplotlib-22719", "reason": "extra tool-turn / cache-read overhead; localization-gap", "prior_artifacts": true, "digest_run": false},
+    {"instance_id": "matplotlib__matplotlib-24627", "reason": "localization-gap candidate", "prior_artifacts": true, "digest_run": false},
+    {"instance_id": "seaborn__seaborn-3187", "reason": "multi-file co-edit / context-to-action gap", "prior_artifacts": true, "digest_run": false}
+  ],
+  "recommendation": "do_not_breadth_run; wire digest into injected context behind a test-only flag and fold impact/memory/rules seams first, OR validate M55 at the MCP layer only",
+  "not_run": {
+    "live_agents": "approval-gated and would be invalid (digest not injected)",
+    "docker_eval": "no new patches produced",
+    "retrieval_eval": "no retrieval/scoring/ranking change this milestone"
+  }
+}
