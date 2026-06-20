@@ -1016,6 +1016,17 @@ test("get_context_capsule capsule_engine=v2 returns the bounded Capsule v2 produ
       .reduce((sum, item) => sum + item.estimatedTokens, 0);
     assert.equal(totalTokens <= capsuleV2.budget.maxTokens, true);
 
+    // VEXP-shaped enrichment: query, summary counts, warnings array, and a
+    // role-glyph digest that an agent can read as the first-call answer.
+    assert.equal(capsuleV2.query, "modify createSession in SessionManager to accept a label");
+    assert.equal(capsuleV2.summary.pivotCount, capsuleV2.pivots.length);
+    assert.equal(capsuleV2.summary.supportCount, capsuleV2.support.length);
+    assert.equal(typeof capsuleV2.summary.skeletonCount, "number");
+    assert.equal(Array.isArray(capsuleV2.warnings), true);
+    assert.equal(typeof capsuleV2.digest, "string");
+    assert.equal(capsuleV2.digest.includes("● pivot"), true);
+    assert.equal(capsuleV2.digest.includes("budget:"), true);
+
     // Manifest persistence is consistent with the v1 path: a deterministic id.
     assert.equal(typeof output.capsuleManifestId, "string");
     assert.equal((output.capsuleManifestId as string).length > 0, true);

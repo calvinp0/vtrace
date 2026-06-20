@@ -479,7 +479,7 @@ function buildCapsuleV2Section(
       intent: rawInput.capsuleIntent ?? CapsuleIntent.Auto,
       maxTokens: rawInput.capsuleBudgetTokens ?? RUN_PIPELINE_DEFAULTS.capsuleV2BudgetTokens,
     });
-    const capsuleV2 = toCapsuleV2ProductResponse(result);
+    const capsuleV2 = toCapsuleV2ProductResponse(result, { query });
     const capsuleV2ManifestId = persistCapsuleV2ManifestBestEffort(
       db,
       query,

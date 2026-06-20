@@ -144,6 +144,82 @@ test("toCapsuleV2ProductResponse is deterministic across repeated calls", () => 
   assert.deepEqual(toCapsuleV2ProductResponse(fixture), toCapsuleV2ProductResponse(fixture));
 });
 
+test("toCapsuleV2ProductResponse threads the query and emits role/section counts", () => {
+  const response = toCapsuleV2ProductResponse(result(), { query: "fix createSession" });
+
+  assert.equal(response.query, "fix createSession");
+  // One pivot (full) + one support (signature). skeleton = items not rendered full.
+  assert.deepEqual(response.summary, {
+    pivotCount: 1,
+    supportCount: 1,
+    skeletonCount: 1,
+  });
+  // No impact/memory/rule seam routed in → those counts are absent, never a fake 0.
+  assert.equal("impactCount" in response.summary, false);
+  assert.equal("memoryCount" in response.summary, false);
+  assert.equal("ruleCount" in response.summary, false);
+});
+
+test("toCapsuleV2ProductResponse digest uses VEXP role glyphs with why + budget lines", () => {
+  const response = toCapsuleV2ProductResponse(result(), { query: "fix createSession" });
+
+  const lines = response.digest.split("\n");
+  assert.equal(lines[0], "# fix createSession");
+  // Pivot line: ● glyph, fqName target, content tag.
+  assert.ok(response.digest.includes("● pivot src/session.ts::SessionManager.createSession  [full ~40t]"));
+  assert.ok(response.digest.includes("    why: lexical match on local_name"));
+  // Support rendered with the ○ skel glyph and signature mode.
+  assert.ok(response.digest.includes("○ skel src/controller.ts::SessionController  [signature ~12t]"));
+  // Closing budget line, no saved clause when no defensible estimate supplied.
+  assert.ok(response.digest.includes("budget: 52/8000t (0.65%)"));
+  assert.equal(response.digest.includes("saved≈"), false);
+});
+
+test("toCapsuleV2ProductResponse folds optional impact/memory/rule seams into summary, warnings, digest", () => {
+  const response = toCapsuleV2ProductResponse(result(), {
+    query: "who calls createSession",
+    impact: { dependentCount: 3, snippetsAvailable: false },
+    memory: { sessionCount: 2, durableCount: 1 },
+    rules: { activeCount: 1 },
+    savedTokensEstimate: 1240,
+  });
+
+  assert.equal(response.summary.impactCount, 3);
+  assert.equal(response.summary.memoryCount, 3);
+  assert.equal(response.summary.ruleCount, 1);
+  // Impact has no per-caller snippets in this build → honest warning, not a fabrication.
+  assert.ok(response.warnings.includes("impact_snippets_unavailable"));
+  assert.ok(response.digest.includes("→ impact 3 dependents (summary only — snippets unavailable)"));
+  assert.ok(response.digest.includes("◎ memory 2 session, 1 durable"));
+  assert.ok(response.digest.includes("◇ rule 1 active"));
+  // Defensible saved estimate routed in → it appears on the budget line.
+  assert.ok(response.digest.includes("saved≈1240t vs full-file"));
+});
+
+test("toCapsuleV2ProductResponse marks bounded pivot source honestly", () => {
+  // A pivot rendered only as a signature (budget-compressed) → bounded-source warning.
+  const signatureOnlyPivot: CapsuleV2Item = {
+    ...pivotItem(),
+    content_mode: CapsuleV2ContentMode.Signature,
+    source: undefined,
+  };
+  const response = toCapsuleV2ProductResponse(result({ pivots: [signatureOnlyPivot] }));
+
+  assert.ok(response.warnings.includes("pivot_source_bounded_to_signatures"));
+  assert.equal(response.summary.skeletonCount, 2);
+});
+
+test("toCapsuleV2ProductResponse merges caller warnings and dedupes", () => {
+  const response = toCapsuleV2ProductResponse(
+    result({ actual_mode: CapsuleV2Mode.NoContext, reason: "none", pivots: [], support: [] }),
+    { warnings: ["no_pivot_recovered", "custom_marker"] },
+  );
+
+  // no_context derives no_pivot_recovered; the caller-supplied duplicate is deduped.
+  assert.deepEqual(response.warnings, ["no_pivot_recovered", "custom_marker"]);
+  assert.ok(response.digest.includes("(no high-confidence pivot recovered)"));
+});
+
 test("toCapsuleV2ProductResponse caps the discarded list but reports the true total", () => {
   const many = Array.from({ length: 20 }, (_unused, index) => discarded(`reason ${index}`));
   const response = toCapsuleV2ProductResponse(result({ discarded: many }));

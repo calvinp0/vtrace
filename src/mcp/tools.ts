@@ -6906,6 +6906,7 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
   {
     engine: stringProperty("Always `v2` here."),
     experimental: booleanProperty("Capsule v2 is opt-in/experimental on the product surface."),
+    query: stringProperty("The task/query the capsule was built for (empty string when not supplied)."),
     intent: stringProperty("The resolved intent the capsule was built for."),
     actualMode: stringProperty("Realised sizing tier, or `no_context` when no pivot was found."),
     reason: { type: ["string", "null"], description: "Human-readable reason — present only on the no_context path." },
@@ -6918,8 +6919,25 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
       },
       ["maxTokens", "estimatedTokens", "usedPercent"],
     ),
+    summary: objectProperty(
+      "Role/section counts for the VEXP-shaped first-call summary. impact/memory/rule counts present only when those sections are routed in (never fabricated).",
+      {
+        pivotCount: integerProperty("Number of pivot items."),
+        supportCount: integerProperty("Number of support items."),
+        skeletonCount: integerProperty("Items rendered without full source (signature/skeleton scaffolding)."),
+        impactCount: integerProperty("Impact dependents, when an impact summary was routed in."),
+        memoryCount: integerProperty("Session + durable memory entries, when a memory summary was routed in."),
+        ruleCount: integerProperty("Active project rules, when a rules summary was routed in."),
+      },
+      ["pivotCount", "supportCount", "skeletonCount"],
+    ),
     pivots: arrayProperty("Pivot items (focused edit targets).", CAPSULE_V2_PRODUCT_ITEM_SCHEMA),
     support: arrayProperty("Support items (compact context).", CAPSULE_V2_PRODUCT_ITEM_SCHEMA),
+    warnings: arrayProperty(
+      "Honest unavailable-data / bounded-content markers (e.g. no_pivot_recovered, pivot_source_bounded_to_signatures, impact_snippets_unavailable). Never fabricated; empty when nothing notable.",
+      stringProperty("A warning marker."),
+    ),
+    digest: stringProperty("Compact, deterministic agent-facing render using role glyphs (● pivot, ○ skel, → impact, ◎ memory, ◇ rule) with per-item why lines and a closing budget line. Carries no latency/clock data."),
     discarded: arrayProperty(
       "Bounded near-miss list (see discardedTotal for the true count).",
       objectProperty(
@@ -7007,12 +7025,16 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
   [
     "engine",
     "experimental",
+    "query",
     "intent",
     "actualMode",
     "reason",
     "budget",
+    "summary",
     "pivots",
     "support",
+    "warnings",
+    "digest",
     "discarded",
     "discardedTotal",
     "diagnostics",
@@ -8006,7 +8028,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
                 intent: capsuleV2Intent,
                 maxTokens: capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
               });
-              const capsuleV2 = toCapsuleV2ProductResponse(result);
+              const capsuleV2 = toCapsuleV2ProductResponse(result, { query });
               const capsuleManifestId = persistCapsuleV2ManifestBestEffort(
                 db,
                 query,

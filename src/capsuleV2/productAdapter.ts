@@ -68,6 +68,74 @@ export interface CapsuleV2ProductBudget {
   usedPercent: number;
 }
 
+/**
+ * Role/section counts for the VEXP-shaped first-call summary. `pivot`/`support`/
+ * `skeleton` are always present (derived from the capsule's own items);
+ * `impact`/`memory`/`rule` are present only when the caller routes those sections
+ * in through {@link ToCapsuleV2ProductResponseOptions} (the orchestrator-level
+ * seam). They are never fabricated — an absent count means "not supplied", not 0.
+ */
+export interface CapsuleV2ProductSummary {
+  pivotCount: number;
+  supportCount: number;
+  /** Items rendered without full source (signature/skeleton) — the skeletonized scaffolding. */
+  skeletonCount: number;
+  impactCount?: number;
+  memoryCount?: number;
+  ruleCount?: number;
+}
+
+/**
+ * Optional impact summary the caller can fold into the digest/summary. VTRACE
+ * exposes impact as graph-summary counts; it does NOT carry per-caller source
+ * snippets, so `snippetsAvailable` is honestly `false` until that milestone lands.
+ */
+export interface CapsuleV2DigestImpactSeam {
+  dependentCount: number;
+  /** False (default) when only the dependency summary is available, not snippets. */
+  snippetsAvailable?: boolean;
+  /** False when the impact section was attempted but produced nothing. */
+  available?: boolean;
+}
+
+/** Optional memory summary (session + durable counts) the caller can fold in. */
+export interface CapsuleV2DigestMemorySeam {
+  sessionCount: number;
+  durableCount: number;
+  available?: boolean;
+}
+
+/** Optional project-rules summary the caller can fold in. */
+export interface CapsuleV2DigestRulesSeam {
+  activeCount: number;
+  available?: boolean;
+}
+
+/**
+ * Caller-supplied context for the product projection. Every field is optional so
+ * the adapter stays a drop-in for its CLI / benchmark / orchestrator / MCP callers;
+ * the defaults produce a self-contained pivot/support digest with no fabricated
+ * impact/memory/rules data.
+ */
+export interface ToCapsuleV2ProductResponseOptions {
+  /** The task/query the capsule was built for (rendered as the digest header). */
+  query?: string;
+  /** Impact summary seam — folds a `→ impact` line + `impactCount` in when present. */
+  impact?: CapsuleV2DigestImpactSeam | null;
+  /** Memory summary seam — folds a `◎ memory` line + `memoryCount` in when present. */
+  memory?: CapsuleV2DigestMemorySeam | null;
+  /** Project-rules summary seam — folds a `◇ rule` line + `ruleCount` in when present. */
+  rules?: CapsuleV2DigestRulesSeam | null;
+  /** Additional honest warnings to merge into `warnings` (deduped, order-stable). */
+  warnings?: string[];
+  /**
+   * Defensible saved-token estimate for the digest budget line. Omitted by the
+   * pure callers (the file-read baseline is computed at the MCP/CLI envelope, not
+   * here); supplied only when a caller already has a defensible figure.
+   */
+  savedTokensEstimate?: number | null;
+}
+
 /** A candidate that did not make the capsule, with the reason it was dropped. */
 export interface CapsuleV2ProductDiscarded {
   path: string;
@@ -108,6 +176,8 @@ export interface CapsuleV2ProductResponse {
   engine: "v2";
   /** Capsule v2 is opt-in/experimental on the product surface. */
   experimental: true;
+  /** The task/query the capsule was built for (empty string when not supplied). */
+  query: string;
   /** The resolved intent the capsule was built for. */
   intent: string;
   /** Realised sizing tier, or `no_context` when no pivot was found. */
@@ -115,8 +185,22 @@ export interface CapsuleV2ProductResponse {
   /** Human-readable reason — present only on the `no_context` path. Null otherwise. */
   reason: string | null;
   budget: CapsuleV2ProductBudget;
+  /** Role/section counts for the VEXP-shaped first-call summary. */
+  summary: CapsuleV2ProductSummary;
   pivots: CapsuleV2ProductItem[];
   support: CapsuleV2ProductItem[];
+  /**
+   * Honest unavailable-data / bounded-content markers. Never fabricated — e.g.
+   * `no_pivot_recovered`, `pivot_source_bounded_to_signatures`,
+   * `impact_snippets_unavailable`. Empty when nothing notable.
+   */
+  warnings: string[];
+  /**
+   * Compact, deterministic agent-facing render of the capsule using stable role
+   * glyphs (`●` pivot, `○` skel, `→` impact, `◎` memory, `◇` rule) with a `why:`
+   * line per item and a closing budget line. Pure: carries no latency/clock data.
+   */
+  digest: string;
   /** Bounded near-miss list (see `discardedTotal` for the true count). */
   discarded: CapsuleV2ProductDiscarded[];
   /** Total discarded candidates the engine produced (before the product cap). */
@@ -148,6 +232,129 @@ function projectItem(item: CapsuleV2Item): CapsuleV2ProductItem {
   };
 }
 
+// How many items per group (pivots, support) the digest spells out before
+// collapsing the tail into a `…(+N more)` line, so the render stays bounded on a
+// noisy capsule. The structured `pivots`/`support` arrays still carry every item.
+const MAX_DIGEST_ITEMS_PER_GROUP = 6;
+
+/** The stable target identity used in the digest: fqName, else `path::symbol`, else path. */
+function digestTarget(item: CapsuleV2ProductItem): string {
+  if (typeof item.fqName === "string" && item.fqName.trim().length > 0) {
+    return item.fqName;
+  }
+  const symbol = typeof item.symbol === "string" ? item.symbol.trim() : "";
+  return symbol.length > 0 ? `${item.path}::${symbol}` : item.path;
+}
+
+/** The `[mode ~Nt]` content tag, e.g. `[full ~40t]` / `[signature ~12t]`. */
+function digestContentTag(item: CapsuleV2ProductItem): string {
+  const mode = item.contentMode;
+  return Number.isFinite(item.estimatedTokens)
+    ? `[${mode} ~${item.estimatedTokens}t]`
+    : `[${mode}]`;
+}
+
+/** One item's digest lines: the glyph line plus an indented `why:` line when known. */
+function digestItemLines(
+  glyph: string,
+  label: string,
+  item: CapsuleV2ProductItem,
+): string[] {
+  const lines = [`${glyph} ${label} ${digestTarget(item)}  ${digestContentTag(item)}`];
+  const why = item.evidence.length > 0 ? item.evidence[0] : item.roleReason;
+  if (typeof why === "string" && why.trim().length > 0) {
+    lines.push(`    why: ${why.trim()}`);
+  }
+  return lines;
+}
+
+/** The closing budget/accounting line; appends a saved-token clause only when defensible. */
+function digestBudgetLine(
+  budget: CapsuleV2ProductBudget,
+  savedTokensEstimate: number | null | undefined,
+): string {
+  let line = `budget: ${budget.estimatedTokens}/${budget.maxTokens}t (${budget.usedPercent}%)`;
+  if (typeof savedTokensEstimate === "number" && savedTokensEstimate > 0) {
+    line += `  saved≈${savedTokensEstimate}t vs full-file`;
+  }
+  return line;
+}
+
+/**
+ * Render the compact, deterministic VEXP-shaped digest. Pure: it touches no clock
+ * and fabricates nothing — impact/memory/rules lines appear only when the caller
+ * routes those seams in, and an unavailable seam renders an explicit
+ * `unavailable` marker rather than an invented count.
+ */
+function renderCapsuleV2Digest(input: {
+  query: string;
+  actualMode: string;
+  reason: string | null;
+  pivots: CapsuleV2ProductItem[];
+  support: CapsuleV2ProductItem[];
+  budget: CapsuleV2ProductBudget;
+  impact?: CapsuleV2DigestImpactSeam | null;
+  memory?: CapsuleV2DigestMemorySeam | null;
+  rules?: CapsuleV2DigestRulesSeam | null;
+  savedTokensEstimate?: number | null;
+}): string {
+  const lines: string[] = [];
+  const query = input.query.trim();
+  if (query.length > 0) {
+    lines.push(`# ${query}`);
+  }
+
+  if (input.actualMode === "no_context" || (input.pivots.length === 0 && input.support.length === 0)) {
+    lines.push("(no high-confidence pivot recovered)");
+    if (typeof input.reason === "string" && input.reason.trim().length > 0) {
+      lines.push(`reason: ${input.reason.trim()}`);
+    }
+  } else {
+    const pivotsShown = input.pivots.slice(0, MAX_DIGEST_ITEMS_PER_GROUP);
+    for (const pivot of pivotsShown) {
+      lines.push(...digestItemLines("●", "pivot", pivot));
+    }
+    if (input.pivots.length > pivotsShown.length) {
+      lines.push(`  …(+${input.pivots.length - pivotsShown.length} more pivots)`);
+    }
+    const supportShown = input.support.slice(0, MAX_DIGEST_ITEMS_PER_GROUP);
+    for (const item of supportShown) {
+      lines.push(...digestItemLines("○", "skel", item));
+    }
+    if (input.support.length > supportShown.length) {
+      lines.push(`  …(+${input.support.length - supportShown.length} more support)`);
+    }
+  }
+
+  if (input.impact) {
+    if (input.impact.available === false) {
+      lines.push("→ impact unavailable");
+    } else {
+      const suffix = input.impact.snippetsAvailable === true
+        ? ""
+        : " (summary only — snippets unavailable)";
+      lines.push(`→ impact ${input.impact.dependentCount} dependents${suffix}`);
+    }
+  }
+  if (input.memory) {
+    lines.push(
+      input.memory.available === false
+        ? "◎ memory unavailable"
+        : `◎ memory ${input.memory.sessionCount} session, ${input.memory.durableCount} durable`,
+    );
+  }
+  if (input.rules) {
+    lines.push(
+      input.rules.available === false
+        ? "◇ rules unavailable"
+        : `◇ rule ${input.rules.activeCount} active`,
+    );
+  }
+
+  lines.push(digestBudgetLine(input.budget, input.savedTokensEstimate));
+  return lines.join("\n");
+}
+
 function projectDiscarded(entry: CapsuleV2Discarded): CapsuleV2ProductDiscarded {
   return {
     path: entry.path,
@@ -165,9 +372,10 @@ function projectDiscarded(entry: CapsuleV2Discarded): CapsuleV2ProductDiscarded 
  */
 export function toCapsuleV2ProductResponse(
   result: CapsuleV2Result,
+  options: ToCapsuleV2ProductResponseOptions = {},
 ): CapsuleV2ProductResponse {
-  const pivots = Array.isArray(result.pivots) ? result.pivots : [];
-  const support = Array.isArray(result.support) ? result.support : [];
+  const rawPivots = Array.isArray(result.pivots) ? result.pivots : [];
+  const rawSupport = Array.isArray(result.support) ? result.support : [];
   const discarded = Array.isArray(result.discarded) ? result.discarded : [];
   const diagnostics = result.diagnostics;
   const editRiskDirectives = Array.isArray(diagnostics.edit_risk_directives)
@@ -177,19 +385,92 @@ export function toCapsuleV2ProductResponse(
     ? result.actionability_hints
     : [];
 
+  const pivots = rawPivots.map(projectItem);
+  const support = rawSupport.map(projectItem);
+  const budget: CapsuleV2ProductBudget = {
+    maxTokens: result.budget.max_tokens,
+    estimatedTokens: result.budget.estimated_tokens,
+    usedPercent: result.budget.used_percent,
+  };
+  const query = typeof options.query === "string" ? options.query : "";
+  const reason = typeof result.reason === "string" ? result.reason : null;
+  const impact = options.impact ?? null;
+  const memory = options.memory ?? null;
+  const rules = options.rules ?? null;
+
+  // Section counts. pivot/support/skeleton come from the capsule's own items;
+  // skeletonCount is the skeletonized scaffolding (anything not rendered as full
+  // source). impact/memory/rule counts are present only when their seam was routed
+  // in — an absent count means "not supplied", never a fabricated 0.
+  const skeletonCount = [...pivots, ...support].filter(
+    (item) => item.contentMode !== CapsuleV2ContentMode.Full,
+  ).length;
+  const summary: CapsuleV2ProductSummary = {
+    pivotCount: pivots.length,
+    supportCount: support.length,
+    skeletonCount,
+    ...(impact ? { impactCount: impact.dependentCount } : {}),
+    ...(memory ? { memoryCount: memory.sessionCount + memory.durableCount } : {}),
+    ...(rules ? { ruleCount: rules.activeCount } : {}),
+  };
+
+  // Honest, deduped, order-stable warnings. Derived from the capsule itself plus
+  // any routed-in unavailability, then merged with caller-supplied warnings.
+  const warnings: string[] = [];
+  const addWarning = (warning: string): void => {
+    if (warning.length > 0 && !warnings.includes(warning)) {
+      warnings.push(warning);
+    }
+  };
+  if (result.actual_mode === "no_context") {
+    addWarning("no_pivot_recovered");
+  }
+  if (pivots.length > 0 && pivots.every((item) => item.contentMode !== CapsuleV2ContentMode.Full)) {
+    addWarning("pivot_source_bounded_to_signatures");
+  }
+  if (impact && impact.available === false) {
+    addWarning("impact_unavailable");
+  } else if (impact && impact.snippetsAvailable !== true) {
+    addWarning("impact_snippets_unavailable");
+  }
+  if (memory && memory.available === false) {
+    addWarning("memory_unavailable");
+  }
+  if (rules && rules.available === false) {
+    addWarning("rules_unavailable");
+  }
+  for (const warning of options.warnings ?? []) {
+    if (typeof warning === "string") {
+      addWarning(warning);
+    }
+  }
+
+  const digest = renderCapsuleV2Digest({
+    query,
+    actualMode: result.actual_mode,
+    reason,
+    pivots,
+    support,
+    budget,
+    impact,
+    memory,
+    rules,
+    savedTokensEstimate: options.savedTokensEstimate ?? null,
+  });
+
   return {
     engine: "v2",
     experimental: true,
+    query,
     intent: result.intent,
     actualMode: result.actual_mode,
-    reason: typeof result.reason === "string" ? result.reason : null,
-    budget: {
-      maxTokens: result.budget.max_tokens,
-      estimatedTokens: result.budget.estimated_tokens,
-      usedPercent: result.budget.used_percent,
-    },
-    pivots: pivots.map(projectItem),
-    support: support.map(projectItem),
+    reason,
+    budget,
+    summary,
+    pivots,
+    support,
+    warnings,
+    digest,
     discarded: discarded.slice(0, MAX_PRODUCT_DISCARDED).map(projectDiscarded),
     discardedTotal: discarded.length,
     diagnostics: {
