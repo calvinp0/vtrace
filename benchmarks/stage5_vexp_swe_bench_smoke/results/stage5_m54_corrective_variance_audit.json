@@ -1,0 +1,91 @@
+{
+  "milestone": "M54",
+  "title": "Offline audit of M53 corrective prompt/response variance",
+  "mode": "report-only offline audit (no live agents, no Docker, no eval, no verifier)",
+  "instance": "sphinx-doc__sphinx-7462",
+  "source": "M53 commit 162c619; runs eval-m53-ruleout-corrective-sphinx-7462-{r1,r2,r3}",
+  "runMatrix": [
+    {
+      "label": "eval-m53-ruleout-corrective-sphinx-7462-r1",
+      "classification": "candidate_ast_edit",
+      "checkerFired": true,
+      "secondCall": true,
+      "candidate": true,
+      "astPyEdit": true,
+      "firstPassPatchSha": "1f5e48d6a5f390e1ff655bc66c311a2ade012493ae4f11efc76f2ce44267c849",
+      "revisedPatchSha": "14e165a7578fc69e075140626c7788b5c485a8550b2dc9ac87c0340f71d0d26d",
+      "correctivePromptSha": "fc42beead0fb9055",
+      "responseSummary": "Stated paired ast.py returns '' instead of '()'; judged it loses the () notation (Tuple[()] -> Tuple[]) hence incorrect output; edited BOTH python.py and ast.py to early-return '()' / punctuation node."
+    },
+    {
+      "label": "eval-m53-ruleout-corrective-sphinx-7462-r2",
+      "classification": "candidate_no_ast_edit",
+      "checkerFired": true,
+      "secondCall": true,
+      "candidate": true,
+      "astPyEdit": false,
+      "firstPassPatchSha": "1f5e48d6a5f390e1ff655bc66c311a2ade012493ae4f11efc76f2ce44267c849",
+      "revisedPatchSha": "1f5e48d6a5f390e1ff655bc66c311a2ade012493ae4f11efc76f2ce44267c849",
+      "correctivePromptSha": "fc42beead0fb9055",
+      "responseSummary": "Stated paired ast.py returns '' for empty tuple; judged it 'no crash, no incorrect output' / 'correct output'; declined to edit ast.py; revised patch byte-identical to first pass."
+    },
+    {
+      "label": "eval-m53-ruleout-corrective-sphinx-7462-r3",
+      "classification": "checker_did_not_fire",
+      "checkerFired": false,
+      "secondCall": false,
+      "candidate": false,
+      "astPyEdit": false,
+      "firstPassPatchSha": "6aca9946519543a6235fae2b3ccd4b706ed8ea4ea633d17e923fd6bd9914539f",
+      "revisedPatchSha": null,
+      "correctivePromptSha": null,
+      "responseSummary": "11-turn first pass; surfaced + grep-inspected ast.py; emitted a crash-shaped rule-out ('safely handles empty tuples. The issue is only in python.py') but phrasing matched no RULEOUT_CUE token and no PIVOT_DECISION marker -> checker did not detect a rule-out -> no fire."
+    }
+  ],
+  "r1_vs_r2": {
+    "firstPassPatchesIdentical": true,
+    "checkerJsonIdentical": false,
+    "checkerJsonDifferenceScope": "only the quoted evidence[] first-pass snippet; all structured/decision fields identical (triggered, triggerKind, originalDecision=ruledOut, effectiveDecision=unclear, pairedOperation=unparse, editedImplementation=sphinx/domains/python.py::unparse, ruledOutImplementation=sphinx/pycode/ast.py::unparse)",
+    "correctivePromptsIdentical": true,
+    "promptInputsIdenticalExceptLabels": true,
+    "promptHasNoRunSpecificTokens": true,
+    "sameFirstPassDiff": true,
+    "responseReasoningDiffered": true,
+    "r2SaidEmptyStringAcceptable": true,
+    "r1SaidEmptyStringNotAcceptable": true,
+    "eitherCitedRepositoryEvidence": false,
+    "eitherRanOrRequestedTests": "both attempted ad hoc tests; both hit the same unrelated Jinja2 import error; neither ran the repository test suite (correct, oracle-free)",
+    "r1Modified": "both (python.py + ast.py)",
+    "r2Modified": "only python.py"
+  },
+  "r3_trigger_analysis": {
+    "astPySurfacedInContext": true,
+    "astPyReadOrMentioned": true,
+    "astPyToolCalls": "1 grep search (isinstance(node, ast.Tuple)) in sphinx/pycode/ast.py; 4 prose mentions",
+    "pivotDecisionMarkerPresent": false,
+    "semanticRuleOutPresent": true,
+    "detectedRuleOutPresent": false,
+    "rootCause": "RULEOUT_CUE lexical recall gap: agent's rule-out phrasing ('safely handles empty tuples; the issue is only in python.py') contains crash-shaped reasoning but no RULEOUT_CUE token, and no machine-readable PIVOT_DECISION marker exists, so ruleOutEvidence() returns undefined and the checker treats it as no-rule-out.",
+    "firstPassEditedOnlyPythonPy": true,
+    "decision": "B-narrow: exposes a rule-out DETECTION recall gap, not a legitimate absence; a NARROW cue broadening is fair/oracle-free; the BROAD 'fire on any unedited surfaced pivot' expansion is NOT justified by one data point"
+  },
+  "promptWeakness": {
+    "forcesConcreteOutputStatement": false,
+    "forcesRoundTripPreservationComparison": false,
+    "rejectsDoesNotCrashAsSufficient": "implied but not explicit; r2 still rationalized '' as correct output",
+    "repositoryEvidenceDemandHonored": "by neither r1 nor r2"
+  },
+  "leakageAudit": {
+    "proposedWordingClean": true,
+    "checkedFor": ["gold patch", "hidden tests", "FAIL_TO_PASS", "PASS_TO_PASS", "test_unparse[()-()]", "benchmark expected output", "resolved status"],
+    "result": "no forbidden strings in proposed prompt revision"
+  },
+  "recommendation": "A",
+  "recommendationText": "M55: implement a sharper corrective prompt that forces the model to (1) state the concrete value the paired implementation returns for the edge case, (2) state whether that value round-trips/preserves the source construct, (3) justify behavior-preservation with repository evidence and explicitly reject 'does not crash' as sufficient; then run a 3-rep candidate-generation validation. The r3 rule-out-detection recall gap is a documented SECONDARY follow-up (future M56), narrow and conservative, to be done AFTER A — fixing the trigger alone would only route r3 into the loop with the same 'empty string is fine' judgment r2 held, not raise the ast.py edit rate.",
+  "codeChanged": false,
+  "liveAgentsAvoided": true,
+  "dockerAvoided": true,
+  "evalAvoided": true,
+  "verifierAvoided": true,
+  "commit": "Audit corrective variance"
+}
