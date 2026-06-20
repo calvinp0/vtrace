@@ -1,0 +1,4 @@
+label,valid,first_pass_produced,first_pass_files,fp_python_py,fp_ast_py,checker_triggered,corrective_prompt_written,corrective_prompt_safe,second_call_executed,corrective_response_written,revised_produced,revised_files,rev_python_py,rev_ast_py,rev_both_expected,canonical_hash_unchanged,canonical_replaced,adoption_eligible,forbidden_leakage,classification
+eval-m53-ruleout-corrective-sphinx-7462-r1,yes,yes,sphinx/domains/python.py,yes,no,yes,yes,yes,yes,yes,yes,sphinx/domains/python.py|sphinx/pycode/ast.py,yes,yes,yes,yes,false,false,none,candidate_ast_edit
+eval-m53-ruleout-corrective-sphinx-7462-r2,yes,yes,sphinx/domains/python.py,yes,no,yes,yes,yes,yes,yes,yes,sphinx/domains/python.py,yes,no,no,yes,false,false,none,candidate_no_ast_edit
+eval-m53-ruleout-corrective-sphinx-7462-r3,yes,yes,sphinx/domains/python.py,yes,no,no,no,n/a,no,no,no,,no,no,no,yes,false,false,none,checker_did_not_fire
