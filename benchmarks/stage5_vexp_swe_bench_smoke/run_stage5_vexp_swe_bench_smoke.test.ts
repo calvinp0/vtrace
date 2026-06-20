@@ -59,6 +59,9 @@ import {
   buildCapsuleV2Task,
   buildAgentCompliance,
   capsuleModeForInstance,
+  buildInjectedCapsuleV2DigestBlock,
+  CAPSULE_V2_DIGEST_SENTINEL_END,
+  CAPSULE_V2_DIGEST_SENTINEL_START,
   capsuleQueryTextFor,
   classifyCapsuleOutput,
   classifyCapsuleV2Output,
@@ -143,6 +146,7 @@ import {
   summarizeOrderedToolCalls,
   type OrderedToolCall,
 } from "../../src/capsule/toolCallLog";
+import { toCapsuleV2ProductResponse } from "../../src/capsuleV2/productAdapter";
 
 // Minimal stand-in for the external vexp-swe-bench Claude Code adapter: it has
 // the anchor line and the `claude -p <prompt>` args array, so the patcher can
@@ -1876,6 +1880,95 @@ test("classifyCapsuleOutput routes a Capsule v2 payload to the v2 classifier", (
   const classified = classifyCapsuleOutput(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
   assert.equal(classified.policyAction, "inject");
   assert.match(classified.context, /get_combinator_sql/);
+});
+
+// --- M55W: opt-in Capsule v2 digest injection (default-off measurability seam) ---
+
+test("M55W: default classify (no --inject-capsule-digest) omits the digest sentinel", () => {
+  const result = JSON.parse(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
+  // Default (no options) and an explicit injectDigest:false both reproduce the
+  // pre-M55W injected context — no sentinel either way.
+  for (const inject of [
+    classifyCapsuleV2Output(result),
+    classifyCapsuleV2Output(result, { injectDigest: false, query: "q" }),
+  ]) {
+    assert.equal(inject.policyAction, "inject");
+    assert.doesNotMatch(inject.context, new RegExp(CAPSULE_V2_DIGEST_SENTINEL_START));
+    assert.doesNotMatch(inject.context, new RegExp(CAPSULE_V2_DIGEST_SENTINEL_END));
+  }
+});
+
+test("M55W: glyph/budget markers are NOT a reliable digest signal — only the sentinel is", () => {
+  // The pre-M55 renderCapsuleV2Human output already carries ● and `budget:`; a
+  // validator keying on those would false-positive on a non-digest run.
+  const inject = classifyCapsuleV2Output(
+    JSON.parse(capsuleV2Json({ pivotSource: "def get_combinator_sql(self): ..." })),
+  );
+  assert.match(inject.context, /●/); // glyph present pre-M55
+  assert.match(inject.context, /budget:/); // budget line present pre-M55
+  assert.doesNotMatch(inject.context, new RegExp(CAPSULE_V2_DIGEST_SENTINEL_START)); // but NOT a digest run
+});
+
+test("M55W: injectDigest prepends the sentinel-wrapped product digest, leading the context", () => {
+  const result = JSON.parse(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
+  const query = "combinator SQL output is wrong";
+  const inject = classifyCapsuleV2Output(result, { injectDigest: true, query });
+
+  assert.equal(inject.policyAction, "inject");
+  // Sentinel block is present...
+  assert.match(inject.context, new RegExp(CAPSULE_V2_DIGEST_SENTINEL_START));
+  assert.match(inject.context, new RegExp(CAPSULE_V2_DIGEST_SENTINEL_END));
+  // ...and leads the injected context (before the inspect-first/human render).
+  assert.ok(
+    inject.context.indexOf(CAPSULE_V2_DIGEST_SENTINEL_START) === 0,
+    "digest sentinel block leads the injected context",
+  );
+  // The digest uses the pivot fqName (SQLCompiler.get_combinator_sql), so the file
+  // path `compiler.py` appears ONLY in the later human/inspect-first sections —
+  // a reliable "after the digest" marker.
+  assert.ok(
+    inject.context.indexOf(CAPSULE_V2_DIGEST_SENTINEL_END)
+      < inject.context.indexOf("compiler.py"),
+    "digest precedes the human render / inspect-first sections",
+  );
+
+  // The block between the sentinels contains the EXACT MCP product digest.
+  const productDigest = toCapsuleV2ProductResponse(result, { query }).digest;
+  const start = inject.context.indexOf(CAPSULE_V2_DIGEST_SENTINEL_START);
+  const end = inject.context.indexOf(CAPSULE_V2_DIGEST_SENTINEL_END);
+  const block = inject.context.slice(start, end);
+  assert.ok(block.includes(productDigest), "sentinel block carries capsuleV2.digest content");
+  assert.match(block, /● pivot/);
+  assert.match(block, /budget:/);
+});
+
+test("M55W: injected digest carries honest not-threaded seam warnings (no fabricated counts)", () => {
+  const result = JSON.parse(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
+  const block = buildInjectedCapsuleV2DigestBlock(result, "q");
+  assert.match(block, /warnings:/);
+  assert.match(block, /impact_not_threaded_into_digest/);
+  assert.match(block, /memory_not_threaded_into_digest/);
+  assert.match(block, /rules_not_threaded_into_digest/);
+  // The seams are warning-only: no fabricated → impact / ◎ memory / ◇ rule lines.
+  assert.doesNotMatch(block, /→ impact/);
+  assert.doesNotMatch(block, /◎ memory/);
+  assert.doesNotMatch(block, /◇ rule/);
+});
+
+test("M55W: classifyCapsuleOutput threads digest options through to the v2 classifier", () => {
+  const json = capsuleV2Json({ pivotSymbol: "get_combinator_sql" });
+  const withDigest = classifyCapsuleOutput(json, { injectDigest: true, query: "q" });
+  const without = classifyCapsuleOutput(json);
+  assert.match(withDigest.context, new RegExp(CAPSULE_V2_DIGEST_SENTINEL_START));
+  assert.doesNotMatch(without.context, new RegExp(CAPSULE_V2_DIGEST_SENTINEL_START));
+});
+
+test("M55W: --inject-capsule-digest parses default-off and on", () => {
+  assert.equal(parseArgs(["--mode", "prepare", "--instances", "a__1"]).injectCapsuleDigest, false);
+  assert.equal(
+    parseArgs(["--mode", "prepare", "--instances", "a__1", "--inject-capsule-digest"]).injectCapsuleDigest,
+    true,
+  );
 });
 
 test("classifyCapsuleV2Output carries the full v2 result for artifact persistence", () => {

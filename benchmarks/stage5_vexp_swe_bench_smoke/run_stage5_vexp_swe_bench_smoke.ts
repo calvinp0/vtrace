@@ -368,6 +368,14 @@ export interface CliConfig {
   readonly capsuleEngine: CapsuleEngine;
   readonly capsuleIntent: CapsuleV2Intent;
   readonly capsuleBudget: number;
+  // When true AND capsuleEngine === "v2", prepend the M55 product `capsuleV2.digest`
+  // (the VEXP-shaped ●/○/→/◎/◇ render) to the injected context, wrapped in the
+  // CAPSULE_V2_DIGEST sentinel so a validator can detect it unambiguously
+  // (--inject-capsule-digest). Default false: the injected context is byte-identical
+  // to before. Test-only measurability seam — never a product default. The impact/
+  // memory/rules seams are NOT threaded into the Stage 5 capsule path, so the digest
+  // carries honest `*_not_threaded_into_digest` warnings rather than fabricated counts.
+  readonly injectCapsuleDigest: boolean;
   // When true AND capsuleEngine === "v2", also probe the PRODUCT surface
   // (`run-pipeline --capsule-engine v2`) per instance and persist its accounting /
   // contextEngine / capsuleV2 signals. Default false: pure instrumentation for the
@@ -904,6 +912,7 @@ const DEFAULT_CONFIG: CliConfig = {
   capsuleEngine: "v2",
   capsuleIntent: "auto",
   capsuleBudget: CAPSULE_V2_DEFAULT_BUDGET,
+  injectCapsuleDigest: false,
   captureProductV2Accounting: false,
   contextPolicyOverride: "auto",
   // PIVOT_CHECK is strict-risk-gated by default: it keeps the multi-pivot floor but
@@ -4290,13 +4299,69 @@ interface CapsuleV2Audit {
   readonly result: CapsuleV2Result;
 }
 
+// Stable sentinels wrapping the injected Capsule v2 product digest (M55W). A
+// validator detects an M55-digest run by THESE markers, never by the generic
+// ●/○/`budget:` markers — those already appeared in the pre-M55
+// `renderCapsuleV2Human` output, so a legacy/pre-M55 snapshot would false-positive
+// on glyphs alone. The sentinel only appears under `--inject-capsule-digest`.
+export const CAPSULE_V2_DIGEST_SENTINEL_START = "<VTRACE_CAPSULE_V2_DIGEST_START>";
+export const CAPSULE_V2_DIGEST_SENTINEL_END = "<VTRACE_CAPSULE_V2_DIGEST_END>";
+
+// Honest warnings stamped onto the injected digest: the Stage 5 capsule query path
+// produces only the capsule result (no impact/memory/rules), so those M55 seams are
+// not threaded into the digest. Surfaced as warnings, never fabricated counts.
+const DIGEST_UNTHREADED_SEAM_WARNINGS = [
+  "impact_not_threaded_into_digest",
+  "memory_not_threaded_into_digest",
+  "rules_not_threaded_into_digest",
+] as const;
+
+// Options controlling how a capsule query output is classified into injectable
+// context. An absent/empty value reproduces the pre-M55W behavior exactly, so every
+// existing single-arg caller (and the wide test surface) is unaffected.
+export interface ClassifyCapsuleOptions {
+  /** Prepend the sentinel-wrapped Capsule v2 product digest (M55W). v2 path only. */
+  readonly injectDigest?: boolean;
+  /** The task/query the capsule was built for (rendered as the digest header). */
+  readonly query?: string;
+}
+
+// Build the sentinel-wrapped digest block from a Capsule v2 result, or "" when the
+// result yields no renderable digest. Reuses the M55 product adapter so the injected
+// digest is byte-identical to the MCP `capsuleV2.digest`.
+export function buildInjectedCapsuleV2DigestBlock(
+  result: CapsuleV2Result,
+  query: string,
+): string {
+  const product = toCapsuleV2ProductResponse(result, {
+    query,
+    warnings: [...DIGEST_UNTHREADED_SEAM_WARNINGS],
+  });
+  const digest = product.digest.trim();
+  if (digest.length === 0) {
+    return "";
+  }
+  const warningsLine = product.warnings.length > 0
+    ? `warnings: ${product.warnings.join(", ")}`
+    : null;
+  return [
+    CAPSULE_V2_DIGEST_SENTINEL_START,
+    digest,
+    warningsLine,
+    CAPSULE_V2_DIGEST_SENTINEL_END,
+  ].filter((line): line is string => line !== null).join("\n");
+}
+
 // Classify a capsule `--json` (or raw) query output into a vtrace policy action.
 // A capsule SKIP is recorded honestly as a valid policy, never thrown as fatal:
 // it is detected from empty context paired with skip diagnostics — an explicit
 // `recommended_mode`/`actual_mode` of `skip`, or `pivot_count === 0` accompanied
 // by a retrieval reason. Empty context WITHOUT any of those signals is a real
 // error (e.g. a broken index) and still fails fast.
-export function classifyCapsuleOutput(stdout: string): CapsuleClassification {
+export function classifyCapsuleOutput(
+  stdout: string,
+  options: ClassifyCapsuleOptions = {},
+): CapsuleClassification {
   const trimmed = stdout.trim();
 
   // Non-JSON (legacy raw text): context iff non-empty, else an error.
@@ -4320,7 +4385,7 @@ export function classifyCapsuleOutput(stdout: string): CapsuleClassification {
   // `pivots` array + `actual_mode` and NO rendered `context` string. Detect and
   // classify it separately (rendering the injectable context from the result).
   if (Array.isArray(parsed.pivots) && isString(parsed.actual_mode)) {
-    return classifyCapsuleV2Output(parsed as unknown as CapsuleV2Result);
+    return classifyCapsuleV2Output(parsed as unknown as CapsuleV2Result, options);
   }
 
   const diagnostics = isRecord(parsed.diagnostics) ? parsed.diagnostics : {};
@@ -4456,7 +4521,10 @@ function errorClassification(message: string): CapsuleClassification {
 // so the agent sees exactly the Capsule v2 the CLI would print. A `no_context`
 // actual_mode is a valid SKIP policy (the cost-aware gate's no_context analogue),
 // never an error. Pivot/support counts come from the v2 diagnostics.
-export function classifyCapsuleV2Output(result: CapsuleV2Result): CapsuleClassification {
+export function classifyCapsuleV2Output(
+  result: CapsuleV2Result,
+  options: ClassifyCapsuleOptions = {},
+): CapsuleClassification {
   // Read defensively as an untyped record: the diagnostics surface is optional and
   // partial JSON must degrade to 0/false rather than throw (the guards below narrow).
   const diagnostics: Record<string, unknown> = isRecord(result.diagnostics) ? result.diagnostics : {};
@@ -4511,7 +4579,14 @@ export function classifyCapsuleV2Output(result: CapsuleV2Result): CapsuleClassif
   );
   const neighborhoodText = renderPivotNeighborhoodsText(neighborhood);
   const rendered = renderCapsuleV2Human(result).trim();
-  const context = [inspectFirstText, rendered, neighborhoodText]
+  // M55W: opt-in (--inject-capsule-digest) sentinel-wrapped product digest placed
+  // FIRST, so the agent sees the compact VEXP-shaped role hierarchy before the
+  // lower-value inspectFirst/human-render/neighborhood sections. Default-off → ""
+  // → the injected context is byte-identical to before.
+  const digestBlock = options.injectDigest === true
+    ? buildInjectedCapsuleV2DigestBlock(result, options.query ?? "")
+    : "";
+  const context = [digestBlock, inspectFirstText, rendered, neighborhoodText]
     .map((part) => part.trim())
     .filter((part) => part.length > 0)
     .join("\n\n");
@@ -6233,13 +6308,19 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
         command: string;
       }> => {
         const engineConfig = engine === config.capsuleEngine ? config : { ...config, capsuleEngine: engine };
-        const spec = buildVtraceQueryCommand(engineConfig, workspace, capsuleQueryTextFor(engineConfig, instance), mode);
+        const queryText = capsuleQueryTextFor(engineConfig, instance);
+        const spec = buildVtraceQueryCommand(engineConfig, workspace, queryText, mode);
         const command = renderCommand(spec);
         const result = await runProc(spec.command, spec.args);
         if (result.exitCode !== 0) {
           throw new EngineQueryError(`vtrace query failed (exit ${result.exitCode}): ${result.stderr.trim() || "(no stderr)"}`);
         }
-        const classified = classifyCapsuleOutput(result.stdout);
+        // M55W: only the v2 engine produces a v2-shaped result the digest applies to;
+        // a legacy fallback parse never reaches classifyCapsuleV2Output anyway.
+        const classified = classifyCapsuleOutput(result.stdout, {
+          injectDigest: config.injectCapsuleDigest && engine === "v2",
+          query: queryText,
+        });
         if (classified.policyAction === "error") {
           throw new EngineQueryError(classified.error ?? "vtrace query returned empty context.");
         }
@@ -9580,6 +9661,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         break;
       }
       case "--capsule-budget": config.capsuleBudget = requirePositiveInt(argv, ++index, arg); break;
+      case "--inject-capsule-digest": config.injectCapsuleDigest = true; break;
       case "--pivot-check-policy": {
         const value = requireValue(argv, ++index, arg);
         if (!PIVOT_CHECK_POLICIES.includes(value as PivotCheckPolicy)) {
@@ -9704,6 +9786,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --capsule-engine legacy|v2                    capsule retrieval engine for indexed-context (default: legacy)",
       "  --capsule-intent auto|debug|modify|refactor|impact|explain|test-failure   Capsule v2 intent (default: auto; v2 only)",
       "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
+      "  --inject-capsule-digest                       prepend the M55 product capsuleV2.digest (●/○/→/◎/◇ render) to the injected context, wrapped in a <VTRACE_CAPSULE_V2_DIGEST_START/END> sentinel (default: off; v2 only). Test-only measurability seam for the M55V digest A/B; impact/memory/rules are warning-only (not threaded). Never a product default",
       "  --pivot-check-policy off|multi_pivot|risk_gated|strict_risk_gated|always   when to inject PIVOT_CHECK (default: strict_risk_gated — inject only on a STRONG risk signal, rejecting hidden_pivot-only and two ordinary pivots; risk_gated injects on any high-risk signal)",
       "  --pivot-check-gate off|hard                   opt-in HARD two-phase context-to-action gate (default: off). 'hard' runs a READ-ONLY inspect-only Phase-1 preflight (mutation tools denied) whose checklist is verified before any Phase-2 solve; on a failed gate Phase 2 never runs (no solve, no Docker). v2 indexed-context only; orthogonal to --pivot-check-policy",
       "  --pivot-check-gate-phase1-only                 (with --pivot-check-gate hard) run only the read-only Phase-1 preflight + gate, then STOP — Phase 2 never runs even on a pass. Canary to prove the read-only preflight can pass without editing",
