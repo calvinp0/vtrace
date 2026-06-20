@@ -95,6 +95,14 @@ import {
   type RuleOutSufficiencyCheck,
 } from "../../src/capsuleV2/ruleoutSufficiency";
 import {
+  RULEOUT_CORRECTIVE_ARTIFACT_FILES,
+  buildRuleOutCorrectiveResult,
+  buildRuleOutCorrectiveSecondPassPrompt,
+  decideRuleOutCorrectivePass,
+  hasRuleOutCorrectiveForbiddenLeakage,
+  type RuleOutCorrectiveResult,
+} from "../../src/capsuleV2/ruleoutCorrectivePass";
+import {
   decideRevisionPass,
   buildRevisionPrompt,
   buildTestExpectation,
@@ -394,6 +402,10 @@ export interface CliConfig {
   // crash-only paired-implementation rule-out as unclear and write a corrective
   // prompt artifact. It never adopts or installs a revised patch.
   readonly ruleoutSufficiencyCheck: boolean;
+  // M51 default-off candidate-only corrective model call. This implies the M49
+  // checker, consumes only its safe prompt + the first-pass patch, and persists a
+  // separate revised candidate. It never replaces the canonical modelPatch.
+  readonly ruleoutSufficiencyCorrectivePass: boolean;
   // M14 corrective pivot-revision pass (--pivot-revision-pass). Default false. When true
   // AND --pivot-inspection-enforcement is set AND Capsule v2 context was injected AND the
   // M13 compliance checker finds missing/unclear candidates for the first patch, run ONE
@@ -909,6 +921,7 @@ const DEFAULT_CONFIG: CliConfig = {
   disablePivotCheck: false,
   pivotInspectionEnforcement: false,
   ruleoutSufficiencyCheck: false,
+  ruleoutSufficiencyCorrectivePass: false,
   pivotRevisionPass: false,
   revisionVerificationPolicy: "none",
   // M26 planner defaults: the revised pivot patch + the revision-phase test commands.
@@ -2058,6 +2071,14 @@ export async function runVtrace(config: CliConfig, deps: RunDeps = {}): Promise<
     ? await maybeRunRuleOutSufficiencyCheck(config, capsuleV2Bundles)
     : null;
 
+  if (config.ruleoutSufficiencyCorrectivePass) {
+    await maybeRunRuleOutSufficiencyCorrectivePass(
+      config,
+      deps,
+      ruleoutSufficiency,
+    );
+  }
+
   // M14 corrective pivot-revision pass (opt-in: --pivot-revision-pass + the M13
   // enforcement flag). Gated so the default suite never reaches it; reuses the
   // hard-gate spawn seam for the second `run` (no external harness internals touched).
@@ -2134,6 +2155,162 @@ async function maybeRunRuleOutSufficiencyCheck(
     );
   }
   return record;
+}
+
+export interface RuleOutCorrectivePassContext {
+  enabled: boolean;
+  outputDir: string;
+  canonicalResultsFile: string | null;
+  checker: RuleOutSufficiencyCheck | null;
+  checkerArtifactText: string;
+  correctivePrompt: string;
+  firstPassPatch: string;
+  runSecondPass: (prompt: string) => Promise<{
+    revisedPatch: string | null;
+    correctiveResponse: string | null;
+  }>;
+}
+
+async function sha256File(file: string | null): Promise<string | undefined> {
+  if (file === null) return undefined;
+  const content = await readFile(file).catch(() => null);
+  return content === null
+    ? undefined
+    : createHash("sha256").update(content).digest("hex");
+}
+
+export async function executeRuleOutSufficiencyCorrectivePass(
+  ctx: RuleOutCorrectivePassContext,
+): Promise<RuleOutCorrectiveResult> {
+  const decision = decideRuleOutCorrectivePass({
+    enabled: ctx.enabled,
+    checker: ctx.checker,
+    checkerArtifactText: ctx.checkerArtifactText,
+    correctivePrompt: ctx.correctivePrompt,
+    firstPassPatch: ctx.firstPassPatch,
+  });
+  const canonicalResultsFileShaBefore = await sha256File(ctx.canonicalResultsFile);
+  await mkdir(ctx.outputDir, { recursive: true });
+
+  let modelCallExecuted = false;
+  let revisedPatch: string | null = null;
+  let correctiveResponse: string | null = null;
+  let responseLeakageDetected = false;
+  if (decision.run) {
+    const prompt = buildRuleOutCorrectiveSecondPassPrompt({
+      correctivePrompt: ctx.correctivePrompt,
+      firstPassPatch: ctx.firstPassPatch,
+    });
+    modelCallExecuted = true;
+    const second = await ctx.runSecondPass(prompt);
+    revisedPatch = second.revisedPatch;
+    correctiveResponse = second.correctiveResponse;
+    responseLeakageDetected = hasRuleOutCorrectiveForbiddenLeakage(
+      `${correctiveResponse ?? ""}\n${revisedPatch ?? ""}`,
+    );
+  }
+
+  const responsePath = modelCallExecuted
+    ? path.join(ctx.outputDir, RULEOUT_CORRECTIVE_ARTIFACT_FILES.response)
+    : undefined;
+  const revisedPatchPath =
+    revisedPatch !== null
+    && revisedPatch.includes("diff --git")
+    && !responseLeakageDetected
+      ? path.join(ctx.outputDir, RULEOUT_CORRECTIVE_ARTIFACT_FILES.revisedPatch)
+      : undefined;
+  if (responsePath !== undefined) {
+    const persistedResponse = responseLeakageDetected
+      ? "Corrective response withheld because the leakage safety check failed.\n"
+      : `${correctiveResponse ?? ""}\n`;
+    await writeFile(responsePath, persistedResponse);
+  }
+  if (revisedPatchPath !== undefined) {
+    await writeFile(revisedPatchPath, revisedPatch!);
+  }
+
+  const canonicalResultsFileShaAfter = await sha256File(ctx.canonicalResultsFile);
+  const result = buildRuleOutCorrectiveResult({
+    enabled: ctx.enabled,
+    checker: ctx.checker,
+    decision,
+    modelCallExecuted,
+    revisedPatch,
+    revisedPatchPath,
+    correctiveResponsePath: responsePath,
+    firstPassPatch: ctx.firstPassPatch,
+    canonicalResultsFileShaBefore,
+    canonicalResultsFileShaAfter,
+    responseLeakageDetected,
+  });
+  await writeFile(
+    path.join(ctx.outputDir, RULEOUT_CORRECTIVE_ARTIFACT_FILES.result),
+    `${JSON.stringify(result, null, 2)}\n`,
+  );
+  if (canonicalResultsFileShaBefore !== canonicalResultsFileShaAfter) {
+    throw new Error(
+      "rule-out corrective pass mutated the canonical results artifact",
+    );
+  }
+  return result;
+}
+
+async function maybeRunRuleOutSufficiencyCorrectivePass(
+  config: CliConfig,
+  deps: RunDeps,
+  checker: RuleOutSufficiencyCheck | null,
+): Promise<RuleOutCorrectiveResult> {
+  const dir = rawConditionDir(config.out, "vtrace", config.runLabel);
+  const canonicalResultsFile = await findCanonicalResultsFile(dir);
+  const firstPassPatch = await readPhasePatchText(canonicalResultsFile);
+  const checkerArtifactText = await readFile(
+    path.join(dir, RULEOUT_SUFFICIENCY_ARTIFACT),
+    "utf8",
+  ).catch(() => "");
+  const correctivePrompt = await readFile(
+    path.join(dir, RULEOUT_SUFFICIENCY_PROMPT_ARTIFACT),
+    "utf8",
+  ).catch(() => "");
+  const instances = await resolveInstances(config);
+  const activePromptFile = path.join(
+    config.out,
+    "_ruleout_sufficiency_corrective_prompt.active.md",
+  );
+  const correctiveStream = path.join(
+    config.out,
+    "_agent_ruleout_sufficiency_corrective_stream.jsonl",
+  );
+  const correctiveDir = path.join(
+    path.dirname(dir),
+    "vtrace_ruleout_sufficiency_corrective",
+  );
+
+  return executeRuleOutSufficiencyCorrectivePass({
+    enabled: config.ruleoutSufficiencyCorrectivePass,
+    outputDir: dir,
+    canonicalResultsFile,
+    checker,
+    checkerArtifactText,
+    correctivePrompt,
+    firstPassPatch,
+    runSecondPass: async (prompt) => {
+      await writeFile(activePromptFile, `${prompt}\n`);
+      const phase = await spawnHardGatePhase(config, deps, {
+        instances,
+        outputDir: correctiveDir,
+        instructionsFile: activePromptFile,
+        streamFile: correctiveStream,
+        label: "rule-out-sufficiency corrective second pass",
+      });
+      const revisedPatch = await readPhasePatchText(phase.resultsFile);
+      const correctiveResponse = assistantTextFromStream(phase.streamContent);
+      return {
+        revisedPatch: revisedPatch.length > 0 ? revisedPatch : null,
+        correctiveResponse:
+          correctiveResponse.length > 0 ? correctiveResponse : null,
+      };
+    },
+  });
 }
 
 // Persist the revision-pass artifacts SEPARATELY (all "_"-prefixed so none is ever
@@ -9423,6 +9600,10 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--disable-pivot-check": config.disablePivotCheck = true; break;
       case "--pivot-inspection-enforcement": config.pivotInspectionEnforcement = true; break;
       case "--ruleout-sufficiency-check": config.ruleoutSufficiencyCheck = true; break;
+      case "--ruleout-sufficiency-corrective-pass":
+        config.ruleoutSufficiencyCorrectivePass = true;
+        config.ruleoutSufficiencyCheck = true;
+        break;
       case "--pivot-revision-pass": config.pivotRevisionPass = true; break;
       case "--revision-verification-policy": {
         const value = requireValue(argv, ++index, arg);
@@ -9529,6 +9710,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --disable-pivot-check                         force PIVOT_CHECK policy off for a controlled before run (compatibility; equivalent to --pivot-check-policy off)",
       "  --pivot-inspection-enforcement                M12 narrow enforcement: inject the '## Required pivot check before final patch' block (explicit EDITED/RULED OUT decision per non-lead pivot + co-edit candidate, with anti-over-edit guardrails) before the capsule body when a v2 pivot inspection contract exists. Off by default; independent of the legacy PIVOT_CHECK policy and --disable-pivot-check",
       "  --ruleout-sufficiency-check                    M49 experimental fair/static checker: after the first patch, reclassify a crash-only rule-out of a surfaced paired same-operation implementation as unclear and write additive check/corrective-prompt artifacts. Off by default; never replaces the canonical patch",
+      "  --ruleout-sufficiency-corrective-pass          M51 experimental candidate-only second pass: implies --ruleout-sufficiency-check; when the checker fires with a safe prompt and valid first patch, run one additional model call and persist a separate revised candidate. Off by default; never replaces modelPatch and never enables evaluation or verification",
       "  --pivot-revision-pass                         M14 experimental: after the first patch, if --pivot-inspection-enforcement is on and the M13 compliance checker finds missing/unclear non-lead pivot / co-edit candidates, run ONE corrective second-pass `run` (same VTRACE_AGENT_* seam as the hard gate; no external harness internals touched) with a revision prompt, then persist the original + revised patch, prompt, response, and before/after compliance. Off by default; requires --pivot-inspection-enforcement; never the product default",
       "  --revision-verification-policy none|agent-discovered-tests   M23 opt-in fair revision verification (default: none, unchanged behavior). 'agent-discovered-tests' makes the revision prompt ask the agent to discover/run a focused test it can justify from repo exploration (NOT hidden FAIL_TO_PASS labels), suppresses literal injected FAIL_TO_PASS names from the prompt, and emits a _revision_verification_policy.json provenance artifact. Scaffolding only — never adopts/rejects a patch and never makes the revision pass run",
       "  --disable-edit-guard                          suppress the EDIT_GUARD block (rides with PIVOT_CHECK) for a PIVOT_CHECK-only before run (default: EDIT_GUARD on)",

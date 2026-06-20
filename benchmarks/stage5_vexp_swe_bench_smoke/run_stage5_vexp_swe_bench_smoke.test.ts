@@ -77,6 +77,7 @@ import {
   extractCapsuleContext,
   extractInstanceContextSection,
   extractRow,
+  executeRuleOutSufficiencyCorrectivePass,
   findCanonicalResultsFile,
   findSweBenchRecord,
   installVtracePatch,
@@ -127,6 +128,10 @@ import {
   type Stage5Row,
   type Stage5RunEvidence,
 } from "./run_stage5_vexp_swe_bench_smoke";
+import {
+  RULEOUT_CORRECTIVE_ARTIFACT_FILES,
+} from "../../src/capsuleV2/ruleoutCorrectivePass";
+import type { RuleOutSufficiencyCheck } from "../../src/capsuleV2/ruleoutSufficiency";
 import {
   buildIndexMeta,
   readIndexMeta,
@@ -236,6 +241,7 @@ test("--disable-pivot-check is off by default and opt-in only", () => {
 test("--ruleout-sufficiency-check is default-off and opt-in only", () => {
   const base = parseArgs(["--mode", "prepare", "--instances", "a__1"]);
   assert.equal(base.ruleoutSufficiencyCheck, false);
+  assert.equal(base.ruleoutSufficiencyCorrectivePass, false);
   const enabled = parseArgs([
     "--mode",
     "prepare",
@@ -244,8 +250,166 @@ test("--ruleout-sufficiency-check is default-off and opt-in only", () => {
     "--ruleout-sufficiency-check",
   ]);
   assert.equal(enabled.ruleoutSufficiencyCheck, true);
+  assert.equal(enabled.ruleoutSufficiencyCorrectivePass, false);
   assert.equal(enabled.pivotRevisionPass, false);
   assert.equal(enabled.pivotInspectionEnforcement, false);
+});
+
+test("--ruleout-sufficiency-corrective-pass is default-off and implies the checker", () => {
+  const base = parseArgs(["--mode", "prepare", "--instances", "a__1"]);
+  assert.equal(base.ruleoutSufficiencyCorrectivePass, false);
+  assert.equal(base.ruleoutSufficiencyCheck, false);
+  const enabled = parseArgs([
+    "--mode",
+    "prepare",
+    "--instances",
+    "a__1",
+    "--ruleout-sufficiency-corrective-pass",
+  ]);
+  assert.equal(enabled.ruleoutSufficiencyCorrectivePass, true);
+  assert.equal(enabled.ruleoutSufficiencyCheck, true);
+  assert.equal(enabled.pivotRevisionPass, false);
+  assert.equal(enabled.pivotInspectionEnforcement, false);
+  assert.equal(enabled.allowDockerVerify, false);
+});
+
+function triggeredRuleOutCheck(
+  overrides: Partial<RuleOutSufficiencyCheck> = {},
+): RuleOutSufficiencyCheck {
+  return {
+    enabled: true,
+    triggered: true,
+    oracleFree: true,
+    evidence: [],
+    missingEvidence: ["concrete output-preserving evidence"],
+    correctivePromptWritten: true,
+    ruledOutImplementation: "sphinx/pycode/ast.py::unparse",
+    canonicalReplaced: false,
+    adoptionEligible: false,
+    ...overrides,
+  };
+}
+
+const RULEOUT_FIRST_PATCH = [
+  "diff --git a/sphinx/domains/python.py b/sphinx/domains/python.py",
+  "--- a/sphinx/domains/python.py",
+  "+++ b/sphinx/domains/python.py",
+  "@@ -1 +1 @@",
+  "-old",
+  "+new",
+  "",
+].join("\n");
+
+test("checker-only execution does not call a corrective model", async () => {
+  const dir = await tmpDir("ruleout-corrective-off");
+  const canonical = path.join(dir, "swebench.jsonl");
+  await writeFile(canonical, `${JSON.stringify({ modelPatch: RULEOUT_FIRST_PATCH })}\n`);
+  let calls = 0;
+  const result = await executeRuleOutSufficiencyCorrectivePass({
+    enabled: false,
+    outputDir: dir,
+    canonicalResultsFile: canonical,
+    checker: triggeredRuleOutCheck(),
+    checkerArtifactText: "{}",
+    correctivePrompt: "Inspect the paired implementation.",
+    firstPassPatch: RULEOUT_FIRST_PATCH,
+    runSecondPass: async () => {
+      calls += 1;
+      return { revisedPatch: null, correctiveResponse: null };
+    },
+  });
+  assert.equal(calls, 0);
+  assert.equal(result.correctiveModelCallExecuted, false);
+  assert.equal(result.canonicalReplaced, false);
+  assert.equal(result.adoptionEligible, false);
+});
+
+test("corrective execution writes separate candidate artifacts and preserves modelPatch", async () => {
+  const dir = await tmpDir("ruleout-corrective-run");
+  const canonical = path.join(dir, "swebench.jsonl");
+  const canonicalContent = `${JSON.stringify({ modelPatch: RULEOUT_FIRST_PATCH })}\n`;
+  await writeFile(canonical, canonicalContent);
+  const revised = [
+    RULEOUT_FIRST_PATCH.trim(),
+    "diff --git a/sphinx/pycode/ast.py b/sphinx/pycode/ast.py",
+    "--- a/sphinx/pycode/ast.py",
+    "+++ b/sphinx/pycode/ast.py",
+    "@@ -1 +1 @@",
+    "-old",
+    "+new",
+    "",
+  ].join("\n");
+  let receivedPrompt = "";
+  const result = await executeRuleOutSufficiencyCorrectivePass({
+    enabled: true,
+    outputDir: dir,
+    canonicalResultsFile: canonical,
+    checker: triggeredRuleOutCheck(),
+    checkerArtifactText: JSON.stringify(triggeredRuleOutCheck()),
+    correctivePrompt: "Inspect the paired implementation using repository evidence.",
+    firstPassPatch: RULEOUT_FIRST_PATCH,
+    runSecondPass: async (prompt) => {
+      receivedPrompt = prompt;
+      return {
+        revisedPatch: revised,
+        correctiveResponse: "Revised the paired implementation from source evidence.",
+      };
+    },
+  });
+  assert.match(receivedPrompt, /First-pass patch/);
+  assert.equal(result.correctiveModelCallExecuted, true);
+  assert.equal(result.revisedPatchProduced, true);
+  assert.equal(result.revisedPatchEditsRuledOutImplementation, true);
+  assert.equal(result.canonicalPatchUnchanged, true);
+  assert.equal(result.canonicalReplaced, false);
+  assert.equal(result.adoptionEligible, false);
+  assert.equal(await readFile(canonical, "utf8"), canonicalContent);
+  assert.equal(
+    await readFile(path.join(dir, RULEOUT_CORRECTIVE_ARTIFACT_FILES.revisedPatch), "utf8"),
+    revised,
+  );
+  assert.match(
+    await readFile(path.join(dir, RULEOUT_CORRECTIVE_ARTIFACT_FILES.response), "utf8"),
+    /Revised the paired implementation/,
+  );
+  const persisted = JSON.parse(
+    await readFile(path.join(dir, RULEOUT_CORRECTIVE_ARTIFACT_FILES.result), "utf8"),
+  );
+  assert.equal(persisted.canonicalReplaced, false);
+  assert.equal(persisted.adoptionEligible, false);
+});
+
+test("missing artifacts and unsafe prompts fail closed without a second call", async () => {
+  for (const sample of [
+    { checker: null, checkerArtifactText: "", prompt: "", patch: "" },
+    {
+      checker: triggeredRuleOutCheck(),
+      checkerArtifactText: "{}",
+      prompt: "FAIL_TO_PASS must pass",
+      patch: RULEOUT_FIRST_PATCH,
+    },
+  ]) {
+    const dir = await tmpDir("ruleout-corrective-skip");
+    let calls = 0;
+    const result = await executeRuleOutSufficiencyCorrectivePass({
+      enabled: true,
+      outputDir: dir,
+      canonicalResultsFile: null,
+      checker: sample.checker,
+      checkerArtifactText: sample.checkerArtifactText,
+      correctivePrompt: sample.prompt,
+      firstPassPatch: sample.patch,
+      runSecondPass: async () => {
+        calls += 1;
+        return { revisedPatch: null, correctiveResponse: null };
+      },
+    });
+    assert.equal(calls, 0);
+    assert.equal(result.correctiveModelCallExecuted, false);
+    assert.equal(result.revisedPatchProduced, false);
+    assert.equal(result.canonicalReplaced, false);
+    assert.equal(result.adoptionEligible, false);
+  }
 });
 
 test("--disable-edit-guard is off by default and opt-in only", () => {
