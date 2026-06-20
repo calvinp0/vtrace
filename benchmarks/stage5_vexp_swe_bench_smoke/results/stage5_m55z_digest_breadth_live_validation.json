@@ -1,0 +1,4393 @@
+{
+  "milestone": "M55Z",
+  "model": "claude-opus-4-5-20251101",
+  "selected_tasks": 24,
+  "digest_runs_found": 24,
+  "digest_valid": 24,
+  "digest_invalid": [],
+  "digest_missing": [],
+  "fresh_baselines": 3,
+  "reused_baselines": 21,
+  "paired_complete": 24,
+  "resolution": {
+    "baseline_resolved": 15,
+    "digest_resolved": 17,
+    "of": 24
+  },
+  "paired_outcomes": {
+    "both_pass": 14,
+    "both_fail": 6,
+    "digest_only_pass": 3,
+    "baseline_only_pass": 1
+  },
+  "pooled": {
+    "total_tokens": {
+      "digest_sum": 31866514,
+      "baseline_sum": 37631675.5,
+      "pct": -15.3
+    },
+    "cache_read": {
+      "digest_sum": 30100760,
+      "baseline_sum": 36124475.5,
+      "pct": -16.7
+    },
+    "cost": {
+      "digest_sum": 15.92,
+      "baseline_sum": 18.27,
+      "pct": -12.9
+    }
+  },
+  "mean_delta": {
+    "cost": -0.1,
+    "duration_ms": -3449.25,
+    "input_tokens_total": -43.5,
+    "output_tokens_total": -16.79,
+    "cache_read_tokens_total": -250988.15,
+    "cache_write_tokens_total": 17277.44,
+    "total_tokens": -240215.06,
+    "turn_count": -6.21,
+    "tool_call_count": -1.44,
+    "read_count": -1.6,
+    "search_count": -1.27,
+    "edit_count": 0.27,
+    "repeated_file_reads": -1.63
+  },
+  "median_delta": {
+    "cost": 0.11,
+    "duration_ms": -2607,
+    "input_tokens_total": -36.75,
+    "output_tokens_total": -8.5,
+    "cache_read_tokens_total": -16710.25,
+    "cache_write_tokens_total": 27083.25,
+    "total_tokens": 6184.75,
+    "turn_count": -5.25,
+    "tool_call_count": -1,
+    "read_count": 0,
+    "search_count": -1,
+    "edit_count": 0,
+    "repeated_file_reads": 0
+  },
+  "by_category": {
+    "A": {
+      "n": 6,
+      "resolved_baseline": 2,
+      "resolved_digest": 4,
+      "digest_only_pass": 2,
+      "baseline_only_pass": 0,
+      "pooled_cost_pct": -21.8,
+      "pooled_cacheread_pct": -19.1,
+      "mean_toolcall_delta": -3.8
+    },
+    "B": {
+      "n": 4,
+      "resolved_baseline": 4,
+      "resolved_digest": 4,
+      "digest_only_pass": 0,
+      "baseline_only_pass": 0,
+      "pooled_cost_pct": -8.6,
+      "pooled_cacheread_pct": -20.8,
+      "mean_toolcall_delta": -2.8
+    },
+    "C": {
+      "n": 5,
+      "resolved_baseline": 3,
+      "resolved_digest": 4,
+      "digest_only_pass": 1,
+      "baseline_only_pass": 0,
+      "pooled_cost_pct": 0.8,
+      "pooled_cacheread_pct": -17,
+      "mean_toolcall_delta": -4.6
+    },
+    "D": {
+      "n": 3,
+      "resolved_baseline": 1,
+      "resolved_digest": 1,
+      "digest_only_pass": 0,
+      "baseline_only_pass": 0,
+      "pooled_cost_pct": -19.2,
+      "pooled_cacheread_pct": -0.7,
+      "mean_toolcall_delta": 3.2
+    },
+    "E": {
+      "n": 6,
+      "resolved_baseline": 5,
+      "resolved_digest": 4,
+      "digest_only_pass": 0,
+      "baseline_only_pass": 1,
+      "pooled_cost_pct": -5.8,
+      "pooled_cacheread_pct": -20.1,
+      "mean_toolcall_delta": 2.1
+    }
+  },
+  "per_instance": [
+    {
+      "instance_id": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "category": "A",
+      "baseline_source": "reused",
+      "selection_reason": "LOCKED M55X. Tier-1 hidden pivot pycode/ast.py::unparse (gold-overlapping, live-confirmed); traceback names gold #1 python.py but not gold #2 ast.py. Pre-digest vtrace surfaced ast.py yet agent edited only python.py; M55X digest closed the gap → resolved. The canonical digest-attributable mechanism.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_sphinx_7462",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "sphinx/domains/python.py::_parse_annotation",
+          "sphinx/pycode/ast.py::unparse"
+        ],
+        "lead_pivot_path": "sphinx/domains/python.py::_parse_annotation",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "sphinx/pycode/ast.py::unparse",
+        "hidden_pivot_inspected": true,
+        "hidden_pivot_edited": true,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.48815699999999995,
+        "duration_ms": 96339,
+        "input_tokens_total": 197,
+        "output_tokens_total": 49,
+        "cache_read_tokens_total": 902237,
+        "cache_write_tokens_total": 75923,
+        "total_tokens": 978406,
+        "turn_count": 27,
+        "tool_call_count": 10,
+        "read_count": 3,
+        "search_count": 0,
+        "edit_count": 2,
+        "repeated_file_reads": 1,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "sphinx-doc__sphinx/sphinx/domains/python.py",
+          "sphinx-doc__sphinx/sphinx/pycode/ast.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 6,
+        "replicate_labels": [
+          "eval-m32-product-baseline-sphinx-7462-r1",
+          "eval-m32-product-baseline-sphinx-7462-r3",
+          "eval-localization-gap-baseline-sphinx-7462",
+          "eval-bounded-baseline-sphinx-7462-r2",
+          "eval-bounded-baseline-sphinx-7462-r1",
+          "eval-m32-product-baseline-sphinx-7462-r2"
+        ],
+        "resolved": false,
+        "resolved_replicates": "0/6",
+        "patch_produced": true,
+        "cost": 0.26606375,
+        "cost_range": [
+          0.2045305,
+          0.3009325
+        ],
+        "duration_ms": 59739.5,
+        "duration_ms_range": [
+          54595,
+          69020
+        ],
+        "input_tokens_total": 149.5,
+        "input_tokens_total_range": [
+          90,
+          160
+        ],
+        "output_tokens_total": 59,
+        "output_tokens_total_range": [
+          22,
+          67
+        ],
+        "cache_read_tokens_total": 572836.5,
+        "cache_read_tokens_total_range": [
+          312111,
+          665233
+        ],
+        "cache_write_tokens_total": 31505.5,
+        "cache_write_tokens_total_range": [
+          13080,
+          40427
+        ],
+        "total_tokens": 612663,
+        "total_tokens_range": [
+          351461,
+          689639
+        ],
+        "turn_count": 20.5,
+        "turn_count_range": [
+          12,
+          22
+        ],
+        "tool_call_count": 5.5,
+        "tool_call_count_range": [
+          0,
+          7
+        ],
+        "read_count": 2,
+        "read_count_range": [
+          0,
+          3
+        ],
+        "search_count": 0,
+        "search_count_range": [
+          0,
+          0
+        ],
+        "edit_count": 1.5,
+        "edit_count_range": [
+          0,
+          2
+        ],
+        "repeated_file_reads": 1,
+        "repeated_file_reads_range": [
+          0,
+          2
+        ],
+        "edited_files": [
+          "sphinx-doc__sphinx/sphinx/domains/python.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.2221,
+          "pct": 83.5
+        },
+        "duration_ms": {
+          "delta": 36599.5,
+          "pct": 61.3
+        },
+        "input_tokens_total": {
+          "delta": 47.5,
+          "pct": 31.8
+        },
+        "output_tokens_total": {
+          "delta": -10,
+          "pct": -16.9
+        },
+        "cache_read_tokens_total": {
+          "delta": 329400.5,
+          "pct": 57.5
+        },
+        "cache_write_tokens_total": {
+          "delta": 44417.5,
+          "pct": 141
+        },
+        "total_tokens": {
+          "delta": 365743,
+          "pct": 59.7
+        },
+        "turn_count": {
+          "delta": 6.5,
+          "pct": 31.7
+        },
+        "tool_call_count": {
+          "delta": 4.5,
+          "pct": 81.8
+        },
+        "read_count": {
+          "delta": 1,
+          "pct": 50
+        },
+        "search_count": {
+          "delta": 0,
+          "pct": null
+        },
+        "edit_count": {
+          "delta": 0.5,
+          "pct": 33.3
+        },
+        "repeated_file_reads": {
+          "delta": 0,
+          "pct": 0
+        }
+      },
+      "resolution_delta": 1,
+      "paired_outcome": "digest_only_pass"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "category": "A",
+      "baseline_source": "reused",
+      "selection_reason": "LOCKED M55X. Strong localization gap (symptom≠cause): deepest traceback frame + 'deprecation warning' framing point at decoy _api/deprecation.py; real fix in category.py (buried middle frame).",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_matplotlib_22719",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "lib/matplotlib/axis.py::Axis.convert_units",
+          "lib/matplotlib/axis.py::Axis.update_units"
+        ],
+        "lead_pivot_path": "lib/matplotlib/axis.py::Axis.convert_units",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": false,
+        "hidden_pivot_present": false,
+        "hidden_pivot_path": null,
+        "hidden_pivot_inspected": null,
+        "hidden_pivot_edited": null,
+        "edited_files_overlap_with_pivots": false,
+        "cost": 0.9443064999999999,
+        "duration_ms": 166062,
+        "input_tokens_total": 363,
+        "output_tokens_total": 132,
+        "cache_read_tokens_total": 2087511,
+        "cache_write_tokens_total": 80516,
+        "total_tokens": 2168522,
+        "turn_count": 51,
+        "tool_call_count": 21,
+        "read_count": 4,
+        "search_count": 2,
+        "edit_count": 1,
+        "repeated_file_reads": 1,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "matplotlib__matplotlib/lib/matplotlib/category.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 5,
+        "replicate_labels": [
+          "eval-m4r1-baseline-matplotlib-22719-r3",
+          "eval-token-discipline-pilot-matplotlib-22719",
+          "eval-localization-gap-baseline-matplotlib-22719",
+          "eval-m4r1-baseline-matplotlib-22719-r1",
+          "eval-m4r1-baseline-matplotlib-22719-r2"
+        ],
+        "resolved": true,
+        "resolved_replicates": "4/5",
+        "patch_produced": true,
+        "cost": 0.46377525,
+        "cost_range": [
+          0.28868550000000004,
+          0.710829
+        ],
+        "duration_ms": 120507,
+        "duration_ms_range": [
+          93228,
+          152173
+        ],
+        "input_tokens_total": 230,
+        "input_tokens_total_range": [
+          167,
+          321
+        ],
+        "output_tokens_total": 52,
+        "output_tokens_total_range": [
+          50,
+          116
+        ],
+        "cache_read_tokens_total": 1060520,
+        "cache_read_tokens_total_range": [
+          764704,
+          1603582
+        ],
+        "cache_write_tokens_total": 55448,
+        "cache_write_tokens_total_range": [
+          17159,
+          73888
+        ],
+        "total_tokens": 1116250,
+        "total_tokens_range": [
+          782082,
+          1677907
+        ],
+        "turn_count": 32,
+        "turn_count_range": [
+          23,
+          45
+        ],
+        "tool_call_count": 11,
+        "tool_call_count_range": [
+          0,
+          17
+        ],
+        "read_count": 1,
+        "read_count_range": [
+          0,
+          4
+        ],
+        "search_count": 0,
+        "search_count_range": [
+          0,
+          2
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          0,
+          1
+        ],
+        "repeated_file_reads": 0,
+        "repeated_file_reads_range": [
+          0,
+          1
+        ],
+        "edited_files": [
+          "matplotlib__matplotlib/lib/matplotlib/category.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.4805,
+          "pct": 103.6
+        },
+        "duration_ms": {
+          "delta": 45555,
+          "pct": 37.8
+        },
+        "input_tokens_total": {
+          "delta": 133,
+          "pct": 57.8
+        },
+        "output_tokens_total": {
+          "delta": 80,
+          "pct": 153.8
+        },
+        "cache_read_tokens_total": {
+          "delta": 1026991,
+          "pct": 96.8
+        },
+        "cache_write_tokens_total": {
+          "delta": 25068,
+          "pct": 45.2
+        },
+        "total_tokens": {
+          "delta": 1052272,
+          "pct": 94.3
+        },
+        "turn_count": {
+          "delta": 19,
+          "pct": 59.4
+        },
+        "tool_call_count": {
+          "delta": 10,
+          "pct": 90.9
+        },
+        "read_count": {
+          "delta": 3,
+          "pct": 300
+        },
+        "search_count": {
+          "delta": 2,
+          "pct": null
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": 1,
+          "pct": null
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24627",
+      "repo": "matplotlib/matplotlib",
+      "category": "A",
+      "baseline_source": "reused",
+      "selection_reason": "LOCKED M55X. Strongest localization gap: behavioural task (cla()/clf()), no traceback, no file named; gold axes/_base.py vs decoy figure.py. Note: M55X digest pivots were off-target (pyplot.py) yet case resolved — over-anchor watch case.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_matplotlib_24627",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "lib/matplotlib/pyplot.py::plot",
+          "lib/matplotlib/pyplot.py::subplots"
+        ],
+        "lead_pivot_path": "lib/matplotlib/pyplot.py::plot",
+        "lead_pivot_inspected": false,
+        "lead_pivot_edited": false,
+        "hidden_pivot_present": false,
+        "hidden_pivot_path": null,
+        "hidden_pivot_inspected": null,
+        "hidden_pivot_edited": null,
+        "edited_files_overlap_with_pivots": false,
+        "cost": 0.9844364999999999,
+        "duration_ms": 216670,
+        "input_tokens_total": 393,
+        "output_tokens_total": 134,
+        "cache_read_tokens_total": 2256782,
+        "cache_write_tokens_total": 104360,
+        "total_tokens": 2361669,
+        "turn_count": 55,
+        "tool_call_count": 21,
+        "read_count": 3,
+        "search_count": 6,
+        "edit_count": 3,
+        "repeated_file_reads": 0,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "matplotlib__matplotlib/lib/matplotlib/axes/_base.py",
+          "matplotlib__matplotlib/lib/matplotlib/figure.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 4,
+        "replicate_labels": [
+          "eval-bounded-baseline-mpl-24627-r1",
+          "eval-localization-gap-baseline-matplotlib-24627",
+          "eval-bounded-baseline-mpl-24627-r2",
+          "eval-bounded-baseline-mpl-24627-r3"
+        ],
+        "resolved": false,
+        "resolved_replicates": "0/4",
+        "patch_produced": true,
+        "cost": 3.030998875,
+        "cost_range": [
+          3.0239754999999997,
+          3.03230525
+        ],
+        "duration_ms": 319735,
+        "duration_ms_range": [
+          282597,
+          351805
+        ],
+        "input_tokens_total": 774.5,
+        "input_tokens_total_range": [
+          652,
+          827
+        ],
+        "output_tokens_total": 250.5,
+        "output_tokens_total_range": [
+          184,
+          281
+        ],
+        "cache_read_tokens_total": 4810128,
+        "cache_read_tokens_total_range": [
+          4369253,
+          5080043
+        ],
+        "cache_write_tokens_total": 98020.5,
+        "cache_write_tokens_total_range": [
+          76662,
+          134371
+        ],
+        "total_tokens": 4909173.5,
+        "total_tokens_range": [
+          4504460,
+          5157813
+        ],
+        "turn_count": 109.5,
+        "turn_count_range": [
+          92,
+          117
+        ],
+        "tool_call_count": 43,
+        "tool_call_count_range": [
+          0,
+          51
+        ],
+        "read_count": 14,
+        "read_count_range": [
+          0,
+          19
+        ],
+        "search_count": 16,
+        "search_count_range": [
+          0,
+          24
+        ],
+        "edit_count": 4.5,
+        "edit_count_range": [
+          0,
+          6
+        ],
+        "repeated_file_reads": 10.5,
+        "repeated_file_reads_range": [
+          0,
+          16
+        ],
+        "edited_files": [
+          "matplotlib__matplotlib/lib/matplotlib/axes/_base.py",
+          "matplotlib__matplotlib/lib/matplotlib/figure.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": -2.0466,
+          "pct": -67.5
+        },
+        "duration_ms": {
+          "delta": -103065,
+          "pct": -32.2
+        },
+        "input_tokens_total": {
+          "delta": -381.5,
+          "pct": -49.3
+        },
+        "output_tokens_total": {
+          "delta": -116.5,
+          "pct": -46.5
+        },
+        "cache_read_tokens_total": {
+          "delta": -2553346,
+          "pct": -53.1
+        },
+        "cache_write_tokens_total": {
+          "delta": 6339.5,
+          "pct": 6.5
+        },
+        "total_tokens": {
+          "delta": -2547504.5,
+          "pct": -51.9
+        },
+        "turn_count": {
+          "delta": -54.5,
+          "pct": -49.8
+        },
+        "tool_call_count": {
+          "delta": -22,
+          "pct": -51.2
+        },
+        "read_count": {
+          "delta": -11,
+          "pct": -78.6
+        },
+        "search_count": {
+          "delta": -10,
+          "pct": -62.5
+        },
+        "edit_count": {
+          "delta": -1.5,
+          "pct": -33.3
+        },
+        "repeated_file_reads": {
+          "delta": -10.5,
+          "pct": -100
+        }
+      },
+      "resolution_delta": 1,
+      "paired_outcome": "digest_only_pass"
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "category": "A",
+      "baseline_source": "reused",
+      "selection_reason": "LOCKED M55X. Two-gold-file case (scales.py + utils.py); M55X digest run edited both golds and resolved while baseline edited scales.py + wrong second file (plot.py). Second gold utils.py was NOT the digest's 2nd pivot (relational.py) — localization-attribution watch case.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_seaborn_3187",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "seaborn/_core/scales.py::ContinuousBase._setup",
+          "seaborn/relational.py::scatterplot"
+        ],
+        "lead_pivot_path": "seaborn/_core/scales.py::ContinuousBase._setup",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "seaborn/relational.py::scatterplot",
+        "hidden_pivot_inspected": true,
+        "hidden_pivot_edited": false,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 1.1031225,
+        "duration_ms": 219689,
+        "input_tokens_total": 384,
+        "output_tokens_total": 91,
+        "cache_read_tokens_total": 2351070,
+        "cache_write_tokens_total": 102005,
+        "total_tokens": 2453550,
+        "turn_count": 54,
+        "tool_call_count": 21,
+        "read_count": 6,
+        "search_count": 7,
+        "edit_count": 3,
+        "repeated_file_reads": 3,
+        "resolved": false,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "mwaskom__seaborn/seaborn/_core/scales.py",
+          "mwaskom__seaborn/seaborn/utils.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 6,
+        "replicate_labels": [
+          "eval-bounded20-baseline-seaborn-3187-r1",
+          "eval-m32-product-baseline-seaborn-3187-r2",
+          "eval-m32-product-baseline-seaborn-3187-r1",
+          "eval-bounded20-baseline-seaborn-3187-r3",
+          "eval-m32-product-baseline-seaborn-3187-r3",
+          "eval-bounded20-baseline-seaborn-3187-r2"
+        ],
+        "resolved": false,
+        "resolved_replicates": "0/6",
+        "patch_produced": true,
+        "cost": 0.9312905,
+        "cost_range": [
+          0.6358464999999999,
+          3.0465925
+        ],
+        "duration_ms": 197216,
+        "duration_ms_range": [
+          157130,
+          296436
+        ],
+        "input_tokens_total": 415.5,
+        "input_tokens_total_range": [
+          258,
+          727
+        ],
+        "output_tokens_total": 141.5,
+        "output_tokens_total_range": [
+          63,
+          218
+        ],
+        "cache_read_tokens_total": 2341217,
+        "cache_read_tokens_total_range": [
+          1186625,
+          4683015
+        ],
+        "cache_write_tokens_total": 69108.5,
+        "cache_write_tokens_total_range": [
+          45076,
+          111360
+        ],
+        "total_tokens": 2410838,
+        "total_tokens_range": [
+          1246472,
+          4795320
+        ],
+        "turn_count": 58.5,
+        "turn_count_range": [
+          36,
+          103
+        ],
+        "tool_call_count": 22,
+        "tool_call_count_range": [
+          13,
+          43
+        ],
+        "read_count": 8,
+        "read_count_range": [
+          5,
+          16
+        ],
+        "search_count": 3.5,
+        "search_count_range": [
+          1,
+          8
+        ],
+        "edit_count": 2,
+        "edit_count_range": [
+          1,
+          8
+        ],
+        "repeated_file_reads": 6,
+        "repeated_file_reads_range": [
+          3,
+          14
+        ],
+        "edited_files": [
+          "mwaskom__seaborn/seaborn/_core/scales.py",
+          "mwaskom__seaborn/seaborn/_core/plot.py",
+          "mwaskom__seaborn/seaborn/utils.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.1718,
+          "pct": 18.5
+        },
+        "duration_ms": {
+          "delta": 22473,
+          "pct": 11.4
+        },
+        "input_tokens_total": {
+          "delta": -31.5,
+          "pct": -7.6
+        },
+        "output_tokens_total": {
+          "delta": -50.5,
+          "pct": -35.7
+        },
+        "cache_read_tokens_total": {
+          "delta": 9853,
+          "pct": 0.4
+        },
+        "cache_write_tokens_total": {
+          "delta": 32896.5,
+          "pct": 47.6
+        },
+        "total_tokens": {
+          "delta": 42712,
+          "pct": 1.8
+        },
+        "turn_count": {
+          "delta": -4.5,
+          "pct": -7.7
+        },
+        "tool_call_count": {
+          "delta": -1,
+          "pct": -4.5
+        },
+        "read_count": {
+          "delta": -2,
+          "pct": -25
+        },
+        "search_count": {
+          "delta": 3.5,
+          "pct": 100
+        },
+        "edit_count": {
+          "delta": 1,
+          "pct": 50
+        },
+        "repeated_file_reads": {
+          "delta": -3,
+          "pct": -50
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_fail"
+    },
+    {
+      "instance_id": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "category": "A",
+      "baseline_source": "reused",
+      "selection_reason": "Tier-2 hidden pivot core/evalf.py (gold-overlap, multi-pivot, decoy sympify.py at top-1). BUT traceback prints evalf.py — baseline likely pre-localizes. Doubles as a decoy/over-anchor test: does the digest's evalf.py pivot help, hurt, or no-op when the agent already has the file?",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_sympy_13372",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "sympy/core/evalf.py::evalf",
+          "sympy/core/evalf.py::evalf_mul"
+        ],
+        "lead_pivot_path": "sympy/core/evalf.py::evalf",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": false,
+        "hidden_pivot_path": null,
+        "hidden_pivot_inspected": null,
+        "hidden_pivot_edited": null,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.45511650000000003,
+        "duration_ms": 94389,
+        "input_tokens_total": 153,
+        "output_tokens_total": 43,
+        "cache_read_tokens_total": 695543,
+        "cache_write_tokens_total": 56509,
+        "total_tokens": 752248,
+        "turn_count": 21,
+        "tool_call_count": 7,
+        "read_count": 2,
+        "search_count": 0,
+        "edit_count": 1,
+        "repeated_file_reads": 1,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "sympy__sympy/sympy/core/evalf.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 3,
+        "replicate_labels": [
+          "eval-bounded20-baseline-sympy-13372-r3",
+          "eval-bounded20-baseline-sympy-13372-r2",
+          "eval-bounded20-baseline-sympy-13372-r1"
+        ],
+        "resolved": true,
+        "resolved_replicates": "3/3",
+        "patch_produced": true,
+        "cost": 0.28228200000000003,
+        "cost_range": [
+          0.2143585,
+          0.471951
+        ],
+        "duration_ms": 72655,
+        "duration_ms_range": [
+          51033,
+          81747
+        ],
+        "input_tokens_total": 181,
+        "input_tokens_total_range": [
+          139,
+          209
+        ],
+        "output_tokens_total": 67,
+        "output_tokens_total_range": [
+          38,
+          71
+        ],
+        "cache_read_tokens_total": 746334,
+        "cache_read_tokens_total_range": [
+          552646,
+          908042
+        ],
+        "cache_write_tokens_total": 18400,
+        "cache_write_tokens_total_range": [
+          11114,
+          54686
+        ],
+        "total_tokens": 764982,
+        "total_tokens_range": [
+          563937,
+          963008
+        ],
+        "turn_count": 25,
+        "turn_count_range": [
+          19,
+          29
+        ],
+        "tool_call_count": 8,
+        "tool_call_count_range": [
+          6,
+          10
+        ],
+        "read_count": 5,
+        "read_count_range": [
+          2,
+          6
+        ],
+        "search_count": 0,
+        "search_count_range": [
+          0,
+          1
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          1,
+          2
+        ],
+        "repeated_file_reads": 4,
+        "repeated_file_reads_range": [
+          1,
+          5
+        ],
+        "edited_files": [
+          "sympy__sympy/sympy/core/evalf.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.1728,
+          "pct": 61.2
+        },
+        "duration_ms": {
+          "delta": 21734,
+          "pct": 29.9
+        },
+        "input_tokens_total": {
+          "delta": -28,
+          "pct": -15.5
+        },
+        "output_tokens_total": {
+          "delta": -24,
+          "pct": -35.8
+        },
+        "cache_read_tokens_total": {
+          "delta": -50791,
+          "pct": -6.8
+        },
+        "cache_write_tokens_total": {
+          "delta": 38109,
+          "pct": 207.1
+        },
+        "total_tokens": {
+          "delta": -12734,
+          "pct": -1.7
+        },
+        "turn_count": {
+          "delta": -4,
+          "pct": -16
+        },
+        "tool_call_count": {
+          "delta": -1,
+          "pct": -12.5
+        },
+        "read_count": {
+          "delta": -3,
+          "pct": -60
+        },
+        "search_count": {
+          "delta": 0,
+          "pct": null
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": -3,
+          "pct": -75
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "django__django-11820",
+      "repo": "django/django",
+      "category": "A",
+      "baseline_source": "fresh",
+      "selection_reason": "Tier-2 hidden pivot base.py::_check_ordering (gold-overlap), enums.py co-pivot. No prior baseline artifact → fresh baseline. Adds a non-cross-repo django hidden-pivot case.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_django_11820",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "django/db/models/base.py::Model._check_ordering",
+          "django/db/models/enums.py::ChoicesMeta"
+        ],
+        "lead_pivot_path": "django/db/models/base.py::Model._check_ordering",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "django/db/models/enums.py::ChoicesMeta",
+        "hidden_pivot_inspected": false,
+        "hidden_pivot_edited": false,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.4651354999999999,
+        "duration_ms": 115763,
+        "input_tokens_total": 146,
+        "output_tokens_total": 29,
+        "cache_read_tokens_total": 666135,
+        "cache_write_tokens_total": 60261,
+        "total_tokens": 726571,
+        "turn_count": 20,
+        "tool_call_count": 6,
+        "read_count": 1,
+        "search_count": 0,
+        "edit_count": 1,
+        "repeated_file_reads": 0,
+        "resolved": false,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "django__django/django/db/models/base.py"
+        ]
+      },
+      "baseline": {
+        "source": "fresh",
+        "run_label": "m55y_baseline_django_11820",
+        "resolved": false,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "django__django/django/db/models/base.py"
+        ],
+        "cost": 0.7057039999999999,
+        "duration_ms": 132214,
+        "input_tokens_total": 335,
+        "output_tokens_total": 92,
+        "cache_read_tokens_total": 1542390,
+        "cache_write_tokens_total": 57623,
+        "total_tokens": 1600440,
+        "turn_count": 47,
+        "tool_call_count": 19,
+        "read_count": 2,
+        "search_count": 5,
+        "edit_count": 1,
+        "repeated_file_reads": 1
+      },
+      "deltas": {
+        "cost": {
+          "delta": -0.2406,
+          "pct": -34.1
+        },
+        "duration_ms": {
+          "delta": -16451,
+          "pct": -12.4
+        },
+        "input_tokens_total": {
+          "delta": -189,
+          "pct": -56.4
+        },
+        "output_tokens_total": {
+          "delta": -63,
+          "pct": -68.5
+        },
+        "cache_read_tokens_total": {
+          "delta": -876255,
+          "pct": -56.8
+        },
+        "cache_write_tokens_total": {
+          "delta": 2638,
+          "pct": 4.6
+        },
+        "total_tokens": {
+          "delta": -873869,
+          "pct": -54.6
+        },
+        "turn_count": {
+          "delta": -27,
+          "pct": -57.4
+        },
+        "tool_call_count": {
+          "delta": -13,
+          "pct": -68.4
+        },
+        "read_count": {
+          "delta": -1,
+          "pct": -50
+        },
+        "search_count": {
+          "delta": -5,
+          "pct": -100
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": -1,
+          "pct": -100
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_fail"
+    },
+    {
+      "instance_id": "pydata__xarray-3677",
+      "repo": "pydata/xarray",
+      "category": "B",
+      "baseline_source": "reused",
+      "selection_reason": "Navigation-heavy / high-overhead repo; prior Stage 5 regression-watch case. Tests whether the digest cuts redundant reads/cache on a heavy case (the M55X repeated_reads-down signal).",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_xarray_3677",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "xarray/core/dataset.py::Dataset",
+          "xarray/core/merge.py::merge"
+        ],
+        "lead_pivot_path": "xarray/core/dataset.py::Dataset",
+        "lead_pivot_inspected": false,
+        "lead_pivot_edited": false,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "xarray/core/merge.py::merge",
+        "hidden_pivot_inspected": true,
+        "hidden_pivot_edited": true,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.710091,
+        "duration_ms": 120058,
+        "input_tokens_total": 314,
+        "output_tokens_total": 93,
+        "cache_read_tokens_total": 1651924,
+        "cache_write_tokens_total": 78032,
+        "total_tokens": 1730363,
+        "turn_count": 44,
+        "tool_call_count": 15,
+        "read_count": 7,
+        "search_count": 0,
+        "edit_count": 1,
+        "repeated_file_reads": 6,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "pydata__xarray/xarray/core/merge.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 5,
+        "replicate_labels": [
+          "eval-m32-product-baseline-xarray-3677-r3",
+          "eval-bounded20-baseline-xarray-3677-r3",
+          "eval-m32-product-baseline-xarray-3677-r2",
+          "eval-bounded20-baseline-xarray-3677-r1",
+          "eval-m32-product-baseline-xarray-3677-r1"
+        ],
+        "resolved": true,
+        "resolved_replicates": "5/5",
+        "patch_produced": true,
+        "cost": 0.4321935,
+        "cost_range": [
+          0.25033799999999995,
+          0.508213
+        ],
+        "duration_ms": 76558,
+        "duration_ms_range": [
+          59294,
+          92851
+        ],
+        "input_tokens_total": 239,
+        "input_tokens_total_range": [
+          160,
+          286
+        ],
+        "output_tokens_total": 72,
+        "output_tokens_total_range": [
+          45,
+          87
+        ],
+        "cache_read_tokens_total": 1029311,
+        "cache_read_tokens_total_range": [
+          659328,
+          1255953
+        ],
+        "cache_write_tokens_total": 24307,
+        "cache_write_tokens_total_range": [
+          15196,
+          62943
+        ],
+        "total_tokens": 1090554,
+        "total_tokens_range": [
+          674729,
+          1280624
+        ],
+        "turn_count": 33,
+        "turn_count_range": [
+          22,
+          40
+        ],
+        "tool_call_count": 12,
+        "tool_call_count_range": [
+          7,
+          14
+        ],
+        "read_count": 6,
+        "read_count_range": [
+          3,
+          7
+        ],
+        "search_count": 1,
+        "search_count_range": [
+          0,
+          3
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          1,
+          1
+        ],
+        "repeated_file_reads": 5,
+        "repeated_file_reads_range": [
+          2,
+          6
+        ],
+        "edited_files": [
+          "pydata__xarray/xarray/core/merge.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.2779,
+          "pct": 64.3
+        },
+        "duration_ms": {
+          "delta": 43500,
+          "pct": 56.8
+        },
+        "input_tokens_total": {
+          "delta": 75,
+          "pct": 31.4
+        },
+        "output_tokens_total": {
+          "delta": 21,
+          "pct": 29.2
+        },
+        "cache_read_tokens_total": {
+          "delta": 622613,
+          "pct": 60.5
+        },
+        "cache_write_tokens_total": {
+          "delta": 53725,
+          "pct": 221
+        },
+        "total_tokens": {
+          "delta": 639809,
+          "pct": 58.7
+        },
+        "turn_count": {
+          "delta": 11,
+          "pct": 33.3
+        },
+        "tool_call_count": {
+          "delta": 3,
+          "pct": 25
+        },
+        "read_count": {
+          "delta": 1,
+          "pct": 16.7
+        },
+        "search_count": {
+          "delta": -1,
+          "pct": -100
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": 1,
+          "pct": 20
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "category": "B",
+      "baseline_source": "reused",
+      "selection_reason": "Navigation-heavy; one of the 3 known genuine vtrace regressions — high-value control for whether the digest worsens or recovers a regressed case.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_sympy_12419",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "sympy/functions/elementary/piecewise.py::piecewise_fold",
+          "sympy/functions/elementary/piecewise.py::Piecewise._sort_expr_cond"
+        ],
+        "lead_pivot_path": "sympy/functions/elementary/piecewise.py::piecewise_fold",
+        "lead_pivot_inspected": false,
+        "lead_pivot_edited": false,
+        "hidden_pivot_present": false,
+        "hidden_pivot_path": null,
+        "hidden_pivot_inspected": null,
+        "hidden_pivot_edited": null,
+        "edited_files_overlap_with_pivots": false,
+        "cost": 0.7964225,
+        "duration_ms": 135878,
+        "input_tokens_total": 335,
+        "output_tokens_total": 89,
+        "cache_read_tokens_total": 1730008,
+        "cache_write_tokens_total": 67266,
+        "total_tokens": 1797698,
+        "turn_count": 47,
+        "tool_call_count": 19,
+        "read_count": 3,
+        "search_count": 8,
+        "edit_count": 2,
+        "repeated_file_reads": 1,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "sympy__sympy/sympy/matrices/expressions/matexpr.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 3,
+        "replicate_labels": [
+          "eval-bounded20-baseline-sympy-12419-r1",
+          "eval-bounded20-baseline-sympy-12419-r3",
+          "eval-bounded20-baseline-sympy-12419-r2"
+        ],
+        "resolved": true,
+        "resolved_replicates": "3/3",
+        "patch_produced": true,
+        "cost": 0.95145,
+        "cost_range": [
+          0.6949154999999998,
+          1.3340774999999998
+        ],
+        "duration_ms": 157334,
+        "duration_ms_range": [
+          128930,
+          274890
+        ],
+        "input_tokens_total": 426,
+        "input_tokens_total_range": [
+          405,
+          559
+        ],
+        "output_tokens_total": 138,
+        "output_tokens_total_range": [
+          135,
+          172
+        ],
+        "cache_read_tokens_total": 2349442,
+        "cache_read_tokens_total_range": [
+          1960857,
+          3419879
+        ],
+        "cache_write_tokens_total": 69706,
+        "cache_write_tokens_total_range": [
+          39664,
+          107700
+        ],
+        "total_tokens": 2457706,
+        "total_tokens_range": [
+          2001061,
+          3490316
+        ],
+        "turn_count": 60,
+        "turn_count_range": [
+          57,
+          79
+        ],
+        "tool_call_count": 23,
+        "tool_call_count_range": [
+          22,
+          31
+        ],
+        "read_count": 10,
+        "read_count_range": [
+          9,
+          14
+        ],
+        "search_count": 7,
+        "search_count_range": [
+          7,
+          13
+        ],
+        "edit_count": 2,
+        "edit_count_range": [
+          1,
+          2
+        ],
+        "repeated_file_reads": 6,
+        "repeated_file_reads_range": [
+          5,
+          8
+        ],
+        "edited_files": [
+          "sympy__sympy/sympy/matrices/expressions/matexpr.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": -0.155,
+          "pct": -16.3
+        },
+        "duration_ms": {
+          "delta": -21456,
+          "pct": -13.6
+        },
+        "input_tokens_total": {
+          "delta": -91,
+          "pct": -21.4
+        },
+        "output_tokens_total": {
+          "delta": -49,
+          "pct": -35.5
+        },
+        "cache_read_tokens_total": {
+          "delta": -619434,
+          "pct": -26.4
+        },
+        "cache_write_tokens_total": {
+          "delta": -2440,
+          "pct": -3.5
+        },
+        "total_tokens": {
+          "delta": -660008,
+          "pct": -26.9
+        },
+        "turn_count": {
+          "delta": -13,
+          "pct": -21.7
+        },
+        "tool_call_count": {
+          "delta": -4,
+          "pct": -17.4
+        },
+        "read_count": {
+          "delta": -7,
+          "pct": -70
+        },
+        "search_count": {
+          "delta": 1,
+          "pct": 14.3
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": -5,
+          "pct": -83.3
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "category": "B",
+      "baseline_source": "reused",
+      "selection_reason": "Navigation-heavy; known genuine vtrace regression. Regression-recovery control.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_astropy_14539",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "astropy/io/fits/diff.py::FITSDiff",
+          "astropy/io/fits/column.py::Column"
+        ],
+        "lead_pivot_path": "astropy/io/fits/diff.py::FITSDiff",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "astropy/io/fits/column.py::Column",
+        "hidden_pivot_inspected": false,
+        "hidden_pivot_edited": false,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.357574,
+        "duration_ms": 57295,
+        "input_tokens_total": 111,
+        "output_tokens_total": 26,
+        "cache_read_tokens_total": 465708,
+        "cache_write_tokens_total": 56033,
+        "total_tokens": 521878,
+        "turn_count": 15,
+        "tool_call_count": 5,
+        "read_count": 1,
+        "search_count": 0,
+        "edit_count": 1,
+        "repeated_file_reads": 0,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "astropy__astropy/astropy/io/fits/diff.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 3,
+        "replicate_labels": [
+          "eval-bounded20-baseline-astropy-14539-r2",
+          "eval-bounded20-baseline-astropy-14539-r3",
+          "eval-bounded20-baseline-astropy-14539-r1"
+        ],
+        "resolved": true,
+        "resolved_replicates": "3/3",
+        "patch_produced": true,
+        "cost": 0.732998,
+        "cost_range": [
+          0.5668939999999999,
+          1.0233685
+        ],
+        "duration_ms": 96747,
+        "duration_ms_range": [
+          88691,
+          155302
+        ],
+        "input_tokens_total": 230,
+        "input_tokens_total_range": [
+          190,
+          372
+        ],
+        "output_tokens_total": 76,
+        "output_tokens_total_range": [
+          50,
+          148
+        ],
+        "cache_read_tokens_total": 1426253,
+        "cache_read_tokens_total_range": [
+          1103554,
+          2607017
+        ],
+        "cache_write_tokens_total": 91702,
+        "cache_write_tokens_total_range": [
+          71399,
+          104188
+        ],
+        "total_tokens": 1530721,
+        "total_tokens_range": [
+          1175219,
+          2699239
+        ],
+        "turn_count": 32,
+        "turn_count_range": [
+          26,
+          52
+        ],
+        "tool_call_count": 11,
+        "tool_call_count_range": [
+          10,
+          22
+        ],
+        "read_count": 2,
+        "read_count_range": [
+          2,
+          4
+        ],
+        "search_count": 5,
+        "search_count_range": [
+          4,
+          7
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          1,
+          1
+        ],
+        "repeated_file_reads": 1,
+        "repeated_file_reads_range": [
+          1,
+          2
+        ],
+        "edited_files": [
+          "astropy__astropy/astropy/io/fits/diff.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": -0.3754,
+          "pct": -51.2
+        },
+        "duration_ms": {
+          "delta": -39452,
+          "pct": -40.8
+        },
+        "input_tokens_total": {
+          "delta": -119,
+          "pct": -51.7
+        },
+        "output_tokens_total": {
+          "delta": -50,
+          "pct": -65.8
+        },
+        "cache_read_tokens_total": {
+          "delta": -960545,
+          "pct": -67.3
+        },
+        "cache_write_tokens_total": {
+          "delta": -35669,
+          "pct": -38.9
+        },
+        "total_tokens": {
+          "delta": -1008843,
+          "pct": -65.9
+        },
+        "turn_count": {
+          "delta": -17,
+          "pct": -53.1
+        },
+        "tool_call_count": {
+          "delta": -6,
+          "pct": -54.5
+        },
+        "read_count": {
+          "delta": -1,
+          "pct": -50
+        },
+        "search_count": {
+          "delta": -5,
+          "pct": -100
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": -1,
+          "pct": -100
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "category": "B",
+      "baseline_source": "reused",
+      "selection_reason": "Deterministic retrieval does NOT place gold in top-3 (vtrace weak) AND a known regression. Tests digest behaviour when retrieval is poor — the digest should not over-anchor the agent to a non-gold pivot.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_pylint_8898",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "pylint/config/argument.py::_regexp_paths_csv_transfomer",
+          "pylint/lint/run.py::Run"
+        ],
+        "lead_pivot_path": "pylint/config/argument.py::_regexp_paths_csv_transfomer",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "pylint/lint/run.py::Run",
+        "hidden_pivot_inspected": false,
+        "hidden_pivot_edited": false,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.5713790000000001,
+        "duration_ms": 99060,
+        "input_tokens_total": 202,
+        "output_tokens_total": 78,
+        "cache_read_tokens_total": 1064731,
+        "cache_write_tokens_total": 75084,
+        "total_tokens": 1140095,
+        "turn_count": 28,
+        "tool_call_count": 9,
+        "read_count": 2,
+        "search_count": 0,
+        "edit_count": 2,
+        "repeated_file_reads": 0,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "pylint-dev__pylint/pylint/config/argument.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 3,
+        "replicate_labels": [
+          "eval-bounded20-baseline-pylint-8898-r2",
+          "eval-bounded20-baseline-pylint-8898-r1",
+          "eval-bounded20-baseline-pylint-8898-r3"
+        ],
+        "resolved": true,
+        "resolved_replicates": "2/3",
+        "patch_produced": true,
+        "cost": 0.5486740000000001,
+        "cost_range": [
+          0.4818960000000001,
+          1.2822335000000002
+        ],
+        "duration_ms": 121995,
+        "duration_ms_range": [
+          96830,
+          293114
+        ],
+        "input_tokens_total": 272,
+        "input_tokens_total_range": [
+          244,
+          356
+        ],
+        "output_tokens_total": 74,
+        "output_tokens_total_range": [
+          62,
+          100
+        ],
+        "cache_read_tokens_total": 1399101,
+        "cache_read_tokens_total_range": [
+          1190423,
+          2285892
+        ],
+        "cache_write_tokens_total": 40192,
+        "cache_write_tokens_total_range": [
+          34623,
+          121505
+        ],
+        "total_tokens": 1439627,
+        "total_tokens_range": [
+          1225364,
+          2407853
+        ],
+        "turn_count": 38,
+        "turn_count_range": [
+          34,
+          50
+        ],
+        "tool_call_count": 13,
+        "tool_call_count_range": [
+          12,
+          17
+        ],
+        "read_count": 2,
+        "read_count_range": [
+          2,
+          4
+        ],
+        "search_count": 3,
+        "search_count_range": [
+          2,
+          4
+        ],
+        "edit_count": 2,
+        "edit_count_range": [
+          2,
+          2
+        ],
+        "repeated_file_reads": 1,
+        "repeated_file_reads_range": [
+          1,
+          3
+        ],
+        "edited_files": [
+          "pylint-dev__pylint/pylint/config/argument.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.0227,
+          "pct": 4.1
+        },
+        "duration_ms": {
+          "delta": -22935,
+          "pct": -18.8
+        },
+        "input_tokens_total": {
+          "delta": -70,
+          "pct": -25.7
+        },
+        "output_tokens_total": {
+          "delta": 4,
+          "pct": 5.4
+        },
+        "cache_read_tokens_total": {
+          "delta": -334370,
+          "pct": -23.9
+        },
+        "cache_write_tokens_total": {
+          "delta": 34892,
+          "pct": 86.8
+        },
+        "total_tokens": {
+          "delta": -299532,
+          "pct": -20.8
+        },
+        "turn_count": {
+          "delta": -10,
+          "pct": -26.3
+        },
+        "tool_call_count": {
+          "delta": -4,
+          "pct": -30.8
+        },
+        "read_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "search_count": {
+          "delta": -3,
+          "pct": -100
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": -1,
+          "pct": -100
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "category": "C",
+      "baseline_source": "reused",
+      "selection_reason": "Normal localization (gold at top-1 pivot, no decoy). Control for whether the digest is neutral when localization is already easy.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_sympy_12481",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "sympy/combinatorics/permutations.py::Permutation",
+          "sympy/combinatorics/permutations.py::Permutation.__new__"
+        ],
+        "lead_pivot_path": "sympy/combinatorics/permutations.py::Permutation",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": false,
+        "hidden_pivot_path": null,
+        "hidden_pivot_inspected": null,
+        "hidden_pivot_edited": null,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.4112295,
+        "duration_ms": 73281,
+        "input_tokens_total": 160,
+        "output_tokens_total": 48,
+        "cache_read_tokens_total": 710276,
+        "cache_write_tokens_total": 54407,
+        "total_tokens": 764891,
+        "turn_count": 22,
+        "tool_call_count": 7,
+        "read_count": 3,
+        "search_count": 0,
+        "edit_count": 1,
+        "repeated_file_reads": 2,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "sympy__sympy/sympy/combinatorics/permutations.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 3,
+        "replicate_labels": [
+          "eval-bounded20-baseline-sympy-12481-r3",
+          "eval-bounded20-baseline-sympy-12481-r1",
+          "eval-bounded20-baseline-sympy-12481-r2"
+        ],
+        "resolved": true,
+        "resolved_replicates": "3/3",
+        "patch_produced": true,
+        "cost": 0.596219,
+        "cost_range": [
+          0.5709825000000001,
+          0.7045735
+        ],
+        "duration_ms": 117253,
+        "duration_ms_range": [
+          112211,
+          140495
+        ],
+        "input_tokens_total": 286,
+        "input_tokens_total_range": [
+          216,
+          314
+        ],
+        "output_tokens_total": 106,
+        "output_tokens_total_range": [
+          72,
+          117
+        ],
+        "cache_read_tokens_total": 1361611,
+        "cache_read_tokens_total_range": [
+          978621,
+          1602199
+        ],
+        "cache_write_tokens_total": 47336,
+        "cache_write_tokens_total_range": [
+          35105,
+          70752
+        ],
+        "total_tokens": 1397108,
+        "total_tokens_range": [
+          1049661,
+          1649966
+        ],
+        "turn_count": 40,
+        "turn_count_range": [
+          30,
+          44
+        ],
+        "tool_call_count": 16,
+        "tool_call_count_range": [
+          11,
+          17
+        ],
+        "read_count": 4,
+        "read_count_range": [
+          3,
+          6
+        ],
+        "search_count": 3,
+        "search_count_range": [
+          2,
+          3
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          1,
+          2
+        ],
+        "repeated_file_reads": 3,
+        "repeated_file_reads_range": [
+          2,
+          5
+        ],
+        "edited_files": [
+          "sympy__sympy/sympy/combinatorics/permutations.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": -0.185,
+          "pct": -31
+        },
+        "duration_ms": {
+          "delta": -43972,
+          "pct": -37.5
+        },
+        "input_tokens_total": {
+          "delta": -126,
+          "pct": -44.1
+        },
+        "output_tokens_total": {
+          "delta": -58,
+          "pct": -54.7
+        },
+        "cache_read_tokens_total": {
+          "delta": -651335,
+          "pct": -47.8
+        },
+        "cache_write_tokens_total": {
+          "delta": 7071,
+          "pct": 14.9
+        },
+        "total_tokens": {
+          "delta": -632217,
+          "pct": -45.3
+        },
+        "turn_count": {
+          "delta": -18,
+          "pct": -45
+        },
+        "tool_call_count": {
+          "delta": -9,
+          "pct": -56.3
+        },
+        "read_count": {
+          "delta": -1,
+          "pct": -25
+        },
+        "search_count": {
+          "delta": -3,
+          "pct": -100
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": -1,
+          "pct": -33.3
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "psf__requests-1142",
+      "repo": "psf/requests",
+      "category": "C",
+      "baseline_source": "reused",
+      "selection_reason": "Normal localization control; small repo, low-overhead case for the neutral-on-easy hypothesis.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_requests_1142",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "requests/api.py::head",
+          "requests/sessions.py::Session.get_adapter"
+        ],
+        "lead_pivot_path": "requests/api.py::head",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": false,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "requests/sessions.py::Session.get_adapter",
+        "hidden_pivot_inspected": false,
+        "hidden_pivot_edited": false,
+        "edited_files_overlap_with_pivots": false,
+        "cost": 0.35075500000000004,
+        "duration_ms": 56828,
+        "input_tokens_total": 134,
+        "output_tokens_total": 52,
+        "cache_read_tokens_total": 556197,
+        "cache_write_tokens_total": 67531,
+        "total_tokens": 623914,
+        "turn_count": 18,
+        "tool_call_count": 6,
+        "read_count": 3,
+        "search_count": 1,
+        "edit_count": 1,
+        "repeated_file_reads": 1,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "psf__requests/requests/models.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 3,
+        "replicate_labels": [
+          "eval-bounded-baseline-requests-1142-r1",
+          "eval-bounded-baseline-requests-1142-r3",
+          "eval-bounded-baseline-requests-1142-r2"
+        ],
+        "resolved": true,
+        "resolved_replicates": "3/3",
+        "patch_produced": true,
+        "cost": 0.2374405,
+        "cost_range": [
+          0.19225350000000002,
+          0.3859475
+        ],
+        "duration_ms": 61393,
+        "duration_ms_range": [
+          31558,
+          62600
+        ],
+        "input_tokens_total": 139,
+        "input_tokens_total_range": [
+          76,
+          195
+        ],
+        "output_tokens_total": 44,
+        "output_tokens_total_range": [
+          28,
+          59
+        ],
+        "cache_read_tokens_total": 546492,
+        "cache_read_tokens_total_range": [
+          290054,
+          784491
+        ],
+        "cache_write_tokens_total": 25609,
+        "cache_write_tokens_total_range": [
+          15641,
+          41600
+        ],
+        "total_tokens": 562316,
+        "total_tokens_range": [
+          315767,
+          826345
+        ],
+        "turn_count": 19,
+        "turn_count_range": [
+          10,
+          27
+        ],
+        "tool_call_count": 6,
+        "tool_call_count_range": [
+          3,
+          10
+        ],
+        "read_count": 2,
+        "read_count_range": [
+          1,
+          5
+        ],
+        "search_count": 2,
+        "search_count_range": [
+          1,
+          2
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          1,
+          1
+        ],
+        "repeated_file_reads": 1,
+        "repeated_file_reads_range": [
+          0,
+          3
+        ],
+        "edited_files": [
+          "psf__requests/requests/models.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.1133,
+          "pct": 47.7
+        },
+        "duration_ms": {
+          "delta": -4565,
+          "pct": -7.4
+        },
+        "input_tokens_total": {
+          "delta": -5,
+          "pct": -3.6
+        },
+        "output_tokens_total": {
+          "delta": 8,
+          "pct": 18.2
+        },
+        "cache_read_tokens_total": {
+          "delta": 9705,
+          "pct": 1.8
+        },
+        "cache_write_tokens_total": {
+          "delta": 41922,
+          "pct": 163.7
+        },
+        "total_tokens": {
+          "delta": 61598,
+          "pct": 11
+        },
+        "turn_count": {
+          "delta": -1,
+          "pct": -5.3
+        },
+        "tool_call_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "read_count": {
+          "delta": 1,
+          "pct": 50
+        },
+        "search_count": {
+          "delta": -1,
+          "pct": -50
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": 0,
+          "pct": 0
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "category": "C",
+      "baseline_source": "reused",
+      "selection_reason": "Normal localization control (cross-repo).",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_astropy_14365",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "astropy/io/ascii/qdp.py::_write_table_qdp",
+          "astropy/io/fits/scripts/fitsdiff.py::handle_options"
+        ],
+        "lead_pivot_path": "astropy/io/ascii/qdp.py::_write_table_qdp",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "astropy/io/fits/scripts/fitsdiff.py::handle_options",
+        "hidden_pivot_inspected": false,
+        "hidden_pivot_edited": false,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.357599,
+        "duration_ms": 63230,
+        "input_tokens_total": 125,
+        "output_tokens_total": 23,
+        "cache_read_tokens_total": 538512,
+        "cache_write_tokens_total": 55227,
+        "total_tokens": 593887,
+        "turn_count": 17,
+        "tool_call_count": 5,
+        "read_count": 1,
+        "search_count": 0,
+        "edit_count": 1,
+        "repeated_file_reads": 0,
+        "resolved": false,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "astropy__astropy/astropy/io/ascii/qdp.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 3,
+        "replicate_labels": [
+          "eval-bounded20-baseline-astropy-14365-r2",
+          "eval-bounded20-baseline-astropy-14365-r3",
+          "eval-bounded20-baseline-astropy-14365-r1"
+        ],
+        "resolved": false,
+        "resolved_replicates": "0/3",
+        "patch_produced": true,
+        "cost": 0.510145,
+        "cost_range": [
+          0.4790765,
+          0.5144190000000001
+        ],
+        "duration_ms": 90710,
+        "duration_ms_range": [
+          87324,
+          123718
+        ],
+        "input_tokens_total": 202,
+        "input_tokens_total_range": [
+          195,
+          202
+        ],
+        "output_tokens_total": 55,
+        "output_tokens_total_range": [
+          41,
+          58
+        ],
+        "cache_read_tokens_total": 987429,
+        "cache_read_tokens_total_range": [
+          905364,
+          993410
+        ],
+        "cache_write_tokens_total": 48396,
+        "cache_write_tokens_total_range": [
+          44102,
+          62031
+        ],
+        "total_tokens": 1036085,
+        "total_tokens_range": [
+          967631,
+          1037769
+        ],
+        "turn_count": 28,
+        "turn_count_range": [
+          27,
+          28
+        ],
+        "tool_call_count": 10,
+        "tool_call_count_range": [
+          10,
+          10
+        ],
+        "read_count": 1,
+        "read_count_range": [
+          1,
+          2
+        ],
+        "search_count": 1,
+        "search_count_range": [
+          1,
+          1
+        ],
+        "edit_count": 2,
+        "edit_count_range": [
+          2,
+          2
+        ],
+        "repeated_file_reads": 0,
+        "repeated_file_reads_range": [
+          0,
+          1
+        ],
+        "edited_files": [
+          "astropy__astropy/astropy/io/ascii/qdp.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": -0.1525,
+          "pct": -29.9
+        },
+        "duration_ms": {
+          "delta": -27480,
+          "pct": -30.3
+        },
+        "input_tokens_total": {
+          "delta": -77,
+          "pct": -38.1
+        },
+        "output_tokens_total": {
+          "delta": -32,
+          "pct": -58.2
+        },
+        "cache_read_tokens_total": {
+          "delta": -448917,
+          "pct": -45.5
+        },
+        "cache_write_tokens_total": {
+          "delta": 6831,
+          "pct": 14.1
+        },
+        "total_tokens": {
+          "delta": -442198,
+          "pct": -42.7
+        },
+        "turn_count": {
+          "delta": -11,
+          "pct": -39.3
+        },
+        "tool_call_count": {
+          "delta": -5,
+          "pct": -50
+        },
+        "read_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "search_count": {
+          "delta": -1,
+          "pct": -100
+        },
+        "edit_count": {
+          "delta": -1,
+          "pct": -50
+        },
+        "repeated_file_reads": {
+          "delta": 0,
+          "pct": null
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_fail"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25960",
+      "repo": "matplotlib/matplotlib",
+      "category": "C",
+      "baseline_source": "reused",
+      "selection_reason": "Normal localization control; gives a 3rd matplotlib datapoint for within-repo comparison without exceeding the 5-per-repo cap.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_matplotlib_25960",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "lib/matplotlib/figure.py::FigureBase.subfigures",
+          "lib/matplotlib/figure.py::SubFigure"
+        ],
+        "lead_pivot_path": "lib/matplotlib/figure.py::FigureBase.subfigures",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": false,
+        "hidden_pivot_path": null,
+        "hidden_pivot_inspected": null,
+        "hidden_pivot_edited": null,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 1.1734295000000001,
+        "duration_ms": 289866,
+        "input_tokens_total": 440,
+        "output_tokens_total": 158,
+        "cache_read_tokens_total": 2600091,
+        "cache_write_tokens_total": 95276,
+        "total_tokens": 2695965,
+        "turn_count": 62,
+        "tool_call_count": 22,
+        "read_count": 1,
+        "search_count": 7,
+        "edit_count": 4,
+        "repeated_file_reads": 0,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "matplotlib__matplotlib/lib/matplotlib/figure.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 1,
+        "replicate_labels": [
+          "eval-bounded-baseline-mpl-25960-r3"
+        ],
+        "resolved": false,
+        "resolved_replicates": "0/1",
+        "patch_produced": true,
+        "cost": 0.9476284999999999,
+        "cost_range": [
+          0.9476284999999999,
+          0.9476284999999999
+        ],
+        "duration_ms": 168877,
+        "duration_ms_range": [
+          168877,
+          168877
+        ],
+        "input_tokens_total": 510,
+        "input_tokens_total_range": [
+          510,
+          510
+        ],
+        "output_tokens_total": 165,
+        "output_tokens_total_range": [
+          165,
+          165
+        ],
+        "cache_read_tokens_total": 2576699,
+        "cache_read_tokens_total_range": [
+          2576699,
+          2576699
+        ],
+        "cache_write_tokens_total": 44002,
+        "cache_write_tokens_total_range": [
+          44002,
+          44002
+        ],
+        "total_tokens": 2621376,
+        "total_tokens_range": [
+          2621376,
+          2621376
+        ],
+        "turn_count": 72,
+        "turn_count_range": [
+          72,
+          72
+        ],
+        "tool_call_count": 29,
+        "tool_call_count_range": [
+          29,
+          29
+        ],
+        "read_count": 17,
+        "read_count_range": [
+          17,
+          17
+        ],
+        "search_count": 6,
+        "search_count_range": [
+          6,
+          6
+        ],
+        "edit_count": 3,
+        "edit_count_range": [
+          3,
+          3
+        ],
+        "repeated_file_reads": 15,
+        "repeated_file_reads_range": [
+          15,
+          15
+        ],
+        "edited_files": [
+          "matplotlib__matplotlib/lib/matplotlib/figure.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.2258,
+          "pct": 23.8
+        },
+        "duration_ms": {
+          "delta": 120989,
+          "pct": 71.6
+        },
+        "input_tokens_total": {
+          "delta": -70,
+          "pct": -13.7
+        },
+        "output_tokens_total": {
+          "delta": -7,
+          "pct": -4.2
+        },
+        "cache_read_tokens_total": {
+          "delta": 23392,
+          "pct": 0.9
+        },
+        "cache_write_tokens_total": {
+          "delta": 51274,
+          "pct": 116.5
+        },
+        "total_tokens": {
+          "delta": 74589,
+          "pct": 2.8
+        },
+        "turn_count": {
+          "delta": -10,
+          "pct": -13.9
+        },
+        "tool_call_count": {
+          "delta": -7,
+          "pct": -24.1
+        },
+        "read_count": {
+          "delta": -16,
+          "pct": -94.1
+        },
+        "search_count": {
+          "delta": 1,
+          "pct": 16.7
+        },
+        "edit_count": {
+          "delta": 1,
+          "pct": 33.3
+        },
+        "repeated_file_reads": {
+          "delta": -15,
+          "pct": -100
+        }
+      },
+      "resolution_delta": 1,
+      "paired_outcome": "digest_only_pass"
+    },
+    {
+      "instance_id": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "category": "C",
+      "baseline_source": "fresh",
+      "selection_reason": "Normal control AND repo diversity (adds pytest, an 11th repo). No prior baseline artifact → fresh baseline.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_pytest_7432",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "src/_pytest/skipping.py::pytest_addoption",
+          "src/_pytest/skipping.py::evaluate_skip_marks"
+        ],
+        "lead_pivot_path": "src/_pytest/skipping.py::pytest_addoption",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": false,
+        "hidden_pivot_path": null,
+        "hidden_pivot_inspected": null,
+        "hidden_pivot_edited": null,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.47308049999999996,
+        "duration_ms": 86921,
+        "input_tokens_total": 181,
+        "output_tokens_total": 67,
+        "cache_read_tokens_total": 819041,
+        "cache_write_tokens_total": 57100,
+        "total_tokens": 876389,
+        "turn_count": 25,
+        "tool_call_count": 9,
+        "read_count": 3,
+        "search_count": 0,
+        "edit_count": 1,
+        "repeated_file_reads": 2,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "pytest-dev__pytest/src/_pytest/skipping.py"
+        ]
+      },
+      "baseline": {
+        "source": "fresh",
+        "run_label": "m55y_baseline_pytest_7432",
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "pytest-dev__pytest/src/_pytest/skipping.py"
+        ],
+        "cost": 0.45300700000000005,
+        "duration_ms": 87570,
+        "input_tokens_total": 188,
+        "output_tokens_total": 50,
+        "cache_read_tokens_total": 822202,
+        "cache_write_tokens_total": 60311,
+        "total_tokens": 882751,
+        "turn_count": 26,
+        "tool_call_count": 11,
+        "read_count": 2,
+        "search_count": 0,
+        "edit_count": 1,
+        "repeated_file_reads": 1
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.0201,
+          "pct": 4.4
+        },
+        "duration_ms": {
+          "delta": -649,
+          "pct": -0.7
+        },
+        "input_tokens_total": {
+          "delta": -7,
+          "pct": -3.7
+        },
+        "output_tokens_total": {
+          "delta": 17,
+          "pct": 34
+        },
+        "cache_read_tokens_total": {
+          "delta": -3161,
+          "pct": -0.4
+        },
+        "cache_write_tokens_total": {
+          "delta": -3211,
+          "pct": -5.3
+        },
+        "total_tokens": {
+          "delta": -6362,
+          "pct": -0.7
+        },
+        "turn_count": {
+          "delta": -1,
+          "pct": -3.8
+        },
+        "tool_call_count": {
+          "delta": -2,
+          "pct": -18.2
+        },
+        "read_count": {
+          "delta": 1,
+          "pct": 50
+        },
+        "search_count": {
+          "delta": 0,
+          "pct": null
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": 1,
+          "pct": 100
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "category": "D",
+      "baseline_source": "reused",
+      "selection_reason": "Rule-out / over-anchor control: digest hidden pivot app.py::name is NOT in gold (gold blueprints.py). Directly tests whether the digest pulls the agent toward a wrong pivot.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_flask_5014",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "src/flask/blueprints.py::Blueprint",
+          "src/flask/app.py::Flask"
+        ],
+        "lead_pivot_path": "src/flask/blueprints.py::Blueprint",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "src/flask/app.py::Flask",
+        "hidden_pivot_inspected": false,
+        "hidden_pivot_edited": false,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.31451,
+        "duration_ms": 47634,
+        "input_tokens_total": 118,
+        "output_tokens_total": 29,
+        "cache_read_tokens_total": 494300,
+        "cache_write_tokens_total": 47892,
+        "total_tokens": 542339,
+        "turn_count": 16,
+        "tool_call_count": 5,
+        "read_count": 2,
+        "search_count": 0,
+        "edit_count": 1,
+        "repeated_file_reads": 1,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "pallets__flask/src/flask/blueprints.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 3,
+        "replicate_labels": [
+          "eval-bounded-baseline-flask-5014-r2",
+          "eval-bounded-baseline-flask-5014-r1",
+          "eval-bounded-baseline-flask-5014-r3"
+        ],
+        "resolved": true,
+        "resolved_replicates": "3/3",
+        "patch_produced": true,
+        "cost": 0.19869649999999997,
+        "cost_range": [
+          0.1719725,
+          0.2536715
+        ],
+        "duration_ms": 24400,
+        "duration_ms_range": [
+          23973,
+          34130
+        ],
+        "input_tokens_total": 76,
+        "input_tokens_total_range": [
+          76,
+          97
+        ],
+        "output_tokens_total": 20,
+        "output_tokens_total_range": [
+          19,
+          33
+        ],
+        "cache_read_tokens_total": 287367,
+        "cache_read_tokens_total_range": [
+          261951,
+          394251
+        ],
+        "cache_write_tokens_total": 26952,
+        "cache_write_tokens_total_range": [
+          25855,
+          51329
+        ],
+        "total_tokens": 313375,
+        "total_tokens_range": [
+          313318,
+          421333
+        ],
+        "turn_count": 10,
+        "turn_count_range": [
+          10,
+          13
+        ],
+        "tool_call_count": 3,
+        "tool_call_count_range": [
+          3,
+          4
+        ],
+        "read_count": 1,
+        "read_count_range": [
+          1,
+          1
+        ],
+        "search_count": 1,
+        "search_count_range": [
+          1,
+          1
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          1,
+          1
+        ],
+        "repeated_file_reads": 0,
+        "repeated_file_reads_range": [
+          0,
+          0
+        ],
+        "edited_files": [
+          "pallets__flask/src/flask/blueprints.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.1158,
+          "pct": 58.3
+        },
+        "duration_ms": {
+          "delta": 23234,
+          "pct": 95.2
+        },
+        "input_tokens_total": {
+          "delta": 42,
+          "pct": 55.3
+        },
+        "output_tokens_total": {
+          "delta": 9,
+          "pct": 45
+        },
+        "cache_read_tokens_total": {
+          "delta": 206933,
+          "pct": 72
+        },
+        "cache_write_tokens_total": {
+          "delta": 20940,
+          "pct": 77.7
+        },
+        "total_tokens": {
+          "delta": 228964,
+          "pct": 73.1
+        },
+        "turn_count": {
+          "delta": 6,
+          "pct": 60
+        },
+        "tool_call_count": {
+          "delta": 2,
+          "pct": 66.7
+        },
+        "read_count": {
+          "delta": 1,
+          "pct": 100
+        },
+        "search_count": {
+          "delta": -1,
+          "pct": -100
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": 1,
+          "pct": null
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "django__django-13195",
+      "repo": "django/django",
+      "category": "D",
+      "baseline_source": "reused",
+      "selection_reason": "Rule-out / over-anchor control: hidden pivot signed_cookies.py NOT in gold (3-file gold incl. http/response.py). Multi-gold over-anchor + heavy-repo case.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_django_13195",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "django/http/response.py::HttpResponseBase.delete_cookie",
+          "django/http/response.py::HttpResponseBase.set_cookie"
+        ],
+        "lead_pivot_path": "django/http/response.py::HttpResponseBase.delete_cookie",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": false,
+        "hidden_pivot_path": null,
+        "hidden_pivot_inspected": null,
+        "hidden_pivot_edited": null,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.9241905000000001,
+        "duration_ms": 182461,
+        "input_tokens_total": 365,
+        "output_tokens_total": 97,
+        "cache_read_tokens_total": 1959758,
+        "cache_write_tokens_total": 98005,
+        "total_tokens": 2058225,
+        "turn_count": 51,
+        "tool_call_count": 22,
+        "read_count": 6,
+        "search_count": 4,
+        "edit_count": 5,
+        "repeated_file_reads": 3,
+        "resolved": false,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "django__django/django/http/response.py",
+          "django__django/django/contrib/sessions/middleware.py",
+          "django__django/django/contrib/messages/storage/cookie.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 6,
+        "replicate_labels": [
+          "eval-m32-product-baseline-django-13195-r3",
+          "eval-bounded20-baseline-django-13195-r1",
+          "eval-m32-product-baseline-django-13195-r2",
+          "eval-bounded20-baseline-django-13195-r3",
+          "eval-m32-product-baseline-django-13195-r1",
+          "eval-bounded20-baseline-django-13195-r2"
+        ],
+        "resolved": false,
+        "resolved_replicates": "0/6",
+        "patch_produced": true,
+        "cost": 0.39210500000000004,
+        "cost_range": [
+          0.16940349999999998,
+          0.4699955
+        ],
+        "duration_ms": 81168.5,
+        "duration_ms_range": [
+          50703,
+          95061
+        ],
+        "input_tokens_total": 212.5,
+        "input_tokens_total_range": [
+          118,
+          293
+        ],
+        "output_tokens_total": 67.5,
+        "output_tokens_total_range": [
+          31,
+          115
+        ],
+        "cache_read_tokens_total": 864605.5,
+        "cache_read_tokens_total_range": [
+          454081,
+          1297262
+        ],
+        "cache_write_tokens_total": 18660,
+        "cache_write_tokens_total_range": [
+          7293,
+          44130
+        ],
+        "total_tokens": 907816.5,
+        "total_tokens_range": [
+          461523,
+          1317566
+        ],
+        "turn_count": 29.5,
+        "turn_count_range": [
+          16,
+          41
+        ],
+        "tool_call_count": 10.5,
+        "tool_call_count_range": [
+          5,
+          16
+        ],
+        "read_count": 3.5,
+        "read_count_range": [
+          1,
+          8
+        ],
+        "search_count": 4,
+        "search_count_range": [
+          2,
+          7
+        ],
+        "edit_count": 1.5,
+        "edit_count_range": [
+          1,
+          3
+        ],
+        "repeated_file_reads": 2,
+        "repeated_file_reads_range": [
+          0,
+          5
+        ],
+        "edited_files": [
+          "django__django/django/http/response.py",
+          "django__django/django/contrib/messages/storage/cookie.py",
+          "django__django/django/contrib/sessions/middleware.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.5321,
+          "pct": 135.7
+        },
+        "duration_ms": {
+          "delta": 101292.5,
+          "pct": 124.8
+        },
+        "input_tokens_total": {
+          "delta": 152.5,
+          "pct": 71.8
+        },
+        "output_tokens_total": {
+          "delta": 29.5,
+          "pct": 43.7
+        },
+        "cache_read_tokens_total": {
+          "delta": 1095152.5,
+          "pct": 126.7
+        },
+        "cache_write_tokens_total": {
+          "delta": 79345,
+          "pct": 425.2
+        },
+        "total_tokens": {
+          "delta": 1150408.5,
+          "pct": 126.7
+        },
+        "turn_count": {
+          "delta": 21.5,
+          "pct": 72.9
+        },
+        "tool_call_count": {
+          "delta": 11.5,
+          "pct": 109.5
+        },
+        "read_count": {
+          "delta": 2.5,
+          "pct": 71.4
+        },
+        "search_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "edit_count": {
+          "delta": 3.5,
+          "pct": 233.3
+        },
+        "repeated_file_reads": {
+          "delta": 1,
+          "pct": 50
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_fail"
+    },
+    {
+      "instance_id": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "category": "D",
+      "baseline_source": "fresh",
+      "selection_reason": "Rule-out / over-anchor control: deterministic retrieval MISSES gold card.py (hidden pivot fitsrec.py NOT gold). No baseline artifact → fresh. Tests digest when retrieval is wrong.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_astropy_14598",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "astropy/io/fits/card.py::Card._format_long_image",
+          "astropy/io/fits/card.py::Card.fromstring"
+        ],
+        "lead_pivot_path": "astropy/io/fits/card.py::Card._format_long_image",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": false,
+        "hidden_pivot_path": null,
+        "hidden_pivot_inspected": null,
+        "hidden_pivot_edited": null,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 1.695694,
+        "duration_ms": 483387,
+        "input_tokens_total": 356,
+        "output_tokens_total": 94,
+        "cache_read_tokens_total": 2531618,
+        "cache_write_tokens_total": 134663,
+        "total_tokens": 2666731,
+        "turn_count": 50,
+        "tool_call_count": 20,
+        "read_count": 4,
+        "search_count": 3,
+        "edit_count": 1,
+        "repeated_file_reads": 3,
+        "resolved": false,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "astropy__astropy/astropy/io/fits/card.py"
+        ]
+      },
+      "baseline": {
+        "source": "fresh",
+        "run_label": "m55y_baseline_astropy_14598",
+        "resolved": false,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "astropy__astropy/astropy/io/fits/card.py"
+        ],
+        "cost": 3.04107675,
+        "duration_ms": 504605,
+        "input_tokens_total": 468,
+        "output_tokens_total": 145,
+        "cache_read_tokens_total": 3867411,
+        "cache_write_tokens_total": 176225,
+        "total_tokens": 4044249,
+        "turn_count": 66,
+        "tool_call_count": 24,
+        "read_count": 10,
+        "search_count": 2,
+        "edit_count": 2,
+        "repeated_file_reads": 8
+      },
+      "deltas": {
+        "cost": {
+          "delta": -1.3454,
+          "pct": -44.2
+        },
+        "duration_ms": {
+          "delta": -21218,
+          "pct": -4.2
+        },
+        "input_tokens_total": {
+          "delta": -112,
+          "pct": -23.9
+        },
+        "output_tokens_total": {
+          "delta": -51,
+          "pct": -35.2
+        },
+        "cache_read_tokens_total": {
+          "delta": -1335793,
+          "pct": -34.5
+        },
+        "cache_write_tokens_total": {
+          "delta": -41562,
+          "pct": -23.6
+        },
+        "total_tokens": {
+          "delta": -1377518,
+          "pct": -34.1
+        },
+        "turn_count": {
+          "delta": -16,
+          "pct": -24.2
+        },
+        "tool_call_count": {
+          "delta": -4,
+          "pct": -16.7
+        },
+        "read_count": {
+          "delta": -6,
+          "pct": -60
+        },
+        "search_count": {
+          "delta": 1,
+          "pct": 50
+        },
+        "edit_count": {
+          "delta": -1,
+          "pct": -50
+        },
+        "repeated_file_reads": {
+          "delta": -5,
+          "pct": -62.5
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_fail"
+    },
+    {
+      "instance_id": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "category": "E",
+      "baseline_source": "reused",
+      "selection_reason": "Baseline-strong: baseline resolved AND localized printing/pycode.py. Also a tier-2 hidden-pivot. Tests that the digest does not hurt a case the baseline already solves.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_sympy_16766",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "sympy/printing/pycode.py::PythonCodePrinter",
+          "sympy/printing/printer.py::Printer._print"
+        ],
+        "lead_pivot_path": "sympy/printing/pycode.py::PythonCodePrinter",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "sympy/printing/printer.py::Printer._print",
+        "hidden_pivot_inspected": false,
+        "hidden_pivot_edited": false,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.6384740000000001,
+        "duration_ms": 103866,
+        "input_tokens_total": 202,
+        "output_tokens_total": 49,
+        "cache_read_tokens_total": 1137267,
+        "cache_write_tokens_total": 83192,
+        "total_tokens": 1220710,
+        "turn_count": 28,
+        "tool_call_count": 10,
+        "read_count": 1,
+        "search_count": 0,
+        "edit_count": 2,
+        "repeated_file_reads": 0,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "sympy__sympy/sympy/printing/pycode.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 4,
+        "replicate_labels": [
+          "eval-bounded-baseline-sympy-16766-r3",
+          "eval-bounded-baseline-sympy-16766-r2",
+          "eval-bounded-baseline-sympy-16766-r1",
+          "eval-baseline-vs-vtrace-baseline-sympy-16766"
+        ],
+        "resolved": true,
+        "resolved_replicates": "4/4",
+        "patch_produced": true,
+        "cost": 0.437788,
+        "cost_range": [
+          0.32924050000000005,
+          0.5486270000000001
+        ],
+        "duration_ms": 144299.5,
+        "duration_ms_range": [
+          76042,
+          332877
+        ],
+        "input_tokens_total": 244,
+        "input_tokens_total_range": [
+          216,
+          293
+        ],
+        "output_tokens_total": 67,
+        "output_tokens_total_range": [
+          45,
+          106
+        ],
+        "cache_read_tokens_total": 1167526.5,
+        "cache_read_tokens_total_range": [
+          927111,
+          1325280
+        ],
+        "cache_write_tokens_total": 34937,
+        "cache_write_tokens_total_range": [
+          19644,
+          88852
+        ],
+        "total_tokens": 1201978.5,
+        "total_tokens_range": [
+          948698,
+          1414441
+        ],
+        "turn_count": 34,
+        "turn_count_range": [
+          30,
+          41
+        ],
+        "tool_call_count": 11,
+        "tool_call_count_range": [
+          0,
+          16
+        ],
+        "read_count": 2.5,
+        "read_count_range": [
+          0,
+          7
+        ],
+        "search_count": 2.5,
+        "search_count_range": [
+          0,
+          4
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          0,
+          2
+        ],
+        "repeated_file_reads": 0.5,
+        "repeated_file_reads_range": [
+          0,
+          2
+        ],
+        "edited_files": [
+          "sympy__sympy/sympy/printing/pycode.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.2007,
+          "pct": 45.8
+        },
+        "duration_ms": {
+          "delta": -40433.5,
+          "pct": -28
+        },
+        "input_tokens_total": {
+          "delta": -42,
+          "pct": -17.2
+        },
+        "output_tokens_total": {
+          "delta": -18,
+          "pct": -26.9
+        },
+        "cache_read_tokens_total": {
+          "delta": -30259.5,
+          "pct": -2.6
+        },
+        "cache_write_tokens_total": {
+          "delta": 48255,
+          "pct": 138.1
+        },
+        "total_tokens": {
+          "delta": 18731.5,
+          "pct": 1.6
+        },
+        "turn_count": {
+          "delta": -6,
+          "pct": -17.6
+        },
+        "tool_call_count": {
+          "delta": -1,
+          "pct": -9.1
+        },
+        "read_count": {
+          "delta": -1.5,
+          "pct": -60
+        },
+        "search_count": {
+          "delta": -2.5,
+          "pct": -100
+        },
+        "edit_count": {
+          "delta": 1,
+          "pct": 100
+        },
+        "repeated_file_reads": {
+          "delta": -0.5,
+          "pct": -100
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "category": "E",
+      "baseline_source": "reused",
+      "selection_reason": "Baseline localized correctly (units/format/cds.py) despite a framing gap, but its patch FAILED. Standing counter-example that a framing gap need not cause a live miss; tests whether the digest changes a localize-but-fail outcome.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_astropy_14369",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "astropy/units/format/cds.py::CDS",
+          "astropy/units/format/vounit.py::VOUnit"
+        ],
+        "lead_pivot_path": "astropy/units/format/cds.py::CDS",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "astropy/units/format/vounit.py::VOUnit",
+        "hidden_pivot_inspected": false,
+        "hidden_pivot_edited": false,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.9565235000000001,
+        "duration_ms": 189858,
+        "input_tokens_total": 307,
+        "output_tokens_total": 96,
+        "cache_read_tokens_total": 1811903,
+        "cache_write_tokens_total": 86960,
+        "total_tokens": 1899266,
+        "turn_count": 43,
+        "tool_call_count": 17,
+        "read_count": 3,
+        "search_count": 1,
+        "edit_count": 2,
+        "repeated_file_reads": 2,
+        "resolved": false,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "astropy__astropy/astropy/units/format/cds.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 4,
+        "replicate_labels": [
+          "eval-baseline-vs-vtrace-baseline-astropy-14369",
+          "eval-m4r2-baseline-astropy-14369-r3",
+          "eval-m4r2-baseline-astropy-14369-r2",
+          "eval-m4r2-baseline-astropy-14369-r1"
+        ],
+        "resolved": false,
+        "resolved_replicates": "0/4",
+        "patch_produced": true,
+        "cost": 1.43899425,
+        "cost_range": [
+          0.9953905000000001,
+          3.0462377499999995
+        ],
+        "duration_ms": 374434,
+        "duration_ms_range": [
+          238754,
+          399811
+        ],
+        "input_tokens_total": 396.5,
+        "input_tokens_total_range": [
+          358,
+          603
+        ],
+        "output_tokens_total": 93.5,
+        "output_tokens_total_range": [
+          84,
+          148
+        ],
+        "cache_read_tokens_total": 2622067,
+        "cache_read_tokens_total_range": [
+          2115972,
+          4294308
+        ],
+        "cache_write_tokens_total": 118044.5,
+        "cache_write_tokens_total_range": [
+          73819,
+          152635
+        ],
+        "total_tokens": 2745526,
+        "total_tokens_range": [
+          2190240,
+          4437838
+        ],
+        "turn_count": 55.5,
+        "turn_count_range": [
+          50,
+          85
+        ],
+        "tool_call_count": 19,
+        "tool_call_count_range": [
+          0,
+          35
+        ],
+        "read_count": 5,
+        "read_count_range": [
+          0,
+          7
+        ],
+        "search_count": 5,
+        "search_count_range": [
+          0,
+          12
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          0,
+          1
+        ],
+        "repeated_file_reads": 1.5,
+        "repeated_file_reads_range": [
+          0,
+          3
+        ],
+        "edited_files": [
+          "astropy__astropy/astropy/units/format/cds.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": -0.4825,
+          "pct": -33.5
+        },
+        "duration_ms": {
+          "delta": -184576,
+          "pct": -49.3
+        },
+        "input_tokens_total": {
+          "delta": -89.5,
+          "pct": -22.6
+        },
+        "output_tokens_total": {
+          "delta": 2.5,
+          "pct": 2.7
+        },
+        "cache_read_tokens_total": {
+          "delta": -810164,
+          "pct": -30.9
+        },
+        "cache_write_tokens_total": {
+          "delta": -31084.5,
+          "pct": -26.3
+        },
+        "total_tokens": {
+          "delta": -846260,
+          "pct": -30.8
+        },
+        "turn_count": {
+          "delta": -12.5,
+          "pct": -22.5
+        },
+        "tool_call_count": {
+          "delta": -2,
+          "pct": -10.5
+        },
+        "read_count": {
+          "delta": -2,
+          "pct": -40
+        },
+        "search_count": {
+          "delta": -4,
+          "pct": -80
+        },
+        "edit_count": {
+          "delta": 1,
+          "pct": 100
+        },
+        "repeated_file_reads": {
+          "delta": 0.5,
+          "pct": 33.3
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_fail"
+    },
+    {
+      "instance_id": "django__django-10880",
+      "repo": "django/django",
+      "category": "E",
+      "baseline_source": "reused",
+      "selection_reason": "Baseline-strong: baseline resolved AND localized db/models/aggregates.py (Count+distinct). Over-anchor/no-hurt control.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_django_10880",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "django/db/models/query.py::QuerySet.count",
+          "django/db/models/functions/comparison.py::Least"
+        ],
+        "lead_pivot_path": "django/db/models/query.py::QuerySet.count",
+        "lead_pivot_inspected": false,
+        "lead_pivot_edited": false,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "django/db/models/functions/comparison.py::Least",
+        "hidden_pivot_inspected": false,
+        "hidden_pivot_edited": false,
+        "edited_files_overlap_with_pivots": false,
+        "cost": 0.3645425,
+        "duration_ms": 67919,
+        "input_tokens_total": 139,
+        "output_tokens_total": 37,
+        "cache_read_tokens_total": 597257,
+        "cache_write_tokens_total": 51383,
+        "total_tokens": 648816,
+        "turn_count": 19,
+        "tool_call_count": 6,
+        "read_count": 1,
+        "search_count": 0,
+        "edit_count": 1,
+        "repeated_file_reads": 0,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "django__django/django/db/models/aggregates.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 5,
+        "replicate_labels": [
+          "eval-m32-product-baseline-django-10880-r3",
+          "eval-m32-product-baseline-django-10880-r1",
+          "eval-10880",
+          "eval-m4h-baseline-django-10880-r2",
+          "eval-m32-product-baseline-django-10880-r2"
+        ],
+        "resolved": true,
+        "resolved_replicates": "5/5",
+        "patch_produced": true,
+        "cost": 0.20882475,
+        "cost_range": [
+          0.13971650000000002,
+          0.23096499999999998
+        ],
+        "duration_ms": 43521,
+        "duration_ms_range": [
+          32741,
+          50447
+        ],
+        "input_tokens_total": 104,
+        "input_tokens_total_range": [
+          97,
+          139
+        ],
+        "output_tokens_total": 29,
+        "output_tokens_total_range": [
+          14,
+          33
+        ],
+        "cache_read_tokens_total": 393648,
+        "cache_read_tokens_total_range": [
+          370088,
+          553666
+        ],
+        "cache_write_tokens_total": 11729,
+        "cache_write_tokens_total_range": [
+          10213,
+          35923
+        ],
+        "total_tokens": 406752,
+        "total_tokens_range": [
+          380738,
+          565567
+        ],
+        "turn_count": 14,
+        "turn_count_range": [
+          13,
+          19
+        ],
+        "tool_call_count": 4,
+        "tool_call_count_range": [
+          0,
+          7
+        ],
+        "read_count": 1,
+        "read_count_range": [
+          0,
+          2
+        ],
+        "search_count": 1,
+        "search_count_range": [
+          0,
+          4
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          0,
+          1
+        ],
+        "repeated_file_reads": 0,
+        "repeated_file_reads_range": [
+          0,
+          1
+        ],
+        "edited_files": [
+          "django__django/django/db/models/aggregates.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.1557,
+          "pct": 74.6
+        },
+        "duration_ms": {
+          "delta": 24398,
+          "pct": 56.1
+        },
+        "input_tokens_total": {
+          "delta": 35,
+          "pct": 33.7
+        },
+        "output_tokens_total": {
+          "delta": 8,
+          "pct": 27.6
+        },
+        "cache_read_tokens_total": {
+          "delta": 203609,
+          "pct": 51.7
+        },
+        "cache_write_tokens_total": {
+          "delta": 39654,
+          "pct": 338.1
+        },
+        "total_tokens": {
+          "delta": 242064,
+          "pct": 59.5
+        },
+        "turn_count": {
+          "delta": 5,
+          "pct": 35.7
+        },
+        "tool_call_count": {
+          "delta": 2,
+          "pct": 50
+        },
+        "read_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "search_count": {
+          "delta": -1,
+          "pct": -100
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": 0,
+          "pct": null
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "django__django-11095",
+      "repo": "django/django",
+      "category": "E",
+      "baseline_source": "reused",
+      "selection_reason": "Baseline-strong: baseline resolved AND localized contrib/admin/options.py. No-hurt control.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_django_11095",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "django/contrib/admin/options.py::ModelAdmin.get_inline_formsets",
+          "django/contrib/admin/options.py::ModelAdmin.get_inline_instances"
+        ],
+        "lead_pivot_path": "django/contrib/admin/options.py::ModelAdmin.get_inline_formsets",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": false,
+        "hidden_pivot_path": null,
+        "hidden_pivot_inspected": null,
+        "hidden_pivot_edited": null,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.4531245,
+        "duration_ms": 82033,
+        "input_tokens_total": 188,
+        "output_tokens_total": 58,
+        "cache_read_tokens_total": 864951,
+        "cache_write_tokens_total": 54419,
+        "total_tokens": 919616,
+        "turn_count": 26,
+        "tool_call_count": 9,
+        "read_count": 3,
+        "search_count": 0,
+        "edit_count": 1,
+        "repeated_file_reads": 2,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "django__django/django/contrib/admin/options.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 4,
+        "replicate_labels": [
+          "eval-m4h-baseline-django-11095-r3",
+          "eval-m4h-baseline-django-11095-r2",
+          "eval-11095",
+          "eval-m4h-baseline-django-11095-r1"
+        ],
+        "resolved": true,
+        "resolved_replicates": "4/4",
+        "patch_produced": true,
+        "cost": 0.243559125,
+        "cost_range": [
+          0.19493,
+          0.2779485
+        ],
+        "duration_ms": 47027,
+        "duration_ms_range": [
+          43486,
+          60873
+        ],
+        "input_tokens_total": 146,
+        "input_tokens_total_range": [
+          139,
+          188
+        ],
+        "output_tokens_total": 50,
+        "output_tokens_total_range": [
+          41,
+          63
+        ],
+        "cache_read_tokens_total": 549425.5,
+        "cache_read_tokens_total_range": [
+          503355,
+          760053
+        ],
+        "cache_write_tokens_total": 23656,
+        "cache_write_tokens_total_range": [
+          7800,
+          33791
+        ],
+        "total_tokens": 570422,
+        "total_tokens_range": [
+          535997,
+          775144
+        ],
+        "turn_count": 20,
+        "turn_count_range": [
+          19,
+          26
+        ],
+        "tool_call_count": 6.5,
+        "tool_call_count_range": [
+          0,
+          9
+        ],
+        "read_count": 1.5,
+        "read_count_range": [
+          0,
+          2
+        ],
+        "search_count": 2.5,
+        "search_count_range": [
+          0,
+          4
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          0,
+          1
+        ],
+        "repeated_file_reads": 0.5,
+        "repeated_file_reads_range": [
+          0,
+          1
+        ],
+        "edited_files": [
+          "django__django/django/contrib/admin/options.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.2096,
+          "pct": 86
+        },
+        "duration_ms": {
+          "delta": 35006,
+          "pct": 74.4
+        },
+        "input_tokens_total": {
+          "delta": 42,
+          "pct": 28.8
+        },
+        "output_tokens_total": {
+          "delta": 8,
+          "pct": 16
+        },
+        "cache_read_tokens_total": {
+          "delta": 315525.5,
+          "pct": 57.4
+        },
+        "cache_write_tokens_total": {
+          "delta": 30763,
+          "pct": 130
+        },
+        "total_tokens": {
+          "delta": 349194,
+          "pct": 61.2
+        },
+        "turn_count": {
+          "delta": 6,
+          "pct": 30
+        },
+        "tool_call_count": {
+          "delta": 2.5,
+          "pct": 38.5
+        },
+        "read_count": {
+          "delta": 1.5,
+          "pct": 100
+        },
+        "search_count": {
+          "delta": -2.5,
+          "pct": -100
+        },
+        "edit_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "repeated_file_reads": {
+          "delta": 1.5,
+          "pct": 300
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    },
+    {
+      "instance_id": "psf__requests-5414",
+      "repo": "psf/requests",
+      "category": "E",
+      "baseline_source": "reused",
+      "selection_reason": "Baseline-strong: baseline resolved AND localized requests/models.py. Also a rule-out (hidden pivot api.py NOT gold) → over-anchor + no-hurt double control.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_requests_5414",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "requests/models.py::PreparedRequest.prepare_url",
+          "requests/api.py::get"
+        ],
+        "lead_pivot_path": "requests/models.py::PreparedRequest.prepare_url",
+        "lead_pivot_inspected": true,
+        "lead_pivot_edited": true,
+        "hidden_pivot_present": true,
+        "hidden_pivot_path": "requests/api.py::get",
+        "hidden_pivot_inspected": false,
+        "hidden_pivot_edited": false,
+        "edited_files_overlap_with_pivots": true,
+        "cost": 0.44170149999999997,
+        "duration_ms": 84199,
+        "input_tokens_total": 146,
+        "output_tokens_total": 56,
+        "cache_read_tokens_total": 653266,
+        "cache_write_tokens_total": 56908,
+        "total_tokens": 710376,
+        "turn_count": 20,
+        "tool_call_count": 6,
+        "read_count": 1,
+        "search_count": 0,
+        "edit_count": 2,
+        "repeated_file_reads": 0,
+        "resolved": false,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "psf__requests/requests/models.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 4,
+        "replicate_labels": [
+          "eval-baseline-vs-vtrace-baseline-requests-5414",
+          "eval-bounded-baseline-requests-5414-r1",
+          "eval-bounded-baseline-requests-5414-r2",
+          "eval-bounded-baseline-requests-5414-r3"
+        ],
+        "resolved": true,
+        "resolved_replicates": "1/4",
+        "patch_produced": true,
+        "cost": 0.30293575000000006,
+        "cost_range": [
+          0.22091049999999998,
+          0.47255224999999995
+        ],
+        "duration_ms": 68943.5,
+        "duration_ms_range": [
+          64383,
+          79083
+        ],
+        "input_tokens_total": 136.5,
+        "input_tokens_total_range": [
+          125,
+          181
+        ],
+        "output_tokens_total": 32,
+        "output_tokens_total_range": [
+          22,
+          44
+        ],
+        "cache_read_tokens_total": 537600.5,
+        "cache_read_tokens_total_range": [
+          492560,
+          717197
+        ],
+        "cache_write_tokens_total": 27809.5,
+        "cache_write_tokens_total_range": [
+          13092,
+          154470
+        ],
+        "total_tokens": 621551,
+        "total_tokens_range": [
+          506152,
+          759594
+        ],
+        "turn_count": 18.5,
+        "turn_count_range": [
+          17,
+          25
+        ],
+        "tool_call_count": 5,
+        "tool_call_count_range": [
+          0,
+          8
+        ],
+        "read_count": 1,
+        "read_count_range": [
+          0,
+          2
+        ],
+        "search_count": 1,
+        "search_count_range": [
+          0,
+          1
+        ],
+        "edit_count": 1,
+        "edit_count_range": [
+          0,
+          1
+        ],
+        "repeated_file_reads": 0,
+        "repeated_file_reads_range": [
+          0,
+          1
+        ],
+        "edited_files": [
+          "psf__requests/requests/models.py"
+        ]
+      },
+      "deltas": {
+        "cost": {
+          "delta": 0.1388,
+          "pct": 45.8
+        },
+        "duration_ms": {
+          "delta": 15255.5,
+          "pct": 22.1
+        },
+        "input_tokens_total": {
+          "delta": 9.5,
+          "pct": 7
+        },
+        "output_tokens_total": {
+          "delta": 24,
+          "pct": 75
+        },
+        "cache_read_tokens_total": {
+          "delta": 115665.5,
+          "pct": 21.5
+        },
+        "cache_write_tokens_total": {
+          "delta": 29098.5,
+          "pct": 104.6
+        },
+        "total_tokens": {
+          "delta": 88825,
+          "pct": 14.3
+        },
+        "turn_count": {
+          "delta": 1.5,
+          "pct": 8.1
+        },
+        "tool_call_count": {
+          "delta": 1,
+          "pct": 20
+        },
+        "read_count": {
+          "delta": 0,
+          "pct": 0
+        },
+        "search_count": {
+          "delta": -1,
+          "pct": -100
+        },
+        "edit_count": {
+          "delta": 1,
+          "pct": 100
+        },
+        "repeated_file_reads": {
+          "delta": 0,
+          "pct": null
+        }
+      },
+      "resolution_delta": -1,
+      "paired_outcome": "baseline_only_pass"
+    },
+    {
+      "instance_id": "django__django-11740",
+      "repo": "django/django",
+      "category": "E",
+      "baseline_source": "reused",
+      "selection_reason": "Baseline-strong: baseline resolved AND localized db/migrations/autodetector.py. Also tier-2 hidden pivot. No-hurt control.",
+      "digest": {
+        "run_label": "m55y_vtrace_digest_django_11740",
+        "digest_valid": true,
+        "invalid_reason": null,
+        "snapshot_used": "_vtrace_instructions.snapshot.md",
+        "digest_pivot_count": 2,
+        "digest_skeleton_count": 4,
+        "digest_support_count": 6,
+        "digest_warning_count": 3,
+        "pivots": [
+          "django/contrib/gis/gdal/feature.py::Feature",
+          "django/contrib/gis/gdal/feature.py::Feature.fid"
+        ],
+        "lead_pivot_path": "django/contrib/gis/gdal/feature.py::Feature",
+        "lead_pivot_inspected": false,
+        "lead_pivot_edited": false,
+        "hidden_pivot_present": false,
+        "hidden_pivot_path": null,
+        "hidden_pivot_inspected": null,
+        "hidden_pivot_edited": null,
+        "edited_files_overlap_with_pivots": false,
+        "cost": 0.48507749999999994,
+        "duration_ms": 77278,
+        "input_tokens_total": 202,
+        "output_tokens_total": 47,
+        "cache_read_tokens_total": 954674,
+        "cache_write_tokens_total": 59466,
+        "total_tokens": 1014389,
+        "turn_count": 28,
+        "tool_call_count": 10,
+        "read_count": 1,
+        "search_count": 2,
+        "edit_count": 1,
+        "repeated_file_reads": 0,
+        "resolved": true,
+        "patch_produced": true,
+        "evaluated": true,
+        "edited_files": [
+          "django__django/django/db/migrations/autodetector.py"
+        ]
+      },
+      "baseline": {
+        "source": "reused",
+        "replicate_count": 1,
+        "replicate_labels": [
+          "eval-11740"
+        ],
+        "resolved": true,
+        "resolved_replicates": "1/1",
+        "patch_produced": true,
+        "cost": 0.9118657499999999,
+        "cost_range": [
+          0.9118657499999999,
+          0.9118657499999999
+        ],
+        "duration_ms": 123844,
+        "duration_ms_range": [
+          123844,
+          123844
+        ],
+        "input_tokens_total": 344,
+        "input_tokens_total_range": [
+          344,
+          344
+        ],
+        "output_tokens_total": 132,
+        "output_tokens_total_range": [
+          132,
+          132
+        ],
+        "cache_read_tokens_total": 2262859,
+        "cache_read_tokens_total_range": [
+          2262859,
+          2262859
+        ],
+        "cache_write_tokens_total": 124080,
+        "cache_write_tokens_total_range": [
+          124080,
+          124080
+        ],
+        "total_tokens": 2387415,
+        "total_tokens_range": [
+          2387415,
+          2387415
+        ],
+        "turn_count": 48,
+        "turn_count_range": [
+          48,
+          48
+        ],
+        "tool_call_count": 0,
+        "tool_call_count_range": [
+          0,
+          0
+        ],
+        "read_count": 0,
+        "read_count_range": [
+          0,
+          0
+        ],
+        "search_count": 0,
+        "search_count_range": [
+          0,
+          0
+        ],
+        "edit_count": 0,
+        "edit_count_range": [
+          0,
+          0
+        ],
+        "repeated_file_reads": 0,
+        "repeated_file_reads_range": [
+          0,
+          0
+        ],
+        "edited_files": []
+      },
+      "deltas": {
+        "cost": {
+          "delta": -0.4268,
+          "pct": -46.8
+        },
+        "duration_ms": {
+          "delta": -46566,
+          "pct": -37.6
+        },
+        "input_tokens_total": {
+          "delta": -142,
+          "pct": -41.3
+        },
+        "output_tokens_total": {
+          "delta": -85,
+          "pct": -64.4
+        },
+        "cache_read_tokens_total": {
+          "delta": -1308185,
+          "pct": -57.8
+        },
+        "cache_write_tokens_total": {
+          "delta": -64614,
+          "pct": -52.1
+        },
+        "total_tokens": {
+          "delta": -1373026,
+          "pct": -57.5
+        },
+        "turn_count": {
+          "delta": -20,
+          "pct": -41.7
+        },
+        "tool_call_count": {
+          "delta": 10,
+          "pct": null
+        },
+        "read_count": {
+          "delta": 1,
+          "pct": null
+        },
+        "search_count": {
+          "delta": 2,
+          "pct": null
+        },
+        "edit_count": {
+          "delta": 1,
+          "pct": null
+        },
+        "repeated_file_reads": {
+          "delta": 0,
+          "pct": null
+        }
+      },
+      "resolution_delta": 0,
+      "paired_outcome": "both_pass"
+    }
+  ]
+}
