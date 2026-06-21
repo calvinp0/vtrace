@@ -9,7 +9,13 @@ import { indexProject } from "../indexer/indexProject";
 import { persistObservation } from "../db/repositories/observationsRepository";
 import { ObservationKind, ObservationSource } from "../observations/types";
 import {
+  deriveImpactDigestSeam,
+  deriveMemoryDigestSeam,
+  deriveRulesDigestSeam,
   runPipelineOrchestrator,
+  type OrchestrationImpactSection,
+  type OrchestrationMemorySection,
+  type OrchestrationRulesSection,
   type RunPipelineOrchestratorInput,
 } from "./runPipelineOrchestrator";
 import { formatRunPipelineOrchestrationOutput } from "./formatRunPipelineOutput";
@@ -609,4 +615,101 @@ test("a genuine v2 build failure falls back to v1 with a fallback reason, preser
     assert.equal((out as Record<string, unknown>).capsuleEngine.effective, "v1");
     assert.ok((out as Record<string, unknown>).capsuleEngine.fallbackReason.startsWith("v2_build_failed: "));
   });
+});
+
+// M56: the impact / memory / rules sections are folded into the Capsule v2 product
+// digest, so the agent-facing render answers "what depends on this" / "what prior
+// knowledge / rules apply" in the same block — not just pivots/support.
+test("M56: capsule v2 digest folds the impact section for an impact-intent query", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const orchestration = runPipelineOrchestrator(db, repoRoot, {
+      query: "what is the impact of base",
+      capsuleEngine: "v2",
+    });
+    // The impact section resolved real reverse dependents (alpha + beta depend on base).
+    assert.equal(orchestration.impact.included, true);
+    assert.ok((orchestration.impact.graph?.summary.dependentSymbolCount ?? 0) > 0);
+    const digest = orchestration.capsuleV2?.digest ?? "";
+    // The digest carries a `→ impact` line with the real dependent + cross-file counts.
+    assert.match(digest, /→ impact \d+ dependents, \d+ cross-file/);
+    // The impact graph attaches signature-window source excerpts (repoRoot supplied),
+    // so the digest folds REAL per-caller rows (path::symbol + line range), not just
+    // counts — and the snippets are genuine, so no snippets-unavailable warning.
+    assert.match(digest, /dependent src\/(alpha|beta)\.ts::(alpha|beta) L\d+-L\d+:/);
+    assert.equal(orchestration.capsuleV2?.warnings.includes("impact_snippets_unavailable"), false);
+    // summary.impactCount mirrors the dependent count (never fabricated).
+    assert.equal(
+      orchestration.capsuleV2?.summary.impactCount,
+      orchestration.impact.graph?.summary.dependentSymbolCount,
+    );
+  });
+});
+
+test("M56: capsule v2 digest carries no impact line when the query does not request impact", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const orchestration = runPipelineOrchestrator(db, repoRoot, {
+      query: "why does base fail",
+      intent: "debug",
+      capsuleEngine: "v2",
+    });
+    assert.equal(orchestration.impact.included, false);
+    const digest = orchestration.capsuleV2?.digest ?? "";
+    // No impact section for this intent → no `→ impact` line and no impactCount.
+    assert.equal(digest.includes("→ impact"), false);
+    assert.equal("impactCount" in (orchestration.capsuleV2?.summary ?? {}), false);
+  });
+});
+
+test("M56: capsule v2 digest folds active project rules when rules are surfaced", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const orchestration = runPipelineOrchestrator(db, repoRoot, {
+      query: "modify base function",
+      intent: "modify",
+      capsuleEngine: "v2",
+    });
+    // Rules availability depends on the fixture; assert the wiring is honest either way.
+    const digest = orchestration.capsuleV2?.digest ?? "";
+    if (orchestration.rules.included && orchestration.rules.activeCount > 0) {
+      assert.match(digest, /◇ rule \d+ active/);
+      assert.equal(orchestration.capsuleV2?.summary.ruleCount, orchestration.rules.activeCount);
+    } else {
+      assert.equal(digest.includes("◇ rule"), false);
+    }
+  });
+});
+
+test("M56: deriveImpactDigestSeam returns null when impact was not included", () => {
+  const section = {
+    included: false,
+    skipReason: "not_requested_by_intent",
+    triggerReason: null,
+    selectionSource: null,
+    focalSymbol: null,
+    graph: null,
+    candidatesConsidered: 0,
+    matchedCandidates: 0,
+  } as unknown as OrchestrationImpactSection;
+  assert.equal(deriveImpactDigestSeam(section), null);
+});
+
+test("M56: deriveMemoryDigestSeam returns null when nothing relevant surfaced", () => {
+  const section = {
+    session: { included: false, skipReason: "query_unsupported", sessionId: null, observationCount: 0, recentObservations: [] },
+    durable: { included: false, skipReason: "no_matches", matchedCount: 0, topObservations: [] },
+  } as unknown as OrchestrationMemorySection;
+  assert.equal(deriveMemoryDigestSeam(section), null);
+});
+
+test("M56: deriveRulesDigestSeam returns null when no active rules", () => {
+  const section = {
+    included: false,
+    active: [],
+    candidates: [],
+    activeCount: 0,
+    candidateCount: 0,
+    staleCount: 0,
+    disabledCount: 0,
+    dismissedCount: 0,
+  } as unknown as OrchestrationRulesSection;
+  assert.equal(deriveRulesDigestSeam(section), null);
 });

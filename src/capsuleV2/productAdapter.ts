@@ -86,29 +86,80 @@ export interface CapsuleV2ProductSummary {
 }
 
 /**
+ * One representative impact relationship — a real graph dependent/caller the
+ * agent should sanity-check for a co-edit. Path/symbol/line spans come straight
+ * from the indexed impact graph; `snippet` is present ONLY when the caller layer
+ * loaded a real source excerpt. When no snippet is available the line is rendered
+ * with `snippetUnavailableReason` and never a fabricated body.
+ */
+export interface CapsuleV2DigestImpactItem {
+  role: "caller" | "importer" | "dependent" | "reference";
+  path: string;
+  symbol?: string;
+  lineStart?: number;
+  lineEnd?: number;
+  snippet?: string;
+  snippetUnavailableReason?: string;
+  why?: string;
+}
+
+/**
  * Optional impact summary the caller can fold into the digest/summary. VTRACE
- * exposes impact as graph-summary counts; it does NOT carry per-caller source
- * snippets, so `snippetsAvailable` is honestly `false` until that milestone lands.
+ * exposes impact as graph-summary counts (and real dependent identities); it does
+ * NOT carry per-caller source snippets on the run_pipeline path, so
+ * `snippetsAvailable` is honestly `false` until edge source-span extraction lands.
  */
 export interface CapsuleV2DigestImpactSeam {
   dependentCount: number;
+  /** Distinct files containing dependents (the blast-radius file count). */
+  crossFileDependentCount?: number;
+  /** Direct caller count when the caller separates callers from other dependents. */
+  callerCount?: number;
+  /** Direct importer count when available. */
+  importerCount?: number;
   /** False (default) when only the dependency summary is available, not snippets. */
   snippetsAvailable?: boolean;
   /** False when the impact section was attempted but produced nothing. */
   available?: boolean;
+  /** Bounded representative dependents (real graph identities; never fabricated). */
+  representative?: CapsuleV2DigestImpactItem[];
+}
+
+/** One surfaced memory observation (already relevance-selected upstream). */
+export interface CapsuleV2DigestMemoryItem {
+  source: "session" | "durable" | "rule" | "unknown";
+  /** Human age string when the caller has a clock; omitted by pure/offline callers. */
+  age?: string;
+  text: string;
+  stale?: boolean;
+  why?: string;
 }
 
 /** Optional memory summary (session + durable counts) the caller can fold in. */
 export interface CapsuleV2DigestMemorySeam {
   sessionCount: number;
   durableCount: number;
+  /** Stale observations among the surfaced set, when the caller computes staleness. */
+  staleCount?: number;
   available?: boolean;
+  /** Bounded representative observations (already-selected relevant memories). */
+  items?: CapsuleV2DigestMemoryItem[];
+}
+
+/** One surfaced active project rule (already relevance-selected upstream). */
+export interface CapsuleV2DigestRuleItem {
+  title?: string;
+  text: string;
+  source?: string;
+  why?: string;
 }
 
 /** Optional project-rules summary the caller can fold in. */
 export interface CapsuleV2DigestRulesSeam {
   activeCount: number;
   available?: boolean;
+  /** Bounded representative active rules (already-selected relevant rules). */
+  items?: CapsuleV2DigestRuleItem[];
 }
 
 /**
@@ -237,6 +288,118 @@ function projectItem(item: CapsuleV2Item): CapsuleV2ProductItem {
 // noisy capsule. The structured `pivots`/`support` arrays still carry every item.
 const MAX_DIGEST_ITEMS_PER_GROUP = 6;
 
+// How many representative impact / memory / rule rows the digest spells out. The
+// header counts still report the true totals; these caps only bound the inline
+// preview so the enriched digest stays compact.
+const MAX_DIGEST_IMPACT_ITEMS = 3;
+const MAX_DIGEST_MEMORY_ITEMS = 3;
+const MAX_DIGEST_RULE_ITEMS = 3;
+
+// Single-line length cap for any folded-in free text (memory body, rule text,
+// impact snippet) so one verbose row can't blow the digest budget.
+const MAX_DIGEST_TEXT_CHARS = 100;
+
+/** Collapse whitespace/newlines to a single line and truncate to a hard cap. */
+function compactDigestText(text: string, max = MAX_DIGEST_TEXT_CHARS): string {
+  const collapsed = text.replace(/\s+/g, " ").trim();
+  return collapsed.length > max ? `${collapsed.slice(0, max - 1).trimEnd()}…` : collapsed;
+}
+
+/** `path::symbol` when a symbol is known, else just the path. */
+function impactItemTarget(item: CapsuleV2DigestImpactItem): string {
+  const symbol = typeof item.symbol === "string" ? item.symbol.trim() : "";
+  return symbol.length > 0 ? `${item.path}::${symbol}` : item.path;
+}
+
+/** ` Lx-Ly` line range when both endpoints are known, else "". */
+function impactItemLineRange(item: CapsuleV2DigestImpactItem): string {
+  if (typeof item.lineStart === "number" && typeof item.lineEnd === "number") {
+    return ` L${item.lineStart}-L${item.lineEnd}`;
+  }
+  if (typeof item.lineStart === "number") {
+    return ` L${item.lineStart}`;
+  }
+  return "";
+}
+
+/**
+ * Render the `→ impact` block: a header line carrying the real dependent/cross-file/
+ * caller counts, then up to {@link MAX_DIGEST_IMPACT_ITEMS} representative rows.
+ * A row gets a `: <snippet>` suffix ONLY when a real snippet was supplied; otherwise
+ * it carries the bare (real) identity plus an optional `why:` — never an invented body.
+ */
+function renderImpactBlock(impact: CapsuleV2DigestImpactSeam): string[] {
+  if (impact.available === false) {
+    return ["→ impact unavailable"];
+  }
+  const parts = [`${impact.dependentCount} dependents`];
+  if (typeof impact.crossFileDependentCount === "number") {
+    parts.push(`${impact.crossFileDependentCount} cross-file`);
+  }
+  if (typeof impact.callerCount === "number") {
+    parts.push(`${impact.callerCount} callers`);
+  }
+  const representative = Array.isArray(impact.representative) ? impact.representative : [];
+  const snippetsAvailable = impact.snippetsAvailable === true;
+  const headerSuffix = snippetsAvailable || representative.length > 0
+    ? ""
+    : " (summary only — snippets unavailable)";
+  const lines = [`→ impact ${parts.join(", ")}${headerSuffix}`];
+  for (const item of representative.slice(0, MAX_DIGEST_IMPACT_ITEMS)) {
+    let line = `    ${item.role} ${impactItemTarget(item)}${impactItemLineRange(item)}`;
+    if (typeof item.snippet === "string" && item.snippet.trim().length > 0) {
+      line += `: ${compactDigestText(item.snippet)}`;
+    }
+    lines.push(line);
+    const why = typeof item.why === "string" && item.why.trim().length > 0
+      ? item.why.trim()
+      : (typeof item.snippet === "string" && item.snippet.trim().length > 0
+          ? null
+          : "likely co-edit / blast-radius check");
+    if (why !== null) {
+      lines.push(`        why: ${why}`);
+    }
+  }
+  return lines;
+}
+
+/** Render the `◎ memory` block: session/durable/stale counts + bounded observations. */
+function renderMemoryBlock(memory: CapsuleV2DigestMemorySeam): string[] {
+  if (memory.available === false) {
+    return ["◎ memory unavailable"];
+  }
+  const parts = [`${memory.sessionCount} session`, `${memory.durableCount} durable`];
+  if (typeof memory.staleCount === "number" && memory.staleCount > 0) {
+    parts.push(`${memory.staleCount} stale`);
+  }
+  const lines = [`◎ memory ${parts.join(", ")}`];
+  const items = Array.isArray(memory.items) ? memory.items : [];
+  for (const item of items.slice(0, MAX_DIGEST_MEMORY_ITEMS)) {
+    const tag = typeof item.age === "string" && item.age.trim().length > 0
+      ? ` (${item.age.trim()})`
+      : "";
+    const staleMark = item.stale === true ? " [stale]" : "";
+    lines.push(`    ${item.source}${tag}${staleMark}: ${compactDigestText(item.text)}`);
+  }
+  return lines;
+}
+
+/** Render the `◇ rule` block: active count + bounded rule previews. */
+function renderRulesBlock(rules: CapsuleV2DigestRulesSeam): string[] {
+  if (rules.available === false) {
+    return ["◇ rules unavailable"];
+  }
+  const lines = [`◇ rule ${rules.activeCount} active`];
+  const items = Array.isArray(rules.items) ? rules.items : [];
+  for (const item of items.slice(0, MAX_DIGEST_RULE_ITEMS)) {
+    const title = typeof item.title === "string" && item.title.trim().length > 0
+      ? `${item.title.trim()}: `
+      : "";
+    lines.push(`    ${title}${compactDigestText(item.text)}`);
+  }
+  return lines;
+}
+
 /** The stable target identity used in the digest: fqName, else `path::symbol`, else path. */
 function digestTarget(item: CapsuleV2ProductItem): string {
   if (typeof item.fqName === "string" && item.fqName.trim().length > 0) {
@@ -327,28 +490,13 @@ function renderCapsuleV2Digest(input: {
   }
 
   if (input.impact) {
-    if (input.impact.available === false) {
-      lines.push("→ impact unavailable");
-    } else {
-      const suffix = input.impact.snippetsAvailable === true
-        ? ""
-        : " (summary only — snippets unavailable)";
-      lines.push(`→ impact ${input.impact.dependentCount} dependents${suffix}`);
-    }
+    lines.push(...renderImpactBlock(input.impact));
   }
   if (input.memory) {
-    lines.push(
-      input.memory.available === false
-        ? "◎ memory unavailable"
-        : `◎ memory ${input.memory.sessionCount} session, ${input.memory.durableCount} durable`,
-    );
+    lines.push(...renderMemoryBlock(input.memory));
   }
   if (input.rules) {
-    lines.push(
-      input.rules.available === false
-        ? "◇ rules unavailable"
-        : `◇ rule ${input.rules.activeCount} active`,
-    );
+    lines.push(...renderRulesBlock(input.rules));
   }
 
   lines.push(digestBudgetLine(input.budget, input.savedTokensEstimate));

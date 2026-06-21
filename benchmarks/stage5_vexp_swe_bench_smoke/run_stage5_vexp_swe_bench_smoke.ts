@@ -125,7 +125,12 @@ import {
   type ShadowSkipReason,
   type RevisionAdoptionDecision,
 } from "./revisedPatchShadowEval";
-import { toCapsuleV2ProductResponse } from "../../src/capsuleV2/productAdapter";
+import {
+  toCapsuleV2ProductResponse,
+  type CapsuleV2DigestImpactSeam,
+  type CapsuleV2DigestMemorySeam,
+  type CapsuleV2DigestRulesSeam,
+} from "../../src/capsuleV2/productAdapter";
 import {
   renderPivotNeighborhoodsText,
   type PivotNeighborhoodContext,
@@ -4307,14 +4312,26 @@ interface CapsuleV2Audit {
 export const CAPSULE_V2_DIGEST_SENTINEL_START = "<VTRACE_CAPSULE_V2_DIGEST_START>";
 export const CAPSULE_V2_DIGEST_SENTINEL_END = "<VTRACE_CAPSULE_V2_DIGEST_END>";
 
-// Honest warnings stamped onto the injected digest: the Stage 5 capsule query path
-// produces only the capsule result (no impact/memory/rules), so those M55 seams are
-// not threaded into the digest. Surfaced as warnings, never fabricated counts.
-const DIGEST_UNTHREADED_SEAM_WARNINGS = [
-  "impact_not_threaded_into_digest",
-  "memory_not_threaded_into_digest",
-  "rules_not_threaded_into_digest",
-] as const;
+// Honest warnings stamped onto the injected digest for any seam NOT folded in.
+// The Stage 5 live capsule query path runs the capsule CLI as a subprocess and has
+// no in-process DB handle, so it cannot compute impact/memory/rules (M56 Option C):
+// those seams stay unthreaded here and surface as warnings, never fabricated counts.
+// A caller that DOES supply a seam (e.g. an offline test, or a future DB-backed
+// enrichment pass) drops that seam's warning — the warning is never left stale.
+const DIGEST_SEAM_WARNING: Readonly<Record<"impact" | "memory" | "rules", string>> = {
+  impact: "impact_not_threaded_into_digest",
+  memory: "memory_not_threaded_into_digest",
+  rules: "rules_not_threaded_into_digest",
+};
+
+// Optional digest enrichments a caller can fold into the injected Stage 5 digest.
+// Absent/null seams keep the honest not-threaded warning; supplied-and-available
+// seams are folded into the digest and drop their warning.
+export interface InjectedDigestEnrichments {
+  readonly impact?: CapsuleV2DigestImpactSeam | null;
+  readonly memory?: CapsuleV2DigestMemorySeam | null;
+  readonly rules?: CapsuleV2DigestRulesSeam | null;
+}
 
 // Options controlling how a capsule query output is classified into injectable
 // context. An absent/empty value reproduces the pre-M55W behavior exactly, so every
@@ -4332,10 +4349,25 @@ export interface ClassifyCapsuleOptions {
 export function buildInjectedCapsuleV2DigestBlock(
   result: CapsuleV2Result,
   query: string,
+  enrichments: InjectedDigestEnrichments = {},
 ): string {
+  const impact = enrichments.impact ?? null;
+  const memory = enrichments.memory ?? null;
+  const rules = enrichments.rules ?? null;
+  // A seam is "threaded" only when supplied AND available; otherwise its honest
+  // not-threaded warning stays. (`available === false` means the section was
+  // attempted but produced nothing — the adapter renders its own `*_unavailable`
+  // warning, so we do not double-stamp the not-threaded one for that case.)
+  const unthreadedWarnings: string[] = [];
+  if (impact === null) unthreadedWarnings.push(DIGEST_SEAM_WARNING.impact);
+  if (memory === null) unthreadedWarnings.push(DIGEST_SEAM_WARNING.memory);
+  if (rules === null) unthreadedWarnings.push(DIGEST_SEAM_WARNING.rules);
   const product = toCapsuleV2ProductResponse(result, {
     query,
-    warnings: [...DIGEST_UNTHREADED_SEAM_WARNINGS],
+    impact,
+    memory,
+    rules,
+    warnings: unthreadedWarnings,
   });
   const digest = product.digest.trim();
   if (digest.length === 0) {

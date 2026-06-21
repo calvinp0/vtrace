@@ -196,6 +196,120 @@ test("toCapsuleV2ProductResponse folds optional impact/memory/rule seams into su
   assert.ok(response.digest.includes("saved≈1240t vs full-file"));
 });
 
+test("digest folds representative impact callers with real identities + cross-file/caller counts", () => {
+  const response = toCapsuleV2ProductResponse(result(), {
+    query: "rename createSession",
+    impact: {
+      dependentCount: 5,
+      crossFileDependentCount: 3,
+      callerCount: 4,
+      snippetsAvailable: false,
+      available: true,
+      representative: [
+        { role: "dependent", path: "src/a.ts", symbol: "callA", snippetUnavailableReason: "edge_source_spans_not_extracted" },
+        { role: "caller", path: "src/b.ts", symbol: "callB", lineStart: 10, lineEnd: 12, snippet: "createSession()" },
+      ],
+    },
+  });
+
+  assert.equal(response.summary.impactCount, 5);
+  // Header carries the real dependent / cross-file / caller counts.
+  assert.ok(response.digest.includes("→ impact 5 dependents, 3 cross-file, 4 callers"));
+  // A row WITHOUT a snippet renders the bare real identity + a co-edit why, never an invented body.
+  assert.ok(response.digest.includes("    dependent src/a.ts::callA"));
+  assert.ok(response.digest.includes("        why: likely co-edit / blast-radius check"));
+  // A row WITH a real snippet renders the line range + body.
+  assert.ok(response.digest.includes("    caller src/b.ts::callB L10-L12: createSession()"));
+  // Representative rows present → header drops the "summary only" suffix.
+  assert.equal(response.digest.includes("summary only — snippets unavailable"), false);
+});
+
+test("digest renders summary-only impact suffix when no snippets and no representative rows", () => {
+  const response = toCapsuleV2ProductResponse(result(), {
+    impact: { dependentCount: 7, crossFileDependentCount: 2, snippetsAvailable: false, available: true },
+  });
+  assert.ok(response.digest.includes("→ impact 7 dependents, 2 cross-file (summary only — snippets unavailable)"));
+  assert.ok(response.warnings.includes("impact_snippets_unavailable"));
+});
+
+test("digest folds representative memory observations with stale marker + stale count", () => {
+  const response = toCapsuleV2ProductResponse(result(), {
+    memory: {
+      sessionCount: 2,
+      durableCount: 3,
+      staleCount: 1,
+      available: true,
+      items: [
+        { source: "session", text: "tried the aggregates.py path last session" },
+        { source: "durable", text: "10880 edits aggregates.py, not html.py", stale: true },
+      ],
+    },
+  });
+  assert.equal(response.summary.memoryCount, 5);
+  assert.ok(response.digest.includes("◎ memory 2 session, 3 durable, 1 stale"));
+  assert.ok(response.digest.includes("    session: tried the aggregates.py path last session"));
+  assert.ok(response.digest.includes("    durable [stale]: 10880 edits aggregates.py, not html.py"));
+});
+
+test("digest folds representative active rules with text", () => {
+  const response = toCapsuleV2ProductResponse(result(), {
+    rules: {
+      activeCount: 2,
+      available: true,
+      items: [
+        { text: "regenerate the PLY parser table after editing the grammar" },
+        { title: "co-edit", text: "update the matching _test.py sibling" },
+      ],
+    },
+  });
+  assert.equal(response.summary.ruleCount, 2);
+  assert.ok(response.digest.includes("◇ rule 2 active"));
+  assert.ok(response.digest.includes("    regenerate the PLY parser table after editing the grammar"));
+  assert.ok(response.digest.includes("    co-edit: update the matching _test.py sibling"));
+});
+
+test("digest warnings stay honest when a section is genuinely unavailable", () => {
+  const response = toCapsuleV2ProductResponse(result(), {
+    impact: { dependentCount: 0, available: false },
+    memory: { sessionCount: 0, durableCount: 0, available: false },
+    rules: { activeCount: 0, available: false },
+  });
+  assert.ok(response.digest.includes("→ impact unavailable"));
+  assert.ok(response.digest.includes("◎ memory unavailable"));
+  assert.ok(response.digest.includes("◇ rules unavailable"));
+  assert.ok(response.warnings.includes("impact_unavailable"));
+  assert.ok(response.warnings.includes("memory_unavailable"));
+  assert.ok(response.warnings.includes("rules_unavailable"));
+});
+
+test("digest warnings disappear when a section is actually threaded with available data", () => {
+  const response = toCapsuleV2ProductResponse(result(), {
+    impact: { dependentCount: 3, crossFileDependentCount: 1, snippetsAvailable: true, available: true,
+      representative: [{ role: "caller", path: "src/x.ts", symbol: "x", lineStart: 1, lineEnd: 2, snippet: "x()" }] },
+    memory: { sessionCount: 1, durableCount: 0, available: true, items: [{ source: "session", text: "note" }] },
+    rules: { activeCount: 1, available: true, items: [{ text: "rule" }] },
+  });
+  // Threaded + available → no unavailable / snippet warnings.
+  assert.equal(response.warnings.includes("impact_unavailable"), false);
+  assert.equal(response.warnings.includes("impact_snippets_unavailable"), false);
+  assert.equal(response.warnings.includes("memory_unavailable"), false);
+  assert.equal(response.warnings.includes("rules_unavailable"), false);
+});
+
+test("enriched digest stays deterministic across repeated calls", () => {
+  const enrich = {
+    query: "q",
+    impact: { dependentCount: 2, crossFileDependentCount: 1, available: true,
+      representative: [{ role: "dependent" as const, path: "p.ts", symbol: "s" }] },
+    memory: { sessionCount: 1, durableCount: 1, available: true, items: [{ source: "durable" as const, text: "m" }] },
+    rules: { activeCount: 1, available: true, items: [{ text: "r" }] },
+  };
+  assert.deepEqual(
+    toCapsuleV2ProductResponse(result(), enrich),
+    toCapsuleV2ProductResponse(result(), enrich),
+  );
+});
+
 test("toCapsuleV2ProductResponse marks bounded pivot source honestly", () => {
   // A pivot rendered only as a signature (budget-compressed) → bounded-source warning.
   const signatureOnlyPivot: CapsuleV2Item = {

@@ -14,6 +14,12 @@ import { buildCapsuleV2 } from "../capsuleV2/buildCapsuleV2";
 import {
   capsuleV2ToManifestItemFields,
   toCapsuleV2ProductResponse,
+  type CapsuleV2DigestImpactItem,
+  type CapsuleV2DigestImpactSeam,
+  type CapsuleV2DigestMemoryItem,
+  type CapsuleV2DigestMemorySeam,
+  type CapsuleV2DigestRuleItem,
+  type CapsuleV2DigestRulesSeam,
   type CapsuleV2ProductResponse,
 } from "../capsuleV2/productAdapter";
 import { CapsuleIntent } from "../capsuleV2/types";
@@ -41,6 +47,7 @@ import {
 import { routeQuery, type RoutedQueryResult } from "../intent/routeQuery";
 import { normalizeIntentQuery } from "../intent/rules";
 import { QueryIntent } from "../intent/types";
+import { StaleStateStatus } from "../memory/types";
 import { getSessionContext } from "../observations/getSessionContext";
 import { searchMemory } from "../observations/searchMemory";
 import type {
@@ -364,15 +371,11 @@ export function runPipelineOrchestrator(
     getLatestIndexRun(db)?.id ?? null,
   );
 
-  // Opt-in Capsule v2 section. The default (no `capsuleEngine`) path leaves both
-  // fields null and the v1 sections untouched, so existing output is byte
-  // identical. When opted in we build the bounded, intent-aware v2 capsule,
-  // project it through the shared product adapter, and persist a manifest the
-  // same way the v1 path does (resolvable by check_capsule_staleness).
-  const capsuleV2Build = buildCapsuleV2Section(db, repoRoot, query, rawInput, {
-    builder: options.capsuleV2Builder ?? buildCapsuleV2,
-  });
-
+  // The impact / memory / rules sections are computed BEFORE the Capsule v2 build
+  // so their bounded summaries can be folded into the v2 product digest (M56).
+  // None of these mutate retrieval/scoring; they read the already-assembled
+  // context + the index. Order change is digest-only — the returned sections are
+  // identical to before.
   const impact = runImpactSection(db, repoRoot, context, normalizedIntent);
   const flow = runFlowSection(db, repoRoot, context);
   const memory = runMemorySection(db, {
@@ -385,6 +388,21 @@ export function runPipelineOrchestrator(
     query,
     intent: intentDecision.selected,
     context,
+  });
+
+  // Opt-in Capsule v2 section. The default (no `capsuleEngine`) path leaves both
+  // fields null and the v1 sections untouched, so existing output is byte
+  // identical. When opted in we build the bounded, intent-aware v2 capsule,
+  // project it through the shared product adapter (with the impact/memory/rules
+  // seams derived above folded into the digest), and persist a manifest the same
+  // way the v1 path does (resolvable by check_capsule_staleness).
+  const capsuleV2Build = buildCapsuleV2Section(db, repoRoot, query, rawInput, {
+    builder: options.capsuleV2Builder ?? buildCapsuleV2,
+    digestEnrichments: {
+      impact: deriveImpactDigestSeam(impact),
+      memory: deriveMemoryDigestSeam(memory),
+      rules: deriveRulesDigestSeam(rules),
+    },
   });
 
   const deferred = buildDeferredPlaceholders({
@@ -452,12 +470,141 @@ interface CapsuleV2SectionResult {
 // reason. Workspace/index preparation runs entirely outside this function (the DB
 // is already open and indexed before the orchestrator is called), so such failures
 // are never caught here and never masquerade as a capsule-engine fallback.
+interface DigestEnrichments {
+  readonly impact: CapsuleV2DigestImpactSeam | null;
+  readonly memory: CapsuleV2DigestMemorySeam | null;
+  readonly rules: CapsuleV2DigestRulesSeam | null;
+}
+
+// How many representative rows each enriched digest section spells out. The
+// header counts still report the true totals; these caps only bound the inline
+// preview the adapter folds into the digest.
+const MAX_DIGEST_IMPACT_REPRESENTATIVE = 3;
+const MAX_DIGEST_MEMORY_REPRESENTATIVE = 3;
+const MAX_DIGEST_RULE_REPRESENTATIVE = 3;
+
+/**
+ * Project the run_pipeline impact section onto the bounded digest seam, or null
+ * when impact is not a meaningful part of this query (not requested by intent, no
+ * focal symbol, no dependents). The representative rows carry REAL graph dependent
+ * identities; a per-caller `snippet` is attached only when the impact graph already
+ * loaded a source excerpt (run_pipeline does not request excerpts today), so
+ * `snippetsAvailable` is honest and `snippetUnavailableReason` records the gap.
+ * Pure: derives only from the already-built section.
+ */
+export function deriveImpactDigestSeam(
+  impact: OrchestrationImpactSection,
+): CapsuleV2DigestImpactSeam | null {
+  if (!impact.included || impact.graph === null) {
+    return null;
+  }
+  const graph = impact.graph;
+  const dependentNodes = graph.nodes.filter((node) => node.distance > 0);
+  let snippetsAvailable = false;
+  const representative: CapsuleV2DigestImpactItem[] = [];
+  for (const node of dependentNodes.slice(0, MAX_DIGEST_IMPACT_REPRESENTATIVE)) {
+    const excerpt = node.sourceExcerpt ?? null;
+    if (excerpt) {
+      snippetsAvailable = true;
+      representative.push({
+        role: "dependent",
+        path: node.filePath,
+        symbol: node.localName,
+        lineStart: excerpt.startLine,
+        lineEnd: excerpt.endLine,
+        snippet: excerpt.text,
+      });
+    } else {
+      representative.push({
+        role: "dependent",
+        path: node.filePath,
+        symbol: node.localName,
+        snippetUnavailableReason: "edge_source_spans_not_extracted",
+      });
+    }
+  }
+  return {
+    dependentCount: graph.summary.dependentSymbolCount,
+    crossFileDependentCount: graph.summary.dependentFileCount,
+    snippetsAvailable,
+    available: true,
+    representative,
+  };
+}
+
+/**
+ * Project the run_pipeline memory section onto the bounded digest seam, or null
+ * when nothing relevant was surfaced (so an ordinary edit query's digest carries
+ * no empty `◎ memory` line). Uses only the already-selected session/durable
+ * observations — no new ranking. Pure.
+ */
+export function deriveMemoryDigestSeam(
+  memory: OrchestrationMemorySection,
+): CapsuleV2DigestMemorySeam | null {
+  const session = memory.session;
+  const durable = memory.durable;
+  const sessionCount = session.included ? session.observationCount : 0;
+  const durableCount = durable.included ? durable.matchedCount : 0;
+  const items: CapsuleV2DigestMemoryItem[] = [];
+  for (const observation of session.recentObservations) {
+    if (items.length >= MAX_DIGEST_MEMORY_REPRESENTATIVE) break;
+    items.push({ source: "session", text: observation.summary });
+  }
+  let staleCount = 0;
+  for (const result of durable.topObservations) {
+    const stale = result.staleness.status === StaleStateStatus.Stale;
+    if (stale) staleCount += 1;
+    if (items.length < MAX_DIGEST_MEMORY_REPRESENTATIVE) {
+      items.push({ source: "durable", text: result.observation.summary, stale });
+    }
+  }
+  if (sessionCount === 0 && durableCount === 0 && items.length === 0) {
+    return null;
+  }
+  return {
+    sessionCount,
+    durableCount,
+    ...(staleCount > 0 ? { staleCount } : {}),
+    available: true,
+    items,
+  };
+}
+
+/**
+ * Project the run_pipeline rules section onto the bounded digest seam, or null
+ * when no active rules were injected. Uses only the already-selected active rules
+ * (promoted, relevance-limited) — no new ranking. Pure.
+ */
+export function deriveRulesDigestSeam(
+  rules: OrchestrationRulesSection,
+): CapsuleV2DigestRulesSeam | null {
+  if (!rules.included || rules.activeCount === 0) {
+    return null;
+  }
+  const items: CapsuleV2DigestRuleItem[] = rules.active
+    .slice(0, MAX_DIGEST_RULE_REPRESENTATIVE)
+    .map((selected) => ({
+      text: selected.rule.summary,
+      ...(typeof selected.reason === "string" && selected.reason.length > 0
+        ? { why: selected.reason }
+        : {}),
+    }));
+  return {
+    activeCount: rules.activeCount,
+    available: true,
+    items,
+  };
+}
+
 function buildCapsuleV2Section(
   db: Database,
   repoRoot: string,
   query: string,
   rawInput: RunPipelineOrchestratorInput,
-  deps: { builder: typeof buildCapsuleV2 },
+  deps: {
+    builder: typeof buildCapsuleV2;
+    digestEnrichments?: DigestEnrichments;
+  },
 ): CapsuleV2SectionResult {
   const requested = parseRequestedCapsuleEngine(rawInput.capsuleEngine);
   const v1Section = {
@@ -479,7 +626,12 @@ function buildCapsuleV2Section(
       intent: rawInput.capsuleIntent ?? CapsuleIntent.Auto,
       maxTokens: rawInput.capsuleBudgetTokens ?? RUN_PIPELINE_DEFAULTS.capsuleV2BudgetTokens,
     });
-    const capsuleV2 = toCapsuleV2ProductResponse(result, { query });
+    const capsuleV2 = toCapsuleV2ProductResponse(result, {
+      query,
+      impact: deps.digestEnrichments?.impact ?? null,
+      memory: deps.digestEnrichments?.memory ?? null,
+      rules: deps.digestEnrichments?.rules ?? null,
+    });
     const capsuleV2ManifestId = persistCapsuleV2ManifestBestEffort(
       db,
       query,

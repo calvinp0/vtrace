@@ -1963,6 +1963,56 @@ test("M55W: classifyCapsuleOutput threads digest options through to the v2 class
   assert.doesNotMatch(without.context, new RegExp(CAPSULE_V2_DIGEST_SENTINEL_START));
 });
 
+// --- M56: injected digest folds impact/memory/rules when a caller supplies them ---
+
+test("M56: supplying a seam folds it into the digest and drops its not-threaded warning", () => {
+  const result = JSON.parse(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
+  const block = buildInjectedCapsuleV2DigestBlock(result, "q", {
+    impact: {
+      dependentCount: 4,
+      crossFileDependentCount: 2,
+      snippetsAvailable: true,
+      available: true,
+      representative: [
+        { role: "caller", path: "x.py", symbol: "callX", lineStart: 3, lineEnd: 5, snippet: "callX()" },
+      ],
+    },
+    memory: { sessionCount: 1, durableCount: 2, available: true, items: [{ source: "durable", text: "prior note" }] },
+    rules: { activeCount: 1, available: true, items: [{ text: "regenerate the parser table" }] },
+  });
+  // Real folded sections appear...
+  assert.match(block, /→ impact 4 dependents, 2 cross-file/);
+  assert.match(block, /caller x\.py::callX L3-L5: callX\(\)/);
+  assert.match(block, /◎ memory 1 session, 2 durable/);
+  assert.match(block, /◇ rule 1 active/);
+  // ...and the corresponding not-threaded warnings are dropped (never left stale).
+  assert.doesNotMatch(block, /impact_not_threaded_into_digest/);
+  assert.doesNotMatch(block, /memory_not_threaded_into_digest/);
+  assert.doesNotMatch(block, /rules_not_threaded_into_digest/);
+});
+
+test("M56: a partially-supplied seam set keeps honest warnings only for the unthreaded sections", () => {
+  const result = JSON.parse(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
+  const block = buildInjectedCapsuleV2DigestBlock(result, "q", {
+    impact: { dependentCount: 2, crossFileDependentCount: 1, snippetsAvailable: true, available: true },
+  });
+  // Impact threaded → its warning is gone; memory + rules remain warning-only.
+  assert.match(block, /→ impact 2 dependents, 1 cross-file/);
+  assert.doesNotMatch(block, /impact_not_threaded_into_digest/);
+  assert.match(block, /memory_not_threaded_into_digest/);
+  assert.match(block, /rules_not_threaded_into_digest/);
+  assert.doesNotMatch(block, /◎ memory/);
+  assert.doesNotMatch(block, /◇ rule/);
+});
+
+test("M56: the digest sentinel block still appears exactly once under --inject-capsule-digest", () => {
+  const result = JSON.parse(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
+  const inject = classifyCapsuleV2Output(result, { injectDigest: true, query: "q" });
+  const countOf = (needle: string): number => inject.context.split(needle).length - 1;
+  assert.equal(countOf(CAPSULE_V2_DIGEST_SENTINEL_START), 1);
+  assert.equal(countOf(CAPSULE_V2_DIGEST_SENTINEL_END), 1);
+});
+
 test("M55W: --inject-capsule-digest parses default-off and on", () => {
   assert.equal(parseArgs(["--mode", "prepare", "--instances", "a__1"]).injectCapsuleDigest, false);
   assert.equal(
