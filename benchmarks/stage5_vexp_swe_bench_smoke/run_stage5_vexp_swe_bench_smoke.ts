@@ -131,6 +131,7 @@ import {
   type CapsuleV2DigestMemorySeam,
   type CapsuleV2DigestRulesSeam,
 } from "../../src/capsuleV2/productAdapter";
+import { buildDigestDecisionContract } from "../../src/capsuleV2/digestDecisionContract";
 import type { Database } from "bun:sqlite";
 import { openIndexerDatabase } from "../../src/db/sqlite";
 import { getImpactGraph } from "../../src/impact/getImpactGraph";
@@ -388,6 +389,21 @@ export interface CliConfig {
   // memory/rules seams are NOT threaded into the Stage 5 capsule path, so the digest
   // carries honest `*_not_threaded_into_digest` warnings rather than fabricated counts.
   readonly injectCapsuleDigest: boolean;
+  // M57 — Digest decision contract (--digest-decision-contract). Default false. When
+  // true AND --inject-capsule-digest + v2, a sentinel-wrapped
+  // <VTRACE_DIGEST_DECISION_CONTRACT_*> block is injected right after the digest,
+  // listing up to MAX_DIGEST_DECISION_TARGETS required targets (lead pivot, the
+  // hidden/non-traceback co-pivot, and ≤2 cross-file impact representatives) that the
+  // agent must each EDIT or explicitly RULE_OUT. Makes surfaced targets action-binding;
+  // adds no new context. Never a product default.
+  readonly digestDecisionContract: boolean;
+  // M57 — Compact digest injection (--compact-digest-injection). Default false. When
+  // true AND --inject-capsule-digest + v2, suppresses injected guidance that is
+  // demonstrably duplicated by the digest (the `## VTRACE inspect-first` block — a
+  // re-ranked restatement of the digest's lead/related pivots). Preserves the digest,
+  // the decision contract, the focused source bodies, the pivot neighborhood, and all
+  // safety blocks (PIVOT_CHECK/EDIT_GUARD/PATCH_VERIFY). Never a product default.
+  readonly compactDigestInjection: boolean;
   // When true AND capsuleEngine === "v2", also probe the PRODUCT surface
   // (`run-pipeline --capsule-engine v2`) per instance and persist its accounting /
   // contextEngine / capsuleV2 signals. Default false: pure instrumentation for the
@@ -925,6 +941,8 @@ const DEFAULT_CONFIG: CliConfig = {
   capsuleIntent: "auto",
   capsuleBudget: CAPSULE_V2_DEFAULT_BUDGET,
   injectCapsuleDigest: false,
+  digestDecisionContract: false,
+  compactDigestInjection: false,
   captureProductV2Accounting: false,
   contextPolicyOverride: "auto",
   // PIVOT_CHECK is strict-risk-gated by default: it keeps the multi-pivot floor but
@@ -4356,6 +4374,16 @@ export interface ClassifyCapsuleOptions {
    * itself stays a pure projection over its inputs plus this injected callback.
    */
   readonly digestEnrichmentProvider?: (result: CapsuleV2Result) => InjectedDigestEnrichments;
+  /**
+   * M57: when true (with injectDigest + v2), append the sentinel-wrapped digest
+   * decision contract right after the digest block. Default off.
+   */
+  readonly digestDecisionContract?: boolean;
+  /**
+   * M57: when true (with injectDigest + v2), suppress injected guidance demonstrably
+   * duplicated by the digest (the `## VTRACE inspect-first` block). Default off.
+   */
+  readonly compactDigestInjection?: boolean;
 }
 
 // Build the sentinel-wrapped digest block from a Capsule v2 result, or "" when the
@@ -4766,14 +4794,30 @@ export function classifyCapsuleV2Output(
   // FIRST, so the agent sees the compact VEXP-shaped role hierarchy before the
   // lower-value inspectFirst/human-render/neighborhood sections. Default-off → ""
   // → the injected context is byte-identical to before.
+  // Compute the digest enrichments ONCE (the provider may open the workspace index);
+  // both the digest block and the M57 decision contract derive from the same seam.
+  const enrichments: InjectedDigestEnrichments =
+    options.injectDigest === true ? options.digestEnrichmentProvider?.(result) ?? {} : {};
   const digestBlock = options.injectDigest === true
-    ? buildInjectedCapsuleV2DigestBlock(
-        result,
-        options.query ?? "",
-        options.digestEnrichmentProvider?.(result) ?? {},
-      )
+    ? buildInjectedCapsuleV2DigestBlock(result, options.query ?? "", enrichments)
     : "";
-  const context = [digestBlock, inspectFirstText, rendered, neighborhoodText]
+  // M57: action-binding decision contract, placed immediately AFTER the digest so the
+  // agent reads the required EDIT/RULE_OUT decisions next to the targets they name.
+  // Default off; only meaningful when the digest is injected.
+  const decisionContractBlock =
+    options.injectDigest === true && options.digestDecisionContract === true
+      ? buildDigestDecisionContract(
+          toCapsuleV2ProductResponse(result, { query: options.query ?? "", impact: enrichments.impact ?? null }),
+          enrichments.impact ?? null,
+        ).text
+      : "";
+  // M57: compact mode drops the `## VTRACE inspect-first` block — a re-ranked
+  // restatement of the digest's lead/related pivots. Everything else (digest,
+  // contract, focused source bodies in `rendered`, neighborhood, and the Stage-B
+  // PIVOT_CHECK/EDIT_GUARD/PATCH_VERIFY blocks) is preserved.
+  const compact = options.injectDigest === true && options.compactDigestInjection === true;
+  const inspectFirstPart = compact ? "" : inspectFirstText;
+  const context = [digestBlock, decisionContractBlock, inspectFirstPart, rendered, neighborhoodText]
     .map((part) => part.trim())
     .filter((part) => part.length > 0)
     .join("\n\n");
@@ -6521,6 +6565,10 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
                 intent: config.capsuleIntent,
               })
             : undefined,
+          // M57: action-binding decision contract + compact injection. Both default
+          // off and only apply on the injected v2 digest path.
+          digestDecisionContract: injectV2Digest && config.digestDecisionContract,
+          compactDigestInjection: injectV2Digest && config.compactDigestInjection,
         });
         if (classified.policyAction === "error") {
           throw new EngineQueryError(classified.error ?? "vtrace query returned empty context.");
@@ -9863,6 +9911,8 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       }
       case "--capsule-budget": config.capsuleBudget = requirePositiveInt(argv, ++index, arg); break;
       case "--inject-capsule-digest": config.injectCapsuleDigest = true; break;
+      case "--digest-decision-contract": config.digestDecisionContract = true; break;
+      case "--compact-digest-injection": config.compactDigestInjection = true; break;
       case "--pivot-check-policy": {
         const value = requireValue(argv, ++index, arg);
         if (!PIVOT_CHECK_POLICIES.includes(value as PivotCheckPolicy)) {
@@ -9988,6 +10038,8 @@ function printUsageAndExit(exitCode: number): never {
       "  --capsule-intent auto|debug|modify|refactor|impact|explain|test-failure   Capsule v2 intent (default: auto; v2 only)",
       "  --capsule-budget <tokens>                     Capsule v2 token budget (default: 8000; v2 only)",
       "  --inject-capsule-digest                       prepend the M55 product capsuleV2.digest (●/○/→/◎/◇ render) to the injected context, wrapped in a <VTRACE_CAPSULE_V2_DIGEST_START/END> sentinel (default: off; v2 only). Test-only measurability seam for the M55V digest A/B; impact/memory/rules are warning-only (not threaded). Never a product default",
+      "  --digest-decision-contract                    M57: with --inject-capsule-digest + v2, inject a <VTRACE_DIGEST_DECISION_CONTRACT_START/END> block right after the digest listing <=4 required targets (lead pivot, hidden/non-traceback co-pivot, <=2 cross-file impact reps) the agent must each EDIT or explicitly RULE_OUT (default: off). Makes surfaced targets action-binding; adds no new context. Never a product default",
+      "  --compact-digest-injection                    M57: with --inject-capsule-digest + v2, suppress guidance demonstrably duplicated by the digest (the '## VTRACE inspect-first' block); preserves digest, decision contract, focused source, neighborhood, and PIVOT_CHECK/EDIT_GUARD/PATCH_VERIFY (default: off). Never a product default",
       "  --pivot-check-policy off|multi_pivot|risk_gated|strict_risk_gated|always   when to inject PIVOT_CHECK (default: strict_risk_gated — inject only on a STRONG risk signal, rejecting hidden_pivot-only and two ordinary pivots; risk_gated injects on any high-risk signal)",
       "  --pivot-check-gate off|hard                   opt-in HARD two-phase context-to-action gate (default: off). 'hard' runs a READ-ONLY inspect-only Phase-1 preflight (mutation tools denied) whose checklist is verified before any Phase-2 solve; on a failed gate Phase 2 never runs (no solve, no Docker). v2 indexed-context only; orthogonal to --pivot-check-policy",
       "  --pivot-check-gate-phase1-only                 (with --pivot-check-gate hard) run only the read-only Phase-1 preflight + gate, then STOP — Phase 2 never runs even on a pass. Canary to prove the read-only preflight can pass without editing",
