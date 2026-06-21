@@ -43,6 +43,15 @@ const MAX_REASON_CHARS = 140;
 
 export type DigestDecisionTargetKind = "PIVOT" | "IMPACT";
 
+// M58 — why a target landed in the required set (or, for optional context, why it
+// did NOT). Drives the bounded contract's `required because:` line so the agent can
+// tell a must-decide pivot from optional blast-radius context.
+export type DigestDecisionRequiredReason =
+  | "lead pivot"
+  | "hidden pivot"
+  | "cross-file co-edit candidate"
+  | "optional context only";
+
 /** One required decision target rendered in the contract. */
 export interface DigestDecisionTarget {
   kind: DigestDecisionTargetKind;
@@ -54,6 +63,8 @@ export interface DigestDecisionTarget {
   reason: string;
   /** True for the lead pivot; true for the derived hidden/non-traceback co-pivot. */
   hidden?: boolean;
+  /** M58: classification of why this target is required (or optional). */
+  requiredReason?: DigestDecisionRequiredReason;
 }
 
 // A pivot is "hidden / non-traceback" when its decisive reason is NOT a literal
@@ -161,6 +172,113 @@ export function selectDigestDecisionTargets(
 }
 
 /**
+ * M58 — bounded target selection. Same hard cap ({@link MAX_DIGEST_DECISION_TARGETS}),
+ * same lead + hidden-pivot priority, but TIGHTER on impact representatives to curb the
+ * M57B over-anchor blow-up (django-13195: 65 turns, edits expanded from an impact
+ * representative into unrelated callers):
+ *   - exactly ONE impact representative is required by default (the primary co-edit
+ *     candidate);
+ *   - a SECOND impact representative is required ONLY when it is a distinct
+ *     `dependent` (a genuine co-edit candidate), never a mere caller/importer/reference;
+ *   - any further / demoted representatives are returned as OPTIONAL context (bounded),
+ *     never as numbered required targets.
+ * Returns required + optional sets; optional items carry `requiredReason: "optional
+ * context only"` and are rendered as non-numbered bullets so the parser never counts
+ * them as required.
+ */
+export interface BoundedDigestDecisionSelection {
+  required: DigestDecisionTarget[];
+  optional: DigestDecisionTarget[];
+}
+
+const MAX_OPTIONAL_CONTEXT_ITEMS = 2;
+
+export function selectBoundedDigestDecisionTargets(
+  response: CapsuleV2ProductResponse,
+  impact?: CapsuleV2DigestImpactSeam | null,
+): BoundedDigestDecisionSelection {
+  const pivots = Array.isArray(response.pivots) ? response.pivots : [];
+  if (pivots.length === 0) return { required: [], optional: [] };
+
+  const required: DigestDecisionTarget[] = [];
+  const optional: DigestDecisionTarget[] = [];
+  const seenIdentity = new Set<string>();
+  const seenPath = new Set<string>();
+
+  const pushRequired = (t: DigestDecisionTarget): boolean => {
+    if (required.length >= MAX_DIGEST_DECISION_TARGETS) return false;
+    if (seenIdentity.has(t.target)) return false;
+    required.push(t);
+    seenIdentity.add(t.target);
+    seenPath.add(t.path);
+    return true;
+  };
+
+  // 1. Lead pivot — always required.
+  const lead = pivots[0]!;
+  pushRequired({
+    kind: "PIVOT",
+    target: pivotTargetIdentity(lead),
+    path: lead.path,
+    reason: pivotReason(lead),
+    hidden: pivotIsHidden(lead.roleReason),
+    requiredReason: "lead pivot",
+  });
+
+  // 2. Hidden / non-traceback co-pivot, if distinct.
+  const hiddenCoPivot = pivots.slice(1).find((p) => pivotIsHidden(p.roleReason));
+  if (hiddenCoPivot !== undefined) {
+    pushRequired({
+      kind: "PIVOT",
+      target: pivotTargetIdentity(hiddenCoPivot),
+      path: hiddenCoPivot.path,
+      reason: pivotReason(hiddenCoPivot),
+      hidden: true,
+      requiredReason: "hidden pivot",
+    });
+  }
+
+  // 3. Impact representatives — ONE required by default; a second only if it is a
+  //    distinct `dependent` co-edit candidate. Everything else is optional context.
+  const representative = Array.isArray(impact?.representative) ? impact!.representative! : [];
+  let requiredImpact = 0;
+  for (const item of representative) {
+    const identity = impactTargetIdentity(item);
+    if (seenPath.has(item.path) || seenIdentity.has(identity)) continue; // cross-file + dedup
+    const isCoEditCandidate = item.role === "dependent";
+    const canRequireMore = required.length < MAX_DIGEST_DECISION_TARGETS;
+    const promote =
+      canRequireMore && (requiredImpact === 0 || (requiredImpact === 1 && isCoEditCandidate));
+    if (promote) {
+      if (
+        pushRequired({
+          kind: "IMPACT",
+          target: identity,
+          path: item.path,
+          reason: impactReason(item),
+          requiredReason: "cross-file co-edit candidate",
+        })
+      ) {
+        requiredImpact += 1;
+        continue;
+      }
+    }
+    if (optional.length < MAX_OPTIONAL_CONTEXT_ITEMS && !seenIdentity.has(identity)) {
+      optional.push({
+        kind: "IMPACT",
+        target: identity,
+        path: item.path,
+        reason: impactReason(item),
+        requiredReason: "optional context only",
+      });
+      seenIdentity.add(identity);
+    }
+  }
+
+  return { required, optional };
+}
+
+/**
  * Render the sentinel-wrapped decision contract for the given required targets.
  * Returns "" when there are no targets (so the contract is simply absent).
  */
@@ -190,16 +308,81 @@ export function renderDigestDecisionContractText(targets: readonly DigestDecisio
 }
 
 /**
+ * M58 — render the BOUNDED contract: three explicit decisions (EDIT / RULE_OUT /
+ * INSPECT_ONLY_NO_EDIT), strong anti-over-edit guidance, a bounded decision-table
+ * template, and a separate non-numbered OPTIONAL CONTEXT list. Returns "" when there
+ * are no required targets.
+ */
+export function renderBoundedDigestDecisionContractText(
+  required: readonly DigestDecisionTarget[],
+  optional: readonly DigestDecisionTarget[] = [],
+): string {
+  if (required.length === 0) return "";
+  const lines: string[] = [DIGEST_DECISION_CONTRACT_START];
+  lines.push(
+    "Close EVERY required target below with exactly one decision: EDIT, RULE_OUT, or INSPECT_ONLY_NO_EDIT.",
+  );
+  lines.push("A required target does NOT mean a required edit.");
+  lines.push("");
+  lines.push("Decision meanings:");
+  lines.push("- EDIT: I changed this target because it is necessary for the fix.");
+  lines.push(
+    "- RULE_OUT: I inspected or reasoned about this target and it does not need changes because <reason>.",
+  );
+  lines.push(
+    "- INSPECT_ONLY_NO_EDIT: I inspected this target, confirmed it is relevant context, but the correct patch belongs elsewhere.",
+  );
+  lines.push("");
+  lines.push("Required target decisions:");
+  required.forEach((t, i) => {
+    lines.push(`${i + 1}. ${t.kind} ${t.target}`);
+    if (t.requiredReason !== undefined) lines.push(`   required because: ${t.requiredReason}`);
+    lines.push("   decision: EDIT | RULE_OUT | INSPECT_ONLY_NO_EDIT");
+    lines.push(`   reason: ${t.reason}`);
+    lines.push("   files_touched: <paths or none>");
+  });
+  lines.push("");
+  lines.push("Anti-over-edit rules:");
+  lines.push("- Required target does not mean required edit.");
+  lines.push("- Prefer RULE_OUT or INSPECT_ONLY_NO_EDIT when the target is only a caller/dependent.");
+  lines.push("- Do not edit impact representatives unless the issue behavior requires a co-edit.");
+  lines.push("- Do not expand from an impact representative into unrelated callers.");
+  lines.push("- Avoid repeated reads of the same file unless new evidence changes the hypothesis.");
+  lines.push("- Stop after each required target has EDIT / RULE_OUT / INSPECT_ONLY_NO_EDIT.");
+  if (optional.length > 0) {
+    lines.push("");
+    lines.push("Optional context (NOT required to decide; do not edit unless the fix needs it):");
+    optional.forEach((t) => {
+      lines.push(`- ${t.kind} ${t.target} — optional context only: additional dependent/caller`);
+    });
+  }
+  lines.push(DIGEST_DECISION_CONTRACT_END);
+  return lines.join("\n");
+}
+
+/**
  * Build the decision contract from a product response + impact seam in one call.
- * Returns both the injectable text and the structured targets (for post-hoc
+ * Returns both the injectable text and the structured (required) targets (for post-hoc
  * classification without re-parsing the rendered text).
+ *
+ * M58: with `{ bounded: true }` the contract uses the tighter target selection +
+ * three-way decision render. Default (`bounded` absent/false) is byte-identical to M57.
  */
 export function buildDigestDecisionContract(
   response: CapsuleV2ProductResponse,
   impact?: CapsuleV2DigestImpactSeam | null,
-): { text: string; targets: DigestDecisionTarget[] } {
+  options?: { bounded?: boolean },
+): { text: string; targets: DigestDecisionTarget[]; optionalTargets: DigestDecisionTarget[] } {
+  if (options?.bounded === true) {
+    const { required, optional } = selectBoundedDigestDecisionTargets(response, impact);
+    return {
+      text: renderBoundedDigestDecisionContractText(required, optional),
+      targets: required,
+      optionalTargets: optional,
+    };
+  }
   const targets = selectDigestDecisionTargets(response, impact);
-  return { text: renderDigestDecisionContractText(targets), targets };
+  return { text: renderDigestDecisionContractText(targets), targets, optionalTargets: [] };
 }
 
 // ---------------------------------------------------------------------------
@@ -240,6 +423,7 @@ export function parseDigestDecisionContract(text: string): ParsedDigestDecisionC
 export type DigestDecision =
   | "EDITED"
   | "RULED_OUT"
+  | "INSPECT_ONLY_NO_EDIT"
   | "INSPECTED_ONLY"
   | "IGNORED"
   | "EDITED_WITHOUT_INSPECTION"
@@ -278,6 +462,12 @@ export interface DigestDecisionClassification {
   requiredTargetIgnoredCount: number;
   requiredTargetInvalidDecisionCount: number;
   requiredTargetEditedWithoutInspectionCount: number;
+  // M58 — three-way decision + closed/open partition.
+  requiredTargetInspectOnlyNoEditCount: number;
+  /** EDITED (incl. without-inspection) + RULED_OUT + INSPECT_ONLY_NO_EDIT. */
+  requiredTargetClosedCount: number;
+  /** IGNORED + INSPECTED_ONLY + INVALID_RULE_OUT. */
+  requiredTargetOpenCount: number;
 }
 
 // Strip a benchmark workspace prefix (`…/.bench-repos/<repo>/`) so absolute
@@ -297,6 +487,12 @@ function pathsMatch(a: string, b: string): boolean {
 const RULE_OUT_PATTERN =
   /(rule[d]?\s*out|ruled_out|rule_out|does ?n['o]t need|do(es)? not need|no (edit|change)s? (needed|required)|not (require|need)\w*\s+(a\s+|any\s+)?(edit|change|modif)|leav\w*\s+\S+\s+unchanged|preserv\w*|no change needed|safe to (leave|skip)|out of scope)/i;
 
+// M58 — an INSPECT_ONLY_NO_EDIT decision: the target is RELEVANT context but the
+// correct patch belongs elsewhere (distinct from RULE_OUT, which asserts the target is
+// not relevant / not needed). Matches the literal contract marker or the prose form.
+const INSPECT_ONLY_NO_EDIT_PATTERN =
+  /(inspect[_ ]?only[_ ]?no[_ ]?edit|(?:inspected|reviewed|read)\b[^.!?\n]*\b(?:relevant|context)\b[^.!?\n]*\b(?:no (?:edit|change)|belongs elsewhere|patch (?:is|belongs|lives) elsewhere|fix (?:is|belongs|lives) (?:in|elsewhere)|edit(?:ed)? elsewhere|elsewhere)|correct patch belongs elsewhere|relevant context[^.!?\n]*\b(?:no edit|elsewhere)|no edit (?:needed|required) here[^.!?\n]*\b(?:relevant|context|elsewhere))/i;
+
 // A rule-out is only valid when it gives a behavioral reason — not a bare assertion.
 const BEHAVIORAL_REASON_PATTERN =
   /(because|since|already|handled|covered by|not (affected|impacted|reached|involved|relevant|called)|unrelated|only (a|the|used)|read[- ]only|no behav\w*|delegat\w*|same code path|duplicat\w*|test (file|only)|caller of)/i;
@@ -308,6 +504,19 @@ function targetMentioned(target: DigestDecisionTarget, sentence: string): boolea
   if (base.length > 0 && lower.includes(base.toLowerCase())) return true;
   const sym = target.target.includes("::") ? target.target.split("::").pop()! : "";
   if (sym.length > 2 && lower.includes(sym.toLowerCase())) return true;
+  return false;
+}
+
+// M58 — returns true when the agent explicitly declared this target inspect-only /
+// relevant-but-no-edit. Scanned per sentence-unit so the marker + target stay scoped
+// together (mirrors ruleOutVerdict).
+function inspectOnlyNoEditDeclared(target: DigestDecisionTarget, agentText: string): boolean {
+  if (agentText.trim().length === 0) return false;
+  const units = agentText.split(/(?<=[.!?\n])\s+/);
+  for (const unit of units) {
+    if (!INSPECT_ONLY_NO_EDIT_PATTERN.test(unit)) continue;
+    if (targetMentioned(target, unit)) return true;
+  }
   return false;
 }
 
@@ -356,6 +565,10 @@ export function classifyDigestDecisionContract(
       const inspectedBeforeEdit =
         inspected && (firstEditIdx < 0 || firstReadIdx <= firstEditIdx);
       decision = inspectedBeforeEdit ? "EDITED" : "EDITED_WITHOUT_INSPECTION";
+    } else if (inspectOnlyNoEditDeclared(target, agentText)) {
+      // M58 — explicit inspect-only/relevant-but-no-edit declaration takes precedence
+      // over a generic rule-out (it is the more specific decision).
+      decision = "INSPECT_ONLY_NO_EDIT";
     } else {
       const verdict = ruleOutVerdict(target, agentText);
       if (verdict === "valid") decision = "RULED_OUT";
@@ -367,15 +580,26 @@ export function classifyDigestDecisionContract(
   });
 
   const count = (d: DigestDecision) => results.filter((r) => r.decision === d).length;
+  const editedCount = count("EDITED") + count("EDITED_WITHOUT_INSPECTION");
+  const ruledOutCount = count("RULED_OUT");
+  const inspectOnlyNoEditCount = count("INSPECT_ONLY_NO_EDIT");
+  const inspectedOnlyCount = count("INSPECTED_ONLY");
+  const ignoredCount = count("IGNORED");
+  const invalidCount = count("INVALID_RULE_OUT");
   return {
     decisionContractPresent: input.requiredTargets.length > 0,
     requiredTargetCount: results.length,
     requiredTargets: results,
-    requiredTargetInspectedCount: count("INSPECTED_ONLY"),
-    requiredTargetEditedCount: count("EDITED") + count("EDITED_WITHOUT_INSPECTION"),
-    requiredTargetRuledOutCount: count("RULED_OUT"),
-    requiredTargetIgnoredCount: count("IGNORED"),
-    requiredTargetInvalidDecisionCount: count("INVALID_RULE_OUT"),
+    requiredTargetInspectedCount: inspectedOnlyCount,
+    requiredTargetEditedCount: editedCount,
+    requiredTargetRuledOutCount: ruledOutCount,
+    requiredTargetIgnoredCount: ignoredCount,
+    requiredTargetInvalidDecisionCount: invalidCount,
     requiredTargetEditedWithoutInspectionCount: count("EDITED_WITHOUT_INSPECTION"),
+    requiredTargetInspectOnlyNoEditCount: inspectOnlyNoEditCount,
+    // closed = a real decision was reached; open = still unresolved (ignored / read
+    // with no decision / a rule-out that doesn't justify itself).
+    requiredTargetClosedCount: editedCount + ruledOutCount + inspectOnlyNoEditCount,
+    requiredTargetOpenCount: ignoredCount + inspectedOnlyCount + invalidCount,
   };
 }

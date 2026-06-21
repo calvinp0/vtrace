@@ -1,0 +1,57 @@
+{
+  "milestone": "M58",
+  "type": "offline_implementation",
+  "live_runs": 0,
+  "docker_eval": false,
+  "flags": {
+    "added": ["--bounded-digest-decisions"],
+    "default_off": true,
+    "requires": ["--inject-capsule-digest", "--digest-decision-contract"],
+    "composes_with": ["--compact-digest-injection"],
+    "default_behavior_changed": false
+  },
+  "contract": {
+    "decisions": ["EDIT", "RULE_OUT", "INSPECT_ONLY_NO_EDIT"],
+    "added_fields": ["required because:", "files_touched:"],
+    "anti_over_edit_rules": 6,
+    "optional_context_section": true
+  },
+  "target_selection": {
+    "max_required_targets": 4,
+    "impact_reps_required_by_default": 1,
+    "second_impact_rep_condition": "distinct dependent co-edit candidate (not a mere caller/importer/reference)",
+    "demoted_reps": "optional context (not required)",
+    "required_reason_labels": ["lead pivot", "hidden pivot", "cross-file co-edit candidate", "optional context only"]
+  },
+  "classifier": {
+    "new_status": "INSPECT_ONLY_NO_EDIT",
+    "statuses": ["EDITED", "EDITED_WITHOUT_INSPECTION", "RULED_OUT", "INSPECT_ONLY_NO_EDIT", "INSPECTED_ONLY", "IGNORED", "INVALID_RULE_OUT"],
+    "new_aggregates": ["requiredTargetInspectOnlyNoEditCount", "requiredTargetClosedCount", "requiredTargetOpenCount"],
+    "closed_definition": "EDITED + RULED_OUT + INSPECT_ONLY_NO_EDIT",
+    "open_definition": "IGNORED + INSPECTED_ONLY + INVALID_RULE_OUT"
+  },
+  "compact_mode": {
+    "changed": false,
+    "aggressive_implemented": false,
+    "aggressive_deferred_reason": "remaining sections (focused source render, neighborhood excerpts) carry real source not duplicated by the digest; removing them would increase reads/turns/cost"
+  },
+  "m57b_failure_analysis": {
+    "case": "django__django-13195",
+    "tool_calls": 24,
+    "reads": 8,
+    "edits": 3,
+    "edited_outside_required_targets": ["django/contrib/messages/storage/cookie.py", "django/contrib/sessions/middleware.py"],
+    "repeated_reads": "response.py x3, sessions/middleware.py x2, tests x2",
+    "drivers": ["two-way contract biases toward editing surfaced callers", "up to 2 impact reps promoted to required even when mere callers", "no inspect-only-no-edit close option", "no anti-over-edit / anti-repeat-read guidance"]
+  },
+  "tests": {
+    "module_tests_added": 11,
+    "assembly_tests_added": 3,
+    "total_pass": 3088,
+    "total_fail": 0,
+    "typecheck": "clean",
+    "typecheck_benchmarks": "clean",
+    "git_diff_check": "clean"
+  },
+  "next_validation": "<=6-live-run A/B: M57 contract (reuse m57b runs) vs M58 bounded on sphinx-7462, django-11820, django-13195; primary metrics closed/open targets, tokens/turns/repeated-reads, off-target edits"
+}

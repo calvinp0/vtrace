@@ -93,3 +93,34 @@ test("M57: compact mode suppresses the duplicated inspect-first block but keeps 
     assert.match(ctx, /● pivot/);
   });
 });
+
+test("M58: bounded decisions are off by default — the M57 two-way contract is rendered", async () => {
+  await withClassifier((classify) => {
+    const ctx = classify({ digestDecisionContract: true });
+    assert.ok(ctx.includes(DIGEST_DECISION_CONTRACT_START), "contract present");
+    assert.equal(ctx.includes("INSPECT_ONLY_NO_EDIT"), false, "no three-way decision by default");
+  });
+});
+
+test("M58: --bounded-digest-decisions renders the three-way contract with anti-over-edit guidance", async () => {
+  await withClassifier((classify) => {
+    const ctx = classify({ digestDecisionContract: true, boundedDigestDecisions: true });
+    assert.ok(ctx.includes(DIGEST_DECISION_CONTRACT_START), "contract present");
+    assert.match(ctx, /decision: EDIT \| RULE_OUT \| INSPECT_ONLY_NO_EDIT/);
+    assert.match(ctx, /Required target does not mean required edit\./);
+  });
+});
+
+test("M58: bounded + compact keeps digest and decision sentinels and drops inspect-first", async () => {
+  await withClassifier((classify) => {
+    const ctx = classify({
+      digestDecisionContract: true,
+      boundedDigestDecisions: true,
+      compactDigestInjection: true,
+    });
+    assert.ok(ctx.includes(DIGEST_START), "digest preserved");
+    assert.ok(ctx.includes(DIGEST_DECISION_CONTRACT_START), "decision contract preserved");
+    assert.equal(ctx.includes(INSPECT_FIRST_HEADING), false, "compact still drops inspect-first");
+    assert.match(ctx, /INSPECT_ONLY_NO_EDIT/, "bounded three-way decision present");
+  });
+});

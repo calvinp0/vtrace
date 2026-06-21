@@ -404,6 +404,14 @@ export interface CliConfig {
   // the decision contract, the focused source bodies, the pivot neighborhood, and all
   // safety blocks (PIVOT_CHECK/EDIT_GUARD/PATCH_VERIFY). Never a product default.
   readonly compactDigestInjection: boolean;
+  // M58 — Bounded digest decisions (--bounded-digest-decisions). Default false.
+  // Requires --inject-capsule-digest + --digest-decision-contract (+ v2). Swaps the
+  // M57 two-way (EDIT/RULE_OUT) contract for the bounded three-way contract
+  // (EDIT / RULE_OUT / INSPECT_ONLY_NO_EDIT) with anti-over-edit guidance, tighter
+  // impact-target selection (1 required impact rep by default; a 2nd only for a
+  // distinct dependent co-edit candidate), and a non-required OPTIONAL CONTEXT list.
+  // Curbs the M57B over-anchor cost blow-up. Never a product default.
+  readonly boundedDigestDecisions: boolean;
   // When true AND capsuleEngine === "v2", also probe the PRODUCT surface
   // (`run-pipeline --capsule-engine v2`) per instance and persist its accounting /
   // contextEngine / capsuleV2 signals. Default false: pure instrumentation for the
@@ -943,6 +951,7 @@ const DEFAULT_CONFIG: CliConfig = {
   injectCapsuleDigest: false,
   digestDecisionContract: false,
   compactDigestInjection: false,
+  boundedDigestDecisions: false,
   captureProductV2Accounting: false,
   contextPolicyOverride: "auto",
   // PIVOT_CHECK is strict-risk-gated by default: it keeps the multi-pivot floor but
@@ -4384,6 +4393,12 @@ export interface ClassifyCapsuleOptions {
    * duplicated by the digest (the `## VTRACE inspect-first` block). Default off.
    */
   readonly compactDigestInjection?: boolean;
+  /**
+   * M58: when true (with injectDigest + digestDecisionContract + v2), render the
+   * BOUNDED three-way contract (EDIT / RULE_OUT / INSPECT_ONLY_NO_EDIT) with
+   * anti-over-edit guidance and tighter impact-target selection. Default off.
+   */
+  readonly boundedDigestDecisions?: boolean;
 }
 
 // Build the sentinel-wrapped digest block from a Capsule v2 result, or "" when the
@@ -4809,6 +4824,7 @@ export function classifyCapsuleV2Output(
       ? buildDigestDecisionContract(
           toCapsuleV2ProductResponse(result, { query: options.query ?? "", impact: enrichments.impact ?? null }),
           enrichments.impact ?? null,
+          { bounded: options.boundedDigestDecisions === true },
         ).text
       : "";
   // M57: compact mode drops the `## VTRACE inspect-first` block — a re-ranked
@@ -6569,6 +6585,9 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
           // off and only apply on the injected v2 digest path.
           digestDecisionContract: injectV2Digest && config.digestDecisionContract,
           compactDigestInjection: injectV2Digest && config.compactDigestInjection,
+          // M58: bounded three-way contract — only meaningful with the contract on.
+          boundedDigestDecisions:
+            injectV2Digest && config.digestDecisionContract && config.boundedDigestDecisions,
         });
         if (classified.policyAction === "error") {
           throw new EngineQueryError(classified.error ?? "vtrace query returned empty context.");
@@ -9913,6 +9932,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--inject-capsule-digest": config.injectCapsuleDigest = true; break;
       case "--digest-decision-contract": config.digestDecisionContract = true; break;
       case "--compact-digest-injection": config.compactDigestInjection = true; break;
+      case "--bounded-digest-decisions": config.boundedDigestDecisions = true; break;
       case "--pivot-check-policy": {
         const value = requireValue(argv, ++index, arg);
         if (!PIVOT_CHECK_POLICIES.includes(value as PivotCheckPolicy)) {
@@ -9992,6 +10012,13 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         throw new Error(`Unknown argument: ${arg}`);
     }
   }
+  // M58: the bounded contract is a rendering of the decision contract over the digest;
+  // it is meaningless without both prerequisites.
+  if (config.boundedDigestDecisions && !(config.injectCapsuleDigest && config.digestDecisionContract)) {
+    throw new Error(
+      "--bounded-digest-decisions requires --inject-capsule-digest and --digest-decision-contract.",
+    );
+  }
   return {
     ...config,
     vexpSweBenchDir: config.vexpSweBenchDir === null ? null : path.resolve(config.vexpSweBenchDir),
@@ -10040,6 +10067,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --inject-capsule-digest                       prepend the M55 product capsuleV2.digest (●/○/→/◎/◇ render) to the injected context, wrapped in a <VTRACE_CAPSULE_V2_DIGEST_START/END> sentinel (default: off; v2 only). Test-only measurability seam for the M55V digest A/B; impact/memory/rules are warning-only (not threaded). Never a product default",
       "  --digest-decision-contract                    M57: with --inject-capsule-digest + v2, inject a <VTRACE_DIGEST_DECISION_CONTRACT_START/END> block right after the digest listing <=4 required targets (lead pivot, hidden/non-traceback co-pivot, <=2 cross-file impact reps) the agent must each EDIT or explicitly RULE_OUT (default: off). Makes surfaced targets action-binding; adds no new context. Never a product default",
       "  --compact-digest-injection                    M57: with --inject-capsule-digest + v2, suppress guidance demonstrably duplicated by the digest (the '## VTRACE inspect-first' block); preserves digest, decision contract, focused source, neighborhood, and PIVOT_CHECK/EDIT_GUARD/PATCH_VERIFY (default: off). Never a product default",
+      "  --bounded-digest-decisions                    M58: requires --inject-capsule-digest + --digest-decision-contract (+ v2). Render the BOUNDED three-way contract (EDIT / RULE_OUT / INSPECT_ONLY_NO_EDIT) with anti-over-edit guidance, tighter impact-target selection (1 required impact rep by default; a 2nd only for a distinct dependent co-edit candidate), and a non-required OPTIONAL CONTEXT list. Curbs the M57B over-anchor cost blow-up (default: off). Never a product default",
       "  --pivot-check-policy off|multi_pivot|risk_gated|strict_risk_gated|always   when to inject PIVOT_CHECK (default: strict_risk_gated — inject only on a STRONG risk signal, rejecting hidden_pivot-only and two ordinary pivots; risk_gated injects on any high-risk signal)",
       "  --pivot-check-gate off|hard                   opt-in HARD two-phase context-to-action gate (default: off). 'hard' runs a READ-ONLY inspect-only Phase-1 preflight (mutation tools denied) whose checklist is verified before any Phase-2 solve; on a failed gate Phase 2 never runs (no solve, no Docker). v2 indexed-context only; orthogonal to --pivot-check-policy",
       "  --pivot-check-gate-phase1-only                 (with --pivot-check-gate hard) run only the read-only Phase-1 preflight + gate, then STOP — Phase 2 never runs even on a pass. Canary to prove the read-only preflight can pass without editing",

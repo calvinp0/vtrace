@@ -14,7 +14,9 @@ import {
   DIGEST_DECISION_CONTRACT_END,
   MAX_DIGEST_DECISION_TARGETS,
   selectDigestDecisionTargets,
+  selectBoundedDigestDecisionTargets,
   renderDigestDecisionContractText,
+  renderBoundedDigestDecisionContractText,
   buildDigestDecisionContract,
   parseDigestDecisionContract,
   classifyDigestDecisionContract,
@@ -240,10 +242,158 @@ test("M57 classifier: counts partition the required targets", () => {
   const sum =
     c.requiredTargetEditedCount +
     c.requiredTargetRuledOutCount +
+    c.requiredTargetInspectOnlyNoEditCount +
     c.requiredTargetInspectedCount +
     c.requiredTargetIgnoredCount +
     c.requiredTargetInvalidDecisionCount;
   assert.equal(sum, c.requiredTargetCount);
   assert.equal(c.requiredTargetCount, 3);
   assert.equal(c.decisionContractPresent, true);
+});
+
+// --- M58: bounded contract (target selection, render, three-way decisions) --------
+
+const CALLER = "caller" as const;
+const DEPENDENT = "dependent" as const;
+
+test("M58: default buildDigestDecisionContract is the M57 two-way contract (unchanged)", () => {
+  const m57 = buildDigestDecisionContract(
+    response([pivot("src/foo.py", "bar", ANCHOR)]),
+    impactSeam([{ path: "src/dep.py", symbol: "qux" }]),
+  );
+  // M57 render: two-way decision line, no INSPECT_ONLY_NO_EDIT, no optional section.
+  assert.match(m57.text, /decision: EDIT \| RULE_OUT(?!\s*\|)/);
+  assert.equal(m57.text.includes("INSPECT_ONLY_NO_EDIT"), false);
+  assert.deepEqual(m57.optionalTargets, []);
+});
+
+test("M58: bounded contract is opt-in and renders the three-way decision", () => {
+  const b = buildDigestDecisionContract(
+    response([pivot("src/foo.py", "bar", ANCHOR)]),
+    impactSeam([{ path: "src/dep.py", symbol: "qux", role: DEPENDENT }]),
+    { bounded: true },
+  );
+  assert.equal((b.text.match(new RegExp(DIGEST_DECISION_CONTRACT_START, "g")) ?? []).length, 1);
+  assert.equal((b.text.match(new RegExp(DIGEST_DECISION_CONTRACT_END, "g")) ?? []).length, 1);
+  assert.match(b.text, /decision: EDIT \| RULE_OUT \| INSPECT_ONLY_NO_EDIT/);
+});
+
+test("M58: bounded contract spells out all three decision meanings", () => {
+  const b = buildDigestDecisionContract(response([pivot("src/foo.py", "bar", ANCHOR)]), null, { bounded: true });
+  assert.match(b.text, /EDIT: I changed this target/);
+  assert.match(b.text, /RULE_OUT: I inspected or reasoned about this target/);
+  assert.match(b.text, /INSPECT_ONLY_NO_EDIT: I inspected this target, confirmed it is relevant context/);
+  assert.match(b.text, /required because: lead pivot/);
+  assert.match(b.text, /files_touched:/);
+});
+
+test("M58: bounded contract carries the anti-over-edit guidance", () => {
+  const b = buildDigestDecisionContract(response([pivot("src/foo.py", "bar", ANCHOR)]), null, { bounded: true });
+  assert.match(b.text, /Required target does not mean required edit\./);
+  assert.match(b.text, /Do not expand from an impact representative into unrelated callers\./);
+  assert.match(b.text, /Avoid repeated reads of the same file/);
+  assert.match(b.text, /Stop after each required target has EDIT \/ RULE_OUT \/ INSPECT_ONLY_NO_EDIT\./);
+});
+
+test("M58: bounded required target cap stays <= 4", () => {
+  const { required } = selectBoundedDigestDecisionTargets(
+    response([
+      pivot("src/a.py", "lead", ANCHOR),
+      pivot("src/b.py", "hid", HIDDEN),
+      pivot("src/c.py", "more", HIDDEN),
+    ]),
+    impactSeam([
+      { path: "src/d.py", symbol: "d", role: DEPENDENT },
+      { path: "src/e.py", symbol: "e", role: DEPENDENT },
+      { path: "src/f.py", symbol: "f", role: DEPENDENT },
+    ]),
+  );
+  assert.ok(required.length <= MAX_DIGEST_DECISION_TARGETS);
+});
+
+test("M58: only ONE impact rep is required when the second is a mere caller", () => {
+  const { required, optional } = selectBoundedDigestDecisionTargets(
+    response([pivot("src/foo.py", "bar", ANCHOR)]),
+    impactSeam([
+      { path: "src/c1.py", symbol: "a", role: CALLER },
+      { path: "src/c2.py", symbol: "b", role: CALLER },
+    ]),
+  );
+  // lead + 1 impact rep required; the 2nd caller is demoted to optional context.
+  assert.equal(required.length, 2);
+  assert.equal(required.filter((t) => t.kind === "IMPACT").length, 1);
+  assert.equal(optional.length, 1);
+  assert.equal(optional[0]!.path, "src/c2.py");
+  assert.equal(optional[0]!.requiredReason, "optional context only");
+});
+
+test("M58: a second impact rep IS required when it is a distinct dependent co-edit candidate", () => {
+  const { required, optional } = selectBoundedDigestDecisionTargets(
+    response([pivot("src/foo.py", "bar", ANCHOR)]),
+    impactSeam([
+      { path: "src/d1.py", symbol: "a", role: DEPENDENT },
+      { path: "src/d2.py", symbol: "b", role: DEPENDENT },
+    ]),
+  );
+  assert.equal(required.length, 3);
+  assert.equal(required.filter((t) => t.kind === "IMPACT").length, 2);
+  assert.equal(optional.length, 0);
+});
+
+test("M58: optional impact reps are NOT parsed as required targets", () => {
+  const b = buildDigestDecisionContract(
+    response([pivot("src/foo.py", "bar", ANCHOR)]),
+    impactSeam([
+      { path: "src/c1.py", symbol: "a", role: CALLER },
+      { path: "src/c2.py", symbol: "b", role: CALLER },
+    ]),
+    { bounded: true },
+  );
+  const parsed = parseDigestDecisionContract(b.text);
+  // Only the lead pivot + the single required impact rep are numbered required targets.
+  assert.equal(parsed.targets.length, 2);
+  assert.equal(parsed.targets.some((t) => t.path === "src/c2.py"), false);
+  assert.match(b.text, /Optional context \(NOT required to decide/);
+  assert.match(b.text, /optional context only: additional dependent\/caller/);
+  assert.equal(b.optionalTargets.length, 1);
+});
+
+test("M58: empty render when there are no required targets", () => {
+  assert.equal(renderBoundedDigestDecisionContractText([], []), "");
+  assert.equal(buildDigestDecisionContract(response([]), null, { bounded: true }).text, "");
+});
+
+test("M58 classifier: detects INSPECT_ONLY_NO_EDIT and separates it from RULED_OUT", () => {
+  const io = classifyDigestDecisionContract({
+    requiredTargets: [T_IMP],
+    toolCalls: [tc("read", "/x/.bench-repos/p/src/dep.py")],
+    editedFiles: [],
+    agentText:
+      "I inspected src/dep.py and confirmed it is relevant context, but the correct patch belongs elsewhere in src/foo.py.",
+  });
+  assert.equal(io.requiredTargets[0]!.decision, "INSPECT_ONLY_NO_EDIT");
+  assert.equal(io.requiredTargetInspectOnlyNoEditCount, 1);
+
+  const ro = classifyDigestDecisionContract({
+    requiredTargets: [T_IMP],
+    toolCalls: [],
+    editedFiles: [],
+    agentText: "I ruled out src/dep.py because it is a read-only caller and not affected by this change.",
+  });
+  assert.equal(ro.requiredTargets[0]!.decision, "RULED_OUT");
+  assert.notEqual(io.requiredTargets[0]!.decision, ro.requiredTargets[0]!.decision);
+});
+
+test("M58 classifier: closed/open counts partition the required targets", () => {
+  const c = classifyDigestDecisionContract({
+    requiredTargets: [T_LEAD, T_HID, T_IMP],
+    toolCalls: [tc("read", "src/foo.py"), tc("edit", "src/foo.py"), tc("read", "src/cause.py")],
+    editedFiles: ["src/foo.py"], // foo EDITED; cause read-only (INSPECTED_ONLY)
+    agentText: "src/dep.py was inspected; it is relevant context but the fix belongs elsewhere.",
+  });
+  // foo.py EDITED + dep.py INSPECT_ONLY_NO_EDIT = closed(2); cause.py INSPECTED_ONLY = open(1).
+  assert.equal(c.requiredTargetClosedCount, 2);
+  assert.equal(c.requiredTargetOpenCount, 1);
+  assert.equal(c.requiredTargetInspectOnlyNoEditCount, 1);
+  assert.equal(c.requiredTargetClosedCount + c.requiredTargetOpenCount, c.requiredTargetCount);
 });

@@ -648,6 +648,7 @@ export function buildPrecheckConfig(opts: {
     injectCapsuleDigest: false,
     digestDecisionContract: false,
     compactDigestInjection: false,
+    boundedDigestDecisions: false,
     captureProductV2Accounting: false,
     contextPolicyOverride: "force-inject",
     pivotCheckPolicy: "risk_gated",
