@@ -1,0 +1,160 @@
+{
+  "milestone": "M57B",
+  "question": "Does the M57 decision contract improve action on surfaced digest/impact targets, while compact injection bounds the M56C token/cost regression?",
+  "cases": [
+    "sphinx-doc__sphinx-7462",
+    "django__django-11820",
+    "django__django-13195"
+  ],
+  "new_live_runs": 3,
+  "run_cap": 6,
+  "fresh_baselines_run": 0,
+  "reused_m56c_baseline": true,
+  "reused_m56c_impact": true,
+  "m57_valid": 3,
+  "m57_invalid": 0,
+  "preflight_all_pass": true,
+  "resolution": {
+    "baseline": "0/3",
+    "m56c_impact": "1/3",
+    "m57_contract": "1/3",
+    "new_passes": 0,
+    "regressions": 0
+  },
+  "paired_outcomes": {
+    "m56c_vs_m57": {
+      "both_pass": 1,
+      "both_fail": 2,
+      "m57_only_pass": 0,
+      "m56c_only_pass": 0
+    },
+    "baseline_vs_m57": {
+      "m57_only_pass": 1,
+      "baseline_only_pass": 0
+    }
+  },
+  "pooled": {
+    "baseline": {
+      "total_tokens": 1743519,
+      "cache_read": 1602946,
+      "cost": 0.978799,
+      "tools": 18,
+      "reads": 6
+    },
+    "m56c_impact": {
+      "total_tokens": 3611554,
+      "cache_read": 3405739,
+      "cost": 1.7675679999999998,
+      "tools": 35,
+      "reads": 9
+    },
+    "m57_contract": {
+      "total_tokens": 4025438,
+      "cache_read": 3811571,
+      "cost": 1.8283310000000004,
+      "tools": 39,
+      "reads": 12
+    }
+  },
+  "deltas_m56c_to_m57": {
+    "tokens_pct": 11.5,
+    "cache_read_pct": 11.9,
+    "cost_pct": 3.4,
+    "tools_delta": 4,
+    "reads_delta": 3,
+    "resolution_delta": 0,
+    "ignored_required_target_delta": -3
+  },
+  "deltas_vs_baseline": {
+    "m56c_tokens_pct": 107.1,
+    "m57_tokens_pct": 130.9,
+    "m56c_cost_pct": 80.6,
+    "m57_cost_pct": 86.8
+  },
+  "per_case_token_delta_pct_m56c_to_m57": {
+    "sphinx-doc__sphinx-7462": -7.2,
+    "django__django-11820": -17.7,
+    "django__django-13195": 32.3
+  },
+  "decision_contract": {
+    "ignored_m56c_counterfactual": 4,
+    "ignored_m57": 1,
+    "actioned_m56c": 5,
+    "actioned_m57": 8,
+    "of_targets": 9,
+    "invalid_rule_outs": 0,
+    "per_target_decisions": [
+      {
+        "instance": "sphinx-doc__sphinx-7462",
+        "decisions": [
+          {
+            "kind": "PIVOT",
+            "path": "sphinx/domains/python.py",
+            "decision": "EDITED"
+          },
+          {
+            "kind": "PIVOT",
+            "path": "sphinx/pycode/ast.py",
+            "decision": "EDITED"
+          },
+          {
+            "kind": "IMPACT",
+            "path": "tests/test_domain_py.py",
+            "decision": "IGNORED"
+          }
+        ]
+      },
+      {
+        "instance": "django__django-11820",
+        "decisions": [
+          {
+            "kind": "PIVOT",
+            "path": "django/db/models/base.py",
+            "decision": "EDITED"
+          },
+          {
+            "kind": "PIVOT",
+            "path": "django/db/models/enums.py",
+            "decision": "RULED_OUT"
+          },
+          {
+            "kind": "IMPACT",
+            "path": "django/contrib/admin/checks.py",
+            "decision": "RULED_OUT"
+          }
+        ]
+      },
+      {
+        "instance": "django__django-13195",
+        "decisions": [
+          {
+            "kind": "PIVOT",
+            "path": "django/http/response.py",
+            "decision": "EDITED"
+          },
+          {
+            "kind": "PIVOT",
+            "path": "django/http/response.py",
+            "decision": "EDITED"
+          },
+          {
+            "kind": "IMPACT",
+            "path": "django/contrib/admin/options.py",
+            "decision": "RULED_OUT"
+          }
+        ]
+      }
+    ]
+  },
+  "compact_mode": {
+    "applied_all": true,
+    "removed_section": "## VTRACE inspect-first",
+    "safety_blocks_present": [
+      "PIVOT_CHECK",
+      "EDIT_GUARD",
+      "PATCH_VERIFY"
+    ]
+  },
+  "verdict": "MIXED",
+  "recommendation": "proceed to a small replicated A+D confirmation (plus tighter anti-over-edit guidance for multi-gold cases)"
+}
