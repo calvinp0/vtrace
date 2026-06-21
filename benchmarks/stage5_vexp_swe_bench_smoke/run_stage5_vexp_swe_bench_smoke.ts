@@ -131,6 +131,13 @@ import {
   type CapsuleV2DigestMemorySeam,
   type CapsuleV2DigestRulesSeam,
 } from "../../src/capsuleV2/productAdapter";
+import type { Database } from "bun:sqlite";
+import { openIndexerDatabase } from "../../src/db/sqlite";
+import { getImpactGraph } from "../../src/impact/getImpactGraph";
+import { impactGraphToDigestSeam } from "../../src/impact/impactDigestSeam";
+import { selectRelevantProjectRules } from "../../src/projectRules/projectRules";
+import { searchMemory } from "../../src/observations/searchMemory";
+import { StaleStateStatus } from "../../src/memory/types";
 import {
   renderPivotNeighborhoodsText,
   type PivotNeighborhoodContext,
@@ -4341,6 +4348,14 @@ export interface ClassifyCapsuleOptions {
   readonly injectDigest?: boolean;
   /** The task/query the capsule was built for (rendered as the digest header). */
   readonly query?: string;
+  /**
+   * M56B: compute enriched digest seams (impact / memory / rules) from the parsed
+   * v2 result. The harness supplies a DB-backed provider (see
+   * {@link buildStage5DigestEnrichmentsBestEffort}); leaving it undefined keeps the
+   * pre-M56B warning-only behavior. The provider is the IO boundary — classify
+   * itself stays a pure projection over its inputs plus this injected callback.
+   */
+  readonly digestEnrichmentProvider?: (result: CapsuleV2Result) => InjectedDigestEnrichments;
 }
 
 // Build the sentinel-wrapped digest block from a Capsule v2 result, or "" when the
@@ -4382,6 +4397,142 @@ export function buildInjectedCapsuleV2DigestBlock(
     warningsLine,
     CAPSULE_V2_DIGEST_SENTINEL_END,
   ].filter((line): line is string => line !== null).join("\n");
+}
+
+// --- M56B: DB-backed Stage 5 digest enrichment (Strategy A) ----------------------
+//
+// The Stage 5 live capsule path runs `vtrace query` as a SUBPROCESS and parses its
+// `CapsuleV2Result` JSON, but the PARENT process holds the repo workspace and the
+// indexed DB (`.vtrace/index.sqlite`). So the parent can compute the same bounded
+// impact/rules/memory summaries M56 folds into MCP run_pipeline — from the SAME
+// index — and thread them into the injected digest. Honest by construction: a
+// section that yields nothing returns null, leaving its not-threaded warning.
+//
+// Bounded (deterministic): impact reads at most the top few pivots and emits at most
+// 3 representative rows; rules/memory emit at most 3 items each. No new ranking.
+
+const MAX_STAGE5_IMPACT_PIVOTS = 3;
+const MAX_STAGE5_RULE_ITEMS = 3;
+const MAX_STAGE5_MEMORY_ITEMS = 3;
+
+export interface Stage5DigestEnrichmentInputs {
+  readonly db: Database;
+  readonly repoRoot: string;
+  readonly query: string;
+  readonly result: CapsuleV2Result;
+  /** Capsule intent string (drives rule relevance); pass the run's --capsule-intent. */
+  readonly intent: string;
+}
+
+// Top pivots → first resolvable impact graph with real dependents → digest seam.
+// Skips doc-heading pseudo-fqns (`path#heading`) that are not indexed symbols.
+// Returns null when no pivot resolves to a dependent-bearing symbol (honest: the
+// `→ impact` line is omitted and the not-threaded warning stays).
+function buildStage5ImpactSeam(
+  db: Database,
+  repoRoot: string,
+  result: CapsuleV2Result,
+): CapsuleV2DigestImpactSeam | null {
+  const pivots = Array.isArray(result.pivots) ? result.pivots : [];
+  for (const pivot of pivots.slice(0, MAX_STAGE5_IMPACT_PIVOTS)) {
+    const fqName = typeof pivot.fq_name === "string" ? pivot.fq_name : "";
+    if (fqName.length === 0 || fqName.includes("#")) continue;
+    const graph = getImpactGraph(db, { symbolFqn: fqName, depth: 2, format: "list" }, { repoRoot });
+    if (!graph.ok) continue;
+    if (graph.output.summary.dependentSymbolCount === 0) continue;
+    return impactGraphToDigestSeam(graph.output);
+  }
+  return null;
+}
+
+// Already-selected active project rules → digest seam (max 3 items). Null when the
+// repo index carries no active rules (the common case for a fresh SWE-bench
+// workspace — there is no prior agent-rule store), keeping the honest warning.
+function buildStage5RulesSeam(
+  db: Database,
+  repoRoot: string,
+  query: string,
+  intent: string,
+): CapsuleV2DigestRulesSeam | null {
+  const selected = selectRelevantProjectRules(db, { repoRoot, query, intent });
+  if (selected.active.length === 0) return null;
+  return {
+    activeCount: selected.activeTotal,
+    available: true,
+    items: selected.active.slice(0, MAX_STAGE5_RULE_ITEMS).map((entry) => ({
+      text: entry.rule.summary,
+      ...(typeof entry.reason === "string" && entry.reason.length > 0 ? { why: entry.reason } : {}),
+    })),
+  };
+}
+
+// Relevant durable observations → digest seam (max 3 items, stale-marked). Null
+// when the index carries no matching observations (the common case for a fresh
+// SWE-bench workspace — no observation store), keeping the honest warning. There is
+// no Stage 5 vtrace session, so sessionCount is 0 (durable evidence only).
+function buildStage5MemorySeam(
+  db: Database,
+  query: string,
+): CapsuleV2DigestMemorySeam | null {
+  const results = searchMemory(db, { query, maxResults: MAX_STAGE5_MEMORY_ITEMS });
+  if (results.length === 0) return null;
+  let staleCount = 0;
+  const items = results.map((entry) => {
+    const stale = entry.staleness.status === StaleStateStatus.Stale;
+    if (stale) staleCount += 1;
+    return { source: "durable" as const, text: entry.observation.summary, stale };
+  });
+  return {
+    sessionCount: 0,
+    durableCount: results.length,
+    ...(staleCount > 0 ? { staleCount } : {}),
+    available: true,
+    items,
+  };
+}
+
+// Compute all three bounded enrichments from an OPEN index DB. Pure w.r.t. the DB
+// handle (the caller owns open/close). Each section is independently honest: a
+// missing section is null, never a fabricated count.
+export function buildStage5DigestEnrichments(
+  input: Stage5DigestEnrichmentInputs,
+): InjectedDigestEnrichments {
+  return {
+    impact: buildStage5ImpactSeam(input.db, input.repoRoot, input.result),
+    rules: buildStage5RulesSeam(input.db, input.repoRoot, input.query, input.intent),
+    memory: buildStage5MemorySeam(input.db, input.query),
+  };
+}
+
+// Best-effort harness wrapper: open the workspace index, compute enrichments, close.
+// NEVER throws and never alters the run — a missing/locked index or any failure
+// degrades to `{}` (no seams → the pre-M56B warning-only digest). This is the IO
+// boundary the `digestEnrichmentProvider` callback wraps.
+export function buildStage5DigestEnrichmentsBestEffort(input: {
+  readonly dbPath: string;
+  readonly repoRoot: string;
+  readonly query: string;
+  readonly result: CapsuleV2Result;
+  readonly intent: string;
+  /** Test seam: override how the index DB is opened. */
+  readonly openDatabase?: (dbPath: string) => Database;
+}): InjectedDigestEnrichments {
+  const open = input.openDatabase ?? openIndexerDatabase;
+  let db: Database | null = null;
+  try {
+    db = open(input.dbPath);
+    return buildStage5DigestEnrichments({
+      db,
+      repoRoot: input.repoRoot,
+      query: input.query,
+      result: input.result,
+      intent: input.intent,
+    });
+  } catch {
+    return {};
+  } finally {
+    db?.close();
+  }
 }
 
 // Classify a capsule `--json` (or raw) query output into a vtrace policy action.
@@ -4616,7 +4767,11 @@ export function classifyCapsuleV2Output(
   // lower-value inspectFirst/human-render/neighborhood sections. Default-off → ""
   // → the injected context is byte-identical to before.
   const digestBlock = options.injectDigest === true
-    ? buildInjectedCapsuleV2DigestBlock(result, options.query ?? "")
+    ? buildInjectedCapsuleV2DigestBlock(
+        result,
+        options.query ?? "",
+        options.digestEnrichmentProvider?.(result) ?? {},
+      )
     : "";
   const context = [digestBlock, inspectFirstText, rendered, neighborhoodText]
     .map((part) => part.trim())
@@ -6349,9 +6504,23 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
         }
         // M55W: only the v2 engine produces a v2-shaped result the digest applies to;
         // a legacy fallback parse never reaches classifyCapsuleV2Output anyway.
+        // M56B: when injecting the v2 digest, supply a DB-backed enrichment provider
+        // so the injected digest folds REAL impact (and rules/memory when the index
+        // carries them) from the workspace index — not just warnings. Best-effort:
+        // a provider failure degrades to the warning-only digest, never the run.
+        const injectV2Digest = config.injectCapsuleDigest && engine === "v2";
         const classified = classifyCapsuleOutput(result.stdout, {
-          injectDigest: config.injectCapsuleDigest && engine === "v2",
+          injectDigest: injectV2Digest,
           query: queryText,
+          digestEnrichmentProvider: injectV2Digest
+            ? (parsed) => buildStage5DigestEnrichmentsBestEffort({
+                dbPath: path.join(workspace, ".vtrace", "index.sqlite"),
+                repoRoot: workspace,
+                query: queryText,
+                result: parsed,
+                intent: config.capsuleIntent,
+              })
+            : undefined,
         });
         if (classified.policyAction === "error") {
           throw new EngineQueryError(classified.error ?? "vtrace query returned empty context.");

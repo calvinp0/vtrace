@@ -1,0 +1,46 @@
+{
+  "milestone": "M56B",
+  "title": "Bridge enriched digest data into Stage 5 live injection",
+  "kind": "harness_product_bridge_no_live",
+  "strategy": "A",
+  "data_boundary": {
+    "capsule_built_via": "vtrace query --capsule-engine v2 subprocess (spawned from prepareIndexedContext/runEngineQuery)",
+    "serialized_back": "capsule --json only (pivots/support/diagnostics/actual_mode/pivot_neighborhood); no impact/rules/memory",
+    "parent_has_repo_root": true,
+    "parent_has_index_db": true,
+    "index_db_path": "<workspace>/.vtrace/index.sqlite",
+    "impact_helpers_callable_in_parent": true,
+    "rules_memory_helpers_callable_in_parent": true,
+    "capsule_pivot_fqname_matches_db_fqname": true,
+    "why_m56_missed_stage5": "Stage 5 capsule arrives from a subprocess returning only the capsule; M56 added digest plumbing but never wired the parent's own DB access to compute the seams"
+  },
+  "stage5_enrichment": {
+    "impact": { "available_live": true, "real": true, "snippets": "signature-window excerpts from impact graph" },
+    "memory": { "available_live": false, "plumbing": true, "reason": "fresh SWE-bench workspace index has no observation store" },
+    "rules": { "available_live": false, "plumbing": true, "reason": "fresh SWE-bench workspace index has no project-rule store" }
+  },
+  "warnings": {
+    "dynamic": true,
+    "drops_when_threaded": ["impact_not_threaded_into_digest"],
+    "remain_on_fresh_index": ["memory_not_threaded_into_digest", "rules_not_threaded_into_digest"],
+    "fabrication": "none"
+  },
+  "files_changed": [
+    "src/impact/impactDigestSeam.ts (new)",
+    "src/runPipeline/runPipelineOrchestrator.ts (use shared mapper)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts",
+    "src/impact/impactDigestSeam.test.ts (new)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/stage5_digest_enrichment.test.ts (new)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.test.ts"
+  ],
+  "tests_added": { "impact_mapper": 4, "stage5_db_backed": 3, "provider_flow": 2 },
+  "verification": {
+    "typecheck": "ok",
+    "typecheck_benchmarks": "ok",
+    "bun_test": "3057 pass / 0 fail",
+    "git_diff_check": "clean",
+    "retrieval_eval_required": false
+  },
+  "validation_recommendation": "not ready for memory/rules but impact is enough to test; run <=6-live-run A+D with impact as the treatment variable",
+  "ad_confirmation_unblocked_for_impact": true
+}

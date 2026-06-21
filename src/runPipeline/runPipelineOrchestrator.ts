@@ -14,7 +14,6 @@ import { buildCapsuleV2 } from "../capsuleV2/buildCapsuleV2";
 import {
   capsuleV2ToManifestItemFields,
   toCapsuleV2ProductResponse,
-  type CapsuleV2DigestImpactItem,
   type CapsuleV2DigestImpactSeam,
   type CapsuleV2DigestMemoryItem,
   type CapsuleV2DigestMemorySeam,
@@ -36,6 +35,7 @@ import {
 } from "./pivotNeighborhood";
 import { buildInspectFirst, type InspectFirst } from "./inspectFirst";
 import { getImpactGraph, type ImpactGraphOutput } from "../impact/getImpactGraph";
+import { impactGraphToDigestSeam } from "../impact/impactDigestSeam";
 import {
   searchLogicFlow,
   type LogicFlowOutput,
@@ -478,8 +478,8 @@ interface DigestEnrichments {
 
 // How many representative rows each enriched digest section spells out. The
 // header counts still report the true totals; these caps only bound the inline
-// preview the adapter folds into the digest.
-const MAX_DIGEST_IMPACT_REPRESENTATIVE = 3;
+// preview the adapter folds into the digest. (Impact's representative cap lives in
+// the shared impactGraphToDigestSeam mapper.)
 const MAX_DIGEST_MEMORY_REPRESENTATIVE = 3;
 const MAX_DIGEST_RULE_REPRESENTATIVE = 3;
 
@@ -498,38 +498,9 @@ export function deriveImpactDigestSeam(
   if (!impact.included || impact.graph === null) {
     return null;
   }
-  const graph = impact.graph;
-  const dependentNodes = graph.nodes.filter((node) => node.distance > 0);
-  let snippetsAvailable = false;
-  const representative: CapsuleV2DigestImpactItem[] = [];
-  for (const node of dependentNodes.slice(0, MAX_DIGEST_IMPACT_REPRESENTATIVE)) {
-    const excerpt = node.sourceExcerpt ?? null;
-    if (excerpt) {
-      snippetsAvailable = true;
-      representative.push({
-        role: "dependent",
-        path: node.filePath,
-        symbol: node.localName,
-        lineStart: excerpt.startLine,
-        lineEnd: excerpt.endLine,
-        snippet: excerpt.text,
-      });
-    } else {
-      representative.push({
-        role: "dependent",
-        path: node.filePath,
-        symbol: node.localName,
-        snippetUnavailableReason: "edge_source_spans_not_extracted",
-      });
-    }
-  }
-  return {
-    dependentCount: graph.summary.dependentSymbolCount,
-    crossFileDependentCount: graph.summary.dependentFileCount,
-    snippetsAvailable,
-    available: true,
-    representative,
-  };
+  // Shared projection (see impactGraphToDigestSeam) so the MCP run_pipeline digest
+  // and the Stage 5 live-injection digest render impact identically.
+  return impactGraphToDigestSeam(impact.graph);
 }
 
 /**

@@ -2013,6 +2013,48 @@ test("M56: the digest sentinel block still appears exactly once under --inject-c
   assert.equal(countOf(CAPSULE_V2_DIGEST_SENTINEL_END), 1);
 });
 
+// --- M56B: classifier threads a DB-backed enrichment provider into the digest ---
+
+test("M56B: classifyCapsuleV2Output folds provider-supplied seams and drops their warnings", () => {
+  const result = JSON.parse(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
+  const inject = classifyCapsuleV2Output(result, {
+    injectDigest: true,
+    query: "q",
+    // The harness supplies this (DB-backed in the live path); here a deterministic
+    // stand-in proves the seams are threaded all the way into the injected digest.
+    digestEnrichmentProvider: () => ({
+      impact: {
+        dependentCount: 3,
+        crossFileDependentCount: 2,
+        snippetsAvailable: true,
+        available: true,
+        representative: [{ role: "caller", path: "x.py", symbol: "callX", lineStart: 1, lineEnd: 2, snippet: "callX()" }],
+      },
+    }),
+  });
+  // Real impact section is injected, and the impact not-threaded warning is dropped.
+  assert.match(inject.context, /→ impact 3 dependents, 2 cross-file/);
+  assert.match(inject.context, /caller x\.py::callX L1-L2: callX\(\)/);
+  assert.doesNotMatch(inject.context, /impact_not_threaded_into_digest/);
+  // Memory/rules were not supplied → their honest warnings remain.
+  assert.match(inject.context, /memory_not_threaded_into_digest/);
+  assert.match(inject.context, /rules_not_threaded_into_digest/);
+  // Still exactly one sentinel block.
+  const countOf = (needle: string): number => inject.context.split(needle).length - 1;
+  assert.equal(countOf(CAPSULE_V2_DIGEST_SENTINEL_START), 1);
+  assert.equal(countOf(CAPSULE_V2_DIGEST_SENTINEL_END), 1);
+});
+
+test("M56B: no enrichment provider → pre-M56B warning-only digest is unchanged", () => {
+  const result = JSON.parse(capsuleV2Json({ pivotSymbol: "get_combinator_sql" }));
+  const withProvider = classifyCapsuleV2Output(result, { injectDigest: true, query: "q" });
+  // Without a provider, all three seams stay warning-only (semantically unchanged).
+  assert.match(withProvider.context, /impact_not_threaded_into_digest/);
+  assert.match(withProvider.context, /memory_not_threaded_into_digest/);
+  assert.match(withProvider.context, /rules_not_threaded_into_digest/);
+  assert.doesNotMatch(withProvider.context, /→ impact/);
+});
+
 test("M55W: --inject-capsule-digest parses default-off and on", () => {
   assert.equal(parseArgs(["--mode", "prepare", "--instances", "a__1"]).injectCapsuleDigest, false);
   assert.equal(
