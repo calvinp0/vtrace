@@ -19,6 +19,7 @@ import {
   renderBoundedDigestDecisionContractText,
   buildDigestDecisionContract,
   parseDigestDecisionContract,
+  parseStructuredAgentDecisions,
   classifyDigestDecisionContract,
   type DigestDecisionTarget,
   type DigestDecisionToolCall,
@@ -396,4 +397,244 @@ test("M58 classifier: closed/open counts partition the required targets", () => 
   assert.equal(c.requiredTargetOpenCount, 1);
   assert.equal(c.requiredTargetInspectOnlyNoEditCount, 1);
   assert.equal(c.requiredTargetClosedCount + c.requiredTargetOpenCount, c.requiredTargetCount);
+});
+
+// --- M59: structured decision grammar (render, parse, classifier recalibration) ----
+
+test("M59: bounded mode renders the structured target_id grammar", () => {
+  const b = buildDigestDecisionContract(
+    response([pivot("src/foo.py", "bar", ANCHOR)]),
+    impactSeam([{ path: "src/dep.py", symbol: "qux", role: DEPENDENT }]),
+    { bounded: true },
+  );
+  assert.match(b.text, /target_id: T1/);
+  assert.match(b.text, /target: PIVOT src\/foo\.py::bar/);
+  assert.match(b.text, /target_id: T2/);
+  assert.match(b.text, /target: IMPACT src\/dep\.py::qux/);
+  assert.match(b.text, /decision: EDIT \| RULE_OUT \| INSPECT_ONLY_NO_EDIT/);
+  assert.match(b.text, /files_touched: <paths or none>/);
+  // M59 reason-rules guidance is present.
+  assert.match(b.text, /"not needed", "irrelevant", or "false positive" ALONE is not enough\./);
+  assert.match(b.text, /handles enum choices, not combinator SQL/);
+});
+
+test("M59: target_id values are stable (T1..Tn) and unique", () => {
+  const text = renderBoundedDigestDecisionContractText([
+    { kind: "PIVOT", target: "src/a.py::a", path: "src/a.py", reason: "lead", requiredReason: "lead pivot" },
+    { kind: "PIVOT", target: "src/b.py::b", path: "src/b.py", reason: "hid", requiredReason: "hidden pivot" },
+    { kind: "IMPACT", target: "src/c.py::c", path: "src/c.py", reason: "dep", requiredReason: "cross-file co-edit candidate" },
+  ]);
+  const ids = [...text.matchAll(/target_id: (\S+)/g)].map((m) => m[1]);
+  assert.deepEqual(ids, ["T1", "T2", "T3"]);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test("M59 parse: EDIT/RULE_OUT/INSPECT_ONLY decisions are parsed from a Markdown table", () => {
+  const agentText = [
+    "## Decision Contract",
+    "| Target | Decision | Reason |",
+    "|--------|----------|--------|",
+    "| `src/foo.py::bar` | **EDIT** | Direct edit site - added the guard |",
+    "| `src/dep.py::qux` | **RULE_OUT** | dependent caller, fix belongs in core method |",
+    "| `src/ctx.py::ctx` | INSPECT_ONLY_NO_EDIT | relevant context but the patch belongs elsewhere |",
+  ].join("\n");
+  const decisions = parseStructuredAgentDecisions(agentText);
+  assert.equal(decisions.length, 3);
+  assert.equal(decisions[0]!.decision, "EDIT");
+  assert.match(decisions[0]!.targetRef, /src\/foo\.py::bar/);
+  assert.equal(decisions[1]!.decision, "RULE_OUT");
+  assert.equal(decisions[2]!.decision, "INSPECT_ONLY_NO_EDIT");
+});
+
+test("M59 parse: the field grammar is parsed and the unfilled placeholder is ignored", () => {
+  const filled = [
+    "- target_id: T2",
+    "  target: IMPACT django/db/models/enums.py::ChoicesMeta",
+    "  decision: RULE_OUT",
+    "  reason: false positive — handles enum choices, not base field conversion",
+    "  files_touched: none",
+  ].join("\n");
+  const d = parseStructuredAgentDecisions(filled);
+  assert.equal(d.length, 1);
+  assert.equal(d[0]!.targetId, "T2");
+  assert.equal(d[0]!.decision, "RULE_OUT");
+
+  // The unfilled contract template (decision is a `A | B | C` placeholder) yields nothing.
+  const placeholder = [
+    "- target_id: T1",
+    "  target: PIVOT src/foo.py::bar",
+    "  decision: EDIT | RULE_OUT | INSPECT_ONLY_NO_EDIT",
+    "  reason: <one sentence with a behavioral reason>",
+  ].join("\n");
+  assert.equal(parseStructuredAgentDecisions(placeholder).length, 0);
+});
+
+const T_RO: DigestDecisionTarget = {
+  kind: "IMPACT",
+  target: "django/db/models/enums.py::ChoicesMeta",
+  path: "django/db/models/enums.py",
+  reason: "dep",
+};
+
+function ruleOutTable(reason: string): string {
+  return `| \`django/db/models/enums.py::ChoicesMeta\` | **RULE_OUT** | ${reason} |`;
+}
+
+test("M59 classifier: RULE_OUT with a behavioral reason is credited", () => {
+  const c = classifyDigestDecisionContract({
+    requiredTargets: [T_RO],
+    toolCalls: [],
+    editedFiles: [],
+    agentText: ruleOutTable("not affected because it only handles enum choices, not ordering"),
+  });
+  assert.equal(c.requiredTargets[0]!.decision, "RULED_OUT");
+});
+
+test('M59 classifier: RULE_OUT with only "not needed" is rejected', () => {
+  const c = classifyDigestDecisionContract({
+    requiredTargets: [T_RO],
+    toolCalls: [],
+    editedFiles: [],
+    agentText: ruleOutTable("not needed"),
+  });
+  assert.equal(c.requiredTargets[0]!.decision, "INVALID_RULE_OUT");
+});
+
+test('M59 classifier: RULE_OUT with only "false positive" is rejected', () => {
+  const c = classifyDigestDecisionContract({
+    requiredTargets: [T_RO],
+    toolCalls: [],
+    editedFiles: [],
+    agentText: ruleOutTable("false positive"),
+  });
+  assert.equal(c.requiredTargets[0]!.decision, "INVALID_RULE_OUT");
+});
+
+test('M59 classifier: "false positive — handles enum choices, not base field conversion" is credited', () => {
+  const c = classifyDigestDecisionContract({
+    requiredTargets: [T_RO],
+    toolCalls: [],
+    editedFiles: [],
+    agentText: ruleOutTable("False positive — handles enum choices, not base field conversion"),
+  });
+  assert.equal(c.requiredTargets[0]!.decision, "RULED_OUT");
+});
+
+test('M59 classifier: "dependent caller, fix belongs in core method" is credited', () => {
+  const T_CHECKS: DigestDecisionTarget = {
+    kind: "IMPACT",
+    target: "django/contrib/admin/checks.py::_check_inlines_item",
+    path: "django/contrib/admin/checks.py",
+    reason: "dep",
+  };
+  const c = classifyDigestDecisionContract({
+    requiredTargets: [T_CHECKS],
+    toolCalls: [],
+    editedFiles: [],
+    agentText:
+      "| `django/contrib/admin/checks.py::_check_inlines_item` | **RULE_OUT** | Just a dependent caller, fix belongs in core method |",
+  });
+  assert.equal(c.requiredTargets[0]!.decision, "RULED_OUT");
+});
+
+test("M59 classifier: INSPECT_ONLY_NO_EDIT is parsed and credited from a structured table", () => {
+  const c = classifyDigestDecisionContract({
+    requiredTargets: [T_RO],
+    toolCalls: [tc("read", "django/db/models/enums.py")],
+    editedFiles: [],
+    agentText: ruleOutTable("inspected — relevant context but the patch belongs elsewhere").replace(
+      "RULE_OUT",
+      "INSPECT_ONLY_NO_EDIT",
+    ),
+  });
+  assert.equal(c.requiredTargets[0]!.decision, "INSPECT_ONLY_NO_EDIT");
+  assert.equal(c.requiredTargetInspectOnlyNoEditCount, 1);
+});
+
+test("M59 classifier: INSPECT_ONLY_NO_EDIT without a reason is rejected", () => {
+  const agentText = [
+    "- target_id: T1",
+    "  target: IMPACT django/db/models/enums.py::ChoicesMeta",
+    "  decision: INSPECT_ONLY_NO_EDIT",
+    "  reason:",
+  ].join("\n");
+  const c = classifyDigestDecisionContract({
+    requiredTargets: [T_RO],
+    toolCalls: [],
+    editedFiles: [],
+    agentText,
+  });
+  assert.notEqual(c.requiredTargets[0]!.decision, "INSPECT_ONLY_NO_EDIT");
+  assert.equal(c.requiredTargets[0]!.decision, "INVALID_RULE_OUT");
+});
+
+test("M59 classifier: a decision referring to a different target does not credit this one", () => {
+  const c = classifyDigestDecisionContract({
+    requiredTargets: [T_RO],
+    toolCalls: [],
+    editedFiles: [],
+    agentText:
+      "| `src/unrelated/other.py::thing` | **RULE_OUT** | unrelated; handled in a different module, not this one |",
+  });
+  // The structured rule-out is about another file, so the required target stays open.
+  assert.notEqual(c.requiredTargets[0]!.decision, "RULED_OUT");
+  assert.equal(c.requiredTargets[0]!.decision, "IGNORED");
+});
+
+test("M59 classifier: free-form (non-structured) M57/M58 prose rule-outs still credit", () => {
+  const c = classifyDigestDecisionContract({
+    requiredTargets: [T_RO],
+    toolCalls: [],
+    editedFiles: [],
+    agentText:
+      "I ruled out django/db/models/enums.py because it is a read-only caller and not affected by this change.",
+  });
+  assert.equal(c.requiredTargets[0]!.decision, "RULED_OUT");
+});
+
+test("M59 classifier: closed/open counts update with the structured grammar", () => {
+  // Mirrors the django-11820 M58B case: one EDIT + two terse table rule-outs.
+  const T_LEAD2: DigestDecisionTarget = {
+    kind: "PIVOT",
+    target: "django/db/models/base.py::_check_ordering",
+    path: "django/db/models/base.py",
+    reason: "lead",
+  };
+  const T_CHECKS: DigestDecisionTarget = {
+    kind: "IMPACT",
+    target: "django/contrib/admin/checks.py::_check_inlines_item",
+    path: "django/contrib/admin/checks.py",
+    reason: "dep",
+  };
+  const agentText = [
+    "| Target | Decision | Reason |",
+    "|--------|----------|--------|",
+    "| `django/db/models/base.py::_check_ordering` | **EDIT** | Direct edit site - added pk exception |",
+    "| `django/db/models/enums.py::ChoicesMeta` | **RULE_OUT** | False positive - handles enum choices, not model ordering |",
+    "| `django/contrib/admin/checks.py::_check_inlines_item` | **RULE_OUT** | Just a dependent caller, fix belongs in core method |",
+  ].join("\n");
+  const c = classifyDigestDecisionContract({
+    requiredTargets: [T_LEAD2, T_RO, T_CHECKS],
+    toolCalls: [tc("read", "django/db/models/base.py"), tc("edit", "django/db/models/base.py")],
+    editedFiles: ["django/db/models/base.py"],
+    agentText,
+  });
+  // All three close: 1 EDITED + 2 RULED_OUT (was 1 EDITED + 2 INVALID_RULE_OUT pre-M59).
+  assert.equal(c.requiredTargetEditedCount, 1);
+  assert.equal(c.requiredTargetRuledOutCount, 2);
+  assert.equal(c.requiredTargetClosedCount, 3);
+  assert.equal(c.requiredTargetOpenCount, 0);
+});
+
+test("M59: default (non-bounded) contract behavior is unchanged", () => {
+  const def = buildDigestDecisionContract(
+    response([pivot("src/foo.py", "bar", ANCHOR)]),
+    impactSeam([{ path: "src/dep.py", symbol: "qux" }]),
+  );
+  // No structured field grammar / no INSPECT_ONLY / numbered M57 render preserved.
+  assert.equal(def.text.includes("target_id:"), false);
+  assert.equal(def.text.includes("INSPECT_ONLY_NO_EDIT"), false);
+  assert.match(def.text, /1\. PIVOT src\/foo\.py::bar/);
+  assert.match(def.text, /decision: EDIT \| RULE_OUT(?!\s*\|)/);
+  assert.deepEqual(def.optionalTargets, []);
 });

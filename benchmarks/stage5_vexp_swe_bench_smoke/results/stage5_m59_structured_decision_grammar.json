@@ -1,0 +1,138 @@
+{
+  "milestone": "M59",
+  "report_only": true,
+  "cases": [
+    "sphinx-doc__sphinx-7462",
+    "django__django-11820",
+    "django__django-13195"
+  ],
+  "total_targets": 9,
+  "closed_old": 6,
+  "closed_new": 8,
+  "reason_credited_old": 1,
+  "reason_credited_new": 3,
+  "flipped_count": 3,
+  "flipped": [
+    {
+      "instance_id": "django__django-11820",
+      "target": "django/db/models/enums.py::ChoicesMeta",
+      "old_status": "INVALID_RULE_OUT",
+      "new_status": "RULED_OUT",
+      "reason_text": "False positive - handles enum choices, not model ordering"
+    },
+    {
+      "instance_id": "django__django-11820",
+      "target": "django/contrib/admin/checks.py::_check_inlines_item",
+      "old_status": "INVALID_RULE_OUT",
+      "new_status": "RULED_OUT",
+      "reason_text": "Just a dependent caller, fix belongs in core method"
+    },
+    {
+      "instance_id": "django__django-13195",
+      "target": "django/contrib/admin/options.py::response_action",
+      "old_status": "INSPECT_ONLY_NO_EDIT",
+      "new_status": "RULED_OUT",
+      "reason_text": "Just a caller; doesn't use delete_cookie for session cookies"
+    }
+  ],
+  "per_instance": {
+    "sphinx-doc__sphinx-7462": {
+      "old_closed": 2,
+      "new_closed": 2,
+      "total": 3
+    },
+    "django__django-11820": {
+      "old_closed": 1,
+      "new_closed": 3,
+      "total": 3
+    },
+    "django__django-13195": {
+      "old_closed": 3,
+      "new_closed": 3,
+      "total": 3
+    }
+  },
+  "rows": [
+    {
+      "instance_id": "sphinx-doc__sphinx-7462",
+      "target": "sphinx/domains/python.py::_parse_annotation",
+      "old_status": "EDITED",
+      "new_status": "EDITED",
+      "old_reason_credit": false,
+      "new_reason_credit": false,
+      "reason_text": "Fixed the inner `unparse` function's `ast.Tuple` handling to guard against empty `elts` before `pop()"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7462",
+      "target": "sphinx/pycode/ast.py::unparse",
+      "old_status": "EDITED",
+      "new_status": "EDITED",
+      "old_reason_credit": false,
+      "new_reason_credit": false,
+      "reason_text": "Fixed the inner `unparse` function's `ast.Tuple` handling to guard against empty `elts` before `pop()"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7462",
+      "target": "tests/test_domain_py.py::test_parse_annotation",
+      "old_status": "INVALID_RULE_OUT",
+      "new_status": "INVALID_RULE_OUT",
+      "old_reason_credit": false,
+      "new_reason_credit": false,
+      "reason_text": "Tests are correct - they verify the expected behavior, no changes needed"
+    },
+    {
+      "instance_id": "django__django-11820",
+      "target": "django/db/models/base.py::Model._check_ordering",
+      "old_status": "EDITED",
+      "new_status": "EDITED",
+      "old_reason_credit": false,
+      "new_reason_credit": false,
+      "reason_text": "Direct edit site - added `pk` exception for related fields"
+    },
+    {
+      "instance_id": "django__django-11820",
+      "target": "django/db/models/enums.py::ChoicesMeta",
+      "old_status": "INVALID_RULE_OUT",
+      "new_status": "RULED_OUT",
+      "old_reason_credit": false,
+      "new_reason_credit": true,
+      "reason_text": "False positive - handles enum choices, not model ordering"
+    },
+    {
+      "instance_id": "django__django-11820",
+      "target": "django/contrib/admin/checks.py::_check_inlines_item",
+      "old_status": "INVALID_RULE_OUT",
+      "new_status": "RULED_OUT",
+      "old_reason_credit": false,
+      "new_reason_credit": true,
+      "reason_text": "Just a dependent caller, fix belongs in core method"
+    },
+    {
+      "instance_id": "django__django-13195",
+      "target": "django/http/response.py::HttpResponseBase.delete_cookie",
+      "old_status": "EDITED",
+      "new_status": "EDITED",
+      "old_reason_credit": false,
+      "new_reason_credit": false,
+      "reason_text": "Added `samesite='Lax'` parameter and passed it to `set_cookie()"
+    },
+    {
+      "instance_id": "django__django-13195",
+      "target": "django/http/response.py::HttpResponseBase.set_cookie",
+      "old_status": "EDITED",
+      "new_status": "EDITED",
+      "old_reason_credit": false,
+      "new_reason_credit": false,
+      "reason_text": "Added `samesite='Lax'` parameter and passed it to `set_cookie()"
+    },
+    {
+      "instance_id": "django__django-13195",
+      "target": "django/contrib/admin/options.py::response_action",
+      "old_status": "INSPECT_ONLY_NO_EDIT",
+      "new_status": "RULED_OUT",
+      "old_reason_credit": true,
+      "new_reason_credit": true,
+      "reason_text": "Just a caller; doesn't use delete_cookie for session cookies"
+    }
+  ]
+}

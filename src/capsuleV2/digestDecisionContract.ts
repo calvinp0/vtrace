@@ -307,11 +307,19 @@ export function renderDigestDecisionContractText(targets: readonly DigestDecisio
   return lines.join("\n");
 }
 
+/** Stable per-target id rendered in (and parsed back from) the bounded contract. */
+export function digestDecisionTargetId(index: number): string {
+  return `T${index + 1}`;
+}
+
 /**
- * M58 — render the BOUNDED contract: three explicit decisions (EDIT / RULE_OUT /
- * INSPECT_ONLY_NO_EDIT), strong anti-over-edit guidance, a bounded decision-table
- * template, and a separate non-numbered OPTIONAL CONTEXT list. Returns "" when there
- * are no required targets.
+ * M58/M59 — render the BOUNDED contract. M59 switches the per-target template from a
+ * numbered list to an explicit FIELD GRAMMAR (`target_id` / `target` / `decision` /
+ * `reason` / `files_touched`) so terse, structured decisions are both easy for the
+ * agent to produce and reliable to credit post-hoc. Carries the three explicit
+ * decisions (EDIT / RULE_OUT / INSPECT_ONLY_NO_EDIT), the reason-validity rules, strong
+ * anti-over-edit guidance, and a separate non-numbered OPTIONAL CONTEXT list. Returns ""
+ * when there are no required targets.
  */
 export function renderBoundedDigestDecisionContractText(
   required: readonly DigestDecisionTarget[],
@@ -333,13 +341,30 @@ export function renderBoundedDigestDecisionContractText(
     "- INSPECT_ONLY_NO_EDIT: I inspected this target, confirmed it is relevant context, but the correct patch belongs elsewhere.",
   );
   lines.push("");
-  lines.push("Required target decisions:");
+  lines.push("Reason rules:");
+  lines.push(
+    '- RULE_OUT is valid ONLY when the reason explains why preserving this target is behaviorally correct.',
+  );
+  lines.push('- "not needed", "irrelevant", or "false positive" ALONE is not enough.');
+  lines.push("- A short structured reason IS enough if it identifies the behavior, e.g.:");
+  lines.push('    "dependent caller; behavior is fixed in core method X"');
+  lines.push('    "false positive; this path handles enum choices, not combinator SQL"');
+  lines.push('    "wrapper only; no independent logic to patch"');
+  lines.push(
+    "- INSPECT_ONLY_NO_EDIT is valid when the target was inspected and relevant but the patch belongs elsewhere.",
+  );
+  lines.push("");
+  lines.push(
+    "Required target decisions (fill in decision/reason/files_touched for EACH; keep target_id and target verbatim):",
+  );
   required.forEach((t, i) => {
-    lines.push(`${i + 1}. ${t.kind} ${t.target}`);
-    if (t.requiredReason !== undefined) lines.push(`   required because: ${t.requiredReason}`);
-    lines.push("   decision: EDIT | RULE_OUT | INSPECT_ONLY_NO_EDIT");
-    lines.push(`   reason: ${t.reason}`);
-    lines.push("   files_touched: <paths or none>");
+    lines.push("");
+    lines.push(`- target_id: ${digestDecisionTargetId(i)}`);
+    lines.push(`  target: ${t.kind} ${t.target}`);
+    if (t.requiredReason !== undefined) lines.push(`  required because: ${t.requiredReason}`);
+    lines.push("  decision: EDIT | RULE_OUT | INSPECT_ONLY_NO_EDIT");
+    lines.push(`  reason: ${t.reason}`);
+    lines.push("  files_touched: <paths or none>");
   });
   lines.push("");
   lines.push("Anti-over-edit rules:");
@@ -411,7 +436,12 @@ export function parseDigestDecisionContract(text: string): ParsedDigestDecisionC
   if (start < 0 || end < 0 || end < start) return { present: false, targets: [] };
   const block = text.slice(start, end);
   const targets: ParsedDigestDecisionTarget[] = [];
-  for (const m of block.matchAll(/^\s*\d+\.\s+(PIVOT|IMPACT)\s+(\S.*?)\s*$/gm)) {
+  // Two required-target renders are accepted:
+  //   - M57 / M58-early numbered list: `1. PIVOT path::sym`
+  //   - M59 field grammar:             `  target: PIVOT path::sym`
+  // Only one form ever appears in a given block, so the union preserves order.
+  const TARGET_LINE = /^\s*(?:\d+\.|target:)\s+(PIVOT|IMPACT)\s+(\S.*?)\s*$/gm;
+  for (const m of block.matchAll(TARGET_LINE)) {
     const kind = m[1] as DigestDecisionTargetKind;
     const target = m[2]!.trim();
     const path = target.split("::")[0]!.trim();
@@ -494,8 +524,17 @@ const INSPECT_ONLY_NO_EDIT_PATTERN =
   /(inspect[_ ]?only[_ ]?no[_ ]?edit|(?:inspected|reviewed|read)\b[^.!?\n]*\b(?:relevant|context)\b[^.!?\n]*\b(?:no (?:edit|change)|belongs elsewhere|patch (?:is|belongs|lives) elsewhere|fix (?:is|belongs|lives) (?:in|elsewhere)|edit(?:ed)? elsewhere|elsewhere)|correct patch belongs elsewhere|relevant context[^.!?\n]*\b(?:no edit|elsewhere)|no edit (?:needed|required) here[^.!?\n]*\b(?:relevant|context|elsewhere))/i;
 
 // A rule-out is only valid when it gives a behavioral reason — not a bare assertion.
+// M59 — broadened to credit the TERSE structured-table phrases the bounded contract
+// elicits (the M58B agents wrote sound rule-outs in Markdown table cells that the
+// original prose-tuned vocabulary under-credited as INVALID_RULE_OUT). New terse forms:
+//   - "handles <behavior>, not <issue behavior>"  (the "…not Y" contrast)
+//   - "(dependent|mere|only a|just a) caller", "wrapper only"
+//   - "fix/patch/edit belongs (in|elsewhere)", "delegates to <symbol>"
+//   - "(already )?covered by (the )?edit in <path>", "preserve because <invariant>"
+// Deliberately NOT added: bare "not needed" / "false positive" / "irrelevant" / "N/A"
+// stay invalid unless paired with one of the behavioral clauses above.
 const BEHAVIORAL_REASON_PATTERN =
-  /(because|since|already|handled|covered by|not (affected|impacted|reached|involved|relevant|called)|unrelated|only (a|the|used)|read[- ]only|no behav\w*|delegat\w*|same code path|duplicat\w*|test (file|only)|caller of)/i;
+  /(because|since|already|handle[sd]?\b[^.\n|]*\bnot\b|handled|covered by|not (affected|impacted|reached|involved|relevant|called)|unrelated|only (a|the|used)|read[- ]only|no behav\w*|delegat\w*|wrapper\b|same code path|duplicat\w*|test (file|only)|\bcaller\b|belongs (in|elsewhere)|fix belongs|preserv\w*)/i;
 
 function targetMentioned(target: DigestDecisionTarget, sentence: string): boolean {
   const lower = sentence.toLowerCase();
@@ -535,6 +574,167 @@ function ruleOutVerdict(target: DigestDecisionTarget, agentText: string): "valid
   return invalidSeen ? "invalid" : null;
 }
 
+// ---------------------------------------------------------------------------
+// M59 — structured agent-decision grammar parsing
+// ---------------------------------------------------------------------------
+
+export type DigestStructuredDecisionToken = "EDIT" | "RULE_OUT" | "INSPECT_ONLY_NO_EDIT";
+
+/** One decision the AGENT emitted (from the field grammar or a Markdown table row). */
+export interface DigestStructuredAgentDecision {
+  /** `T1`/`T2`… if the agent kept the target_id, else "". */
+  targetId: string;
+  /** The target reference the agent wrote (path / path::symbol / `KIND path::symbol`). */
+  targetRef: string;
+  decision: DigestStructuredDecisionToken;
+  reason: string;
+}
+
+// Map a free cell/value onto a decision token. Order matters: INSPECT_ONLY_NO_EDIT
+// CONTAINS the substring "EDIT", so it must be tested first. A value carrying the
+// template's `EDIT | RULE_OUT | INSPECT_ONLY_NO_EDIT` placeholder (multiple options
+// separated by `|`) is NOT a real decision.
+function decisionTokenIn(value: string): DigestStructuredDecisionToken | null {
+  if (value.includes("|")) return null; // unfilled template placeholder
+  const u = value.replace(/[*`_]/g, " ").toUpperCase();
+  if (/\bINSPECT\s*ONLY/.test(u)) return "INSPECT_ONLY_NO_EDIT";
+  if (/\bRULE\s*D?\s*OUT\b/.test(u) || /\bRULED\s*OUT\b/.test(u)) return "RULE_OUT";
+  if (/\bEDIT(?:ED)?\b/.test(u)) return "EDIT";
+  return null;
+}
+
+// Strict: the cell IS exactly a decision token (used to find a Markdown table's
+// decision column without mistaking a reason cell like "Direct edit site" for it).
+function exactDecisionToken(cell: string): DigestStructuredDecisionToken | null {
+  const norm = cell
+    .replace(/[*`]/g, "")
+    .replace(/[^A-Za-z]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .toUpperCase();
+  if (norm === "EDIT" || norm === "EDITED") return "EDIT";
+  if (norm === "RULE_OUT" || norm === "RULED_OUT" || norm === "RULEOUT") return "RULE_OUT";
+  if (norm === "INSPECT_ONLY_NO_EDIT" || norm === "INSPECT_ONLY") return "INSPECT_ONLY_NO_EDIT";
+  return null;
+}
+
+function stripCell(s: string): string {
+  return s.replace(/^[*`\s]+|[*`\s]+$/g, "").trim();
+}
+
+/**
+ * Parse the decisions the AGENT emitted from its final text. Recognizes BOTH forms:
+ *   1. the M59 field grammar — `target_id:` / `target:` / `decision:` / `reason:` blocks;
+ *   2. a Markdown decision table — `| target | DECISION | reason |` rows.
+ * Pure and conservative: a record is only emitted when a real decision token is present.
+ */
+export function parseStructuredAgentDecisions(agentText: string): DigestStructuredAgentDecision[] {
+  const out: DigestStructuredAgentDecision[] = [];
+  if (typeof agentText !== "string" || agentText.trim().length === 0) return out;
+
+  // --- Form 1: field grammar (multi-line records). ---
+  let cur: Partial<DigestStructuredAgentDecision> | null = null;
+  const flush = () => {
+    if (cur && cur.decision && (cur.targetRef || cur.targetId)) {
+      out.push({
+        targetId: cur.targetId ?? "",
+        targetRef: cur.targetRef ?? "",
+        decision: cur.decision,
+        reason: cur.reason ?? "",
+      });
+    }
+    cur = null;
+  };
+  for (const rawLine of agentText.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    let m: RegExpMatchArray | null;
+    if ((m = line.match(/^[-*]?\s*target_id:\s*(\S+)/i))) {
+      if (cur && cur.decision) flush();
+      cur = cur ?? {};
+      cur.targetId = m[1]!.replace(/[*`]/g, "");
+    } else if ((m = line.match(/^[-*]?\s*target:\s*(.+)$/i))) {
+      if (cur && cur.decision) flush();
+      cur = cur ?? {};
+      cur.targetRef = stripCell(m[1]!);
+    } else if ((m = line.match(/^[-*]?\s*decision:\s*(.+)$/i))) {
+      const tok = decisionTokenIn(m[1]!);
+      if (tok) {
+        cur = cur ?? {};
+        cur.decision = tok;
+      }
+    } else if ((m = line.match(/^[-*]?\s*reason:\s*(.+)$/i))) {
+      if (cur) cur.reason = stripCell(m[1]!);
+    }
+  }
+  flush();
+
+  // --- Form 2: Markdown table rows. ---
+  for (const rawLine of agentText.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line.startsWith("|") || !line.includes("|", 1)) continue;
+    const cells = line
+      .split("|")
+      .map((c) => c.trim())
+      .filter((c, i, arr) => !(i === 0 && c === "") && !(i === arr.length - 1 && c === ""));
+    if (cells.length < 2) continue;
+    if (cells.every((c) => /^:?-{2,}:?$/.test(c) || c === "")) continue; // separator row
+    let decIdx = -1;
+    let token: DigestStructuredDecisionToken | null = null;
+    for (let i = 0; i < cells.length; i++) {
+      const t = exactDecisionToken(cells[i]!);
+      if (t) {
+        decIdx = i;
+        token = t;
+        break;
+      }
+    }
+    if (decIdx < 0 || token === null) continue; // header / non-decision row
+    const targetRef = stripCell(cells[decIdx === 0 ? 1 : 0] ?? "");
+    const reason = stripCell(cells[decIdx + 1] ?? cells[cells.length - 1] ?? "");
+    if (targetRef.length === 0) continue;
+    out.push({ targetId: "", targetRef, decision: token, reason });
+  }
+
+  return out;
+}
+
+// True when a RULE_OUT reason gives a behavioral justification (not a bare assertion).
+function reasonIsBehavioral(reason: string): boolean {
+  return reason.trim().length > 0 && BEHAVIORAL_REASON_PATTERN.test(reason);
+}
+
+// True when an INSPECT_ONLY_NO_EDIT reason explains why no edit belongs at the target.
+// Looser than a rule-out (the decision already concedes relevance), but an empty /
+// "N/A" / bare reason is still rejected.
+function inspectReasonExplains(reason: string): boolean {
+  const r = reason.trim();
+  if (r.length === 0) return false;
+  if (/^(n\/?a|none|todo|tbd|\?+)$/i.test(r)) return false;
+  return (
+    reasonIsBehavioral(r) ||
+    /(elsewhere|belongs|already|relevant|context|support|handled|no (edit|change)|other (file|method|module)|core method)/i.test(
+      r,
+    )
+  );
+}
+
+// Does a structured agent decision refer to this required target? Match on the stable
+// target_id, the repo-relative path / basename, or the symbol after `::`.
+function structuredDecisionMatches(
+  target: DigestDecisionTarget,
+  targetId: string,
+  rec: DigestStructuredAgentDecision,
+): boolean {
+  if (rec.targetId.length > 0 && rec.targetId.toUpperCase() === targetId.toUpperCase()) return true;
+  const ref = rec.targetRef.toLowerCase();
+  if (ref.length === 0) return false;
+  if (ref.includes(target.path.toLowerCase())) return true;
+  const base = (target.path.split("/").pop() ?? target.path).toLowerCase();
+  if (base.length > 0 && ref.includes(base)) return true;
+  const sym = target.target.includes("::") ? target.target.split("::").pop()!.toLowerCase() : "";
+  if (sym.length > 2 && ref.includes(sym)) return true;
+  return false;
+}
+
 /**
  * Classify each required target's decision from the tool-call trace, the final
  * patch's edited files, and the agent's final text. Pure; no second model call.
@@ -543,7 +743,10 @@ export function classifyDigestDecisionContract(
   input: DigestDecisionClassificationInput,
 ): DigestDecisionClassification {
   const agentText = input.agentText ?? "";
-  const results: DigestDecisionTargetResult[] = input.requiredTargets.map((target) => {
+  // M59 — parse the agent's explicit structured decisions once, up front, so each
+  // target can be matched against a table row / field-grammar block.
+  const structured = parseStructuredAgentDecisions(agentText);
+  const results: DigestDecisionTargetResult[] = input.requiredTargets.map((target, targetIndex) => {
     // First read / first edit indices for this target (ordered trace).
     let firstReadIdx = -1;
     let firstEditIdx = -1;
@@ -565,16 +768,34 @@ export function classifyDigestDecisionContract(
       const inspectedBeforeEdit =
         inspected && (firstEditIdx < 0 || firstReadIdx <= firstEditIdx);
       decision = inspectedBeforeEdit ? "EDITED" : "EDITED_WITHOUT_INSPECTION";
-    } else if (inspectOnlyNoEditDeclared(target, agentText)) {
-      // M58 — explicit inspect-only/relevant-but-no-edit declaration takes precedence
-      // over a generic rule-out (it is the more specific decision).
-      decision = "INSPECT_ONLY_NO_EDIT";
     } else {
-      const verdict = ruleOutVerdict(target, agentText);
-      if (verdict === "valid") decision = "RULED_OUT";
-      else if (verdict === "invalid") decision = "INVALID_RULE_OUT";
-      else if (inspected) decision = "INSPECTED_ONLY";
-      else decision = "IGNORED";
+      // M59 — an explicit STRUCTURED decision (field grammar / decision table) is the
+      // most precise signal; prefer it over the prose scan. Only RULE_OUT and
+      // INSPECT_ONLY_NO_EDIT close a non-edited target; a structured EDIT with no actual
+      // edit detected is not a closure (falls through to the prose / inspected path).
+      const targetId = digestDecisionTargetId(targetIndex);
+      const rec = structured.find(
+        (r) =>
+          (r.decision === "RULE_OUT" || r.decision === "INSPECT_ONLY_NO_EDIT") &&
+          structuredDecisionMatches(target, targetId, r),
+      );
+      if (rec !== undefined) {
+        if (rec.decision === "INSPECT_ONLY_NO_EDIT") {
+          decision = inspectReasonExplains(rec.reason) ? "INSPECT_ONLY_NO_EDIT" : "INVALID_RULE_OUT";
+        } else {
+          decision = reasonIsBehavioral(rec.reason) ? "RULED_OUT" : "INVALID_RULE_OUT";
+        }
+      } else if (inspectOnlyNoEditDeclared(target, agentText)) {
+        // M58 — explicit prose inspect-only/relevant-but-no-edit declaration takes
+        // precedence over a generic rule-out (it is the more specific decision).
+        decision = "INSPECT_ONLY_NO_EDIT";
+      } else {
+        const verdict = ruleOutVerdict(target, agentText);
+        if (verdict === "valid") decision = "RULED_OUT";
+        else if (verdict === "invalid") decision = "INVALID_RULE_OUT";
+        else if (inspected) decision = "INSPECTED_ONLY";
+        else decision = "IGNORED";
+      }
     }
     return { target, decision, inspected, edited };
   });
