@@ -21,6 +21,8 @@ import {
   classifyHeading,
   inventorySections,
   truncateContextByPriority,
+  STRUCTURED_CONTRACT_OMITTED_MARKER,
+  type AtomicSentinelBlockSpec,
 } from "./sectionBudgetAccounting";
 import {
   CapsuleIntent,
@@ -477,4 +479,235 @@ test("M45. M42-shaped capsule: optional advisory dropped, pivot-neighborhood pre
   assert.equal(r.budget.essentialSectionsEvicted, false);
   assert.ok(r.budget.droppedSectionNames.some((n) => classifyHeading(n) === "optional"));
   assert.ok(r.text.includes("source evidence the capsule exists to preserve"), "neighborhood tail evicted");
+});
+
+// === M61: atomic sentinel-block preservation under truncation ======================
+//
+// The structured bounded digest treatment injects two sentinel-delimited blocks — the
+// Capsule v2 digest and the decision contract — that the strict four-sentinel validator
+// requires WHOLE. M60B (pylint-8898) showed the legacy_slice fallback could clip a
+// trailing sentinel and leave a dangling START with no END (a partial pair the validator
+// rightly rejects). These tests pin the invariant: with `atomicBlocks` supplied, a
+// sentinel block is either fully present or fully absent with an explicit omission marker.
+
+const DIGEST_START = "<VTRACE_CAPSULE_V2_DIGEST_START>";
+const DIGEST_END = "<VTRACE_CAPSULE_V2_DIGEST_END>";
+const CONTRACT_START = "<VTRACE_DIGEST_DECISION_CONTRACT_START>";
+const CONTRACT_END = "<VTRACE_DIGEST_DECISION_CONTRACT_END>";
+
+const ATOMIC_BLOCKS: readonly AtomicSentinelBlockSpec[] = [
+  { label: "capsule_v2_digest", start: DIGEST_START, end: DIGEST_END },
+  { label: "digest_decision_contract", start: CONTRACT_START, end: CONTRACT_END },
+];
+
+function countOcc(haystack: string, needle: string): number {
+  return haystack.split(needle).length - 1;
+}
+
+// True when EVERY START present has its matching END present (no dangling sentinel).
+function noPartialSentinels(text: string): boolean {
+  const pairOk = (s: string, e: string): boolean => {
+    const hasS = text.includes(s);
+    const hasE = text.includes(e);
+    return hasS === hasE; // both, or neither — never a lone START/END
+  };
+  return pairOk(DIGEST_START, DIGEST_END) && pairOk(CONTRACT_START, CONTRACT_END);
+}
+
+// A digest sentinel block of roughly `bodyChars` chars (plain text — no `## `/`●` lines,
+// so the non-atomic reducer treats it as a single essential framing section).
+function digestBlock(bodyChars: number): string {
+  const body = Array.from({ length: Math.ceil(bodyChars / 40) }, (_, i) =>
+    `digest line ${i} carrying the compact role hierarchy`,
+  ).join("\n");
+  return [DIGEST_START, body, DIGEST_END].join("\n");
+}
+
+function contractBlock(): string {
+  return [
+    CONTRACT_START,
+    "Close EVERY required target below with exactly one decision.",
+    "- target_id: T1",
+    "  target: PIVOT pkg/a.py::foo",
+    "  decision: EDIT | RULE_OUT | INSPECT_ONLY_NO_EDIT",
+    "  reason: lead pivot",
+    "  files_touched: <paths or none>",
+    CONTRACT_END,
+  ].join("\n");
+}
+
+// A large lower-priority free body: one optional advisory heading + an essential pivot
+// source render + a pivot-neighborhood tail (the sections the M61 policy sheds FIRST to
+// keep the atomic blocks whole).
+function freeRender(sourceChars: number): string {
+  const fill = (tag: string, n: number) =>
+    Array.from({ length: n }, (_, i) => `  # ${tag} body line ${i} carrying real content`);
+  const n = Math.max(8, Math.ceil(sourceChars / 200));
+  return [
+    "## Semantic Edit Hypothesis",
+    "Two implementations define `bar`; no crash does not mean correct output.",
+    ...fill("semantic-hypothesis", n),
+    "",
+    "● pivot pkg/a.py::foo",
+    "  source:",
+    "  def foo():",
+    "      return bar()",
+    ...fill("foo-source", n * 2),
+    "",
+    "## Pivot neighborhood (nearby symbols, compact)",
+    "- caller: pkg/a.py::handle (pkg/a.py:1091-1096)",
+    ...fill("neighborhood", n),
+  ].join("\n");
+}
+
+// --- (M61-1) repro: legacy core clips the contract; atomic NEVER emits a partial ----
+
+test("M61-1. legacy core can clip the contract END; atomic path never leaves a partial sentinel", () => {
+  // Digest large enough that the contract END sits past the cut → the section-blind
+  // core fallback slices through the contract block (the M60B failure shape).
+  const text = [digestBlock(5000), contractBlock(), freeRender(6000)].join("\n\n");
+  const ds = text.indexOf(DIGEST_END);
+  const ce = text.indexOf(CONTRACT_END);
+  const cut = ds + 250; // after digest END, BEFORE contract END
+
+  // Pre-fix behavior: the non-atomic core produces a dangling contract START.
+  const core = truncateContextByPriority(text, cut);
+  assert.equal(core.budget.truncationMode, "legacy_slice_fallback");
+  assert.ok(core.text.includes(CONTRACT_START), "core keeps the contract START");
+  assert.equal(core.text.includes(CONTRACT_END), false, "core clips the contract END (the bug)");
+  assert.equal(noPartialSentinels(core.text), false, "core leaves a partial sentinel pair");
+
+  // After fix: the atomic path fails CLOSED — the contract cannot fit, so it is omitted
+  // whole with an explicit marker rather than split. No partial sentinel either way.
+  assert.ok(cut < ce, "fixture: cut must fall before the contract END");
+  const atomic = truncateContextByPriority(text, cut, { atomicBlocks: ATOMIC_BLOCKS });
+  assert.equal(atomic.budget.truncationMode, "atomic_omitted");
+  assert.ok(noPartialSentinels(atomic.text), "atomic path never leaves a partial sentinel pair");
+  assert.ok(atomic.text.includes(STRUCTURED_CONTRACT_OMITTED_MARKER), "explicit omission marker emitted");
+  assert.deepEqual(atomic.budget.atomicBlocksOmitted, ["digest_decision_contract"]);
+  assert.deepEqual(atomic.budget.atomicBlocksPreserved, ["capsule_v2_digest"]);
+  assert.ok(atomic.text.length <= cut, "fail-closed output still fits the budget");
+});
+
+// --- (M61-2) preservation: both blocks survive whole by evicting free content -------
+
+test("M61-2. structured bounded treatment preserves BOTH sentinel blocks under a tight budget", () => {
+  // Digest + contract together fit well under budget; the large lower-priority free
+  // render is what pushes the total over. The fix keeps both blocks whole and sheds the
+  // free render (the pylint-8898 expected outcome).
+  const digest = digestBlock(3000);
+  const contract = contractBlock();
+  const text = [digest, contract, freeRender(8000)].join("\n\n");
+  const lockedChars = digest.length + contract.length;
+  const cut = lockedChars + 2500; // room for both blocks + a slice of free content
+  assert.ok(cut < text.length, "fixture: must actually truncate");
+
+  const r = truncateContextByPriority(text, cut, { atomicBlocks: ATOMIC_BLOCKS });
+
+  // Both sentinel pairs present exactly once → strict four-sentinel validity holds.
+  assert.equal(countOcc(r.text, DIGEST_START), 1);
+  assert.equal(countOcc(r.text, DIGEST_END), 1);
+  assert.equal(countOcc(r.text, CONTRACT_START), 1);
+  assert.equal(countOcc(r.text, CONTRACT_END), 1);
+  assert.ok(noPartialSentinels(r.text));
+  // The full digest body and the full contract grammar survived verbatim.
+  assert.ok(r.text.includes(digest), "digest block preserved whole");
+  assert.ok(r.text.includes(contract), "decision contract preserved whole");
+  assert.deepEqual([...(r.budget.atomicBlocksPreserved ?? [])].sort(), [
+    "capsule_v2_digest",
+    "digest_decision_contract",
+  ]);
+  assert.deepEqual(r.budget.atomicBlocksOmitted, []);
+  assert.ok(r.text.length <= cut, "fits the budget");
+  assert.ok(["atomic_section_priority", "atomic_legacy_slice"].includes(r.budget.truncationMode));
+});
+
+// --- (M61-3) lower-priority free sections are evicted before the atomic blocks ------
+
+test("M61-3. lower-priority free render is evicted before the digest/contract blocks", () => {
+  const digest = digestBlock(2500);
+  const contract = contractBlock();
+  const text = [digest, contract, freeRender(8000)].join("\n\n");
+  const cut = digest.length + contract.length + 1200;
+
+  const r = truncateContextByPriority(text, cut, { atomicBlocks: ATOMIC_BLOCKS });
+  // Atomic blocks intact...
+  assert.ok(r.text.includes(digest));
+  assert.ok(r.text.includes(contract));
+  // ...while the free render lost content (a drop marker or a clip marker is present, and
+  // the bulk of the source body is gone).
+  const droppedOrClipped =
+    r.text.includes("[omitted ") || r.text.includes("[truncated to ");
+  assert.ok(droppedOrClipped, "free render must be reduced to make room");
+  assert.ok(countOcc(r.text, "foo-source body line") < countOcc(text, "foo-source body line"));
+});
+
+// --- (M61-4) the no-partial-sentinel invariant holds at EVERY budget ----------------
+
+test("M61-4. no budget ever produces a partial digest or contract sentinel pair", () => {
+  const text = [digestBlock(4000), contractBlock(), freeRender(7000)].join("\n\n");
+  for (let cut = 50; cut <= text.length + 500; cut += 173) {
+    const r = truncateContextByPriority(text, cut, { atomicBlocks: ATOMIC_BLOCKS });
+    assert.ok(noPartialSentinels(r.text), `partial sentinel at budget=${cut}`);
+    // Whenever a block IS present, it is present exactly once (never duplicated).
+    if (r.text.includes(DIGEST_START)) assert.equal(countOcc(r.text, DIGEST_END), 1);
+    if (r.text.includes(CONTRACT_START)) assert.equal(countOcc(r.text, CONTRACT_END), 1);
+  }
+});
+
+// --- (M61-5) a registered safety block is preserved the same way (generality) -------
+
+test("M61-5. a registered safety block is preserved atomically alongside digest/contract", () => {
+  const SAFETY_START = "<VTRACE_EDIT_GUARD_START>";
+  const SAFETY_END = "<VTRACE_EDIT_GUARD_END>";
+  const safety = [SAFETY_START, "Do not edit non-pivot files without justification.", SAFETY_END].join("\n");
+  const digest = digestBlock(2000);
+  const contract = contractBlock();
+  // Safety block placed in the body region; registered as atomic with priority intent.
+  const text = [digest, contract, safety, freeRender(8000)].join("\n\n");
+  const blocks: AtomicSentinelBlockSpec[] = [
+    ...ATOMIC_BLOCKS,
+    { label: "edit_guard", start: SAFETY_START, end: SAFETY_END },
+  ];
+  const cut = digest.length + contract.length + safety.length + 800;
+  const r = truncateContextByPriority(text, cut, { atomicBlocks: blocks });
+  assert.ok(r.text.includes(safety), "safety block preserved whole after truncation");
+  assert.ok(r.text.includes(digest));
+  assert.ok(r.text.includes(contract));
+  assert.ok((r.budget.atomicBlocksPreserved ?? []).includes("edit_guard"));
+});
+
+// --- (M61-6) default behavior is unchanged when no atomic blocks are present ---------
+
+test("M61-6. without atomicBlocks (or with none present) truncation is byte-identical", () => {
+  const { text } = sizes(); // a render with NO digest/contract sentinels
+  for (const cut of [200, 1500, text.length - 100, text.length + 50]) {
+    const base = truncateContextByPriority(text, cut);
+    const withOpt = truncateContextByPriority(text, cut, { atomicBlocks: ATOMIC_BLOCKS });
+    assert.equal(withOpt.text, base.text, `text differs at budget=${cut}`);
+    assert.equal(withOpt.budget.truncationMode, base.budget.truncationMode);
+    assert.equal(withOpt.budget.essentialSectionsEvicted, base.budget.essentialSectionsEvicted);
+    // No atomic telemetry leaks onto the default path.
+    assert.equal(withOpt.budget.atomicBlocksPreserved, undefined);
+  }
+  // A glyph-only text (●/○/→ but NO sentinels) must NOT activate the atomic path.
+  const glyphy = "● pivot pkg/a.py::foo\n  source\n→ impact\n○ support pkg/b.py::bar";
+  assert.equal(
+    truncateContextByPriority(glyphy, 10, { atomicBlocks: ATOMIC_BLOCKS }).text,
+    truncateContextByPriority(glyphy, 10).text,
+  );
+});
+
+// --- (M61-7) untruncated atomic text is returned verbatim with telemetry ------------
+
+test("M61-7. when everything fits, atomic blocks are reported preserved and text is unchanged", () => {
+  const text = [digestBlock(1000), contractBlock(), freeRender(1500)].join("\n\n");
+  const r = truncateContextByPriority(text, text.length + 100, { atomicBlocks: ATOMIC_BLOCKS });
+  assert.equal(r.text, text, "no truncation → text unchanged");
+  assert.equal(r.budget.truncationOccurred, false);
+  assert.equal(r.budget.truncationMode, "none");
+  assert.deepEqual([...(r.budget.atomicBlocksPreserved ?? [])].sort(), [
+    "capsule_v2_digest",
+    "digest_decision_contract",
+  ]);
 });

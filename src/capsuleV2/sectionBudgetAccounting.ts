@@ -262,7 +262,15 @@ export interface VtraceContextBudget {
   /** Net chars removed (`preTruncationChars - postTruncationChars`). */
   readonly truncatedChars: number;
   readonly truncationOccurred: boolean;
-  readonly truncationMode: "none" | "section_priority" | "legacy_slice_fallback";
+  readonly truncationMode:
+    | "none"
+    | "section_priority"
+    | "legacy_slice_fallback"
+    // M61 — atomic-block-preserving modes (used only when `atomicBlocks` is supplied
+    // and at least one sentinel block is present in the text):
+    | "atomic_section_priority"  // free content shed by priority; atomic blocks whole
+    | "atomic_legacy_slice"      // free content head-clipped; atomic blocks still whole
+    | "atomic_omitted";          // an atomic block could not fit — failed CLOSED
   /** Sections dropped whole and replaced by an omission marker, in render order. */
   readonly droppedSectionNames: readonly string[];
   /** Sections clipped mid-block by the legacy-slice fallback (empty otherwise). */
@@ -272,6 +280,18 @@ export interface VtraceContextBudget {
   readonly optionalSectionsDropped: boolean;
   /** Optional sections retained in full (should be empty whenever essential evicted). */
   readonly optionalSectionsRetained: readonly string[];
+  /**
+   * M61 — labels of atomic sentinel blocks (digest / decision contract) that were
+   * preserved WHOLE through truncation. Undefined on the non-atomic (default) path.
+   */
+  readonly atomicBlocksPreserved?: readonly string[];
+  /**
+   * M61 — labels of atomic blocks that could NOT fit even after evicting every
+   * lower-priority section; each is replaced by an explicit omission marker rather
+   * than a partial sentinel block. Undefined on the non-atomic path; empty in the
+   * normal (success) atomic path.
+   */
+  readonly atomicBlocksOmitted?: readonly string[];
 }
 
 export interface SectionPriorityTruncation {
@@ -294,13 +314,62 @@ function countNonEmptyLines(text: string): number {
 }
 
 /**
+ * M61 — one sentinel-delimited block that must survive truncation whole (or be
+ * omitted with an explicit marker — never left as a partial sentinel pair).
+ */
+export interface AtomicSentinelBlockSpec {
+  /** Stable label used in telemetry / omission markers (e.g. "capsule_v2_digest"). */
+  readonly label: string;
+  /** Opening sentinel literal, e.g. "<VTRACE_CAPSULE_V2_DIGEST_START>". */
+  readonly start: string;
+  /** Closing sentinel literal, e.g. "<VTRACE_CAPSULE_V2_DIGEST_END>". */
+  readonly end: string;
+}
+
+/** Options for {@link truncateContextByPriority}. Absent ⇒ exact pre-M61 behavior. */
+export interface TruncateByPriorityOptions {
+  /**
+   * M61 — sentinel blocks (digest / decision contract) to preserve ATOMICALLY. Only
+   * blocks whose BOTH sentinels are actually present (START before END) activate the
+   * atomic path; if none are present the function is byte-identical to the default.
+   */
+  readonly atomicBlocks?: readonly AtomicSentinelBlockSpec[];
+}
+
+/**
+ * M61 — explicit marker emitted in place of an atomic block that genuinely cannot fit
+ * the budget. Kept OUTSIDE any sentinel pair so a validator never sees a partial block.
+ */
+export const STRUCTURED_CONTRACT_OMITTED_MARKER = "VTRACE_STRUCTURED_CONTRACT_OMITTED_DUE_TO_BUDGET";
+
+/**
  * Reduce `text` to fit `maxChars` by dropping whole non-essential sections in priority
  * order (diagnostic → optional → important, largest-first within a class), preserving
  * essential evidence. Falls back to a head-preserving slice (with the legacy
  * `[truncated to N chars]` marker) only when the essential sections alone exceed the
  * budget. PURE: no retrieval/ranking/scoring/render-content change.
+ *
+ * M61 — when `options.atomicBlocks` names sentinel blocks that are present in `text`,
+ * those blocks are reserved WHOLE and only the surrounding (free) content is reduced,
+ * so the structured bounded digest + decision contract are never split by truncation.
+ * Without `atomicBlocks` (or when none are present) the original behavior is preserved
+ * exactly.
  */
-export function truncateContextByPriority(text: string, maxChars: number): SectionPriorityTruncation {
+export function truncateContextByPriority(
+  text: string,
+  maxChars: number,
+  options?: TruncateByPriorityOptions,
+): SectionPriorityTruncation {
+  const atomicSpecs = options?.atomicBlocks ?? [];
+  if (atomicSpecs.length > 0) {
+    const locked = locateAtomicBlocks(text, atomicSpecs);
+    if (locked.length > 0) return truncatePreservingAtomicBlocks(text, maxChars, locked);
+  }
+  return truncateContextByPriorityCore(text, maxChars);
+}
+
+/** The pre-M61 section-priority reducer. Unchanged behavior; now the non-atomic core. */
+function truncateContextByPriorityCore(text: string, maxChars: number): SectionPriorityTruncation {
   const cut = Math.max(0, maxChars);
   const preTruncationChars = text.length;
 
@@ -403,6 +472,226 @@ export function truncateContextByPriority(text: string, maxChars: number): Secti
       optionalSectionsDropped,
       // After fallback every non-essential is dropped, so nothing optional is "retained".
       optionalSectionsRetained: [],
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------------
+// M61: atomic sentinel-block preservation under truncation.
+//
+// The structured bounded treatment injects two sentinel-delimited blocks that MUST
+// reach the agent whole — the Capsule v2 digest (<VTRACE_CAPSULE_V2_DIGEST_*>) and the
+// decision contract (<VTRACE_DIGEST_DECISION_CONTRACT_*>). The section-blind legacy
+// slice (`truncateContextByPriorityCore`'s fallback) could clip the TAIL of the render
+// and evict the contract END sentinel (M60B pylint-8898), leaving a dangling START with
+// no END — a PARTIAL sentinel pair the strict four-sentinel validator rightly rejects.
+//
+// The fix reserves the atomic blocks OUTSIDE the reducer: locked spans are emitted
+// verbatim, and only the surrounding FREE content is reduced (via the same priority
+// reducer, so the duplicate human render / neighborhood is shed before the atomic blocks
+// are ever touched). The invariant — a sentinel block is either fully present or fully
+// absent with an explicit omission marker — therefore holds by CONSTRUCTION, not repair.
+
+/** A located atomic block: its label and the half-open `[start, end)` char span. */
+interface LockedSpan {
+  readonly label: string;
+  readonly start: number;
+  readonly end: number;
+}
+
+/**
+ * Locate each spec's atomic block (START before its matching END). Specs whose
+ * sentinels are not both present are skipped (the block is simply absent). Returns
+ * non-overlapping spans sorted by start offset (an overlapping later span is dropped,
+ * defensively — well-formed digest/contract blocks never overlap).
+ */
+function locateAtomicBlocks(text: string, specs: readonly AtomicSentinelBlockSpec[]): LockedSpan[] {
+  const found: LockedSpan[] = [];
+  for (const spec of specs) {
+    const s = text.indexOf(spec.start);
+    if (s < 0) continue;
+    const e = text.indexOf(spec.end, s + spec.start.length);
+    if (e < 0) continue;
+    found.push({ label: spec.label, start: s, end: e + spec.end.length });
+  }
+  found.sort((a, b) => a.start - b.start);
+  const out: LockedSpan[] = [];
+  let lastEnd = -1;
+  for (const span of found) {
+    if (span.start >= lastEnd) {
+      out.push(span);
+      lastEnd = span.end;
+    }
+  }
+  return out;
+}
+
+/**
+ * Reduce `text` to `maxChars` while preserving every locked block whole. Reserves the
+ * locked spans, reduces the surrounding free content with the standard section-priority
+ * reducer, and fails CLOSED (explicit omission marker, never a partial sentinel) only if
+ * the locked blocks alone exceed the budget. PURE.
+ */
+function truncatePreservingAtomicBlocks(
+  text: string,
+  maxChars: number,
+  locked: readonly LockedSpan[],
+): SectionPriorityTruncation {
+  const cut = Math.max(0, maxChars);
+  const preTruncationChars = text.length;
+  const labels = locked.map((l) => l.label);
+
+  // Whole text already fits — keep everything, report the atomic blocks preserved.
+  if (preTruncationChars <= cut) {
+    return {
+      text,
+      items: countNonEmptyLines(text),
+      budget: {
+        maxChars: cut,
+        preTruncationChars,
+        postTruncationChars: preTruncationChars,
+        truncatedChars: 0,
+        truncationOccurred: false,
+        truncationMode: "none",
+        droppedSectionNames: [],
+        truncatedSectionNames: [],
+        essentialSectionsEvicted: false,
+        optionalSectionsDropped: false,
+        optionalSectionsRetained: [],
+        atomicBlocksPreserved: labels,
+        atomicBlocksOmitted: [],
+      },
+    };
+  }
+
+  const lockedChars = locked.reduce((n, l) => n + (l.end - l.start), 0);
+
+  // Fail CLOSED: the atomic blocks alone cannot fit. Keep blocks greedily (in order)
+  // until the budget is exhausted; replace each block that cannot fit with an explicit
+  // omission marker — NEVER a partial sentinel pair — and drop all free content. This is
+  // expected to be rare (digest + contract are a few KB; the budget is ~12 KB).
+  if (lockedChars > cut) {
+    const preserved: string[] = [];
+    const omitted: string[] = [];
+    const parts: string[] = [];
+    let used = 0;
+    for (const l of locked) {
+      const block = text.slice(l.start, l.end);
+      const sep = parts.length > 0 ? 2 : 0; // a "\n\n" join between emitted parts
+      if (used + sep + block.length <= cut) {
+        if (parts.length > 0) parts.push("\n\n");
+        parts.push(block);
+        used += sep + block.length;
+        preserved.push(l.label);
+      } else {
+        const marker = `${STRUCTURED_CONTRACT_OMITTED_MARKER} (${l.label})`;
+        if (parts.length > 0) parts.push("\n\n");
+        parts.push(marker);
+        used += sep + marker.length;
+        omitted.push(l.label);
+      }
+    }
+    const finalText = parts.join("");
+    return {
+      text: finalText,
+      items: countNonEmptyLines(finalText),
+      budget: {
+        maxChars: cut,
+        preTruncationChars,
+        postTruncationChars: finalText.length,
+        truncatedChars: preTruncationChars - finalText.length,
+        truncationOccurred: true,
+        truncationMode: "atomic_omitted",
+        droppedSectionNames: [],
+        truncatedSectionNames: [],
+        essentialSectionsEvicted: true,
+        optionalSectionsDropped: false,
+        optionalSectionsRetained: [],
+        atomicBlocksPreserved: preserved,
+        atomicBlocksOmitted: omitted,
+      },
+    };
+  }
+
+  // Normal atomic path: reserve the locked blocks, reduce the FREE content to the
+  // remaining budget. Build the ordered free/locked segment list (it covers the whole
+  // text contiguously, so concatenating the segments reproduces `text`).
+  type Seg = { readonly kind: "free" | "locked"; readonly text: string };
+  const segs: Seg[] = [];
+  let cursor = 0;
+  for (const l of locked) {
+    if (l.start > cursor) segs.push({ kind: "free", text: text.slice(cursor, l.start) });
+    segs.push({ kind: "locked", text: text.slice(l.start, l.end) });
+    cursor = l.end;
+  }
+  if (cursor < text.length) segs.push({ kind: "free", text: text.slice(cursor) });
+
+  // Whitespace-only free segments (e.g. the "\n\n" between digest and contract) are kept
+  // verbatim — they are negligible and dropping them would visually fuse the blocks. The
+  // remaining (content) free budget is split across content free segments in proportion
+  // to their size; the LAST content segment absorbs the rounding remainder. For the real
+  // single-trailing-free-segment layout this is exact.
+  const freeBudget = cut - lockedChars;
+  const wsChars = segs
+    .filter((s) => s.kind === "free" && s.text.trim().length === 0)
+    .reduce((n, s) => n + s.text.length, 0);
+  const contentSegs = segs.filter((s) => s.kind === "free" && s.text.trim().length > 0);
+  // The core reducer's head-clip fallback appends a `\n[truncated to N chars]` marker, so
+  // a clipped free segment can exceed its own budget by the marker length. Reserve that
+  // overhead per content segment so the assembled total still respects `cut` (the locked
+  // blocks are never clipped, so the only overshoot risk is these free markers).
+  const MARKER_RESERVE = 32;
+  const contentFreeBudget = Math.max(0, freeBudget - wsChars - contentSegs.length * MARKER_RESERVE);
+  const totalContentFree = contentSegs.reduce((n, s) => n + s.text.length, 0);
+
+  const droppedSectionNames: string[] = [];
+  const truncatedSectionNames: string[] = [];
+  let anyClip = false;
+  let optionalDropped = false;
+  let contentSeen = 0;
+  let budgetAssigned = 0;
+
+  const rebuilt = segs.map((seg) => {
+    if (seg.kind === "locked") return seg.text;
+    if (seg.text.trim().length === 0) return seg.text; // whitespace-only separator, kept
+    if (totalContentFree === 0) return seg.text;
+    contentSeen += seg.text.length;
+    const isLast = contentSeen === totalContentFree;
+    const segBudget = isLast
+      ? Math.max(0, contentFreeBudget - budgetAssigned)
+      : Math.floor((contentFreeBudget * seg.text.length) / totalContentFree);
+    budgetAssigned += segBudget;
+    const reduced = truncateContextByPriorityCore(seg.text, segBudget);
+    droppedSectionNames.push(...reduced.budget.droppedSectionNames);
+    truncatedSectionNames.push(...reduced.budget.truncatedSectionNames);
+    if (reduced.budget.truncationMode === "legacy_slice_fallback") anyClip = true;
+    if (reduced.budget.essentialSectionsEvicted) anyClip = true;
+    if (reduced.budget.optionalSectionsDropped) optionalDropped = true;
+    return reduced.text;
+  });
+
+  const finalText = rebuilt.join("");
+  return {
+    text: finalText,
+    items: countNonEmptyLines(finalText),
+    budget: {
+      maxChars: cut,
+      preTruncationChars,
+      postTruncationChars: finalText.length,
+      truncatedChars: preTruncationChars - finalText.length,
+      truncationOccurred: true,
+      // The atomic blocks are preserved either way; the mode reflects whether the
+      // surrounding free content was shed cleanly or had to be head-clipped.
+      truncationMode: anyClip ? "atomic_legacy_slice" : "atomic_section_priority",
+      droppedSectionNames,
+      truncatedSectionNames,
+      // `essentialSectionsEvicted` here means lower-priority free SOURCE was clipped — the
+      // atomic digest/contract blocks themselves are always whole (see atomicBlocksPreserved).
+      essentialSectionsEvicted: anyClip,
+      optionalSectionsDropped: optionalDropped,
+      optionalSectionsRetained: [],
+      atomicBlocksPreserved: labels,
+      atomicBlocksOmitted: [],
     },
   };
 }

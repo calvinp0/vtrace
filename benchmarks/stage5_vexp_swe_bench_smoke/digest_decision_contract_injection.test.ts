@@ -16,10 +16,15 @@ import { CapsuleIntent } from "../../src/capsuleV2/types";
 import {
   DIGEST_DECISION_CONTRACT_START,
   DIGEST_DECISION_CONTRACT_END,
+  parseDigestDecisionContract,
 } from "../../src/capsuleV2/digestDecisionContract";
+import { truncateContextByPriority } from "../../src/capsuleV2/sectionBudgetAccounting";
 import {
   classifyCapsuleOutput,
   buildStage5DigestEnrichments,
+  STAGE5_ATOMIC_SENTINEL_BLOCKS,
+  CAPSULE_V2_DIGEST_SENTINEL_START,
+  CAPSULE_V2_DIGEST_SENTINEL_END,
   type ClassifyCapsuleOptions,
 } from "./run_stage5_vexp_swe_bench_smoke";
 
@@ -122,5 +127,72 @@ test("M58: bounded + compact keeps digest and decision sentinels and drops inspe
     assert.ok(ctx.includes(DIGEST_DECISION_CONTRACT_START), "decision contract preserved");
     assert.equal(ctx.includes(INSPECT_FIRST_HEADING), false, "compact still drops inspect-first");
     assert.match(ctx, /INSPECT_ONLY_NO_EDIT/, "bounded three-way decision present");
+  });
+});
+
+// === M61: the REAL structured-bounded context survives Stage 5 truncation atomically.
+// This exercises the same `truncateContextByPriority(..., { atomicBlocks })` call the
+// harness applies at buildVtraceContextMarkdown, on the genuine digest + contract render
+// (real glyphs, real grammar) — the M60B pylint-8898 failure was this step.
+
+function lockedCharsOf(ctx: string): number {
+  const ds = ctx.indexOf(CAPSULE_V2_DIGEST_SENTINEL_START);
+  const de = ctx.indexOf(CAPSULE_V2_DIGEST_SENTINEL_END) + CAPSULE_V2_DIGEST_SENTINEL_END.length;
+  const cs = ctx.indexOf(DIGEST_DECISION_CONTRACT_START);
+  const ce = ctx.indexOf(DIGEST_DECISION_CONTRACT_END) + DIGEST_DECISION_CONTRACT_END.length;
+  return (de - ds) + (ce - cs);
+}
+
+function occ(h: string, n: string): number {
+  return h.split(n).length - 1;
+}
+
+test("M61: real structured-bounded context keeps both sentinel blocks under a tight truncation budget", async () => {
+  await withClassifier((classify) => {
+    const ctx = classify({
+      digestDecisionContract: true,
+      boundedDigestDecisions: true,
+      compactDigestInjection: true,
+    });
+    // A budget that holds the two atomic blocks but forces the surrounding render to be
+    // shed — the pylint-8898 shape, where the digest + contract must outrank the body.
+    const cut = lockedCharsOf(ctx) + 200;
+    const reduced = truncateContextByPriority(ctx, cut, { atomicBlocks: STAGE5_ATOMIC_SENTINEL_BLOCKS });
+
+    // Strict four-sentinel validity holds on the TRUNCATED context.
+    assert.equal(occ(reduced.text, DIGEST_START), 1, "digest START exactly once");
+    assert.equal(occ(reduced.text, CAPSULE_V2_DIGEST_SENTINEL_END), 1, "digest END exactly once");
+    assert.equal(occ(reduced.text, DIGEST_DECISION_CONTRACT_START), 1, "contract START exactly once");
+    assert.equal(occ(reduced.text, DIGEST_DECISION_CONTRACT_END), 1, "contract END exactly once");
+    // The strict parser (both sentinels required) confirms the contract is intact.
+    assert.equal(parseDigestDecisionContract(reduced.text).present, true);
+    assert.ok((reduced.budget.atomicBlocksPreserved ?? []).includes("capsule_v2_digest"));
+    assert.ok((reduced.budget.atomicBlocksPreserved ?? []).includes("digest_decision_contract"));
+  });
+});
+
+test("M61: a budget below the atomic floor fails CLOSED — no partial sentinel pair", async () => {
+  await withClassifier((classify) => {
+    const ctx = classify({
+      digestDecisionContract: true,
+      boundedDigestDecisions: true,
+      compactDigestInjection: true,
+    });
+    // Smaller than the two blocks combined: at least one block cannot fit.
+    const cut = Math.floor(lockedCharsOf(ctx) / 2);
+    const reduced = truncateContextByPriority(ctx, cut, { atomicBlocks: STAGE5_ATOMIC_SENTINEL_BLOCKS });
+    // Never a dangling START without its END (the invariant the validator depends on).
+    assert.equal(
+      reduced.text.includes(DIGEST_DECISION_CONTRACT_START),
+      reduced.text.includes(DIGEST_DECISION_CONTRACT_END),
+      "contract sentinels appear together or not at all",
+    );
+    assert.equal(
+      reduced.text.includes(DIGEST_START),
+      reduced.text.includes(CAPSULE_V2_DIGEST_SENTINEL_END),
+      "digest sentinels appear together or not at all",
+    );
+    // A block that could not fit is reported, not silently split.
+    assert.ok((reduced.budget.atomicBlocksOmitted ?? []).length > 0);
   });
 });

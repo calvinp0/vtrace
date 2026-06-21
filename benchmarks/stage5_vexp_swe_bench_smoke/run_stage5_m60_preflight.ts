@@ -33,9 +33,16 @@ import {
   capsuleModeForInstance,
   classifyCapsuleOutput,
   buildStage5DigestEnrichmentsBestEffort,
+  STAGE5_ATOMIC_SENTINEL_BLOCKS,
   type CliConfig,
 } from "./run_stage5_vexp_swe_bench_smoke.ts";
 import { parseDigestDecisionContract } from "../../src/capsuleV2/digestDecisionContract.ts";
+import { truncateContextByPriority } from "../../src/capsuleV2/sectionBudgetAccounting.ts";
+
+// The default Stage 5 injected-context char budget (DEFAULT_CONFIG.vtraceContextMaxChars).
+// M60B pylint-8898 evicted the contract END sentinel at exactly this budget; the M61 fix
+// preserves the digest + contract atomically through this truncation step.
+const VTRACE_CONTEXT_MAX_CHARS = 12_000;
 
 const INSTANCE = process.argv[2];
 const WORKSPACE = process.argv[3];
@@ -92,6 +99,15 @@ function classify(opts: { bounded: boolean; compact: boolean }): string {
 const ctx = classify({ bounded: true, compact: true }); // the actual M60 treatment context
 const ctxNoCompact = classify({ bounded: true, compact: false });
 
+// M61: the harness truncates the injected context to 12,000 chars BEFORE the agent sees
+// it. Reproduce that step here so the pre-flight validates the context the agent actually
+// receives, not the untruncated build. With the atomic-block option the digest + contract
+// sentinel blocks must survive WHOLE (the pylint-8898 regression target).
+const truncated = truncateContextByPriority(ctx, VTRACE_CONTEXT_MAX_CHARS, {
+  atomicBlocks: STAGE5_ATOMIC_SENTINEL_BLOCKS,
+});
+const ctxTruncated = truncated.text;
+
 const DIGEST_START = "<VTRACE_CAPSULE_V2_DIGEST_START>";
 const DIGEST_END = "<VTRACE_CAPSULE_V2_DIGEST_END>";
 const CONTRACT_START = "<VTRACE_DIGEST_DECISION_CONTRACT_START>";
@@ -123,10 +139,24 @@ const structuredGrammarPresent =
 const compactApplied =
   countOcc(ctxNoCompact, INSPECT_FIRST) >= 1 && countOcc(ctx, INSPECT_FIRST) === 0;
 
+// M61: re-validate the four sentinels + strict contract parse on the TRUNCATED context.
+const postTruncationContract = parseDigestDecisionContract(ctxTruncated);
+const post_digest_ok =
+  countOcc(ctxTruncated, DIGEST_START) === 1 && countOcc(ctxTruncated, DIGEST_END) === 1;
+const post_contract_ok =
+  countOcc(ctxTruncated, CONTRACT_START) === 1 && countOcc(ctxTruncated, CONTRACT_END) === 1;
+
 const checks = {
   instance: INSTANCE,
   digest_sentinel_exactly_once: countOcc(ctx, DIGEST_START) === 1 && countOcc(ctx, DIGEST_END) === 1,
   contract_sentinel_exactly_once: countOcc(ctx, CONTRACT_START) === 1 && countOcc(ctx, CONTRACT_END) === 1,
+  // M61 atomic-truncation regression checks (12,000-char budget, the M60B failure point).
+  post_truncation_mode: truncated.budget.truncationMode,
+  post_truncation_atomic_preserved: truncated.budget.atomicBlocksPreserved ?? [],
+  post_truncation_atomic_omitted: truncated.budget.atomicBlocksOmitted ?? [],
+  post_truncation_digest_sentinel_exactly_once: post_digest_ok,
+  post_truncation_contract_sentinel_exactly_once: post_contract_ok,
+  post_truncation_contract_present: postTruncationContract.present,
   impact_section_present: hasImpact,
   impact_warning_only: impactWarnOnly,
   structured_grammar_present: structuredGrammarPresent,
@@ -151,6 +181,10 @@ const PASS =
   checks.structured_grammar_present &&
   checks.bounded_three_way_present &&
   checks.required_target_ok &&
-  checks.compact_mode_applied;
+  checks.compact_mode_applied &&
+  // M61: the digest + contract must remain valid AFTER 12k truncation.
+  checks.post_truncation_digest_sentinel_exactly_once &&
+  checks.post_truncation_contract_sentinel_exactly_once &&
+  checks.post_truncation_contract_present;
 
 console.log("RESULT_JSON: " + JSON.stringify({ ...checks, PASS }));

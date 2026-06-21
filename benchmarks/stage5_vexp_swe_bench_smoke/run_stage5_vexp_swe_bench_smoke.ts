@@ -131,7 +131,11 @@ import {
   type CapsuleV2DigestMemorySeam,
   type CapsuleV2DigestRulesSeam,
 } from "../../src/capsuleV2/productAdapter";
-import { buildDigestDecisionContract } from "../../src/capsuleV2/digestDecisionContract";
+import {
+  buildDigestDecisionContract,
+  DIGEST_DECISION_CONTRACT_START,
+  DIGEST_DECISION_CONTRACT_END,
+} from "../../src/capsuleV2/digestDecisionContract";
 import type { Database } from "bun:sqlite";
 import { openIndexerDatabase } from "../../src/db/sqlite";
 import { getImpactGraph } from "../../src/impact/getImpactGraph";
@@ -150,6 +154,7 @@ import {
 import { CapsuleV2Mode, parseCapsuleIntent, type CapsuleV2Item, type CapsuleV2Result } from "../../src/capsuleV2/types";
 import {
   truncateContextByPriority,
+  type AtomicSentinelBlockSpec,
   type VtraceContextBudget,
 } from "../../src/capsuleV2/sectionBudgetAccounting";
 import { pathIsUserLocalized, type LocalizationSignals } from "../../src/capsuleV2/localizationSignals";
@@ -4346,6 +4351,27 @@ interface CapsuleV2Audit {
 export const CAPSULE_V2_DIGEST_SENTINEL_START = "<VTRACE_CAPSULE_V2_DIGEST_START>";
 export const CAPSULE_V2_DIGEST_SENTINEL_END = "<VTRACE_CAPSULE_V2_DIGEST_END>";
 
+// M61 — sentinel blocks the section-priority truncation must preserve ATOMICALLY (fully
+// present, or fully absent with an explicit omission marker — never a partial sentinel
+// pair). These are the two highest-priority blocks of the structured bounded digest
+// treatment: the Capsule v2 digest and the decision contract. The preformatted v2
+// truncation always passes this list; it activates ONLY when the sentinels are actually
+// present (i.e. under --inject-capsule-digest [+ --digest-decision-contract]), so runs
+// without the digest are byte-identical to the pre-M61 path. M60B pylint-8898 exposed the
+// gap: a 12k legacy_slice clip evicted the decision-contract END sentinel.
+export const STAGE5_ATOMIC_SENTINEL_BLOCKS: readonly AtomicSentinelBlockSpec[] = [
+  {
+    label: "capsule_v2_digest",
+    start: CAPSULE_V2_DIGEST_SENTINEL_START,
+    end: CAPSULE_V2_DIGEST_SENTINEL_END,
+  },
+  {
+    label: "digest_decision_contract",
+    start: DIGEST_DECISION_CONTRACT_START,
+    end: DIGEST_DECISION_CONTRACT_END,
+  },
+];
+
 // Honest warnings stamped onto the injected digest for any seam NOT folded in.
 // The Stage 5 live capsule query path runs the capsule CLI as a subprocess and has
 // no in-process DB handle, so it cannot compute impact/memory/rules (M56 Option C):
@@ -6003,11 +6029,24 @@ export function aggregateContextBudgets(
   maxChars: number,
 ): VtraceContextBudget | null {
   if (budgets.length === 0) return null;
-  const mode: VtraceContextBudget["truncationMode"] = budgets.some((b) => b.truncationMode === "legacy_slice_fallback")
-    ? "legacy_slice_fallback"
-    : budgets.some((b) => b.truncationMode === "section_priority")
-      ? "section_priority"
-      : "none";
+  // Mode precedence (most-to-least severe): a fail-closed atomic omission dominates, then
+  // any clip (legacy or atomic), then a clean priority drop (atomic or section), then none.
+  const has = (m: VtraceContextBudget["truncationMode"]) => budgets.some((b) => b.truncationMode === m);
+  const mode: VtraceContextBudget["truncationMode"] = has("atomic_omitted")
+    ? "atomic_omitted"
+    : has("legacy_slice_fallback")
+      ? "legacy_slice_fallback"
+      : has("atomic_legacy_slice")
+        ? "atomic_legacy_slice"
+        : has("atomic_section_priority")
+          ? "atomic_section_priority"
+          : has("section_priority")
+            ? "section_priority"
+            : "none";
+  // Atomic telemetry is only meaningful when the atomic path ran; collect the union.
+  const atomicPreserved = budgets.flatMap((b) => b.atomicBlocksPreserved ?? []);
+  const atomicOmitted = budgets.flatMap((b) => b.atomicBlocksOmitted ?? []);
+  const anyAtomic = budgets.some((b) => b.atomicBlocksPreserved !== undefined);
   return {
     maxChars,
     preTruncationChars: budgets.reduce((sum, b) => sum + b.preTruncationChars, 0),
@@ -6020,6 +6059,9 @@ export function aggregateContextBudgets(
     essentialSectionsEvicted: budgets.some((b) => b.essentialSectionsEvicted),
     optionalSectionsDropped: budgets.some((b) => b.optionalSectionsDropped),
     optionalSectionsRetained: budgets.flatMap((b) => b.optionalSectionsRetained),
+    ...(anyAtomic
+      ? { atomicBlocksPreserved: atomicPreserved, atomicBlocksOmitted: atomicOmitted }
+      : {}),
   };
 }
 
@@ -6161,7 +6203,12 @@ export function buildVtraceContextMarkdown(
       let truncItems: number;
       let truncTruncated: boolean;
       if (section.preformatted) {
-        const reduced = truncateContextByPriority(section.rawContext, limits.maxChars);
+        // M61: preserve the digest + decision-contract sentinel blocks atomically. The
+        // option is inert unless those sentinels are actually present in rawContext, so
+        // non-digest v2 runs keep byte-identical truncation behavior.
+        const reduced = truncateContextByPriority(section.rawContext, limits.maxChars, {
+          atomicBlocks: STAGE5_ATOMIC_SENTINEL_BLOCKS,
+        });
         truncText = reduced.text;
         truncChars = reduced.budget.postTruncationChars;
         truncItems = reduced.items;

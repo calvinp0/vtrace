@@ -1,0 +1,52 @@
+{
+  "milestone": "M61",
+  "title": "Atomic digest/contract preservation under Stage 5 truncation",
+  "cause": "truncateContextByPriority (M45) was blind to the sentinel-delimited digest/contract blocks; its legacy_slice head-preserving fallback could clip through a block and evict the CONTRACT_END sentinel, leaving a dangling START (M60B pylint-8898).",
+  "strategy": "Strategy A+C hybrid: opt-in atomicBlocks option reserves sentinel spans whole and reduces only the surrounding free content via the unchanged M45 reducer; fails closed with an explicit omission marker if a block cannot fit. Strict four-sentinel validity unchanged.",
+  "budget_chars": 12000,
+  "default_behavior_changed": false,
+  "files_changed": [
+    "src/capsuleV2/sectionBudgetAccounting.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m60_preflight.ts",
+    "src/capsuleV2/sectionBudgetAccounting.test.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/digest_decision_contract_injection.test.ts"
+  ],
+  "pylint_8898_offline": {
+    "source": "results/workspaces/m60_structured_bounded_pylint_8898/pylint-dev__pylint-8898 (real persisted index; local capsule CLI only; no agent, no Docker)",
+    "digest_block_chars": 9937,
+    "contract_block_chars": 2866,
+    "digest_plus_contract_chars": 12803,
+    "free_render_chars": 11853,
+    "total_ctx_chars": 24656,
+    "fits_both_atomic_blocks_at_12k": false,
+    "post_truncation_mode": "atomic_omitted",
+    "atomic_blocks_preserved": ["capsule_v2_digest"],
+    "atomic_blocks_omitted": ["digest_decision_contract"],
+    "partial_sentinel_emitted": false,
+    "interpretation": "Silent partial-sentinel corruption eliminated; pylint's two atomic blocks alone exceed 12k, so the run fails closed (explicitly invalid, detectable). Not a truncation-ordering bug — a genuine content-budget overflow needing a separate digest-compaction follow-up."
+  },
+  "invariant": "A digest/contract sentinel block is always either fully present or fully absent with an explicit VTRACE_STRUCTURED_CONTRACT_OMITTED_DUE_TO_BUDGET marker; never a dangling START/END pair, at any budget.",
+  "tests": {
+    "sectionBudgetAccounting.test.ts": [
+      "M61-1 legacy core clips contract END; atomic never partial",
+      "M61-2 preserve BOTH blocks under tight budget",
+      "M61-3 lower-priority free evicted before atomic blocks",
+      "M61-4 no budget yields a partial sentinel (sweep)",
+      "M61-5 registered safety block preserved atomically",
+      "M61-6 default byte-identical without atomicBlocks / glyph-only inert",
+      "M61-7 untruncated text unchanged, atomic preserved reported"
+    ],
+    "digest_decision_contract_injection.test.ts": [
+      "M61 real structured-bounded context keeps both blocks under tight truncation",
+      "M61 below-floor budget fails closed, no partial sentinel"
+    ]
+  },
+  "verification": {
+    "typecheck": "pass",
+    "typecheck_benchmarks": "pass",
+    "bun_test": "3112 pass / 0 fail (184 files)",
+    "git_diff_check": "clean"
+  },
+  "next_recommendation": "proceed to a small no-live pre-flight replay over all M60 selected cases"
+}
