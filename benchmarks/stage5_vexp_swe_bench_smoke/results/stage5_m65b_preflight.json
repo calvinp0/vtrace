@@ -1,0 +1,309 @@
+{
+  "milestone": "M65B-preflight",
+  "budget_chars": 12000,
+  "total": 8,
+  "valid": 8,
+  "fail_closed_omitted": [],
+  "invalid_partial_sentinel": [],
+  "invalid_structured_grammar": [],
+  "invalid_impact": [],
+  "invalid_optional_impact": [],
+  "other_invalid": [],
+  "cases": [
+    {
+      "instance_id": "django__django-11740",
+      "repo": "django/django",
+      "category": "E",
+      "selection_reason": "main ignored-target driver in M62C; resolved despite wrong required targets",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-diagnostic-rerun-11740/django__django-11740",
+      "final_status": "VALID",
+      "invalid_reason": null,
+      "digest_chars": 2805,
+      "contract_chars": 2319,
+      "required_target_count": 2,
+      "required_target_ids": [
+        "T1",
+        "T2"
+      ],
+      "required_has_impact": false,
+      "impact_present": true,
+      "impact_representative_paths": [
+        "django/db/migrations/autodetector.py",
+        "django/db/migrations/autodetector.py",
+        "django/db/migrations/autodetector.py"
+      ],
+      "cross_file_impact_rep_count": 0,
+      "impact_reps_exist": false,
+      "structured_grammar_present": true,
+      "compact_mode_applied": true,
+      "optional_section_present": false,
+      "optional_impact_id_count": 0,
+      "optional_ids": [],
+      "optional_not_closure_scored": false,
+      "optional_ids_collide": false,
+      "partial_sentinel": false,
+      "omission_marker_present": false,
+      "truncation_mode": "atomic_legacy_slice"
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "category": "B",
+      "selection_reason": "invalid/open structured-decision driver",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m62_structured_bounded_astropy_14539/astropy__astropy-14539",
+      "final_status": "VALID",
+      "invalid_reason": null,
+      "digest_chars": 2856,
+      "contract_chars": 2783,
+      "required_target_count": 2,
+      "required_target_ids": [
+        "T1",
+        "T2"
+      ],
+      "required_has_impact": false,
+      "impact_present": true,
+      "impact_representative_paths": [
+        "astropy/io/fits/convenience.py",
+        "astropy/io/fits/tests/test_core.py",
+        "astropy/io/fits/tests/test_core.py"
+      ],
+      "cross_file_impact_rep_count": 3,
+      "impact_reps_exist": true,
+      "structured_grammar_present": true,
+      "compact_mode_applied": true,
+      "optional_section_present": true,
+      "optional_impact_id_count": 2,
+      "optional_ids": [
+        "O1",
+        "O2"
+      ],
+      "optional_not_closure_scored": true,
+      "optional_ids_collide": false,
+      "partial_sentinel": false,
+      "omission_marker_present": false,
+      "truncation_mode": "atomic_legacy_slice"
+    },
+    {
+      "instance_id": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "category": "D",
+      "selection_reason": "invalid impact-rep rule-out driver",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m55y_vtrace_digest_flask_5014/pallets__flask-5014",
+      "final_status": "VALID",
+      "invalid_reason": null,
+      "digest_chars": 2169,
+      "contract_chars": 2681,
+      "required_target_count": 2,
+      "required_target_ids": [
+        "T1",
+        "T2"
+      ],
+      "required_has_impact": false,
+      "impact_present": true,
+      "impact_representative_paths": [
+        "src/flask/debughelpers.py",
+        "tests/test_async.py",
+        "tests/test_async.py"
+      ],
+      "cross_file_impact_rep_count": 3,
+      "impact_reps_exist": true,
+      "structured_grammar_present": true,
+      "compact_mode_applied": true,
+      "optional_section_present": true,
+      "optional_impact_id_count": 2,
+      "optional_ids": [
+        "O1",
+        "O2"
+      ],
+      "optional_not_closure_scored": true,
+      "optional_ids_collide": false,
+      "partial_sentinel": false,
+      "omission_marker_present": false,
+      "truncation_mode": "atomic_legacy_slice"
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "category": "C",
+      "selection_reason": "ignored required-target driver",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-bounded20-current-clean-sympy-12481-r1/sympy__sympy-12481",
+      "final_status": "VALID",
+      "invalid_reason": null,
+      "digest_chars": 2402,
+      "contract_chars": 2673,
+      "required_target_count": 2,
+      "required_target_ids": [
+        "T1",
+        "T2"
+      ],
+      "required_has_impact": false,
+      "impact_present": true,
+      "impact_representative_paths": [
+        "sympy/combinatorics/generators.py",
+        "sympy/combinatorics/generators.py",
+        "sympy/combinatorics/generators.py"
+      ],
+      "cross_file_impact_rep_count": 3,
+      "impact_reps_exist": true,
+      "structured_grammar_present": true,
+      "compact_mode_applied": true,
+      "optional_section_present": true,
+      "optional_impact_id_count": 2,
+      "optional_ids": [
+        "O1",
+        "O2"
+      ],
+      "optional_not_closure_scored": true,
+      "optional_ids_collide": false,
+      "partial_sentinel": false,
+      "omission_marker_present": false,
+      "truncation_mode": "atomic_legacy_slice"
+    },
+    {
+      "instance_id": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "category": "B",
+      "selection_reason": "recovered long-query + structured-decision problem case",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-bounded20-current-clean-sympy-12419-r1/sympy__sympy-12419",
+      "final_status": "VALID",
+      "invalid_reason": null,
+      "digest_chars": 2633,
+      "contract_chars": 2656,
+      "required_target_count": 2,
+      "required_target_ids": [
+        "T1",
+        "T2"
+      ],
+      "required_has_impact": false,
+      "impact_present": true,
+      "impact_representative_paths": [
+        "sympy/concrete/delta.py",
+        "sympy/concrete/expr_with_limits.py",
+        "sympy/concrete/expr_with_limits.py"
+      ],
+      "cross_file_impact_rep_count": 3,
+      "impact_reps_exist": true,
+      "structured_grammar_present": true,
+      "compact_mode_applied": true,
+      "optional_section_present": true,
+      "optional_impact_id_count": 2,
+      "optional_ids": [
+        "O1",
+        "O2"
+      ],
+      "optional_not_closure_scored": true,
+      "optional_ids_collide": false,
+      "partial_sentinel": false,
+      "omission_marker_present": false,
+      "truncation_mode": "atomic_legacy_slice"
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "category": "A",
+      "selection_reason": "main live stability / resolution-flip case",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-m15-pivot-revision-current-seaborn-3187-r3/mwaskom__seaborn-3187",
+      "final_status": "VALID",
+      "invalid_reason": null,
+      "digest_chars": 2530,
+      "contract_chars": 2275,
+      "required_target_count": 2,
+      "required_target_ids": [
+        "T1",
+        "T2"
+      ],
+      "required_has_impact": false,
+      "impact_present": true,
+      "impact_representative_paths": [
+        "seaborn/_core/scales.py",
+        "seaborn/_core/scales.py",
+        "seaborn/_core/scales.py"
+      ],
+      "cross_file_impact_rep_count": 0,
+      "impact_reps_exist": false,
+      "structured_grammar_present": true,
+      "compact_mode_applied": true,
+      "optional_section_present": false,
+      "optional_impact_id_count": 0,
+      "optional_ids": [],
+      "optional_not_closure_scored": false,
+      "optional_ids_collide": false,
+      "partial_sentinel": false,
+      "omission_marker_present": false,
+      "truncation_mode": "atomic_section_priority"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24627",
+      "repo": "matplotlib/matplotlib",
+      "category": "A",
+      "selection_reason": "treatment-only win safety check",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-bounded-current-clean-mpl-24627-r1/matplotlib__matplotlib-24627",
+      "final_status": "VALID",
+      "invalid_reason": null,
+      "digest_chars": 2272,
+      "contract_chars": 2714,
+      "required_target_count": 2,
+      "required_target_ids": [
+        "T1",
+        "T2"
+      ],
+      "required_has_impact": false,
+      "impact_present": true,
+      "impact_representative_paths": [
+        "lib/matplotlib/tests/test_agg.py",
+        "lib/matplotlib/tests/test_agg.py",
+        "lib/matplotlib/tests/test_agg.py"
+      ],
+      "cross_file_impact_rep_count": 3,
+      "impact_reps_exist": true,
+      "structured_grammar_present": true,
+      "compact_mode_applied": true,
+      "optional_section_present": true,
+      "optional_impact_id_count": 2,
+      "optional_ids": [
+        "O1",
+        "O2"
+      ],
+      "optional_not_closure_scored": true,
+      "optional_ids_collide": false,
+      "partial_sentinel": false,
+      "omission_marker_present": false,
+      "truncation_mode": "atomic_legacy_slice"
+    },
+    {
+      "instance_id": "psf__requests-5414",
+      "repo": "psf/requests",
+      "category": "E",
+      "selection_reason": "baseline-only loss / no-hurt stability check",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-bounded-current-clean-requests-5414-r1/psf__requests-5414",
+      "final_status": "VALID",
+      "invalid_reason": null,
+      "digest_chars": 2488,
+      "contract_chars": 2262,
+      "required_target_count": 2,
+      "required_target_ids": [
+        "T1",
+        "T2"
+      ],
+      "required_has_impact": false,
+      "impact_present": true,
+      "impact_representative_paths": [
+        "requests/models.py",
+        "requests/models.py",
+        "requests/models.py"
+      ],
+      "cross_file_impact_rep_count": 0,
+      "impact_reps_exist": false,
+      "structured_grammar_present": true,
+      "compact_mode_applied": true,
+      "optional_section_present": false,
+      "optional_impact_id_count": 0,
+      "optional_ids": [],
+      "optional_not_closure_scored": false,
+      "optional_ids_collide": false,
+      "partial_sentinel": false,
+      "omission_marker_present": false,
+      "truncation_mode": "atomic_section_priority"
+    }
+  ]
+}

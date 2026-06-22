@@ -1,0 +1,108 @@
+{
+  "milestone": "M65B",
+  "kind": "small live confirmation (8 cases)",
+  "live_runs_performed": 8,
+  "fresh_baselines": 0,
+  "reused_baselines": 8,
+  "docker_evals": 8,
+  "valid_treatment_runs": 8,
+  "invalid_treatment_runs": 0,
+  "required_impact_targets_any": false,
+  "resolution": {
+    "m65b": 5,
+    "m62c_same8": 6,
+    "baseline_same8": 6,
+    "n": 8
+  },
+  "structured_decision": {
+    "required": 16,
+    "closed": 15,
+    "open": 1,
+    "ignored": 1,
+    "invalid": 0,
+    "coverage_pct": 93.8,
+    "ignored_rate_pct": 6.25,
+    "invalid_rate_pct": 0.0
+  },
+  "structured_decision_excl_matplotlib": {
+    "coverage_pct": 100.0,
+    "ignored_rate_pct": 0.0,
+    "invalid_rate_pct": 0.0,
+    "resolved": "5/7"
+  },
+  "optional_impact": {
+    "surfaced": 12,
+    "edited": 0,
+    "inspected": 0
+  },
+  "off_target_edits": {
+    "m65b": 3,
+    "m62c_same8": 5
+  },
+  "pooled_cost": {
+    "m65b_usd": 7.26,
+    "baseline_usd": 8.17,
+    "delta_vs_baseline_pct": -11.2
+  },
+  "paired_m65b_vs_baseline": {
+    "both_pass": 5,
+    "both_fail": 2,
+    "m65b_only_pass": 0,
+    "other_only_pass": 1
+  },
+  "paired_m65b_vs_m62c": {
+    "both_pass": 5,
+    "both_fail": 2,
+    "m65b_only_pass": 0,
+    "other_only_pass": 1
+  },
+  "treatment_only_win_safety": {
+    "instance": "matplotlib__matplotlib-24627",
+    "m62c": "resolved",
+    "m65b": "not_resolved",
+    "demoted_impact_reps": [
+      "lib/matplotlib/tests/test_agg.py::test_jpeg_dpi",
+      "lib/matplotlib/tests/test_agg.py::test_pil_kwargs_webp"
+    ],
+    "demoted_reps_edited": 0,
+    "mechanism_removed_by_rule": false,
+    "flip_cause": "fresh-clone pivot set differed (pyplot.py entry points vs M62C _base.py/figure.py); agent edited _base.py only (incomplete, missing figure.py) over 95 thrashing turns; demoted reps were test files never edited",
+    "classification": "retrieval+agent variance, not optional-impact rule"
+  },
+  "success_criteria": {
+    "c1_valid_all_runs": {
+      "pass": true,
+      "value": "8/8 valid"
+    },
+    "c2_coverage_ge_90": {
+      "pass": true,
+      "value": "93.8%"
+    },
+    "c3_ignored_le_5": {
+      "pass": false,
+      "value": "6.25% (1 ignored PIVOT in matplotlib; 0% on other 7)"
+    },
+    "c4_invalid_not_worse": {
+      "pass": true,
+      "value": "0.0% vs M62C 4.2%"
+    },
+    "c5_win_mechanism_preserved": {
+      "pass": true,
+      "value": "demoted reps were test files edited 0x; rule did not remove mechanism (resolution flipped on variance)"
+    },
+    "c6_no_off_target_increase": {
+      "pass": true,
+      "value": "3 vs M62C 5 (decreased)"
+    },
+    "c7_resolution_not_worse": {
+      "pass": false,
+      "value": "5/8 vs M62C 6/8 and baseline 6/8 (matplotlib flip)"
+    },
+    "c8_pooled_cost_regression_le_15": {
+      "pass": true,
+      "value": "-11.2% vs baseline"
+    }
+  },
+  "verdict": "MIXED",
+  "recommendation": "proceed to broader confirmation planning (replicate matplotlib-24627 + seaborn-3187 2-3x to settle resolution variance before a 24-task repeat); do NOT revert (structured-decision goal met) and do NOT make default yet"
+}
