@@ -172,19 +172,26 @@ export function selectDigestDecisionTargets(
 }
 
 /**
- * M58 — bounded target selection. Same hard cap ({@link MAX_DIGEST_DECISION_TARGETS}),
- * same lead + hidden-pivot priority, but TIGHTER on impact representatives to curb the
- * M57B over-anchor blow-up (django-13195: 65 turns, edits expanded from an impact
- * representative into unrelated callers):
- *   - exactly ONE impact representative is required by default (the primary co-edit
- *     candidate);
- *   - a SECOND impact representative is required ONLY when it is a distinct
- *     `dependent` (a genuine co-edit candidate), never a mere caller/importer/reference;
- *   - any further / demoted representatives are returned as OPTIONAL context (bounded),
- *     never as numbered required targets.
+ * M58/M65 — bounded target selection. Same hard cap ({@link MAX_DIGEST_DECISION_TARGETS}),
+ * same lead + hidden-pivot priority.
+ *
+ * M65 — impact representatives are NO LONGER required decision targets. The M64 audit of
+ * M62C found that required impact representatives were EDITED 0/24 across the 24-task
+ * validation yet produced 5 of the 8 open/ignored/invalid required targets, failing two
+ * preregistered structured-decision criteria (decision coverage ≥90%, ignored-target rate
+ * ≤5%). Demoting impact representatives from required to optional/FYI clears both criteria
+ * in M64's simulation (coverage 88.7% → 93.6%, ignored 5.6% → 4.3%, invalid 4.2% → 0.0%),
+ * harms no treatment-only win (impact reps are never load-bearing), and reduces the M57B
+ * over-anchor over-edit pressure rather than adding to it.
+ *
+ * Selection now:
+ *   - lead pivot — always required;
+ *   - hidden / non-traceback co-pivot — required if the existing pivot logic surfaces one;
+ *   - ALL cross-file impact representatives — OPTIONAL/FYI context only (bounded), never
+ *     required, never closure-scored. They remain visible for orientation.
  * Returns required + optional sets; optional items carry `requiredReason: "optional
- * context only"` and are rendered as non-numbered bullets so the parser never counts
- * them as required.
+ * context only"` and are rendered in a non-numbered O-namespaced FYI section so the
+ * required-target parser never counts them.
  */
 export interface BoundedDigestDecisionSelection {
   required: DigestDecisionTarget[];
@@ -238,41 +245,21 @@ export function selectBoundedDigestDecisionTargets(
     });
   }
 
-  // 3. Impact representatives — ONE required by default; a second only if it is a
-  //    distinct `dependent` co-edit candidate. Everything else is optional context.
+  // 3. M65 — impact representatives: OPTIONAL/FYI context only, never required. Bounded,
+  //    cross-file (a different file from every required pivot), deduped by identity.
   const representative = Array.isArray(impact?.representative) ? impact!.representative! : [];
-  let requiredImpact = 0;
   for (const item of representative) {
+    if (optional.length >= MAX_OPTIONAL_CONTEXT_ITEMS) break;
     const identity = impactTargetIdentity(item);
     if (seenPath.has(item.path) || seenIdentity.has(identity)) continue; // cross-file + dedup
-    const isCoEditCandidate = item.role === "dependent";
-    const canRequireMore = required.length < MAX_DIGEST_DECISION_TARGETS;
-    const promote =
-      canRequireMore && (requiredImpact === 0 || (requiredImpact === 1 && isCoEditCandidate));
-    if (promote) {
-      if (
-        pushRequired({
-          kind: "IMPACT",
-          target: identity,
-          path: item.path,
-          reason: impactReason(item),
-          requiredReason: "cross-file co-edit candidate",
-        })
-      ) {
-        requiredImpact += 1;
-        continue;
-      }
-    }
-    if (optional.length < MAX_OPTIONAL_CONTEXT_ITEMS && !seenIdentity.has(identity)) {
-      optional.push({
-        kind: "IMPACT",
-        target: identity,
-        path: item.path,
-        reason: impactReason(item),
-        requiredReason: "optional context only",
-      });
-      seenIdentity.add(identity);
-    }
+    optional.push({
+      kind: "IMPACT",
+      target: identity,
+      path: item.path,
+      reason: impactReason(item),
+      requiredReason: "optional context only",
+    });
+    seenIdentity.add(identity);
   }
 
   return { required, optional };
@@ -310,6 +297,13 @@ export function renderDigestDecisionContractText(targets: readonly DigestDecisio
 /** Stable per-target id rendered in (and parsed back from) the bounded contract. */
 export function digestDecisionTargetId(index: number): string {
   return `T${index + 1}`;
+}
+
+// M65 — optional/FYI impact context uses a DISTINCT id namespace (O1, O2, …) so it can
+// never collide with a required `target_id` (T1, T2, …) and the closure-scoring parser
+// (which only recognizes `\d+.` / `target:` required lines) never reads it as a target.
+export function digestDecisionOptionalId(index: number): string {
+  return `O${index + 1}`;
 }
 
 /**
@@ -376,10 +370,15 @@ export function renderBoundedDigestDecisionContractText(
   lines.push("- Stop after each required target has EDIT / RULE_OUT / INSPECT_ONLY_NO_EDIT.");
   if (optional.length > 0) {
     lines.push("");
-    lines.push("Optional context (NOT required to decide; do not edit unless the fix needs it):");
-    optional.forEach((t) => {
-      lines.push(`- ${t.kind} ${t.target} — optional context only: additional dependent/caller`);
+    lines.push(
+      "Optional context / FYI impact references (NOT required decision targets; NOT closure-scored; do not edit unless the fix needs it):",
+    );
+    optional.forEach((t, i) => {
+      lines.push(
+        `- ${digestDecisionOptionalId(i)}: ${t.kind} ${t.target} — optional context only: additional dependent/caller`,
+      );
     });
+    lines.push("These are not required decision targets and are not closure-scored.");
   }
   lines.push(DIGEST_DECISION_CONTRACT_END);
   return lines.join("\n");

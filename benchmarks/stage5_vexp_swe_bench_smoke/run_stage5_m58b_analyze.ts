@@ -80,7 +80,8 @@ function parseOptionalContext(snapshot: string): Array<{ kind: string; target: s
   if (s < 0 || e < 0) return [];
   const block = snapshot.slice(s, e);
   const out: Array<{ kind: string; target: string; path: string }> = [];
-  for (const m of block.matchAll(/^- (PIVOT|IMPACT) (\S+) — optional context only/gm)) {
+  // M65 optional reps are O-namespaced (`- O1: IMPACT …`); pre-M65 were unprefixed.
+  for (const m of block.matchAll(/^- (?:O\d+: )?(PIVOT|IMPACT) (\S+) — optional context only/gm)) {
     const target = m[2]!.trim();
     out.push({ kind: m[1]!, target, path: target.split("::")[0]!.trim() });
   }

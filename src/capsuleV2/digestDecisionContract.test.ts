@@ -312,7 +312,9 @@ test("M58: bounded required target cap stays <= 4", () => {
   assert.ok(required.length <= MAX_DIGEST_DECISION_TARGETS);
 });
 
-test("M58: only ONE impact rep is required when the second is a mere caller", () => {
+// M65 — impact representatives are NO LONGER required. Both callers and dependents are
+// demoted to optional/FYI context; only pivots are required decision targets.
+test("M65: no impact rep is required — callers are demoted to optional context", () => {
   const { required, optional } = selectBoundedDigestDecisionTargets(
     response([pivot("src/foo.py", "bar", ANCHOR)]),
     impactSeam([
@@ -320,15 +322,15 @@ test("M58: only ONE impact rep is required when the second is a mere caller", ()
       { path: "src/c2.py", symbol: "b", role: CALLER },
     ]),
   );
-  // lead + 1 impact rep required; the 2nd caller is demoted to optional context.
-  assert.equal(required.length, 2);
-  assert.equal(required.filter((t) => t.kind === "IMPACT").length, 1);
-  assert.equal(optional.length, 1);
-  assert.equal(optional[0]!.path, "src/c2.py");
-  assert.equal(optional[0]!.requiredReason, "optional context only");
+  // lead pivot is the only required target; BOTH impact reps are optional context.
+  assert.equal(required.length, 1);
+  assert.equal(required.filter((t) => t.kind === "IMPACT").length, 0);
+  assert.equal(optional.length, 2);
+  assert.deepEqual(optional.map((t) => t.path), ["src/c1.py", "src/c2.py"]);
+  assert.ok(optional.every((t) => t.requiredReason === "optional context only"));
 });
 
-test("M58: a second impact rep IS required when it is a distinct dependent co-edit candidate", () => {
+test("M65: dependent impact reps are ALSO optional (no required IMPACT, even for dependents)", () => {
   const { required, optional } = selectBoundedDigestDecisionTargets(
     response([pivot("src/foo.py", "bar", ANCHOR)]),
     impactSeam([
@@ -336,12 +338,30 @@ test("M58: a second impact rep IS required when it is a distinct dependent co-ed
       { path: "src/d2.py", symbol: "b", role: DEPENDENT },
     ]),
   );
-  assert.equal(required.length, 3);
-  assert.equal(required.filter((t) => t.kind === "IMPACT").length, 2);
-  assert.equal(optional.length, 0);
+  assert.equal(required.length, 1);
+  assert.equal(required.filter((t) => t.kind === "IMPACT").length, 0);
+  assert.equal(optional.length, 2);
 });
 
-test("M58: optional impact reps are NOT parsed as required targets", () => {
+test("M65: lead + hidden pivots remain required while impact reps are optional", () => {
+  const { required, optional } = selectBoundedDigestDecisionTargets(
+    response([
+      pivot("src/symptom.py", "trigger", ANCHOR), // lead, source-anchored
+      pivot("src/cause.py", "root", HIDDEN), // hidden co-pivot
+    ]),
+    impactSeam([{ path: "src/dep.py", symbol: "qux", role: DEPENDENT }]),
+  );
+  assert.deepEqual(
+    required.map((t) => t.target),
+    ["src/symptom.py::trigger", "src/cause.py::root"],
+  );
+  assert.ok(required.every((t) => t.kind === "PIVOT"));
+  assert.equal(required[1]!.hidden, true);
+  assert.equal(optional.length, 1);
+  assert.equal(optional[0]!.kind, "IMPACT");
+});
+
+test("M65: optional impact reps are NOT parsed as required targets, and render in the FYI section", () => {
   const b = buildDigestDecisionContract(
     response([pivot("src/foo.py", "bar", ANCHOR)]),
     impactSeam([
@@ -351,12 +371,75 @@ test("M58: optional impact reps are NOT parsed as required targets", () => {
     { bounded: true },
   );
   const parsed = parseDigestDecisionContract(b.text);
-  // Only the lead pivot + the single required impact rep are numbered required targets.
-  assert.equal(parsed.targets.length, 2);
+  // Only the lead pivot is a numbered required target — neither impact rep is.
+  assert.equal(parsed.targets.length, 1);
+  assert.equal(parsed.targets[0]!.kind, "PIVOT");
+  assert.equal(parsed.targets.some((t) => t.path === "src/c1.py"), false);
   assert.equal(parsed.targets.some((t) => t.path === "src/c2.py"), false);
-  assert.match(b.text, /Optional context \(NOT required to decide/);
+  // FYI section header + the explicit not-closure-scored statement are present.
+  assert.match(b.text, /Optional context \/ FYI impact references/);
+  assert.match(b.text, /These are not required decision targets and are not closure-scored\./);
   assert.match(b.text, /optional context only: additional dependent\/caller/);
-  assert.equal(b.optionalTargets.length, 1);
+  assert.equal(b.optionalTargets.length, 2);
+});
+
+test("M65: optional IDs are O-namespaced and never collide with required T-ids", () => {
+  const b = buildDigestDecisionContract(
+    response([pivot("src/foo.py", "bar", ANCHOR)]),
+    impactSeam([
+      { path: "src/c1.py", symbol: "a", role: CALLER },
+      { path: "src/c2.py", symbol: "b", role: CALLER },
+    ]),
+    { bounded: true },
+  );
+  const requiredIds = [...b.text.matchAll(/target_id: (\S+)/g)].map((m) => m[1]!);
+  const optionalIds = [...b.text.matchAll(/^- (O\d+):/gm)].map((m) => m[1]!);
+  assert.deepEqual(requiredIds, ["T1"]); // only the lead pivot
+  assert.deepEqual(optionalIds, ["O1", "O2"]);
+  // Disjoint namespaces — no optional id is ever a required id.
+  assert.equal(requiredIds.some((id) => optionalIds.includes(id)), false);
+  assert.ok(optionalIds.every((id) => id.startsWith("O")));
+});
+
+test("M65: the classifier never closure-scores optional/FYI impact rows", () => {
+  // Build the bounded contract; the required targets handed to the classifier exclude
+  // every impact rep, so an impact row can never count toward closed/open/ignored.
+  const b = buildDigestDecisionContract(
+    response([pivot("src/foo.py", "bar", ANCHOR)]),
+    impactSeam([{ path: "src/dep.py", symbol: "qux", role: DEPENDENT }]),
+    { bounded: true },
+  );
+  assert.equal(b.targets.every((t) => t.kind === "PIVOT"), true);
+  const c = classifyDigestDecisionContract({
+    requiredTargets: b.targets,
+    // The agent never touched the impact rep at all — it must not surface as IGNORED.
+    toolCalls: [tc("read", "src/foo.py"), tc("edit", "src/foo.py")],
+    editedFiles: ["src/foo.py"],
+  });
+  assert.equal(c.requiredTargetCount, 1);
+  assert.equal(c.requiredTargets.some((r) => r.target.kind === "IMPACT"), false);
+  assert.equal(c.requiredTargetIgnoredCount, 0);
+  assert.equal(c.requiredTargetClosedCount, 1);
+  assert.equal(c.requiredTargetOpenCount, 0);
+});
+
+test("M65: M62C-style ignored impact rep no longer counts against coverage/ignored", () => {
+  // Mirrors sympy-12481 / django-11740 layer: lead pivot EDITED, an impact rep the agent
+  // never touched. Pre-M65 the impact rep was a required IGNORED target (open); post-M65
+  // it is optional, so coverage is 1/1 and the ignored rate contribution is 0.
+  const sel = selectBoundedDigestDecisionTargets(
+    response([pivot("combinatorics/permutations.py", "_af_rmul", ANCHOR)]),
+    impactSeam([{ path: "combinatorics/generators.py", symbol: "alternating", role: DEPENDENT }]),
+  );
+  const c = classifyDigestDecisionContract({
+    requiredTargets: sel.required,
+    toolCalls: [tc("read", "combinatorics/permutations.py"), tc("edit", "combinatorics/permutations.py")],
+    editedFiles: ["combinatorics/permutations.py"],
+  });
+  assert.equal(c.requiredTargetCount, 1); // only the pivot is required
+  assert.equal(c.requiredTargetClosedCount, 1); // coverage 1/1
+  assert.equal(c.requiredTargetOpenCount, 0);
+  assert.equal(c.requiredTargetIgnoredCount, 0); // the un-touched impact rep is optional, not ignored
 });
 
 test("M58: empty render when there are no required targets", () => {
@@ -402,15 +485,23 @@ test("M58 classifier: closed/open counts partition the required targets", () => 
 // --- M59: structured decision grammar (render, parse, classifier recalibration) ----
 
 test("M59: bounded mode renders the structured target_id grammar", () => {
+  // M65 — required target_ids are PIVOTs only (lead + hidden co-pivot); the impact rep
+  // renders as O-namespaced optional context, not a required target.
   const b = buildDigestDecisionContract(
-    response([pivot("src/foo.py", "bar", ANCHOR)]),
+    response([
+      pivot("src/foo.py", "bar", ANCHOR), // lead → T1
+      pivot("src/cause.py", "root", HIDDEN), // hidden co-pivot → T2
+    ]),
     impactSeam([{ path: "src/dep.py", symbol: "qux", role: DEPENDENT }]),
     { bounded: true },
   );
   assert.match(b.text, /target_id: T1/);
   assert.match(b.text, /target: PIVOT src\/foo\.py::bar/);
   assert.match(b.text, /target_id: T2/);
-  assert.match(b.text, /target: IMPACT src\/dep\.py::qux/);
+  assert.match(b.text, /target: PIVOT src\/cause\.py::root/);
+  // The impact rep is NOT a required target — it lives in the optional/FYI section.
+  assert.equal(b.text.includes("target: IMPACT src/dep.py::qux"), false);
+  assert.match(b.text, /- O1: IMPACT src\/dep\.py::qux/);
   assert.match(b.text, /decision: EDIT \| RULE_OUT \| INSPECT_ONLY_NO_EDIT/);
   assert.match(b.text, /files_touched: <paths or none>/);
   // M59 reason-rules guidance is present.
