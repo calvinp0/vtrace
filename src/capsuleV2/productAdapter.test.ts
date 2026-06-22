@@ -3,6 +3,8 @@ import { test } from "bun:test";
 
 import {
   capsuleV2ToManifestItemFields,
+  compactDigestHeader,
+  MAX_DIGEST_QUERY_CHARS,
   toCapsuleV2ProductResponse,
 } from "./productAdapter";
 import {
@@ -368,4 +370,91 @@ test("capsuleV2ToManifestItemFields uses fqName as the symbol-identity surrogate
   // Support is signature-mode → not source-backed.
   assert.equal(fields[1]!.role, "support");
   assert.equal(fields[1]!.sourceBacked, false);
+});
+
+// === M63: deterministic digest-header (query) compaction =========================
+
+// A realistic oversized SWE-bench-shaped task: short metadata lead + a multi-KB
+// problem statement. Mirrors the M62 fail-closed driver (header ~8k chars).
+function oversizedQuery(): string {
+  const head = "instance: acme__widget-4242\nrepo: acme/widget\n\n";
+  const body = "combinator SQL output is wrong for values_list\n\n"
+    + "When chaining union() the generated SQL drops the ORDER BY clause. "
+      .repeat(220); // ~ thousands of chars, well over the 800 cap
+  return head + body + "\nExpected: ordering preserved. Actual: ordering lost.";
+}
+
+test("M63: long digest query/header is compacted deterministically to a bounded block", () => {
+  const q = oversizedQuery();
+  assert.ok(q.length > MAX_DIGEST_QUERY_CHARS, "fixture must exceed the cap");
+  const h = compactDigestHeader(q);
+  assert.equal(h.truncated, true);
+  // First line becomes the compact label (not the whole body).
+  assert.equal(h.lines[0], "# instance: acme__widget-4242");
+  assert.ok(h.lines.some((l) => l.startsWith("query_excerpt: ")));
+  assert.ok(h.lines.includes("query_truncated: true"));
+  // The rendered header block is bounded — never the multi-KB verbatim query.
+  assert.ok(h.renderedChars < 1_000, `rendered header ${h.renderedChars} must stay bounded`);
+  assert.ok(h.renderedChars < q.length, "compaction must shrink the header");
+  // The verbatim issue body must NOT appear whole in the header block.
+  assert.equal(h.lines.join("\n").includes(q), false);
+});
+
+test("M63: compacted header records the original query char count exactly", () => {
+  const q = oversizedQuery();
+  const h = compactDigestHeader(q);
+  assert.equal(h.queryChars, q.trim().length);
+  assert.ok(h.lines.includes(`query_original_chars: ${q.trim().length}`));
+});
+
+test("M63: compacted header carries a bounded deterministic head/tail excerpt", () => {
+  const q = oversizedQuery();
+  const h = compactDigestHeader(q);
+  const excerpt = h.lines.find((l) => l.startsWith("query_excerpt: "))!;
+  assert.ok(excerpt.includes(" … "), "excerpt must join a head and a tail with an ellipsis");
+  // Head reflects the opening of the query; tail reflects its close.
+  assert.ok(excerpt.includes("instance: acme__widget-4242"));
+  assert.ok(excerpt.includes("Actual: ordering lost."));
+  // Bounded: head(500)+sep+tail(200) ⇒ comfortably under ~750 content chars.
+  assert.ok(excerpt.length < 760, `excerpt ${excerpt.length} must be bounded`);
+});
+
+test("M63: short digest query/header remains byte-identical to legacy `# <query>`", () => {
+  const q = "fix createSession ordering";
+  const h = compactDigestHeader(q);
+  assert.equal(h.truncated, false);
+  assert.deepEqual(h.lines, [`# ${q}`]);
+  assert.equal(h.queryChars, q.length);
+  // A query exactly at the cap is still emitted verbatim (boundary inclusive).
+  const atCap = "x".repeat(MAX_DIGEST_QUERY_CHARS);
+  const hc = compactDigestHeader(atCap);
+  assert.equal(hc.truncated, false);
+  assert.deepEqual(hc.lines, [`# ${atCap}`]);
+  // One char over the cap flips to compacted.
+  assert.equal(compactDigestHeader("x".repeat(MAX_DIGEST_QUERY_CHARS + 1)).truncated, true);
+});
+
+test("M63: empty/blank query yields no header line (no fabricated content)", () => {
+  assert.deepEqual(compactDigestHeader("").lines, []);
+  assert.deepEqual(compactDigestHeader("   \n  ").lines, []);
+});
+
+test("M63: compaction is deterministic across repeated calls", () => {
+  const q = oversizedQuery();
+  assert.deepEqual(compactDigestHeader(q), compactDigestHeader(q));
+  assert.equal(compactDigestHeader(q).lines.join("\n"), compactDigestHeader(q).lines.join("\n"));
+});
+
+test("M63: the rendered digest uses the compacted header in its block, not the verbatim issue", () => {
+  const q = oversizedQuery();
+  const response = toCapsuleV2ProductResponse(result(), { query: q });
+  const lines = response.digest.split("\n");
+  assert.equal(lines[0], "# instance: acme__widget-4242");
+  assert.ok(response.digest.includes("query_truncated: true"));
+  assert.ok(response.digest.includes(`query_original_chars: ${q.trim().length}`));
+  // The action map still renders its pivot/budget lines (compaction touched only the header).
+  assert.ok(response.digest.includes("● pivot src/session.ts::SessionManager.createSession  [full ~40t]"));
+  assert.ok(response.digest.includes("budget: 52/8000t (0.65%)"));
+  // The verbatim multi-KB issue body never lands in the digest.
+  assert.equal(response.digest.includes(q), false);
 });

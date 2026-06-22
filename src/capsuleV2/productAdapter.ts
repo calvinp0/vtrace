@@ -305,6 +305,70 @@ function compactDigestText(text: string, max = MAX_DIGEST_TEXT_CHARS): string {
   return collapsed.length > max ? `${collapsed.slice(0, max - 1).trimEnd()}…` : collapsed;
 }
 
+// --- Digest header (query) compaction -------------------------------------------
+//
+// The digest header line `# <query>` echoes the task/query the capsule was built
+// for. For a navigation MCP call that query is a short phrase, but a Stage-5
+// SWE-bench task carries the FULL issue/problem statement (up to the harness query
+// cap), so a verbatim header can be multiple thousand chars — large enough to crowd
+// out the (bounded) decision contract under the atomic context budget, which is
+// exactly what forced M62's three fail-closed cases. The digest is an action map,
+// and the agent already receives the full problem statement through the harness
+// prompt, so the header only needs a compact label plus a bounded, deterministic
+// excerpt — never the whole issue body.
+//
+// Cap rationale (800 chars): the M61B/M62 size accounting showed every
+// non-pathological task's title+lead sits well under 800, while the three M62
+// fail-closed headers were ~8,000 chars; capping the verbatim query at 800 keeps
+// the header from ever dominating the 12,000-char structured budget. Head/tail
+// excerpting (500 + 200) preserves the issue's opening framing and its closing ask
+// (reproduction / expected-vs-actual typically live at the head and tail). Pure and
+// deterministic: no clock, no model summarization, identical output across calls.
+export const MAX_DIGEST_QUERY_CHARS = 800;
+const DIGEST_QUERY_HEAD_CHARS = 500;
+const DIGEST_QUERY_TAIL_CHARS = 200;
+
+/** Result of {@link compactDigestHeader}: the header lines plus size accounting. */
+export interface CompactedDigestHeader {
+  /** The digest header lines to emit (join with "\n"); empty when query is blank. */
+  readonly lines: string[];
+  /** True when the query exceeded the cap and was excerpted. */
+  readonly truncated: boolean;
+  /** Length of the trimmed query (the value emitted as `query_original_chars`). */
+  readonly queryChars: number;
+  /** Length of the rendered header block (lines joined by "\n"). */
+  readonly renderedChars: number;
+}
+
+/**
+ * Deterministically render the digest header for a query. Short queries
+ * (≤ {@link MAX_DIGEST_QUERY_CHARS}) render byte-identically to the legacy
+ * `# <query>` line. Longer queries are compacted to a bounded first-line label
+ * plus a deterministic head/tail excerpt, an explicit `query_truncated: true`
+ * marker, and the original char count — no model summarization, fully pure.
+ */
+export function compactDigestHeader(rawQuery: string): CompactedDigestHeader {
+  const query = rawQuery.trim();
+  if (query.length === 0) {
+    return { lines: [], truncated: false, queryChars: 0, renderedChars: 0 };
+  }
+  if (query.length <= MAX_DIGEST_QUERY_CHARS) {
+    const lines = [`# ${query}`];
+    return { lines, truncated: false, queryChars: query.length, renderedChars: lines.join("\n").length };
+  }
+  const firstLine = query.split("\n").find((line) => line.trim().length > 0) ?? query;
+  const title = compactDigestText(firstLine);
+  const head = query.slice(0, DIGEST_QUERY_HEAD_CHARS).replace(/\s+/g, " ").trim();
+  const tail = query.slice(query.length - DIGEST_QUERY_TAIL_CHARS).replace(/\s+/g, " ").trim();
+  const lines = [
+    `# ${title}`,
+    `query_excerpt: ${head} … ${tail}`,
+    "query_truncated: true",
+    `query_original_chars: ${query.length}`,
+  ];
+  return { lines, truncated: true, queryChars: query.length, renderedChars: lines.join("\n").length };
+}
+
 /** `path::symbol` when a symbol is known, else just the path. */
 function impactItemTarget(item: CapsuleV2DigestImpactItem): string {
   const symbol = typeof item.symbol === "string" ? item.symbol.trim() : "";
@@ -462,10 +526,7 @@ function renderCapsuleV2Digest(input: {
   savedTokensEstimate?: number | null;
 }): string {
   const lines: string[] = [];
-  const query = input.query.trim();
-  if (query.length > 0) {
-    lines.push(`# ${query}`);
-  }
+  lines.push(...compactDigestHeader(input.query).lines);
 
   if (input.actualMode === "no_context" || (input.pivots.length === 0 && input.support.length === 0)) {
     lines.push("(no high-confidence pivot recovered)");
