@@ -1,0 +1,233 @@
+{
+  "milestone": "M64",
+  "kind": "offline audit of M62C mixed structured-decision criteria",
+  "metric_recheck": {
+    "consistent_with_report": true,
+    "resolution_treatment": 15,
+    "resolution_baseline": 15,
+    "coverage_pct": 88.7,
+    "ignored_pct": 5.6,
+    "invalid_pct": 4.2,
+    "cost_pooled_pct": -27.8,
+    "token_pooled_pct": -31.5,
+    "off_target_edits": 8,
+    "valid_runs": 24
+  },
+  "invariant": {
+    "impact_reps_edited": 0,
+    "impact_reps_total": 24,
+    "pivot_targets_edited": 24,
+    "pivot_targets_total": 47,
+    "note": "impact representatives were never edited in any of the 24 runs"
+  },
+  "problem_targets": [
+    {
+      "instance_id": "sympy__sympy-12419",
+      "category": "B",
+      "resolved": true,
+      "target": "sympy/functions/elementary/piecewise.py::Piecewise._sort_expr_cond",
+      "kind": "PIVOT",
+      "is_test_file": false,
+      "decision": "INSPECTED_ONLY",
+      "edited_files": [
+        "sympy/matrices/expressions/matexpr.py"
+      ],
+      "diagnosis": "classifier_strictness_minor"
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "category": "B",
+      "resolved": true,
+      "target": "astropy/io/fits/convenience.py::printdiff",
+      "kind": "IMPACT",
+      "is_test_file": false,
+      "decision": "INVALID_RULE_OUT",
+      "edited_files": [
+        "astropy/io/fits/diff.py"
+      ],
+      "diagnosis": "selector_issue_nonactionable_impact"
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "category": "B",
+      "resolved": true,
+      "target": "astropy/io/fits/tests/test_core.py::test_fits_file_bytes_object",
+      "kind": "IMPACT",
+      "is_test_file": true,
+      "decision": "INVALID_RULE_OUT",
+      "edited_files": [
+        "astropy/io/fits/diff.py"
+      ],
+      "diagnosis": "selector_issue_testfile"
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "category": "C",
+      "resolved": true,
+      "target": "sympy/combinatorics/generators.py::alternating",
+      "kind": "IMPACT",
+      "is_test_file": false,
+      "decision": "IGNORED",
+      "edited_files": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "diagnosis": "selector_issue_nonactionable_impact"
+    },
+    {
+      "instance_id": "pallets__flask-5014",
+      "category": "D",
+      "resolved": true,
+      "target": "tests/test_async.py::_async_app",
+      "kind": "IMPACT",
+      "is_test_file": true,
+      "decision": "INVALID_RULE_OUT",
+      "edited_files": [
+        "src/flask/blueprints.py"
+      ],
+      "diagnosis": "selector_issue_testfile"
+    },
+    {
+      "instance_id": "django__django-11740",
+      "category": "E",
+      "resolved": true,
+      "target": "django/contrib/gis/gdal/feature.py::Feature",
+      "kind": "PIVOT",
+      "is_test_file": false,
+      "decision": "IGNORED",
+      "edited_files": [
+        "django/db/migrations/autodetector.py"
+      ],
+      "diagnosis": "retrieval_mislocalization"
+    },
+    {
+      "instance_id": "django__django-11740",
+      "category": "E",
+      "resolved": true,
+      "target": "django/contrib/gis/gdal/feature.py::Feature.fid",
+      "kind": "PIVOT",
+      "is_test_file": false,
+      "decision": "IGNORED",
+      "edited_files": [
+        "django/db/migrations/autodetector.py"
+      ],
+      "diagnosis": "retrieval_mislocalization"
+    },
+    {
+      "instance_id": "django__django-11740",
+      "category": "E",
+      "resolved": true,
+      "target": "django/contrib/gis/gdal/layer.py::Layer",
+      "kind": "IMPACT",
+      "is_test_file": false,
+      "decision": "IGNORED",
+      "edited_files": [
+        "django/db/migrations/autodetector.py"
+      ],
+      "diagnosis": "retrieval_mislocalization"
+    }
+  ],
+  "problem_summary": {
+    "total": 8,
+    "by_diagnosis": {
+      "retrieval_mislocalization": 3,
+      "selector_issue_nonactionable_impact": 2,
+      "classifier_strictness_minor": 1,
+      "selector_issue_testfile": 2
+    },
+    "all_in_resolved_cases": true
+  },
+  "rule_simulations": {
+    "baseline": {
+      "required": 71,
+      "closed": 63,
+      "open": 8,
+      "ignored": 4,
+      "invalid": 3,
+      "coverage_pct": 88.7,
+      "ignored_pct": 5.6,
+      "invalid_pct": 4.2,
+      "c3_ignored_le5": false,
+      "c4_coverage_ge90": false
+    },
+    "ruleA_demote_test_impact": {
+      "required": 63,
+      "closed": 57,
+      "open": 6,
+      "ignored": 4,
+      "invalid": 1,
+      "coverage_pct": 90.5,
+      "ignored_pct": 6.3,
+      "invalid_pct": 1.6,
+      "c3_ignored_le5": false,
+      "c4_coverage_ge90": true
+    },
+    "ruleD_impact_optional": {
+      "required": 47,
+      "closed": 44,
+      "open": 3,
+      "ignored": 2,
+      "invalid": 0,
+      "coverage_pct": 93.6,
+      "ignored_pct": 4.3,
+      "invalid_pct": 0.0,
+      "c3_ignored_le5": true,
+      "c4_coverage_ge90": true
+    }
+  },
+  "variance": {
+    "matplotlib-24627_treatment_only_win": {
+      "resolution": "T,T,T,T (M60B,M60C,M62,M62C)",
+      "class": "stable_treatment_win"
+    },
+    "requests-5414": {
+      "resolution": "F,F,T,F",
+      "class": "regression_to_mode_m62_outlier"
+    },
+    "sphinx-7462": {
+      "resolution": "T,T,T,F",
+      "class": "known_multigold_fragility"
+    },
+    "seaborn-3187": {
+      "resolution": "T,T,T,F",
+      "class": "stable_win_flip_mechanism_unclear"
+    },
+    "astropy-14369": {
+      "resolution": "T,F (M62,M62C)",
+      "class": "insufficient_history"
+    },
+    "django-11740": {
+      "resolution": "T,T",
+      "class": "stable_but_targets_mislocalized"
+    }
+  },
+  "diagnosis": {
+    "primary": "A_selector_surfaced_nonactionable_required_impact_reps",
+    "secondary": [
+      "retrieval_mislocalization_django_11740",
+      "classifier_strictness_minor_sympy_12419"
+    ],
+    "ruled_out": [
+      "B_agent_ignored_good_targets",
+      "E_real_treatment_gap",
+      "D_variance_for_criteria"
+    ],
+    "criteria_misses_are_deterministic": true
+  },
+  "recommendation": {
+    "choice": "A_implement_narrow_general_required_target_demotion_rule",
+    "rule": "demote impact representatives from required to optional/FYI (never force-require test files or non-dependent callers); keep lead+hidden pivot required",
+    "fixes_both_failed_criteria": true,
+    "harms_treatment_only_wins": false,
+    "increases_over_edit_risk": false,
+    "supported_by": "impact_edited=0/24 invariant + 4 independent cases (astropy-14539, flask-5014, sympy-12481, matplotlib-24627)",
+    "code_changes_recommended_next": true,
+    "more_live_runs_recommended_next": "yes_after_rule_to_confirm_criteria_and_resolution_stability"
+  },
+  "pre_existing_dirty_files": [
+    "stage5_outcome_ledger.json",
+    "stage5_outcome_ledger.md",
+    "stage5_retrieval_eval_cross_repo_30.csv",
+    "stage5_retrieval_eval_cross_repo_30.json",
+    "stage5_retrieval_eval_cross_repo_30.md"
+  ]
+}
