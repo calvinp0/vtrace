@@ -1,0 +1,201 @@
+{
+ "milestone": "M67",
+ "kind": "offline audit of M66 pivot localization & required-target quality",
+ "live_agents_run": false,
+ "docker_run": false,
+ "retrieval_scoring_changed": false,
+ "metric_recheck": {
+  "internally_consistent": true,
+  "valid_treatment": "24/24",
+  "resolution_m66_baseline_m62c": [
+   15,
+   15,
+   15
+  ],
+  "required_targets": 47,
+  "in_gold": 25,
+  "not_in_gold": 22,
+  "coverage_pct": 85.1,
+  "ignored_rate_pct": 2.13,
+  "invalid_rule_out_pct": 8.51,
+  "off_target_edits": 8,
+  "optional_surfaced": 30,
+  "optional_inspected": 1,
+  "optional_edited": 0,
+  "pooled_token_pct": -6.76,
+  "pooled_cache_pct": -7.83,
+  "pooled_cost_pct": 12.31,
+  "failed_criteria": [
+   "c4_coverage_ge_90",
+   "c5_invalid_not_worse_than_m62c"
+  ],
+  "prompt_recap_discrepancy": "M67 prompt recap merged M62C-vs-M66 counts (14/8/1/1) with baseline-vs-M66 named cases (mpl-24627, requests-5414); M66 artifacts themselves consistent. Baseline-vs-M66=13/7/2/2; M62C-vs-M66=14/8/1/1."
+ },
+ "required_pivot_quality": {
+  "total": 47,
+  "in_gold": 25,
+  "not_in_gold": 22,
+  "lead_pivot_in_gold_cases": 18,
+  "lead_pivot_wrong_cases": 6,
+  "lead_pivot_wrong_all_resolved": true,
+  "decision_distribution": {
+   "EDITED": 24,
+   "RULED_OUT": 8,
+   "INSPECT_ONLY_NO_EDIT": 8,
+   "INVALID_RULE_OUT": 4,
+   "INSPECTED_ONLY": 2,
+   "IGNORED": 1
+  },
+  "invalid_rule_out_cases": [
+   "django__django-11740(x2)",
+   "psf__requests-1142",
+   "astropy__astropy-14369"
+  ],
+  "ignored_cases": [
+   "matplotlib__matplotlib-24627"
+  ]
+ },
+ "primary_root_cause": "wrong required-PIVOT localization via lexical/symbol-name over-match onto unrelated subsystem; drives the failed structured-decision criteria. Agent self-rescues so all 6 wrong-lead cases still resolve.",
+ "resolution_failure_buckets": {
+  "missing_second_gold_retrieval": [
+   "mwaskom__seaborn-3187",
+   "django__django-13195",
+   "pylint-dev__pylint-8898",
+   "astropy__astropy-14369"
+  ],
+  "second_gold_surfaced_not_acted": [
+   "sphinx-doc__sphinx-7462"
+  ],
+  "single_gold_correct_patch_quality_variance": [
+   "django__django-11820",
+   "matplotlib__matplotlib-25960",
+   "astropy__astropy-14598",
+   "psf__requests-5414"
+  ]
+ },
+ "wrong_lead_but_resolved_self_rescue": [
+  "django__django-10880",
+  "django__django-11740",
+  "matplotlib__matplotlib-22719",
+  "matplotlib__matplotlib-24627",
+  "psf__requests-1142",
+  "sympy__sympy-12419"
+ ],
+ "deep_dives": {
+  "django__django-11740": {
+   "lead_pivot": "django/contrib/gis/gdal/feature.py",
+   "gold": [
+    "django/db/migrations/autodetector.py"
+   ],
+   "gold_in_context": false,
+   "found_via": "agent grep search",
+   "decision": "INVALID_RULE_OUT x2",
+   "resolved": true,
+   "root_cause": "wrong_lead_pivot_lexical_overmatch"
+  },
+  "mwaskom__seaborn-3187": {
+   "lead_pivot": "seaborn/_core/scales.py",
+   "gold": [
+    "seaborn/_core/scales.py",
+    "seaborn/utils.py"
+   ],
+   "second_gold_in_context": "only skel/support of wrong symbol load_dataset",
+   "surfaced_second_pivot": "seaborn/relational.py (wrong)",
+   "resolved": false,
+   "root_cause": "missing_second_gold_retrieval"
+  },
+  "psf__requests-5414": {
+   "lead_pivot": "requests/models.py",
+   "gold": [
+    "requests/models.py"
+   ],
+   "lead_correct": true,
+   "edited_gold": true,
+   "resolved": false,
+   "baseline_frac": "1/1",
+   "m62c_resolved": false,
+   "root_cause": "patch_quality_live_variance_not_localization"
+  },
+  "sphinx-doc__sphinx-7462": {
+   "required_pivots": [
+    "sphinx/domains/python.py",
+    "sphinx/pycode/ast.py"
+   ],
+   "gold": [
+    "sphinx/domains/python.py",
+    "sphinx/pycode/ast.py"
+   ],
+   "both_gold_surfaced": true,
+   "ast_decision": "RULED_OUT",
+   "edited": [
+    "sphinx/domains/python.py"
+   ],
+   "resolved": false,
+   "root_cause": "context_to_action_not_retrieval"
+  },
+  "matplotlib__matplotlib-24627": {
+   "required_pivots": [
+    "lib/matplotlib/pyplot.py"
+   ],
+   "gold": [
+    "lib/matplotlib/axes/_base.py"
+   ],
+   "gold_in_context": false,
+   "win_mechanism": "agent self-rescue (17 searches/13 reads/$3.02)",
+   "resolved": true,
+   "risk_from_candidate_B": "low"
+  }
+ },
+ "candidate_rules": {
+  "A_multi_gold_expansion": {
+   "recommend": "defer",
+   "reason": "resolution-facing; over-edit + wrong-second-pivot risk; needs retrieval change"
+  },
+  "B_lead_pivot_confidence_demotion": {
+   "recommend": "PRIMARY",
+   "helps": [
+    "django-11740",
+    "requests-1142",
+    "astropy-14369",
+    "matplotlib-24627(metric)",
+    "sympy-12419"
+   ],
+   "risks": [],
+   "effect": "coverage up, invalid down, ignored down, resolution neutral, over-edit down",
+   "scope": "contract-render gate; no retrieval change",
+   "offline_measurable": true
+  },
+  "C_dependency_co_pivot_promotion": {
+   "recommend": "defer",
+   "reason": "graph/retrieval change; promotes wrong seconds"
+  },
+  "E_required_pivot_demotion": {
+   "recommend": "adopt_as_part_of_B"
+  },
+  "F_classifier_credit_terse_ruleouts": {
+   "recommend": "reject_primary",
+   "reason": "cosmetic; masks wrong-pivot root cause"
+  },
+  "G_no_change_variance": {
+   "recommend": "insufficient_alone"
+  }
+ },
+ "recommendation": {
+  "primary_next_step": "B (lead/required-pivot confidence-demotion gate, absorbing E)",
+  "live_runs_next": false,
+  "validation_gate": [
+   "replay M66 transcripts: coverage>=90% AND invalid<=4.2%",
+   "no gold-in-required pivot demoted",
+   "mpl-24627 win mechanism unchanged",
+   "retrieval no-change proof byte-identical",
+   "only then optional 5-case live slice with approval"
+  ],
+  "non_goals": [
+   "no retrieval/scoring/ranking/candidate-gen change",
+   "no multi-gold expansion yet",
+   "no classifier leniency",
+   "no 100-task sweep",
+   "do not fix patch-quality failures via localization"
+  ]
+ }
+}
