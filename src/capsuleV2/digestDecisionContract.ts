@@ -34,6 +34,14 @@ import type {
 export const DIGEST_DECISION_CONTRACT_START = "<VTRACE_DIGEST_DECISION_CONTRACT_START>";
 export const DIGEST_DECISION_CONTRACT_END = "<VTRACE_DIGEST_DECISION_CONTRACT_END>";
 
+// M68 — explicit marker the confidence gate emits when EVERY candidate required pivot
+// was demoted (zero high-confidence required targets). Its presence is what makes a
+// `required_target_count == 0` bounded contract VALID rather than an accidental empty
+// contract: a contract with both sentinels, zero required targets, and NO marker is
+// still invalid.
+export const NO_HIGH_CONFIDENCE_REQUIRED_MARKER =
+  "<VTRACE_NO_HIGH_CONFIDENCE_REQUIRED_TARGET>";
+
 // Hard cap on required targets. Bounded to prevent the cost explosion M56C exposed:
 // at most lead pivot + one hidden/co-pivot + two impact representatives.
 export const MAX_DIGEST_DECISION_TARGETS = 4;
@@ -50,7 +58,38 @@ export type DigestDecisionRequiredReason =
   | "lead pivot"
   | "hidden pivot"
   | "cross-file co-edit candidate"
-  | "optional context only";
+  | "optional context only"
+  // M68 — a pivot the confidence gate demoted from required to optional/FYI.
+  | "low-confidence pivot (demoted)";
+
+// M68 — required-pivot confidence gate. A bounded-only step that runs AFTER the
+// lead/hidden-pivot candidates are selected and BEFORE rendering: it decides whether
+// each candidate pivot has adequate localization evidence to be a closure-scored
+// REQUIRED target, or should be demoted to optional/FYI context (still visible, never
+// closure-scored). Retrieval, ranking, and candidate generation are untouched — the
+// gate only reclassifies already-selected pivots from the digest evidence text.
+export type DigestDecisionTargetConfidence = "required" | "optional_low_confidence";
+
+// Why a candidate pivot kept (strong) or lost (weak) its required status. Derived
+// purely from the canonical role-reason evidence clauses (`describeSignals` +
+// edit-site/anchor enrichment), never from gold.
+export type DigestDecisionConfidenceReason =
+  // strong → remains required
+  | "traceback_anchor" // "source line anchor in the issue points at this symbol"
+  | "failing_test_exercised" // "exercised by a failing test"
+  | "edit_site_evidence" // explicit/likely edit site, task-diagnostic literal, likely edit file, recovered method
+  | "direct_graph_edge" // graph/import/call/reference neighbour, invoked by the entry point
+  | "issue_specific_overlap" // "issue-domain relevance" — issue-term overlap beyond a generic lexical hit
+  // weak → demoted to optional/FYI
+  | "lexical_only" // symbol-name / lexical match only, no behavioral evidence
+  | "facade_or_wrapper" // lexical-only AND a high dependent (hub) count — entry-point/facade
+  | "test_file_without_test_issue" // a test file when the issue is not about test behavior
+  | "unknown_low_confidence";
+
+export interface DigestDecisionConfidenceVerdict {
+  confidence: DigestDecisionTargetConfidence;
+  reason: DigestDecisionConfidenceReason;
+}
 
 /** One required decision target rendered in the contract. */
 export interface DigestDecisionTarget {
@@ -65,6 +104,10 @@ export interface DigestDecisionTarget {
   hidden?: boolean;
   /** M58: classification of why this target is required (or optional). */
   requiredReason?: DigestDecisionRequiredReason;
+  /** M68: confidence-gate verdict, set only on gate-demoted pivots. */
+  confidence?: DigestDecisionTargetConfidence;
+  /** M68: the confidence reason behind the verdict (for offline reporting). */
+  confidenceReason?: DigestDecisionConfidenceReason;
 }
 
 // A pivot is "hidden / non-traceback" when its decisive reason is NOT a literal
@@ -196,6 +239,80 @@ export function selectDigestDecisionTargets(
 export interface BoundedDigestDecisionSelection {
   required: DigestDecisionTarget[];
   optional: DigestDecisionTarget[];
+  // M68 — pivots the confidence gate demoted from required to optional/FYI. Empty when
+  // the gate is off. Rendered in the optional/FYI section, never closure-scored.
+  demotedPivots?: DigestDecisionTarget[];
+  // M68 — true when the gate ran AND every candidate required pivot was demoted, so the
+  // contract intentionally has zero required targets (emits the explicit marker).
+  noHighConfidenceRequired?: boolean;
+}
+
+// M68 — strong/weak localization-evidence clause vocabulary. These are the canonical
+// phrases the capsule role-reason / evidence text uses (`assignCandidateRoles.describeSignals`
+// plus the capsuleV2 pivot edit-site / anchor enrichment). Each STRONG clause maps to one
+// confidence reason; a pivot keeps REQUIRED status if it matches ANY strong clause.
+const STRONG_CONFIDENCE_CLAUSES: ReadonlyArray<{ pattern: RegExp; reason: DigestDecisionConfidenceReason }> = [
+  { pattern: /source line anchor/i, reason: "traceback_anchor" },
+  { pattern: /exercised by a failing test/i, reason: "failing_test_exercised" },
+  // explicit / likely edit-site signals (a behavioral locality stronger than lexical):
+  { pattern: /explicit edit site|likely edit site|in a likely edit file|task diagnostic literal|recovered from .* expansion|local implementation helper/i, reason: "edit_site_evidence" },
+  // direct dependency edge (import/call/reference), not a mere caller count:
+  { pattern: /graph\/import neighbour|graph neighbour|import neighbour|call neighbour|reference neighbour|invoked by the entry point/i, reason: "direct_graph_edge" },
+  // issue-term overlap beyond a generic lexical hit:
+  { pattern: /issue-domain relevance/i, reason: "issue_specific_overlap" },
+];
+
+// A high dependent (hub) count alongside lexical-only evidence reads as a facade /
+// entry-point file rather than a real edit site.
+const HUB_DEPENDENTS_CLAUSE = /\b\d+\s+dependents\b/i;
+
+// Heuristic: does a repo-relative path look like a test file?
+function looksLikeTestFile(path: string): boolean {
+  return /(^|\/)tests?(\/|$)|(^|\/)test_[^/]*\.py$|_test\.py$|\.test\.[tj]sx?$/i.test(path);
+}
+
+/**
+ * M68 — the bounded-only required-pivot confidence gate. PURE; consumes only the
+ * pivot's evidence text (+ its path and the issue's test-behavior flag), never gold.
+ *
+ * A pivot REMAINS required when it carries at least one strong localization signal
+ * (traceback anchor, failing-test exercise, an explicit/likely edit-site clause, a
+ * direct graph/import edge, or issue-term overlap beyond a generic lexical hit). It is
+ * DEMOTED to optional/FYI when the only evidence is a lexical/symbol-name hit, or it is
+ * a test file while the issue is not about test behavior.
+ *
+ * Note on hidden co-pivots: the gate keys on the pivot's EVIDENCE, not its lead/hidden
+ * role. A hidden / non-traceback co-pivot is kept only when it independently carries a
+ * strong clause (every legitimate hidden co-pivot in the M66 set does — failing-test or
+ * graph edge); a hidden co-pivot whose sole evidence is lexical (the M67 django-11740 /
+ * sympy-12419 misses) is demoted. This is the deliberate reading that makes the gate fix
+ * the motivating cases without changing retrieval.
+ */
+export function classifyDigestPivotConfidence(
+  evidenceText: string,
+  opts?: { path?: string; issueIsTestBehavior?: boolean },
+): DigestDecisionConfidenceVerdict {
+  const text = (evidenceText ?? "").toString();
+  const path = opts?.path ?? "";
+
+  // Test-file rule: a test file is not a required edit target unless the issue is
+  // explicitly about test behavior. Applies even over a lexical/symbol hit.
+  if (path.length > 0 && looksLikeTestFile(path) && opts?.issueIsTestBehavior !== true) {
+    return { confidence: "optional_low_confidence", reason: "test_file_without_test_issue" };
+  }
+
+  for (const { pattern, reason } of STRONG_CONFIDENCE_CLAUSES) {
+    if (pattern.test(text)) return { confidence: "required", reason };
+  }
+
+  // No strong clause → weak. Distinguish a facade/hub from a plain lexical-only hit.
+  if (HUB_DEPENDENTS_CLAUSE.test(text)) {
+    return { confidence: "optional_low_confidence", reason: "facade_or_wrapper" };
+  }
+  if (/symbol-name match|lexical match/i.test(text)) {
+    return { confidence: "optional_low_confidence", reason: "lexical_only" };
+  }
+  return { confidence: "optional_low_confidence", reason: "unknown_low_confidence" };
 }
 
 const MAX_OPTIONAL_CONTEXT_ITEMS = 2;
@@ -203,27 +320,36 @@ const MAX_OPTIONAL_CONTEXT_ITEMS = 2;
 export function selectBoundedDigestDecisionTargets(
   response: CapsuleV2ProductResponse,
   impact?: CapsuleV2DigestImpactSeam | null,
+  // M68 — `confidenceGate` (bounded-only, default off) runs the required-pivot
+  // confidence gate; `issueIsTestBehavior` lets a genuine test-behavior issue keep a
+  // test-file pivot required. Default off → byte-identical to the pre-M68 selection.
+  options?: { confidenceGate?: boolean; issueIsTestBehavior?: boolean },
 ): BoundedDigestDecisionSelection {
   const pivots = Array.isArray(response.pivots) ? response.pivots : [];
   if (pivots.length === 0) return { required: [], optional: [] };
 
-  const required: DigestDecisionTarget[] = [];
+  // The candidate required set (lead + hidden co-pivot) PLUS the untruncated evidence
+  // text the gate keys on. Selection logic is unchanged from M65; the gate runs after.
+  const candidates: Array<{ target: DigestDecisionTarget; evidence: string }> = [];
   const optional: DigestDecisionTarget[] = [];
   const seenIdentity = new Set<string>();
   const seenPath = new Set<string>();
 
-  const pushRequired = (t: DigestDecisionTarget): boolean => {
-    if (required.length >= MAX_DIGEST_DECISION_TARGETS) return false;
+  const evidenceTextOf = (item: CapsuleV2ProductItem): string =>
+    [...(Array.isArray(item.evidence) ? item.evidence : []), item.roleReason ?? ""].join(" ");
+
+  const pushCandidate = (item: CapsuleV2ProductItem, t: DigestDecisionTarget): boolean => {
+    if (candidates.length >= MAX_DIGEST_DECISION_TARGETS) return false;
     if (seenIdentity.has(t.target)) return false;
-    required.push(t);
+    candidates.push({ target: t, evidence: evidenceTextOf(item) });
     seenIdentity.add(t.target);
     seenPath.add(t.path);
     return true;
   };
 
-  // 1. Lead pivot — always required.
+  // 1. Lead pivot.
   const lead = pivots[0]!;
-  pushRequired({
+  pushCandidate(lead, {
     kind: "PIVOT",
     target: pivotTargetIdentity(lead),
     path: lead.path,
@@ -235,7 +361,7 @@ export function selectBoundedDigestDecisionTargets(
   // 2. Hidden / non-traceback co-pivot, if distinct.
   const hiddenCoPivot = pivots.slice(1).find((p) => pivotIsHidden(p.roleReason));
   if (hiddenCoPivot !== undefined) {
-    pushRequired({
+    pushCandidate(hiddenCoPivot, {
       kind: "PIVOT",
       target: pivotTargetIdentity(hiddenCoPivot),
       path: hiddenCoPivot.path,
@@ -243,6 +369,31 @@ export function selectBoundedDigestDecisionTargets(
       hidden: true,
       requiredReason: "hidden pivot",
     });
+  }
+
+  // M68 — apply the confidence gate (bounded-only, opt-in). Demoted candidates move to
+  // the optional/FYI section, carrying their confidence reason for offline reporting.
+  const required: DigestDecisionTarget[] = [];
+  const demotedPivots: DigestDecisionTarget[] = [];
+  if (options?.confidenceGate === true) {
+    for (const c of candidates) {
+      const verdict = classifyDigestPivotConfidence(c.evidence, {
+        path: c.target.path,
+        issueIsTestBehavior: options.issueIsTestBehavior,
+      });
+      if (verdict.confidence === "required") {
+        required.push(c.target);
+      } else {
+        demotedPivots.push({
+          ...c.target,
+          requiredReason: "low-confidence pivot (demoted)",
+          confidence: verdict.confidence,
+          confidenceReason: verdict.reason,
+        });
+      }
+    }
+  } else {
+    for (const c of candidates) required.push(c.target);
   }
 
   // 3. M65 — impact representatives: OPTIONAL/FYI context only, never required. Bounded,
@@ -262,7 +413,12 @@ export function selectBoundedDigestDecisionTargets(
     seenIdentity.add(identity);
   }
 
-  return { required, optional };
+  // Zero high-confidence required targets is intentional ONLY when the gate ran and
+  // demoted every candidate; that distinguishes it from an empty no_context capsule.
+  const noHighConfidenceRequired =
+    options?.confidenceGate === true && required.length === 0 && demotedPivots.length > 0;
+
+  return { required, optional, demotedPivots, noHighConfidenceRequired };
 }
 
 /**
@@ -318,8 +474,57 @@ export function digestDecisionOptionalId(index: number): string {
 export function renderBoundedDigestDecisionContractText(
   required: readonly DigestDecisionTarget[],
   optional: readonly DigestDecisionTarget[] = [],
+  // M68 — gate extras: pivots demoted to optional/FYI, and the explicit zero-required
+  // marker. Both default off → byte-identical to the pre-M68 render.
+  opts?: { demotedPivots?: readonly DigestDecisionTarget[]; noHighConfidenceRequired?: boolean },
 ): string {
-  if (required.length === 0) return "";
+  const demotedPivots = opts?.demotedPivots ?? [];
+  const noHighConfidenceRequired = opts?.noHighConfidenceRequired === true;
+  // Zero required targets renders the contract ONLY when the gate intentionally demoted
+  // everything (explicit marker). Otherwise (no_context capsule, no marker) → absent.
+  if (required.length === 0 && !noHighConfidenceRequired) return "";
+
+  // The optional/FYI section lists gate-demoted pivots first, then impact references;
+  // both share the O-namespace so they never collide with required T ids.
+  const fyiLines = (): string[] => {
+    const out: string[] = [];
+    if (demotedPivots.length === 0 && optional.length === 0) return out;
+    out.push("");
+    // Gate OFF (no demoted pivots) → byte-identical to the pre-M68 optional block.
+    // Gate ON → a combined FYI list (demoted low-confidence pivots first, then impact).
+    out.push(
+      demotedPivots.length === 0
+        ? "Optional context / FYI impact references (NOT required decision targets; NOT closure-scored; do not edit unless the fix needs it):"
+        : "Optional context / FYI (NOT required decision targets; NOT closure-scored; do not edit unless the fix needs it):",
+    );
+    let oIdx = 0;
+    for (const t of demotedPivots) {
+      out.push(
+        `- ${digestDecisionOptionalId(oIdx)}: ${t.kind} ${t.target} — optional context only: low-confidence pivot (weak localization evidence); search to confirm before editing`,
+      );
+      oIdx += 1;
+    }
+    for (const t of optional) {
+      out.push(
+        `- ${digestDecisionOptionalId(oIdx)}: ${t.kind} ${t.target} — optional context only: additional dependent/caller`,
+      );
+      oIdx += 1;
+    }
+    out.push("These are not required decision targets and are not closure-scored.");
+    return out;
+  };
+
+  if (required.length === 0) {
+    // Zero high-confidence required targets — explicit, non-misleading contract.
+    const lines: string[] = [DIGEST_DECISION_CONTRACT_START, NO_HIGH_CONFIDENCE_REQUIRED_MARKER];
+    lines.push(
+      "No high-confidence required decision target was selected; inspect optional context and search as needed.",
+    );
+    lines.push(...fyiLines());
+    lines.push(DIGEST_DECISION_CONTRACT_END);
+    return lines.join("\n");
+  }
+
   const lines: string[] = [DIGEST_DECISION_CONTRACT_START];
   lines.push(
     "Close EVERY required target below with exactly one decision: EDIT, RULE_OUT, or INSPECT_ONLY_NO_EDIT.",
@@ -368,18 +573,7 @@ export function renderBoundedDigestDecisionContractText(
   lines.push("- Do not expand from an impact representative into unrelated callers.");
   lines.push("- Avoid repeated reads of the same file unless new evidence changes the hypothesis.");
   lines.push("- Stop after each required target has EDIT / RULE_OUT / INSPECT_ONLY_NO_EDIT.");
-  if (optional.length > 0) {
-    lines.push("");
-    lines.push(
-      "Optional context / FYI impact references (NOT required decision targets; NOT closure-scored; do not edit unless the fix needs it):",
-    );
-    optional.forEach((t, i) => {
-      lines.push(
-        `- ${digestDecisionOptionalId(i)}: ${t.kind} ${t.target} — optional context only: additional dependent/caller`,
-      );
-    });
-    lines.push("These are not required decision targets and are not closure-scored.");
-  }
+  lines.push(...fyiLines());
   lines.push(DIGEST_DECISION_CONTRACT_END);
   return lines.join("\n");
 }
@@ -395,18 +589,41 @@ export function renderBoundedDigestDecisionContractText(
 export function buildDigestDecisionContract(
   response: CapsuleV2ProductResponse,
   impact?: CapsuleV2DigestImpactSeam | null,
-  options?: { bounded?: boolean },
-): { text: string; targets: DigestDecisionTarget[]; optionalTargets: DigestDecisionTarget[] } {
+  // M68: `confidenceGate` + `issueIsTestBehavior` are bounded-only and default off.
+  options?: { bounded?: boolean; confidenceGate?: boolean; issueIsTestBehavior?: boolean },
+): {
+  text: string;
+  targets: DigestDecisionTarget[];
+  optionalTargets: DigestDecisionTarget[];
+  // M68 — gate-demoted pivots + the intentional zero-required flag (empty/false off-gate).
+  demotedTargets: DigestDecisionTarget[];
+  noHighConfidenceRequired: boolean;
+} {
   if (options?.bounded === true) {
-    const { required, optional } = selectBoundedDigestDecisionTargets(response, impact);
+    const { required, optional, demotedPivots = [], noHighConfidenceRequired = false } =
+      selectBoundedDigestDecisionTargets(response, impact, {
+        confidenceGate: options.confidenceGate === true,
+        issueIsTestBehavior: options.issueIsTestBehavior,
+      });
     return {
-      text: renderBoundedDigestDecisionContractText(required, optional),
+      text: renderBoundedDigestDecisionContractText(required, optional, {
+        demotedPivots,
+        noHighConfidenceRequired,
+      }),
       targets: required,
       optionalTargets: optional,
+      demotedTargets: demotedPivots,
+      noHighConfidenceRequired,
     };
   }
   const targets = selectDigestDecisionTargets(response, impact);
-  return { text: renderDigestDecisionContractText(targets), targets, optionalTargets: [] };
+  return {
+    text: renderDigestDecisionContractText(targets),
+    targets,
+    optionalTargets: [],
+    demotedTargets: [],
+    noHighConfidenceRequired: false,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -423,6 +640,9 @@ export interface ParsedDigestDecisionTarget {
 export interface ParsedDigestDecisionContract {
   present: boolean;
   targets: ParsedDigestDecisionTarget[];
+  // M68 — the explicit no-high-confidence-required marker. When true with 0 targets, a
+  // zero-required contract is VALID (intentional); 0 targets without it stays invalid.
+  noHighConfidenceRequired: boolean;
 }
 
 /**
@@ -432,8 +652,11 @@ export interface ParsedDigestDecisionContract {
 export function parseDigestDecisionContract(text: string): ParsedDigestDecisionContract {
   const start = text.indexOf(DIGEST_DECISION_CONTRACT_START);
   const end = text.indexOf(DIGEST_DECISION_CONTRACT_END);
-  if (start < 0 || end < 0 || end < start) return { present: false, targets: [] };
+  if (start < 0 || end < 0 || end < start) {
+    return { present: false, targets: [], noHighConfidenceRequired: false };
+  }
   const block = text.slice(start, end);
+  const noHighConfidenceRequired = block.includes(NO_HIGH_CONFIDENCE_REQUIRED_MARKER);
   const targets: ParsedDigestDecisionTarget[] = [];
   // Two required-target renders are accepted:
   //   - M57 / M58-early numbered list: `1. PIVOT path::sym`
@@ -446,7 +669,7 @@ export function parseDigestDecisionContract(text: string): ParsedDigestDecisionC
     const path = target.split("::")[0]!.trim();
     targets.push({ kind, target, path });
   }
-  return { present: true, targets };
+  return { present: true, targets, noHighConfidenceRequired };
 }
 
 export type DigestDecision =

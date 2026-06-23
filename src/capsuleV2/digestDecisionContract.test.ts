@@ -21,6 +21,8 @@ import {
   parseDigestDecisionContract,
   parseStructuredAgentDecisions,
   classifyDigestDecisionContract,
+  classifyDigestPivotConfidence,
+  NO_HIGH_CONFIDENCE_REQUIRED_MARKER,
   type DigestDecisionTarget,
   type DigestDecisionToolCall,
 } from "./digestDecisionContract";
@@ -728,4 +730,250 @@ test("M59: default (non-bounded) contract behavior is unchanged", () => {
   assert.match(def.text, /1\. PIVOT src\/foo\.py::bar/);
   assert.match(def.text, /decision: EDIT \| RULE_OUT(?!\s*\|)/);
   assert.deepEqual(def.optionalTargets, []);
+});
+
+// ---------------------------------------------------------------------------
+// M68 — required-pivot confidence gate
+// ---------------------------------------------------------------------------
+
+// Canonical evidence clauses (from assignCandidateRoles.describeSignals + the
+// capsuleV2 edit-site/anchor enrichment), used to build realistic pivots.
+const LEXICAL_ONLY = "actionable class — symbol-name match; strong lexical match";
+const FAILING_TEST = "actionable function — exercised by a failing test; symbol-name match; lexical match";
+const EDIT_SITE = "task diagnostic literal appears in this symbol's body — explicit edit site";
+const GRAPH_EDGE = "actionable method — symbol-name match; lexical match; issue-domain relevance; graph/import neighbour";
+const ISSUE_DOMAIN = "actionable class — symbol-name match; lexical match; issue-domain relevance; 94 dependents";
+const FACADE = "actionable function — symbol-name match; lexical match; 857 dependents";
+
+test("M68: unit — strong signals keep a pivot required; weak signals demote it", () => {
+  assert.equal(classifyDigestPivotConfidence(ANCHOR).confidence, "required");
+  assert.equal(classifyDigestPivotConfidence(ANCHOR).reason, "traceback_anchor");
+  assert.equal(classifyDigestPivotConfidence(FAILING_TEST).reason, "failing_test_exercised");
+  assert.equal(classifyDigestPivotConfidence(EDIT_SITE).reason, "edit_site_evidence");
+  assert.equal(classifyDigestPivotConfidence(GRAPH_EDGE).reason, "direct_graph_edge");
+  assert.equal(classifyDigestPivotConfidence(ISSUE_DOMAIN).reason, "issue_specific_overlap");
+  // weak
+  assert.equal(classifyDigestPivotConfidence(LEXICAL_ONLY).confidence, "optional_low_confidence");
+  assert.equal(classifyDigestPivotConfidence(LEXICAL_ONLY).reason, "lexical_only");
+  assert.equal(classifyDigestPivotConfidence(FACADE).reason, "facade_or_wrapper");
+});
+
+test("M68 (1): lead pivot with traceback/failing-test evidence remains required", () => {
+  const sel = selectBoundedDigestDecisionTargets(
+    response([pivot("src/core.py", "evalf", FAILING_TEST)]),
+    null,
+    { confidenceGate: true },
+  );
+  assert.equal(sel.required.length, 1);
+  assert.equal(sel.required[0]!.target, "src/core.py::evalf");
+  assert.deepEqual(sel.demotedPivots, []);
+  assert.equal(sel.noHighConfidenceRequired, false);
+});
+
+test("M68 (2): hidden/non-traceback co-pivot WITH strong evidence remains required", () => {
+  const sel = selectBoundedDigestDecisionTargets(
+    response([
+      pivot("src/symptom.py", "trigger", ANCHOR), // lead, anchored
+      pivot("src/cause.py", "root", FAILING_TEST), // hidden co-pivot, failing-test → strong
+    ]),
+    null,
+    { confidenceGate: true },
+  );
+  assert.equal(sel.required.length, 2);
+  assert.equal(sel.required[1]!.target, "src/cause.py::root");
+  assert.deepEqual(sel.demotedPivots, []);
+});
+
+test("M68 (3): lexical-only unrelated-subsystem pivot is demoted to optional/FYI", () => {
+  // lead is a strong anchor; the second (hidden) pivot is lexical-only → demoted.
+  const sel = selectBoundedDigestDecisionTargets(
+    response([
+      pivot("src/real.py", "fix", ANCHOR),
+      pivot("src/contrib/gis/gdal/feature.py", "Feature", LEXICAL_ONLY),
+    ]),
+    null,
+    { confidenceGate: true },
+  );
+  assert.equal(sel.required.length, 1);
+  assert.equal(sel.required[0]!.path, "src/real.py");
+  assert.equal(sel.demotedPivots!.length, 1);
+  assert.equal(sel.demotedPivots![0]!.confidenceReason, "lexical_only");
+  assert.equal(sel.demotedPivots![0]!.requiredReason, "low-confidence pivot (demoted)");
+});
+
+test("M68 (4): facade/wrapper pivot with no direct evidence is demoted", () => {
+  const sel = selectBoundedDigestDecisionTargets(
+    response([
+      pivot("src/real.py", "fix", ANCHOR),
+      pivot("lib/pyplot.py", "subplots", FACADE), // hub/facade, lexical-only
+    ]),
+    null,
+    { confidenceGate: true },
+  );
+  assert.equal(sel.required.length, 1);
+  assert.equal(sel.demotedPivots![0]!.confidenceReason, "facade_or_wrapper");
+});
+
+test("M68 (5): a test-file pivot is demoted unless the issue is test behavior", () => {
+  const pivots = [pivot("tests/test_foo.py", "test_bar", FAILING_TEST)];
+  // default: test file on a non-test issue → demoted even though it has failing-test text
+  const demoted = selectBoundedDigestDecisionTargets(response(pivots), null, { confidenceGate: true });
+  assert.equal(demoted.required.length, 0);
+  assert.equal(demoted.demotedPivots![0]!.confidenceReason, "test_file_without_test_issue");
+  assert.equal(demoted.noHighConfidenceRequired, true);
+  // when the issue IS about test behavior, the test-file pivot may remain required
+  const kept = selectBoundedDigestDecisionTargets(response(pivots), null, {
+    confidenceGate: true,
+    issueIsTestBehavior: true,
+  });
+  assert.equal(kept.required.length, 1);
+});
+
+test("M68 (6): demoted pivots render as optional/FYI and are explicitly not closure-scored", () => {
+  const b = buildDigestDecisionContract(
+    response([
+      pivot("src/real.py", "fix", ANCHOR),
+      pivot("src/weak.py", "Thing", LEXICAL_ONLY),
+    ]),
+    null,
+    { bounded: true, confidenceGate: true },
+  );
+  assert.equal(b.targets.length, 1);
+  assert.equal(b.demotedTargets.length, 1);
+  assert.match(b.text, /Optional context \/ FYI/);
+  assert.match(b.text, /low-confidence pivot \(weak localization evidence\)/);
+  assert.match(b.text, /are not closure-scored/);
+  // the demoted pivot is NOT parsed as a required target.
+  const parsed = parseDigestDecisionContract(b.text);
+  assert.equal(parsed.targets.length, 1);
+  assert.equal(parsed.targets[0]!.path, "src/real.py");
+});
+
+test("M68 (7): optional IDs (O*) do not collide with required T IDs", () => {
+  const b = buildDigestDecisionContract(
+    response([
+      pivot("src/real.py", "fix", ANCHOR),
+      pivot("src/weak.py", "Thing", LEXICAL_ONLY),
+    ]),
+    impactSeam([{ path: "src/dep.py", symbol: "uses" }]),
+    { bounded: true, confidenceGate: true },
+  );
+  assert.match(b.text, /target_id: T1/);
+  assert.equal(b.text.includes("target_id: O"), false);
+  // both the demoted pivot and the impact rep appear under the O namespace.
+  assert.match(b.text, /- O1: PIVOT src\/weak\.py::Thing/);
+  assert.match(b.text, /- O2: IMPACT src\/dep\.py::uses/);
+});
+
+test("M68 (8): post-hoc classifier scores only the kept required set (ignores demoted)", () => {
+  const b = buildDigestDecisionContract(
+    response([
+      pivot("src/real.py", "fix", ANCHOR),
+      pivot("src/weak.py", "Thing", LEXICAL_ONLY),
+    ]),
+    null,
+    { bounded: true, confidenceGate: true },
+  );
+  const cls = classifyDigestDecisionContract({
+    requiredTargets: b.targets,
+    toolCalls: [],
+    editedFiles: ["src/real.py"],
+    agentText: "",
+  });
+  // only the kept required target is scored; the demoted weak pivot never counts.
+  assert.equal(cls.requiredTargetCount, 1);
+  assert.equal(cls.requiredTargetEditedCount, 1);
+  assert.equal(cls.requiredTargetOpenCount, 0);
+});
+
+test("M68 (9): zero-required contract is VALID only with the explicit marker", () => {
+  // all candidates demoted → zero required, marker present, contract still rendered.
+  const b = buildDigestDecisionContract(
+    response([
+      pivot("src/gdal/feature.py", "Feature", LEXICAL_ONLY),
+      pivot("src/gdal/feature.py", "fid", LEXICAL_ONLY),
+    ]),
+    null,
+    { bounded: true, confidenceGate: true },
+  );
+  assert.equal(b.targets.length, 0);
+  assert.equal(b.noHighConfidenceRequired, true);
+  assert.notEqual(b.text, "");
+  assert.ok(b.text.includes(NO_HIGH_CONFIDENCE_REQUIRED_MARKER));
+  assert.match(b.text, /No high-confidence required decision target was selected/);
+  const parsed = parseDigestDecisionContract(b.text);
+  assert.equal(parsed.present, true);
+  assert.equal(parsed.targets.length, 0);
+  assert.equal(parsed.noHighConfidenceRequired, true);
+});
+
+test("M68 (10): an accidental zero-required contract (no marker) stays absent/invalid", () => {
+  // no pivots at all → no intentional marker → empty contract (NOT a misleading one).
+  const b = buildDigestDecisionContract(response([]), null, { bounded: true, confidenceGate: true });
+  assert.equal(b.text, "");
+  assert.equal(b.noHighConfidenceRequired, false);
+  // render with required=[] and NO marker also yields "".
+  assert.equal(
+    renderBoundedDigestDecisionContractText([], [], { demotedPivots: [], noHighConfidenceRequired: false }),
+    "",
+  );
+  const parsed = parseDigestDecisionContract(b.text);
+  assert.equal(parsed.present, false);
+});
+
+test("M68 (11): M65 optional-impact behavior still holds under the gate", () => {
+  const b = buildDigestDecisionContract(
+    response([pivot("src/real.py", "fix", ANCHOR)]),
+    impactSeam([{ path: "src/dep.py", symbol: "uses" }]),
+    { bounded: true, confidenceGate: true },
+  );
+  // impact rep stays OPTIONAL/FYI, never a required target, never closure-scored.
+  assert.equal(b.targets.length, 1);
+  assert.equal(b.targets.some((t) => t.kind === "IMPACT"), false);
+  assert.equal(b.optionalTargets.length, 1);
+  assert.equal(b.optionalTargets[0]!.kind, "IMPACT");
+  assert.match(b.text, /- O1: IMPACT src\/dep\.py::uses/);
+});
+
+test("M68 (12): gate ON keeps both sentinels (strict validity intact)", () => {
+  const b = buildDigestDecisionContract(
+    response([
+      pivot("src/real.py", "fix", ANCHOR),
+      pivot("src/weak.py", "Thing", LEXICAL_ONLY),
+    ]),
+    null,
+    { bounded: true, confidenceGate: true },
+  );
+  assert.ok(b.text.includes(DIGEST_DECISION_CONTRACT_START));
+  assert.ok(b.text.includes(DIGEST_DECISION_CONTRACT_END));
+  assert.equal(b.text.split(DIGEST_DECISION_CONTRACT_START).length - 1, 1);
+  assert.equal(b.text.split(DIGEST_DECISION_CONTRACT_END).length - 1, 1);
+});
+
+test("M68 (13): gate OFF is byte-identical to the pre-M68 bounded contract", () => {
+  const pivots = response([
+    pivot("src/real.py", "fix", ANCHOR),
+    pivot("src/weak.py", "Thing", LEXICAL_ONLY),
+  ]);
+  const seam = impactSeam([{ path: "src/dep.py", symbol: "uses" }]);
+  const gateOff = buildDigestDecisionContract(pivots, seam, { bounded: true }).text;
+  const explicitOff = buildDigestDecisionContract(pivots, seam, {
+    bounded: true,
+    confidenceGate: false,
+  }).text;
+  assert.equal(gateOff, explicitOff);
+  // gate off → the weak pivot is STILL a required target (old behavior), impact still FYI.
+  assert.match(gateOff, /target_id: T2/);
+  assert.match(gateOff, /Optional context \/ FYI impact references/);
+  assert.equal(gateOff.includes("low-confidence pivot"), false);
+});
+
+test("M68 (14): non-bounded/default contract is unchanged by the gate option", () => {
+  const pivots = response([pivot("src/foo.py", "bar", ANCHOR)]);
+  // confidenceGate is inert without bounded:true.
+  const def = buildDigestDecisionContract(pivots, null);
+  const withGateButNotBounded = buildDigestDecisionContract(pivots, null, { confidenceGate: true });
+  assert.equal(def.text, withGateButNotBounded.text);
+  assert.match(def.text, /1\. PIVOT src\/foo\.py::bar/);
+  assert.deepEqual(def.demotedTargets, []);
 });

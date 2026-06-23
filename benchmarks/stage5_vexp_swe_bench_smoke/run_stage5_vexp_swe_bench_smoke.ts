@@ -417,6 +417,11 @@ export interface CliConfig {
   // distinct dependent co-edit candidate), and a non-required OPTIONAL CONTEXT list.
   // Curbs the M57B over-anchor cost blow-up. Never a product default.
   readonly boundedDigestDecisions: boolean;
+  // M68 — Required-pivot confidence gate (--pivot-confidence-gate). Default false.
+  // Requires the bounded contract. After lead/hidden-pivot selection, demotes a required
+  // pivot to optional/FYI when its localization evidence is weak (lexical/symbol-name
+  // only, facade/hub, or a test file on a non-test issue). Retrieval/ranking unchanged.
+  readonly pivotConfidenceGate: boolean;
   // When true AND capsuleEngine === "v2", also probe the PRODUCT surface
   // (`run-pipeline --capsule-engine v2`) per instance and persist its accounting /
   // contextEngine / capsuleV2 signals. Default false: pure instrumentation for the
@@ -957,6 +962,7 @@ const DEFAULT_CONFIG: CliConfig = {
   digestDecisionContract: false,
   compactDigestInjection: false,
   boundedDigestDecisions: false,
+  pivotConfidenceGate: false,
   captureProductV2Accounting: false,
   contextPolicyOverride: "auto",
   // PIVOT_CHECK is strict-risk-gated by default: it keeps the multi-pivot floor but
@@ -4425,6 +4431,11 @@ export interface ClassifyCapsuleOptions {
    * anti-over-edit guidance and tighter impact-target selection. Default off.
    */
   readonly boundedDigestDecisions?: boolean;
+  /**
+   * M68: when true (with the bounded contract), run the required-pivot confidence gate
+   * that demotes weak-evidence pivots to optional/FYI. Default off.
+   */
+  readonly pivotConfidenceGate?: boolean;
 }
 
 // Build the sentinel-wrapped digest block from a Capsule v2 result, or "" when the
@@ -4850,7 +4861,12 @@ export function classifyCapsuleV2Output(
       ? buildDigestDecisionContract(
           toCapsuleV2ProductResponse(result, { query: options.query ?? "", impact: enrichments.impact ?? null }),
           enrichments.impact ?? null,
-          { bounded: options.boundedDigestDecisions === true },
+          {
+            bounded: options.boundedDigestDecisions === true,
+            // M68 — confidence gate is bounded-only; inert unless the bounded contract is on.
+            confidenceGate:
+              options.boundedDigestDecisions === true && options.pivotConfidenceGate === true,
+          },
         ).text
       : "";
   // M57: compact mode drops the `## VTRACE inspect-first` block — a re-ranked
@@ -6635,6 +6651,12 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
           // M58: bounded three-way contract — only meaningful with the contract on.
           boundedDigestDecisions:
             injectV2Digest && config.digestDecisionContract && config.boundedDigestDecisions,
+          // M68: confidence gate — bounded-only, off by default.
+          pivotConfidenceGate:
+            injectV2Digest &&
+            config.digestDecisionContract &&
+            config.boundedDigestDecisions &&
+            config.pivotConfidenceGate,
         });
         if (classified.policyAction === "error") {
           throw new EngineQueryError(classified.error ?? "vtrace query returned empty context.");
@@ -9964,6 +9986,9 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--capture-product-v2-accounting":
         config.captureProductV2Accounting = true;
         break;
+      case "--pivot-confidence-gate":
+        config.pivotConfidenceGate = true;
+        break;
       case "--capsule-intent": {
         const value = requireValue(argv, ++index, arg);
         // Route through the canonical parser so the harness flag maps through the
@@ -10066,6 +10091,10 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       "--bounded-digest-decisions requires --inject-capsule-digest and --digest-decision-contract.",
     );
   }
+  // M68: the confidence gate operates on the bounded contract's required pivots.
+  if (config.pivotConfidenceGate && !config.boundedDigestDecisions) {
+    throw new Error("--pivot-confidence-gate requires --bounded-digest-decisions.");
+  }
   return {
     ...config,
     vexpSweBenchDir: config.vexpSweBenchDir === null ? null : path.resolve(config.vexpSweBenchDir),
@@ -10115,6 +10144,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --digest-decision-contract                    M57: with --inject-capsule-digest + v2, inject a <VTRACE_DIGEST_DECISION_CONTRACT_START/END> block right after the digest listing <=4 required targets (lead pivot, hidden/non-traceback co-pivot, <=2 cross-file impact reps) the agent must each EDIT or explicitly RULE_OUT (default: off). Makes surfaced targets action-binding; adds no new context. Never a product default",
       "  --compact-digest-injection                    M57: with --inject-capsule-digest + v2, suppress guidance demonstrably duplicated by the digest (the '## VTRACE inspect-first' block); preserves digest, decision contract, focused source, neighborhood, and PIVOT_CHECK/EDIT_GUARD/PATCH_VERIFY (default: off). Never a product default",
       "  --bounded-digest-decisions                    M58/M65: requires --inject-capsule-digest + --digest-decision-contract (+ v2). Render the BOUNDED three-way contract (EDIT / RULE_OUT / INSPECT_ONLY_NO_EDIT) with anti-over-edit guidance. M65: only pivots (lead + hidden/non-traceback co-pivot) are required decision targets; impact representatives are demoted to a non-required OPTIONAL/FYI context list (O-namespaced, never closure-scored). Curbs the M57B over-anchor cost blow-up (default: off). Never a product default",
+      "  --pivot-confidence-gate                       M68: requires --bounded-digest-decisions. Demote a required pivot to OPTIONAL/FYI when its localization evidence is weak (lexical/symbol-name only, facade/hub, or a test file on a non-test issue); keep it required on a strong signal (traceback anchor, failing-test exercise, explicit/likely edit site, direct graph edge, or issue-specific overlap). Zero high-confidence required targets emits an explicit no-high-confidence marker (still valid). Retrieval/ranking unchanged (default: off). Never a product default",
       "  --pivot-check-policy off|multi_pivot|risk_gated|strict_risk_gated|always   when to inject PIVOT_CHECK (default: strict_risk_gated — inject only on a STRONG risk signal, rejecting hidden_pivot-only and two ordinary pivots; risk_gated injects on any high-risk signal)",
       "  --pivot-check-gate off|hard                   opt-in HARD two-phase context-to-action gate (default: off). 'hard' runs a READ-ONLY inspect-only Phase-1 preflight (mutation tools denied) whose checklist is verified before any Phase-2 solve; on a failed gate Phase 2 never runs (no solve, no Docker). v2 indexed-context only; orthogonal to --pivot-check-policy",
       "  --pivot-check-gate-phase1-only                 (with --pivot-check-gate hard) run only the read-only Phase-1 preflight + gate, then STOP — Phase 2 never runs even on a pass. Canary to prove the read-only preflight can pass without editing",
