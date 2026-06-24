@@ -1,0 +1,191 @@
+{
+  "milestone": "M70B",
+  "kind": "100-task readiness summary (no agents, no Docker, no API spend)",
+  "fixture_validated": {
+    "path": "stage5_m70_100_task_preregistration.json",
+    "task_count": 100,
+    "repo_count": 12,
+    "repo_counts": {
+      "astropy/astropy": 5,
+      "django/django": 44,
+      "matplotlib/matplotlib": 7,
+      "mwaskom/seaborn": 1,
+      "pallets/flask": 1,
+      "psf/requests": 4,
+      "pydata/xarray": 6,
+      "pylint-dev/pylint": 2,
+      "pytest-dev/pytest": 4,
+      "scikit-learn/scikit-learn": 2,
+      "sphinx-doc/sphinx": 7,
+      "sympy/sympy": 17
+    },
+    "complexity_counts": {
+      "15 min - 1 hour": 53,
+      "1-4 hours": 8,
+      "<15 min fix": 38,
+      ">4 hours": 1
+    },
+    "tasks_changed": false
+  },
+  "preflight": {
+    "helper": "run_stage5_m70b_preflight_100.ts",
+    "total": 100,
+    "valid_count": 99,
+    "rendered_count": 100,
+    "reuse_count": 49,
+    "clone_count": 51,
+    "pending_index_count": 0,
+    "fail_closed_count": 0,
+    "partial_sentinel_count": 0,
+    "invalid_structured_count": 0,
+    "invalid_impact_count": 0,
+    "invalid_confidence_gate_count": 0,
+    "other_invalid_count": 1,
+    "zero_required_count": 9,
+    "zero_required_cases": [
+      "django__django-10973",
+      "django__django-11815",
+      "django__django-13012",
+      "django__django-13810",
+      "django__django-15695",
+      "sphinx-doc__sphinx-7748",
+      "sympy__sympy-12419",
+      "sympy__sympy-16597",
+      "sympy__sympy-16792"
+    ],
+    "demoted_pivot_count": 31,
+    "required_impact_target_count": 0,
+    "optional_impact_context_missing_count": 0,
+    "by_status": {
+      "VALID": 99,
+      "OTHER_INVALID": 1
+    }
+  },
+  "baselines": {
+    "helper": "run_stage5_m70b_qualify_baselines.ts",
+    "reused_verified_count": 27,
+    "fresh_required_count": 73,
+    "counts": {
+      "reused_verified": 27,
+      "missing": 73
+    },
+    "per_repo": [
+      {
+        "repo": "astropy/astropy",
+        "selected": 5,
+        "reused_verified": 4,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 1,
+        "fresh_required": 1
+      },
+      {
+        "repo": "django/django",
+        "selected": 44,
+        "reused_verified": 7,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 37,
+        "fresh_required": 37
+      },
+      {
+        "repo": "matplotlib/matplotlib",
+        "selected": 7,
+        "reused_verified": 3,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 4,
+        "fresh_required": 4
+      },
+      {
+        "repo": "mwaskom/seaborn",
+        "selected": 1,
+        "reused_verified": 1,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 0,
+        "fresh_required": 0
+      },
+      {
+        "repo": "pallets/flask",
+        "selected": 1,
+        "reused_verified": 1,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 0,
+        "fresh_required": 0
+      },
+      {
+        "repo": "psf/requests",
+        "selected": 4,
+        "reused_verified": 2,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 2,
+        "fresh_required": 2
+      },
+      {
+        "repo": "pydata/xarray",
+        "selected": 6,
+        "reused_verified": 1,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 5,
+        "fresh_required": 5
+      },
+      {
+        "repo": "pylint-dev/pylint",
+        "selected": 2,
+        "reused_verified": 1,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 1,
+        "fresh_required": 1
+      },
+      {
+        "repo": "pytest-dev/pytest",
+        "selected": 4,
+        "reused_verified": 1,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 3,
+        "fresh_required": 3
+      },
+      {
+        "repo": "scikit-learn/scikit-learn",
+        "selected": 2,
+        "reused_verified": 0,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 2,
+        "fresh_required": 2
+      },
+      {
+        "repo": "sphinx-doc/sphinx",
+        "selected": 7,
+        "reused_verified": 2,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 5,
+        "fresh_required": 5
+      },
+      {
+        "repo": "sympy/sympy",
+        "selected": 17,
+        "reused_verified": 4,
+        "incomplete": 0,
+        "invalid": 0,
+        "missing": 13,
+        "fresh_required": 13
+      }
+    ]
+  },
+  "execution": {
+    "expected_treatment_runs": 100,
+    "expected_fresh_baseline_runs": 73,
+    "expected_total_live_runs": 173,
+    "recommended_execution_option": "option_3_staged_50_50_plus_fresh_baselines",
+    "recommended_run_cap": 173
+  },
+  "recommendation": "option_3_staged_50_50_plus_fresh_baselines"
+}
