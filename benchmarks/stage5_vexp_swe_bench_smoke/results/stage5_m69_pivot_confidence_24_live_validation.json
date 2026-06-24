@@ -1,0 +1,396 @@
+{
+  "milestone": "M69",
+  "kind": "pivot-confidence gate — frozen M62 24-task live repeat (treatment + reused baselines)",
+  "live_agents": true,
+  "new_live_runs": 24,
+  "fresh_baselines": 0,
+  "reused_baselines": 24,
+  "docker_evals": 24,
+  "retrieval_changed": false,
+  "selected_task_count": 24,
+  "repos": 11,
+  "category_counts": {
+    "A": 6,
+    "B": 4,
+    "C": 5,
+    "D": 3,
+    "E": 6
+  },
+  "valid_treatment_runs": 24,
+  "invalid_treatment_runs": 0,
+  "invalid_detail": [],
+  "gate_enabled_all": true,
+  "required_impact_any": false,
+  "ids_collide_any": false,
+  "optional_impact_ok": true,
+  "zero_required_cases": [
+    "sympy__sympy-12419",
+    "django__django-11740"
+  ],
+  "zero_required_all_marker_backed": true,
+  "demoted_pivot_total": 6,
+  "demoted_cases": [
+    {
+      "instance_id": "sympy__sympy-12419",
+      "demoted_pivots": [
+        "O1 sympy/functions/elementary/piecewise.py::piecewise_fold",
+        "O2 sympy/functions/elementary/piecewise.py::Piecewise._sort_expr_cond"
+      ],
+      "demoted_inspected": [],
+      "demoted_edited": [],
+      "resolved": true,
+      "marker": true
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "demoted_pivots": [
+        "O1 sympy/combinatorics/permutations.py::Permutation.__new__"
+      ],
+      "demoted_inspected": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "demoted_edited": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "resolved": true,
+      "marker": false
+    },
+    {
+      "instance_id": "astropy__astropy-14365",
+      "demoted_pivots": [
+        "O1 astropy/io/fits/scripts/fitsdiff.py::handle_options"
+      ],
+      "demoted_inspected": [],
+      "demoted_edited": [],
+      "resolved": false,
+      "marker": false
+    },
+    {
+      "instance_id": "django__django-11740",
+      "demoted_pivots": [
+        "O1 django/contrib/gis/gdal/feature.py::Feature",
+        "O2 django/contrib/gis/gdal/feature.py::Feature.fid"
+      ],
+      "demoted_inspected": [],
+      "demoted_edited": [],
+      "resolved": true,
+      "marker": true
+    }
+  ],
+  "any_demoted_pivot_edited": true,
+  "resolution": {
+    "m69": 17,
+    "baseline": 15,
+    "m66": 15,
+    "n": 24,
+    "m69_resolved": [
+      "matplotlib__matplotlib-22719",
+      "matplotlib__matplotlib-24627",
+      "sympy__sympy-13372",
+      "pydata__xarray-3677",
+      "sympy__sympy-12419",
+      "astropy__astropy-14539",
+      "pylint-dev__pylint-8898",
+      "sympy__sympy-12481",
+      "psf__requests-1142",
+      "matplotlib__matplotlib-25960",
+      "pytest-dev__pytest-7432",
+      "pallets__flask-5014",
+      "sympy__sympy-16766",
+      "astropy__astropy-14369",
+      "django__django-10880",
+      "django__django-11095",
+      "django__django-11740"
+    ]
+  },
+  "paired_vs_baseline": {
+    "both_pass": [
+      "matplotlib__matplotlib-22719",
+      "sympy__sympy-13372",
+      "pydata__xarray-3677",
+      "sympy__sympy-12419",
+      "astropy__astropy-14539",
+      "pylint-dev__pylint-8898",
+      "sympy__sympy-12481",
+      "psf__requests-1142",
+      "pytest-dev__pytest-7432",
+      "pallets__flask-5014",
+      "sympy__sympy-16766",
+      "django__django-10880",
+      "django__django-11095",
+      "django__django-11740"
+    ],
+    "both_fail": [
+      "sphinx-doc__sphinx-7462",
+      "mwaskom__seaborn-3187",
+      "django__django-11820",
+      "astropy__astropy-14365",
+      "django__django-13195",
+      "astropy__astropy-14598"
+    ],
+    "m69_only_pass": [
+      "matplotlib__matplotlib-24627",
+      "matplotlib__matplotlib-25960",
+      "astropy__astropy-14369"
+    ],
+    "baseline_only_pass": [
+      "psf__requests-5414"
+    ]
+  },
+  "paired_vs_m66": {
+    "both_pass": [
+      "matplotlib__matplotlib-22719",
+      "matplotlib__matplotlib-24627",
+      "sympy__sympy-13372",
+      "pydata__xarray-3677",
+      "sympy__sympy-12419",
+      "astropy__astropy-14539",
+      "sympy__sympy-12481",
+      "psf__requests-1142",
+      "pytest-dev__pytest-7432",
+      "pallets__flask-5014",
+      "sympy__sympy-16766",
+      "django__django-10880",
+      "django__django-11095",
+      "django__django-11740"
+    ],
+    "both_fail": [
+      "sphinx-doc__sphinx-7462",
+      "mwaskom__seaborn-3187",
+      "django__django-11820",
+      "django__django-13195",
+      "astropy__astropy-14598",
+      "psf__requests-5414"
+    ],
+    "m69_only_pass": [
+      "pylint-dev__pylint-8898",
+      "matplotlib__matplotlib-25960",
+      "astropy__astropy-14369"
+    ],
+    "m66_only_pass": [
+      "astropy__astropy-14365"
+    ]
+  },
+  "deltas_vs_baseline": {
+    "n": 24,
+    "token_delta_mean": -261123.58333333334,
+    "token_delta_median": -112683,
+    "token_delta_pooled_pct": -16.962496061483005,
+    "cache_read_delta_mean": -272977.1458333333,
+    "cache_read_delta_median": -68670.25,
+    "cache_read_delta_pooled_pct": -18.506236907884485,
+    "cost_delta_mean": -0.06654886979166665,
+    "cost_delta_median": 0.06798450000000006,
+    "cost_delta_pooled_pct": -8.797274682278836,
+    "tool_call_delta_mean": -2.2708333333333335,
+    "read_mean": 3.2083333333333335,
+    "search_mean": 2,
+    "resolution_delta": 2,
+    "pooled_treatment_cost": 16.558141499999998,
+    "pooled_baseline_cost": 18.155314375000003,
+    "pooled_treatment_tokens": 30679047,
+    "pooled_baseline_tokens": 36946013
+  },
+  "structured_decision_m69": {
+    "required": 41,
+    "closed": 37,
+    "open": 4,
+    "ignored": 1,
+    "invalid": 3,
+    "edited": 23,
+    "ruled_out": 2,
+    "inspect_only_no_edit": 12,
+    "coverage_pct": 90.24,
+    "ignored_rate_pct": 2.44,
+    "invalid_rule_out_rate_pct": 7.32
+  },
+  "structured_decision_m66": {
+    "required": 47,
+    "closed": 40,
+    "open": 7,
+    "ignored": 1,
+    "invalid": 4,
+    "edited": 24,
+    "ruled_out": 8,
+    "inspect_only_no_edit": 8,
+    "coverage_pct": 85.11,
+    "ignored_rate_pct": 2.13,
+    "invalid_rule_out_rate_pct": 8.51
+  },
+  "by_category": {
+    "A": {
+      "n": 6,
+      "baseline_resolved": 2,
+      "m66_resolved": 3,
+      "m69_resolved": 3,
+      "m69_only_wins_vs_baseline": [
+        "matplotlib__matplotlib-24627"
+      ],
+      "baseline_only_wins": [],
+      "cost_delta_pooled_pct": -41.19823336927727,
+      "token_delta_pooled_pct": -39.13813325346856,
+      "coverage_pct": 100,
+      "ignored_rate_pct": 0,
+      "invalid_rule_out_rate_pct": 0,
+      "off_target_edits": 3
+    },
+    "B": {
+      "n": 4,
+      "baseline_resolved": 4,
+      "m66_resolved": 3,
+      "m69_resolved": 4,
+      "m69_only_wins_vs_baseline": [],
+      "baseline_only_wins": [],
+      "cost_delta_pooled_pct": 67.04501871609585,
+      "token_delta_pooled_pct": 45.05749235612808,
+      "coverage_pct": 66.67,
+      "ignored_rate_pct": 16.67,
+      "invalid_rule_out_rate_pct": 16.67,
+      "off_target_edits": 1
+    },
+    "C": {
+      "n": 5,
+      "baseline_resolved": 3,
+      "m66_resolved": 4,
+      "m69_resolved": 4,
+      "m69_only_wins_vs_baseline": [
+        "matplotlib__matplotlib-25960"
+      ],
+      "baseline_only_wins": [],
+      "cost_delta_pooled_pct": -1.0477563668110832,
+      "token_delta_pooled_pct": -22.47747412316628,
+      "coverage_pct": 100,
+      "ignored_rate_pct": 0,
+      "invalid_rule_out_rate_pct": 0,
+      "off_target_edits": 1
+    },
+    "D": {
+      "n": 3,
+      "baseline_resolved": 1,
+      "m66_resolved": 1,
+      "m69_resolved": 1,
+      "m69_only_wins_vs_baseline": [],
+      "baseline_only_wins": [],
+      "cost_delta_pooled_pct": 3.2286471009305604,
+      "token_delta_pooled_pct": -2.8057733600048973,
+      "coverage_pct": 83.33,
+      "ignored_rate_pct": 0,
+      "invalid_rule_out_rate_pct": 16.67,
+      "off_target_edits": 0
+    },
+    "E": {
+      "n": 6,
+      "baseline_resolved": 5,
+      "m66_resolved": 4,
+      "m69_resolved": 5,
+      "m69_only_wins_vs_baseline": [
+        "astropy__astropy-14369"
+      ],
+      "baseline_only_wins": [
+        "psf__requests-5414"
+      ],
+      "cost_delta_pooled_pct": -26.76484587461806,
+      "token_delta_pooled_pct": -36.754981542277996,
+      "coverage_pct": 90,
+      "ignored_rate_pct": 0,
+      "invalid_rule_out_rate_pct": 10,
+      "off_target_edits": 4
+    }
+  },
+  "off_target_edit_total": 9,
+  "off_target_cases": [
+    {
+      "instance_id": "matplotlib__matplotlib-22719",
+      "count": 1,
+      "edits": [
+        "lib/matplotlib/category.py"
+      ]
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24627",
+      "count": 2,
+      "edits": [
+        "lib/matplotlib/axes/_base.py",
+        "lib/matplotlib/figure.py"
+      ]
+    },
+    {
+      "instance_id": "sympy__sympy-12419",
+      "count": 1,
+      "edits": [
+        "sympy/matrices/expressions/matexpr.py"
+      ]
+    },
+    {
+      "instance_id": "psf__requests-1142",
+      "count": 1,
+      "edits": [
+        "requests/models.py"
+      ]
+    },
+    {
+      "instance_id": "astropy__astropy-14369",
+      "count": 2,
+      "edits": [
+        "astropy/units/format/cds_lextab.py",
+        "astropy/units/format/cds_parsetab.py"
+      ]
+    },
+    {
+      "instance_id": "django__django-10880",
+      "count": 1,
+      "edits": [
+        "django/db/models/aggregates.py"
+      ]
+    },
+    {
+      "instance_id": "django__django-11740",
+      "count": 1,
+      "edits": [
+        "django/db/migrations/autodetector.py"
+      ]
+    }
+  ],
+  "success_criteria": {
+    "c1_valid_all": {
+      "pass": true,
+      "detail": "24/24 valid"
+    },
+    "c2_gate_enabled_all": {
+      "pass": true,
+      "detail": "gate verified on 24/24"
+    },
+    "c3_zero_required_marker": {
+      "pass": true,
+      "detail": "2 zero-required, all marker-backed=true"
+    },
+    "c4_no_required_impact": {
+      "pass": true,
+      "detail": "required_impact_any=false"
+    },
+    "c5_optional_not_closure_scored": {
+      "pass": true,
+      "detail": "optional/FYI never closure-scored"
+    },
+    "c6_coverage_ge_90": {
+      "pass": true,
+      "detail": "coverage 90.24%"
+    },
+    "c7_ignored_le_5": {
+      "pass": true,
+      "detail": "ignored 2.44%"
+    },
+    "c8_invalid_not_worse_than_m66": {
+      "pass": true,
+      "detail": "M69 7.32% vs M66 8.51%"
+    },
+    "c11_resolution_not_worse": {
+      "pass": true,
+      "detail": "M69 17 vs baseline 15"
+    },
+    "c12_cost_pooled_le_15": {
+      "pass": true,
+      "detail": "pooled cost -8.80%"
+    }
+  }
+}
