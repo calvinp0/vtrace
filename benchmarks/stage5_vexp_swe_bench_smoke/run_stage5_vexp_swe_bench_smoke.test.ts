@@ -204,6 +204,7 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     pivotCheckPolicy: "strict_risk_gated",
     disablePivotCheck: false,
     disableToolUseDiscipline: false,
+    toolLoopGuard: false,
     disableTokenDiscipline: false,
     sweBenchDataFile: null,
     runLabel: null,
@@ -230,6 +231,13 @@ test("instances are parsed from the CLI", () => {
 test("invalid mode and vtrace-method are rejected", () => {
   assert.throws(() => parseArgs(["--mode", "bogus"]), /Invalid --mode/);
   assert.throws(() => parseArgs(["--vtrace-method", "bogus"]), /Invalid --vtrace-method/);
+});
+
+test("--tool-loop-guard is default-off and opt-in only (M75)", () => {
+  // Default: the tool-loop guard is OFF (flag absent) — no behavior change.
+  assert.equal(parseArgs(["--mode", "run-protocol"]).toolLoopGuard, false);
+  // Opt-in: the flag flips it on.
+  assert.equal(parseArgs(["--mode", "run-protocol", "--tool-loop-guard"]).toolLoopGuard, true);
 });
 
 test("--disable-pivot-check is off by default and opt-in only", () => {

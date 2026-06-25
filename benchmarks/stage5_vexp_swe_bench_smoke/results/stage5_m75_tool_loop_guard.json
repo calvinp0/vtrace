@@ -1,0 +1,110 @@
+{
+  "milestone": "M75",
+  "kind": "Offline replay of the default-off tool-loop guard over M71/M72/M73 treatment streams",
+  "live_agents": false,
+  "docker": false,
+  "api_spend": false,
+  "guard_config": {
+    "enabled": true,
+    "maxInjections": 3,
+    "cooldownToolCalls": 3,
+    "repeatedReadThreshold": 3,
+    "repeatedSearchThreshold": 2,
+    "repeatedFailureThreshold": 2,
+    "repeatedFamilyErrorThreshold": 3,
+    "windowSize": 6,
+    "windowRepeatedReadThreshold": 4
+  },
+  "total_cases": 99,
+  "deterministic": true,
+  "used_gold_labels": false,
+  "headline": {
+    "cap_hit_cases": 6,
+    "cap_hit_guard_fired": 3,
+    "cap_hit_early_fire": 2,
+    "thrash_or_cap_cases": 9,
+    "thrash_or_cap_fired": 5,
+    "normal_control_cases": 54,
+    "normal_control_fired": 3,
+    "normal_control_early_fire": 3
+  },
+  "by_group": [
+    {
+      "group": "cap_hit",
+      "cases": 6,
+      "guard_fired": 3,
+      "early_fire": 2,
+      "late_fire": 1,
+      "resolved_count": 0,
+      "cost_total": 18.09,
+      "cost_mean": 3.015,
+      "fire_rate": 0.5
+    },
+    {
+      "group": "thrashing_signal",
+      "cases": 3,
+      "guard_fired": 2,
+      "early_fire": 2,
+      "late_fire": 0,
+      "resolved_count": 2,
+      "cost_total": 3.54,
+      "cost_mean": 1.181,
+      "fire_rate": 0.67
+    },
+    {
+      "group": "treatment_only_win",
+      "cases": 10,
+      "guard_fired": 0,
+      "early_fire": 0,
+      "late_fire": 0,
+      "resolved_count": 10,
+      "cost_total": 6.31,
+      "cost_mean": 0.631,
+      "fire_rate": 0
+    },
+    {
+      "group": "baseline_only_loss",
+      "cases": 7,
+      "guard_fired": 0,
+      "early_fire": 0,
+      "late_fire": 0,
+      "resolved_count": 0,
+      "cost_total": 4.01,
+      "cost_mean": 0.573,
+      "fire_rate": 0
+    },
+    {
+      "group": "no_patch_exhaustion",
+      "cases": 1,
+      "guard_fired": 0,
+      "early_fire": 0,
+      "late_fire": 0,
+      "resolved_count": 0,
+      "cost_total": 0.51,
+      "cost_mean": 0.508,
+      "fire_rate": 0
+    },
+    {
+      "group": "normal_resolved_control",
+      "cases": 54,
+      "guard_fired": 3,
+      "early_fire": 3,
+      "late_fire": 0,
+      "resolved_count": 54,
+      "cost_total": 27.43,
+      "cost_mean": 0.508,
+      "fire_rate": 0.06
+    },
+    {
+      "group": "other_unresolved",
+      "cases": 18,
+      "guard_fired": 1,
+      "early_fire": 1,
+      "late_fire": 0,
+      "resolved_count": 0,
+      "cost_total": 8.05,
+      "cost_mean": 0.447,
+      "fire_rate": 0.06
+    }
+  ]
+}

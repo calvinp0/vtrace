@@ -70,6 +70,12 @@ import {
   type HardGatePhase2Outcome,
 } from "./pivotCheckGateRunner";
 import {
+  DEFAULT_TOOL_LOOP_GUARD_CONFIG,
+  runToolLoopGuard,
+  toGuardEvent,
+  toolLoopGuardMeta,
+} from "./toolLoopGuard";
+import {
   DEFAULT_PRE_EDIT_BASH_BUDGET,
   DEFAULT_PRE_EDIT_SEARCH_BUDGET,
   DEFAULT_REPEATED_FILE_READ_LIMIT,
@@ -521,6 +527,11 @@ export interface CliConfig {
   // it changes only the appended discipline text — retrieval, ranking, PIVOT_CHECK,
   // Capsule generation, critic, repair, and evaluation are untouched.
   readonly disableToolUseDiscipline: boolean;
+  // M75 candidate C1: default-OFF repeated-failure / repeated-read tool-loop guard.
+  // When set, the guard runs in OBSERVE mode over the captured tool-call stream after
+  // the run and records `tool_loop_guard_*` metadata (the external harness owns the
+  // turn loop, so M75 cannot inject mid-loop). Purely additive; off by default.
+  readonly toolLoopGuard: boolean;
   // Benchmark/dev-only suppression of the vtrace-only STAGE5_TOKEN_DISCIPLINE block
   // (--disable-token-discipline). Default false: the active turn-count reduction
   // policy is injected on the live vtrace context path, conditional on per-section
@@ -997,6 +1008,8 @@ const DEFAULT_CONFIG: CliConfig = {
   // The shared anti-loop tool-use-discipline block is ON by default for both baseline
   // and vtrace; --disable-tool-use-discipline is a benchmark/dev-only override.
   disableToolUseDiscipline: false,
+  // M75 tool-loop guard is DEFAULT-OFF; enable explicitly with --tool-loop-guard.
+  toolLoopGuard: false,
   // The vtrace-only STAGE5_TOKEN_DISCIPLINE turn-count reduction policy is ON by
   // default; --disable-token-discipline is a benchmark/dev-only override.
   disableTokenDiscipline: false,
@@ -7627,6 +7640,33 @@ export async function persistOrderedToolCalls(
   }
 }
 
+// M75 tool-loop guard, OBSERVE mode. Reads the just-persisted ordered tool-call
+// stream (rich `_tool_calls_with_outputs.json` preferred for command/exit/error
+// fields; lean `_tool_calls.json` as fallback) and runs the PURE detector. Returns
+// `{}` when the flag is off (so default runs' `_run.meta.json` is byte-identical),
+// else the additive `tool_loop_guard_*` block plus the observe-mode marker + config.
+async function computeToolLoopGuardMeta(config: CliConfig, rawDir: string): Promise<Record<string, unknown>> {
+  if (config.toolLoopGuard !== true) return {};
+  const candidates = [path.join(rawDir, "_tool_calls_with_outputs.json"), toolCallLogFilePath(rawDir)];
+  let rawEvents: Array<Record<string, unknown>> = [];
+  for (const file of candidates) {
+    const parsed = await readFile(file, "utf8")
+      .then((c) => JSON.parse(c) as unknown)
+      .catch(() => null);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      rawEvents = parsed as Array<Record<string, unknown>>;
+      break;
+    }
+  }
+  const events = rawEvents.map((r, i) => toGuardEvent(r, i));
+  const result = runToolLoopGuard(events, { ...DEFAULT_TOOL_LOOP_GUARD_CONFIG, enabled: true });
+  return {
+    ...toolLoopGuardMeta(result),
+    tool_loop_guard_mode: "observe_post_run",
+    tool_loop_guard_config: DEFAULT_TOOL_LOOP_GUARD_CONFIG,
+  };
+}
+
 async function runCondition(
   config: CliConfig,
   condition: Stage5Condition,
@@ -7693,6 +7733,13 @@ async function runCondition(
   // JSONL. UNIVERSAL — captured for every condition now, not just vtrace. Best-effort
   // and additive: absence just leaves the report's honest false-by-absence behavior.
   const toolCallMeta = await persistOrderedToolCalls(config, dir, condition, instances);
+  // M75 tool-loop guard (DEFAULT-OFF). When --tool-loop-guard is set, run the PURE
+  // detector in OBSERVE mode over the just-persisted tool-call stream (rich
+  // `_tool_calls_with_outputs.json` if present, else lean `_tool_calls.json`) and
+  // emit additive `tool_loop_guard_*` metadata. The external harness owns the turn
+  // loop, so this records what the guard WOULD inject; it does not steer the agent
+  // mid-run. When the flag is off, NOTHING is added (meta stays byte-identical).
+  const toolLoopGuardMetaFields = await computeToolLoopGuardMeta(config, dir);
   // Persist Capsule v2 manifest/ranking/context artifacts next to the other raw
   // VTRACE evidence (vtrace condition only) and record what was written into the
   // run meta. Off the v2 engine no bundle exists, so nothing is written and the
@@ -7737,6 +7784,7 @@ async function runCondition(
     vtraceMethod: condition === "vtrace" ? config.vtraceMethod : null,
     ...toolUseDisciplineMeta,
     ...vtraceMeta,
+    ...toolLoopGuardMetaFields,
     exitCode: result.exitCode,
     durationMs: Date.now() - startedMs,
   };
@@ -10069,6 +10117,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
+      case "--tool-loop-guard": config.toolLoopGuard = true; break;
       case "--disable-token-discipline": config.disableTokenDiscipline = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
@@ -10158,6 +10207,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --disable-patch-verify                        suppress the PATCH_VERIFY checkpoint (rides with PIVOT_CHECK, after EDIT_GUARD; independent of EDIT_GUARD) (default: PATCH_VERIFY on)",
       "  --disable-tool-use-discipline                 benchmark/dev-only: suppress the shared anti-loop tool-use-discipline block injected into BOTH baseline and vtrace prompts (default: injected). Not a user-facing product mode",
       "  --disable-token-discipline                    benchmark/dev-only: suppress the vtrace-only STAGE5_TOKEN_DISCIPLINE turn-count reduction policy (strong-context patch-first / weak-context explore) (default: injected). Not a user-facing product mode",
+      "  --tool-loop-guard                             M75 candidate C1 (DEFAULT-OFF): run the repeated-failure / repeated-read tool-loop guard in OBSERVE mode over the captured tool-call stream and record additive tool_loop_guard_* metadata. The external harness owns the turn loop, so M75 does not inject mid-loop. Changes no retrieval/scoring/ranking/Capsule v2/decision-contract behavior",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),
