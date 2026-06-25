@@ -1,0 +1,300 @@
+{
+  "milestone": "M73",
+  "kind": "Final paired 100-task benchmark — reused_verified (M70B) + fresh (M73) baselines vs structured-bounded + pivot-confidence treatment (M71/M72)",
+  "live_agents": true,
+  "scope_caveat": "100-task engineering validation over the frozen on-disk SWE-bench-100 census. NOT proof of broad SWE-bench superiority or VEXP parity.",
+  "selected_tasks": 100,
+  "treatment_attempted": 99,
+  "treatment_skipped": 1,
+  "treatment_skipped_cases": [
+    "django__django-10973"
+  ],
+  "baseline_composition": {
+    "reused_verified": 27,
+    "fresh_baseline": 73
+  },
+  "strict_100": {
+    "treatment_resolved": 66,
+    "baseline_resolved": 64,
+    "treatment_pass_rate": 0.66,
+    "baseline_pass_rate": 0.64,
+    "resolution_delta": 2,
+    "wilson_treatment": {
+      "p": 0.66,
+      "lo": 0.5628,
+      "hi": 0.7454
+    },
+    "wilson_baseline": {
+      "p": 0.64,
+      "lo": 0.5424,
+      "hi": 0.7273
+    }
+  },
+  "runnable_99": {
+    "denominator": 99,
+    "treatment_resolved": 66,
+    "baseline_resolved": 64,
+    "treatment_pass_rate": 0.6667,
+    "baseline_pass_rate": 0.6465,
+    "resolution_delta": 2
+  },
+  "paired_outcomes": {
+    "both_pass": 55,
+    "both_fail": 21,
+    "treatment_only_pass": 11,
+    "baseline_only_pass": 9,
+    "treatment_invalid_or_skipped": 4,
+    "baseline_invalid_or_missing": 0
+  },
+  "net_treatment_wins": 2,
+  "paired_test": {
+    "discordant_treatment_only": 11,
+    "discordant_baseline_only": 9,
+    "exact_two_sided_sign_test_p": 0.8238,
+    "note": "Exact two-sided binomial sign test (McNemar exact) on discordant pairs only; computed here, not from an external library."
+  },
+  "cost_token": {
+    "total_treatment_cost": 67.9468,
+    "total_baseline_cost": 78.4659,
+    "mean_treatment_cost": 0.6863,
+    "median_treatment_cost": 0.4734,
+    "mean_baseline_cost": 0.7847,
+    "median_baseline_cost": 0.4764,
+    "total_treatment_tokens": 117114916,
+    "total_baseline_tokens": 151381715,
+    "total_treatment_cache_read": 110002107,
+    "total_baseline_cache_read": 144493617,
+    "total_treatment_tool_calls": 1057,
+    "total_baseline_tool_calls": 1364,
+    "pooled_cost_delta": -10.5191,
+    "cost_regression_pct": -13.16,
+    "paired_cost_rows": 99
+  },
+  "structured_decision_treatment": {
+    "required": 148,
+    "closed": 137,
+    "open": 11,
+    "ignored": 2,
+    "invalid": 9,
+    "edited": 87,
+    "ruled_out": 15,
+    "inspect_only_no_edit": 35,
+    "coverage_pct": 92.57,
+    "ignored_rate_pct": 1.35,
+    "invalid_rule_out_rate_pct": 6.08,
+    "zero_required_count": 9,
+    "demoted_pivot_count": 33,
+    "required_impact_count": 0,
+    "optional_impact_inspected_or_edited": "see per-stage detail (O-namespaced, never closure-scored)",
+    "fail_closed_no_patch_invalid_count": 3
+  },
+  "stratified": {
+    "by_repo": {
+      "astropy/astropy": {
+        "task_count": 5,
+        "baseline_resolved": 2,
+        "treatment_resolved": 2,
+        "treatment_only_wins": 0,
+        "baseline_only_wins": 0,
+        "treatment_cost": 4.94,
+        "baseline_cost": 6.15
+      },
+      "django/django": {
+        "task_count": 44,
+        "baseline_resolved": 28,
+        "treatment_resolved": 31,
+        "treatment_only_wins": 6,
+        "baseline_only_wins": 3,
+        "treatment_cost": 26.74,
+        "baseline_cost": 28.61
+      },
+      "matplotlib/matplotlib": {
+        "task_count": 7,
+        "baseline_resolved": 3,
+        "treatment_resolved": 5,
+        "treatment_only_wins": 2,
+        "baseline_only_wins": 0,
+        "treatment_cost": 4.93,
+        "baseline_cost": 7.09
+      },
+      "mwaskom/seaborn": {
+        "task_count": 1,
+        "baseline_resolved": 0,
+        "treatment_resolved": 0,
+        "treatment_only_wins": 0,
+        "baseline_only_wins": 0,
+        "treatment_cost": 0.45,
+        "baseline_cost": 3.05
+      },
+      "pallets/flask": {
+        "task_count": 1,
+        "baseline_resolved": 1,
+        "treatment_resolved": 1,
+        "treatment_only_wins": 0,
+        "baseline_only_wins": 0,
+        "treatment_cost": 0.34,
+        "baseline_cost": 0.25
+      },
+      "psf/requests": {
+        "task_count": 4,
+        "baseline_resolved": 2,
+        "treatment_resolved": 2,
+        "treatment_only_wins": 1,
+        "baseline_only_wins": 1,
+        "treatment_cost": 1.84,
+        "baseline_cost": 1.79
+      },
+      "pydata/xarray": {
+        "task_count": 6,
+        "baseline_resolved": 4,
+        "treatment_resolved": 4,
+        "treatment_only_wins": 1,
+        "baseline_only_wins": 1,
+        "treatment_cost": 4.17,
+        "baseline_cost": 6.55
+      },
+      "pylint-dev/pylint": {
+        "task_count": 2,
+        "baseline_resolved": 1,
+        "treatment_resolved": 1,
+        "treatment_only_wins": 0,
+        "baseline_only_wins": 0,
+        "treatment_cost": 3.84,
+        "baseline_cost": 2.41
+      },
+      "pytest-dev/pytest": {
+        "task_count": 4,
+        "baseline_resolved": 3,
+        "treatment_resolved": 3,
+        "treatment_only_wins": 0,
+        "baseline_only_wins": 0,
+        "treatment_cost": 3,
+        "baseline_cost": 2.91
+      },
+      "scikit-learn/scikit-learn": {
+        "task_count": 2,
+        "baseline_resolved": 2,
+        "treatment_resolved": 2,
+        "treatment_only_wins": 0,
+        "baseline_only_wins": 0,
+        "treatment_cost": 0.73,
+        "baseline_cost": 0.58
+      },
+      "sphinx-doc/sphinx": {
+        "task_count": 7,
+        "baseline_resolved": 4,
+        "treatment_resolved": 4,
+        "treatment_only_wins": 0,
+        "baseline_only_wins": 0,
+        "treatment_cost": 3.5,
+        "baseline_cost": 5.5
+      },
+      "sympy/sympy": {
+        "task_count": 17,
+        "baseline_resolved": 14,
+        "treatment_resolved": 11,
+        "treatment_only_wins": 1,
+        "baseline_only_wins": 4,
+        "treatment_cost": 13.49,
+        "baseline_cost": 13.59
+      }
+    },
+    "by_difficulty": {
+      "15 min - 1 hour": {
+        "task_count": 53,
+        "baseline_resolved": 33,
+        "treatment_resolved": 34,
+        "treatment_only_wins": 7,
+        "baseline_only_wins": 6,
+        "treatment_cost": 37.14,
+        "baseline_cost": 44.5
+      },
+      "1-4 hours": {
+        "task_count": 8,
+        "baseline_resolved": 2,
+        "treatment_resolved": 3,
+        "treatment_only_wins": 1,
+        "baseline_only_wins": 0,
+        "treatment_cost": 13.04,
+        "baseline_cost": 13
+      },
+      "<15 min fix": {
+        "task_count": 38,
+        "baseline_resolved": 29,
+        "treatment_resolved": 29,
+        "treatment_only_wins": 3,
+        "baseline_only_wins": 3,
+        "treatment_cost": 17.45,
+        "baseline_cost": 20.69
+      },
+      ">4 hours": {
+        "task_count": 1,
+        "baseline_resolved": 0,
+        "treatment_resolved": 0,
+        "treatment_only_wins": 0,
+        "baseline_only_wins": 0,
+        "treatment_cost": 0.32,
+        "baseline_cost": 0.29
+      }
+    },
+    "m62_m69_locked": {
+      "task_count": 24,
+      "baseline_resolved": 15,
+      "treatment_resolved": 15,
+      "treatment_only_wins": 2,
+      "baseline_only_wins": 2,
+      "treatment_cost": 17.41,
+      "baseline_cost": 21.97
+    },
+    "not_m62_m69_locked": {
+      "task_count": 76,
+      "baseline_resolved": 49,
+      "treatment_resolved": 51,
+      "treatment_only_wins": 9,
+      "baseline_only_wins": 7,
+      "treatment_cost": 50.53,
+      "baseline_cost": 56.5
+    },
+    "reused_verified_baseline": {
+      "task_count": 27,
+      "baseline_resolved": 17,
+      "treatment_resolved": 17,
+      "treatment_only_wins": 2,
+      "baseline_only_wins": 2,
+      "treatment_cost": 19.68,
+      "baseline_cost": 27.36
+    },
+    "fresh_baseline": {
+      "task_count": 73,
+      "baseline_resolved": 47,
+      "treatment_resolved": 49,
+      "treatment_only_wins": 9,
+      "baseline_only_wins": 7,
+      "treatment_cost": 48.27,
+      "baseline_cost": 51.11
+    },
+    "django": {
+      "task_count": 44,
+      "baseline_resolved": 28,
+      "treatment_resolved": 31,
+      "treatment_only_wins": 6,
+      "baseline_only_wins": 3,
+      "treatment_cost": 26.74,
+      "baseline_cost": 28.61
+    },
+    "non_django": {
+      "task_count": 56,
+      "baseline_resolved": 36,
+      "treatment_resolved": 35,
+      "treatment_only_wins": 5,
+      "baseline_only_wins": 6,
+      "treatment_cost": 41.21,
+      "baseline_cost": 49.86
+    }
+  },
+  "non_claims": [
+    "Does not claim VTRACE is VEXP parity.",
+    "Does not claim broad SWE-bench superiority.",
+    "Does not claim statistical superiority beyond what the reported paired sign test supports."
+  ]
+}
