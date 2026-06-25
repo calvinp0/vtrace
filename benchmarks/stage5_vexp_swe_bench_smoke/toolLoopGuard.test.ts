@@ -13,7 +13,13 @@ import {
   type ToolLoopGuardConfig,
 } from "./toolLoopGuard";
 
+// ON = the enabled guard at its DEFAULT calibration (V4, M79). ON_V0 restores the
+// pre-M79 behavior for the mechanics tests that exercise pure opening-orientation
+// read/search loops (which V4 deliberately suppresses); the detection machinery they
+// cover — thresholds, caps, cooldown, once-per-signature, metadata — is
+// calibration-independent, so pinning them to V0 keeps their intent.
 const ON: ToolLoopGuardConfig = { ...DEFAULT_TOOL_LOOP_GUARD_CONFIG, enabled: true };
+const ON_V0: ToolLoopGuardConfig = { ...ON, calibration: "v0" };
 
 let auto = 0;
 function bash(command: string, opts: { success?: boolean; exitCode?: number; output?: string } = {}): ToolLoopGuardEvent {
@@ -120,10 +126,10 @@ describe("toolLoopGuard — read/search detection", () => {
   // (5) repeated file read triggers only after threshold
   test("repeated read triggers only at the threshold", () => {
     auto = 0;
-    const two = runToolLoopGuard(reindex([read("/a.py"), read("/a.py")]), ON);
+    const two = runToolLoopGuard(reindex([read("/a.py"), read("/a.py")]), ON_V0);
     expect(two.wouldFire).toBe(false); // 2 reads < threshold 3
     auto = 0;
-    const three = runToolLoopGuard(reindex([read("/a.py"), read("/a.py"), read("/a.py")]), ON);
+    const three = runToolLoopGuard(reindex([read("/a.py"), read("/a.py"), read("/a.py")]), ON_V0);
     expect(three.wouldFire).toBe(true);
     expect(three.events[0]!.triggerType).toBe("repeated_read");
   });
@@ -147,7 +153,7 @@ describe("toolLoopGuard — read/search detection", () => {
   test("repeated identical search with no new result triggers", () => {
     auto = 0;
     const events = reindex([search("class Foo", "/p", "hit"), search("class Foo", "/p", "hit")]);
-    const res = runToolLoopGuard(events, ON);
+    const res = runToolLoopGuard(events, ON_V0);
     expect(res.wouldFire).toBe(true);
     expect(res.events[0]!.triggerType).toBe("repeated_search");
   });
@@ -181,7 +187,7 @@ describe("toolLoopGuard — caps and cooldown", () => {
     for (let i = 0; i < 5; i++) {
       events.push(read(`/f${i}.py`), read(`/f${i}.py`), read(`/f${i}.py`));
     }
-    const res = runToolLoopGuard(reindex(events), { ...ON, cooldownToolCalls: 0, maxInjections: 3 });
+    const res = runToolLoopGuard(reindex(events), { ...ON_V0, cooldownToolCalls: 0, maxInjections: 3 });
     expect(res.injectionCount).toBe(3);
   });
 
@@ -207,7 +213,7 @@ describe("toolLoopGuard — caps and cooldown", () => {
     auto = 0;
     // read /a.py many times -> repeated_read signature is read:a.py once only
     const events = reindex([read("/a.py"), read("/a.py"), read("/a.py"), read("/a.py"), read("/a.py")]);
-    const res = runToolLoopGuard(events, { ...ON, cooldownToolCalls: 0, maxInjections: 3 });
+    const res = runToolLoopGuard(events, { ...ON_V0, cooldownToolCalls: 0, maxInjections: 3 });
     const sigs = res.events.map((e) => e.signature);
     expect(new Set(sigs).size).toBe(sigs.length);
     expect(sigs.filter((s) => s === "read:a.py").length).toBe(1);
@@ -266,9 +272,10 @@ describe("toolLoopGuard — rendering and metadata", () => {
   test("toolLoopGuardMeta records events, count, signatures, turns", () => {
     auto = 0;
     const events = reindex([read("/a.py"), read("/a.py"), read("/a.py")]);
-    const res = runToolLoopGuard(events, ON);
+    const res = runToolLoopGuard(events, ON_V0);
     const meta = toolLoopGuardMeta(res);
     expect(meta.tool_loop_guard_enabled).toBe(true);
+    expect(meta.tool_loop_guard_calibration).toBe("v0");
     expect(meta.tool_loop_guard_injection_count).toBe(1);
     expect(meta.tool_loop_guard_events.length).toBe(1);
     expect(meta.tool_loop_guard_events[0]!.trigger_type).toBe("repeated_read");
@@ -297,6 +304,235 @@ describe("toolLoopGuard — rendering and metadata", () => {
     expect(rich.index).toBe(9); // fallback index
     expect(rich.success).toBe(false);
     expect(rich.output).toBe("fail");
+  });
+});
+
+describe("toolLoopGuard — V4 calibration (M79)", () => {
+  // (16) default-off behavior is unchanged: the default config carries calibration v4
+  // but stays disabled, so nothing fires.
+  test("default config is v4 and still default-off", () => {
+    expect(DEFAULT_TOOL_LOOP_GUARD_CONFIG.calibration).toBe("v4");
+    expect(DEFAULT_TOOL_LOOP_GUARD_CONFIG.enabled).toBe(false);
+    auto = 0;
+    const res = runToolLoopGuard(reindex([read("/a.py"), read("/a.py"), read("/a.py")]));
+    expect(res.wouldFire).toBe(false);
+    expect(res.suppressedEvents).toEqual([]);
+  });
+
+  // (1) repeated_read with no prior search/edit is suppressed under V4 (it fired under V0).
+  test("repeated_read before any prior progress is suppressed", () => {
+    auto = 0;
+    const events = reindex([read("/a.py"), read("/a.py"), read("/a.py")]);
+    const v4 = runToolLoopGuard(events, ON);
+    const v0 = runToolLoopGuard(events, ON_V0);
+    expect(v0.wouldFire).toBe(true); // V0 fires on pure orientation
+    expect(v4.wouldFire).toBe(false); // V4 withholds it
+    expect(v4.suppressedEvents.length).toBe(1);
+    expect(v4.suppressedEvents[0]!.triggerType).toBe("repeated_read");
+  });
+
+  // (2) repeated_search with no prior progress (only the repeating query itself) is suppressed.
+  test("repeated_search before any prior progress is suppressed", () => {
+    auto = 0;
+    const events = reindex([search("class Foo", "/p", "hit"), search("class Foo", "/p", "hit")]);
+    const v4 = runToolLoopGuard(events, ON);
+    expect(v4.wouldFire).toBe(false);
+    expect(v4.suppressedEvents.some((s) => s.triggerType === "repeated_search")).toBe(true);
+    // V0 still fires on the same stream.
+    expect(runToolLoopGuard(events, ON_V0).wouldFire).toBe(true);
+  });
+
+  // (3) repeated_read_window with no prior progress is suppressed.
+  test("repeated_read_window before any prior progress is suppressed", () => {
+    auto = 0;
+    // Six reads of one file: V0 trips both repeated_read and the read-window; V4 withholds both.
+    const events = reindex([read("/a.py"), read("/a.py"), read("/a.py"), read("/a.py"), read("/a.py"), read("/a.py")]);
+    const v4 = runToolLoopGuard(events, ON);
+    const v0 = runToolLoopGuard(events, ON_V0);
+    expect(v0.events.some((e) => e.triggerType === "repeated_read_window")).toBe(true);
+    expect(v4.wouldFire).toBe(false);
+    expect(v4.suppressedEvents.some((s) => s.triggerType === "repeated_read_window")).toBe(true);
+  });
+
+  // (4) repeated_read AFTER a prior search may fire.
+  test("repeated_read after a prior search may fire", () => {
+    auto = 0;
+    const events = reindex([search("anything", "/p", "hit"), read("/a.py"), read("/a.py"), read("/a.py")]);
+    const res = runToolLoopGuard(events, ON);
+    expect(res.wouldFire).toBe(true);
+    expect(res.events[0]!.triggerType).toBe("repeated_read");
+  });
+
+  // (5) repeated_read AFTER a prior edit may fire (edit clears the streak, so re-read 3x after it).
+  test("repeated_read after a prior edit may fire", () => {
+    auto = 0;
+    const events = reindex([edit("/b.py"), read("/a.py"), read("/a.py"), read("/a.py")]);
+    const res = runToolLoopGuard(events, ON);
+    expect(res.wouldFire).toBe(true);
+    expect(res.events[0]!.triggerType).toBe("repeated_read");
+  });
+
+  // (6) repeated_search after a prior DIFFERENT search (or edit) may fire.
+  test("repeated_search after a prior different search may fire", () => {
+    auto = 0;
+    const events = reindex([
+      search("other query", "/p", "hit"),
+      search("class Foo", "/p", "hit"),
+      search("class Foo", "/p", "hit"),
+    ]);
+    const res = runToolLoopGuard(events, ON);
+    expect(res.events.some((e) => e.triggerType === "repeated_search")).toBe(true);
+  });
+
+  test("repeated_search after a prior edit may fire", () => {
+    auto = 0;
+    const events = reindex([edit("/b.py"), search("class Foo", "/p", "hit"), search("class Foo", "/p", "hit")]);
+    const res = runToolLoopGuard(events, ON);
+    expect(res.events.some((e) => e.triggerType === "repeated_search")).toBe(true);
+  });
+
+  // (7) repeated_failed_command stays eligible with NO prior search/edit (sympy-12419 case).
+  test("repeated_failed_command remains eligible without prior search/edit", () => {
+    auto = 0;
+    const events = reindex([
+      bash("python repro.py", { success: false, output: "ValueError: boom" }),
+      bash("python repro.py", { success: false, output: "ValueError: boom" }),
+    ]);
+    const res = runToolLoopGuard(events, ON);
+    expect(res.wouldFire).toBe(true);
+    expect(res.events[0]!.triggerType).toBe("repeated_failed_command");
+    expect(res.suppressedEvents).toEqual([]);
+  });
+
+  // (8) repeated_command_family_error stays eligible with no prior search/edit.
+  test("repeated_command_family_error remains eligible without prior search/edit", () => {
+    auto = 0;
+    const events = reindex([
+      bash("python a.py", { success: false, output: "ModuleNotFoundError: No module named 'foo'" }),
+      bash("python b.py", { success: false, output: "ModuleNotFoundError: No module named 'foo'" }),
+      bash("python c.py", { success: false, output: "ModuleNotFoundError: No module named 'foo'" }),
+    ]);
+    const res = runToolLoopGuard(events, ON);
+    expect(res.events.some((e) => e.triggerType === "repeated_command_family_error")).toBe(true);
+  });
+
+  // (9) repeated_edit_failure stays eligible with no prior search/edit.
+  test("repeated_edit_failure remains eligible without prior search/edit", () => {
+    auto = 0;
+    const events = reindex([
+      edit("/a.py", { success: false, output: "SyntaxError: invalid syntax" }),
+      edit("/a.py", { success: false, output: "SyntaxError: invalid syntax" }),
+    ]);
+    const res = runToolLoopGuard(events, ON);
+    expect(res.events.some((e) => e.triggerType === "repeated_edit_failure")).toBe(true);
+  });
+
+  // (10) suppression metadata records the reason.
+  test("suppression metadata records the no-prior-progress reason", () => {
+    auto = 0;
+    const res = runToolLoopGuard(reindex([read("/a.py"), read("/a.py"), read("/a.py")]), ON);
+    const meta = toolLoopGuardMeta(res);
+    expect(meta.tool_loop_guard_calibration).toBe("v4");
+    expect(meta.tool_loop_guard_suppressed_count).toBe(1);
+    expect(meta.tool_loop_guard_suppressed_events[0]!.reason).toBe("no_prior_progress_for_read_search_window_trigger");
+    expect(meta.tool_loop_guard_suppression_reasons).toEqual(["no_prior_progress_for_read_search_window_trigger"]);
+  });
+
+  // (11) a suppressed read does NOT consume the injection cap — a later genuine command
+  // loop still injects (the cap was untouched by the suppressed read).
+  test("a suppressed read does not consume the injection cap", () => {
+    auto = 0;
+    const events = reindex([
+      read("/a.py"), read("/a.py"), read("/a.py"), // suppressed (no prior progress)
+      bash("pytest", { success: false, output: "1 failed" }),
+      bash("pytest", { success: false, output: "1 failed" }), // command loop still fires
+    ]);
+    const res = runToolLoopGuard(events, { ...ON, maxInjections: 1 });
+    expect(res.injectionCount).toBe(1);
+    expect(res.events[0]!.triggerType).toBe("repeated_failed_command");
+    expect(res.suppressedEvents.length).toBe(1);
+  });
+
+  // (12) a suppressed read does NOT start a cooldown — a command loop one step later
+  // (within the cooldown window) still injects because the suppressed read never did.
+  test("a suppressed read does not start a cooldown", () => {
+    auto = 0;
+    const events = reindex([
+      read("/a.py"), read("/a.py"), read("/a.py"), // would-be fire at idx2, but suppressed
+      bash("pytest", { success: false, output: "1 failed" }), // idx3
+      bash("pytest", { success: false, output: "1 failed" }), // idx4 fires; cooldown 5 from a real idx2 fire would have blocked it
+    ]);
+    const res = runToolLoopGuard(events, { ...ON, cooldownToolCalls: 5 });
+    expect(res.events.some((e) => e.triggerType === "repeated_failed_command")).toBe(true);
+  });
+});
+
+describe("toolLoopGuard — named M77/M78 case shapes (V4)", () => {
+  // Compact synthetic streams derived from the captured M77 guarded tool-call shapes
+  // (the raw streams are untracked benchmark artifacts and are NOT committed). Each
+  // reproduces the relevant prefix that drives the documented V4 outcome.
+
+  // pytest-6197: three opening reads of python.py, no prior search/edit -> V0 fired the
+  // repeated_read at idx 2; V4 suppresses it (the M78 "risky early fire" we calibrated out).
+  test("pytest-6197 shape: early repeated_read with no prior progress is suppressed under V4", () => {
+    auto = 0;
+    const stream = reindex([
+      read("/repo/src/_pytest/python.py"),
+      read("/repo/src/_pytest/python.py"),
+      read("/repo/src/_pytest/python.py"),
+    ]);
+    expect(runToolLoopGuard(stream, ON_V0).wouldFire).toBe(true); // V0 fired @2
+    const v4 = runToolLoopGuard(stream, ON);
+    expect(v4.wouldFire).toBe(false); // V4 suppressed
+    expect(v4.suppressedEvents[0]!.triggerType).toBe("repeated_read");
+  });
+
+  // astropy-14598: searches precede the heavy card.py re-reads, so the repeated_read has
+  // prior progress -> the helpful fire is PRESERVED under V4.
+  test("astropy-14598 shape: repeated_read after prior search is preserved under V4", () => {
+    auto = 0;
+    const stream = reindex([
+      search("class Card", "/repo/astropy/io/fits/card.py", "hit"),
+      read("/repo/astropy/io/fits/card.py"),
+      read("/repo/astropy/io/fits/card.py"),
+      read("/repo/astropy/io/fits/card.py"),
+    ]);
+    const v4 = runToolLoopGuard(stream, ON);
+    expect(v4.wouldFire).toBe(true);
+    expect(v4.events[0]!.triggerType).toBe("repeated_read");
+  });
+
+  // sympy-12419: the helpful fire was a repeated FAILED command (not a read) -> it is NOT
+  // gated by V4 and stays eligible from the opening turns.
+  test("sympy-12419 shape: repeated failed command fires under V4 with no prior search/edit", () => {
+    auto = 0;
+    const stream = reindex([
+      read("/repo/sympy/core/expr.py"),
+      bash("python -c 'import sympy; sympy.S(...)'", { success: false, output: "RecursionError: maximum recursion depth" }),
+      bash("python -c 'import sympy; sympy.S(...)'", { success: false, output: "RecursionError: maximum recursion depth" }),
+    ]);
+    const v4 = runToolLoopGuard(stream, ON);
+    expect(v4.wouldFire).toBe(true);
+    expect(v4.events.some((e) => e.triggerType === "repeated_failed_command")).toBe(true);
+    expect(v4.suppressedEvents).toEqual([]);
+  });
+
+  // django-16263: mixed read/search/edit churn, never a same-file repeated-read streak ->
+  // no fire under either calibration (the cost/no-convergence case belongs to a future
+  // C7 cost guard, not the read-loop detector).
+  test("django-16263 shape: interleaved read/search/edit churn does not fire (V0 or V4)", () => {
+    auto = 0;
+    const stream = reindex([
+      read("/repo/django/db/models/sql/query.py"),
+      search("def add_q", "/repo/django/db/models/sql/query.py", "hit"),
+      read("/repo/django/db/models/sql/query.py"),
+      search("def build_filter", "/repo/django/db/models/sql/query.py", "hit2"),
+      edit("/repo/django/db/models/sql/query.py"),
+      read("/repo/django/db/models/sql/query.py"),
+      edit("/repo/django/db/models/sql/query.py"),
+    ]);
+    expect(runToolLoopGuard(stream, ON).wouldFire).toBe(false);
+    expect(runToolLoopGuard(stream, ON_V0).wouldFire).toBe(false);
   });
 });
 

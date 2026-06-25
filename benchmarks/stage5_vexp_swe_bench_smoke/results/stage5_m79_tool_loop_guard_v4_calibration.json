@@ -1,0 +1,37 @@
+{
+  "milestone": "M79",
+  "kind": "compact V4 calibration replay summary",
+  "default_off": true,
+  "default_calibration_when_enabled": "v4",
+  "cohort_size": 99,
+  "cap_thrash_recall": {
+    "v0": "5/9",
+    "v4": "5/9"
+  },
+  "normal_control_fp": {
+    "v0": "3/71",
+    "v4": "2/71"
+  },
+  "treatment_only_win_fires": {
+    "v0": 0,
+    "v4": 0
+  },
+  "baseline_only_loss_fires": {
+    "v0": 0,
+    "v4": 0
+  },
+  "total_injections": {
+    "v0": 11,
+    "v4": 7
+  },
+  "v4_total_suppressed": 8,
+  "deep_dive": {
+    "pytest-6197_suppressed": true,
+    "astropy-14598_preserved": true,
+    "sympy-12419_preserved": true,
+    "django-16263_no_fire": true
+  },
+  "runtime_observe_inject_parity": true,
+  "runtime_deterministic": true,
+  "all_expectations_pass": true
+}

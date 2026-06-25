@@ -74,6 +74,7 @@ import {
   runToolLoopGuard,
   toGuardEvent,
   toolLoopGuardMeta,
+  type ToolLoopGuardCalibration,
 } from "./toolLoopGuard";
 import {
   TOOL_LOOP_GUARD_OBSERVE_MODE,
@@ -544,6 +545,10 @@ export interface CliConfig {
   // the live agent's NEXT turn mid-loop. "inject" implies the guard is enabled; both
   // are opt-in and default-off, so an unflagged run is unaffected and byte-identical.
   readonly toolLoopGuardMode: "observe" | "inject";
+  // M79 read-trigger calibration. "v4" (default when the guard is enabled) gates the
+  // read/search/window triggers on prior progress; "v0" restores the M75 behavior for
+  // A/B comparison. Inert unless the guard itself is enabled.
+  readonly toolLoopGuardCalibration: ToolLoopGuardCalibration;
   // Benchmark/dev-only suppression of the vtrace-only STAGE5_TOKEN_DISCIPLINE block
   // (--disable-token-discipline). Default false: the active turn-count reduction
   // policy is injected on the live vtrace context path, conditional on per-section
@@ -1026,6 +1031,8 @@ const DEFAULT_CONFIG: CliConfig = {
   // "inject" enables the runtime PostToolUse hook so the guard steers the live agent.
   // Only meaningful when the guard is enabled; injection mode is itself opt-in.
   toolLoopGuardMode: "observe",
+  // M79 read-trigger calibration: V4 is the default behavior whenever the guard runs.
+  toolLoopGuardCalibration: "v4",
   // The vtrace-only STAGE5_TOKEN_DISCIPLINE turn-count reduction policy is ON by
   // default; --disable-token-discipline is a benchmark/dev-only override.
   disableTokenDiscipline: false,
@@ -1457,7 +1464,11 @@ function sharedConditionEnv(config: CliConfig): Record<string, string> {
   if (toolLoopGuardInjectionActive(config)) {
     env.VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS = toolLoopGuardHookSettingsFilePath(config.out);
     env.VTRACE_TOOL_LOOP_GUARD_STATE_DIR = toolLoopGuardStateDirPath(config.out);
-    env.VTRACE_TOOL_LOOP_GUARD_CONFIG = JSON.stringify({ ...DEFAULT_TOOL_LOOP_GUARD_CONFIG, enabled: true });
+    env.VTRACE_TOOL_LOOP_GUARD_CONFIG = JSON.stringify({
+      ...DEFAULT_TOOL_LOOP_GUARD_CONFIG,
+      enabled: true,
+      calibration: config.toolLoopGuardCalibration,
+    });
   }
   return env;
 }
@@ -7734,7 +7745,8 @@ async function computeToolLoopGuardMeta(config: CliConfig, rawDir: string): Prom
     }
   }
   const events = rawEvents.map((r, i) => toGuardEvent(r, i));
-  const result = runToolLoopGuard(events, { ...DEFAULT_TOOL_LOOP_GUARD_CONFIG, enabled: true });
+  const guardConfig = { ...DEFAULT_TOOL_LOOP_GUARD_CONFIG, enabled: true, calibration: config.toolLoopGuardCalibration };
+  const result = runToolLoopGuard(events, guardConfig);
 
   const injectMode = toolLoopGuardInjectionActive(config);
   const mode = injectMode ? TOOL_LOOP_GUARD_RUNTIME_MODE : TOOL_LOOP_GUARD_OBSERVE_MODE;
@@ -7756,7 +7768,7 @@ async function computeToolLoopGuardMeta(config: CliConfig, rawDir: string): Prom
   return {
     ...toolLoopGuardMeta(result),
     ...toolLoopGuardRuntimeMeta(result, mode, hookAvailable, unavailableReason),
-    tool_loop_guard_config: DEFAULT_TOOL_LOOP_GUARD_CONFIG,
+    tool_loop_guard_config: guardConfig,
   };
 }
 
@@ -10290,6 +10302,15 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         break;
       }
       case "--tool-loop-guard-inject": config.toolLoopGuard = true; config.toolLoopGuardMode = "inject"; break;
+      case "--tool-loop-guard-calibration": {
+        const value = requireValue(argv, ++index, arg);
+        if (value !== "v0" && value !== "v4") {
+          throw new Error(`--tool-loop-guard-calibration must be 'v0' or 'v4' (got '${value}')`);
+        }
+        // Advanced A/B knob; does NOT enable the guard on its own (default stays v4).
+        config.toolLoopGuardCalibration = value;
+        break;
+      }
       case "--disable-token-discipline": config.disableTokenDiscipline = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
@@ -10382,6 +10403,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --tool-loop-guard                             M75 candidate C1 (DEFAULT-OFF): run the repeated-failure / repeated-read tool-loop guard in OBSERVE mode over the captured tool-call stream and record additive tool_loop_guard_* metadata. The external harness owns the turn loop, so M75 does not inject mid-loop. Changes no retrieval/scoring/ranking/Capsule v2/decision-contract behavior",
       "  --tool-loop-guard-mode observe|inject         M76 (DEFAULT-OFF; implies --tool-loop-guard). 'observe' = the M75 post-run detector. 'inject' = runtime_injection: register a Claude Code PostToolUse hook (via --settings) so the deterministic detector feeds a compact <VTRACE_TOOL_LOOP_GUARD> recovery message into the live agent's next turn mid-loop, respecting caps/cooldown/once-per-signature. Fail-closed: if the adapter hook point is absent no hook is wired and the run is unaffected",
       "  --tool-loop-guard-inject                      shorthand for --tool-loop-guard-mode inject",
+      "  --tool-loop-guard-calibration v0|v4           M79 read-trigger calibration (default v4). 'v4' gates repeated_read/repeated_search/repeated_read_window on prior progress (a prior search/edit), suppressing pure opening-orientation fires; command-failure triggers stay eligible. 'v0' restores the M75 behavior for A/B comparison. Inert unless the guard is enabled",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),

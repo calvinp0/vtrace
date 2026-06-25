@@ -212,6 +212,7 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     disableToolUseDiscipline: false,
     toolLoopGuard: false,
     toolLoopGuardMode: "observe",
+    toolLoopGuardCalibration: "v4",
     disableTokenDiscipline: false,
     sweBenchDataFile: null,
     runLabel: null,
@@ -271,6 +272,22 @@ test("M76 tool-loop guard mode is default-observe and injection is explicit-only
   assert.equal(toolLoopGuardInjectionActive(shorthand), true);
   // Invalid mode rejected.
   assert.throws(() => parseArgs(["--mode", "run-protocol", "--tool-loop-guard-mode", "bogus"]), /must be 'observe' or 'inject'/);
+});
+
+test("M79 tool-loop guard calibration defaults to v4 and is overridable to v0 (advanced)", () => {
+  // Default: V4 is the enabled-guard behavior, even without an explicit flag.
+  assert.equal(parseArgs(["--mode", "run-protocol"]).toolLoopGuardCalibration, "v4");
+  // The advanced knob flips it to v0 for A/B comparison; it does NOT enable the guard.
+  const v0 = parseArgs(["--mode", "run-protocol", "--tool-loop-guard-calibration", "v0"]);
+  assert.equal(v0.toolLoopGuardCalibration, "v0");
+  assert.equal(v0.toolLoopGuard, false);
+  // Explicit v4 is accepted; inject mode uses whatever calibration is set (v4 default).
+  const inject = parseArgs(["--mode", "run-protocol", "--tool-loop-guard-inject"]);
+  assert.equal(inject.toolLoopGuardCalibration, "v4");
+  assert.throws(
+    () => parseArgs(["--mode", "run-protocol", "--tool-loop-guard-calibration", "v9"]),
+    /must be 'v0' or 'v4'/,
+  );
 });
 
 test("--disable-pivot-check is off by default and opt-in only", () => {

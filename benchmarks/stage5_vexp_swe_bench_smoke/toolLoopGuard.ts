@@ -48,8 +48,35 @@ export type ToolLoopTriggerType =
   | "repeated_edit_failure" // same edit/write target failing the same way
   | "repeated_read_window"; // high repeated-read density over a sliding window
 
+// M79 calibration variant.
+//   "v0" — the original M75 detector: read/search/window triggers can fire from
+//          pure opening orientation (the first thing the agent does).
+//   "v4" — the M78-validated calibration (DEFAULT when the guard is enabled): the
+//          three READ-FAMILY triggers (repeated_read / repeated_search /
+//          repeated_read_window) may fire ONLY after the agent has already made a
+//          progress move (a prior search or edit). The three COMMAND-FAILURE
+//          triggers (repeated_failed_command / repeated_command_family_error /
+//          repeated_edit_failure) are UNCHANGED — they stay eligible from turn 0,
+//          which is what preserves the sympy-12419 helpful command-loop fire.
+export type ToolLoopGuardCalibration = "v0" | "v4";
+
+// The READ-FAMILY trigger set that V4's prior-progress requirement gates. The
+// command-failure family is deliberately excluded (see ToolLoopGuardCalibration).
+export const READ_FAMILY_TRIGGERS: ReadonlySet<ToolLoopTriggerType> = new Set<ToolLoopTriggerType>([
+  "repeated_read",
+  "repeated_search",
+  "repeated_read_window",
+]);
+
+// The single suppression reason V4 emits when a read-family trigger is withheld
+// because no prior progress (search/edit) preceded it.
+export const NO_PRIOR_PROGRESS_REASON = "no_prior_progress_for_read_search_window_trigger";
+
 export interface ToolLoopGuardConfig {
   readonly enabled: boolean;
+  // M79 calibration of the read-family triggers. Default "v4" (see type docs);
+  // "v0" restores the original M75 behavior for A/B comparison.
+  readonly calibration: ToolLoopGuardCalibration;
   // anti-spam caps
   readonly maxInjections: number; // default 3
   readonly cooldownToolCalls: number; // >= this many calls between injections; default 3
@@ -64,6 +91,7 @@ export interface ToolLoopGuardConfig {
 
 export const DEFAULT_TOOL_LOOP_GUARD_CONFIG: ToolLoopGuardConfig = {
   enabled: false, // DEFAULT-OFF
+  calibration: "v4", // M79: V4 is the default behavior whenever the guard is enabled
   maxInjections: 3,
   cooldownToolCalls: 3,
   repeatedReadThreshold: 3,
@@ -82,14 +110,28 @@ export interface ToolLoopGuardFiring {
   readonly message: string;
 }
 
+// A read-family trigger that the V4 calibration WITHHELD because no prior progress
+// (search/edit) preceded it. Recorded for telemetry; it consumes NO injection cap
+// and starts NO cooldown (a suppressed event is as if it never reached the injector).
+export interface ToolLoopGuardSuppression {
+  readonly turnIndex: number;
+  readonly triggerType: ToolLoopTriggerType;
+  readonly signature: string;
+  readonly repeatCount: number;
+  readonly reason: string;
+}
+
 export interface ToolLoopGuardResult {
   readonly enabled: boolean;
+  readonly calibration: ToolLoopGuardCalibration;
   readonly wouldFire: boolean;
   readonly injectionCount: number;
   readonly events: readonly ToolLoopGuardFiring[];
   readonly signatures: readonly string[];
   readonly firstEventTurn: number | null;
   readonly lastEventTurn: number | null;
+  // V4 read-family triggers withheld for lack of prior progress (see type docs).
+  readonly suppressedEvents: readonly ToolLoopGuardSuppression[];
   // diagnostic counters — accumulate regardless of the injection caps so the
   // offline replay can characterise thrash even when the guard self-suppresses.
   readonly repeatedReadCount: number;
@@ -234,9 +276,21 @@ export function runToolLoopGuard(
   config: ToolLoopGuardConfig = DEFAULT_TOOL_LOOP_GUARD_CONFIG,
 ): ToolLoopGuardResult {
   const firings: ToolLoopGuardFiring[] = [];
+  const suppressedEvents: ToolLoopGuardSuppression[] = [];
   const firedSignatures = new Set<string>();
   let lastInjectionIndex = -Infinity;
   let injectionCount = 0;
+
+  // V4 prior-progress tracking. `priorEdit` / `priorSearchSigs` reflect ONLY events
+  // strictly before the event currently being evaluated (both are updated at the END
+  // of each loop iteration), so a trigger sees the information state that preceded it.
+  // A non-read shell command (category "other") is deliberately NOT counted as
+  // progress: Bash is ambiguous (it may be `cat`/`echo` — read-like), and excluding
+  // it both matches the M78-validated V4 and is the conservative choice (it suppresses
+  // more pure-orientation fires), per the M79 protocol's tie-break rule.
+  const v4 = config.calibration === "v4";
+  let priorEdit = false;
+  const priorSearchSigs = new Set<string>();
 
   // streak / repeat state
   const readStreak = new Map<string, number>(); // path -> consecutive unproductive reads
@@ -283,6 +337,40 @@ export function runToolLoopGuard(
     });
   };
 
+  // Read-family fire with the V4 prior-progress gate. When V4 withholds the trigger
+  // it records a suppression and returns WITHOUT touching the injector — so no cap is
+  // consumed, no cooldown starts, and the signature is NOT marked fired (it can still
+  // fire later if real progress arrives and the loop recurs).
+  const fireReadFamily = (
+    idx: number,
+    triggerType: ToolLoopTriggerType,
+    signature: string,
+    repeatCount: number,
+    progressOk: boolean,
+  ): void => {
+    if (v4 && !progressOk) {
+      // Record the withheld trigger only when the guard is actually enabled; a
+      // disabled guard is fully inert (no firings AND no suppressions).
+      if (config.enabled) {
+        suppressedEvents.push({ turnIndex: idx, triggerType, signature, repeatCount, reason: NO_PRIOR_PROGRESS_REASON });
+      }
+      return;
+    }
+    fire(idx, triggerType, signature, repeatCount);
+  };
+
+  // Prior progress for repeated_read / repeated_read_window: any earlier search or edit.
+  const readWindowProgressOk = (): boolean => priorEdit || priorSearchSigs.size > 0;
+  // Prior progress for repeated_search: an earlier edit, OR an earlier search whose
+  // signature DIFFERS from the one now repeating (the repeating query's own first
+  // occurrence does not count as progress for itself — otherwise a bare repeated
+  // search could never be suppressed).
+  const searchProgressOk = (currentSig: string): boolean => {
+    if (priorEdit) return true;
+    for (const s of priorSearchSigs) if (s !== currentSig) return true;
+    return false;
+  };
+
   for (const e of events) {
     const idx = e.index;
     let wasRepeatedRead = false;
@@ -313,7 +401,7 @@ export function runToolLoopGuard(
           wasRepeatedRead = true;
         }
         if (n >= config.repeatedReadThreshold) {
-          fire(idx, "repeated_read", `read:${basename(p)}`, n);
+          fireReadFamily(idx, "repeated_read", `read:${basename(p)}`, n, readWindowProgressOk());
         }
       }
     } else if (e.category === "search" && (e.query ?? "")) {
@@ -329,7 +417,8 @@ export function runToolLoopGuard(
       searchOccur.set(key, occ);
       if (!isNewResult && occ >= config.repeatedSearchThreshold) {
         repeatedSearchCount += 1;
-        fire(idx, "repeated_search", `search:${stripVolatile(e.query ?? "")}`, occ);
+        const sig = stripVolatile(e.query ?? "");
+        fireReadFamily(idx, "repeated_search", `search:${sig}`, occ, searchProgressOk(sig));
       }
       // a FIRST-TIME or NEW-RESULT search is new evidence -> reset read streaks.
       if (occ === 1) readStreak.clear();
@@ -367,18 +456,26 @@ export function runToolLoopGuard(
     if (recentReadFlags.length > config.windowSize) recentReadFlags.shift();
     const windowRepeats = recentReadFlags.filter(Boolean).length;
     if (windowRepeats >= config.windowRepeatedReadThreshold) {
-      fire(idx, "repeated_read_window", `window:${idx}`, windowRepeats);
+      fireReadFamily(idx, "repeated_read_window", `window:${idx}`, windowRepeats, readWindowProgressOk());
     }
+
+    // Advance the V4 prior-progress state AFTER all of this event's trigger checks, so
+    // every trigger is gated on strictly-earlier progress only. A search records its
+    // normalized signature; an edit flips the edit flag. (A read/other never counts.)
+    if (e.category === "edit") priorEdit = true;
+    else if (e.category === "search" && (e.query ?? "")) priorSearchSigs.add(stripVolatile(e.query ?? ""));
   }
 
   return {
     enabled: config.enabled,
+    calibration: config.calibration,
     wouldFire: firings.length > 0,
     injectionCount,
     events: firings,
     signatures: firings.map((f) => f.signature),
     firstEventTurn: firings.length ? firings[0]!.turnIndex : null,
     lastEventTurn: firings.length ? firings[firings.length - 1]!.turnIndex : null,
+    suppressedEvents,
     repeatedReadCount,
     repeatedSearchCount,
     repeatedCommandFailureCount,
@@ -390,6 +487,7 @@ export function runToolLoopGuard(
 // callers spread this into `_run.meta.json` (or the analyzer reads it back).
 export interface ToolLoopGuardMeta {
   readonly tool_loop_guard_enabled: boolean;
+  readonly tool_loop_guard_calibration: ToolLoopGuardCalibration;
   readonly tool_loop_guard_injection_count: number;
   readonly tool_loop_guard_events: ReadonlyArray<{
     readonly turn: number;
@@ -400,11 +498,22 @@ export interface ToolLoopGuardMeta {
   readonly tool_loop_guard_signatures: readonly string[];
   readonly tool_loop_guard_first_event_turn: number | null;
   readonly tool_loop_guard_last_event_turn: number | null;
+  // M79: read-family triggers withheld by the V4 prior-progress gate.
+  readonly tool_loop_guard_suppressed_events: ReadonlyArray<{
+    readonly turn: number;
+    readonly trigger_type: ToolLoopTriggerType;
+    readonly signature: string;
+    readonly repeat_count: number;
+    readonly reason: string;
+  }>;
+  readonly tool_loop_guard_suppressed_count: number;
+  readonly tool_loop_guard_suppression_reasons: readonly string[];
 }
 
 export function toolLoopGuardMeta(result: ToolLoopGuardResult): ToolLoopGuardMeta {
   return {
     tool_loop_guard_enabled: result.enabled,
+    tool_loop_guard_calibration: result.calibration,
     tool_loop_guard_injection_count: result.injectionCount,
     tool_loop_guard_events: result.events.map((e) => ({
       turn: e.turnIndex,
@@ -415,6 +524,15 @@ export function toolLoopGuardMeta(result: ToolLoopGuardResult): ToolLoopGuardMet
     tool_loop_guard_signatures: result.signatures,
     tool_loop_guard_first_event_turn: result.firstEventTurn,
     tool_loop_guard_last_event_turn: result.lastEventTurn,
+    tool_loop_guard_suppressed_events: result.suppressedEvents.map((s) => ({
+      turn: s.turnIndex,
+      trigger_type: s.triggerType,
+      signature: s.signature,
+      repeat_count: s.repeatCount,
+      reason: s.reason,
+    })),
+    tool_loop_guard_suppressed_count: result.suppressedEvents.length,
+    tool_loop_guard_suppression_reasons: [...new Set(result.suppressedEvents.map((s) => s.reason))],
   };
 }
 

@@ -27,7 +27,11 @@ import {
   type ToolLoopGuardHookIo,
 } from "./toolLoopGuardRuntime";
 
+// ON = enabled at the DEFAULT calibration (V4, M79). ON_V0 restores the pre-M79
+// behavior for state-machine mechanics tests built on pure opening-orientation read/
+// search loops (which V4 deliberately suppresses).
 const ON: ToolLoopGuardConfig = { ...DEFAULT_TOOL_LOOP_GUARD_CONFIG, enabled: true };
+const ON_V0: ToolLoopGuardConfig = { ...ON, calibration: "v0" };
 
 // ---- event builders (mirror toolLoopGuard.test.ts) ------------------------
 let auto = 0;
@@ -110,20 +114,44 @@ describe("runtime injector — triggers", () => {
     expect(injections[0]!.message).toContain(TOOL_LOOP_GUARD_MARKER);
   });
 
-  test("injects exactly one message for a repeated read loop", () => {
+  test("injects exactly one message for a repeated read loop (V0 mechanics)", () => {
     auto = 0;
     const events = reindex([read("/a.py"), read("/a.py"), read("/a.py")]);
-    const { injections } = drive(events, ON);
+    const { injections } = drive(events, ON_V0);
     expect(injections.length).toBe(1);
     expect(injections[0]!.triggerType).toBe("repeated_read");
   });
 
-  test("injects exactly one message for a repeated search loop", () => {
+  test("injects exactly one message for a repeated search loop (V0 mechanics)", () => {
     auto = 0;
     const events = reindex([search("class Foo", "/p", "hit"), search("class Foo", "/p", "hit")]);
-    const { injections } = drive(events, ON);
+    const { injections } = drive(events, ON_V0);
     expect(injections.length).toBe(1);
     expect(injections[0]!.triggerType).toBe("repeated_search");
+  });
+
+  // (17) under V4 (the default), a pure opening read loop is NOT injected mid-loop; the
+  // same loop AFTER a search IS — the runtime state machine honors the calibration.
+  test("V4: a pure opening read loop injects nothing, but the same loop after a search injects", () => {
+    auto = 0;
+    const pure = drive(reindex([read("/a.py"), read("/a.py"), read("/a.py")]), ON);
+    expect(pure.injections).toEqual([]);
+    auto = 0;
+    const afterSearch = drive(reindex([search("q", "/p", "hit"), read("/a.py"), read("/a.py"), read("/a.py")]), ON);
+    expect(afterSearch.injections.length).toBe(1);
+    expect(afterSearch.injections[0]!.triggerType).toBe("repeated_read");
+  });
+
+  // V4: command-failure loops are still injected with no prior search/edit.
+  test("V4: a repeated failed command still injects without prior progress", () => {
+    auto = 0;
+    const events = reindex([
+      bash("python repro.py", { success: false, output: "ValueError: boom" }),
+      bash("python repro.py", { success: false, output: "ValueError: boom" }),
+    ]);
+    const { injections } = drive(events, ON);
+    expect(injections.length).toBe(1);
+    expect(injections[0]!.triggerType).toBe("repeated_failed_command");
   });
 
   test("a progress event (intervening edit) resets the repeated-read streak — no injection", () => {
@@ -170,7 +198,7 @@ describe("runtime injector — caps, cooldown, suppression", () => {
     for (let i = 0; i < 5; i++) events.push(read(`/f${i}.py`), read(`/f${i}.py`), read(`/f${i}.py`));
     // cooldown 1 = realistic "at most one delivered message per turn"; the detector
     // self-suppresses the co-firing window signal at an already-injected index.
-    const { state, injections } = drive(reindex(events), { ...ON, cooldownToolCalls: 1, maxInjections: 3 });
+    const { state, injections } = drive(reindex(events), { ...ON_V0, cooldownToolCalls: 1, maxInjections: 3 });
     expect(injections.length).toBe(3);
     expect(state.injectedSignatures.length).toBe(3); // canonical firing set is also capped
   });
@@ -179,7 +207,7 @@ describe("runtime injector — caps, cooldown, suppression", () => {
     auto = 0;
     const events = reindex([read("/a.py"), read("/a.py"), read("/a.py"), read("/a.py"), read("/a.py")]);
     // Under the production cooldown the same read:a.py loop warns exactly once.
-    const { injections } = drive(events, ON);
+    const { injections } = drive(events, ON_V0);
     expect(injections.length).toBe(1);
     expect(injections[0]!.signature).toBe("read:a.py");
   });
@@ -202,13 +230,13 @@ describe("runtime injector — state serialization", () => {
     auto = 0;
     const events = reindex([read("/a.py"), read("/a.py"), read("/a.py")]);
     // step 1
-    let step = stepToolLoopGuardRuntime(initRuntimeState(), events[0]!, ON);
+    let step = stepToolLoopGuardRuntime(initRuntimeState(), events[0]!, ON_V0);
     const wire = serializeRuntimeState(step.state);
     // resume from serialized state for the rest
     let state = deserializeRuntimeState(wire);
     const injections: ToolLoopGuardFiring[] = [];
     for (const e of events.slice(1)) {
-      step = stepToolLoopGuardRuntime(state, e, ON);
+      step = stepToolLoopGuardRuntime(state, e, ON_V0);
       state = step.state;
       if (step.injection) injections.push(step.injection);
     }
@@ -278,10 +306,12 @@ describe("hook stdout", () => {
     expect(s.hooks.PostToolUse[0]!.hooks[0]!.type).toBe("command");
   });
 
-  test("parseHookConfig defaults to enabled and merges overrides", () => {
+  test("parseHookConfig defaults to enabled+V4 and merges overrides", () => {
     expect(parseHookConfig(undefined).enabled).toBe(true);
+    expect(parseHookConfig(undefined).calibration).toBe("v4"); // M79 default
     expect(parseHookConfig('{"enabled":false}').enabled).toBe(true); // forced on
     expect(parseHookConfig('{"repeatedReadThreshold":2}').repeatedReadThreshold).toBe(2);
+    expect(parseHookConfig('{"calibration":"v0"}').calibration).toBe("v0"); // override honored
     expect(parseHookConfig("garbage").enabled).toBe(true);
   });
 });
@@ -317,13 +347,24 @@ describe("runToolLoopGuardHook — fail-closed body", () => {
     expect(logs[0]!).toContain(TOOL_LOOP_GUARD_MARKER);
   });
 
-  test("repeated read loop injects once on the threshold-th invocation", () => {
+  test("repeated read loop injects once on the threshold-th invocation (V0 mechanics)", () => {
     const { io } = memIo();
     const ev = JSON.stringify({ tool_name: "Read", tool_input: { file_path: "/a.py" }, tool_output: "x" });
+    const cfg = { stateFile: STATE, configJson: '{"calibration":"v0"}' };
+    const r1 = runToolLoopGuardHook(ev, cfg, io);
+    const r2 = runToolLoopGuardHook(ev, cfg, io);
+    const r3 = runToolLoopGuardHook(ev, cfg, io);
+    expect([r1.injected, r2.injected, r3.injected]).toEqual([false, false, true]);
+  });
+
+  test("V4 (hook default): a pure opening read loop never injects", () => {
+    const { io } = memIo();
+    const ev = JSON.stringify({ tool_name: "Read", tool_input: { file_path: "/a.py" }, tool_output: "x" });
+    // No configJson => parseHookConfig defaults to V4. Three pure reads => no injection.
     const r1 = runToolLoopGuardHook(ev, { stateFile: STATE }, io);
     const r2 = runToolLoopGuardHook(ev, { stateFile: STATE }, io);
     const r3 = runToolLoopGuardHook(ev, { stateFile: STATE }, io);
-    expect([r1.injected, r2.injected, r3.injected]).toEqual([false, false, true]);
+    expect([r1.injected, r2.injected, r3.injected]).toEqual([false, false, false]);
   });
 
   test("malformed stdin fails closed: no inject, well-formed noop payload, no throw", () => {
@@ -382,7 +423,7 @@ describe("toolLoopGuardRuntimeMeta", () => {
   test("records mode, injected messages, and hook availability", () => {
     auto = 0;
     const events = reindex([read("/a.py"), read("/a.py"), read("/a.py")]);
-    const result = runToolLoopGuard(events, ON);
+    const result = runToolLoopGuard(events, ON_V0);
     const meta = toolLoopGuardRuntimeMeta(result, TOOL_LOOP_GUARD_RUNTIME_MODE, true);
     expect(meta.tool_loop_guard_mode).toBe(TOOL_LOOP_GUARD_RUNTIME_MODE);
     expect(meta.tool_loop_guard_injected_messages.length).toBe(1);
