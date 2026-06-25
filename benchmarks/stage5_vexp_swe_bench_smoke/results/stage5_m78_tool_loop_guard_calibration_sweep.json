@@ -1,0 +1,306 @@
+{
+  "milestone": "M78-calibration-sweep",
+  "kind": "offline post-hoc calibration sweep of the runtime tool-loop guard; no live agents, no Docker, no API spend",
+  "live_agents": false,
+  "docker": false,
+  "retrieval_changed": false,
+  "uses_gold_for_detector": false,
+  "base_guard_config": {
+    "enabled": false,
+    "maxInjections": 3,
+    "cooldownToolCalls": 3,
+    "repeatedReadThreshold": 3,
+    "repeatedSearchThreshold": 2,
+    "repeatedFailureThreshold": 2,
+    "repeatedFamilyErrorThreshold": 3,
+    "windowSize": 6,
+    "windowRepeatedReadThreshold": 4
+  },
+  "v5_multifile_window": {
+    "window_size": 8,
+    "distinct_files": 2,
+    "min_reads_per_file": 2
+  },
+  "cohort_size": 99,
+  "cohort_group_counts": {
+    "other_unresolved": 18,
+    "normal_resolved_control": 54,
+    "cap_hit": 6,
+    "treatment_only_win": 10,
+    "baseline_only_loss": 7,
+    "thrashing_signal": 3,
+    "no_patch_exhaustion": 1
+  },
+  "variant_definitions": {
+    "V0": "current guard",
+    "V1": "minimum first-fire turn >= 4 (post-filter)",
+    "V2": "minimum first-fire turn >= 6 (post-filter)",
+    "V3": "repeated-read requires >=3 identical reads (== current threshold; equivalent to V0)",
+    "V4": "repeated-read/search/window fires only after >=1 search-or-edit event",
+    "V5": "V0 + multi-file (distinct-file) read-window add-on",
+    "V6": "V1 + multi-file read-window",
+    "V7": "V2 + multi-file read-window"
+  },
+  "named_cases_basis": "M77 LIVE guarded streams (the trajectories that actually ran)",
+  "named_by_variant": {
+    "V0": {
+      "astropy__astropy-14598": {
+        "fires": true,
+        "firstFireTurn": 13,
+        "injectionCount": 1
+      },
+      "pytest-dev__pytest-6197": {
+        "fires": true,
+        "firstFireTurn": 2,
+        "injectionCount": 1
+      },
+      "sympy__sympy-12419": {
+        "fires": true,
+        "firstFireTurn": 5,
+        "injectionCount": 1
+      },
+      "django__django-16263": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      }
+    },
+    "V1": {
+      "astropy__astropy-14598": {
+        "fires": true,
+        "firstFireTurn": 13,
+        "injectionCount": 1
+      },
+      "pytest-dev__pytest-6197": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      },
+      "sympy__sympy-12419": {
+        "fires": true,
+        "firstFireTurn": 5,
+        "injectionCount": 1
+      },
+      "django__django-16263": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      }
+    },
+    "V2": {
+      "astropy__astropy-14598": {
+        "fires": true,
+        "firstFireTurn": 13,
+        "injectionCount": 1
+      },
+      "pytest-dev__pytest-6197": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      },
+      "sympy__sympy-12419": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      },
+      "django__django-16263": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      }
+    },
+    "V3": {
+      "astropy__astropy-14598": {
+        "fires": true,
+        "firstFireTurn": 13,
+        "injectionCount": 1
+      },
+      "pytest-dev__pytest-6197": {
+        "fires": true,
+        "firstFireTurn": 2,
+        "injectionCount": 1
+      },
+      "sympy__sympy-12419": {
+        "fires": true,
+        "firstFireTurn": 5,
+        "injectionCount": 1
+      },
+      "django__django-16263": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      }
+    },
+    "V4": {
+      "astropy__astropy-14598": {
+        "fires": true,
+        "firstFireTurn": 13,
+        "injectionCount": 1
+      },
+      "pytest-dev__pytest-6197": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      },
+      "sympy__sympy-12419": {
+        "fires": true,
+        "firstFireTurn": 5,
+        "injectionCount": 1
+      },
+      "django__django-16263": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      }
+    },
+    "V5": {
+      "astropy__astropy-14598": {
+        "fires": true,
+        "firstFireTurn": 13,
+        "injectionCount": 1
+      },
+      "pytest-dev__pytest-6197": {
+        "fires": true,
+        "firstFireTurn": 2,
+        "injectionCount": 1
+      },
+      "sympy__sympy-12419": {
+        "fires": true,
+        "firstFireTurn": 5,
+        "injectionCount": 1
+      },
+      "django__django-16263": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      }
+    },
+    "V6": {
+      "astropy__astropy-14598": {
+        "fires": true,
+        "firstFireTurn": 13,
+        "injectionCount": 1
+      },
+      "pytest-dev__pytest-6197": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      },
+      "sympy__sympy-12419": {
+        "fires": true,
+        "firstFireTurn": 5,
+        "injectionCount": 1
+      },
+      "django__django-16263": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      }
+    },
+    "V7": {
+      "astropy__astropy-14598": {
+        "fires": true,
+        "firstFireTurn": 13,
+        "injectionCount": 1
+      },
+      "pytest-dev__pytest-6197": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      },
+      "sympy__sympy-12419": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      },
+      "django__django-16263": {
+        "fires": false,
+        "firstFireTurn": null,
+        "injectionCount": 0
+      }
+    }
+  },
+  "cohort_basis": "M71/M72/M73 captured UNGUARDED treatment streams",
+  "cohort_by_variant": {
+    "V0": {
+      "cap_thrash_recall_fires": 5,
+      "cap_thrash_recall_total": 9,
+      "control_fp_fires": 3,
+      "control_fp_total": 71,
+      "treatment_only_win_fires": 0,
+      "baseline_only_loss_fires": 0,
+      "early_fires_lt_turn4": 5,
+      "total_injections": 11
+    },
+    "V1": {
+      "cap_thrash_recall_fires": 4,
+      "cap_thrash_recall_total": 9,
+      "control_fp_fires": 2,
+      "control_fp_total": 71,
+      "treatment_only_win_fires": 0,
+      "baseline_only_loss_fires": 0,
+      "early_fires_lt_turn4": 0,
+      "total_injections": 6
+    },
+    "V2": {
+      "cap_thrash_recall_fires": 4,
+      "cap_thrash_recall_total": 9,
+      "control_fp_fires": 0,
+      "control_fp_total": 71,
+      "treatment_only_win_fires": 0,
+      "baseline_only_loss_fires": 0,
+      "early_fires_lt_turn4": 0,
+      "total_injections": 4
+    },
+    "V3": {
+      "cap_thrash_recall_fires": 5,
+      "cap_thrash_recall_total": 9,
+      "control_fp_fires": 3,
+      "control_fp_total": 71,
+      "treatment_only_win_fires": 0,
+      "baseline_only_loss_fires": 0,
+      "early_fires_lt_turn4": 5,
+      "total_injections": 11
+    },
+    "V4": {
+      "cap_thrash_recall_fires": 5,
+      "cap_thrash_recall_total": 9,
+      "control_fp_fires": 1,
+      "control_fp_total": 71,
+      "treatment_only_win_fires": 0,
+      "baseline_only_loss_fires": 0,
+      "early_fires_lt_turn4": 1,
+      "total_injections": 6
+    },
+    "V5": {
+      "cap_thrash_recall_fires": 6,
+      "cap_thrash_recall_total": 9,
+      "control_fp_fires": 4,
+      "control_fp_total": 71,
+      "treatment_only_win_fires": 1,
+      "baseline_only_loss_fires": 0,
+      "early_fires_lt_turn4": 6,
+      "total_injections": 15
+    },
+    "V6": {
+      "cap_thrash_recall_fires": 5,
+      "cap_thrash_recall_total": 9,
+      "control_fp_fires": 2,
+      "control_fp_total": 71,
+      "treatment_only_win_fires": 0,
+      "baseline_only_loss_fires": 0,
+      "early_fires_lt_turn4": 0,
+      "total_injections": 9
+    },
+    "V7": {
+      "cap_thrash_recall_fires": 5,
+      "cap_thrash_recall_total": 9,
+      "control_fp_fires": 0,
+      "control_fp_total": 71,
+      "treatment_only_win_fires": 0,
+      "baseline_only_loss_fires": 0,
+      "early_fires_lt_turn4": 0,
+      "total_injections": 6
+    }
+  }
+}
