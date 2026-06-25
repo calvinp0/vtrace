@@ -1,0 +1,302 @@
+{
+ "milestone": "M74",
+ "categories": [
+  {
+   "category": "wrong_required_pivot",
+   "description": "A required pivot the harness surfaced/scored was not the real fix site; agent followed it or the decision was invalid.",
+   "deterministic_signals": [
+    "required_target_invalid_decision_count>0",
+    "required pivot path not in gold files (offline)",
+    "ruled_out on a gold file (offline)"
+   ],
+   "llm_signals": [
+    "judge: did the surfaced pivot match the actual defect?"
+   ],
+   "examples": [
+    "astropy__astropy-14369",
+    "django__django-13512"
+   ],
+   "harness_surface": "pivot_inspection_policy",
+   "candidate_intervention": "low-confidence required-pivot demotion / context-to-action rule",
+   "regression_risk": "medium (could demote a correct pivot)",
+   "auto_mineable": true
+  },
+  {
+   "category": "missing_second_gold",
+   "description": "Multi-file gold fix where the agent edited only a subset of required files.",
+   "deterministic_signals": [
+    "n_gold_files>1 and edited_gold<n_gold (offline)",
+    "single edit on multi-file task"
+   ],
+   "llm_signals": [
+    "judge: does the change fully cover the reported behavior?"
+   ],
+   "examples": [
+    "sphinx-doc__sphinx-7462",
+    "sympy__sympy-16597",
+    "django__django-16256"
+   ],
+   "harness_surface": "patch_policy",
+   "candidate_intervention": "multi-gold / second-file action prompt",
+   "regression_risk": "medium (may invite over-editing)",
+   "auto_mineable": true
+  },
+  {
+   "category": "context_to_action_gap",
+   "description": "Agent had full required-target coverage and produced a patch, but it did not resolve the tests \u2014 a gap between context and a passing action.",
+   "deterministic_signals": [
+    "decision_coverage>=0.9",
+    "patch produced",
+    "resolved=false",
+    "edits>=1"
+   ],
+   "llm_signals": [
+    "judge: was the edit semantically on-target but incomplete/incorrect?"
+   ],
+   "examples": [
+    "matplotlib__matplotlib-26466",
+    "pytest-dev__pytest-10051",
+    "django__django-16667"
+   ],
+   "harness_surface": "patch_policy / verification_policy",
+   "candidate_intervention": "context-to-action rule for hidden pivots; pre-submit self-check",
+   "regression_risk": "low-medium",
+   "auto_mineable": true
+  },
+  {
+   "category": "agent_self_rescue_success",
+   "description": "Agent hit an error/dead-end mid-run and recovered to a passing patch.",
+   "deterministic_signals": [
+    "(needs turn-level trace) early failed tool call followed by resolved=true"
+   ],
+   "llm_signals": [
+    "trace judge: identify recovery turn"
+   ],
+   "examples": [
+    "not deterministically mined in M74 (turn-level trace required)"
+   ],
+   "harness_surface": "failure_recovery_policy",
+   "candidate_intervention": "none (positive signal; mine to reinforce)",
+   "regression_risk": "n/a",
+   "auto_mineable": false
+  },
+  {
+   "category": "agent_self_rescue_failure",
+   "description": "Agent hit an error/dead-end and failed to recover.",
+   "deterministic_signals": [
+    "(needs turn-level trace) repeated failed tool calls then no_patch/both_fail"
+   ],
+   "llm_signals": [
+    "trace judge: identify the stall point"
+   ],
+   "examples": [
+    "proxy: thrashing+no_patch cases (django-15503, astropy-14598)"
+   ],
+   "harness_surface": "failure_recovery_policy",
+   "candidate_intervention": "no-patch exhaustion recovery prompt",
+   "regression_risk": "low",
+   "auto_mineable": false
+  },
+  {
+   "category": "no_patch_exhaustion",
+   "description": "Run ended (budget/turns/fail-closed) without emitting a usable patch.",
+   "deterministic_signals": [
+    "patch_produced=false",
+    "treatment_edits=0",
+    "invalid_reason contains fail_closed",
+    "cost near cap"
+   ],
+   "llm_signals": [],
+   "examples": [
+    "django__django-15503",
+    "django__django-13513",
+    "astropy__astropy-14598"
+   ],
+   "harness_surface": "failure_recovery_policy / cost_guard",
+   "candidate_intervention": "no-patch exhaustion recovery prompt + earlier stop-and-commit",
+   "regression_risk": "low",
+   "auto_mineable": true
+  },
+  {
+   "category": "patch_quality_failure",
+   "description": "A patch was produced touching plausible code but failed FAIL_TO_PASS.",
+   "deterministic_signals": [
+    "resolved=false",
+    "patch produced",
+    "edits>=1",
+    "coverage not high or off-target"
+   ],
+   "llm_signals": [
+    "judge: correctness of the diff against the issue"
+   ],
+   "examples": [
+    "sympy__sympy-13974",
+    "django__django-15695",
+    "sympy__sympy-24562"
+   ],
+   "harness_surface": "verification_policy",
+   "candidate_intervention": "verification failure recovery / pre-submit reproduction",
+   "regression_risk": "medium",
+   "auto_mineable": true
+  },
+  {
+   "category": "tool_loop_or_thrashing",
+   "description": "Repeated reads/searches of the same files or runaway tool-call counts without convergence.",
+   "deterministic_signals": [
+    "repeated_file_reads>=5",
+    "tool_call_count>=25"
+   ],
+   "llm_signals": [],
+   "examples": [
+    "django__django-16263",
+    "sympy__sympy-12419",
+    "pylint-dev__pylint-4551"
+   ],
+   "harness_surface": "tool_loop_guard",
+   "candidate_intervention": "repeated-failure / repeated-read tool-loop guard",
+   "regression_risk": "low",
+   "auto_mineable": true
+  },
+  {
+   "category": "verification_gap",
+   "description": "Agent did not (or could not) run the failing tests before submitting, so a wrong patch was accepted by the agent.",
+   "deterministic_signals": [
+    "(needs trace) no test-run tool call before final patch",
+    "resolved=false with confident patch"
+   ],
+   "llm_signals": [
+    "trace judge: was a reproduction/verification step attempted?"
+   ],
+   "examples": [
+    "proxy: patch_quality_failure cluster"
+   ],
+   "harness_surface": "verification_policy",
+   "candidate_intervention": "verification failure recovery rule",
+   "regression_risk": "medium",
+   "auto_mineable": false
+  },
+  {
+   "category": "environment_or_dependency_failure",
+   "description": "Build/import/dependency failure prevented progress.",
+   "deterministic_signals": [
+    "invalid_reason mentions env/import/build",
+    "docker eval missing"
+   ],
+   "llm_signals": [],
+   "examples": [
+    "none observed on treatment arm in M70-M73 (baseline_invalid=0)"
+   ],
+   "harness_surface": "environment_policy",
+   "candidate_intervention": "environment preflight / dependency hint",
+   "regression_risk": "low",
+   "auto_mineable": true
+  },
+  {
+   "category": "quota_or_infra_abort",
+   "description": "Run aborted for quota/infra reasons (not a model failure).",
+   "deterministic_signals": [
+    "treatment_skipped=true",
+    "operational retry/quota abort logged"
+   ],
+   "llm_signals": [],
+   "examples": [
+    "django__django-10973 (skipped)"
+   ],
+   "harness_surface": "environment_policy",
+   "candidate_intervention": "retry/resume policy (operational, not behavioral)",
+   "regression_risk": "none",
+   "auto_mineable": true
+  },
+  {
+   "category": "over_anchor_on_context",
+   "description": "Agent edited a surfaced context/optional/demoted target instead of (or in addition to) the real fix, producing off-target edits.",
+   "deterministic_signals": [
+    "off_target_edit_count>0",
+    "edited a demoted/optional path but not gold"
+   ],
+   "llm_signals": [
+    "judge: was the edit driven by injected context rather than the issue?"
+   ],
+   "examples": [
+    "off-target edits present in 31/99 treatment runs (secondary signal)"
+   ],
+   "harness_surface": "pivot_inspection_policy / decision_contract_policy",
+   "candidate_intervention": "optional/demoted context phrasing guard (advisory only)",
+   "regression_risk": "medium",
+   "auto_mineable": true
+  },
+  {
+   "category": "under_use_of_context",
+   "description": "Agent inspected a required pivot but did not edit it, then failed.",
+   "deterministic_signals": [
+    "required_target_inspect_only_no_edit_count>0",
+    "resolved=false"
+   ],
+   "llm_signals": [],
+   "examples": [
+    "django__django-14792",
+    "sphinx-doc__sphinx-9711",
+    "sympy__sympy-20428"
+   ],
+   "harness_surface": "decision_contract_policy",
+   "candidate_intervention": "context-to-action transition rule (commit-or-rule-out)",
+   "regression_risk": "low-medium",
+   "auto_mineable": true
+  },
+  {
+   "category": "cost_explosion",
+   "description": "Run consumed an outlier cost/token budget, typically hitting the per-run cap.",
+   "deterministic_signals": [
+    "treatment_cost>=1.5",
+    "treatment_cost>=2.9 (cap)"
+   ],
+   "llm_signals": [],
+   "examples": [
+    "django__django-15503",
+    "sympy__sympy-15599",
+    "django__django-16263"
+   ],
+   "harness_surface": "cost_guard",
+   "candidate_intervention": "cost/thrashing guard with early stop-and-commit",
+   "regression_risk": "low",
+   "auto_mineable": true
+  },
+  {
+   "category": "baseline_only_loss",
+   "description": "Baseline resolved, treatment did not \u2014 a treatment regression vs the unaided agent.",
+   "deterministic_signals": [
+    "paired_outcome=baseline_only_pass"
+   ],
+   "llm_signals": [
+    "judge: did injected context mislead vs the baseline path?"
+   ],
+   "examples": [
+    "sympy__sympy-12419",
+    "sympy__sympy-15599",
+    "django__django-16938"
+   ],
+   "harness_surface": "pivot_inspection_policy",
+   "candidate_intervention": "investigate per-mechanism (thrash/under-use/missing-gold drive most)",
+   "regression_risk": "n/a (diagnostic)",
+   "auto_mineable": true
+  },
+  {
+   "category": "treatment_only_win",
+   "description": "Treatment resolved, baseline did not \u2014 a treatment-attributable win.",
+   "deterministic_signals": [
+    "paired_outcome=treatment_only_pass"
+   ],
+   "llm_signals": [],
+   "examples": [
+    "matplotlib__matplotlib-24627",
+    "django__django-13112",
+    "sympy__sympy-15875"
+   ],
+   "harness_surface": "n/a (positive)",
+   "candidate_intervention": "none (reinforce; protect against regression)",
+   "regression_risk": "n/a",
+   "auto_mineable": true
+  }
+ ],
+ "category_count": 16
+}

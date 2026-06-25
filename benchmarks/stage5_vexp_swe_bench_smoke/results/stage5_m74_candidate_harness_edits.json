@@ -1,0 +1,164 @@
+{
+ "milestone": "M74",
+ "note": "PROPOSALS ONLY \u2014 not implemented in M74",
+ "candidates": [
+  {
+   "candidate_id": "C1",
+   "title": "Repeated-failure / repeated-read tool-loop guard",
+   "target_harness_surface": "tool_loop_guard",
+   "failure_cluster_addressed": "tool_loop_or_thrashing + cost_cap_exhaustion",
+   "evidence_cases": [
+    "astropy__astropy-14598",
+    "django__django-15503",
+    "django__django-16263",
+    "pydata__xarray-6938",
+    "pylint-dev__pylint-4551",
+    "pytest-dev__pytest-6197",
+    "sphinx-doc__sphinx-7748",
+    "sympy__sympy-12419",
+    "sympy__sympy-15599"
+   ],
+   "proposed_behavior": "Detect N repeated reads/searches of the same path or M consecutive failed tool calls; inject a one-line advisory ('you have re-read X three times \u2014 decide: edit, rule out, or move on') and harden the stop condition. Advisory middleware, default OFF behind a flag.",
+   "expected_change": "Fewer cap-hit runs; lower median tool_calls on degenerate runs; no change on healthy runs.",
+   "validation_split": "frozen thrashing/cap-hit subset (9 thrash incl. 6 cap-hits) held-in; full 100 held-out for no-regression",
+   "success_metric": "cap-hit count and repeated_file_reads drop on held-in; resolution non-regressive on held-out; cost non-regressive",
+   "regression_risk": "low (fires only on degenerate loops where nothing resolves anyway)",
+   "ready": "yes \u2014 strongest, most general, fully offline-detectable"
+  },
+  {
+   "candidate_id": "C2",
+   "title": "No-patch exhaustion recovery prompt",
+   "target_harness_surface": "failure_recovery_policy",
+   "failure_cluster_addressed": "no_patch_exhaustion",
+   "evidence_cases": [
+    "astropy__astropy-14598",
+    "django__django-10973",
+    "django__django-13513",
+    "django__django-15503"
+   ],
+   "proposed_behavior": "When budget/turns near exhaustion and no patch exists, inject a 'commit your best minimal diff now' recovery step rather than fail-closed-empty.",
+   "expected_change": "Converts a fraction of no-patch runs into a scored (possibly passing) patch; reduces invalid count.",
+   "validation_split": "4 no-patch cases held-in; full 100 held-out",
+   "success_metric": "no-patch/invalid count drops; resolution non-regressive; no increase in off-target edits",
+   "regression_risk": "low-medium (a late forced patch could be wrong but cannot be worse than empty)",
+   "ready": "yes (small, but smaller cluster than C1)"
+  },
+  {
+   "candidate_id": "C3",
+   "title": "Multi-gold / second-file action prompt",
+   "target_harness_surface": "patch_policy",
+   "failure_cluster_addressed": "missing_second_gold",
+   "evidence_cases": [
+    "django__django-13195",
+    "django__django-16256",
+    "matplotlib__matplotlib-24870",
+    "mwaskom__seaborn-3187",
+    "pydata__xarray-6992",
+    "sphinx-doc__sphinx-7462",
+    "sympy__sympy-16597"
+   ],
+   "proposed_behavior": "When the surfaced pivots span >1 file (or impact analysis suggests a coupled site), add an advisory: 'this fix likely spans multiple files \u2014 confirm whether a second site needs the same change.' Advisory only; never asserts gold.",
+   "expected_change": "More complete multi-file patches on coupled-fix tasks.",
+   "validation_split": "7 missing-gold both_fail held-in; multi-gold subset held-out",
+   "success_metric": "edited_gold coverage rises on held-in; no rise in off-target edits on single-file tasks",
+   "regression_risk": "medium (could invite over-editing single-file tasks \u2192 off-target)",
+   "ready": "no \u2014 needs an offline phrasing-leak guard first (risk of benchmark-shaped hinting)"
+  },
+  {
+   "candidate_id": "C4",
+   "title": "Context-to-action transition rule (commit-or-rule-out)",
+   "target_harness_surface": "decision_contract_policy",
+   "failure_cluster_addressed": "under_use_of_context + context_to_action_gap",
+   "evidence_cases": [
+    "astropy__astropy-14365",
+    "django__django-11820",
+    "django__django-16667",
+    "matplotlib__matplotlib-26466",
+    "psf__requests-1921",
+    "pytest-dev__pytest-10051"
+   ],
+   "proposed_behavior": "When a required pivot has been inspected but neither edited nor ruled out by a turn threshold, prompt the agent to explicitly EDIT or RULE_OUT it before continuing exploration.",
+   "expected_change": "Fewer inspect-only-then-fail runs; tighter exploration\u2192implementation transition.",
+   "validation_split": "3 under-use + 6 context-gap held-in; full 100 held-out",
+   "success_metric": "inspect_only_no_edit count drops on held-in; resolution non-regressive",
+   "regression_risk": "low-medium",
+   "ready": "no \u2014 overlaps existing pivot-inspection contract; design first"
+  },
+  {
+   "candidate_id": "C5",
+   "title": "Exploration-to-implementation transition rule",
+   "target_harness_surface": "failure_recovery_policy",
+   "failure_cluster_addressed": "tool_loop_or_thrashing (early phase)",
+   "evidence_cases": [
+    "astropy__astropy-14598",
+    "django__django-15503",
+    "django__django-16263",
+    "pydata__xarray-6938",
+    "pylint-dev__pylint-4551"
+   ],
+   "proposed_behavior": "After K exploration turns with 0 edits, inject a 'state your hypothesis and make the first edit' nudge.",
+   "expected_change": "Earlier first edit on slow-start runs; fewer runaway-exploration cap-hits.",
+   "validation_split": "thrash subset held-in; full 100 held-out",
+   "success_metric": "turns-to-first-edit drops; resolution non-regressive",
+   "regression_risk": "medium (premature edits)",
+   "ready": "no \u2014 partially subsumed by C1"
+  },
+  {
+   "candidate_id": "C6",
+   "title": "Required-artifact-early policy",
+   "target_harness_surface": "artifact_policy",
+   "failure_cluster_addressed": "no_patch_exhaustion + verification_gap",
+   "evidence_cases": [
+    "astropy__astropy-14598",
+    "django__django-10973",
+    "django__django-13513",
+    "django__django-15503"
+   ],
+   "proposed_behavior": "Require a draft patch artifact be written early and updated, so a usable diff always exists at budget exhaustion.",
+   "expected_change": "Eliminates empty-on-exhaustion outcomes.",
+   "validation_split": "no-patch cases held-in",
+   "success_metric": "zero empty-on-exhaustion among held-in",
+   "regression_risk": "low",
+   "ready": "no \u2014 overlaps C2; pick one"
+  },
+  {
+   "candidate_id": "C7",
+   "title": "Cost/thrashing guard (budget-aware stop-and-commit)",
+   "target_harness_surface": "cost_guard",
+   "failure_cluster_addressed": "cost_explosion + cost_cap_exhaustion",
+   "evidence_cases": [
+    "astropy__astropy-14598",
+    "django__django-15503",
+    "django__django-16263",
+    "pylint-dev__pylint-4551",
+    "sympy__sympy-12419",
+    "sympy__sympy-15599"
+   ],
+   "proposed_behavior": "At a soft budget fraction (e.g. 70% of cap) with no resolving signal, switch to 'finalize best diff' mode.",
+   "expected_change": "Caps cost on degenerate runs; 0/6 cap-hits currently resolve, so little resolution to lose.",
+   "validation_split": "6 cap-hit cases held-in; full 100 held-out",
+   "success_metric": "cap-hit count drops; pooled cost improves; resolution non-regressive",
+   "regression_risk": "low",
+   "ready": "yes \u2014 strong, but largely realizable as the stop-condition half of C1"
+  },
+  {
+   "candidate_id": "C8",
+   "title": "Verification failure recovery rule",
+   "target_harness_surface": "verification_policy",
+   "failure_cluster_addressed": "patch_quality_failure + verification_gap",
+   "evidence_cases": [
+    "sympy__sympy-13974",
+    "django__django-15695",
+    "sympy__sympy-24562"
+   ],
+   "proposed_behavior": "Before finalizing, prompt the agent to run the targeted failing test (where discoverable) and revise if it still fails.",
+   "expected_change": "Converts some patch-quality failures into passes.",
+   "validation_split": "patch_quality cluster held-in",
+   "success_metric": "resolution rises on held-in without cost blow-up",
+   "regression_risk": "medium (cost increase; test discovery unreliable)",
+   "ready": "no \u2014 highest cost risk"
+  }
+ ],
+ "candidate_count": 8,
+ "recommended_for_m75": "C1"
+}
