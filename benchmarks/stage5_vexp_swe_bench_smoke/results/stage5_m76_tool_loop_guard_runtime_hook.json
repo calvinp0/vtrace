@@ -1,0 +1,83 @@
+{
+  "milestone": "M76",
+  "kind": "Offline simulation of the runtime tool-loop-guard injector over captured M71/M72/M73 treatment streams",
+  "live_agents": false,
+  "docker": false,
+  "api_spend": false,
+  "guard_config": {
+    "enabled": true,
+    "maxInjections": 3,
+    "cooldownToolCalls": 3,
+    "repeatedReadThreshold": 3,
+    "repeatedSearchThreshold": 2,
+    "repeatedFailureThreshold": 2,
+    "repeatedFamilyErrorThreshold": 3,
+    "windowSize": 6,
+    "windowRepeatedReadThreshold": 4
+  },
+  "total_cases": 99,
+  "cases_with_runtime_injection": 9,
+  "total_runtime_injections": 11,
+  "total_observe_events": 11,
+  "runtime_matches_observe_timing_all_cases": true,
+  "deterministic_all_cases": true,
+  "by_group": [
+    {
+      "group": "cap_hit",
+      "cases": 6,
+      "observe_events_total": 3,
+      "runtime_injections_total": 3,
+      "timing_match_cases": 6,
+      "deterministic_cases": 6
+    },
+    {
+      "group": "thrashing_signal",
+      "cases": 3,
+      "observe_events_total": 2,
+      "runtime_injections_total": 2,
+      "timing_match_cases": 3,
+      "deterministic_cases": 3
+    },
+    {
+      "group": "treatment_only_win",
+      "cases": 10,
+      "observe_events_total": 0,
+      "runtime_injections_total": 0,
+      "timing_match_cases": 10,
+      "deterministic_cases": 10
+    },
+    {
+      "group": "baseline_only_loss",
+      "cases": 7,
+      "observe_events_total": 0,
+      "runtime_injections_total": 0,
+      "timing_match_cases": 7,
+      "deterministic_cases": 7
+    },
+    {
+      "group": "no_patch_exhaustion",
+      "cases": 1,
+      "observe_events_total": 0,
+      "runtime_injections_total": 0,
+      "timing_match_cases": 1,
+      "deterministic_cases": 1
+    },
+    {
+      "group": "normal_resolved_control",
+      "cases": 54,
+      "observe_events_total": 3,
+      "runtime_injections_total": 3,
+      "timing_match_cases": 54,
+      "deterministic_cases": 54
+    },
+    {
+      "group": "other_unresolved",
+      "cases": 18,
+      "observe_events_total": 1,
+      "runtime_injections_total": 1,
+      "timing_match_cases": 18,
+      "deterministic_cases": 18
+    }
+  ],
+  "verdict": "PASS — runtime injector fires at the same turns as M75 observe mode, deterministic across reruns"
+}

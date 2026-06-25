@@ -668,6 +668,7 @@ export function buildPrecheckConfig(opts: {
     disablePatchVerify: false,
     disableToolUseDiscipline: false,
     toolLoopGuard: false,
+    toolLoopGuardMode: "observe",
     disableTokenDiscipline: false,
     sweBenchDataFile: null,
     runLabel: null,

@@ -76,6 +76,12 @@ import {
   toolLoopGuardMeta,
 } from "./toolLoopGuard";
 import {
+  TOOL_LOOP_GUARD_OBSERVE_MODE,
+  TOOL_LOOP_GUARD_RUNTIME_MODE,
+  buildToolLoopGuardHookSettings,
+  toolLoopGuardRuntimeMeta,
+} from "./toolLoopGuardRuntime";
+import {
   DEFAULT_PRE_EDIT_BASH_BUDGET,
   DEFAULT_PRE_EDIT_SEARCH_BUDGET,
   DEFAULT_REPEATED_FILE_READ_LIMIT,
@@ -532,6 +538,12 @@ export interface CliConfig {
   // the run and records `tool_loop_guard_*` metadata (the external harness owns the
   // turn loop, so M75 cannot inject mid-loop). Purely additive; off by default.
   readonly toolLoopGuard: boolean;
+  // M76 tool-loop guard mode. "observe" = the M75 post-run detector (records what it
+  // WOULD inject). "inject" = runtime_injection: register a Claude Code PostToolUse
+  // hook (via --settings) so the deterministic detector feeds a recovery message into
+  // the live agent's NEXT turn mid-loop. "inject" implies the guard is enabled; both
+  // are opt-in and default-off, so an unflagged run is unaffected and byte-identical.
+  readonly toolLoopGuardMode: "observe" | "inject";
   // Benchmark/dev-only suppression of the vtrace-only STAGE5_TOKEN_DISCIPLINE block
   // (--disable-token-discipline). Default false: the active turn-count reduction
   // policy is injected on the live vtrace context path, conditional on per-section
@@ -1010,6 +1022,10 @@ const DEFAULT_CONFIG: CliConfig = {
   disableToolUseDiscipline: false,
   // M75 tool-loop guard is DEFAULT-OFF; enable explicitly with --tool-loop-guard.
   toolLoopGuard: false,
+  // M76 tool-loop guard mode. "observe" (default) keeps the M75 post-run detector;
+  // "inject" enables the runtime PostToolUse hook so the guard steers the live agent.
+  // Only meaningful when the guard is enabled; injection mode is itself opt-in.
+  toolLoopGuardMode: "observe",
   // The vtrace-only STAGE5_TOKEN_DISCIPLINE turn-count reduction policy is ON by
   // default; --disable-token-discipline is a benchmark/dev-only override.
   disableTokenDiscipline: false,
@@ -1138,6 +1154,22 @@ export const STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER = "STAGE5_VTRACE_DISALLOWED_T
 
 // Stderr line the patched adapter logs when it denies the Phase-1 mutation tools.
 export const STAGE5_VTRACE_DISALLOWED_TOOLS_LOG = "Stage5 vtrace phase-1 read-only: --disallowedTools";
+
+// Marker for the FIFTH patch block (M76): it pushes `--settings <file>` into the
+// `claude` invocation when VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS points at an
+// EXISTING settings file, registering the runtime tool-loop-guard PostToolUse hook
+// so the deterministic detector can inject a recovery message mid-loop. Independent
+// of the other blocks (own marker + anchor) so an already-patched adapter migrates
+// it in. Fail-closed: if the env var is unset OR the file is absent, NO --settings
+// is added and the run is unaffected (so default/observe runs stay byte-identical).
+export const STAGE5_TOOL_LOOP_GUARD_HOOK_MARKER = "STAGE5_TOOL_LOOP_GUARD_HOOK_PATCH";
+
+// Stderr line the patched adapter logs when it wires in the runtime guard hook.
+export const STAGE5_TOOL_LOOP_GUARD_HOOK_LOG = "Stage5 tool-loop-guard runtime hook: --settings";
+
+// Stderr line the patched adapter logs when the hook env var is set but the settings
+// file is missing (fail-closed: the run proceeds WITHOUT the runtime hook).
+export const STAGE5_TOOL_LOOP_GUARD_HOOK_SKIPPED = "Stage5 tool-loop-guard runtime hook skipped";
 
 // Stderr line the patched adapter logs when it appends the tool-use-discipline
 // block at runtime. Purely observational (not load-bearing for treatment validity).
@@ -1335,6 +1367,32 @@ export function toolCallSummaryFilePath(rawDir: string): string {
   return path.join(rawDir, "_tool_calls.summary.json");
 }
 
+// M76 runtime tool-loop-guard hook artifacts. Like the instructions/stream files,
+// the settings file lives at the results ROOT so vexp's --output dir clean cannot
+// delete it before the agent reads it. The hook command is `bun <executable>`.
+export function toolLoopGuardHookScriptPath(): string {
+  return fileURLToPath(new URL("toolLoopGuardHook.ts", import.meta.url));
+}
+export function toolLoopGuardHookSettingsFilePath(outDir: string): string {
+  return path.join(outDir, "_tool_loop_guard_hook_settings.json");
+}
+// Per-run state directory the hook keys by Claude Code session id (so concurrent
+// sessions never collide). Lives at the results root for the same survival reason.
+export function toolLoopGuardStateDirPath(outDir: string): string {
+  return path.join(outDir, "_tool_loop_guard_state");
+}
+// The shell command Claude Code's PostToolUse hook runs (one process per tool call).
+export function toolLoopGuardHookCommand(nodeCommand: string): string {
+  // The external harness is spawned via `node`/`bun`; reuse the same runtime so the
+  // hook executes the TypeScript entrypoint directly. `bun` runs .ts natively.
+  const runtime = nodeCommand.includes("bun") ? nodeCommand : "bun";
+  return `${runtime} ${toolLoopGuardHookScriptPath()}`;
+}
+// True when the config asks for live runtime injection (guard enabled + inject mode).
+export function toolLoopGuardInjectionActive(config: CliConfig): boolean {
+  return config.toolLoopGuard === true && config.toolLoopGuardMode === "inject";
+}
+
 // The shared anti-loop tool-use-discipline instructions file. Like the vtrace
 // instructions and the agent stream, it lives at the results ROOT so vexp's
 // --output clean cannot delete it. The patched adapter appends it to the prompt
@@ -1391,6 +1449,15 @@ function sharedConditionEnv(config: CliConfig): Record<string, string> {
   };
   if (config.disableToolUseDiscipline !== true) {
     env.VTRACE_TOOL_USE_DISCIPLINE_FILE = stage5ToolUseDisciplineFilePath(config.out);
+  }
+  // M76 runtime tool-loop guard (DEFAULT-OFF; only when --tool-loop-guard-mode inject).
+  // Point the patched adapter at the hook settings file (which it adds via --settings,
+  // fail-closed if absent) and give the hook a state dir + config. Omitted entirely in
+  // observe mode and when the guard is off, so those runs' env stays byte-identical.
+  if (toolLoopGuardInjectionActive(config)) {
+    env.VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS = toolLoopGuardHookSettingsFilePath(config.out);
+    env.VTRACE_TOOL_LOOP_GUARD_STATE_DIR = toolLoopGuardStateDirPath(config.out);
+    env.VTRACE_TOOL_LOOP_GUARD_CONFIG = JSON.stringify({ ...DEFAULT_TOOL_LOOP_GUARD_CONFIG, enabled: true });
   }
   return env;
 }
@@ -7640,11 +7707,19 @@ export async function persistOrderedToolCalls(
   }
 }
 
-// M75 tool-loop guard, OBSERVE mode. Reads the just-persisted ordered tool-call
-// stream (rich `_tool_calls_with_outputs.json` preferred for command/exit/error
-// fields; lean `_tool_calls.json` as fallback) and runs the PURE detector. Returns
-// `{}` when the flag is off (so default runs' `_run.meta.json` is byte-identical),
-// else the additive `tool_loop_guard_*` block plus the observe-mode marker + config.
+// Tool-loop guard run metadata. Reads the just-persisted ordered tool-call stream
+// (rich `_tool_calls_with_outputs.json` preferred for command/exit/error fields;
+// lean `_tool_calls.json` as fallback) and runs the PURE detector. Returns `{}`
+// when the guard is off (so default runs' `_run.meta.json` is byte-identical).
+//
+// M75 OBSERVE mode records what the detector WOULD inject. M76 INJECT mode
+// (runtime_injection) additionally records whether the live PostToolUse hook was
+// actually wired for this run (i.e. the external adapter carries the M76 hook patch
+// AND its anchor was present); if not, it records a fail-closed unavailable reason.
+// The firing SET is computed the same way in both modes — the runtime injector and
+// the observe detector agree by construction (same pure detector over the same
+// stream) — so this stays a single, deterministic post-run computation even though
+// in inject mode the messages were injected live mid-run.
 async function computeToolLoopGuardMeta(config: CliConfig, rawDir: string): Promise<Record<string, unknown>> {
   if (config.toolLoopGuard !== true) return {};
   const candidates = [path.join(rawDir, "_tool_calls_with_outputs.json"), toolCallLogFilePath(rawDir)];
@@ -7660,9 +7735,27 @@ async function computeToolLoopGuardMeta(config: CliConfig, rawDir: string): Prom
   }
   const events = rawEvents.map((r, i) => toGuardEvent(r, i));
   const result = runToolLoopGuard(events, { ...DEFAULT_TOOL_LOOP_GUARD_CONFIG, enabled: true });
+
+  const injectMode = toolLoopGuardInjectionActive(config);
+  const mode = injectMode ? TOOL_LOOP_GUARD_RUNTIME_MODE : TOOL_LOOP_GUARD_OBSERVE_MODE;
+  // In inject mode, the live hook is "available" only if the external adapter carries
+  // the M76 hook patch. Probe it; absence is recorded as a fail-closed reason.
+  let hookAvailable = false;
+  let unavailableReason: string | null = null;
+  if (injectMode) {
+    const target = config.vexpSweBenchDir === null ? null : await locateClaudePromptFile(config.vexpSweBenchDir);
+    const adapter = target === null ? "" : await readFile(target, "utf8").catch(() => "");
+    if (target === null) {
+      unavailableReason = "claude-code adapter not located under --vexp-swe-bench-dir";
+    } else if (!hasToolLoopGuardHookPatch(adapter)) {
+      unavailableReason = `M76 hook patch (${STAGE5_TOOL_LOOP_GUARD_HOOK_MARKER}) absent from ${target}; run install-vtrace-patch`;
+    } else {
+      hookAvailable = true;
+    }
+  }
   return {
     ...toolLoopGuardMeta(result),
-    tool_loop_guard_mode: "observe_post_run",
+    ...toolLoopGuardRuntimeMeta(result, mode, hookAvailable, unavailableReason),
     tool_loop_guard_config: DEFAULT_TOOL_LOOP_GUARD_CONFIG,
   };
 }
@@ -7695,6 +7788,20 @@ async function runCondition(
   // reads it. Idempotent: every condition rewrites identical content.
   if (config.disableToolUseDiscipline !== true) {
     await writeFile(stage5ToolUseDisciplineFilePath(config.out), `${buildToolUseDisciplineBlock()}\n`);
+  }
+  // M76 runtime tool-loop guard (inject mode only): write the Claude Code --settings
+  // file that registers the PostToolUse hook, and ensure a clean per-run state dir so
+  // a prior run's accumulated events cannot leak in. Skipped entirely otherwise, so
+  // default/observe runs write no extra artifacts. The adapter adds --settings only
+  // when this file exists (fail-closed); env wiring lives in sharedConditionEnv.
+  if (toolLoopGuardInjectionActive(config)) {
+    const hookCommand = toolLoopGuardHookCommand(config.nodeCommand);
+    await writeFile(
+      toolLoopGuardHookSettingsFilePath(config.out),
+      `${JSON.stringify(buildToolLoopGuardHookSettings(hookCommand), null, 2)}\n`,
+    );
+    await rm(toolLoopGuardStateDirPath(config.out), { recursive: true, force: true });
+    await mkdir(toolLoopGuardStateDirPath(config.out), { recursive: true });
   }
   const spec =
     condition === "baseline"
@@ -8302,6 +8409,37 @@ export function buildVtraceDisallowedToolsPatchBlock(): string {
   ].join("\n");
 }
 
+// The FIFTH inserted block (M76): after the `args` array exists, push
+// `--settings <file>` when VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS points at an
+// EXISTING settings file. That settings file registers the runtime tool-loop-guard
+// PostToolUse hook (see buildToolLoopGuardHookSettings), so the deterministic
+// detector can inject a <VTRACE_TOOL_LOOP_GUARD> recovery message into the live
+// agent's next turn. FAIL-CLOSED: unset env OR missing file => nothing is added,
+// so default and observe-mode runs are byte-identical. Logs to STDERR (stdout is
+// parsed as stream-json). Synchronous existsSync keeps the check inline and cheap.
+export function buildToolLoopGuardHookPatchBlock(): string {
+  return [
+    `        // ${STAGE5_TOOL_LOOP_GUARD_HOOK_MARKER} begin — local Stage 5 smoke patch (M76 runtime`,
+    "        // tool-loop guard: register a PostToolUse hook via --settings so the detector can inject mid-loop).",
+    "        if (process.env.VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS) {",
+    "            const __stage5GuardSettings = process.env.VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS;",
+    "            try {",
+    '                const { existsSync: __stage5Exists } = await import("node:fs");',
+    "                if (__stage5Exists(__stage5GuardSettings)) {",
+    '                    args.push("--settings", __stage5GuardSettings);',
+    `                    console.error(\`${STAGE5_TOOL_LOOP_GUARD_HOOK_LOG} \${__stage5GuardSettings}\`);`,
+    "                } else {",
+    `                    console.error(\`${STAGE5_TOOL_LOOP_GUARD_HOOK_SKIPPED}: settings file not found at \${__stage5GuardSettings}\`);`,
+    "                }",
+    "            } catch (__stage5GuardErr) {",
+    `                console.error(\`${STAGE5_TOOL_LOOP_GUARD_HOOK_SKIPPED}: \${__stage5GuardErr instanceof Error ? __stage5GuardErr.message : String(__stage5GuardErr)}\`);`,
+    "            }",
+    "        }",
+    `        // ${STAGE5_TOOL_LOOP_GUARD_HOOK_MARKER} end`,
+    "",
+  ].join("\n");
+}
+
 // Independent per-block presence checks. A given adapter may carry the
 // instructions patch but not the (later-introduced) stream patch — these let the
 // patcher migrate one without re-installing the other.
@@ -8319,6 +8457,10 @@ export function hasStreamPatch(content: string): boolean {
 
 export function hasToolUseDisciplinePatch(content: string): boolean {
   return content.includes(STAGE5_TOOL_USE_DISCIPLINE_MARKER);
+}
+
+export function hasToolLoopGuardHookPatch(content: string): boolean {
+  return content.includes(STAGE5_TOOL_LOOP_GUARD_HOOK_MARKER);
 }
 
 // Insert `block` immediately after the first line containing `anchor`. Pure.
@@ -8374,6 +8516,16 @@ export function applyVtracePatch(content: string): { content: string; changed: b
   // read-only Phase-1 enforcement, which the harness then surfaces honestly).
   if (!hasDisallowedToolsPatch(next) && next.indexOf(VTRACE_DISALLOWED_TOOLS_ANCHOR) !== -1) {
     next = insertAfterAnchor(next, VTRACE_DISALLOWED_TOOLS_ANCHOR, buildVtraceDisallowedToolsPatchBlock());
+    changed = true;
+  }
+
+  // The M76 runtime tool-loop-guard hook block (Phase: live injection) is OPTIONAL
+  // like the stream + disallowed-tools blocks: it shares the disallowed-tools anchor
+  // (both push onto the assembled `args` array) and is skipped if that anchor is
+  // absent (fail-closed — the runtime hook is then simply unavailable, which the
+  // harness records honestly). Own marker, so an already-patched adapter migrates it.
+  if (!hasToolLoopGuardHookPatch(next) && next.indexOf(VTRACE_DISALLOWED_TOOLS_ANCHOR) !== -1) {
+    next = insertAfterAnchor(next, VTRACE_DISALLOWED_TOOLS_ANCHOR, buildToolLoopGuardHookPatchBlock());
     changed = true;
   }
 
@@ -8498,6 +8650,12 @@ export async function verifyVtracePatch(config: CliConfig): Promise<VtracePatchV
       ? `Tool-use-discipline patch present in ${target}.`
       : `Tool-use-discipline patch NOT found in ${target} (re-run install-vtrace-patch to migrate it).`,
   );
+  const hookInstalled = hasToolLoopGuardHookPatch(content);
+  notes.push(
+    hookInstalled
+      ? `Tool-loop-guard runtime hook patch present in ${target}.`
+      : `Tool-loop-guard runtime hook patch NOT found in ${target} (M76; re-run install-vtrace-patch to migrate it).`,
+  );
   return {
     installed,
     vexpSweBenchDir: config.vexpSweBenchDir,
@@ -8547,7 +8705,7 @@ async function assertVtracePatchInstalled(config: CliConfig): Promise<void> {
 // pristine original from the instructions install is preserved). Never throws —
 // telemetry / read-only enforcement must not fail the Stage 5 run.
 async function migrateOptionalPatchesIfMissing(target: string, content: string): Promise<void> {
-  if (hasStreamPatch(content) && hasDisallowedToolsPatch(content)) return;
+  if (hasStreamPatch(content) && hasDisallowedToolsPatch(content) && hasToolLoopGuardHookPatch(content)) return;
   try {
     const { content: patched, changed } = applyVtracePatch(content);
     if (!changed) {
@@ -8564,6 +8722,9 @@ async function migrateOptionalPatchesIfMissing(target: string, content: string):
     if (!hasStreamPatch(content) && hasStreamPatch(patched)) migrated.push(STAGE5_VTRACE_STREAM_MARKER);
     if (!hasDisallowedToolsPatch(content) && hasDisallowedToolsPatch(patched)) {
       migrated.push(STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER);
+    }
+    if (!hasToolLoopGuardHookPatch(content) && hasToolLoopGuardHookPatch(patched)) {
+      migrated.push(STAGE5_TOOL_LOOP_GUARD_HOOK_MARKER);
     }
     process.stderr.write(
       `Stage5 vtrace: migrated optional patch block(s) [${migrated.join(", ")}] into ${target}.\n`,
@@ -10118,6 +10279,17 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
       case "--tool-loop-guard": config.toolLoopGuard = true; break;
+      case "--tool-loop-guard-mode": {
+        const value = requireValue(argv, ++index, arg);
+        if (value !== "observe" && value !== "inject") {
+          throw new Error(`--tool-loop-guard-mode must be 'observe' or 'inject' (got '${value}')`);
+        }
+        // Selecting any mode enables the guard; "inject" turns on runtime injection.
+        config.toolLoopGuard = true;
+        config.toolLoopGuardMode = value;
+        break;
+      }
+      case "--tool-loop-guard-inject": config.toolLoopGuard = true; config.toolLoopGuardMode = "inject"; break;
       case "--disable-token-discipline": config.disableTokenDiscipline = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
@@ -10208,6 +10380,8 @@ function printUsageAndExit(exitCode: number): never {
       "  --disable-tool-use-discipline                 benchmark/dev-only: suppress the shared anti-loop tool-use-discipline block injected into BOTH baseline and vtrace prompts (default: injected). Not a user-facing product mode",
       "  --disable-token-discipline                    benchmark/dev-only: suppress the vtrace-only STAGE5_TOKEN_DISCIPLINE turn-count reduction policy (strong-context patch-first / weak-context explore) (default: injected). Not a user-facing product mode",
       "  --tool-loop-guard                             M75 candidate C1 (DEFAULT-OFF): run the repeated-failure / repeated-read tool-loop guard in OBSERVE mode over the captured tool-call stream and record additive tool_loop_guard_* metadata. The external harness owns the turn loop, so M75 does not inject mid-loop. Changes no retrieval/scoring/ranking/Capsule v2/decision-contract behavior",
+      "  --tool-loop-guard-mode observe|inject         M76 (DEFAULT-OFF; implies --tool-loop-guard). 'observe' = the M75 post-run detector. 'inject' = runtime_injection: register a Claude Code PostToolUse hook (via --settings) so the deterministic detector feeds a compact <VTRACE_TOOL_LOOP_GUARD> recovery message into the live agent's next turn mid-loop, respecting caps/cooldown/once-per-signature. Fail-closed: if the adapter hook point is absent no hook is wired and the run is unaffected",
+      "  --tool-loop-guard-inject                      shorthand for --tool-loop-guard-mode inject",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),

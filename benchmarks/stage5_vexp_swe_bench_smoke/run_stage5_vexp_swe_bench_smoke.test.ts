@@ -53,6 +53,12 @@ import {
   hasDisallowedToolsPatch,
   STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER,
   PHASE1_READONLY_DISALLOWED_TOOLS,
+  buildToolLoopGuardHookPatchBlock,
+  hasToolLoopGuardHookPatch,
+  STAGE5_TOOL_LOOP_GUARD_HOOK_MARKER,
+  toolLoopGuardInjectionActive,
+  toolLoopGuardHookCommand,
+  toolLoopGuardHookSettingsFilePath,
   buildVtraceQueryCommand,
   decideIndexPolicy,
   buildVtraceCommand,
@@ -205,6 +211,7 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     disablePivotCheck: false,
     disableToolUseDiscipline: false,
     toolLoopGuard: false,
+    toolLoopGuardMode: "observe",
     disableTokenDiscipline: false,
     sweBenchDataFile: null,
     runLabel: null,
@@ -238,6 +245,32 @@ test("--tool-loop-guard is default-off and opt-in only (M75)", () => {
   assert.equal(parseArgs(["--mode", "run-protocol"]).toolLoopGuard, false);
   // Opt-in: the flag flips it on.
   assert.equal(parseArgs(["--mode", "run-protocol", "--tool-loop-guard"]).toolLoopGuard, true);
+});
+
+test("M76 tool-loop guard mode is default-observe and injection is explicit-only", () => {
+  // Default mode is observe even when nothing is passed.
+  const def = parseArgs(["--mode", "run-protocol"]);
+  assert.equal(def.toolLoopGuardMode, "observe");
+  assert.equal(toolLoopGuardInjectionActive(def), false);
+  // Bare --tool-loop-guard stays in OBSERVE mode (M75 back-compat): no runtime injection.
+  const observe = parseArgs(["--mode", "run-protocol", "--tool-loop-guard"]);
+  assert.equal(observe.toolLoopGuardMode, "observe");
+  assert.equal(toolLoopGuardInjectionActive(observe), false);
+  // --tool-loop-guard-mode observe is explicit and also enables the guard.
+  const explicitObserve = parseArgs(["--mode", "run-protocol", "--tool-loop-guard-mode", "observe"]);
+  assert.equal(explicitObserve.toolLoopGuard, true);
+  assert.equal(explicitObserve.toolLoopGuardMode, "observe");
+  assert.equal(toolLoopGuardInjectionActive(explicitObserve), false);
+  // --tool-loop-guard-mode inject turns on runtime injection AND the guard.
+  const inject = parseArgs(["--mode", "run-protocol", "--tool-loop-guard-mode", "inject"]);
+  assert.equal(inject.toolLoopGuard, true);
+  assert.equal(inject.toolLoopGuardMode, "inject");
+  assert.equal(toolLoopGuardInjectionActive(inject), true);
+  // Shorthand flag.
+  const shorthand = parseArgs(["--mode", "run-protocol", "--tool-loop-guard-inject"]);
+  assert.equal(toolLoopGuardInjectionActive(shorthand), true);
+  // Invalid mode rejected.
+  assert.throws(() => parseArgs(["--mode", "run-protocol", "--tool-loop-guard-mode", "bogus"]), /must be 'observe' or 'inject'/);
 });
 
 test("--disable-pivot-check is off by default and opt-in only", () => {
@@ -823,6 +856,42 @@ test("applyVtracePatch skips the disallowed-tools block when its anchor is absen
   const { content } = applyVtracePatch(FAKE_CLAUDE_ADAPTER);
   assert.ok(content.includes(STAGE5_VTRACE_PATCH_MARKER));
   assert.ok(!hasDisallowedToolsPatch(content));
+});
+
+test("buildToolLoopGuardHookPatchBlock pushes --settings gated on the env var + fails closed on a missing file", () => {
+  const block = buildToolLoopGuardHookPatchBlock();
+  assert.ok(block.includes(STAGE5_TOOL_LOOP_GUARD_HOOK_MARKER));
+  assert.ok(block.includes("process.env.VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS"));
+  assert.ok(block.includes('args.push("--settings"'));
+  // Fail-closed: it only adds --settings when the settings file actually exists.
+  assert.ok(block.includes("existsSync"));
+});
+
+test("applyVtracePatch inserts the M76 hook block after the tool-whitelist anchor and is idempotent", () => {
+  const { content, changed } = applyVtracePatch(ADAPTER_WITH_TOOL_WHITELIST);
+  assert.equal(changed, true);
+  assert.ok(hasToolLoopGuardHookPatch(content));
+  const anchorIdx = content.indexOf("// Tool whitelist for SWE-bench");
+  const blockIdx = content.indexOf(STAGE5_TOOL_LOOP_GUARD_HOOK_MARKER);
+  assert.ok(anchorIdx !== -1 && anchorIdx < blockIdx);
+  // Re-applying does not duplicate the block (idempotent).
+  const twice = applyVtracePatch(content);
+  assert.equal(twice.content, content);
+  assert.equal(twice.changed, false);
+});
+
+test("applyVtracePatch skips the M76 hook block when the tool-whitelist anchor is absent (fail-closed)", () => {
+  // FAKE_CLAUDE_ADAPTER lacks the tool-whitelist line, so no --settings hook is wired.
+  const { content } = applyVtracePatch(FAKE_CLAUDE_ADAPTER);
+  assert.ok(content.includes(STAGE5_VTRACE_PATCH_MARKER));
+  assert.ok(!hasToolLoopGuardHookPatch(content));
+});
+
+test("toolLoopGuardHookCommand points bun at the executable hook + settings file lives at the results root", () => {
+  const cmd = toolLoopGuardHookCommand("node");
+  assert.ok(cmd.startsWith("bun "));
+  assert.ok(cmd.includes("toolLoopGuardHook.ts"));
+  assert.ok(toolLoopGuardHookSettingsFilePath("/out").endsWith("_tool_loop_guard_hook_settings.json"));
 });
 
 test("PHASE1_READONLY_DISALLOWED_TOOLS denies the mutation/unsafe tools", () => {
