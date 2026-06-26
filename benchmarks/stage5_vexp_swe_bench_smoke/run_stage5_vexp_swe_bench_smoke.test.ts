@@ -213,6 +213,8 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     toolLoopGuard: false,
     toolLoopGuardMode: "observe",
     toolLoopGuardCalibration: "v4",
+    costGuard: false,
+    costGuardMode: "observe",
     disableTokenDiscipline: false,
     sweBenchDataFile: null,
     runLabel: null,

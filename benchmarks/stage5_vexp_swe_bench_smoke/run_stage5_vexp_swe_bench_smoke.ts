@@ -83,6 +83,18 @@ import {
   toolLoopGuardRuntimeMeta,
 } from "./toolLoopGuardRuntime";
 import {
+  DEFAULT_COST_GUARD_CONFIG,
+  runCostGuard,
+  toCostGuardEvent,
+  costGuardMeta,
+  type CostGuardRunContext,
+} from "./costGuard";
+import {
+  COST_GUARD_OBSERVE_MODE,
+  COST_GUARD_RUNTIME_MODE,
+  costGuardRuntimeMeta,
+} from "./costGuardRuntime";
+import {
   DEFAULT_PRE_EDIT_BASH_BUDGET,
   DEFAULT_PRE_EDIT_SEARCH_BUDGET,
   DEFAULT_REPEATED_FILE_READ_LIMIT,
@@ -549,6 +561,16 @@ export interface CliConfig {
   // read/search/window triggers on prior progress; "v0" restores the M75 behavior for
   // A/B comparison. Inert unless the guard itself is enabled.
   readonly toolLoopGuardCalibration: ToolLoopGuardCalibration;
+  // M81 candidate C7: default-OFF cost / no-convergence guard (SEPARATE from the M75–M80
+  // tool-loop guard). When set, the guard runs over the captured tool-call stream (plus
+  // the result row's cost/turns) and records additive `cost_guard_*` metadata. "observe"
+  // = post-run detector (records what it WOULD inject). "inject" = runtime_injection:
+  // register a Claude Code PostToolUse hook so the deterministic detector feeds a compact
+  // <VTRACE_COST_GUARD> recovery message into the live agent's next turn. Both opt-in and
+  // default-off; an unflagged run is unaffected and byte-identical. Coexists with the
+  // tool-loop guard via a single combined hook (cost guard takes priority near budget).
+  readonly costGuard: boolean;
+  readonly costGuardMode: "observe" | "inject";
   // Benchmark/dev-only suppression of the vtrace-only STAGE5_TOKEN_DISCIPLINE block
   // (--disable-token-discipline). Default false: the active turn-count reduction
   // policy is injected on the live vtrace context path, conditional on per-section
@@ -1033,6 +1055,11 @@ const DEFAULT_CONFIG: CliConfig = {
   toolLoopGuardMode: "observe",
   // M79 read-trigger calibration: V4 is the default behavior whenever the guard runs.
   toolLoopGuardCalibration: "v4",
+  // M81 cost / no-convergence guard is DEFAULT-OFF; enable explicitly with --cost-guard.
+  costGuard: false,
+  // M81 cost guard mode. "observe" (default) keeps the post-run detector; "inject"
+  // enables the runtime PostToolUse hook. Only meaningful when the guard is enabled.
+  costGuardMode: "observe",
   // The vtrace-only STAGE5_TOKEN_DISCIPLINE turn-count reduction policy is ON by
   // default; --disable-token-discipline is a benchmark/dev-only override.
   disableTokenDiscipline: false,
@@ -1400,6 +1427,29 @@ export function toolLoopGuardInjectionActive(config: CliConfig): boolean {
   return config.toolLoopGuard === true && config.toolLoopGuardMode === "inject";
 }
 
+// M81 cost / no-convergence guard hook artifacts. The cost guard reuses the M76 hook
+// infrastructure: its executable is registered into `claude -p` via the SAME --settings
+// env var (VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS) the adapter already honours, so when the
+// cost guard is injecting it owns that single PostToolUse registration (and the combined
+// hook also evaluates the tool-loop guard when its state env is present — no message spam).
+export function costGuardHookScriptPath(): string {
+  return fileURLToPath(new URL("costGuardHook.ts", import.meta.url));
+}
+export function costGuardHookSettingsFilePath(outDir: string): string {
+  return path.join(outDir, "_cost_guard_hook_settings.json");
+}
+export function costGuardStateDirPath(outDir: string): string {
+  return path.join(outDir, "_cost_guard_state");
+}
+export function costGuardHookCommand(nodeCommand: string): string {
+  const runtime = nodeCommand.includes("bun") ? nodeCommand : "bun";
+  return `${runtime} ${costGuardHookScriptPath()}`;
+}
+// True when the config asks for live cost-guard runtime injection.
+export function costGuardInjectionActive(config: CliConfig): boolean {
+  return config.costGuard === true && config.costGuardMode === "inject";
+}
+
 // The shared anti-loop tool-use-discipline instructions file. Like the vtrace
 // instructions and the agent stream, it lives at the results ROOT so vexp's
 // --output clean cannot delete it. The patched adapter appends it to the prompt
@@ -1457,18 +1507,34 @@ function sharedConditionEnv(config: CliConfig): Record<string, string> {
   if (config.disableToolUseDiscipline !== true) {
     env.VTRACE_TOOL_USE_DISCIPLINE_FILE = stage5ToolUseDisciplineFilePath(config.out);
   }
-  // M76 runtime tool-loop guard (DEFAULT-OFF; only when --tool-loop-guard-mode inject).
-  // Point the patched adapter at the hook settings file (which it adds via --settings,
-  // fail-closed if absent) and give the hook a state dir + config. Omitted entirely in
-  // observe mode and when the guard is off, so those runs' env stays byte-identical.
-  if (toolLoopGuardInjectionActive(config)) {
+  // M76/M81 runtime guards (DEFAULT-OFF; only in inject mode). The adapter adds exactly
+  // ONE PostToolUse hook via --settings (VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS); whichever
+  // guard owns that registration is the hook process that runs. Precedence: when the cost
+  // guard is injecting it owns the single registration (its combined hook ALSO evaluates
+  // the tool-loop guard when the tool-loop state env is present, so the two coexist with
+  // one prioritized message). When only the tool-loop guard is injecting, it owns the
+  // registration (the M76 path, unchanged). Off/observe runs set none of this, so their
+  // env stays byte-identical.
+  const tlConfigJson = JSON.stringify({
+    ...DEFAULT_TOOL_LOOP_GUARD_CONFIG,
+    enabled: true,
+    calibration: config.toolLoopGuardCalibration,
+  });
+  if (costGuardInjectionActive(config)) {
+    env.VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS = costGuardHookSettingsFilePath(config.out);
+    env.VTRACE_COST_GUARD_STATE_DIR = costGuardStateDirPath(config.out);
+    env.VTRACE_COST_GUARD_CONFIG = JSON.stringify({ ...DEFAULT_COST_GUARD_CONFIG, enabled: true });
+    // Coexistence: also hand the combined hook the tool-loop state + config so it can
+    // evaluate that guard too (priority to the cost guard near budget). Its state dir is
+    // the signal the combined hook uses to decide whether to run the tool-loop detector.
+    if (toolLoopGuardInjectionActive(config)) {
+      env.VTRACE_TOOL_LOOP_GUARD_STATE_DIR = toolLoopGuardStateDirPath(config.out);
+      env.VTRACE_TOOL_LOOP_GUARD_CONFIG = tlConfigJson;
+    }
+  } else if (toolLoopGuardInjectionActive(config)) {
     env.VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS = toolLoopGuardHookSettingsFilePath(config.out);
     env.VTRACE_TOOL_LOOP_GUARD_STATE_DIR = toolLoopGuardStateDirPath(config.out);
-    env.VTRACE_TOOL_LOOP_GUARD_CONFIG = JSON.stringify({
-      ...DEFAULT_TOOL_LOOP_GUARD_CONFIG,
-      enabled: true,
-      calibration: config.toolLoopGuardCalibration,
-    });
+    env.VTRACE_TOOL_LOOP_GUARD_CONFIG = tlConfigJson;
   }
   return env;
 }
@@ -7772,6 +7838,66 @@ async function computeToolLoopGuardMeta(config: CliConfig, rawDir: string): Prom
   };
 }
 
+// M81 cost / no-convergence guard observe-mode meta (DEFAULT-OFF). Runs the PURE detector
+// over the captured tool-call stream PLUS this run's cost/turn context (read back from the
+// canonical result row) and emits additive `cost_guard_*` metadata. Like the tool-loop
+// guard it records what the guard WOULD inject; in inject mode the live combined hook does
+// the actual mid-loop injection. Returns {} when the flag is off (meta byte-identical).
+async function computeCostGuardMeta(config: CliConfig, rawDir: string): Promise<Record<string, unknown>> {
+  if (config.costGuard !== true) return {};
+  const candidates = [path.join(rawDir, "_tool_calls_with_outputs.json"), toolCallLogFilePath(rawDir)];
+  let rawEvents: Array<Record<string, unknown>> = [];
+  for (const file of candidates) {
+    const parsed = await readFile(file, "utf8")
+      .then((c) => JSON.parse(c) as unknown)
+      .catch(() => null);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      rawEvents = parsed as Array<Record<string, unknown>>;
+      break;
+    }
+  }
+  const events = rawEvents.map((r, i) => toCostGuardEvent(r, i));
+  // Run-context: best-effort cost/turns from the canonical swebench result row.
+  const context: CostGuardRunContext = {};
+  const resultsFile = await findCanonicalResultsFile(rawDir).catch(() => null);
+  if (resultsFile) {
+    const rows = parseJsonlRecords(await readFile(resultsFile, "utf8").catch(() => ""));
+    const row = rows.at(-1);
+    if (row) {
+      const cost = asUnknownableNumber(pick(row, FIELD_ALIASES.costUsd!));
+      const turns = asUnknownableNumber(pick(row, FIELD_ALIASES.numTurns!));
+      if (typeof cost === "number") (context as { estimatedCostUsd?: number }).estimatedCostUsd = cost;
+      if (typeof turns === "number") (context as { turnCount?: number }).turnCount = turns;
+    }
+  }
+  const guardConfig = { ...DEFAULT_COST_GUARD_CONFIG, enabled: true };
+  const result = runCostGuard(events, guardConfig, context);
+
+  const injectMode = costGuardInjectionActive(config);
+  const mode = injectMode ? COST_GUARD_RUNTIME_MODE : COST_GUARD_OBSERVE_MODE;
+  // In inject mode, the live hook is "available" only if the external adapter carries the
+  // M76 hook patch (the cost guard reuses that same --settings registration point).
+  let hookAvailable = false;
+  let unavailableReason: string | null = null;
+  if (injectMode) {
+    const target = config.vexpSweBenchDir === null ? null : await locateClaudePromptFile(config.vexpSweBenchDir);
+    const adapter = target === null ? "" : await readFile(target, "utf8").catch(() => "");
+    if (target === null) {
+      unavailableReason = "claude-code adapter not located under --vexp-swe-bench-dir";
+    } else if (!hasToolLoopGuardHookPatch(adapter)) {
+      unavailableReason = `M76 hook patch (${STAGE5_TOOL_LOOP_GUARD_HOOK_MARKER}) absent from ${target}; run install-vtrace-patch`;
+    } else {
+      hookAvailable = true;
+    }
+  }
+  const coexists = injectMode && toolLoopGuardInjectionActive(config);
+  return {
+    ...costGuardMeta(result, mode),
+    ...costGuardRuntimeMeta(hookAvailable, coexists, unavailableReason),
+    cost_guard_config: guardConfig,
+  };
+}
+
 async function runCondition(
   config: CliConfig,
   condition: Stage5Condition,
@@ -7806,7 +7932,22 @@ async function runCondition(
   // a prior run's accumulated events cannot leak in. Skipped entirely otherwise, so
   // default/observe runs write no extra artifacts. The adapter adds --settings only
   // when this file exists (fail-closed); env wiring lives in sharedConditionEnv.
-  if (toolLoopGuardInjectionActive(config)) {
+  // M81 cost guard takes precedence over the registration when injecting (its combined
+  // hook also runs the tool-loop guard when that state dir is present). When only the
+  // tool-loop guard injects, the M76 path runs unchanged.
+  if (costGuardInjectionActive(config)) {
+    const hookCommand = costGuardHookCommand(config.nodeCommand);
+    await writeFile(
+      costGuardHookSettingsFilePath(config.out),
+      `${JSON.stringify(buildToolLoopGuardHookSettings(hookCommand), null, 2)}\n`,
+    );
+    await rm(costGuardStateDirPath(config.out), { recursive: true, force: true });
+    await mkdir(costGuardStateDirPath(config.out), { recursive: true });
+    if (toolLoopGuardInjectionActive(config)) {
+      await rm(toolLoopGuardStateDirPath(config.out), { recursive: true, force: true });
+      await mkdir(toolLoopGuardStateDirPath(config.out), { recursive: true });
+    }
+  } else if (toolLoopGuardInjectionActive(config)) {
     const hookCommand = toolLoopGuardHookCommand(config.nodeCommand);
     await writeFile(
       toolLoopGuardHookSettingsFilePath(config.out),
@@ -7859,6 +8000,8 @@ async function runCondition(
   // loop, so this records what the guard WOULD inject; it does not steer the agent
   // mid-run. When the flag is off, NOTHING is added (meta stays byte-identical).
   const toolLoopGuardMetaFields = await computeToolLoopGuardMeta(config, dir);
+  // M81 cost / no-convergence guard (DEFAULT-OFF). Additive; off-flag leaves meta intact.
+  const costGuardMetaFields = await computeCostGuardMeta(config, dir);
   // Persist Capsule v2 manifest/ranking/context artifacts next to the other raw
   // VTRACE evidence (vtrace condition only) and record what was written into the
   // run meta. Off the v2 engine no bundle exists, so nothing is written and the
@@ -7904,6 +8047,7 @@ async function runCondition(
     ...toolUseDisciplineMeta,
     ...vtraceMeta,
     ...toolLoopGuardMetaFields,
+    ...costGuardMetaFields,
     exitCode: result.exitCode,
     durationMs: Date.now() - startedMs,
   };
@@ -10311,6 +10455,18 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         config.toolLoopGuardCalibration = value;
         break;
       }
+      case "--cost-guard": config.costGuard = true; break;
+      case "--cost-guard-mode": {
+        const value = requireValue(argv, ++index, arg);
+        if (value !== "observe" && value !== "inject") {
+          throw new Error(`--cost-guard-mode must be 'observe' or 'inject' (got '${value}')`);
+        }
+        // Selecting any mode enables the guard; "inject" turns on runtime injection.
+        config.costGuard = true;
+        config.costGuardMode = value;
+        break;
+      }
+      case "--cost-guard-inject": config.costGuard = true; config.costGuardMode = "inject"; break;
       case "--disable-token-discipline": config.disableTokenDiscipline = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
@@ -10404,6 +10560,9 @@ function printUsageAndExit(exitCode: number): never {
       "  --tool-loop-guard-mode observe|inject         M76 (DEFAULT-OFF; implies --tool-loop-guard). 'observe' = the M75 post-run detector. 'inject' = runtime_injection: register a Claude Code PostToolUse hook (via --settings) so the deterministic detector feeds a compact <VTRACE_TOOL_LOOP_GUARD> recovery message into the live agent's next turn mid-loop, respecting caps/cooldown/once-per-signature. Fail-closed: if the adapter hook point is absent no hook is wired and the run is unaffected",
       "  --tool-loop-guard-inject                      shorthand for --tool-loop-guard-mode inject",
       "  --tool-loop-guard-calibration v0|v4           M79 read-trigger calibration (default v4). 'v4' gates repeated_read/repeated_search/repeated_read_window on prior progress (a prior search/edit), suppressing pure opening-orientation fires; command-failure triggers stay eligible. 'v0' restores the M75 behavior for A/B comparison. Inert unless the guard is enabled",
+      "  --cost-guard                                  M81 candidate C7 (DEFAULT-OFF): run the cost / no-convergence guard over the captured tool-call stream + the result row's cost/turns and record additive cost_guard_* metadata. SEPARATE from the tool-loop guard. Detects high tool/turn count, edit/verify churn, no-patch drift, persistent verify failures, and cost near the per-task cap. Changes no retrieval/scoring/ranking/Capsule v2/decision-contract behavior",
+      "  --cost-guard-mode observe|inject              M81 (DEFAULT-OFF; implies --cost-guard). 'observe' = the post-run detector. 'inject' = runtime_injection: register a Claude Code PostToolUse hook (via --settings) so the deterministic detector feeds a compact <VTRACE_COST_GUARD> recovery message into the live agent's next turn, respecting gates/caps/cooldown/once-per-signature. Coexists with --tool-loop-guard-inject via ONE combined hook (cost guard has priority near budget; if both fire, one combined message). Fail-closed if the adapter hook point is absent",
+      "  --cost-guard-inject                           shorthand for --cost-guard-mode inject",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),

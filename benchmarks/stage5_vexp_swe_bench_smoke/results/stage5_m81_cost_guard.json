@@ -1,0 +1,115 @@
+{
+  "milestone": "M81",
+  "title": "Default-off cost / no-convergence guard (C7)",
+  "implemented": true,
+  "default_off": true,
+  "flags": [
+    "--cost-guard",
+    "--cost-guard-mode observe|inject",
+    "--cost-guard-inject"
+  ],
+  "modes": {
+    "observe": "observe_post_run",
+    "inject": "runtime_injection"
+  },
+  "marker": "<VTRACE_COST_GUARD>",
+  "runtime_integration": "M76 Claude Code PostToolUse --settings hook (combined hook; cost guard owns the single registration when injecting)",
+  "trigger_types": [
+    "high_tool_count",
+    "high_turn_count",
+    "edit_verify_churn",
+    "no_patch_drift",
+    "repeated_verification_no_progress",
+    "cost_cap_approaching"
+  ],
+  "thresholds": {
+    "enabled": true,
+    "maxInjections": 2,
+    "cooldownToolCalls": 8,
+    "minToolCallsBeforeFire": 25,
+    "minTurnsBeforeFire": 8,
+    "highToolCountThreshold": 35,
+    "highTurnCountThreshold": 90,
+    "editVerifyChurnThreshold": 3,
+    "noPatchToolThreshold": 30,
+    "repeatedVerifyThreshold": 3,
+    "costCapFraction": 0.85,
+    "defaultCostCapUsd": 3
+  },
+  "guard_priority_with_tool_loop_guard": "cost guard priority near budget; if both fire on the same tool result, ONE combined message (cost text + one-line tool-loop tail)",
+  "replay_rollup": [
+    {
+      "cohort": "cap_hit_cluster",
+      "cases": 1,
+      "fired": 0,
+      "early": 0,
+      "late": 0,
+      "resolved": 0
+    },
+    {
+      "cohort": "cap_hit_cluster_not_fired",
+      "cases": 1,
+      "fired": 0,
+      "early": 0,
+      "late": 0,
+      "resolved": 0
+    },
+    {
+      "cohort": "cap_hit_high_cost_resolved",
+      "cases": 1,
+      "fired": 1,
+      "early": 1,
+      "late": 0,
+      "resolved": 1
+    },
+    {
+      "cohort": "high_cost_no_convergence",
+      "cases": 1,
+      "fired": 1,
+      "early": 1,
+      "late": 0,
+      "resolved": 0
+    },
+    {
+      "cohort": "normal_control_low_cost",
+      "cases": 3,
+      "fired": 0,
+      "early": 0,
+      "late": 0,
+      "resolved": 2
+    },
+    {
+      "cohort": "protected_win_command_loop",
+      "cases": 1,
+      "fired": 0,
+      "early": 0,
+      "late": 0,
+      "resolved": 1
+    },
+    {
+      "cohort": "protected_win_high_cost",
+      "cases": 1,
+      "fired": 1,
+      "early": 0,
+      "late": 1,
+      "resolved": 0
+    },
+    {
+      "cohort": "treatment_only_win_low_cost",
+      "cases": 1,
+      "fired": 0,
+      "early": 0,
+      "late": 0,
+      "resolved": 1
+    }
+  ],
+  "replay_summary": {
+    "fired": 3,
+    "not_fired": 7,
+    "protected_win_or_command_loop_fires": 0,
+    "normal_control_fires": 0,
+    "early_orientation_fires": 0
+  },
+  "coexists_with_v4": true,
+  "v4_unchanged": true
+}
