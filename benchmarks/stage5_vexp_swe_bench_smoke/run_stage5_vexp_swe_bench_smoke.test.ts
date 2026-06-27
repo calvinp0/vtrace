@@ -215,6 +215,7 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     toolLoopGuardCalibration: "v4",
     costGuard: false,
     costGuardMode: "observe",
+    costGuardCalibration: "c7d",
     disableTokenDiscipline: false,
     sweBenchDataFile: null,
     runLabel: null,
@@ -289,6 +290,33 @@ test("M79 tool-loop guard calibration defaults to v4 and is overridable to v0 (a
   assert.throws(
     () => parseArgs(["--mode", "run-protocol", "--tool-loop-guard-calibration", "v9"]),
     /must be 'v0' or 'v4'/,
+  );
+});
+
+test("M84 cost-guard calibration defaults to c7d and is overridable to v0 (advanced, default-off-safe)", () => {
+  // Default: c7d is the enabled-guard calibration, even with no flag — but the guard is OFF.
+  const def = parseArgs(["--mode", "run-protocol"]);
+  assert.equal(def.costGuardCalibration, "c7d");
+  assert.equal(def.costGuard, false); // default-off invariant: calibration default never enables the guard
+  // The advanced knob flips it to v0 for A/B; it does NOT enable the guard on its own.
+  const v0 = parseArgs(["--mode", "run-protocol", "--cost-guard-calibration", "v0"]);
+  assert.equal(v0.costGuardCalibration, "v0");
+  assert.equal(v0.costGuard, false);
+  // Explicit c7d is accepted; still does not enable the guard.
+  const c7d = parseArgs(["--mode", "run-protocol", "--cost-guard-calibration", "c7d"]);
+  assert.equal(c7d.costGuardCalibration, "c7d");
+  assert.equal(c7d.costGuard, false);
+  // When the guard IS enabled, the selected calibration rides along (observe + inject).
+  const observe = parseArgs(["--mode", "run-protocol", "--cost-guard", "--cost-guard-calibration", "v0"]);
+  assert.equal(observe.costGuard, true);
+  assert.equal(observe.costGuardCalibration, "v0");
+  const inject = parseArgs(["--mode", "run-protocol", "--cost-guard-inject"]);
+  assert.equal(inject.costGuard, true);
+  assert.equal(inject.costGuardCalibration, "c7d"); // inject mode uses the default calibration
+  // Invalid value rejected.
+  assert.throws(
+    () => parseArgs(["--mode", "run-protocol", "--cost-guard-calibration", "c8"]),
+    /must be 'v0' or 'c7d'/,
   );
 });
 

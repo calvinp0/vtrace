@@ -672,6 +672,7 @@ export function buildPrecheckConfig(opts: {
     toolLoopGuardCalibration: "v4",
     costGuard: false,
     costGuardMode: "observe",
+    costGuardCalibration: "c7d",
     disableTokenDiscipline: false,
     sweBenchDataFile: null,
     runLabel: null,

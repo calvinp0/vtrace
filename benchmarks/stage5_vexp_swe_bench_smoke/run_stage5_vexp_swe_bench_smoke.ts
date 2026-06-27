@@ -83,11 +83,12 @@ import {
   toolLoopGuardRuntimeMeta,
 } from "./toolLoopGuardRuntime";
 import {
-  DEFAULT_COST_GUARD_CONFIG,
   runCostGuard,
   toCostGuardEvent,
   costGuardMeta,
+  costGuardConfigForCalibration,
   type CostGuardRunContext,
+  type CostGuardCalibration,
 } from "./costGuard";
 import {
   COST_GUARD_OBSERVE_MODE,
@@ -571,6 +572,12 @@ export interface CliConfig {
   // tool-loop guard via a single combined hook (cost guard takes priority near budget).
   readonly costGuard: boolean;
   readonly costGuardMode: "observe" | "inject";
+  // M84 first-class C7 calibration (A/B knob). "c7d" (the default selected WHEN the guard
+  // is enabled) lowers editVerifyChurnThreshold 3 -> 2 so same-file edit/verify churn fires
+  // one cycle earlier; "v0" restores the M81/M82/M83 threshold of 3. Inert unless the guard
+  // is enabled (default-off): an unflagged run never executes the guard and emits no
+  // cost_guard_* metadata regardless of this value.
+  readonly costGuardCalibration: CostGuardCalibration;
   // Benchmark/dev-only suppression of the vtrace-only STAGE5_TOKEN_DISCIPLINE block
   // (--disable-token-discipline). Default false: the active turn-count reduction
   // policy is injected on the live vtrace context path, conditional on per-section
@@ -1060,6 +1067,10 @@ const DEFAULT_CONFIG: CliConfig = {
   // M81 cost guard mode. "observe" (default) keeps the post-run detector; "inject"
   // enables the runtime PostToolUse hook. Only meaningful when the guard is enabled.
   costGuardMode: "observe",
+  // M84 C7 calibration: c7d (editVerifyChurnThreshold 2) is the default WHEN the guard is
+  // enabled; restore the M81/M82/M83 threshold of 3 with --cost-guard-calibration v0. Inert
+  // while the guard is off (default), so an unflagged run stays byte-identical.
+  costGuardCalibration: "c7d",
   // The vtrace-only STAGE5_TOKEN_DISCIPLINE turn-count reduction policy is ON by
   // default; --disable-token-discipline is a benchmark/dev-only override.
   disableTokenDiscipline: false,
@@ -1523,7 +1534,7 @@ function sharedConditionEnv(config: CliConfig): Record<string, string> {
   if (costGuardInjectionActive(config)) {
     env.VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS = costGuardHookSettingsFilePath(config.out);
     env.VTRACE_COST_GUARD_STATE_DIR = costGuardStateDirPath(config.out);
-    env.VTRACE_COST_GUARD_CONFIG = JSON.stringify({ ...DEFAULT_COST_GUARD_CONFIG, enabled: true });
+    env.VTRACE_COST_GUARD_CONFIG = JSON.stringify(costGuardConfigForCalibration(config.costGuardCalibration, { enabled: true }));
     // Coexistence: also hand the combined hook the tool-loop state + config so it can
     // evaluate that guard too (priority to the cost guard near budget). Its state dir is
     // the signal the combined hook uses to decide whether to run the tool-loop detector.
@@ -7870,7 +7881,7 @@ async function computeCostGuardMeta(config: CliConfig, rawDir: string): Promise<
       if (typeof turns === "number") (context as { turnCount?: number }).turnCount = turns;
     }
   }
-  const guardConfig = { ...DEFAULT_COST_GUARD_CONFIG, enabled: true };
+  const guardConfig = costGuardConfigForCalibration(config.costGuardCalibration, { enabled: true });
   const result = runCostGuard(events, guardConfig, context);
 
   const injectMode = costGuardInjectionActive(config);
@@ -10467,6 +10478,16 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         break;
       }
       case "--cost-guard-inject": config.costGuard = true; config.costGuardMode = "inject"; break;
+      case "--cost-guard-calibration": {
+        const value = requireValue(argv, ++index, arg);
+        if (value !== "v0" && value !== "c7d") {
+          throw new Error(`--cost-guard-calibration must be 'v0' or 'c7d' (got '${value}')`);
+        }
+        // Advanced A/B knob; does NOT enable the guard on its own (default stays c7d, inert
+        // until --cost-guard / --cost-guard-mode / --cost-guard-inject turns the guard on).
+        config.costGuardCalibration = value;
+        break;
+      }
       case "--disable-token-discipline": config.disableTokenDiscipline = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
@@ -10563,6 +10584,7 @@ function printUsageAndExit(exitCode: number): never {
       "  --cost-guard                                  M81 candidate C7 (DEFAULT-OFF): run the cost / no-convergence guard over the captured tool-call stream + the result row's cost/turns and record additive cost_guard_* metadata. SEPARATE from the tool-loop guard. Detects high tool/turn count, edit/verify churn, no-patch drift, persistent verify failures, and cost near the per-task cap. Changes no retrieval/scoring/ranking/Capsule v2/decision-contract behavior",
       "  --cost-guard-mode observe|inject              M81 (DEFAULT-OFF; implies --cost-guard). 'observe' = the post-run detector. 'inject' = runtime_injection: register a Claude Code PostToolUse hook (via --settings) so the deterministic detector feeds a compact <VTRACE_COST_GUARD> recovery message into the live agent's next turn, respecting gates/caps/cooldown/once-per-signature. Coexists with --tool-loop-guard-inject via ONE combined hook (cost guard has priority near budget; if both fire, one combined message). Fail-closed if the adapter hook point is absent",
       "  --cost-guard-inject                           shorthand for --cost-guard-mode inject",
+      "  --cost-guard-calibration v0|c7d               M84 C7 calibration (default c7d WHEN the guard is enabled). 'c7d' lowers editVerifyChurnThreshold 3 -> 2 so same-file edit/verify churn fires one cycle earlier; EVERY other threshold (incl. the 25-tool protective gate) is unchanged. 'v0' restores the M81/M82/M83 threshold of 3 for A/B comparison. Inert unless the guard is enabled — an unflagged run never runs the guard and emits no cost_guard_* metadata. Recorded as cost_guard_calibration in run metadata",
       "  --run-labels a,b,c                            (with --mode aggregate-runs) combine those run-labels into results/aggregate/",
       "",
     ].join("\n"),

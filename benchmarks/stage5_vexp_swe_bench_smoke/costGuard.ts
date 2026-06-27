@@ -56,6 +56,26 @@ const CHURN_TRIGGERS: ReadonlySet<CostGuardTriggerType> = new Set<CostGuardTrigg
   "repeated_verification_no_progress",
 ]);
 
+// M84 first-class C7 calibration. A named, A/B-selectable tuning of the guard.
+//   "v0"  — the M81/M82/M83 default: editVerifyChurnThreshold = 3.
+//   "c7d" — the M83-recommended calibration: editVerifyChurnThreshold = 2, EVERY other
+//           threshold unchanged. It lets the SAME-file edit/verify churn trigger fire one
+//           cycle earlier (the largest safe timing lead found in the M83 sweep — e.g.
+//           django-16263 first-fires +10 tools earlier — without lowering the 25-tool
+//           protective gate, without new early/control fires, and leaving the winning
+//           sympy-12419 trajectory untouched).
+// The calibration changes ONLY editVerifyChurnThreshold; the 25-tool gate, turn gate,
+// high tool/turn counts, no-patch drift, repeated-verify, cost cap, and anti-spam caps
+// are all identical between v0 and c7d.
+export type CostGuardCalibration = "v0" | "c7d";
+
+// The single source mapping a calibration to its edit/verify-churn threshold. The ONLY
+// dimension a calibration changes.
+export const COST_GUARD_CALIBRATION_CHURN_THRESHOLD: Readonly<Record<CostGuardCalibration, number>> = {
+  v0: 3,
+  c7d: 2,
+};
+
 // Optional run-level signals. Available offline / in observe mode (read back from the
 // result row); usually ABSENT in the live PostToolUse hook, where only stream proxies
 // (tool / read / search / edit / command counts) are observable. When a signal is null,
@@ -68,6 +88,9 @@ export interface CostGuardRunContext {
 
 export interface CostGuardConfig {
   readonly enabled: boolean;
+  // M84 named calibration. Provenance for the run + the canonical knob that selects
+  // editVerifyChurnThreshold (see costGuardConfigForCalibration). Default "v0".
+  readonly calibration: CostGuardCalibration;
   // anti-spam caps
   readonly maxInjections: number; // default 2
   readonly cooldownToolCalls: number; // >= this many calls between injections; default 8
@@ -87,6 +110,7 @@ export interface CostGuardConfig {
 
 export const DEFAULT_COST_GUARD_CONFIG: CostGuardConfig = {
   enabled: false, // DEFAULT-OFF
+  calibration: "v0", // module default stays v0 (the harness selects c7d when it enables the guard)
   maxInjections: 2,
   cooldownToolCalls: 8,
   minToolCallsBeforeFire: 25,
@@ -99,6 +123,23 @@ export const DEFAULT_COST_GUARD_CONFIG: CostGuardConfig = {
   costCapFraction: 0.85,
   defaultCostCapUsd: 3.0,
 };
+
+// Build the canonical config for a named calibration. The calibration is the single knob
+// that selects editVerifyChurnThreshold (v0 -> 3, c7d -> 2); EVERY other field comes from
+// DEFAULT_COST_GUARD_CONFIG so c7d differs from v0 in exactly one threshold (plus the
+// recorded calibration label). Optional `overrides` win last (the harness passes
+// `{ enabled: true }`; the offline sweep may pass extra threshold overrides). PURE.
+export function costGuardConfigForCalibration(
+  calibration: CostGuardCalibration,
+  overrides: Partial<CostGuardConfig> = {},
+): CostGuardConfig {
+  return {
+    ...DEFAULT_COST_GUARD_CONFIG,
+    calibration,
+    editVerifyChurnThreshold: COST_GUARD_CALIBRATION_CHURN_THRESHOLD[calibration],
+    ...overrides,
+  };
+}
 
 // A snapshot of the run-state proxies at the moment a trigger fired. Recorded per event
 // so the offline replay / metadata can characterise WHY the guard fired.
@@ -134,6 +175,7 @@ export interface CostGuardSuppression {
 
 export interface CostGuardResult {
   readonly enabled: boolean;
+  readonly calibration: CostGuardCalibration; // the calibration this result was produced under
   readonly wouldFire: boolean;
   readonly injectionCount: number;
   readonly events: readonly CostGuardFiring[];
@@ -356,6 +398,7 @@ export function runCostGuard(
 
   return {
     enabled: config.enabled,
+    calibration: config.calibration,
     wouldFire: firings.length > 0,
     injectionCount,
     events: firings,
@@ -377,10 +420,12 @@ export type CostGuardMode = "observe_post_run" | "runtime_injection";
 
 export interface CostGuardMeta {
   readonly cost_guard_enabled: boolean;
+  readonly cost_guard_calibration: CostGuardCalibration;
   readonly cost_guard_mode: CostGuardMode;
   readonly cost_guard_injection_count: number;
   readonly cost_guard_events: ReadonlyArray<{
     readonly turn_or_event_index: number;
+    readonly calibration: CostGuardCalibration;
     readonly trigger_type: CostGuardTriggerType;
     readonly signature: string;
     readonly reason: string;
@@ -409,10 +454,12 @@ export interface CostGuardMeta {
 export function costGuardMeta(result: CostGuardResult, mode: CostGuardMode): CostGuardMeta {
   return {
     cost_guard_enabled: result.enabled,
+    cost_guard_calibration: result.calibration,
     cost_guard_mode: mode,
     cost_guard_injection_count: result.injectionCount,
     cost_guard_events: result.events.map((e) => ({
       turn_or_event_index: e.turnIndex,
+      calibration: result.calibration,
       trigger_type: e.triggerType,
       signature: e.signature,
       reason: e.reason,
