@@ -96,6 +96,10 @@ import {
   costGuardRuntimeMeta,
 } from "./costGuardRuntime";
 import {
+  runStage5EnvGuardPreflight,
+  type Stage5EnvGuardOutcome,
+} from "./stage5EnvGuardIntegration";
+import {
   DEFAULT_PRE_EDIT_BASH_BUDGET,
   DEFAULT_PRE_EDIT_SEARCH_BUDGET,
   DEFAULT_REPEATED_FILE_READ_LIMIT,
@@ -511,6 +515,19 @@ export interface CliConfig {
   // container. `--allow-docker-verify` is the explicit future opt-in to the isolated container
   // execution (NEVER oracle grading). Default false.
   readonly allowDockerVerify: boolean;
+  // M86 environment isolation guard (--stage5-env-guard). Default false (opt-in). When
+  // true, before any path that could trigger a Python dependency install the harness
+  // probes the interpreter the run would use and FAILS CLOSED unless it provably targets
+  // `--expected-testbed-prefix` (and not the conda base or the active dev env). The
+  // contamination this defends against: an editable pytest install + double pluggy landed
+  // in the operator's conda BASE because the install resolved to bare `python`/`pip`.
+  readonly stage5EnvGuard: boolean;
+  // M86 post-run drift check (--stage5-env-drift-check). Default false. Enables before/after
+  // package-state snapshotting of protected prefixes (reported only; read-only).
+  readonly stage5EnvDriftCheck: boolean;
+  // M86 expected disposable testbed Python prefix (--expected-testbed-prefix). Null by
+  // default. Required to PROVE an install target when --stage5-env-guard is on.
+  readonly expectedTestbedPrefix: string | null;
   // Hard context-to-action gate (--pivot-check-gate). Default "off" — the existing
   // single-shot run path is unchanged. "hard" runs the two-phase enforcement
   // (Phase 1 inspect-only preflight → gate → Phase 2 solve only on pass) for the
@@ -1045,6 +1062,10 @@ const DEFAULT_CONFIG: CliConfig = {
   commandSource: "pivot_revision_test_commands",
   // M27: diagnostic verifier never starts Docker unless explicitly authorized.
   allowDockerVerify: false,
+  // M86 env isolation guard: opt-in, default-off; no behavior change when off.
+  stage5EnvGuard: false,
+  stage5EnvDriftCheck: false,
+  expectedTestbedPrefix: null,
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
   // off only the guard block).
   disableEditGuard: false,
@@ -7976,6 +7997,31 @@ async function runCondition(
   // Every condition now carries env (telemetry stream + shared discipline; vtrace
   // additionally carries its context env), so the agent child always gets it.
   const env = (spec as unknown as { env: Record<string, string> }).env;
+  // M86 environment isolation guard (opt-in via --stage5-env-guard). Default-off ⇒ a
+  // `not_applicable` metadata record and NO behavior change. When enabled, prove that the
+  // disposable testbed interpreter the run depends on is the EXPECTED prefix (never the
+  // conda base or the active dev env) and FAIL CLOSED before spawning the agent otherwise.
+  // The contamination this prevents: an editable pytest install + double pluggy landed in
+  // the operator's conda base because a dependency install resolved to bare `python`/`pip`.
+  const envGuardOutcome: Stage5EnvGuardOutcome = runStage5EnvGuardPreflight({
+    enabled: config.stage5EnvGuard,
+    driftCheckEnabled: config.stage5EnvDriftCheck,
+    expectedTestbedPrefix: config.expectedTestbedPrefix,
+    vexpSweBenchDir: config.vexpSweBenchDir,
+  });
+  if (config.stage5EnvGuard && !envGuardOutcome.ok) {
+    throw new Error(
+      `[stage5] env isolation guard FAILED CLOSED: ${envGuardOutcome.failClosedReason}\n` +
+        `  expected testbed prefix: ${envGuardOutcome.metadata.stage5_expected_testbed_prefix}\n` +
+        `  resolved interpreter:    ${envGuardOutcome.resolvedTestbedPython ?? "<none>"}\n` +
+        (envGuardOutcome.prefixGuard
+          ? `  sys.prefix: ${envGuardOutcome.prefixGuard.actualPrefix}\n` +
+            `  pip prefix: ${envGuardOutcome.prefixGuard.actualPipPrefix ?? "<unparsed>"}\n` +
+            `  CONDA_PREFIX: ${envGuardOutcome.prefixGuard.condaPrefix ?? "<unset>"}\n`
+          : "") +
+        `  refusing to spawn the agent (a dependency install could contaminate a protected prefix).`,
+    );
+  }
   const startedMs = Date.now();
   process.stderr.write(`\n[stage5] running ${condition} agent for ${config.runLabel ?? instances.join(",")} …\n`);
   operatorTtyHintOnce();
@@ -8059,6 +8105,7 @@ async function runCondition(
     ...vtraceMeta,
     ...toolLoopGuardMetaFields,
     ...costGuardMetaFields,
+    ...envGuardOutcome.metadata,
     exitCode: result.exitCode,
     durationMs: Date.now() - startedMs,
   };
@@ -10442,6 +10489,9 @@ export function parseArgs(argv: readonly string[]): CliConfig {
         break;
       }
       case "--allow-docker-verify": config.allowDockerVerify = true; break;
+      case "--stage5-env-guard": config.stage5EnvGuard = true; break;
+      case "--stage5-env-drift-check": config.stage5EnvDriftCheck = true; break;
+      case "--expected-testbed-prefix": config.expectedTestbedPrefix = requireValue(argv, ++index, arg); break;
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
@@ -10552,6 +10602,9 @@ function printUsageAndExit(exitCode: number): never {
       "  --patch-source original_model_patch|pivot_revision_revised   (with --mode plan-agent-test-command) which captured patch to plan a fair verification of (default: pivot_revision_revised)",
       "  --command-source first_pass_test_commands|pivot_revision_test_commands   (with --mode plan-agent-test-command|verify-agent-test-command) which captured agent-selected test commands to draw the single candidate from (default: pivot_revision_test_commands)",
       "  --allow-docker-verify                         (with --mode verify-agent-test-command) explicitly authorize the isolated container execution of the canonical safe command (non-oracle seam only — NEVER SWE-bench grading). default: off ⇒ the verifier writes a docker_not_authorized skip and never starts Docker",
+      "  --stage5-env-guard                            (M86) fail closed before spawning the agent unless the disposable testbed interpreter provably targets --expected-testbed-prefix (never the conda base or active dev env). default: off ⇒ not_applicable metadata, no behavior change",
+      "  --stage5-env-drift-check                      (M86) enable read-only before/after package-state drift snapshotting of protected prefixes (pluggy/pytest/pip/setuptools/wheel); reported only",
+      "  --expected-testbed-prefix <path>              (M86) the disposable testbed Python prefix dependency installs must target, e.g. /opt/miniconda3/envs/testbed. Required to PROVE a target when --stage5-env-guard is on",
       "  --reuse-workspace                             reuse an existing labeled workspace by RESETTING it to the SWE-bench base commit and running git clean -fdx (never pulls main; reuses a fresh index per --index-policy) instead of redownloading the repo",
       "  --index-policy auto|always|reuse              reuse a fingerprint-fresh index (auto), force rebuild (always), or keep a stale index (reuse). default: auto",
       "  --show-vtrace-index-log                       print the vtrace index log to the terminal (drops --quiet)",

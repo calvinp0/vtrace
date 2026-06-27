@@ -244,6 +244,24 @@ test("invalid mode and vtrace-method are rejected", () => {
   assert.throws(() => parseArgs(["--vtrace-method", "bogus"]), /Invalid --vtrace-method/);
 });
 
+test("M86 env isolation guard flags parse and default off", () => {
+  // Default: env guard off, drift check off, no expected prefix — no behavior change.
+  const def = parseArgs(["--mode", "run-protocol"]);
+  assert.equal(def.stage5EnvGuard, false);
+  assert.equal(def.stage5EnvDriftCheck, false);
+  assert.equal(def.expectedTestbedPrefix, null);
+  // Opt-in flags flip on and the prefix flag captures its value.
+  const on = parseArgs([
+    "--mode", "run-protocol",
+    "--stage5-env-guard",
+    "--stage5-env-drift-check",
+    "--expected-testbed-prefix", "/opt/miniconda3/envs/testbed",
+  ]);
+  assert.equal(on.stage5EnvGuard, true);
+  assert.equal(on.stage5EnvDriftCheck, true);
+  assert.equal(on.expectedTestbedPrefix, "/opt/miniconda3/envs/testbed");
+});
+
 test("--tool-loop-guard is default-off and opt-in only (M75)", () => {
   // Default: the tool-loop guard is OFF (flag absent) — no behavior change.
   assert.equal(parseArgs(["--mode", "run-protocol"]).toolLoopGuard, false);
