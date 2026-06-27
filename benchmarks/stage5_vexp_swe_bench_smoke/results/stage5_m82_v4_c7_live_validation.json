@@ -1,0 +1,224 @@
+{
+  "milestone": "M82",
+  "kind": "combined V4 tool-loop guard + C7 cost-guard INJECT-mode live validation (10-case slice; NOT a 100-task benchmark, NOT a promotion, NOT a VEXP/SWE-bench external claim)",
+  "helper": "run_stage5_m82_analyze.ts",
+  "live_agents": true,
+  "docker": true,
+  "retrieval_changed": false,
+  "tool_loop_guard_calibration": "v4",
+  "cost_guard_mode": "inject",
+  "scope_caveat": "Mechanism validation slice over the frozen M82 10-case split (identical membership to M77/M80). Not a paired significance claim, not broad SWE-bench evidence, not a default promotion. Both guards remain DEFAULT-OFF.",
+  "total_cases": 10,
+  "valid_runs": 10,
+  "invalid_runs": [],
+  "both_guards_runtime_active_all": true,
+  "calibration_v4_all": true,
+  "combined_hook_coexists_all": true,
+  "v4_fired_count": 3,
+  "v4_fired_instances": [
+    "django__django-15503",
+    "pylint-dev__pylint-4551",
+    "django__django-12273"
+  ],
+  "v4_suppressed_total": 2,
+  "c7_fired_count": 3,
+  "c7_fired_instances": [
+    "django__django-16263",
+    "sympy__sympy-12419",
+    "django__django-12273"
+  ],
+  "c7_trigger_types_union": [
+    "high_tool_count",
+    "edit_verify_churn"
+  ],
+  "c7_fired_before_cap_all": false,
+  "combined_same_turn_total": 0,
+  "guard_marker_verified_all_fired": true,
+  "mechanism_checks": {
+    "django-16263": {
+      "instance_id": "django__django-16263",
+      "valid": true,
+      "resolved": false,
+      "cost": 3.04366275,
+      "cost_delta_vs_m80": 1.1195,
+      "turns": 86,
+      "tool_calls": 35,
+      "v4_fired": false,
+      "v4_trigger_types": [],
+      "v4_first_turn": null,
+      "c7_fired": true,
+      "c7_trigger_types": [
+        "high_tool_count"
+      ],
+      "c7_first_turn": 34,
+      "c7_last_turn": 34,
+      "c7_fired_before_cap": false,
+      "combined_same_turn_count": 0,
+      "m81_expected_c7_fire": true
+    },
+    "django-15503": {
+      "instance_id": "django__django-15503",
+      "valid": true,
+      "resolved": false,
+      "cost": 0.486555,
+      "cost_delta_vs_m80": -2.5208,
+      "turns": 25,
+      "tool_calls": 8,
+      "v4_fired": true,
+      "v4_trigger_types": [
+        "repeated_read"
+      ],
+      "v4_first_turn": 7,
+      "c7_fired": false,
+      "c7_trigger_types": [],
+      "c7_first_turn": null,
+      "c7_last_turn": null,
+      "c7_fired_before_cap": null,
+      "combined_same_turn_count": 0,
+      "m81_expected_c7_fire": true
+    },
+    "django-12273": {
+      "instance_id": "django__django-12273",
+      "valid": true,
+      "resolved": false,
+      "cost": 3.00892375,
+      "cost_delta_vs_m80": -0.0196,
+      "turns": 87,
+      "tool_calls": 32,
+      "v4_fired": true,
+      "v4_trigger_types": [
+        "repeated_read"
+      ],
+      "v4_first_turn": 30,
+      "c7_fired": true,
+      "c7_trigger_types": [
+        "edit_verify_churn"
+      ],
+      "c7_first_turn": 31,
+      "c7_last_turn": 31,
+      "c7_fired_before_cap": false,
+      "combined_same_turn_count": 0,
+      "m81_expected_c7_fire": true
+    },
+    "pytest-6197": {
+      "instance_id": "pytest-dev__pytest-6197",
+      "valid": true,
+      "resolved": false,
+      "cost": 0.947129,
+      "cost_delta_vs_m80": 0.3022,
+      "turns": 45,
+      "tool_calls": 19,
+      "v4_fired": false,
+      "v4_trigger_types": [],
+      "v4_first_turn": null,
+      "c7_fired": false,
+      "c7_trigger_types": [],
+      "c7_first_turn": null,
+      "c7_last_turn": null,
+      "c7_fired_before_cap": null,
+      "combined_same_turn_count": 0,
+      "m81_expected_c7_fire": false,
+      "early_v4_read_fire": false,
+      "early_c7_fire": false
+    },
+    "sympy-12419": {
+      "instance_id": "sympy__sympy-12419",
+      "valid": true,
+      "resolved": true,
+      "cost": 3.0484927500000003,
+      "cost_delta_vs_m80": 1.1436,
+      "turns": 91,
+      "tool_calls": 35,
+      "v4_fired": false,
+      "v4_trigger_types": [],
+      "v4_first_turn": null,
+      "c7_fired": true,
+      "c7_trigger_types": [
+        "high_tool_count"
+      ],
+      "c7_first_turn": 34,
+      "c7_last_turn": 34,
+      "c7_fired_before_cap": false,
+      "combined_same_turn_count": 0,
+      "m81_expected_c7_fire": false,
+      "v4_command_trigger_present": false
+    }
+  },
+  "by_group": {
+    "A": {
+      "n": 4,
+      "valid": 4,
+      "v4_fired": 1,
+      "c7_fired": 1,
+      "resolved": 0,
+      "prior_m73_resolved": 1,
+      "prior_m80_resolved": 1,
+      "mean_cost": 1.5009273125,
+      "mean_m80_cost": 1.7978244375,
+      "mean_m73_cost": 2.7030458125
+    },
+    "B": {
+      "n": 2,
+      "valid": 2,
+      "v4_fired": 1,
+      "c7_fired": 1,
+      "resolved": 1,
+      "prior_m73_resolved": 0,
+      "prior_m80_resolved": 1,
+      "mean_cost": 2.332401375,
+      "mean_m80_cost": 1.40636125,
+      "mean_m73_cost": 3.003936125
+    },
+    "C": {
+      "n": 2,
+      "valid": 2,
+      "v4_fired": 1,
+      "c7_fired": 1,
+      "resolved": 1,
+      "prior_m73_resolved": 2,
+      "prior_m80_resolved": 1,
+      "mean_cost": 1.670350625,
+      "mean_m80_cost": 1.7189093750000002,
+      "mean_m73_cost": 0.489826
+    },
+    "D": {
+      "n": 2,
+      "valid": 2,
+      "v4_fired": 0,
+      "c7_fired": 0,
+      "resolved": 2,
+      "prior_m73_resolved": 2,
+      "prior_m80_resolved": 2,
+      "mean_cost": 0.4988705,
+      "mean_m80_cost": 0.5183117500000001,
+      "mean_m73_cost": 0.3729025
+    }
+  },
+  "protected_wins_summary": {
+    "n": 2,
+    "resolved": 1,
+    "prior_m73_resolved": 2,
+    "prior_m80_resolved": 1,
+    "any_v4_fired": true,
+    "any_c7_fired": true,
+    "regressed_vs_m73": [
+      "django__django-12273"
+    ],
+    "recovered_vs_m80": []
+  },
+  "controls_summary": {
+    "n": 2,
+    "resolved": 2,
+    "prior_m73_resolved": 2,
+    "prior_m80_resolved": 2,
+    "any_guard_fired": false
+  },
+  "resolution": {
+    "m82_resolved": 4,
+    "m80_resolved": 5,
+    "m73_resolved": 5
+  },
+  "cost_total_m82": 15.007,
+  "cost_total_m80": 14.4785,
+  "cost_total_m73": 18.5455
+}

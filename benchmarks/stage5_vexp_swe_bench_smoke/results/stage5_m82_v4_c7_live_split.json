@@ -1,0 +1,111 @@
+{
+  "milestone": "M82-split",
+  "kind": "frozen V4 + C7 combined-guard live validation split (10 cases); identical membership to the frozen M77/M80 split, re-grouped to the M82 brief's A/B/C/D intents",
+  "live_agents": false,
+  "docker": false,
+  "retrieval_changed": false,
+  "derived_from": [
+    "stage5_m77_tool_loop_guard_live_split.json (frozen membership)",
+    "stage5_m80_tool_loop_guard_v4_live_validation.json (V4-only live outcomes)",
+    "stage5_m81_cost_guard_replay.json (offline C7 expectation)"
+  ],
+  "freeze_note": "Membership is identical to the frozen M77/M80 10-case split (A=4,B=2,C=2,D=2). No case added, dropped, reordered, or excluded after the M81 sanity check — that check found no material contradiction, only a prose imprecision in the M81 rolled-up 'protected_win_or_command_loop_fires' headline (django-12273 DID fire C7, but LATE; openly recorded in the cohort rollup + MD).",
+  "no_replacements": true,
+  "selected_counts": { "A": 4, "B": 2, "C": 2, "D": 2 },
+  "total_selected": 10,
+  "group_definitions": {
+    "A": { "name": "targeted_cost_no_convergence_high_cost", "intent": "high-cost / cap-hit / no-convergence cluster; V4 and/or C7 may fire on a deep trajectory" },
+    "B": { "name": "targeted_non_fire_or_command_loop", "intent": "targeted cluster where C7 should stay silent (below gate) and V4's command-loop pathway must remain available" },
+    "C": { "name": "protected_treatment_only_win", "intent": "protected M73 treatment-only win; guards must not harm (django-12273 = M80 V4 regression + expected LATE C7 fire — watch carefully)" },
+    "D": { "name": "normal_resolved_control", "intent": "normal low-cost resolved control; neither guard should fire (below gate)" }
+  },
+  "cases": [
+    {
+      "instance_id": "astropy__astropy-14598", "repo": "astropy/astropy", "difficulty": "15 min - 1 hour", "validation_group": "A",
+      "prior_m73_treatment_resolved": false, "prior_m73_treatment_cost": 3.002213, "prior_m73_tool_calls": 32,
+      "prior_m80_resolved": false, "prior_m80_cost": 1.6149015, "prior_m80_turns": 47, "prior_m80_tool_calls": 19,
+      "prior_m80_v4_fired": true, "prior_m80_v4_first_turn": 14,
+      "m81_expected_c7_fire": false, "m81_expected_c7_trigger": null, "m81_expected_c7_first_turn": null,
+      "m81_cohort": "cap_hit_cluster", "note": "19 tools < 25 gate; V4 owns it (useful read fire). C7 silent expected."
+    },
+    {
+      "instance_id": "django__django-15503", "repo": "django/django", "difficulty": "1-4 hours", "validation_group": "A",
+      "prior_m73_treatment_resolved": false, "prior_m73_treatment_cost": 3.043239, "prior_m73_tool_calls": 44,
+      "prior_m80_resolved": true, "prior_m80_cost": 3.00732475, "prior_m80_turns": 100, "prior_m80_tool_calls": 28,
+      "prior_m80_v4_fired": false, "prior_m80_v4_first_turn": null,
+      "m81_expected_c7_fire": true, "m81_expected_c7_trigger": "edit_verify_churn+high_tool_count", "m81_expected_c7_first_turn": 27,
+      "m81_cohort": "cap_hit_high_cost_resolved", "note": "C7 fires mid-run @27 (churn:json.py + tools); resolved anyway in M80."
+    },
+    {
+      "instance_id": "django__django-16263", "repo": "django/django", "difficulty": "1-4 hours", "validation_group": "A",
+      "prior_m73_treatment_resolved": false, "prior_m73_treatment_cost": 3.01682275, "prior_m73_tool_calls": 35,
+      "prior_m80_resolved": false, "prior_m80_cost": 1.9241295, "prior_m80_turns": 97, "prior_m80_tool_calls": 29,
+      "prior_m80_v4_fired": true, "prior_m80_v4_first_turn": 18,
+      "m81_expected_c7_fire": true, "m81_expected_c7_trigger": "edit_verify_churn+high_tool_count", "m81_expected_c7_first_turn": 28,
+      "m81_cohort": "high_cost_no_convergence", "note": "HEADLINE target: V4 fired but did not converge; C7 expected to fire @28 (churn:query.py + tools)."
+    },
+    {
+      "instance_id": "pytest-dev__pytest-6197", "repo": "pytest-dev/pytest", "difficulty": "1-4 hours", "validation_group": "A",
+      "prior_m73_treatment_resolved": true, "prior_m73_treatment_cost": 1.7499085, "prior_m73_tool_calls": 23,
+      "prior_m80_resolved": false, "prior_m80_cost": 0.644942, "prior_m80_turns": 37, "prior_m80_tool_calls": 15,
+      "prior_m80_v4_fired": false, "prior_m80_v4_first_turn": null,
+      "m81_expected_c7_fire": false, "m81_expected_c7_trigger": null, "m81_expected_c7_first_turn": null,
+      "m81_cohort": "normal_control_low_cost", "note": "Risky-early-fire check: 15 tools < gate; neither guard should fire early."
+    },
+    {
+      "instance_id": "pylint-dev__pylint-4551", "repo": "pylint-dev/pylint", "difficulty": "1-4 hours", "validation_group": "B",
+      "prior_m73_treatment_resolved": false, "prior_m73_treatment_cost": 3.00536525, "prior_m73_tool_calls": 26,
+      "prior_m80_resolved": false, "prior_m80_cost": 0.907858, "prior_m80_turns": 33, "prior_m80_tool_calls": 12,
+      "prior_m80_v4_fired": false, "prior_m80_v4_first_turn": null,
+      "m81_expected_c7_fire": false, "m81_expected_c7_trigger": null, "m81_expected_c7_first_turn": null,
+      "m81_cohort": "cap_hit_cluster_not_fired", "note": "12 tools < gate; C7 silent expected."
+    },
+    {
+      "instance_id": "sympy__sympy-12419", "repo": "sympy/sympy", "difficulty": "15 min - 1 hour", "validation_group": "B",
+      "prior_m73_treatment_resolved": false, "prior_m73_treatment_cost": 3.002507, "prior_m73_tool_calls": 31,
+      "prior_m80_resolved": true, "prior_m80_cost": 1.9048645, "prior_m80_turns": 77, "prior_m80_tool_calls": 28,
+      "prior_m80_v4_fired": false, "prior_m80_v4_first_turn": null,
+      "m81_expected_c7_fire": false, "m81_expected_c7_trigger": null, "m81_expected_c7_first_turn": null,
+      "m81_cohort": "protected_win_command_loop", "note": "Command-loop pathway: 28 tools < 35, $1.90 < cap; C7 must stay silent to preserve the win."
+    },
+    {
+      "instance_id": "django__django-11815", "repo": "django/django", "difficulty": "15 min - 1 hour", "validation_group": "C",
+      "prior_m73_treatment_resolved": true, "prior_m73_treatment_cost": 0.444346, "prior_m73_tool_calls": 10,
+      "prior_m80_resolved": true, "prior_m80_cost": 0.409295, "prior_m80_turns": 24, "prior_m80_tool_calls": 9,
+      "prior_m80_v4_fired": false, "prior_m80_v4_first_turn": null,
+      "m81_expected_c7_fire": false, "m81_expected_c7_trigger": null, "m81_expected_c7_first_turn": null,
+      "m81_cohort": "treatment_only_win_low_cost", "note": "Protected low-cost win; both guards silent expected."
+    },
+    {
+      "instance_id": "django__django-12273", "repo": "django/django", "difficulty": "15 min - 1 hour", "validation_group": "C",
+      "prior_m73_treatment_resolved": true, "prior_m73_treatment_cost": 0.535306, "prior_m73_tool_calls": 9,
+      "prior_m80_resolved": false, "prior_m80_cost": 3.02852375, "prior_m80_turns": 103, "prior_m80_tool_calls": 35,
+      "prior_m80_v4_fired": true, "prior_m80_v4_first_turn": 36,
+      "m81_expected_c7_fire": true, "m81_expected_c7_trigger": "high_tool_count", "m81_expected_c7_first_turn": 34,
+      "m81_cohort": "protected_win_high_cost",
+      "note": "CLASSIFIED PROTECTED. M73 win, but M80 V4 regressed it (cap-hit $3.03, unresolved). M81 expects a LATE C7 fire (high_tool@34 of 41). Watch: is any M82 fire late + on an already-failing trajectory (not guard-caused harm)?"
+    },
+    {
+      "instance_id": "astropy__astropy-7166", "repo": "astropy/astropy", "difficulty": "<15 min fix", "validation_group": "D",
+      "prior_m73_treatment_resolved": true, "prior_m73_treatment_cost": 0.3980115, "prior_m73_tool_calls": 5,
+      "prior_m80_resolved": true, "prior_m80_cost": 0.6066875, "prior_m80_turns": 33, "prior_m80_tool_calls": 11,
+      "prior_m80_v4_fired": false, "prior_m80_v4_first_turn": null,
+      "m81_expected_c7_fire": false, "m81_expected_c7_trigger": null, "m81_expected_c7_first_turn": null,
+      "m81_cohort": "normal_control_low_cost", "note": "Normal control; both guards silent expected."
+    },
+    {
+      "instance_id": "django__django-10880", "repo": "django/django", "difficulty": "<15 min fix", "validation_group": "D",
+      "prior_m73_treatment_resolved": true, "prior_m73_treatment_cost": 0.3477935, "prior_m73_tool_calls": 5,
+      "prior_m80_resolved": true, "prior_m80_cost": 0.429936, "prior_m80_turns": 23, "prior_m80_tool_calls": 8,
+      "prior_m80_v4_fired": false, "prior_m80_v4_first_turn": null,
+      "m81_expected_c7_fire": false, "m81_expected_c7_trigger": null, "m81_expected_c7_first_turn": null,
+      "m81_cohort": "normal_control_low_cost", "note": "Normal control; both guards silent expected."
+    }
+  ],
+  "prior_resolution_rollup": {
+    "m73_resolved": 5,
+    "m80_resolved": 5,
+    "m80_v4_fired_instances": ["astropy__astropy-14598", "django__django-16263", "django__django-12273"],
+    "m81_expected_c7_fire_instances": ["django__django-15503", "django__django-16263", "django__django-12273"]
+  }
+}
