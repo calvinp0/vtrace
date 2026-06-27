@@ -1,0 +1,85 @@
+{
+  "milestone": "M83",
+  "title": "C7 timing calibration audit (offline; no agents, no Docker, no spend, no benchmark)",
+  "audit_only": true,
+  "c7_behavior_changed": false,
+  "v4_changed": false,
+  "retrieval_changed": false,
+  "live_agents": false,
+  "docker": false,
+  "implementation_performed": false,
+  "inputs_inspected": [
+    "stage5_m82_v4_c7_live_validation.md",
+    "stage5_m82_v4_c7_live_validation.detail.json",
+    "stage5_m82_v4_c7_live_split.json",
+    "stage5_m82_v4_c7_preflight.json",
+    "stage5_m81_cost_guard.json",
+    "stage5_m81_cost_guard_replay.json",
+    "stage5_m80_tool_loop_guard_v4_live_validation.detail.json (via M82 priors)",
+    "costGuard.ts (detector source; UNMODIFIED)"
+  ],
+  "raw_artifacts_inspected": {
+    "m82_streams": "10/10 (runs/m82_v4_c7_guard_*/raw/vtrace/_tool_calls.json)",
+    "m80_streams": "10/10 (runs/m80_tool_loop_guard_v4_*/raw/vtrace/_tool_calls.json)",
+    "m73_streams": "NOT AVAILABLE as full tool-call streams (only eval logs captured); M73 outcomes taken from split metadata",
+    "broad_corpus": "563 non-empty captured streams across all milestones in runs/ (used for the scale false-positive sweep)"
+  },
+  "m82_verdict_recap": "MIXED. Both guards mechanically correct, default-off, 10/10 valid. C7 fired on its target (django-16263) but @34 of 35 tools, after ~$3 already spent -> too late to steer convergence or save cost. Resolution 4/10 vs M80 5/10 = live variance; the one protected-win regression (django-12273) predates C7 (also regressed in M80 V4-only).",
+  "timing_reconstruction": [
+    {"instance_id": "astropy__astropy-14598", "group": "neutral/cap-cluster", "m73": "F", "m80": "F", "m82": "F", "m82_cost": 1.53, "c7_fired": false, "first_fire": null, "trigger": null, "mechanism": "silent_correct", "confidence": "high", "note": "24 tools < 35 high-tool; below trigger"},
+    {"instance_id": "django__django-15503", "group": "targeted", "m73": "F", "m80": "T", "m82": "F", "m82_cost": 0.49, "c7_fired": false, "first_fire": null, "trigger": null, "mechanism": "silent_correct", "confidence": "high", "note": "M82 was a short 8-tool $0.49 path far below the gate; C7 correctly silent. M80 stream would have fired @27 (different $3 trajectory)."},
+    {"instance_id": "django__django-16263", "group": "targeted (headline)", "m73": "F", "m80": "F", "m82": "F", "m82_cost": 3.04, "c7_fired": true, "first_fire": 34, "trigger": "high_tool_count", "tool_at_fire": 35, "edit_at_fire": 2, "verify_at_fire": 17, "patch_seen": true, "est_cost_at_fire": 3.04, "mechanism": "useful_but_late", "confidence": "high", "note": "Cap-hit at fire. 17 failing verifies / 2 edits = thrash, but churn (needs 3 same-file edits) and repeated-verify (needs 3 persisted) under threshold; only high_tool@35 caught it, too late."},
+    {"instance_id": "pytest-dev__pytest-6197", "group": "control/risky-early-check", "m73": "T", "m80": "F", "m82": "F", "m82_cost": 0.95, "c7_fired": false, "first_fire": null, "trigger": null, "mechanism": "silent_correct", "confidence": "high", "note": "19 tools < gate; max_same_file_edits=1 so churn impossible. Silent under EVERY variant."},
+    {"instance_id": "pylint-dev__pylint-4551", "group": "neutral/cap-cluster", "m73": "F", "m80": "F", "m82": "F", "m82_cost": 1.62, "c7_fired": false, "first_fire": null, "trigger": null, "mechanism": "silent_miss", "confidence": "medium", "note": "33 tools, $1.62, 4 same-file edits but the 3rd landed pre-gate (suppressed x2); 33<35 high-tool. high_tool-30 WOULD fire (defensible no-convergence run)."},
+    {"instance_id": "sympy__sympy-12419", "group": "protected/command-loop", "m73": "F", "m80": "T", "m82": "T", "m82_cost": 3.05, "c7_fired": true, "first_fire": 34, "trigger": "high_tool_count", "tool_at_fire": 35, "edit_at_fire": 2, "verify_at_fire": 21, "patch_seen": true, "est_cost_at_fire": 3.05, "mechanism": "neutral_late", "confidence": "high", "note": "Long but CONVERGING verification path (21 verifies, 1 file edited); resolved. high_tool@35 fired at the very end, harmless. No same-file churn (maxSameFile=1)."},
+    {"instance_id": "django__django-11815", "group": "protected/treatment-win", "m73": "T", "m80": "T", "m82": "T", "m82_cost": 0.33, "c7_fired": false, "first_fire": null, "trigger": null, "mechanism": "silent_correct", "confidence": "high", "note": "4-tool win; far below gate."},
+    {"instance_id": "django__django-12273", "group": "protected/high-cost", "m73": "T", "m80": "F", "m82": "F", "m82_cost": 3.01, "c7_fired": true, "first_fire": 31, "trigger": "edit_verify_churn", "signature": "churn:base.py", "tool_at_fire": 32, "edit_at_fire": 3, "verify_at_fire": 12, "patch_seen": true, "est_cost_at_fire": 3.01, "mechanism": "neutral_late", "confidence": "high", "note": "3rd base.py edit @ tool 32, cap-hit. V4 fired @30 (adjacent). Regression predates C7 (M80 V4-only also regressed). Fired during already-failing churn, did not precede harm."},
+    {"instance_id": "astropy__astropy-7166", "group": "control", "m73": "T", "m80": "T", "m82": "T", "m82_cost": 0.65, "c7_fired": false, "first_fire": null, "trigger": null, "mechanism": "silent_correct", "confidence": "high", "note": "13-tool control; held."},
+    {"instance_id": "django__django-10880", "group": "control/canary", "m73": "T", "m80": "T", "m82": "T", "m82_cost": 0.35, "c7_fired": false, "first_fire": null, "trigger": null, "mechanism": "silent_correct", "confidence": "high", "note": "6-tool control; held."}
+  ],
+  "panel_sweep_summary": {
+    "panel": "10-case M82 split (with run-context)",
+    "all_variants_early_fire_count": 0,
+    "all_variants_control_fire_count": 0,
+    "all_variants_protected_early_fire_count": 0,
+    "pytest_6197_fired_any_variant": false,
+    "sympy_12419_ever_early": false,
+    "best_lead_on_django_16263": {"variant": "C7_D (editVerifyChurn 2)", "first_fire_event_index": 24, "tool_at_fire": 25, "lead_vs_v0_tools": 10}
+  },
+  "broad_corpus_sweep_summary": {
+    "streams_scanned": 563,
+    "stream_only_live_faithful": true,
+    "fire_rate_pct": {"V0": 4.1, "high_tool_30": 6.4, "high_tool_28": 7.6, "churn_2": 4.6, "min20_high30_churn2": 8.0},
+    "early_fire_count_all_variants": 0,
+    "key_finding": "churn_2 adds only +3 fires vs V0 (14->18 churn fires) across 563 streams; high_tool_30 adds +13. The 25-tool orientation gate provably contains every variant (ZERO early fires at scale). Lowering the gate (min20, variant E) is the only change that materially inflates churn fires (14->32) -> the GATE, not the churn count, is the protective lever."
+  },
+  "structural_ceiling": "Tool-position triggers lag TURN-driven cost accrual on these runs (django-16263 = 86 turns / 35 tools ~= 2.5 turns/tool; sympy-12419 = 91 turns / 35 tools). Most of the $3 is spent via cached-context turns BETWEEN tool calls, so even the earliest safe tool-position fire (churn-2 @ tool 25) likely lands after much of the budget is gone. No tool-position threshold calibration can fully prevent cap-burn on turn-heavy runs; that needs a turn-aware or cost-aware LIVE signal (current high_turn_count / cost_cap_approaching are observe-only / end-attributed).",
+  "candidate_recommendation": {
+    "chosen": "C (lower editVerifyChurn only: 3 -> 2) = variant C7_D",
+    "why": "Largest SAFE lead on the no-convergence target (django-16263 @ tool 25, +10 vs V0); uniquely leaves the WINNING sympy-12419 trajectory untouched (@34, no same-file churn); adds only +3 fires / 563 streams (4.6%) with ZERO early fires; keeps the 25-tool orientation gate and high_tool=35 intact; one knob, deterministic, no gold labels.",
+    "expected_benefit": "Earlier nudge on genuine same-file edit/verify churn while NOT pulling forward fires on long-but-converging verification runs.",
+    "regression_risk": "Low on the captured corpus. Residual: the structural ceiling means even @tool-25 may land after most cost on turn-heavy runs; benefit is a partial cost trim, not a cap-burn fix.",
+    "rejected": {
+      "A_keep_current": "M82 live confirmed too-late firing; do nothing wastes the calibration opportunity.",
+      "B_lower_highToolCount": "Defensible (+5/+7 lead) but adds +13 fires at scale and PULLS the winning sympy run's fire 5-7 tools earlier; less surgical than churn-2.",
+      "E_density_slope": "Lowering minTool to 20 inflates churn fires 14->32 at scale; the gate is the protective lever, do not weaken it.",
+      "F_observe_only": "C7 is mechanically sound and safe-capable; a calibrated default-off inject candidate is more useful than freezing it observe-only.",
+      "G_abandon_for_C2": "Premature; C2 no-patch recovery does not apply to 16263/12273 (both PRODUCED patches and churned). Keep C7 as the churn/no-convergence lever."
+    }
+  },
+  "external_hook_status": {
+    "patch_installed": true,
+    "patch_file": "vexp-swe-bench/dist/agents/claude-code.js",
+    "backup_present": true,
+    "backup_file": "vexp-swe-bench/dist/agents/claude-code.js.stage5-vtrace-backup",
+    "default_off_safe": true,
+    "default_off_evidence": "All patched blocks are env-gated (VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS / VTRACE_AGENT_INSTRUCTIONS_FILE / VTRACE_TOOL_USE_DISCIPLINE_FILE) and existsSync-check the settings file; with no env set the adapter is behaviorally equivalent to the backup.",
+    "risk_from_leaving_installed": "none (inert without explicit env opt-in)",
+    "recommendation": "LEAVE installed; M84 = verify-only. No revert needed; backup available if ever wanted. No external repo change performed."
+  },
+  "recommended_m84": {
+    "step": "OFFLINE validation of C7_D (editVerifyChurn 3->2), default-off, over the full 563-stream corpus + any recoverable M73 streams; quantify fire-rate, early-fire (expect 0), and per-cohort fire deltas. NO live agents, NO Docker, NO spend.",
+    "non_goals": "No live run, no Docker, no V4 change, no retrieval/scoring/ranking/Capsule-v2/digest/pivot-gate change, no default promotion, no external repo change.",
+    "validation_gate": "C7_D adopted as the inject candidate ONLY if offline shows 0 early fires at scale, no new control/protected EARLY fires, and the sympy-class winning trajectories remain untouched; live re-validation deferred until a turn-aware live signal is designed (the structural ceiling)."
+  }
+}
