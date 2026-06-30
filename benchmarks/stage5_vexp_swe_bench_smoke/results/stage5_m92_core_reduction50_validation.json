@@ -1,0 +1,264 @@
+{
+  "milestone": "M92",
+  "kind": "frozen 50-task internal CORE VTRACE token-reduction confirmation (structured-bounded + pivot-confidence; behavioral V4/C7_D guards DISABLED; mandatory M89 env guard + M90A shell guard). NOT a VEXP parity / broad SWE-bench / statistical-superiority / promotion claim.",
+  "expected_testbed_prefix": "/home/calvin/miniforge3/envs/vexp_swebench",
+  "total_cases": 50,
+  "ran_count": 50,
+  "valid_count": 50,
+  "invalid_runs": [],
+  "not_yet_run": [],
+  "operational_retries_used": 0,
+  "safety": {
+    "env_guard_pass_all": true,
+    "shell_guard_pass_all": true,
+    "host_pip_firewall_enabled_all": true,
+    "drift_check_enabled_all": true,
+    "benchmark_valid_all": true,
+    "expected_prefix_all_match": true,
+    "env_safety_invalid_instances": [],
+    "shell_safety_invalid_instances": [],
+    "escape_hatch_used_instances": [],
+    "drift_detected_instances": [],
+    "blocked_package_command_count_total": 0,
+    "blocked_package_command_instances": []
+  },
+  "behavioral_guards": {
+    "behavioral_off_all": true,
+    "tool_loop_guard_enabled_any": false,
+    "cost_guard_enabled_any": false,
+    "tool_loop_guard_injection_total": 0,
+    "cost_guard_injection_total": 0,
+    "behavioral_on_instances": []
+  },
+  "resolution": {
+    "m92_resolved": 20,
+    "m92_unresolved": 30,
+    "m92_pending_eval": 0,
+    "prior_m73_baseline_resolved": 20,
+    "prior_m73_treatment_resolved": 22,
+    "prior_m90_resolved": 17,
+    "wins_vs_m73_baseline": {
+      "wins": [
+        "django__django-11815",
+        "matplotlib__matplotlib-24627",
+        "psf__requests-1724",
+        "pydata__xarray-6938",
+        "django__django-12325",
+        "django__django-12774",
+        "django__django-13590",
+        "django__django-12273"
+      ],
+      "losses": [
+        "pydata__xarray-6599",
+        "django__django-15695",
+        "django__django-16938",
+        "sympy__sympy-13974",
+        "django__django-15572",
+        "psf__requests-5414",
+        "pytest-dev__pytest-6197",
+        "sympy__sympy-15599"
+      ]
+    },
+    "wins_vs_m73_treatment": {
+      "wins": [
+        "sympy__sympy-24562",
+        "sympy__sympy-12419"
+      ],
+      "losses": [
+        "sympy__sympy-15875",
+        "matplotlib__matplotlib-25960",
+        "django__django-13112",
+        "pytest-dev__pytest-6197"
+      ]
+    }
+  },
+  "cost": {
+    "total_cost_m92": 36.337,
+    "total_cost_m73_baseline": 48.453,
+    "total_cost_m73_treatment": 39.7665,
+    "total_cost_m90": 34.6072,
+    "total_tool_calls_m92": 612,
+    "total_tool_calls_m73_baseline": 877,
+    "total_tool_calls_m73_treatment": 583
+  },
+  "token_categories": {
+    "totals": {
+      "input_tokens": 11819,
+      "output_tokens": 4117,
+      "cache_read_tokens": 62721151,
+      "cache_write_tokens": 3475751
+    },
+    "pct": {
+      "input_tokens": 0.02,
+      "output_tokens": 0.01,
+      "cache_read_tokens": 94.73,
+      "cache_write_tokens": 5.25
+    },
+    "grand_total": 66212838
+  },
+  "deltas": {
+    "m92_vs_m73_baseline": {
+      "resolution": {
+        "m92": 20,
+        "m73_baseline": 20,
+        "delta": 0
+      },
+      "cost": {
+        "n_paired": 50,
+        "m92_total": 36.337,
+        "prior_total": 48.453,
+        "abs_delta": -12.116,
+        "pct_delta": -25.01
+      },
+      "total_tokens": {
+        "n_paired": 50,
+        "m92_total": 66212838,
+        "prior_total": 90342843,
+        "abs_delta": -24130005,
+        "pct_delta": -26.71
+      },
+      "cache_read_tokens": {
+        "n_paired": 50,
+        "m92_total": 62721151,
+        "prior_total": 86635093,
+        "abs_delta": -23913942,
+        "pct_delta": -27.6
+      },
+      "tool_calls": {
+        "n_paired": 50,
+        "m92_total": 612,
+        "prior_total": 877,
+        "abs_delta": -265,
+        "pct_delta": -30.22
+      }
+    },
+    "m92_vs_m73_treatment": {
+      "resolution": {
+        "m92": 20,
+        "m73_treatment": 22,
+        "delta": -2
+      },
+      "cost": {
+        "n_paired": 50,
+        "m92_total": 36.337,
+        "prior_total": 39.7665,
+        "abs_delta": -3.4294,
+        "pct_delta": -8.62
+      },
+      "total_tokens": {
+        "n_paired": 50,
+        "m92_total": 66212838,
+        "prior_total": 66463689,
+        "abs_delta": -250851,
+        "pct_delta": -0.38
+      },
+      "tool_calls": {
+        "n_paired": 50,
+        "m92_total": 612,
+        "prior_total": 583,
+        "abs_delta": 29,
+        "pct_delta": 4.97
+      }
+    },
+    "m92_vs_m90": {
+      "resolution": {
+        "m92": 20,
+        "m90": 17,
+        "delta": 3
+      },
+      "cost": {
+        "n_paired": 50,
+        "m92_total": 36.337,
+        "prior_total": 34.6072,
+        "abs_delta": 1.7298,
+        "pct_delta": 5.0
+      },
+      "total_tokens": {
+        "n_paired": 50,
+        "m92_total": 66212838,
+        "prior_total": 59781034,
+        "abs_delta": 6431804,
+        "pct_delta": 10.76
+      },
+      "tool_calls": {
+        "n_paired": 50,
+        "m92_total": 612,
+        "prior_total": 577,
+        "abs_delta": 35,
+        "pct_delta": 6.07
+      }
+    }
+  },
+  "by_group": {
+    "A": {
+      "n": 14,
+      "ran": 14,
+      "valid": 14,
+      "m92_resolved": 1,
+      "m73_baseline_resolved": 4,
+      "m73_treatment_resolved": 0,
+      "cost_m92": 13.32,
+      "cost_m73_baseline": 17.5004,
+      "cost_m73_treatment": 11.097,
+      "tokens_m92": 24658755,
+      "tokens_m73_baseline": 31413108,
+      "tools_m92": 220
+    },
+    "B": {
+      "n": 10,
+      "ran": 10,
+      "valid": 10,
+      "m92_resolved": 7,
+      "m73_baseline_resolved": 0,
+      "m73_treatment_resolved": 10,
+      "cost_m92": 6.57,
+      "cost_m73_baseline": 11.0973,
+      "cost_m73_treatment": 6.8982,
+      "tokens_m92": 14559009,
+      "tokens_m73_baseline": 20784534,
+      "tools_m92": 137
+    },
+    "C": {
+      "n": 10,
+      "ran": 10,
+      "valid": 10,
+      "m92_resolved": 0,
+      "m73_baseline_resolved": 3,
+      "m73_treatment_resolved": 0,
+      "cost_m92": 4.2471,
+      "cost_m73_baseline": 5.3615,
+      "cost_m73_treatment": 3.7342,
+      "tokens_m92": 7686869,
+      "tokens_m73_baseline": 11055124,
+      "tools_m92": 78
+    },
+    "D": {
+      "n": 10,
+      "ran": 10,
+      "valid": 10,
+      "m92_resolved": 10,
+      "m73_baseline_resolved": 10,
+      "m73_treatment_resolved": 10,
+      "cost_m92": 4.0234,
+      "cost_m73_baseline": 4.0321,
+      "cost_m73_treatment": 3.6696,
+      "tokens_m92": 6751031,
+      "tokens_m73_baseline": 7958541,
+      "tools_m92": 69
+    },
+    "E": {
+      "n": 6,
+      "ran": 6,
+      "valid": 6,
+      "m92_resolved": 2,
+      "m73_baseline_resolved": 3,
+      "m73_treatment_resolved": 2,
+      "cost_m92": 8.1765,
+      "cost_m73_baseline": 10.4618,
+      "cost_m73_treatment": 14.3675,
+      "tokens_m92": 12557174,
+      "tokens_m73_baseline": 19131536,
+      "tools_m92": 108
+    }
+  }
+}
