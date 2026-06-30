@@ -103,6 +103,18 @@ import {
   STAGE5_EXPECTED_TESTBED_PREFIX_ENV,
   type Stage5EnvGuardOutcome,
 } from "./stage5EnvGuardIntegration";
+import {
+  evaluateMandatoryAgentShellGuard,
+  buildAgentShellGuardMetadata,
+  STAGE5_AGENT_SHELL_GUARD_MANDATORY_SINCE,
+  type AgentShellGuardMetadata,
+} from "./agentShellGuard";
+import {
+  materializeAgentShellGuard,
+  readBlockedCommandLog,
+  type MaterializeAgentShellGuardOptions,
+  type MaterializeAgentShellGuardResult,
+} from "./stage5AgentShellGuardIntegration";
 import type { PythonProbe } from "./envIsolationGuard";
 import {
   DEFAULT_PRE_EDIT_BASH_BUDGET,
@@ -383,6 +395,11 @@ export interface RunDeps {
   // runCondition without ever touching a real conda environment.
   readonly envProbeFn?: (pythonCommand: string) => PythonProbe | null;
   readonly envExistsFn?: (absPath: string) => boolean;
+  // M90A — injectable materializer for the agent-shell guard / host-pip firewall. Defaults to
+  // the real implementation (writes a per-run wrapper bin + sanitized env). Tests pass a
+  // synthetic version so the mandatory shell-guard gate can be exercised through runCondition
+  // without writing real wrapper scripts.
+  readonly materializeAgentShellGuardFn?: (opts: MaterializeAgentShellGuardOptions) => MaterializeAgentShellGuardResult;
 }
 
 function defaultSleep(ms: number): Promise<void> {
@@ -546,6 +563,17 @@ export interface CliConfig {
   // warning, is recorded in metadata, and INVALIDATES benchmark-valid status. Never set by any
   // default driver. Prefer leaving it false; if you need it you almost certainly have a misconfig.
   readonly allowUnguardedLiveEnv: boolean;
+  // M90A agent-shell guard / host-pip firewall. Default TRUE (mandatory). The M89 env guard
+  // protects the RUNNER before spawn; this protects the tool shell the spawned agent inherits.
+  // Every live agent run materializes a per-run wrapper bin (pip/python/conda/uv/poetry/pipx
+  // firewall scripts) and a sanitized PATH/env so a bare `pip install`/`python -m pip`/`conda
+  // install`/editable install resolves to a fail-closed wrapper, never host/base pip. A live run
+  // FAILS CLOSED before spawn unless both are on and the wrapper bin materialized; the ONLY way
+  // to proceed unguarded is the shared --allow-unguarded-live-env escape hatch (never benchmark-
+  // valid). Settable false via --disable-agent-shell-guard (which then fails closed unless the
+  // escape hatch is also set). Safety infra only — no retrieval/scoring/ranking/Capsule/V4/C7_D change.
+  readonly stage5AgentShellGuard: boolean;
+  readonly stage5HostPipFirewall: boolean;
   // Hard context-to-action gate (--pivot-check-gate). Default "off" — the existing
   // single-shot run path is unchanged. "hard" runs the two-phase enforcement
   // (Phase 1 inspect-only preflight → gate → Phase 2 solve only on pass) for the
@@ -1086,6 +1114,9 @@ const DEFAULT_CONFIG: CliConfig = {
   expectedTestbedPrefix: null,
   // M89 escape hatch: default-off; the env guard is mandatory for live agent runs.
   allowUnguardedLiveEnv: false,
+  // M90A agent-shell guard / host-pip firewall: default-ON (mandatory for live agent runs).
+  stage5AgentShellGuard: true,
+  stage5HostPipFirewall: true,
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
   // off only the guard block).
   disableEditGuard: false,
@@ -8015,8 +8046,10 @@ async function runCondition(
         ? buildVexpCommand(config, instances)
         : buildVtraceCommand(config, instances, injectContext);
   // Every condition now carries env (telemetry stream + shared discipline; vtrace
-  // additionally carries its context env), so the agent child always gets it.
-  const env = (spec as unknown as { env: Record<string, string> }).env;
+  // additionally carries its context env), so the agent child always gets it. The M90A
+  // agent-shell-guard overrides (sanitized PATH + scrubbed conda/venv vars) are merged in
+  // below, AFTER the guard materializes its per-run wrapper bin.
+  const specEnv = (spec as unknown as { env: Record<string, string> }).env;
   // M89 — the environment isolation guard is MANDATORY for live agent runs. runCondition()
   // is the single Stage 5 path that spawns a real agent / external SWE-bench agent run, so
   // this is THE live-run enforcement point. A live run FAILS CLOSED (before any model call,
@@ -8107,6 +8140,83 @@ async function runCondition(
         "############################################################\n",
     );
   }
+  // M90A — the agent-shell guard / host-pip firewall is the SECOND mandatory live-run layer.
+  // M89 (above) protects the runner before spawn; M90A protects the tool shell the spawned
+  // agent inherits. We materialize a per-run wrapper bin (pip/python/conda/uv/poetry/pipx
+  // firewall scripts) and sanitize the agent's PATH/env so any bare `pip install`/`python -m
+  // pip`/`conda install`/editable install resolves to a fail-closed wrapper, never host/base
+  // pip — the exact vector that downgraded base pluggy and broke Conda. A live run FAILS CLOSED
+  // (before spawn) unless the guard + firewall are on and the wrapper bin materialized; the only
+  // unguarded path is the shared --allow-unguarded-live-env escape hatch (never benchmark-valid).
+  // Safety infra ONLY: no retrieval / scoring / ranking / Capsule v2 / V4 / C7_D change.
+  const agentShellOverrides: Record<string, string> = {};
+  let shellMat: MaterializeAgentShellGuardResult | null = null;
+  let shellGuardMetaInput = {
+    required: true,
+    enabled: config.stage5AgentShellGuard,
+    hostPipFirewallEnabled: config.stage5HostPipFirewall,
+    status: "fail" as "pass" | "fail" | "not_applicable",
+    wrapperBin: null as string | null,
+    pathSanitized: false,
+    condaEnvScrubbed: false,
+    pythonResolution: null as string | null,
+    pipResolution: null as string | null,
+    failureReason: null as string | null,
+  };
+  if (guardDecision.bypassed) {
+    // Escape hatch: proceed UNGUARDED (no wrapper bin materialized); record the bypass honestly.
+    shellGuardMetaInput = {
+      ...shellGuardMetaInput,
+      failureReason: "unguarded live env (escape hatch) — agent shell guard bypassed (NOT benchmark-valid)",
+    };
+  } else {
+    shellMat = (deps.materializeAgentShellGuardFn ?? materializeAgentShellGuard)({
+      runDir: dir,
+      expectedTestbedPrefix: expectedResolution.prefix,
+    });
+    Object.assign(agentShellOverrides, shellMat.shellEnv.overrides);
+    const shellDecision = evaluateMandatoryAgentShellGuard({
+      isLiveAgentRun: true,
+      allowUnguardedLiveEnv: false,
+      shellGuardEnabled: config.stage5AgentShellGuard,
+      hostPipFirewallEnabled: config.stage5HostPipFirewall,
+      wrapperBinReady: shellMat.wrapperBinReady,
+      pathSanitized: shellMat.shellEnv.pathSanitized,
+      condaEnvScrubbed: shellMat.shellEnv.condaEnvScrubbed,
+    });
+    shellGuardMetaInput = {
+      required: true,
+      enabled: config.stage5AgentShellGuard,
+      hostPipFirewallEnabled: config.stage5HostPipFirewall,
+      status: shellDecision.status,
+      wrapperBin: shellMat.wrapperBin,
+      pathSanitized: shellMat.shellEnv.pathSanitized,
+      condaEnvScrubbed: shellMat.shellEnv.condaEnvScrubbed,
+      pythonResolution: shellMat.pythonResolution,
+      pipResolution: shellMat.pipResolution,
+      failureReason: shellDecision.reason ?? shellMat.failureReason,
+    };
+    if (shellDecision.failClosed) {
+      const failMeta = buildAgentShellGuardMetadata({ ...shellGuardMetaInput, blockedCommands: [] });
+      await writeFile(
+        path.join(dir, "_agent_shell_guard.meta.json"),
+        `${JSON.stringify({ condition, instances, ...failMeta }, null, 2)}\n`,
+      );
+      throw new Error(
+        [
+          `[stage5] M90A agent shell guard FAILED CLOSED (mandatory since ${STAGE5_AGENT_SHELL_GUARD_MANDATORY_SINCE}): ${shellDecision.reason}`,
+          `  wrapper bin: ${shellMat.wrapperBin}`,
+          `  path sanitized: ${shellMat.shellEnv.pathSanitized}; conda env scrubbed: ${shellMat.shellEnv.condaEnvScrubbed}`,
+          "",
+          "  Refusing to spawn the agent before any model call / Docker eval / external harness mutation.",
+        ].join("\n"),
+      );
+    }
+  }
+  // Final agent env = the condition's spec env overlaid with the shell-guard overrides
+  // (sanitized PATH, scrubbed conda/venv vars, block-log path). On the escape-hatch bypass the
+  // override map is empty, so the agent inherits the unguarded env (recorded NOT benchmark-valid).
+  const env = { ...specEnv, ...agentShellOverrides };
   const startedMs = Date.now();
   process.stderr.write(`\n[stage5] running ${condition} agent for ${config.runLabel ?? instances.join(",")} …\n`);
   operatorTtyHintOnce();
@@ -8135,6 +8245,14 @@ async function runCondition(
   // JSONL. UNIVERSAL — captured for every condition now, not just vtrace. Best-effort
   // and additive: absence just leaves the report's honest false-by-absence behavior.
   const toolCallMeta = await persistOrderedToolCalls(config, dir, condition, instances);
+  // M90A — read back the wrappers' blocked-command log (every host package-mutation attempt the
+  // firewall refused during this run) and fold the counts into the shell-guard metadata. Empty
+  // when the guard was bypassed or nothing was blocked. Best-effort; never throws.
+  const blockedHostPackageCommands = shellMat ? readBlockedCommandLog(shellMat.blockLogPath) : [];
+  const agentShellGuardMeta: AgentShellGuardMetadata = buildAgentShellGuardMetadata({
+    ...shellGuardMetaInput,
+    blockedCommands: blockedHostPackageCommands,
+  });
   // M75 tool-loop guard (DEFAULT-OFF). When --tool-loop-guard is set, run the PURE
   // detector in OBSERVE mode over the just-persisted tool-call stream (rich
   // `_tool_calls_with_outputs.json` if present, else lean `_tool_calls.json`) and
@@ -8191,6 +8309,7 @@ async function runCondition(
     ...toolLoopGuardMetaFields,
     ...costGuardMetaFields,
     ...envGuardMeta,
+    ...agentShellGuardMeta,
     exitCode: result.exitCode,
     durationMs: Date.now() - startedMs,
   };
@@ -10578,6 +10697,13 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--stage5-env-drift-check": config.stage5EnvDriftCheck = true; break;
       case "--expected-testbed-prefix": config.expectedTestbedPrefix = requireValue(argv, ++index, arg); break;
       case "--allow-unguarded-live-env": config.allowUnguardedLiveEnv = true; break;
+      // M90A agent-shell guard / host-pip firewall. Both default ON (mandatory); the enable
+      // flags are idempotent / documentation aids. --disable-agent-shell-guard turns the guard
+      // off (a live run then fails closed unless --allow-unguarded-live-env is also set).
+      case "--stage5-agent-shell-guard": config.stage5AgentShellGuard = true; break;
+      case "--stage5-host-pip-firewall": config.stage5HostPipFirewall = true; break;
+      case "--disable-agent-shell-guard": config.stage5AgentShellGuard = false; break;
+      case "--disable-host-pip-firewall": config.stage5HostPipFirewall = false; break;
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
@@ -10691,7 +10817,11 @@ function printUsageAndExit(exitCode: number): never {
       "  --stage5-env-guard                            (M86) probe the testbed interpreter and prove it targets --expected-testbed-prefix (never the conda base or active dev env). MANDATORY for live agent runs since M89: a live run fails closed before agent spawn unless this is on",
       "  --stage5-env-drift-check                      (M86) read-only before/after package-state drift snapshotting of protected prefixes (pluggy/pytest/pip/setuptools/wheel). MANDATORY for live agent runs since M89",
       "  --expected-testbed-prefix <path>              (M86) the disposable testbed Python prefix dependency installs must target, e.g. /home/calvin/miniforge3/envs/vexp_swebench. M89: required for live runs (resolved from this flag, else $" + STAGE5_EXPECTED_TESTBED_PREFIX_ENV + ", else fail closed)",
-      "  --allow-unguarded-live-env                    (M89) EMERGENCY/TEST-ONLY escape hatch: proceed a live run with the mandatory env guard BYPASSED. Prints a loud warning, is recorded in metadata, and is NEVER benchmark-valid. Never used by default drivers",
+      "  --allow-unguarded-live-env                    (M89/M90A) EMERGENCY/TEST-ONLY escape hatch: proceed a live run with BOTH the mandatory env guard AND the agent shell guard BYPASSED. Prints a loud warning, is recorded in metadata, and is NEVER benchmark-valid. Never used by default drivers",
+      "  --stage5-agent-shell-guard                    (M90A) MANDATORY (default ON): materialize a per-run wrapper bin (pip/python/conda/uv/poetry/pipx firewall) + sanitized PATH/env so the spawned agent cannot mutate host/base Python (bare pip/python -m pip/conda install/editable installs are blocked before mutation). A live run fails closed before spawn if disabled (unless --allow-unguarded-live-env)",
+      "  --stage5-host-pip-firewall                    (M90A) MANDATORY (default ON): the host-pip firewall component of the agent shell guard. Idempotent enable flag",
+      "  --disable-agent-shell-guard                   (M90A) EMERGENCY/TEST-ONLY: turn the agent shell guard off. A live run then FAILS CLOSED before spawn unless --allow-unguarded-live-env is also set (never benchmark-valid)",
+      "  --disable-host-pip-firewall                   (M90A) EMERGENCY/TEST-ONLY: turn the host-pip firewall off (same fail-closed semantics as --disable-agent-shell-guard)",
       "  --reuse-workspace                             reuse an existing labeled workspace by RESETTING it to the SWE-bench base commit and running git clean -fdx (never pulls main; reuses a fresh index per --index-policy) instead of redownloading the repo",
       "  --index-policy auto|always|reuse              reuse a fingerprint-fresh index (auto), force rebuild (always), or keep a stale index (reuse). default: auto",
       "  --show-vtrace-index-log                       print the vtrace index log to the terminal (drops --quiet)",

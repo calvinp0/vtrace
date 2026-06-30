@@ -19,6 +19,14 @@
 #   --cost-guard-mode inject --cost-guard-calibration c7d            (behavioral; opt-in)
 #   --stage5-env-guard --stage5-env-drift-check                      (M89 MANDATORY safety infra)
 #   --expected-testbed-prefix /home/calvin/miniforge3/envs/vexp_swebench
+#   --stage5-agent-shell-guard --stage5-host-pip-firewall            (M90A MANDATORY safety infra)
+#
+# M90A adds a SECOND mandatory safety layer: the agent shell guard / host-pip firewall. M89
+# protects the runner before spawn; M90A protects the tool shell the spawned agent inherits, so
+# a bare `pip install`/`python -m pip`/`conda install`/editable install inside .bench-repos is
+# blocked by a per-run wrapper bin before it can mutate host/base Python. Both flags default ON;
+# they are passed explicitly below for clarity. The shell guard is bypassable ONLY via the
+# unguarded escape hatch, which is test-/emergency-only and MUST NEVER appear in a driver template.
 #
 # Runs are SEQUENTIAL (the first pass writes a SHARED results/_agent_stream.jsonl; concurrent
 # live runs clobber it). Resumable: a treatment run is skipped if its swebench-*.jsonl exists.
@@ -84,6 +92,10 @@ run_treatment() { # instance, label  -> rc
     --stage5-env-drift-check \
     --expected-testbed-prefix "$EXPECTED_TESTBED_PREFIX" \
     `# <<< M89 env guard` \
+    `# >>> M90A MANDATORY agent shell guard / host-pip firewall (default ON; explicit for clarity)` \
+    --stage5-agent-shell-guard \
+    --stage5-host-pip-firewall \
+    `# <<< M90A agent shell guard` \
     --out "$OUT" \
     > "$LOGDIR/${label}.stdout.log" 2> "$LOGDIR/${label}.stderr.log"
   return $?

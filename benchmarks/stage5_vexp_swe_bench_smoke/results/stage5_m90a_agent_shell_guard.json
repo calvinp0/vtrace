@@ -1,0 +1,79 @@
+{
+  "milestone": "M90A",
+  "title": "Stage 5 agent shell guard / host-pip firewall",
+  "recurrence_root_cause_confirmed": true,
+  "recurrence": {
+    "command": "pip install -e .",
+    "cwd": "/home/calvin/code/vexp-swe-bench/.bench-repos/pytest-dev__pytest",
+    "mechanism": "bare pip resolved via PATH to the Miniforge base interpreter; editable install of a pytest checkout pinning pluggy<1.0 downgraded base pluggy to 0.13.1 and broke Conda",
+    "why_m89_insufficient": "M89 fails closed in the runner before spawn; it does not protect the tool shell the spawned agent inherits, where pip still resolved to base via PATH"
+  },
+  "implementation": {
+    "path_sanitization": "remove all Conda/Miniforge/Anaconda/mambaforge PATH entries (base bin, condabin, env bins); prepend per-run wrapper bin first",
+    "wrapper_bin_dirname": "_vtrace_agent_bin",
+    "wrappers": ["pip", "pip3", "pip3.12", "python", "python3", "python3.12", "conda", "uv", "poetry", "pipx"],
+    "env_scrubbed_keys": ["CONDA_PREFIX", "CONDA_DEFAULT_ENV", "CONDA_SHLVL", "CONDA_PROMPT_MODIFIER", "CONDA_EXE", "CONDA_PYTHON_EXE", "_CE_CONDA", "_CE_M", "VIRTUAL_ENV", "PYTHONPATH", "PYTHONHOME"],
+    "hardening_env": {"PYTHONNOUSERSITE": "1", "PIP_REQUIRE_VIRTUALENV": "true"},
+    "block_exit_code": 97,
+    "markers": ["VTRACE_HOST_PIP_BLOCKED", "VTRACE_HOST_CONDA_BLOCKED", "VTRACE_HOST_PACKAGE_MANAGER_BLOCKED"],
+    "pre_tool_hook": "not added (PATH wrappers + env scrub are the robust fail-closed layer; a PreToolUse regex blocker is evadable and would only be advisory)",
+    "fail_closed": "runCondition() throws before any model call / Docker eval / harness mutation if the guard is disabled, the firewall is off, or the wrapper bin did not materialize"
+  },
+  "default_live_run_behavior": {
+    "mandatory": true,
+    "default_on": true,
+    "escape_hatch": "--allow-unguarded-live-env (loud warning, recorded, NEVER benchmark-valid)",
+    "required_layers": ["M89 env guard", "M90A agent shell guard", "post-run drift check"]
+  },
+  "smoke": {
+    "status": "pass",
+    "danger_cwd": "/home/calvin/code/vexp-swe-bench/.bench-repos/pytest-dev__pytest",
+    "used_real_danger_cwd": true,
+    "blocked_commands": [
+      "pip install -e .",
+      "python -m pip install -e .",
+      "python3 -m pip install -e .",
+      "conda install pluggy=0.13.1",
+      "uv pip install -e .",
+      "poetry add pluggy",
+      "pipx install pytest"
+    ],
+    "blocked_exit_code": 97,
+    "which_pip_resolves_to_wrapper": true,
+    "which_pip_not_base": true,
+    "harmless_python_runs": true,
+    "real_conda_mutated": false,
+    "path_sanitized": true,
+    "conda_env_scrubbed": true,
+    "removed_path_entries": ["/home/calvin/miniforge3/bin", "/home/calvin/miniforge3/condabin"]
+  },
+  "metadata_fields": [
+    "stage5_agent_shell_guard_required",
+    "stage5_agent_shell_guard_enabled",
+    "stage5_agent_shell_guard_status",
+    "stage5_host_pip_firewall_enabled",
+    "stage5_agent_wrapper_bin",
+    "stage5_agent_path_sanitized",
+    "stage5_agent_conda_env_scrubbed",
+    "stage5_agent_python_resolution",
+    "stage5_agent_pip_resolution",
+    "stage5_blocked_host_package_commands",
+    "stage5_blocked_host_package_command_count",
+    "stage5_agent_shell_guard_failure_reason",
+    "stage5_agent_shell_guard_mandatory_since"
+  ],
+  "tests": {
+    "agentShellGuard.test.ts": "pure: sanitize/scrub/gate/parse/metadata/wrapper-gen",
+    "stage5AgentShellGuardIntegration.test.ts": "materialize + invoke wrappers (blocked exit 97, which-pip resolution, block log, not-ready failure)",
+    "run_stage5_vexp_swe_bench_smoke.test.ts": "flags default ON/disable; runCondition guarded-pass / disabled-fail-closed / escape-hatch-bypass"
+  },
+  "verification": {
+    "typecheck": "pass",
+    "typecheck_benchmarks": "pass",
+    "bun_test": "pass",
+    "git_diff_check": "pass",
+    "retrieval_scoring_ranking_capsule_touched": false,
+    "v4_c7d_changed": false
+  },
+  "recommendation": "proceed to M90 50-task confirmation with shell guard (no base repair needed; firewall blocks before mutation)"
+}

@@ -230,6 +230,11 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     // environment, so they ride the test-only escape hatch. The dedicated mandatory-gate
     // tests override this back to false to assert the real fail-closed / pass behavior.
     allowUnguardedLiveEnv: true,
+    // M90A agent-shell guard / host-pip firewall default ON (mirrors DEFAULT_CONFIG). The
+    // generic mocked live tests ride the escape hatch above, so the guard is bypassed for them;
+    // the dedicated M90A tests override allowUnguardedLiveEnv back to false to exercise it.
+    stage5AgentShellGuard: true,
+    stage5HostPipFirewall: true,
     ...overrides,
   };
 }
@@ -273,6 +278,18 @@ test("M89 escape hatch flag parses and defaults off", () => {
     parseArgs(["--mode", "run-protocol", "--allow-unguarded-live-env"]).allowUnguardedLiveEnv,
     true,
   );
+});
+
+test("M90A agent shell guard flags default ON and disable flags turn them off", () => {
+  const def = parseArgs(["--mode", "run-protocol"]);
+  assert.equal(def.stage5AgentShellGuard, true);
+  assert.equal(def.stage5HostPipFirewall, true);
+  // Idempotent enable flags.
+  assert.equal(parseArgs(["--mode", "run-protocol", "--stage5-agent-shell-guard"]).stage5AgentShellGuard, true);
+  assert.equal(parseArgs(["--mode", "run-protocol", "--stage5-host-pip-firewall"]).stage5HostPipFirewall, true);
+  // Emergency disable flags.
+  assert.equal(parseArgs(["--mode", "run-protocol", "--disable-agent-shell-guard"]).stage5AgentShellGuard, false);
+  assert.equal(parseArgs(["--mode", "run-protocol", "--disable-host-pip-firewall"]).stage5HostPipFirewall, false);
 });
 
 test("--tool-loop-guard is default-off and opt-in only (M75)", () => {
@@ -1252,11 +1269,10 @@ async function runGuardedBaseline(
   }
   let meta: Record<string, unknown> | null = null;
   const dir = rawConditionDir(config.out, "baseline", config.runLabel);
-  try {
-    meta = JSON.parse(await readFile(path.join(dir, "_run.meta.json"), "utf8")) as Record<string, unknown>;
-  } catch {
+  for (const name of ["_run.meta.json", "_env_guard.meta.json", "_agent_shell_guard.meta.json"]) {
     try {
-      meta = JSON.parse(await readFile(path.join(dir, "_env_guard.meta.json"), "utf8")) as Record<string, unknown>;
+      meta = JSON.parse(await readFile(path.join(dir, name), "utf8")) as Record<string, unknown>;
+      break;
     } catch {
       meta = null;
     }
@@ -1469,6 +1485,83 @@ test("M89 escape hatch proceeds unguarded but is never benchmark-valid", async (
   assert.equal(meta?.stage5_env_guard_required, true);
   assert.equal(meta?.stage5_unguarded_live_env_allowed, true);
   assert.equal(meta?.stage5_env_guard_benchmark_valid, false);
+});
+
+// ----------------------------------------------------------------------------------------
+// M90A — agent-shell guard / host-pip firewall: mandatory live-run integration through
+// runCondition (baseline). The env guard is satisfied (clean testbed prefix injected) so the
+// run reaches the M90A layer; the shell guard materializes a REAL per-run wrapper bin in the
+// temp out dir (no agent spawns, no conda mutation).
+// ----------------------------------------------------------------------------------------
+
+// (1) a guarded live run materializes the shell guard and PASSES (benchmark-valid path).
+test("M90A live run materializes the agent shell guard and passes", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m90a-pass");
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["a__1"],
+    stage5EnvGuard: true,
+    stage5EnvDriftCheck: true,
+    expectedTestbedPrefix: M89_TESTBED,
+    allowUnguardedLiveEnv: false,
+  });
+  const { spawned, meta, error } = await runGuardedBaseline(config, M89_TESTBED);
+  assert.equal(error, null);
+  assert.equal(spawned, true);
+  assert.equal(meta?.stage5_agent_shell_guard_required, true);
+  assert.equal(meta?.stage5_agent_shell_guard_enabled, true);
+  assert.equal(meta?.stage5_host_pip_firewall_enabled, true);
+  assert.equal(meta?.stage5_agent_shell_guard_status, "pass");
+  assert.equal(meta?.stage5_agent_path_sanitized, true);
+  assert.equal(meta?.stage5_agent_shell_guard_mandatory_since, "M90A");
+  // The wrapper bin lives under the run dir and `pip` resolves to it (not host/base pip).
+  const wrapperBin = meta?.stage5_agent_wrapper_bin as string;
+  assert.ok(wrapperBin && wrapperBin.includes("_vtrace_agent_bin"));
+  const pipWrapper = await readFile(path.join(wrapperBin, "pip"), "utf8");
+  assert.match(pipWrapper, /VTRACE_HOST_PIP_BLOCKED/);
+});
+
+// (2) missing shell guard FAILS CLOSED before agent spawn (env guard already satisfied).
+test("M90A live run with the shell guard disabled fails closed before spawn", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m90a-noshell");
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["a__1"],
+    stage5EnvGuard: true,
+    stage5EnvDriftCheck: true,
+    expectedTestbedPrefix: M89_TESTBED,
+    allowUnguardedLiveEnv: false,
+    stage5AgentShellGuard: false, // disabled ⇒ fail closed at the M90A layer
+  });
+  const { spawned, meta, error } = await runGuardedBaseline(config, M89_TESTBED);
+  assert.ok(error, "expected a fail-closed throw");
+  assert.match(error!.message, /M90A.*FAILED CLOSED/s);
+  assert.equal(spawned, false);
+  assert.equal(meta?.stage5_agent_shell_guard_required, true);
+  assert.equal(meta?.stage5_agent_shell_guard_status, "fail");
+});
+
+// (3) escape hatch proceeds unguarded but the shell guard is NOT applied (never benchmark-valid).
+test("M90A escape hatch proceeds with the shell guard bypassed", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m90a-escape");
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["a__1"],
+    stage5EnvGuard: false,
+    stage5EnvDriftCheck: false,
+    expectedTestbedPrefix: null,
+    allowUnguardedLiveEnv: true,
+  });
+  const { spawned, meta, error } = await runGuardedBaseline(config, null);
+  assert.equal(error, null);
+  assert.equal(spawned, true);
+  assert.equal(meta?.stage5_agent_shell_guard_status, "fail");
+  assert.match(String(meta?.stage5_agent_shell_guard_failure_reason), /bypassed/);
+  // No wrapper bin materialized on the bypass path.
+  assert.equal(meta?.stage5_agent_wrapper_bin, null);
 });
 
 test("baseline run writes the shared discipline file, exports the env, and records injected metadata", async () => {

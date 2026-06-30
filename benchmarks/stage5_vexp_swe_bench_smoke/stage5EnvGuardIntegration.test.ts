@@ -316,4 +316,11 @@ describe("M89 driver templates carry the env guard flags", () => {
       expect(text).not.toContain("--allow-unguarded-live-env");
     });
   }
+
+  // M90A — the forward template additionally carries the agent shell guard flags.
+  test("run_stage5_m90_driver.template.sh includes the M90A agent shell guard flags", () => {
+    const text = fs.readFileSync(path.join(here, "run_stage5_m90_driver.template.sh"), "utf8");
+    expect(text).toContain("--stage5-agent-shell-guard");
+    expect(text).toContain("--stage5-host-pip-firewall");
+  });
 });

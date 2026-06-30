@@ -670,6 +670,10 @@ export function buildPrecheckConfig(opts: {
     // Reporting-only path: builds a Capsule context, never spawns an agent, so the M89
     // mandatory live-run env guard does not apply here.
     allowUnguardedLiveEnv: false,
+    // Reporting-only path: never spawns an agent, so the M90A mandatory shell guard is moot
+    // here; keep the production defaults (ON) for type/shape parity.
+    stage5AgentShellGuard: true,
+    stage5HostPipFirewall: true,
     disableEditGuard: false,
     disablePatchVerify: false,
     disableToolUseDiscipline: false,
