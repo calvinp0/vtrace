@@ -1,0 +1,79 @@
+{
+  "milestone": "M91",
+  "kind": "offline attribution audit of M90 (V4 tool-loop + C7_D cost + mandatory M89 env guard) and default-policy decision; report-only, no live agents/Docker/conda mutation",
+  "expected_testbed_prefix": "/home/calvin/miniforge3/envs/vexp_swebench",
+  "scope_caveat": "Internal attribution. NOT a VEXP parity / broad SWE-bench / statistical-superiority / promotion claim.",
+  "key_timing_finding": {
+    "m90_live_runs_window": "2026-06-30 ~08:01 to ~10:32 (+0300)",
+    "m90_commit_fa09ebd": "2026-06-30 12:05",
+    "shell_guard_commit_b19fd6c": "2026-06-30 13:18",
+    "conclusion": "Agent shell guard / host-pip firewall (b19fd6c, M90A) landed AFTER all M90 live runs and AFTER the M90 commit. It did NOT exist during M90, so it cannot have caused or interfered with any M90 outcome. The M90A pip-install-breaks-conda incident is what MOTIVATED the shell guard; the firewall is the fix applied afterward, mandatory going forward."
+  },
+  "safety_infrastructure": {
+    "env_guard_status_all": "pass (50/50)",
+    "env_guard_benchmark_valid_all": true,
+    "drift_detected_instances": [],
+    "escape_hatch_used_instances": [],
+    "blocked_host_package_command_count_total": 0,
+    "blocked_host_package_command_note": "stage5_blocked_unsafe_pip_command_count=0 on all 50; no shell-guard-named fields present in any M90 run meta, consistent with the firewall being absent during M90.",
+    "shell_guard_present_during_m90": false,
+    "env_scrubbing_changed_agent_python": false,
+    "env_scrubbing_note": "M89 env guard is a read-only pre-spawn prefix probe + drift check; PATH sanitization / conda scrub belong to the later shell guard and were not active in M90. Preflight warning noted CONDA_PREFIX!=expected but absolute interpreter verified.",
+    "env_guard_blind_spot": "M89 env guard watches the testbed prefix (vexp_swebench), not miniforge base, so it did not detect the M90A base-pluggy downgrade. Canonical resolution ran in isolated Docker, so M90 resolution numbers are unaffected by host-base contamination.",
+    "shell_guard_contributed_to_any_unresolved_case": false
+  },
+  "behavioral_guards": {
+    "v4_fired_count": 4,
+    "c7d_fired_count": 3,
+    "v4_all_reactive_to_repeated_failure": true,
+    "v4_risky_early_read_fire": false,
+    "v4_fire_blocked_a_win": false,
+    "v4_resolved_despite_fire": [
+      "pydata__xarray-2905"
+    ],
+    "c7d_all_neutral_late": true,
+    "c7d_fired_on_control_or_protected": [],
+    "guards_explain_resolution_drop": false,
+    "guard_fire_among_7_losses": [
+      "matplotlib__matplotlib-24627"
+    ],
+    "guard_fire_among_7_losses_causal": false
+  },
+  "resolution_delta": {
+    "m90_resolved": 17,
+    "m73_treatment_resolved": 22,
+    "m73_baseline_resolved": 20,
+    "net_delta_vs_treatment": -5,
+    "losses_vs_treatment": [
+      "matplotlib__matplotlib-24627",
+      "psf__requests-1724",
+      "sympy__sympy-15875",
+      "django__django-12325",
+      "matplotlib__matplotlib-25960",
+      "django__django-13112",
+      "pytest-dev__pytest-6197"
+    ],
+    "gains_vs_treatment": [
+      "sympy__sympy-24562",
+      "matplotlib__matplotlib-26466"
+    ],
+    "losses_with_guard_fire": 1,
+    "losses_with_no_guard_fire": 6,
+    "losses_with_blocked_pip": 0,
+    "losses_all_produced_patch": true,
+    "interpretation": "Resolution moved +2/-7 across DIFFERENT single-sample cases; 6 of 7 losses had zero guard fire and all 7 produced a patch with no package block. Drop is attributable to ordinary live single-sample variance (treatment-only one-shot B wins not replicating), not to V4/C7_D or any safety mechanism."
+  },
+  "policy_decision": {
+    "chosen": "Policy A",
+    "policy_A": "Env guard mandatory; shell guard mandatory; V4/C7_D disabled by default, kept as opt-in diagnostics.",
+    "rationale": "Safety infra is clean and (for the shell guard) was not even present during M90, so it cannot explain the drop. V4 fires are purely reactive recovery nudges (one fired and the case still resolved); C7_D fires are neutral-late on cap targets only. No evidence of benefit or harm sufficient to promote either guard. The drop is live variance. Keep both safety layers mandatory, keep behavioral guards opt-in.",
+    "rejected": {
+      "B": "V4 default-on \u2014 no demonstrated benefit; would add injected-message noise without resolution gain.",
+      "C": "V4+C7_D default-on \u2014 same, no benefit shown across M85/M88/M90.",
+      "D": "Retire V4/C7_D \u2014 premature; they are harmless diagnostics with value for cap/thrash investigation.",
+      "E": "Pause for per-task venv \u2014 not warranted; shell guard + env guard already close the M90A hole; Docker eval already isolates resolution."
+    }
+  },
+  "recommendation": "proceed to default env+shell guarded confirmation without V4/C7_D (Policy A); keep V4/C7_D opt-in diagnostics",
+  "next_milestone": "M92 default env+shell guarded confirmation slice (no behavioral guards), optionally a targeted B-cohort replicate to bound variance"
+}
