@@ -354,13 +354,19 @@ describe("metadata builder", () => {
       "stage5_blocked_unsafe_pip_command_count",
       "stage5_dependency_install_commands_checked",
       "stage5_drift_check_enabled",
+      "stage5_env_guard_benchmark_valid",
       "stage5_env_guard_enabled",
+      "stage5_env_guard_failure_reason",
+      "stage5_env_guard_mandatory_since",
+      "stage5_env_guard_required",
       "stage5_env_guard_status",
       "stage5_expected_testbed_prefix",
+      "stage5_expected_testbed_prefix_source",
       "stage5_pip_prefix_verified",
       "stage5_prefix_drift_summary",
       "stage5_prefix_guard_failures",
       "stage5_python_prefix_verified",
+      "stage5_unguarded_live_env_allowed",
     ]);
     // No giant strings.
     expect(JSON.stringify(meta).length).toBeLessThan(2000);

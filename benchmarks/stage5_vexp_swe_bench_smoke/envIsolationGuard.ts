@@ -547,6 +547,22 @@ export interface EnvGuardMetadataInput {
   readonly blockedUnsafePipCommandCount: number;
   /** Set when the guard was not run because no install-capable path was active. */
   readonly notApplicableReason?: string | null;
+  // ---- M89 mandatory-guard fields (additive; default to the legacy opt-in shape) ----
+  /** True when this run is a live agent run for which the guard is REQUIRED (M89). */
+  readonly required?: boolean;
+  /** Milestone the guard became mandatory ("M89"), recorded only when required. */
+  readonly mandatorySince?: string | null;
+  /** Where the expected prefix came from ("cli" | "env" | "inferred" | "none"). */
+  readonly expectedPrefixSource?: string | null;
+  /** Human-readable fail-closed reason, when the mandatory gate refused the run. */
+  readonly failureReason?: string | null;
+  /** True when the escape hatch (--allow-unguarded-live-env) bypassed the guard. */
+  readonly unguardedLiveEnvAllowed?: boolean;
+  /**
+   * Whether this run counts toward a valid benchmark. A bypassed (unguarded) live run
+   * is NEVER benchmark-valid; a clean guarded pass is. Undefined ⇒ derived from status.
+   */
+  readonly benchmarkValid?: boolean;
 }
 
 export interface EnvGuardMetadata {
@@ -560,6 +576,13 @@ export interface EnvGuardMetadata {
   readonly stage5_drift_check_enabled: boolean;
   readonly stage5_prefix_drift_summary: string;
   readonly stage5_env_guard_status: EnvGuardStatus;
+  // ---- M89 mandatory-guard fields ----
+  readonly stage5_env_guard_required: boolean;
+  readonly stage5_env_guard_mandatory_since: string | null;
+  readonly stage5_expected_testbed_prefix_source: string | null;
+  readonly stage5_env_guard_failure_reason: string | null;
+  readonly stage5_unguarded_live_env_allowed: boolean;
+  readonly stage5_env_guard_benchmark_valid: boolean;
 }
 
 function summarizeDriftLine(drift: DriftSummary | null): string {
@@ -576,9 +599,12 @@ export function buildEnvGuardMetadata(input: EnvGuardMetadataInput): EnvGuardMet
   // Derive the two boolean verifications from the named checks (false when guard absent).
   const checkOk = (id: string): boolean => Boolean(pg?.checks.find((c) => c.id === id)?.ok);
 
+  const required = input.required ?? false;
   let status: EnvGuardStatus;
   if (!input.enabled) {
-    status = "not_applicable";
+    // A live run that is REQUIRED to guard but arrives disabled is a fail-closed condition,
+    // not "not_applicable" — record it as a failure so reports cannot mistake it for safe.
+    status = required ? "fail" : "not_applicable";
   } else if (pg == null) {
     status = input.notApplicableReason ? "not_applicable" : "unknown";
   } else if (!pg.ok || (input.drift?.safetyFailed ?? false)) {
@@ -586,6 +612,10 @@ export function buildEnvGuardMetadata(input: EnvGuardMetadataInput): EnvGuardMet
   } else {
     status = "pass";
   }
+
+  // A bypassed (unguarded) live run is never benchmark-valid; otherwise validity follows
+  // the explicit input, else a clean "pass".
+  const benchmarkValid = input.benchmarkValid ?? (input.unguardedLiveEnvAllowed ? false : status === "pass");
 
   return {
     stage5_env_guard_enabled: input.enabled,
@@ -598,5 +628,11 @@ export function buildEnvGuardMetadata(input: EnvGuardMetadataInput): EnvGuardMet
     stage5_drift_check_enabled: input.driftCheckEnabled,
     stage5_prefix_drift_summary: summarizeDriftLine(input.drift),
     stage5_env_guard_status: status,
+    stage5_env_guard_required: required,
+    stage5_env_guard_mandatory_since: required ? input.mandatorySince ?? null : null,
+    stage5_expected_testbed_prefix_source: input.expectedPrefixSource ?? null,
+    stage5_env_guard_failure_reason: input.failureReason ?? null,
+    stage5_unguarded_live_env_allowed: input.unguardedLiveEnvAllowed ?? false,
+    stage5_env_guard_benchmark_valid: benchmarkValid,
   };
 }

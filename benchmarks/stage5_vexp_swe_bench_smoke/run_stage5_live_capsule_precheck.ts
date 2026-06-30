@@ -667,6 +667,9 @@ export function buildPrecheckConfig(opts: {
     stage5EnvGuard: false,
     stage5EnvDriftCheck: false,
     expectedTestbedPrefix: null,
+    // Reporting-only path: builds a Capsule context, never spawns an agent, so the M89
+    // mandatory live-run env guard does not apply here.
+    allowUnguardedLiveEnv: false,
     disableEditGuard: false,
     disablePatchVerify: false,
     disableToolUseDiscipline: false,

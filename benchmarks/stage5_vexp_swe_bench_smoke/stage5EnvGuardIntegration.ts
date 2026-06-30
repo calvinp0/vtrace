@@ -19,7 +19,24 @@ import {
   type PrefixGuardResult,
   type PrefixGuardConfig,
   type EnvGuardMetadata,
+  type EnvGuardStatus,
 } from "./envIsolationGuard";
+
+// M89 — the milestone the Stage 5 environment guard became MANDATORY for live agent runs.
+// Before M89 the guard was opt-in (--stage5-env-guard); from M89 a live agent run fails
+// closed unless the guard provably passes. This is safety infrastructure only — it changes
+// NO retrieval, scoring, ranking, Capsule v2, V4 tool-loop guard, or C7_D cost-guard behavior.
+export const STAGE5_ENV_GUARD_MANDATORY_SINCE = "M89";
+
+// Environment variable that supplies the expected disposable testbed Python prefix when the
+// `--expected-testbed-prefix` flag is absent (resolution order: CLI flag → this env var).
+export const STAGE5_EXPECTED_TESTBED_PREFIX_ENV = "VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX";
+
+// The fix instructions printed (and recorded) whenever a live run cannot resolve an expected
+// testbed prefix. Kept as one constant so the runner, tests, and report stay in lockstep.
+export const EXPECTED_PREFIX_FIX_MESSAGE =
+  "Pass:\n  --expected-testbed-prefix /path/to/env\n" +
+  `or set:\n  ${STAGE5_EXPECTED_TESTBED_PREFIX_ENV}=/path/to/env`;
 
 /** Derive the conda BASE prefix from any conda prefix (`<base>/envs/x` ➜ `<base>`). */
 export function deriveCondaBasePrefix(condaPrefix: string | null | undefined): string | null {
@@ -42,6 +59,148 @@ export interface Stage5EnvGuardOptions {
   readonly probeFn?: (pythonCommand: string) => PythonProbe | null;
   /** Injectable for tests; defaults to fs.existsSync. */
   readonly existsFn?: (absPath: string) => boolean;
+  // ---- M89 metadata passthrough (no behavior change; recorded in EnvGuardMetadata) ----
+  /** True when this preflight backs a live agent run for which the guard is REQUIRED. */
+  readonly required?: boolean;
+  /** Milestone string recorded when required (defaults to STAGE5_ENV_GUARD_MANDATORY_SINCE). */
+  readonly mandatorySince?: string | null;
+  /** Where the expected prefix was resolved from, for metadata only. */
+  readonly expectedPrefixSource?: ExpectedPrefixSource | null;
+  /** True when the escape hatch bypassed the guard (recorded; never benchmark-valid). */
+  readonly unguardedLiveEnvAllowed?: boolean;
+}
+
+// -------------------------------------------------------------------------------------------
+// M89 — expected-prefix resolution + the mandatory live-run gate (PURE / deterministic).
+// -------------------------------------------------------------------------------------------
+
+export type ExpectedPrefixSource = "cli" | "env" | "inferred" | "none";
+
+export interface ExpectedPrefixResolution {
+  readonly prefix: string | null;
+  readonly source: ExpectedPrefixSource;
+}
+
+/**
+ * Resolve the expected disposable testbed Python prefix in priority order:
+ *   1. the explicit `--expected-testbed-prefix` CLI value,
+ *   2. else the `VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX` environment variable,
+ *   3. else a reliably-inferred prefix (only when the caller proved one — none by default),
+ *   4. else null/`none` ⇒ a live run MUST fail closed.
+ * Pure: no env access here; the caller passes the env value in so this stays testable.
+ */
+export function resolveExpectedTestbedPrefix(input: {
+  readonly cliPrefix?: string | null;
+  readonly envValue?: string | null;
+  readonly inferredPrefix?: string | null;
+}): ExpectedPrefixResolution {
+  const cli = (input.cliPrefix ?? "").trim();
+  if (cli.length > 0) return { prefix: normalizePrefix(cli), source: "cli" };
+  const env = (input.envValue ?? "").trim();
+  if (env.length > 0) return { prefix: normalizePrefix(env), source: "env" };
+  const inferred = (input.inferredPrefix ?? "").trim();
+  if (inferred.length > 0) return { prefix: normalizePrefix(inferred), source: "inferred" };
+  return { prefix: null, source: "none" };
+}
+
+export interface MandatoryLiveEnvGuardInput {
+  /** True for any path that spawns a live agent / external SWE-bench agent run. */
+  readonly isLiveAgentRun: boolean;
+  /** The escape hatch (--allow-unguarded-live-env). Test/emergency only; never a driver default. */
+  readonly allowUnguardedLiveEnv: boolean;
+  readonly envGuardEnabled: boolean;
+  readonly driftCheckEnabled: boolean;
+  readonly resolvedExpectedPrefix: string | null;
+  readonly expectedPrefixSource: ExpectedPrefixSource;
+  /** The prefix preflight's `ok`, or null when it was not (yet) run. */
+  readonly preflightOk: boolean | null;
+  /** The prefix preflight's status, or null when it was not (yet) run. */
+  readonly preflightStatus: EnvGuardStatus | null;
+  /** The prefix preflight's fail-closed reason, when it failed. */
+  readonly preflightFailureReason?: string | null;
+}
+
+export interface MandatoryLiveEnvGuardDecision {
+  /** May the caller spawn the agent? */
+  readonly proceed: boolean;
+  /** Must the caller throw (fail closed) before any model call / Docker / harness mutation? */
+  readonly failClosed: boolean;
+  /** Was the escape hatch used to proceed unguarded? */
+  readonly bypassed: boolean;
+  /** Whether the run counts toward a valid benchmark (false for bypass and for failures). */
+  readonly benchmarkValid: boolean;
+  /** Whether the guard was required for this run (true for any live agent run). */
+  readonly required: boolean;
+  /** Failure / bypass explanation, null on a clean guarded pass. */
+  readonly reason: string | null;
+  /** Operator fix instructions, when failing closed on configuration. */
+  readonly fixInstructions: string | null;
+}
+
+/**
+ * Decide whether a live Stage 5 agent run may proceed under the M89 MANDATORY env guard.
+ *
+ * For a non-live run the guard is not applicable (always proceeds). For a live run the guard
+ * is REQUIRED: the run fails closed unless `--stage5-env-guard` and `--stage5-env-drift-check`
+ * are on, an expected testbed prefix resolved, and the prefix preflight passed. The only way
+ * to proceed unguarded is the loud `--allow-unguarded-live-env` escape hatch, which proceeds
+ * but is NEVER benchmark-valid. Pure: encodes the policy with no I/O so it is fully unit-tested.
+ */
+export function evaluateMandatoryLiveEnvGuard(input: MandatoryLiveEnvGuardInput): MandatoryLiveEnvGuardDecision {
+  // Non-live (offline analysis / preflight / replay / report) ⇒ guard not applicable.
+  if (!input.isLiveAgentRun) {
+    return { proceed: true, failClosed: false, bypassed: false, benchmarkValid: true, required: false, reason: null, fixInstructions: null };
+  }
+
+  // Escape hatch: proceed unguarded, very loudly, and NEVER benchmark-valid.
+  if (input.allowUnguardedLiveEnv) {
+    return {
+      proceed: true,
+      failClosed: false,
+      bypassed: true,
+      benchmarkValid: false,
+      required: true,
+      reason: "unguarded live env explicitly allowed via --allow-unguarded-live-env (NOT benchmark-valid)",
+      fixInstructions: null,
+    };
+  }
+
+  const fail = (reason: string, fix: string | null): MandatoryLiveEnvGuardDecision => ({
+    proceed: false,
+    failClosed: true,
+    bypassed: false,
+    benchmarkValid: false,
+    required: true,
+    reason,
+    fixInstructions: fix,
+  });
+
+  if (!input.envGuardEnabled) {
+    return fail(
+      "live Stage 5 agent runs require the environment guard (mandatory since M89)",
+      "Enable it: pass --stage5-env-guard",
+    );
+  }
+  if (!input.driftCheckEnabled) {
+    return fail(
+      "live Stage 5 agent runs require the drift check (mandatory since M89)",
+      "Enable it: pass --stage5-env-drift-check",
+    );
+  }
+  if (!input.resolvedExpectedPrefix) {
+    return fail(
+      "live Stage 5 agent runs require a proven expected testbed prefix (mandatory since M89)",
+      EXPECTED_PREFIX_FIX_MESSAGE,
+    );
+  }
+  if (input.preflightOk !== true || input.preflightStatus !== "pass") {
+    return fail(
+      `environment guard did not pass: ${input.preflightFailureReason ?? "prefix verification failed"}`,
+      null,
+    );
+  }
+
+  return { proceed: true, failClosed: false, bypassed: false, benchmarkValid: true, required: true, reason: null, fixInstructions: null };
 }
 
 export interface Stage5EnvGuardOutcome {
@@ -94,6 +253,7 @@ export function runStage5EnvGuardPreflight(opts: Stage5EnvGuardOptions): Stage5E
         dependencyInstallCommandsChecked: 0,
         blockedUnsafePipCommandCount: 0,
         notApplicableReason: "env guard disabled",
+        ...m89MetaPassthrough(opts),
       }),
     };
   }
@@ -148,6 +308,8 @@ export function runStage5EnvGuardPreflight(opts: Stage5EnvGuardOptions): Stage5E
     drift: null,
     dependencyInstallCommandsChecked: depCommandsChecked,
     blockedUnsafePipCommandCount: blockedUnsafe,
+    failureReason: pg.ok ? null : pg.failures.join("; "),
+    ...m89MetaPassthrough(opts),
   });
   return {
     ok: pg.ok,
@@ -179,7 +341,25 @@ function fail(
       drift: null,
       dependencyInstallCommandsChecked: depChecked,
       blockedUnsafePipCommandCount: blocked,
+      failureReason: reason,
+      ...m89MetaPassthrough(opts),
     }),
+  };
+}
+
+// Carry the additive M89 metadata fields (required / mandatory-since / prefix source /
+// escape-hatch) from the options into buildEnvGuardMetadata. No behavior change — pure shaping.
+function m89MetaPassthrough(opts: Stage5EnvGuardOptions): {
+  required?: boolean;
+  mandatorySince?: string | null;
+  expectedPrefixSource?: string | null;
+  unguardedLiveEnvAllowed?: boolean;
+} {
+  return {
+    required: opts.required ?? false,
+    mandatorySince: opts.required ? opts.mandatorySince ?? STAGE5_ENV_GUARD_MANDATORY_SINCE : null,
+    expectedPrefixSource: opts.expectedPrefixSource ?? null,
+    unguardedLiveEnvAllowed: opts.unguardedLiveEnvAllowed ?? false,
   };
 }
 

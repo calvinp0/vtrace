@@ -1,0 +1,92 @@
+{
+  "milestone": "M89",
+  "title": "Make Stage 5 environment guard mandatory for live agent runs",
+  "mandatory_env_guard_implemented": true,
+  "live_run_default_behavior": "fail_closed_unless_env_guard_passes",
+  "offline_report_replay_behavior": "env_guard_not_applicable_no_change",
+  "enforcement_point": "runCondition (the single Stage 5 live-agent spawn path; baseline/vtrace/vexp)",
+  "expected_prefix_resolution_order": ["cli:--expected-testbed-prefix", "env:VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX", "inferred:none_reliable", "fail_closed"],
+  "default_expected_prefix_for_local_setup": "/home/calvin/miniforge3/envs/vexp_swebench",
+  "mandatory_requirements_for_live_runs": {
+    "stage5_env_guard_enabled": true,
+    "stage5_drift_check_enabled": true,
+    "expected_testbed_prefix_configured": true,
+    "python_prefix_verified": true,
+    "pip_prefix_verified": true,
+    "stage5_env_guard_status": "pass"
+  },
+  "fail_closed_before": ["model_call", "docker_eval", "external_harness_mutation", "agent_spawn"],
+  "escape_hatch": {
+    "flag": "--allow-unguarded-live-env",
+    "default": false,
+    "purpose": "test/emergency only",
+    "loud_warning": true,
+    "recorded_in_metadata": true,
+    "never_benchmark_valid": true,
+    "used_by_default_drivers": false
+  },
+  "behavioral_guards_unchanged": {
+    "v4_tool_loop_guard": "default_off_unchanged",
+    "c7d_cost_guard": "default_off_unchanged"
+  },
+  "metadata_fields_emitted": [
+    "stage5_env_guard_required",
+    "stage5_env_guard_enabled",
+    "stage5_drift_check_enabled",
+    "stage5_expected_testbed_prefix",
+    "stage5_expected_testbed_prefix_source",
+    "stage5_env_guard_status",
+    "stage5_python_prefix_verified",
+    "stage5_pip_prefix_verified",
+    "stage5_prefix_drift_summary",
+    "stage5_prefix_guard_failures",
+    "stage5_env_guard_failure_reason",
+    "stage5_env_guard_mandatory_since",
+    "stage5_unguarded_live_env_allowed",
+    "stage5_env_guard_benchmark_valid"
+  ],
+  "no_full_environment_dump": true,
+  "driver_templates_updated": [
+    "run_stage5_m88_driver.template.sh (already carried the flags; comments note M89 mandatory)",
+    "run_stage5_m90_driver.template.sh (new future 50-task guarded-confirmation template)"
+  ],
+  "files_changed": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/envIsolationGuard.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/stage5EnvGuardIntegration.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_live_capsule_precheck.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/stage5EnvGuardIntegration.test.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.test.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m90_driver.template.sh"
+  ],
+  "tests": {
+    "pure_gate_and_resolution": "stage5EnvGuardIntegration.test.ts (M89 suites)",
+    "runcondition_end_to_end": "run_stage5_vexp_swe_bench_smoke.test.ts (M89 tests)",
+    "coverage": [
+      "no env guard -> fail closed before spawn",
+      "no drift check -> fail closed before spawn",
+      "no expected prefix -> fail closed with fix instructions",
+      "expected prefix from CLI -> pass",
+      "expected prefix from env var -> pass",
+      "offline/non-live -> not required",
+      "wrong-prefix python -> fail closed",
+      "pip-prefix mismatch -> fail closed",
+      "base/dev prefix target -> fail closed",
+      "metadata records required=true + mandatory-since M89",
+      "escape hatch -> proceeds but never benchmark-valid",
+      "driver template includes env guard flags / excludes escape hatch",
+      "metadata is compact (no full environment dump)"
+    ]
+  },
+  "verification": {
+    "typecheck": "pass",
+    "typecheck_benchmarks": "pass",
+    "bun_test": "pass",
+    "git_diff_check": "clean",
+    "retrieval_eval_required": false,
+    "live_agents_run": false,
+    "docker_run": false,
+    "conda_mutated": false
+  },
+  "recommendation": "proceed to M90 50-task guarded confirmation"
+}

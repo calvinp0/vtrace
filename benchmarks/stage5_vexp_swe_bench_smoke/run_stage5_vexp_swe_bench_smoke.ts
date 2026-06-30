@@ -97,8 +97,13 @@ import {
 } from "./costGuardRuntime";
 import {
   runStage5EnvGuardPreflight,
+  resolveExpectedTestbedPrefix,
+  evaluateMandatoryLiveEnvGuard,
+  STAGE5_ENV_GUARD_MANDATORY_SINCE,
+  STAGE5_EXPECTED_TESTBED_PREFIX_ENV,
   type Stage5EnvGuardOutcome,
 } from "./stage5EnvGuardIntegration";
+import type { PythonProbe } from "./envIsolationGuard";
 import {
   DEFAULT_PRE_EDIT_BASH_BUDGET,
   DEFAULT_PRE_EDIT_SEARCH_BUDGET,
@@ -372,6 +377,12 @@ export interface RunDeps {
   // Injectable backoff sleep for git-retry tests (default: real setTimeout). Tests
   // pass a no-op so retries are deterministic and instant.
   readonly sleep?: (ms: number) => Promise<void>;
+  // M89 — injectable read-only environment probe / existence check for the mandatory
+  // live-run env guard. Defaults to the real read-only probe + fs.existsSync. Tests pass
+  // synthetic versions so the mandatory gate can be exercised end-to-end through
+  // runCondition without ever touching a real conda environment.
+  readonly envProbeFn?: (pythonCommand: string) => PythonProbe | null;
+  readonly envExistsFn?: (absPath: string) => boolean;
 }
 
 function defaultSleep(ms: number): Promise<void> {
@@ -526,8 +537,15 @@ export interface CliConfig {
   // package-state snapshotting of protected prefixes (reported only; read-only).
   readonly stage5EnvDriftCheck: boolean;
   // M86 expected disposable testbed Python prefix (--expected-testbed-prefix). Null by
-  // default. Required to PROVE an install target when --stage5-env-guard is on.
+  // default. Required to PROVE an install target when --stage5-env-guard is on. M89: also
+  // resolvable from VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX when the flag is absent.
   readonly expectedTestbedPrefix: string | null;
+  // M89 escape hatch (--allow-unguarded-live-env). Default false. The env guard is MANDATORY
+  // for live agent runs from M89 on: a live run fails closed unless the guard provably passes.
+  // This flag is the ONLY way to proceed unguarded — it is test-/emergency-only, prints a loud
+  // warning, is recorded in metadata, and INVALIDATES benchmark-valid status. Never set by any
+  // default driver. Prefer leaving it false; if you need it you almost certainly have a misconfig.
+  readonly allowUnguardedLiveEnv: boolean;
   // Hard context-to-action gate (--pivot-check-gate). Default "off" — the existing
   // single-shot run path is unchanged. "hard" runs the two-phase enforcement
   // (Phase 1 inspect-only preflight → gate → Phase 2 solve only on pass) for the
@@ -1066,6 +1084,8 @@ const DEFAULT_CONFIG: CliConfig = {
   stage5EnvGuard: false,
   stage5EnvDriftCheck: false,
   expectedTestbedPrefix: null,
+  // M89 escape hatch: default-off; the env guard is mandatory for live agent runs.
+  allowUnguardedLiveEnv: false,
   // EDIT_GUARD is ON by default (rides with PIVOT_CHECK; --disable-edit-guard turns
   // off only the guard block).
   disableEditGuard: false,
@@ -7997,29 +8017,94 @@ async function runCondition(
   // Every condition now carries env (telemetry stream + shared discipline; vtrace
   // additionally carries its context env), so the agent child always gets it.
   const env = (spec as unknown as { env: Record<string, string> }).env;
-  // M86 environment isolation guard (opt-in via --stage5-env-guard). Default-off ⇒ a
-  // `not_applicable` metadata record and NO behavior change. When enabled, prove that the
-  // disposable testbed interpreter the run depends on is the EXPECTED prefix (never the
-  // conda base or the active dev env) and FAIL CLOSED before spawning the agent otherwise.
-  // The contamination this prevents: an editable pytest install + double pluggy landed in
-  // the operator's conda base because a dependency install resolved to bare `python`/`pip`.
+  // M89 — the environment isolation guard is MANDATORY for live agent runs. runCondition()
+  // is the single Stage 5 path that spawns a real agent / external SWE-bench agent run, so
+  // this is THE live-run enforcement point. A live run FAILS CLOSED (before any model call,
+  // Docker eval, or external harness mutation) unless the guard provably passes: the guard
+  // and drift check must be on, an expected testbed prefix must resolve, and the disposable
+  // testbed interpreter must provably be the EXPECTED prefix (never the conda base or the
+  // active dev env). The contamination this prevents: an editable pytest install + double
+  // pluggy landed in the operator's conda base because a dependency install resolved to bare
+  // `python`/`pip` (M86). The only way to proceed unguarded is the loud, test-/emergency-only
+  // --allow-unguarded-live-env escape hatch, which is NEVER benchmark-valid. This is safety
+  // infrastructure ONLY: it changes no retrieval / scoring / ranking / Capsule v2 / V4
+  // tool-loop guard / C7_D cost-guard behavior (those stay opt-in, default-off, unchanged).
+  const expectedResolution = resolveExpectedTestbedPrefix({
+    cliPrefix: config.expectedTestbedPrefix,
+    envValue: process.env[STAGE5_EXPECTED_TESTBED_PREFIX_ENV] ?? null,
+  });
   const envGuardOutcome: Stage5EnvGuardOutcome = runStage5EnvGuardPreflight({
     enabled: config.stage5EnvGuard,
     driftCheckEnabled: config.stage5EnvDriftCheck,
-    expectedTestbedPrefix: config.expectedTestbedPrefix,
+    expectedTestbedPrefix: expectedResolution.prefix,
     vexpSweBenchDir: config.vexpSweBenchDir,
+    required: true,
+    mandatorySince: STAGE5_ENV_GUARD_MANDATORY_SINCE,
+    expectedPrefixSource: expectedResolution.source,
+    unguardedLiveEnvAllowed: config.allowUnguardedLiveEnv,
+    probeFn: deps.envProbeFn,
+    existsFn: deps.envExistsFn,
   });
-  if (config.stage5EnvGuard && !envGuardOutcome.ok) {
-    throw new Error(
-      `[stage5] env isolation guard FAILED CLOSED: ${envGuardOutcome.failClosedReason}\n` +
-        `  expected testbed prefix: ${envGuardOutcome.metadata.stage5_expected_testbed_prefix}\n` +
-        `  resolved interpreter:    ${envGuardOutcome.resolvedTestbedPython ?? "<none>"}\n` +
-        (envGuardOutcome.prefixGuard
-          ? `  sys.prefix: ${envGuardOutcome.prefixGuard.actualPrefix}\n` +
-            `  pip prefix: ${envGuardOutcome.prefixGuard.actualPipPrefix ?? "<unparsed>"}\n` +
-            `  CONDA_PREFIX: ${envGuardOutcome.prefixGuard.condaPrefix ?? "<unset>"}\n`
-          : "") +
-        `  refusing to spawn the agent (a dependency install could contaminate a protected prefix).`,
+  const guardDecision = evaluateMandatoryLiveEnvGuard({
+    isLiveAgentRun: true,
+    allowUnguardedLiveEnv: config.allowUnguardedLiveEnv,
+    envGuardEnabled: config.stage5EnvGuard,
+    driftCheckEnabled: config.stage5EnvDriftCheck,
+    resolvedExpectedPrefix: expectedResolution.prefix,
+    expectedPrefixSource: expectedResolution.source,
+    preflightOk: config.stage5EnvGuard ? envGuardOutcome.ok : null,
+    preflightStatus: config.stage5EnvGuard ? envGuardOutcome.metadata.stage5_env_guard_status : null,
+    preflightFailureReason: envGuardOutcome.failClosedReason,
+  });
+  // Final env-guard metadata reflects the MANDATORY gate decision (M89), layered over the
+  // preflight's prefix evidence. Recorded for EVERY live run, including fail-closed ones.
+  const envGuardMeta = {
+    ...envGuardOutcome.metadata,
+    stage5_env_guard_required: true,
+    stage5_env_guard_mandatory_since: STAGE5_ENV_GUARD_MANDATORY_SINCE,
+    stage5_expected_testbed_prefix_source: expectedResolution.source,
+    stage5_unguarded_live_env_allowed: guardDecision.bypassed,
+    stage5_env_guard_benchmark_valid: guardDecision.benchmarkValid,
+    stage5_env_guard_failure_reason: guardDecision.reason,
+    stage5_env_guard_status:
+      guardDecision.bypassed || guardDecision.failClosed
+        ? ("fail" as const)
+        : envGuardOutcome.metadata.stage5_env_guard_status,
+  };
+  if (guardDecision.failClosed) {
+    // Emit env metadata for the FAILURE before refusing (M89: every live run emits env meta,
+    // including failures). No full environment dump — just the compact guard verdict.
+    await writeFile(
+      path.join(dir, "_env_guard.meta.json"),
+      `${JSON.stringify({ condition, instances, ...envGuardMeta }, null, 2)}\n`,
+    );
+    const lines = [
+      `[stage5] M89 environment guard FAILED CLOSED (mandatory since ${STAGE5_ENV_GUARD_MANDATORY_SINCE}): ${guardDecision.reason}`,
+      `  expected testbed prefix: ${expectedResolution.prefix ?? "<unresolved>"} (source: ${expectedResolution.source})`,
+      `  resolved interpreter:    ${envGuardOutcome.resolvedTestbedPython ?? "<none>"}`,
+    ];
+    if (envGuardOutcome.prefixGuard) {
+      lines.push(
+        `  sys.prefix: ${envGuardOutcome.prefixGuard.actualPrefix}`,
+        `  pip prefix: ${envGuardOutcome.prefixGuard.actualPipPrefix ?? "<unparsed>"}`,
+        `  CONDA_PREFIX: ${envGuardOutcome.prefixGuard.condaPrefix ?? "<unset>"}`,
+      );
+    }
+    if (guardDecision.fixInstructions) lines.push("", guardDecision.fixInstructions);
+    lines.push(
+      "",
+      "  Refusing to spawn the agent before any model call / Docker eval / external harness mutation.",
+    );
+    throw new Error(lines.join("\n"));
+  }
+  if (guardDecision.bypassed) {
+    process.stderr.write(
+      "\n############################################################\n" +
+        "# [stage5] WARNING: --allow-unguarded-live-env is set.\n" +
+        `# The M89 MANDATORY environment guard is BYPASSED for this live ${condition} run.\n` +
+        "# This run is NOT benchmark-valid and may contaminate protected prefixes.\n" +
+        `# Reason recorded: ${guardDecision.reason}\n` +
+        "############################################################\n",
     );
   }
   const startedMs = Date.now();
@@ -8105,7 +8190,7 @@ async function runCondition(
     ...vtraceMeta,
     ...toolLoopGuardMetaFields,
     ...costGuardMetaFields,
-    ...envGuardOutcome.metadata,
+    ...envGuardMeta,
     exitCode: result.exitCode,
     durationMs: Date.now() - startedMs,
   };
@@ -10492,6 +10577,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--stage5-env-guard": config.stage5EnvGuard = true; break;
       case "--stage5-env-drift-check": config.stage5EnvDriftCheck = true; break;
       case "--expected-testbed-prefix": config.expectedTestbedPrefix = requireValue(argv, ++index, arg); break;
+      case "--allow-unguarded-live-env": config.allowUnguardedLiveEnv = true; break;
       case "--disable-edit-guard": config.disableEditGuard = true; break;
       case "--disable-patch-verify": config.disablePatchVerify = true; break;
       case "--disable-tool-use-discipline": config.disableToolUseDiscipline = true; break;
@@ -10602,9 +10688,10 @@ function printUsageAndExit(exitCode: number): never {
       "  --patch-source original_model_patch|pivot_revision_revised   (with --mode plan-agent-test-command) which captured patch to plan a fair verification of (default: pivot_revision_revised)",
       "  --command-source first_pass_test_commands|pivot_revision_test_commands   (with --mode plan-agent-test-command|verify-agent-test-command) which captured agent-selected test commands to draw the single candidate from (default: pivot_revision_test_commands)",
       "  --allow-docker-verify                         (with --mode verify-agent-test-command) explicitly authorize the isolated container execution of the canonical safe command (non-oracle seam only — NEVER SWE-bench grading). default: off ⇒ the verifier writes a docker_not_authorized skip and never starts Docker",
-      "  --stage5-env-guard                            (M86) fail closed before spawning the agent unless the disposable testbed interpreter provably targets --expected-testbed-prefix (never the conda base or active dev env). default: off ⇒ not_applicable metadata, no behavior change",
-      "  --stage5-env-drift-check                      (M86) enable read-only before/after package-state drift snapshotting of protected prefixes (pluggy/pytest/pip/setuptools/wheel); reported only",
-      "  --expected-testbed-prefix <path>              (M86) the disposable testbed Python prefix dependency installs must target, e.g. /opt/miniconda3/envs/testbed. Required to PROVE a target when --stage5-env-guard is on",
+      "  --stage5-env-guard                            (M86) probe the testbed interpreter and prove it targets --expected-testbed-prefix (never the conda base or active dev env). MANDATORY for live agent runs since M89: a live run fails closed before agent spawn unless this is on",
+      "  --stage5-env-drift-check                      (M86) read-only before/after package-state drift snapshotting of protected prefixes (pluggy/pytest/pip/setuptools/wheel). MANDATORY for live agent runs since M89",
+      "  --expected-testbed-prefix <path>              (M86) the disposable testbed Python prefix dependency installs must target, e.g. /home/calvin/miniforge3/envs/vexp_swebench. M89: required for live runs (resolved from this flag, else $" + STAGE5_EXPECTED_TESTBED_PREFIX_ENV + ", else fail closed)",
+      "  --allow-unguarded-live-env                    (M89) EMERGENCY/TEST-ONLY escape hatch: proceed a live run with the mandatory env guard BYPASSED. Prints a loud warning, is recorded in metadata, and is NEVER benchmark-valid. Never used by default drivers",
       "  --reuse-workspace                             reuse an existing labeled workspace by RESETTING it to the SWE-bench base commit and running git clean -fdx (never pulls main; reuses a fresh index per --index-policy) instead of redownloading the repo",
       "  --index-policy auto|always|reuse              reuse a fingerprint-fresh index (auto), force rebuild (always), or keep a stale index (reuse). default: auto",
       "  --show-vtrace-index-log                       print the vtrace index log to the terminal (drops --quiet)",

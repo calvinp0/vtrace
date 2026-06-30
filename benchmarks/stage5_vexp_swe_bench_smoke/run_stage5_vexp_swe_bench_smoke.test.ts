@@ -225,6 +225,11 @@ function baseConfig(overrides: Partial<CliConfig> = {}): CliConfig {
     evalMode: "docker",
     evalDataset: null,
     evalTimeout: 1800,
+    // M89: the env guard is mandatory for live agent runs. The generic mocked live-path
+    // tests below exercise OTHER behavior (discipline/telemetry/meta) and never touch a real
+    // environment, so they ride the test-only escape hatch. The dedicated mandatory-gate
+    // tests override this back to false to assert the real fail-closed / pass behavior.
+    allowUnguardedLiveEnv: true,
     ...overrides,
   };
 }
@@ -260,6 +265,14 @@ test("M86 env isolation guard flags parse and default off", () => {
   assert.equal(on.stage5EnvGuard, true);
   assert.equal(on.stage5EnvDriftCheck, true);
   assert.equal(on.expectedTestbedPrefix, "/opt/miniconda3/envs/testbed");
+});
+
+test("M89 escape hatch flag parses and defaults off", () => {
+  assert.equal(parseArgs(["--mode", "run-protocol"]).allowUnguardedLiveEnv, false);
+  assert.equal(
+    parseArgs(["--mode", "run-protocol", "--allow-unguarded-live-env"]).allowUnguardedLiveEnv,
+    true,
+  );
 });
 
 test("--tool-loop-guard is default-off and opt-in only (M75)", () => {
@@ -1196,6 +1209,267 @@ async function mockVexpCheckout(label: string): Promise<{ vexpDir: string; out: 
   await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
   return { vexpDir, out };
 }
+
+// ----------------------------------------------------------------------------------------
+// M89 — the env guard is MANDATORY for live agent runs. These tests exercise the real
+// fail-closed / pass behavior end-to-end through runCondition (baseline), with the env
+// probe/exists injected so no real conda environment is ever touched and no agent spawns.
+// ----------------------------------------------------------------------------------------
+const M89_TESTBED = "/home/calvin/miniforge3/envs/vexp_swebench";
+
+function m89Probe(prefix: string, pipPrefix = prefix) {
+  return {
+    executable: `${prefix}/bin/python`,
+    prefix,
+    basePrefix: prefix,
+    pipVersionLine: `pip 26.1 from ${pipPrefix}/lib/python3.12/site-packages/pip (python 3.12)`,
+    condaPrefix: prefix,
+  };
+}
+
+// Run a guarded baseline live run; records whether the agent process was spawned so a
+// fail-closed assertion can prove the refusal happened BEFORE spawn.
+async function runGuardedBaseline(
+  config: CliConfig,
+  probePrefix: string | null,
+): Promise<{ spawned: boolean; meta: Record<string, unknown> | null; error: Error | null }> {
+  let spawned = false;
+  const runProcess = async () => {
+    spawned = true;
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const deps = {
+    runProcess,
+    envExistsFn: (p: string) => probePrefix !== null && p === `${probePrefix}/bin/python`,
+    envProbeFn: (py: string) =>
+      probePrefix !== null && py === `${probePrefix}/bin/python` ? m89Probe(probePrefix) : null,
+  };
+  let error: Error | null = null;
+  try {
+    await runBaseline(config, deps);
+  } catch (e) {
+    error = e as Error;
+  }
+  let meta: Record<string, unknown> | null = null;
+  const dir = rawConditionDir(config.out, "baseline", config.runLabel);
+  try {
+    meta = JSON.parse(await readFile(path.join(dir, "_run.meta.json"), "utf8")) as Record<string, unknown>;
+  } catch {
+    try {
+      meta = JSON.parse(await readFile(path.join(dir, "_env_guard.meta.json"), "utf8")) as Record<string, unknown>;
+    } catch {
+      meta = null;
+    }
+  }
+  return { spawned, meta, error };
+}
+
+// (4) live run with expected prefix from the CLI flag PASSES and is benchmark-valid.
+test("M89 live run with expected prefix from CLI passes the mandatory env guard", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m89-cli-pass");
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["a__1"],
+    stage5EnvGuard: true,
+    stage5EnvDriftCheck: true,
+    expectedTestbedPrefix: M89_TESTBED,
+    allowUnguardedLiveEnv: false,
+  });
+  const { spawned, meta, error } = await runGuardedBaseline(config, M89_TESTBED);
+  assert.equal(error, null);
+  assert.equal(spawned, true);
+  assert.equal(meta?.stage5_env_guard_status, "pass");
+  assert.equal(meta?.stage5_env_guard_required, true);
+  assert.equal(meta?.stage5_env_guard_mandatory_since, "M89");
+  assert.equal(meta?.stage5_expected_testbed_prefix_source, "cli");
+  assert.equal(meta?.stage5_env_guard_benchmark_valid, true);
+  assert.equal(meta?.stage5_python_prefix_verified, true);
+  assert.equal(meta?.stage5_pip_prefix_verified, true);
+});
+
+// (5) live run with expected prefix from the environment variable PASSES.
+test("M89 live run with expected prefix from env var passes the mandatory env guard", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m89-env-pass");
+  const prev = process.env.VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX;
+  process.env.VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX = M89_TESTBED;
+  try {
+    const config = baseConfig({
+      vexpSweBenchDir: vexpDir,
+      out,
+      instances: ["a__1"],
+      stage5EnvGuard: true,
+      stage5EnvDriftCheck: true,
+      expectedTestbedPrefix: null, // resolved from the env var instead
+      allowUnguardedLiveEnv: false,
+    });
+    const { spawned, meta, error } = await runGuardedBaseline(config, M89_TESTBED);
+    assert.equal(error, null);
+    assert.equal(spawned, true);
+    assert.equal(meta?.stage5_env_guard_status, "pass");
+    assert.equal(meta?.stage5_expected_testbed_prefix_source, "env");
+  } finally {
+    if (prev === undefined) delete process.env.VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX;
+    else process.env.VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX = prev;
+  }
+});
+
+// (1) live run without env guard fails closed BEFORE spawn.
+test("M89 live run without env guard fails closed before agent spawn", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m89-noguard");
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["a__1"],
+    stage5EnvGuard: false,
+    stage5EnvDriftCheck: true,
+    expectedTestbedPrefix: M89_TESTBED,
+    allowUnguardedLiveEnv: false,
+  });
+  const { spawned, error, meta } = await runGuardedBaseline(config, M89_TESTBED);
+  assert.ok(error, "expected a fail-closed throw");
+  assert.match(error!.message, /FAILED CLOSED/);
+  assert.match(error!.message, /--stage5-env-guard/);
+  assert.equal(spawned, false);
+  // Env metadata for the failure is still emitted.
+  assert.equal(meta?.stage5_env_guard_required, true);
+  assert.equal(meta?.stage5_env_guard_status, "fail");
+});
+
+// (2) live run without drift check fails closed BEFORE spawn.
+test("M89 live run without drift check fails closed before agent spawn", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m89-nodrift");
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["a__1"],
+    stage5EnvGuard: true,
+    stage5EnvDriftCheck: false,
+    expectedTestbedPrefix: M89_TESTBED,
+    allowUnguardedLiveEnv: false,
+  });
+  const { spawned, error } = await runGuardedBaseline(config, M89_TESTBED);
+  assert.ok(error, "expected a fail-closed throw");
+  assert.match(error!.message, /--stage5-env-drift-check/);
+  assert.equal(spawned, false);
+});
+
+// (3) live run without an expected prefix fails closed with clear fix instructions.
+test("M89 live run without expected prefix fails closed with fix instructions", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m89-noprefix");
+  const prev = process.env.VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX;
+  delete process.env.VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX;
+  try {
+    const config = baseConfig({
+      vexpSweBenchDir: vexpDir,
+      out,
+      instances: ["a__1"],
+      stage5EnvGuard: true,
+      stage5EnvDriftCheck: true,
+      expectedTestbedPrefix: null,
+      allowUnguardedLiveEnv: false,
+    });
+    const { spawned, error } = await runGuardedBaseline(config, M89_TESTBED);
+    assert.ok(error, "expected a fail-closed throw");
+    assert.match(error!.message, /--expected-testbed-prefix/);
+    assert.match(error!.message, /VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX/);
+    assert.equal(spawned, false);
+  } finally {
+    if (prev !== undefined) process.env.VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX = prev;
+  }
+});
+
+// (8) a wrong-prefix interpreter (resolves to base) fails closed before spawn.
+test("M89 wrong-prefix python fails closed before agent spawn", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m89-wrongprefix");
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["a__1"],
+    stage5EnvGuard: true,
+    stage5EnvDriftCheck: true,
+    expectedTestbedPrefix: M89_TESTBED,
+    allowUnguardedLiveEnv: false,
+  });
+  // Interpreter EXISTS at the expected path but PROBES as the base prefix — contamination vector.
+  let spawned = false;
+  const deps = {
+    runProcess: async () => {
+      spawned = true;
+      return { exitCode: 0, stdout: "", stderr: "" };
+    },
+    envExistsFn: (p: string) => p === `${M89_TESTBED}/bin/python`,
+    envProbeFn: () => m89Probe("/home/calvin/miniforge3"),
+  };
+  await assert.rejects(() => runBaseline(config, deps), /FAILED CLOSED/);
+  assert.equal(spawned, false);
+});
+
+// (9) a pip-prefix mismatch fails closed before spawn.
+test("M89 pip-prefix mismatch fails closed before agent spawn", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m89-pipmismatch");
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["a__1"],
+    stage5EnvGuard: true,
+    stage5EnvDriftCheck: true,
+    expectedTestbedPrefix: M89_TESTBED,
+    allowUnguardedLiveEnv: false,
+  });
+  let spawned = false;
+  const deps = {
+    runProcess: async () => {
+      spawned = true;
+      return { exitCode: 0, stdout: "", stderr: "" };
+    },
+    envExistsFn: (p: string) => p === `${M89_TESTBED}/bin/python`,
+    // sys.prefix is the testbed but pip writes to the BASE prefix — mismatch must fail closed.
+    envProbeFn: () => m89Probe(M89_TESTBED, "/home/calvin/miniforge3"),
+  };
+  await assert.rejects(() => runBaseline(config, deps), /FAILED CLOSED/);
+  assert.equal(spawned, false);
+});
+
+// (10) targeting a base/dev prefix as the expected prefix fails closed before spawn.
+test("M89 base-prefix target fails closed before agent spawn", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m89-basetarget");
+  const base = "/home/calvin/miniforge3";
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["a__1"],
+    stage5EnvGuard: true,
+    stage5EnvDriftCheck: true,
+    expectedTestbedPrefix: base, // expected prefix IS the conda base — must be refused
+    allowUnguardedLiveEnv: false,
+  });
+  const { spawned, error } = await runGuardedBaseline(config, base);
+  assert.ok(error, "expected a fail-closed throw");
+  assert.match(error!.message, /FAILED CLOSED/);
+  assert.equal(spawned, false);
+});
+
+// (6/13) the escape hatch lets a live run proceed unguarded, but the run is recorded as
+// NOT benchmark-valid (and the guard status is not a clean pass).
+test("M89 escape hatch proceeds unguarded but is never benchmark-valid", async () => {
+  const { vexpDir, out } = await mockVexpCheckout("m89-escape");
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["a__1"],
+    stage5EnvGuard: false, // no guard configured...
+    stage5EnvDriftCheck: false,
+    expectedTestbedPrefix: null,
+    allowUnguardedLiveEnv: true, // ...but the escape hatch is set
+  });
+  const { spawned, meta, error } = await runGuardedBaseline(config, null);
+  assert.equal(error, null);
+  assert.equal(spawned, true); // proceeds
+  assert.equal(meta?.stage5_env_guard_required, true);
+  assert.equal(meta?.stage5_unguarded_live_env_allowed, true);
+  assert.equal(meta?.stage5_env_guard_benchmark_valid, false);
+});
 
 test("baseline run writes the shared discipline file, exports the env, and records injected metadata", async () => {
   const { vexpDir, out } = await mockVexpCheckout("baseline-discipline");
