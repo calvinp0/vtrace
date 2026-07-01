@@ -1,8 +1,14 @@
 # M94 Deterministic Retrieval/Capsule Scoreboard Plan
 
-_Status: planned (not implemented). Written in M93A. This is a design/scope
-document only — no scoreboard code, no live agents, and no Docker are introduced
-by M93A._
+_Status: **implemented** (M94). The scoreboard runner
+(`benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m94_deterministic_scoreboard.ts`,
+pure metrics in `stage5_m94_lib.ts`) scores all 100 frozen instances deterministically
+— no live agents, no Docker, no API spend. Headline (99/100 scored): gold-file
+recall@1 **0.44**, recall@5 **0.64**, MRR **0.55**, any-gold-in-capsule **69.7%**,
+lead-pivot-is-source-gold **45.5%**; deterministic excellent/good cases resolved live
+at **61.9%** vs **21.7%** for weak cases (M92 clean-core join, n=49). Verdict **PASS**.
+Report: `results/stage5_m94_deterministic_scoreboard.md`. This section supersedes the
+original "planned" status below (the design intent is unchanged)._
 
 ## Purpose
 
