@@ -64,44 +64,113 @@ Three design commitments follow from that and recur everywhere:
 
 Before the flow makes sense, five building blocks.
 
-### 2.1 Source code as a tree: AST and CST
+### 2.1 Source code as a tree
 
-A parser turns a flat string of source into a **tree**. Two flavors matter:
+To a computer, a source file starts life as one long string of characters. A
+**parser** reads that string and figures out its grammatical structure — "this is a
+function, its name is `foo`, it has two parameters, and here is its body" — and
+represents that structure as a **tree**.
 
-- An **AST** (Abstract Syntax Tree) keeps the semantically meaningful structure — "a
-  function named `foo` with two parameters and this body" — and throws away
-  punctuation and whitespace.
-- A **CST** (Concrete Syntax Tree, or *parse tree*) keeps *everything*, including
-  every token and its exact byte position in the file.
+Take this tiny Python file:
 
-VTRACE needs byte positions (to slice out a symbol's source later), so it works from
-concrete parse trees and records each symbol's `startByte`/`endByte`.
+```python
+def greet(name):
+    return "hi " + name
+```
+
+A parser turns it into a tree roughly like:
+
+```
+Module
+└── FunctionDef  name="greet"
+    ├── arguments  →  arg "name"
+    └── Return
+        └── BinOp  (+)
+            ├── Constant "hi "
+            └── Name "name"
+```
+
+Now the string isn't just text — it's a structure you can ask questions of: *what
+functions are defined here? what does each one call? what does it return?* That tree
+is the foundation for everything VTRACE knows.
+
+**One nuance about "flavors" of tree** (this is the bit I stated confusingly before):
+computer science distinguishes an **AST** (Abstract Syntax Tree — keeps the meaningful
+structure, drops punctuation) from a **CST/parse tree** (keeps every token and byte).
+VTRACE does **not** care which flavor it gets. All it needs from a parse is: for each
+symbol, *what is it, and where does it start and end in the file* — so it can later cut
+out that symbol's exact source text. Both parsers VTRACE uses give it that location,
+just packaged differently:
+
+- **tree-sitter** (for TS/JS) hands back **byte offsets** directly on every node
+  (`node.startIndex` / `node.endIndex`).
+- **Python's `ast`** hands back **line and column** numbers instead; VTRACE's parser
+  script converts those to byte offsets itself (`absolute_byte()`,
+  `src/parsers/pythonParser.ts:190`).
+
+Either way, each symbol ends up with a `startByte`/`endByte`, and that's all the
+downstream code relies on. So there is no contradiction between "we use tree-sitter"
+and "we use Python's AST" — they're two parsers that both answer the same question
+("what symbols are here and where are they"), each in its language's natural way.
 
 ### 2.2 Tree-sitter (for TypeScript and JavaScript)
 
-**Tree-sitter** is an incremental parsing library: you give it a language grammar and
-a source string, and it produces a concrete syntax tree you can walk node by node. It
-is fast, error-tolerant (it produces a usable tree even for code with syntax errors),
-and language-agnostic via pluggable grammars. VTRACE depends on `tree-sitter`
-(`^0.21`) and the `tree-sitter-typescript` grammar (`^0.23`) — see `package.json`.
+Writing a correct parser for a real language is a huge job — the grammar is enormous
+and full of edge cases. **Tree-sitter** is an off-the-shelf library that does it for
+you: you hand it (a) a *grammar* for a language and (b) a source string, and it hands
+back the parse tree. It's the same technology many code editors use for syntax
+highlighting. Three properties make it a good fit:
 
-In `src/parsers/typescriptParser.ts` the parser is created once, the grammar is set
-per file extension (`getTreeSitterLanguage`, line 108 — `.tsx` vs `.ts`), and the
-tree is walked to find declaration nodes: `function_declaration`, `class_declaration`,
-`interface_declaration`, `type_alias_declaration`, and class members. Each becomes a
-**symbol**; the walk also emits **edges** (a class *contains* its methods; a file
-*imports* another; a call site *calls* a symbol).
+- **It's fast** and works file-by-file.
+- **It's error-tolerant** — if the file has a syntax error, it still returns a usable
+  tree for the parts it *could* understand, instead of giving up. (VTRACE indexes
+  real, sometimes-broken repos, so this matters.)
+- **It's pluggable** — one library, a separate grammar per language. VTRACE installs
+  the `tree-sitter` engine and the `tree-sitter-typescript` grammar (`package.json`).
+
+Concretely, given:
+
+```ts
+export class Cart {
+  addItem(item) { this.items.push(item); }
+}
+```
+
+tree-sitter produces a tree whose nodes are typed, e.g.:
+
+```
+program
+└── export_statement
+    └── class_declaration  name: "Cart"          ← VTRACE: a Class symbol
+        └── method_definition  name: "addItem"    ← VTRACE: a Method symbol
+            └── call_expression  "this.items.push" ← VTRACE: a Calls edge
+```
+
+VTRACE walks that tree (`src/parsers/typescriptParser.ts`), and every time it meets a
+node type it cares about — `function_declaration`, `class_declaration`,
+`interface_declaration`, `type_alias_declaration`, `method_definition` — it records a
+**symbol**. When it sees one symbol referring to another (a class holding a method, a
+file importing a name, a call site) it records an **edge**. The grammar is selected per
+extension (`getTreeSitterLanguage:108` — `.tsx` vs `.ts`). So: `Cart` becomes a Class
+symbol that *contains* the Method `addItem`, which *calls* `push`.
 
 ### 2.3 CPython's `ast` module (for Python), and a tokenizer for Cython
 
-Python already ships a battle-tested parser: the standard-library `ast` module.
-Rather than reimplement Python grammar, VTRACE **spawns a CPython subprocess** running
-a small script that parses the file with `ast` and prints the symbols/edges as data
+Python already ships a battle-tested parser: the standard-library `ast` module (the
+`ast` in Chapter 2.1's example is literally what it produces). Rather than reimplement
+Python's grammar in TypeScript, VTRACE **spawns a small Python process** that imports
+`ast`, parses the file, and prints the symbols/edges back as data
 (`src/parsers/pythonParser.ts`; `spawnSync` at line 2, the embedded Python at line
 176, interpreter candidates `python3`/`python` at line 173). This is the classic
 "shell out to the language's own parser" strategy — maximally correct, at the cost of
-a subprocess per file (mitigated by content-caching export indexes to avoid an
-effectively O(n²) spawn count).
+one subprocess per file (softened by content-caching so unchanged files aren't
+re-parsed).
+
+Python's `ast` reports each node's **line and column**, not a byte offset. So the
+script first builds a table of where each line begins in the file, then converts
+(line, column) → absolute byte with `absolute_byte()` (line 190). That's the small
+extra step tree-sitter doesn't need — and the reason both parsers end up producing the
+same `startByte`/`endByte` VTRACE stores.
 
 Cython (`.pyx`/`.pxd`) is *not* valid Python, so `ast` can't parse it. Instead
 `src/parsers/cythonParser.ts` spawns CPython running the **`tokenize`**-based
@@ -130,26 +199,73 @@ every clever thing VTRACE does later is a graph operation over this.
 `node:crypto`'s `createHash`). Same input → same ID, which is what lets the index be
 diffed run-to-run and lets references be stable.
 
-### 2.5 SQLite, FTS5, and the unicode61 tokenizer
+### 2.5 SQLite, and full-text search (FTS5)
 
-The graph is persisted in **SQLite** — a single-file, embedded, zero-server
-relational database (`.vtrace/index.sqlite`; opened in `src/db/sqlite.ts:5`, schema in
-`src/db/schema.ts`). Core tables: `files`, `symbols`, `edges` (plus run-history
+The graph is persisted in **SQLite** — a database that is just a single file on disk,
+with no server to run (`.vtrace/index.sqlite`; opened in `src/db/sqlite.ts:5`, schema
+in `src/db/schema.ts`). Core tables: `files`, `symbols`, `edges` (plus run-history
 tables `index_runs`, `file_run_states`, `symbol_run_states` that let VTRACE compute
 what changed between two indexings).
 
-For text search, SQLite ships **FTS5**, a full-text-search extension exposed as a
-*virtual table*. You write rows into it and query with `MATCH`; it maintains an
-inverted index for fast term lookup. VTRACE declares two (`schema.ts:331`):
+**What "FTS" means.** FTS = **Full-Text Search**. The problem it solves: suppose you
+have 50,000 symbols and you want the ones whose name or docstring mentions "session".
+The naive way is to scan all 50,000 rows and check each for the word — like running
+`grep` over everything, every query. That's slow.
 
-- `symbol_search_fts` over `local_name`, `fq_name`, `signature`, `docstring`,
-  `file_path`.
-- `symbol_body_literals_fts` over extracted body literals (see 3.4).
+Full-text search instead builds an **inverted index** ahead of time: a lookup table
+that maps *each word* → *the list of rows that contain it*. Think of the index at the
+back of a book — you don't read every page to find "mitochondria", you look the word up
+and it tells you the pages. So:
 
-Both use the **`unicode61`** tokenizer — FTS5's Unicode-aware default that splits text
-on non-alphanumeric boundaries and case-folds, so `parseRequest` and `parse_request`
-and `Parse Request` all tokenize compatibly. This is the lexical substrate retrieval
-sits on (Chapter 6).
+```
+word "session"  →  rows [12, 87, 340, 1901, …]
+word "create"   →  rows [12, 55, 340, …]
+```
+
+Now "find symbols mentioning session" is an instant lookup, and "session AND create"
+is just intersecting two lists → rows [12, 340]. No scan.
+
+SQLite ships this as **FTS5**, exposed as a special *virtual table*: you insert rows,
+and query them with the `MATCH` keyword. VTRACE declares two such tables
+(`schema.ts:331`):
+
+- `symbol_search_fts` — indexes each symbol's `local_name`, `fq_name`, `signature`,
+  `docstring`, and `file_path`. (This is what turns a prose query into candidate
+  symbols in Chapter 6.)
+- `symbol_body_literals_fts` — indexes the distinctive literals pulled from symbol
+  bodies (error codes/messages; see 3.4), so a pasted error can be matched back to its
+  source.
+
+### 2.6 Tokenizers, and why `unicode61`
+
+Before FTS can build that word → rows table, it has to decide *what counts as a word*.
+That job is the **tokenizer**: it chops a string into tokens and normalizes them.
+VTRACE uses FTS5's built-in **`unicode61`** tokenizer (named for the Unicode 6.1
+character rules). Its two rules are simple:
+
+1. **Split on anything that isn't a letter or digit** — spaces, punctuation, and
+   *underscores* all separate words.
+2. **Lowercase everything** (case-fold).
+
+Worked example — how these strings tokenize:
+
+| Input string | Tokens produced |
+| --- | --- |
+| `create_session` | `create`, `session` |
+| `Create Session` | `create`, `session` |
+| `session.create()` | `session`, `create` |
+| `createSession` | `createsession`  ← **one token** |
+
+Note the last row: `unicode61` splits on underscores and punctuation, but **camelCase
+is not split** (a capital letter isn't a separator). So `create_session` and
+`Create Session` are interchangeable to the index, but `createSession` is a single
+different token. That's a real, sometimes-surprising property of the lexical layer —
+and part of why retrieval doesn't rely on FTS alone but blends in other signals
+(Chapter 6). *(This corrects an earlier draft of this doc that wrongly claimed all
+three forms tokenize alike.)*
+
+This tokenizer + inverted index is the lexical substrate the whole retrieval stage
+sits on.
 
 ---
 
@@ -294,7 +410,7 @@ Two lexical signals are computed and blended.
 
 **FTS5 match.** `searchSymbolsFts` (`src/retrieval/searchSymbolsFts.ts`) runs a SQL
 `… WHERE symbol_search_fts MATCH ?` (line 34) and joins back to the `symbols` table.
-This uses the inverted index from Chapter 2.5 to find symbols whose
+This uses the inverted index from Chapter 2.5–2.6 to find symbols whose
 name/signature/docstring contain the query terms, fast.
 
 **BM25.** On top of the candidate pool, VTRACE computes its own **BM25** score
