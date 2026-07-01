@@ -1,0 +1,58 @@
+{
+  "milestone": "M93B",
+  "title": "README token-claim clarification pass",
+  "date": "2026-07-02",
+  "scope": "documentation-only; no code, retrieval, scoring, ranking, or Capsule behavior change",
+  "readme_token_claim_found": "Up to 74% fewer tokens in benchmarked workflows (README.md:21)",
+  "seventy_four_percent_disposition": "replaced",
+  "seventy_four_percent_traceable": false,
+  "seventy_four_percent_trace_note": "git grep finds the token-reduction `74` only inside README.md itself; not present in any tracked benchmark report",
+  "sources_used": [
+    {
+      "claim": "Stage 5 clean-core token reduction",
+      "report": "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m92_core_reduction50_validation.md",
+      "token_reduction_pct": -26.7,
+      "cost_reduction_pct": -25.0,
+      "resolution": "20/50 vs 20/50 baseline (preserved)"
+    },
+    {
+      "claim": "Stage 3 controlled Claude Code total-token reduction",
+      "report": "benchmarks/arc_stage3_agent_usage/STAGE3_RESULTS.md",
+      "mean_reduction_pct": 46.5,
+      "median_reduction_pct": 42.81,
+      "paired_tasks": 12
+    }
+  ],
+  "readme_changes": [
+    "removed untraceable 'up to 74% fewer tokens' headline",
+    "added two traceable measured downstream figures with links (M92 -26.7%, Stage 3 46.5%)",
+    "stated internal budgeter is deterministic and character-based (chars/4 estimate, not a tokenizer)",
+    "framed Stage 5 as integrated downstream validation, not a pure deterministic-core benchmark and not a public SWE-bench pass@1 claim",
+    "pointed to planned M94 deterministic retrieval/capsule scoreboard",
+    "clarified V4/C7_D are default-off diagnostics, not the token-reduction mechanism",
+    "clarified env guard and shell guard are Stage 5 safety infrastructure, not token-reduction features",
+    "added boundaries bullet: not a semantic oracle, dynamic call graph, or complete multi-language blast-radius engine"
+  ],
+  "consistency_changes": {
+    "docs/current_product_state.md": "no change needed; already consistent",
+    "docs/M94_DETERMINISTIC_SCOREBOARD_PLAN.md": "no change needed; README now links to it"
+  },
+  "tests_added_or_updated": [
+    "src/productDocsHonesty.test.ts: added README token-claim guard test (no 74%, no vexb, char-based+chars/4+downstream framing when tokens mentioned, integrated-downstream + no-pass@1, V4/C7_D default-off + not-the-mechanism)"
+  ],
+  "code_behavior_changed": false,
+  "success_criteria": {
+    "1_token_language_traceable_and_qualified": "pass",
+    "2_downstream_vs_character_budget_distinguished": "pass",
+    "3_no_tokenizer_accurate_implication": "pass",
+    "4_stage5_not_pure_core_benchmark": "pass",
+    "5_v4_c7d_not_core_features": "pass",
+    "6_current_product_state_consistent": "pass",
+    "7_m94_plan_consistent": "pass",
+    "8_no_live_agents": "pass",
+    "9_no_docker": "pass",
+    "10_no_code_behavior_change": "pass",
+    "11_tests_typechecks_pass": "pass"
+  },
+  "recommendation": "proceed to M94 deterministic scoreboard"
+}

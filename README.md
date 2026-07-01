@@ -18,7 +18,7 @@ It is designed for coding agents and human operators that need compact, inspecta
 
 VTRACE analyzes codebases at the AST/symbol level, combines hybrid search with lightweight code-graph context, and returns compressed context capsules with session memory. In benchmarked workflows, VTRACE reduces first-pass token usage by delivering the smallest useful code evidence instead of dumping whole files or broad grep results.
 
-The product surface, in one line: analyzes codebases at the AST level, identifies the most relevant code via hybrid search, and delivers compressed context capsules with session memory. Up to 74% fewer tokens in benchmarked workflows.
+The product surface, in one line: analyzes codebases at the AST level, identifies the most relevant code via hybrid search, and delivers compressed context capsules with session memory. In internal validation this has measured meaningfully lower downstream agent-side token usage (measured figures and their sources below).
 
 What that means in practice:
 
@@ -30,11 +30,16 @@ What that means in practice:
 
 ### Benchmark caveats
 
-- Token reduction is measured on benchmarked workflows, not guaranteed for every task.
+- Token reduction is measured downstream agent-side usage in internal validation, not guaranteed for every task.
 - First-pass token reduction and repair-side recovery cost are reported separately.
 - A verified generated-parser repair conversion is single-instance evidence, not an aggregate SWE-bench score.
 
-The "up to 74% in benchmarked workflows" phrasing points to the committed benchmark reports; it is a benchmarked-workflow figure, not a universal per-task guarantee. Measured per-stage reductions vary by workload — see the ARC evidence ladder and Stage 5 first-pass accounting in the [Stage 5 benchmark README](./benchmarks/stage5_vexp_swe_bench_smoke/README.md) for the specific committed numbers.
+The measured numbers, and where they come from:
+
+- **Stage 5, 50-task clean-core run:** −26.7% total agent tokens and −25.0% cost, with resolution preserved (20/50 vs 20/50 baseline) — see [`stage5_m92_core_reduction50_validation.md`](./benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m92_core_reduction50_validation.md).
+- **Stage 3, 12 paired controlled Claude Code tasks:** 46.5% mean actual total-token reduction — see [`STAGE3_RESULTS.md`](./benchmarks/arc_stage3_agent_usage/STAGE3_RESULTS.md).
+
+These are **measured downstream agent-run figures** (VTRACE + agent, from run telemetry), not a tokenizer-accurate budget guarantee, and they vary by workload. Internally the capsule budgeter is **deterministic and character-based** (`CapsuleBudgetModel.CharacterCount`); the "tokens" it reports are a `chars/4` estimate, not a model tokenizer. Stage 5 results are **integrated downstream validation** — VTRACE + agent + harness + evaluator — not a pure deterministic-core benchmark and not a public SWE-bench pass@1 claim; the planned M94 retrieval/capsule scoreboard ([`docs/M94_DETERMINISTIC_SCOREBOARD_PLAN.md`](./docs/M94_DETERMINISTIC_SCOREBOARD_PLAN.md)) will measure deterministic-core quality separately. The behavioral guards (V4 tool-loop, C7_D cost) are **default-off diagnostics**, not the token-reduction mechanism; the env guard and shell guard are Stage 5 **safety infrastructure**, not product token-reduction features. Full accounting: [`docs/current_product_state.md`](./docs/current_product_state.md).
 
 ## What vtrace is for
 
@@ -243,3 +248,4 @@ VTRACE's repair/control-loop experiments are internal benchmark controls, not th
 - watcher freshness is mark-stale-only by default; `watch --auto-reindex` is explicit opt-in and keeps failures visible
 - V-REF expansion is exact stored-payload lookup with bounded repo-local retention, not fuzzy reconstruction
 - the optional daemon is inspectable, but not required
+- VTRACE is a structural context engine — not a semantic oracle, a dynamic/runtime call graph, or a complete multi-language blast-radius engine; call/reference coverage is deepest for Python and conservative for TypeScript/Cython

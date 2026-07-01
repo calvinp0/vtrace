@@ -9,9 +9,14 @@ import { test } from "bun:test";
 // avoid brittle full-content snapshots.
 
 const DOCS_DIR = path.resolve(import.meta.dir, "..", "docs");
+const REPO_ROOT = path.resolve(import.meta.dir, "..");
 
 function readDoc(name: string): string {
   return readFileSync(path.join(DOCS_DIR, name), "utf8");
+}
+
+function readRepoFile(name: string): string {
+  return readFileSync(path.join(REPO_ROOT, name), "utf8");
 }
 
 test("current_product_state.md exists and carries no stale vexb brand", () => {
@@ -37,6 +42,31 @@ test("current_product_state.md documents the load-bearing honesty facts", () => 
   assert.match(doc, /V4/);
   assert.match(doc, /C7_D/);
   assert.match(doc, /default-off/i);
+});
+
+// M93B README token-claim guards. Keep the README's token-reduction claim honest:
+// measured downstream agent-side, not a tokenizer-accurate budget, and not a pure
+// deterministic-core / SWE-bench claim.
+test("README token-reduction claim stays qualified and traceable", () => {
+  const readme = readRepoFile("README.md");
+  // The old untraceable "74%" headline must not come back.
+  assert.equal(/74\s*%/.test(readme), false, "README must not resurrect the untraceable 74% figure");
+  // No stale brand.
+  assert.equal(/vexb/i.test(readme), false, "README must not contain stale `vexb`");
+  // If the README talks about tokens, it must disclose the character-based budgeter
+  // and the chars/4 estimate rather than implying tokenizer-accurate packing.
+  if (/token/i.test(readme)) {
+    assert.match(readme, /character-based/, "README must state budgeting is character-based");
+    assert.match(readme, /chars\/4/, "README must state tokens are a chars/4 estimate");
+    assert.match(readme, /downstream agent/i, "README must frame token savings as measured downstream agent-side");
+  }
+  // Stage 5 must be framed as integrated downstream validation, not a pure core benchmark.
+  assert.match(readme, /integrated downstream validation/i);
+  assert.match(readme, /not a public SWE-bench pass@1 claim/i);
+  // V4/C7_D must be described as default-off diagnostics that are NOT the token-reduction
+  // mechanism, never promoted as a core/default reduction feature.
+  assert.match(readme, /default-off diagnostics/i);
+  assert.match(readme, /not the token-reduction mechanism/i);
 });
 
 test("M94_DETERMINISTIC_SCOREBOARD_PLAN.md exists and states its no-live-agents non-goals", () => {
