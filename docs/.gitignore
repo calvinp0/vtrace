@@ -1,6 +1,7 @@
 *
 !.gitignore
 !VTRACE_ARCHITECTURE_AND_DEBUGGING.md
+!VTRACE_PRODUCT_OVERVIEW.md
 !cli_usage.md
 !getting_started.md
 !mcp_tool_cheat_sheet.md
