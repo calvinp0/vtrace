@@ -1,0 +1,140 @@
+{
+  "milestone": "M93A",
+  "purpose": "Machine-readable map of VTRACE architecture and the Stage 5 live-debug harness. Companion to docs/VTRACE_ARCHITECTURE_AND_DEBUGGING.md. Documentation only; no code/behavior change.",
+  "generated_from": "static inspection of src/ and benchmarks/stage5_vexp_swe_bench_smoke/ at commit 4b662e6 (post-M92)",
+  "core_entrypoints": [
+    "src/cli/index.ts — CLI dispatch for `vtrace <command>`",
+    "src/cli/commands/indexCommand.ts::runIndexCommand — `vtrace index`",
+    "src/cli/commands/capsuleCommand.ts — `vtrace capsule` (the Stage 5 retrieval seam)",
+    "src/cli/commands/intentCommand.ts — `vtrace intent`",
+    "src/cli/commands/mcpServeCommand.ts — `vtrace mcp-serve` (MCP server)",
+    "src/cli/commands/setupCommand.ts — `vtrace setup` (index + install agent config)",
+    "src/runPipeline/runPipelineOrchestrator.ts — MCP get_code_context / run_pipeline orchestration",
+    "src/indexer/indexProject.ts::indexProject — full index build pipeline",
+    "src/retrieval/hybridRetrieval.ts::hybridRetrieve — task-text -> candidates",
+    "src/capsuleV2/buildCapsuleV2.ts::buildCapsuleV2 (line 130) — capsule assembly"
+  ],
+  "indexing_files": [
+    "src/fs/scanRepo.ts::scanRepo (line 55) — recursive file walk, hardcoded ignore dirs",
+    "src/fs/ignoreRules.ts::loadIgnoreRulesForDirectory (line 29), isPathIgnored (line 238) — .gitignore/.ignore/.vtraceignore",
+    "src/fs/languageDetection.ts::detectLanguage (line 10) — ts/tsx/js/jsx/py/pyx/pxd/pxi",
+    "src/parsers/LanguageParser.ts::createParserRegistry (line 23) — parser dispatch",
+    "src/parsers/typescriptParser.ts::createTypeScriptParser (line 44) — TS/JS symbols+edges",
+    "src/parsers/pythonParser.ts::createPythonParser — CPython ast subprocess",
+    "src/parsers/cythonParser.ts::createCythonParser (line 109) — Cython + cimport/pxd",
+    "src/indexer/extractBodyLiterals.ts::buildSymbolBodyLiterals (line 127) — diagnostic codes/messages",
+    "src/indexer/indexProject.ts::indexProject (line 38), pruneRemovedFiles (line 344) — build + prune",
+    "src/indexer/indexMeta.ts::checkIndexFreshness (line 163) — stale detection (6 fingerprints)",
+    "src/db/schema.ts::initializeSchema (line 3) — files/symbols/edges + FTS5 tables",
+    "src/db/sqlite.ts::openIndexerDatabase (line 5) — opens .vtrace/index.sqlite",
+    "src/db/persistParseResult.ts::persistParseResult (line 27) — write symbols/edges/FTS",
+    "src/runtime/reindexRepo.ts::reindexRepoAndRefreshState (line 51) — reindex + state refresh"
+  ],
+  "index_storage": {
+    "sqlite_path": ".vtrace/index.sqlite",
+    "meta_path": ".vtrace/index.meta.json",
+    "core_tables": ["files", "symbols", "edges", "index_runs", "file_run_states", "symbol_run_states"],
+    "fts_tables": ["symbol_search_fts (fts5)", "symbol_body_literals_fts (fts5)"],
+    "edge_types": ["Contains", "Imports", "Calls", "References"],
+    "symbol_kinds": ["Function", "Class", "Method", "Interface", "TypeAlias", "ModuleConstant", "ModuleVariable", "ModuleAlias"],
+    "languages": ["TypeScript", "JavaScript", "Python", "Cython"]
+  },
+  "retrieval_files": [
+    "src/retrieval/hybridRetrieval.ts::hybridRetrieve (line 143) — 6 candidate generators + assemble (line 422)",
+    "src/retrieval/hybridScoring.ts::combineFinalScore (line 162) — weighted signal sum",
+    "src/retrieval/hybridScoring.ts::computeBm25Scores (line 688), blendLexical (line 135) — lexical",
+    "src/retrieval/hybridScoring.ts::evaluateHub (line 225), evaluateActionability (line 295) — penalties",
+    "src/retrieval/searchSymbols.ts — FTS5 symbol search",
+    "src/retrieval/graphExpansion.ts — bounded BFS neighbor expansion",
+    "src/capsule/microTargets.ts::recoverMicroCapsule (line 96), classifyMicroSkipReason (line 154) — pivot recovery",
+    "src/capsule/assignCandidateRoles.ts::assignCandidateRoles (line 61), detectPivotAmbiguity (line 95) — pivot/support/discard",
+    "src/impact/impactDigestSeam.ts::impactGraphToDigestSeam (line 25) — optional impact reps (max 3)"
+  ],
+  "capsule_files": [
+    "src/capsuleV2/buildCapsuleV2.ts::buildCapsuleV2 (line 130) — assembler; returns CapsuleV2Result",
+    "src/capsuleV2/types.ts — CapsuleV2Result, CapsuleV2Item, CapsuleIntent, CapsuleV2Mode",
+    "src/capsuleV2/budgetAllocator.ts::allocateBudget (line 49) — micro/standard/full tiers",
+    "src/capsuleV2/sectionBudgetAccounting.ts::truncateContextByPriority (line 358) — section-priority truncation",
+    "src/capsuleV2/productAdapter.ts::compactDigestHeader (line 350), renderCapsuleV2Digest (line 516) — compact digest",
+    "src/capsuleV2/digestDecisionContract.ts::buildDigestDecisionContract (line 589) — decision contract",
+    "src/capsuleV2/digestDecisionContract.ts::selectBoundedDigestDecisionTargets (line 320) — required/optional targets",
+    "src/capsuleV2/digestDecisionContract.ts::renderBoundedDigestDecisionContractText (line 474) — bounded render",
+    "src/capsuleV2/digestDecisionContract.ts::classifyDigestPivotConfidence (line 291) — confidence gate (M68)",
+    "src/capsuleV2/digestDecisionContract.ts NO_HIGH_CONFIDENCE_REQUIRED_MARKER (line 42) — zero-required marker",
+    "src/capsuleV2/pivotInspectionContract.ts::buildPivotInspectionContract (line 103) — M11/M12 inspection overlay",
+    "src/capsuleV2/pivotInspectionCompliance.ts::computePivotInspectionCompliance — M13 compliance checker",
+    "src/capsuleV2/pivotRevisionPass.ts::decideRevisionPass, buildRevisionPrompt — M14/M15 corrective pass (PURE)",
+    "src/capsuleV2/stage5Artifacts.ts::buildCapsuleV2Manifest (line 213) — capsule audit artifacts",
+    "src/capsuleV2/tokens.ts::estimateTokens — shared chars/4 estimator"
+  ],
+  "stage5_runner_files": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts — main runner (all modes)",
+    "run_stage5_vexp_swe_bench_smoke.ts::runCondition (line 7984) — single live-spawn path; fail-closed guard gate",
+    "run_stage5_vexp_swe_bench_smoke.ts::rawConditionDir (line 1386) — label -> results/runs/<label>/raw/<cond>",
+    "run_stage5_vexp_swe_bench_smoke.ts _run.meta.json write (line 8318)",
+    "run_stage5_vexp_swe_bench_smoke.ts::buildStage5DigestEnrichments (line 4817) — impact/rules/memory seams",
+    "run_stage5_vexp_swe_bench_smoke.ts printUsageAndExit / --help (line 10760)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m34_accounting.ts — capsule-attributable token accounting (PURE)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_retrieval_eval.ts — deterministic retrieval no-change proof"
+  ],
+  "safety_guard_files": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/envIsolationGuard.ts::evaluatePrefixGuard (line 251) — M89 prefix guard (7 checks)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/envIsolationProbe.ts::probePython (line 41), probePackageRecords (line 101) — read-only probes",
+    "benchmarks/stage5_vexp_swe_bench_smoke/stage5EnvGuardIntegration.ts::evaluateMandatoryLiveEnvGuard (line 149), resolveExpectedTestbedPrefix (line 92) — M89 fail-closed gate",
+    "benchmarks/stage5_vexp_swe_bench_smoke/agentShellGuard.ts::evaluateMandatoryAgentShellGuard (line 387), sanitizeAgentPath (line 89), scrubAgentCondaEnv (line 141) — M90A shell guard + host-pip firewall",
+    "benchmarks/stage5_vexp_swe_bench_smoke/stage5AgentShellGuardIntegration.ts::materializeAgentShellGuard (line 105), resolveWrapperDelegates (line 67) — wrapper bin + block log"
+  ],
+  "behavioral_guard_files": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/toolLoopGuard.ts::runToolLoopGuard (line 274), DEFAULT_TOOL_LOOP_GUARD_CONFIG enabled=false (line 92) — V4 tool-loop guard (default-off)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/toolLoopGuardRuntime.ts::stepToolLoopGuardRuntime (line 82), buildToolLoopGuardHookSettings (line 255)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/toolLoopGuardHook.ts — PostToolUse hook shell",
+    "benchmarks/stage5_vexp_swe_bench_smoke/costGuard.ts::runCostGuard (line 245), costGuardConfigForCalibration (line 132), DEFAULT_COST_GUARD_CONFIG enabled=false (line 111) — C7_D cost guard (default-off)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/costGuardRuntime.ts::stepCostGuardRuntime (line 84)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/costGuardHook.ts — PostToolUse hook shell (combined with tool-loop guard)"
+  ],
+  "report_artifacts": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m92_core_reduction50_validation.md — M92 50-task core reduction (PASS)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m92_token_attribution.json — M92 token attribution",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m91_m90_attribution_and_policy.md — Policy A decision",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m89_mandatory_env_guard.md — mandatory env guard",
+    "benchmarks/stage5_vexp_swe_bench_smoke/README.md — Stage 5 harness reference",
+    "docs/VTRACE_ARCHITECTURE_AND_DEBUGGING.md — this manual"
+  ],
+  "live_debug_artifacts": [
+    "results/runs/<label>/raw/vtrace/swebench-*.jsonl — canonical row (modelPatch, resolved, costUsd, numTurns, tokens)",
+    "results/runs/<label>/raw/vtrace/_run.meta.json — engine/injection/guard/telemetry meta (camelCase keys)",
+    "results/runs/<label>/raw/vtrace/_tool_calls.json — ordered tool calls (read/search/edit)",
+    "results/runs/<label>/raw/vtrace/_eval.meta.json — post-evaluate evidence (resolvedCount, evaluationRan)",
+    "results/runs/<label>/_vtrace_instructions.snapshot.md — immutable snapshot of injected context",
+    "results/_vtrace_instructions.md — latest injected instructions (overwritten per run)",
+    "results/runs/<label>/raw/vtrace/_env_guard.meta.json — fail-closed env guard metadata",
+    "results/runs/<label>/raw/vtrace/_blocked_host_package_commands.jsonl — host-pip firewall block log"
+  ],
+  "recommended_debug_commands": [
+    "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts --help",
+    "bun src/cli/index.ts capsule <workspace> \"<task>\" --intent auto --budget 8000 --pivot-neighborhood --json   # inspect capsule/digest offline, no agent",
+    "bun src/cli/index.ts index <workspace>   # (re)build index",
+    "bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m92_preflight.ts   # no-agent preflight (validity + guard config)",
+    "bun \"$RUNNER\" --mode run-protocol --protocol vtrace-indexed --instances <id> --capsule-engine v2 --capsule-intent auto --inject-capsule-digest --digest-decision-contract --bounded-digest-decisions --compact-digest-injection --pivot-confidence-gate --stage5-env-guard --stage5-env-drift-check --expected-testbed-prefix /home/calvin/miniforge3/envs/vexp_swebench --run-label <label> --out $OUT   # ONE live run, needs approval",
+    "bun \"$RUNNER\" --mode evaluate --eval-mode docker --run-label <label> --out $OUT   # Docker eval, needs approval",
+    "bun \"$RUNNER\" --mode ingest --run-label <label> --out $OUT   # build report"
+  ],
+  "known_product_boundaries": [
+    "Structural only: outputs are indexed AST/symbol data, not runtime tracing or dataflow",
+    "search_logic_flow needs exact start+end FQNs; calls edges only for Python/TypeScript/Cython",
+    "Impact/flow tools are not runtime execution proofs",
+    "Watcher freshness is mark-stale-only by default; --auto-reindex is explicit opt-in",
+    "V-REF expansion is exact stored-payload lookup, not fuzzy reconstruction",
+    "VTRACE does not run/patch/evaluate code; the coding agent edits, the Stage 5 harness measures, Docker evaluates",
+    "Stage 5 control-loop/repair/critic machinery is internal benchmark tooling, not the public product surface",
+    "cost-aware gate may choose no_context for small/local tasks — a valid policy run, not a failed treatment"
+  ],
+  "next_optimization_targets": [
+    "1. cache-read / tool-output accounting — cache_read_tokens = 94.73% of M92 spend; reduction is dominated by conversation/tool-output replay across turns, not injected-capsule size",
+    "2. high-cost unresolved cases — top-10 heavy cases = 65.72% of total spend ($23.88); e.g. django-16263 ($3.03, 97 turns, unresolved), sympy-20428, pydata-xarray-6599",
+    "3. capsule/digest packing — 10/10 top context-heavy runs hit the 11994-char truncation ceiling; investigate whether required pivot neighborhood survives truncation",
+    "4. retrieval/pivot misses — cohorts A (1/14) and C (0/10) resolve poorly; audit whether gold pivot neighborhood was injected",
+    "5. context-to-action gaps — B/E flips are single-sample variance; measure whether required-target compliance correlates with resolution"
+  ],
+  "recommended_next_milestone": "M93B: turn-level token attribution on the top-10 M92 cost-heavy cases (offline replay of captured streams) to localize cache-read/tool-output spend before any 100-task confirmation run."
+}
