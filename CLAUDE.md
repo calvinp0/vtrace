@@ -50,8 +50,17 @@ enforcement; off by default; does NOT replace the canonical patch).
 
 ### Deterministic retrieval no-change proof
 
-Run after any change that *shouldn't* affect retrieval/ranking, then diff the CSVs
-against the committed baselines — byte-identical ⇒ no retrieval change.
+Run after any change that *shouldn't* affect retrieval/ranking. **Step 0 — check
+baseline freshness first** (learned in M99: the baselines had been silently stale
+since pre-M95, making the byte-diff meaningless):
+
+```bash
+BASE=$(python3 -c "import json;print(json.load(open('$OUT/stage5_retrieval_eval_baselines.meta.json'))['generated_at_commit'])")
+git diff --stat "$BASE"..HEAD -- src/   # empty ⇒ baselines fresh, diff proof valid
+```
+
+If fresh, diff the CSVs against the committed baselines — byte-identical ⇒ no
+retrieval change:
 
 ```bash
 TMP=$(mktemp -d)
@@ -65,8 +74,17 @@ diff "$TMP/stage5_retrieval_eval_expanded.csv"      "$OUT/stage5_retrieval_eval_
 diff "$TMP/stage5_retrieval_eval_cross_repo_30.csv" "$OUT/stage5_retrieval_eval_cross_repo_30.csv"
 ```
 
-(Note: `stage5_retrieval_eval_cross_repo_30.*` is often already dirty in the working
-tree as a pre-existing edit — compare against the working copy, not HEAD.)
+If `src/` moved since the baseline commit (or you are mid-milestone with uncommitted
+src changes), use the **stash A/B proof** instead — always valid, no baseline needed:
+run both evals to `TMP_POST`, `git stash push -- <your modified tracked src files>`,
+run both evals to `TMP_PRE`, `git stash pop`, then diff `TMP_PRE` vs `TMP_POST`
+(byte-identical ⇒ no retrieval change). Untracked new files may stay in place as
+long as nothing at HEAD imports them.
+
+**Refresh duty**: any milestone that *intentionally* changes retrieval/capsule
+output must regenerate both baselines with the canonical report names
+(`--out "$OUT"`) and update `stage5_retrieval_eval_baselines.meta.json`
+(new `generated_at_commit`) in the same commit.
 
 ### Offline audits (no live agents / no Docker)
 
@@ -107,8 +125,10 @@ Each labelled run lives under `$OUT/runs/<label>/raw/`:
 - **Raw artifacts are untracked, never stage them**: everything under `$OUT/runs/`,
   `$OUT/_agent_*.jsonl`, `$OUT/_*prompt*.md`, and `_m1*_*_prompts/` dirs. Stage only
   source, tests, and the named `results/stage5_*.md` reports.
-- **Don't touch pre-existing dirty result files** (e.g. `stage5_outcome_ledger.*`,
-  `stage5_retrieval_eval_cross_repo_30.*`) — they predate your work.
+- **Don't touch pre-existing dirty result files** (e.g. `stage5_outcome_ledger.*`) —
+  they predate your work. (The `stage5_retrieval_eval_*` baselines are an exception
+  since 2026-07-03: they are canonical again, refreshed via the meta-file protocol
+  above.)
 - **Runs re-clone the repo** (fresh workspace per label) — slow, network-bound; expect
   minutes per run. `--reuse-workspace` exists but can contaminate later repeats.
 - **Resolution needs ALL FAIL_TO_PASS to pass**: a partially-correct patch reports
@@ -121,3 +141,10 @@ Each labelled run lives under `$OUT/runs/<label>/raw/`:
 - Do not run live agents / Docker / 30- or 100-case sweeps without explicit approval.
 - Do not change scoring, candidate generation, Capsule v2 ranking, or retrieval as a
   side effect; prove no-change with the retrieval eval above.
+- **At the start of any milestone/prompt, read
+  `results/stage5_milestone_ledger.md`** (what's been done, standing findings, the
+  issued next-step recommendation) and run the baseline freshness check if the work
+  touches retrieval/capsule code. **At the end, append the milestone's row +
+  standing findings to the ledger in the same commit**, and update the untracked
+  working docs (`VTRACE_TOOLING_AUDIT.md` addendum) when a finding changes what
+  they claim.

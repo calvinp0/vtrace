@@ -37,15 +37,15 @@ support / discarded are compared against the fixture's `expected_files` and
 | workspace_error_count | 0 |
 | no_context_count | 0 |
 | top_1_file_accuracy | 80.0% |
-| top_3_file_recall | 95.0% |
-| expected_file_as_pivot_rate | 85.0% |
-| expected_file_as_support_rate | 15.0% |
+| top_3_file_recall | 100.0% |
+| expected_file_as_pivot_rate | 95.0% |
+| expected_file_as_support_rate | 5.0% |
 | expected_file_discarded_rate | 0.0% |
 | expected_file_missing_rate | 0.0% |
 | expected_symbol_hit_rate | 70.0% |
 | expected_symbol_as_pivot_rate | 55.0% |
-| mean_capsule_tokens | 1017.7 |
-| mean_pivot_count | 1.85 |
+| mean_capsule_tokens | 1097.0 |
+| mean_pivot_count | 2.00 |
 | mean_support_count | 4.00 |
 
 ## Aggregate metrics — by label source
@@ -59,15 +59,15 @@ support / discarded are compared against the fixture's `expected_files` and
 | workspace_error_count | 0 |
 | no_context_count | 0 |
 | top_1_file_accuracy | 73.3% |
-| top_3_file_recall | 93.3% |
-| expected_file_as_pivot_rate | 80.0% |
-| expected_file_as_support_rate | 20.0% |
+| top_3_file_recall | 100.0% |
+| expected_file_as_pivot_rate | 93.3% |
+| expected_file_as_support_rate | 6.7% |
 | expected_file_discarded_rate | 0.0% |
 | expected_file_missing_rate | 0.0% |
 | expected_symbol_hit_rate | 73.3% |
 | expected_symbol_as_pivot_rate | 53.3% |
-| mean_capsule_tokens | 1019.9 |
-| mean_pivot_count | 1.80 |
+| mean_capsule_tokens | 1039.1 |
+| mean_pivot_count | 2.00 |
 | mean_support_count | 4.00 |
 
 ### manual_verified (hand-curated and checked)
@@ -86,7 +86,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | expected_file_missing_rate | 0.0% |
 | expected_symbol_hit_rate | 60.0% |
 | expected_symbol_as_pivot_rate | 60.0% |
-| mean_capsule_tokens | 1011.0 |
+| mean_capsule_tokens | 1270.6 |
 | mean_pivot_count | 2.00 |
 | mean_support_count | 4.00 |
 
@@ -94,13 +94,13 @@ support / discarded are compared against the fixture's `expected_files` and
 
 | repo | instances | top-1 file | top-3 file | as pivot | missing | mean tokens | mean pivots | mean support |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| django/django | 20/20 | 80.0% | 95.0% | 85.0% | 0.0% | 1017.7 | 1.85 | 4.00 |
+| django/django | 20/20 | 80.0% | 100.0% | 95.0% | 0.0% | 1097.0 | 2.00 | 4.00 |
 
 ## Miss summary (compact)
 
-- non-top-3 cases: 1
+- non-top-3 cases: 0
 - missing (not surfaced): 0
-- present-but-support: 1
+- present-but-support: 0
 - present-but-discarded: 0
 - wrong-subsystem: 0
 - body-literal misses: 0
@@ -110,8 +110,7 @@ support / discarded are compared against the fixture's `expected_files` and
 
 | category | count |
 | --- | --- |
-| none | 19 |
-| present_but_support | 1 |
+| none | 20 |
 
 ## Per-instance results
 
@@ -122,16 +121,16 @@ support / discarded are compared against the fixture's `expected_files` and
 | django__django-11490 | manual_verified | django/db/models/sql/compiler.py | django/db/models/sql/compiler.py::get_combinator_sql | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11728 | manual_verified | django/contrib/admindocs/utils.py | django/contrib/admindocs/utils.py::replace_named_groups | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11740 | manual_verified | django/db/migrations/autodetector.py | django/db/migrations/autodetector.py::_get_dependencies_for_foreign_key | pivot | yes | yes | hit_top1_pivot | none |
-| django__django-10973 | gold_patch | django/db/backends/postgresql/client.py | contrib/postgres/fields/array.py::run_validators | support | no | yes | hit_top3 | none |
+| django__django-10973 | gold_patch | django/db/backends/postgresql/client.py | db/backends/postgresql/client.py::_escape_pgpass | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11133 | gold_patch | django/http/response.py | http/response.py::HttpResponse | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11206 | gold_patch | django/utils/numberformat.py | utils/formats.py::number_format | support | no | yes | hit_top3 | none |
 | django__django-11749 | gold_patch | django/core/management/__init__.py | core/management/__init__.py::call_command | pivot | yes | yes | hit_top1_pivot | none |
-| django__django-11815 | gold_patch | django/db/migrations/serializer.py | db/migrations/serializer.py::EnumSerializer | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-11815 | gold_patch | django/db/migrations/serializer.py | db/models/base.py::serializable_value | pivot | no | yes | hit_top3 | none |
 | django__django-11820 | gold_patch | django/db/models/base.py | db/models/base.py::_check_ordering | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12050 | gold_patch | django/db/models/sql/query.py | db/models/sql/query.py::resolve_lookup_value | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12273 | gold_patch | django/db/models/base.py | forms/models.py::save | pivot | no | yes | hit_top3 | none |
 | django__django-12276 | gold_patch | django/forms/widgets.py | forms/widgets.py::FileInput | pivot | yes | yes | hit_top1_pivot | none |
-| django__django-12325 | gold_patch | django/db/models/base.py | core/checks/model_checks.py::_check_lazy_references | support | no | no | hit_support | present_but_support |
+| django__django-12325 | gold_patch | django/db/models/base.py | db/models/sql/query.py::setup_joins | pivot | no | yes | hit_top3 | none |
 | django__django-12774 | gold_patch | django/db/models/query.py | db/models/query.py::in_bulk | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12858 | gold_patch | django/db/models/base.py | db/models/base.py::_check_ordering | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-13012 | gold_patch | django/db/models/expressions.py | db/models/expressions.py::ExpressionWrapper | pivot | yes | yes | hit_top1_pivot | none |
@@ -140,25 +139,7 @@ support / discarded are compared against the fixture's `expected_files` and
 
 ## Misses / failures — top-k diagnostics
 
-### django__django-12325 — hit_support / present_but_support
-
-- expected: django/db/models/base.py, django/db/models/options.py
-- reason: —
-- down-weighted lexical tokens: multiple
-- graph-neighbour expansions: conf/__init__.py::_setup -[calls]-> conf/__init__.py::__getattr__; db/models/fields/related_descriptors.py::ReverseManyToOneDescriptor -[references]-> db/models/fields/related.py::ForeignObject; db/backends/sqlite3/schema.py::_is_referenced_by_fk_constraint -[contains]-> db/backends/sqlite3/schema.py::DatabaseSchemaEditor; db/backends/ddl_references.py::Columns -[references]-> db/backends/ddl_references.py::IndexColumns; db/models/fields/related_descriptors.py::ForwardManyToOneDescriptor -[contains]-> db/models/fields/related_descriptors.py::__init__; db/models/sql/compiler.py::pre_sql_setup -[calls]-> db/models/sql/compiler.py::get_group_by; conf/__init__.py::_setup -[calls]-> conf/__init__.py::Settings; db/models/sql/compiler.py::pre_sql_setup -[calls]-> db/models/sql/compiler.py::setup_query
-- top pivots:
-  - core/checks/model_checks.py::_check_lazy_references — actionable function — strong lexical match; issue-domain relevance
-- top support:
-  - db/models/fields/reverse_related.py::ManyToOneRel — generic infrastructure outside the issue's subsystem (class) — support only without direct failing-test or issue evidence
-  - db/models/sql/query.py::setup_joins — generic infrastructure outside the issue's subsystem (method) — support only without direct failing-test or issue evidence
-  - db/backends/ddl_references.py::TableColumns — generic infrastructure outside the issue's subsystem (class) — support only without direct failing-test or issue evidence
-  - db/models/options.py::setup_pk — generic infrastructure outside the issue's subsystem (method) — support only without direct failing-test or issue evidence
-- top discarded:
-  - db/backends/ddl_references.py::Columns — beyond standard support budget (max 4)
-  - db/models/fields/related_descriptors.py::ReverseManyToOneDescriptor — beyond standard support budget (max 4)
-  - db/models/sql/compiler.py::pre_sql_setup — beyond standard support budget (max 4)
-  - db/backends/sqlite3/schema.py::_is_referenced_by_fk_constraint — beyond standard support budget (max 4)
-  - conf/__init__.py::_setup — beyond standard support budget (max 4)
+None — every evaluated instance surfaced its expected edit target in the top-3.
 
 ## Notes
 
