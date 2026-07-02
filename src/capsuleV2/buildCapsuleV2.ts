@@ -794,6 +794,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       baseOrder: baseSupportOrder,
       coeditEntries: coedit.entries,
       rescuedSymbolIds: coedit.rescuedSymbolIds,
+      spareOnlySymbolIds: coedit.spareOnlySymbolIds,
       pivotFilePaths: new Set(pivotCandidates.map((e) => e.candidate.filePath)),
       maxSupport: allocation.maxSupport,
       // Generic-infrastructure-tier support is junk a co-edit may replace.
@@ -837,19 +838,46 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   }
 
   // Diagnostics: which displaceable winners actually lost their slot to a co-edit
-  // candidate (rendered co-edit present AND the winner did not render).
-  const coeditRendered = coedit.entries.some((e) => renderedSupportIds.has(e.candidate.symbolId));
-  const coeditDisplaced = coeditRendered
+  // candidate. Only a rendered HIGH-confidence (displacing) co-edit can be the
+  // cause — spare-only (medium) entries rank behind every winner, so a winner
+  // missing next to a rendered medium entry was cut by the ordinary budget.
+  const coeditDisplacingRendered = coedit.entries.some(
+    (e) => !coedit.spareOnlySymbolIds.has(e.candidate.symbolId)
+      && renderedSupportIds.has(e.candidate.symbolId),
+  );
+  const coeditDisplaced = coeditDisplacingRendered
     ? displaceableWinners
         .filter((w) => !renderedSupportIds.has(w.candidate.symbolId))
         .map((w) => ({ path: w.candidate.filePath, symbol: w.candidate.localName }))
     : [];
+  // Medium-confidence entries that found no spare slot — the displacements the
+  // M98 spare-only placement refused (they would have rendered under M97).
+  const coeditSpareSlotDeferredCount = coedit.entries.filter(
+    (e) => coedit.spareOnlySymbolIds.has(e.candidate.symbolId)
+      && !renderedSupportIds.has(e.candidate.symbolId),
+  ).length;
+  const coeditConfidenceTiers: Record<string, number> = {};
+  for (const c of [...coedit.candidates, ...coedit.pruned]) {
+    coeditConfidenceTiers[c.confidence] = (coeditConfidenceTiers[c.confidence] ?? 0) + 1;
+  }
   const coeditDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
     coedit.fired || coedit.highDegreeRejectedCount > 0 || coedit.ambiguousRejectedCount > 0
       ? {
           coedit_lane_fired: coedit.fired,
           ...(coedit.anchors.length > 0 ? { coedit_anchors: coedit.anchors } : {}),
           ...(coedit.candidates.length > 0 ? { coedit_candidates: coedit.candidates } : {}),
+          ...(coedit.pruned.length > 0
+            ? {
+                coedit_pruned: coedit.pruned,
+                coedit_pruned_low_confidence_count: coedit.pruned.length,
+              }
+            : {}),
+          ...(Object.keys(coeditConfidenceTiers).length > 0
+            ? { coedit_confidence_tiers: coeditConfidenceTiers }
+            : {}),
+          ...(coeditSpareSlotDeferredCount > 0
+            ? { coedit_spare_slot_deferred_count: coeditSpareSlotDeferredCount }
+            : {}),
           ...(coedit.highDegreeRejectedCount > 0
             ? { coedit_high_degree_rejected_count: coedit.highDegreeRejectedCount }
             : {}),

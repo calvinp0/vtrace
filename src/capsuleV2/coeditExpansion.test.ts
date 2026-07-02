@@ -395,6 +395,8 @@ test("one non-generated proposal per anchor; combined cap at MAX_COEDIT_FILES", 
   ];
   // Anchor 1 reaches two pooled siblings (first stronger); anchor 2 reaches the
   // third. Per-anchor cap keeps first + third; second is rejected as ambiguous.
+  // Each sibling couples via calls AND references so the rescues stay selectable
+  // under the M98 confidence tiers (a single relation type is low-confidence).
   const supportEntries: RefinedRoledCandidate[] = [];
   const edges: Array<[string, string, EdgeType, string?]> = [];
   for (const [src, name, n] of [
@@ -403,6 +405,7 @@ test("one non-generated proposal per anchor; combined cap at MAX_COEDIT_FILES", 
     ["anchor_two_func", "third_annotation", 2],
   ] as const) {
     for (let i = 0; i < n; i += 1) edges.push([ids[src]!, ids[name]!, EdgeType.Calls, `${name}-${i}`]);
+    edges.push([ids[name]!, ids[src]!, EdgeType.References, `${name}-ref`]);
     supportEntries.push(entry(candidate({
       symbolId: ids[name]!, filePath: `pkg/${name}.py`, localName: name, fqName: name,
     }), CandidateRole.Support));
@@ -463,6 +466,7 @@ test("orderSupportWithCoedit: a new-file, non-generic winner is never displaced"
     baseOrder: winners,
     coeditEntries: [coeditEntry],
     rescuedSymbolIds: new Set(),
+    spareOnlySymbolIds: new Set(),
     pivotFilePaths: new Set(["pkg/pivot.py"]),
     maxSupport: 2,
     isProtectedTier: () => true,
@@ -485,6 +489,7 @@ test("orderSupportWithCoedit: duplicate-file symbols and generic files are displ
     baseOrder: winners,
     coeditEntries: [coeditEntry],
     rescuedSymbolIds: new Set(),
+    spareOnlySymbolIds: new Set(),
     pivotFilePaths: new Set(["pkg/pivot.py"]),
     maxSupport: 3,
     isProtectedTier: () => true,
@@ -503,12 +508,189 @@ test("orderSupportWithCoedit: a rescued non-winner is not emitted twice", () => 
     baseOrder: [namedEntry("s1", "pkg/one.py"), rescued],
     coeditEntries: [rescued],
     rescuedSymbolIds: new Set(["resc"]),
+    spareOnlySymbolIds: new Set(),
     pivotFilePaths: new Set(["pkg/pivot.py"]),
     maxSupport: 1,
     isProtectedTier: () => true,
   });
   const ids = order.ordered.map((e) => e.candidate.symbolId);
   assert.deepEqual(ids, ["s1", "resc"]);
+});
+
+// --- confidence tiers (M98) ----------------------------------------------------------
+
+test("single-relation-type rescue is pruned as low confidence, not rendered", () => {
+  const fx = seedLaneFixture();
+  linkAll(fx.db, [
+    // 3 edges, but ALL calls — one-way usage, not the co-edit signature.
+    [fx.ids["anchor_func"]!, fx.ids["plain_helper"]!, EdgeType.Calls, "a"],
+    [fx.ids["anchor_func"]!, fx.ids["plain_helper"]!, EdgeType.Calls, "b"],
+    [fx.ids["anchor_func"]!, fx.ids["plain_helper"]!, EdgeType.Calls, "c"],
+  ]);
+  const plain = entry(candidate({
+    symbolId: fx.ids["plain_helper"]!, filePath: "pkg/plain.py",
+    localName: "plain_helper", fqName: "plain_helper",
+  }), CandidateRole.Support);
+  const result = expandCoeditSupport(laneInput({
+    db: fx.db,
+    pivotEntries: [anchorPivot(fx)],
+    supportEntries: [plain],
+    poolFilePaths: new Set(["pkg/anchor.py", "pkg/plain.py"]),
+  }));
+  assert.equal(result.entries.length, 0);
+  assert.equal(result.candidates.length, 0);
+  assert.equal(result.rescuedSymbolIds.size, 0); // stays in the base support order
+  assert.equal(result.pruned.length, 1);
+  assert.equal(result.pruned[0]!.path, "pkg/plain.py");
+  assert.equal(result.pruned[0]!.confidence, "low");
+  assert.equal(result.pruned[0]!.prune_reason, "single relation type rescue");
+  fx.db.close();
+});
+
+test("sparse two-type rescue is MEDIUM (spare slots only); dense is HIGH", () => {
+  const fx = seedLaneFixture();
+  const edges: Array<[string, string, EdgeType, string?]> = [
+    // sibling: 2 types, sparse (2 edges) → medium.
+    [fx.ids["anchor_func"]!, fx.ids["build_annotation"]!, EdgeType.Calls, "a"],
+    [fx.ids["build_annotation"]!, fx.ids["anchor_func"]!, EdgeType.References, "b"],
+  ];
+  // plain: 2 types, dense (8 edges) → high.
+  for (let i = 0; i < 7; i += 1) {
+    edges.push([fx.ids["anchor_func"]!, fx.ids["plain_helper"]!, EdgeType.Calls, `c${i}`]);
+  }
+  edges.push([fx.ids["plain_helper"]!, fx.ids["anchor_func"]!, EdgeType.References, "r"]);
+  linkAll(fx.db, edges);
+  const sibling = entry(candidate({
+    symbolId: fx.ids["build_annotation"]!, filePath: "pkg/sibling.py",
+    localName: "build_annotation", fqName: "build_annotation",
+  }), CandidateRole.Support);
+  const plain = entry(candidate({
+    symbolId: fx.ids["plain_helper"]!, filePath: "pkg/plain.py",
+    localName: "plain_helper", fqName: "plain_helper",
+  }), CandidateRole.Support);
+  // Two runs (the per-anchor cap keeps only the best rescue per anchor).
+  const sparse = expandCoeditSupport(laneInput({
+    db: fx.db,
+    pivotEntries: [anchorPivot(fx)],
+    supportEntries: [sibling],
+    poolFilePaths: new Set(["pkg/anchor.py", "pkg/sibling.py"]),
+  }));
+  assert.equal(sparse.candidates.length, 1);
+  assert.equal(sparse.candidates[0]!.confidence, "medium");
+  assert.ok(sparse.spareOnlySymbolIds.has(fx.ids["build_annotation"]!));
+  const dense = expandCoeditSupport(laneInput({
+    db: fx.db,
+    pivotEntries: [anchorPivot(fx)],
+    supportEntries: [plain],
+    poolFilePaths: new Set(["pkg/anchor.py", "pkg/plain.py"]),
+  }));
+  assert.equal(dense.candidates.length, 1);
+  assert.equal(dense.candidates[0]!.confidence, "high");
+  assert.equal(dense.spareOnlySymbolIds.size, 0);
+  fx.db.close();
+});
+
+test("injection without a call edge is pruned even with task affinity", () => {
+  const fx = seedLaneFixture();
+  linkAll(fx.db, [
+    // references-only coupling; the connecting symbol carries a task word.
+    [fx.ids["anchor_func"]!, fx.ids["build_annotation"]!, EdgeType.References, "a"],
+    [fx.ids["anchor_func"]!, fx.ids["build_annotation"]!, EdgeType.References, "b"],
+  ]);
+  const result = expandCoeditSupport(laneInput({ db: fx.db, pivotEntries: [anchorPivot(fx)] }));
+  assert.equal(result.entries.length, 0);
+  assert.equal(result.pruned.length, 1);
+  assert.equal(result.pruned[0]!.prune_reason, "no call edge behind injection");
+  fx.db.close();
+});
+
+test("injected __init__ package facade is pruned as low confidence", () => {
+  const fx = seedCustomFixture([
+    { relPath: "pkg/anchor.py", specs: [
+      { localName: "anchor_func", kind: SymbolKind.Function, body: "def anchor_func():\n    return register_annotation()" },
+    ] },
+    { relPath: "pkg/__init__.py", specs: [
+      { localName: "register_annotation", kind: SymbolKind.Function, body: "def register_annotation():\n    return 1" },
+    ] },
+  ]);
+  const rows = fx.db.query("SELECT symbols.local_name AS name, symbols.id AS id FROM symbols").all() as Array<{ name: string; id: string }>;
+  const ids: Record<string, string> = {};
+  for (const row of rows) ids[row.name] = row.id;
+  linkAll(fx.db, [
+    [ids["anchor_func"]!, ids["register_annotation"]!, EdgeType.Calls, "a"],
+    [ids["anchor_func"]!, ids["register_annotation"]!, EdgeType.Calls, "b"],
+  ]);
+  const lead = entry(candidate({
+    symbolId: ids["anchor_func"]!, filePath: "pkg/anchor.py",
+    localName: "anchor_func", fqName: "anchor_func",
+  }));
+  const result = expandCoeditSupport(laneInput({ db: fx.db, pivotEntries: [lead] }));
+  assert.equal(result.entries.length, 0);
+  assert.equal(result.pruned.length, 1);
+  assert.equal(result.pruned[0]!.prune_reason, "package facade (__init__) injection");
+  fx.db.close();
+});
+
+test("call-edge injection with task affinity is HIGH; stem-share-only is MEDIUM", () => {
+  const fx = seedCustomFixture([
+    { relPath: "pkg/contour.py", specs: [
+      { localName: "draw_main", kind: SymbolKind.Function, body: "def draw_main():\n    return helper_fn()" },
+    ] },
+    { relPath: "pkg/contour_extra.py", specs: [
+      { localName: "helper_fn", kind: SymbolKind.Function, body: "def helper_fn():\n    return 1" },
+    ] },
+  ]);
+  const rows = fx.db.query("SELECT symbols.local_name AS name, symbols.id AS id FROM symbols").all() as Array<{ name: string; id: string }>;
+  const ids: Record<string, string> = {};
+  for (const row of rows) ids[row.name] = row.id;
+  linkAll(fx.db, [
+    [ids["draw_main"]!, ids["helper_fn"]!, EdgeType.Calls, "a"],
+    [ids["draw_main"]!, ids["helper_fn"]!, EdgeType.Calls, "b"],
+  ]);
+  const lead = entry(candidate({
+    symbolId: ids["draw_main"]!, filePath: "pkg/contour.py",
+    localName: "draw_main", fqName: "draw_main",
+  }));
+  // No task word matches any connecting symbol; the neighbour only shares the
+  // anchor's file stem ("contour") → selectable, but spare slots only.
+  const stemOnly = expandCoeditSupport(laneInput({
+    db: fx.db, task: "fix the rendering bug", pivotEntries: [lead],
+  }));
+  assert.equal(stemOnly.candidates.length, 1);
+  assert.equal(stemOnly.candidates[0]!.confidence, "medium");
+  assert.ok(stemOnly.spareOnlySymbolIds.has(ids["helper_fn"]!));
+  // A task word matching the connecting symbol name upgrades it to HIGH.
+  const affinity = expandCoeditSupport(laneInput({
+    db: fx.db, task: "the helper output is wrong", pivotEntries: [lead],
+  }));
+  assert.equal(affinity.candidates.length, 1);
+  assert.equal(affinity.candidates[0]!.confidence, "high");
+  assert.equal(affinity.spareOnlySymbolIds.size, 0);
+  fx.db.close();
+});
+
+test("orderSupportWithCoedit: a spare-only (medium) entry never displaces, even junk", () => {
+  const winners = [
+    namedEntry("s1", "pkg/one.py"),
+    namedEntry("dup", "pkg/pivot.py"), // duplicate-file symbol → displaceable
+  ];
+  const high = namedEntry("hi", "pkg/high.py");
+  const medium = namedEntry("med", "pkg/medium.py");
+  const order = orderSupportWithCoedit({
+    baseOrder: winners,
+    coeditEntries: [high, medium],
+    rescuedSymbolIds: new Set(),
+    spareOnlySymbolIds: new Set(["med"]),
+    pivotFilePaths: new Set(["pkg/pivot.py"]),
+    maxSupport: 2,
+    isProtectedTier: () => true,
+  });
+  // High displaces the duplicate; medium ranks behind EVERY winner, so with 2
+  // slots it can only render when a slot is genuinely spare.
+  assert.deepEqual(
+    order.ordered.map((e) => e.candidate.symbolId),
+    ["s1", "hi", "dup", "med"],
+  );
 });
 
 test("co-edit expansion is deterministic", () => {

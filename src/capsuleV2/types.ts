@@ -411,6 +411,22 @@ export interface CapsuleV2Diagnostics {
   coedit_anchors?: Array<{ path: string; symbol: string }>;
   /** Selected co-edit candidates (rescued from the pool or freshly injected). */
   coedit_candidates?: CoeditCandidateDiagnostic[];
+  /**
+   * M98 support precision: LOW-confidence candidates that won a selection slot
+   * but were pruned before rendering (single-relation-type rescues, injections
+   * without a call edge, injected `__init__` package facades). Diagnostics
+   * only — the slot is left empty rather than refilled, so the rendered set is
+   * always a subset of what the M97 lane would have shipped.
+   */
+  coedit_pruned?: CoeditPrunedDiagnostic[];
+  /** Count of the above (present only when >0). */
+  coedit_pruned_low_confidence_count?: number;
+  /** Selection winners by relation-shape confidence tier (high/medium/low). */
+  coedit_confidence_tiers?: Record<string, number>;
+  /** Medium-confidence co-edit items that found no SPARE support slot and were
+   * therefore not rendered (the displacement M98 refuses; they would have
+   * displaced a duplicate/generic/docs winner under the M97 placement). */
+  coedit_spare_slot_deferred_count?: number;
   /** Hub-shaped rejections: anchors with too many qualifying neighbours, or
    * neighbour files edge-connected to too many distinct files repo-wide. */
   coedit_high_degree_rejected_count?: number;
@@ -512,6 +528,13 @@ export interface CoeditCandidateDiagnostic {
   anchor_path: string;
   edge_count: number;
   score: number;
+  /** Relation-shape confidence tier (M98): "high" | "medium" | "low". */
+  confidence: string;
+}
+
+/** A LOW-confidence co-edit selection winner pruned before rendering (M98). */
+export interface CoeditPrunedDiagnostic extends CoeditCandidateDiagnostic {
+  prune_reason: string;
 }
 
 /** One non-source candidate down-ranked from pivot to support. */

@@ -1,4 +1,4 @@
-// Bounded hidden co-edit support expansion (M97).
+// Bounded hidden co-edit support expansion (M97) + confidence tiers (M98).
 //
 // WHY THIS EXISTS
 // ----------------
@@ -32,6 +32,35 @@
 // enforces a token ceiling (COEDIT_BUDGET_FRACTION of the capsule budget) and a
 // displacement rule that never evicts a new-file, non-generic support item.
 // Repo-agnostic and deterministic: no instance ids, no per-repo file lists.
+//
+// CONFIDENCE TIERS (M98)
+// ----------------------
+// M97 shipped ~1 non-gold relation-backed support file per fired case (94% of
+// its candidates were non-gold), which became the dominant capsule-precision
+// cost. The M98 audit found the noise concentrates in three shapes that carry
+// the weakest evidence, so every proposal now gets a confidence tier decided
+// purely from its relation shape (never from outcome or gold):
+//
+//   HIGH   — an exact generated-artifact pair; an injection whose connecting
+//            edges include a CALL and whose connecting symbol names match task
+//            words; a rescue coupled to the anchor by ≥2 relation TYPES
+//            (e.g. calls AND references) with dense coupling
+//            (≥ MIN_HIGH_CONFIDENCE_RESCUE_EDGES edges). Keeps M97's full
+//            displacement rights over duplicate/generic/docs support slots.
+//   MEDIUM — a real relation with weaker corroboration: a call-edge injection
+//            gated only by anchor-stem sharing (no task-word affinity), or a
+//            multi-type rescue with sparse coupling. Selectable, but SPARE
+//            support slots only — a medium candidate never displaces anything.
+//   LOW    — no call edge behind an injection (imports/references-only), an
+//            injected `__init__` package facade (a re-export surface reached by
+//            import edges, not an edit sibling), or a rescue backed by a single
+//            relation type. Excluded from selection entirely; recorded in the
+//            pruned diagnostics so the decision stays auditable.
+//
+// Tiering is applied AFTER the per-anchor and global competitions, which stay
+// byte-identical to M97 — so the M98 rendered set is always a SUBSET of the
+// M97 rendered set (strictly subtractive; a pruned low-confidence winner never
+// lets a new, unmeasured candidate surface in its place).
 
 import type { Database } from "bun:sqlite";
 
@@ -72,6 +101,11 @@ const MIN_RESCUE_EDGES = 2;
 /** A neighbour file edge-connected to more distinct files than this is a
  * repo-wide utility (`_api/__init__.py`), not a co-edit sibling. */
 export const MAX_NEIGHBOR_GLOBAL_FANIN = 25;
+/** Rescue edge density for HIGH confidence (4× MIN_RESCUE_EDGES). Both observed
+ * gold rescues sit at 15/26 edges, so any threshold ≤15 preserves them; 8 is
+ * chosen with margin rather than at the boundary. Below it a multi-type rescue
+ * is still selectable, but only into spare support slots (MEDIUM). */
+export const MIN_HIGH_CONFIDENCE_RESCUE_EDGES = 8;
 /** Synthesized final for an injected co-edit candidate — support-strength, just
  * above a bare graph neighbour (0.3) and far below any real direct evidence. */
 export const COEDIT_INJECT_FINAL = 0.35;
@@ -242,6 +276,9 @@ function nameAffinity(
 
 // --- results ----------------------------------------------------------------------
 
+/** Relation-shape confidence tier (see the module header). */
+export type CoeditConfidence = "high" | "medium" | "low";
+
 export interface CoeditCandidateMeta {
   readonly path: string;
   readonly symbol: string;
@@ -250,6 +287,12 @@ export interface CoeditCandidateMeta {
   readonly anchor_path: string;
   readonly edge_count: number;
   readonly score: number;
+  readonly confidence: CoeditConfidence;
+}
+
+/** A selected-then-pruned low-confidence candidate (diagnostics only). */
+export interface CoeditPrunedMeta extends CoeditCandidateMeta {
+  readonly prune_reason: string;
 }
 
 export interface CoeditExpansionResult {
@@ -259,14 +302,19 @@ export interface CoeditExpansionResult {
   readonly rescuedSymbolIds: ReadonlySet<string>;
   /** Selected co-edit entries in selection order (rescued refs + injected). */
   readonly entries: RefinedRoledCandidate[];
+  /** Symbol ids of MEDIUM-confidence entries — spare support slots only. */
+  readonly spareOnlySymbolIds: ReadonlySet<string>;
   readonly candidates: CoeditCandidateMeta[];
+  /** LOW-confidence candidates that won selection but were pruned (M98). */
+  readonly pruned: CoeditPrunedMeta[];
   readonly highDegreeRejectedCount: number;
   readonly ambiguousRejectedCount: number;
 }
 
 const EMPTY_RESULT: CoeditExpansionResult = {
   fired: false, anchors: [], rescuedSymbolIds: new Set(), entries: [],
-  candidates: [], highDegreeRejectedCount: 0, ambiguousRejectedCount: 0,
+  spareOnlySymbolIds: new Set(), candidates: [], pruned: [],
+  highDegreeRejectedCount: 0, ambiguousRejectedCount: 0,
 };
 
 export interface CoeditExpansionInput {
@@ -334,6 +382,9 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
     readonly anchor: RefinedRoledCandidate;
     readonly edgeCount: number;
     readonly score: number;
+    readonly confidence: CoeditConfidence;
+    /** Present iff confidence is "low": why it will be pruned at selection. */
+    readonly pruneReason?: string;
     /** rescued: the pool entry to promote; injected: the synthesized entry. */
     readonly entry: RefinedRoledCandidate;
   }
@@ -374,6 +425,7 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
         evidenceType: `pool_rescue_${[...fileStats.edgeTypes].sort().join("_")}`,
         anchor, edgeCount: fileStats.edgeCount,
         score: Math.min(fileStats.edgeCount, 8) + proximity,
+        ...rescueConfidence(fileStats),
         entry,
       });
     }
@@ -389,7 +441,7 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
       proposedFiles.add(pairPath);
       proposals.push({
         path: pairPath, action: "injected", evidenceType: "generated_artifact_pair",
-        anchor, edgeCount: 0, score: MIN_INJECT_SCORE + 2,
+        anchor, edgeCount: 0, score: MIN_INJECT_SCORE + 2, confidence: "high",
         entry: buildInjectedEntry({
           symbolId: first.id, filePath: pairPath, fqName: first.fqName,
           localName: first.localName, kind: first.kind,
@@ -442,6 +494,7 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
         path: q.stats.path, action: "injected",
         evidenceType: `edge_${[...q.stats.edgeTypes].sort().join("_")}`,
         anchor, edgeCount: q.stats.edgeCount, score: q.score,
+        ...injectionConfidence(q.stats, q.stemShare),
         entry: buildInjectedEntry({
           symbolId: pick.id, filePath: q.stats.path, fqName: pick.fqName,
           localName: pick.name, kind: pick.kind,
@@ -464,9 +517,7 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
     const best = anchorProposals[0];
     if (best !== undefined) {
       proposedFiles.add(best.path);
-      proposals.push(best.action === "rescued"
-        ? { ...best, entry: markRescued(best.entry, anchorPath, best.edgeCount) }
-        : best);
+      proposals.push(best);
       ambiguousRejected += anchorProposals.length - 1;
     }
   }
@@ -476,7 +527,10 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
   }
 
   // Combined selection: rescues first (organically evidenced), then injections
-  // by score; MAX_COEDIT_FILES files total.
+  // by score; MAX_COEDIT_FILES files total. Confidence is deliberately NOT an
+  // ordering key — the competition stays byte-identical to M97 and the tier is
+  // applied to the WINNERS below, so pruning a low-confidence winner can only
+  // shrink the rendered set, never surface a new unmeasured candidate.
   proposals.sort((a, b) => {
     if (a.action !== b.action) return a.action === "rescued" ? -1 : 1;
     return b.score - a.score || a.path.localeCompare(b.path);
@@ -485,26 +539,82 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
   ambiguousRejected += proposals.length - selected.length;
 
   const rescuedIds = new Set<string>();
+  const spareOnlyIds = new Set<string>();
   const entries: RefinedRoledCandidate[] = [];
   const meta: CoeditCandidateMeta[] = [];
+  const pruned: CoeditPrunedMeta[] = [];
   for (const p of selected) {
-    if (p.action === "rescued") rescuedIds.add(p.entry.candidate.symbolId);
-    entries.push(p.entry);
-    meta.push({
+    const base: CoeditCandidateMeta = {
       path: p.path, symbol: p.entry.candidate.localName, action: p.action,
       evidence_type: p.evidenceType, anchor_path: p.anchor.candidate.filePath,
-      edge_count: p.edgeCount, score: p.score,
-    });
+      edge_count: p.edgeCount, score: p.score, confidence: p.confidence,
+    };
+    if (p.confidence === "low") {
+      pruned.push({ ...base, prune_reason: p.pruneReason ?? "low confidence" });
+      continue;
+    }
+    const entry = p.action === "rescued"
+      ? markRescued(p.entry, p.anchor.candidate.filePath, p.edgeCount)
+      : p.entry;
+    if (p.action === "rescued") rescuedIds.add(entry.candidate.symbolId);
+    if (p.confidence === "medium") spareOnlyIds.add(entry.candidate.symbolId);
+    entries.push(entry);
+    meta.push(base);
   }
   return {
+    // Fired = the lane WON selection slots (kept or pruned) — comparable to the
+    // M97 fire-rate; a fully-pruned fire is visible via `pruned` + empty entries.
     fired: true,
     anchors: anchors.map((a) => ({ path: a.candidate.filePath, symbol: a.candidate.localName })),
     rescuedSymbolIds: rescuedIds,
     entries,
+    spareOnlySymbolIds: spareOnlyIds,
     candidates: meta,
+    pruned,
     highDegreeRejectedCount: highDegreeRejected,
     ambiguousRejectedCount: ambiguousRejected,
   };
+}
+
+// --- confidence tiers (M98) --------------------------------------------------------
+
+// A rescue is organically retrieved, so its tier keys on the SHAPE of its
+// coupling to the anchor: two independent relation types (e.g. the anchor both
+// calls into and is referenced by the file) is the observed co-edit signature;
+// a single relation type — however many edges — is ordinary one-way usage and
+// contributed zero gold in the M98 audit (23/23 non-gold).
+function rescueConfidence(
+  stats: NeighborFileStats,
+): { confidence: CoeditConfidence; pruneReason?: string } {
+  if (stats.edgeTypes.size < 2) {
+    return { confidence: "low", pruneReason: "single relation type rescue" };
+  }
+  return stats.edgeCount >= MIN_HIGH_CONFIDENCE_RESCUE_EDGES
+    ? { confidence: "high" }
+    : { confidence: "medium" };
+}
+
+// An injection is synthesized, so it needs the strongest relation available: a
+// CALL edge (the anchor executes the sibling's code, or vice versa). Import- and
+// reference-only injections (0/20 gold in the M98 audit) and `__init__` package
+// facades (re-export surfaces import edges always reach; 0/13 gold) are LOW.
+// With a call edge, task-word affinity on a connecting symbol is HIGH; an
+// anchor-stem share alone is circumstantial → MEDIUM (spare slots only).
+function injectionConfidence(
+  stats: NeighborFileStats,
+  stemShare: boolean,
+): { confidence: CoeditConfidence; pruneReason?: string } {
+  const base = stats.path.slice(stats.path.lastIndexOf("/") + 1);
+  if (base === "__init__.py") {
+    return { confidence: "low", pruneReason: "package facade (__init__) injection" };
+  }
+  if (!stats.edgeTypes.has("calls")) {
+    return { confidence: "low", pruneReason: "no call edge behind injection" };
+  }
+  if (stats.affinityNames.size > 0) return { confidence: "high" };
+  return stemShare
+    ? { confidence: "medium" }
+    : { confidence: "low", pruneReason: "no affinity or stem share" };
 }
 
 // --- displacement-safe support ordering --------------------------------------------
@@ -523,11 +633,18 @@ export interface CoeditSupportOrder {
  * co-edit can reclaim a slot spent on a second symbol of an already-present
  * file (or on junk) but never displace a distinct support file vtrace found on
  * its own evidence. `isProtectedTier` abstracts the builder's tier test.
+ *
+ * M98: only HIGH-confidence co-edit entries hold that displacement position.
+ * MEDIUM-confidence entries (`spareOnlySymbolIds`) rank behind EVERY winner —
+ * they render only into genuinely spare support slots and can never displace
+ * anything, not even a duplicate-file symbol.
  */
 export function orderSupportWithCoedit(input: {
   readonly baseOrder: readonly RefinedRoledCandidate[];
   readonly coeditEntries: readonly RefinedRoledCandidate[];
   readonly rescuedSymbolIds: ReadonlySet<string>;
+  /** Medium-confidence co-edit symbol ids: spare slots only, never displace. */
+  readonly spareOnlySymbolIds: ReadonlySet<string>;
   readonly pivotFilePaths: ReadonlySet<string>;
   readonly maxSupport: number;
   readonly isProtectedTier: (entry: RefinedRoledCandidate) => boolean;
@@ -550,11 +667,16 @@ export function orderSupportWithCoedit(input: {
     || entry.nonSourceExample?.isNonSourceExample === true
     || !input.isProtectedTier(entry);
   const displaceableWinners = winners.filter(displaceable);
+  const displacing = input.coeditEntries
+    .filter((e) => !input.spareOnlySymbolIds.has(e.candidate.symbolId));
+  const spareOnly = input.coeditEntries
+    .filter((e) => input.spareOnlySymbolIds.has(e.candidate.symbolId));
   return {
     ordered: [
       ...winners.filter((w) => !displaceable(w)),
-      ...input.coeditEntries,
+      ...displacing,
       ...displaceableWinners,
+      ...spareOnly,
       ...rest,
     ],
     displaceableWinners,
