@@ -82,6 +82,8 @@ function laneInput(over: Partial<CoeditExpansionInput> & { db: Database }): Coed
     winnerSymbolIds: over.winnerSymbolIds ?? new Set(),
     poolFilePaths: over.poolFilePaths ?? new Set(),
     ids: over.ids ?? EMPTY_IDS,
+    ...(over.repoRoot === undefined ? {} : { repoRoot: over.repoRoot }),
+    ...(over.readFile === undefined ? {} : { readFile: over.readFile }),
   };
 }
 
@@ -705,6 +707,199 @@ test("co-edit expansion is deterministic", () => {
   assert.deepEqual(
     JSON.parse(JSON.stringify(first.candidates)),
     JSON.parse(JSON.stringify(second.candidates)),
+  );
+  fx.db.close();
+});
+
+// --- import-re-export rescue (M99) ---------------------------------------------------
+
+// Anchor implementation module `db/related.py`, facade `db/__init__.py`
+// re-exporting RelatedThing, and a cross-package pooled candidate
+// `contrib/fields.py` that imports the anchor's name through the facade — the
+// django-16256 shape: no index edges, package proximity null, exact import
+// relation only.
+interface ImportLaneFixture extends LaneFixture {
+  candidateEntry: RefinedRoledCandidate;
+  anchorEntry: RefinedRoledCandidate;
+}
+
+function seedImportLaneFixture(over: {
+  candidateBody?: string;
+  extraFiles?: Array<{ relPath: string; specs: Array<{ localName: string; kind: SymbolKind; body: string }> }>;
+} = {}): ImportLaneFixture {
+  const fx = seedCustomFixture([
+    { relPath: "db/related.py", specs: [
+      { localName: "RelatedThing", kind: SymbolKind.Class, body: "class RelatedThing:\n    pass" },
+    ] },
+    { relPath: "db/__init__.py", specs: [
+      { localName: "reexports", kind: SymbolKind.ModuleVariable, body: "from db.related import RelatedThing" },
+    ] },
+    { relPath: "contrib/fields.py", specs: [
+      { localName: "manage_related", kind: SymbolKind.Function,
+        body: over.candidateBody ?? "from db import RelatedThing\ndef manage_related():\n    return RelatedThing" },
+    ] },
+    ...(over.extraFiles ?? []),
+  ]);
+  const rows = fx.db.query(
+    "SELECT symbols.local_name AS name, symbols.id AS id FROM symbols",
+  ).all() as Array<{ name: string; id: string }>;
+  const ids: Record<string, string> = {};
+  for (const row of rows) ids[row.name] = row.id;
+  const anchorEntry = entry(candidate({
+    symbolId: ids["RelatedThing"]!, filePath: "db/related.py",
+    localName: "RelatedThing", fqName: "RelatedThing", kind: SymbolKind.Class,
+  }));
+  const candidateEntry = entry(candidate({
+    symbolId: ids["manage_related"]!, filePath: "contrib/fields.py",
+    localName: "manage_related", fqName: "manage_related",
+  }), CandidateRole.Support);
+  return { ...fx, ids, anchorEntry, candidateEntry };
+}
+
+function importLaneInput(fx: ImportLaneFixture, over: Partial<CoeditExpansionInput> = {}): CoeditExpansionInput {
+  return laneInput({
+    db: fx.db,
+    task: "related manager methods missing",
+    pivotEntries: [fx.anchorEntry],
+    supportEntries: [fx.candidateEntry],
+    poolFilePaths: new Set(["db/related.py", "contrib/fields.py"]),
+    repoRoot: fx.repoRoot,
+    ...over,
+  });
+}
+
+test("import-re-export rescue admits a pooled cross-package candidate (django-16256 shape)", () => {
+  const fx = seedImportLaneFixture();
+  const result = expandCoeditSupport(importLaneInput(fx));
+  assert.equal(result.fired, true);
+  assert.equal(result.candidates.length, 1);
+  const kept = result.candidates[0]!;
+  assert.equal(kept.path, "contrib/fields.py");
+  assert.equal(kept.action, "rescued");
+  assert.equal(kept.evidence_type, "import_reexport_rescue");
+  assert.equal(kept.confidence, "high");
+  assert.ok(kept.import_kinds!.includes("init_reexport"));
+  assert.equal(result.importConsideredCount, 1);
+  // High tier (never spare-only), rescued from the pool, still SUPPORT role.
+  assert.ok(result.rescuedSymbolIds.has(fx.ids["manage_related"]!));
+  assert.ok(!result.spareOnlySymbolIds.has(fx.ids["manage_related"]!));
+  assert.equal(result.entries[0]!.role, CandidateRole.Support);
+  assert.ok(result.entries[0]!.candidate.evidence.some((e) => e.includes("import-relation lane")));
+  fx.db.close();
+});
+
+test("import rescue is disabled without repoRoot (byte-identical M98 behaviour)", () => {
+  const fx = seedImportLaneFixture();
+  const result = expandCoeditSupport(importLaneInput(fx, { repoRoot: undefined }));
+  assert.equal(result.fired, false);
+  assert.equal(result.importConsideredCount, 0);
+  fx.db.close();
+});
+
+test("plain direct import without a facade re-export is rejected", () => {
+  const fx = seedImportLaneFixture({
+    candidateBody: "from db.related import RelatedThing\ndef manage_related():\n    return RelatedThing",
+  });
+  const result = expandCoeditSupport(importLaneInput(fx));
+  assert.equal(result.fired, false);
+  assert.equal(result.importConsideredCount, 1);
+  assert.equal(result.importAmbiguousRejectedCount, 1);
+  fx.db.close();
+});
+
+test("wildcard import resolves to the facade only — never reaches the anchor", () => {
+  const fx = seedImportLaneFixture({
+    candidateBody: "from db import *\ndef manage_related():\n    return RelatedThing",
+  });
+  const result = expandCoeditSupport(importLaneInput(fx));
+  assert.equal(result.fired, false);
+  // The facade is not an anchor, so the candidate is not even considered.
+  assert.equal(result.importConsideredCount, 0);
+  fx.db.close();
+});
+
+test("import rescue without task affinity is rejected", () => {
+  const fx = seedImportLaneFixture();
+  const result = expandCoeditSupport(importLaneInput(fx, { task: "totally unconnected words here" }));
+  assert.equal(result.fired, false);
+  assert.equal(result.importConsideredCount, 1);
+  assert.equal(result.importAmbiguousRejectedCount, 1);
+  fx.db.close();
+});
+
+test("import rescue never enters a capsule with more than 4 distinct base files", () => {
+  const fx = seedImportLaneFixture({ extraFiles: [
+    { relPath: "db/a.py", specs: [{ localName: "aa", kind: SymbolKind.Function, body: "def aa():\n    return 1" }] },
+    { relPath: "db/b.py", specs: [{ localName: "bb", kind: SymbolKind.Function, body: "def bb():\n    return 1" }] },
+    { relPath: "db/c.py", specs: [{ localName: "cc", kind: SymbolKind.Function, body: "def cc():\n    return 1" }] },
+    { relPath: "db/d.py", specs: [{ localName: "dd", kind: SymbolKind.Function, body: "def dd():\n    return 1" }] },
+  ] });
+  const rows = fx.db.query(
+    "SELECT symbols.local_name AS name, symbols.id AS id FROM symbols",
+  ).all() as Array<{ name: string; id: string }>;
+  const ids: Record<string, string> = {};
+  for (const row of rows) ids[row.name] = row.id;
+  const pivots = [
+    fx.anchorEntry,
+    entry(candidate({ symbolId: ids["aa"]!, filePath: "db/a.py", localName: "aa", fqName: "aa" })),
+    entry(candidate({ symbolId: ids["bb"]!, filePath: "db/b.py", localName: "bb", fqName: "bb" })),
+    entry(candidate({ symbolId: ids["cc"]!, filePath: "db/c.py", localName: "cc", fqName: "cc" })),
+    entry(candidate({ symbolId: ids["dd"]!, filePath: "db/d.py", localName: "dd", fqName: "dd" })),
+  ];
+  const result = expandCoeditSupport(importLaneInput(fx, { pivotEntries: pivots }));
+  assert.equal(result.candidates.length, 0);
+  assert.equal(result.importConsideredCount, 1);
+  assert.equal(result.importAmbiguousRejectedCount, 1);
+  fx.db.close();
+});
+
+test("import rescue rejects high-degree hub candidates", () => {
+  const hubFiles = Array.from({ length: 26 }, (_, i) => ({
+    relPath: `spread/f${i}.py`,
+    specs: [{ localName: `spread_${i}`, kind: SymbolKind.Function, body: `def spread_${i}():\n    return 1` }],
+  }));
+  const fx = seedImportLaneFixture({ extraFiles: hubFiles });
+  // Edge-connect the candidate's symbol to 26 distinct files → global fan gate.
+  const rows = fx.db.query(
+    "SELECT symbols.local_name AS name, symbols.id AS id FROM symbols",
+  ).all() as Array<{ name: string; id: string }>;
+  const ids: Record<string, string> = {};
+  for (const row of rows) ids[row.name] = row.id;
+  linkAll(fx.db, Array.from({ length: 26 }, (_, i) =>
+    [ids[`spread_${i}`]!, ids["manage_related"]!, EdgeType.References, `s${i}`] as [string, string, EdgeType, string],
+  ));
+  const result = expandCoeditSupport(importLaneInput(fx));
+  assert.equal(result.candidates.length, 0);
+  assert.equal(result.importConsideredCount, 1);
+  assert.equal(result.importHubRejectedCount, 1);
+  fx.db.close();
+});
+
+test("import rescue is deterministic and capped at one per capsule", () => {
+  const fx = seedImportLaneFixture({ extraFiles: [
+    { relPath: "contrib/other_related.py", specs: [
+      { localName: "other_related", kind: SymbolKind.Function,
+        body: "from db import RelatedThing\ndef other_related():\n    return RelatedThing" },
+    ] },
+  ] });
+  const rows = fx.db.query(
+    "SELECT symbols.local_name AS name, symbols.id AS id FROM symbols",
+  ).all() as Array<{ name: string; id: string }>;
+  const ids: Record<string, string> = {};
+  for (const row of rows) ids[row.name] = row.id;
+  const second = entry(candidate({
+    symbolId: ids["other_related"]!, filePath: "contrib/other_related.py",
+    localName: "other_related", fqName: "other_related",
+  }), CandidateRole.Support);
+  const input = importLaneInput(fx, { supportEntries: [fx.candidateEntry, second] });
+  const first = expandCoeditSupport(input);
+  // Cap: only the first candidate in base support order is kept.
+  assert.equal(first.candidates.filter((c) => c.evidence_type === "import_reexport_rescue").length, 1);
+  assert.equal(first.candidates[0]!.path, "contrib/fields.py");
+  const again = expandCoeditSupport(importLaneInput(fx, { supportEntries: [fx.candidateEntry, second] }));
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(first.candidates)),
+    JSON.parse(JSON.stringify(again.candidates)),
   );
   fx.db.close();
 });

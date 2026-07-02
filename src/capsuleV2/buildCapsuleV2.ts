@@ -782,6 +782,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     ),
     poolFilePaths: new Set(candidates.map((c) => c.filePath)),
     ids: { anchorSymbolIds, titleSymbolIds, literalAnchorIds, directEvidenceStrongIds, suppressedDecoyIds },
+    repoRoot: input.repoRoot,
   });
   const coeditSymbolIds = new Set(coedit.entries.map((e) => e.candidate.symbolId));
 
@@ -861,7 +862,10 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     coeditConfidenceTiers[c.confidence] = (coeditConfidenceTiers[c.confidence] ?? 0) + 1;
   }
   const coeditDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
-    coedit.fired || coedit.highDegreeRejectedCount > 0 || coedit.ambiguousRejectedCount > 0
+    coedit.fired
+    || coedit.highDegreeRejectedCount > 0
+    || coedit.ambiguousRejectedCount > 0
+    || coedit.importConsideredCount > 0
       ? {
           coedit_lane_fired: coedit.fired,
           ...(coedit.anchors.length > 0 ? { coedit_anchors: coedit.anchors } : {}),
@@ -888,6 +892,15 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
             ? { coedit_budget_limited_count: coeditBudgetLimitedCount }
             : {}),
           ...(coeditDisplaced.length > 0 ? { coedit_displaced: coeditDisplaced } : {}),
+          ...(coedit.importConsideredCount > 0
+            ? { coedit_import_considered_count: coedit.importConsideredCount }
+            : {}),
+          ...(coedit.importHubRejectedCount > 0
+            ? { coedit_import_hub_rejected_count: coedit.importHubRejectedCount }
+            : {}),
+          ...(coedit.importAmbiguousRejectedCount > 0
+            ? { coedit_import_ambiguous_rejected_count: coedit.importAmbiguousRejectedCount }
+            : {}),
         }
       : {};
 

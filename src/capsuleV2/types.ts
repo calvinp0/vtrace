@@ -437,6 +437,18 @@ export interface CapsuleV2Diagnostics {
   /** Displaceable support items that lost their slot to a co-edit candidate. */
   coedit_displaced?: Array<{ path: string; symbol: string }>;
   /**
+   * Import-re-export rescue instrumentation (M99): pooled support entries with
+   * an exact file-level import relation to a co-edit anchor. Kept candidates
+   * appear in `coedit_candidates` with evidence type `import_reexport_rescue`
+   * and their `import_kinds`.
+   */
+  coedit_import_considered_count?: number;
+  /** Import-relation candidates rejected as edge-fan hubs (M99). */
+  coedit_import_hub_rejected_count?: number;
+  /** Import-relation candidates rejected by the facade/affinity/capsule-size
+   * gates (M99). */
+  coedit_import_ambiguous_rejected_count?: number;
+  /**
    * Generic-infrastructure lexical-decoy suppression. A generic bug-report word
    * ("deprecation", "dict", "utils") over-anchors retrieval to an
    * infrastructure/helper module NAMED after that word (`deprecation.py`, a
@@ -530,6 +542,8 @@ export interface CoeditCandidateDiagnostic {
   score: number;
   /** Relation-shape confidence tier (M98): "high" | "medium" | "low". */
   confidence: string;
+  /** Exact import relation shapes behind an import-relation candidate (M99). */
+  import_kinds?: string[];
 }
 
 /** A LOW-confidence co-edit selection winner pruned before rendering (M98). */

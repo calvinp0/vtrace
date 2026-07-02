@@ -61,6 +61,35 @@
 // byte-identical to M97 — so the M98 rendered set is always a SUBSET of the
 // M97 rendered set (strictly subtractive; a pruned low-confidence winner never
 // lets a new, unmeasured candidate surface in its place).
+//
+// IMPORT-RE-EXPORT RESCUE (M99)
+// -----------------------------
+// The index's symbol-level `imports` edges are structurally absent for real
+// modules (only single-top-level-symbol files can carry them), so a pooled
+// candidate that demonstrably IMPORTS a capsule anchor — the classic hidden
+// co-edit `contrib/contenttypes/fields.py` → `db/models/fields/related.py` —
+// is invisible to the edge-based rescue above, and the package-proximity gate
+// rejects it anyway (co-edit siblings routinely live in different top-level
+// packages). The M99 gap audit measured every wider import lane as noise
+// (injection-shaped import candidates: 0 gold in every gated slice), so
+// exactly ONE import-relation mechanism is admitted, on the audit's only
+// surviving slice:
+//
+//   a pooled, credible-source support candidate that imports a capsule anchor
+//   through an exact package-`__init__` re-export chain (alias-aware, never
+//   wildcard-expanded), with task-token affinity, below the global edge fan-in
+//   hub bound, not itself a facade/generic/docs/test file, only into capsules
+//   with ≤ IMPORT_RESCUE_MAX_BASE_FILES distinct base files, capped at ONE per
+//   capsule, and only in selection capacity the M97/M98 competition left
+//   unused — so the M98 rendered set is never perturbed, only appended to.
+//
+// The relation comes from an exact build-time scan of top-level import
+// statements over the indexed file list (src/parsers/pythonFileImports.ts) —
+// never from grep, and never writing to the index (retrieval scoring, graph
+// expansion, and hub counts are untouched).
+
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
 import type { Database } from "bun:sqlite";
 
@@ -69,7 +98,12 @@ import {
   listCrossFileEdgeEndpointsForFile,
   type CrossFileEdgeEndpoint,
 } from "../db/repositories/edgesRepository";
+import { listAllFilePaths } from "../db/repositories/filesRepository";
 import { listSymbolsForFile } from "../db/repositories/symbolsRepository";
+import {
+  createFileImportScanner,
+  type FileImportRelation,
+} from "../parsers/pythonFileImports";
 import { SymbolKind } from "../domain/types";
 import {
   HybridCandidateSource,
@@ -110,6 +144,14 @@ export const MIN_HIGH_CONFIDENCE_RESCUE_EDGES = 8;
  * above a bare graph neighbour (0.3) and far below any real direct evidence. */
 export const COEDIT_INJECT_FINAL = 0.35;
 const COEDIT_INJECT_PROXIMITY = 0.5;
+/** At most one import-re-export rescue per capsule (M99) — the weakest
+ * admissible evidence tier gets the tightest volume cap. */
+export const IMPORT_REEXPORT_RESCUE_MAX_PER_CAPSULE = 1;
+/** An import-re-export rescue only enters a capsule whose pivots + winning
+ * support span at most this many distinct files: the M99 audit's render
+ * simulation showed larger capsules taking an import candidate cross straight
+ * into overpacking territory, with zero gold among them. Gold-blind. */
+export const IMPORT_RESCUE_MAX_BASE_FILES = 4;
 
 // Word tokens too generic to count as task affinity or stem sharing. Small on
 // purpose — a wrong exclusion only weakens one signal among several.
@@ -288,6 +330,8 @@ export interface CoeditCandidateMeta {
   readonly edge_count: number;
   readonly score: number;
   readonly confidence: CoeditConfidence;
+  /** Exact import relation shapes behind an import-relation candidate (M99). */
+  readonly import_kinds?: string[];
 }
 
 /** A selected-then-pruned low-confidence candidate (diagnostics only). */
@@ -309,12 +353,20 @@ export interface CoeditExpansionResult {
   readonly pruned: CoeditPrunedMeta[];
   readonly highDegreeRejectedCount: number;
   readonly ambiguousRejectedCount: number;
+  /** Pooled support entries with an exact import relation to an anchor (M99). */
+  readonly importConsideredCount: number;
+  /** Import-relation candidates rejected as edge-fan hubs (M99). */
+  readonly importHubRejectedCount: number;
+  /** Import-relation candidates rejected by the facade/affinity/capsule-size
+   * gates or the per-capsule cap (M99). */
+  readonly importAmbiguousRejectedCount: number;
 }
 
 const EMPTY_RESULT: CoeditExpansionResult = {
   fired: false, anchors: [], rescuedSymbolIds: new Set(), entries: [],
   spareOnlySymbolIds: new Set(), candidates: [], pruned: [],
   highDegreeRejectedCount: 0, ambiguousRejectedCount: 0,
+  importConsideredCount: 0, importHubRejectedCount: 0, importAmbiguousRejectedCount: 0,
 };
 
 export interface CoeditExpansionInput {
@@ -329,6 +381,12 @@ export interface CoeditExpansionInput {
   /** Every file path currently in the candidate pool. */
   readonly poolFilePaths: ReadonlySet<string>;
   readonly ids: CoeditAnchorIds;
+  /** Repo root for the exact file-level import scan (M99). When absent, the
+   * import-re-export rescue is disabled and behaviour is byte-identical M98. */
+  readonly repoRoot?: string;
+  /** Test seam: reads a repo-relative file for the import scan (defaults to
+   * reading from `repoRoot`). */
+  readonly readFile?: (relPath: string) => string | null;
 }
 
 /**
@@ -385,6 +443,8 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
     readonly confidence: CoeditConfidence;
     /** Present iff confidence is "low": why it will be pruned at selection. */
     readonly pruneReason?: string;
+    /** Exact import relation shapes behind an import-relation proposal (M99). */
+    readonly importKinds?: string[];
     /** rescued: the pool entry to promote; injected: the synthesized entry. */
     readonly entry: RefinedRoledCandidate;
   }
@@ -522,10 +582,6 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
     }
   }
 
-  if (proposals.length === 0) {
-    return { ...EMPTY_RESULT, fired: false, highDegreeRejectedCount: highDegreeRejected, ambiguousRejectedCount: ambiguousRejected };
-  }
-
   // Combined selection: rescues first (organically evidenced), then injections
   // by score; MAX_COEDIT_FILES files total. Confidence is deliberately NOT an
   // ordering key — the competition stays byte-identical to M97 and the tier is
@@ -538,6 +594,85 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
   const selected = proposals.slice(0, MAX_COEDIT_FILES);
   ambiguousRejected += proposals.length - selected.length;
 
+  // ---- IMPORT-RE-EXPORT RESCUE (M99) ----
+  // Runs strictly AFTER the M97/M98 competition and only into selection
+  // capacity it left unused, so the existing rendered set is never perturbed.
+  // See the module header for the audit-derived gates.
+  let importConsidered = 0;
+  let importHubRejected = 0;
+  let importAmbiguousRejected = 0;
+  if (input.repoRoot !== undefined && selected.length < MAX_COEDIT_FILES) {
+    const repoRoot = input.repoRoot;
+    const readFile = input.readFile
+      ?? ((relPath: string): string | null => {
+        try {
+          return readFileSync(path.join(repoRoot, relPath), "utf8");
+        } catch {
+          return null;
+        }
+      });
+    const scanner = createFileImportScanner(listAllFilePaths(input.db), readFile);
+    // Gold-blind bloat guard: import evidence is the weakest admissible tier,
+    // so it never grows a capsule that is already broad.
+    const baseFilesOk = guaranteedFiles.size <= IMPORT_RESCUE_MAX_BASE_FILES;
+    let importKept = 0;
+    for (const entry of input.supportEntries) {
+      if (importKept >= IMPORT_REEXPORT_RESCUE_MAX_PER_CAPSULE) break;
+      if (selected.length >= MAX_COEDIT_FILES) break;
+      const c = entry.candidate;
+      if (input.winnerSymbolIds.has(c.symbolId)) continue;
+      if (guaranteedFiles.has(c.filePath) || proposedFiles.has(c.filePath)) continue;
+      if (!isCredibleSourceAnchor(entry, input.ids, taskAllowsNonSource)) continue;
+      if (c.filePath.endsWith("__init__.py")) continue;
+      const anchorRelations = scanner
+        .relationsOf(c.filePath)
+        .filter((r) => anchorFiles.has(r.importedPath));
+      if (anchorRelations.length === 0) continue;
+      importConsidered += 1;
+      // Facade gate: the candidate must reach the anchor through an exact
+      // package __init__ re-export chain — the only import shape the M99 audit
+      // found precise enough (plain name/module imports were 65/67 non-gold).
+      const relation = anchorRelations.find((r) => r.kinds.includes("init_reexport"));
+      if (relation === undefined || !baseFilesOk) {
+        importAmbiguousRejected += 1;
+        continue;
+      }
+      const affinity = intersects(meaningfulTokens(relation.importedNames.join(" ")), taskTokens)
+        || intersects(meaningfulTokens(stemOf(c.filePath)), taskTokens);
+      if (!affinity) {
+        importAmbiguousRejected += 1;
+        continue;
+      }
+      if (countCrossFileNeighborFiles(input.db, c.filePath) > MAX_NEIGHBOR_GLOBAL_FANIN) {
+        importHubRejected += 1;
+        continue;
+      }
+      const anchor = anchors.find((a) => a.candidate.filePath === relation.importedPath);
+      if (anchor === undefined) continue;
+      proposedFiles.add(c.filePath);
+      selected.push({
+        path: c.filePath, action: "rescued",
+        evidenceType: "import_reexport_rescue",
+        anchor, edgeCount: 0, score: 0, confidence: "high",
+        importKinds: [...relation.kinds],
+        entry: markImportRescued(entry, relation),
+      });
+      importKept += 1;
+    }
+  }
+
+  if (selected.length === 0) {
+    return {
+      ...EMPTY_RESULT,
+      fired: false,
+      highDegreeRejectedCount: highDegreeRejected,
+      ambiguousRejectedCount: ambiguousRejected,
+      importConsideredCount: importConsidered,
+      importHubRejectedCount: importHubRejected,
+      importAmbiguousRejectedCount: importAmbiguousRejected,
+    };
+  }
+
   const rescuedIds = new Set<string>();
   const spareOnlyIds = new Set<string>();
   const entries: RefinedRoledCandidate[] = [];
@@ -548,12 +683,13 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
       path: p.path, symbol: p.entry.candidate.localName, action: p.action,
       evidence_type: p.evidenceType, anchor_path: p.anchor.candidate.filePath,
       edge_count: p.edgeCount, score: p.score, confidence: p.confidence,
+      ...(p.importKinds === undefined ? {} : { import_kinds: p.importKinds }),
     };
     if (p.confidence === "low") {
       pruned.push({ ...base, prune_reason: p.pruneReason ?? "low confidence" });
       continue;
     }
-    const entry = p.action === "rescued"
+    const entry = p.action === "rescued" && p.importKinds === undefined
       ? markRescued(p.entry, p.anchor.candidate.filePath, p.edgeCount)
       : p.entry;
     if (p.action === "rescued") rescuedIds.add(entry.candidate.symbolId);
@@ -573,6 +709,9 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
     pruned,
     highDegreeRejectedCount: highDegreeRejected,
     ambiguousRejectedCount: ambiguousRejected,
+    importConsideredCount: importConsidered,
+    importHubRejectedCount: importHubRejected,
+    importAmbiguousRejectedCount: importAmbiguousRejected,
   };
 }
 
@@ -705,6 +844,21 @@ function pickInjectedSymbol(
     || a.id.localeCompare(b.id));
   const best = entries[0]!;
   return { id: best.id, name: best.name, kind: best.kind, fqName: best.name };
+}
+
+// An import-rescued entry keeps its organic candidate/scores; it only gains an
+// evidence line naming the exact re-export relation so the promotion is
+// auditable in the capsule output.
+function markImportRescued(
+  entry: RefinedRoledCandidate,
+  relation: FileImportRelation,
+): RefinedRoledCandidate {
+  const names = relation.importedNames.slice(0, 3).join(", ");
+  const line = `imports co-edit anchor ${relation.importedPath} via package __init__ re-export${names.length > 0 ? ` (${names})` : ""} (import-relation lane)`;
+  if (!entry.candidate.evidence.includes(line)) {
+    entry.candidate.evidence = [...entry.candidate.evidence, line].sort();
+  }
+  return entry;
 }
 
 // A rescued entry keeps its organic candidate/scores; it only gains the co-edit

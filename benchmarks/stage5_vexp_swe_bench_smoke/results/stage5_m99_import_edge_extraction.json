@@ -1,0 +1,97 @@
+{
+  "milestone": "M99",
+  "kind": "Import-edge extraction and import-relation co-edit recall",
+  "live_agents": false,
+  "docker": false,
+  "api_spend": false,
+  "seam_decision": {
+    "root_cause": "A: import edges structurally absent from the index (0/43 import-related hidden-gold pairs have an imports edge; single-top-level-symbol emission constraint + package-rooted checkouts cannot resolve absolute self-imports)",
+    "fix_seam": "C: co-edit evidence/scoring fed by an exact build-time file-level import relation scan; index/schema/retrieval untouched",
+    "django_13195": "seam E for the hidden file (no static import relation; dynamic call through an argument)",
+    "django_16256": "canonical import-only hidden co-edit; recovered"
+  },
+  "change": {
+    "mechanism": "import_reexport_rescue",
+    "gates": [
+      "pooled credible-source support candidate imports a co-edit anchor via exact package __init__ re-export chain (init_reexport)",
+      "task-token affinity on imported names or candidate stem",
+      "edge-fan hub bound <= 25 (MAX_NEIGHBOR_GLOBAL_FANIN)",
+      "candidate not __init__/generic-infra/vendored/test/docs",
+      "capsule holds <= 4 distinct base files (IMPORT_RESCUE_MAX_BASE_FILES)",
+      "max 1 per capsule (IMPORT_REEXPORT_RESCUE_MAX_PER_CAPSULE)",
+      "only in co-edit selection capacity M97/M98 left unused",
+      "HIGH tier: displaces duplicate/generic/docs slots only; support-only, never lead"
+    ],
+    "rejected_designs": [
+      "injection-shaped import lane (0 gold in every gated audit slice)",
+      "plain name-import rescues (65/67 non-gold under affinity gate)",
+      "proximity-gate loosening, support-cap increases",
+      "parser/index schema change + 100-workspace reindex (perturbs calibrated graph scoring; not the smallest safe change)"
+    ],
+    "files_changed": [
+      "src/parsers/pythonFileImports.ts (new)",
+      "src/parsers/pythonFileImports.test.ts (new)",
+      "src/capsuleV2/coeditExpansion.ts",
+      "src/capsuleV2/coeditExpansion.test.ts",
+      "src/capsuleV2/buildCapsuleV2.ts",
+      "src/capsuleV2/types.ts",
+      "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m99_import_edge_gap_audit.ts (new)",
+      "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m99_deterministic_scoreboard.ts (new)"
+    ]
+  },
+  "audit": {
+    "cases_with_hidden_gold": 29,
+    "hidden_gold_files": 42,
+    "import_linked_hidden_files": { "dev": 8, "holdout": 12 },
+    "no_import_relation": { "dev": 12, "holdout": 10 },
+    "index_import_edge_presence_for_import_pairs": "0/43",
+    "absent_from_pool_hidden_files": 31
+  },
+  "scoreboard": {
+    "all": {
+      "n": 99,
+      "recall_at_5": { "m98": 0.7214, "m99": 0.7264 },
+      "all_gold_in_capsule": { "m98": 0.7071, "m99": 0.7172 },
+      "any_gold_in_capsule": { "m98": 0.7576, "m99": 0.7576 },
+      "recall_at_1": { "m98": 0.5034, "m99": 0.5034 },
+      "lead_pivot_is_source_gold": { "m98": 0.5152, "m99": 0.5152 },
+      "hidden_coedit_recall": { "m98": 0.5889, "m99": 0.5889 },
+      "mean_capsule_file_count": { "m98": 3.9192, "m99": 3.9293 },
+      "median_capsule_est_tokens": { "m98": 1152, "m99": 1152 },
+      "p90_capsule_est_tokens": { "m98": 3536, "m99": 3536 },
+      "outcomes": { "excellent": 26, "good": 22, "partial": 2, "wrong_pivot": 11, "overpacked": 14, "miss": 24 },
+      "outcome_flips_vs_m98": 0
+    },
+    "dev": { "all_gold_in_capsule": { "m98": 0.7833, "m99": 0.8 }, "other_metrics": "unchanged" },
+    "holdout": "byte-identical to M98 on every metric",
+    "multi_file": { "n": 15, "all_gold_in_capsule": { "m98": 0.4, "m99": 0.4667 }, "hidden_coedit_recall": 0.5889 },
+    "import_only_suspected": { "n": 16, "all_gold_in_capsule": { "m98": 0.0, "m99": 0.0625 } },
+    "anchorless": { "n": 13, "delta": "unchanged" },
+    "all_gold_flips_vs_m98": [{ "instance_id": "django__django-16256", "direction": "gained", "cohort": "dev" }]
+  },
+  "import_lane": {
+    "considered": 51,
+    "kept": 1,
+    "kept_gold": 1,
+    "pruned": 0,
+    "hub_rejected": 0,
+    "ambiguous_rejected": 50,
+    "evidence_types": { "import_reexport_rescue": 1 }
+  },
+  "retrieval_evals": {
+    "proof": "pre/post A/B (M99 source diff stashed) — byte-identical CSVs for both fixtures",
+    "expanded": { "evaluated": 20, "top1": 0.8, "top3": 1.0, "pivot": 0.95 },
+    "cross_repo_30": { "evaluated": 30, "top1": 0.667, "top3": 0.8, "pivot": 0.733 },
+    "note": "committed expanded baseline stale since aa62cc4; working-tree cross_repo_30 baseline also predates M95-M98 capsule changes; A/B is the valid no-change proof"
+  },
+  "verification": {
+    "bun_test": "3479 pass, 0 fail",
+    "typecheck": "clean",
+    "typecheck_benchmarks": "clean",
+    "git_diff_check": "clean"
+  },
+  "success_criteria": "14/14 pass",
+  "verdict": "MIXED",
+  "verdict_reason": "all criteria pass and the recovery is surgical/cost-free, but the recall gain is dev-only (holdout byte-identical by design)",
+  "recommendation": "proceed to candidate recall improvement (31/42 hidden gold files never enter the retrieval pool; relation evidence is no longer the binding constraint)"
+}
