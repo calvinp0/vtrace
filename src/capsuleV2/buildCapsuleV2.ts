@@ -80,6 +80,11 @@ import {
 } from "./directEvidenceAnchoring";
 import { anchorGraphNeighbors, type GraphNeighborResult } from "./graphNeighborAnchoring";
 import {
+  COEDIT_BUDGET_FRACTION,
+  expandCoeditSupport,
+  orderSupportWithCoedit,
+} from "./coeditExpansion";
+import {
   classifyGenericLexicalDecoy,
   collectQueryTokens,
   taskNamesCandidatePath,
@@ -752,14 +757,61 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // non-debug intents every signal is false, so this reduces to final order.
   // Recovered graph neighbours are appended AFTER every real support candidate, so
   // they only fill a leftover slot and never displace a file vtrace already found.
-  const orderedSupport = [
-    ...[...supportCandidates].sort(
-      (left, right) =>
-        supportTier(left) - supportTier(right)
-        || right.candidate.scores.final - left.candidate.scores.final,
+  const baseSupportOrder = [...supportCandidates].sort(
+    (left, right) =>
+      supportTier(left) - supportTier(right)
+      || right.candidate.scores.final - left.candidate.scores.final,
+  );
+
+  // Hidden co-edit support expansion (M97). With a credible source lead pivot,
+  // relation-backed sibling files (edge-connected package neighbours with
+  // task-word affinity, generated-artifact pairs, or pooled siblings the support
+  // budget squeezed out) enter as SUPPORT-only co-edit candidates. Placement is
+  // displacement-safe: co-edit entries rank BEHIND every winner that introduces a
+  // genuinely new, non-generic file, and only ahead of duplicate-file /
+  // generic-infra winners — so a co-edit can reclaim a slot spent on a second
+  // symbol of an already-present file but never evict a distinct support file
+  // vtrace found on its own evidence.
+  const coedit = expandCoeditSupport({
+    db: input.db,
+    task: input.task,
+    pivotEntries: pivotCandidates,
+    supportEntries: baseSupportOrder,
+    winnerSymbolIds: new Set(
+      baseSupportOrder.slice(0, allocation.maxSupport).map((e) => e.candidate.symbolId),
     ),
-    ...graphNeighborSupport,
-  ];
+    poolFilePaths: new Set(candidates.map((c) => c.filePath)),
+    ids: { anchorSymbolIds, titleSymbolIds, literalAnchorIds, directEvidenceStrongIds, suppressedDecoyIds },
+  });
+  const coeditSymbolIds = new Set(coedit.entries.map((e) => e.candidate.symbolId));
+
+  let orderedSupport: RefinedRoledCandidate[];
+  let displaceableWinners: RefinedRoledCandidate[] = [];
+  if (coedit.entries.length === 0) {
+    orderedSupport = [...baseSupportOrder, ...graphNeighborSupport];
+  } else {
+    const order = orderSupportWithCoedit({
+      baseOrder: baseSupportOrder,
+      coeditEntries: coedit.entries,
+      rescuedSymbolIds: coedit.rescuedSymbolIds,
+      pivotFilePaths: new Set(pivotCandidates.map((e) => e.candidate.filePath)),
+      maxSupport: allocation.maxSupport,
+      // Generic-infrastructure-tier support is junk a co-edit may replace.
+      isProtectedTier: (entry) => supportTier(entry) !== 2,
+    });
+    displaceableWinners = order.displaceableWinners;
+    orderedSupport = [
+      ...order.ordered,
+      ...graphNeighborSupport.filter((e) => !coeditSymbolIds.has(e.candidate.symbolId)),
+    ];
+  }
+
+  // Combined token ceiling for co-edit items, so the lane can never inflate the
+  // capsule: whatever does not fit under the fraction is discarded (and counted).
+  const coeditTokenCeiling = Math.floor(input.maxTokens * COEDIT_BUDGET_FRACTION);
+  let coeditTokensUsed = 0;
+  let coeditBudgetLimitedCount = 0;
+  const renderedSupportIds = new Set<string>();
 
   for (const entry of orderedSupport) {
     if (support.length >= allocation.maxSupport) {
@@ -771,9 +823,45 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       discarded.push(toDiscarded(entry, "over budget: no room for this support item"));
       continue;
     }
+    if (coeditSymbolIds.has(entry.candidate.symbolId)) {
+      if (coeditTokensUsed + item.estimated_tokens > coeditTokenCeiling) {
+        coeditBudgetLimitedCount += 1;
+        discarded.push(toDiscarded(entry, "co-edit token ceiling: over the co-edit budget fraction"));
+        continue;
+      }
+      coeditTokensUsed += item.estimated_tokens;
+    }
     usedTokens += item.estimated_tokens;
+    renderedSupportIds.add(entry.candidate.symbolId);
     support.push(item);
   }
+
+  // Diagnostics: which displaceable winners actually lost their slot to a co-edit
+  // candidate (rendered co-edit present AND the winner did not render).
+  const coeditRendered = coedit.entries.some((e) => renderedSupportIds.has(e.candidate.symbolId));
+  const coeditDisplaced = coeditRendered
+    ? displaceableWinners
+        .filter((w) => !renderedSupportIds.has(w.candidate.symbolId))
+        .map((w) => ({ path: w.candidate.filePath, symbol: w.candidate.localName }))
+    : [];
+  const coeditDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
+    coedit.fired || coedit.highDegreeRejectedCount > 0 || coedit.ambiguousRejectedCount > 0
+      ? {
+          coedit_lane_fired: coedit.fired,
+          ...(coedit.anchors.length > 0 ? { coedit_anchors: coedit.anchors } : {}),
+          ...(coedit.candidates.length > 0 ? { coedit_candidates: coedit.candidates } : {}),
+          ...(coedit.highDegreeRejectedCount > 0
+            ? { coedit_high_degree_rejected_count: coedit.highDegreeRejectedCount }
+            : {}),
+          ...(coedit.ambiguousRejectedCount > 0
+            ? { coedit_ambiguous_rejected_count: coedit.ambiguousRejectedCount }
+            : {}),
+          ...(coeditBudgetLimitedCount > 0
+            ? { coedit_budget_limited_count: coeditBudgetLimitedCount }
+            : {}),
+          ...(coeditDisplaced.length > 0 ? { coedit_displaced: coeditDisplaced } : {}),
+        }
+      : {};
 
   // Documentation candidate source: query-relevant markdown sections fill any
   // remaining SUPPORT budget as summaries (never pivots — docs are not edit
@@ -867,6 +955,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...literalAnchorDiagnostics,
       ...directEvidenceDiagnostics,
       ...graphNeighborDiagnostics,
+      ...coeditDiagnostics,
       ...genericLexicalDecoyDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
       localization_signals: localizationSignals,

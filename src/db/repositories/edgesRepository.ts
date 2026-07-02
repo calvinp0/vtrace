@@ -151,6 +151,85 @@ export function listAllEdges(db: Database): EdgeRecord[] {
   return rows.map(edgeRowToRecord);
 }
 
+/**
+ * One cross-file edge endpoint as seen from an ANCHOR file: the other file, the
+ * edge type, the symbol name on the anchor side, and the id/name/kind of the
+ * symbol on the OTHER side. Powers file-level co-edit neighbour mining without
+ * per-symbol round trips.
+ */
+export interface CrossFileEdgeEndpoint {
+  otherPath: string;
+  edgeType: EdgeRecord["edgeType"];
+  anchorSymbolName: string;
+  otherSymbolId: string;
+  otherSymbolName: string;
+  otherSymbolKind: string;
+}
+
+interface CrossFileEdgeRow {
+  other_path: string;
+  edge_type: string;
+  anchor_name: string;
+  other_symbol_id: string;
+  other_name: string;
+  other_kind: string;
+}
+
+/** Every edge with exactly one endpoint inside `filePath`, both directions. */
+export function listCrossFileEdgeEndpointsForFile(
+  db: Database,
+  filePath: FilePath,
+): CrossFileEdgeEndpoint[] {
+  const normalized = normalizeFilePath(filePath);
+  const rows = db.query(`
+    SELECT
+      CASE WHEN src_files.path = ?1 THEN dst_files.path ELSE src_files.path END AS other_path,
+      edges.edge_type AS edge_type,
+      CASE WHEN src_files.path = ?1 THEN src_symbols.local_name ELSE dst_symbols.local_name END AS anchor_name,
+      CASE WHEN src_files.path = ?1 THEN dst_symbols.id ELSE src_symbols.id END AS other_symbol_id,
+      CASE WHEN src_files.path = ?1 THEN dst_symbols.local_name ELSE src_symbols.local_name END AS other_name,
+      CASE WHEN src_files.path = ?1 THEN dst_symbols.kind ELSE src_symbols.kind END AS other_kind
+    FROM edges
+    INNER JOIN symbols AS src_symbols ON src_symbols.id = edges.src_symbol_id
+    INNER JOIN symbols AS dst_symbols ON dst_symbols.id = edges.dst_symbol_id
+    INNER JOIN files AS src_files ON src_files.id = src_symbols.file_id
+    INNER JOIN files AS dst_files ON dst_files.id = dst_symbols.file_id
+    WHERE (src_files.path = ?1 AND dst_files.path != ?1)
+       OR (dst_files.path = ?1 AND src_files.path != ?1)
+    ORDER BY edges.id ASC
+  `).all(normalized) as CrossFileEdgeRow[];
+
+  return rows.map((row) => ({
+    otherPath: row.other_path,
+    edgeType: row.edge_type as EdgeRecord["edgeType"],
+    anchorSymbolName: row.anchor_name,
+    otherSymbolId: row.other_symbol_id,
+    otherSymbolName: row.other_name,
+    otherSymbolKind: row.other_kind,
+  }));
+}
+
+/**
+ * How many DISTINCT other files `filePath` shares at least one edge with (either
+ * direction). A cheap file-level fan-in/fan-out measure: a repo-wide utility
+ * (`_api/__init__.py`) touches hundreds of files, a genuine co-edit sibling a
+ * handful.
+ */
+export function countCrossFileNeighborFiles(db: Database, filePath: FilePath): number {
+  const normalized = normalizeFilePath(filePath);
+  const row = db.query(`
+    SELECT COUNT(DISTINCT CASE WHEN src_files.path = ?1 THEN dst_files.path ELSE src_files.path END) AS n
+    FROM edges
+    INNER JOIN symbols AS src_symbols ON src_symbols.id = edges.src_symbol_id
+    INNER JOIN symbols AS dst_symbols ON dst_symbols.id = edges.dst_symbol_id
+    INNER JOIN files AS src_files ON src_files.id = src_symbols.file_id
+    INNER JOIN files AS dst_files ON dst_files.id = dst_symbols.file_id
+    WHERE (src_files.path = ?1 AND dst_files.path != ?1)
+       OR (dst_files.path = ?1 AND src_files.path != ?1)
+  `).get(normalized) as { n: number } | undefined;
+  return row?.n ?? 0;
+}
+
 function edgeRowToRecord(row: EdgeRow): EdgeRecord {
   return {
     id: row.id,

@@ -398,6 +398,29 @@ export interface CapsuleV2Diagnostics {
   /** The seed→neighbour links the expansion added. */
   graph_neighbor_matches?: GraphNeighborMatchDiagnostic[];
   /**
+   * Bounded hidden co-edit support expansion (M97). When the capsule leads with a
+   * credible source pivot, relation-backed sibling files (edge-connected package
+   * neighbours with task-word affinity, generated-artifact pairs, or pooled
+   * siblings squeezed out of the support budget) are promoted/injected as
+   * SUPPORT-only co-edit candidates — capped, budget-limited, and never able to
+   * displace a new-file, non-generic support item or become the lead. Present
+   * only when the lane evaluated at least one anchor.
+   */
+  coedit_lane_fired?: boolean;
+  /** The anchor files/symbols the expansion mined from. */
+  coedit_anchors?: Array<{ path: string; symbol: string }>;
+  /** Selected co-edit candidates (rescued from the pool or freshly injected). */
+  coedit_candidates?: CoeditCandidateDiagnostic[];
+  /** Hub-shaped rejections: anchors with too many qualifying neighbours, or
+   * neighbour files edge-connected to too many distinct files repo-wide. */
+  coedit_high_degree_rejected_count?: number;
+  /** Neighbours rejected as ambiguous (volume without affinity) or beyond the cap. */
+  coedit_ambiguous_rejected_count?: number;
+  /** Co-edit items dropped by the per-capsule co-edit token ceiling. */
+  coedit_budget_limited_count?: number;
+  /** Displaceable support items that lost their slot to a co-edit candidate. */
+  coedit_displaced?: Array<{ path: string; symbol: string }>;
+  /**
    * Generic-infrastructure lexical-decoy suppression. A generic bug-report word
    * ("deprecation", "dict", "utils") over-anchors retrieval to an
    * infrastructure/helper module NAMED after that word (`deprecation.py`, a
@@ -475,6 +498,20 @@ export interface GraphNeighborMatchDiagnostic {
   neighbor_path: string;
   neighbor_symbol: string;
   reason: string;
+}
+
+/** One selected hidden co-edit candidate (M97 lane), as diagnostics report it. */
+export interface CoeditCandidateDiagnostic {
+  path: string;
+  symbol: string;
+  /** "rescued" (already pooled, promoted) or "injected" (fresh candidate). */
+  action: string;
+  /** Relation evidence class, e.g. "edge_calls_references", "generated_artifact_pair". */
+  evidence_type: string;
+  /** The anchor file whose relations selected this candidate. */
+  anchor_path: string;
+  edge_count: number;
+  score: number;
 }
 
 /** One non-source candidate down-ranked from pivot to support. */
