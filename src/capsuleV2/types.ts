@@ -367,6 +367,25 @@ export interface CapsuleV2Diagnostics {
   /** The production symbols those literal terms resolved to. */
   literal_anchor_matches?: LiteralAnchorMatchDiagnostic[];
   /**
+   * Direct-evidence candidate anchoring (M96). Exact code mentions in the task
+   * (dotted module paths, explicit file tokens, file-stem words, mid-sentence
+   * class words, mixed-case identifiers) resolved against the index with tight
+   * ambiguity caps; resolved symbols already in the pool are boosted, missing
+   * ones injected. Present whenever at least one mention was extracted or a
+   * generic mention was rejected — so the lane's decisions are always auditable.
+   */
+  direct_evidence_search_used?: boolean;
+  /** Extracted mentions as `type:term` (present when extraction found any). */
+  direct_evidence_mentions?: string[];
+  /** The indexed production symbols the mentions resolved to. */
+  direct_evidence_matches?: DirectEvidenceMatchDiagnostic[];
+  /** Mentions dropped because they matched too many indexed files/symbols. */
+  direct_evidence_rejected_ambiguous_count?: number;
+  /** Mentions dropped by the generic-word stoplist. */
+  direct_evidence_rejected_generic_count?: number;
+  /** Pool candidates that received the bounded direct-evidence boost. */
+  direct_evidence_boosted?: DirectEvidenceBoostDiagnostic[];
+  /**
    * Bounded test/import graph-neighbour expansion. The bug report may not name the
    * production edit target, but a high-confidence candidate vtrace already found (a
    * failing test, a config/warning helper, a parser adapter, a sibling module) may
@@ -425,6 +444,25 @@ export interface LiteralAnchorMatchDiagnostic {
   term: string;
   path: string;
   symbol: string;
+}
+
+/** One exact code mention resolved to an indexed production symbol (M96). */
+export interface DirectEvidenceMatchDiagnostic {
+  /** The mention that matched (e.g. "utils.numberformat.format", "autoreload"). */
+  term: string;
+  /** The mention shape ("dotted_module_path", "file_stem_word", ...). */
+  type: string;
+  /** "strong" (file-resolved, anchor-grade) or "weak" (competitive only). */
+  tier: string;
+  path: string;
+  symbol: string;
+}
+
+/** One pool candidate boosted by a direct-evidence mention (M96). */
+export interface DirectEvidenceBoostDiagnostic {
+  path: string;
+  symbol: string;
+  tier: string;
 }
 
 /** One production neighbour added by bounded graph-neighbour expansion. */

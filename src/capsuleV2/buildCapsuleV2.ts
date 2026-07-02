@@ -72,6 +72,12 @@ import {
 } from "./nonSourceExample";
 import { anchorTitleSymbols, type TitleSymbolResult } from "./titleSymbolAnchoring";
 import { anchorLiterals, type LiteralAnchorResult } from "./literalAnchoring";
+import {
+  anchorDirectEvidence,
+  boostScoresForDirectEvidence,
+  type DirectEvidenceResult,
+  type WeakDirectEvidenceOrdering,
+} from "./directEvidenceAnchoring";
 import { anchorGraphNeighbors, type GraphNeighborResult } from "./graphNeighborAnchoring";
 import {
   classifyGenericLexicalDecoy,
@@ -290,6 +296,84 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       }
     : {};
 
+  // Direct-evidence candidate anchoring (M96). The issue often names the edit
+  // site in a shape none of the other lanes resolves — a dotted module path
+  // (`utils.numberformat.format`), an explicit file token, a bare file stem
+  // (`autoreload`), a mid-sentence class word (`Count`), or a mixed-case
+  // identifier (`kernS`). Each mention is resolved against the INDEX with tight
+  // ambiguity caps; a resolved symbol already in the pool receives a bounded
+  // boost (evidence line + final floored at its tier), and a missing one is
+  // injected. Strong (file-resolved) matches are anchor-grade like title
+  // symbols; weak (stem/word) matches stay competitive-only and never join the
+  // anchor precedence tiers.
+  const directEvidence: DirectEvidenceResult = anchorDirectEvidence({ db: input.db, task: input.task });
+  const directEvidenceBoosted: Array<{ path: string; symbol: string; tier: string }> = [];
+  // WEAK-tier ordering metadata: the boosted/injected final buys budget (a
+  // support slot, a free pivot slot) but never the LEAD — pivot ordering ranks
+  // weak-lane candidates behind every organically-evidenced pivot, tie-broken
+  // among themselves by the ORGANIC final they had before the lane touched them
+  // (0 for fresh injections). Weak evidence fills gaps and breaks ties; it
+  // never reorders organic evidence.
+  const weakDirectIds = new Set<string>();
+  const weakOrganicFinalById = new Map<string, number>();
+  if (directEvidence.used) {
+    const poolById = new Map(candidates.map((c) => [c.symbolId, c] as const));
+    const fresh: HybridCandidate[] = [];
+    for (const match of directEvidence.matches) {
+      const existing = poolById.get(match.symbolId);
+      if (existing !== undefined) {
+        if (match.tier === "weak" && !weakDirectIds.has(match.symbolId)) {
+          weakDirectIds.add(match.symbolId);
+          weakOrganicFinalById.set(match.symbolId, existing.scores.final);
+        }
+        existing.scores = boostScoresForDirectEvidence(existing.scores, match);
+        const line = `task names ${match.reason} (direct evidence, ${match.tier})`;
+        if (!existing.evidence.includes(line)) {
+          existing.evidence = [...existing.evidence, line].sort();
+        }
+        directEvidenceBoosted.push({ path: match.path, symbol: match.symbol, tier: match.tier });
+      }
+    }
+    const tierById = new Map(directEvidence.matches.map((m) => [m.symbolId, m.tier] as const));
+    const freshIds = new Set<string>();
+    for (const candidate of directEvidence.candidates) {
+      if (poolById.has(candidate.symbolId) || freshIds.has(candidate.symbolId)) continue;
+      freshIds.add(candidate.symbolId);
+      if (tierById.get(candidate.symbolId) === "weak") {
+        weakDirectIds.add(candidate.symbolId);
+        weakOrganicFinalById.set(candidate.symbolId, 0);
+      }
+      fresh.push(candidate);
+    }
+    if (fresh.length > 0) {
+      candidates = mergeCandidatesPreferring(fresh, candidates, CANDIDATE_POOL_SIZE);
+    }
+  }
+  const weakDirectOrdering: WeakDirectEvidenceOrdering = {
+    symbolIds: weakDirectIds,
+    organicFinalById: weakOrganicFinalById,
+  };
+  const directEvidenceStrongIds = directEvidence.strongSymbolIds;
+  const directEvidenceDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
+    directEvidence.mentions.length > 0 || directEvidence.rejectedGenericCount > 0
+      ? {
+          direct_evidence_search_used: directEvidence.used,
+          direct_evidence_mentions: directEvidence.mentions.map((m) => `${m.type}:${m.term}`),
+          direct_evidence_matches: directEvidence.matches.map((m) => ({
+            term: m.term,
+            type: m.type,
+            tier: m.tier,
+            path: m.path,
+            symbol: m.symbol,
+          })),
+          direct_evidence_rejected_ambiguous_count: directEvidence.rejectedAmbiguousCount,
+          direct_evidence_rejected_generic_count: directEvidence.rejectedGenericCount,
+          ...(directEvidenceBoosted.length > 0
+            ? { direct_evidence_boosted: directEvidenceBoosted }
+            : {}),
+        }
+      : {};
+
   // Merge the anchor-resolved targets AHEAD of everything else: an explicit source
   // anchor is the strongest edit-site signal, so it must never be crowded out of
   // the pool by the lexical ranking it was meant to correct.
@@ -427,6 +511,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
           ? { sqlRendering: { compositionTerms: sqlRenderingTrigger.compositionTerms } }
           : {}),
         ...(anchorSymbolIds.size > 0 ? { lineAnchor: { symbolIds: anchorSymbolIds } } : {}),
+        ...(weakDirectIds.size > 0 ? { weakDirectEvidence: weakDirectOrdering } : {}),
       },
     );
     refined = result.refined;
@@ -509,6 +594,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     || sqlRenderingTrigger.active
     || titleSymbolIds.size > 0
     || literalAnchorIds.size > 0
+    || directEvidenceStrongIds.size > 0
   ) {
     const anchorRank = (entry: RefinedRoledCandidate): number =>
       anchorSymbolIds.has(entry.candidate.symbolId) ? 1 : 0;
@@ -516,12 +602,25 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       sqlRenderingTrigger.active
         ? sqlRenderingRelevance(entry.candidate.localName, sqlRenderingTrigger.compositionTerms)
         : 0;
+    // A weak direct-evidence candidate orders by its ORGANIC (pre-boost) final:
+    // a boosted incumbent keeps the rank its own evidence earned; a fresh
+    // injection (organic 0) sorts behind every organically-evidenced pivot.
+    const orderingFinal = (entry: RefinedRoledCandidate): number =>
+      weakDirectIds.has(entry.candidate.symbolId)
+        ? weakOrganicFinalById.get(entry.candidate.symbolId) ?? 0
+        : entry.candidate.scores.final;
     // Direct-evidence tier: body-literal (3) > title-symbol / high-signal literal
-    // anchor (2) > normal (1). Title-symbol and literal anchors share tier 2 — an
-    // exact title-name and an exact high-signal-literal hit are comparable evidence.
+    // anchor / strong file-resolved direct evidence (2) > normal (1). The three
+    // tier-2 lanes are comparable: each is an exact, author-written pointer at
+    // the symbol/file. Weak direct-evidence (stem/class-word) matches stay in
+    // tier 1 — a circumstantial mention must not out-rank multi-signal retrieval.
     const evidenceTier = (entry: RefinedRoledCandidate): number => {
       if (entry.candidate.scores.bodyLiteral > 0) return 3;
-      if (titleSymbolIds.has(entry.candidate.symbolId) || literalAnchorIds.has(entry.candidate.symbolId)) return 2;
+      if (
+        titleSymbolIds.has(entry.candidate.symbolId)
+        || literalAnchorIds.has(entry.candidate.symbolId)
+        || directEvidenceStrongIds.has(entry.candidate.symbolId)
+      ) return 2;
       return 1;
     };
     pivotCandidates.sort(
@@ -529,7 +628,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         anchorRank(right) - anchorRank(left)
         || renderingRank(right) - renderingRank(left)
         || evidenceTier(right) - evidenceTier(left)
-        || right.candidate.scores.final - left.candidate.scores.final
+        || orderingFinal(right) - orderingFinal(left)
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
         || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
     );
@@ -565,13 +664,19 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     anchorSymbolIds.size === 0
     && !sqlRenderingTrigger.active
     && titleSymbolIds.size === 0
-    && literalAnchorIds.size === 0;
+    && literalAnchorIds.size === 0
+    && directEvidenceStrongIds.size === 0;
   if (pivotRankingVersion === "v2" && pivotCandidates.length >= 2 && noStrongAnchor) {
+    // Weak direct-evidence pivots order by ORGANIC final here too — their
+    // boosted scorecard would otherwise game the v2 rank (v2 scores are
+    // final-scaled, so the organic final is directly comparable).
+    const v2Score = (entry: RefinedRoledCandidate): number =>
+      weakDirectIds.has(entry.candidate.symbolId)
+        ? weakOrganicFinalById.get(entry.candidate.symbolId) ?? 0
+        : pivotRankMeta.get(entry.candidate.symbolId)?.score ?? entry.candidate.scores.final;
     pivotCandidates.sort((left, right) => {
-      const ls = pivotRankMeta.get(left.candidate.symbolId)?.score ?? left.candidate.scores.final;
-      const rs = pivotRankMeta.get(right.candidate.symbolId)?.score ?? right.candidate.scores.final;
       return (
-        rs - ls
+        v2Score(right) - v2Score(left)
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
         || left.candidate.symbolId.localeCompare(right.candidate.symbolId)
       );
@@ -603,6 +708,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         ...nonSourceDiagnostics,
         ...titleSymbolDiagnostics,
         ...literalAnchorDiagnostics,
+        ...directEvidenceDiagnostics,
         ...graphNeighborDiagnostics,
         ...genericLexicalDecoyDiagnostics,
       },
@@ -759,6 +865,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...nonSourceDiagnostics,
       ...titleSymbolDiagnostics,
       ...literalAnchorDiagnostics,
+      ...directEvidenceDiagnostics,
       ...graphNeighborDiagnostics,
       ...genericLexicalDecoyDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),

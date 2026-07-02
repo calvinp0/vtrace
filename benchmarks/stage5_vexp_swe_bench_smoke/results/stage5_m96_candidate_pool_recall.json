@@ -1,0 +1,84 @@
+{
+  "milestone": "M96",
+  "kind": "Direct-evidence candidate lane: high-confidence code-mention recall improvement",
+  "live_agents": false,
+  "docker": false,
+  "api_spend": false,
+  "change": {
+    "summary": "New direct-evidence candidate lane: extract exact code mentions (dotted module paths, explicit .py tokens, mid-sentence class words, mixed-case identifiers, bare file stems) from the task, resolve against the index with ambiguity caps + generic stoplist, inject missing candidates and boost in-pool ones. Strong (file-resolved) mentions are anchor-grade; weak (stem/word) mentions order by organic pre-boost final so they can never steal the lead pivot.",
+    "files_changed": [
+      "src/capsuleV2/directEvidenceAnchoring.ts",
+      "src/capsuleV2/buildCapsuleV2.ts",
+      "src/capsuleV2/debugRoles.ts",
+      "src/capsuleV2/types.ts",
+      "src/capsuleV2/directEvidenceAnchoring.test.ts",
+      "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m96_candidate_pool_gap_audit.ts",
+      "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m96_deterministic_scoreboard.ts"
+    ],
+    "caps": {
+      "max_file_mentions": 3,
+      "max_symbols_per_file": 2,
+      "max_weak_candidates": 5,
+      "max_total_candidates": 8,
+      "dotted_file_matches": 2,
+      "explicit_file_matches": 3,
+      "stem_file_matches": 2,
+      "class_word_matches": 5,
+      "word_symbol_matches": 2
+    },
+    "tiers": { "strong_final": 2.5, "weak_final": 1.9, "weak_ordering": "organic pre-boost final" }
+  },
+  "all_scored": {
+    "n": 99,
+    "m95": { "recall_at_1": 0.463, "recall_at_5": 0.652, "recall_at_10": 0.662, "mrr": 0.571, "any_gold": 0.707, "all_gold": 0.626, "lead_src_gold": 0.475, "hidden_coedit": 0.222, "median_tokens": 1127, "p90_tokens": 4447, "overpacked": 7, "miss": 29 },
+    "m96": { "recall_at_1": 0.503, "recall_at_5": 0.706, "recall_at_10": 0.706, "mrr": 0.609, "any_gold": 0.758, "all_gold": 0.657, "lead_src_gold": 0.515, "hidden_coedit": 0.256, "median_tokens": 1152, "p90_tokens": 3536, "overpacked": 11, "miss": 24 }
+  },
+  "dev": {
+    "n": 60,
+    "m95": { "recall_at_1": 0.481, "recall_at_5": 0.685, "any_gold": 0.767, "lead_src_gold": 0.5, "median_tokens": 896, "p90_tokens": 3048, "overpacked": 6 },
+    "m96": { "recall_at_1": 0.547, "recall_at_5": 0.774, "any_gold": 0.85, "lead_src_gold": 0.567, "median_tokens": 920, "p90_tokens": 2843, "overpacked": 9 }
+  },
+  "holdout": {
+    "n": 39,
+    "m95": { "recall_at_1": 0.436, "recall_at_5": 0.603, "recall_at_10": 0.603, "any_gold": 0.615, "lead_src_gold": 0.436, "median_tokens": 1484, "p90_tokens": 6329, "overpacked": 1 },
+    "m96": { "recall_at_1": 0.436, "recall_at_5": 0.603, "recall_at_10": 0.603, "any_gold": 0.615, "lead_src_gold": 0.436, "median_tokens": 1484, "p90_tokens": 6329, "overpacked": 2 },
+    "note": "net zero: sympy-19637 miss->excellent (kernS mixed-case mention) offset by one sphinx excellent->miss (support-budget displacement) and one good->overpacked"
+  },
+  "absent_gold_subset": {
+    "all": { "n": 23, "any_gold_m95": 0.0, "any_gold_m96": 0.174 },
+    "dev": { "n": 11, "any_gold_m95": 0.0, "any_gold_m96": 0.273 },
+    "holdout": { "n": 12, "any_gold_m95": 0.0, "any_gold_m96": 0.083 }
+  },
+  "direct_evidence": {
+    "all": { "cases_used": 60, "cases_gold_hit": 31, "gold_hit_rate_when_used": 0.517, "candidates_added": 72, "candidates_boosted": 46, "non_gold_matches": 86, "ambiguous_rejected": 13, "generic_rejected": 295 },
+    "type_distribution_all": { "file_stem_word": 52, "class_word": 10, "dotted_module_path": 5, "explicit_file": 1, "mixed_case_identifier": 1 }
+  },
+  "retrieval_evals": {
+    "django_expanded": { "top3_recall": [0.95, 1.0], "as_pivot_rate": [0.85, 0.95], "missing_rate": [0.0, 0.0], "mean_tokens": [1017.7, 1096.55] },
+    "cross_repo_30": { "top1_accuracy": [0.533, 0.667], "top3_recall": [0.767, 0.8], "missing_rate": [0.133, 0.133], "no_context_count": [2, 1], "mean_tokens": [1981.4, 1914.1] },
+    "regression": "none - both improve"
+  },
+  "success_criteria": {
+    "holdout_headline_gain": false,
+    "holdout_recall_at_1_guard": true,
+    "holdout_lead_guard": true,
+    "holdout_median_tokens_guard": true,
+    "holdout_p90_tokens_guard": true,
+    "overpacking_guard": true,
+    "retrieval_evals_guard": true,
+    "no_module_path_pollution": true,
+    "no_gold_leakage": true,
+    "tests_typechecks": true,
+    "no_live_spend": true
+  },
+  "verdict": "MIXED",
+  "recommendation": "proceed to hidden co-edit expansion",
+  "reports": {
+    "gap_analysis": "stage5_m96_candidate_pool_gap_analysis.md",
+    "gap_audit_json": "stage5_m96_candidate_pool_gap_audit.json",
+    "scoreboard": "stage5_m96_deterministic_scoreboard.{json,md,detail.json}",
+    "failure_modes": "stage5_m96_deterministic_failure_modes.json",
+    "by_repo_csv": "stage5_m96_deterministic_by_repo.csv",
+    "top_misses_csv": "stage5_m96_deterministic_top_misses.csv"
+  }
+}

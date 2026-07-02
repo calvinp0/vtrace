@@ -99,6 +99,17 @@ export interface RefineDebugRolesOptions {
    * kind) and ranked first among pivots — the issue named the edit site outright.
    */
   lineAnchor?: { symbolIds: ReadonlySet<string> };
+  /**
+   * WEAK direct-evidence candidates (M96 stem/class-word mentions). Their boosted
+   * final buys budget competition, but pivot ordering ranks them BEHIND every
+   * organically-evidenced pivot — tie-broken among themselves by the organic
+   * final they had before the boost (0 for fresh injections) — so a
+   * circumstantial mention can fill a free pivot slot but never steal the lead.
+   */
+  weakDirectEvidence?: {
+    symbolIds: ReadonlySet<string>;
+    organicFinalById: ReadonlyMap<string, number>;
+  };
 }
 
 export interface RefineDebugResult {
@@ -367,7 +378,9 @@ export function refineDebugRoles(
   });
 
   return {
-    refined: capPivots(refined, maxPivots, expansion, options.sqlRendering, options.lineAnchor),
+    refined: capPivots(
+      refined, maxPivots, expansion, options.sqlRendering, options.lineAnchor, options.weakDirectEvidence,
+    ),
     ...(subsystemDir === undefined ? {} : { subsystemRoot: subsystemDir }),
     sourceBodyCallFallbackUsed,
   };
@@ -502,9 +515,18 @@ function capPivots(
   expansion: ClassMethodExpansion | undefined,
   sqlRendering: { compositionTerms: ReadonlySet<string> } | undefined,
   lineAnchor: { symbolIds: ReadonlySet<string> } | undefined,
+  weakDirectEvidence: RefineDebugRolesOptions["weakDirectEvidence"],
 ): RefinedRoledCandidate[] {
   const anchorScore = (entry: RefinedRoledCandidate): number =>
     lineAnchor?.symbolIds.has(entry.candidate.symbolId) ? 1 : 0;
+  // A weak direct-evidence candidate orders by its ORGANIC (pre-boost) final:
+  // a boosted incumbent keeps exactly the rank its own evidence earned, and a
+  // fresh injection (organic 0) sorts behind every organically-evidenced pivot.
+  // The boost buys budget competition, never ordering.
+  const effectiveFinal = (entry: RefinedRoledCandidate): number =>
+    weakDirectEvidence?.symbolIds.has(entry.candidate.symbolId) === true
+      ? weakDirectEvidence.organicFinalById.get(entry.candidate.symbolId) ?? 0
+      : entry.candidate.scores.final;
   const expansionScore = (entry: RefinedRoledCandidate): number =>
     entry.signals.is_class_method_expansion_target
       ? expansion?.methodScores.get(entry.candidate.symbolId) ?? 0
@@ -522,7 +544,7 @@ function capPivots(
         anchorScore(right) - anchorScore(left)
         || renderingScore(right) - renderingScore(left)
         || expansionScore(right) - expansionScore(left)
-        || right.candidate.scores.final - left.candidate.scores.final
+        || effectiveFinal(right) - effectiveFinal(left)
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
         || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
     )
