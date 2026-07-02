@@ -26,8 +26,10 @@ import {
   computeSymbolId,
 } from "../domain/types";
 import { shapeSweQuery } from "../capsule/sweQueryShaping";
+import type { HybridCandidate } from "../retrieval/hybridRetrieval";
+import type { HybridScoreComponents } from "../retrieval/hybridScoring";
 import { buildCapsuleV2 } from "./buildCapsuleV2";
-import { collectIssueTokens } from "./debugRoles";
+import { collectIssueTokens, isGenericInfrastructure } from "./debugRoles";
 import { renderCapsuleV2Human } from "./renderHuman";
 import { CapsuleIntent, CapsuleV2Mode, type CapsuleV2Result } from "./types";
 import {
@@ -223,4 +225,37 @@ test("generic bug-report tokens do not reach the subsystem issue-token set", () 
   assert.ok(!tokens.has("error") && !tokens.has("errors"));
   // A meaningful identifier still survives to drive subsystem selection.
   assert.ok(tokens.has("deconstruct") || tokens.has("onetoonefield"));
+});
+
+// M95: a strongly-lexically-matched FUNCTION/METHOD outside the (heuristically
+// inferred, often wrong) subsystem is NOT generic infrastructure — it stays an
+// eligible edit site. A generic data-structure CLASS riding the same lexical
+// coincidence remains demoted, so this never re-promotes broad infra.
+function candidate(kind: SymbolKind, lexical: number, extra: Partial<HybridScoreComponents> = {}): HybridCandidate {
+  const scores: HybridScoreComponents = {
+    lexical, fts: lexical, tfidf: lexical, bm25: lexical, symbol: 0, path: 0,
+    testToImpl: 0, bodyLiteral: 0, domain: 0, graph: 0, graphProximity: 0,
+    centrality: 0, actionability: 1, inDegree: 0, localEvidence: lexical,
+    hubPenalty: 0, actionabilityPenalty: 0, final: lexical, ...extra,
+  };
+  return {
+    symbolId: `s:${kind}:${lexical}`, filePath: "pkg/other/thing.py",
+    fqName: "thing", localName: "thing", kind, scores, sources: [], evidence: [], matches: [],
+  };
+}
+
+test("M95: strong-lexical exemption from generic-infrastructure is function/method only", () => {
+  const outside = false; // NOT in local subsystem
+  const noNameOverlap = 0;
+  // A strong-lexical function/method escapes the generic-infra demotion.
+  assert.equal(isGenericInfrastructure(candidate(SymbolKind.Function, 0.8), outside, noNameOverlap), false);
+  assert.equal(isGenericInfrastructure(candidate(SymbolKind.Method, 0.6), outside, noNameOverlap), false);
+  // A strong-lexical CLASS does NOT — broad data-structure/util classes stay demoted.
+  assert.equal(isGenericInfrastructure(candidate(SymbolKind.Class, 0.9), outside, noNameOverlap), true);
+  // Weak lexical function is still generic infrastructure (no free pass).
+  assert.equal(isGenericInfrastructure(candidate(SymbolKind.Function, 0.2), outside, noNameOverlap), true);
+  // A real symbol-name / path pointer still exempts any kind (unchanged behaviour).
+  assert.equal(isGenericInfrastructure(candidate(SymbolKind.Class, 0, { symbol: 1 }), outside, noNameOverlap), false);
+  // In-subsystem is never generic infrastructure, regardless of kind.
+  assert.equal(isGenericInfrastructure(candidate(SymbolKind.Class, 0), true, noNameOverlap), false);
 });

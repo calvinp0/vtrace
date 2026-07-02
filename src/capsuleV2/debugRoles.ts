@@ -30,7 +30,7 @@ import { listEdgesForSymbols } from "../db/repositories/edgesRepository";
 import { EdgeType, SymbolKind } from "../domain/types";
 import { GENERIC_TOKEN_STOPLIST, type ShapedSweQuery } from "../capsule/sweQueryShaping";
 import { isLikelyTestCandidate } from "../retrieval/searchSymbolsShared";
-import { tokenize } from "../retrieval/hybridScoring";
+import { STRONG_DIRECT_LEXICAL, tokenize } from "../retrieval/hybridScoring";
 import type { HybridCandidate } from "../retrieval/hybridRetrieval";
 import {
   isQueryBuilderEntrypointSymbol,
@@ -431,7 +431,7 @@ export function buildNoContextExplanations(
 // through graph expansion or a coincidental lexical hit, not because the issue is
 // about it. Applies to any kind (a regex `Group` class OR a `normalize` helper in
 // another package): centrality/graph reach must not promote it to a pivot.
-function isGenericInfrastructure(
+export function isGenericInfrastructure(
   candidate: HybridCandidate,
   inLocalSubsystem: boolean,
   nameOverlap: number,
@@ -439,9 +439,24 @@ function isGenericInfrastructure(
   if (isLikelyTestCandidate(candidate) || inLocalSubsystem) {
     return false;
   }
+  // Direct evidence: a symbol-name / likely-file / failing-test pointer.
   const directEvidence =
     candidate.scores.symbol > 0 || candidate.scores.path > 0 || candidate.scores.testToImpl > 0;
   if (directEvidence || nameOverlap >= HELPER_NAME_OVERLAP) {
+    return false;
+  }
+  // Strong-lexical exemption, narrowed to ACTIONABLE behaviour (function/method).
+  // The subsystem inference is heuristic and mis-fires often (an `examples/units`
+  // dir winning over `lib/matplotlib`; `contrib/postgres/fields` over
+  // `db/backends/postgresql`); when it does, a strongly-lexically-matched *edit
+  // site* — a function/method that does work — must not be branded "generic
+  // infrastructure outside the subsystem". Restricting to function/method kinds
+  // keeps a broad generic data-structure/util CLASS (a regex `Group`) demoted:
+  // those ride lexical coincidence but are context, not the behavioural edit site.
+  if (
+    ACTIONABLE_FUNCTION_KINDS.has(candidate.kind)
+    && candidate.scores.lexical >= STRONG_DIRECT_LEXICAL
+  ) {
     return false;
   }
   return true;

@@ -1,0 +1,63 @@
+{
+  "milestone": "M95",
+  "kind": "Deterministic retrieval/ranking improvement (offline; no live agents, Docker, or API spend)",
+  "change": {
+    "file": "src/capsuleV2/debugRoles.ts",
+    "function": "isGenericInfrastructure",
+    "summary": "A strongly-lexically-matched actionable function/method outside the inferred subsystem is no longer demoted to generic-infrastructure support; aligns the generic-infra direct-evidence test with the base pivot gate. Narrowed to function/method kinds so a broad generic class (regex Group) stays demoted.",
+    "general": true,
+    "gold_leakage": false,
+    "token_neutral": true
+  },
+  "rejected_alternatives": [
+    "module-path -> likelyFiles (polluted the 25-candidate pool; regressed ALL recall@5 0.637->0.622)",
+    "dispatcher-demotion guard (broke the Problem-B wrapper fixture)",
+    "standard support cap 4->5/6 (no holdout gate movement; cap 6 overpacked 7->17)"
+  ],
+  "split": {
+    "file": "stage5_m95_dev_holdout_split.json",
+    "dev": 60,
+    "holdout": 39,
+    "skipped": ["psf__requests-5414 (gold-leakage guard)"]
+  },
+  "metrics": {
+    "all": {
+      "n": 99,
+      "m94": {"recall_at_1": 0.443, "recall_at_5": 0.637, "recall_at_10": 0.647, "mrr": 0.553, "any_gold_in_capsule": 0.697, "all_gold_in_capsule": 0.606, "source_gold_in_capsule": 0.697, "lead_pivot_is_source_gold": 0.455, "median_capsule_est_tokens": 1077, "p90_capsule_est_tokens": 4447, "overpacked": 7, "wrong_pivot": 10},
+      "m95": {"recall_at_1": 0.463, "recall_at_5": 0.652, "recall_at_10": 0.662, "mrr": 0.571, "any_gold_in_capsule": 0.707, "all_gold_in_capsule": 0.626, "source_gold_in_capsule": 0.707, "lead_pivot_is_source_gold": 0.475, "median_capsule_est_tokens": 1127, "p90_capsule_est_tokens": 4447, "overpacked": 7, "wrong_pivot": 9}
+    },
+    "dev": {
+      "n": 60,
+      "m94": {"recall_at_1": 0.464, "recall_at_5": 0.676, "any_gold_in_capsule": 0.767, "lead_pivot_is_source_gold": 0.483, "median_capsule_est_tokens": 808, "p90_capsule_est_tokens": 3048, "overpacked": 6, "wrong_pivot": 8},
+      "m95": {"recall_at_1": 0.481, "recall_at_5": 0.685, "any_gold_in_capsule": 0.767, "lead_pivot_is_source_gold": 0.500, "median_capsule_est_tokens": 896, "p90_capsule_est_tokens": 3048, "overpacked": 6, "wrong_pivot": 6}
+    },
+    "holdout": {
+      "n": 39,
+      "m94": {"recall_at_1": 0.410, "recall_at_5": 0.577, "recall_at_10": 0.577, "mrr": 0.488, "any_gold_in_capsule": 0.590, "all_gold_in_capsule": 0.564, "lead_pivot_is_source_gold": 0.410, "median_capsule_est_tokens": 1484, "p90_capsule_est_tokens": 6329, "overpacked": 1, "wrong_pivot": 2},
+      "m95": {"recall_at_1": 0.436, "recall_at_5": 0.603, "recall_at_10": 0.603, "mrr": 0.509, "any_gold_in_capsule": 0.615, "all_gold_in_capsule": 0.590, "lead_pivot_is_source_gold": 0.436, "median_capsule_est_tokens": 1484, "p90_capsule_est_tokens": 6329, "overpacked": 1, "wrong_pivot": 3}
+    },
+    "by_patch_shape": {
+      "single_file": {"n": 84, "m94_recall_at_5": 0.690, "m95_recall_at_5": 0.702, "m94_any": 0.702, "m95_any": 0.714},
+      "multi_file": {"n": 15, "m94_recall_at_5": 0.339, "m95_recall_at_5": 0.372, "m94_all": 0.067, "m95_all": 0.133}
+    }
+  },
+  "retrieval_evals": {
+    "django_expanded": {"n": 20, "m94_outcomes": {"top1_pivot": 16, "top3": 3, "support": 1}, "m95_outcomes": {"top1_pivot": 16, "top3": 4}, "missing": 0, "regressed": false},
+    "cross_repo_30": {"n": 30, "m94_outcomes": {"top1_pivot": 16, "top3": 7, "support": 1, "discarded": 1, "missing": 3, "no_context": 2}, "m95_outcomes": {"top1_pivot": 18, "top3": 6, "support": 1, "discarded": 1, "missing": 3, "no_context": 1}, "regressed": false}
+  },
+  "success_criteria": {
+    "1_holdout_recall5_or_any_plus5": false,
+    "2_holdout_recall1_not_down_gt2": true,
+    "3_holdout_lead_not_down_gt2": true,
+    "4_holdout_median_tokens_not_up_gt15pct": true,
+    "5_holdout_p90_tokens_not_up_gt20pct": true,
+    "6_overpacked_not_up_materially": true,
+    "7_retrieval_evals_not_regress": true,
+    "8_tests_typechecks_pass": true,
+    "9_no_live_docker_api": true,
+    "10_no_gold_leakage": true
+  },
+  "verdict": "MIXED",
+  "recommendation": "proceed to next deterministic improvement (lexical-recall gap for gold absent from the candidate pool; hidden co-edit expansion). Keep this change.",
+  "tests": ["3411 pass / 0 fail (full suite)", "src/capsuleV2/debugRoles.test.ts: added M95 strong-lexical-exemption unit test", "typecheck + typecheck:benchmarks clean"]
+}
