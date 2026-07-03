@@ -449,6 +449,32 @@ export interface CapsuleV2Diagnostics {
    * gates (M99). */
   coedit_import_ambiguous_rejected_count?: number;
   /**
+   * File-evidence deep-pool rescue (M100): support-only recovery of a source
+   * file the organic generators reach at deep rank (≤100 of a maxResults-400
+   * pass) whose raw source text carries an exact, low-ambiguity (≤3 files
+   * repo-wide) derived-task evidence term. Present only when the lane
+   * extracted at least one mention or was skipped by the distinct-file guard.
+   */
+  file_evidence_lane_fired?: boolean;
+  /** Extracted evidence terms, as `shape:term`. */
+  file_evidence_mentions?: string[];
+  /** Deep-pool files that passed the cheap gates and were content-tested. */
+  file_evidence_considered_count?: number;
+  /** Rescued support candidates with their evidence term / ambiguity / rank. */
+  file_evidence_candidates?: FileEvidenceCandidateDiagnostic[];
+  /** Files whose evidence matched only above the ambiguity cap. */
+  file_evidence_ambiguous_rejected_count?: number;
+  /** Mentions dropped by the generic-term stoplist. */
+  file_evidence_generic_rejected_count?: number;
+  /** Files skipped by the content size guard. */
+  file_evidence_size_rejected_count?: number;
+  /** Qualifying files beyond the per-capsule rescue cap. */
+  file_evidence_pruned_count?: number;
+  /** Lane skipped because the capsule is already at the distinct-file guard. */
+  file_evidence_file_cap_skipped?: boolean;
+  /** Rescued items dropped by the file-evidence token ceiling. */
+  file_evidence_budget_limited_count?: number;
+  /**
    * Generic-infrastructure lexical-decoy suppression. A generic bug-report word
    * ("deprecation", "dict", "utils") over-anchors retrieval to an
    * infrastructure/helper module NAMED after that word (`deprecation.py`, a
@@ -470,6 +496,20 @@ export interface CapsuleV2Diagnostics {
    * gold patches. Always present on a built capsule (including no_context).
    */
   localization_signals?: LocalizationSignals;
+}
+
+/** One file rescued by the file-evidence deep-pool lane (M100). */
+export interface FileEvidenceCandidateDiagnostic {
+  path: string;
+  symbol: string;
+  /** The exact task term found verbatim in the file's source text. */
+  term: string;
+  /** The evidence shape the term was extracted as (e.g. "snake_identifier"). */
+  shape: string;
+  /** Repo-wide count of files containing the term (≤ the ambiguity cap). */
+  ambiguity: number;
+  /** 1-based symbol rank of the file's best symbol in the deep organic pass. */
+  organic_rank: number;
 }
 
 /** One candidate whose generic-infrastructure lexical match was weakened. */

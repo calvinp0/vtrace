@@ -85,6 +85,10 @@ import {
   orderSupportWithCoedit,
 } from "./coeditExpansion";
 import {
+  FILE_EVIDENCE_BUDGET_FRACTION,
+  rescueFileEvidenceSupport,
+} from "./fileEvidenceRescue";
+import {
   classifyGenericLexicalDecoy,
   collectQueryTokens,
   taskNamesCandidatePath,
@@ -161,6 +165,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const weightsRecord: Record<string, number> = Object.fromEntries(Object.entries(weights));
   const allocation = allocateBudget(input.maxTokens);
 
+  const symbolSeeds = deriveSymbolSeeds(shaped);
   const retrieval = hybridRetrieve(input.db, {
     query: shaped.query,
     shaped,
@@ -168,7 +173,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     // diagnostic literal that the body-literal search needs.
     taskText: input.task,
     weights,
-    symbolSeeds: deriveSymbolSeeds(shaped),
+    symbolSeeds,
     maxResults: CANDIDATE_POOL_SIZE,
   });
   let candidates = retrieval.candidates;
@@ -808,11 +813,59 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     ];
   }
 
+  // File-evidence deep-pool rescue (M100). The candidate pool cap counts
+  // SYMBOLS (25 symbols ≈ 9 distinct files), so a real edit target the organic
+  // generators DO reach can still miss the pool entirely. When such a deep-pool
+  // source file also carries an exact, low-ambiguity derived-task evidence term
+  // verbatim in its raw source text, rescue it as a SUPPORT-only entry. The
+  // lane is doubly gated (organic reach AND exact file-level evidence — the
+  // M100 audit measured each signal alone as noise), capped at 2 files, barred
+  // from capsules already at 5 distinct files (an overpack flip needs ≥6), and
+  // placed under the M98 displacement contract below, so it can reclaim a
+  // duplicate-file/generic/docs slot but never evict a distinct new-file
+  // winner, and never touches pivots.
+  const baseWinnerFiles = new Set(pivotCandidates.map((e) => e.candidate.filePath));
+  for (const entry of orderedSupport.slice(0, allocation.maxSupport)) {
+    baseWinnerFiles.add(entry.candidate.filePath);
+  }
+  const fileEvidence = rescueFileEvidenceSupport({
+    db: input.db,
+    repoRoot: input.repoRoot,
+    task: input.task,
+    shaped,
+    weights,
+    symbolSeeds,
+    poolFilePaths: new Set([
+      ...candidates.map((c) => c.filePath),
+      ...coedit.entries.map((e) => e.candidate.filePath),
+      ...graphNeighborSupport.map((e) => e.candidate.filePath),
+    ]),
+    baseDistinctFileCount: baseWinnerFiles.size,
+    taskAllowsNonSource,
+  });
+  const fileEvidenceSymbolIds = new Set(fileEvidence.entries.map((e) => e.candidate.symbolId));
+  if (fileEvidence.entries.length > 0) {
+    const rescueOrder = orderSupportWithCoedit({
+      baseOrder: orderedSupport,
+      coeditEntries: fileEvidence.entries,
+      rescuedSymbolIds: new Set(),
+      spareOnlySymbolIds: new Set(),
+      pivotFilePaths: new Set(pivotCandidates.map((e) => e.candidate.filePath)),
+      maxSupport: allocation.maxSupport,
+      isProtectedTier: (entry) => supportTier(entry) !== 2,
+    });
+    orderedSupport = rescueOrder.ordered;
+  }
+
   // Combined token ceiling for co-edit items, so the lane can never inflate the
   // capsule: whatever does not fit under the fraction is discarded (and counted).
   const coeditTokenCeiling = Math.floor(input.maxTokens * COEDIT_BUDGET_FRACTION);
   let coeditTokensUsed = 0;
   let coeditBudgetLimitedCount = 0;
+  // Separate ceiling for file-evidence rescues, so that lane is bounded too.
+  const fileEvidenceTokenCeiling = Math.floor(input.maxTokens * FILE_EVIDENCE_BUDGET_FRACTION);
+  let fileEvidenceTokensUsed = 0;
+  let fileEvidenceBudgetLimitedCount = 0;
   const renderedSupportIds = new Set<string>();
 
   for (const entry of orderedSupport) {
@@ -832,6 +885,14 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         continue;
       }
       coeditTokensUsed += item.estimated_tokens;
+    }
+    if (fileEvidenceSymbolIds.has(entry.candidate.symbolId)) {
+      if (fileEvidenceTokensUsed + item.estimated_tokens > fileEvidenceTokenCeiling) {
+        fileEvidenceBudgetLimitedCount += 1;
+        discarded.push(toDiscarded(entry, "file-evidence token ceiling: over the rescue budget fraction"));
+        continue;
+      }
+      fileEvidenceTokensUsed += item.estimated_tokens;
     }
     usedTokens += item.estimated_tokens;
     renderedSupportIds.add(entry.candidate.symbolId);
@@ -900,6 +961,48 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
             : {}),
           ...(coedit.importAmbiguousRejectedCount > 0
             ? { coedit_import_ambiguous_rejected_count: coedit.importAmbiguousRejectedCount }
+            : {}),
+        }
+      : {};
+
+  // File-evidence rescue diagnostics: every extraction/gate decision the lane
+  // made, surfaced only when the lane did anything observable.
+  const fileEvidenceDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
+    fileEvidence.fired
+    || fileEvidence.fileCapSkipped
+    || fileEvidence.consideredCount > 0
+    || fileEvidence.ambiguousRejectedCount > 0
+      ? {
+          file_evidence_lane_fired: fileEvidence.fired,
+          file_evidence_mentions: fileEvidence.mentions.map((m) => `${m.shape}:${m.term}`),
+          file_evidence_considered_count: fileEvidence.consideredCount,
+          ...(fileEvidence.matches.length > 0
+            ? {
+                file_evidence_candidates: fileEvidence.matches.map((m) => ({
+                  path: m.path,
+                  symbol: m.symbol,
+                  term: m.term,
+                  shape: m.shape,
+                  ambiguity: m.ambiguity,
+                  organic_rank: m.organicRank,
+                })),
+              }
+            : {}),
+          ...(fileEvidence.ambiguousRejectedCount > 0
+            ? { file_evidence_ambiguous_rejected_count: fileEvidence.ambiguousRejectedCount }
+            : {}),
+          ...(fileEvidence.genericRejectedCount > 0
+            ? { file_evidence_generic_rejected_count: fileEvidence.genericRejectedCount }
+            : {}),
+          ...(fileEvidence.sizeRejectedCount > 0
+            ? { file_evidence_size_rejected_count: fileEvidence.sizeRejectedCount }
+            : {}),
+          ...(fileEvidence.prunedCount > 0
+            ? { file_evidence_pruned_count: fileEvidence.prunedCount }
+            : {}),
+          ...(fileEvidence.fileCapSkipped ? { file_evidence_file_cap_skipped: true } : {}),
+          ...(fileEvidenceBudgetLimitedCount > 0
+            ? { file_evidence_budget_limited_count: fileEvidenceBudgetLimitedCount }
             : {}),
         }
       : {};
@@ -997,6 +1100,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...directEvidenceDiagnostics,
       ...graphNeighborDiagnostics,
       ...coeditDiagnostics,
+      ...fileEvidenceDiagnostics,
       ...genericLexicalDecoyDiagnostics,
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
       localization_signals: localizationSignals,

@@ -1,0 +1,106 @@
+{
+  "milestone": "M100",
+  "kind": "Candidate-pool recall via file-evidence deep-pool rescue",
+  "live_agents": false,
+  "docker": false,
+  "api_spend": false,
+  "seam_decision": "C (symbol-counted pool cap / file aggregation drops organically-reached files); file-level evidence used as the admission selector, computed at capsule-build time",
+  "change": {
+    "module": "src/capsuleV2/fileEvidenceRescue.ts",
+    "wiring": "src/capsuleV2/buildCapsuleV2.ts (support-only, M98 displacement contract, token ceiling)",
+    "gates": {
+      "organic_rank_max": 100,
+      "deep_pool_size": 400,
+      "term_ambiguity_max": 3,
+      "max_rescued_files": 2,
+      "max_resulting_distinct_files": 5,
+      "budget_fraction": 0.15,
+      "min_term_length": 4,
+      "max_content_bytes": 524288,
+      "excluded": ["tests", "__init__", "docs/examples", "vendored/generated", "generic-infra", "non-.py", "pool-present files"]
+    }
+  },
+  "audit": {
+    "report": "stage5_m100_candidate_pool_recall_gap_analysis.md",
+    "artifact": "stage5_m100_candidate_pool_recall_gap_audit.json",
+    "hidden_gold_files": 41,
+    "absent_or_unindexed": { "dev": 18, "holdout": 15 },
+    "absent_all_source": true,
+    "organically_reachable_deep": { "dev": 10, "holdout": 10 },
+    "evidence_only_in_full_statement": { "dev": 7, "holdout": 6 },
+    "no_lexical_evidence": { "dev": 4, "holdout": 4 },
+    "pure_file_evidence_lane_precision": "1/31 dev, 1/14 holdout gold at amb<=5 (rejected)",
+    "rank_only_rescue_precision": "1/104 dev at rank<=25 source (rejected)",
+    "chosen_slice": "rank<=100 AND source AND exact derived-task term ambiguity<=3 (sim dev 1/2, holdout 1/4)"
+  },
+  "scoreboard": {
+    "all": {
+      "recall_at_5": { "m99": 0.726, "m100": 0.730 },
+      "all_gold_in_capsule": { "m99": 0.717, "m100": 0.727 },
+      "any_gold_in_capsule": { "m99": 0.758, "m100": 0.758 },
+      "lead_pivot_is_source_gold": { "m99": 0.515, "m100": 0.515 },
+      "hidden_coedit_recall": { "m99": 0.589, "m100": 0.622 },
+      "mean_capsule_files": { "m99": 3.929, "m100": 3.949 },
+      "median_tokens": { "m99": 1152, "m100": 1152 },
+      "p90_tokens": { "m99": 3536, "m100": 3536 },
+      "excellent": { "m99": 26, "m100": 27 },
+      "overpacked": { "m99": 14, "m100": 14 }
+    },
+    "dev": {
+      "recall_at_5": { "m99": 0.807, "m100": 0.813 },
+      "all_gold_in_capsule": { "m99": 0.800, "m100": 0.817 },
+      "hidden_coedit_recall": { "m99": 0.736, "m100": 0.778 }
+    },
+    "holdout": {
+      "recall_at_1": { "m99": 0.436, "m100": 0.436 },
+      "recall_at_5": { "m99": 0.603, "m100": 0.603 },
+      "any_gold_in_capsule": { "m99": 0.615, "m100": 0.615 },
+      "all_gold_in_capsule": { "m99": 0.590, "m100": 0.590 },
+      "lead_pivot_is_source_gold": { "m99": 0.436, "m100": 0.436 },
+      "mean_capsule_files": { "m99": 3.897, "m100": 3.923 }
+    },
+    "multi_file": {
+      "all_gold_in_capsule": { "m99": 0.467, "m100": 0.533 },
+      "hidden_coedit_recall": { "m99": 0.589, "m100": 0.622 }
+    },
+    "absent_pool_subset": {
+      "n": 21,
+      "all_gold_in_capsule": { "m99": 0.0, "m100": 0.048 },
+      "hidden_coedit_recall": { "m99": 0.262, "m100": 0.333 }
+    },
+    "all_gold_flips": ["django__django-13195 gained [dev]"],
+    "outcome_flips": ["django__django-13195 partial→excellent [dev]"]
+  },
+  "file_evidence_lane": {
+    "fired_cases": 2,
+    "considered_files": 666,
+    "added": 2,
+    "added_gold": 1,
+    "rendered": 2,
+    "rendered_gold": 1,
+    "ambiguous_rejected": 61,
+    "generic_rejected": 2,
+    "size_rejected": 3,
+    "file_cap_skipped_cases": 27,
+    "pruned": 0,
+    "budget_limited": 0,
+    "candidates": [
+      { "instance": "django__django-13195", "cohort": "dev", "path": "contrib/sessions/middleware.py", "term": "delete_cookie", "shape": "snake_identifier", "ambiguity": 3, "organic_rank": 94, "is_gold": true },
+      { "instance": "django__django-13658", "cohort": "holdout", "path": "core/management/commands/runserver.py", "term": "ManagementUtility", "shape": "camel_identifier", "ambiguity": 3, "organic_rank": 24, "is_gold": false }
+    ]
+  },
+  "retrieval_evals": {
+    "proof": "stash A/B (pre-change vs post-change working tree; committed baselines predate this change)",
+    "cross_repo_30": "byte-identical",
+    "django_expanded": "one row (django-13195) strictly additive: est tokens 465→468, items 26→27, all hit metrics identical"
+  },
+  "verification": {
+    "tests": "3493 pass / 0 fail (14 new in fileEvidenceRescue.test.ts)",
+    "typecheck_src": "clean",
+    "typecheck_benchmarks": "clean",
+    "git_diff_check": "clean"
+  },
+  "success_criteria": "all 14 PASS",
+  "verdict": "MIXED, lean positive",
+  "recommendation": "pause pool-recall tuning; next lever is either a task-derivation milestone (preserve full-statement literals; re-baselines all lanes) or ranking/pivot improvement (lead=src 51.5%, wrong_pivot 11)"
+}
