@@ -2382,8 +2382,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 465,
-      "used_percent": 5.81,
+      "estimated_tokens": 468,
+      "used_percent": 5.85,
       "expected_files": [
         "django/contrib/messages/storage/cookie.py",
         "django/contrib/sessions/middleware.py",
@@ -2413,7 +2413,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 26,
+      "discarded_count": 27,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -2462,16 +2462,6 @@
         ],
         "top_support": [
           {
-            "path": "http/response.py",
-            "symbol": "__init__",
-            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
-          },
-          {
-            "path": "http/response.py",
-            "symbol": "__init__",
-            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
-          },
-          {
             "path": "contrib/messages/storage/cookie.py",
             "symbol": "MessageEncoder",
             "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; strong lexical match"
@@ -2480,9 +2470,24 @@
             "path": "core/mail/message.py",
             "symbol": "message",
             "role_reason": "strong target beyond the pivot budget — actionable method — symbol-name match; strong lexical match"
+          },
+          {
+            "path": "contrib/sessions/middleware.py",
+            "symbol": "process_response",
+            "role_reason": "task literal `delete_cookie` appears in this file's source (exact match in 3 repo files; organic retrieval rank 94) (file-evidence rescue)"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "__init__",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
           }
         ],
         "top_discarded": [
+          {
+            "path": "http/response.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
           {
             "path": "http/cookie.py",
             "symbol": "parse_cookie",
@@ -2502,11 +2507,6 @@
             "path": "http/response.py",
             "symbol": "HttpResponse",
             "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "contrib/sessions/backends/base.py",
-            "symbol": "delete_test_cookie",
-            "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
       }
@@ -2525,7 +2525,7 @@
     "expected_file_discarded_rate": 0,
     "expected_symbol_hit_rate": 0.7,
     "expected_symbol_as_pivot_rate": 0.55,
-    "mean_capsule_tokens": 1097,
+    "mean_capsule_tokens": 1097.15,
     "mean_pivot_count": 2,
     "mean_support_count": 4,
     "miss_taxonomy": {
@@ -2559,7 +2559,7 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.7333,
       "expected_symbol_as_pivot_rate": 0.5333,
-      "mean_capsule_tokens": 1039.1333,
+      "mean_capsule_tokens": 1039.3333,
       "mean_pivot_count": 2,
       "mean_support_count": 4,
       "miss_taxonomy": {
@@ -2628,7 +2628,7 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.7,
       "expected_symbol_as_pivot_rate": 0.55,
-      "mean_capsule_tokens": 1097,
+      "mean_capsule_tokens": 1097.15,
       "mean_pivot_count": 2,
       "mean_support_count": 4,
       "miss_taxonomy": {
