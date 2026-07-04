@@ -870,33 +870,33 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 609,
-      "used_percent": 7.61,
+      "estimated_tokens": 1280,
+      "used_percent": 16,
       "expected_files": [
         "django/utils/numberformat.py"
       ],
       "expected_symbols": [
         "format"
       ],
-      "top_1_pivot_file": "utils/formats.py",
-      "top_1_pivot_symbol": "number_format",
+      "top_1_pivot_file": "utils/numberformat.py",
+      "top_1_pivot_symbol": "format",
       "top_3_files": [
+        "utils/numberformat.py",
         "utils/formats.py",
-        "utils/html.py",
-        "utils/numberformat.py"
+        "utils/dateformat.py"
       ],
-      "expected_file_best_rank": 3,
-      "expected_file_role": "support",
-      "expected_symbol_best_rank": 3,
-      "expected_symbol_role": "support",
-      "contains_expected_file_top1": false,
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
       "discarded_count": 26,
-      "result": "hit_top3",
+      "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
       "filtered_generic_symbols": [],
@@ -925,26 +925,26 @@
       "diagnostics": {
         "top_pivots": [
           {
+            "path": "utils/numberformat.py",
+            "symbol": "format",
+            "role_reason": "task names this symbol directly — edit target despite delegating to local helpers"
+          },
+          {
             "path": "utils/formats.py",
             "symbol": "number_format",
             "role_reason": "local implementation helper whose name matches the issue — likely edit site"
-          },
-          {
-            "path": "utils/html.py",
-            "symbol": "format_html",
-            "role_reason": "actionable function — strong lexical match; issue-domain relevance"
           }
         ],
         "top_support": [
           {
-            "path": "utils/numberformat.py",
+            "path": "utils/dateformat.py",
             "symbol": "format",
             "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
           },
           {
-            "path": "utils/dateformat.py",
-            "symbol": "format",
-            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+            "path": "utils/html.py",
+            "symbol": "format_html",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
           },
           {
             "path": "utils/_os.py",
@@ -1870,8 +1870,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 1258,
-      "used_percent": 15.73,
+      "estimated_tokens": 1430,
+      "used_percent": 17.88,
       "expected_files": [
         "django/db/models/query.py"
       ],
@@ -1882,8 +1882,8 @@
       "top_1_pivot_symbol": "in_bulk",
       "top_3_files": [
         "db/models/query.py",
-        "db/models/fields/related_descriptors.py",
-        "db/models/fields/related.py"
+        "contrib/admin/filters.py",
+        "db/models/fields/related_descriptors.py"
       ],
       "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
@@ -1893,8 +1893,8 @@
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": true,
-      "pivot_count": 2,
-      "support_count": 4,
+      "pivot_count": 3,
+      "support_count": 3,
       "discarded_count": 28,
       "result": "hit_top1_pivot",
       "miss_category": "none",
@@ -1941,6 +1941,11 @@
             "path": "db/models/query.py",
             "symbol": "bulk_update",
             "role_reason": "existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "contrib/admin/filters.py",
+            "symbol": "queryset",
+            "role_reason": "actionable method — symbol-name match; strong lexical match"
           }
         ],
         "top_support": [
@@ -1958,38 +1963,33 @@
             "path": "db/models/options.py",
             "symbol": "total_unique_constraints",
             "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
-          },
-          {
-            "path": "db/models/query.py",
-            "symbol": "bulk_create",
-            "role_reason": "strong target beyond the pivot budget — existing method recovered from Class.method expansion — more actionable than containing class"
           }
         ],
         "top_discarded": [
           {
+            "path": "db/models/query.py",
+            "symbol": "bulk_create",
+            "discard_reason": "beyond standard support budget (max 3)"
+          },
+          {
             "path": "db/models/fields/related_descriptors.py",
             "symbol": "get_prefetch_queryset",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "contrib/admin/filters.py",
             "symbol": "queryset",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "contrib/admin/filters.py",
             "symbol": "queryset",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "contrib/admin/filters.py",
-            "symbol": "queryset",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "db/backends/oracle/features.py",
             "symbol": "allows_multiple_constraints_on_same_fields",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           }
         ]
       }
@@ -2517,17 +2517,17 @@
     "instances_evaluated": 20,
     "workspace_error_count": 0,
     "no_context_count": 0,
-    "top_1_file_accuracy": 0.8,
+    "top_1_file_accuracy": 0.85,
     "top_3_file_recall": 1,
-    "expected_file_as_pivot_rate": 0.95,
-    "expected_file_as_support_rate": 0.05,
+    "expected_file_as_pivot_rate": 1,
+    "expected_file_as_support_rate": 0,
     "expected_file_missing_rate": 0,
     "expected_file_discarded_rate": 0,
     "expected_symbol_hit_rate": 0.7,
-    "expected_symbol_as_pivot_rate": 0.55,
-    "mean_capsule_tokens": 1097.15,
-    "mean_pivot_count": 2,
-    "mean_support_count": 4,
+    "expected_symbol_as_pivot_rate": 0.6,
+    "mean_capsule_tokens": 1139.3,
+    "mean_pivot_count": 2.05,
+    "mean_support_count": 3.95,
     "miss_taxonomy": {
       "none": 20,
       "missing_from_candidates": 0,
@@ -2551,17 +2551,17 @@
       "instances_evaluated": 15,
       "workspace_error_count": 0,
       "no_context_count": 0,
-      "top_1_file_accuracy": 0.7333,
+      "top_1_file_accuracy": 0.8,
       "top_3_file_recall": 1,
-      "expected_file_as_pivot_rate": 0.9333,
-      "expected_file_as_support_rate": 0.0667,
+      "expected_file_as_pivot_rate": 1,
+      "expected_file_as_support_rate": 0,
       "expected_file_missing_rate": 0,
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.7333,
-      "expected_symbol_as_pivot_rate": 0.5333,
-      "mean_capsule_tokens": 1039.3333,
-      "mean_pivot_count": 2,
-      "mean_support_count": 4,
+      "expected_symbol_as_pivot_rate": 0.6,
+      "mean_capsule_tokens": 1095.5333,
+      "mean_pivot_count": 2.0667,
+      "mean_support_count": 3.9333,
       "miss_taxonomy": {
         "none": 15,
         "missing_from_candidates": 0,
@@ -2620,17 +2620,17 @@
       "instances_evaluated": 20,
       "workspace_error_count": 0,
       "no_context_count": 0,
-      "top_1_file_accuracy": 0.8,
+      "top_1_file_accuracy": 0.85,
       "top_3_file_recall": 1,
-      "expected_file_as_pivot_rate": 0.95,
-      "expected_file_as_support_rate": 0.05,
+      "expected_file_as_pivot_rate": 1,
+      "expected_file_as_support_rate": 0,
       "expected_file_missing_rate": 0,
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.7,
-      "expected_symbol_as_pivot_rate": 0.55,
-      "mean_capsule_tokens": 1097.15,
-      "mean_pivot_count": 2,
-      "mean_support_count": 4,
+      "expected_symbol_as_pivot_rate": 0.6,
+      "mean_capsule_tokens": 1139.3,
+      "mean_pivot_count": 2.05,
+      "mean_support_count": 3.95,
       "miss_taxonomy": {
         "none": 20,
         "missing_from_candidates": 0,

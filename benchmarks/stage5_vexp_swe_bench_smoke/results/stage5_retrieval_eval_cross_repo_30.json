@@ -138,8 +138,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 2076,
-      "used_percent": 25.95,
+      "estimated_tokens": 2120,
+      "used_percent": 26.5,
       "expected_files": [
         "sympy/combinatorics/permutations.py"
       ],
@@ -150,8 +150,8 @@
       "top_1_pivot_symbol": "Permutation",
       "top_3_files": [
         "sympy/combinatorics/permutations.py",
-        "sympy/polys/constructor.py",
-        "sympy/combinatorics/perm_groups.py"
+        "sympy/combinatorics/perm_groups.py",
+        "sympy/polys/constructor.py"
       ],
       "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
@@ -161,9 +161,9 @@
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": true,
-      "pivot_count": 2,
-      "support_count": 4,
-      "discarded_count": 24,
+      "pivot_count": 3,
+      "support_count": 3,
+      "discarded_count": 25,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -214,6 +214,11 @@
             "path": "sympy/combinatorics/permutations.py",
             "symbol": "Cycle",
             "role_reason": "actionable class — strong lexical match; issue-domain relevance; 11 dependents"
+          },
+          {
+            "path": "sympy/combinatorics/perm_groups.py",
+            "symbol": "PermutationGroup",
+            "role_reason": "actionable class — symbol-name match; lexical match; issue-domain relevance; 50 dependents"
           }
         ],
         "top_support": [
@@ -223,46 +228,41 @@
             "role_reason": "strong target beyond the pivot budget — actionable function — symbol-name match; strong lexical match"
           },
           {
-            "path": "sympy/combinatorics/perm_groups.py",
-            "symbol": "PermutationGroup",
-            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; lexical match; issue-domain relevance; 50 dependents"
-          },
-          {
             "path": "sympy/core/sympify.py",
             "symbol": "sympify",
             "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; 395 dependents"
           },
           {
-            "path": "sympy/combinatorics/permutations.py",
-            "symbol": "cycle_structure",
-            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+            "path": "sympy/combinatorics/named_groups.py",
+            "symbol": "AlternatingGroup",
+            "role_reason": "likely co-edit sibling of a high-confidence anchor"
           }
         ],
         "top_discarded": [
           {
+            "path": "sympy/combinatorics/permutations.py",
+            "symbol": "cycle_structure",
+            "discard_reason": "beyond standard support budget (max 3)"
+          },
+          {
             "path": "sympy/strategies/branch/core.py",
             "symbol": "identity",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "sympy/combinatorics/permutations.py",
             "symbol": "cycles",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "sympy/core/expr.py",
             "symbol": "is_constant",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "sympy/combinatorics/permutations.py",
             "symbol": "__new__",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "sympy/combinatorics/permutations.py",
-            "symbol": "mul_inv",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           }
         ]
       }
@@ -1036,8 +1036,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 2250,
-      "used_percent": 28.13,
+      "estimated_tokens": 4812,
+      "used_percent": 60.15,
       "expected_files": [
         "astropy/units/format/cds.py",
         "astropy/units/format/cds_parsetab.py"
@@ -1058,15 +1058,15 @@
         "astropy/io/ascii/mrt.py"
       ],
       "expected_file_best_rank": 2,
-      "expected_file_role": "support",
+      "expected_file_role": "pivot",
       "expected_symbol_best_rank": null,
       "expected_symbol_role": "missing",
       "contains_expected_file_top1": false,
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": false,
-      "pivot_count": 2,
-      "support_count": 4,
+      "pivot_count": 3,
+      "support_count": 3,
       "discarded_count": 28,
       "result": "hit_top3",
       "miss_category": "none",
@@ -1114,14 +1114,14 @@
             "path": "astropy/io/ascii/cds.py",
             "symbol": "read",
             "role_reason": "actionable method — in a likely edit file; strong lexical match"
-          }
-        ],
-        "top_support": [
+          },
           {
             "path": "astropy/units/format/cds.py",
             "symbol": "CDS",
-            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; strong lexical match"
-          },
+            "role_reason": "actionable class — symbol-name match; strong lexical match"
+          }
+        ],
+        "top_support": [
           {
             "path": "astropy/io/ascii/mrt.py",
             "symbol": "Mrt",
@@ -1142,27 +1142,27 @@
           {
             "path": "astropy/io/ascii/mrt.py",
             "symbol": "MrtSplitter",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "astropy/io/ascii/mrt.py",
             "symbol": "MrtData",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "astropy/io/ascii/mrt.py",
             "symbol": "MrtHeader",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "astropy/io/ascii/mrt.py",
             "symbol": "MRT_TEMPLATE",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "astropy/io/ascii/cparser.pyx",
             "symbol": "FileString",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           }
         ]
       }
@@ -2170,8 +2170,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 2731,
-      "used_percent": 34.14,
+      "estimated_tokens": 4046,
+      "used_percent": 50.58,
       "expected_files": [
         "astropy/io/fits/card.py"
       ],
@@ -2194,8 +2194,8 @@
       "contains_expected_file_top3": false,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": true,
-      "pivot_count": 2,
-      "support_count": 4,
+      "pivot_count": 3,
+      "support_count": 3,
       "discarded_count": 28,
       "result": "hit_support",
       "miss_category": "present_but_support",
@@ -2240,14 +2240,14 @@
             "path": "astropy/io/fits/fitsrec.py",
             "symbol": "FITS_rec",
             "role_reason": "actionable class — symbol-name match; strong lexical match"
-          }
-        ],
-        "top_support": [
+          },
           {
             "path": "astropy/units/format/fits.py",
             "symbol": "Fits",
-            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; strong lexical match"
-          },
+            "role_reason": "actionable class — symbol-name match; strong lexical match"
+          }
+        ],
+        "top_support": [
           {
             "path": "astropy/io/fits/hdu/table.py",
             "symbol": "quotechar",
@@ -2268,27 +2268,27 @@
           {
             "path": "astropy/io/ascii/core.py",
             "symbol": "quotechar",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "astropy/io/fits/header.py",
             "symbol": "__repr__",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "astropy/io/fits/card.py",
             "symbol": "_value_FSC_RE",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "astropy/extern/configobj/configobj.py",
             "symbol": "_quote",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "astropy/io/fits/hdu/hdulist.py",
             "symbol": "fitsopen",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           }
         ]
       }
@@ -2773,8 +2773,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 595,
-      "used_percent": 7.44,
+      "estimated_tokens": 764,
+      "used_percent": 9.55,
       "expected_files": [
         "xarray/core/variable.py"
       ],
@@ -2796,8 +2796,8 @@
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": false,
-      "pivot_count": 2,
-      "support_count": 4,
+      "pivot_count": 3,
+      "support_count": 3,
       "discarded_count": 28,
       "result": "hit_top1_pivot",
       "miss_category": "none",
@@ -2844,18 +2844,18 @@
             "path": "xarray/core/variable.py",
             "symbol": "values",
             "role_reason": "existing method recovered from Class.method expansion — more actionable than containing class"
+          },
+          {
+            "path": "xarray/backends/lru_cache.py",
+            "symbol": "__setitem__",
+            "role_reason": "task names this symbol directly — edit target despite delegating to local helpers"
           }
         ],
         "top_support": [
           {
-            "path": "xarray/backends/lru_cache.py",
-            "symbol": "__setitem__",
-            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
-          },
-          {
             "path": "xarray/backends/netCDF4_.py",
             "symbol": "__setitem__",
-            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+            "role_reason": "strong target beyond the pivot budget — task names this symbol directly — edit target despite delegating to local helpers"
           },
           {
             "path": "xarray/core/dataarray.py",
@@ -2872,27 +2872,27 @@
           {
             "path": "xarray/core/variable.py",
             "symbol": "values",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "xarray/core/variable.py",
             "symbol": "_as_array_or_item",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "xarray/core/variable.py",
             "symbol": "Variable",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "xarray/core/variable.py",
             "symbol": "__setitem__",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "xarray/coding/variables.py",
             "symbol": "safe_setitem",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "discard_reason": "beyond standard support budget (max 3)"
           }
         ]
       }
@@ -3723,15 +3723,15 @@
     "no_context_count": 1,
     "top_1_file_accuracy": 0.6667,
     "top_3_file_recall": 0.8,
-    "expected_file_as_pivot_rate": 0.7333,
-    "expected_file_as_support_rate": 0.1,
+    "expected_file_as_pivot_rate": 0.7667,
+    "expected_file_as_support_rate": 0.0667,
     "expected_file_missing_rate": 0.1333,
     "expected_file_discarded_rate": 0.0333,
     "expected_symbol_hit_rate": 0.5667,
     "expected_symbol_as_pivot_rate": 0.2,
-    "mean_capsule_tokens": 1918.3333,
-    "mean_pivot_count": 1.9,
-    "mean_support_count": 3.8667,
+    "mean_capsule_tokens": 2054.6667,
+    "mean_pivot_count": 2.0333,
+    "mean_support_count": 3.7333,
     "miss_taxonomy": {
       "none": 24,
       "missing_from_candidates": 1,
@@ -3757,15 +3757,15 @@
       "no_context_count": 1,
       "top_1_file_accuracy": 0.6667,
       "top_3_file_recall": 0.8,
-      "expected_file_as_pivot_rate": 0.7333,
-      "expected_file_as_support_rate": 0.1,
+      "expected_file_as_pivot_rate": 0.7667,
+      "expected_file_as_support_rate": 0.0667,
       "expected_file_missing_rate": 0.1333,
       "expected_file_discarded_rate": 0.0333,
       "expected_symbol_hit_rate": 0.5667,
       "expected_symbol_as_pivot_rate": 0.2,
-      "mean_capsule_tokens": 1918.3333,
-      "mean_pivot_count": 1.9,
-      "mean_support_count": 3.8667,
+      "mean_capsule_tokens": 2054.6667,
+      "mean_pivot_count": 2.0333,
+      "mean_support_count": 3.7333,
       "miss_taxonomy": {
         "none": 24,
         "missing_from_candidates": 1,
@@ -3799,9 +3799,9 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.4,
       "expected_symbol_as_pivot_rate": 0,
-      "mean_capsule_tokens": 2683.8,
-      "mean_pivot_count": 2,
-      "mean_support_count": 4,
+      "mean_capsule_tokens": 2692.6,
+      "mean_pivot_count": 2.2,
+      "mean_support_count": 3.8,
       "miss_taxonomy": {
         "none": 5,
         "missing_from_candidates": 0,
@@ -3827,15 +3827,15 @@
       "no_context_count": 0,
       "top_1_file_accuracy": 0.5,
       "top_3_file_recall": 0.75,
-      "expected_file_as_pivot_rate": 0.5,
-      "expected_file_as_support_rate": 0.5,
+      "expected_file_as_pivot_rate": 0.75,
+      "expected_file_as_support_rate": 0.25,
       "expected_file_missing_rate": 0,
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.5,
       "expected_symbol_as_pivot_rate": 0,
-      "mean_capsule_tokens": 2008.5,
-      "mean_pivot_count": 2,
-      "mean_support_count": 4,
+      "mean_capsule_tokens": 2977.75,
+      "mean_pivot_count": 2.5,
+      "mean_support_count": 3.5,
       "miss_taxonomy": {
         "none": 3,
         "missing_from_candidates": 0,
@@ -4003,9 +4003,9 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.5,
       "expected_symbol_as_pivot_rate": 0.5,
-      "mean_capsule_tokens": 1891.5,
-      "mean_pivot_count": 2,
-      "mean_support_count": 4,
+      "mean_capsule_tokens": 1976,
+      "mean_pivot_count": 2.5,
+      "mean_support_count": 3.5,
       "miss_taxonomy": {
         "none": 2,
         "missing_from_candidates": 0,
