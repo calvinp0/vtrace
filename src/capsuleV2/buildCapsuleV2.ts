@@ -505,9 +505,24 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // intent we then refine roles with call-graph structure (caller vs helper,
   // local vs generic infrastructure) before capping pivots to the tier. Other
   // intents keep the base gate's own cap. Centrality never produces a pivot.
+  // Tier-2 anchored targets (M101): the symbols the issue author NAMED outright
+  // (title symbol / high-signal literal / STRONG direct evidence) — the same
+  // precedence family the pivot ordering below already honours (evidenceTier 2).
+  // Threading the ids into the role layer keeps the two stages coherent: a
+  // target the orderer would rank first must not be cap-evicted or
+  // dispatcher-demoted before ordering ever runs. Weak-direct and the
+  // support-only lanes (co-edit / file-evidence / graph-neighbour) are
+  // deliberately excluded, so a circumstantial mention can never ride this.
+  const namedAnchorIds = new Set<string>([
+    ...titleSymbolIds,
+    ...literalAnchorIds,
+    ...directEvidenceStrongIds,
+  ]);
   let refined: RefinedRoledCandidate[];
   let subsystemRoot: string | undefined;
   let sourceBodyCallFallbackUsed = false;
+  let anchoredDispatcherExemptions: Array<{ path: string; symbol: string }> = [];
+  let anchoredCapExemption: { path: string; symbol: string; symbolId: string } | undefined;
   if (debugRefinement) {
     const result = refineDebugRoles(
       input.db,
@@ -522,11 +537,14 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
           : {}),
         ...(anchorSymbolIds.size > 0 ? { lineAnchor: { symbolIds: anchorSymbolIds } } : {}),
         ...(weakDirectIds.size > 0 ? { weakDirectEvidence: weakDirectOrdering } : {}),
+        ...(namedAnchorIds.size > 0 ? { namedAnchors: { symbolIds: namedAnchorIds } } : {}),
       },
     );
     refined = result.refined;
     subsystemRoot = result.subsystemRoot;
     sourceBodyCallFallbackUsed = result.sourceBodyCallFallbackUsed;
+    anchoredDispatcherExemptions = result.anchoredDispatcherExemptions;
+    anchoredCapExemption = result.anchoredCapExemption;
   } else {
     refined = passthroughRoles(assignCandidateRoles(candidates, { maxPivots: allocation.maxPivots }));
   }
@@ -568,6 +586,26 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
           source_body_call_fallback_used: sourceBodyCallFallbackUsed,
           sql_rendering_backfill_used: sqlRenderingBackfillUsed,
           ...(subsystemRoot === undefined ? {} : { subsystem_root: subsystemRoot }),
+        }
+      : {};
+
+  // M101 anchored-target pivot guard diagnostics: which exemptions fired.
+  // Present only when the guard changed a role decision, so unaffected capsules
+  // stay byte-identical.
+  const pivotGuardDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
+    anchoredDispatcherExemptions.length > 0 || anchoredCapExemption !== undefined
+      ? {
+          pivot_selection_version: "m101_anchored_target_guard",
+          ...(anchoredDispatcherExemptions.length > 0
+            ? { anchored_dispatcher_demotions_prevented: anchoredDispatcherExemptions }
+            : {}),
+          ...(anchoredCapExemption === undefined
+            ? {}
+            : {
+                anchored_pivot_cap_exemptions: [
+                  { path: anchoredCapExemption.path, symbol: anchoredCapExemption.symbol },
+                ],
+              }),
         }
       : {};
 
@@ -633,9 +671,14 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ) return 2;
       return 1;
     };
+    // A cap-exempted anchored pivot (M101) orders LAST regardless of its tier:
+    // the exemption buys a required-target slot, never the lead.
+    const capExemptRank = (entry: RefinedRoledCandidate): number =>
+      anchoredCapExemption?.symbolId === entry.candidate.symbolId ? 1 : 0;
     pivotCandidates.sort(
       (left, right) =>
-        anchorRank(right) - anchorRank(left)
+        capExemptRank(left) - capExemptRank(right)
+        || anchorRank(right) - anchorRank(left)
         || renderingRank(right) - renderingRank(left)
         || evidenceTier(right) - evidenceTier(left)
         || orderingFinal(right) - orderingFinal(left)
@@ -768,6 +811,15 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       || right.candidate.scores.final - left.candidate.scores.final,
   );
 
+  // An anchored pivot-cap exemption (M101) CONVERTS one support slot into the
+  // extra pivot slot rather than growing the capsule: the promoted target was
+  // (or would have been) support anyway, so the total item budget — and with it
+  // file count, overpacking, and token profile — stays at the tier's cap.
+  const maxSupportSlots = Math.max(
+    0,
+    allocation.maxSupport - (anchoredCapExemption !== undefined ? 1 : 0),
+  );
+
   // Hidden co-edit support expansion (M97). With a credible source lead pivot,
   // relation-backed sibling files (edge-connected package neighbours with
   // task-word affinity, generated-artifact pairs, or pooled siblings the support
@@ -783,7 +835,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     pivotEntries: pivotCandidates,
     supportEntries: baseSupportOrder,
     winnerSymbolIds: new Set(
-      baseSupportOrder.slice(0, allocation.maxSupport).map((e) => e.candidate.symbolId),
+      baseSupportOrder.slice(0, maxSupportSlots).map((e) => e.candidate.symbolId),
     ),
     poolFilePaths: new Set(candidates.map((c) => c.filePath)),
     ids: { anchorSymbolIds, titleSymbolIds, literalAnchorIds, directEvidenceStrongIds, suppressedDecoyIds },
@@ -802,7 +854,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       rescuedSymbolIds: coedit.rescuedSymbolIds,
       spareOnlySymbolIds: coedit.spareOnlySymbolIds,
       pivotFilePaths: new Set(pivotCandidates.map((e) => e.candidate.filePath)),
-      maxSupport: allocation.maxSupport,
+      maxSupport: maxSupportSlots,
       // Generic-infrastructure-tier support is junk a co-edit may replace.
       isProtectedTier: (entry) => supportTier(entry) !== 2,
     });
@@ -825,7 +877,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // duplicate-file/generic/docs slot but never evict a distinct new-file
   // winner, and never touches pivots.
   const baseWinnerFiles = new Set(pivotCandidates.map((e) => e.candidate.filePath));
-  for (const entry of orderedSupport.slice(0, allocation.maxSupport)) {
+  for (const entry of orderedSupport.slice(0, maxSupportSlots)) {
     baseWinnerFiles.add(entry.candidate.filePath);
   }
   const fileEvidence = rescueFileEvidenceSupport({
@@ -851,7 +903,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       rescuedSymbolIds: new Set(),
       spareOnlySymbolIds: new Set(),
       pivotFilePaths: new Set(pivotCandidates.map((e) => e.candidate.filePath)),
-      maxSupport: allocation.maxSupport,
+      maxSupport: maxSupportSlots,
       isProtectedTier: (entry) => supportTier(entry) !== 2,
     });
     orderedSupport = rescueOrder.ordered;
@@ -869,8 +921,8 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const renderedSupportIds = new Set<string>();
 
   for (const entry of orderedSupport) {
-    if (support.length >= allocation.maxSupport) {
-      discarded.push(toDiscarded(entry, `beyond ${allocation.tier} support budget (max ${allocation.maxSupport})`));
+    if (support.length >= maxSupportSlots) {
+      discarded.push(toDiscarded(entry, `beyond ${allocation.tier} support budget (max ${maxSupportSlots})`));
       continue;
     }
     const item = renderSupport(input.db, input.repoRoot, entry, input.maxTokens - usedTokens);
@@ -1010,8 +1062,8 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // Documentation candidate source: query-relevant markdown sections fill any
   // remaining SUPPORT budget as summaries (never pivots — docs are not edit
   // targets). Code support takes priority, so docs are added last.
-  if (support.length < allocation.maxSupport) {
-    const docs = retrieveDocSections(input.repoRoot, shaped.query, allocation.maxSupport - support.length);
+  if (support.length < maxSupportSlots) {
+    const docs = retrieveDocSections(input.repoRoot, shaped.query, maxSupportSlots - support.length);
     for (const doc of docs) {
       const item = composeDocItem(doc);
       if (usedTokens + item.estimated_tokens > input.maxTokens) {
@@ -1093,6 +1145,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...lexicalScoringDiagnostics(shaped.query),
       ...bodyLiteralDiagnostics(bodyLiteralMatches),
       ...debugDiagnostics,
+      ...pivotGuardDiagnostics,
       ...lineAnchorDiagnostics,
       ...nonSourceDiagnostics,
       ...titleSymbolDiagnostics,

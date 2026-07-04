@@ -110,6 +110,20 @@ export interface RefineDebugRolesOptions {
     symbolIds: ReadonlySet<string>;
     organicFinalById: ReadonlyMap<string, number>;
   };
+  /**
+   * Tier-2 anchored targets (M101): the union of title-symbol, high-signal
+   * literal-anchor and STRONG direct-evidence symbol ids — candidates the issue
+   * author NAMED outright. Weak direct evidence and the support-only lanes
+   * (co-edit, file-evidence rescue, graph neighbours) are never in this set.
+   * Two effects, both one confidence notch below the line-anchor override:
+   * (a) an anchored actionable pivot is not demoted to support as an
+   * entry-point/dispatcher — a function the issue names is the edit target even
+   * when it delegates; (b) at most ONE anchored, anchor-actionable, non-test
+   * pivot that the `maxPivots` cap would evict keeps the pivot role as a
+   * bounded extra slot (standard/full tiers only) — the caller orders it LAST
+   * among pivots, so it can become a required target but never the lead.
+   */
+  namedAnchors?: { symbolIds: ReadonlySet<string> };
 }
 
 export interface RefineDebugResult {
@@ -118,6 +132,13 @@ export interface RefineDebugResult {
   subsystemRoot?: string;
   /** True when a dispatcher->helper call was recovered from source bodies. */
   sourceBodyCallFallbackUsed: boolean;
+  /** Anchored pivots the dispatcher demotion would have taken (M101 guard). */
+  anchoredDispatcherExemptions: Array<{ path: string; symbol: string }>;
+  /**
+   * The single anchored pivot kept past the `maxPivots` cap (M101 guard), or
+   * undefined. The caller must order it LAST among pivots (never the lead).
+   */
+  anchoredCapExemption?: { path: string; symbol: string; symbolId: string };
 }
 
 // Boilerplate/structural tokens the shaped query injects, plus generic verbs that
@@ -239,6 +260,10 @@ export function refineDebugRoles(
       && !isLikelyTestCandidate(entry.candidate),
   );
 
+  const isNamedAnchor = (symbolId: string): boolean =>
+    options.namedAnchors?.symbolIds.has(symbolId) ?? false;
+  const anchoredDispatcherExemptions: Array<{ path: string; symbol: string }> = [];
+
   const refined: RefinedRoledCandidate[] = base.map((entry) => {
     const candidate = entry.candidate;
     const dispatcher = isDispatcher(entry);
@@ -263,8 +288,31 @@ export function refineDebugRoles(
         : "local implementation helper whose name matches the issue — likely edit site";
     }
     if (dispatcher) {
-      role = CandidateRole.Support;
-      roleReason = "entry point/caller delegating to local helpers — the edit site is the helper it calls";
+      // Anchored-target exemption (M101): the issue NAMED this symbol (title /
+      // high-signal literal / strong direct evidence). Like a line anchor one
+      // notch up, that outranks the structural "it delegates, so the edit site
+      // is the helper" inference — a candidate holding the pivot role on its
+      // own evidence keeps it. Weak-direct and support-only lanes are never in
+      // the anchor set, so this cannot promote a circumstantial mention.
+      if (
+        role === CandidateRole.Pivot
+        && isNamedAnchor(candidate.symbolId)
+        && ACTIONABLE_FUNCTION_KINDS.has(candidate.kind)
+        && !isLikelyTestCandidate(candidate)
+      ) {
+        roleReason =
+          "task names this symbol directly — edit target despite delegating to local helpers";
+        if (
+          !anchoredDispatcherExemptions.some(
+            (e) => e.path === candidate.filePath && e.symbol === candidate.localName,
+          )
+        ) {
+          anchoredDispatcherExemptions.push({ path: candidate.filePath, symbol: candidate.localName });
+        }
+      } else {
+        role = CandidateRole.Support;
+        roleReason = "entry point/caller delegating to local helpers — the edit site is the helper it calls";
+      }
     }
 
     // Class.method expansion overrides (applied last, so they win): a recovered
@@ -377,12 +425,16 @@ export function refineDebugRoles(
     };
   });
 
+  const capped = capPivots(
+    refined, maxPivots, expansion, options.sqlRendering, options.lineAnchor, options.weakDirectEvidence,
+    options.namedAnchors,
+  );
   return {
-    refined: capPivots(
-      refined, maxPivots, expansion, options.sqlRendering, options.lineAnchor, options.weakDirectEvidence,
-    ),
+    refined: capped.refined,
     ...(subsystemDir === undefined ? {} : { subsystemRoot: subsystemDir }),
     sourceBodyCallFallbackUsed,
+    anchoredDispatcherExemptions,
+    ...(capped.capExemption === undefined ? {} : { anchoredCapExemption: capped.capExemption }),
   };
 }
 
@@ -516,7 +568,11 @@ function capPivots(
   sqlRendering: { compositionTerms: ReadonlySet<string> } | undefined,
   lineAnchor: { symbolIds: ReadonlySet<string> } | undefined,
   weakDirectEvidence: RefineDebugRolesOptions["weakDirectEvidence"],
-): RefinedRoledCandidate[] {
+  namedAnchors: RefineDebugRolesOptions["namedAnchors"],
+): {
+  refined: RefinedRoledCandidate[];
+  capExemption?: { path: string; symbol: string; symbolId: string };
+} {
   const anchorScore = (entry: RefinedRoledCandidate): number =>
     lineAnchor?.symbolIds.has(entry.candidate.symbolId) ? 1 : 0;
   // A weak direct-evidence candidate orders by its ORGANIC (pre-boost) final:
@@ -537,7 +593,7 @@ function capPivots(
     entry.signals.is_sql_rendering_implementation && sqlRendering !== undefined
       ? sqlRenderingRelevance(entry.candidate.localName, sqlRendering.compositionTerms)
       : -1;
-  const pivotIds = refined
+  const sortedPivots = refined
     .filter((entry) => entry.role === CandidateRole.Pivot)
     .sort(
       (left, right) =>
@@ -547,21 +603,52 @@ function capPivots(
         || effectiveFinal(right) - effectiveFinal(left)
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
         || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
-    )
-    .slice(0, Math.max(0, maxPivots))
-    .map((entry) => entry.candidate.symbolId);
-  const keep = new Set(pivotIds);
+    );
+  const kept = sortedPivots.slice(0, Math.max(0, maxPivots));
+  const keep = new Set(kept.map((entry) => entry.candidate.symbolId));
 
-  return refined.map((entry) => {
-    if (entry.role === CandidateRole.Pivot && !keep.has(entry.candidate.symbolId)) {
-      return {
-        ...entry,
-        role: CandidateRole.Support,
-        roleReason: `strong target beyond the pivot budget — ${entry.roleReason}`,
+  // Anchored cap exemption (M101): the issue author NAMED at most one of the
+  // cap-evicted pivots (title symbol / high-signal literal / strong direct
+  // evidence) — keep the best-ordered such target as a single bounded extra
+  // pivot slot instead of demoting it to support. Single-pivot (micro) tiers
+  // stay decisive; test candidates and non-anchor-actionable kinds (a module
+  // variable a literal happened to hit) never qualify; the caller orders the
+  // exempted pivot last, so it can never be the lead.
+  let capExemption: { path: string; symbol: string; symbolId: string } | undefined;
+  if (namedAnchors !== undefined && maxPivots >= 2) {
+    const keptFiles = new Set(kept.map((entry) => entry.candidate.filePath));
+    const exempt = sortedPivots
+      .slice(Math.max(0, maxPivots))
+      .find(
+        (entry) =>
+          namedAnchors.symbolIds.has(entry.candidate.symbolId)
+          && isAnchorActionableKind(entry.candidate.kind)
+          && !isLikelyTestCandidate(entry.candidate)
+          && !keptFiles.has(entry.candidate.filePath),
+      );
+    if (exempt !== undefined) {
+      keep.add(exempt.candidate.symbolId);
+      capExemption = {
+        path: exempt.candidate.filePath,
+        symbol: exempt.candidate.localName,
+        symbolId: exempt.candidate.symbolId,
       };
     }
-    return entry;
-  });
+  }
+
+  return {
+    refined: refined.map((entry) => {
+      if (entry.role === CandidateRole.Pivot && !keep.has(entry.candidate.symbolId)) {
+        return {
+          ...entry,
+          role: CandidateRole.Support,
+          roleReason: `strong target beyond the pivot budget — ${entry.roleReason}`,
+        };
+      }
+      return entry;
+    }),
+    ...(capExemption === undefined ? {} : { capExemption }),
+  };
 }
 
 // The issue's local subsystem: the directory the issue most clearly points at.

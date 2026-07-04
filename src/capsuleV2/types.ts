@@ -310,6 +310,19 @@ export interface CapsuleV2Diagnostics {
    */
   sql_rendering_backfill_used?: boolean;
   /**
+   * M101 anchored-target pivot guard. Present only when the guard changed a
+   * role decision: `pivot_selection_version` names the active guard,
+   * `anchored_dispatcher_demotions_prevented` lists the tier-2-anchored pivots
+   * (title symbol / high-signal literal / strong direct evidence) the
+   * entry-point/dispatcher demotion would otherwise have taken, and
+   * `anchored_pivot_cap_exemptions` the single anchored pivot kept past the
+   * `maxPivots` cap (ordered last among pivots — a required target, never the
+   * lead). Weak-direct and support-only lanes are never eligible.
+   */
+  pivot_selection_version?: string;
+  anchored_dispatcher_demotions_prevented?: Array<{ path: string; symbol: string }>;
+  anchored_pivot_cap_exemptions?: Array<{ path: string; symbol: string }>;
+  /**
    * Present only when `actual_mode === no_context`. For the strongest near-miss
    * candidates, the precise reason each failed the pivot gate — so a conservative
    * no-context decision is never opaque (was it weak parsing, a missing failing

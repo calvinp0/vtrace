@@ -259,3 +259,169 @@ test("M95: strong-lexical exemption from generic-infrastructure is function/meth
   // In-subsystem is never generic infrastructure, regardless of kind.
   assert.equal(isGenericInfrastructure(candidate(SymbolKind.Class, 0), true, noNameOverlap), false);
 });
+
+// ---------------------------------------------------------------------------
+// M101 anchored-target pivot guard
+// ---------------------------------------------------------------------------
+//
+// Tier-2 anchored targets (title symbol / high-signal literal / STRONG direct
+// evidence — the ids buildCapsuleV2 passes as `namedAnchors`) get exactly two
+// role-layer defences: (a) a dispatcher demotion never takes an anchored pivot,
+// and (b) at most ONE anchored, anchor-actionable, non-test pivot survives the
+// `maxPivots` cap as a bounded extra slot. Everything else — weak direct
+// evidence, support-only lanes, base-gate support roles, tests, module-level
+// kinds, micro tier — is untouched, and these tests pin each boundary.
+
+function m101Candidate(
+  id: string,
+  localName: string,
+  filePath: string,
+  kind: SymbolKind,
+  final: number,
+  extra: Partial<HybridScoreComponents> = {},
+): HybridCandidate {
+  const scores: HybridScoreComponents = {
+    lexical: 0.5, fts: 0.5, tfidf: 0.5, bm25: 0.5, symbol: 1, path: 0,
+    testToImpl: 0, bodyLiteral: 0, domain: 0, graph: 0, graphProximity: 0,
+    centrality: 0, actionability: 1, inDegree: 0, localEvidence: 0.5,
+    hubPenalty: 0, actionabilityPenalty: 0, final, ...extra,
+  };
+  return {
+    symbolId: id, filePath, fqName: `${filePath}::${localName}`, localName,
+    kind, scores, sources: [], evidence: [], matches: [],
+  };
+}
+
+const M101_TASK =
+  "fix widgets: parse_widget_groups returns wrong widget names and "
+  + "render_widget_list drops entries; simplify_widgets output is stale";
+const m101Shaped = () => shapeSweQuery({ problemStatement: M101_TASK, failToPass: [] });
+
+function m101Pivot(candidate: HybridCandidate) {
+  return { candidate, role: CandidateRole.Pivot, why: "pivot: synthetic" };
+}
+
+import { refineDebugRoles } from "./debugRoles";
+import { CandidateRole } from "../capsule/assignCandidateRoles";
+
+test("M101: an anchored pivot beyond the cap keeps the pivot role (bounded to one)", () => {
+  const db = openIndexerDatabase();
+  const a = m101Candidate("m101:a", "parse_widget_groups", "pkg/widgets/utils.py", SymbolKind.Function, 3.0);
+  const b = m101Candidate("m101:b", "render_widget_list", "pkg/widgets/utils2.py", SymbolKind.Function, 2.5);
+  const c = m101Candidate("m101:c", "simplify_widgets", "pkg/widgets/entry.py", SymbolKind.Function, 2.0);
+  const d = m101Candidate("m101:d", "widget_names", "pkg/widgets/extra.py", SymbolKind.Function, 1.8);
+
+  // Without namedAnchors: cap 2 demotes c and d to support.
+  const base = refineDebugRoles(db, [a, b, c, d].map(m101Pivot), m101Shaped(), 2);
+  const roleOf = (r: ReturnType<typeof refineDebugRoles>, id: string) =>
+    r.refined.find((e) => e.candidate.symbolId === id)!.role;
+  assert.equal(roleOf(base, "m101:c"), CandidateRole.Support);
+  assert.equal(roleOf(base, "m101:d"), CandidateRole.Support);
+  assert.equal(base.anchoredCapExemption, undefined);
+
+  // With BOTH c and d anchored: only the best-ordered one (c) is exempted.
+  const guarded = refineDebugRoles(db, [a, b, c, d].map(m101Pivot), m101Shaped(), 2, {
+    namedAnchors: { symbolIds: new Set(["m101:c", "m101:d"]) },
+  });
+  assert.equal(roleOf(guarded, "m101:a"), CandidateRole.Pivot);
+  assert.equal(roleOf(guarded, "m101:b"), CandidateRole.Pivot);
+  assert.equal(roleOf(guarded, "m101:c"), CandidateRole.Pivot, "anchored cap-evictee must stay a pivot");
+  assert.equal(roleOf(guarded, "m101:d"), CandidateRole.Support, "the exemption is bounded to ONE");
+  assert.equal(guarded.anchoredCapExemption?.symbol, "simplify_widgets");
+  db.close();
+});
+
+test("M101: the cap exemption never fires for tests, module-level kinds, micro tier, or base-gate support", () => {
+  const db = openIndexerDatabase();
+  const a = m101Candidate("m101:a", "parse_widget_groups", "pkg/widgets/utils.py", SymbolKind.Function, 3.0);
+  const b = m101Candidate("m101:b", "render_widget_list", "pkg/widgets/utils2.py", SymbolKind.Function, 2.5);
+
+  // A TEST candidate beyond the cap stays demoted even when anchored.
+  const testCand = m101Candidate("m101:t", "test_widget_groups", "tests/test_widgets.py", SymbolKind.Function, 2.0);
+  const t = refineDebugRoles(db, [a, b, testCand].map(m101Pivot), m101Shaped(), 2, {
+    namedAnchors: { symbolIds: new Set(["m101:t"]) },
+  });
+  assert.notEqual(t.refined.find((e) => e.candidate.symbolId === "m101:t")!.role, CandidateRole.Pivot);
+  assert.equal(t.anchoredCapExemption, undefined);
+
+  // A module VARIABLE a literal happened to hit is not anchor-actionable.
+  const varCand = m101Candidate("m101:v", "WIDGET_NAMES", "pkg/widgets/consts.py", SymbolKind.ModuleVariable, 2.0);
+  const v = refineDebugRoles(db, [a, b, varCand].map(m101Pivot), m101Shaped(), 2, {
+    namedAnchors: { symbolIds: new Set(["m101:v"]) },
+  });
+  assert.equal(v.refined.find((e) => e.candidate.symbolId === "m101:v")!.role, CandidateRole.Support);
+  assert.equal(v.anchoredCapExemption, undefined);
+
+  // Micro tier (maxPivots=1) stays single-pivot decisive: no extra slot.
+  const c = m101Candidate("m101:c", "simplify_widgets", "pkg/widgets/entry.py", SymbolKind.Function, 2.0);
+  const micro = refineDebugRoles(db, [a, c].map(m101Pivot), m101Shaped(), 1, {
+    namedAnchors: { symbolIds: new Set(["m101:c"]) },
+  });
+  assert.equal(micro.refined.filter((e) => e.role === CandidateRole.Pivot).length, 1);
+  assert.equal(micro.anchoredCapExemption, undefined);
+
+  // An anchored candidate the base gate marked SUPPORT is never promoted: the
+  // exemption defends an earned pivot role, it does not create one. (Named so
+  // the helper rule cannot promote it either — zero issue name-overlap.)
+  const supCand = m101Candidate("m101:s", "assemble_report", "pkg/widgets/out.py", SymbolKind.Function, 2.0);
+  const sup = { candidate: supCand, role: CandidateRole.Support, why: "support: synthetic" };
+  const s = refineDebugRoles(db, [m101Pivot(a), m101Pivot(b), sup], m101Shaped(), 2, {
+    namedAnchors: { symbolIds: new Set(["m101:s"]) },
+  });
+  assert.equal(s.refined.find((e) => e.candidate.symbolId === "m101:s")!.role, CandidateRole.Support);
+  assert.equal(s.anchoredCapExemption, undefined);
+  db.close();
+});
+
+test("M101: a weak-direct (non-anchored) cap-evictee still cannot claim a pivot slot", () => {
+  const db = openIndexerDatabase();
+  const a = m101Candidate("m101:a", "parse_widget_groups", "pkg/widgets/utils.py", SymbolKind.Function, 3.0);
+  const b = m101Candidate("m101:b", "render_widget_list", "pkg/widgets/utils2.py", SymbolKind.Function, 2.5);
+  // A weak direct-evidence injection: boosted final 1.9, organic final 0. It is
+  // NOT in namedAnchors (weak tier is excluded by construction in the builder).
+  const weak = m101Candidate("m101:w", "widget_entry", "pkg/widgets/weak.py", SymbolKind.Function, 1.9);
+  const r = refineDebugRoles(db, [a, b, weak].map(m101Pivot), m101Shaped(), 2, {
+    weakDirectEvidence: { symbolIds: new Set(["m101:w"]), organicFinalById: new Map([["m101:w", 0]]) },
+    namedAnchors: { symbolIds: new Set(["m101:a"]) }, // anchor on a KEPT pivot: no exemption needed
+  });
+  assert.equal(r.refined.find((e) => e.candidate.symbolId === "m101:w")!.role, CandidateRole.Support);
+  assert.equal(r.anchoredCapExemption, undefined);
+  db.close();
+});
+
+test("M101: an anchored pivot is not dispatcher-demoted; an unanchored one still is", () => {
+  const db = openIndexerDatabase();
+  // Entry point delegating to two issue-relevant local helpers via source-body calls.
+  const entry = m101Candidate("m101:e", "simplify_widgets", "pkg/widgets/entry.py", SymbolKind.Function, 3.0);
+  const h1 = m101Candidate("m101:h1", "parse_widget_groups", "pkg/widgets/utils.py", SymbolKind.Function, 2.0);
+  const h2 = m101Candidate("m101:h2", "render_widget_list", "pkg/widgets/utils.py", SymbolKind.Function, 1.9);
+  const sourceTextOf = (id: string) =>
+    id === "m101:e" ? "def simplify_widgets():\n  return parse_widget_groups() + render_widget_list()\n" : undefined;
+
+  const base = refineDebugRoles(db, [entry, h1, h2].map(m101Pivot), m101Shaped(), 3, { sourceTextOf });
+  const baseEntry = base.refined.find((e) => e.candidate.symbolId === "m101:e")!;
+  assert.equal(baseEntry.role, CandidateRole.Support, "unanchored dispatcher is demoted");
+  assert.match(baseEntry.roleReason, /entry point\/caller/);
+  assert.equal(base.anchoredDispatcherExemptions.length, 0);
+
+  const guarded = refineDebugRoles(db, [entry, h1, h2].map(m101Pivot), m101Shaped(), 3, {
+    sourceTextOf,
+    namedAnchors: { symbolIds: new Set(["m101:e"]) },
+  });
+  const guardedEntry = guarded.refined.find((e) => e.candidate.symbolId === "m101:e")!;
+  assert.equal(guardedEntry.role, CandidateRole.Pivot, "anchored named target keeps the pivot role");
+  assert.match(guardedEntry.roleReason, /task names this symbol directly/);
+  assert.deepEqual(guarded.anchoredDispatcherExemptions, [
+    { path: "pkg/widgets/entry.py", symbol: "simplify_widgets" },
+  ]);
+  // The helpers are unaffected either way.
+  assert.equal(guarded.refined.find((e) => e.candidate.symbolId === "m101:h1")!.role, CandidateRole.Pivot);
+  db.close();
+});
+
+test("M101: the guard is inert when no anchor lane fired (admindocs capsule unchanged)", () => {
+  const r = admindocs(8_000);
+  assert.equal(r.diagnostics.pivot_selection_version, undefined);
+  assert.equal(r.diagnostics.anchored_pivot_cap_exemptions, undefined);
+  assert.equal(r.diagnostics.anchored_dispatcher_demotions_prevented, undefined);
+});
