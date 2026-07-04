@@ -1,0 +1,53 @@
+{
+  "milestone": "M103",
+  "kind": "Structured task derivation (M102 V5 shape) promoted to the default Stage 5 deterministic derivation; provenance-based leakage policy; full rebaseline",
+  "date": "2026-07-04",
+  "verdict": "PASS",
+  "recommendation": "proceed to small live confirmation",
+  "live_agents": false,
+  "docker": false,
+  "api_spend": false,
+  "change": {
+    "derivation": "deriveStructuredTaskFromProblemStatement (stage5_task_derivation.ts): unchanged V0 base (title + first prose sentence, <=360 chars) + extracted exceptions (<=6) + failing-test ids (<=6) + traceback frames (<=8, head+tail), labelled lines, 1200-char total cap with whole-section trimming; byte-identical to M102 V5_title_plus_errors (unit-tested + scoreboard parity)",
+    "leakage_policy": "assessGoldLeakage(task, problem_statement, gold): gold path in task AND in problem statement => issue_authored_gold_path (scored, diagnostic); gold path NOT in problem statement => gold_patch_leak (blocked). Legacy assertNoGoldLeakage kept for frozen M94-M102 runners.",
+    "consumers_switched": ["build_stage5_retrieval_fixture.ts buildGoldRow", "run_stage5_m103_deterministic_scoreboard.ts"],
+    "live_runner": "untouched (uses its own buildCapsuleV2Task full-problem path; out of scope)",
+    "v0_access": "deriveTaskFromProblemStatement moved verbatim + re-exported; frozen M94-M102 runners byte-identical"
+  },
+  "files_changed": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/stage5_task_derivation.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/stage5_task_derivation.test.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/build_stage5_retrieval_fixture.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/stage5_m94_lib.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m103_deterministic_scoreboard.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.django.expanded.json",
+    "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.cross_repo.30.json"
+  ],
+  "v5_reproduction": { "parity_mismatches": 0, "note": "exact per-instance outcome/lead/task-chars parity on the 99-id comparable set" },
+  "comparable_99": {
+    "m101": { "r1": 0.5286, "r5": 0.7298, "mrr": 0.6269, "any_gold": 0.7576, "all_gold": 0.7273, "lead_src_gold": 0.5455, "gold_in_required": 0.6465, "hidden_coedit": 0.6222, "multi_all_gold": 0.5333, "wrong_pivot": 8, "miss": 24, "overpacked": 14, "med_tokens": 1178, "p90_tokens": 4046, "mean_files": 3.9798 },
+    "m103": { "r1": 0.564, "r5": 0.7449, "mrr": 0.6598, "any_gold": 0.7879, "all_gold": 0.7475, "lead_src_gold": 0.5859, "gold_in_required": 0.6768, "hidden_coedit": 0.6222, "multi_all_gold": 0.5333, "wrong_pivot": 7, "miss": 21, "overpacked": 14, "med_tokens": 1094, "p90_tokens": 3712, "mean_files": 3.8788, "task_chars_median": 176, "task_chars_p90": 392 }
+  },
+  "new_policy_100": { "n": 100, "r1": 0.5683, "r5": 0.7475, "any_gold": 0.79, "all_gold": 0.75, "lead_src_gold": 0.59, "wrong_pivot": 7, "miss": 21, "overpacked": 14, "mean_files": 3.88, "task_chars_median": 176, "task_chars_p90": 371, "issue_authored_gold_path_count": 8, "gold_patch_leak_block_count": 0 },
+  "dev_60": { "m101": { "r1": 0.5889, "r5": 0.8125, "any_gold": 0.85, "all_gold": 0.8167, "lead_src_gold": 0.6167, "miss": 9, "overpacked": 11 }, "m103": { "r1": 0.6139, "r5": 0.8125, "any_gold": 0.8667, "all_gold": 0.8333, "lead_src_gold": 0.65, "miss": 8, "overpacked": 11 } },
+  "holdout_39": { "m101": { "r1": 0.4359, "r5": 0.6026, "any_gold": 0.6154, "all_gold": 0.5897, "lead_src_gold": 0.4359, "wrong_pivot": 3, "miss": 15, "overpacked": 3 }, "m103": { "r1": 0.4872, "r5": 0.641, "any_gold": 0.6667, "all_gold": 0.6154, "lead_src_gold": 0.4872, "wrong_pivot": 2, "miss": 13, "overpacked": 3 } },
+  "evidence_beyond_v0_50": { "m101": { "any_gold": 0.74, "all_gold": 0.74, "lead_src_gold": 0.58, "miss": 13 }, "m103": { "any_gold": 0.8, "all_gold": 0.78, "lead_src_gold": 0.64, "miss": 10 } },
+  "psf_requests_5414": { "m101": "leakage_blocked", "m103": "scored", "outcome": "good", "leakage_verdict": "issue_authored_gold_path", "lead_pivot_is_source_gold": true, "all_gold_in_capsule": true },
+  "regression_guard_cases": {
+    "django__django-13513": { "m101": "excellent", "m102_v5": "good", "m103": "good", "change": "lead drifted views/debug.py -> views/generic/__init__.py; all gold still in capsule + required, r@5=1.0", "acceptable": true, "mitigation": "facade (__init__.py) lead demotion IF more cases appear; single instance today" },
+    "matplotlib__matplotlib-22719": { "m101": "overpacked", "m102_v5": "overpacked", "m103": "overpacked", "change": "lead category.py -> units.py, gold demoted required->support inside pre-existing overpacked capsule; gold stays in capsule", "acceptable": true, "mitigation": "fix is overpacking, not derivation" },
+    "pydata__xarray-4695": { "m101": "overpacked", "m102_v5": "overpacked", "m103": "overpacked", "change": "gold left top-5 (r@5 1->0) inside pre-existing overpacked capsule; any/all gold in capsule unchanged", "acceptable": true, "mitigation": "fix is overpacking, not derivation" }
+  },
+  "retrieval_evals": {
+    "engine_no_change_proof": "old fixtures byte-identical to committed baselines (src/ unchanged since 48379f1)",
+    "expanded": { "before": { "top1": 0.85, "top3": 1.0, "pivot": 1.0, "missing": 0.0 }, "after": { "top1": 0.9, "top3": 1.0, "pivot": 1.0, "missing": 0.0 }, "row_changes": { "django__django-11815": "hit_top3 -> hit_top1_pivot" } },
+    "cross_repo_30": { "before": { "top1": 0.667, "top3": 0.8, "pivot": 0.767, "missing": 0.133 }, "after": { "top1": 0.733, "top3": 0.833, "pivot": 0.8, "missing": 0.1 }, "row_changes": { "psf__requests-1724": "hit_discarded -> hit_top1_pivot", "pylint-dev__pylint-8898": "skipped_no_context -> hit_discarded", "sphinx-doc__sphinx-7462": "hit_top3 -> hit_top1_pivot", "sympy__sympy-13372": "hit_top3 -> hit_top1_pivot", "matplotlib__matplotlib-22719": "hit_top1_pivot -> hit_top3 (known guard case; gold stays top-3)" } }
+  },
+  "verification": { "bun_test": "3520 pass / 0 fail", "typecheck_src": "clean", "typecheck_benchmarks": "clean", "git_diff_check": "clean" },
+  "success_criteria": { "passed": 15, "failed": 0 },
+  "reports": {
+    "plan": "stage5_m103_structured_task_derivation_plan.md",
+    "report": "stage5_m103_structured_task_derivation.md",
+    "scoreboard": ["stage5_m103_deterministic_scoreboard.json", "stage5_m103_deterministic_scoreboard.detail.json", "stage5_m103_deterministic_scoreboard.md", "stage5_m103_deterministic_failure_modes.json", "stage5_m103_deterministic_by_repo.csv", "stage5_m103_deterministic_top_misses.csv"]
+  }
+}

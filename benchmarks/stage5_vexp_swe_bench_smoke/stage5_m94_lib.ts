@@ -110,6 +110,61 @@ export function assertNoGoldLeakage(task: string, gold: GoldLabels): string | nu
 }
 
 // ---------------------------------------------------------------------------
+// Provenance-aware leakage assessment (M103)
+// ---------------------------------------------------------------------------
+//
+// `assertNoGoldLeakage` (above, kept verbatim for the frozen M94–M102 runners)
+// conflates two very different situations: a gold path the ISSUE AUTHOR wrote
+// into the problem statement (legitimate evidence — psf__requests-5414 names
+// `requests/models.py` in its own traceback) and a gold path injected from the
+// gold patch / FAIL_TO_PASS / any post-hoc artifact (real contamination). The
+// M103 policy: text whose provenance is the problem statement is evidence, not
+// leakage; only gold-derived text that the issue never contained invalidates
+// scoring.
+
+export type GoldLeakageVerdict = "clean" | "issue_authored_gold_path" | "gold_patch_leak";
+
+export interface GoldLeakageAssessment {
+  readonly verdict: GoldLeakageVerdict;
+  /** Gold paths found in the task that the problem statement also contains. */
+  readonly issueAuthoredPaths: string[];
+  /** Gold paths found in the task that the problem statement does NOT contain. */
+  readonly leakedPaths: string[];
+}
+
+// Assess gold-path overlap between the generation-driving task text and the
+// gold labels, using the problem statement as the provenance oracle: a gold
+// path in the task is issue-authored evidence when the problem statement
+// contains it (the derivation only ever extracts verbatim problem-statement
+// text), and a gold-patch leak otherwise. Any leak ⇒ verdict gold_patch_leak
+// (the case must stay unscoreable); issue-authored paths alone ⇒ scored, with
+// the diagnostic verdict. Case-insensitive, same `/`-requirement as the legacy
+// guard (a bare basename like "models.py" is never flagged).
+export function assessGoldLeakage(
+  task: string,
+  problemStatement: string,
+  gold: GoldLabels,
+): GoldLeakageAssessment {
+  const taskHay = task.toLowerCase();
+  const statementHay = problemStatement.toLowerCase();
+  const issueAuthoredPaths: string[] = [];
+  const leakedPaths: string[] = [];
+  for (const f of gold.allFiles) {
+    if (!f.includes("/")) continue;
+    const needle = f.toLowerCase();
+    if (!taskHay.includes(needle)) continue;
+    if (statementHay.includes(needle)) issueAuthoredPaths.push(f);
+    else leakedPaths.push(f);
+  }
+  const verdict: GoldLeakageVerdict = leakedPaths.length > 0
+    ? "gold_patch_leak"
+    : issueAuthoredPaths.length > 0
+      ? "issue_authored_gold_path"
+      : "clean";
+  return { verdict, issueAuthoredPaths, leakedPaths };
+}
+
+// ---------------------------------------------------------------------------
 // Ranking helpers
 // ---------------------------------------------------------------------------
 

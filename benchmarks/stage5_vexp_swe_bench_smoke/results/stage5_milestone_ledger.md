@@ -20,6 +20,7 @@ file; live-run outcome history is separate (`stage5_outcome_ledger.md`).
 | M100 | 49577bc | MIXED (lean positive) | file-evidence deep-pool rescue (`fileEvidenceRescue.ts`): support-only recovery of an organically-reached deep-rank (≤100 of 400) source file whose raw text carries an exact derived-task term at repo ambiguity ≤3; ≤2/case, ≤5 resulting files, 15% token ceiling, M98 displacement contract | all-gold 71.7%→72.7%, multi-file all-gold 46.7%→53.3%, hidden-coedit 0.589→0.622 (django-13195 recovered `contrib/sessions/middleware.py`, partial→excellent); 666 considered → 2 added (1 gold); holdout metrics byte-flat; mean files +0.020; overpacked 14→14 | task-derivation milestone OR ranking/pivot improvement |
 | M101 | 48379f1 | PASS | anchored-target pivot guard (`m101_anchored_target_guard`): tier-2 anchor ids (title-symbol ∪ literal-anchor ∪ strong-direct; never weak/support-only lanes) threaded into `refineDebugRoles` — (a) dispatcher demotion never takes an anchored actionable pivot, (b) max ONE anchored anchor-actionable non-test pivot survives the `maxPivots` cap by converting a support slot, ordered LAST (required target, never lead) | wrong_pivot 11→8, lead=src-gold 51.5%→54.5%, gold-in-required 60.6%→64.6%, excellent 27→29, r@1 .503→.529; r@5/any/all/hidden/multi-file-all-gold/overpacked byte-flat; holdout gold metrics byte-identical (guard fired on 7 holdout capsules, gold-neutral); 3 leads flipped TO gold (11206, xarray-6599, xarray-6938), none lost; retrieval evals improved (expanded top-1 80→85%, pivot 95→100%; cross-repo pivot 73.3→76.7%) via stash A/B proof | task-derivation audit |
 | M102 | a5ec283 | PASS | task-derivation evidence-loss audit — benchmark-only variants (`stage5_m102_task_variants.ts`), NO product change: V0 parity exact; V1_720/V2_1200/V4_full/V6_first-last/V7_token-dump all net-NEGATIVE (prose pollution; hidden-coedit 0.622→0.26–0.39, multi-file all-gold 53.3%→20–33%); V5_title_plus_errors (V0 + exceptions + failing tests + capped traceback frames, p90 392 chars) is the only net-positive: +4 net cases, holdout r@1 +5.1pts / r@5 +3.8 / any-gold +5.2 / lead +5.1, miss 24→21, wrong_pivot 8→7, capsules smaller (files 3.98→3.88, med tok 1178→1094), hidden/multi-file/overpacked byte-flat | evidence loss: 50/100 cases (17/32 miss-class) hold gold evidence beyond the 360-char prose-biased derivation, half of it in code blocks/tracebacks the derivation structurally skips | M103: implement V5-shaped structured task derivation as a full re-baselining milestone (leakage-guard policy for issue-authored paths incl. psf-5414; watch django-13513 lead drift) |
+| M103 | (this commit) | PASS | structured task derivation shipped as the DEFAULT Stage 5 derivation (`stage5_task_derivation.ts`: V0 base + exceptions ≤6 + failing tests ≤6 + traceback frames ≤8, 1200-char total cap — byte-identical to M102 V5, unit-tested + scoreboard parity 0 mismatches) + provenance-based leakage policy (`assessGoldLeakage`: issue-authored gold paths scored w/ diagnostic, gold-patch-derived paths still block); fixture builder + new M103 scoreboard switched; frozen M94–M102 runners keep V0 via re-export; both retrieval fixtures regenerated | comparable-99 = exact V5 reproduction (r@1 .529→.564, r@5 .730→.745, any 75.8→78.8%, lead 54.5→58.6%, wp 8→7, miss 24→21, op 14 flat, files 3.98→3.88, med tok 1178→1094; holdout r@5 +3.8 / lead +5.1 / any +5.2); NEW 100-case set: psf-5414 scored `good` (issue-authored path), 8 issue-authored diagnostics, 0 leak blocks; retrieval evals improved (expanded top-1 85→90%; cross-repo top-1 66.7→73.3%, pivot 76.7→80%, missing 13.3→10%; 1 traded row = matplotlib-22719 top1→top3, the known guard case); losses accepted: django-13513 excellent→good (lead → `views/generic/__init__.py`), matplotlib-22719/xarray-4695 shifts inside pre-existing overpacked capsules | small live confirmation (deterministic chain M95–M103 unvalidated live since M92); alternative: parser/language coverage |
 
 ## Standing findings (still true unless a later row says otherwise)
 
@@ -30,11 +31,19 @@ file; live-run outcome history is separate (`stage5_outcome_ledger.md`).
   failing tests + capped traceback frames) was net-positive, improving holdout
   while SHRINKING capsules. Do not lengthen the prose window in M103; augment
   with extracted error/test/traceback evidence only.
-- **The M94 leakage guard conflates issue-authored paths with contamination**
-  (M102): psf-5414 is unscoreable because the ISSUE names the gold file; with
-  longer/structured tasks this collision grows (V5: 7 cases). M103 must define
-  a product-side policy (provenance-based: text from the problem statement is
-  evidence, not leakage).
+- ~~The M94 leakage guard conflates issue-authored paths with contamination~~
+  (M102, RESOLVED in M103): `assessGoldLeakage` now scores issue-authored gold
+  paths with an `issue_authored_gold_path` diagnostic (8 cases incl. psf-5414,
+  now scored `good`) while a gold path the issue never contained still blocks
+  (`gold_patch_leak`, 0 fired). The 100-case set is the new-policy scoreboard
+  basis; the 99-id M101-scored set remains the cross-milestone comparable set.
+- **The three M103 derivation losses are pinned regression guards**
+  (M103): django-13513 (holdout lead → `views/generic/__init__.py` facade —
+  the first facade-lead case; revisit facade lead-demotion only if more
+  appear), matplotlib-22719 and xarray-4695 (rank shifts inside capsules that
+  were ALREADY overpacked at M101 — the lever is overpacking, not
+  derivation). Diff `regression_guard_cases` in the M103 scoreboard JSON in
+  any milestone touching retrieval/ranking.
 - **The role layer and pivot ordering now share the tier-2 anchor precedence**
   (M101): before, a title-symbol/literal-anchor/strong-direct target could be
   cap-evicted or dispatcher-demoted by structural inference despite being the
@@ -57,7 +66,10 @@ file; live-run outcome history is separate (`stage5_outcome_ledger.md`).
   audited addressable slice (organic rank ≤100 ∧ exact derived-task term at
   repo ambiguity ≤3) is shipped; a PURE file-evidence lane measured 3–8% gold
   and a rank-only rescue ≤1% — do not widen either without new evidence.
-- **Task-derivation truncation is the next recall ceiling** (M100 audit): 13
+- ~~Task-derivation truncation is the next recall ceiling~~ (M100 audit,
+  ADDRESSED in M103: structured error/test/traceback evidence shipped; the
+  remaining loss classes — file stems/symbols in prose the base sentence
+  skips — were measured net-harmful to add in M102 V3/V7 form): 13
   absent gold files carry exact evidence ONLY in the full problem statement
   (e.g. django-13195's `SESSION_COOKIE_*`, matplotlib-24970's `plt.get_cmap`),
   cut by the 360-char derived task. Extending derivation re-baselines every
