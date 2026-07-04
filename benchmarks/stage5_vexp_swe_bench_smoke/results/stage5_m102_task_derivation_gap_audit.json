@@ -1,0 +1,6836 @@
+{
+  "milestone": "M102",
+  "kind": "Task-derivation evidence-loss audit (text-level, read-only; gold vocabulary is audit-side only)",
+  "live_agents": false,
+  "docker": false,
+  "api_spend": false,
+  "n": 100,
+  "all": {
+    "n": 100,
+    "cases_with_evidence_beyond_v0": 50,
+    "earliest_beyond_bucket_distribution": {
+      "le_720": 16,
+      "le_360": 17,
+      "le_1200": 11,
+      "beyond_1200": 6
+    },
+    "beyond_context_distribution": {
+      "code_block": 23,
+      "prose": 72,
+      "traceback": 30
+    },
+    "beyond_kind_distribution": {
+      "dotted_module": 7,
+      "symbol": 26,
+      "file_stem": 34,
+      "file_basename": 32,
+      "path_suffix": 26
+    },
+    "median_statement_chars": 1132,
+    "median_code_like_tokens": {
+      "chars_360": 2,
+      "chars_720": 3,
+      "chars_1200": 4,
+      "full": 5
+    }
+  },
+  "dev": {
+    "n": 60,
+    "cases_with_evidence_beyond_v0": 31,
+    "earliest_beyond_bucket_distribution": {
+      "le_720": 13,
+      "le_360": 7,
+      "le_1200": 7,
+      "beyond_1200": 4
+    },
+    "beyond_context_distribution": {
+      "code_block": 17,
+      "prose": 47,
+      "traceback": 15
+    },
+    "beyond_kind_distribution": {
+      "dotted_module": 6,
+      "symbol": 15,
+      "file_stem": 20,
+      "file_basename": 21,
+      "path_suffix": 17
+    },
+    "median_statement_chars": 1249,
+    "median_code_like_tokens": {
+      "chars_360": 3,
+      "chars_720": 3,
+      "chars_1200": 4,
+      "full": 6
+    }
+  },
+  "holdout": {
+    "n": 40,
+    "cases_with_evidence_beyond_v0": 19,
+    "earliest_beyond_bucket_distribution": {
+      "le_360": 10,
+      "le_1200": 4,
+      "le_720": 3,
+      "beyond_1200": 2
+    },
+    "beyond_context_distribution": {
+      "prose": 25,
+      "traceback": 15,
+      "code_block": 6
+    },
+    "beyond_kind_distribution": {
+      "file_basename": 11,
+      "file_stem": 14,
+      "path_suffix": 9,
+      "symbol": 11,
+      "dotted_module": 1
+    },
+    "median_statement_chars": 1081,
+    "median_code_like_tokens": {
+      "chars_360": 2,
+      "chars_720": 3,
+      "chars_1200": 4,
+      "full": 5
+    }
+  },
+  "m101_miss_class_all": {
+    "n": 32,
+    "cases_with_evidence_beyond_v0": 17,
+    "earliest_beyond_bucket_distribution": {
+      "le_720": 5,
+      "le_1200": 3,
+      "le_360": 7,
+      "beyond_1200": 2
+    },
+    "beyond_context_distribution": {
+      "prose": 25,
+      "traceback": 17,
+      "code_block": 6
+    },
+    "beyond_kind_distribution": {
+      "file_stem": 13,
+      "dotted_module": 2,
+      "symbol": 11,
+      "file_basename": 12,
+      "path_suffix": 10
+    },
+    "median_statement_chars": 1204,
+    "median_code_like_tokens": {
+      "chars_360": 2,
+      "chars_720": 3,
+      "chars_1200": 5,
+      "full": 5
+    }
+  },
+  "m101_miss_class_dev": {
+    "n": 14,
+    "cases_with_evidence_beyond_v0": 9,
+    "earliest_beyond_bucket_distribution": {
+      "le_720": 4,
+      "le_1200": 2,
+      "le_360": 3
+    },
+    "beyond_context_distribution": {
+      "prose": 18,
+      "code_block": 6,
+      "traceback": 8
+    },
+    "beyond_kind_distribution": {
+      "file_stem": 7,
+      "dotted_module": 2,
+      "symbol": 8,
+      "file_basename": 8,
+      "path_suffix": 7
+    },
+    "median_statement_chars": 1551,
+    "median_code_like_tokens": {
+      "chars_360": 3,
+      "chars_720": 5,
+      "chars_1200": 5,
+      "full": 6
+    }
+  },
+  "m101_miss_class_holdout": {
+    "n": 18,
+    "cases_with_evidence_beyond_v0": 8,
+    "earliest_beyond_bucket_distribution": {
+      "le_1200": 1,
+      "le_360": 4,
+      "beyond_1200": 2,
+      "le_720": 1
+    },
+    "beyond_context_distribution": {
+      "prose": 7,
+      "traceback": 9
+    },
+    "beyond_kind_distribution": {
+      "file_basename": 4,
+      "path_suffix": 3,
+      "file_stem": 6,
+      "symbol": 3
+    },
+    "median_statement_chars": 1157,
+    "median_code_like_tokens": {
+      "chars_360": 2,
+      "chars_720": 3,
+      "chars_1200": 5,
+      "full": 5
+    }
+  },
+  "m101_lexical_mismatch": {
+    "n": 24,
+    "cases_with_evidence_beyond_v0": 13,
+    "earliest_beyond_bucket_distribution": {
+      "le_720": 4,
+      "le_1200": 2,
+      "le_360": 5,
+      "beyond_1200": 2
+    },
+    "beyond_context_distribution": {
+      "prose": 13,
+      "traceback": 15,
+      "code_block": 4
+    },
+    "beyond_kind_distribution": {
+      "file_stem": 11,
+      "dotted_module": 1,
+      "symbol": 6,
+      "file_basename": 8,
+      "path_suffix": 6
+    },
+    "median_statement_chars": 1368,
+    "median_code_like_tokens": {
+      "chars_360": 1,
+      "chars_720": 3,
+      "chars_1200": 5,
+      "full": 6
+    }
+  },
+  "by_repo": {
+    "astropy/astropy": {
+      "n": 5,
+      "cases_with_evidence_beyond_v0": 1,
+      "earliest_beyond_bucket_distribution": {
+        "le_720": 1
+      },
+      "beyond_context_distribution": {
+        "code_block": 1
+      },
+      "beyond_kind_distribution": {
+        "dotted_module": 1
+      },
+      "median_statement_chars": 1433,
+      "median_code_like_tokens": {
+        "chars_360": 1,
+        "chars_720": 3,
+        "chars_1200": 3,
+        "full": 5
+      }
+    },
+    "django/django": {
+      "n": 44,
+      "cases_with_evidence_beyond_v0": 21,
+      "earliest_beyond_bucket_distribution": {
+        "le_360": 3,
+        "le_720": 7,
+        "le_1200": 8,
+        "beyond_1200": 3
+      },
+      "beyond_context_distribution": {
+        "prose": 42,
+        "traceback": 11
+      },
+      "beyond_kind_distribution": {
+        "symbol": 14,
+        "file_stem": 13,
+        "file_basename": 12,
+        "path_suffix": 11,
+        "dotted_module": 3
+      },
+      "median_statement_chars": 926,
+      "median_code_like_tokens": {
+        "chars_360": 3,
+        "chars_720": 5,
+        "chars_1200": 6,
+        "full": 7
+      }
+    },
+    "matplotlib/matplotlib": {
+      "n": 7,
+      "cases_with_evidence_beyond_v0": 3,
+      "earliest_beyond_bucket_distribution": {
+        "le_1200": 1,
+        "le_360": 2
+      },
+      "beyond_context_distribution": {
+        "code_block": 6,
+        "prose": 3
+      },
+      "beyond_kind_distribution": {
+        "file_basename": 3,
+        "path_suffix": 3,
+        "symbol": 1,
+        "file_stem": 2
+      },
+      "median_statement_chars": 1136,
+      "median_code_like_tokens": {
+        "chars_360": 1,
+        "chars_720": 3,
+        "chars_1200": 4,
+        "full": 5
+      }
+    },
+    "mwaskom/seaborn": {
+      "n": 1,
+      "cases_with_evidence_beyond_v0": 1,
+      "earliest_beyond_bucket_distribution": {
+        "le_1200": 1
+      },
+      "beyond_context_distribution": {
+        "prose": 3
+      },
+      "beyond_kind_distribution": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1
+      },
+      "median_statement_chars": 1412,
+      "median_code_like_tokens": {
+        "chars_360": 4,
+        "chars_720": 7,
+        "chars_1200": 8,
+        "full": 9
+      }
+    },
+    "pallets/flask": {
+      "n": 1,
+      "cases_with_evidence_beyond_v0": 0,
+      "earliest_beyond_bucket_distribution": {},
+      "beyond_context_distribution": {},
+      "beyond_kind_distribution": {},
+      "median_statement_chars": 194,
+      "median_code_like_tokens": {
+        "chars_360": 1,
+        "chars_720": 1,
+        "chars_1200": 1,
+        "full": 1
+      }
+    },
+    "psf/requests": {
+      "n": 4,
+      "cases_with_evidence_beyond_v0": 1,
+      "earliest_beyond_bucket_distribution": {
+        "le_360": 1
+      },
+      "beyond_context_distribution": {
+        "traceback": 3,
+        "code_block": 1
+      },
+      "beyond_kind_distribution": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1,
+        "symbol": 1
+      },
+      "median_statement_chars": 1371,
+      "median_code_like_tokens": {
+        "chars_360": 2,
+        "chars_720": 3,
+        "chars_1200": 4,
+        "full": 6
+      }
+    },
+    "pydata/xarray": {
+      "n": 6,
+      "cases_with_evidence_beyond_v0": 5,
+      "earliest_beyond_bucket_distribution": {
+        "beyond_1200": 1,
+        "le_720": 1,
+        "le_360": 3
+      },
+      "beyond_context_distribution": {
+        "prose": 6,
+        "traceback": 2,
+        "code_block": 4
+      },
+      "beyond_kind_distribution": {
+        "file_basename": 3,
+        "path_suffix": 3,
+        "file_stem": 3,
+        "dotted_module": 1,
+        "symbol": 2
+      },
+      "median_statement_chars": 2864,
+      "median_code_like_tokens": {
+        "chars_360": 1,
+        "chars_720": 3,
+        "chars_1200": 8,
+        "full": 15
+      }
+    },
+    "pylint-dev/pylint": {
+      "n": 2,
+      "cases_with_evidence_beyond_v0": 1,
+      "earliest_beyond_bucket_distribution": {
+        "le_1200": 1
+      },
+      "beyond_context_distribution": {
+        "traceback": 5
+      },
+      "beyond_kind_distribution": {
+        "file_basename": 2,
+        "file_stem": 1,
+        "path_suffix": 1,
+        "symbol": 1
+      },
+      "median_statement_chars": 3377,
+      "median_code_like_tokens": {
+        "chars_360": 3,
+        "chars_720": 5,
+        "chars_1200": 6,
+        "full": 21
+      }
+    },
+    "pytest-dev/pytest": {
+      "n": 4,
+      "cases_with_evidence_beyond_v0": 4,
+      "earliest_beyond_bucket_distribution": {
+        "le_720": 3,
+        "beyond_1200": 1
+      },
+      "beyond_context_distribution": {
+        "prose": 5,
+        "code_block": 4
+      },
+      "beyond_kind_distribution": {
+        "file_basename": 3,
+        "file_stem": 2,
+        "path_suffix": 3,
+        "symbol": 1
+      },
+      "median_statement_chars": 2699,
+      "median_code_like_tokens": {
+        "chars_360": 1,
+        "chars_720": 1,
+        "chars_1200": 3,
+        "full": 13
+      }
+    },
+    "scikit-learn/scikit-learn": {
+      "n": 2,
+      "cases_with_evidence_beyond_v0": 2,
+      "earliest_beyond_bucket_distribution": {
+        "le_720": 2
+      },
+      "beyond_context_distribution": {
+        "prose": 6,
+        "code_block": 1
+      },
+      "beyond_kind_distribution": {
+        "file_basename": 2,
+        "file_stem": 2,
+        "path_suffix": 1,
+        "dotted_module": 1,
+        "symbol": 1
+      },
+      "median_statement_chars": 7216,
+      "median_code_like_tokens": {
+        "chars_360": 6,
+        "chars_720": 7,
+        "chars_1200": 11,
+        "full": 37
+      }
+    },
+    "sphinx-doc/sphinx": {
+      "n": 7,
+      "cases_with_evidence_beyond_v0": 3,
+      "earliest_beyond_bucket_distribution": {
+        "le_360": 2,
+        "le_720": 1
+      },
+      "beyond_context_distribution": {
+        "traceback": 2,
+        "prose": 3
+      },
+      "beyond_kind_distribution": {
+        "file_basename": 1,
+        "file_stem": 3,
+        "symbol": 1
+      },
+      "median_statement_chars": 1116,
+      "median_code_like_tokens": {
+        "chars_360": 1,
+        "chars_720": 1,
+        "chars_1200": 3,
+        "full": 3
+      }
+    },
+    "sympy/sympy": {
+      "n": 17,
+      "cases_with_evidence_beyond_v0": 8,
+      "earliest_beyond_bucket_distribution": {
+        "le_360": 6,
+        "beyond_1200": 1,
+        "le_720": 1
+      },
+      "beyond_context_distribution": {
+        "traceback": 7,
+        "code_block": 6,
+        "prose": 4
+      },
+      "beyond_kind_distribution": {
+        "file_basename": 4,
+        "path_suffix": 2,
+        "file_stem": 6,
+        "symbol": 4,
+        "dotted_module": 1
+      },
+      "median_statement_chars": 602,
+      "median_code_like_tokens": {
+        "chars_360": 2,
+        "chars_720": 2,
+        "chars_1200": 2,
+        "full": 2
+      }
+    }
+  },
+  "cases": [
+    {
+      "instance_id": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 1307,
+      "v0_task_chars": 246,
+      "term_count": 6,
+      "terms_in_v0": 2,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 4,
+      "code_like_tokens_1200": 8,
+      "code_like_tokens_full": 8,
+      "findings": [
+        {
+          "term": "qdp.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "qdp",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 6,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "ascii/qdp.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "ascii.qdp",
+          "kind": "dotted_module",
+          "in_v0_task": true,
+          "statement_offset": 0,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "_get_tables_from_qdp_file",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_line_type",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 2543,
+      "v0_task_chars": 259,
+      "term_count": 14,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 4,
+      "code_like_tokens_1200": 4,
+      "code_like_tokens_full": 6,
+      "findings": [
+        {
+          "term": "cds.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "cds",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 31,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "format/cds.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "format.cds",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "cds_parsetab.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "cds_parsetab",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "format/cds_parsetab.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "format.cds_parsetab",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_lr_action_items",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_lr_goto_items",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_lr_signature",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_make_parser",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "p_division_of_units",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "p_product_of_units",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 1433,
+      "v0_task_chars": 208,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 5,
+      "findings": [
+        {
+          "term": "diff.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "diff",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "fits/diff.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "fits.diff",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_diff",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "cohort": "dev",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 2554,
+      "v0_task_chars": 277,
+      "term_count": 6,
+      "terms_in_v0": 2,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "code_block": 1
+      },
+      "beyond_kinds": {
+        "dotted_module": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 5,
+      "findings": [
+        {
+          "term": "card.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "card",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 61,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "fits/card.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "fits.card",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": 401,
+          "bucket": "le_720",
+          "context": "code_block"
+        },
+        {
+          "term": "Card",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 61,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "_split",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "astropy__astropy-7166",
+      "repo": "astropy/astropy",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 162,
+      "v0_task_chars": 163,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 1,
+      "code_like_tokens_full": 1,
+      "findings": [
+        {
+          "term": "misc.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "misc",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "utils/misc.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "utils.misc",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "is_public_member",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-10880",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "wrong_pivot",
+      "m101_failure_reasons": [
+        "ranking_gap"
+      ],
+      "statement_chars": 278,
+      "v0_task_chars": 202,
+      "term_count": 6,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": [
+        {
+          "term": "aggregates.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "aggregates",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models/aggregates.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models.aggregates",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "as_sql",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_group_by_cols",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-10973",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 356,
+      "v0_task_chars": 154,
+      "term_count": 8,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 2,
+      "code_like_tokens_full": 2,
+      "findings": [
+        {
+          "term": "client.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "client",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 38,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "postgresql/client.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "postgresql.client",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "DatabaseClient",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_escape_pgpass",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "runshell",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "runshell_db",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-11095",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 381,
+      "v0_task_chars": 94,
+      "term_count": 8,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "symbol": 1
+      },
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": [
+        {
+          "term": "options.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "options",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "admin/options.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "admin.options",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_fieldsets",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_inline_instances",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 242,
+          "bucket": "le_360",
+          "context": "prose"
+        },
+        {
+          "term": "get_inlines",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 15,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "get_ordering",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-11133",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 895,
+      "v0_task_chars": 132,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "file_stem": 1
+      },
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 2,
+      "code_like_tokens_full": 2,
+      "findings": [
+        {
+          "term": "response.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "response",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 403,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "http/response.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "http.response",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "make_bytes",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-11206",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 698,
+      "v0_task_chars": 190,
+      "term_count": 5,
+      "terms_in_v0": 3,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 4,
+      "code_like_tokens_1200": 4,
+      "code_like_tokens_full": 4,
+      "findings": [
+        {
+          "term": "numberformat.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "numberformat",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 6,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "utils/numberformat.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "utils.numberformat",
+          "kind": "dotted_module",
+          "in_v0_task": true,
+          "statement_offset": 0,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "format",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 19,
+          "bucket": "in_v0",
+          "context": "prose"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-11490",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 456,
+      "v0_task_chars": 194,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 2
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1
+      },
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 2,
+      "code_like_tokens_full": 2,
+      "findings": [
+        {
+          "term": "compiler.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 432,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "compiler",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 432,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "sql/compiler.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "sql.compiler",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_combinator_sql",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-11728",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 498,
+      "v0_task_chars": 169,
+      "term_count": 5,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 4,
+      "code_like_tokens_1200": 4,
+      "code_like_tokens_full": 4,
+      "findings": [
+        {
+          "term": "utils.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "admindocs/utils.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "admindocs.utils",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "replace_named_groups",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 65,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "replace_unnamed_groups",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-11740",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 1972,
+      "v0_task_chars": 86,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 7,
+      "code_like_tokens_1200": 11,
+      "code_like_tokens_full": 13,
+      "findings": [
+        {
+          "term": "autodetector.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "autodetector",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "migrations/autodetector.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "migrations.autodetector",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "generate_altered_fields",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-11749",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 1249,
+      "v0_task_chars": 191,
+      "term_count": 4,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 7,
+      "code_like_tokens_1200": 10,
+      "code_like_tokens_full": 10,
+      "findings": [
+        {
+          "term": "__init__.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "management/__init__.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "core.management",
+          "kind": "dotted_module",
+          "in_v0_task": true,
+          "statement_offset": 124,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "get_actions",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-11815",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 1601,
+      "v0_task_chars": 83,
+      "term_count": 8,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 6,
+      "code_like_tokens_full": 7,
+      "findings": [
+        {
+          "term": "serializer.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "serializer",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "migrations/serializer.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "migrations.serializer",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "EnumSerializer",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "EnumSerializer.serialize",
+          "kind": "class_method",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "serialize",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "FloatSerializer",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-11820",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 343,
+      "v0_task_chars": 157,
+      "term_count": 4,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": [
+        {
+          "term": "base.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models/base.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models.base",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_check_ordering",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-12050",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 347,
+      "v0_task_chars": 172,
+      "term_count": 6,
+      "terms_in_v0": 2,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-12273",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 926,
+      "v0_task_chars": 186,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 7,
+      "code_like_tokens_1200": 9,
+      "code_like_tokens_full": 9,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-12276",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 603,
+      "v0_task_chars": 103,
+      "term_count": 7,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 4,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "prose": 4
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-12325",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 900,
+      "v0_task_chars": 176,
+      "term_count": 8,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 9,
+      "code_like_tokens_720": 11,
+      "code_like_tokens_1200": 11,
+      "code_like_tokens_full": 11,
+      "findings": [
+        {
+          "term": "base.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models/base.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models.base",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "options.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "options",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models/options.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models.options",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_prepare",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-12774",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 1094,
+      "v0_task_chars": 174,
+      "term_count": 5,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_1200",
+      "beyond_contexts": {
+        "traceback": 3
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 7,
+      "code_like_tokens_720": 11,
+      "code_like_tokens_1200": 13,
+      "code_like_tokens_full": 13,
+      "findings": [
+        {
+          "term": "query.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 821,
+          "bucket": "le_1200",
+          "context": "traceback"
+        },
+        {
+          "term": "query",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 821,
+          "bucket": "le_1200",
+          "context": "traceback"
+        },
+        {
+          "term": "models/query.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 814,
+          "bucket": "le_1200",
+          "context": "traceback"
+        },
+        {
+          "term": "models.query",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "in_bulk",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 15,
+          "bucket": "in_v0",
+          "context": "prose"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-12858",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 794,
+      "v0_task_chars": 130,
+      "term_count": 4,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 5,
+      "code_like_tokens_1200": 7,
+      "code_like_tokens_full": 7,
+      "findings": [
+        {
+          "term": "base.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models/base.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models.base",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_check_ordering",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-13012",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 1414,
+      "v0_task_chars": 200,
+      "term_count": 8,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 6,
+      "code_like_tokens_720": 12,
+      "code_like_tokens_1200": 14,
+      "code_like_tokens_full": 14,
+      "findings": [
+        {
+          "term": "expressions.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "expressions",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 9,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "models/expressions.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models.expressions",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "as_sql",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_group_by_cols",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_source_expressions",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "set_source_expressions",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-13112",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 1944,
+      "v0_task_chars": 187,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "beyond_1200",
+      "beyond_contexts": {
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "file_stem": 1
+      },
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 12,
+      "code_like_tokens_1200": 20,
+      "code_like_tokens_full": 34,
+      "findings": [
+        {
+          "term": "related.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "related",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 1476,
+          "bucket": "beyond_1200",
+          "context": "prose"
+        },
+        {
+          "term": "fields/related.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "fields.related",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "deconstruct",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-13195",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 2401,
+      "v0_task_chars": 127,
+      "term_count": 17,
+      "terms_in_v0": 2,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_1200",
+      "beyond_contexts": {
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "file_stem": 1
+      },
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 8,
+      "code_like_tokens_1200": 10,
+      "code_like_tokens_full": 16,
+      "findings": [
+        {
+          "term": "cookie.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "cookie",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 45,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "storage/cookie.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "storage.cookie",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "middleware.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "middleware",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "sessions/middleware.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "sessions.middleware",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "response.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "response",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 996,
+          "bucket": "le_1200",
+          "context": "prose"
+        },
+        {
+          "term": "http/response.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "http.response",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_store",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_update_cookie",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "delete_cookie",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 13,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "process_response",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "set_signed_cookie",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-13363",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 1673,
+      "v0_task_chars": 97,
+      "term_count": 9,
+      "terms_in_v0": 2,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_1200",
+      "beyond_contexts": {
+        "prose": 3
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 5,
+      "code_like_tokens_720": 7,
+      "code_like_tokens_1200": 11,
+      "code_like_tokens_full": 15,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-13512",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "wrong_pivot",
+      "m101_failure_reasons": [
+        "hidden_coedit_missing",
+        "ranking_gap"
+      ],
+      "statement_chars": 461,
+      "v0_task_chars": 89,
+      "term_count": 11,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-13513",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 1157,
+      "v0_task_chars": 123,
+      "term_count": 10,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 4,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 4
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1,
+        "symbol": 2
+      },
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 6,
+      "code_like_tokens_1200": 7,
+      "code_like_tokens_full": 7,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-13551",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 602,
+      "v0_task_chars": 100,
+      "term_count": 7,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "symbol": 1
+      },
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": [
+        {
+          "term": "tokens.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "tokens",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 54,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "auth/tokens.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "auth.tokens",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_make_hash_value",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 411,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "_make_token_with_timestamp",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_num_seconds",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-13590",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 859,
+      "v0_task_chars": 136,
+      "term_count": 6,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 3
+      },
+      "beyond_kinds": {
+        "file_stem": 1,
+        "dotted_module": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": [
+        {
+          "term": "query.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "query",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 396,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "sql/query.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "sql.query",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": 392,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "resolve_lookup_value",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 408,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "solve_lookup_type",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-13658",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 1233,
+      "v0_task_chars": 210,
+      "term_count": 4,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 6,
+      "code_like_tokens_1200": 8,
+      "code_like_tokens_full": 8,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-13810",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 2254,
+      "v0_task_chars": 193,
+      "term_count": 4,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_1200",
+      "beyond_contexts": {
+        "prose": 2
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 6,
+      "code_like_tokens_1200": 8,
+      "code_like_tokens_full": 10,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-13820",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 2095,
+      "v0_task_chars": 241,
+      "term_count": 5,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "beyond_1200",
+      "beyond_contexts": {
+        "prose": 2
+      },
+      "beyond_kinds": {
+        "dotted_module": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 4,
+      "findings": [
+        {
+          "term": "loader.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "loader",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 198,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "migrations/loader.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "migrations.loader",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": 1241,
+          "bucket": "beyond_1200",
+          "context": "prose"
+        },
+        {
+          "term": "load_disk",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 1275,
+          "bucket": "beyond_1200",
+          "context": "prose"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-14608",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 604,
+      "v0_task_chars": 93,
+      "term_count": 6,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": [
+        {
+          "term": "formsets.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "formsets",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 47,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "forms/formsets.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "forms.formsets",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "clean",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "full_clean",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-14792",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 1512,
+      "v0_task_chars": 239,
+      "term_count": 6,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "prose": 2
+      },
+      "beyond_kinds": {
+        "file_stem": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 7,
+      "code_like_tokens_1200": 12,
+      "code_like_tokens_full": 12,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-15037",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 502,
+      "v0_task_chars": 91,
+      "term_count": 5,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 6,
+      "code_like_tokens_720": 6,
+      "code_like_tokens_1200": 6,
+      "code_like_tokens_full": 6,
+      "findings": [
+        {
+          "term": "inspectdb.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "inspectdb",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 50,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "commands/inspectdb.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "commands.inspectdb",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "table2model",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-15503",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "wrong_pivot",
+      "m101_failure_reasons": [
+        "ranking_gap"
+      ],
+      "statement_chars": 1795,
+      "v0_task_chars": 145,
+      "term_count": 17,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 5,
+      "code_like_tokens_720": 14,
+      "code_like_tokens_1200": 16,
+      "code_like_tokens_full": 19,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-15572",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 1386,
+      "v0_task_chars": 179,
+      "term_count": 5,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 2
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 5,
+      "code_like_tokens_1200": 6,
+      "code_like_tokens_full": 6,
+      "findings": [
+        {
+          "term": "autoreload.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 529,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "autoreload",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 14,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "template/autoreload.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 520,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "template.autoreload",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_template_directories",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-15695",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 1259,
+      "v0_task_chars": 193,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_1200",
+      "beyond_contexts": {
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "symbol": 1
+      },
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 10,
+      "code_like_tokens_1200": 15,
+      "code_like_tokens_full": 15,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-15731",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "wrong_pivot",
+      "m101_failure_reasons": [
+        "ranking_gap"
+      ],
+      "statement_chars": 1178,
+      "v0_task_chars": 100,
+      "term_count": 8,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_1200",
+      "beyond_contexts": {
+        "prose": 2
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 5,
+      "code_like_tokens_1200": 5,
+      "code_like_tokens_full": 5,
+      "findings": [
+        {
+          "term": "manager.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 755,
+          "bucket": "le_1200",
+          "context": "prose"
+        },
+        {
+          "term": "manager",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 51,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "models/manager.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 748,
+          "bucket": "le_1200",
+          "context": "prose"
+        },
+        {
+          "term": "models.manager",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_get_queryset_methods",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "check",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "create_method",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "manager_method",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-16256",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "wrong_pivot",
+      "m101_failure_reasons": [
+        "ranking_gap"
+      ],
+      "statement_chars": 2110,
+      "v0_task_chars": 194,
+      "term_count": 16,
+      "terms_in_v0": 3,
+      "terms_beyond_v0": 7,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 7
+      },
+      "beyond_kinds": {
+        "file_stem": 2,
+        "file_basename": 1,
+        "path_suffix": 1,
+        "symbol": 3
+      },
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 6,
+      "code_like_tokens_1200": 13,
+      "code_like_tokens_full": 21,
+      "findings": [
+        {
+          "term": "fields.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "fields",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 551,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "contenttypes/fields.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "contenttypes.fields",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "related_descriptors.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 558,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "related_descriptors",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 558,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "fields/related_descriptors.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 551,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "fields.related_descriptors",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "Child",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_get_target_ids",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "acreate",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 0,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "aget_or_create",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 11,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "aupdate_or_create",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 33,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "create",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 367,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "get_or_create",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 377,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "update_or_create",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 398,
+          "bucket": "le_720",
+          "context": "prose"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-16263",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "partial",
+      "m101_failure_reasons": [
+        "hidden_coedit_missing"
+      ],
+      "statement_chars": 656,
+      "v0_task_chars": 176,
+      "term_count": 29,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 4,
+      "code_like_tokens_1200": 4,
+      "code_like_tokens_full": 4,
+      "findings": [
+        {
+          "term": "expressions.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "expressions",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models/expressions.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models.expressions",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "query_utils.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "query_utils",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models/query_utils.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models.query_utils",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "query.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "query",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 62,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "sql/query.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "sql.query",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "where.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "where",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "sql/where.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "sql.where",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_add_q",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_contains_aggregate",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "build_filter",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "check_rel_lookup_compatibility",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "copy",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_aggregation",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_refs",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "refs_expression",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "relabeled_clone",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "replace_expressions",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "resolve_expression",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "resolve_lookup_value",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "solve_lookup_type",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-16333",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 556,
+      "v0_task_chars": 253,
+      "term_count": 5,
+      "terms_in_v0": 3,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 6,
+      "code_like_tokens_720": 8,
+      "code_like_tokens_1200": 8,
+      "code_like_tokens_full": 8,
+      "findings": [
+        {
+          "term": "forms.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "forms",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 100,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "auth/forms.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "auth.forms",
+          "kind": "dotted_module",
+          "in_v0_task": true,
+          "statement_offset": 95,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "save",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 24,
+          "bucket": "in_v0",
+          "context": "prose"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-16569",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 1739,
+      "v0_task_chars": 88,
+      "term_count": 5,
+      "terms_in_v0": 2,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_1200",
+      "beyond_contexts": {
+        "prose": 3
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1,
+        "dotted_module": 1
+      },
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 11,
+      "code_like_tokens_1200": 13,
+      "code_like_tokens_full": 22,
+      "findings": [
+        {
+          "term": "formsets.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 862,
+          "bucket": "le_1200",
+          "context": "prose"
+        },
+        {
+          "term": "formsets",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 0,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "forms/formsets.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 856,
+          "bucket": "le_1200",
+          "context": "prose"
+        },
+        {
+          "term": "forms.formsets",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": 790,
+          "bucket": "le_1200",
+          "context": "prose"
+        },
+        {
+          "term": "add_fields",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 10,
+          "bucket": "in_v0",
+          "context": "prose"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-16667",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 1757,
+      "v0_task_chars": 90,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 4,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_1200",
+      "beyond_contexts": {
+        "traceback": 4
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 8,
+      "code_like_tokens_720": 12,
+      "code_like_tokens_1200": 15,
+      "code_like_tokens_full": 15,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-16819",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 146,
+      "v0_task_chars": 133,
+      "term_count": 8,
+      "terms_in_v0": 2,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 2,
+      "code_like_tokens_full": 2,
+      "findings": [
+        {
+          "term": "models.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "operations/models.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "operations.models",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "RemoveIndex",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 11,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "describe",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "migration_name_fragment",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "reduce",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 69,
+          "bucket": "in_v0",
+          "context": "prose"
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-16877",
+      "repo": "django/django",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 435,
+      "v0_task_chars": 220,
+      "term_count": 7,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 1,
+      "code_like_tokens_full": 1,
+      "findings": [
+        {
+          "term": "defaultfilters.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "defaultfilters",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "template/defaultfilters.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "template.defaultfilters",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "escape_filter",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "escapeseq",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 21,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "force_escape",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "django__django-16938",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "hidden_coedit_missing",
+        "lexical_mismatch"
+      ],
+      "statement_chars": 4015,
+      "v0_task_chars": 259,
+      "term_count": 11,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 4,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "beyond_1200",
+      "beyond_contexts": {
+        "traceback": 4
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 8,
+      "code_like_tokens_1200": 13,
+      "code_like_tokens_full": 36,
+      "findings": null
+    },
+    {
+      "instance_id": "django__django-17084",
+      "repo": "django/django",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 648,
+      "v0_task_chars": 87,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 5,
+      "code_like_tokens_1200": 5,
+      "code_like_tokens_full": 5,
+      "findings": null
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "cohort": "dev",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 9971,
+      "v0_task_chars": 105,
+      "term_count": 6,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_1200",
+      "beyond_contexts": {
+        "code_block": 3
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 4,
+      "code_like_tokens_full": 27,
+      "findings": [
+        {
+          "term": "category.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 1270,
+          "bucket": "beyond_1200",
+          "context": "code_block"
+        },
+        {
+          "term": "category",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 73,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "matplotlib/category.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 1259,
+          "bucket": "beyond_1200",
+          "context": "code_block"
+        },
+        {
+          "term": "matplotlib.category",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "convert",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 1124,
+          "bucket": "le_1200",
+          "context": "code_block"
+        },
+        {
+          "term": "update",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24627",
+      "repo": "matplotlib/matplotlib",
+      "cohort": "dev",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 395,
+      "v0_task_chars": 197,
+      "term_count": 4,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 0,
+      "code_like_tokens_1200": 0,
+      "code_like_tokens_full": 0,
+      "findings": [
+        {
+          "term": "_base.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_base",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "axes/_base.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "axes._base",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "cohort": "dev",
+      "m101_outcome": "wrong_pivot",
+      "m101_failure_reasons": [
+        "ranking_gap"
+      ],
+      "statement_chars": 1136,
+      "v0_task_chars": 92,
+      "term_count": 13,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 4,
+      "code_like_tokens_full": 4,
+      "findings": [
+        {
+          "term": "contour.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "contour",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 41,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "matplotlib/contour.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "matplotlib.contour",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_tricontour.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_tricontour",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "tri/_tricontour.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "tri._tricontour",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_autolev",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_check_xyz",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_contour_args",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_process_args",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_process_contour_level_args",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24970",
+      "repo": "matplotlib/matplotlib",
+      "cohort": "dev",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 1693,
+      "v0_task_chars": 56,
+      "term_count": 4,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "code_block": 3
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 6,
+      "findings": [
+        {
+          "term": "colors.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 330,
+          "bucket": "le_360",
+          "context": "code_block"
+        },
+        {
+          "term": "colors",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 330,
+          "bucket": "le_360",
+          "context": "code_block"
+        },
+        {
+          "term": "matplotlib/colors.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 319,
+          "bucket": "le_360",
+          "context": "code_block"
+        },
+        {
+          "term": "matplotlib.colors",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25332",
+      "repo": "matplotlib/matplotlib",
+      "cohort": "dev",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 940,
+      "v0_task_chars": 68,
+      "term_count": 12,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 5,
+      "code_like_tokens_1200": 5,
+      "code_like_tokens_full": 5,
+      "findings": [
+        {
+          "term": "cbook.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "cbook",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "matplotlib/cbook.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "matplotlib.cbook",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "Grouper",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "Grouper.__contains__",
+          "kind": "class_method",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "__contains__",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "Grouper.__getstate__",
+          "kind": "class_method",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "__getstate__",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "Grouper.__init__",
+          "kind": "class_method",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "Grouper.__setstate__",
+          "kind": "class_method",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "__setstate__",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25960",
+      "repo": "matplotlib/matplotlib",
+      "cohort": "holdout",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 783,
+      "v0_task_chars": 68,
+      "term_count": 5,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "prose": 3
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 1,
+      "code_like_tokens_full": 1,
+      "findings": null
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 1368,
+      "v0_task_chars": 96,
+      "term_count": 8,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 5,
+      "code_like_tokens_1200": 6,
+      "code_like_tokens_full": 7,
+      "findings": null
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 1412,
+      "v0_task_chars": 198,
+      "term_count": 9,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_1200",
+      "beyond_contexts": {
+        "prose": 3
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 7,
+      "code_like_tokens_1200": 8,
+      "code_like_tokens_full": 9,
+      "findings": [
+        {
+          "term": "scales.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 1026,
+          "bucket": "le_1200",
+          "context": "prose"
+        },
+        {
+          "term": "scales",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 1026,
+          "bucket": "le_1200",
+          "context": "prose"
+        },
+        {
+          "term": "_core/scales.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 1020,
+          "bucket": "le_1200",
+          "context": "prose"
+        },
+        {
+          "term": "_core.scales",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "utils.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "seaborn/utils.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "seaborn.utils",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_view_interval",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "spacer",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 194,
+      "v0_task_chars": 122,
+      "term_count": 4,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 1,
+      "code_like_tokens_full": 1,
+      "findings": [
+        {
+          "term": "blueprints.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "blueprints",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 29,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "flask/blueprints.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "flask.blueprints",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "psf__requests-1142",
+      "repo": "psf/requests",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 381,
+      "v0_task_chars": 130,
+      "term_count": 7,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 2,
+      "code_like_tokens_full": 2,
+      "findings": [
+        {
+          "term": "models.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "models",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "requests/models.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "requests.models",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "prepare_auth",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "prepare_body",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "prepare_content_length",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "psf__requests-1724",
+      "repo": "psf/requests",
+      "cohort": "dev",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 7476,
+      "v0_task_chars": 115,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 4,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "traceback": 3,
+        "code_block": 1
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 4,
+      "code_like_tokens_full": 6,
+      "findings": [
+        {
+          "term": "sessions.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 902,
+          "bucket": "le_1200",
+          "context": "traceback"
+        },
+        {
+          "term": "sessions",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 902,
+          "bucket": "le_1200",
+          "context": "traceback"
+        },
+        {
+          "term": "requests/sessions.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 893,
+          "bucket": "le_1200",
+          "context": "traceback"
+        },
+        {
+          "term": "requests.sessions",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "request",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 188,
+          "bucket": "le_360",
+          "context": "code_block"
+        }
+      ]
+    },
+    {
+      "instance_id": "psf__requests-1921",
+      "repo": "psf/requests",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 708,
+      "v0_task_chars": 239,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 1,
+      "code_like_tokens_full": 1,
+      "findings": [
+        {
+          "term": "sessions.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "sessions",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "requests/sessions.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "requests.sessions",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "merge_setting",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "psf__requests-5414",
+      "repo": "psf/requests",
+      "cohort": "holdout",
+      "m101_outcome": null,
+      "m101_failure_reasons": [
+        "unknown"
+      ],
+      "statement_chars": 1371,
+      "v0_task_chars": 324,
+      "term_count": 5,
+      "terms_in_v0": 3,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 4,
+      "code_like_tokens_full": 6,
+      "findings": null
+    },
+    {
+      "instance_id": "pydata__xarray-2905",
+      "repo": "pydata/xarray",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 2060,
+      "v0_task_chars": 92,
+      "term_count": 5,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "beyond_1200",
+      "beyond_contexts": {
+        "prose": 2
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 5,
+      "code_like_tokens_720": 6,
+      "code_like_tokens_1200": 8,
+      "code_like_tokens_full": 15,
+      "findings": [
+        {
+          "term": "variable.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 1335,
+          "bucket": "beyond_1200",
+          "context": "prose"
+        },
+        {
+          "term": "variable",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 0,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "core/variable.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 1330,
+          "bucket": "beyond_1200",
+          "context": "prose"
+        },
+        {
+          "term": "core.variable",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "as_compatible_data",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-3677",
+      "repo": "pydata/xarray",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 1418,
+      "v0_task_chars": 226,
+      "term_count": 5,
+      "terms_in_v0": 2,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "traceback": 2
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 6,
+      "code_like_tokens_full": 7,
+      "findings": [
+        {
+          "term": "dataset.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 666,
+          "bucket": "le_720",
+          "context": "traceback"
+        },
+        {
+          "term": "dataset",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 23,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "core/dataset.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 661,
+          "bucket": "le_720",
+          "context": "traceback"
+        },
+        {
+          "term": "core.dataset",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "merge",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 81,
+          "bucket": "in_v0",
+          "context": "prose"
+        }
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-4695",
+      "repo": "pydata/xarray",
+      "cohort": "dev",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 3360,
+      "v0_task_chars": 116,
+      "term_count": 4,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "code_block": 1
+      },
+      "beyond_kinds": {
+        "file_stem": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 9,
+      "code_like_tokens_full": 13,
+      "findings": [
+        {
+          "term": "dataarray.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "dataarray",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 164,
+          "bucket": "le_360",
+          "context": "code_block"
+        },
+        {
+          "term": "core/dataarray.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "core.dataarray",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 4168,
+      "v0_task_chars": 82,
+      "term_count": 6,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 0,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 15,
+      "findings": [
+        {
+          "term": "computation.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "computation",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "core/computation.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "core.computation",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_ensure_numeric",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "to_floatable",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-6938",
+      "repo": "pydata/xarray",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 2864,
+      "v0_task_chars": 62,
+      "term_count": 19,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "code_block": 1,
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "file_stem": 2
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 7,
+      "code_like_tokens_full": 20,
+      "findings": [
+        {
+          "term": "dataset.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "dataset",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 497,
+          "bucket": "le_720",
+          "context": "code_block"
+        },
+        {
+          "term": "core/dataset.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "core.dataset",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "variable.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "variable",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 233,
+          "bucket": "le_360",
+          "context": "prose"
+        },
+        {
+          "term": "core/variable.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "core.variable",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_data_equals",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_inplace_binary_op",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "equals",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_level_variable",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "level_names",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "name",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "swap_dims",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 2,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "to_base_variable",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "to_index",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "to_index_variable",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "values",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-6992",
+      "repo": "pydata/xarray",
+      "cohort": "dev",
+      "m101_outcome": "wrong_pivot",
+      "m101_failure_reasons": [
+        "ranking_gap"
+      ],
+      "statement_chars": 1551,
+      "v0_task_chars": 85,
+      "term_count": 13,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 5,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "prose": 3,
+        "code_block": 2
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1,
+        "dotted_module": 1,
+        "symbol": 2
+      },
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 6,
+      "code_like_tokens_1200": 8,
+      "code_like_tokens_full": 9,
+      "findings": [
+        {
+          "term": "dataset.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 1431,
+          "bucket": "beyond_1200",
+          "context": "prose"
+        },
+        {
+          "term": "dataset",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 57,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "core/dataset.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 1426,
+          "bucket": "beyond_1200",
+          "context": "prose"
+        },
+        {
+          "term": "core.dataset",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": 89,
+          "bucket": "le_360",
+          "context": "prose"
+        },
+        {
+          "term": "indexes.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "indexes",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "core/indexes.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "core.indexes",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "drop_or_convert",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "keep_levels",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "reorder_levels",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "reset_index",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 615,
+          "bucket": "le_720",
+          "context": "code_block"
+        },
+        {
+          "term": "set_index",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 591,
+          "bucket": "le_720",
+          "context": "code_block"
+        }
+      ]
+    },
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "cohort": "dev",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "hidden_coedit_missing",
+        "lexical_mismatch"
+      ],
+      "statement_chars": 754,
+      "v0_task_chars": 232,
+      "term_count": 24,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 5,
+      "code_like_tokens_1200": 6,
+      "code_like_tokens_full": 6,
+      "findings": [
+        {
+          "term": "diagrams.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "diagrams",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pyreverse/diagrams.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pyreverse.diagrams",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "inspector.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "inspector",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pyreverse/inspector.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pyreverse.inspector",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "utils.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pyreverse/utils.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pyreverse.utils",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "writer.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "writer",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pyreverse/writer.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pyreverse.writer",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "class_names",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_annotation",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_annotation_label",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "get_values",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "handle_assignattr_type",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "infer_node",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "visit",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "visit_assignname",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "visit_import",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "cohort": "dev",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "hidden_coedit_missing",
+        "zero_required_but_gold_exists",
+        "lexical_mismatch"
+      ],
+      "statement_chars": 3377,
+      "v0_task_chars": 76,
+      "term_count": 15,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 5,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_1200",
+      "beyond_contexts": {
+        "traceback": 5
+      },
+      "beyond_kinds": {
+        "file_basename": 2,
+        "file_stem": 1,
+        "path_suffix": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 5,
+      "code_like_tokens_full": 21,
+      "findings": [
+        {
+          "term": "argument.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 2159,
+          "bucket": "beyond_1200",
+          "context": "traceback"
+        },
+        {
+          "term": "argument",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 2159,
+          "bucket": "beyond_1200",
+          "context": "traceback"
+        },
+        {
+          "term": "config/argument.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 2152,
+          "bucket": "beyond_1200",
+          "context": "traceback"
+        },
+        {
+          "term": "config.argument",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "__init__.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 784,
+          "bucket": "le_1200",
+          "context": "traceback"
+        },
+        {
+          "term": "utils/__init__.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pylint.utils",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "utils.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "utils/utils.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "utils.utils",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_check_csv",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_check_regexp_csv",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_comment",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_regex_transformer",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_regexp_csv_transfomer",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 2186,
+          "bucket": "beyond_1200",
+          "context": "traceback"
+        }
+      ]
+    },
+    {
+      "instance_id": "pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 1334,
+      "v0_task_chars": 144,
+      "term_count": 9,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 3
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": [
+        {
+          "term": "logging.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 437,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "logging",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 437,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "_pytest/logging.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 429,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "_pytest.logging",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "clear",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 30,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "handleError",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "messages",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "reset",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "set_level",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5262",
+      "repo": "pytest-dev/pytest",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 4689,
+      "v0_task_chars": 98,
+      "term_count": 6,
+      "terms_in_v0": 3,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "beyond_1200",
+      "beyond_contexts": {
+        "code_block": 2
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 1,
+      "code_like_tokens_full": 19,
+      "findings": [
+        {
+          "term": "capture.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 3649,
+          "bucket": "beyond_1200",
+          "context": "code_block"
+        },
+        {
+          "term": "capture",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 8,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "_pytest/capture.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 3641,
+          "bucket": "beyond_1200",
+          "context": "code_block"
+        },
+        {
+          "term": "_pytest.capture",
+          "kind": "dotted_module",
+          "in_v0_task": true,
+          "statement_offset": 0,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "mode",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 28,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "name",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "cohort": "dev",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 2699,
+      "v0_task_chars": 121,
+      "term_count": 17,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "file_stem": 1
+      },
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 13,
+      "findings": [
+        {
+          "term": "python.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "python",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 397,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "_pytest/python.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_pytest.python",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "Module",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "Module.__init__",
+          "kind": "class_method",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "Module._getobj",
+          "kind": "class_method",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_getobj",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "PyobjMixin",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "PyobjMixin._getobj",
+          "kind": "class_method",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "PyobjMixin._mount_obj_if_needed",
+          "kind": "class_method",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_mount_obj_if_needed",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "PyobjMixin.obj",
+          "kind": "class_method",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "obj",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "_genfunctions",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "collect",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 37,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "isinitpath",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        }
+      ]
+    },
+    {
+      "instance_id": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 746,
+      "v0_task_chars": 104,
+      "term_count": 5,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "code_block": 2,
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 4,
+      "code_like_tokens_1200": 5,
+      "code_like_tokens_full": 5,
+      "findings": [
+        {
+          "term": "skipping.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 542,
+          "bucket": "le_720",
+          "context": "code_block"
+        },
+        {
+          "term": "skipping",
+          "kind": "file_stem",
+          "in_v0_task": true,
+          "statement_offset": 0,
+          "bucket": "in_v0",
+          "context": "prose"
+        },
+        {
+          "term": "_pytest/skipping.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 534,
+          "bucket": "le_720",
+          "context": "code_block"
+        },
+        {
+          "term": "_pytest.skipping",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pytest_runtest_makereport",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 713,
+          "bucket": "le_720",
+          "context": "prose"
+        }
+      ]
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "cohort": "dev",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 2337,
+      "v0_task_chars": 132,
+      "term_count": 6,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 2
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1
+      },
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 7,
+      "code_like_tokens_1200": 10,
+      "code_like_tokens_full": 19,
+      "findings": [
+        {
+          "term": "supervised.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 684,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "supervised",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 684,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "cluster/supervised.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "cluster.supervised",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "entropy",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "fowlkes_mallows_score",
+          "kind": "symbol",
+          "in_v0_task": true,
+          "statement_offset": 0,
+          "bucket": "in_v0",
+          "context": "prose"
+        }
+      ]
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-11578",
+      "repo": "scikit-learn/scikit-learn",
+      "cohort": "dev",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 7216,
+      "v0_task_chars": 357,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 5,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 4,
+        "code_block": 1
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "path_suffix": 1,
+        "dotted_module": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 6,
+      "code_like_tokens_720": 6,
+      "code_like_tokens_1200": 11,
+      "code_like_tokens_full": 37,
+      "findings": [
+        {
+          "term": "logistic.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 734,
+          "bucket": "le_1200",
+          "context": "prose"
+        },
+        {
+          "term": "logistic",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 497,
+          "bucket": "le_720",
+          "context": "prose"
+        },
+        {
+          "term": "linear_model/logistic.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": 866,
+          "bucket": "le_1200",
+          "context": "prose"
+        },
+        {
+          "term": "linear_model.logistic",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": 2669,
+          "bucket": "beyond_1200",
+          "context": "code_block"
+        },
+        {
+          "term": "_log_reg_scoring_path",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 774,
+          "bucket": "le_1200",
+          "context": "prose"
+        }
+      ]
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "cohort": "dev",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 1132,
+      "v0_task_chars": 88,
+      "term_count": 9,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "traceback": 2,
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": [
+        {
+          "term": "python.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": 352,
+          "bucket": "le_360",
+          "context": "traceback"
+        },
+        {
+          "term": "python",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": 164,
+          "bucket": "le_360",
+          "context": "prose"
+        },
+        {
+          "term": "domains/python.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "domains.python",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "ast.py",
+          "kind": "file_basename",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "ast",
+          "kind": "file_stem",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pycode/ast.py",
+          "kind": "path_suffix",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "pycode.ast",
+          "kind": "dotted_module",
+          "in_v0_task": false,
+          "statement_offset": null,
+          "bucket": "absent",
+          "context": null
+        },
+        {
+          "term": "unparse",
+          "kind": "symbol",
+          "in_v0_task": false,
+          "statement_offset": 377,
+          "bucket": "le_720",
+          "context": "traceback"
+        }
+      ]
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "cohort": "holdout",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 381,
+      "v0_task_chars": 256,
+      "term_count": 10,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 1,
+      "code_like_tokens_full": 1,
+      "findings": null
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7910",
+      "repo": "sphinx-doc/sphinx",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 1116,
+      "v0_task_chars": 93,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 5,
+      "code_like_tokens_full": 5,
+      "findings": null
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9230",
+      "repo": "sphinx-doc/sphinx",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 1204,
+      "v0_task_chars": 88,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 5,
+      "code_like_tokens_full": 5,
+      "findings": null
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9320",
+      "repo": "sphinx-doc/sphinx",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "zero_required_but_gold_exists",
+        "lexical_mismatch"
+      ],
+      "statement_chars": 1081,
+      "v0_task_chars": 84,
+      "term_count": 8,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 1,
+      "code_like_tokens_full": 1,
+      "findings": null
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9698",
+      "repo": "sphinx-doc/sphinx",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 808,
+      "v0_task_chars": 115,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "file_stem": 1
+      },
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 2,
+      "code_like_tokens_full": 2,
+      "findings": null
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9711",
+      "repo": "sphinx-doc/sphinx",
+      "cohort": "holdout",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 1508,
+      "v0_task_chars": 69,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "file_stem": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 1111,
+      "v0_task_chars": 74,
+      "term_count": 8,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 3,
+      "code_like_tokens_full": 3,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 405,
+      "v0_task_chars": 167,
+      "term_count": 4,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 1,
+      "code_like_tokens_1200": 1,
+      "code_like_tokens_full": 1,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "wrong_pivot",
+      "m101_failure_reasons": [
+        "ranking_gap"
+      ],
+      "statement_chars": 1157,
+      "v0_task_chars": 96,
+      "term_count": 5,
+      "terms_in_v0": 2,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "traceback": 2
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1
+      },
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 4,
+      "code_like_tokens_1200": 5,
+      "code_like_tokens_full": 5,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-13480",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 421,
+      "v0_task_chars": 93,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "traceback": 3
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 2,
+      "code_like_tokens_full": 2,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-13974",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 1008,
+      "v0_task_chars": 191,
+      "term_count": 7,
+      "terms_in_v0": 2,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 4,
+      "code_like_tokens_720": 4,
+      "code_like_tokens_1200": 4,
+      "code_like_tokens_full": 4,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-15599",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 1777,
+      "v0_task_chars": 239,
+      "term_count": 5,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "code_block": 3
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "path_suffix": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 5,
+      "code_like_tokens_full": 9,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-15875",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 542,
+      "v0_task_chars": 133,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "file_stem": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 5,
+      "code_like_tokens_1200": 5,
+      "code_like_tokens_full": 5,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "hidden_coedit_missing",
+        "lexical_mismatch"
+      ],
+      "statement_chars": 602,
+      "v0_task_chars": 82,
+      "term_count": 30,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 2,
+      "code_like_tokens_full": 2,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 577,
+      "v0_task_chars": 124,
+      "term_count": 6,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "code_block": 2
+      },
+      "beyond_kinds": {
+        "file_stem": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 2,
+      "code_like_tokens_full": 2,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-16792",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 1879,
+      "v0_task_chars": 277,
+      "term_count": 6,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 1,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "beyond_1200",
+      "beyond_contexts": {
+        "prose": 1
+      },
+      "beyond_kinds": {
+        "file_stem": 1
+      },
+      "code_like_tokens_360": 1,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 4,
+      "code_like_tokens_full": 4,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-18189",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 664,
+      "v0_task_chars": 149,
+      "term_count": 5,
+      "terms_in_v0": 2,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 0,
+      "code_like_tokens_1200": 0,
+      "code_like_tokens_full": 0,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-19637",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "excellent",
+      "m101_failure_reasons": [],
+      "statement_chars": 216,
+      "v0_task_chars": 64,
+      "term_count": 5,
+      "terms_in_v0": 1,
+      "terms_beyond_v0": 2,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_360",
+      "beyond_contexts": {
+        "prose": 2
+      },
+      "beyond_kinds": {
+        "file_stem": 1,
+        "dotted_module": 1
+      },
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 2,
+      "code_like_tokens_full": 2,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-20428",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 3620,
+      "v0_task_chars": 158,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 3,
+      "code_like_tokens_720": 3,
+      "code_like_tokens_1200": 4,
+      "code_like_tokens_full": 16,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-20801",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "miss",
+      "m101_failure_reasons": [
+        "lexical_mismatch"
+      ],
+      "statement_chars": 490,
+      "v0_task_chars": 81,
+      "term_count": 4,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 0,
+      "code_like_tokens_1200": 0,
+      "code_like_tokens_full": 0,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-23413",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 347,
+      "v0_task_chars": 121,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 2,
+      "code_like_tokens_720": 2,
+      "code_like_tokens_1200": 2,
+      "code_like_tokens_full": 2,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-24213",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "good",
+      "m101_failure_reasons": [],
+      "statement_chars": 996,
+      "v0_task_chars": 99,
+      "term_count": 5,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 3,
+      "has_evidence_beyond_v0": true,
+      "earliest_beyond_bucket": "le_720",
+      "beyond_contexts": {
+        "traceback": 2,
+        "code_block": 1
+      },
+      "beyond_kinds": {
+        "file_basename": 1,
+        "file_stem": 1,
+        "symbol": 1
+      },
+      "code_like_tokens_360": 5,
+      "code_like_tokens_720": 4,
+      "code_like_tokens_1200": 5,
+      "code_like_tokens_full": 5,
+      "findings": null
+    },
+    {
+      "instance_id": "sympy__sympy-24562",
+      "repo": "sympy/sympy",
+      "cohort": "holdout",
+      "m101_outcome": "overpacked",
+      "m101_failure_reasons": [
+        "too_many_optional_targets"
+      ],
+      "statement_chars": 221,
+      "v0_task_chars": 196,
+      "term_count": 4,
+      "terms_in_v0": 0,
+      "terms_beyond_v0": 0,
+      "has_evidence_beyond_v0": false,
+      "earliest_beyond_bucket": null,
+      "beyond_contexts": {},
+      "beyond_kinds": {},
+      "code_like_tokens_360": 0,
+      "code_like_tokens_720": 0,
+      "code_like_tokens_1200": 0,
+      "code_like_tokens_full": 0,
+      "findings": null
+    }
+  ]
+}
