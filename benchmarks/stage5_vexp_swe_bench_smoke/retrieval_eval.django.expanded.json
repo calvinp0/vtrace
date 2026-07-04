@@ -100,7 +100,7 @@
       "runshell",
       "runshell_db"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-11133",
@@ -116,7 +116,7 @@
     "expected_symbols": [
       "make_bytes"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-11206",
@@ -132,13 +132,13 @@
     "expected_symbols": [
       "format"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-11749",
     "repo": "django/django",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11749",
-    "task": "call_command fails when argument of required mutually exclusive group is passed in kwargs. — django.core.management.base.CommandError: Error: one of the arguments --shop-id --shop is required",
+    "task": "call_command fails when argument of required mutually exclusive group is passed in kwargs. — django.core.management.base.CommandError: Error: one of the arguments --shop-id --shop is required\nErrors: CommandError",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -148,13 +148,13 @@
     "expected_symbols": [
       "get_actions"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-11815",
     "repo": "django/django",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11815",
-    "task": "Migrations uses value of enum object instead of its name. — (last modified by oasl)",
+    "task": "Migrations uses value of enum object instead of its name. — (last modified by oasl)\nErrors: ValueError\nTraceback: ValueError: 'Good' is not a valid Status",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -167,13 +167,13 @@
       "FloatSerializer",
       "serialize"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-11820",
     "repo": "django/django",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11820",
-    "task": "models.E015 is raised when Meta.ordering contains \"pk\" of a related field. — models.E015 is raised when Meta.ordering contains __pk of a related field, e.g.:",
+    "task": "models.E015 is raised when Meta.ordering contains \"pk\" of a related field. — models.E015 is raised when Meta.ordering contains __pk of a related field, e.g.:\nFailing tests: test_app",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -183,7 +183,7 @@
     "expected_symbols": [
       "_check_ordering"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-12050",
@@ -200,13 +200,13 @@
       "resolve_lookup_value",
       "solve_lookup_type"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-12273",
     "repo": "django/django",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12273",
-    "task": "Resetting primary key for a child model doesn't work. — In the attached example code setting the primary key to None does not work (so that the existing object is overwritten on save()).",
+    "task": "Resetting primary key for a child model doesn't work. — In the attached example code setting the primary key to None does not work (so that the existing object is overwritten on save()).\nFailing tests: test_f_true",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -217,7 +217,7 @@
       "_get_pk_val",
       "_set_pk_val"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-12276",
@@ -235,7 +235,7 @@
       "value_from_datadict",
       "value_omitted_from_data"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-12325",
@@ -253,13 +253,13 @@
       "__new__",
       "_prepare"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-12774",
     "repo": "django/django",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12774",
-    "task": "Allow QuerySet.in_bulk() for fields with total UniqueConstraints. — If a field is unique by UniqueConstraint instead of unique=True running in_bulk() on that field will fail.",
+    "task": "Allow QuerySet.in_bulk() for fields with total UniqueConstraints. — If a field is unique by UniqueConstraint instead of unique=True running in_bulk() on that field will fail.\nErrors: ValueError\nTraceback: File \"/usr/local/lib/python3.8/code.py\", line 90, in runcode | File \"<console>\", line 1, in <module> | File \"/app/venv/lib/python3.8/site-packages/django/db/models/manager.py\", line 82, in manager_method | File \"/app/venv/lib/python3.8/site-packages/django/db/models/query.py\", line 680, in in_bulk | ValueError: in_bulk()'s field_name must be a unique field but 'slug' isn't.",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -269,13 +269,13 @@
     "expected_symbols": [
       "in_bulk"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-12858",
     "repo": "django/django",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12858",
-    "task": "models.E015 is raised when ordering uses lookups that are not transforms. — SystemCheckError: System check identified some issues:",
+    "task": "models.E015 is raised when ordering uses lookups that are not transforms. — SystemCheckError: System check identified some issues:\nErrors: SystemCheckError\nTraceback: SystemCheckError: System check identified some issues:",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -285,13 +285,13 @@
     "expected_symbols": [
       "_check_ordering"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-13012",
     "repo": "django/django",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13012",
-    "task": "Constant expressions of an ExpressionWrapper object are incorrectly placed at the GROUP BY clause — I have a function that expects an arbitrary Query expression and constructs a query on a Postgres db",
+    "task": "Constant expressions of an ExpressionWrapper object are incorrectly placed at the GROUP BY clause — I have a function that expects an arbitrary Query expression and constructs a query on a Postgres db\nErrors: ProgrammingError",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -304,13 +304,13 @@
       "get_source_expressions",
       "set_source_expressions"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-13112",
     "repo": "django/django",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13112",
-    "task": "makemigrations crashes for ForeignKey with mixed-case app name. — When i run \"python3 manage.py migrate\" on Django 3.1b1 shows me that error (Please, note that the code works well in 3.0)",
+    "task": "makemigrations crashes for ForeignKey with mixed-case app name. — When i run \"python3 manage.py migrate\" on Django 3.1b1 shows me that error (Please, note that the code works well in 3.0)\nErrors: ValueError\nTraceback: ValueError: The field DJ_RegLogin.Content.category was declared with a lazy reference to 'dj_reglogin.category', but app 'dj_reglogin' isn't installed.",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -320,7 +320,7 @@
     "expected_symbols": [
       "deconstruct"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "django__django-13195",
@@ -342,6 +342,6 @@
       "process_response",
       "set_signed_cookie"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   }
 ]

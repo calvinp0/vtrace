@@ -36,7 +36,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | instances_evaluated | 20 |
 | workspace_error_count | 0 |
 | no_context_count | 0 |
-| top_1_file_accuracy | 85.0% |
+| top_1_file_accuracy | 90.0% |
 | top_3_file_recall | 100.0% |
 | expected_file_as_pivot_rate | 100.0% |
 | expected_file_as_support_rate | 0.0% |
@@ -44,7 +44,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | expected_file_missing_rate | 0.0% |
 | expected_symbol_hit_rate | 70.0% |
 | expected_symbol_as_pivot_rate | 60.0% |
-| mean_capsule_tokens | 1139.3 |
+| mean_capsule_tokens | 1220.7 |
 | mean_pivot_count | 2.05 |
 | mean_support_count | 3.95 |
 
@@ -58,7 +58,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | instances_evaluated | 15 |
 | workspace_error_count | 0 |
 | no_context_count | 0 |
-| top_1_file_accuracy | 80.0% |
+| top_1_file_accuracy | 86.7% |
 | top_3_file_recall | 100.0% |
 | expected_file_as_pivot_rate | 100.0% |
 | expected_file_as_support_rate | 0.0% |
@@ -66,7 +66,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | expected_file_missing_rate | 0.0% |
 | expected_symbol_hit_rate | 73.3% |
 | expected_symbol_as_pivot_rate | 60.0% |
-| mean_capsule_tokens | 1095.5 |
+| mean_capsule_tokens | 1204.1 |
 | mean_pivot_count | 2.07 |
 | mean_support_count | 3.93 |
 
@@ -94,7 +94,7 @@ support / discarded are compared against the fixture's `expected_files` and
 
 | repo | instances | top-1 file | top-3 file | as pivot | missing | mean tokens | mean pivots | mean support |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| django/django | 20/20 | 85.0% | 100.0% | 100.0% | 0.0% | 1139.3 | 2.05 | 3.95 |
+| django/django | 20/20 | 90.0% | 100.0% | 100.0% | 0.0% | 1220.7 | 2.05 | 3.95 |
 
 ## Miss summary (compact)
 
@@ -125,7 +125,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | django__django-11133 | gold_patch | django/http/response.py | http/response.py::HttpResponse | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11206 | gold_patch | django/utils/numberformat.py | utils/numberformat.py::format | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11749 | gold_patch | django/core/management/__init__.py | core/management/__init__.py::call_command | pivot | yes | yes | hit_top1_pivot | none |
-| django__django-11815 | gold_patch | django/db/migrations/serializer.py | db/models/base.py::serializable_value | pivot | no | yes | hit_top3 | none |
+| django__django-11815 | gold_patch | django/db/migrations/serializer.py | db/migrations/serializer.py::EnumSerializer | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11820 | gold_patch | django/db/models/base.py | db/models/base.py::_check_ordering | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12050 | gold_patch | django/db/models/sql/query.py | db/models/sql/query.py::resolve_lookup_value | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-12273 | gold_patch | django/db/models/base.py | forms/models.py::save | pivot | no | yes | hit_top3 | none |

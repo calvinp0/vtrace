@@ -16,13 +16,13 @@
       "_eval_determinant",
       "conjugate"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "sympy__sympy-12481",
     "repo": "sympy/sympy",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-12481",
-    "task": "`Permutation` constructor fails with non-disjoint cycles — Calling `Permutation([[0,1],[0,1]])` raises a `ValueError` instead of constructing the identity permutation.",
+    "task": "`Permutation` constructor fails with non-disjoint cycles — Calling `Permutation([[0,1],[0,1]])` raises a `ValueError` instead of constructing the identity permutation.\nErrors: ValueError",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -32,13 +32,13 @@
     "expected_symbols": [
       "__new__"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "sympy__sympy-13372",
     "repo": "sympy/sympy",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-13372",
-    "task": "UnboundLocalError in evalf — During handling of the above exception, another exception occurred:",
+    "task": "UnboundLocalError in evalf — During handling of the above exception, another exception occurred:\nErrors: UnboundLocalError | KeyError | NotImplementedError\nTraceback: File \"./sympy/core/evalf.py\", line 1285, in evalf | KeyError: Max | File \"<stdin>\", line 1, in <module> | File \"./sympy/core/evalf.py\", line 1394, in evalf | File \"./sympy/core/evalf.py\", line 1286, in evalf | File \"./sympy/core/evalf.py\", line 538, in evalf_mul | File \"./sympy/core/evalf.py\", line 1308, in evalf | UnboundLocalError: local variable 'reprec' referenced before assignment",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -48,13 +48,13 @@
     "expected_symbols": [
       "evalf"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "scikit-learn__scikit-learn-10844",
     "repo": "scikit-learn/scikit-learn",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/scikit-learn__scikit-learn-10844",
-    "task": "fowlkes_mallows_score returns RuntimeWarning when variables get too big — If your issue is a usage question, submit it here instead:",
+    "task": "fowlkes_mallows_score returns RuntimeWarning when variables get too big — If your issue is a usage question, submit it here instead:\nErrors: RuntimeWarning",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -65,7 +65,7 @@
       "entropy",
       "fowlkes_mallows_score"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "scikit-learn__scikit-learn-11578",
@@ -81,13 +81,13 @@
     "expected_symbols": [
       "_log_reg_scoring_path"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "matplotlib__matplotlib-22719",
     "repo": "matplotlib/matplotlib",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-22719",
-    "task": "[Bug]: Confusing deprecation warning when empty data passed to axis with category units — ### Bug summary",
+    "task": "[Bug]: Confusing deprecation warning when empty data passed to axis with category units — ### Bug summary\nErrors: MatplotlibDeprecationWarning | ConversionError\nTraceback: MatplotlibDeprecationWarning: Support for passing numbers through unit converters is deprecated since 3.5 and support will be removed two minor releases later;… | ConversionError: Failed to convert value(s) to axis units: array([], dtype=float64) | ConversionError: Failed to convert value(s) to axis units: []",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -98,7 +98,7 @@
       "convert",
       "update"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "matplotlib__matplotlib-24627",
@@ -114,13 +114,13 @@
     "expected_symbols": [
       "__clear"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "astropy__astropy-14365",
     "repo": "astropy/astropy",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14365",
-    "task": "ascii.qdp Table format assumes QDP commands are upper case — ascii.qdp assumes that commands in a QDP file are upper case, for example, for errors they must be \"READ SERR 1 2\" whereas QDP itself is not case sensitive and case use \"read serr 1 2\".",
+    "task": "ascii.qdp Table format assumes QDP commands are upper case — ascii.qdp assumes that commands in a QDP file are upper case, for example, for errors they must be \"READ SERR 1 2\" whereas QDP itself is not case sensitive and case use \"read serr 1 2\".\nErrors: ValueError\nTraceback: ValueError: Unrecognized QDP line: read serr 1 2",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -131,7 +131,7 @@
       "_get_tables_from_qdp_file",
       "_line_type"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "astropy__astropy-14369",
@@ -153,7 +153,7 @@
       "p_division_of_units",
       "p_product_of_units"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "pytest-dev__pytest-10051",
@@ -173,13 +173,13 @@
       "reset",
       "set_level"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "pytest-dev__pytest-5262",
     "repo": "pytest-dev/pytest",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-5262",
-    "task": "_pytest.capture.EncodedFile mode should not include `b` (binary) — Thanks for submitting an issue!",
+    "task": "_pytest.capture.EncodedFile mode should not include `b` (binary) — Thanks for submitting an issue!\nErrors: TypeError\nFailing tests: test_foo",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -191,13 +191,13 @@
       "mode",
       "name"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "sphinx-doc__sphinx-7462",
     "repo": "sphinx-doc/sphinx",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-7462",
-    "task": "`IndexError: pop from empty list` for empty tuple type annotation — **Describe the bug**",
+    "task": "`IndexError: pop from empty list` for empty tuple type annotation — **Describe the bug**\nErrors: IndexError\nTraceback: File \"\\path\\to\\site-packages\\sphinx\\domains\\python.py\", line 112, in unparse | IndexError: pop from empty list",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -208,7 +208,7 @@
     "expected_symbols": [
       "unparse"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "sphinx-doc__sphinx-7748",
@@ -230,7 +230,7 @@
       "format_signature",
       "get_doc"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "psf__requests-1142",
@@ -248,13 +248,13 @@
       "prepare_body",
       "prepare_content_length"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "psf__requests-1724",
     "repo": "psf/requests",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-1724",
-    "task": "Unicode method names cause UnicodeDecodeError for some requests in Python 2.7.2 — The following example works fine:",
+    "task": "Unicode method names cause UnicodeDecodeError for some requests in Python 2.7.2 — The following example works fine:\nErrors: UnicodeDecodeError\nFailing tests: test_requests\nTraceback: File \"/Users/hwkns/test_requests.py\", line 6, in <module> | File \"/Library/Python/2.7/site-packages/requests/api.py\", line 44, in request | File \"/Library/Python/2.7/site-packages/requests/sessions.py\", line 335, in request | File \"/Library/Python/2.7/site-packages/requests/sessions.py\", line 438, in send | File \"/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py\", line 989, in _send_request | File \"/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py\", line 951, in endheaders | File \"/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py\", line 809, in _send_output | UnicodeDecodeError: 'ascii' codec can't decode byte 0xcf in position 140: ordinal not in range(128)",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -264,13 +264,13 @@
     "expected_symbols": [
       "request"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "pallets__flask-5014",
     "repo": "pallets/flask",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pallets__flask-5014",
-    "task": "Require a non-empty name for Blueprints — Things do not work correctly if a Blueprint is given an empty name (e.g. #4944).",
+    "task": "Require a non-empty name for Blueprints — Things do not work correctly if a Blueprint is given an empty name (e.g. #4944).\nErrors: ValueError",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -280,7 +280,7 @@
     "expected_symbols": [
       "__init__"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "astropy__astropy-14539",
@@ -296,7 +296,7 @@
     "expected_symbols": [
       "_diff"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "astropy__astropy-14598",
@@ -313,13 +313,13 @@
       "Card",
       "_split"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "matplotlib__matplotlib-24970",
     "repo": "matplotlib/matplotlib",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-24970",
-    "task": "[Bug]: NumPy 1.24 deprecation warnings — ### Bug summary",
+    "task": "[Bug]: NumPy 1.24 deprecation warnings — ### Bug summary\nErrors: DeprecationWarning",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -329,7 +329,7 @@
     "expected_symbols": [
       "__call__"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "matplotlib__matplotlib-25960",
@@ -345,7 +345,7 @@
     "expected_symbols": [
       "subfigures"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "mwaskom__seaborn-3187",
@@ -363,13 +363,13 @@
       "get_view_interval",
       "spacer"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "psf__requests-5414",
     "repo": "psf/requests",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-5414",
-    "task": "Getting http://.example.com raises UnicodeError — Attempting to get e.g. `http://.example.com` results in a `UnicodeError`. It seems like the intention so far has been to raise `InvalidUrl` instead (see e.g. [this line](https://github.com/psf/requests/blob/ca6f9af5dba09591007b15a7368bc0f006b7cc50/requests/models.py#L401)).",
+    "task": "Getting http://.example.com raises UnicodeError — Attempting to get e.g. `http://.example.com` results in a `UnicodeError`. It seems like the intention so far has been to raise `InvalidUrl` instead (see e.g. [this line](https://github.com/psf/requests/blob/ca6f9af5dba09591007b15a7368bc0f006b7cc50/requests/models.py#L401)).\nErrors: UnicodeError",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -379,7 +379,7 @@
     "expected_symbols": [
       "prepare_url"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "pydata__xarray-2905",
@@ -395,13 +395,13 @@
     "expected_symbols": [
       "as_compatible_data"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "pydata__xarray-3677",
     "repo": "pydata/xarray",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pydata__xarray-3677",
-    "task": "Merging dataArray into dataset using dataset method fails — While it's possible to merge a dataset and a dataarray object using the top-level `merge()` function, if you try the same thing with the `ds.merge()` method it fails.",
+    "task": "Merging dataArray into dataset using dataset method fails — While it's possible to merge a dataset and a dataarray object using the top-level `merge()` function, if you try the same thing with the `ds.merge()` method it fails.\nErrors: AttributeError\nTraceback: File \"mwe.py\", line 6, in <module> | File \"/home/tegn500/Documents/Work/Code/xarray/xarray/core/dataset.py\", line 3591, in merge | File \"/home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py\", line 835, in dataset_merge_method | File \"/home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py\", line 548, in merge_core | File \"/home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py\", line 394, in coerce_pandas_values | File \"/home/tegn500/Documents/Work/Code/xarray/xarray/core/common.py\", line 233, in __getattr__ | AttributeError: 'DataArray' object has no attribute 'items'",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -411,13 +411,13 @@
     "expected_symbols": [
       "merge"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "pylint-dev__pylint-8898",
     "repo": "pylint-dev/pylint",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pylint-dev__pylint-8898",
-    "task": "bad-names-rgxs mangles regular expressions with commas — ### Bug description",
+    "task": "bad-names-rgxs mangles regular expressions with commas — ### Bug description\nTraceback: File \"/home/lihu/.venv/bin/pylint\", line 8, in <module> | File \"/home/lihu/.venv/lib/python3.10/site-packages/pylint/__init__.py\", line 25, in run_pylint | File \"/home/lihu/.venv/lib/python3.10/site-packages/pylint/lint/run.py\", line 161, in __init__ | File \"/home/lihu/.venv/lib/python3.10/site-packages/pylint/config/config_initialization.py\", line 57, in _config_initialization | File \"/usr/lib/python3.10/sre_compile.py\", line 764, in compile | File \"/usr/lib/python3.10/sre_parse.py\", line 950, in parse | File \"/usr/lib/python3.10/sre_parse.py\", line 443, in _parse_sub | File \"/usr/lib/python3.10/sre_parse.py\", line 838, in _parse",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -433,13 +433,13 @@
       "_regex_transformer",
       "_regexp_csv_transfomer"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "pytest-dev__pytest-7432",
     "repo": "pytest-dev/pytest",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-7432",
-    "task": "skipping: --runxfail breaks pytest.mark.skip location reporting — pytest versions: 5.4.x, current master",
+    "task": "skipping: --runxfail breaks pytest.mark.skip location reporting — pytest versions: 5.4.x, current master\nFailing tests: test_skip_location | test_it",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -449,7 +449,7 @@
     "expected_symbols": [
       "pytest_runtest_makereport"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "sphinx-doc__sphinx-7910",
@@ -466,7 +466,7 @@
       "Config",
       "_skip_member"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "sphinx-doc__sphinx-9230",
@@ -482,13 +482,13 @@
     "expected_symbols": [
       "transform"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "sympy__sympy-15599",
     "repo": "sympy/sympy",
     "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-15599",
-    "task": "Mod(3*i, 2) unchanged — `Mod(3*i, 2)` should reduce to `Mod(i, 2)` (as reported in [this post](https://stackoverflow.com/questions/53302669/sympify-does-not-simplify-remainder-as-expected)) and will do so with a change something like this:",
+    "task": "Mod(3*i, 2) unchanged — `Mod(3*i, 2)` should reduce to `Mod(i, 2)` (as reported in [this post](https://stackoverflow.com/questions/53302669/sympify-does-not-simplify-remainder-as-expected)) and will do so with a change something like this:\nFailing tests: test_arit | test_Mod",
     "intent": "debug",
     "budget": 8000,
     "label_source": "gold_patch",
@@ -498,7 +498,7 @@
     "expected_symbols": [
       "doit"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   },
   {
     "instance_id": "sympy__sympy-16766",
@@ -515,6 +515,6 @@
       "_print_Indexed",
       "_print_Not"
     ],
-    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement. Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
   }
 ]

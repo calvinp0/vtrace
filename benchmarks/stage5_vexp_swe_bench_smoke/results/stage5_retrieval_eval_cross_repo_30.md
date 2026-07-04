@@ -35,18 +35,18 @@ support / discarded are compared against the fixture's `expected_files` and
 | instances_total | 30 |
 | instances_evaluated | 30 |
 | workspace_error_count | 0 |
-| no_context_count | 1 |
-| top_1_file_accuracy | 66.7% |
-| top_3_file_recall | 80.0% |
-| expected_file_as_pivot_rate | 76.7% |
+| no_context_count | 0 |
+| top_1_file_accuracy | 73.3% |
+| top_3_file_recall | 83.3% |
+| expected_file_as_pivot_rate | 80.0% |
 | expected_file_as_support_rate | 6.7% |
 | expected_file_discarded_rate | 3.3% |
-| expected_file_missing_rate | 13.3% |
+| expected_file_missing_rate | 10.0% |
 | expected_symbol_hit_rate | 56.7% |
-| expected_symbol_as_pivot_rate | 20.0% |
-| mean_capsule_tokens | 2054.7 |
-| mean_pivot_count | 2.03 |
-| mean_support_count | 3.73 |
+| expected_symbol_as_pivot_rate | 26.7% |
+| mean_capsule_tokens | 2156.2 |
+| mean_pivot_count | 2.10 |
+| mean_support_count | 3.83 |
 
 ## Comparison vs prior cross-repo baseline
 
@@ -54,10 +54,10 @@ Does Capsule v2 retrieval stay stable as cross-repo coverage grows from 16 to 30
 
 | metric | previous 16-instance cross-repo | new 30-instance cross-repo | delta |
 | --- | --- | --- | --- |
-| top-1 file accuracy | 62.5% | 66.7% | +4.2 pp ▲ |
-| top-3 file recall | 87.5% | 80.0% | -7.5 pp ▼ |
-| expected file as pivot | 81.3% | 76.7% | -4.6 pp ▼ |
-| expected file missing | 6.3% | 13.3% | +7.1 pp ▼ |
+| top-1 file accuracy | 62.5% | 73.3% | +10.8 pp ▲ |
+| top-3 file recall | 87.5% | 83.3% | -4.2 pp ▼ |
+| expected file as pivot | 81.3% | 80.0% | -1.2 pp ▼ |
+| expected file missing | 6.3% | 10.0% | +3.8 pp ▼ |
 
 ## Aggregate metrics — by label source
 
@@ -67,22 +67,22 @@ All 30 instances share one label source (gold_patch); see the table above.
 
 | repo | instances | top-1 file | top-3 file | as pivot | missing | mean tokens | mean pivots | mean support |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| sympy/sympy | 5/5 | 60.0% | 100.0% | 80.0% | 0.0% | 2692.6 | 2.20 | 3.80 |
+| sympy/sympy | 5/5 | 80.0% | 100.0% | 100.0% | 0.0% | 2969.2 | 2.20 | 3.80 |
 | astropy/astropy | 4/4 | 50.0% | 75.0% | 75.0% | 0.0% | 2977.8 | 2.50 | 3.50 |
-| matplotlib/matplotlib | 4/4 | 75.0% | 75.0% | 75.0% | 25.0% | 672.0 | 1.75 | 4.00 |
-| sphinx-doc/sphinx | 4/4 | 25.0% | 50.0% | 50.0% | 50.0% | 2797.8 | 2.00 | 4.00 |
-| psf/requests | 3/3 | 66.7% | 66.7% | 66.7% | 0.0% | 711.7 | 2.00 | 4.00 |
-| pytest-dev/pytest | 3/3 | 100.0% | 100.0% | 100.0% | 0.0% | 779.7 | 2.00 | 4.00 |
-| pydata/xarray | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 1976.0 | 2.50 | 3.50 |
-| scikit-learn/scikit-learn | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 3408.0 | 2.00 | 4.00 |
+| matplotlib/matplotlib | 4/4 | 50.0% | 75.0% | 50.0% | 25.0% | 656.3 | 1.75 | 4.00 |
+| sphinx-doc/sphinx | 4/4 | 50.0% | 50.0% | 50.0% | 50.0% | 2744.5 | 2.00 | 4.00 |
+| psf/requests | 3/3 | 100.0% | 100.0% | 100.0% | 0.0% | 940.3 | 1.67 | 4.00 |
+| pytest-dev/pytest | 3/3 | 100.0% | 100.0% | 100.0% | 0.0% | 855.3 | 2.00 | 4.00 |
+| pydata/xarray | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 2124.0 | 3.00 | 3.00 |
+| scikit-learn/scikit-learn | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 3412.0 | 2.00 | 4.00 |
 | mwaskom/seaborn | 1/1 | 100.0% | 100.0% | 100.0% | 0.0% | 1530.0 | 2.00 | 4.00 |
 | pallets/flask | 1/1 | 100.0% | 100.0% | 100.0% | 0.0% | 5615.0 | 2.00 | 4.00 |
-| pylint-dev/pylint | 1/1 | 0.0% | 0.0% | 0.0% | 100.0% | 0.0 | 0.00 | 0.00 |
+| pylint-dev/pylint | 1/1 | 0.0% | 0.0% | 0.0% | 0.0% | 722.0 | 2.00 | 4.00 |
 
 ## Miss summary (compact)
 
-- non-top-3 cases: 6
-- missing (not surfaced): 1
+- non-top-3 cases: 5
+- missing (not surfaced): 0
 - present-but-support: 1
 - present-but-discarded: 1
 - wrong-subsystem: 3
@@ -93,8 +93,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 
 | category | count |
 | --- | --- |
-| none | 24 |
-| missing_from_candidates | 1 |
+| none | 25 |
 | present_but_support | 1 |
 | present_but_discarded | 1 |
 | wrong_subsystem | 3 |
@@ -105,19 +104,19 @@ All 30 instances share one label source (gold_patch); see the table above.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | sympy__sympy-12419 | gold_patch | sympy/matrices/expressions/matexpr.py | sympy/physics/quantum/identitysearch.py::is_scalar_sparse_matrix | pivot | no | yes | hit_top3 | none |
 | sympy__sympy-12481 | gold_patch | sympy/combinatorics/permutations.py | sympy/combinatorics/permutations.py::Permutation | pivot | yes | yes | hit_top1_pivot | none |
-| sympy__sympy-13372 | gold_patch | sympy/core/evalf.py | sympy/functions/special/error_functions.py::_eval_evalf | support | no | yes | hit_top3 | none |
+| sympy__sympy-13372 | gold_patch | sympy/core/evalf.py | sympy/core/evalf.py::evalf | pivot | yes | yes | hit_top1_pivot | none |
 | scikit-learn__scikit-learn-10844 | gold_patch | sklearn/metrics/cluster/supervised.py | sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score | pivot | yes | yes | hit_top1_pivot | none |
 | scikit-learn__scikit-learn-11578 | gold_patch | sklearn/linear_model/logistic.py | sklearn/linear_model/logistic.py::LogisticRegression | pivot | yes | yes | hit_top1_pivot | none |
-| matplotlib__matplotlib-22719 | gold_patch | lib/matplotlib/category.py | lib/matplotlib/category.py::default_units | pivot | yes | yes | hit_top1_pivot | none |
+| matplotlib__matplotlib-22719 | gold_patch | lib/matplotlib/category.py | lib/matplotlib/units.py::ConversionError | support | no | yes | hit_top3 | none |
 | matplotlib__matplotlib-24627 | gold_patch | lib/matplotlib/axes/_base.py | lib/matplotlib/axes/_base.py::cla | pivot | yes | yes | hit_top1_pivot | none |
 | astropy__astropy-14365 | gold_patch | astropy/io/ascii/qdp.py | astropy/io/ascii/qdp.py::_write_table_qdp | pivot | yes | yes | hit_top1_pivot | none |
 | astropy__astropy-14369 | gold_patch | astropy/units/format/cds.py | astropy/io/ascii/cds.py::Cds | pivot | no | yes | hit_top3 | none |
 | pytest-dev__pytest-10051 | gold_patch | src/_pytest/logging.py | src/_pytest/logging.py::get_records | pivot | yes | yes | hit_top1_pivot | none |
 | pytest-dev__pytest-5262 | gold_patch | src/_pytest/capture.py | src/_pytest/capture.py::EncodedFile | pivot | yes | yes | hit_top1_pivot | none |
-| sphinx-doc__sphinx-7462 | gold_patch | sphinx/domains/python.py | sphinx/application.py::add_object_type | pivot | no | yes | hit_top3 | none |
+| sphinx-doc__sphinx-7462 | gold_patch | sphinx/domains/python.py | sphinx/domains/python.py::_parse_annotation | pivot | yes | yes | hit_top1_pivot | none |
 | sphinx-doc__sphinx-7748 | gold_patch | sphinx/ext/autodoc/__init__.py | sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin | pivot | yes | yes | hit_top1_pivot | none |
 | psf__requests-1142 | gold_patch | requests/models.py | requests/models.py::prepare_content_length | pivot | yes | yes | hit_top1_pivot | none |
-| psf__requests-1724 | gold_patch | requests/sessions.py | requests/utils.py::stream_decode_response_unicode | discarded | no | no | hit_discarded | present_but_discarded |
+| psf__requests-1724 | gold_patch | requests/sessions.py | requests/sessions.py::request | pivot | yes | yes | hit_top1_pivot | none |
 | pallets__flask-5014 | gold_patch | src/flask/blueprints.py | src/flask/blueprints.py::Blueprint | pivot | yes | yes | hit_top1_pivot | none |
 | astropy__astropy-14539 | gold_patch | astropy/io/fits/diff.py | astropy/io/fits/diff.py::identical | pivot | yes | yes | hit_top1_pivot | none |
 | astropy__astropy-14598 | gold_patch | astropy/io/fits/card.py | astropy/io/fits/diff.py::FITSDiff | support | no | no | hit_support | present_but_support |
@@ -127,7 +126,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 | psf__requests-5414 | gold_patch | requests/models.py | requests/models.py::prepare_url | pivot | yes | yes | hit_top1_pivot | none |
 | pydata__xarray-2905 | gold_patch | xarray/core/variable.py | xarray/core/variable.py::__setitem__ | pivot | yes | yes | hit_top1_pivot | none |
 | pydata__xarray-3677 | gold_patch | xarray/core/dataset.py | xarray/core/dataset.py::merge | pivot | yes | yes | hit_top1_pivot | none |
-| pylint-dev__pylint-8898 | gold_patch | pylint/config/argument.py | — | missing | no | no | skipped_no_context | missing_from_candidates |
+| pylint-dev__pylint-8898 | gold_patch | pylint/config/argument.py | pylint/config/config_initialization.py::_order_all_first | discarded | no | no | hit_discarded | present_but_discarded |
 | pytest-dev__pytest-7432 | gold_patch | src/_pytest/skipping.py | src/_pytest/skipping.py::evaluate_skip_marks | pivot | yes | yes | hit_top1_pivot | none |
 | sphinx-doc__sphinx-7910 | gold_patch | sphinx/ext/napoleon/__init__.py | sphinx/ext/autodoc/__init__.py::DecoratorDocumenter | missing | no | no | missing | wrong_subsystem |
 | sphinx-doc__sphinx-9230 | gold_patch | sphinx/util/docfields.py | sphinx/pycode/ast.py::visit_Dict | missing | no | no | missing | wrong_subsystem |
@@ -135,28 +134,6 @@ All 30 instances share one label source (gold_patch); see the table above.
 | sympy__sympy-16766 | gold_patch | sympy/printing/pycode.py | sympy/printing/pycode.py::PythonCodePrinter | pivot | yes | yes | hit_top1_pivot | none |
 
 ## Misses / failures — top-k diagnostics
-
-### psf__requests-1724 — hit_discarded / present_but_discarded
-
-- expected: requests/sessions.py
-- reason: expected file recovered but discarded: requests/sessions.py — beyond standard support budget (max 4)
-- down-weighted lexical tokens: decode, error
-- de-anchored exception tokens: decode
-- graph-neighbour expansions: requests/models.py::prepare_method -[calls]-> requests/models.py::prepare; requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_put_conn; requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_get_conn; requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_get_timeout; requests/packages/urllib3/fields.py::from_tuples -[calls]-> requests/packages/urllib3/filepost.py::iter_field_objects; requests/packages/charade/hebrewprober.py::feed -[calls]-> requests/packages/charade/hebrewprober.py::is_non_final; requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_make_request; requests/packages/urllib3/request.py::RequestMethods -[contains]-> requests/packages/urllib3/request.py::_encode_url_methods
-- top pivots:
-  - requests/utils.py::stream_decode_response_unicode — local implementation helper whose name matches the issue — likely edit site
-  - requests/packages/urllib3/exceptions.py::DecodeError — actionable class — strong lexical match; issue-domain relevance
-- top support:
-  - requests/structures.py::CaseInsensitiveDict — strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance; 25 dependents
-  - requests/packages/urllib3/connectionpool.py::HTTPConnectionPool — strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance
-  - requests/api.py::request — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 7 dependents
-  - requests/packages/urllib3/exceptions.py::PoolError — strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance
-- top discarded:
-  - requests/packages/urllib3/request.py::RequestMethods — beyond standard support budget (max 4)
-  - requests/models.py::Request — beyond standard support budget (max 4)
-  - requests/packages/urllib3/exceptions.py::HTTPError — beyond standard support budget (max 4)
-  - requests/packages/charade/hebrewprober.py::feed — beyond standard support budget (max 4)
-  - requests/packages/urllib3/connectionpool.py::_get_timeout — beyond standard support budget (max 4)
 
 ### astropy__astropy-14598 — hit_support / present_but_support
 
@@ -185,38 +162,43 @@ All 30 instances share one label source (gold_patch); see the table above.
 
 - expected: lib/matplotlib/colors.py
 - reason: expected file not surfaced (candidate_count=25)
-- down-weighted lexical tokens: bug
+- down-weighted lexical tokens: bug, errors
 - generic lexical decoys suppressed: deprecation -> lib/matplotlib/_api/deprecation.py
 - top pivots:
-  - lib/matplotlib/_api/deprecation.py::suppress_matplotlib_deprecation_warning — actionable function — strong lexical match; issue-domain relevance; 16 dependents
+  - lib/matplotlib/_api/deprecation.py::suppress_matplotlib_deprecation_warning — local implementation helper whose name matches the issue — likely edit site
   - lib/matplotlib/_api/deprecation.py::MatplotlibDeprecationWarning — actionable class — strong lexical match; issue-domain relevance; 23 dependents
 - top support:
+  - lib/matplotlib/_api/deprecation.py::_generate_deprecation_warning — strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site
   - lib/matplotlib/_api/deprecation.py::deprecated — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 116 dependents
   - lib/matplotlib/_api/deprecation.py::warn_deprecated — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 28 dependents
-  - lib/matplotlib/_api/deprecation.py::delete_parameter — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 11 dependents
   - lib/matplotlib/_api/deprecation.py::rename_parameter — strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 8 dependents
 - top discarded:
-  - lib/matplotlib/path.py::NUM_VERTICES_FOR_CODE — beyond standard support budget (max 4)
+  - lib/matplotlib/_api/deprecation.py::delete_parameter — beyond standard support budget (max 4)
   - lib/matplotlib/transforms.py::Bbox — beyond standard support budget (max 4)
+  - lib/matplotlib/mathtext.py::MathTextWarning — beyond standard support budget (max 4)
   - lib/matplotlib/_api/deprecation.py::make_keyword_only — beyond standard support budget (max 4)
-  - lib/matplotlib/_api/deprecation.py::_generate_deprecation_warning — beyond standard support budget (max 4)
-  - lib/matplotlib/_mathtext.py::NUM_SIZE_LEVELS — beyond standard support budget (max 4)
+  - lib/matplotlib/widgets.py::rectangles — beyond standard support budget (max 4)
 
-### pylint-dev__pylint-8898 — skipped_no_context / missing_from_candidates
+### pylint-dev__pylint-8898 — hit_discarded / present_but_discarded
 
 - expected: pylint/config/argument.py, pylint/utils/__init__.py, pylint/utils/utils.py
-- reason: capsule returned no_context (no high-confidence edit target)
-- down-weighted lexical tokens: bug
-- non-source candidates down-ranked: doc/data/messages/t/too-many-boolean-expressions/bad.py — path under doc/data; doc/data/messages/s/simplify-boolean-expression/bad.py — path under doc/data
-- graph-neighbour expansions: pylint/checkers/lambda_expressions.py::visit_namedexpr -[contains]-> pylint/checkers/lambda_expressions.py::LambdaExpressionChecker
-- top pivots: (none)
-- top support: (none)
+- reason: expected file recovered but discarded: pylint/config/argument.py — beyond standard support budget (max 4)
+- down-weighted lexical tokens: run, bug
+- generic lexical decoys suppressed: config -> pylint/config/arguments_manager.py
+- top pivots:
+  - pylint/config/config_initialization.py::_order_all_first — actionable function — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour
+  - pylint/__init__.py::_run_pylint_config — local implementation helper whose name matches the issue — likely edit site
+- top support:
+  - pylint/config/__init__.py::__all__ — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour (not a pivot: module_variable is a low-actionability edit target)
+  - pylint/pyreverse/__init__.py::__revision__ — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour (not a pivot: module_variable is a low-actionability edit target)
+  - pylint/config/config_file_parser.py::_ConfigurationFileParser — likely co-edit sibling of a high-confidence anchor
+  - pylint/config/config_initialization.py::_config_initialization — strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site
 - top discarded:
-  - pylint/checkers/base/name_checker/checker.py::_BadNamesTuple — support-only: no actionable edit target
-  - doc/data/messages/t/too-many-boolean-expressions/bad.py::can_be_divided_by_two_and_are_not_zero — support-only: no actionable edit target
-  - doc/data/messages/s/simplifiable-if-expression/bad.py::FLYING_THINGS — support-only: no actionable edit target
-  - doc/data/messages/t/trailing-comma-tuple/bad.py::COMPASS — support-only: no actionable edit target
-  - doc/data/messages/s/simplify-boolean-expression/bad.py::has_oranges — support-only: no actionable edit target
+  - pylint/__init__.py::run_pylint — beyond standard support budget (max 4)
+  - pylint/config/argument.py::_csv_transformer — beyond standard support budget (max 4)
+  - pylint/config/arguments_provider.py::_ArgumentsProvider — beyond standard support budget (max 4)
+  - pylint/config/arguments_manager.py::help — beyond standard support budget (max 4)
+  - pylint/__pkginfo__.py::get_numversion_from_version — beyond standard support budget (max 4)
 
 ### sphinx-doc__sphinx-7910 — missing / wrong_subsystem
 

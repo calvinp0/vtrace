@@ -1120,8 +1120,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 513,
-      "used_percent": 6.41,
+      "estimated_tokens": 665,
+      "used_percent": 8.31,
       "expected_files": [
         "django/db/migrations/serializer.py"
       ],
@@ -1131,25 +1131,25 @@
         "FloatSerializer",
         "serialize"
       ],
-      "top_1_pivot_file": "db/models/base.py",
-      "top_1_pivot_symbol": "serializable_value",
+      "top_1_pivot_file": "db/migrations/serializer.py",
+      "top_1_pivot_symbol": "EnumSerializer",
       "top_3_files": [
-        "db/models/base.py",
         "db/migrations/serializer.py",
-        "db/migrations/operations/fields.py"
+        "db/models/base.py",
+        "core/checks/security/base.py"
       ],
-      "expected_file_best_rank": 2,
+      "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
-      "expected_symbol_best_rank": 2,
+      "expected_symbol_best_rank": 1,
       "expected_symbol_role": "pivot",
-      "contains_expected_file_top1": false,
+      "contains_expected_file_top1": true,
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
       "discarded_count": 25,
-      "result": "hit_top3",
+      "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
       "filtered_generic_symbols": [],
@@ -1160,8 +1160,13 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
-      "literal_anchor_terms": [],
-      "literal_anchor_matches": [],
+      "literal_anchor_terms": [
+        "Good"
+      ],
+      "literal_anchor_matches": [
+        "Good -> core/checks/security/base.py::W002",
+        "Good -> core/checks/security/base.py::W019"
+      ],
       "graph_neighbor_matches": [
         "db/migrations/autodetector.py::deep_deconstruct -[calls]-> db/migrations/autodetector.py::generate_renamed_fields",
         "db/migrations/autodetector.py::deep_deconstruct -[calls]-> db/migrations/autodetector.py::only_relation_agnostic_fields",
@@ -1176,17 +1181,27 @@
       "diagnostics": {
         "top_pivots": [
           {
-            "path": "db/models/base.py",
-            "symbol": "serializable_value",
-            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
-          },
-          {
             "path": "db/migrations/serializer.py",
             "symbol": "EnumSerializer",
             "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "serializable_value",
+            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
           }
         ],
         "top_support": [
+          {
+            "path": "core/checks/security/base.py",
+            "symbol": "W002",
+            "role_reason": "symbol-name match; strong lexical match (not a pivot: module_constant is a low-actionability edit target)"
+          },
+          {
+            "path": "core/checks/security/base.py",
+            "symbol": "W019",
+            "role_reason": "symbol-name match; strong lexical match (not a pivot: module_constant is a low-actionability edit target)"
+          },
           {
             "path": "db/migrations/operations/fields.py",
             "symbol": "model_name_lower",
@@ -1196,19 +1211,19 @@
             "path": "db/migrations/operations/models.py",
             "symbol": "name_lower",
             "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
-          },
+          }
+        ],
+        "top_discarded": [
           {
             "path": "db/migrations/autodetector.py",
             "symbol": "__init__",
-            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+            "discard_reason": "beyond standard support budget (max 4)"
           },
           {
             "path": "db/migrations/operations/fields.py",
             "symbol": "new_name_lower",
-            "role_reason": "lexical match; issue-domain relevance (not a pivot: no direct evidence (graph/domain reach only))"
-          }
-        ],
-        "top_discarded": [
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
           {
             "path": "db/migrations/autodetector.py",
             "symbol": "suggest_name",
@@ -1222,16 +1237,6 @@
           {
             "path": "db/migrations/autodetector.py",
             "symbol": "generate_removed_constraints",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "db/migrations/questioner.py",
-            "symbol": "NonInteractiveMigrationQuestioner",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "db/migrations/operations/fields.py",
-            "symbol": "old_name_lower",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -1870,8 +1875,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 1430,
-      "used_percent": 17.88,
+      "estimated_tokens": 2932,
+      "used_percent": 36.65,
       "expected_files": [
         "django/db/models/query.py"
       ],
@@ -1882,8 +1887,8 @@
       "top_1_pivot_symbol": "in_bulk",
       "top_3_files": [
         "db/models/query.py",
-        "contrib/admin/filters.py",
-        "db/models/fields/related_descriptors.py"
+        "apps/config.py",
+        "db/models/sql/query.py"
       ],
       "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
@@ -1895,7 +1900,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 3,
       "support_count": 3,
-      "discarded_count": 28,
+      "discarded_count": 23,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1903,7 +1908,14 @@
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [],
       "deanchored_exception_tokens": [],
-      "body_literal_matches": [],
+      "body_literal_matches": [
+        "s field_name must be a unique field but -> Model",
+        "s field_name must be a unique field but -> ForeignKey",
+        "s field_name must be a unique field but -> ManyToManyField",
+        "s field_name must be a unique field but -> QuerySet",
+        "s field_name must be a unique field but -> in_bulk",
+        "s field_name must be a unique field but -> Query"
+      ],
       "non_source_downranked": [],
       "title_symbol_terms": [
         "QuerySet",
@@ -1917,17 +1929,23 @@
         "QuerySet -> contrib/admin/filters.py::queryset",
         "QuerySet.in_bulk -> db/models/query.py::in_bulk"
       ],
-      "literal_anchor_terms": [],
-      "literal_anchor_matches": [],
+      "literal_anchor_terms": [
+        "isn"
+      ],
+      "literal_anchor_matches": [
+        "isn -> apps/config.py::AppConfig",
+        "isn -> apps/config.py::create",
+        "isn -> apps/registry.py::Apps"
+      ],
       "graph_neighbor_matches": [
-        "db/models/query.py::bulk_create -[calls]-> db/models/query.py::_batched_insert",
-        "db/models/constraints.py::UniqueConstraint -[contains]-> db/models/constraints.py::deconstruct",
-        "db/models/constraints.py::UniqueConstraint -[contains]-> db/models/constraints.py::create_sql",
-        "db/models/sql/query.py::get_loaded_field_names -[calls]-> db/models/sql/query.py::deferred_to_data",
-        "db/models/query.py::model_fields -[contains]-> db/models/query.py::RawQuerySet",
-        "db/models/sql/query.py::add_fields -[calls]-> db/models/sql/query.py::set_select",
-        "db/models/constraints.py::UniqueConstraint -[references]-> db/models/constraints.py::BaseConstraint",
-        "db/models/query.py::model_fields -[references]-> db/models/query.py::iterator"
+        "apps/registry.py::Apps -[contains]-> apps/registry.py::get_app_configs",
+        "db/models/fields/related.py::ForeignKey -[contains]-> db/models/fields/related.py::get_db_prep_save",
+        "db/models/sql/query.py::Query -[contains]-> db/models/sql/query.py::output_field",
+        "db/models/sql/query.py::Query -[contains]-> db/models/sql/query.py::set_extra_mask",
+        "db/models/fields/related.py::ForeignKey -[references]-> db/models/fields/reverse_related.py::ManyToOneRel",
+        "db/models/sql/query.py::Query -[contains]-> db/models/sql/query.py::_add_q",
+        "db/models/sql/query.py::Query -[contains]-> db/models/sql/query.py::is_sliced",
+        "apps/registry.py::Apps -[contains]-> apps/registry.py::check_models_ready"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -1935,45 +1953,50 @@
           {
             "path": "db/models/query.py",
             "symbol": "in_bulk",
-            "role_reason": "existing method recovered from Class.method expansion — more actionable than containing class"
+            "role_reason": "task diagnostic literal appears in this symbol's body — explicit edit site"
           },
           {
             "path": "db/models/query.py",
-            "symbol": "bulk_update",
-            "role_reason": "existing method recovered from Class.method expansion — more actionable than containing class"
+            "symbol": "_chain",
+            "role_reason": "actionable method — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour; 24 dependents"
           },
           {
-            "path": "contrib/admin/filters.py",
-            "symbol": "queryset",
-            "role_reason": "actionable method — symbol-name match; strong lexical match"
+            "path": "apps/config.py",
+            "symbol": "AppConfig",
+            "role_reason": "actionable class — symbol-name match; strong lexical match"
           }
         ],
         "top_support": [
           {
-            "path": "db/models/fields/related_descriptors.py",
-            "symbol": "get_prefetch_queryset",
-            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+            "path": "db/models/sql/query.py",
+            "symbol": "Query",
+            "role_reason": "containing class for the body-literal edit-site method"
           },
           {
-            "path": "db/models/fields/related.py",
-            "symbol": "OneToOneField",
-            "role_reason": "likely co-edit sibling of a high-confidence anchor"
+            "path": "template/backends/django.py",
+            "symbol": "DjangoTemplates",
+            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; strong lexical match"
           },
           {
-            "path": "db/models/options.py",
-            "symbol": "total_unique_constraints",
-            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+            "path": "db/models/manager.py",
+            "symbol": "Manager",
+            "role_reason": "task literal `manager_method` appears in this file's source (exact match in 1 repo file; organic retrieval rank 18) (file-evidence rescue)"
           }
         ],
         "top_discarded": [
           {
             "path": "db/models/query.py",
-            "symbol": "bulk_create",
+            "symbol": "QuerySet",
             "discard_reason": "beyond standard support budget (max 3)"
           },
           {
-            "path": "db/models/fields/related_descriptors.py",
-            "symbol": "get_prefetch_queryset",
+            "path": "apps/config.py",
+            "symbol": "create",
+            "discard_reason": "beyond standard support budget (max 3)"
+          },
+          {
+            "path": "apps/registry.py",
+            "symbol": "Apps",
             "discard_reason": "beyond standard support budget (max 3)"
           },
           {
@@ -1984,11 +2007,6 @@
           {
             "path": "contrib/admin/filters.py",
             "symbol": "queryset",
-            "discard_reason": "beyond standard support budget (max 3)"
-          },
-          {
-            "path": "db/backends/oracle/features.py",
-            "symbol": "allows_multiple_constraints_on_same_fields",
             "discard_reason": "beyond standard support budget (max 3)"
           }
         ]
@@ -2125,8 +2143,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 552,
-      "used_percent": 6.9,
+      "estimated_tokens": 526,
+      "used_percent": 6.58,
       "expected_files": [
         "django/db/models/expressions.py"
       ],
@@ -2159,8 +2177,14 @@
       "failure_reason": null,
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
-      "downweighted_lexical_tokens": [],
-      "deanchored_exception_tokens": [],
+      "downweighted_lexical_tokens": [
+        "errors",
+        "programming",
+        "error"
+      ],
+      "deanchored_exception_tokens": [
+        "programming"
+      ],
       "body_literal_matches": [],
       "non_source_downranked": [],
       "title_symbol_terms": [
@@ -2181,7 +2205,9 @@
         "db/models/expressions.py::get_group_by_cols -[contains]-> db/models/expressions.py::Subquery",
         "db/models/expressions.py::ExpressionWrapper -[contains]-> db/models/expressions.py::get_source_expressions"
       ],
-      "generic_lexical_decoys_suppressed": [],
+      "generic_lexical_decoys_suppressed": [
+        "error -> contrib/messages/constants.py"
+      ],
       "diagnostics": {
         "top_pivots": [
           {
@@ -2202,6 +2228,11 @@
             "role_reason": "strong target beyond the pivot budget — actionable function — symbol-name match; strong lexical match"
           },
           {
+            "path": "db/models/expressions.py",
+            "symbol": "get_group_by_cols",
+            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+          },
+          {
             "path": "contrib/postgres/aggregates/mixins.py",
             "symbol": "set_source_expressions",
             "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
@@ -2210,14 +2241,14 @@
             "path": "db/models/expressions.py",
             "symbol": "get_group_by_cols",
             "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
-          },
-          {
-            "path": "db/models/query.py",
-            "symbol": "_validate_values_are_expressions",
-            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
           }
         ],
         "top_discarded": [
+          {
+            "path": "db/models/query.py",
+            "symbol": "_validate_values_are_expressions",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
           {
             "path": "db/models/expressions.py",
             "symbol": "get_group_by_cols",
@@ -2229,18 +2260,13 @@
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "db/models/expressions.py",
-            "symbol": "get_group_by_cols",
+            "path": "db/models/functions/datetime.py",
+            "symbol": "resolve_expression",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "db/models/expressions.py",
-            "symbol": "get_group_by_cols",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "db/models/query_utils.py",
-            "symbol": "refs_expression",
+            "path": "db/models/functions/datetime.py",
+            "symbol": "resolve_expression",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -2517,7 +2543,7 @@
     "instances_evaluated": 20,
     "workspace_error_count": 0,
     "no_context_count": 0,
-    "top_1_file_accuracy": 0.85,
+    "top_1_file_accuracy": 0.9,
     "top_3_file_recall": 1,
     "expected_file_as_pivot_rate": 1,
     "expected_file_as_support_rate": 0,
@@ -2525,7 +2551,7 @@
     "expected_file_discarded_rate": 0,
     "expected_symbol_hit_rate": 0.7,
     "expected_symbol_as_pivot_rate": 0.6,
-    "mean_capsule_tokens": 1139.3,
+    "mean_capsule_tokens": 1220.7,
     "mean_pivot_count": 2.05,
     "mean_support_count": 3.95,
     "miss_taxonomy": {
@@ -2551,7 +2577,7 @@
       "instances_evaluated": 15,
       "workspace_error_count": 0,
       "no_context_count": 0,
-      "top_1_file_accuracy": 0.8,
+      "top_1_file_accuracy": 0.8667,
       "top_3_file_recall": 1,
       "expected_file_as_pivot_rate": 1,
       "expected_file_as_support_rate": 0,
@@ -2559,7 +2585,7 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.7333,
       "expected_symbol_as_pivot_rate": 0.6,
-      "mean_capsule_tokens": 1095.5333,
+      "mean_capsule_tokens": 1204.0667,
       "mean_pivot_count": 2.0667,
       "mean_support_count": 3.9333,
       "miss_taxonomy": {
@@ -2620,7 +2646,7 @@
       "instances_evaluated": 20,
       "workspace_error_count": 0,
       "no_context_count": 0,
-      "top_1_file_accuracy": 0.85,
+      "top_1_file_accuracy": 0.9,
       "top_3_file_recall": 1,
       "expected_file_as_pivot_rate": 1,
       "expected_file_as_support_rate": 0,
@@ -2628,7 +2654,7 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.7,
       "expected_symbol_as_pivot_rate": 0.6,
-      "mean_capsule_tokens": 1139.3,
+      "mean_capsule_tokens": 1220.7,
       "mean_pivot_count": 2.05,
       "mean_support_count": 3.95,
       "miss_taxonomy": {

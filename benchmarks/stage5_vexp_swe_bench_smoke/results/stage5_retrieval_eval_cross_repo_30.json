@@ -274,33 +274,32 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 325,
-      "used_percent": 4.06,
+      "estimated_tokens": 1708,
+      "used_percent": 21.35,
       "expected_files": [
         "sympy/core/evalf.py"
       ],
       "expected_symbols": [
         "evalf"
       ],
-      "top_1_pivot_file": "sympy/functions/special/error_functions.py",
-      "top_1_pivot_symbol": "_eval_evalf",
+      "top_1_pivot_file": "sympy/core/evalf.py",
+      "top_1_pivot_symbol": "evalf",
       "top_3_files": [
-        "sympy/functions/special/error_functions.py",
         "sympy/core/evalf.py",
-        "sympy/core/sympify.py"
+        "sympy/core/compatibility.py"
       ],
-      "expected_file_best_rank": 2,
-      "expected_file_role": "support",
-      "expected_symbol_best_rank": 3,
-      "expected_symbol_role": "support",
-      "contains_expected_file_top1": false,
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 27,
-      "result": "hit_top3",
+      "discarded_count": 20,
+      "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
       "filtered_generic_symbols": [],
@@ -309,11 +308,16 @@
         "unbound",
         "local",
         "error",
-        "exception"
+        "exception",
+        "errors",
+        "key",
+        "implemented"
       ],
       "deanchored_exception_tokens": [
         "unbound",
-        "local"
+        "local",
+        "key",
+        "implemented"
       ],
       "body_literal_matches": [],
       "non_source_downranked": [],
@@ -322,75 +326,70 @@
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
       "graph_neighbor_matches": [
-        "sympy/core/evalf.py::evalf -[calls]-> sympy/core/evalf.py::as_mpmath",
-        "sympy/core/evalf.py::evalf_trig -[references]-> sympy/core/evalf.py::_create_evalf_table",
-        "sympy/core/evalf.py::add_terms -[references]-> sympy/core/evalf.py::MINUS_INF",
-        "sympy/core/evalf.py::evalf -[calls]-> sympy/core/evalf.py::evalf_symbol",
-        "sympy/core/evalf.py::add_terms -[calls]-> sympy/core/evalf.py::scaled_zero",
-        "sympy/core/evalf.py::evalf -[calls]-> sympy/core/evalf.py::evalf_atan",
-        "sympy/core/evalf.py::evalf -[calls]-> sympy/core/evalf.py::chop_parts",
-        "sympy/core/evalf.py::evalf_trig -[references]-> sympy/core/evalf.py::DEFAULT_MAXPREC"
+        "sympy/core/evalf.py::evalf_mul -[references]-> sympy/core/evalf.py::_create_evalf_table",
+        "sympy/core/evalf.py::evalf_mul -[calls]-> sympy/core/evalf.py::pure_complex",
+        "sympy/core/evalf.py::evalf_mul -[calls]-> sympy/core/evalf.py::bitcount"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
-            "path": "sympy/functions/special/error_functions.py",
-            "symbol": "_eval_evalf",
-            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+            "path": "sympy/core/evalf.py",
+            "symbol": "evalf",
+            "role_reason": "local implementation helper invoked by the entry point — likely edit site"
           },
           {
-            "path": "sympy/functions/special/error_functions.py",
-            "symbol": "_eval_evalf",
-            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+            "path": "sympy/core/evalf.py",
+            "symbol": "evalf_mul",
+            "role_reason": "task names this symbol directly — edit target despite delegating to local helpers"
           }
         ],
         "top_support": [
           {
             "path": "sympy/core/evalf.py",
-            "symbol": "evalf",
-            "role_reason": "strong target beyond the pivot budget — actionable function — symbol-name match; strong lexical match"
-          },
-          {
-            "path": "sympy/core/sympify.py",
-            "symbol": "sympify",
-            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; 409 dependents"
-          },
-          {
-            "path": "sympy/holonomic/numerical.py",
-            "symbol": "_evalf",
-            "role_reason": "likely co-edit sibling of a high-confidence anchor"
+            "symbol": "complex_accuracy",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
           },
           {
             "path": "sympy/core/evalf.py",
-            "symbol": "add_terms",
-            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
+            "symbol": "fastlog",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "sympy/core/evalf.py",
+            "symbol": "scaled_zero",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
+            "path": "sympy/core/compatibility.py",
+            "symbol": "is_sequence",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
           }
         ],
         "top_discarded": [
           {
             "path": "sympy/core/evalf.py",
-            "symbol": "complex_accuracy",
+            "symbol": "pure_complex",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
             "path": "sympy/core/evalf.py",
-            "symbol": "as_mpmath",
+            "symbol": "bitcount",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
             "path": "sympy/core/evalf.py",
-            "symbol": "evalf_trig",
+            "symbol": "_eval_evalf",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "sympy/core/evalf.py",
-            "symbol": "PrecisionExhausted",
+            "path": "sympy/core/sympify.py",
+            "symbol": "sympify",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "sympy/core/evalf.py",
-            "symbol": "get_integer_part",
+            "path": "sympy/core/singleton.py",
+            "symbol": "S",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -403,8 +402,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 1439,
-      "used_percent": 17.99,
+      "estimated_tokens": 1447,
+      "used_percent": 18.09,
       "expected_files": [
         "sklearn/metrics/cluster/supervised.py"
       ],
@@ -436,7 +435,8 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [
-        "runtime"
+        "runtime",
+        "errors"
       ],
       "deanchored_exception_tokens": [
         "runtime"
@@ -459,7 +459,7 @@
         "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score -[imports]-> sklearn/metrics/cluster/__init__.py::__all__",
         "sklearn/model_selection/_validation.py::permutation_test_score -[imports]-> sklearn/model_selection/__init__.py::__all__",
         "sklearn/grid_search.py::score -[contains]-> sklearn/grid_search.py::BaseSearchCV",
-        "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score -[imports]-> sklearn/metrics/__init__.py::__all__"
+        "sklearn/exceptions.py::DataDimensionalityWarning -[references]-> sklearn/random_projection.py::fit"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -499,23 +499,23 @@
         ],
         "top_discarded": [
           {
+            "path": "sklearn/metrics/scorer.py",
+            "symbol": "SCORERS",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
             "path": "sklearn/model_selection/_validation.py",
             "symbol": "cross_val_score",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "sklearn/metrics/ranking.py",
-            "symbol": "average_precision_score",
+            "path": "sklearn/exceptions.py",
+            "symbol": "DataConversionWarning",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "sklearn/cross_validation.py",
-            "symbol": "permutation_test_score",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "sklearn/model_selection/_validation.py",
-            "symbol": "permutation_test_score",
+            "path": "sklearn/exceptions.py",
+            "symbol": "DataDimensionalityWarning",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
@@ -661,8 +661,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 914,
-      "used_percent": 11.43,
+      "estimated_tokens": 808,
+      "used_percent": 10.1,
       "expected_files": [
         "lib/matplotlib/category.py"
       ],
@@ -670,33 +670,41 @@
         "convert",
         "update"
       ],
-      "top_1_pivot_file": "lib/matplotlib/category.py",
-      "top_1_pivot_symbol": "default_units",
+      "top_1_pivot_file": "lib/matplotlib/units.py",
+      "top_1_pivot_symbol": "ConversionError",
       "top_3_files": [
-        "lib/matplotlib/category.py",
+        "lib/matplotlib/units.py",
         "lib/matplotlib/_api/deprecation.py",
-        "lib/matplotlib/axis.py"
+        "lib/matplotlib/category.py"
       ],
-      "expected_file_best_rank": 1,
-      "expected_file_role": "pivot",
-      "expected_symbol_best_rank": null,
-      "expected_symbol_role": "discarded",
-      "contains_expected_file_top1": true,
+      "expected_file_best_rank": 3,
+      "expected_file_role": "support",
+      "expected_symbol_best_rank": 3,
+      "expected_symbol_role": "support",
+      "contains_expected_file_top1": false,
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 26,
-      "result": "hit_top1_pivot",
+      "discarded_count": 28,
+      "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [
-        "bug"
+        "bug",
+        "errors",
+        "matplotlib",
+        "conversion",
+        "error",
+        "support"
       ],
-      "deanchored_exception_tokens": [],
+      "deanchored_exception_tokens": [
+        "matplotlib",
+        "conversion"
+      ],
       "body_literal_matches": [],
       "non_source_downranked": [],
       "title_symbol_terms": [],
@@ -707,7 +715,9 @@
         "lib/matplotlib/axis.py::Axis -[contains]-> lib/matplotlib/axis.py::_get_ticks_position",
         "lib/matplotlib/axis.py::Axis -[contains]-> lib/matplotlib/axis.py::get_minor_formatter",
         "lib/matplotlib/axis.py::Axis -[contains]-> lib/matplotlib/axis.py::set_ticklabels",
+        "lib/matplotlib/category.py::convert -[contains]-> lib/matplotlib/category.py::StrCategoryConverter",
         "lib/matplotlib/axis.py::Axis -[contains]-> lib/matplotlib/axis.py::set_remove_overlapping_locs",
+        "lib/matplotlib/units.py::convert -[contains]-> lib/matplotlib/units.py::DecimalConverter",
         "lib/matplotlib/category.py::convert -[calls]-> lib/matplotlib/category.py::_validate_unit"
       ],
       "generic_lexical_decoys_suppressed": [
@@ -716,9 +726,9 @@
       "diagnostics": {
         "top_pivots": [
           {
-            "path": "lib/matplotlib/category.py",
-            "symbol": "default_units",
-            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+            "path": "lib/matplotlib/units.py",
+            "symbol": "ConversionError",
+            "role_reason": "actionable class — symbol-name match; strong lexical match; issue-domain relevance"
           },
           {
             "path": "lib/matplotlib/_api/deprecation.py",
@@ -728,50 +738,50 @@
         ],
         "top_support": [
           {
+            "path": "lib/matplotlib/category.py",
+            "symbol": "convert",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+          },
+          {
             "path": "lib/matplotlib/axis.py",
             "symbol": "Axis",
             "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; strong lexical match"
           },
           {
-            "path": "lib/matplotlib/units.py",
-            "symbol": "ConversionError",
-            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; strong lexical match"
+            "path": "lib/matplotlib/_type1font.py",
+            "symbol": "value",
+            "role_reason": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
           },
           {
             "path": "lib/matplotlib/projections/polar.py",
             "symbol": "RadialAxis",
             "role_reason": "likely co-edit sibling of a high-confidence anchor"
-          },
-          {
-            "path": "lib/matplotlib/dates.py",
-            "symbol": "axisinfo",
-            "role_reason": "likely co-edit sibling of a high-confidence anchor"
           }
         ],
         "top_discarded": [
           {
-            "path": "lib/matplotlib/category.py",
-            "symbol": "StrCategoryConverter",
+            "path": "lib/matplotlib/dates.py",
+            "symbol": "axisinfo",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "lib/matplotlib/axis.py",
-            "symbol": "update_units",
+            "path": "lib/matplotlib/_type1font.py",
+            "symbol": "value",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "lib/matplotlib/_api/deprecation.py",
-            "symbol": "MatplotlibDeprecationWarning",
+            "path": "lib/matplotlib/_type1font.py",
+            "symbol": "value",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "lib/matplotlib/_api/deprecation.py",
-            "symbol": "suppress_matplotlib_deprecation_warning",
+            "path": "lib/matplotlib/_type1font.py",
+            "symbol": "value",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "examples/units/units_scatter.py",
-            "symbol": "data",
+            "path": "lib/matplotlib/_type1font.py",
+            "symbol": "value",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -1357,7 +1367,9 @@
         "src/_pytest/capture.py::EncodedFile -[contains]-> src/_pytest/capture.py::errors",
         "src/_pytest/capture.py::SysCaptureBinary -[references]-> src/_pytest/capture.py::capsysbinary"
       ],
-      "generic_lexical_decoys_suppressed": [],
+      "generic_lexical_decoys_suppressed": [
+        "errors -> src/_pytest/capture.py"
+      ],
       "diagnostics": {
         "top_pivots": [
           {
@@ -1396,11 +1408,6 @@
         "top_discarded": [
           {
             "path": "src/_pytest/capture.py",
-            "symbol": "errors",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "src/_pytest/capture.py",
             "symbol": "name",
             "discard_reason": "beyond standard support budget (max 4)"
           },
@@ -1418,6 +1425,11 @@
             "path": "src/_pytest/capture.py",
             "symbol": "writelines",
             "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/capture.py",
+            "symbol": "__init__",
+            "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
       }
@@ -1429,8 +1441,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 1646,
-      "used_percent": 20.58,
+      "estimated_tokens": 1433,
+      "used_percent": 17.91,
       "expected_files": [
         "sphinx/domains/python.py",
         "sphinx/pycode/ast.py"
@@ -1438,25 +1450,25 @@
       "expected_symbols": [
         "unparse"
       ],
-      "top_1_pivot_file": "sphinx/application.py",
-      "top_1_pivot_symbol": "add_object_type",
+      "top_1_pivot_file": "sphinx/domains/python.py",
+      "top_1_pivot_symbol": "_parse_annotation",
       "top_3_files": [
-        "sphinx/application.py",
         "sphinx/domains/python.py",
-        "sphinx/addnodes.py"
+        "sphinx/pycode/ast.py",
+        "sphinx/util/inspect.py"
       ],
-      "expected_file_best_rank": 2,
+      "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
-      "expected_symbol_best_rank": null,
-      "expected_symbol_role": "missing",
-      "contains_expected_file_top1": false,
+      "expected_symbol_best_rank": 3,
+      "expected_symbol_role": "support",
+      "contains_expected_file_top1": true,
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
-      "contains_expected_symbol_anywhere": false,
+      "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 22,
-      "result": "hit_top3",
+      "discarded_count": 3,
+      "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
       "filtered_generic_symbols": [],
@@ -1464,7 +1476,8 @@
       "downweighted_lexical_tokens": [
         "index",
         "error",
-        "bug"
+        "bug",
+        "errors"
       ],
       "deanchored_exception_tokens": [
         "index"
@@ -1476,69 +1489,62 @@
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
       "graph_neighbor_matches": [
-        "sphinx/domains/python.py::_parse_annotation -[calls]-> sphinx/domains/python.py::_parse_arglist",
-        "sphinx/domains/python.py::_parse_annotation -[calls]-> sphinx/domains/python.py::handle_signature"
+        "sphinx/pycode/ast.py::unparse -[calls]-> sphinx/ext/autodoc/type_comment.py::update_annotations_using_type_comments",
+        "sphinx/domains/python.py::_parse_annotation -[calls]-> sphinx/domains/python.py::handle_signature",
+        "sphinx/pycode/ast.py::unparse -[calls]-> sphinx/ext/autodoc/type_comment.py::not_suppressed",
+        "sphinx/pycode/ast.py::unparse -[references]-> sphinx/pycode/ast.py::OPERATORS",
+        "sphinx/pycode/ast.py::unparse -[calls]-> sphinx/ext/autodoc/type_comment.py::signature_from_ast"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
-            "path": "sphinx/application.py",
-            "symbol": "add_object_type",
-            "role_reason": "actionable method — strong lexical match; issue-domain relevance"
+            "path": "sphinx/domains/python.py",
+            "symbol": "_parse_annotation",
+            "role_reason": "actionable function — in a likely edit file; strong lexical match"
           },
           {
             "path": "sphinx/domains/python.py",
-            "symbol": "_parse_annotation",
-            "role_reason": "actionable function — strong lexical match; issue-domain relevance"
+            "symbol": "_parse_arglist",
+            "role_reason": "actionable function — in a likely edit file; strong lexical match"
           }
         ],
         "top_support": [
           {
-            "path": "sphinx/addnodes.py",
-            "symbol": "index",
-            "role_reason": "lexical match; issue-domain relevance; 56 dependents (not a pivot: high-degree framework root — support at most)"
-          },
-          {
-            "path": "sphinx/domains/c.py",
-            "symbol": "ASTType",
-            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
-          },
-          {
             "path": "sphinx/pycode/ast.py",
-            "symbol": "parse",
+            "symbol": "unparse",
+            "role_reason": "strong target beyond the pivot budget — actionable function — symbol-name match; strong lexical match"
+          },
+          {
+            "path": "sphinx/util/inspect.py",
+            "symbol": "signature_from_str",
             "role_reason": "likely co-edit sibling of a high-confidence anchor"
           },
           {
-            "path": "sphinx/application.py",
-            "symbol": "add_crossref_type",
-            "role_reason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance"
+            "path": "sphinx/ext/autodoc/type_comment.py",
+            "symbol": "update_annotations_using_type_comments",
+            "role_reason": "near high-confidence seed `unparse` (sphinx/pycode/ast.py) via calls edge"
+          },
+          {
+            "path": "sphinx/domains/python.py",
+            "symbol": "handle_signature",
+            "role_reason": "near high-confidence seed `_parse_annotation` (sphinx/domains/python.py) via calls edge"
           }
         ],
         "top_discarded": [
           {
-            "path": "sphinx/domains/c.py",
-            "symbol": "ASTSizeofType",
+            "path": "sphinx/ext/autodoc/type_comment.py",
+            "symbol": "not_suppressed",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "sphinx/roles.py",
-            "symbol": "Index",
+            "path": "sphinx/pycode/ast.py",
+            "symbol": "OPERATORS",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "sphinx/registry.py",
-            "symbol": "add_object_type",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "sphinx/domains/c.py",
-            "symbol": "describe_signature",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "sphinx/domains/cpp.py",
-            "symbol": "describe_signature",
+            "path": "sphinx/ext/autodoc/type_comment.py",
+            "symbol": "signature_from_ast",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -1800,40 +1806,40 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 399,
-      "used_percent": 4.99,
+      "estimated_tokens": 1085,
+      "used_percent": 13.56,
       "expected_files": [
         "requests/sessions.py"
       ],
       "expected_symbols": [
         "request"
       ],
-      "top_1_pivot_file": "requests/utils.py",
-      "top_1_pivot_symbol": "stream_decode_response_unicode",
+      "top_1_pivot_file": "requests/sessions.py",
+      "top_1_pivot_symbol": "request",
       "top_3_files": [
-        "requests/utils.py",
-        "requests/packages/urllib3/exceptions.py",
-        "requests/structures.py"
+        "requests/sessions.py",
+        "requests/cookies.py"
       ],
-      "expected_file_best_rank": null,
-      "expected_file_role": "discarded",
-      "expected_symbol_best_rank": 5,
-      "expected_symbol_role": "support",
-      "contains_expected_file_top1": false,
-      "contains_expected_file_top3": false,
+      "expected_file_best_rank": 1,
+      "expected_file_role": "pivot",
+      "expected_symbol_best_rank": 1,
+      "expected_symbol_role": "pivot",
+      "contains_expected_file_top1": true,
+      "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": true,
-      "pivot_count": 2,
+      "pivot_count": 1,
       "support_count": 4,
-      "discarded_count": 25,
-      "result": "hit_discarded",
-      "miss_category": "present_but_discarded",
-      "failure_reason": "expected file recovered but discarded: requests/sessions.py — beyond standard support budget (max 4)",
+      "discarded_count": 1,
+      "result": "hit_top1_pivot",
+      "miss_category": "none",
+      "failure_reason": null,
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [
         "decode",
-        "error"
+        "error",
+        "errors"
       ],
       "deanchored_exception_tokens": [
         "decode"
@@ -1845,75 +1851,46 @@
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
       "graph_neighbor_matches": [
-        "requests/models.py::prepare_method -[calls]-> requests/models.py::prepare",
-        "requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_put_conn",
-        "requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_get_conn",
-        "requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_get_timeout",
-        "requests/packages/urllib3/fields.py::from_tuples -[calls]-> requests/packages/urllib3/filepost.py::iter_field_objects",
-        "requests/packages/charade/hebrewprober.py::feed -[calls]-> requests/packages/charade/hebrewprober.py::is_non_final",
-        "requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_make_request",
-        "requests/packages/urllib3/request.py::RequestMethods -[contains]-> requests/packages/urllib3/request.py::_encode_url_methods"
+        "requests/sessions.py::request -[calls]-> requests/sessions.py::delete",
+        "requests/sessions.py::request -[calls]-> requests/sessions.py::head",
+        "requests/sessions.py::request -[calls]-> requests/sessions.py::options",
+        "requests/sessions.py::request -[calls]-> requests/sessions.py::prepare_request"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
-            "path": "requests/utils.py",
-            "symbol": "stream_decode_response_unicode",
-            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
-          },
-          {
-            "path": "requests/packages/urllib3/exceptions.py",
-            "symbol": "DecodeError",
-            "role_reason": "actionable class — strong lexical match; issue-domain relevance"
+            "path": "requests/sessions.py",
+            "symbol": "request",
+            "role_reason": "actionable method — symbol-name match; strong lexical match"
           }
         ],
         "top_support": [
           {
-            "path": "requests/structures.py",
-            "symbol": "CaseInsensitiveDict",
-            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance; 25 dependents"
+            "path": "requests/cookies.py",
+            "symbol": "RequestsCookieJar",
+            "role_reason": "likely co-edit sibling of a high-confidence anchor"
           },
           {
-            "path": "requests/packages/urllib3/connectionpool.py",
-            "symbol": "HTTPConnectionPool",
-            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+            "path": "requests/sessions.py",
+            "symbol": "delete",
+            "role_reason": "near high-confidence seed `request` (requests/sessions.py) via calls edge"
           },
           {
-            "path": "requests/api.py",
-            "symbol": "request",
-            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 7 dependents"
+            "path": "requests/sessions.py",
+            "symbol": "head",
+            "role_reason": "near high-confidence seed `request` (requests/sessions.py) via calls edge"
           },
           {
-            "path": "requests/packages/urllib3/exceptions.py",
-            "symbol": "PoolError",
-            "role_reason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance"
+            "path": "requests/sessions.py",
+            "symbol": "options",
+            "role_reason": "near high-confidence seed `request` (requests/sessions.py) via calls edge"
           }
         ],
         "top_discarded": [
           {
-            "path": "requests/packages/urllib3/request.py",
-            "symbol": "RequestMethods",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "requests/models.py",
-            "symbol": "Request",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "requests/packages/urllib3/exceptions.py",
-            "symbol": "HTTPError",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "requests/packages/charade/hebrewprober.py",
-            "symbol": "feed",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "requests/packages/urllib3/connectionpool.py",
-            "symbol": "_get_timeout",
+            "path": "requests/sessions.py",
+            "symbol": "prepare_request",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -2300,8 +2277,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 406,
-      "used_percent": 5.08,
+      "estimated_tokens": 449,
+      "used_percent": 5.61,
       "expected_files": [
         "lib/matplotlib/colors.py"
       ],
@@ -2330,7 +2307,8 @@
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [
-        "bug"
+        "bug",
+        "errors"
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
@@ -2348,7 +2326,7 @@
           {
             "path": "lib/matplotlib/_api/deprecation.py",
             "symbol": "suppress_matplotlib_deprecation_warning",
-            "role_reason": "actionable function — strong lexical match; issue-domain relevance; 16 dependents"
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
           },
           {
             "path": "lib/matplotlib/_api/deprecation.py",
@@ -2357,6 +2335,11 @@
           }
         ],
         "top_support": [
+          {
+            "path": "lib/matplotlib/_api/deprecation.py",
+            "symbol": "_generate_deprecation_warning",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+          },
           {
             "path": "lib/matplotlib/_api/deprecation.py",
             "symbol": "deprecated",
@@ -2369,19 +2352,14 @@
           },
           {
             "path": "lib/matplotlib/_api/deprecation.py",
-            "symbol": "delete_parameter",
-            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 11 dependents"
-          },
-          {
-            "path": "lib/matplotlib/_api/deprecation.py",
             "symbol": "rename_parameter",
             "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 8 dependents"
           }
         ],
         "top_discarded": [
           {
-            "path": "lib/matplotlib/path.py",
-            "symbol": "NUM_VERTICES_FOR_CODE",
+            "path": "lib/matplotlib/_api/deprecation.py",
+            "symbol": "delete_parameter",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
@@ -2390,18 +2368,18 @@
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
+            "path": "lib/matplotlib/mathtext.py",
+            "symbol": "MathTextWarning",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
             "path": "lib/matplotlib/_api/deprecation.py",
             "symbol": "make_keyword_only",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "lib/matplotlib/_api/deprecation.py",
-            "symbol": "_generate_deprecation_warning",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "lib/matplotlib/_mathtext.py",
-            "symbol": "NUM_SIZE_LEVELS",
+            "path": "lib/matplotlib/widgets.py",
+            "symbol": "rectangles",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -2904,8 +2882,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 3188,
-      "used_percent": 39.85,
+      "estimated_tokens": 3484,
+      "used_percent": 43.55,
       "expected_files": [
         "xarray/core/dataset.py"
       ],
@@ -2917,7 +2895,7 @@
       "top_3_files": [
         "xarray/core/dataset.py",
         "xarray/core/merge.py",
-        "xarray/core/variable.py"
+        "versioneer.py"
       ],
       "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
@@ -2927,9 +2905,9 @@
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": true,
-      "pivot_count": 2,
-      "support_count": 4,
-      "discarded_count": 24,
+      "pivot_count": 3,
+      "support_count": 3,
+      "discarded_count": 20,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -2943,13 +2921,24 @@
       "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
-      "literal_anchor_terms": [],
-      "literal_anchor_matches": [],
+      "literal_anchor_terms": [
+        "DataArray",
+        "items",
+        "__getattr__"
+      ],
+      "literal_anchor_matches": [
+        "DataArray -> xarray/core/dataarray.py::DataArray",
+        "DataArray -> xarray/backends/api.py::DATAARRAY_NAME",
+        "DataArray -> xarray/backends/api.py::DATAARRAY_VARIABLE",
+        "items -> versioneer.py::scan_setup_py",
+        "items -> xarray/backends/lru_cache.py::LRUCache",
+        "items -> xarray/backends/lru_cache.py::maxsize",
+        "__getattr__ -> xarray/core/common.py::__getattr__"
+      ],
       "graph_neighbor_matches": [
         "xarray/core/dataarray.py::DataArray -[contains]-> xarray/core/dataarray.py::reset_coords",
-        "xarray/core/merge.py::merge_core -[calls]-> xarray/core/variable.py::assert_unique_multiindex_level_names",
+        "xarray/backends/lru_cache.py::LRUCache -[contains]-> xarray/backends/lru_cache.py::__len__",
         "xarray/core/dataarray.py::DataArray -[contains]-> xarray/core/dataarray.py::reindex_like",
-        "xarray/core/merge.py::merge_core -[calls]-> xarray/core/merge.py::coerce_pandas_values",
         "xarray/core/dataarray.py::DataArray -[contains]-> xarray/core/dataarray.py::name",
         "xarray/core/dataarray.py::DataArray -[contains]-> xarray/core/dataarray.py::sortby"
       ],
@@ -2959,61 +2948,61 @@
           {
             "path": "xarray/core/dataset.py",
             "symbol": "merge",
-            "role_reason": "actionable method — symbol-name match; strong lexical match; issue-domain relevance"
+            "role_reason": "actionable method — symbol-name match; in a likely edit file; lexical match; issue-domain relevance"
           },
           {
             "path": "xarray/core/merge.py",
             "symbol": "merge",
-            "role_reason": "actionable function — symbol-name match; strong lexical match; issue-domain relevance; 24 dependents"
+            "role_reason": "actionable function — symbol-name match; in a likely edit file; lexical match; issue-domain relevance; 24 dependents"
+          },
+          {
+            "path": "versioneer.py",
+            "symbol": "scan_setup_py",
+            "role_reason": "actionable function — symbol-name match; strong lexical match"
           }
         ],
         "top_support": [
+          {
+            "path": "xarray/core/dataarray.py",
+            "symbol": "DataArray",
+            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; lexical match; issue-domain relevance; 694 dependents"
+          },
           {
             "path": "xarray/core/variable.py",
             "symbol": "assert_unique_multiindex_level_names",
             "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
           },
           {
-            "path": "xarray/core/dataarray.py",
-            "symbol": "DataArray",
-            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; strong lexical match; issue-domain relevance; 694 dependents"
-          },
-          {
             "path": "xarray/core/merge.py",
             "symbol": "dataset_merge_method",
-            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
-          },
-          {
-            "path": "xarray/core/merge.py",
-            "symbol": "merge_data_and_coords",
             "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
           }
         ],
         "top_discarded": [
           {
             "path": "xarray/core/merge.py",
-            "symbol": "dataset_update_method",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "symbol": "merge_collected",
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
             "path": "xarray/core/merge.py",
-            "symbol": "merge_collected",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "symbol": "coerce_pandas_values",
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
-            "path": "xarray/core/coordinates.py",
-            "symbol": "merge",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "path": "xarray/backends/api.py",
+            "symbol": "DATAARRAY_NAME",
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
-            "path": "xarray/core/dataset.py",
-            "symbol": "merge_indexes",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "path": "xarray/backends/api.py",
+            "symbol": "DATAARRAY_VARIABLE",
+            "discard_reason": "beyond standard support budget (max 3)"
           },
           {
-            "path": "xarray/core/dataset.py",
-            "symbol": "Dataset",
-            "discard_reason": "beyond standard support budget (max 4)"
+            "path": "xarray/backends/lru_cache.py",
+            "symbol": "LRUCache",
+            "discard_reason": "beyond standard support budget (max 3)"
           }
         ]
       }
@@ -3023,10 +3012,10 @@
       "repo": "pylint-dev/pylint",
       "label_source": "gold_patch",
       "intent": "debug",
-      "actual_mode": "no_context",
+      "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 0,
-      "used_percent": 0,
+      "estimated_tokens": 722,
+      "used_percent": 9.03,
       "expected_files": [
         "pylint/config/argument.py",
         "pylint/utils/__init__.py",
@@ -3039,70 +3028,104 @@
         "_regex_transformer",
         "_regexp_csv_transfomer"
       ],
-      "top_1_pivot_file": null,
-      "top_1_pivot_symbol": null,
-      "top_3_files": [],
+      "top_1_pivot_file": "pylint/config/config_initialization.py",
+      "top_1_pivot_symbol": "_order_all_first",
+      "top_3_files": [
+        "pylint/config/config_initialization.py",
+        "pylint/__init__.py",
+        "pylint/config/__init__.py"
+      ],
       "expected_file_best_rank": null,
-      "expected_file_role": "missing",
+      "expected_file_role": "discarded",
       "expected_symbol_best_rank": null,
       "expected_symbol_role": "missing",
       "contains_expected_file_top1": false,
       "contains_expected_file_top3": false,
-      "contains_expected_file_anywhere": false,
+      "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": false,
-      "pivot_count": 0,
-      "support_count": 0,
-      "discarded_count": 25,
-      "result": "skipped_no_context",
-      "miss_category": "missing_from_candidates",
-      "failure_reason": "capsule returned no_context (no high-confidence edit target)",
+      "pivot_count": 2,
+      "support_count": 4,
+      "discarded_count": 20,
+      "result": "hit_discarded",
+      "miss_category": "present_but_discarded",
+      "failure_reason": "expected file recovered but discarded: pylint/config/argument.py — beyond standard support budget (max 4)",
       "filtered_generic_symbols": [],
       "filtered_runner_files": [],
       "downweighted_lexical_tokens": [
+        "run",
         "bug"
       ],
       "deanchored_exception_tokens": [],
       "body_literal_matches": [],
-      "non_source_downranked": [
-        "doc/data/messages/t/too-many-boolean-expressions/bad.py — path under doc/data",
-        "doc/data/messages/s/simplify-boolean-expression/bad.py — path under doc/data"
-      ],
+      "non_source_downranked": [],
       "title_symbol_terms": [],
       "title_symbol_matches": [],
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
-      "graph_neighbor_matches": [
-        "pylint/checkers/lambda_expressions.py::visit_namedexpr -[contains]-> pylint/checkers/lambda_expressions.py::LambdaExpressionChecker"
+      "graph_neighbor_matches": [],
+      "generic_lexical_decoys_suppressed": [
+        "config -> pylint/config/arguments_manager.py"
       ],
-      "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
-        "top_pivots": [],
-        "top_support": [],
+        "top_pivots": [
+          {
+            "path": "pylint/config/config_initialization.py",
+            "symbol": "_order_all_first",
+            "role_reason": "actionable function — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour"
+          },
+          {
+            "path": "pylint/__init__.py",
+            "symbol": "_run_pylint_config",
+            "role_reason": "local implementation helper whose name matches the issue — likely edit site"
+          }
+        ],
+        "top_support": [
+          {
+            "path": "pylint/config/__init__.py",
+            "symbol": "__all__",
+            "role_reason": "in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "pylint/pyreverse/__init__.py",
+            "symbol": "__revision__",
+            "role_reason": "in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour (not a pivot: module_variable is a low-actionability edit target)"
+          },
+          {
+            "path": "pylint/config/config_file_parser.py",
+            "symbol": "_ConfigurationFileParser",
+            "role_reason": "likely co-edit sibling of a high-confidence anchor"
+          },
+          {
+            "path": "pylint/config/config_initialization.py",
+            "symbol": "_config_initialization",
+            "role_reason": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+          }
+        ],
         "top_discarded": [
           {
-            "path": "pylint/checkers/base/name_checker/checker.py",
-            "symbol": "_BadNamesTuple",
-            "discard_reason": "support-only: no actionable edit target"
+            "path": "pylint/__init__.py",
+            "symbol": "run_pylint",
+            "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "doc/data/messages/t/too-many-boolean-expressions/bad.py",
-            "symbol": "can_be_divided_by_two_and_are_not_zero",
-            "discard_reason": "support-only: no actionable edit target"
+            "path": "pylint/config/argument.py",
+            "symbol": "_csv_transformer",
+            "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "doc/data/messages/s/simplifiable-if-expression/bad.py",
-            "symbol": "FLYING_THINGS",
-            "discard_reason": "support-only: no actionable edit target"
+            "path": "pylint/config/arguments_provider.py",
+            "symbol": "_ArgumentsProvider",
+            "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "doc/data/messages/t/trailing-comma-tuple/bad.py",
-            "symbol": "COMPASS",
-            "discard_reason": "support-only: no actionable edit target"
+            "path": "pylint/config/arguments_manager.py",
+            "symbol": "help",
+            "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "doc/data/messages/s/simplify-boolean-expression/bad.py",
-            "symbol": "has_oranges",
-            "discard_reason": "support-only: no actionable edit target"
+            "path": "pylint/__pkginfo__.py",
+            "symbol": "get_numversion_from_version",
+            "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
       }
@@ -3114,8 +3137,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 559,
-      "used_percent": 6.99,
+      "estimated_tokens": 786,
+      "used_percent": 9.83,
       "expected_files": [
         "src/_pytest/skipping.py"
       ],
@@ -3132,14 +3155,14 @@
       "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
       "expected_symbol_best_rank": null,
-      "expected_symbol_role": "discarded",
+      "expected_symbol_role": "missing",
       "contains_expected_file_top1": true,
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
-      "contains_expected_symbol_anywhere": true,
+      "contains_expected_symbol_anywhere": false,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 25,
+      "discarded_count": 21,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -3154,14 +3177,8 @@
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
       "graph_neighbor_matches": [
-        "src/_pytest/skipping.py::Xfail -[contains]-> src/_pytest/skipping.py::reason",
-        "src/_pytest/skipping.py::Xfail -[contains]-> src/_pytest/skipping.py::run",
         "src/_pytest/skipping.py::Skip -[contains]-> src/_pytest/skipping.py::reason",
-        "src/_pytest/terminal.py::_width_of_current_line -[references]-> src/_pytest/terminal.py::pytest_runtest_logfinish",
-        "src/_pytest/skipping.py::pytest_runtest_makereport -[references]-> src/_pytest/skipping.py::xfailed_key",
-        "src/_pytest/terminal.py::_width_of_current_line -[references]-> src/_pytest/terminal.py::_write_progress_information_filling_space",
-        "src/_pytest/skipping.py::evaluate_xfail_marks -[calls]-> src/_pytest/skipping.py::pytest_runtest_call",
-        "src/_pytest/skipping.py::pytest_runtest_makereport -[references]-> src/_pytest/skipping.py::skipped_by_mark_key"
+        "src/_pytest/skipping.py::evaluate_condition -[calls]-> src/_pytest/skipping.py::evaluate_xfail_marks"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -3169,20 +3186,15 @@
           {
             "path": "src/_pytest/skipping.py",
             "symbol": "evaluate_skip_marks",
-            "role_reason": "local implementation helper invoked by the entry point — likely edit site"
+            "role_reason": "actionable function — strong lexical match; issue-domain relevance; 10 dependents"
           },
-          {
-            "path": "src/_pytest/skipping.py",
-            "symbol": "Skip",
-            "role_reason": "actionable class — symbol-name match; strong lexical match; issue-domain relevance"
-          }
-        ],
-        "top_support": [
           {
             "path": "src/_pytest/outcomes.py",
             "symbol": "skip",
-            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
-          },
+            "role_reason": "actionable function — strong lexical match; issue-domain relevance; 24 dependents"
+          }
+        ],
+        "top_support": [
           {
             "path": "src/_pytest/reports.py",
             "symbol": "skipped",
@@ -3190,39 +3202,44 @@
           },
           {
             "path": "src/_pytest/skipping.py",
-            "symbol": "evaluate_xfail_marks",
-            "role_reason": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+            "symbol": "Skip",
+            "role_reason": "strong target beyond the pivot budget — actionable class — symbol-name match; strong lexical match; issue-domain relevance"
           },
           {
             "path": "src/_pytest/skipping.py",
             "symbol": "skipped_by_mark_key",
             "role_reason": "strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)"
-          }
-        ],
-        "top_discarded": [
-          {
-            "path": "src/_pytest/mark/__init__.py",
-            "symbol": "deselect_by_keyword",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "src/_pytest/reports.py",
-            "symbol": "location",
-            "discard_reason": "beyond standard support budget (max 4)"
-          },
-          {
-            "path": "src/_pytest/reports.py",
-            "symbol": "location",
-            "discard_reason": "beyond standard support budget (max 4)"
           },
           {
             "path": "src/_pytest/skipping.py",
             "symbol": "pytest_report_teststatus",
+            "role_reason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance"
+          }
+        ],
+        "top_discarded": [
+          {
+            "path": "src/_pytest/doctest.py",
+            "symbol": "_check_all_skipped",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/mark/structures.py",
+            "symbol": "MarkGenerator",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
             "path": "src/_pytest/outcomes.py",
             "symbol": "importorskip",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/pathlib.py",
+            "symbol": "symlink_or_skip",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "src/_pytest/skipping.py",
+            "symbol": "evaluate_condition",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -3720,21 +3737,21 @@
     "instances_total": 30,
     "instances_evaluated": 30,
     "workspace_error_count": 0,
-    "no_context_count": 1,
-    "top_1_file_accuracy": 0.6667,
-    "top_3_file_recall": 0.8,
-    "expected_file_as_pivot_rate": 0.7667,
+    "no_context_count": 0,
+    "top_1_file_accuracy": 0.7333,
+    "top_3_file_recall": 0.8333,
+    "expected_file_as_pivot_rate": 0.8,
     "expected_file_as_support_rate": 0.0667,
-    "expected_file_missing_rate": 0.1333,
+    "expected_file_missing_rate": 0.1,
     "expected_file_discarded_rate": 0.0333,
     "expected_symbol_hit_rate": 0.5667,
-    "expected_symbol_as_pivot_rate": 0.2,
-    "mean_capsule_tokens": 2054.6667,
-    "mean_pivot_count": 2.0333,
-    "mean_support_count": 3.7333,
+    "expected_symbol_as_pivot_rate": 0.2667,
+    "mean_capsule_tokens": 2156.2,
+    "mean_pivot_count": 2.1,
+    "mean_support_count": 3.8333,
     "miss_taxonomy": {
-      "none": 24,
-      "missing_from_candidates": 1,
+      "none": 25,
+      "missing_from_candidates": 0,
       "present_but_support": 1,
       "present_but_discarded": 1,
       "wrong_subsystem": 3,
@@ -3754,21 +3771,21 @@
       "instances_total": 30,
       "instances_evaluated": 30,
       "workspace_error_count": 0,
-      "no_context_count": 1,
-      "top_1_file_accuracy": 0.6667,
-      "top_3_file_recall": 0.8,
-      "expected_file_as_pivot_rate": 0.7667,
+      "no_context_count": 0,
+      "top_1_file_accuracy": 0.7333,
+      "top_3_file_recall": 0.8333,
+      "expected_file_as_pivot_rate": 0.8,
       "expected_file_as_support_rate": 0.0667,
-      "expected_file_missing_rate": 0.1333,
+      "expected_file_missing_rate": 0.1,
       "expected_file_discarded_rate": 0.0333,
       "expected_symbol_hit_rate": 0.5667,
-      "expected_symbol_as_pivot_rate": 0.2,
-      "mean_capsule_tokens": 2054.6667,
-      "mean_pivot_count": 2.0333,
-      "mean_support_count": 3.7333,
+      "expected_symbol_as_pivot_rate": 0.2667,
+      "mean_capsule_tokens": 2156.2,
+      "mean_pivot_count": 2.1,
+      "mean_support_count": 3.8333,
       "miss_taxonomy": {
-        "none": 24,
-        "missing_from_candidates": 1,
+        "none": 25,
+        "missing_from_candidates": 0,
         "present_but_support": 1,
         "present_but_discarded": 1,
         "wrong_subsystem": 3,
@@ -3791,15 +3808,15 @@
       "instances_evaluated": 5,
       "workspace_error_count": 0,
       "no_context_count": 0,
-      "top_1_file_accuracy": 0.6,
+      "top_1_file_accuracy": 0.8,
       "top_3_file_recall": 1,
-      "expected_file_as_pivot_rate": 0.8,
-      "expected_file_as_support_rate": 0.2,
+      "expected_file_as_pivot_rate": 1,
+      "expected_file_as_support_rate": 0,
       "expected_file_missing_rate": 0,
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.4,
-      "expected_symbol_as_pivot_rate": 0,
-      "mean_capsule_tokens": 2692.6,
+      "expected_symbol_as_pivot_rate": 0.2,
+      "mean_capsule_tokens": 2969.2,
       "mean_pivot_count": 2.2,
       "mean_support_count": 3.8,
       "miss_taxonomy": {
@@ -3859,15 +3876,15 @@
       "instances_evaluated": 4,
       "workspace_error_count": 0,
       "no_context_count": 0,
-      "top_1_file_accuracy": 0.75,
+      "top_1_file_accuracy": 0.5,
       "top_3_file_recall": 0.75,
-      "expected_file_as_pivot_rate": 0.75,
-      "expected_file_as_support_rate": 0,
+      "expected_file_as_pivot_rate": 0.5,
+      "expected_file_as_support_rate": 0.25,
       "expected_file_missing_rate": 0.25,
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.5,
       "expected_symbol_as_pivot_rate": 0.25,
-      "mean_capsule_tokens": 672,
+      "mean_capsule_tokens": 656.25,
       "mean_pivot_count": 1.75,
       "mean_support_count": 4,
       "miss_taxonomy": {
@@ -3893,15 +3910,15 @@
       "instances_evaluated": 4,
       "workspace_error_count": 0,
       "no_context_count": 0,
-      "top_1_file_accuracy": 0.25,
+      "top_1_file_accuracy": 0.5,
       "top_3_file_recall": 0.5,
       "expected_file_as_pivot_rate": 0.5,
       "expected_file_as_support_rate": 0,
       "expected_file_missing_rate": 0.5,
       "expected_file_discarded_rate": 0,
-      "expected_symbol_hit_rate": 0.25,
+      "expected_symbol_hit_rate": 0.5,
       "expected_symbol_as_pivot_rate": 0.25,
-      "mean_capsule_tokens": 2797.75,
+      "mean_capsule_tokens": 2744.5,
       "mean_pivot_count": 2,
       "mean_support_count": 4,
       "miss_taxonomy": {
@@ -3927,22 +3944,22 @@
       "instances_evaluated": 3,
       "workspace_error_count": 0,
       "no_context_count": 0,
-      "top_1_file_accuracy": 0.6667,
-      "top_3_file_recall": 0.6667,
-      "expected_file_as_pivot_rate": 0.6667,
+      "top_1_file_accuracy": 1,
+      "top_3_file_recall": 1,
+      "expected_file_as_pivot_rate": 1,
       "expected_file_as_support_rate": 0,
       "expected_file_missing_rate": 0,
-      "expected_file_discarded_rate": 0.3333,
+      "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 1,
-      "expected_symbol_as_pivot_rate": 0.6667,
-      "mean_capsule_tokens": 711.6667,
-      "mean_pivot_count": 2,
+      "expected_symbol_as_pivot_rate": 1,
+      "mean_capsule_tokens": 940.3333,
+      "mean_pivot_count": 1.6667,
       "mean_support_count": 4,
       "miss_taxonomy": {
-        "none": 2,
+        "none": 3,
         "missing_from_candidates": 0,
         "present_but_support": 0,
-        "present_but_discarded": 1,
+        "present_but_discarded": 0,
         "wrong_subsystem": 0,
         "wrong_entry_point": 0,
         "generic_infrastructure_ranked_above_target": 0,
@@ -3967,9 +3984,9 @@
       "expected_file_as_support_rate": 0,
       "expected_file_missing_rate": 0,
       "expected_file_discarded_rate": 0,
-      "expected_symbol_hit_rate": 1,
+      "expected_symbol_hit_rate": 0.6667,
       "expected_symbol_as_pivot_rate": 0,
-      "mean_capsule_tokens": 779.6667,
+      "mean_capsule_tokens": 855.3333,
       "mean_pivot_count": 2,
       "mean_support_count": 4,
       "miss_taxonomy": {
@@ -4003,9 +4020,9 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.5,
       "expected_symbol_as_pivot_rate": 0.5,
-      "mean_capsule_tokens": 1976,
-      "mean_pivot_count": 2.5,
-      "mean_support_count": 3.5,
+      "mean_capsule_tokens": 2124,
+      "mean_pivot_count": 3,
+      "mean_support_count": 3,
       "miss_taxonomy": {
         "none": 2,
         "missing_from_candidates": 0,
@@ -4037,7 +4054,7 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 1,
       "expected_symbol_as_pivot_rate": 0.5,
-      "mean_capsule_tokens": 3408,
+      "mean_capsule_tokens": 3412,
       "mean_pivot_count": 2,
       "mean_support_count": 4,
       "miss_taxonomy": {
@@ -4130,23 +4147,23 @@
       "instances_total": 1,
       "instances_evaluated": 1,
       "workspace_error_count": 0,
-      "no_context_count": 1,
+      "no_context_count": 0,
       "top_1_file_accuracy": 0,
       "top_3_file_recall": 0,
       "expected_file_as_pivot_rate": 0,
       "expected_file_as_support_rate": 0,
-      "expected_file_missing_rate": 1,
-      "expected_file_discarded_rate": 0,
+      "expected_file_missing_rate": 0,
+      "expected_file_discarded_rate": 1,
       "expected_symbol_hit_rate": 0,
       "expected_symbol_as_pivot_rate": 0,
-      "mean_capsule_tokens": 0,
-      "mean_pivot_count": 0,
-      "mean_support_count": 0,
+      "mean_capsule_tokens": 722,
+      "mean_pivot_count": 2,
+      "mean_support_count": 4,
       "miss_taxonomy": {
         "none": 0,
-        "missing_from_candidates": 1,
+        "missing_from_candidates": 0,
         "present_but_support": 0,
-        "present_but_discarded": 0,
+        "present_but_discarded": 1,
         "wrong_subsystem": 0,
         "wrong_entry_point": 0,
         "generic_infrastructure_ranked_above_target": 0,
