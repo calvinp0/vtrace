@@ -162,6 +162,7 @@ import {
   type RevisionSourceExcerpt,
   type RevisionTestExpectation,
 } from "../../src/capsuleV2/pivotRevisionPass";
+import { deriveStructuredTaskFromProblemStatement } from "./stage5_task_derivation";
 import {
   prepareRevisedShadowEval,
   classifyShadowEval,
@@ -5174,19 +5175,21 @@ export function buildInstanceQuery(instance: SweBenchInstance): string {
   return query.length > MAX_VTRACE_QUERY_CHARS ? query.slice(0, MAX_VTRACE_QUERY_CHARS) : query;
 }
 
-// Capsule v2 reads the raw task, not a packed retrieval query. Build a clean,
-// human task description from the instance fields the planner uses: the issue
-// text plus the repo / failing tests / hints that help intent detection. We do
-// NOT include any evaluation labels (resolved/gold patch/condition) — only what
-// a developer reading the issue would have.
+// Capsule v2 task text — the SHARED M103 structured derivation (M104). Before
+// M104 this composed `instance:`/`repo:` headers + the FULL problem statement +
+// a `failing tests: <FAIL_TO_PASS>` line + `hints:` — so live retrieval ran on
+// evidence the deterministic M103 measurement never saw, and the hidden
+// FAIL_TO_PASS labels contaminated the retrieval query (and its tail echoed
+// into model-visible context under opt-in --inject-capsule-digest). Now the
+// live task is byte-identical to the deterministic scoreboard/fixture task:
+// title + first prose sentence + extracted exceptions / failing-test ids /
+// capped traceback frames, ALL read from the problem statement alone (≤1200
+// chars). FAIL_TO_PASS, hints, and evaluation labels never enter the task; the
+// instance is attributed by the `## Instance` header of the injected context,
+// not by the query. The MAX_VTRACE_QUERY_CHARS guard is kept as an argv safety
+// net only (the structured cap is far below it).
 export function buildCapsuleV2Task(instance: SweBenchInstance): string {
-  const parts: string[] = [`instance: ${instance.instanceId}`, `repo: ${instance.repo}`];
-  const problem = instance.problemStatement.trim();
-  if (problem.length > 0) parts.push("", problem);
-  if (instance.failToPass.length > 0) parts.push("", `failing tests: ${instance.failToPass.join(", ")}`);
-  const hints = instance.hintsText?.trim() ?? "";
-  if (hints.length > 0) parts.push("", `hints: ${hints}`);
-  const task = parts.join("\n");
+  const task = deriveStructuredTaskFromProblemStatement(instance.problemStatement).taskText;
   return task.length > MAX_VTRACE_QUERY_CHARS ? task.slice(0, MAX_VTRACE_QUERY_CHARS) : task;
 }
 

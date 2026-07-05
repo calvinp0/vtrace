@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "bun:test";
 
+import { deriveStructuredTaskFromProblemStatement } from "./stage5_task_derivation";
 import {
   applyContextPolicyOverride,
   applyVtracePatch,
@@ -2315,19 +2316,83 @@ test("--capsule-intent maps through the shared normalized vocabulary (incl. modi
   }
 });
 
-test("capsuleQueryTextFor returns a clean task for v2 and the packed query for legacy", () => {
+test("capsuleQueryTextFor returns the shared structured task for v2 and the packed query for legacy", () => {
   const instance = sampleInstance();
   const v2Task = capsuleQueryTextFor(baseConfig({ capsuleEngine: "v2" }), instance);
+  // M104: the v2 task IS the shared M103 structured derivation — byte-identical
+  // to the deterministic scoreboard/fixture task for the same problem statement.
   assert.equal(v2Task, buildCapsuleV2Task(instance));
-  assert.match(v2Task, /instance: django__django-11728/);
-  assert.match(v2Task, /repo: django\/django/);
+  assert.equal(v2Task, deriveStructuredTaskFromProblemStatement(instance.problemStatement).taskText);
   assert.match(v2Task, /replace_named_groups does not handle trailing groups/);
-  assert.match(v2Task, /failing tests:/);
-  // No evaluation labels leak into the task text.
+  // Model-invisible metadata never enters the task: no instance/repo header, no
+  // hidden FAIL_TO_PASS test ids, no hints, no evaluation labels.
+  assert.doesNotMatch(v2Task, /instance: |repo: /);
+  assert.doesNotMatch(v2Task, /failing tests:|hints:/);
+  assert.ok(!v2Task.includes("test_replace_named_groups"));
+  assert.ok(!v2Task.includes("look at admindocs utils"));
   assert.doesNotMatch(v2Task, /resolved|gold|FAIL_TO_PASS|condition/);
 
   const legacy = capsuleQueryTextFor(baseConfig({ capsuleEngine: "legacy" }), instance);
   assert.equal(legacy, buildInstanceQuery(instance));
+});
+
+test("buildCapsuleV2Task never uses the full problem statement as the task", () => {
+  // A long multi-paragraph issue with a traceback: the structured derivation keeps
+  // the title + first prose sentence + extracted evidence, NOT the raw dump.
+  const statement = [
+    "Combinator querysets drop values_list() columns",
+    "",
+    "When composing querysets with union() the column list is reused from the first query.",
+    "This is a longer paragraph of prose that the structured derivation must not include verbatim. ".repeat(20),
+    "Traceback (most recent call last):",
+    '  File "django/db/models/sql/compiler.py", line 428, in get_combinator_sql',
+    "ValueError: too many values to unpack",
+  ].join("\n");
+  const instance = toSweBenchInstance({
+    ...SAMPLE_RECORD,
+    problem_statement: statement,
+    PASS_TO_PASS: '["tests.queries.test_qs_combinators.QuerySetSetOperationTests.test_union"]',
+    patch: "diff --git a/django/db/models/sql/compiler.py b/django/db/models/sql/compiler.py",
+  });
+  const task = buildCapsuleV2Task(instance);
+  assert.equal(task, deriveStructuredTaskFromProblemStatement(statement).taskText);
+  assert.notEqual(task, statement);
+  assert.ok(!task.includes("longer paragraph of prose that the structured derivation must not include verbatim. This"));
+  assert.ok(task.length <= 1200);
+  // Structured evidence extracted FROM the issue is kept…
+  assert.match(task, /ValueError/);
+  assert.match(task, /compiler\.py/);
+  // …while hidden benchmark metadata (FAIL_TO_PASS / PASS_TO_PASS / gold patch)
+  // never reaches the task, even when present on the raw record.
+  assert.ok(!task.includes("test_replace_named_groups"));
+  assert.ok(!task.includes("test_union"));
+  assert.ok(!task.includes("diff --git"));
+});
+
+test("assembled model-visible context excludes FAIL_TO_PASS / hints even when the instance carries them", () => {
+  const instance = sampleInstance();
+  const classification = classifyCapsuleV2Output(JSON.parse(capsuleV2Json()));
+  const section: VtraceContextSection = {
+    instance,
+    rawContext: classification.context,
+    error: null,
+    classification,
+    preformatted: true,
+  };
+  const { markdown } = buildVtraceContextMarkdown([section], {
+    maxChars: 12000,
+    maxItems: 8,
+    pivotCheckPolicy: "off",
+    injectTokenDiscipline: true,
+  });
+  // The injected file carries attribution (id/repo/base_commit) + retrieved
+  // context + policy blocks — never the hidden test labels or issue hints.
+  assert.match(markdown, /instance_id: django__django-11728/);
+  assert.ok(!markdown.includes("test_replace_named_groups"));
+  assert.ok(!markdown.includes("FAIL_TO_PASS"));
+  assert.ok(!markdown.includes("PASS_TO_PASS"));
+  assert.ok(!markdown.includes("look at admindocs utils"));
+  assert.ok(!markdown.includes("failing tests:"));
 });
 
 test("classifyCapsuleV2Output injects rendered context for a pivot and skips no_context", () => {
