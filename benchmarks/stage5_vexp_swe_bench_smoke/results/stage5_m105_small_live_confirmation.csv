@@ -1,0 +1,15 @@
+instance_id,preflight_status,task_hash_match,leakage_status,fallback_status,live_status,eval_status,resolved,total_tokens,cache_read_tokens,cost_usd,tool_calls,changed_files,m103_outcome,m73_treatment_resolved,m73_baseline_resolved,m92_resolved
+psf__requests-5414,pass,true,clean,none,valid,evaluated,false,932650,874441,0.5498,10,requests/models.py,good,false,true,false
+django__django-13513,pass,true,clean,none,valid,evaluated,false,2798505,2720696,1.1870,29,,good,false,false,
+matplotlib__matplotlib-22719,pass,true,clean,none,valid,evaluated,true,603170,539841,0.4049,5,lib/matplotlib/category.py,overpacked,true,true,
+pydata__xarray-4695,pass,true,clean,none,valid,evaluated,true,1504390,1414794,0.6727,15,xarray/core/dataarray.py,overpacked,true,true,
+psf__requests-1724,pass,true,clean,none,valid,evaluated,true,687802,636083,0.3737,7,requests/sessions.py,excellent,true,false,true
+sympy__sympy-13372,pass,true,clean,none,valid,evaluated,true,757636,704297,0.4339,8,sympy/core/evalf.py,excellent,true,true,
+sympy__sympy-13480,pass,true,clean,none,valid,evaluated,true,490803,445458,0.3007,5,sympy/functions/elementary/hyperbolic.py,good,true,true,
+django__django-16938,pass,true,clean,none,valid,evaluated,false,734160,679164,0.4283,7,django/core/serializers/python.py,partial,false,true,false
+django__django-13810,pass,true,clean,none,valid,evaluated,true,698819,643414,0.4334,7,django/core/handlers/base.py,miss,true,true,
+astropy__astropy-14369,pass,true,clean,none,valid,evaluated,false,1782416,1680569,1.0457,15,astropy/units/format/cds.py,good,false,false,false
+django__django-16256,pass,true,clean,none,valid,evaluated,false,869307,784041,0.4623,10,django/db/models/fields/related_descriptors.py,wrong_pivot,false,false,false
+django__django-13195,pass,true,clean,none,valid,evaluated,false,695152,626970,0.3995,7,django/http/response.py,excellent,false,false,
+mwaskom__seaborn-3187,pass,true,clean,none,valid,evaluated,false,903885,840170,0.5514,9,seaborn/_core/scales.py,excellent,false,false,false
+sphinx-doc__sphinx-7462,pass,true,clean,none,valid,evaluated,false,691786,638331,0.4171,7,sphinx/domains/python.py,excellent,false,false,false
