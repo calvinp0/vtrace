@@ -123,7 +123,7 @@ export function mandatoryGuardsOff(config: CliConfig): string[] {
   return guards.filter(([, ok]) => !ok).map(([name]) => name);
 }
 
-interface M103DetailRow {
+export interface M103DetailRow {
   readonly instance_id: string;
   readonly outcome: string | null;
   readonly derivation: {
@@ -136,7 +136,7 @@ interface M103DetailRow {
   readonly capsule: { readonly lead_pivot_file: string | null } | null;
 }
 
-interface M104DetailRow {
+export interface M104DetailRow {
   readonly instance_id: string;
   readonly structured_task_hash: string;
   readonly lead_pivot_file: string | null;
@@ -201,7 +201,7 @@ function normalizeList(value: unknown): string[] {
 const DIGEST_START = "<VTRACE_CAPSULE_V2_DIGEST_START>";
 const CONTRACT_START = "<VTRACE_DIGEST_DECISION_CONTRACT_START>";
 
-function runCase(
+export function runCase(
   record: Record<string, unknown>,
   config: CliConfig,
   m103Row: M103DetailRow | null,
@@ -420,7 +420,7 @@ function runCase(
   };
 }
 
-async function probeShellGuard(outDir: string) {
+export async function probeShellGuard(outDir: string) {
   const probeDir = path.join(outDir, "_m105_preflight_shell_guard_probe");
   await rm(probeDir, { recursive: true, force: true }).catch(() => {});
   let materializeOk = false;
