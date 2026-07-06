@@ -1,0 +1,92 @@
+{
+  "milestone": "M107",
+  "kind": "50-case live confirmation of the current default VTRACE path (M95-M104 deterministic chain + M103 structured task derivation + M104 live-path parity), built as committed M105 (14) + committed M106 (10) + 26 pre-registered extension cases",
+  "date": "2026-07-06",
+  "verdict": "PASS",
+  "recommendation": "proceed to 100-case live confirmation (reuse these 50 valid runs under the artifact-reuse contract); treat the 17/50-vs-23/50 shortfall as the thing the larger sample must bound",
+  "m105_m106_reuse": {
+    "reused_not_rerun": true,
+    "m105_source": "stage5_m105_live_runs.detail.json (committed fb791b0)",
+    "m106_source": "stage5_m106_live_runs.detail.json (committed 5043a63)",
+    "m105_reaggregation_matches_committed_aggregate": true,
+    "m106_reaggregation_matches_committed_aggregate": true,
+    "combined24_reaggregation_matches_committed_aggregate": true,
+    "rerun_guard": "selection excludes all 24 committed ids; preflight throws on overlap; aggregateCombined50 throws on any instance_id overlap across the three sets"
+  },
+  "case_selection": {
+    "file": "stage5_m107_case_selection.json",
+    "method": "deterministic stratified selection (selectM107Cases, pure + unit-tested) from the frozen M103 100-case pool minus the 24 committed ids; strata 5/4/4/4/5/2/2 per the M107 brief; M92-row preference, instance_id tie-break, repo cap 6 (pass-2 relaxation fired only where a stratum was exhausted: wrong_pivot is all-django, multi_file had one non-django candidate left)",
+    "substitution": "only 1 outcome=partial case remained in the pool; the deficit of 3 filled deterministically from outcome=overpacked with the GLOBAL repo cap, stratum-tagged partial_sub_overpacked",
+    "phases": { "A": 5, "B": 10, "C": 11 }
+  },
+  "preflight": {
+    "cases": 26,
+    "preflight_pass_count": 26,
+    "m103_task_text_exact_match": "26/26",
+    "raw_leak_scanner_hits": 0,
+    "unexplained_leak_hits": 0,
+    "fallback_would_fire_count": 0,
+    "env_guard_pass": true,
+    "shell_guard_available": true
+  },
+  "resolution": {
+    "m107_resolved": [
+      "django__django-16569",
+      "pallets__flask-5014",
+      "django__django-10880",
+      "django__django-15731",
+      "sphinx-doc__sphinx-9698",
+      "pylint-dev__pylint-8898",
+      "sympy__sympy-12419",
+      "sympy__sympy-24562"
+    ],
+    "m107_vs_m73_treatment": "8/26 vs 13/26 expected; per-case agreement 17/26 (wins: sympy-12419, sympy-24562; losses: django-12273, django-12774, matplotlib-25960, pytest-6197, sympy-15875, django-12325, matplotlib-24627)",
+    "combined_vs_m73_treatment": "17/50 (34.0%) vs pre-registered 23/50; per-case agreement 39/50 (M105 14/14, M106 8/10, M107 17/26)",
+    "m92_overlap": "M107 extension: live 5/21 vs M92 9/21 (agreement 17/21); combined 50: live 9/37 vs M92 13/37 (agreement 31/37)",
+    "criterion_12_floor": "pre-registered floor = catastrophic iff combined resolved < 12 over >=45 valid evaluated; actual 17/50 over 50 valid -> floor cleared",
+    "standing_regression_note": "sympy-12419 (M73-treatment unresolved, standing M7.x live regression) RESOLVED live; pylint-8898 (the second standing regression in the set) also resolved (M73-treatment agreed)"
+  },
+  "safety": {
+    "unexplained_leak_events": 0,
+    "fallback_fires": 0,
+    "revision_or_corrective_artifacts": 0,
+    "behavioral_guard_metadata": 0,
+    "env_guard": "pass 26/26, benchmark-valid, 0 drift",
+    "shell_guard": "pass 26/26, 0 blocked host package-manager commands",
+    "unguarded_escape_hatch_used": false,
+    "operational_events": "django-10880 first launch was killed externally mid-agent (no result row, no run meta, cost unrecorded by accounting); partial run dir removed and the case relaunched clean under the same label per the resumable-driver contract; 0 provider-abort retries"
+  },
+  "budget": {
+    "extension_pause_cap_usd": 22,
+    "extension_spend_usd": 16.66,
+    "m73_treatment_historical_cost_same_26": 25.09,
+    "combined50_spend_usd": 31.41,
+    "m73_treatment_historical_cost_same_50": 39.76,
+    "outlier": "django-16263 $3.008 / 93 turns (the known M78 edit-churn case; historical M73 cost $0.51 - live churn regression reproduced)"
+  },
+  "success_criteria": {
+    "1_m105_m106_reused_not_rerun": "PASS (bit-identical reaggregation, overlap guards)",
+    "2_selection_pre_registered": "PASS (26 frozen in stage5_m107_case_selection.json before any live run)",
+    "3_at_least_24_of_26_attempted": "PASS (26/26 preflight-pass and live-attempted)",
+    "4_task_parity_before_spawn": "PASS (26/26 M103 byte-exact + shared-derivation identity)",
+    "5_zero_leakage": "PASS (0 unexplained pre- and post-run; 0 raw scanner hits pre-run)",
+    "6_zero_fallback": "PASS (0 fires)",
+    "7_zero_revision_or_failtopass_context": "PASS (0 artifacts, arms off in parsed config)",
+    "8_zero_unguarded_runs": "PASS",
+    "9_zero_drift": "PASS",
+    "10_zero_host_mutation_escapes": "PASS (0 blocked commands, 0 escapes)",
+    "11_at_least_24_parseable": "PASS (26/26 parse)",
+    "12_resolution_floor": "PASS (17 >= floor 12; 6 below point expectation 23/50 - discussed as MIXED-leaning signal, floor cleared)",
+    "13_accounting_complete": "PASS (tokens/cost/tool-calls complete for 26/26; the killed first 10880 attempt has no accounting row by design)",
+    "14_spend_under_cap": "PASS ($16.66 < $22)",
+    "15_tests_typechecks": "PASS (bun test, typecheck, typecheck:benchmarks, git diff --check)"
+  },
+  "artifacts": {
+    "plan": "stage5_m107_50_case_live_confirmation_plan.md",
+    "selection": "stage5_m107_case_selection.json",
+    "preflight_detail": "stage5_m107_live_preflight.detail.json",
+    "runs_detail": "stage5_m107_live_runs.detail.json",
+    "csv": "stage5_m107_50_case_live_confirmation.csv",
+    "report": "stage5_m107_50_case_live_confirmation.md"
+  }
+}
