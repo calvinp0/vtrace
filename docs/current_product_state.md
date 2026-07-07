@@ -1,9 +1,11 @@
 # Current VTRACE Product State
 
-_Last reconciled: 2026-07-01 (milestone M93A). This document is the single
-plain-truth surface for "what VTRACE can and cannot do today." It supersedes the
-stale claims in `VTRACE_TOOLING_AUDIT.md` (2026-06-04) wherever the code has since
-moved — every capability below was re-verified against `src/` on 2026-07-01._
+_Last reconciled: 2026-07-07 (milestone M109; benchmark-interpretation and
+next-milestones sections only — capability sections below were last
+re-verified against `src/` on 2026-07-01 at M93A). This document is the
+single plain-truth surface for "what VTRACE can and cannot do today." It
+supersedes the stale claims in `VTRACE_TOOLING_AUDIT.md` (2026-06-04)
+wherever the code has since moved._
 
 ## What VTRACE is
 
@@ -131,13 +133,31 @@ Note: TS/Cython **do** now emit `calls` edges (`typescriptParser.ts:634`,
   guard fails closed unless the agent uses a disposable testbed interpreter; the
   M90A shell guard / host-pip firewall blocks host/base Python mutation. Both are
   mandatory fail-closed safety infrastructure, not behavioral experiments.
+- **M94→M103 deterministic scoreboard (gold-blind, pre-agent, no live runs):**
+  the M95–M103 chain improved the pre-agent scoreboard from M94 to M103,
+  including higher recall (recall@5 .637→.748), capsule coverage (all-gold
+  60.6%→75.0%), lead-pivot quality (source-gold lead 45.5%→59.0%), multi-file
+  all-gold coverage (6.7%→53.3%), and structured task evidence handling — at
+  flat median capsule size. Accepted cost: overpacked capsules 7→14. See
+  `benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m109_final_internal_summary.md`.
+- **M105–M108 live confirmation (internal, integrated, guarded):** on the
+  frozen internal 100-case Stage 5 pool, the current default VTRACE path
+  produced 97 valid guarded live runs, with 55 resolved patches (56.7% of
+  valid live runs). Three cases were pre-registered no-context exclusions
+  under the parity contract. Across the 97 valid runs the path was
+  leak-clean: zero model-visible FAIL_TO_PASS/PASS_TO_PASS/gold-patch
+  leakage, zero fallback-context fires, zero unguarded env/shell runs, zero
+  host-pip mutation escapes. **This is an internal live confirmation, not a
+  public SWE-bench pass@1 claim and not a VEXP parity claim.**
 
 ## Next product milestones
 
-- **M94 — deterministic retrieval/capsule scoreboard** (planned next; see
-  `docs/M94_DETERMINISTIC_SCOREBOARD_PLAN.md`). Score VTRACE's retrieval/capsule
-  quality *before* the agent acts, with no live agents and no Docker.
-- Retrieval / pivot / capsule ranking improvements driven by the scoreboard.
+- **Default path frozen at M109** (M95–M104 chain + structured task
+  derivation + live-path parity). No further live benchmark spend until the
+  captured-artifact analysis questions are exhausted (hard-stratum
+  agent-variance losses, multi-file patch-shape levers).
+- Deterministic residue work only if evidence grows: no-context cases (3/100),
+  miss-class pool recall (mined-out per M100), overpacking (packing lever).
 - Token-attribution optimization (and, longer term, tokenizer-accurate budgeting).
 - Incremental removal of `@ts-nocheck`; TypeScript call/reference graph depth;
   `.gitignore` refinements. All deferred beyond M93A.

@@ -1,0 +1,114 @@
+{
+  "milestone": "M109",
+  "kind": "final internal summary of the M94-M108 deterministic-improvement + live-confirmation arc; no-spend analysis over committed artifacts only",
+  "date": "2026-07-07",
+  "verdict": "PASS",
+  "final_status": "current default VTRACE path (M95-M104) frozen; live-validated over the frozen internal 100-case Stage 5 pool",
+  "default_path": {
+    "task_derivation": "deriveStructuredTaskFromProblemStatement (M102 V5 shape; shared by scoreboard and live runner since M104)",
+    "retrieval_capsule": "Capsule v2 + M95 strong-lexical fix + M96 direct-evidence lanes + M97/M98 tiered co-edit expansion + M99 import rescue + M100 file-evidence rescue + M101 anchored pivot guard",
+    "live_flags": "force-inject, v2, intent debug, budget 8000, digest + decision contract + bounded + compact + pivot-confidence gate",
+    "mandatory_safety": "M89 env guard + drift check + pinned testbed prefix; M90A shell guard + host-pip firewall",
+    "disabled_arms": ["V4", "C7_D", "pivot-inspection enforcement", "M14/M15 revision passes", "rule-out corrective", "M7.3 traceback skip", "VEXP", "baseline arms", "unguarded escape"]
+  },
+  "deterministic_core_result": {
+    "baseline": "M94 (8d52a78)",
+    "final": "M103 (199769f)",
+    "recall_at_5": [0.637, 0.748],
+    "any_gold_in_capsule": [0.697, 0.79],
+    "all_gold_in_capsule": [0.606, 0.75],
+    "lead_pivot_source_gold": [0.455, 0.59],
+    "hidden_coedit_recall": [0.222, 0.622],
+    "multi_file_all_gold": [0.067, 0.533],
+    "outcome_miss": [30, 21],
+    "outcome_wrong_pivot": [10, 7],
+    "outcome_overpacked": [7, 14],
+    "median_capsule_est_tokens": [1077, 1096],
+    "p90_capsule_est_tokens": [4447, 3536],
+    "note": "M94 = comparable-99 set; M103 = new-policy-100 set; overpacked +7 is the accepted cost of the multi-file co-edit recall gains"
+  },
+  "live_confirmation_result": {
+    "pool_cases": 100,
+    "valid_live_runs": 97,
+    "invalid_runs": 0,
+    "no_context_exclusions": ["django__django-11740", "django__django-15572", "sphinx-doc__sphinx-9320"],
+    "resolved": 55,
+    "resolution_rate_of_valid": 0.567,
+    "per_set": { "m105": [14, 6], "m106": [10, 3], "m107": [26, 8], "m108": [47, 38] },
+    "cost_usd": 56.69,
+    "total_tokens": 104647906,
+    "cache_read_share": 0.939,
+    "denominator_rule": "always report 100 frozen pool cases, 97 valid live runs, 3 pre-registered no-context exclusions; never imply 100/100 ran"
+  },
+  "historical_comparison": {
+    "m73_treatment_strict": { "comparable": 93, "expectation": 64, "live": 54, "agreement": 77 },
+    "m73_treatment_as_reported": { "comparable": 96, "agreement": 81, "expectation_over_pool": 66, "live_over_valid": 55 },
+    "m73_no_valid_row": ["django__django-10973", "astropy__astropy-14598", "django__django-13513", "django__django-15503"],
+    "m73_baseline": { "comparable": 97, "expectation": 61, "live": 55 },
+    "m92_overlap": { "comparable": 49, "m92_resolved": 20, "live_resolved": 16, "agreement": 41 },
+    "live_by_m103_outcome": { "excellent": [32, 19], "good": [24, 14], "overpacked": [14, 9], "miss": [18, 11], "wrong_pivot": [7, 2], "partial": [2, 0] },
+    "caveat": "frozen history, unpaired, partly different protocol versions; directional context only; not statistically powered as a public claim"
+  },
+  "hard_stratum_analysis": {
+    "artifact": "stage5_m109_hard_stratum_analysis.json",
+    "strict_live_losses": 13,
+    "losses_with_all_gold_in_capsule": 10,
+    "loss_reasons": { "agent_variance": 10, "single_file_patch_on_multifile_gold": 1, "deterministic_context_gap": 2 },
+    "wins_vs_m73": ["astropy__astropy-14365", "sympy__sympy-12419", "sympy__sympy-24562"],
+    "no_row_win": "django__django-10973 resolved live (no valid M73 treatment row)",
+    "m7x_regressions_recovered": ["sympy__sympy-12419", "pylint-dev__pylint-8898", "astropy__astropy-14539"],
+    "conclusion": "live deficit vs M73 is dominated by agent-side variance on hard-stratum cases with complete context, not by retrieval/context regressions"
+  },
+  "safety": {
+    "unexplained_leakage": 0,
+    "fallback_fires": 0,
+    "env_guard_failures": 0,
+    "drift": 0,
+    "shell_guard_failures": 0,
+    "host_pip_blocks": 0,
+    "unguarded_runs": 0,
+    "revision_corrective_artifacts": 0,
+    "framing": "measured-zero on this protocol; never claim leakage is impossible"
+  },
+  "cost_claims": {
+    "supportable": "M92 paired 50-task: tokens -26.7%, cost -25.0%, tool calls -30.2%, resolution preserved 20/50 both arms (only same-protocol paired claim); M105-M108 vs M73 historical cost deltas (+14%/-11%/-34%/-10%) are directional only",
+    "not_supportable": ["guaranteed/universal token reduction", "tokenizer-accurate budgeting (chars/4 budgeter)"]
+  },
+  "claim_safe_wording": {
+    "allowed": [
+      "On the frozen internal 100-case Stage 5 pool, the current default VTRACE path produced 97 valid guarded live runs, with 55 resolved patches (56.7% of valid live runs). Three cases were pre-registered no-context exclusions under the parity contract.",
+      "Across the 97 valid runs, the default path was leak-clean: zero model-visible FAIL_TO_PASS/PASS_TO_PASS/gold-patch leakage, zero fallback-context fires, zero unguarded env/shell runs, and zero host-pip mutation escapes.",
+      "The M95-M103 deterministic chain improved the pre-agent scoreboard from M94 to M103, including higher recall, capsule coverage, lead-pivot quality, multi-file all-gold coverage, and structured task evidence handling.",
+      "This is an internal live confirmation, not a public SWE-bench pass@1 claim and not a VEXP parity claim."
+    ],
+    "prohibited": [
+      "VTRACE achieved 56.7% on SWE-bench",
+      "VTRACE pass@1 is 56.7%",
+      "100/100 live cases were run",
+      "VTRACE beats VEXP",
+      "VTRACE is validated on SWE-bench Verified",
+      "no leakage is possible",
+      "token reduction is guaranteed"
+    ]
+  },
+  "remaining_bottlenecks": [
+    "3 no-context pool cases (only non-injectable rows; 3% of pool)",
+    "agent-variance losses despite complete context (10 of 13 strict losses had all gold in capsule) — patch-shape/convergence levers, not retrieval",
+    "cache-read dominance (93.9% of tokens): turn efficiency, not capsule size, is the cost lever",
+    "deterministic residue: 21 miss / 14 overpacked / 7 wrong_pivot (mined-out or deliberate-conservatism per M100/M103/M96)",
+    "high-cost tool-loop structural ceiling (django-16263, pylint-4551, sympy-20428 signatures; guards stay default-off per M78/M83)"
+  ],
+  "recommended_next_steps_ranked": [
+    "freeze current default path (recorded)",
+    "prepare internal package/report (this summary + M108 report + hard-stratum JSON)",
+    "no more live spend until analysis questions are exhausted",
+    "investigate hard-stratum live losses from captured transcripts",
+    "investigate no_context cases only if the class grows",
+    "compare against VEXP only with a separate preregistered protocol"
+  ],
+  "files": {
+    "analysis_notes": "stage5_m109_final_analysis_notes.md",
+    "hard_stratum": "stage5_m109_hard_stratum_analysis.json",
+    "summary_md": "stage5_m109_final_internal_summary.md"
+  }
+}
