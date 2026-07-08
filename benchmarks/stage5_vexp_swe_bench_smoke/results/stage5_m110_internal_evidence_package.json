@@ -1,0 +1,66 @@
+{
+  "milestone": "M110",
+  "kind": "internal evidence package summary — freezes the default path and indexes the validation artifacts; documentation-only, no-spend",
+  "date": "2026-07-08",
+  "verdict": "PASS",
+  "recommendation": "freeze and archive",
+  "packaging_basis_commit": "9b462cc",
+  "package_artifacts": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m110_package_plan.md",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m110_frozen_default_path_manifest.json",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m110_evidence_artifact_index.md",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m110_evidence_artifact_index.json",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m110_claim_matrix.md",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m110_claim_matrix.json",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m110_new_chat_handoff.md",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m110_internal_evidence_package.md"
+  ],
+  "frozen_default_path": {
+    "protocol": "vtrace-indexed (sequential guarded live runs; external vexp-swe-bench harness owns the agent turn loop)",
+    "capsule_engine": "v2",
+    "capsule_intent": "debug (live clean-core pin; deterministic scoreboard pins the same Debug intent)",
+    "capsule_budget": 8000,
+    "context_policy": "force-inject",
+    "digest_injection": "ON (--inject-capsule-digest)",
+    "digest_decision_contract": "ON (--digest-decision-contract)",
+    "bounded_digest_decisions": "ON (--bounded-digest-decisions)",
+    "compact_digest_injection": "ON (--compact-digest-injection)",
+    "pivot_confidence_gate": "ON (--pivot-confidence-gate)",
+    "structured_task_derivation": "ON — deriveStructuredTaskFromProblemStatement (stage5_task_derivation.ts; M103 V5 shape: V0 base + exceptions <=6 + issue-mentioned failing tests <=6 + traceback frames <=8, 1200-char cap); shared by deterministic scoreboard AND live runner since M104",
+    "retrieval_capsule_chain": "Capsule v2 + M95 strong-lexical fix + M96 direct-evidence lanes + M97/M98 tiered co-edit expansion + M99 import_reexport_rescue + M100 file-evidence rescue + M101 anchored pivot guard",
+    "env_guard": "MANDATORY fail-closed (M89): --stage5-env-guard --stage5-env-drift-check --expected-testbed-prefix <pinned testbed prefix>",
+    "shell_guard": "MANDATORY (M90A): --stage5-agent-shell-guard --stage5-host-pip-firewall"
+  },
+  "disabled_paths": {
+    "V4": "tool-loop guard — default-off diagnostic (M78/M82/M85/M88: harmless, no resolution benefit)",
+    "C7_D": "cost guard — default-off diagnostic (fires neutral-late on cap targets)",
+    "revision_corrective_arms": "M12 pivot-inspection enforcement, M14/M15 revision passes, rule-out corrective — default-off; revision arms inject FAIL_TO_PASS by design and are parity-INVALID as benchmark evidence",
+    "VEXP": "no VEXP arm run or claimed; comparison requires a separate preregistered protocol",
+    "baseline_arm": "no fresh baseline arm; M73/M92 frozen history is the only comparison basis",
+    "legacy_fallback_validity": "v2->legacy fallback packs FAIL_TO_PASS into the retrieval query — any fire makes the run parity-invalid by contract (0 fires across the 97 valid runs)",
+    "m7_3_traceback_skip": "default-off since 7863c80",
+    "unguarded_escape_hatch": "--allow-unguarded-live-env exists for test/emergency only; never benchmark-valid; never used"
+  },
+  "no_context_exclusions": [
+    "django__django-11740",
+    "django__django-15572",
+    "sphinx-doc__sphinx-9320"
+  ],
+  "claim_boundaries": [
+    "internal confirmation only — a frozen internal 100-case Stage 5 pool, not a public benchmark run",
+    "not a public SWE-bench pass@1 claim",
+    "not a VEXP parity or superiority claim",
+    "not 100-of-100 live-attempted — 97 valid guarded live runs + 3 pre-registered no-context exclusions"
+  ],
+  "canonical_evidence_counts": {
+    "indexed_artifacts": 47,
+    "canonical": 32,
+    "supporting": 15,
+    "claims": 9
+  },
+  "docs_status": {
+    "docs/current_product_state.md": "confirmed claim-safe (M109 wording present; freeze note present); no M110 change",
+    "README.md": "claim-safe; one stale 'planned M94 scoreboard' sentence updated to reference the completed M94->M103 scoreboard (tense fix only, no new claims)"
+  },
+  "no_spend_confirmation": "no live agents, no Docker, no API calls, no VEXP, no baseline arms, no retrieval evals run in M110"
+}
