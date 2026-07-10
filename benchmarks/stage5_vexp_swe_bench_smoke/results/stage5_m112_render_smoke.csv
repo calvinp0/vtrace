@@ -1,0 +1,13 @@
+instance_id,pre_digest_chars,post_digest_chars,added_chars,action_contract_present,per_file_action_count,required_files_with_action,coedit_files_with_action,support_files_not_overconstrained,lead_pivot_action_present,gold_leakage_status,fallback_status
+pydata__xarray-6938,15929,15929,0,true,4,"xarray/core/dataset.py;xarray/core/dataarray.py","xarray/core/alignment.py;xarray/core/variable.py",true,true,clean,none
+django__django-12325,15927,15927,0,true,4,"db/models/sql/query.py;db/models/options.py","",true,true,clean,none
+pytest-dev__pytest-6197,15472,15699,227,true,5,"src/_pytest/assertion/__init__.py;src/_pytest/mark/__init__.py","src/_pytest/mark/structures.py;src/_pytest/assertion/rewrite.py",true,true,clean,none
+sympy__sympy-15875,15591,15919,328,true,5,"sympy/integrals/integrals.py;sympy/polys/agca/modules.py;sympy/polys/agca/homomorphisms.py","",true,true,clean,none
+django__django-16263,14521,15428,907,true,2,"db/models/query.py;db/models/sql/query.py","",true,true,clean,none
+pylint-dev__pylint-4551,13023,13940,917,true,2,"pylint/checkers/python3.py;pylint/checkers/utils.py","",true,true,clean,none
+pylint-dev__pylint-8898,15287,15531,244,true,3,"pylint/config/config_initialization.py;pylint/__init__.py","pylint/config/config_file_parser.py",true,true,clean,none
+astropy__astropy-14365,15935,15935,0,true,1,"astropy/io/ascii/qdp.py","",true,true,clean,none
+sympy__sympy-12419,15971,15971,0,true,5,"sympy/physics/quantum/identitysearch.py;sympy/matrices/expressions/matexpr.py","sympy/physics/quantum/represent.py",true,true,clean,none
+django__django-10973,14862,15864,1002,true,3,"db/backends/postgresql/client.py","",true,true,clean,none
+django__django-16256,12996,14024,1028,true,4,"db/models/query.py","contrib/contenttypes/fields.py",true,true,clean,none
+django__django-11740,0,0,0,false,0,"","",true,false,clean,none

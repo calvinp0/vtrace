@@ -317,6 +317,157 @@ export function classifyDigestPivotConfidence(
 
 const MAX_OPTIONAL_CONTEXT_ITEMS = 2;
 
+// ---------------------------------------------------------------------------
+// M112 — per-file EDIT/RULE_OUT action contract
+// ---------------------------------------------------------------------------
+//
+// M111's hard-stratum transcript study found the decisive multi-file failure
+// shape: a high-importance capsule file the agent's own analysis touched was
+// silently dropped from the patch because NO wording ever demanded a per-file
+// decision on it (xarray-6938: gold variable.py was a pivot-budget-evicted
+// support item; django-12325: a required pivot outside the bounded T set).
+// The action contract closes that hole with a LIGHT obligation: one explicit
+// EDIT-or-RULE_OUT line per high-importance FILE. It deliberately does NOT
+// change the closure-scored required-target (T) selection, the M68 confidence
+// gate, or any retrieval/selection — it is rendering over already-selected,
+// already-model-visible items and their own evidence markers.
+
+/** Why a file is on the per-file action list (rendered verbatim per entry). */
+export type DigestActionFileReason =
+  | "lead pivot"
+  | "hidden pivot"
+  | "required target"
+  | "co-edit candidate"
+  | "import/re-export rescue"
+  | "file evidence";
+
+export interface DigestActionFile {
+  /** Repo-relative file path (the unit of decision — per FILE, not symbol). */
+  path: string;
+  reason: DigestActionFileReason;
+}
+
+/** Total per-file action entries (pivot files + lane files + evicted strong). */
+export const MAX_DIGEST_ACTION_FILES = 6;
+/** Pivot-cap-evicted strong targets admitted to the action list (rank order). */
+export const MAX_DIGEST_ACTION_EVICTED_FILES = 2;
+
+// The pivot-cap demotion marker `debugRoles.ts` stamps on a pivot-strength
+// candidate displaced by the pivot budget ("strong target beyond the pivot
+// budget — …"; legacy capsule wording carries "but"). Model-visible on the
+// item's role_reason/digest `why:` line — the xarray-6938 variable.py class.
+const PIVOT_BUDGET_EVICTION_MARKER = /strong target (?:but )?beyond the pivot budget/i;
+
+// Exact lane markers the co-edit / rescue lanes append to a support item's
+// evidence (see coeditExpansion.markRescued / markImportRescued and
+// fileEvidenceRescue). These lanes are precision-gated and selection-capped
+// upstream, so keying on their markers admits only their bounded output.
+const ACTION_LANE_MARKERS: ReadonlyArray<{ marker: string; reason: DigestActionFileReason }> = [
+  // markRescued renders "…, co-edit lane)"; the inject/pair evidence "(co-edit lane)".
+  { marker: "co-edit lane)", reason: "co-edit candidate" },
+  { marker: "(import-relation lane)", reason: "import/re-export rescue" },
+  { marker: "(file-evidence rescue)", reason: "file evidence" },
+];
+
+export interface DigestActionFileSelection {
+  files: DigestActionFile[];
+  /** Action-eligible files dropped by {@link MAX_DIGEST_ACTION_FILES} (honesty count). */
+  droppedCount: number;
+}
+
+/**
+ * Select the bounded per-file action list from the product response. Pure and
+ * gold-blind: inputs are the already-selected pivots/support and their own
+ * model-visible evidence text. Order (dedup by path throughout):
+ *   1. every PIVOT file, lead first ("lead pivot" / "hidden pivot" /
+ *      "required target") — independent of the M68 gate verdict, which governs
+ *      only the closure-scored T set;
+ *   2. support files carrying a co-edit / import-re-export / file-evidence
+ *      lane marker (each lane is already selection-capped upstream);
+ *   3. up to {@link MAX_DIGEST_ACTION_EVICTED_FILES} support files whose
+ *      role_reason carries the pivot-cap demotion marker (pivot-strength
+ *      candidates the budget displaced), in support (rank) order.
+ * Returns no files for a no-pivot (no_context) response.
+ */
+export function selectDigestActionFiles(
+  response: CapsuleV2ProductResponse,
+): DigestActionFileSelection {
+  const pivots = Array.isArray(response.pivots) ? response.pivots : [];
+  const support = Array.isArray(response.support) ? response.support : [];
+  if (pivots.length === 0) return { files: [], droppedCount: 0 };
+
+  const eligible: DigestActionFile[] = [];
+  const seenPath = new Set<string>();
+  const push = (path: string, reason: DigestActionFileReason): void => {
+    if (typeof path !== "string" || path.length === 0 || seenPath.has(path)) return;
+    seenPath.add(path);
+    eligible.push({ path, reason });
+  };
+
+  pivots.forEach((pivot, index) => {
+    const reason: DigestActionFileReason =
+      index === 0 ? "lead pivot" : pivotIsHidden(pivot.roleReason) ? "hidden pivot" : "required target";
+    push(pivot.path, reason);
+  });
+
+  const evidenceTextOf = (item: CapsuleV2ProductItem): string =>
+    [...(Array.isArray(item.evidence) ? item.evidence : []), item.roleReason ?? ""].join(" ");
+
+  for (const item of support) {
+    const text = evidenceTextOf(item);
+    const lane = ACTION_LANE_MARKERS.find(({ marker }) => text.includes(marker));
+    if (lane !== undefined) push(item.path, lane.reason);
+  }
+
+  let evictedAdded = 0;
+  for (const item of support) {
+    if (evictedAdded >= MAX_DIGEST_ACTION_EVICTED_FILES) break;
+    if (seenPath.has(item.path)) continue;
+    if (!PIVOT_BUDGET_EVICTION_MARKER.test(item.roleReason ?? "")) continue;
+    push(item.path, "required target");
+    evictedAdded += 1;
+  }
+
+  const files = eligible.slice(0, MAX_DIGEST_ACTION_FILES);
+  return { files, droppedCount: eligible.length - files.length };
+}
+
+// Render the per-file action block (inside the contract sentinels). Empty when
+// there are no action files. The `A#` id namespace is disjoint from required
+// `T#` and optional `O#`, and the line shape never matches the required-target
+// parser grammar (`\d+.` / `target:` + PIVOT|IMPACT), so closure scoring and
+// `parseDigestDecisionContract` are unaffected.
+function renderPerFileActionLines(selection: DigestActionFileSelection): string[] {
+  if (selection.files.length === 0) return [];
+  const lines: string[] = [];
+  lines.push("");
+  lines.push("Per-file action contract (Required / Pivot / Co-edit files):");
+  lines.push("- EDIT the file if the issue requires a change there.");
+  lines.push(
+    "- Otherwise RULE_OUT the file with one concrete repository-grounded reason (code you inspected, a caller/callee relationship, or behavior you verified).",
+  );
+  lines.push("- Do not silently ignore any file listed here.");
+  lines.push(
+    "- If several files are listed, make an explicit EDIT / RULE_OUT decision for EACH before finalizing the patch — especially co-edit candidates your own analysis touches.",
+  );
+  lines.push("");
+  lines.push("Action required (decide EDIT or RULE_OUT for each file):");
+  selection.files.forEach((file, index) => {
+    lines.push(`- A${index + 1}: ${file.path} — ${file.reason}`);
+  });
+  if (selection.droppedCount > 0) {
+    lines.push(`(+${selection.droppedCount} more action-eligible file(s) not listed)`);
+  }
+  lines.push("");
+  lines.push(
+    "Support-only files are context: consult if needed; do not treat them as required edits.",
+  );
+  lines.push(
+    "If tests cannot run, that is not evidence of correctness: verify against a repository-grounded oracle (existing code paths, docstrings, issue reproduction) or state the uncertainty explicitly.",
+  );
+  return lines;
+}
+
 export function selectBoundedDigestDecisionTargets(
   response: CapsuleV2ProductResponse,
   impact?: CapsuleV2DigestImpactSeam | null,
@@ -476,7 +627,14 @@ export function renderBoundedDigestDecisionContractText(
   optional: readonly DigestDecisionTarget[] = [],
   // M68 — gate extras: pivots demoted to optional/FYI, and the explicit zero-required
   // marker. Both default off → byte-identical to the pre-M68 render.
-  opts?: { demotedPivots?: readonly DigestDecisionTarget[]; noHighConfidenceRequired?: boolean },
+  // M112 — `actionFiles`: the per-file EDIT/RULE_OUT action list rendered between the
+  // required targets and the anti-over-edit rules. Absent/empty → byte-identical to
+  // the pre-M112 render.
+  opts?: {
+    demotedPivots?: readonly DigestDecisionTarget[];
+    noHighConfidenceRequired?: boolean;
+    actionFiles?: DigestActionFileSelection;
+  },
 ): string {
   const demotedPivots = opts?.demotedPivots ?? [];
   const noHighConfidenceRequired = opts?.noHighConfidenceRequired === true;
@@ -565,6 +723,10 @@ export function renderBoundedDigestDecisionContractText(
     lines.push(`  reason: ${t.reason}`);
     lines.push("  files_touched: <paths or none>");
   });
+  // M112 — per-file action contract: one explicit EDIT/RULE_OUT decision per
+  // high-importance FILE (pivot files, co-edit/rescue lane files, pivot-cap-evicted
+  // strong targets), so a file outside the bounded T set cannot be silently ignored.
+  lines.push(...renderPerFileActionLines(opts?.actionFiles ?? { files: [], droppedCount: 0 }));
   lines.push("");
   lines.push("Anti-over-edit rules:");
   lines.push("- Required target does not mean required edit.");
@@ -590,7 +752,15 @@ export function buildDigestDecisionContract(
   response: CapsuleV2ProductResponse,
   impact?: CapsuleV2DigestImpactSeam | null,
   // M68: `confidenceGate` + `issueIsTestBehavior` are bounded-only and default off.
-  options?: { bounded?: boolean; confidenceGate?: boolean; issueIsTestBehavior?: boolean },
+  // M112: `perFileActionContract` (bounded-only) renders the per-file EDIT/RULE_OUT
+  // action list — DEFAULT ON (the M112 product wording); `false` reproduces the
+  // pre-M112 bounded render byte-for-byte (tests / pre-post render diffs).
+  options?: {
+    bounded?: boolean;
+    confidenceGate?: boolean;
+    issueIsTestBehavior?: boolean;
+    perFileActionContract?: boolean;
+  },
 ): {
   text: string;
   targets: DigestDecisionTarget[];
@@ -598,6 +768,8 @@ export function buildDigestDecisionContract(
   // M68 — gate-demoted pivots + the intentional zero-required flag (empty/false off-gate).
   demotedTargets: DigestDecisionTarget[];
   noHighConfidenceRequired: boolean;
+  // M112 — the rendered per-file action list (empty when disabled or no pivots).
+  actionFiles: DigestActionFile[];
 } {
   if (options?.bounded === true) {
     const { required, optional, demotedPivots = [], noHighConfidenceRequired = false } =
@@ -605,15 +777,24 @@ export function buildDigestDecisionContract(
         confidenceGate: options.confidenceGate === true,
         issueIsTestBehavior: options.issueIsTestBehavior,
       });
+    // M112 — the action list renders only alongside a non-empty required set (a
+    // gate-demoted-everything contract deliberately declares no high-confidence
+    // target; a hard per-file action list would contradict it).
+    const actionSelection =
+      options.perFileActionContract !== false && required.length > 0
+        ? selectDigestActionFiles(response)
+        : { files: [], droppedCount: 0 };
     return {
       text: renderBoundedDigestDecisionContractText(required, optional, {
         demotedPivots,
         noHighConfidenceRequired,
+        actionFiles: actionSelection,
       }),
       targets: required,
       optionalTargets: optional,
       demotedTargets: demotedPivots,
       noHighConfidenceRequired,
+      actionFiles: actionSelection.files,
     };
   }
   const targets = selectDigestDecisionTargets(response, impact);
@@ -623,6 +804,7 @@ export function buildDigestDecisionContract(
     optionalTargets: [],
     demotedTargets: [],
     noHighConfidenceRequired: false,
+    actionFiles: [],
   };
 }
 

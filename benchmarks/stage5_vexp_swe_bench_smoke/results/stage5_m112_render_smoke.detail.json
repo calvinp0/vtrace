@@ -1,0 +1,678 @@
+{
+  "summary": {
+    "milestone": "M112",
+    "kind": "digest per-file action contract — no-agent render smoke (pre/post)",
+    "no_agents": true,
+    "no_docker": true,
+    "no_api_spend": true,
+    "cases": 12,
+    "context_rendered": 11,
+    "action_contract_present_count": 11,
+    "all_invariants_hold": true,
+    "support_overconstrained_any": false,
+    "leak_unexplained_total": 0,
+    "added_chars_median": 244,
+    "added_chars_p90": 1002,
+    "added_chars_min": 0,
+    "added_chars_max": 1028,
+    "added_tokens_median_est": 61
+  },
+  "rows": [
+    {
+      "instance_id": "pydata__xarray-6938",
+      "pre_digest_chars": 15929,
+      "post_digest_chars": 15929,
+      "added_chars": 0,
+      "pre_contract_chars": 2530,
+      "post_contract_chars": 3544,
+      "contract_added_chars": 1014,
+      "action_contract_present": true,
+      "per_file_action_count": 4,
+      "action_files": [
+        {
+          "path": "xarray/core/dataset.py",
+          "reason": "lead pivot"
+        },
+        {
+          "path": "xarray/core/dataarray.py",
+          "reason": "hidden pivot"
+        },
+        {
+          "path": "xarray/core/alignment.py",
+          "reason": "co-edit candidate"
+        },
+        {
+          "path": "xarray/core/variable.py",
+          "reason": "co-edit candidate"
+        }
+      ],
+      "required_files_with_action": [
+        "xarray/core/dataset.py",
+        "xarray/core/dataarray.py"
+      ],
+      "coedit_files_with_action": [
+        "xarray/core/alignment.py",
+        "xarray/core/variable.py"
+      ],
+      "beyond_budget_files_with_action": [
+        "xarray/core/variable.py",
+        "xarray/core/dataset.py"
+      ],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": true,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": true,
+      "capsule_actual_mode": "standard",
+      "capsule_policy_action": "inject",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 0,
+      "leak_hits_unexplained": [],
+      "error": null
+    },
+    {
+      "instance_id": "django__django-12325",
+      "pre_digest_chars": 15927,
+      "post_digest_chars": 15927,
+      "added_chars": 0,
+      "pre_contract_chars": 2220,
+      "post_contract_chars": 3231,
+      "contract_added_chars": 1011,
+      "action_contract_present": true,
+      "per_file_action_count": 4,
+      "action_files": [
+        {
+          "path": "db/models/sql/query.py",
+          "reason": "lead pivot"
+        },
+        {
+          "path": "db/models/options.py",
+          "reason": "hidden pivot"
+        },
+        {
+          "path": "template/backends/django.py",
+          "reason": "required target"
+        },
+        {
+          "path": "db/models/sql/compiler.py",
+          "reason": "required target"
+        }
+      ],
+      "required_files_with_action": [
+        "db/models/sql/query.py",
+        "db/models/options.py"
+      ],
+      "coedit_files_with_action": [],
+      "beyond_budget_files_with_action": [
+        "template/backends/django.py",
+        "db/models/sql/compiler.py"
+      ],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": true,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": true,
+      "capsule_actual_mode": "standard",
+      "capsule_policy_action": "inject",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 0,
+      "leak_hits_unexplained": [],
+      "error": null
+    },
+    {
+      "instance_id": "pytest-dev__pytest-6197",
+      "pre_digest_chars": 15472,
+      "post_digest_chars": 15699,
+      "added_chars": 227,
+      "pre_contract_chars": 2707,
+      "post_contract_chars": 3806,
+      "contract_added_chars": 1099,
+      "action_contract_present": true,
+      "per_file_action_count": 5,
+      "action_files": [
+        {
+          "path": "src/_pytest/assertion/__init__.py",
+          "reason": "lead pivot"
+        },
+        {
+          "path": "src/_pytest/mark/__init__.py",
+          "reason": "hidden pivot"
+        },
+        {
+          "path": "src/_pytest/mark/structures.py",
+          "reason": "co-edit candidate"
+        },
+        {
+          "path": "src/_pytest/assertion/rewrite.py",
+          "reason": "co-edit candidate"
+        },
+        {
+          "path": "src/_pytest/config/__init__.py",
+          "reason": "required target"
+        }
+      ],
+      "required_files_with_action": [
+        "src/_pytest/assertion/__init__.py",
+        "src/_pytest/mark/__init__.py"
+      ],
+      "coedit_files_with_action": [
+        "src/_pytest/mark/structures.py",
+        "src/_pytest/assertion/rewrite.py"
+      ],
+      "beyond_budget_files_with_action": [
+        "src/_pytest/config/__init__.py",
+        "src/_pytest/mark/__init__.py"
+      ],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": true,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": true,
+      "capsule_actual_mode": "standard",
+      "capsule_policy_action": "inject",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 0,
+      "leak_hits_unexplained": [],
+      "error": null
+    },
+    {
+      "instance_id": "sympy__sympy-15875",
+      "pre_digest_chars": 15591,
+      "post_digest_chars": 15919,
+      "added_chars": 328,
+      "pre_contract_chars": 2261,
+      "post_contract_chars": 3338,
+      "contract_added_chars": 1077,
+      "action_contract_present": true,
+      "per_file_action_count": 5,
+      "action_files": [
+        {
+          "path": "sympy/integrals/integrals.py",
+          "reason": "lead pivot"
+        },
+        {
+          "path": "sympy/polys/agca/modules.py",
+          "reason": "hidden pivot"
+        },
+        {
+          "path": "sympy/polys/agca/homomorphisms.py",
+          "reason": "hidden pivot"
+        },
+        {
+          "path": "sympy/polys/agca/ideals.py",
+          "reason": "required target"
+        },
+        {
+          "path": "sympy/matrices/common.py",
+          "reason": "required target"
+        }
+      ],
+      "required_files_with_action": [
+        "sympy/integrals/integrals.py",
+        "sympy/polys/agca/modules.py",
+        "sympy/polys/agca/homomorphisms.py"
+      ],
+      "coedit_files_with_action": [],
+      "beyond_budget_files_with_action": [
+        "sympy/polys/agca/ideals.py",
+        "sympy/matrices/common.py",
+        "sympy/polys/agca/modules.py"
+      ],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": true,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": true,
+      "capsule_actual_mode": "standard",
+      "capsule_policy_action": "inject",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 0,
+      "leak_hits_unexplained": [],
+      "error": null
+    },
+    {
+      "instance_id": "django__django-16263",
+      "pre_digest_chars": 14521,
+      "post_digest_chars": 15428,
+      "added_chars": 907,
+      "pre_contract_chars": 2248,
+      "post_contract_chars": 3155,
+      "contract_added_chars": 907,
+      "action_contract_present": true,
+      "per_file_action_count": 2,
+      "action_files": [
+        {
+          "path": "db/models/query.py",
+          "reason": "lead pivot"
+        },
+        {
+          "path": "db/models/sql/query.py",
+          "reason": "hidden pivot"
+        }
+      ],
+      "required_files_with_action": [
+        "db/models/query.py",
+        "db/models/sql/query.py"
+      ],
+      "coedit_files_with_action": [],
+      "beyond_budget_files_with_action": [
+        "db/models/sql/query.py"
+      ],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": true,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": true,
+      "capsule_actual_mode": "standard",
+      "capsule_policy_action": "inject",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 0,
+      "leak_hits_unexplained": [],
+      "error": null
+    },
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "pre_digest_chars": 13023,
+      "post_digest_chars": 13940,
+      "added_chars": 917,
+      "pre_contract_chars": 2237,
+      "post_contract_chars": 3154,
+      "contract_added_chars": 917,
+      "action_contract_present": true,
+      "per_file_action_count": 2,
+      "action_files": [
+        {
+          "path": "pylint/checkers/python3.py",
+          "reason": "lead pivot"
+        },
+        {
+          "path": "pylint/checkers/utils.py",
+          "reason": "hidden pivot"
+        }
+      ],
+      "required_files_with_action": [
+        "pylint/checkers/python3.py",
+        "pylint/checkers/utils.py"
+      ],
+      "coedit_files_with_action": [],
+      "beyond_budget_files_with_action": [],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": true,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": true,
+      "capsule_actual_mode": "standard",
+      "capsule_policy_action": "inject",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 0,
+      "leak_hits_unexplained": [],
+      "error": null
+    },
+    {
+      "instance_id": "pylint-dev__pylint-8898",
+      "pre_digest_chars": 15287,
+      "post_digest_chars": 15531,
+      "added_chars": 244,
+      "pre_contract_chars": 2680,
+      "post_contract_chars": 3665,
+      "contract_added_chars": 985,
+      "action_contract_present": true,
+      "per_file_action_count": 3,
+      "action_files": [
+        {
+          "path": "pylint/config/config_initialization.py",
+          "reason": "lead pivot"
+        },
+        {
+          "path": "pylint/__init__.py",
+          "reason": "hidden pivot"
+        },
+        {
+          "path": "pylint/config/config_file_parser.py",
+          "reason": "co-edit candidate"
+        }
+      ],
+      "required_files_with_action": [
+        "pylint/config/config_initialization.py",
+        "pylint/__init__.py"
+      ],
+      "coedit_files_with_action": [
+        "pylint/config/config_file_parser.py"
+      ],
+      "beyond_budget_files_with_action": [
+        "pylint/config/config_initialization.py"
+      ],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": true,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": true,
+      "capsule_actual_mode": "standard",
+      "capsule_policy_action": "inject",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 0,
+      "leak_hits_unexplained": [],
+      "error": null
+    },
+    {
+      "instance_id": "astropy__astropy-14365",
+      "pre_digest_chars": 15935,
+      "post_digest_chars": 15935,
+      "added_chars": 0,
+      "pre_contract_chars": 2545,
+      "post_contract_chars": 3413,
+      "contract_added_chars": 868,
+      "action_contract_present": true,
+      "per_file_action_count": 1,
+      "action_files": [
+        {
+          "path": "astropy/io/ascii/qdp.py",
+          "reason": "lead pivot"
+        }
+      ],
+      "required_files_with_action": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "coedit_files_with_action": [],
+      "beyond_budget_files_with_action": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": true,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": true,
+      "capsule_actual_mode": "standard",
+      "capsule_policy_action": "inject",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 0,
+      "leak_hits_unexplained": [],
+      "error": null
+    },
+    {
+      "instance_id": "sympy__sympy-12419",
+      "pre_digest_chars": 15971,
+      "post_digest_chars": 15971,
+      "added_chars": 0,
+      "pre_contract_chars": 2603,
+      "post_contract_chars": 3721,
+      "contract_added_chars": 1118,
+      "action_contract_present": true,
+      "per_file_action_count": 5,
+      "action_files": [
+        {
+          "path": "sympy/physics/quantum/identitysearch.py",
+          "reason": "lead pivot"
+        },
+        {
+          "path": "sympy/matrices/expressions/matexpr.py",
+          "reason": "hidden pivot"
+        },
+        {
+          "path": "sympy/physics/quantum/represent.py",
+          "reason": "co-edit candidate"
+        },
+        {
+          "path": "sympy/assumptions/handlers/matrices.py",
+          "reason": "required target"
+        },
+        {
+          "path": "sympy/matrices/matrices.py",
+          "reason": "required target"
+        }
+      ],
+      "required_files_with_action": [
+        "sympy/physics/quantum/identitysearch.py",
+        "sympy/matrices/expressions/matexpr.py"
+      ],
+      "coedit_files_with_action": [
+        "sympy/physics/quantum/represent.py"
+      ],
+      "beyond_budget_files_with_action": [
+        "sympy/assumptions/handlers/matrices.py",
+        "sympy/matrices/matrices.py"
+      ],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": true,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": true,
+      "capsule_actual_mode": "standard",
+      "capsule_policy_action": "inject",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 0,
+      "leak_hits_unexplained": [],
+      "error": null
+    },
+    {
+      "instance_id": "django__django-10973",
+      "pre_digest_chars": 14862,
+      "post_digest_chars": 15864,
+      "added_chars": 1002,
+      "pre_contract_chars": 2237,
+      "post_contract_chars": 3239,
+      "contract_added_chars": 1002,
+      "action_contract_present": true,
+      "per_file_action_count": 3,
+      "action_files": [
+        {
+          "path": "db/backends/postgresql/client.py",
+          "reason": "lead pivot"
+        },
+        {
+          "path": "contrib/gis/db/backends/postgis/operations.py",
+          "reason": "required target"
+        },
+        {
+          "path": "db/backends/postgresql/base.py",
+          "reason": "required target"
+        }
+      ],
+      "required_files_with_action": [
+        "db/backends/postgresql/client.py"
+      ],
+      "coedit_files_with_action": [],
+      "beyond_budget_files_with_action": [
+        "db/backends/postgresql/client.py",
+        "contrib/gis/db/backends/postgis/operations.py",
+        "db/backends/postgresql/base.py"
+      ],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": true,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": true,
+      "capsule_actual_mode": "standard",
+      "capsule_policy_action": "inject",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 0,
+      "leak_hits_unexplained": [],
+      "error": null
+    },
+    {
+      "instance_id": "django__django-16256",
+      "pre_digest_chars": 12996,
+      "post_digest_chars": 14024,
+      "added_chars": 1028,
+      "pre_contract_chars": 2254,
+      "post_contract_chars": 3282,
+      "contract_added_chars": 1028,
+      "action_contract_present": true,
+      "per_file_action_count": 4,
+      "action_files": [
+        {
+          "path": "db/models/query.py",
+          "reason": "lead pivot"
+        },
+        {
+          "path": "contrib/contenttypes/fields.py",
+          "reason": "import/re-export rescue"
+        },
+        {
+          "path": "db/models/fields/related.py",
+          "reason": "required target"
+        },
+        {
+          "path": "contrib/sites/managers.py",
+          "reason": "required target"
+        }
+      ],
+      "required_files_with_action": [
+        "db/models/query.py"
+      ],
+      "coedit_files_with_action": [
+        "contrib/contenttypes/fields.py"
+      ],
+      "beyond_budget_files_with_action": [
+        "db/models/fields/related.py",
+        "contrib/sites/managers.py",
+        "contrib/contenttypes/fields.py"
+      ],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": true,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": true,
+      "capsule_actual_mode": "standard",
+      "capsule_policy_action": "inject",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 2,
+      "leak_hits_unexplained": [],
+      "error": null
+    },
+    {
+      "instance_id": "django__django-11740",
+      "pre_digest_chars": 0,
+      "post_digest_chars": 0,
+      "added_chars": 0,
+      "pre_contract_chars": 0,
+      "post_contract_chars": 0,
+      "contract_added_chars": 0,
+      "action_contract_present": false,
+      "per_file_action_count": 0,
+      "action_files": [],
+      "required_files_with_action": [],
+      "coedit_files_with_action": [],
+      "beyond_budget_files_with_action": [],
+      "support_files_not_overconstrained": true,
+      "overconstrained_support_files": [],
+      "lead_pivot_action_present": false,
+      "gold_leakage_status": "clean",
+      "fallback_status": "none",
+      "invariant_capsule_stdout_hash_equal": true,
+      "invariant_task_hash_equal": true,
+      "invariant_lead_pivot_equal": true,
+      "invariant_pivot_files_equal": true,
+      "invariant_support_files_equal": true,
+      "invariant_required_targets_equal": true,
+      "invariant_capsule_mode_equal": true,
+      "invariant_m103_task_parity": true,
+      "context_hash_changed": false,
+      "capsule_actual_mode": "no_context",
+      "capsule_policy_action": "skip",
+      "leak_unexplained_count": 0,
+      "leak_base_commit_content_count": 0,
+      "leak_hits_unexplained": [],
+      "error": null
+    }
+  ]
+}

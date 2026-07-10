@@ -23,6 +23,8 @@ import {
   classifyDigestDecisionContract,
   classifyDigestPivotConfidence,
   NO_HIGH_CONFIDENCE_REQUIRED_MARKER,
+  selectDigestActionFiles,
+  MAX_DIGEST_ACTION_FILES,
   type DigestDecisionTarget,
   type DigestDecisionToolCall,
 } from "./digestDecisionContract";
@@ -976,4 +978,235 @@ test("M68 (14): non-bounded/default contract is unchanged by the gate option", (
   assert.equal(def.text, withGateButNotBounded.text);
   assert.match(def.text, /1\. PIVOT src\/foo\.py::bar/);
   assert.deepEqual(def.demotedTargets, []);
+});
+
+// ---------------------------------------------------------------------------
+// M112 — per-file EDIT/RULE_OUT action contract
+// ---------------------------------------------------------------------------
+
+function supportItem(
+  path: string,
+  symbol: string,
+  roleReason: string,
+  evidence: string[] = [],
+): CapsuleV2ProductItem {
+  return { ...pivot(path, symbol, roleReason, evidence), role: "support", contentMode: "signature" };
+}
+
+function responseWith(
+  pivots: CapsuleV2ProductItem[],
+  support: CapsuleV2ProductItem[],
+): CapsuleV2ProductResponse {
+  return { pivots, support } as unknown as CapsuleV2ProductResponse;
+}
+
+const EVICTED = "strong target beyond the pivot budget — actionable method — strong lexical match; 5 dependents";
+
+test("M112 (1): every pivot file gets an action entry with its role label", () => {
+  const { files } = selectDigestActionFiles(
+    responseWith(
+      [
+        pivot("src/lead.py", "run", ANCHOR),
+        pivot("src/hidden.py", "root", HIDDEN),
+        pivot("src/other.py", "aux", ANCHOR),
+      ],
+      [],
+    ),
+  );
+  assert.deepEqual(files, [
+    { path: "src/lead.py", reason: "lead pivot" },
+    { path: "src/hidden.py", reason: "hidden pivot" },
+    { path: "src/other.py", reason: "required target" },
+  ]);
+});
+
+test("M112 (2): pivot files dedup by path (two pivots in one file → one entry)", () => {
+  const { files } = selectDigestActionFiles(
+    responseWith([pivot("src/lead.py", "a", ANCHOR), pivot("src/lead.py", "b", HIDDEN)], []),
+  );
+  assert.deepEqual(files, [{ path: "src/lead.py", reason: "lead pivot" }]);
+});
+
+test("M112 (3): co-edit / import-reexport / file-evidence lane support files get labeled action entries", () => {
+  const { files } = selectDigestActionFiles(
+    responseWith(
+      [pivot("src/lead.py", "run", ANCHOR)],
+      [
+        supportItem("src/sibling.py", "helper", "likely co-edit sibling of a high-confidence anchor", [
+          "co-edit sibling of anchor src/lead.py (3 cross-file edge(s), co-edit lane)",
+        ]),
+        supportItem("src/facade_user.py", "consume", "support", [
+          "imports co-edit anchor src/lead.py via package __init__ re-export (helper) (import-relation lane)",
+        ]),
+        supportItem("src/evidence.py", "hit", "support", [
+          "task literal `frobnicate` appears in this file's source (file-evidence rescue)",
+        ]),
+      ],
+    ),
+  );
+  assert.deepEqual(files, [
+    { path: "src/lead.py", reason: "lead pivot" },
+    { path: "src/sibling.py", reason: "co-edit candidate" },
+    { path: "src/facade_user.py", reason: "import/re-export rescue" },
+    { path: "src/evidence.py", reason: "file evidence" },
+  ]);
+});
+
+test("M112 (4): pivot-cap-evicted strong targets are included, capped, in support order", () => {
+  const { files } = selectDigestActionFiles(
+    responseWith(
+      [pivot("src/lead.py", "run", ANCHOR)],
+      [
+        supportItem("src/evicted1.py", "a", EVICTED),
+        supportItem("src/evicted2.py", "b", "strong target beyond the pivot budget — helper — likely edit site"),
+        supportItem("src/evicted3.py", "c", EVICTED), // beyond MAX_DIGEST_ACTION_EVICTED_FILES
+      ],
+    ),
+  );
+  assert.deepEqual(files, [
+    { path: "src/lead.py", reason: "lead pivot" },
+    { path: "src/evicted1.py", reason: "required target" },
+    { path: "src/evicted2.py", reason: "required target" },
+  ]);
+});
+
+test("M112 (5): plain support files (no lane marker, no eviction marker) get NO action entry", () => {
+  const { files } = selectDigestActionFiles(
+    responseWith(
+      [pivot("src/lead.py", "run", ANCHOR)],
+      [
+        supportItem("src/neighbour.py", "x", "graph/import neighbour (not a pivot: no direct evidence)"),
+        supportItem("src/lexical.py", "y", "actionable method — symbol-name match"),
+      ],
+    ),
+  );
+  assert.deepEqual(files, [{ path: "src/lead.py", reason: "lead pivot" }]);
+});
+
+test("M112 (6): no pivots (no_context) → no action files and no contract", () => {
+  const selection = selectDigestActionFiles(responseWith([], [supportItem("src/a.py", "a", EVICTED)]));
+  assert.deepEqual(selection, { files: [], droppedCount: 0 });
+  const built = buildDigestDecisionContract(responseWith([], []), null, { bounded: true });
+  assert.equal(built.text, "");
+  assert.deepEqual(built.actionFiles, []);
+});
+
+test("M112 (7): total cap binds with an explicit honesty line, never silent truncation", () => {
+  const pivots = [
+    pivot("src/p1.py", "a", ANCHOR),
+    pivot("src/p2.py", "b", HIDDEN),
+    pivot("src/p3.py", "c", ANCHOR),
+    pivot("src/p4.py", "d", ANCHOR),
+  ];
+  const support = [
+    supportItem("src/s1.py", "e", "support", ["x (co-edit lane)"]),
+    supportItem("src/s2.py", "f", "support", ["x (file-evidence rescue)"]),
+    supportItem("src/s3.py", "g", EVICTED),
+  ];
+  const selection = selectDigestActionFiles(responseWith(pivots, support));
+  assert.equal(selection.files.length, MAX_DIGEST_ACTION_FILES);
+  assert.equal(selection.droppedCount, 1);
+  const text = buildDigestDecisionContract(responseWith(pivots, support), null, { bounded: true }).text;
+  assert.match(text, /\(\+1 more action-eligible file\(s\) not listed\)/);
+});
+
+test("M112 (8): bounded render with the action contract keeps the T/O grammar parseable and adds A lines", () => {
+  const resp = responseWith(
+    [pivot("src/lead.py", "run", ANCHOR), pivot("src/hidden.py", "root", HIDDEN)],
+    [supportItem("src/sibling.py", "helper", "support", ["x (co-edit lane)"])],
+  );
+  const built = buildDigestDecisionContract(resp, null, { bounded: true });
+  assert.match(built.text, /Per-file action contract \(Required \/ Pivot \/ Co-edit files\):/);
+  assert.match(built.text, /- A1: src\/lead\.py — lead pivot/);
+  assert.match(built.text, /- A2: src\/hidden\.py — hidden pivot/);
+  assert.match(built.text, /- A3: src\/sibling\.py — co-edit candidate/);
+  assert.match(built.text, /Do not silently ignore any file listed here\./);
+  assert.match(built.text, /decision for EACH before finalizing the patch/);
+  assert.match(built.text, /Support-only files are context: consult if needed/);
+  assert.match(built.text, /If tests cannot run, that is not evidence of correctness/);
+  // The required-target parser must see EXACTLY the T targets — A lines never parse.
+  const parsed = parseDigestDecisionContract(built.text);
+  assert.equal(parsed.present, true);
+  assert.deepEqual(
+    parsed.targets.map((t) => t.path),
+    built.targets.map((t) => t.path),
+  );
+});
+
+test("M112 (9): perFileActionContract:false reproduces the pre-M112 bounded render byte-for-byte", () => {
+  const resp = responseWith(
+    [pivot("src/lead.py", "run", ANCHOR), pivot("src/hidden.py", "root", HIDDEN)],
+    [supportItem("src/sibling.py", "helper", "support", ["x (co-edit lane)"])],
+  );
+  const off = buildDigestDecisionContract(resp, null, { bounded: true, perFileActionContract: false });
+  const { required, optional } = selectBoundedDigestDecisionTargets(resp, null, {});
+  const preM112 = renderBoundedDigestDecisionContractText(required, optional, {});
+  assert.equal(off.text, preM112);
+  assert.deepEqual(off.actionFiles, []);
+  assert.equal(off.text.includes("Per-file action contract"), false);
+});
+
+test("M112 (10): gate demoting EVERY pivot yields the zero-required contract with NO action list", () => {
+  const weak = pivot("src/vague.py", "thing", "actionable function — symbol-name match", [
+    "symbol-name match only",
+  ]);
+  const built = buildDigestDecisionContract(response([weak]), null, {
+    bounded: true,
+    confidenceGate: true,
+  });
+  assert.match(built.text, new RegExp(NO_HIGH_CONFIDENCE_REQUIRED_MARKER));
+  assert.equal(built.text.includes("Per-file action contract"), false);
+  assert.deepEqual(built.actionFiles, []);
+});
+
+test("M112 (11): xarray-6938 shape — gate-demoted lead + budget-evicted co-edit file all get action entries", () => {
+  // Lead pivot's evidence phrase is NOT in the M68 strong-clause vocabulary (the
+  // real xarray-6938 render), the hidden co-pivot passes, and gold variable.py is a
+  // pivot-cap-evicted support item. The T set has ONE target; the action list must
+  // still name all three FILES.
+  const lead = pivot("xarray/core/dataset.py", "Dataset.swap_dims", "actionable method — strong lexical match", [
+    "task names this symbol directly — edit target despite delegating to local helpers",
+  ]);
+  const hidden = pivot(
+    "xarray/core/dataarray.py",
+    "DataArray.swap_dims",
+    "local implementation helper invoked by the entry point — likely edit site",
+  );
+  const evicted = supportItem(
+    "xarray/core/variable.py",
+    "Variable.transpose",
+    "strong target beyond the pivot budget — actionable method — strong lexical match; 5 dependents",
+  );
+  const plain = supportItem(
+    "xarray/core/alignment.py",
+    "reindex_like",
+    "graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))",
+  );
+  const built = buildDigestDecisionContract(responseWith([lead, hidden], [evicted, plain]), null, {
+    bounded: true,
+    confidenceGate: true,
+  });
+  // Gate: lead demoted (weak vocabulary), hidden kept → exactly one T target.
+  assert.equal(built.targets.length, 1);
+  assert.equal(built.targets[0]!.path, "xarray/core/dataarray.py");
+  // Action list: all three high-importance FILES, alignment.py excluded.
+  assert.deepEqual(built.actionFiles, [
+    { path: "xarray/core/dataset.py", reason: "lead pivot" },
+    { path: "xarray/core/dataarray.py", reason: "hidden pivot" },
+    { path: "xarray/core/variable.py", reason: "required target" },
+  ]);
+  assert.equal(built.text.includes("xarray/core/alignment.py"), false);
+});
+
+test("M112 (12): action-contract render is deterministic and carries no benchmark markers", () => {
+  const resp = responseWith(
+    [pivot("src/lead.py", "run", ANCHOR)],
+    [supportItem("src/sibling.py", "helper", "support", ["x (co-edit lane)"])],
+  );
+  const a = buildDigestDecisionContract(resp, null, { bounded: true }).text;
+  const b = buildDigestDecisionContract(resp, null, { bounded: true }).text;
+  assert.equal(a, b);
+  for (const marker of ["FAIL_TO_PASS", "PASS_TO_PASS", "gold_patch", "gold patch", "hints:"]) {
+    assert.equal(a.includes(marker), false, `render must not contain ${marker}`);
+  }
 });
