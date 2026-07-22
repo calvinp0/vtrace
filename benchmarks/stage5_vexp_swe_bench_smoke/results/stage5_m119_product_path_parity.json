@@ -1,0 +1,114 @@
+{
+  "milestone": "M119",
+  "title": "Unified VEXP-shaped product context response",
+  "date": "2026-07-22",
+  "responseVersion": 2,
+  "architecture": {
+    "sharedAssembler": "src/productContext/assembleProductContext.ts",
+    "types": "src/productContext/types.ts",
+    "surfaces": [
+      "get_code_context",
+      "get_context_capsule",
+      "run_pipeline"
+    ],
+    "compatibility": "additive productContext; existing outer fields and semantics preserved"
+  },
+  "accounting": {
+    "estimateMethod": "character_ratio",
+    "estimateExact": false,
+    "formula": "ceil(renderedCharacters / 4)",
+    "usedBasis": "final deduplicated modelVisibleContext",
+    "naiveBaseline": "full source contents of every unique selected source file before compression, excluding duplicate inclusion and generated metadata",
+    "claimBoundary": "not the entire repository and not provider-billed-token reduction",
+    "unresolvedBaseline": null
+  },
+  "bounds": {
+    "impactPivots": 2,
+    "impactEdgesPerPivot": 6,
+    "impactItems": 10,
+    "impactCharacters": 2400,
+    "memoryItems": 3,
+    "ruleItems": 3
+  },
+  "parity": {
+    "passed": true,
+    "taskHash": "8e81fb92bae17850d69bf6f8a5e618998e1d46f308aaceb51db1db59dea9689a",
+    "intent": "modify",
+    "capsuleMode": "standard",
+    "leadPivot": "src/rank.ts::src/rank.ts::rankCandidates",
+    "selectedFileHash": "d4e5aec01feda55372ef8cc3b7d9323a229dfe880b3cdaa9e8f0899219723470",
+    "pivots": 2,
+    "required": 3,
+    "supports": 5,
+    "skeletons": 4,
+    "renderedCharacters": 2882,
+    "usedTokensEstimate": 721,
+    "naiveTokensEstimate": 1671,
+    "savedTokensEstimate": 950,
+    "reductionPercent": 56.85
+  },
+  "smoke": {
+    "passed": true,
+    "caseCount": 10,
+    "crossToolParity": true,
+    "pythonImpactItems": 3,
+    "pythonDocumentationItems": 2,
+    "duplicateTokensEstimateRemoved": 23,
+    "mixedMemoryItems": 1,
+    "mixedRuleItems": 1,
+    "linkedWorktreeReductionPercent": 61.28,
+    "incrementalRefresh": {
+      "indexMode": "incremental",
+      "indexRefreshMs": 22.722938,
+      "reductionPercent": 61.3
+    },
+    "noContextSavings": null,
+    "staleSavings": null,
+    "vtracePreflight": "stale:manifest_invalid; read-only, no refresh"
+  },
+  "timing": {
+    "clock": "monotonic wall clock",
+    "components": [
+      "freshnessMs",
+      "retrievalMs",
+      "capsuleBuildMs",
+      "impactMs",
+      "memoryRulesMs",
+      "renderMs",
+      "indexRefreshMs",
+      "totalMs"
+    ],
+    "retrievalLimitation": "No internal Capsule v2 retrieval timing seam; synchronous work is attributed to capsuleBuildMs and retrievalMs is 0."
+  },
+  "invariants": {
+    "retrievalSelectionChanged": false,
+    "leadPivotChanged": false,
+    "selectedFilesChanged": false,
+    "requiredSupportClassificationChanged": false,
+    "taskHashChanged": false,
+    "capsuleModeChanged": false,
+    "m114Preserved": true,
+    "m118Preserved": true,
+    "benchmarkMetadataLeakage": false
+  },
+  "verification": {
+    "focusedTests": "99 pass, 0 fail",
+    "typecheck": "pass",
+    "typecheckBenchmarks": "pass",
+    "fullTests": "3728 pass, 0 fail across 216 files",
+    "diffCheck": "pass"
+  },
+  "successCriteria": {
+    "passed": 18,
+    "total": 18
+  },
+  "verdict": "PASS",
+  "recommendation": "promote unified response",
+  "deferred": [
+    "richer impact/flow evidence in M120",
+    "cross-repository workspace graph",
+    "tokenizer-exact accounting",
+    "internal retrieval timing seam",
+    "public benchmark work"
+  ]
+}

@@ -55,6 +55,26 @@ import {
   type McpToolDefinition,
 } from "./types";
 
+function normalizeProductContextTiming<T extends Record<string, any>>(output: T): T {
+  if (output.productContext === undefined) return output;
+  return {
+    ...output,
+    productContext: {
+      ...output.productContext,
+      freshness: { ...output.productContext.freshness, refreshDiagnostics: null },
+      timing: {
+        freshnessMs: 0,
+        retrievalMs: 0,
+        capsuleBuildMs: 0,
+        impactMs: 0,
+        memoryRulesMs: 0,
+        renderMs: 0,
+        totalMs: 0,
+      },
+    },
+  };
+}
+
 const EXPECTED_VISIBLE_TOOL_IDS = [
   "get_code_context",
   "run_pipeline",
@@ -839,11 +859,13 @@ test("get_context_capsule is a thin visible wrapper over the existing capsule pi
       accounting,
       capsuleEngine,
       inspectFirst,
+      productContext,
       ...visibleWithoutExtras
     } = visible.result.output;
     assert.deepEqual(visibleWithoutExtras, legacy.result.output);
     assert.equal(typeof capsuleManifestId, "string");
     assert.equal((capsuleManifestId as string).length > 0, true);
+    assert.equal(productContext.responseVersion, 2);
     // The visible product tool also records the engine selection on the default
     // v1 path; build_capsule (legacy) does not.
     assert.deepEqual(capsuleEngine, {
@@ -987,7 +1009,7 @@ test("get_context_capsule capsule_engine=v2 returns the bounded Capsule v2 produ
     // `accounting` block whose `latencyMs` is wall-clock and inherently varies.
     const { accounting: firstAccounting, ...firstStable } = first.result.output;
     const { accounting: secondAccounting, ...secondStable } = second.result.output;
-    assert.deepEqual(secondStable, firstStable);
+    assert.deepEqual(normalizeProductContextTiming(secondStable), normalizeProductContextTiming(firstStable));
     // Everything in accounting except latency is deterministic too.
     assert.notEqual(firstAccounting, undefined);
     assert.notEqual(secondAccounting, undefined);
@@ -1330,6 +1352,42 @@ test("get_code_context inherits capsule_engine=v2 by delegating to run_pipeline"
     assert.equal(output.capsuleEngine.effective, "v2");
     assert.equal(output.capsuleEngine.compactInspectFirst, true);
     assertOutputConformsToToolSchema(McpToolId.GetCodeContext, output);
+  });
+});
+
+test("M119 primary product paths share task, selection, roles, estimator, and worktree identity", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+    const input = {
+      task: V2_PIPELINE_QUERY,
+      query: V2_PIPELINE_QUERY,
+      capsule_engine: "v2",
+      capsule_intent: "modify",
+      capsule_budget_tokens: 8_000,
+    } as const;
+    const code = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m119-code", toolId: McpToolId.GetCodeContext, input });
+    const capsule = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m119-capsule", toolId: McpToolId.GetContextCapsule, input });
+    const pipeline = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m119-pipeline", toolId: McpToolId.RunPipeline, input });
+    for (const result of [code, capsule, pipeline]) assert.equal(result.result.ok, true);
+    const parity = (response: any) => {
+      const product = response.result.output.productContext;
+      return {
+        responseVersion: product.responseVersion,
+        taskHash: product.taskHash,
+        intent: product.intent,
+        capsuleMode: product.capsuleMode,
+        leadPivot: product.leadPivot,
+        selectedFileHash: product.selectedFileHash,
+        identities: product.items.map((item: any) => ({ stableId: item.stableId, path: item.path, symbol: item.symbol, roles: item.roles })),
+        estimator: [product.accounting.estimateMethod, product.accounting.estimateExact],
+        worktree: [product.repository.repositoryId, product.repository.worktreeId, product.repository.headCommit],
+        freshness: [product.freshness.status, product.freshness.reason],
+      };
+    };
+    assert.deepEqual(parity(code), parity(capsule));
+    assert.deepEqual(parity(code), parity(pipeline));
   });
 });
 
@@ -1968,6 +2026,7 @@ test("run_pipeline vNext returns a compact orchestration result that differs mat
         "impact",
         "intent",
         "memory",
+        "productContext",
         "request",
         "rules",
         "savedObservation",
@@ -2025,8 +2084,8 @@ test("get_code_context delegates to the same implementation and output as run_pi
     const normalizeAccounting = (result: typeof getCodeContext.result) => ({
       ...result,
       output: {
-        ...result.output,
-        accounting: { ...result.output.accounting, latencyMs: 0 },
+        ...normalizeProductContextTiming(result.output),
+        accounting: undefined,
       },
     });
     const normalizeFreshnessAndAccounting = (result: typeof getCodeContext.result) => ({
@@ -4327,7 +4386,7 @@ test("get_context_capsule auto-captures one deduped tool-call observation on hap
       // Deterministic across calls except the additive `accounting.latencyMs`.
       const { accounting: firstAccounting, ...firstStable } = first.result.output;
       const { accounting: secondAccounting, ...secondStable } = second.result.output;
-      assert.deepEqual(secondStable, firstStable);
+      assert.deepEqual(normalizeProductContextTiming(secondStable), normalizeProductContextTiming(firstStable));
       assert.deepEqual(
         { ...secondAccounting, latencyMs: 0 },
         { ...firstAccounting, latencyMs: 0 },

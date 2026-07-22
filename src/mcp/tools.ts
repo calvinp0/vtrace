@@ -155,6 +155,11 @@ import {
 } from "../indexer/indexMeta";
 import { WorktreeIndexLockError } from "../indexer/worktreeIndexLock";
 import {
+  assembleProductContext,
+  buildUnresolvedProductContext,
+} from "../productContext/assembleProductContext";
+import type { ProductContextResponse } from "../productContext/types";
+import {
   resolveWorkspaceConfigPath,
   safeReadWorkspaceConfig,
   type ResolvedWorkspaceConfig,
@@ -3177,8 +3182,9 @@ function parseRequiredQuery(
 
 function parseRequiredRunPipelineTask(
   input: Record<string, unknown>,
+  toolId: McpToolId = McpToolId.RunPipeline,
 ): string | McpToolExecutionResult<never> {
-  const task = parseOptionalStringField(McpToolId.RunPipeline, input, "task");
+  const task = parseOptionalStringField(toolId, input, "task");
 
   if (task !== undefined && typeof task !== "string") {
     return task;
@@ -3188,7 +3194,7 @@ function parseRequiredRunPipelineTask(
     return task;
   }
 
-  return parseRequiredStringField(McpToolId.RunPipeline, input, "query");
+  return parseRequiredStringField(toolId, input, "query");
 }
 
 function parseOptionalIntegerAlias(
@@ -7028,6 +7034,55 @@ const CONTEXT_ACCOUNTING_SCHEMA = objectProperty(
   ],
 );
 
+const PRODUCT_CONTEXT_RESPONSE_SCHEMA: McpSchemaProperty = {
+  type: "object",
+  description: "Versioned M119 role-aware product context shared by get_code_context, get_context_capsule, and run_pipeline. It includes repository/freshness identity, deduplicated items, final model-visible text, approximate token accounting, and monotonic latency accounting.",
+  properties: {
+    responseVersion: integerProperty("Product response contract version; M119 emits 2."),
+    resolved: booleanProperty("Whether fresh, usable model-visible context was assembled."),
+    task: stringProperty("Normalized task text used by the shared assembler."),
+    taskHash: stringProperty("Deterministic hash of the normalized task."),
+    intent: stringProperty("Resolved Capsule v2 intent."),
+    capsuleMode: stringProperty("Capsule mode shared by all three product paths."),
+    leadPivot: { type: ["string", "null"], description: "Repository-relative lead-pivot path, or null." },
+    selectedFileHash: stringProperty("Deterministic hash of unique selected source-file identities."),
+    repository: { type: "object", description: "Repository, worktree, HEAD, branch, index-run, and index-mode identity.", additionalProperties: true },
+    freshness: { type: "object", description: "M114 freshness status/reason plus M118 refresh diagnostics when applicable.", additionalProperties: true },
+    accounting: { type: "object", description: "Final-render accounting and the unique-selected-full-file baseline. Character-ratio estimates are approximate.", additionalProperties: true },
+    timing: { type: "object", description: "Nonnegative monotonic wall-clock stage timings in milliseconds.", additionalProperties: true },
+    roleCounts: { type: "object", description: "Counts for pivot, required, support, skeleton, impact, memory, rule, and documentation roles.", additionalProperties: true },
+    items: {
+      type: "array",
+      description: "Deterministically ordered, role-aware, source-body-deduplicated context items.",
+      items: {
+        type: "object",
+        properties: {
+          id: stringProperty("Compact deterministic display id such as P1 or S1."),
+          stableId: stringProperty("Content-stable item identity for an identical task and index."),
+          path: stringProperty("Repository-relative path when applicable."),
+          symbol: stringProperty("Symbol or section identity when available."),
+          roles: arrayProperty("One or more product-context roles.", stringProperty("Product-context role.")),
+          contentMode: stringProperty("Focused/full source, excerpt, structural skeleton, signature, or summary."),
+          selectionReasons: arrayProperty("Evidence-backed selection reasons.", stringProperty("Selection reason.")),
+          estimatedTokens: integerProperty("Approximate chars/4 estimate for the emitted item."),
+          content: stringProperty("Model-visible body when this item owns a unique emitted body."),
+          metadata: { type: "object", description: "Role-specific bounded evidence and fallback metadata.", additionalProperties: true },
+        },
+        required: ["id", "stableId", "roles", "contentMode", "selectionReasons", "estimatedTokens"],
+        additionalProperties: true,
+      },
+    },
+    modelVisibleContext: stringProperty("Final deduplicated text measured by accounting and suitable for model injection."),
+    diagnostics: { type: "object", description: "Limitations, caps, duplicate-suppression counts, and fallback diagnostics.", additionalProperties: true },
+  },
+  required: [
+    "responseVersion", "resolved", "task", "taskHash", "intent", "capsuleMode",
+    "repository", "freshness", "accounting", "timing", "roleCounts", "items",
+    "modelVisibleContext", "diagnostics",
+  ],
+  additionalProperties: true,
+};
+
 const CAPSULE_V2_PRODUCT_ITEM_SCHEMA = objectProperty(
   "A Capsule v2 pivot or support item.",
   {
@@ -7294,6 +7349,7 @@ const INSPECT_FIRST_SCHEMA: McpSchemaProperty = {
 };
 
 type RunPipelineMcpOutput = ReturnType<typeof formatRunPipelineOrchestrationOutput> & {
+  productContext: ProductContextResponse;
   savedObservation: {
     observation: ReturnType<typeof formatObservation>;
     staleness: ReturnType<typeof formatObservationSearchResult>["staleness"];
@@ -7388,6 +7444,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           capsuleEngine: CAPSULE_ENGINE_SELECTION_SCHEMA,
           inspectFirst: INSPECT_FIRST_SCHEMA,
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
+          productContext: PRODUCT_CONTEXT_RESPONSE_SCHEMA,
           capsuleV2: CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA,
           capsuleV2ManifestId: {
             type: ["string", "null"],
@@ -7529,7 +7586,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
       const useCapsuleV2 = (engineSnake ?? engineCamel)?.toLowerCase() === CAPSULE_ENGINE_V2;
 
       let capsuleV2Intent = CapsuleIntent.Auto;
-      if (useCapsuleV2 && capsuleIntentRaw !== undefined) {
+      if (capsuleIntentRaw !== undefined) {
         const parsedIntent = parseCapsuleIntent(capsuleIntentRaw);
         if (parsedIntent === undefined) {
           return invalidRequest(
@@ -7540,7 +7597,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
         }
         capsuleV2Intent = parsedIntent;
       }
-      if (useCapsuleV2 && capsuleBudgetTokens !== undefined && capsuleBudgetTokens <= 0) {
+      if (capsuleBudgetTokens !== undefined && capsuleBudgetTokens <= 0) {
         return invalidRequest(
           McpToolId.RunPipeline,
           "MCP tool run_pipeline requires capsule_budget_tokens to be a positive integer.",
@@ -7698,8 +7755,18 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
               : {}),
           });
 
+          const productContext = await assembleProductContext({
+            db,
+            repoRoot: binding.repoRoot,
+            task: query,
+            intent: capsuleV2Intent,
+            budgetTokens: capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
+            ...(sessionId === undefined ? {} : { sessionId }),
+          });
+
           const assembledOutput = {
             ...output,
+            productContext,
             diagnostics: {
               ...output.diagnostics,
               freshness,
@@ -7735,6 +7802,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
 type GetCodeContextStaleReason = WorktreeIndexFreshnessResult["reason"] | "repo_not_ready" | "ambiguous_worktree" | "refresh_failed";
 
 interface GetCodeContextStaleEnvelope {
+  readonly productContext?: ProductContextResponse;
   readonly resolved: false;
   readonly reason: GetCodeContextStaleReason;
   readonly message: string;
@@ -7745,6 +7813,30 @@ interface GetCodeContextStaleEnvelope {
   readonly diagnostics: {
     readonly indexFreshness: ReturnType<typeof formatIndexFreshnessDiagnostic>;
   };
+}
+
+function attachUnresolvedProductContext(
+  output: GetCodeContextStaleEnvelope,
+  task: string,
+  freshness: WorktreeIndexFreshnessResult,
+  startedAt: number,
+): GetCodeContextStaleEnvelope {
+  const current = freshness.current;
+  const productContext = buildUnresolvedProductContext({
+    task,
+    repoRoot: current.worktree.worktreeRoot,
+    repositoryId: current.repository.repositoryId,
+    worktreeId: current.worktree.worktreeId,
+    headCommit: current.snapshot.headCommit,
+    branch: current.snapshot.branch,
+    detached: current.snapshot.detached,
+    freshnessStatus: freshness.status,
+    freshnessReason: freshness.reason,
+    freshnessAction: freshness.action,
+    refreshDiagnostics: output.diagnostics.indexFreshness,
+    totalMs: Math.max(0, performance.now() - startedAt),
+  });
+  return { ...output, productContext };
 }
 
 type GetCodeContextOutput = GetCodeContextStaleEnvelope | RunPipelineMcpOutput;
@@ -7760,9 +7852,14 @@ async function handleGetCodeContextRequest({
   context,
   request,
 }: McpToolHandlerInput<RunPipelineInput>): Promise<McpToolExecutionResult<GetCodeContextOutput>> {
+  const productStartedAt = performance.now();
   const input = parseObjectInput(McpToolId.GetCodeContext, request.input);
   if ("ok" in input && input.ok === false) {
     return input;
+  }
+  const productTask = parseRequiredRunPipelineTask(input, McpToolId.GetCodeContext);
+  if (typeof productTask !== "string") {
+    return productTask;
   }
   const requestedRoot = parseOptionalStringField(McpToolId.GetCodeContext, input, "repo_root");
   if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
@@ -7811,7 +7908,7 @@ async function handleGetCodeContextRequest({
       if (check.kind === "stale_response") {
         return {
           ok: true,
-          output: buildStaleEnvelope({
+          output: attachUnresolvedProductContext(buildStaleEnvelope({
             reason: "refresh_failed",
             message: `Vtrace refreshed ${repoRoot}, but the requested worktree index is still not fresh.`,
             indexFreshness: formatPreciseIndexFreshnessDiagnostic(check.freshness, {
@@ -7820,7 +7917,7 @@ async function handleGetCodeContextRequest({
               refreshMode,
               refreshFailed: true,
             }),
-          }),
+          }), productTask, check.freshness, productStartedAt),
         };
       }
       check = {
@@ -7836,7 +7933,7 @@ async function handleGetCodeContextRequest({
       const lockReason = error instanceof WorktreeIndexLockError ? error.code : null;
       return {
         ok: true,
-        output: buildStaleEnvelope({
+        output: attachUnresolvedProductContext(buildStaleEnvelope({
           reason: "refresh_failed",
           message: `Vtrace could not refresh ${repoRoot}: ${error instanceof Error ? error.message : String(error)}`,
           indexFreshness: formatPreciseIndexFreshnessDiagnostic(before, {
@@ -7846,13 +7943,16 @@ async function handleGetCodeContextRequest({
             refreshFailed: true,
             failureReason: lockReason ?? (error instanceof Error ? error.message : String(error)),
           }),
-        }),
+        }), productTask, before, productStartedAt),
       };
     }
   }
 
   if (check.kind === "stale_response") {
-    return { ok: true, output: check.output };
+    return {
+      ok: true,
+      output: attachUnresolvedProductContext(check.output, productTask, check.freshness, productStartedAt),
+    };
   }
 
   const result = await RUN_PIPELINE_TOOL_DEFINITION.handler({
@@ -7871,6 +7971,30 @@ async function handleGetCodeContextRequest({
     ok: true,
     output: {
       ...result.output,
+      productContext: {
+        ...result.output.productContext,
+        repository: {
+          ...result.output.productContext.repository,
+          indexMode: check.indexFreshness.performance?.mode
+            ?? result.output.productContext.repository.indexMode,
+        },
+        freshness: {
+          status: check.indexFreshness.status,
+          reason: check.indexFreshness.reason,
+          action: check.indexFreshness.action,
+          refreshDiagnostics: check.indexFreshness,
+        },
+        timing: {
+          ...result.output.productContext.timing,
+          totalMs: Math.max(
+            result.output.productContext.timing.totalMs,
+            performance.now() - productStartedAt,
+          ),
+          ...(check.indexFreshness.performance?.timingsMs?.total === undefined
+            ? {}
+            : { indexRefreshMs: check.indexFreshness.performance.timingsMs.total }),
+        },
+      },
       diagnostics: {
         ...result.output.diagnostics,
         indexFreshness: check.indexFreshness,
@@ -8100,6 +8224,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       inputSchema: objectSchema(
         "Context-capsule build request.",
         {
+          task: stringProperty("Preferred task text. `query` remains a backward-compatible alias."),
           query: stringProperty("User query text."),
           maxResults: integerProperty("Optional reranked candidate count."),
           maxBudgetCharacters: integerProperty("Optional capsule character budget."),
@@ -8109,7 +8234,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           capsule_intent: stringProperty("Optional Capsule v2 intent: auto|debug|refactor|modify|explain|impact|test-failure. Only used when capsule_engine=v2. Defaults to auto."),
           capsule_budget_tokens: integerProperty("Optional Capsule v2 token budget. Only used when capsule_engine=v2. Defaults to 8000."),
         },
-        ["query"],
+        [],
       ),
       outputSchema: objectSchema(
         "Context capsule output.",
@@ -8144,6 +8269,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           capsuleEngine: CAPSULE_ENGINE_SELECTION_SCHEMA,
           inspectFirst: INSPECT_FIRST_SCHEMA,
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
+          productContext: PRODUCT_CONTEXT_RESPONSE_SCHEMA,
           classification: CLASSIFICATION_SCHEMA,
           routingProfile: ROUTING_PROFILE_SCHEMA,
           capsuleProfile: CAPSULE_PROFILE_SCHEMA,
@@ -8198,7 +8324,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         return input;
       }
 
-      const query = parseRequiredQuery(McpToolId.GetContextCapsule, input);
+      const query = parseRequiredRunPipelineTask(input, McpToolId.GetContextCapsule);
       const maxResults = parseOptionalInteger(McpToolId.GetContextCapsule, input, "maxResults");
       const maxBudgetCharacters = parseOptionalInteger(
         McpToolId.GetContextCapsule,
@@ -8247,7 +8373,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       }
 
       let capsuleV2Intent = CapsuleIntent.Auto;
-      if (useCapsuleV2 && capsuleIntentRaw !== undefined) {
+      if (capsuleIntentRaw !== undefined) {
         const parsedIntent = parseCapsuleIntent(capsuleIntentRaw);
         if (parsedIntent === undefined) {
           return invalidRequest(
@@ -8258,7 +8384,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         }
         capsuleV2Intent = parsedIntent;
       }
-      if (useCapsuleV2 && capsuleBudgetTokens !== undefined && capsuleBudgetTokens <= 0) {
+      if (capsuleBudgetTokens !== undefined && capsuleBudgetTokens <= 0) {
         return invalidRequest(
           McpToolId.GetContextCapsule,
           "MCP tool get_context_capsule requires capsule_budget_tokens to be a positive integer.",
@@ -8300,6 +8426,13 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         async (binding, db) => {
           const sourceRunId = getLatestIndexRun(db)?.id ?? null;
           const accountingStartedAt = performance.now();
+          const productContext = await assembleProductContext({
+            db,
+            repoRoot: binding.repoRoot,
+            task: query,
+            intent: capsuleV2Intent,
+            budgetTokens: capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
+          });
 
           // Opt-in Capsule v2 path: build the bounded, intent-aware v2 capsule,
           // project it to the stable product response, and persist a manifest the
@@ -8351,6 +8484,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               if (accounting !== undefined) {
                 output.accounting = accounting;
               }
+              output.productContext = productContext;
               return { ok: true, output };
             } catch (error) {
               // Fall through to the v1 pipeline, recording why v2 did not produce
@@ -8405,9 +8539,12 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           });
           return {
             ok: true,
-            output: accounting === undefined
+            output: {
+              ...(accounting === undefined
               ? v1Output
-              : { ...v1Output, accounting },
+              : { ...v1Output, accounting }),
+              productContext,
+            },
           };
         },
       );

@@ -13,6 +13,7 @@ import {
   runPipelineOutputFilePathGroups,
 } from "../../metrics/contextAccounting";
 import { CAPSULE_ENGINE } from "../../capsuleV2/engineSelection";
+import { assembleProductContext } from "../../productContext/assembleProductContext";
 
 // Accepted `--capsule-engine` values, normalized lowercase. The orchestrator
 // normalizes the string through the shared selection model; only `v2` engages
@@ -85,6 +86,14 @@ export async function runRunPipelineCommand(
         ...(parsed.capsuleBudgetTokens === undefined ? {} : { capsuleBudgetTokens: parsed.capsuleBudgetTokens }),
       });
       const formatted = formatRunPipelineOrchestrationOutput(orchestration);
+      const productContext = await assembleProductContext({
+        db,
+        repoRoot: resolvedRepo.repoRoot,
+        task: parsed.query,
+        intent: parsed.capsuleIntent ?? CapsuleIntent.Auto,
+        budgetTokens: parsed.capsuleBudgetTokens ?? 8_000,
+        ...(parsed.sessionId === undefined ? {} : { sessionId: parsed.sessionId }),
+      });
       // Deterministic, best-effort accounting over the emitted response. Mirrors
       // the MCP run_pipeline path so the CLI and tool surfaces report the same
       // estimated compactness. Accounting failure must never fail the command.
@@ -96,9 +105,16 @@ export async function runRunPipelineCommand(
           filePathGroups: runPipelineOutputFilePathGroups(formatted),
           latencyMs: performance.now() - accountingStartedAt,
         });
-        withAccounting = { ...formatted, accounting };
+        withAccounting = {
+          ...formatted,
+          accounting,
+          productContext,
+        };
       } catch {
-        withAccounting = formatted;
+        withAccounting = {
+          ...formatted,
+          productContext,
+        };
       }
       return success(`${JSON.stringify(withAccounting)}\n`);
     } finally {

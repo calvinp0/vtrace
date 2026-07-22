@@ -40,6 +40,8 @@ import { buildCapsuleV2 } from "../../capsuleV2/buildCapsuleV2";
 import { parsePivotRankingVersion, type PivotRankingVersion } from "../../capsuleV2/pivotRankingV2";
 import { renderCapsuleV2Human } from "../../capsuleV2/renderHuman";
 import { toCapsuleV2ProductResponse } from "../../capsuleV2/productAdapter";
+import { assembleProductContext } from "../../productContext/assembleProductContext";
+import type { ProductContextResponse } from "../../productContext/types";
 import {
   buildPivotNeighborhoods,
   renderPivotNeighborhoodsText,
@@ -143,6 +145,14 @@ export async function runCapsuleCommand(
           maxTokens: parsed.budget ?? CAPSULE_V2_DEFAULT_BUDGET,
           ...(parsed.pivotRankingVersion === undefined ? {} : { pivotRankingVersion: parsed.pivotRankingVersion }),
         });
+        const product = toCapsuleV2ProductResponse(result);
+        const productContext = await assembleProductContext({
+          db,
+          repoRoot,
+          task: query,
+          intent: parsed.intent ?? CapsuleIntent.Auto,
+          budgetTokens: parsed.budget ?? CAPSULE_V2_DEFAULT_BUDGET,
+        });
 
         // Opt-in (`--pivot-neighborhood`, default off): enrich with the SAME
         // bounded pivot-neighborhood excerpts the run_pipeline product path emits,
@@ -150,7 +160,6 @@ export async function runCapsuleCommand(
         // it never fails the command. Reuses buildPivotNeighborhoods/sourceExcerpt;
         // does not touch retrieval or v2 ranking.
         if (parsed.pivotNeighborhood) {
-          const product = toCapsuleV2ProductResponse(result);
           const neighborhood = buildPivotNeighborhoods(db, repoRoot, product);
           if (json) {
             // Full structured neighborhood (with excerpt bodies) is preserved for
@@ -158,7 +167,7 @@ export async function runCapsuleCommand(
             // carries the same deterministic accounting block as the MCP tools.
             const emitted = { ...result, pivot_neighborhood: neighborhood };
             return success(formatJson(
-              await attachCapsuleV2Accounting(repoRoot, emitted, product, neighborhood, accountingStartedAt),
+              await attachCapsuleV2Accounting(repoRoot, emitted, product, neighborhood, productContext, accountingStartedAt),
             ));
           }
           // Compact, action-oriented inspect-first guidance at the top, then the
@@ -166,7 +175,7 @@ export async function runCapsuleCommand(
           const inspectFirstText = renderInspectFirstText(buildInspectFirst(product, neighborhood));
           const human = renderCapsuleV2Human(result);
           const neighborhoodText = renderPivotNeighborhoodsText(neighborhood);
-          const composed = [inspectFirstText, human, neighborhoodText]
+          const composed = [renderProductContextSummary(productContext), inspectFirstText, human, neighborhoodText]
             .map((part) => part.trim())
             .filter((part) => part.length > 0)
             .join("\n\n");
@@ -174,12 +183,11 @@ export async function runCapsuleCommand(
         }
 
         if (json) {
-          const product = toCapsuleV2ProductResponse(result);
           return success(formatJson(
-            await attachCapsuleV2Accounting(repoRoot, { ...result }, product, undefined, accountingStartedAt),
+            await attachCapsuleV2Accounting(repoRoot, { ...result }, product, undefined, productContext, accountingStartedAt),
           ));
         }
-        return success(renderCapsuleV2Human(result));
+        return success(`${renderProductContextSummary(productContext)}\n\n${renderCapsuleV2Human(result)}`);
       }
 
       const routedQuery = routeQuery(db, query, { maxResults: limits.maxItems });
@@ -785,6 +793,7 @@ async function attachCapsuleV2Accounting(
   emitted: Record<string, unknown>,
   product: ReturnType<typeof toCapsuleV2ProductResponse>,
   neighborhood: ReturnType<typeof buildPivotNeighborhoods> | undefined,
+  productContext: ProductContextResponse,
   accountingStartedAt: number,
 ): Promise<Record<string, unknown>> {
   try {
@@ -797,10 +806,32 @@ async function attachCapsuleV2Accounting(
       }),
       latencyMs: performance.now() - accountingStartedAt,
     });
-    return { ...emitted, accounting };
+    return { ...emitted, accounting, productContext };
   } catch {
     return emitted;
   }
+}
+
+function renderProductContextSummary(product: ProductContextResponse): string {
+  const approximate = product.accounting.estimateExact ? "exact" : "approximate";
+  const naive = product.accounting.naiveTokensEstimate === null
+    ? "unavailable"
+    : `~${product.accounting.naiveTokensEstimate.toLocaleString()} tokens`;
+  const reduction = product.accounting.reductionPercent === null
+    ? "unavailable"
+    : `${product.accounting.reductionPercent.toFixed(1)}%`;
+  return [
+    `Resolved: ${product.resolved ? "yes" : "no"}`,
+    `Worktree: ${product.repository.worktreeId ?? "unknown"}`,
+    `Pivots: ${product.roleCounts.pivot}`,
+    `Required: ${product.roleCounts.required}`,
+    `Supports: ${product.roleCounts.support}`,
+    `Used: ~${product.accounting.usedTokensEstimate.toLocaleString()} tokens`,
+    `Naive selected full files: ${naive}`,
+    `Estimated reduction: ${reduction}`,
+    `Estimator: character ratio, ${approximate}`,
+    `Latency: ${product.timing.totalMs.toFixed(1)} ms`,
+  ].join("\n");
 }
 
 function formatCommandError(prefix: string, error: unknown): string {

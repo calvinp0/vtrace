@@ -201,6 +201,47 @@ Backward-compatible aliases are still accepted:
 
 `get_code_context` does not make itself mandatory before code edits. It is the broad-task entrypoint; exact tools remain better when the caller already has exact inputs.
 
+### Shared product context response (version 2)
+
+The single-repository forms of `get_code_context`, `get_context_capsule`, and
+`run_pipeline` now carry the same additive `productContext` object. Existing v1
+and opt-in-v2 outer fields remain available; `productContext` is the normalized
+model-facing contract and always uses the shared Capsule v2 selection assembly.
+For the same fresh index, task, intent, and budget it has the same task hash,
+lead pivot, selected files, role assignments, worktree/freshness identity, and
+token estimator on all three tools.
+
+`productContext.responseVersion` is `2`. Its `items` are deterministically
+ordered and can have multiple roles (`pivot`, `required`, `support`, `skeleton`,
+`impact`, `memory`, `rule`, or `documentation`). Pivot source remains focused or
+full source. Support compression uses indexed parser skeletons and signatures,
+with an explicit bounded-excerpt or metadata fallback. Exact duplicate bodies
+are rendered once even when an item is reached through multiple roles.
+
+`productContext.modelVisibleContext` is the final deduplicated text measured by
+`productContext.accounting`. Token values use `ceil(characters / 4)`, reported as
+`estimateMethod: "character_ratio"` and `estimateExact: false`; they are not
+provider-reported or billable-token counts. The canonical naive baseline is the
+full content of each unique selected source file before compression. It excludes
+duplicate inclusion and generated metadata, is not an entire-repository
+baseline, and is `null` when a trustworthy baseline cannot be formed. Small
+files may honestly produce a negative estimated reduction when structured
+context costs more than their full text.
+
+`productContext.timing` uses monotonic wall-clock measurements. Freshness,
+capsule build, static impact, memory/rules, rendering, total time, and (when an
+automatic refresh occurred) index refresh are reported separately. The current
+Capsule v2 builder has no internal retrieval timing seam, so retrieval is
+reported as `0` and the encompassing synchronous work is attributed to capsule
+construction rather than double-counted. Impact items are bounded static graph
+evidence, never claims about dynamic execution flow. Memory and rule items are
+included only when existing stores return relevant, fresh/active entries.
+
+Stale and invalid `get_code_context` responses also include an unresolved
+`productContext`, with freshness diagnostics and measured total latency but no
+fabricated selected-file savings. Multi-repository workspace normalization is
+deferred; those existing outer responses remain unchanged.
+
 ### `run_pipeline`
 
 Internal/stable name for the same default Vtrace repo-context pipeline exposed as `get_code_context`.
