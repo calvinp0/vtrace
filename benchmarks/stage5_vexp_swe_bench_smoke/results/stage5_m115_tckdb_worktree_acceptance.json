@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "stage5.m115.tckdb_worktree_acceptance/1",
+  "milestone": "M115",
+  "verdict": "PASS",
+  "recommendation": "promote M114 without qualification",
+  "reportOnly": true,
+  "vtraceSourceChanged": false,
+  "defects": [],
+  "safety": {
+    "codingAgentRan": false,
+    "apiSpend": false,
+    "dockerRan": false,
+    "vexpRan": false,
+    "benchmarkRan": false,
+    "environmentMutated": false,
+    "tckdbSourceEdited": false,
+    "tckdbPushed": false
+  },
+  "repository": {
+    "registeredWorktreeCount": 17,
+    "canonicalHead": "7ad5cb99a6212ceea89e140931c34e67f01c2126",
+    "originMainHead": "b4d862feb9ae87ffe8167dd1817018da18fc615e",
+    "essHead": "60617d404f1395207805a647b6870c2497118b00",
+    "repositoryId": "c271b8050354bff293434995"
+  },
+  "toolSurface": {
+    "freshProcess": true,
+    "protocolVersion": "2024-11-05",
+    "visibleToolCount": 14,
+    "requiredToolsPresent": [
+      "get_code_context",
+      "index_repo",
+      "check_capsule_staleness"
+    ],
+    "getCodeContextFieldsPresent": ["repo_root", "auto_refresh"],
+    "clientSchemaCachingObserved": false
+  },
+  "criteria": {
+    "defaultFailClosed": true,
+    "explicitRefreshSelectedRootOnly": true,
+    "canonicalManifestByteIdentical": true,
+    "dirtyReasonWorkingTreeChanged": true,
+    "headReasonHeadMismatch": true,
+    "detachedHeadAccepted": true,
+    "nextToolTruthful": true,
+    "contextResolvedAfterRefresh": true,
+    "cleanupComplete": true
+  },
+  "canonicalManifestSha256": {
+    "before": "b605cc36309c7bd7d737f61f84a8517e2090545a025c0178c77012fa5831583d",
+    "after": "b605cc36309c7bd7d737f61f84a8517e2090545a025c0178c77012fa5831583d"
+  },
+  "taskSha256": "4bb6e46ded682153b3410a36a941908c6bf71370ebfae85ef8dcaebeb1116f67"
+}
