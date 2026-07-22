@@ -42,6 +42,14 @@ export interface SearchSymbolsFtsDiagnostics {
     readonly documentation: number;
     readonly tests: number;
   };
+  readonly rawLaneFiles: {
+    readonly path: readonly string[];
+    readonly symbol: readonly string[];
+    readonly lexical: readonly string[];
+    readonly documentation: readonly string[];
+    readonly tests: readonly string[];
+  };
+  readonly candidateUnionFiles: readonly string[];
   readonly preFilterCandidates: number;
   readonly rejectedByThreshold: number;
   readonly rejectedByScope: number;
@@ -101,7 +109,7 @@ export function searchSymbolsFtsDetailed(
   const broadContext = resolveBroadQueryContext(
     options.query,
     options.enableBroadQueryBoosts !== false,
-    true,
+    options.enableCompoundTaskDecomposition === true,
   );
   const testContext = resolveTestAwareQueryContext(
     options.query,
@@ -117,7 +125,7 @@ export function searchSymbolsFtsDetailed(
     options.query,
     broadContext,
     options.enablePathSignalBoosts !== false,
-    true,
+    options.enableCompoundTaskDecomposition === true,
   );
   const matchQuery = buildFtsMatchQueryForContext(options.query, broadContext);
   const identifierTerms = collectIdentifierTerms(options.query);
@@ -140,6 +148,8 @@ export function searchSymbolsFtsDetailed(
         pathTerms: pathSignalContext?.pathTerms ?? [],
         ftsTerms: buildFtsSearchText(options.query).split(" ").filter(Boolean),
         rawLaneHits: { path: 0, symbol: 0, lexical: 0, documentation: 0, tests: 0 },
+        rawLaneFiles: { path: [], symbol: [], lexical: [], documentation: [], tests: [] },
+        candidateUnionFiles: [],
         preFilterCandidates: 0,
         rejectedByThreshold: 0,
         rejectedByScope: 0,
@@ -224,6 +234,14 @@ export function searchSymbolsFtsDetailed(
   ).length;
   const symbol = new Set(identifierCandidates.map((result) => result.symbolId)).size;
   const tests = allRanked.filter((result) => isLikelyTestCandidate(result)).length;
+  const candidateUnionFiles = uniqueSorted([
+    ...mergedCandidates.map((candidate) => candidate.file_path),
+    ...identifierCandidates.map((candidate) => candidate.filePath),
+  ]);
+  const documentationFiles = uniqueSorted(allRanked
+    .filter((result) => result.matches.some((match) => match.field === SymbolSearchMatchField.Docstring))
+    .map((result) => result.filePath));
+  const testFiles = uniqueSorted(allRanked.filter((result) => isLikelyTestCandidate(result)).map((result) => result.filePath));
 
   return {
     results,
@@ -243,7 +261,15 @@ export function searchSymbolsFtsDetailed(
         documentation,
         tests,
       },
-      preFilterCandidates: mergedCandidates.length,
+      rawLaneFiles: {
+        path: uniqueSorted(pathSignalCandidates.map((candidate) => candidate.file_path)),
+        symbol: uniqueSorted(identifierCandidates.map((candidate) => candidate.filePath)),
+        lexical: uniqueSorted([...primaryCandidates, ...recoveryCandidates].map((candidate) => candidate.file_path)),
+        documentation: documentationFiles,
+        tests: testFiles,
+      },
+      candidateUnionFiles,
+      preFilterCandidates: new Set([...mergedCandidates.map((candidate) => candidate.symbol_id), ...identifierCandidates.map((candidate) => candidate.symbolId)]).size,
       rejectedByThreshold: mergedCandidates.length - allRanked.length,
       rejectedByScope: 0,
       fallbackAttempted,
@@ -256,6 +282,10 @@ export function searchSymbolsFtsDetailed(
       },
     },
   };
+}
+
+function uniqueSorted(values: readonly string[]): string[] {
+  return [...new Set(values)].sort();
 }
 
 function collectIdentifierTerms(query: string): string[] {

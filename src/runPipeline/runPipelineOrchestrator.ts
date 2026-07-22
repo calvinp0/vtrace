@@ -641,7 +641,13 @@ function buildCapsuleV2Section(
   }
 }
 
-function runReliableContextRetrieval(
+/**
+ * The routed product-context assembly seam shared by run_pipeline and offline
+ * retrieval evaluation. Exported so deterministic evaluators can exercise the
+ * real candidate, graph, profile, and packing path without also running the
+ * unrelated impact, flow, memory, manifest, and deferred-output sections.
+ */
+export function runReliableContextRetrieval(
   db: Database,
   repoRoot: string,
   input: {
@@ -649,10 +655,13 @@ function runReliableContextRetrieval(
     maxResults: number;
     maxBudgetCharacters: number;
     preset: RunPipelineConcretePreset;
+    /** Offline diagnostics only; product behavior and ordering are unchanged. */
+    includeTimingDiagnostics?: boolean;
   },
 ): OrchestrationContextSection {
   const routedQuery = routeQuery(db, input.query, {
     maxResults: input.maxResults,
+    includeTimingDiagnostics: input.includeTimingDiagnostics,
   });
   // Force capsule-profile classification to the preset's mapped QueryIntent so
   // intent presets materially affect which capsule profile is used.

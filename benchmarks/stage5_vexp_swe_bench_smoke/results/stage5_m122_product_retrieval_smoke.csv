@@ -1,0 +1,14 @@
+id,resolved,reason,lead_pivot,candidate_files_considered,variant_count,selected_files
+exact_identifier,true,,models/reproducibility_assessment.py,1,2,models/reproducibility_assessment.py
+filename,true,,services/public_assessments.py,7,4,services/public_assessments.py|models/reproducibility_assessment.py|client/models/assessment.py|schemas/reproducibility_assessment.py
+standalone_path,true,,services/public_assessments.py,8,6,services/public_assessments.py|models/reproducibility_assessment.py|client/models/assessment.py|schemas/reproducibility_assessment.py
+prose_containing_path,true,,services/public_assessments.py,8,12,services/public_assessments.py|models/reproducibility_assessment.py|client/models/assessment.py|schemas/reproducibility_assessment.py
+slash_punctuation,true,,models/reproducibility_assessment.py,2,6,models/reproducibility_assessment.py|tests/test_public_assessments.py
+url,true,,models/reproducibility_assessment.py,7,15,models/reproducibility_assessment.py|tests/test_public_assessments.py|client/models/assessment.py|schemas/reproducibility_assessment.py
+stack_trace,true,,models/reproducibility_assessment.py,8,17,models/reproducibility_assessment.py|services/public_assessments.py|client/models/assessment.py|schemas/reproducibility_assessment.py|services/public_refs.py
+long_compound_task,true,,models/reproducibility_assessment.py,6,13,models/reproducibility_assessment.py|services/public_assessments.py|schemas/reproducibility_assessment.py|migrations/versions/add_assessment_ref.py|tests/test_public_assessments.py
+no_context,false,unsupported_query_shape,,0,0,
+incremental-refresh_index,true,,models/reproducibility_assessment.py,7,7,models/reproducibility_assessment.py|schemas/reproducibility_assessment.py|client/models/assessment.py|migrations/versions/add_assessment_ref.py
+full-rebuild_index,true,,models/reproducibility_assessment.py,7,7,models/reproducibility_assessment.py|schemas/reproducibility_assessment.py|client/models/assessment.py|migrations/versions/add_assessment_ref.py
+product-legacy_comparison,true,,models/reproducibility_assessment.py,7,7,models/reproducibility_assessment.py|schemas/reproducibility_assessment.py|client/models/assessment.py|migrations/versions/add_assessment_ref.py
+stale_index,false,smoke_fixture,,0,0,

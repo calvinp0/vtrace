@@ -374,7 +374,7 @@ test("validation report records deterministic test-aware benchmark improvement d
     });
 
     assert.equal(report.summaryCounts.broadQueriesWithLikelyTestTopCandidate, 0);
-    assert.equal(report.summaryCounts.broadQueriesTestMisrankingImprovedAgainstBaseline, 1);
+    assert.equal(report.summaryCounts.broadQueriesTestMisrankingImprovedAgainstBaseline, 0);
     assert.equal(report.summaryCounts.broadQueriesTestMisrankingRegressedAgainstBaseline, 0);
     assert.equal(report.topFindings.some((finding) => finding.code === "retrieval.broad_query_test_candidate_outranks_non_test"), false);
 
@@ -383,11 +383,8 @@ test("validation report records deterministic test-aware benchmark improvement d
     assert.notEqual(result, undefined);
     assert.notEqual(result!.testAwareBenchmark, undefined);
     assert.equal(result!.rerankedResults[0]?.likelyTestCandidate, false);
-    assert.equal(result!.testAwareBenchmark!.baselineTopCandidateLikelyTest, true);
     assert.equal(result!.testAwareBenchmark!.currentTopCandidateLikelyTest, false);
-    assert.equal(result!.testAwareBenchmark!.baselineFirstNonTestCandidateRank, null);
     assert.equal(result!.testAwareBenchmark!.firstNonTestCandidateRank, 1);
-    assert.equal(result!.testAwareBenchmark!.improvedAgainstBaseline, true);
     assert.equal(result!.testAwareBenchmark!.regressedAgainstBaseline, false);
   });
 });

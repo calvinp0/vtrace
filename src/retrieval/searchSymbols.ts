@@ -69,6 +69,7 @@ export function searchSymbolsPlainSql(
   const broadContext = resolveBroadQueryContext(
     options.query,
     options.enableBroadQueryBoosts !== false,
+    options.enableCompoundTaskDecomposition === true,
   );
   const testContext = resolveTestAwareQueryContext(
     options.query,
@@ -84,6 +85,7 @@ export function searchSymbolsPlainSql(
     options.query,
     broadContext,
     options.enablePathSignalBoosts !== false,
+    options.enableCompoundTaskDecomposition === true,
   );
 
   if (query.length === 0 || maxResults === 0) {

@@ -466,11 +466,9 @@ export function resolveBroadQueryContext(
   // for an otherwise natural-language task. Treating every slash as a path made
   // the fallback builder require every word in a compound task in one FTS row.
   if (
-    /\\/.test(trimmedQuery)
-    || (
-      trimmedQuery.includes("/")
-      && (!enableCompoundTaskDecomposition || !/\s/.test(trimmedQuery))
-    )
+    enableCompoundTaskDecomposition
+      ? isStandalonePathLikeQuery(trimmedQuery)
+      : /[\\/]/.test(trimmedQuery)
   ) {
     return undefined;
   }
@@ -641,20 +639,31 @@ export function resolvePathSignalQueryContext(
   enablePathSignalBoosts = true,
   enableCompoundTaskDecomposition = false,
 ): PathSignalQueryContext | undefined {
-  if (!enablePathSignalBoosts || broadContext === undefined) {
+  if (!enablePathSignalBoosts) {
     return undefined;
   }
 
   const variantsByTerm = new Map<string, readonly string[]>();
   const pathTerms: string[] = [];
 
-  for (const group of broadContext.termGroups) {
-    if (!isPathLikeTerm(group.label)) {
-      continue;
+  // Historical SQL/hybrid callers retain their broad-term path-signal behavior.
+  // The explicit extractor is the routed product-mode correction and is enabled
+  // only with compound-task decomposition, as routeQuery requests.
+  if (!enableCompoundTaskDecomposition) {
+    if (broadContext === undefined) return undefined;
+    for (const group of broadContext.termGroups) {
+      if (!isLegacyPathLikeTerm(group.label)) continue;
+      pathTerms.push(group.label);
+      variantsByTerm.set(group.label, group.variants);
     }
+    if (pathTerms.length < 2) return undefined;
+    return { pathTerms, variantsByTerm };
+  }
 
-    pathTerms.push(group.label);
-    variantsByTerm.set(group.label, group.variants);
+  for (const term of extractExplicitPathTerms(query)) {
+    pathTerms.push(term);
+    const broadGroup = broadContext?.termGroups.find((group) => group.label === term);
+    variantsByTerm.set(term, broadGroup?.variants ?? buildBroadTermVariants(term));
   }
 
   if (pathTerms.length < 2) {
@@ -720,8 +729,43 @@ export function queryPathSignalCandidates(
   return db.query(sql).all(...params) as SearchCandidateRow[];
 }
 
-function isPathLikeTerm(term: string): boolean {
+function isStandalonePathLikeQuery(query: string): boolean {
+  if (/\s/.test(query)) return false;
+  return extractPathFragments(query).some((fragment) => fragment === query || stripWrappingPunctuation(fragment) === stripWrappingPunctuation(query));
+}
+
+function isLegacyPathLikeTerm(term: string): boolean {
   return /^[a-z][a-z0-9]{2,}$/.test(term) && !BROAD_QUERY_STOPWORDS.has(term);
+}
+
+function extractExplicitPathTerms(query: string): string[] {
+  const terms: string[] = [];
+  for (const fragment of extractPathFragments(query)) {
+    const withoutUrlPrefix = fragment.replace(/^https?:\/\/[^/]+/i, "");
+    for (const segment of withoutUrlPrefix.replace(/\\/g, "/").split(/[/._-]+/)) {
+      const normalized = segment.toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (normalized.length > 1 && !BROAD_QUERY_STOPWORDS.has(normalized)) terms.push(normalized);
+    }
+  }
+  return collectUniqueInOrder(terms);
+}
+
+function extractPathFragments(query: string): string[] {
+  const tokens = query.match(/https?:\/\/[^\s"'`),;]+|(?:[A-Za-z]:)?[\\/][^\s"'`),;]+|[A-Za-z0-9_.-]+(?:[\\/][A-Za-z0-9_.-]+)+/g) ?? [];
+  return tokens
+    .map(stripWrappingPunctuation)
+    .filter((token) => {
+      if (/^https?:\/\//i.test(token) || /^(?:[A-Za-z]:)?[\\/]/.test(token)) return true;
+      const slashCount = (token.match(/[\\/]/g) ?? []).length;
+      const finalSegment = token.split(/[\\/]/).at(-1) ?? "";
+      return slashCount >= 2
+        || /\.[A-Za-z0-9]{1,8}$/.test(finalSegment)
+        || /^v\d+(?:[\\/]|$)/i.test(token);
+    });
+}
+
+function stripWrappingPunctuation(value: string): string {
+  return value.replace(/^["'`(]+/, "").replace(/["'`).,;:]+$/, "");
 }
 
 export function classifyLikelyTestCandidate(input: {
@@ -1295,7 +1339,7 @@ function buildBroadAdmissionDisjuncts(
     return [termGroups];
   }
 
-  if (!boundCompoundTask || termGroups.length <= 16) {
+  if (!boundCompoundTask) {
     const legacyDisjuncts: QueryTermGroup[][] = phraseGroups.map((group) => [group]);
     for (let leftIndex = 0; leftIndex < termGroups.length - 1; leftIndex += 1) {
       const left = termGroups[leftIndex];
@@ -1332,11 +1376,23 @@ function buildBroadAdmissionDisjuncts(
     }
   }
 
-  // For compound tasks, adjacent phrases plus identifier-safe adjacent AND
-  // pairs are the complete bounded decomposition. Exhaustive non-adjacent pairs
-  // would admit generic files merely because they contain any two concerns.
-  if (isCompoundTask) {
-    return disjuncts;
+  // Spend the remaining fixed budget on non-adjacent, high-information concept
+  // pairs. This recovers files that connect distant concerns (for example
+  // "reproducibility" + "projection") without restoring the complete O(n²)
+  // expansion or admitting pairs of short generic terms.
+  for (let leftIndex = 0; leftIndex < termGroups.length - 2; leftIndex += 1) {
+    const left = termGroups[leftIndex]!;
+    for (let rightIndex = leftIndex + 2; rightIndex < termGroups.length; rightIndex += 1) {
+      const right = termGroups[rightIndex]!;
+      const combinedLength = left.label.length + right.label.length;
+      const bothHighInformation = left.label.length >= 8 && right.label.length >= 8;
+      const boundedSkipOnePair = rightIndex === leftIndex + 2
+        && combinedLength >= 12
+        && Math.max(left.label.length, right.label.length) >= 8;
+      if (!bothHighInformation && !boundedSkipOnePair) continue;
+      disjuncts.push([left, right]);
+      if (disjuncts.length >= BROAD_ADMISSION_DISJUNCT_LIMIT) return disjuncts;
+    }
   }
 
   return disjuncts;

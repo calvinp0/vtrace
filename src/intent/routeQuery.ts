@@ -98,6 +98,7 @@ export function routeQuery(
     enableTechnicalQueryBoosts: options.enableTechnicalQueryBoosts,
     enablePathSignalBoosts: options.enablePathSignalBoosts,
     enableExactIdentifierLane: options.enableExactIdentifierLane,
+    enableCompoundTaskDecomposition: true,
   };
   const detailedSearch = profile.backend === SymbolSearchBackend.Fts
     ? searchSymbolsFtsDetailed(db, searchOptions)
@@ -141,6 +142,8 @@ function emptyPathSignalDiagnostics(): RetrievalPathSignalDiagnostics {
     pathTerms: [],
     ftsTerms: [],
     laneResults: { path: 0, symbol: 0, lexical: 0, documentation: 0, tests: 0, graph: 0 },
+    laneCandidateFiles: { path: [], symbol: [], lexical: [], documentation: [], tests: [] },
+    candidateUnionFiles: [],
     preFilterCandidates: 0,
     rejectedByThreshold: 0,
     rejectedByScope: 0,
@@ -173,6 +176,8 @@ function collectPathSignalDiagnostics(
       tests: searchDiagnostics?.rawLaneHits.tests ?? 0,
       graph: 0,
     },
+    laneCandidateFiles: searchDiagnostics?.rawLaneFiles ?? { path: [], symbol: [], lexical: [], documentation: [], tests: [] },
+    candidateUnionFiles: searchDiagnostics?.candidateUnionFiles ?? [],
     preFilterCandidates: searchDiagnostics?.preFilterCandidates ?? candidateFilePaths.length,
     rejectedByThreshold: searchDiagnostics?.rejectedByThreshold ?? 0,
     rejectedByScope: searchDiagnostics?.rejectedByScope ?? 0,

@@ -15,6 +15,8 @@ export interface SearchSymbolsOptions {
   enableTestAwareDownweighting?: boolean;
   enableTechnicalQueryBoosts?: boolean;
   enablePathSignalBoosts?: boolean;
+  /** Routed product mode: bounded compound decomposition and explicit path extraction. */
+  enableCompoundTaskDecomposition?: boolean;
   /** Internal comparison switch; product retrieval keeps this enabled by default. */
   enableExactIdentifierLane?: boolean;
 }
@@ -43,6 +45,10 @@ export interface RetrievalPathSignalDiagnostics {
   readonly pathTerms: readonly string[];
   readonly ftsTerms: readonly string[];
   readonly laneResults: RetrievalLaneResults;
+  /** Source-body-free repo-relative file paths observed in each retrieval lane. */
+  readonly laneCandidateFiles: Readonly<Record<keyof Omit<RetrievalLaneResults, "graph">, readonly string[]>>;
+  /** De-duplicated file membership of the complete pre-rerank candidate union. */
+  readonly candidateUnionFiles: readonly string[];
   readonly preFilterCandidates: number;
   readonly rejectedByThreshold: number;
   readonly rejectedByScope: number;

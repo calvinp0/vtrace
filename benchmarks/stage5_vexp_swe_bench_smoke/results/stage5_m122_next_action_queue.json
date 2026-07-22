@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "stage5.m122.next-action-queue.v1",
+  "decision": {
+    "option": "C",
+    "verdict": "FAIL",
+    "recommendation": "fix product retrieval before promotion"
+  },
+  "items": [
+    {
+      "milestone": "M122-followup",
+      "action": "Investigate product losses before primary promotion."
+    },
+    {
+      "milestone": "M123",
+      "action": "Deferred until the primary deterministic path is established."
+    }
+  ]
+}

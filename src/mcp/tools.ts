@@ -1562,6 +1562,18 @@ const RUN_PIPELINE_DIAGNOSTICS_SCHEMA = objectProperty(
           },
           ["path", "symbol", "lexical", "documentation", "tests", "graph"],
         ),
+        laneCandidateFiles: objectProperty(
+          "Repo-relative candidate file paths by lane; paths and symbols only, never source bodies.",
+          {
+            path: arrayProperty("Path-lane files.", stringProperty("Repo-relative path.")),
+            symbol: arrayProperty("Exact identifier/filename-lane files.", stringProperty("Repo-relative path.")),
+            lexical: arrayProperty("Lexical-lane files.", stringProperty("Repo-relative path.")),
+            documentation: arrayProperty("Documentation-match files.", stringProperty("Repo-relative path.")),
+            tests: arrayProperty("Test-shaped files.", stringProperty("Repo-relative path.")),
+          },
+          ["path", "symbol", "lexical", "documentation", "tests"],
+        ),
+        candidateUnionFiles: arrayProperty("De-duplicated files in the complete pre-rerank candidate union.", stringProperty("Repo-relative path.")),
         preFilterCandidates: integerProperty("Candidate union size before score filtering."),
         rejectedByThreshold: integerProperty("Candidates rejected because they produced no score evidence."),
         rejectedByScope: integerProperty("Candidates rejected by explicit scope filters."),
@@ -1584,7 +1596,7 @@ const RUN_PIPELINE_DIAGNOSTICS_SCHEMA = objectProperty(
       [
         "normalizedQuery", "pathSignalsConsidered", "pathSignalsMatched", "candidateFilesConsidered",
         "weakPathCoverage", "queryVariants", "identifierTerms", "pathTerms", "ftsTerms",
-        "laneResults", "preFilterCandidates", "rejectedByThreshold", "rejectedByScope",
+        "laneResults", "laneCandidateFiles", "candidateUnionFiles", "preFilterCandidates", "rejectedByThreshold", "rejectedByScope",
         "graphExpansions", "fallbackAttempted", "timingsMs",
       ],
     ),

@@ -291,7 +291,7 @@ test("memory and rule benchmark keeps active guidance distinct from candidates",
   }
 });
 
-test("route-oriented broad query surfaces sibling scientific route files", () => {
+test("route-oriented broad prose surfaces sibling files without fabricating path signals", () => {
   const db = openIndexerDatabase();
 
   try {
@@ -331,21 +331,8 @@ test("route-oriented broad query surfaces sibling scientific route files", () =>
       "path-signal boosts should not regress sibling coverage versus the no-boost baseline",
     );
 
-    assert.deepEqual(
-      routed.pathSignalDiagnostics.pathSignalsConsidered.includes("kinetics"),
-      true,
-    );
-    assert.deepEqual(
-      routed.pathSignalDiagnostics.pathSignalsConsidered.includes("scientific"),
-      true,
-    );
-    assert.ok(routed.pathSignalDiagnostics.pathSignalsMatched.length >= 3);
-    assert.ok(
-      ["kinetics", "thermo", "statmech", "transport", "scientific"].every((term) => {
-        return routed.pathSignalDiagnostics.pathSignalsMatched.includes(term);
-      }),
-      `expected scientific route signals to be matched, got ${JSON.stringify(routed.pathSignalDiagnostics.pathSignalsMatched)}`,
-    );
+    assert.deepEqual(routed.pathSignalDiagnostics.pathSignalsConsidered, []);
+    assert.deepEqual(routed.pathSignalDiagnostics.pathSignalsMatched, []);
     assert.equal(typeof routed.pathSignalDiagnostics.weakPathCoverage, "boolean");
     assert.ok(routed.pathSignalDiagnostics.candidateFilesConsidered > 0);
   } finally {
