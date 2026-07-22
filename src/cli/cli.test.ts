@@ -153,7 +153,18 @@ test("index rejects unknown flags with a usage hint", async () => {
 
     const result = await runCli(["index", repoRoot, "--bogus"]);
     assert.equal(result.exitCode, 1);
-    assert.match(result.stderr, /Usage: index <repo> \[--json\]/);
+    assert.match(result.stderr, /Usage: index <repo> \[--repo-root <worktree>\] \[--json\]/);
+  });
+});
+
+test("index and status accept explicit --repo-root worktree selection", async () => {
+  await withFixture(async ({ repoRoot }) => {
+    await writeFixtureRepo(repoRoot);
+    const indexed = await runCli(["index", "--repo-root", repoRoot, "--json"]);
+    assert.equal(indexed.exitCode, 0);
+    const status = await runCli(["status", "--repo-root", repoRoot, "--json"]);
+    assert.equal(status.exitCode, 0);
+    assert.equal(JSON.parse(status.stdout).repoRoot, repoRoot);
   });
 });
 

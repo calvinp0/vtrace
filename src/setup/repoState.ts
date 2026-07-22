@@ -1,4 +1,4 @@
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -40,7 +40,8 @@ export async function ensureRepoLocalStateDirectory(paths: RepoLocalPaths): Prom
 }
 
 export async function detectRepoRoot(repoPath: string): Promise<RepoRootDetection> {
-  const requestedPath = path.resolve(repoPath);
+  const requestedAbsolutePath = path.resolve(repoPath);
+  const requestedPath = await realpath(requestedAbsolutePath).catch(() => requestedAbsolutePath);
   const stats = await safeStat(requestedPath);
 
   if (stats === undefined || !stats.isDirectory()) {
@@ -264,7 +265,7 @@ export async function evaluateRepoReadiness(input: {
 async function detectRepoRootMarker(
   repoRoot: string,
 ): Promise<RepoRootMarker | undefined> {
-  if (await isExistingDirectory(path.join(repoRoot, ".git"))) {
+  if (await pathExists(path.join(repoRoot, ".git"))) {
     return ".git";
   }
 

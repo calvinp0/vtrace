@@ -1,0 +1,64 @@
+{
+  "schema": "vtrace.stage5.m114.worktree_aware_indexing.v1",
+  "milestone": "M114",
+  "verdict": "PASS",
+  "recommendation": "promote worktree-aware indexing",
+  "defaultAutoRefresh": "never",
+  "storage": {
+    "layout": "<worktree-root>/.vtrace",
+    "repositoryId": "sha256(canonical git common directory)",
+    "worktreeId": "sha256(canonical git common directory + canonical worktree root)",
+    "crossWorktreeReuseAllowed": false
+  },
+  "manifestVersion": 2,
+  "freshnessReasons": [
+    "fresh",
+    "missing_index",
+    "worktree_mismatch",
+    "repository_mismatch",
+    "head_mismatch",
+    "working_tree_changed",
+    "index_schema_changed",
+    "configuration_changed",
+    "manifest_invalid",
+    "index_in_progress",
+    "unknown"
+  ],
+  "autoRefreshAllowed": [
+    "missing_index",
+    "head_mismatch",
+    "working_tree_changed",
+    "configuration_changed",
+    "manifest_invalid"
+  ],
+  "autoRefreshBlocked": [
+    "worktree_mismatch",
+    "repository_mismatch",
+    "index_schema_changed",
+    "index_in_progress",
+    "unknown"
+  ],
+  "toolExposure": {
+    "get_code_context": true,
+    "index_repo": true,
+    "check_capsule_staleness": true,
+    "contractHonest": true
+  },
+  "verification": {
+    "typecheck": "PASS",
+    "benchmarkTypecheck": "PASS",
+    "fullTests": "PASS (3674 pass, 0 fail, 210 files)",
+    "diffCheck": "PASS",
+    "noAgentSmoke": "PASS",
+    "freshIndexInvariant": "PASS",
+    "retrievalEvaluationRun": false,
+    "retrievalEvaluationReason": "Retrieval, scoring, ranking, packing, task derivation, and digest code were unchanged; deterministic fresh-context parity passed."
+  },
+  "deferred": [
+    "orphaned worktree prune command",
+    "shared immutable Git-blob parse cache",
+    "background watching",
+    "new CLI context command"
+  ],
+  "prohibitedActionsRun": []
+}

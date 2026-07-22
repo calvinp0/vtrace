@@ -1,0 +1,112 @@
+{
+  "schema": "vtrace.stage5.m114.worktree_index_smoke.v1",
+  "generatedAt": "2026-07-22T09:20:16.280Z",
+  "noAgent": true,
+  "scenarios": {
+    "sameRootHeadMismatch": {
+      "resolved": false,
+      "reason": "head_mismatch",
+      "refreshAttempted": false,
+      "refreshMode": null,
+      "afterReason": "head_mismatch",
+      "worktreeRoot": "/tmp/vtrace-m114-smoke-lpcy9Y/main"
+    },
+    "sameRootDirtyChange": {
+      "resolved": false,
+      "reason": "working_tree_changed",
+      "refreshAttempted": false,
+      "refreshMode": null,
+      "afterReason": "working_tree_changed",
+      "worktreeRoot": "/tmp/vtrace-m114-smoke-lpcy9Y/main"
+    },
+    "sameRootDirtyAutoRefresh": {
+      "resolved": true,
+      "reason": "working_tree_changed",
+      "refreshAttempted": true,
+      "refreshMode": "incremental",
+      "afterReason": "fresh",
+      "worktreeRoot": "/tmp/vtrace-m114-smoke-lpcy9Y/main"
+    },
+    "newLinkedWorktree": {
+      "resolved": false,
+      "reason": "missing_index",
+      "refreshAttempted": false,
+      "refreshMode": null,
+      "afterReason": "missing_index",
+      "worktreeRoot": "/tmp/vtrace-m114-smoke-lpcy9Y/feature"
+    },
+    "detachedWorktree": {
+      "branch": null,
+      "detached": true,
+      "headCommit": "abfee634d25efb1c4651cb44316ec20447b4fed8",
+      "worktreeId": "ff80e414d57b36cfd93ed0b4"
+    },
+    "autoRefreshSuccess": {
+      "resolved": true,
+      "reason": "head_mismatch",
+      "refreshAttempted": true,
+      "refreshMode": "incremental",
+      "afterReason": "fresh",
+      "worktreeRoot": "/tmp/vtrace-m114-smoke-lpcy9Y/main"
+    },
+    "autoRefreshDisabled": {
+      "resolved": false,
+      "reason": "head_mismatch",
+      "refreshAttempted": false,
+      "refreshMode": null,
+      "afterReason": "head_mismatch",
+      "worktreeRoot": "/tmp/vtrace-m114-smoke-lpcy9Y/main"
+    },
+    "featureAutoRefresh": {
+      "resolved": true,
+      "reason": "missing_index",
+      "refreshAttempted": true,
+      "refreshMode": "full",
+      "afterReason": "fresh",
+      "worktreeRoot": "/tmp/vtrace-m114-smoke-lpcy9Y/feature"
+    },
+    "lockBehavior": {
+      "sameWorktreeSecondOperation": "index_in_progress",
+      "differentWorktreeConcurrent": true
+    },
+    "toolExposure": {
+      "getCodeContext": true,
+      "indexRepo": true,
+      "checkCapsuleStaleness": true
+    }
+  },
+  "freshIndexInvariants": {
+    "before": {
+      "taskHash": "e779beb7da5f4264211a8c8ad202c3b2b707224eb14e85fb663f3c68115cba73",
+      "selectedFiles": [
+        "src/session.ts",
+        "src/session.ts"
+      ],
+      "leadPivot": "src/session.ts",
+      "requiredFiles": [
+        "src/session.ts"
+      ],
+      "optionalFiles": [
+        "src/session.ts"
+      ],
+      "capsuleMode": "standard"
+    },
+    "after": {
+      "taskHash": "e779beb7da5f4264211a8c8ad202c3b2b707224eb14e85fb663f3c68115cba73",
+      "selectedFiles": [
+        "src/session.ts",
+        "src/session.ts"
+      ],
+      "leadPivot": "src/session.ts",
+      "requiredFiles": [
+        "src/session.ts"
+      ],
+      "optionalFiles": [
+        "src/session.ts"
+      ],
+      "capsuleMode": "standard"
+    },
+    "equal": true
+  },
+  "verdict": "PASS"
+}

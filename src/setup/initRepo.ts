@@ -4,6 +4,7 @@ import { getLatestIndexRun, getIndexRunSummary } from "../db/repositories/indexR
 import { openIndexerDatabase } from "../db/sqlite";
 import { readGitHead } from "../fs/git";
 import { recordIndexMeta } from "../indexer/indexMeta";
+import { withWorktreeIndexLock } from "../indexer/worktreeIndexLock";
 import { indexProject } from "../indexer/indexProject";
 import {
   buildLastIndexSnapshot,
@@ -25,6 +26,18 @@ import type {
 export async function initRepo(options: InitRepoOptions): Promise<InitRepoResult> {
   const requestedPath = path.resolve(options.cwd ?? process.cwd(), options.repoPath);
   const detection = await detectRepoRoot(requestedPath);
+  const locked = await withWorktreeIndexLock({
+    repoRoot: detection.repoRoot,
+    operation: () => initRepoUnlocked(options, requestedPath, detection),
+  });
+  return locked.value;
+}
+
+async function initRepoUnlocked(
+  options: InitRepoOptions,
+  requestedPath: string,
+  detection: Awaited<ReturnType<typeof detectRepoRoot>>,
+): Promise<InitRepoResult> {
   const paths = resolveRepoLocalPaths(detection.repoRoot);
 
   await ensureRepoLocalStateDirectory(paths);
@@ -66,13 +79,8 @@ export async function initRepo(options: InitRepoOptions): Promise<InitRepoResult
 
     await writeRepoLocalState(paths.statePath, state);
 
-    // Stamp versioned index metadata so later runs can reuse this index when the
-    // source checkout and indexer/parser versions still match. Non-fatal on error.
-    try {
-      await recordIndexMeta(detection.repoRoot);
-    } catch {
-      // Metadata is an optimisation; a failure to write it is non-fatal.
-    }
+    // Persisted worktree ownership is part of a successful repo-local index.
+    await recordIndexMeta(detection.repoRoot, latestRun?.id ?? null);
 
     return {
       requestedPath,

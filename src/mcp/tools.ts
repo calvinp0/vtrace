@@ -138,14 +138,21 @@ import {
   type SkeletonDetailLevel,
 } from "../skeleton/getSkeleton";
 import {
+  detectRepoRoot,
   readRepoLocalConfig,
   readRepoLocalState,
   resolveRepoLocalPaths,
 } from "../setup/repoState";
+import { initRepo } from "../setup/initRepo";
 import type { RepoLocalConfig, RepoLocalState } from "../setup/types";
 import { buildFileWatcherStatus } from "../runtime/fileWatcher";
 import { inspectIndexFreshness } from "../runtime/indexFreshness";
 import { reindexRepoAndRefreshState } from "../runtime/reindexRepo";
+import {
+  inspectWorktreeIndexFreshness,
+  type WorktreeIndexFreshnessResult,
+} from "../indexer/indexMeta";
+import { WorktreeIndexLockError } from "../indexer/worktreeIndexLock";
 import {
   resolveWorkspaceConfigPath,
   safeReadWorkspaceConfig,
@@ -184,6 +191,7 @@ const CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS = 8_000;
 
 interface IndexRepoInput {
   readonly force?: boolean;
+  readonly repo_root?: string;
 }
 
 interface SearchSymbolsInput {
@@ -236,6 +244,8 @@ interface RunPipelineInput extends BuildCapsuleInput {
   readonly capsuleIntent?: string;
   readonly capsule_budget_tokens?: number;
   readonly capsuleBudgetTokens?: number;
+  readonly repo_root?: string;
+  readonly auto_refresh?: "never" | "if_stale";
 }
 
 const RUN_PIPELINE_DIAGNOSTIC_REASON = Object.freeze({
@@ -301,6 +311,7 @@ type BuildHandoffInput = BuildCapsuleInput;
 interface CheckCapsuleStalenessInput {
   readonly manifestId?: string;
   readonly comparisonRunId?: number;
+  readonly repo_root?: string;
 }
 
 interface SaveObservationInput {
@@ -343,6 +354,7 @@ interface GetSkeletonInput {
 
 interface IndexStatusInput {
   readonly repos?: readonly string[];
+  readonly repo_root?: string;
 }
 type ListSessionsInput = Record<string, never>;
 type DeferredToolInput = Record<string, unknown>;
@@ -1341,12 +1353,12 @@ const OBSERVATION_NUDGE_SCHEMA = objectProperty(
 const GET_CODE_CONTEXT_INDEX_FRESHNESS_DIAGNOSTIC_SCHEMA = objectProperty(
   "Front-door index freshness action taken before building code context.",
   {
-    status: stringProperty("fresh, stale, unknown, refreshed, or unavailable."),
+    status: stringProperty("fresh, stale, missing, or blocked."),
     reason: {
       type: ["string", "null"],
       description: "Reason for the status or refresh decision.",
     },
-    action: stringProperty("none, auto_index_repo, or call_index_repo."),
+    action: stringProperty("none, call_index_repo, retry, choose_worktree, or rebuild_index."),
     beforeState: {
       type: ["string", "null"],
       description: "Freshness state observed before an automatic refresh, when checked.",
@@ -1359,6 +1371,44 @@ const GET_CODE_CONTEXT_INDEX_FRESHNESS_DIAGNOSTIC_SCHEMA = objectProperty(
       type: ["integer", "null"],
       description: "Latest index run id after refresh, when available.",
     },
+    before: {
+      type: ["object", "null"],
+      description: "Precise freshness before an explicitly requested refresh.",
+      properties: {
+        status: stringProperty("Pre-refresh status."),
+        reason: stringProperty("Pre-refresh reason."),
+      },
+      required: ["status", "reason"],
+      additionalProperties: false,
+    },
+    refreshAttempted: booleanProperty("Whether explicit auto-refresh was attempted."),
+    refreshMode: { type: ["string", "null"], description: "incremental or full when refresh was attempted." },
+    refreshFailed: booleanProperty("Whether the requested refresh failed."),
+    failureReason: { type: ["string", "null"], description: "Lock or indexing failure when refresh failed." },
+    after: objectProperty(
+      "Precise freshness after the request.",
+      { status: stringProperty("Post-request status."), reason: stringProperty("Post-request reason.") },
+      ["status", "reason"],
+    ),
+    worktreeRoot: stringProperty("Canonical selected worktree root."),
+    requestedWorktree: objectProperty(
+      "Selected worktree snapshot.",
+      { root: stringProperty("Canonical root."), headCommit: { type: ["string", "null"], description: "Current HEAD." } },
+      ["root", "headCommit"],
+    ),
+    indexedWorktree: {
+      type: ["object", "null"],
+      description: "Worktree recorded by the manifest, when present.",
+      properties: {
+        root: stringProperty("Canonical root."),
+        headCommit: { type: ["string", "null"], description: "Indexed HEAD." },
+      },
+      required: ["root", "headCommit"],
+      additionalProperties: false,
+    },
+    previousHead: { type: ["string", "null"], description: "Previously indexed HEAD." },
+    currentHead: { type: ["string", "null"], description: "Current selected-worktree HEAD." },
+    indexRunId: { type: ["integer", "string", "null"], description: "Manifest index run id." },
   },
   ["status", "reason", "action", "beforeState", "afterState", "latestRunId"],
 );
@@ -3415,14 +3465,58 @@ async function pathExists(targetPath: string): Promise<boolean> {
   }
 }
 
+async function resolveRequestedRepoRoot(
+  context: McpServerContext,
+  toolId: McpToolId,
+  requestedRoot?: string,
+): Promise<string | McpToolExecutionResult<never>> {
+  const candidate = requestedRoot ?? context.repoRoot;
+  if (candidate === null || candidate === undefined) {
+    return invalidRequest(toolId, `MCP tool ${toolId} requires an explicit repo_root because the server has no bound root.`, {
+      reason: "ambiguous_worktree",
+    });
+  }
+  try {
+    return (await detectRepoRoot(candidate)).repoRoot;
+  } catch (error) {
+    return invalidRequest(toolId, `MCP tool ${toolId} could not resolve repo_root.`, {
+      reason: "ambiguous_worktree",
+      repoRoot: candidate,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+function rebindMcpContext(context: McpServerContext, repoRoot: string): McpServerContext {
+  if (context.repoRoot === repoRoot) {
+    return context;
+  }
+  const paths = resolveRepoLocalPaths(repoRoot);
+  return {
+    ...context,
+    repoRoot,
+    dbPath: paths.dbPath,
+    configPath: paths.configPath,
+    statePath: paths.statePath,
+    initialized: false,
+    config: null,
+    state: null,
+  };
+}
+
 async function resolveReadyRepoBinding(
   context: McpServerContext,
   toolId: McpToolId,
+  requestedRoot?: string,
 ): Promise<
   | { ok: true; binding: ReadyRepoBinding }
   | { ok: false; result: McpToolExecutionResult<never> }
 > {
-  const repoRoot = context.repoRoot;
+  const resolvedRoot = await resolveRequestedRepoRoot(context, toolId, requestedRoot);
+  if (typeof resolvedRoot !== "string") {
+    return { ok: false, result: resolvedRoot };
+  }
+  const repoRoot = resolvedRoot;
 
   if (repoRoot === null) {
     return {
@@ -3435,11 +3529,12 @@ async function resolveReadyRepoBinding(
   }
 
   const paths = resolveRepoLocalPaths(repoRoot);
-  const configPath = context.configPath ?? paths.configPath;
-  const statePath = context.statePath ?? paths.statePath;
-  const config = (await safeReadConfig(configPath)) ?? context.config ?? undefined;
-  const state = (await safeReadState(statePath)) ?? context.state ?? undefined;
-  const dbPath = context.dbPath ?? config?.dbPath ?? state?.dbPath ?? paths.dbPath;
+  const usesBoundContext = repoRoot === context.repoRoot;
+  const configPath = (usesBoundContext ? context.configPath : null) ?? paths.configPath;
+  const statePath = (usesBoundContext ? context.statePath : null) ?? paths.statePath;
+  const config = (await safeReadConfig(configPath)) ?? (usesBoundContext ? context.config : null) ?? undefined;
+  const state = (await safeReadState(statePath)) ?? (usesBoundContext ? context.state : null) ?? undefined;
+  const dbPath = (usesBoundContext ? context.dbPath : null) ?? config?.dbPath ?? state?.dbPath ?? paths.dbPath;
 
   if (config === undefined || state === undefined) {
     return {
@@ -3521,8 +3616,9 @@ async function withReadyRepoDb<TOutput>(
   context: McpServerContext,
   toolId: McpToolId,
   execute: (binding: ReadyRepoBinding, db: ReturnType<typeof openIndexerDatabase>) => Promise<McpToolExecutionResult<TOutput>> | McpToolExecutionResult<TOutput>,
+  requestedRoot?: string,
 ): Promise<McpToolExecutionResult<TOutput>> {
-  const resolved = await resolveReadyRepoBinding(context, toolId);
+  const resolved = await resolveReadyRepoBinding(context, toolId, requestedRoot);
 
   if (!resolved.ok) {
     return resolved.result;
@@ -5590,6 +5686,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
     readiness: RepoLocalState["readiness"];
     indexSummary: RepoLocalState["indexSummary"];
     latestRun: NonNullable<RepoLocalState["latestRun"]> | null;
+    lock: { status: "released"; staleLockRecovered: boolean };
   }>({
     metadata: {
       toolId: McpToolId.IndexRepo,
@@ -5597,9 +5694,10 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       description:
         "Refresh the Vtrace repo index. Use this when get_code_context or another Vtrace tool reports stale_index, missing_index, or repo_not_ready.",
       inputSchema: objectSchema(
-        "Optional controls for re-indexing the currently initialized repository.",
+        "Optional controls for indexing a concrete Git worktree.",
         {
           force: booleanProperty("Accepted for future compatibility; currently re-indexing always runs."),
+          repo_root: stringProperty("Optional absolute or relative worktree root. Defaults to the server-bound root."),
         },
         [],
       ),
@@ -5622,8 +5720,16 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             required: RUN_SUMMARY_SCHEMA.required ?? [],
             additionalProperties: false,
           },
+          lock: objectProperty(
+            "Worktree-specific indexing lock outcome.",
+            {
+              status: stringProperty("released after a completed index operation."),
+              staleLockRecovered: booleanProperty("Whether a dead process lock was recovered."),
+            },
+            ["status", "staleLockRecovered"],
+          ),
         },
-        ["repoRoot", "latestRunId", "readiness", "indexSummary", "latestRun"],
+        ["repoRoot", "latestRunId", "readiness", "indexSummary", "latestRun", "lock"],
       ),
     },
     async handler({ context, request }) {
@@ -5639,31 +5745,58 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         return force;
       }
       void force;
-
-      const resolved = await resolveReadyRepoBinding(context, McpToolId.IndexRepo);
-
-      if (!resolved.ok) {
-        return resolved.result;
+      const requestedRoot = parseOptionalStringField(McpToolId.IndexRepo, input, "repo_root");
+      if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
+        return requestedRoot;
+      }
+      const repoRoot = await resolveRequestedRepoRoot(context, McpToolId.IndexRepo, requestedRoot);
+      if (typeof repoRoot !== "string") {
+        return repoRoot;
+      }
+      const paths = resolveRepoLocalPaths(repoRoot);
+      const config = await safeReadConfig(paths.configPath);
+      const stateBefore = await safeReadState(paths.statePath);
+      let state: RepoLocalState | null;
+      let staleLockRecovered = false;
+      try {
+        if (config === undefined || stateBefore === undefined) {
+          state = (await initRepo({ repoPath: repoRoot })).state;
+        } else {
+          const indexed = await reindexRepoAndRefreshState({
+            repoRoot,
+            dbPath: config.dbPath ?? stateBefore.dbPath ?? paths.dbPath,
+            statePath: paths.statePath,
+            configPresent: true,
+            statePresent: true,
+            usesDbPathOverride: false,
+          });
+          state = indexed.state;
+          staleLockRecovered = indexed.staleLockRecovered;
+        }
+      } catch (error) {
+        if (error instanceof WorktreeIndexLockError) {
+          return failure(McpErrorCode.HandlerFailed, error.message, {
+            reason: error.code,
+            action: "retry",
+            repoRoot,
+          });
+        }
+        throw error;
       }
 
-      const result = await reindexRepoAndRefreshState({
-        repoRoot: resolved.binding.repoRoot,
-        dbPath: resolved.binding.dbPath,
-        statePath: resolved.binding.statePath,
-        configPresent: true,
-        statePresent: true,
-        usesDbPathOverride: false,
-      });
-      const state = result.state;
+      if (state === null) {
+        return repoNotReady(McpToolId.IndexRepo, `Index state was not persisted for ${repoRoot}.`);
+      }
 
       return {
         ok: true,
         output: {
-          repoRoot: resolved.binding.repoRoot,
+          repoRoot,
           latestRunId: state.latestRunId,
           readiness: state.readiness,
           indexSummary: state.indexSummary,
           latestRun: state.latestRun ?? null,
+          lock: { status: "released", staleLockRecovered },
         },
       };
     },
@@ -6160,6 +6293,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         {
           manifestId: stringProperty("Persisted capsule manifest id."),
           comparisonRunId: integerProperty("Run id to compare against."),
+          repo_root: stringProperty("Optional concrete worktree root. Defaults to the server-bound root."),
         },
         ["manifestId", "comparisonRunId"],
       ),
@@ -6182,6 +6316,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         input,
         "comparisonRunId",
       );
+      const requestedRoot = parseOptionalStringField(McpToolId.CheckCapsuleStaleness, input, "repo_root");
 
       if (typeof manifestId !== "string") {
         return manifestId;
@@ -6195,6 +6330,9 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       }
       if (typeof comparisonRunId !== "number") {
         return comparisonRunId;
+      }
+      if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
+        return requestedRoot;
       }
 
       return withReadyRepoDb(
@@ -6250,6 +6388,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             );
           }
         },
+        requestedRoot,
       );
     },
   }),
@@ -7571,7 +7710,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
     },
   });
 
-type GetCodeContextStaleReason = "stale_index" | "missing_index" | "repo_not_ready";
+type GetCodeContextStaleReason = WorktreeIndexFreshnessResult["reason"] | "repo_not_ready" | "ambiguous_worktree" | "refresh_failed";
 
 interface GetCodeContextStaleEnvelope {
   readonly resolved: false;
@@ -7599,14 +7738,99 @@ async function handleGetCodeContextRequest({
   context,
   request,
 }: McpToolHandlerInput<RunPipelineInput>): Promise<McpToolExecutionResult<GetCodeContextOutput>> {
-  const check = await checkIndexForGetCodeContext(context);
+  const input = parseObjectInput(McpToolId.GetCodeContext, request.input);
+  if ("ok" in input && input.ok === false) {
+    return input;
+  }
+  const requestedRoot = parseOptionalStringField(McpToolId.GetCodeContext, input, "repo_root");
+  if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
+    return requestedRoot;
+  }
+  const autoRefresh = parseOptionalStringField(McpToolId.GetCodeContext, input, "auto_refresh") ?? "never";
+  if (typeof autoRefresh !== "string") {
+    return autoRefresh;
+  }
+  if (autoRefresh !== "never" && autoRefresh !== "if_stale") {
+    return invalidRequest(McpToolId.GetCodeContext, "auto_refresh must be `never` or `if_stale`.", {
+      field: "auto_refresh",
+      value: autoRefresh,
+    });
+  }
+  const repoRoot = await resolveRequestedRepoRoot(context, McpToolId.GetCodeContext, requestedRoot);
+  if (typeof repoRoot !== "string") {
+    return repoRoot;
+  }
+  const reboundContext = rebindMcpContext(context, repoRoot);
+  let check = await checkIndexForGetCodeContext(reboundContext, repoRoot);
+
+  if (check.kind === "stale_response" && autoRefresh === "if_stale" && check.autoRefreshAllowed) {
+    const before = check.freshness;
+    try {
+      const paths = resolveRepoLocalPaths(repoRoot);
+      const config = await safeReadConfig(paths.configPath);
+      const state = await safeReadState(paths.statePath);
+      const refreshMode = config === undefined || state === undefined ? "full" : "incremental";
+      if (refreshMode === "full") {
+        await initRepo({ repoPath: repoRoot });
+      } else {
+        await reindexRepoAndRefreshState({
+          repoRoot,
+          dbPath: config.dbPath ?? state.dbPath ?? paths.dbPath,
+          statePath: paths.statePath,
+          configPresent: true,
+          statePresent: true,
+          usesDbPathOverride: false,
+        });
+      }
+      check = await checkIndexForGetCodeContext(reboundContext, repoRoot);
+      if (check.kind === "stale_response") {
+        return {
+          ok: true,
+          output: buildStaleEnvelope({
+            reason: "refresh_failed",
+            message: `Vtrace refreshed ${repoRoot}, but the requested worktree index is still not fresh.`,
+            indexFreshness: formatPreciseIndexFreshnessDiagnostic(check.freshness, {
+              before,
+              refreshAttempted: true,
+              refreshMode,
+              refreshFailed: true,
+            }),
+          }),
+        };
+      }
+      check = {
+        ...check,
+        indexFreshness: formatPreciseIndexFreshnessDiagnostic(check.freshness, {
+          before,
+          refreshAttempted: true,
+          refreshMode,
+        }),
+      };
+    } catch (error) {
+      const lockReason = error instanceof WorktreeIndexLockError ? error.code : null;
+      return {
+        ok: true,
+        output: buildStaleEnvelope({
+          reason: "refresh_failed",
+          message: `Vtrace could not refresh ${repoRoot}: ${error instanceof Error ? error.message : String(error)}`,
+          indexFreshness: formatPreciseIndexFreshnessDiagnostic(before, {
+            before,
+            refreshAttempted: true,
+            refreshMode: "incremental",
+            refreshFailed: true,
+            failureReason: lockReason ?? (error instanceof Error ? error.message : String(error)),
+          }),
+        }),
+      };
+    }
+  }
 
   if (check.kind === "stale_response") {
     return { ok: true, output: check.output };
   }
 
   const result = await RUN_PIPELINE_TOOL_DEFINITION.handler({
-    context,
+    context: reboundContext,
     request: {
       ...request,
       toolId: McpToolId.RunPipeline,
@@ -7631,68 +7855,96 @@ async function handleGetCodeContextRequest({
 
 async function checkIndexForGetCodeContext(
   context: McpServerContext,
+  repoRoot: string,
 ): Promise<
-  | { kind: "fresh"; indexFreshness: ReturnType<typeof formatIndexFreshnessDiagnostic> }
-  | { kind: "stale_response"; output: GetCodeContextStaleEnvelope }
+  | { kind: "fresh"; freshness: WorktreeIndexFreshnessResult; indexFreshness: ReturnType<typeof formatIndexFreshnessDiagnostic> }
+  | { kind: "stale_response"; freshness: WorktreeIndexFreshnessResult; autoRefreshAllowed: boolean; output: GetCodeContextStaleEnvelope }
 > {
-  const resolved = await resolveReadyRepoBinding(context, McpToolId.GetCodeContext);
+  let precise = await inspectWorktreeIndexFreshness(repoRoot);
+  const resolved = await resolveReadyRepoBinding(context, McpToolId.GetCodeContext, repoRoot);
 
   if (!resolved.ok) {
+    const reason = precise.reason === "missing_index" ? "missing_index" : "repo_not_ready";
     return {
       kind: "stale_response",
+      freshness: precise,
+      autoRefreshAllowed: precise.reason === "missing_index" || precise.reason === "manifest_invalid",
       output: buildStaleEnvelope({
-        reason: "repo_not_ready",
-        message: REPO_NOT_READY_MESSAGE,
-        indexFreshness: formatIndexFreshnessDiagnostic({
-          status: "unavailable",
-          reason: "repo_not_ready",
-          action: "call_index_repo",
-          beforeState: null,
-          afterState: null,
-          latestRunId: null,
-        }),
+        reason,
+        message: reason === "missing_index" ? MISSING_INDEX_MESSAGE : REPO_NOT_READY_MESSAGE,
+        indexFreshness: formatPreciseIndexFreshnessDiagnostic(precise),
       }),
     };
   }
-
-  const beforeFreshness = await inspectIndexFreshness({
-    repoRoot: resolved.binding.repoRoot,
-    lastIndexSnapshot: resolved.binding.state.lastIndexSnapshot,
-    observedFileChanges: resolved.binding.state.observedFileChanges,
-    fileWatcher: resolved.binding.state.fileWatcher,
-  });
   const db = openIndexerDatabase(resolved.binding.dbPath);
   const indexMissing = !hasIndexedFiles(db);
   db.close();
-  const latestRunId = resolved.binding.state.latestRunId ?? null;
-
-  if (!indexMissing && beforeFreshness.state === "fresh") {
-    return {
-      kind: "fresh",
-      indexFreshness: formatIndexFreshnessDiagnostic({
-        freshness: beforeFreshness,
-        latestRunId,
-      }),
-    };
+  if (indexMissing) {
+    precise = { ...precise, status: "missing", reason: "missing_index", action: "call_index_repo" };
+  } else if (precise.reason === "fresh" && resolved.binding.state.observedFileChanges !== undefined) {
+    precise = { ...precise, status: "stale", reason: "working_tree_changed", action: "call_index_repo" };
   }
 
-  const reason: GetCodeContextStaleReason = indexMissing ? "missing_index" : "stale_index";
-  const message = indexMissing ? MISSING_INDEX_MESSAGE : STALE_INDEX_MESSAGE;
+  if (precise.status === "fresh") {
+    return {
+      kind: "fresh",
+      freshness: precise,
+      indexFreshness: formatPreciseIndexFreshnessDiagnostic(precise),
+    };
+  }
+  const autoRefreshAllowed = [
+    "missing_index",
+    "head_mismatch",
+    "working_tree_changed",
+    "configuration_changed",
+    "manifest_invalid",
+  ].includes(precise.reason);
 
   return {
     kind: "stale_response",
+    freshness: precise,
+    autoRefreshAllowed,
     output: buildStaleEnvelope({
-      reason,
-      message,
-      indexFreshness: formatIndexFreshnessDiagnostic({
-        status: indexMissing ? "unavailable" : "stale",
-        reason,
-        action: "call_index_repo",
-        beforeState: beforeFreshness.state,
-        afterState: beforeFreshness.state,
-        latestRunId,
-      }),
+      reason: precise.reason,
+      message: precise.reason === "missing_index" ? MISSING_INDEX_MESSAGE : STALE_INDEX_MESSAGE,
+      indexFreshness: formatPreciseIndexFreshnessDiagnostic(precise),
     }),
+  };
+}
+
+function formatPreciseIndexFreshnessDiagnostic(
+  freshness: WorktreeIndexFreshnessResult,
+  refresh: {
+    before?: WorktreeIndexFreshnessResult;
+    refreshAttempted?: boolean;
+    refreshMode?: "incremental" | "full";
+    refreshFailed?: boolean;
+    failureReason?: string | null;
+  } = {},
+) {
+  const latestRunId = freshness.manifest?.index.runId ?? null;
+  return {
+    status: freshness.status,
+    reason: freshness.reason,
+    action: freshness.action,
+    beforeState: refresh.before?.status ?? freshness.status,
+    afterState: freshness.status,
+    latestRunId,
+    before: refresh.before === undefined ? null : {
+      status: refresh.before.status,
+      reason: refresh.before.reason,
+    },
+    refreshAttempted: refresh.refreshAttempted ?? false,
+    refreshMode: refresh.refreshMode ?? null,
+    refreshFailed: refresh.refreshFailed ?? false,
+    failureReason: refresh.failureReason ?? null,
+    after: { status: freshness.status, reason: freshness.reason },
+    worktreeRoot: freshness.requestedWorktree.root,
+    requestedWorktree: freshness.requestedWorktree,
+    indexedWorktree: freshness.indexedWorktree ?? null,
+    previousHead: refresh.before?.indexedWorktree?.headCommit ?? freshness.indexedWorktree?.headCommit ?? null,
+    currentHead: freshness.requestedWorktree.headCommit,
+    indexRunId: latestRunId,
   };
 }
 
@@ -7707,7 +7959,9 @@ function buildStaleEnvelope(input: {
     message: input.message,
     nextTool: {
       name: McpToolId.IndexRepo,
-      input: {},
+      input: {
+        repo_root: input.indexFreshness.worktreeRoot,
+      },
     },
     diagnostics: {
       indexFreshness: input.indexFreshness,
@@ -7772,7 +8026,16 @@ const GET_CODE_CONTEXT_TOOL_DEFINITION = Object.freeze({
     toolId: McpToolId.GetCodeContext,
     displayName: "Get Code Context",
     description:
-      "Vtrace default first-pass repo-context tool. Use this before manual repo exploration for broad coding, debugging, refactor, and code-understanding tasks. It analyzes the task, routes retrieval, builds compact code context, surfaces relevant memory when available, and returns diagnostics. If the index is stale, missing, or the repo is not ready, get_code_context returns a fast envelope with resolved=false and reason in {stale_index, missing_index, repo_not_ready} and nextTool=index_repo. Call index_repo, then retry get_code_context. For exact known-symbol impact questions, use get_impact_graph directly or after this tool.",
+      "Vtrace default first-pass repo-context tool for broad coding, debugging, refactor, and code-understanding tasks. It is fail-closed on stale or missing indexes by default. Pass auto_refresh=if_stale only to explicitly refresh the selected repo_root worktree. Precise freshness diagnostics identify HEAD, dirty-tree, schema, configuration, and identity mismatches.",
+    inputSchema: objectSchema(
+      "Code-context request with optional explicit worktree selection and opt-in refresh.",
+      {
+        ...(RUN_PIPELINE_TOOL_DEFINITION.metadata.inputSchema.properties ?? {}),
+        repo_root: stringProperty("Optional concrete worktree root. Defaults to the server-bound root."),
+        auto_refresh: stringProperty("Refresh policy: `never` (default) or `if_stale`."),
+      },
+      RUN_PIPELINE_TOOL_DEFINITION.metadata.inputSchema.required,
+    ),
     outputSchema: GET_CODE_CONTEXT_OUTPUT_SCHEMA,
   }),
   handler: handleGetCodeContextRequest,
@@ -7799,6 +8062,8 @@ interface CapsuleV2ToolOutput {
 const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
   GET_CODE_CONTEXT_TOOL_DEFINITION,
   RUN_PIPELINE_TOOL_DEFINITION,
+  getRequiredToolDefinition(LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN, McpToolId.IndexRepo),
+  getRequiredToolDefinition(LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN, McpToolId.CheckCapsuleStaleness),
   createEngineDelegateToolDefinition<BuildCapsuleInput, ReturnType<typeof formatContextCapsulePipelineOutput> | CapsuleV2ToolOutput>({
     metadata: {
       toolId: McpToolId.GetContextCapsule,
@@ -8449,6 +8714,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         "Index-status request.",
         {
           repos: arrayProperty("Optional workspace repo aliases to inspect. Defaults to all enabled repos when a workspace config is present.", stringProperty("Repo alias.")),
+          repo_root: stringProperty("Optional concrete worktree root. Defaults to the server-bound root."),
         },
         [],
       ),
@@ -8462,12 +8728,24 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       }
 
       const repos = parseOptionalStringArrayField(McpToolId.IndexStatus, input, "repos");
+      const requestedRoot = parseOptionalStringField(McpToolId.IndexStatus, input, "repo_root");
 
       if (repos !== undefined && !Array.isArray(repos)) {
         return repos;
       }
+      if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
+        return requestedRoot;
+      }
+      if (requestedRoot !== undefined && repos !== undefined) {
+        return invalidRequest(McpToolId.IndexStatus, "index_status cannot combine repo_root with workspace repos.");
+      }
+      const repoRoot = await resolveRequestedRepoRoot(context, McpToolId.IndexStatus, requestedRoot);
+      if (typeof repoRoot !== "string") {
+        return repoRoot;
+      }
+      const effectiveContext = rebindMcpContext(context, repoRoot);
 
-      const selection = await resolveWorkspaceRepoSelection(context, McpToolId.IndexStatus, repos, {
+      const selection = await resolveWorkspaceRepoSelection(effectiveContext, McpToolId.IndexStatus, repos, {
         includeDisabledByDefault: true,
         allowDisabledSelection: true,
       });
@@ -8489,7 +8767,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       try {
         return {
           ok: true,
-          output: await inspectIndexStatus(context),
+          output: await inspectIndexStatus(effectiveContext),
         };
       } catch (error) {
         return repoNotReady(
@@ -8653,5 +8931,7 @@ export const defaultMcpToolRegistry = createMcpToolRegistry({
     tool.metadata.toolId !== McpToolId.SaveObservation
     && tool.metadata.toolId !== McpToolId.SearchMemory
     && tool.metadata.toolId !== McpToolId.GetSessionContext
+    && tool.metadata.toolId !== McpToolId.IndexRepo
+    && tool.metadata.toolId !== McpToolId.CheckCapsuleStaleness
   )),
 });

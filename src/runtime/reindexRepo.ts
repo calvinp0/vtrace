@@ -3,6 +3,7 @@ import { openIndexerDatabase } from "../db/sqlite";
 import { readGitHead } from "../fs/git";
 import { indexProject } from "../indexer/indexProject";
 import { recordIndexMeta } from "../indexer/indexMeta";
+import { withWorktreeIndexLock } from "../indexer/worktreeIndexLock";
 import { detectSymbolAddedThenRemovedAntiPatterns } from "../observations/antiPatterns";
 import {
   DEFAULT_REINDEX_SESSION_COMPRESSION_LIMIT,
@@ -46,6 +47,7 @@ export interface ReindexRepoResult {
   readonly indexResult: IndexProjectResult;
   readonly state: RepoLocalState | null;
   readonly sessionCompression: ReindexSessionCompressionDiagnostics;
+  readonly staleLockRecovered: boolean;
 }
 
 export async function reindexRepoAndRefreshState(input: {
@@ -57,7 +59,26 @@ export async function reindexRepoAndRefreshState(input: {
   readonly usesDbPathOverride: boolean;
   readonly progress?: ProgressReporter | null;
   readonly preserveWatcher?: RepoFileWatcherState;
+  readonly lockWaitMs?: number;
 }): Promise<ReindexRepoResult> {
+  const locked = await withWorktreeIndexLock({
+    repoRoot: input.repoRoot,
+    ...(input.lockWaitMs === undefined ? {} : { waitMs: input.lockWaitMs }),
+    operation: () => reindexRepoAndRefreshStateUnlocked(input),
+  });
+  return { ...locked.value, staleLockRecovered: locked.staleLockRecovered };
+}
+
+async function reindexRepoAndRefreshStateUnlocked(input: {
+  readonly repoRoot: string;
+  readonly dbPath: string;
+  readonly statePath: string;
+  readonly configPresent: boolean;
+  readonly statePresent: boolean;
+  readonly usesDbPathOverride: boolean;
+  readonly progress?: ProgressReporter | null;
+  readonly preserveWatcher?: RepoFileWatcherState;
+}): Promise<Omit<ReindexRepoResult, "staleLockRecovered">> {
   const db = openIndexerDatabase(input.dbPath);
 
   try {
@@ -76,16 +97,10 @@ export async function reindexRepoAndRefreshState(input: {
       });
     }
 
-    // Stamp versioned index metadata next to the repo-local database so a later
-    // run can decide whether to reuse this index. Skipped only when the database
-    // lives at a custom path (the metadata's `.vtrace/index.meta.json` location
-    // would not describe it). Never fails the reindex.
+    // Persist the worktree ownership manifest next to a repo-local database.
+    // A completed repo-local index without this manifest is unsafe to reuse.
     if (!input.usesDbPathOverride) {
-      try {
-        await recordIndexMeta(input.repoRoot);
-      } catch {
-        // Metadata is an optimisation; a failure to write it is non-fatal.
-      }
+      await recordIndexMeta(input.repoRoot, latestRun?.id ?? null);
     }
 
     const sessionCompression = runBoundedSessionCompressionSweep(db, input.repoRoot);

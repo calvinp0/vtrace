@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { readGitHead } from "../fs/git";
+import { resolveWorktreeIdentity, type ResolvedWorktreeIdentity } from "./worktreeIdentity";
 import {
   INIT_STATE_SCHEMA_VERSION,
   REPO_LOCAL_DB_FILENAME,
@@ -14,7 +15,7 @@ import {
  * Bump when the SHAPE of index.meta.json changes (fields added/removed/renamed).
  * Distinct from the fingerprints below, which track the indexed CONTENT logic.
  */
-export const INDEX_FORMAT_VERSION = 1 as const;
+export const INDEX_FORMAT_VERSION = 2 as const;
 
 export const INDEX_META_FILENAME = "index.meta.json" as const;
 
@@ -52,6 +53,61 @@ export interface ExpectedIndexMeta extends IndexFingerprint {
 /** The on-disk index.meta.json contents. */
 export interface IndexMeta extends ExpectedIndexMeta {
   created_at: string;
+  manifest: WorktreeIndexManifest;
+}
+
+export interface WorktreeIndexManifest {
+  schemaVersion: number;
+  repository: {
+    gitCommonDir: string | null;
+    repositoryId: string;
+    isGitRepository: boolean;
+  };
+  worktree: {
+    root: string;
+    gitDir: string | null;
+    worktreeId: string;
+    isGitWorktree: boolean;
+  };
+  snapshot: {
+    headCommit: string | null;
+    branch: string | null;
+    detached: boolean;
+    dirty: boolean;
+    dirtyFingerprint: string | null;
+  };
+  index: {
+    runId: number | string | null;
+    indexedAt: string;
+    parserVersion: string;
+    indexSchemaVersion: number;
+    configFingerprint: string;
+  };
+}
+
+export type WorktreeIndexFreshnessStatus = "fresh" | "stale" | "missing" | "blocked";
+export type WorktreeIndexFreshnessReason =
+  | "fresh"
+  | "missing_index"
+  | "worktree_mismatch"
+  | "repository_mismatch"
+  | "head_mismatch"
+  | "working_tree_changed"
+  | "index_schema_changed"
+  | "configuration_changed"
+  | "manifest_invalid"
+  | "index_in_progress"
+  | "unknown";
+export type WorktreeIndexFreshnessAction = "none" | "call_index_repo" | "retry" | "choose_worktree" | "rebuild_index";
+
+export interface WorktreeIndexFreshnessResult {
+  status: WorktreeIndexFreshnessStatus;
+  reason: WorktreeIndexFreshnessReason;
+  requestedWorktree: { root: string; headCommit: string | null };
+  indexedWorktree?: { root: string; headCommit: string | null };
+  action: WorktreeIndexFreshnessAction;
+  current: ResolvedWorktreeIdentity;
+  manifest?: WorktreeIndexManifest;
 }
 
 export interface IndexFreshness {
@@ -131,9 +187,32 @@ export async function buildExpectedIndexMeta(repoPath: string): Promise<Expected
 }
 
 /** The full meta to persist after an index completes (adds created_at). */
-export async function buildIndexMeta(repoPath: string): Promise<IndexMeta> {
+export async function buildIndexMeta(repoPath: string, runId: number | string | null = null): Promise<IndexMeta> {
   const expected = await buildExpectedIndexMeta(repoPath);
-  return { ...expected, created_at: new Date().toISOString() };
+  const identity = await resolveWorktreeIdentity(repoPath);
+  const indexedAt = new Date().toISOString();
+  return {
+    ...expected,
+    created_at: indexedAt,
+    manifest: {
+      schemaVersion: INDEX_FORMAT_VERSION,
+      repository: { ...identity.repository },
+      worktree: {
+        root: identity.worktree.worktreeRoot,
+        gitDir: identity.worktree.worktreeGitDir,
+        worktreeId: identity.worktree.worktreeId,
+        isGitWorktree: identity.worktree.isGitWorktree,
+      },
+      snapshot: { ...identity.snapshot },
+      index: {
+        runId,
+        indexedAt,
+        parserVersion: expected.parser_fingerprint,
+        indexSchemaVersion: INDEX_FORMAT_VERSION,
+        configFingerprint: expected.config_hash,
+      },
+    },
+  };
 }
 
 export async function writeIndexMeta(repoPath: string, meta: IndexMeta): Promise<void> {
@@ -141,10 +220,85 @@ export async function writeIndexMeta(repoPath: string, meta: IndexMeta): Promise
 }
 
 /** Build and write fresh metadata for a just-completed index. Returns the meta. */
-export async function recordIndexMeta(repoPath: string): Promise<IndexMeta> {
-  const meta = await buildIndexMeta(repoPath);
+export async function recordIndexMeta(repoPath: string, runId: number | string | null = null): Promise<IndexMeta> {
+  const meta = await buildIndexMeta(repoPath, runId);
   await writeIndexMeta(repoPath, meta);
   return meta;
+}
+
+export async function inspectWorktreeIndexFreshness(repoPath: string): Promise<WorktreeIndexFreshnessResult> {
+  const current = await resolveWorktreeIdentity(repoPath);
+  const requestedWorktree = {
+    root: current.worktree.worktreeRoot,
+    headCommit: current.snapshot.headCommit,
+  };
+  if (!(await pathExists(resolveIndexDbPath(current.worktree.worktreeRoot)))) {
+    return { status: "missing", reason: "missing_index", requestedWorktree, action: "call_index_repo", current };
+  }
+
+  const stored = await readIndexMeta(current.worktree.worktreeRoot);
+  if (!isWorktreeAwareIndexMeta(stored)) {
+    return { status: "stale", reason: "manifest_invalid", requestedWorktree, action: "rebuild_index", current };
+  }
+  const manifest = stored.manifest;
+  const indexedWorktree = {
+    root: manifest.worktree.root,
+    headCommit: manifest.snapshot.headCommit,
+  };
+  const base = { requestedWorktree, indexedWorktree, current, manifest };
+
+  if (manifest.repository.repositoryId !== current.repository.repositoryId
+    || manifest.repository.gitCommonDir !== current.repository.gitCommonDir) {
+    return { status: "blocked", reason: "repository_mismatch", action: "choose_worktree", ...base };
+  }
+  if (manifest.worktree.worktreeId !== current.worktree.worktreeId
+    || manifest.worktree.root !== current.worktree.worktreeRoot
+    || manifest.worktree.gitDir !== current.worktree.worktreeGitDir) {
+    return { status: "blocked", reason: "worktree_mismatch", action: "choose_worktree", ...base };
+  }
+  if (manifest.schemaVersion !== INDEX_FORMAT_VERSION
+    || manifest.index.indexSchemaVersion !== INDEX_FORMAT_VERSION) {
+    return { status: "stale", reason: "index_schema_changed", action: "rebuild_index", ...base };
+  }
+  const expected = await buildExpectedIndexMeta(current.worktree.worktreeRoot);
+  if (stored.index_format_version !== expected.index_format_version
+    || stored.schema_version !== expected.schema_version
+    || stored.indexer_fingerprint !== expected.indexer_fingerprint
+    || stored.parser_fingerprint !== expected.parser_fingerprint
+    || manifest.index.parserVersion !== expected.parser_fingerprint) {
+    return { status: "stale", reason: "index_schema_changed", action: "rebuild_index", ...base };
+  }
+  if (stored.config_hash !== expected.config_hash
+    || manifest.index.configFingerprint !== expected.config_hash) {
+    return { status: "stale", reason: "configuration_changed", action: "call_index_repo", ...base };
+  }
+  if (manifest.snapshot.headCommit !== current.snapshot.headCommit) {
+    return { status: "stale", reason: "head_mismatch", action: "call_index_repo", ...base };
+  }
+  if (manifest.snapshot.dirty !== current.snapshot.dirty
+    || manifest.snapshot.dirtyFingerprint !== current.snapshot.dirtyFingerprint) {
+    return { status: "stale", reason: "working_tree_changed", action: "call_index_repo", ...base };
+  }
+  return { status: "fresh", reason: "fresh", action: "none", ...base };
+}
+
+function isWorktreeAwareIndexMeta(value: IndexMeta | undefined): value is IndexMeta {
+  if (value === undefined) {
+    return false;
+  }
+  const manifest = (value as Partial<IndexMeta>).manifest;
+  return typeof manifest?.schemaVersion === "number"
+    && (typeof manifest.repository?.gitCommonDir === "string" || manifest.repository?.gitCommonDir === null)
+    && typeof manifest.repository?.repositoryId === "string"
+    && typeof manifest.repository?.isGitRepository === "boolean"
+    && typeof manifest.worktree?.root === "string"
+    && (typeof manifest.worktree?.gitDir === "string" || manifest.worktree?.gitDir === null)
+    && typeof manifest.worktree?.worktreeId === "string"
+    && typeof manifest.worktree?.isGitWorktree === "boolean"
+    && typeof manifest.snapshot?.detached === "boolean"
+    && typeof manifest.snapshot?.dirty === "boolean"
+    && typeof manifest.index?.indexSchemaVersion === "number"
+    && typeof manifest.index?.configFingerprint === "string";
 }
 
 export async function readIndexMeta(repoPath: string): Promise<IndexMeta | undefined> {

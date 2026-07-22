@@ -77,12 +77,13 @@ export async function runIndexCommand(
 function parseIndexArgs(
   args: readonly string[],
 ): { repoPath: string; json: boolean; quiet: boolean } | { error: string } {
-  const usage = "Usage: index <repo> [--json] [--quiet|--no-progress]";
+  const usage = "Usage: index <repo> [--repo-root <worktree>] [--json] [--quiet|--no-progress]";
   let repoPath: string | undefined;
   let json = false;
   let quiet = false;
 
-  for (const argument of args) {
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index]!;
     if (argument === "--json") {
       json = true;
       continue;
@@ -90,6 +91,25 @@ function parseIndexArgs(
 
     if (argument === "--quiet" || argument === "--no-progress") {
       quiet = true;
+      continue;
+    }
+
+    if (argument === "--repo-root") {
+      const value = args[index + 1];
+      if (typeof value !== "string" || value.startsWith("--") || repoPath !== undefined) {
+        return { error: usage };
+      }
+      repoPath = value;
+      index += 1;
+      continue;
+    }
+
+    if (argument.startsWith("--repo-root=")) {
+      const value = argument.slice("--repo-root=".length);
+      if (value.length === 0 || repoPath !== undefined) {
+        return { error: usage };
+      }
+      repoPath = value;
       continue;
     }
 

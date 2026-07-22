@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { PassThrough } from "node:stream";
@@ -58,6 +58,8 @@ import {
 const EXPECTED_VISIBLE_TOOL_IDS = [
   "get_code_context",
   "run_pipeline",
+  "index_repo",
+  "check_capsule_staleness",
   "get_context_capsule",
   "get_impact_graph",
   "search_logic_flow",
@@ -192,6 +194,8 @@ test("MCP registry registration and lookup are deterministic", () => {
       tool.metadata.toolId !== McpToolId.SaveObservation
       && tool.metadata.toolId !== McpToolId.SearchMemory
       && tool.metadata.toolId !== McpToolId.GetSessionContext
+      && tool.metadata.toolId !== McpToolId.IndexRepo
+      && tool.metadata.toolId !== McpToolId.CheckCapsuleStaleness
     )),
   });
 
@@ -213,10 +217,15 @@ test("MCP registry registration and lookup are deterministic", () => {
     registry.getByToolId(McpToolId.GetCodeContext)?.handler,
     undefined,
   );
-  assert.equal(
-    registry.getByToolId(McpToolId.GetCodeContext)?.metadata.inputSchema,
-    registry.getByToolId(McpToolId.RunPipeline)?.metadata.inputSchema,
-  );
+  const getCodeContextInputSchema = registry.getByToolId(McpToolId.GetCodeContext)?.metadata.inputSchema;
+  const runPipelineInputSchema = registry.getByToolId(McpToolId.RunPipeline)?.metadata.inputSchema;
+  assert.notEqual(getCodeContextInputSchema, undefined);
+  assert.notEqual(runPipelineInputSchema, undefined);
+  for (const key of Object.keys(runPipelineInputSchema!.properties)) {
+    assert.deepEqual(getCodeContextInputSchema!.properties[key], runPipelineInputSchema!.properties[key]);
+  }
+  assert.notEqual(getCodeContextInputSchema!.properties.repo_root, undefined);
+  assert.notEqual(getCodeContextInputSchema!.properties.auto_refresh, undefined);
   const getCodeContextOutputSchema =
     registry.getByToolId(McpToolId.GetCodeContext)?.metadata.outputSchema;
   const runPipelineOutputSchema =
@@ -2020,7 +2029,20 @@ test("get_code_context delegates to the same implementation and output as run_pi
         accounting: { ...result.output.accounting, latencyMs: 0 },
       },
     });
-    assert.deepEqual(normalizeAccounting(getCodeContext.result), normalizeAccounting(runPipeline.result));
+    const normalizeFreshnessAndAccounting = (result: typeof getCodeContext.result) => ({
+      ...normalizeAccounting(result),
+      output: {
+        ...normalizeAccounting(result).output,
+        diagnostics: {
+          ...normalizeAccounting(result).output.diagnostics,
+          indexFreshness: undefined,
+        },
+      },
+    });
+    assert.deepEqual(
+      normalizeFreshnessAndAccounting(getCodeContext.result),
+      normalizeFreshnessAndAccounting(runPipeline.result),
+    );
     assert.equal(getCodeContext.result.output.diagnostics.indexFreshness.status, "fresh");
     assert.equal(getCodeContext.result.output.diagnostics.indexFreshness.action, "none");
   });
@@ -3105,7 +3127,7 @@ test("get_code_context returns fast stale envelope and does not auto-reindex whe
 
     assert.equal(response.result.ok, true);
     assert.equal(response.result.output.resolved, false);
-    assert.equal(response.result.output.reason, "stale_index");
+    assert.equal(response.result.output.reason, "working_tree_changed");
     assert.equal(typeof response.result.output.message, "string");
     assert.ok(
       response.result.output.message.length > 0,
@@ -3115,10 +3137,10 @@ test("get_code_context returns fast stale envelope and does not auto-reindex whe
     assert.match(response.result.output.message, /get_code_context/);
     assert.deepEqual(response.result.output.nextTool, {
       name: "index_repo",
-      input: {},
+      input: { repo_root: repoRoot },
     });
     assert.equal(response.result.output.diagnostics.indexFreshness.status, "stale");
-    assert.equal(response.result.output.diagnostics.indexFreshness.reason, "stale_index");
+    assert.equal(response.result.output.diagnostics.indexFreshness.reason, "working_tree_changed");
     assert.equal(response.result.output.diagnostics.indexFreshness.action, "call_index_repo");
     assert.equal("context" in response.result.output, false);
     assert.equal("capsule" in response.result.output, false);
@@ -3168,7 +3190,7 @@ test("get_code_context returns nextTool=index_repo when the index is missing", a
     assert.equal(response.result.output.resolved, false);
     assert.equal(response.result.output.reason, "missing_index");
     assert.equal(response.result.output.nextTool.name, "index_repo");
-    assert.deepEqual(response.result.output.nextTool.input, {});
+    assert.deepEqual(response.result.output.nextTool.input, { repo_root: repoRoot });
     assert.equal(response.result.output.diagnostics.indexFreshness.action, "call_index_repo");
   });
 });
@@ -3190,9 +3212,9 @@ test("get_code_context returns nextTool=index_repo when the repo is not ready", 
 
     assert.equal(response.result.ok, true);
     assert.equal(response.result.output.resolved, false);
-    assert.equal(response.result.output.reason, "repo_not_ready");
+    assert.equal(response.result.output.reason, "missing_index");
     assert.equal(response.result.output.nextTool.name, "index_repo");
-    assert.deepEqual(response.result.output.nextTool.input, {});
+    assert.deepEqual(response.result.output.nextTool.input, { repo_root: repoRoot });
   });
 });
 
@@ -3241,6 +3263,83 @@ test("index_repo remains callable and recovers from stale_index reported by get_
     assert.equal(retry.result.output.diagnostics.indexFreshness.status, "fresh");
     assert.equal(retry.result.output.diagnostics.indexFreshness.action, "none");
     assert.equal(retry.result.output.diagnostics.freshness.state, "fresh");
+  });
+});
+
+test("visible get_code_context always has visible index_repo and check_capsule_staleness companions", () => {
+  const visible = new Set(defaultVisibleToolIds());
+  assert.equal(visible.has(McpToolId.GetCodeContext), true);
+  assert.equal(visible.has(McpToolId.IndexRepo), true);
+  assert.equal(visible.has(McpToolId.CheckCapsuleStaleness), true);
+});
+
+test("get_code_context auto_refresh defaults to never and if_stale refreshes only the selected worktree", async () => {
+  await withGitMcpWorktrees(async ({ mainRoot, featureRoot }) => {
+    await initRepo({ repoPath: mainRoot });
+    const mainManifestBefore = await readFile(path.join(mainRoot, ".vtrace", "index.meta.json"), "utf8");
+    const server = createMcpServer({ context: { repoRoot: mainRoot } });
+
+    const disabled = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-worktree-auto-disabled",
+      toolId: McpToolId.GetCodeContext,
+      input: {
+        task: "find createSession",
+        repo_root: featureRoot,
+      },
+    });
+    assert.equal(disabled.result.ok, true);
+    assert.equal(disabled.result.output.resolved, false);
+    assert.equal(disabled.result.output.reason, "missing_index");
+    assert.equal(disabled.result.output.diagnostics.indexFreshness.refreshAttempted, false);
+    assert.deepEqual(disabled.result.output.nextTool.input, { repo_root: featureRoot });
+
+    const refreshed = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-worktree-auto-enabled",
+      toolId: McpToolId.GetCodeContext,
+      input: {
+        task: "find createSession",
+        repo_root: featureRoot,
+        auto_refresh: "if_stale",
+        maxBudgetCharacters: 4_000,
+      },
+    });
+    assert.equal(refreshed.result.ok, true);
+    assert.equal("resolved" in refreshed.result.output, false);
+    assert.equal(refreshed.result.output.diagnostics.indexFreshness.before.reason, "missing_index");
+    assert.equal(refreshed.result.output.diagnostics.indexFreshness.refreshAttempted, true);
+    assert.equal(refreshed.result.output.diagnostics.indexFreshness.after.reason, "fresh");
+    assert.equal(refreshed.result.output.diagnostics.indexFreshness.worktreeRoot, featureRoot);
+    assert.equal(await readFile(path.join(mainRoot, ".vtrace", "index.meta.json"), "utf8"), mainManifestBefore);
+  });
+});
+
+test("original detached-checkout scenario cannot reuse its index for a new main worktree", async () => {
+  await withGitMcpWorktrees(async ({ mainRoot, featureRoot }) => {
+    gitOk(mainRoot, "checkout", "--detach");
+    await initRepo({ repoPath: mainRoot });
+    const canonicalManifest = await readFile(path.join(mainRoot, ".vtrace", "index.meta.json"), "utf8");
+    const server = createMcpServer({ context: { repoRoot: mainRoot } });
+
+    const missing = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-detached-isolation-missing",
+      toolId: McpToolId.GetCodeContext,
+      input: { task: "find createSession", repo_root: featureRoot },
+    });
+    assert.equal(missing.result.ok, true);
+    assert.equal(missing.result.output.reason, "missing_index");
+
+    const refreshed = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-detached-isolation-refresh",
+      toolId: McpToolId.GetCodeContext,
+      input: { task: "find createSession", repo_root: featureRoot, auto_refresh: "if_stale" },
+    });
+    assert.equal(refreshed.result.ok, true);
+    assert.equal("resolved" in refreshed.result.output, false);
+    assert.equal(await readFile(path.join(mainRoot, ".vtrace", "index.meta.json"), "utf8"), canonicalManifest);
   });
 });
 
@@ -5099,6 +5198,40 @@ function collectUniqueInOrder<T>(values: readonly T[]): T[] {
 
 function collectSortedUnique(values: readonly string[]): string[] {
   return [...new Set(values)].sort();
+}
+
+function defaultVisibleToolIds(): string[] {
+  return RESERVED_MCP_TOOL_METADATA.map((tool) => tool.toolId);
+}
+
+async function withGitMcpWorktrees(
+  run: (roots: { mainRoot: string; featureRoot: string }) => Promise<void>,
+): Promise<void> {
+  const tempRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-mcp-worktrees-"));
+  const mainRoot = path.join(tempRoot, "canonical");
+  const featureRoot = path.join(tempRoot, "main-worktree");
+  try {
+    await mkdir(path.join(mainRoot, "src"), { recursive: true });
+    gitOk(mainRoot, "init", "-b", "main");
+    gitOk(mainRoot, "config", "user.email", "vtrace@example.test");
+    gitOk(mainRoot, "config", "user.name", "Vtrace Test");
+    await writeFile(path.join(mainRoot, ".gitignore"), ".vtrace/\n");
+    await writeFile(
+      path.join(mainRoot, "src", "session.ts"),
+      "export class SessionManager { createSession(): void {} }\n",
+    );
+    gitOk(mainRoot, "add", ".gitignore", "src/session.ts");
+    gitOk(mainRoot, "commit", "-m", "initial");
+    gitOk(mainRoot, "worktree", "add", "-b", "worktree-main", featureRoot);
+    await run({ mainRoot, featureRoot });
+  } finally {
+    await rm(tempRoot, { recursive: true, force: true });
+  }
+}
+
+function gitOk(cwd: string, ...args: string[]): void {
+  const result = spawnSync("git", args, { cwd, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
 }
 
 async function writeMcpFixtureRepo(repoRoot: string): Promise<void> {

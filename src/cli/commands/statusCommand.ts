@@ -95,6 +95,25 @@ function parseStatusArgs(
       continue;
     }
 
+    if (argument === "--repo-root") {
+      const value = args[index + 1];
+      if (typeof value !== "string" || value.startsWith("--") || repoPath !== ".") {
+        return { error: `Usage: ${mode} [repo] [--repo-root <worktree>] [--agent <name>] [--json]`, json };
+      }
+      repoPath = value;
+      index += 1;
+      continue;
+    }
+
+    if (argument.startsWith("--repo-root=")) {
+      const value = argument.slice("--repo-root=".length);
+      if (value.length === 0 || repoPath !== ".") {
+        return { error: `Usage: ${mode} [repo] [--repo-root <worktree>] [--agent <name>] [--json]`, json };
+      }
+      repoPath = value;
+      continue;
+    }
+
     if (argument.startsWith("--")) {
       return { error: `Usage: ${mode} [repo] [--agent <name>] [--json]`, json };
     }
