@@ -1,0 +1,318 @@
+{
+  "milestone": "M113",
+  "date": "2026-07-22",
+  "kind": "verification-oracle prompt-policy audit over captured M105–M108 artifacts",
+  "no_spend_confirmation": "No agents, Claude, Codex, Docker, API calls, VEXP, baselines, V4/C7_D, revision/corrective/oracle arms, environment mutation, or live reruns were executed.",
+  "artifact_coverage": {
+    "valid_runs": 97,
+    "full_transcript_and_tool_output": 97,
+    "raw_eval_meta": 96,
+    "committed_eval_detail_fallback": [
+      "django__django-13513"
+    ],
+    "invalid_excluded": [
+      {
+        "instance_id": "django__django-15572",
+        "milestone": "M108"
+      },
+      {
+        "instance_id": "django__django-11740",
+        "milestone": "M108"
+      },
+      {
+        "instance_id": "sphinx-doc__sphinx-9320",
+        "milestone": "M108"
+      }
+    ]
+  },
+  "aggregate": {
+    "overall": {
+      "cases": 97,
+      "verification_attempted": 97,
+      "repo_test_attempted": 25,
+      "local_oracle_attempted": 97,
+      "oracle_quality": {
+        "strong": 11,
+        "weak": 71,
+        "wrong": 2,
+        "medium": 13
+      },
+      "repo_test_result": {
+        "failed_environment": 25,
+        "not_run": 72
+      },
+      "failure_mode": {
+        "none": 55,
+        "command_loop": 22,
+        "wrong_oracle": 2,
+        "overtrusted_partial_check": 13,
+        "test_passed_but_eval_failed": 5
+      },
+      "primary_cause": {
+        "verification_sufficient": 17,
+        "env_loop": 22,
+        "not_relevant_to_failure": 38,
+        "wrong_oracle": 2,
+        "verification_blackout": 13,
+        "overtrusted_weak_oracle": 5
+      }
+    },
+    "resolved": {
+      "cases": 55,
+      "verification_attempted": 55,
+      "repo_test_attempted": 15,
+      "local_oracle_attempted": 55,
+      "oracle_quality": {
+        "strong": 11,
+        "weak": 38,
+        "medium": 6
+      },
+      "repo_test_result": {
+        "failed_environment": 15,
+        "not_run": 40
+      },
+      "failure_mode": {
+        "none": 55
+      },
+      "primary_cause": {
+        "verification_sufficient": 17,
+        "not_relevant_to_failure": 38
+      }
+    },
+    "unresolved": {
+      "cases": 42,
+      "verification_attempted": 42,
+      "repo_test_attempted": 10,
+      "local_oracle_attempted": 42,
+      "oracle_quality": {
+        "weak": 33,
+        "wrong": 2,
+        "medium": 7
+      },
+      "repo_test_result": {
+        "not_run": 32,
+        "failed_environment": 10
+      },
+      "failure_mode": {
+        "command_loop": 22,
+        "wrong_oracle": 2,
+        "overtrusted_partial_check": 13,
+        "test_passed_but_eval_failed": 5
+      },
+      "primary_cause": {
+        "env_loop": 22,
+        "wrong_oracle": 2,
+        "verification_blackout": 13,
+        "overtrusted_weak_oracle": 5
+      }
+    }
+  },
+  "oracle_quality_by_outcome": [
+    {
+      "quality": "medium",
+      "cases": 13,
+      "resolved": 6,
+      "unresolved": 7,
+      "resolved_rate": 0.462
+    },
+    {
+      "quality": "strong",
+      "cases": 11,
+      "resolved": 11,
+      "unresolved": 0,
+      "resolved_rate": 1
+    },
+    {
+      "quality": "weak",
+      "cases": 71,
+      "resolved": 38,
+      "unresolved": 33,
+      "resolved_rate": 0.535
+    },
+    {
+      "quality": "wrong",
+      "cases": 2,
+      "resolved": 0,
+      "unresolved": 2,
+      "resolved_rate": 0
+    }
+  ],
+  "hard_loss_subset": {
+    "cases": 13,
+    "verification_attempted": 13,
+    "repo_test_attempted": 4,
+    "environment_failure": 13,
+    "local_oracle_attempted": 13,
+    "built_local_oracle": 2,
+    "wrong_oracle": 2,
+    "finalized_uncertain_or_after_failed_check": 10,
+    "command_loop": 8
+  },
+  "strong_oracle_wins": [
+    {
+      "instance_id": "astropy__astropy-14365",
+      "oracle_type": "exact_issue_reproduction",
+      "why_strong": "The standalone parser copied the changed repository logic and exercised the issue's exact lowercase command plus data/NO variants.",
+      "issue_exact_inputs": true,
+      "structured_task_help": "yes — the derived task retained the lowercase `read serr 1 2` traceback input"
+    },
+    {
+      "instance_id": "django__django-11133",
+      "oracle_type": "exact_issue_reproduction",
+      "why_strong": "A compatible interpreter executed bytes(memoryview(...)) and checked the response-content primitive directly.",
+      "issue_exact_inputs": true,
+      "structured_task_help": "yes — memoryview content is the issue's exact behavior"
+    },
+    {
+      "instance_id": "django__django-11206",
+      "oracle_type": "exact_issue_reproduction",
+      "why_strong": "The isolated repository logic checked the exact issue input and expected '0.00', with nearby exponent controls.",
+      "issue_exact_inputs": true,
+      "structured_task_help": "yes — Decimal('1e-200') and decimal_pos=2 were retained"
+    },
+    {
+      "instance_id": "django__django-11728",
+      "oracle_type": "exact_issue_reproduction",
+      "why_strong": "The regex helper was exercised on the exact trailing-group shape and a slash-terminated regression control.",
+      "issue_exact_inputs": true,
+      "structured_task_help": "yes — the trailing named-group pattern was retained"
+    },
+    {
+      "instance_id": "django__django-11815",
+      "oracle_type": "exact_issue_reproduction",
+      "why_strong": "The oracle demonstrated call-by-value failure after translation and bracket-by-name stability.",
+      "issue_exact_inputs": true,
+      "structured_task_help": "yes — translated Enum values supplied the distinguishing input"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25332",
+      "oracle_type": "minimal_script",
+      "why_strong": "The repository-shaped mock preserved weakref groups through pickle and checked joined siblings before and after.",
+      "issue_exact_inputs": false,
+      "structured_task_help": "partly — the issue supplied the pickled shared-axis behavior"
+    },
+    {
+      "instance_id": "pylint-dev__pylint-8898",
+      "oracle_type": "exact_issue_reproduction",
+      "why_strong": "The standalone brace-aware parser consumed the exact issue regex and additional nested/comma controls.",
+      "issue_exact_inputs": true,
+      "structured_task_help": "yes — the derived traceback named argument.py and preserved `(foo{1,3})`"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7910",
+      "oracle_type": "minimal_script",
+      "why_strong": "The two-module script demonstrated the old globals lookup failing and the new module lookup succeeding.",
+      "issue_exact_inputs": false,
+      "structured_task_help": "partly — the derived task described decorated external-module methods"
+    },
+    {
+      "instance_id": "sympy__sympy-16792",
+      "oracle_type": "exact_issue_reproduction",
+      "why_strong": "The available project venv generated C and verified a pointer argument rather than a scalar.",
+      "issue_exact_inputs": true,
+      "structured_task_help": "yes — MatrixSymbol dimensions and generated C shape were issue-visible"
+    },
+    {
+      "instance_id": "sympy__sympy-24213",
+      "oracle_type": "exact_issue_reproduction",
+      "why_strong": "The project venv ran both the issue reproduction and an incompatible-dimension negative control.",
+      "issue_exact_inputs": true,
+      "structured_task_help": "yes — the quantity/dimension case was retained"
+    },
+    {
+      "instance_id": "sympy__sympy-24562",
+      "oracle_type": "exact_issue_reproduction",
+      "why_strong": "The script reproduced the coercion path for Rational('0.5', '100') and checked the exact 1/200 result.",
+      "issue_exact_inputs": true,
+      "structured_task_help": "yes — the Rational string operands were issue-authored"
+    }
+  ],
+  "command_loop_count": 47,
+  "env_failure_signatures": {
+    "missing_dependency": 52,
+    "missing_pip": 37,
+    "import_error": 1,
+    "none": 7
+  },
+  "prompt_policy_decision": {
+    "choice": "A",
+    "label": "Implement small verification wording in this milestone",
+    "rationale": "Wrong/no/weak-oracle behavior affects 35 unresolved runs; wording is generic, compact, gold-blind, and offline-testable. Environment loops remain a separate diagnostic problem."
+  },
+  "implementation": {
+    "wording": [
+      "If normal tests cannot run, do not treat that as proof of correctness.",
+      "Build a small repository-grounded oracle from the issue's exact inputs or changed behavior when possible.",
+      "If only static reasoning is possible, state the uncertainty before finalizing."
+    ],
+    "default_on_under_bounded_per_file_contract": true,
+    "m112_compatibility_option": "verificationOraclePolicy:false",
+    "smoke": {
+      "milestone": "M113",
+      "kind": "verification-oracle wording — no-agent render smoke (M112 wording / M113 wording)",
+      "no_agents": true,
+      "no_docker": true,
+      "no_api_spend": true,
+      "cases": 12,
+      "context_rendered": 11,
+      "action_contract_present_count": 11,
+      "m112_wording_present_pre_count": 11,
+      "m113_wording_present_post_count": 11,
+      "all_invariants_hold": true,
+      "support_overconstrained_any": false,
+      "leak_unexplained_total": 0,
+      "added_chars_median": 0,
+      "added_chars_p90": 84,
+      "added_chars_min": -356,
+      "added_chars_max": 84,
+      "added_tokens_median_est": 0,
+      "contract_added_chars_median": 84,
+      "contract_added_chars_p90": 84,
+      "contract_added_tokens_median_est": 21
+    }
+  },
+  "next_action_queue": [
+    {
+      "rank": 1,
+      "action": "implement_compact_verification_wording",
+      "mode": "offline_default_on_existing_contract",
+      "evidence": "35 unresolved runs used wrong, absent, or weak oracles; the two strict wrong-oracle losses contrast with 11 resolved strong-oracle runs.",
+      "live_spend": "none"
+    },
+    {
+      "rank": 2,
+      "action": "design_env_failure_loop_diagnostic",
+      "mode": "default_off_offline_replay",
+      "evidence": "47 runs carried the deterministic command-loop classification.",
+      "live_spend": "none"
+    },
+    {
+      "rank": 3,
+      "action": "review_medium_oracle_eval_mismatches",
+      "mode": "captured_artifact_human_review",
+      "evidence": "7 unresolved cases had a passing but only partial local oracle.",
+      "live_spend": "none"
+    },
+    {
+      "rank": 4,
+      "action": "no_retrieval_work_for_this_stratum",
+      "mode": "archive",
+      "evidence": "M111's 0/13 binding context-gap result remains unchanged; this audit concerns verification after localization.",
+      "live_spend": "none"
+    },
+    {
+      "rank": 5,
+      "action": "defer_env_provisioning_or_live_confirmation",
+      "mode": "requires_separate_approval_and_preregistration",
+      "evidence": "Prompt rendering and captured-artifact analysis can be completed without changing the frozen execution environment.",
+      "live_spend": "not justified in M113"
+    }
+  ],
+  "claim_boundary": [
+    "Internal captured-artifact audit only.",
+    "No public benchmark, pass@1, VEXP-parity, or new-live-result claim.",
+    "Gold patch hunks and hidden tests were not used for oracle-quality judgments; M103 gold-file booleans appear only as post-hoc capsule-quality strata."
+  ],
+  "verdict": "PASS",
+  "recommendation": "implement/keep verification wording"
+}

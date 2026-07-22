@@ -76,6 +76,23 @@ export const M112_SMOKE_CASE_IDS: readonly string[] = [
   "django__django-11740",
 ];
 
+// M113 verification-policy smoke: wrong oracles, weak/no behavioral oracle,
+// strong wins, env loops, no_context, and a normal excellent case.
+export const M113_SMOKE_CASE_IDS: readonly string[] = [
+  "astropy__astropy-7166",
+  "sympy__sympy-15875",
+  "django__django-12774",
+  "pydata__xarray-6938",
+  "astropy__astropy-14365",
+  "pylint-dev__pylint-8898",
+  "sympy__sympy-24562",
+  "django__django-16263",
+  "pylint-dev__pylint-4551",
+  "django__django-11740",
+  "django__django-10973",
+  "django__django-11206",
+];
+
 // The exact treatment flags of the frozen default path (M105–M108 driver /
 // M110 manifest). Env/shell guards and vexp wiring are live-spawn concerns and
 // do not affect the rendered context, so they are not (and cannot be) passed
@@ -186,6 +203,7 @@ function captureCase(
   record: Record<string, unknown>,
   m103Row: M103Row | null,
   repoRoot: string,
+  verificationOraclePolicy = true,
 ): { row: CapturedCase; contextText: string } {
   const instance: SweBenchInstance = toSweBenchInstance(record);
   const task = buildCapsuleV2Task(instance);
@@ -267,6 +285,7 @@ function captureCase(
     compactDigestInjection: true,
     boundedDigestDecisions: true,
     pivotConfidenceGate: true,
+    verificationOraclePolicy,
   });
 
   const result = classification.capsuleV2Result;
@@ -396,8 +415,8 @@ interface Capture {
   readonly cases: CapturedCase[];
 }
 
-function loadCapture(tag: string): Capture {
-  const p = path.join(RENDER_DIR, `stage5_m112_render_smoke.${tag}.json`);
+function loadCapture(tag: string, renderDir = RENDER_DIR, baseName = "stage5_m112_render_smoke"): Capture {
+  const p = path.join(renderDir, `${baseName}.${tag}.json`);
   return JSON.parse(readFileSync(p, "utf8")) as Capture;
 }
 
@@ -407,14 +426,20 @@ function percentile(sorted: number[], q: number): number {
   return sorted[Math.max(0, idx)]!;
 }
 
-function compare(): Record<string, unknown> {
-  const pre = loadCapture("pre");
-  const post = loadCapture("post");
+function compare(
+  renderDir = RENDER_DIR,
+  baseName = "stage5_m112_render_smoke",
+  milestone = "M112",
+): Record<string, unknown> {
+  const pre = loadCapture("pre", renderDir, baseName);
+  const post = loadCapture("post", renderDir, baseName);
   const preById = new Map(pre.cases.map((c) => [c.instance_id, c]));
 
   const rows = post.cases.map((p) => {
     const b = preById.get(p.instance_id);
     if (b === undefined) throw new Error(`no pre capture for ${p.instance_id}`);
+    const preContext = readFileSync(path.join(renderDir, "pre", `${p.instance_id}.context.txt`), "utf8");
+    const postContext = readFileSync(path.join(renderDir, "post", `${p.instance_id}.context.txt`), "utf8");
     const actionPaths = p.action_files.map((a) => normalizeFilePath(a.path));
     const requiredWithAction = p.pivot_files.filter((f) => actionPaths.includes(f));
     const coeditWithAction = p.coedit_lane_files.filter((f) => actionPaths.includes(f));
@@ -435,6 +460,11 @@ function compare(): Record<string, unknown> {
       post_contract_chars: p.contract_block_chars,
       contract_added_chars: p.contract_block_chars - b.contract_block_chars,
       action_contract_present: p.action_contract_present,
+      pre_m112_verification_wording_present: preContext.includes("If tests cannot run, that is not evidence of correctness"),
+      post_m113_verification_wording_present:
+        postContext.includes("If normal tests cannot run, do not treat that as proof of correctness") &&
+        postContext.includes("issue's exact inputs or changed behavior") &&
+        postContext.includes("state the uncertainty before finalizing"),
       per_file_action_count: p.action_files.length,
       action_files: p.action_files,
       required_files_with_action: requiredWithAction,
@@ -474,15 +504,20 @@ function compare(): Record<string, unknown> {
 
   const contextRows = rows.filter((r) => r.post_digest_chars > 0);
   const added = contextRows.map((r) => r.added_chars).sort((a, b) => a - b);
+  const contractAdded = contextRows.map((r) => r.contract_added_chars).sort((a, b) => a - b);
   const summary = {
-    milestone: "M112",
-    kind: "digest per-file action contract — no-agent render smoke (pre/post)",
+    milestone,
+    kind: milestone === "M113"
+      ? "verification-oracle wording — no-agent render smoke (M112 wording / M113 wording)"
+      : "digest per-file action contract — no-agent render smoke (pre/post)",
     no_agents: true,
     no_docker: true,
     no_api_spend: true,
     cases: rows.length,
     context_rendered: contextRows.length,
     action_contract_present_count: rows.filter((r) => r.action_contract_present).length,
+    m112_wording_present_pre_count: rows.filter((r) => r.pre_m112_verification_wording_present).length,
+    m113_wording_present_post_count: rows.filter((r) => r.post_m113_verification_wording_present).length,
     all_invariants_hold: rows.every(
       (r) =>
         r.invariant_capsule_stdout_hash_equal !== false &&
@@ -500,6 +535,9 @@ function compare(): Record<string, unknown> {
     added_chars_min: added[0] ?? 0,
     added_chars_max: added[added.length - 1] ?? 0,
     added_tokens_median_est: Math.ceil(percentile(added, 0.5) / 4),
+    contract_added_chars_median: percentile(contractAdded, 0.5),
+    contract_added_chars_p90: percentile(contractAdded, 0.9),
+    contract_added_tokens_median_est: Math.ceil(percentile(contractAdded, 0.5) / 4),
   };
   return { summary, rows };
 }
@@ -515,15 +553,23 @@ async function main(): Promise<void> {
     return idx >= 0 && argv[idx + 1] !== undefined ? argv[idx + 1]! : fallback;
   };
 
+  const milestone = flag("--milestone", "m112").toLowerCase();
+  if (milestone !== "m112" && milestone !== "m113") throw new Error("--milestone must be m112 or m113");
+  const isM113 = milestone === "m113";
+  const renderDir = isM113 ? path.join(RESULTS_ROOT, "_m113_render") : RENDER_DIR;
+  const baseName = isM113 ? "stage5_m113_verification_wording_smoke" : "stage5_m112_render_smoke";
+  const smokeIds = isM113 ? M113_SMOKE_CASE_IDS : M112_SMOKE_CASE_IDS;
+
   if (argv.includes("--compare")) {
-    const result = compare();
-    const detailPath = path.join(RESULTS_ROOT, "stage5_m112_render_smoke.detail.json");
-    const csvPath = path.join(RESULTS_ROOT, "stage5_m112_render_smoke.csv");
+    const result = compare(renderDir, baseName, milestone.toUpperCase());
+    const detailPath = path.join(RESULTS_ROOT, `${baseName}.detail.json`);
+    const csvPath = path.join(RESULTS_ROOT, `${baseName}.csv`);
     await writeFile(detailPath, `${JSON.stringify(result, null, 2)}\n`);
     const rows = (result as { rows: Array<Record<string, unknown>> }).rows;
     const header = [
       "instance_id", "pre_digest_chars", "post_digest_chars", "added_chars",
       "action_contract_present", "per_file_action_count", "required_files_with_action",
+      "pre_m112_verification_wording_present", "post_m113_verification_wording_present",
       "coedit_files_with_action", "support_files_not_overconstrained",
       "lead_pivot_action_present", "gold_leakage_status", "fallback_status",
     ];
@@ -540,7 +586,7 @@ async function main(): Promise<void> {
       ),
     ].join("\n");
     await writeFile(csvPath, `${csv}\n`);
-    process.stderr.write(`[m112] wrote ${detailPath}\n[m112] wrote ${csvPath}\n`);
+    process.stderr.write(`[${milestone}] wrote ${detailPath}\n[${milestone}] wrote ${csvPath}\n`);
     process.stdout.write(`${JSON.stringify((result as { summary: unknown }).summary, null, 2)}\n`);
     return;
   }
@@ -560,25 +606,30 @@ async function main(): Promise<void> {
   );
 
   const cases: CapturedCase[] = [];
-  const textDir = path.join(RENDER_DIR, tag);
+  const textDir = path.join(renderDir, tag);
   await mkdir(textDir, { recursive: true });
-  for (const id of M112_SMOKE_CASE_IDS) {
+  for (const id of smokeIds) {
     const record = records.find(
       (r) => r.instance_id === id || (r as { instanceId?: string }).instanceId === id,
     );
     if (record === undefined) {
-      process.stderr.write(`[m112] SKIP ${id}: not in dataset\n`);
+      process.stderr.write(`[${milestone}] SKIP ${id}: not in dataset\n`);
       continue;
     }
-    process.stderr.write(`[m112] ${tag} ${id} …\n`);
-    const { row, contextText } = captureCase(record as Record<string, unknown>, m103Rows.get(id) ?? null, repoRoot);
+    process.stderr.write(`[${milestone}] ${tag} ${id} …\n`);
+    const { row, contextText } = captureCase(
+      record as Record<string, unknown>,
+      m103Rows.get(id) ?? null,
+      repoRoot,
+      isM113 ? tag === "post" : true,
+    );
     cases.push(row);
     await writeFile(path.join(textDir, `${id}.context.txt`), contextText);
   }
 
-  const outPath = path.join(RENDER_DIR, `stage5_m112_render_smoke.${tag}.json`);
+  const outPath = path.join(renderDir, `${baseName}.${tag}.json`);
   await writeFile(outPath, `${JSON.stringify({ tag, cases }, null, 2)}\n`);
-  process.stderr.write(`[m112] wrote ${outPath}\n`);
+  process.stderr.write(`[${milestone}] wrote ${outPath}\n`);
   process.stdout.write(
     `${JSON.stringify(
       {

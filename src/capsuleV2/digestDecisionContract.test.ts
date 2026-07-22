@@ -1123,7 +1123,9 @@ test("M112 (8): bounded render with the action contract keeps the T/O grammar pa
   assert.match(built.text, /Do not silently ignore any file listed here\./);
   assert.match(built.text, /decision for EACH before finalizing the patch/);
   assert.match(built.text, /Support-only files are context: consult if needed/);
-  assert.match(built.text, /If tests cannot run, that is not evidence of correctness/);
+  assert.match(built.text, /Verification:/);
+  assert.match(built.text, /issue's exact inputs or changed behavior/);
+  assert.match(built.text, /state the uncertainty before finalizing/);
   // The required-target parser must see EXACTLY the T targets — A lines never parse.
   const parsed = parseDigestDecisionContract(built.text);
   assert.equal(parsed.present, true);
@@ -1144,6 +1146,28 @@ test("M112 (9): perFileActionContract:false reproduces the pre-M112 bounded rend
   assert.equal(off.text, preM112);
   assert.deepEqual(off.actionFiles, []);
   assert.equal(off.text.includes("Per-file action contract"), false);
+});
+
+test("M113: verification guidance is default-on and false reproduces M112 wording", () => {
+  const resp = responseWith([pivot("src/lead.py", "run", ANCHOR)], []);
+  const current = buildDigestDecisionContract(resp, null, { bounded: true }).text;
+  const m112 = buildDigestDecisionContract(resp, null, {
+    bounded: true,
+    verificationOraclePolicy: false,
+  }).text;
+  assert.match(current, /Verification:\n- If normal tests cannot run/);
+  assert.match(current, /issue's exact inputs or changed behavior/);
+  assert.match(current, /state the uncertainty before finalizing/);
+  assert.doesNotMatch(current, /existing code paths, docstrings, issue reproduction/);
+  assert.match(m112, /If tests cannot run, that is not evidence of correctness/);
+  assert.doesNotMatch(m112, /Verification:\n/);
+  assert.equal(
+    current.replace(
+      /\nVerification:\n- If normal tests cannot run, do not treat that as proof of correctness\.\n- Build a small repository-grounded oracle from the issue's exact inputs or changed behavior when possible\.\n- If only static reasoning is possible, state the uncertainty before finalizing\./,
+      "If tests cannot run, that is not evidence of correctness: verify against a repository-grounded oracle (existing code paths, docstrings, issue reproduction) or state the uncertainty explicitly.",
+    ),
+    m112,
+  );
 });
 
 test("M112 (10): gate demoting EVERY pivot yields the zero-required contract with NO action list", () => {

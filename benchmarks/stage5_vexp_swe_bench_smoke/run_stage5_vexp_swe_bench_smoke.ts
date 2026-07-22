@@ -4677,6 +4677,8 @@ export interface ClassifyCapsuleOptions {
    * that demotes weak-evidence pivots to optional/FYI. Default off.
    */
   readonly pivotConfidenceGate?: boolean;
+  /** M113 smoke seam: false reproduces M112 verification wording; default on. */
+  readonly verificationOraclePolicy?: boolean;
 }
 
 // Build the sentinel-wrapped digest block from a Capsule v2 result, or "" when the
@@ -5107,6 +5109,7 @@ export function classifyCapsuleV2Output(
             // M68 — confidence gate is bounded-only; inert unless the bounded contract is on.
             confidenceGate:
               options.boundedDigestDecisions === true && options.pivotConfidenceGate === true,
+            verificationOraclePolicy: options.verificationOraclePolicy !== false,
           },
         ).text
       : "";

@@ -437,7 +437,10 @@ export function selectDigestActionFiles(
 // `T#` and optional `O#`, and the line shape never matches the required-target
 // parser grammar (`\d+.` / `target:` + PIVOT|IMPACT), so closure scoring and
 // `parseDigestDecisionContract` are unaffected.
-function renderPerFileActionLines(selection: DigestActionFileSelection): string[] {
+function renderPerFileActionLines(
+  selection: DigestActionFileSelection,
+  verificationOraclePolicy = true,
+): string[] {
   if (selection.files.length === 0) return [];
   const lines: string[] = [];
   lines.push("");
@@ -462,9 +465,20 @@ function renderPerFileActionLines(selection: DigestActionFileSelection): string[
   lines.push(
     "Support-only files are context: consult if needed; do not treat them as required edits.",
   );
-  lines.push(
-    "If tests cannot run, that is not evidence of correctness: verify against a repository-grounded oracle (existing code paths, docstrings, issue reproduction) or state the uncertainty explicitly.",
-  );
+  if (verificationOraclePolicy) {
+    lines.push("");
+    lines.push("Verification:");
+    lines.push("- If normal tests cannot run, do not treat that as proof of correctness.");
+    lines.push(
+      "- Build a small repository-grounded oracle from the issue's exact inputs or changed behavior when possible.",
+    );
+    lines.push("- If only static reasoning is possible, state the uncertainty before finalizing.");
+  } else {
+    // M112 compatibility seam used by the M113 no-agent render smoke.
+    lines.push(
+      "If tests cannot run, that is not evidence of correctness: verify against a repository-grounded oracle (existing code paths, docstrings, issue reproduction) or state the uncertainty explicitly.",
+    );
+  }
   return lines;
 }
 
@@ -634,6 +648,7 @@ export function renderBoundedDigestDecisionContractText(
     demotedPivots?: readonly DigestDecisionTarget[];
     noHighConfidenceRequired?: boolean;
     actionFiles?: DigestActionFileSelection;
+    verificationOraclePolicy?: boolean;
   },
 ): string {
   const demotedPivots = opts?.demotedPivots ?? [];
@@ -726,7 +741,10 @@ export function renderBoundedDigestDecisionContractText(
   // M112 — per-file action contract: one explicit EDIT/RULE_OUT decision per
   // high-importance FILE (pivot files, co-edit/rescue lane files, pivot-cap-evicted
   // strong targets), so a file outside the bounded T set cannot be silently ignored.
-  lines.push(...renderPerFileActionLines(opts?.actionFiles ?? { files: [], droppedCount: 0 }));
+  lines.push(...renderPerFileActionLines(
+    opts?.actionFiles ?? { files: [], droppedCount: 0 },
+    opts?.verificationOraclePolicy !== false,
+  ));
   lines.push("");
   lines.push("Anti-over-edit rules:");
   lines.push("- Required target does not mean required edit.");
@@ -760,6 +778,8 @@ export function buildDigestDecisionContract(
     confidenceGate?: boolean;
     issueIsTestBehavior?: boolean;
     perFileActionContract?: boolean;
+    /** M113: default-on verification-oracle guidance; false reproduces M112 wording. */
+    verificationOraclePolicy?: boolean;
   },
 ): {
   text: string;
@@ -789,6 +809,7 @@ export function buildDigestDecisionContract(
         demotedPivots,
         noHighConfidenceRequired,
         actionFiles: actionSelection,
+        verificationOraclePolicy: options.verificationOraclePolicy !== false,
       }),
       targets: required,
       optionalTargets: optional,
