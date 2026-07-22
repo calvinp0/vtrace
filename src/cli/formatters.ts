@@ -187,6 +187,13 @@ export function formatIndexResultHuman(input: IndexHumanSummaryInput): string {
       `symbols: ${formatCount(indexResult.totalSymbols)}`,
       `relationships: ${formatCount(indexResult.totalRelationships)}`,
       `status: ${summaryStatus}`,
+      ...(indexResult.performance === undefined ? [] : [
+        `refresh mode: ${indexResult.performance.mode}`,
+        `parse cache: ${formatCount(indexResult.performance.parseCacheHits)} hit(s), ${formatCount(indexResult.performance.parseCacheMisses)} miss(es)`,
+        `parsed files: ${formatCount(indexResult.performance.parsedFiles)}`,
+        `affected closure: ${formatCount(indexResult.performance.affectedClosureFiles)} file(s)`,
+        ...(indexResult.performance.fallbackReason === undefined ? [] : [`fallback: ${indexResult.performance.fallbackReason}`]),
+      ]),
     ]),
   ].join("");
 }

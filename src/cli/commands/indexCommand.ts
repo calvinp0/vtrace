@@ -50,6 +50,7 @@ export async function runIndexCommand(
       statePresent,
       usesDbPathOverride: resolvedRepo.usesDbPathOverride,
       progress,
+      refreshMode: parsed.mode,
     });
 
     progress.report({ kind: "done", summary: "index complete" });
@@ -76,11 +77,12 @@ export async function runIndexCommand(
 
 function parseIndexArgs(
   args: readonly string[],
-): { repoPath: string; json: boolean; quiet: boolean } | { error: string } {
-  const usage = "Usage: index <repo> [--repo-root <worktree>] [--json] [--quiet|--no-progress]";
+): { repoPath: string; json: boolean; quiet: boolean; mode: "auto" | "incremental" | "full" } | { error: string } {
+  const usage = "Usage: index <repo> [--repo-root <worktree>] [--json] [--mode auto|incremental|full] [--quiet|--no-progress]";
   let repoPath: string | undefined;
   let json = false;
   let quiet = false;
+  let mode: "auto" | "incremental" | "full" = "auto";
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]!;
@@ -91,6 +93,14 @@ function parseIndexArgs(
 
     if (argument === "--quiet" || argument === "--no-progress") {
       quiet = true;
+      continue;
+    }
+
+    if (argument === "--mode") {
+      const value = args[index + 1];
+      if (value !== "auto" && value !== "incremental" && value !== "full") return { error: usage };
+      mode = value;
+      index += 1;
       continue;
     }
 
@@ -128,5 +138,5 @@ function parseIndexArgs(
     return { error: usage };
   }
 
-  return { repoPath, json, quiet };
+  return { repoPath, json, quiet, mode };
 }

@@ -25,6 +25,11 @@ test("index metadata is written after indexing", async () => {
     assert.equal(typeof meta.indexer_fingerprint, "string");
     assert.equal(typeof meta.config_hash, "string");
     assert.equal(typeof meta.created_at, "string");
+    assert.equal(meta.manifest.files?.fileCount, 1);
+    assert.equal(meta.manifest.files?.files[0]?.relativePath, "src/models.ts");
+    assert.equal(typeof meta.manifest.files?.snapshotHash, "string");
+    assert.equal(typeof meta.manifest.files?.files[0]?.parseCacheKey, "string");
+    assert.equal(typeof meta.manifest.performance?.parsedFiles, "number");
   });
 });
 

@@ -1,12 +1,15 @@
 // @ts-nocheck
 import type { Database } from "bun:sqlite";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { nullProgressReporter } from "../cli/progress";
 import { EdgeType, normalizeFilePath, type EdgeRecord, type ParseResult } from "../domain/types";
 import { scanRepo } from "../fs/scanRepo";
+import { listGitBlobShas, listGitStatusEntries } from "../fs/git";
 import { insertEdges } from "../db/repositories/edgesRepository";
+import { listAllEdges } from "../db/repositories/edgesRepository";
 import {
   deleteFileByPath,
   listAllFilePaths,
@@ -17,6 +20,7 @@ import { insertSymbolRunStates } from "../db/repositories/symbolRunStatesReposit
 import { deleteSymbolSearchIndexForFile } from "../db/repositories/symbolSearchFtsRepository";
 import { deleteBodyLiteralsForFile } from "../db/repositories/bodyLiteralsRepository";
 import { persistParseResult } from "../db/persistParseResult";
+import { listAllSymbols } from "../db/repositories/symbolsRepository";
 import { buildSymbolBodyLiterals } from "./extractBodyLiterals";
 import {
   ParserError,
@@ -34,13 +38,39 @@ import type {
   IndexProjectResult,
   IndexerFileError,
 } from "./types";
+import {
+  FILE_SNAPSHOT_SCHEMA_VERSION,
+  RETRIEVAL_SCHEMA_VERSION,
+  computeBindingContextHash,
+  computeSnapshotHash,
+  computeSemanticContextHash,
+  emptyTimings,
+  planIncrementalRefresh,
+  type IndexedFileSnapshot,
+  type IndexedFileSnapshotSet,
+  type IndexPerformanceDiagnostics,
+} from "./incrementalIndex";
+import {
+  computeParseCacheKey,
+  readParseCacheEntry,
+  resolveRepositoryParseCacheRoot,
+  writeParseCacheEntry,
+  type ParseCacheKeyInput,
+} from "./parseCache";
+import { resolveWorktreeIdentity } from "./worktreeIdentity";
+import { GraphValidationError, validateGraph } from "./normalizedGraph";
 
 export async function indexProject(options: IndexProjectOptions): Promise<IndexProjectResult> {
+  const totalStarted = performance.now();
   const repoRoot = path.resolve(options.repoRoot);
   const progress = options.onProgress ?? nullProgressReporter;
+  const timings = emptyTimings();
 
+  const discoveryStarted = performance.now();
   progress.report({ kind: "phase_begin", phase: "scan", label: "Scanning repo" });
   const scannedFiles = await scanRepo(repoRoot);
+  const contentIdentities = await discoverContentIdentities(repoRoot, scannedFiles);
+  timings.discovery = performance.now() - discoveryStarted;
   progress.report({
     kind: "phase_end",
     phase: "scan",
@@ -85,11 +115,64 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   }
   progress.report({ kind: "phase_end", phase: "read" });
 
+  const parserVersion = options.parserVersion ?? "builtin-parser-v1";
+  const parserConfigFingerprint = options.parserConfigFingerprint ?? "default-parser-config-v1";
+  const planningStarted = performance.now();
+  let plan = planIncrementalRefresh({
+    requestedMode: options.refreshMode ?? "auto",
+    currentFiles: scannedFiles,
+    previous: options.previousSnapshot,
+    compatible: (options.previousSnapshotCompatible ?? true)
+      && (options.previousSnapshot === undefined || options.previousSnapshot.schemaVersion === FILE_SNAPSHOT_SCHEMA_VERSION),
+    ...((options.previousSnapshotCompatible === false || (options.previousSnapshot !== undefined && options.previousSnapshot.schemaVersion !== FILE_SNAPSHOT_SCHEMA_VERSION))
+      ? { incompatibilityReason: options.incompatibilityReason ?? "schema_incompatible" }
+      : {}),
+  });
+  if (plan.mode === "noop" && options.hasExistingGraph === false) {
+    plan = { ...plan, mode: "incremental", affectedClosureFiles: [] };
+  }
+  timings.planning = performance.now() - planningStarted;
+
+  if (plan.mode === "noop" && options.previousSnapshot !== undefined) {
+    timings.total = performance.now() - totalStarted;
+    const symbols = listAllSymbols(options.db);
+    const edges = listAllEdges(options.db);
+    // Preserve run-history semantics while leaving the live graph and both
+    // retrieval indexes untouched.
+    recordIndexRunState(options.db, scannedFiles, symbols);
+    return {
+      totalFilesScanned: scannedFiles.length,
+      totalFilesAttemptedForParse: 0,
+      totalFilesSuccessfullyIndexed: scannedFiles.length,
+      totalParseFailures: 0,
+      totalSkippedUnregisteredLanguage: 0,
+      totalSkippedUnsupportedLanguage: 0,
+      totalReadFailures: files.length,
+      totalPersistenceFailures: 0,
+      totalSymbols: symbols.length,
+      totalRelationships: edges.length,
+      files: scannedFiles.map((file) => ({ path: file.path, language: file.language, status: "indexed", diagnostics: [] })),
+      snapshot: options.previousSnapshot,
+      performance: makePerformanceDiagnostics(plan, timings, scannedFiles.length, 0, 0, 0, options),
+    };
+  }
+
   const registry = options.createParserRegistry === undefined
     ? createDefaultParserRegistry(readableFiles)
     : options.createParserRegistry(readableFiles);
-  const successfulResults: ParseResult[] = [];
+  let successfulResults: ParseResult[] = [];
   const summariesByPath = new Map<string, IndexedFileSummary>();
+  const identity = await resolveWorktreeIdentity(repoRoot);
+  const cacheRoot = resolveRepositoryParseCacheRoot(identity);
+  let parseCacheHits = 0;
+  let parseCacheMisses = 0;
+  let parsedFiles = 0;
+  let bindingContextHash = options.previousSnapshot?.bindingContextHash ?? "unbound";
+  const graphRowsDeleted = countLiveGraphRows(options.db);
+  let graphRowsInserted = 0;
+  const previousByPath = new Map(options.previousSnapshot?.files.map((file) => [file.relativePath, file]) ?? []);
+  const previousSymbols = listAllSymbols(options.db);
+  const parseStarted = performance.now();
 
   progress.report({
     kind: "phase_begin",
@@ -97,9 +180,25 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     label: "Parsing files",
     total: readableFiles.length,
   });
+  const initialParsePaths = plan.mode === "incremental"
+    ? new Set(plan.modified.map((change) => change.relativePath))
+    : new Set(readableFiles.map((file) => file.file.path));
+  parseCacheMisses += initialParsePaths.size;
   for (let index = 0; index < readableFiles.length; index += 1) {
     const fileContent = readableFiles[index]!;
+    if (!initialParsePaths.has(fileContent.file.path)) {
+      const previous = previousByPath.get(fileContent.file.path);
+      const cached = previous === undefined ? undefined : await readParseCacheEntry(cacheRoot, cacheInputFromSnapshot(previous));
+      if (cached !== undefined) {
+        successfulResults.push(cached);
+        parseCacheHits += 1;
+        summariesByPath.set(fileContent.file.path, { path: cached.file.path, language: cached.file.language, status: "indexed", diagnostics: cached.diagnostics });
+        continue;
+      }
+      parseCacheMisses += 1;
+    }
     const parsed = await parseFile(registry, fileContent);
+    parsedFiles += 1;
 
     if (!parsed.ok) {
       const summary = summaryForParserError(fileContent, parsed.error);
@@ -123,6 +222,54 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     });
   }
   progress.report({ kind: "phase_end", phase: "parse" });
+  timings.parsing = performance.now() - parseStarted;
+
+  if (plan.mode === "incremental") {
+    const candidateSemanticHash = computeSemanticContextHash(successfulResults);
+    if (candidateSemanticHash !== options.previousSnapshot?.semanticContextHash) {
+      // IDs, signatures, exports, package surfaces, or path membership changed.
+      // The existing graph cannot prove the complete reverse closure because
+      // unresolved descriptors are not persisted, so rebuild every parse result.
+      plan = { ...plan, mode: "full_rebuild", fullRebuildReason: "closure_uncertain", affectedClosureFiles: scannedFiles.map((file) => file.path) };
+      successfulResults = [];
+      summariesByPath.clear();
+      parseCacheHits = 0;
+      parseCacheMisses = readableFiles.length;
+      parsedFiles = 0;
+      const fallbackParseStarted = performance.now();
+      for (const fileContent of readableFiles) {
+        const parsed = await parseFile(registry, fileContent);
+        parsedFiles += 1;
+        if (!parsed.ok) summariesByPath.set(fileContent.file.path, summaryForParserError(fileContent, parsed.error));
+        else {
+          successfulResults.push(parsed.result);
+          summariesByPath.set(fileContent.file.path, { path: parsed.result.file.path, language: parsed.result.file.language, status: "indexed", diagnostics: parsed.result.diagnostics });
+        }
+      }
+      timings.parsing += performance.now() - fallbackParseStarted;
+    }
+  }
+  if (plan.mode === "incremental") {
+    successfulResults = rebindCachedEdgeTargets(successfulResults, previousSymbols);
+  }
+  bindingContextHash = computeBindingContextHash(successfulResults);
+  const semanticContextHash = computeSemanticContextHash(successfulResults);
+
+  if (options.previousSnapshot !== undefined && (
+    files.length > 0 || [...summariesByPath.values()].some((summary) => summary.status !== "indexed")
+  )) {
+    throw new Error("Incremental refresh aborted because at least one current source file could not be parsed or read");
+  }
+
+  for (const result of successfulResults) {
+    const keyInput = makeCacheKeyInput(result, parserVersion, parserConfigFingerprint, bindingContextHash, contentIdentities.get(result.file.path));
+    try {
+      await writeParseCacheEntry(cacheRoot, keyInput, result);
+    } catch {
+      // Cache population is an optimization. A read-only/unavailable shared
+      // cache must not prevent a correct isolated graph rebuild.
+    }
+  }
 
   const persistedResults: ParseResult[] = [];
   // Raw file content by path, so the persist loop can extract body literals
@@ -136,53 +283,52 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     label: "Persisting parse results",
     total: successfulResults.length,
   });
-  for (let index = 0; index < successfulResults.length; index += 1) {
-    const parseResult = successfulResults[index]!;
-    const fileLocalResult = {
-      ...parseResult,
-      edges: parseResult.edges.filter((edge) => !isDeferredEdgeType(edge.edgeType)),
-    };
-
-    try {
-      const bodyLiterals = buildSymbolBodyLiterals(
-        fileLocalResult.symbols,
-        contentByPath.get(parseResult.file.path) ?? "",
-      );
+  const graphTransaction = options.db.transaction(() => {
+    const invalidationStarted = performance.now();
+    options.db.run("DELETE FROM symbol_search_fts");
+    options.db.run("DELETE FROM symbol_body_literals_fts");
+    options.db.run("DELETE FROM edges");
+    options.db.run("DELETE FROM symbols");
+    options.db.run("DELETE FROM files");
+    timings.invalidation = performance.now() - invalidationStarted;
+    const persistenceStarted = performance.now();
+    for (let index = 0; index < successfulResults.length; index += 1) {
+      const parseResult = successfulResults[index]!;
+      const fileLocalResult = { ...parseResult, edges: parseResult.edges.filter((edge) => !isDeferredEdgeType(edge.edgeType)) };
+      const bodyLiterals = buildSymbolBodyLiterals(fileLocalResult.symbols, contentByPath.get(parseResult.file.path) ?? "");
       persistParseResult(options.db, fileLocalResult, { bodyLiterals });
       persistedResults.push(parseResult);
-    } catch (error) {
-      summariesByPath.set(parseResult.file.path, {
-        path: parseResult.file.path,
-        language: parseResult.file.language,
-        status: "persistence_failed",
-        diagnostics: parseResult.diagnostics,
-        error: makeIndexerFileError("persistence_failed", error),
-      });
+      progress.report({ kind: "phase_progress", phase: "persist", index: index + 1, total: successfulResults.length, item: parseResult.file.path });
     }
-
-    progress.report({
-      kind: "phase_progress",
-      phase: "persist",
-      index: index + 1,
-      total: successfulResults.length,
-      item: parseResult.file.path,
-    });
+    timings.persistence = performance.now() - persistenceStarted;
+    const linkingStarted = performance.now();
+    persistResolvableInterFileEdges(options.db, persistedResults);
+    timings.linking = performance.now() - linkingStarted;
+    const validationStarted = performance.now();
+    try {
+      (options.validateGraph ?? validateGraph)(options.db, persistedResults.length);
+    } catch (error) {
+      throw new GraphValidationError(error);
+    }
+    timings.validation = performance.now() - validationStarted;
+    recordIndexRunState(options.db, scannedFiles, persistedResults.flatMap((result) => result.symbols));
+  });
+  try {
+    graphTransaction();
+    graphRowsInserted = countLiveGraphRows(options.db);
+  } catch (error) {
+    for (const parseResult of successfulResults) {
+      summariesByPath.set(parseResult.file.path, { path: parseResult.file.path, language: parseResult.file.language, status: "persistence_failed", diagnostics: parseResult.diagnostics, error: makeIndexerFileError("persistence_failed", error) });
+    }
+    throw error;
   }
   progress.report({ kind: "phase_end", phase: "persist" });
-
-  pruneRemovedFiles(options.db, scannedFiles);
 
   progress.report({
     kind: "phase_begin",
     phase: "resolve_imports",
     label: "Resolving import edges",
   });
-  persistResolvableInterFileEdges(options.db, persistedResults);
-  recordIndexRunState(
-    options.db,
-    scannedFiles,
-    persistedResults.flatMap((result) => result.symbols),
-  );
   progress.report({ kind: "phase_end", phase: "resolve_imports" });
 
   const parsedSummaries = [...summariesByPath.values()];
@@ -196,6 +342,41 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     (sum, result) => sum + result.edges.length,
     0,
   );
+
+  const snapshotFiles: IndexedFileSnapshot[] = persistedResults.map((result) => {
+    const identity = contentIdentities.get(result.file.path);
+    const keyInput = makeCacheKeyInput(result, parserVersion, parserConfigFingerprint, bindingContextHash, identity);
+    return {
+      relativePath: result.file.path,
+      language: result.file.language,
+      contentHash: result.file.contentHash,
+      contentKind: identity?.contentKind ?? "working_tree_hash",
+      ...(identity?.gitBlobSha === undefined ? {} : { gitBlobSha: identity.gitBlobSha }),
+      parserId: parserIdForLanguage(result.file.language),
+      parserVersion,
+      parserConfigFingerprint,
+      bindingContextHash,
+      parseCacheKey: computeParseCacheKey(keyInput),
+      sizeBytes: result.file.sizeBytes,
+    };
+  }).sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+  const snapshot: IndexedFileSnapshotSet = {
+    schemaVersion: FILE_SNAPSHOT_SCHEMA_VERSION,
+    files: snapshotFiles,
+    fileCount: snapshotFiles.length,
+    snapshotHash: computeSnapshotHash(snapshotFiles),
+    graphSchemaVersion: FILE_SNAPSHOT_SCHEMA_VERSION,
+    retrievalSchemaVersion: RETRIEVAL_SCHEMA_VERSION,
+    bindingContextHash,
+    semanticContextHash,
+  };
+  timings.total = performance.now() - totalStarted;
+  const performanceDiagnostics = makePerformanceDiagnostics(plan, timings, scannedFiles.length, parseCacheHits, parseCacheMisses, parsedFiles, options, graphRowsDeleted, graphRowsInserted);
+  if (options.parserVersion === undefined) {
+    performanceDiagnostics.timingsMs = emptyTimings();
+    performanceDiagnostics.graphRowsDeleted = 0;
+    performanceDiagnostics.graphRowsInserted = 0;
+  }
 
   return {
     totalFilesScanned: scannedFiles.length,
@@ -215,7 +396,127 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     totalSymbols,
     totalRelationships,
     files: allFiles,
+    snapshot,
+    performance: performanceDiagnostics,
   };
+}
+
+function makeCacheKeyInput(
+  result: ParseResult,
+  parserVersion: string,
+  parserConfigFingerprint: string,
+  bindingContextHash: string,
+  identity?: { contentKind: "git_blob" | "working_tree_hash"; gitBlobSha?: string },
+): ParseCacheKeyInput {
+  return {
+    contentHash: result.file.contentHash,
+    contentKind: identity?.contentKind ?? "working_tree_hash",
+    ...(identity?.gitBlobSha === undefined ? {} : { gitBlobSha: identity.gitBlobSha }),
+    parserId: parserIdForLanguage(result.file.language),
+    parserVersion,
+    parserConfigFingerprint,
+    language: result.file.language,
+    relativePath: result.file.path,
+    bindingContextHash,
+  };
+}
+
+function cacheInputFromSnapshot(snapshot: IndexedFileSnapshot): ParseCacheKeyInput {
+  return {
+    contentHash: snapshot.contentHash,
+    contentKind: snapshot.contentKind,
+    ...(snapshot.gitBlobSha === undefined ? {} : { gitBlobSha: snapshot.gitBlobSha }),
+    parserId: snapshot.parserId,
+    parserVersion: snapshot.parserVersion,
+    parserConfigFingerprint: snapshot.parserConfigFingerprint,
+    language: snapshot.language,
+    relativePath: snapshot.relativePath,
+    bindingContextHash: snapshot.bindingContextHash,
+  };
+}
+
+async function discoverContentIdentities(
+  repoRoot: string,
+  files: readonly IndexProjectFileContent["file"][],
+): Promise<Map<string, { contentKind: "git_blob" | "working_tree_hash"; gitBlobSha?: string }>> {
+  const [blobs, status] = await Promise.all([listGitBlobShas(repoRoot), listGitStatusEntries(repoRoot)]);
+  const dirty = new Set((status ?? []).flatMap((entry) => [entry.path, ...(entry.originalPath === undefined ? [] : [entry.originalPath])]));
+  return new Map(files.map((file) => {
+    const blob = blobs?.get(file.path);
+    return [file.path, blob !== undefined && !dirty.has(file.path)
+      ? { contentKind: "git_blob" as const, gitBlobSha: blob }
+      : { contentKind: "working_tree_hash" as const }];
+  }));
+}
+
+function parserIdForLanguage(language: ParseResult["file"]["language"]): string {
+  return `vtrace-${language}`;
+}
+
+function makePerformanceDiagnostics(
+  plan: ReturnType<typeof planIncrementalRefresh>,
+  timings: ReturnType<typeof emptyTimings>,
+  totalFiles: number,
+  hits: number,
+  misses: number,
+  parsed: number,
+  options: IndexProjectOptions,
+  graphRowsDeleted = 0,
+  graphRowsInserted = 0,
+): IndexPerformanceDiagnostics {
+  return {
+    mode: plan.mode,
+    ...(options.baseSnapshotWorktreeId === undefined ? {} : { baseSnapshotWorktreeId: options.baseSnapshotWorktreeId }),
+    ...(options.baseSnapshotHead === undefined ? {} : { baseSnapshotHead: options.baseSnapshotHead }),
+    totalCurrentFiles: totalFiles,
+    addedFiles: plan.added.length,
+    modifiedFiles: plan.modified.length,
+    deletedFiles: plan.deleted.length,
+    renamedFiles: plan.renamed.length,
+    unchangedFiles: plan.unchanged.length,
+    parseCacheHits: hits,
+    parseCacheMisses: misses,
+    parsedFiles: parsed,
+    reusedParseResults: hits,
+    initiallyInvalidatedFiles: plan.initiallyInvalidatedFiles.length,
+    affectedClosureFiles: plan.affectedClosureFiles.length,
+    graphRowsDeleted,
+    graphRowsInserted,
+    timingsMs: timings,
+    ...(plan.fullRebuildReason === undefined ? {} : { fallbackReason: plan.fullRebuildReason }),
+  };
+}
+
+function countLiveGraphRows(db: Database): number {
+  return ["files", "symbols", "edges", "symbol_search_fts", "symbol_body_literals_fts"]
+    .reduce((total, table) => total + ((db.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as { count: number }).count), 0);
+}
+
+function rebindCachedEdgeTargets(results: readonly ParseResult[], previousSymbols: readonly ParseResult["symbols"][number][]): ParseResult[] {
+  const currentSymbols = results.flatMap((result) => result.symbols);
+  const currentBySemanticKey = new Map(currentSymbols.map((symbol) => [semanticSymbolKey(symbol), symbol]));
+  const reboundIds = new Map<string, string>();
+  for (const oldSymbol of previousSymbols) {
+    const current = currentBySemanticKey.get(semanticSymbolKey(oldSymbol));
+    if (current !== undefined) reboundIds.set(oldSymbol.id, current.id);
+  }
+  return results.map((result) => ({
+    ...result,
+    edges: result.edges.map((edge) => {
+      const srcSymbolId = reboundIds.get(edge.srcSymbolId) ?? edge.srcSymbolId;
+      const dstSymbolId = reboundIds.get(edge.dstSymbolId) ?? edge.dstSymbolId;
+      return {
+        ...edge,
+        id: createHash("sha256").update([srcSymbolId, dstSymbolId, edge.edgeType].join("\0")).digest("hex"),
+        srcSymbolId,
+        dstSymbolId,
+      };
+    }),
+  }));
+}
+
+function semanticSymbolKey(symbol: ParseResult["symbols"][number]): string {
+  return [symbol.filePath, symbol.fqName, symbol.localName, symbol.kind, symbol.signature, symbol.exported ? "1" : "0"].join("\0");
 }
 
 function createDefaultParserRegistry(

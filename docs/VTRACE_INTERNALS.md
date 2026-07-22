@@ -275,10 +275,10 @@ Indexing is the one-time (then incremental) job that builds the map. Entry point
 `indexProject` (`src/indexer/indexProject.ts:38`). Triggered by `vtrace setup` /
 `vtrace index` → `reindexRepoAndRefreshState` (`src/runtime/reindexRepo.ts:51`).
 
-The pipeline is a straight line:
+The refresh pipeline is:
 
 ```
-scan → read → parse → persist → prune deleted → resolve inter-file edges → record run
+scan → plan → parse/cache reuse → isolated graph replacement → resolve edges → validate → record run
 ```
 
 ### 3.1 Scan (file discovery)
@@ -292,22 +292,28 @@ per directory (`loadIgnoreRulesForDirectory:29`), compiles globs to regexes
 only if its extension is a known language (`detectLanguage`,
 `src/fs/languageDetection.ts:10`: `.ts/.tsx/.js/.jsx/.py/.pyx/.pxd/.pxi`).
 
-Output: a sorted list of `FileRecord`s, each with a content hash (so unchanged files
-can be skipped on reindex).
+Output: a sorted list of `FileRecord`s. Manifest v3 persists a canonical per-file
+snapshot; clean tracked files also carry Git blob identity, while dirty/untracked
+files use their cryptographic working-tree hash.
 
 ### 3.2 Parse (per-language, Chapter 2.2–2.3)
 
 Dispatch goes through a small **parser registry** (`createParserRegistry`,
 `src/parsers/LanguageParser.ts:23`): the file's language selects the tree-sitter TS/JS
 parser, the CPython-`ast` Python parser, or the tokenizer-based Cython parser. Each
-returns a `ParseResult` = symbols + edges + diagnostics. Parser errors are captured,
-not fatal — one bad file doesn't sink the index.
+returns a `ParseResult` = symbols + edges + diagnostics. Complete results are cached
+immutably under the repository's canonical Git common directory. Keys include
+content/blob identity, language, parser/config versions, relative path, and a
+binding-context hash. Incremental refresh aborts before graph mutation if a changed
+file cannot be parsed; an initial full index can still report per-file failures.
 
 ### 3.3 Persist
 
-`persistParseResult` (`src/db/persistParseResult.ts:27`) writes the file row, inserts
-the symbols (also feeding `symbol_search_fts`), and inserts the edges. FTS rows are
-kept in lockstep with the symbol rows so search never points at a stale symbol.
+`persistParseResult` writes the file row, symbols, FTS rows, body literals, and local
+edges. A mutating refresh replaces the complete live graph inside one SQLite
+transaction, then validates edge/FTS integrity before commit. This is deliberately
+a full-worktree relink/persist even when parsing is incremental; it prevents stale
+cross-file edges while unresolved descriptors remain unpersisted.
 
 ### 3.4 Body literals (the bug-report bridge)
 
@@ -326,10 +332,21 @@ then resolves cross-file edges only where **both** endpoints exist
 (`persistResolvableInterFileEdges`). Unresolvable edges are dropped rather than
 guessed — conservatism again.
 
-### 3.6 Pruning and freshness
+### 3.6 Incremental planning, rollback, and freshness
 
-`pruneRemovedFiles` (`indexProject.ts:344`) diffs the scanned set against the DB and
-cascades deletes for vanished files (symbols, edges, FTS rows all go).
+An unchanged compatible snapshot is a no-op: zero files parsed and no live graph or
+retrieval rows rewritten (an index-run history snapshot is still appended for API
+compatibility). A modified-only change parses the changed files and reuses cached
+results only if the combined path/symbol binding surface is unchanged. Adds,
+deletes, renames, package entrypoint changes, structural symbol/ID changes, legacy
+manifests, and incompatible parser/config/schema versions fall back to a clean full
+rebuild with a precise reason. The old graph remains valid if parsing, persistence,
+or validation fails.
+
+Linked worktrees keep distinct `.vtrace/index.sqlite` databases and manifests, but
+read the same repository-scoped immutable cache and reusable snapshot registry.
+Exact-commit worktrees can therefore assemble a separate graph with zero parsing.
+Graph snapshot cloning, cache pruning, and background watching remain separate work.
 
 Staleness is detected by **fingerprinting**, not guesswork. `checkIndexFreshness`
 (`src/indexer/indexMeta.ts:163`) compares six values stored in `.vtrace/index.meta.json`:
@@ -338,7 +355,9 @@ index format version, schema (a hash of the DDL), a **parser fingerprint** (hash
 Change the parser code and every index is correctly considered stale. `vtrace watch`
 marks stale on file change; `--auto-reindex` is opt-in so nothing silently churns.
 
-At the end, `recordIndexRunState` snapshots this run's files/symbols so the *next* run
+Manifest format v3 adds the per-file cache/snapshot fields and performance
+diagnostics. A v2/legacy manifest receives one safe full rebuild. At the end,
+`recordIndexRunState` snapshots this run's files/symbols so the *next* run
 can compute a precise diff — the basis for memory staleness and rule invalidation
 later.
 

@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "bun:test";
+import { normalizedGraphHash } from "../indexer/normalizedGraph";
 
 import { listIndexRuns } from "../db/repositories/indexRunsRepository";
 import {
@@ -201,6 +202,65 @@ test("session compression sweep failure is isolated and never throws", async () 
       assert.equal(diagnostics.attempted, true);
       assert.equal(diagnostics.compressedSessionCount, 0);
       assert.notEqual(diagnostics.error, null);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("unchanged refresh is a zero-parse no-op and body-only refresh parses one file", async () => {
+  await withReindexFixture(async (fixture) => {
+    const beforeDb = openIndexerDatabase(fixture.dbPath);
+    const beforeHash = normalizedGraphHash(beforeDb);
+    const beforeRunCount = listIndexRuns(beforeDb).length;
+    beforeDb.close();
+
+    const noop = await reindexRepoAndRefreshState(reindexInput(fixture));
+    assert.equal(noop.indexResult.performance?.mode, "noop");
+    assert.equal(noop.indexResult.performance?.parsedFiles, 0);
+    assert.equal(noop.indexResult.performance?.graphRowsInserted, 0);
+    const afterNoopDb = openIndexerDatabase(fixture.dbPath);
+    assert.equal(listIndexRuns(afterNoopDb).length, beforeRunCount + 1);
+    assert.equal(normalizedGraphHash(afterNoopDb), beforeHash);
+    afterNoopDb.close();
+
+    await writeFile(
+      path.join(fixture.repoRoot, "src", "service.ts"),
+      "import { User } from \"./models\";\nexport function readUser(): User { return { id: \"changed-longer\" }; }\n",
+    );
+    const incremental = await reindexRepoAndRefreshState(reindexInput(fixture));
+    assert.equal(incremental.indexResult.performance?.mode, "incremental");
+    assert.equal(incremental.indexResult.performance?.parsedFiles, 1);
+    assert.equal(incremental.indexResult.performance?.parseCacheHits, 1);
+
+    const incrementalDb = openIndexerDatabase(fixture.dbPath);
+    const incrementalHash = normalizedGraphHash(incrementalDb);
+    incrementalDb.close();
+    const full = await reindexRepoAndRefreshState({ ...reindexInput(fixture), refreshMode: "full" });
+    const fullDb = openIndexerDatabase(fixture.dbPath);
+    const fullHash = normalizedGraphHash(fullDb);
+    fullDb.close();
+    assert.equal(incrementalHash, fullHash);
+    assert.notEqual(incrementalHash, beforeHash);
+    assert.equal(full.indexResult.performance?.mode, "full_rebuild");
+  });
+});
+
+test("a structural symbol change falls back instead of retaining stale incoming edges", async () => {
+  await withReindexFixture(async (fixture) => {
+    await writeFile(
+      path.join(fixture.repoRoot, "src", "models.ts"),
+      "export interface Account { id: string }\n",
+    );
+    const result = await reindexRepoAndRefreshState(reindexInput(fixture));
+    assert.equal(result.indexResult.performance?.mode, "full_rebuild");
+    assert.equal(result.indexResult.performance?.fallbackReason, "closure_uncertain");
+    const db = openIndexerDatabase(fixture.dbPath);
+    try {
+      const ghost = db.query("SELECT COUNT(*) AS count FROM symbols WHERE local_name = 'User'").get() as { count: number };
+      assert.equal(ghost.count, 0);
+      const dangling = db.query("SELECT COUNT(*) AS count FROM edges WHERE dst_symbol_id NOT IN (SELECT id FROM symbols)").get() as { count: number };
+      assert.equal(dangling.count, 0);
     } finally {
       db.close();
     }

@@ -2,8 +2,12 @@ import { getLatestIndexRun, getIndexRunSummary } from "../db/repositories/indexR
 import { openIndexerDatabase } from "../db/sqlite";
 import { readGitHead } from "../fs/git";
 import { indexProject } from "../indexer/indexProject";
-import { recordIndexMeta } from "../indexer/indexMeta";
+import { INDEX_FORMAT_VERSION, computeIndexFingerprints, readIndexMeta, recordIndexMeta } from "../indexer/indexMeta";
 import { withWorktreeIndexLock } from "../indexer/worktreeIndexLock";
+import { resolveWorktreeIdentity } from "../indexer/worktreeIdentity";
+import { recordReusableSnapshot, selectReusableSnapshot } from "../indexer/sharedSnapshots";
+import { scanRepo } from "../fs/scanRepo";
+import { GraphValidationError } from "../indexer/normalizedGraph";
 import { detectSymbolAddedThenRemovedAntiPatterns } from "../observations/antiPatterns";
 import {
   DEFAULT_REINDEX_SESSION_COMPRESSION_LIMIT,
@@ -24,6 +28,8 @@ import type {
   RepoLocalState,
 } from "../setup/types";
 import type { IndexProjectResult } from "../indexer/types";
+import type { IndexRefreshMode } from "../indexer/incrementalIndex";
+import { isValidSnapshotSet } from "../indexer/incrementalIndex";
 import type { ProgressReporter } from "../cli/progress";
 
 export interface ReindexSessionCompressionDiagnostics {
@@ -60,6 +66,7 @@ export async function reindexRepoAndRefreshState(input: {
   readonly progress?: ProgressReporter | null;
   readonly preserveWatcher?: RepoFileWatcherState;
   readonly lockWaitMs?: number;
+  readonly refreshMode?: IndexRefreshMode;
 }): Promise<ReindexRepoResult> {
   const locked = await withWorktreeIndexLock({
     repoRoot: input.repoRoot,
@@ -78,15 +85,56 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
   readonly usesDbPathOverride: boolean;
   readonly progress?: ProgressReporter | null;
   readonly preserveWatcher?: RepoFileWatcherState;
+  readonly refreshMode?: IndexRefreshMode;
 }): Promise<Omit<ReindexRepoResult, "staleLockRecovered">> {
   const db = openIndexerDatabase(input.dbPath);
 
   try {
-    const indexResult = await indexProject({
+    const fingerprints = await computeIndexFingerprints();
+    const identity = await resolveWorktreeIdentity(input.repoRoot);
+    const localMeta = await readIndexMeta(input.repoRoot);
+    const currentFiles = await scanRepo(input.repoRoot);
+    const localSnapshot = localMeta?.manifest?.files;
+    const localIncompatibility = localMeta === undefined || localMeta === null
+      ? undefined
+      : localMeta.parser_fingerprint !== fingerprints.parser_fingerprint
+        ? "parser_incompatible" as const
+        : localMeta.config_hash !== fingerprints.config_hash
+          ? "configuration_incompatible" as const
+          : localMeta.index_format_version !== INDEX_FORMAT_VERSION || localSnapshot === undefined
+            ? "schema_incompatible" as const
+            : !isValidSnapshotSet(localSnapshot)
+              ? "snapshot_invalid" as const
+            : undefined;
+    const reusable = localSnapshot === undefined
+      ? await selectReusableSnapshot({
+        identity,
+        currentFiles,
+        parserVersion: fingerprints.parser_fingerprint,
+        parserConfigFingerprint: fingerprints.config_hash,
+      })
+      : undefined;
+    const indexOptions = {
       repoRoot: input.repoRoot,
       db,
+      previousSnapshot: localSnapshot ?? reusable?.snapshot,
+      ...(localIncompatibility === undefined ? {} : { previousSnapshotCompatible: false, incompatibilityReason: localIncompatibility }),
+      parserVersion: fingerprints.parser_fingerprint,
+      parserConfigFingerprint: fingerprints.config_hash,
+      refreshMode: input.refreshMode ?? "auto",
+      ...(reusable === undefined ? {} : { baseSnapshotWorktreeId: reusable.worktreeId, baseSnapshotHead: reusable.headCommit ?? undefined }),
       ...(input.progress === undefined || input.progress === null ? {} : { onProgress: input.progress }),
-    });
+    } as const;
+    let indexResult: IndexProjectResult;
+    try {
+      indexResult = await indexProject(indexOptions);
+    } catch (error) {
+      if (!(error instanceof GraphValidationError) || indexOptions.refreshMode === "full") throw error;
+      indexResult = await indexProject({ ...indexOptions, refreshMode: "full" });
+      if (indexResult.performance !== undefined) {
+        indexResult.performance.fallbackReason = "graph_validation_failed";
+      }
+    }
     detectSymbolAddedThenRemovedAntiPatterns(db, { repoRoot: input.repoRoot });
     const latestRun = getLatestIndexRun(db);
 
@@ -100,7 +148,22 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
     // Persist the worktree ownership manifest next to a repo-local database.
     // A completed repo-local index without this manifest is unsafe to reuse.
     if (!input.usesDbPathOverride) {
-      await recordIndexMeta(input.repoRoot, latestRun?.id ?? null);
+      await recordIndexMeta(input.repoRoot, latestRun?.id ?? null, {
+        files: indexResult.snapshot,
+        performance: indexResult.performance,
+      });
+      if (indexResult.snapshot !== undefined) {
+        try {
+          await recordReusableSnapshot(identity, {
+            parserVersion: fingerprints.parser_fingerprint,
+            parserConfigFingerprint: fingerprints.config_hash,
+            snapshot: indexResult.snapshot,
+          });
+        } catch {
+          // Shared snapshot discovery is an optimization; the worktree-local
+          // graph and manifest are already valid.
+        }
+      }
     }
 
     const sessionCompression = runBoundedSessionCompressionSweep(db, input.repoRoot);

@@ -10,6 +10,12 @@ import type {
   ParserRegistry,
   SerializedParserError,
 } from "../parsers";
+import type {
+  FullRebuildReason,
+  IndexedFileSnapshotSet,
+  IndexPerformanceDiagnostics,
+  IndexRefreshMode,
+} from "./incrementalIndex";
 
 export interface IndexProjectFileContent {
   file: FileRecord;
@@ -21,6 +27,16 @@ export interface IndexProjectOptions {
   db: Database;
   createParserRegistry?: (files: readonly IndexProjectFileContent[]) => ParserRegistry;
   onProgress?: ProgressReporter;
+  refreshMode?: IndexRefreshMode;
+  previousSnapshot?: IndexedFileSnapshotSet;
+  parserVersion?: string;
+  parserConfigFingerprint?: string;
+  baseSnapshotWorktreeId?: string;
+  baseSnapshotHead?: string;
+  hasExistingGraph?: boolean;
+  previousSnapshotCompatible?: boolean;
+  incompatibilityReason?: FullRebuildReason;
+  validateGraph?: (db: Database, expectedFileCount: number) => void;
 }
 
 export type IndexedFileStatus =
@@ -56,4 +72,6 @@ export interface IndexProjectResult {
   totalSymbols: number;
   totalRelationships: number;
   files: IndexedFileSummary[];
+  snapshot?: IndexedFileSnapshotSet;
+  performance?: IndexPerformanceDiagnostics;
 }

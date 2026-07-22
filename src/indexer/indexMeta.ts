@@ -15,7 +15,7 @@ import {
  * Bump when the SHAPE of index.meta.json changes (fields added/removed/renamed).
  * Distinct from the fingerprints below, which track the indexed CONTENT logic.
  */
-export const INDEX_FORMAT_VERSION = 2 as const;
+export const INDEX_FORMAT_VERSION = 3 as const;
 
 export const INDEX_META_FILENAME = "index.meta.json" as const;
 
@@ -83,6 +83,8 @@ export interface WorktreeIndexManifest {
     indexSchemaVersion: number;
     configFingerprint: string;
   };
+  files?: import("./incrementalIndex").IndexedFileSnapshotSet;
+  performance?: import("./incrementalIndex").IndexPerformanceDiagnostics;
 }
 
 export type WorktreeIndexFreshnessStatus = "fresh" | "stale" | "missing" | "blocked";
@@ -187,7 +189,11 @@ export async function buildExpectedIndexMeta(repoPath: string): Promise<Expected
 }
 
 /** The full meta to persist after an index completes (adds created_at). */
-export async function buildIndexMeta(repoPath: string, runId: number | string | null = null): Promise<IndexMeta> {
+export async function buildIndexMeta(
+  repoPath: string,
+  runId: number | string | null = null,
+  details: Pick<WorktreeIndexManifest, "files" | "performance"> = {},
+): Promise<IndexMeta> {
   const expected = await buildExpectedIndexMeta(repoPath);
   const identity = await resolveWorktreeIdentity(repoPath);
   const indexedAt = new Date().toISOString();
@@ -211,6 +217,8 @@ export async function buildIndexMeta(repoPath: string, runId: number | string | 
         indexSchemaVersion: INDEX_FORMAT_VERSION,
         configFingerprint: expected.config_hash,
       },
+      ...(details.files === undefined ? {} : { files: details.files }),
+      ...(details.performance === undefined ? {} : { performance: details.performance }),
     },
   };
 }
@@ -220,8 +228,12 @@ export async function writeIndexMeta(repoPath: string, meta: IndexMeta): Promise
 }
 
 /** Build and write fresh metadata for a just-completed index. Returns the meta. */
-export async function recordIndexMeta(repoPath: string, runId: number | string | null = null): Promise<IndexMeta> {
-  const meta = await buildIndexMeta(repoPath, runId);
+export async function recordIndexMeta(
+  repoPath: string,
+  runId: number | string | null = null,
+  details: Pick<WorktreeIndexManifest, "files" | "performance"> = {},
+): Promise<IndexMeta> {
+  const meta = await buildIndexMeta(repoPath, runId, details);
   await writeIndexMeta(repoPath, meta);
   return meta;
 }

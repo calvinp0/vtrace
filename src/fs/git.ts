@@ -44,6 +44,24 @@ export async function listGitStatusEntries(
   }
 }
 
+export async function listGitBlobShas(repoRoot: string): Promise<Map<string, string> | undefined> {
+  try {
+    const { stdout } = await execFile("git", ["-c", "core.quotepath=off", "ls-files", "--stage", "-z"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    });
+    const blobs = new Map<string, string>();
+    for (const entry of stdout.split("\0")) {
+      if (entry.length === 0) continue;
+      const match = /^(\d+) ([0-9a-f]+) (\d)\t(.+)$/.exec(entry);
+      if (match?.[3] === "0") blobs.set(normalizeFilePath(match[4]!), match[2]!);
+    }
+    return blobs;
+  } catch {
+    return undefined;
+  }
+}
+
 function parseGitStatusEntries(stdout: string): GitStatusEntry[] {
   const entries: GitStatusEntry[] = [];
 

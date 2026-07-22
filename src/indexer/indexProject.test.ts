@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "bun:test";
+import { normalizedGraphHash } from "./normalizedGraph";
 import type { Database } from "bun:sqlite";
 
 import { EdgeType, Language, SymbolKind } from "../domain/types";
@@ -1020,6 +1021,55 @@ test("repeated reindex with ignore files produces a deterministic active graph",
       assert.deepEqual(secondSnapshot, firstSnapshot);
       assert.equal(getFileByPath(db, "src/models.ts"), undefined);
       assertGraphIntegrity(db);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("validation failure rolls back the complete live graph mutation", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeBasicTypeScriptRepo(repoRoot);
+    const db = openIndexerDatabase();
+    try {
+      const first = await indexProject({ repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config" });
+      const before = normalizedGraphHash(db);
+      await writeFile(path.join(repoRoot, "src", "service.ts"), `
+import { User } from "./models";
+export function readUser(): User { throw new Error("changed content"); }
+`);
+      await assert.rejects(
+        indexProject({
+          repoRoot,
+          db,
+          parserVersion: "test-parser",
+          parserConfigFingerprint: "test-config",
+          previousSnapshot: first.snapshot,
+          validateGraph: () => { throw new Error("injected validation failure"); },
+        }),
+        /injected validation failure/,
+      );
+      assert.equal(normalizedGraphHash(db), before);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("incremental parse failure preserves the previous valid graph", async () => {
+  await withFixture(async (repoRoot) => {
+    await mkdir(path.join(repoRoot, "src"), { recursive: true });
+    await writeFile(path.join(repoRoot, "src", "service.py"), "def service():\n    return 1\n");
+    const db = openIndexerDatabase();
+    try {
+      const first = await indexProject({ repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config" });
+      const before = normalizedGraphHash(db);
+      await writeFile(path.join(repoRoot, "src", "service.py"), "def broken(:\n    return 1\n");
+      await assert.rejects(
+        indexProject({ repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config", previousSnapshot: first.snapshot }),
+        /aborted.*could not be parsed/i,
+      );
+      assert.equal(normalizedGraphHash(db), before);
     } finally {
       db.close();
     }

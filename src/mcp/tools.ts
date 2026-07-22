@@ -150,6 +150,7 @@ import { inspectIndexFreshness } from "../runtime/indexFreshness";
 import { reindexRepoAndRefreshState } from "../runtime/reindexRepo";
 import {
   inspectWorktreeIndexFreshness,
+  readIndexMeta,
   type WorktreeIndexFreshnessResult,
 } from "../indexer/indexMeta";
 import { WorktreeIndexLockError } from "../indexer/worktreeIndexLock";
@@ -192,6 +193,7 @@ const CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS = 8_000;
 interface IndexRepoInput {
   readonly force?: boolean;
   readonly repo_root?: string;
+  readonly mode?: "auto" | "incremental" | "full";
 }
 
 interface SearchSymbolsInput {
@@ -1385,6 +1387,7 @@ const GET_CODE_CONTEXT_INDEX_FRESHNESS_DIAGNOSTIC_SCHEMA = objectProperty(
     refreshMode: { type: ["string", "null"], description: "incremental or full when refresh was attempted." },
     refreshFailed: booleanProperty("Whether the requested refresh failed."),
     failureReason: { type: ["string", "null"], description: "Lock or indexing failure when refresh failed." },
+    performance: { type: ["object", "null"], description: "Selected refresh mode, parse-cache, closure, fallback, and timing diagnostics.", additionalProperties: true },
     after: objectProperty(
       "Precise freshness after the request.",
       { status: stringProperty("Post-request status."), reason: stringProperty("Post-request reason.") },
@@ -2926,6 +2929,7 @@ const INDEX_STATUS_SCHEMA = objectProperty(
     },
     freshness: INDEX_FRESHNESS_SCHEMA,
     watcher: FILE_WATCHER_STATUS_SCHEMA,
+    performance: { type: ["object", "null"], description: "Diagnostics from the most recent index operation.", additionalProperties: true },
   },
   [
     "repoRoot",
@@ -2941,6 +2945,7 @@ const INDEX_STATUS_SCHEMA = objectProperty(
     "readiness",
     "freshness",
     "watcher",
+    "performance",
   ],
 );
 
@@ -5335,6 +5340,7 @@ async function inspectIndexStatus(
   readiness: RepoLocalState["readiness"] | null;
   freshness: unknown;
   watcher: unknown;
+  performance: import("../indexer/incrementalIndex").IndexPerformanceDiagnostics | null;
 }> {
   if (context.repoRoot === null) {
     throw new Error("MCP tool requires a repo-bound server context.");
@@ -5358,6 +5364,7 @@ async function inspectIndexStatus(
     observedFileChanges: state?.observedFileChanges,
     fileWatcher: state?.fileWatcher,
   });
+  const indexMeta = await readIndexMeta(context.repoRoot);
 
   return {
     repoRoot: context.repoRoot,
@@ -5373,6 +5380,7 @@ async function inspectIndexStatus(
     readiness: state?.readiness ?? null,
     freshness,
     watcher: buildFileWatcherStatus(state),
+    performance: indexMeta?.manifest?.performance ?? null,
   };
 }
 
@@ -5687,6 +5695,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
     indexSummary: RepoLocalState["indexSummary"];
     latestRun: NonNullable<RepoLocalState["latestRun"]> | null;
     lock: { status: "released"; staleLockRecovered: boolean };
+    performance: import("../indexer/incrementalIndex").IndexPerformanceDiagnostics | null;
   }>({
     metadata: {
       toolId: McpToolId.IndexRepo,
@@ -5698,6 +5707,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         {
           force: booleanProperty("Accepted for future compatibility; currently re-indexing always runs."),
           repo_root: stringProperty("Optional absolute or relative worktree root. Defaults to the server-bound root."),
+          mode: stringProperty("Refresh mode: auto (default), incremental, or full."),
         },
         [],
       ),
@@ -5728,8 +5738,9 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             },
             ["status", "staleLockRecovered"],
           ),
+          performance: { type: ["object", "null"], description: "Incremental planning, cache, closure, fallback, and timing diagnostics.", additionalProperties: true },
         },
-        ["repoRoot", "latestRunId", "readiness", "indexSummary", "latestRun", "lock"],
+        ["repoRoot", "latestRunId", "readiness", "indexSummary", "latestRun", "lock", "performance"],
       ),
     },
     async handler({ context, request }) {
@@ -5745,6 +5756,11 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         return force;
       }
       void force;
+      const mode = parseOptionalStringField(McpToolId.IndexRepo, input, "mode") ?? "auto";
+      if (typeof mode !== "string") return mode;
+      if (mode !== "auto" && mode !== "incremental" && mode !== "full") {
+        return invalidRequest(McpToolId.IndexRepo, "mode must be `auto`, `incremental`, or `full`.", { field: "mode", value: mode });
+      }
       const requestedRoot = parseOptionalStringField(McpToolId.IndexRepo, input, "repo_root");
       if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
         return requestedRoot;
@@ -5758,9 +5774,12 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       const stateBefore = await safeReadState(paths.statePath);
       let state: RepoLocalState | null;
       let staleLockRecovered = false;
+      let performance: import("../indexer/incrementalIndex").IndexPerformanceDiagnostics | null = null;
       try {
         if (config === undefined || stateBefore === undefined) {
-          state = (await initRepo({ repoPath: repoRoot })).state;
+          const initialized = await initRepo({ repoPath: repoRoot });
+          state = initialized.state;
+          performance = initialized.indexResult.performance ?? null;
         } else {
           const indexed = await reindexRepoAndRefreshState({
             repoRoot,
@@ -5769,9 +5788,11 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             configPresent: true,
             statePresent: true,
             usesDbPathOverride: false,
+            refreshMode: mode,
           });
           state = indexed.state;
           staleLockRecovered = indexed.staleLockRecovered;
+          performance = indexed.indexResult.performance ?? null;
         }
       } catch (error) {
         if (error instanceof WorktreeIndexLockError) {
@@ -5797,6 +5818,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           indexSummary: state.indexSummary,
           latestRun: state.latestRun ?? null,
           lock: { status: "released", staleLockRecovered },
+          performance,
         },
       };
     },
@@ -7770,10 +7792,12 @@ async function handleGetCodeContextRequest({
       const config = await safeReadConfig(paths.configPath);
       const state = await safeReadState(paths.statePath);
       const refreshMode = config === undefined || state === undefined ? "full" : "incremental";
+      let refreshPerformance: import("../indexer/incrementalIndex").IndexPerformanceDiagnostics | null = null;
       if (refreshMode === "full") {
-        await initRepo({ repoPath: repoRoot });
+        const initialized = await initRepo({ repoPath: repoRoot });
+        refreshPerformance = initialized.indexResult.performance ?? null;
       } else {
-        await reindexRepoAndRefreshState({
+        const refreshed = await reindexRepoAndRefreshState({
           repoRoot,
           dbPath: config.dbPath ?? state.dbPath ?? paths.dbPath,
           statePath: paths.statePath,
@@ -7781,6 +7805,7 @@ async function handleGetCodeContextRequest({
           statePresent: true,
           usesDbPathOverride: false,
         });
+        refreshPerformance = refreshed.indexResult.performance ?? null;
       }
       check = await checkIndexForGetCodeContext(reboundContext, repoRoot);
       if (check.kind === "stale_response") {
@@ -7804,6 +7829,7 @@ async function handleGetCodeContextRequest({
           before,
           refreshAttempted: true,
           refreshMode,
+          performance: refreshPerformance,
         }),
       };
     } catch (error) {
@@ -7920,6 +7946,7 @@ function formatPreciseIndexFreshnessDiagnostic(
     refreshMode?: "incremental" | "full";
     refreshFailed?: boolean;
     failureReason?: string | null;
+    performance?: import("../indexer/incrementalIndex").IndexPerformanceDiagnostics | null;
   } = {},
 ) {
   const latestRunId = freshness.manifest?.index.runId ?? null;
@@ -7938,6 +7965,7 @@ function formatPreciseIndexFreshnessDiagnostic(
     refreshMode: refresh.refreshMode ?? null,
     refreshFailed: refresh.refreshFailed ?? false,
     failureReason: refresh.failureReason ?? null,
+    performance: refresh.performance ?? null,
     after: { status: freshness.status, reason: freshness.reason },
     worktreeRoot: freshness.requestedWorktree.root,
     requestedWorktree: freshness.requestedWorktree,

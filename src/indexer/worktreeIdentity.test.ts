@@ -60,6 +60,20 @@ test("detached HEAD and non-Git directories are represented honestly", async () 
   }
 });
 
+test("file snapshots prefer Git blob identity and use working hashes for dirty content", async () => {
+  await withGitWorktrees(async ({ mainRoot }) => {
+    await initRepo({ repoPath: mainRoot });
+    const clean = (await readIndexMeta(mainRoot))?.manifest.files?.files.find((file) => file.relativePath === "src/app.ts");
+    assert.equal(clean?.contentKind, "git_blob");
+    assert.match(clean?.gitBlobSha ?? "", /^[0-9a-f]{40}$/);
+    await writeFile(path.join(mainRoot, "src", "app.ts"), "export const value = 12345;\n");
+    await refresh(mainRoot);
+    const dirty = (await readIndexMeta(mainRoot))?.manifest.files?.files.find((file) => file.relativePath === "src/app.ts");
+    assert.equal(dirty?.contentKind, "working_tree_hash");
+    assert.equal(dirty?.gitBlobSha, undefined);
+  });
+});
+
 test("freshness distinguishes HEAD, tracked, staged, deleted, untracked, ignored, schema, config, and invalid manifest changes", async () => {
   await withGitWorktrees(async ({ mainRoot }) => {
     await initRepo({ repoPath: mainRoot });
@@ -106,7 +120,10 @@ test("linked worktrees retain isolated indexes and stale independently", async (
     const mainManifestBefore = await readFile(resolveIndexMetaPath(mainRoot), "utf8");
     assert.equal((await inspectWorktreeIndexFreshness(featureRoot)).reason, "missing_index");
 
-    await initRepo({ repoPath: featureRoot });
+    const featureInit = await initRepo({ repoPath: featureRoot });
+    assert.equal(featureInit.indexResult.performance?.mode, "incremental");
+    assert.equal(featureInit.indexResult.performance?.parsedFiles, 0);
+    assert.equal(featureInit.indexResult.performance?.parseCacheHits, featureInit.indexResult.totalFilesScanned);
     assert.equal((await inspectWorktreeIndexFreshness(mainRoot)).reason, "fresh");
     assert.equal((await inspectWorktreeIndexFreshness(featureRoot)).reason, "fresh");
     const mainMeta = await readIndexMeta(mainRoot);
@@ -182,6 +199,17 @@ test("a lock left by a dead process is recovered explicitly", async () => {
     });
     assert.equal(recovered.value, true);
     assert.equal(recovered.staleLockRecovered, true);
+  });
+});
+
+test("a detached linked worktree reuses the repository parse cache with a distinct graph", async () => {
+  await withGitWorktrees(async ({ mainRoot, featureRoot }) => {
+    const main = await initRepo({ repoPath: mainRoot });
+    await git(featureRoot, "checkout", "--detach");
+    const detached = await initRepo({ repoPath: featureRoot });
+    assert.equal(detached.indexResult.performance?.parsedFiles, 0);
+    assert.equal(detached.indexResult.performance?.parseCacheHits, main.indexResult.totalFilesScanned);
+    assert.notEqual((await readIndexMeta(mainRoot))?.manifest.worktree.worktreeId, (await readIndexMeta(featureRoot))?.manifest.worktree.worktreeId);
   });
 });
 

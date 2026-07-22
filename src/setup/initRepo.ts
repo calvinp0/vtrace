@@ -6,6 +6,10 @@ import { readGitHead } from "../fs/git";
 import { recordIndexMeta } from "../indexer/indexMeta";
 import { withWorktreeIndexLock } from "../indexer/worktreeIndexLock";
 import { indexProject } from "../indexer/indexProject";
+import { computeIndexFingerprints } from "../indexer/indexMeta";
+import { resolveWorktreeIdentity } from "../indexer/worktreeIdentity";
+import { recordReusableSnapshot, selectReusableSnapshot } from "../indexer/sharedSnapshots";
+import { scanRepo } from "../fs/scanRepo";
 import {
   buildLastIndexSnapshot,
   buildRepoLocalState,
@@ -45,9 +49,22 @@ async function initRepoUnlocked(
   const db = openIndexerDatabase(paths.dbPath);
 
   try {
+    const fingerprints = await computeIndexFingerprints();
+    const identity = await resolveWorktreeIdentity(detection.repoRoot);
+    const reusable = await selectReusableSnapshot({
+      identity,
+      currentFiles: await scanRepo(detection.repoRoot),
+      parserVersion: fingerprints.parser_fingerprint,
+      parserConfigFingerprint: fingerprints.config_hash,
+    });
     const indexResult = await indexProject({
       repoRoot: detection.repoRoot,
       db,
+      previousSnapshot: reusable?.snapshot,
+      parserVersion: fingerprints.parser_fingerprint,
+      parserConfigFingerprint: fingerprints.config_hash,
+      hasExistingGraph: false,
+      ...(reusable === undefined ? {} : { baseSnapshotWorktreeId: reusable.worktreeId, baseSnapshotHead: reusable.headCommit ?? undefined }),
       ...(options.onProgress === undefined ? {} : { onProgress: options.onProgress }),
     });
     const latestRun = getLatestIndexRun(db);
@@ -80,7 +97,21 @@ async function initRepoUnlocked(
     await writeRepoLocalState(paths.statePath, state);
 
     // Persisted worktree ownership is part of a successful repo-local index.
-    await recordIndexMeta(detection.repoRoot, latestRun?.id ?? null);
+    await recordIndexMeta(detection.repoRoot, latestRun?.id ?? null, {
+      files: indexResult.snapshot,
+      performance: indexResult.performance,
+    });
+    if (indexResult.snapshot !== undefined) {
+      try {
+        await recordReusableSnapshot(identity, {
+          parserVersion: fingerprints.parser_fingerprint,
+          parserConfigFingerprint: fingerprints.config_hash,
+          snapshot: indexResult.snapshot,
+        });
+      } catch {
+        // Shared snapshot discovery is optional once the isolated index is valid.
+      }
+    }
 
     return {
       requestedPath,
