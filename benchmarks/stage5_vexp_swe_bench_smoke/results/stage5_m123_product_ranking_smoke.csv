@@ -1,0 +1,11 @@
+id,pass,lead_pivot,selected_files
+exact model task,true,app/models/reproducibility_assessment.py,app/models/reproducibility_assessment.py|migrations/add_public_ref.py|app/__init__.py|app/services/public_assessments.py|app/services/public_refs.py|app/large_exact_target.py
+model plus projection task,true,app/models/reproducibility_assessment.py,app/models/reproducibility_assessment.py|app/services/public_assessments.py|app/__init__.py|app/large_exact_target.py|app/schemas/assessment.py|app/services/public_refs.py
+schema plus service co-edit,true,app/services/public_refs.py,app/services/public_refs.py|app/schemas/assessment.py|app/services/public_assessments.py|migrations/add_public_ref.py|app/api/public_openapi.py|app/models/reproducibility_assessment.py
+generic-central-file distractor,true,app/models/reproducibility_assessment.py,app/models/reproducibility_assessment.py|migrations/add_public_ref.py|app/__init__.py|app/api/public_openapi.py|app/services/public_assessments.py|app/services/public_refs.py
+large exact target,true,app/large_exact_target.py,app/large_exact_target.py|app/__init__.py
+package initializer re-export,true,app/large_exact_target.py,app/large_exact_target.py|app/__init__.py|app/models/reproducibility_assessment.py
+compound slash task,true,app/models/reproducibility_assessment.py,app/models/reproducibility_assessment.py|app/services/public_refs.py|app/__init__.py|app/services/public_assessments.py|app/api/public_openapi.py|app/large_exact_target.py
+standalone path task,true,app/services/public_assessments.py,app/services/public_assessments.py|app/services/public_refs.py
+TCKDB-shaped long task,true,app/services/public_assessments.py,app/services/public_assessments.py|app/services/public_refs.py|app/schemas/assessment.py|app/api/public_openapi.py|app/models/reproducibility_assessment.py|app/__init__.py
+no-context,true,,
