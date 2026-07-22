@@ -453,16 +453,27 @@ export function resolveBoundaryQueryContext(
 export function resolveBroadQueryContext(
   query: string,
   enableBroadQueryBoosts = true,
+  enableCompoundTaskDecomposition = false,
 ): BroadQueryContext | undefined {
   if (!enableBroadQueryBoosts) {
     return undefined;
   }
 
-  if (/[\\/]/.test(query)) {
+  const trimmedQuery = query.trim();
+
+  // Preserve exact handling for a standalone repository path, but do not let a
+  // prose separator such as "immutability/supersession" disable decomposition
+  // for an otherwise natural-language task. Treating every slash as a path made
+  // the fallback builder require every word in a compound task in one FTS row.
+  if (
+    /\\/.test(trimmedQuery)
+    || (
+      trimmedQuery.includes("/")
+      && (!enableCompoundTaskDecomposition || !/\s/.test(trimmedQuery))
+    )
+  ) {
     return undefined;
   }
-
-  const trimmedQuery = query.trim();
 
   if (!/[\s_-]/.test(trimmedQuery)) {
     return undefined;
@@ -486,7 +497,11 @@ export function resolveBroadQueryContext(
     variants: buildBroadTermVariants(term),
   }));
   const phraseGroups = buildBroadPhraseGroups(uniqueOrderedTerms);
-  const admissionDisjuncts = buildBroadAdmissionDisjuncts(termGroups, phraseGroups);
+  const admissionDisjuncts = buildBroadAdmissionDisjuncts(
+    termGroups,
+    phraseGroups,
+    enableCompoundTaskDecomposition,
+  );
 
   if (admissionDisjuncts.length === 0) {
     return undefined;
@@ -624,6 +639,7 @@ export function resolvePathSignalQueryContext(
   query: string,
   broadContext: BroadQueryContext | undefined,
   enablePathSignalBoosts = true,
+  enableCompoundTaskDecomposition = false,
 ): PathSignalQueryContext | undefined {
   if (!enablePathSignalBoosts || broadContext === undefined) {
     return undefined;
@@ -1269,6 +1285,7 @@ function buildBroadPhraseGroups(orderedTerms: readonly string[]): QueryTermGroup
 function buildBroadAdmissionDisjuncts(
   termGroups: readonly QueryTermGroup[],
   phraseGroups: readonly QueryTermGroup[],
+  boundCompoundTask: boolean,
 ): readonly (readonly QueryTermGroup[])[] {
   if (termGroups.length === 0) {
     return [];
@@ -1278,20 +1295,48 @@ function buildBroadAdmissionDisjuncts(
     return [termGroups];
   }
 
-  const disjuncts: QueryTermGroup[][] = phraseGroups.map((group) => [group]);
-
-  for (let leftIndex = 0; leftIndex < termGroups.length - 1; leftIndex += 1) {
-    const left = termGroups[leftIndex];
-
-    for (let rightIndex = leftIndex + 1; rightIndex < termGroups.length; rightIndex += 1) {
-      const right = termGroups[rightIndex];
-
-      if (left === undefined || right === undefined) {
-        continue;
+  if (!boundCompoundTask || termGroups.length <= 16) {
+    const legacyDisjuncts: QueryTermGroup[][] = phraseGroups.map((group) => [group]);
+    for (let leftIndex = 0; leftIndex < termGroups.length - 1; leftIndex += 1) {
+      const left = termGroups[leftIndex];
+      for (let rightIndex = leftIndex + 1; rightIndex < termGroups.length; rightIndex += 1) {
+        const right = termGroups[rightIndex];
+        if (left !== undefined && right !== undefined) legacyDisjuncts.push([left, right]);
       }
+    }
+    return legacyDisjuncts;
+  }
 
+  // Long implementation tasks can contain dozens of concerns. The complete
+  // pairwise expansion is quadratic (and can admit most of a large index), so
+  // keep every bounded adjacent phrase and only then add deterministic cross-
+  // concept pairs up to a fixed ceiling. Short queries retain their prior full
+  // expansion exactly.
+  const BROAD_ADMISSION_DISJUNCT_LIMIT = 96;
+  const disjuncts: QueryTermGroup[][] = phraseGroups
+    .slice(0, BROAD_ADMISSION_DISJUNCT_LIMIT)
+    .map((group) => [group]);
+
+  // FTS phrase positions do not always cross identifier punctuation (notably
+  // `reproducibility_assessment`). Preserve each adjacent concept as an AND
+  // pair before spending the remaining budget on non-adjacent combinations.
+  const isCompoundTask = true;
+  for (let index = 0; index < termGroups.length - 1; index += 1) {
+    if (disjuncts.length >= BROAD_ADMISSION_DISJUNCT_LIMIT) {
+      return disjuncts;
+    }
+    const left = termGroups[index]!;
+    const right = termGroups[index + 1]!;
+    if (!isCompoundTask || left.label.length + right.label.length >= 17) {
       disjuncts.push([left, right]);
     }
+  }
+
+  // For compound tasks, adjacent phrases plus identifier-safe adjacent AND
+  // pairs are the complete bounded decomposition. Exhaustive non-adjacent pairs
+  // would admit generic files merely because they contain any two concerns.
+  if (isCompoundTask) {
+    return disjuncts;
   }
 
   return disjuncts;

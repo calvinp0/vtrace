@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "stage5.m121.smoke.v1",
+  "repository": "TCKDB_READ_ONLY",
+  "index": {
+    "currentIncremental": {
+      "counts": {
+        "files": 957,
+        "symbols": 23064,
+        "edges": 47734,
+        "ftsDocuments": 23064,
+        "bodyLiteralDocuments": 6134,
+        "retrievalRows": 29198
+      },
+      "normalizedGraphHash": "25bb3d414484b87d3a2ee73af50257be378a600728958856e54844254d641676",
+      "retrievalIndexHash": "00dafe84dfb7d1c354c73f254cd8f672efe2f4e63f8a0137b48d2db47f9143bb",
+      "coverage": {
+        "backend/app/db/models/reproducibility_assessment.py": {
+          "fileRecords": 1,
+          "symbolRecords": 18,
+          "ftsRecords": 18,
+          "graphRecords": 45
+        },
+        "backend/app/schemas/entities/reproducibility_assessment.py": {
+          "fileRecords": 1,
+          "symbolRecords": 34,
+          "ftsRecords": 34,
+          "graphRecords": 55
+        },
+        "backend/app/schemas/reads/scientific_assessment.py": {
+          "fileRecords": 1,
+          "symbolRecords": 15,
+          "ftsRecords": 15,
+          "graphRecords": 23
+        },
+        "backend/app/services/scientific_read/public_assessments.py": {
+          "fileRecords": 1,
+          "symbolRecords": 12,
+          "ftsRecords": 12,
+          "graphRecords": 55
+        },
+        "backend/app/services/public_refs.py": {
+          "fileRecords": 1,
+          "symbolRecords": 27,
+          "ftsRecords": 27,
+          "graphRecords": 57
+        }
+      }
+    },
+    "cleanFull": {
+      "counts": {
+        "files": 957,
+        "symbols": 23064,
+        "edges": 47734,
+        "ftsDocuments": 23064,
+        "bodyLiteralDocuments": 6134,
+        "retrievalRows": 29198
+      },
+      "normalizedGraphHash": "25bb3d414484b87d3a2ee73af50257be378a600728958856e54844254d641676",
+      "retrievalIndexHash": "00dafe84dfb7d1c354c73f254cd8f672efe2f4e63f8a0137b48d2db47f9143bb",
+      "coverage": {
+        "backend/app/db/models/reproducibility_assessment.py": {
+          "fileRecords": 1,
+          "symbolRecords": 18,
+          "ftsRecords": 18,
+          "graphRecords": 45
+        },
+        "backend/app/schemas/entities/reproducibility_assessment.py": {
+          "fileRecords": 1,
+          "symbolRecords": 34,
+          "ftsRecords": 34,
+          "graphRecords": 55
+        },
+        "backend/app/schemas/reads/scientific_assessment.py": {
+          "fileRecords": 1,
+          "symbolRecords": 15,
+          "ftsRecords": 15,
+          "graphRecords": 23
+        },
+        "backend/app/services/scientific_read/public_assessments.py": {
+          "fileRecords": 1,
+          "symbolRecords": 12,
+          "ftsRecords": 12,
+          "graphRecords": 55
+        },
+        "backend/app/services/public_refs.py": {
+          "fileRecords": 1,
+          "symbolRecords": 27,
+          "ftsRecords": 27,
+          "graphRecords": 57
+        }
+      }
+    },
+    "equivalent": {
+      "counts": true,
+      "normalizedGraphHash": true,
+      "retrievalIndexHash": true,
+      "querySelections": true
+    },
+    "fullRebuild": {
+      "mode": "full_rebuild",
+      "scannedFiles": 958,
+      "indexedFiles": 957,
+      "symbols": 23064,
+      "relationships": 47734,
+      "indexRefreshMs": 43577.266
+    }
+  },
+  "retrievalLatencyMs": {
+    "currentIncremental": {
+      "A": 2.114,
+      "B": 21.372,
+      "C": 30.966,
+      "D": 52.402,
+      "E": 91.924,
+      "F": 216.519,
+      "G": 221.422
+    },
+    "cleanFull": {
+      "A": 1.703,
+      "B": 18.17,
+      "C": 28.28,
+      "D": 49.984,
+      "E": 89.857,
+      "F": 209.934,
+      "G": 211.628
+    }
+  },
+  "totalInvestigationMs": 47460.752
+}

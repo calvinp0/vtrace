@@ -2603,6 +2603,23 @@ test("run_pipeline returns explicit retrieval diagnostics for empty candidate an
     assert.equal(noCandidates.result.output.context.included, false);
     assert.equal(noCandidates.result.output.context.skipReason, "no_candidates");
     assert.equal(noCandidates.result.output.diagnostics.retrieval.finalReason, "no_candidates");
+    assert.equal(
+      noCandidates.result.output.diagnostics.retrieval.search.normalizedQuery,
+      "definitely_missing_pipeline_symbol",
+    );
+    assert.ok(
+      noCandidates.result.output.diagnostics.retrieval.search.identifierTerms.includes(
+        "definitely_missing_pipeline_symbol",
+      ),
+    );
+    assert.equal(noCandidates.result.output.diagnostics.retrieval.search.laneResults.lexical, 0);
+    assert.equal(noCandidates.result.output.diagnostics.retrieval.search.candidateFilesConsidered, 0);
+    assert.equal(noCandidates.result.output.diagnostics.retrieval.search.fallbackAttempted, true);
+    assert.equal(
+      noCandidates.result.output.diagnostics.retrieval.search.fallbackReason,
+      "primary_lexical_no_hits",
+    );
+    assert.equal(noCandidates.result.output.diagnostics.retrieval.search.finalReason, "no_candidates");
 
     assert.equal(unsupported.result.ok, true);
     assert.equal(unsupported.result.output.context.skipReason, "unsupported_query_shape");

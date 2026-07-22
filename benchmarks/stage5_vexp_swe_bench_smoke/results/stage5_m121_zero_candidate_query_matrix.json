@@ -1,0 +1,3534 @@
+{
+  "schemaVersion": "stage5.m121.query-matrix.v1",
+  "repository": "TCKDB_READ_ONLY",
+  "incidentTask": "Add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. Determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, OpenAPI, tests, docs, and Python client types.",
+  "queries": [
+    {
+      "id": "A",
+      "query": "RecordReproducibilityAssessment"
+    },
+    {
+      "id": "B",
+      "query": "reproducibility_assessment"
+    },
+    {
+      "id": "C",
+      "query": "public_assessments.py"
+    },
+    {
+      "id": "D",
+      "query": "Add a public reference to reproducibility assessment summaries"
+    },
+    {
+      "id": "E",
+      "query": "Find the reproducibility assessment model, public assessment projection, public_ref support, schemas, and migration"
+    },
+    {
+      "id": "F",
+      "query": "Add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. Determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, OpenAPI, tests, docs, and Python client types."
+    },
+    {
+      "id": "G",
+      "query": "Add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. Determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, OpenAPI, tests, docs, and Python client types. RecordReproducibilityAssessment\npublic_assessments.py\nreproducibility_assessment.py"
+    }
+  ],
+  "currentIncremental": {
+    "before": [
+      {
+        "id": "A",
+        "indexKind": "incremental",
+        "phase": "before",
+        "normalizedTask": "recordreproducibilityassessment",
+        "derivedRetrievalQuery": "\"assessment\" AND \"record\" AND \"recordreproducibility\" AND \"recordreproducibilityassessment\" AND \"reproducibility\" AND \"reproducibilityassessment\"",
+        "queryTerms": [
+          "assessment",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "reproducibility",
+          "reproducibilityassessment"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "RecordReproducibilityAssessment"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"assessment\" AND \"record\" AND \"recordreproducibility\" AND \"recordreproducibilityassessment\" AND \"reproducibility\" AND \"reproducibilityassessment\""
+          }
+        ],
+        "identifierTerms": [
+          "RecordReproducibilityAssessment"
+        ],
+        "pathTerms": [],
+        "ftsTerms": [
+          "assessment",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "reproducibility",
+          "reproducibilityassessment"
+        ],
+        "rawHitsPerLane": {
+          "path": 0,
+          "symbol": 0,
+          "lexical": 25,
+          "documentation": 0,
+          "tests": 1,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 25,
+        "candidateFilesConsidered": 2,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/app/services/reproducibility_assessment.py"
+        ],
+        "selectedSymbols": [
+          "RecordReproducibilityAssessment",
+          "assessed_at",
+          "id",
+          "record_id",
+          "record_type",
+          "__table_args__",
+          "__tablename__",
+          "assessor_kind",
+          "assessor_user_id",
+          "context_hash",
+          "context_json",
+          "grade",
+          "missing_json",
+          "passed_json",
+          "rubric_name",
+          "rubric_version",
+          "source_submission_id",
+          "warnings_json",
+          "get_latest_reproducibility_assessment",
+          "append_reproducibility_assessment"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.258,
+          "laneSearch": 1.138,
+          "candidateMerge": 0.719,
+          "graphExpansion": 0.877,
+          "render": 0,
+          "total": 4.658
+        }
+      },
+      {
+        "id": "B",
+        "indexKind": "incremental",
+        "phase": "before",
+        "normalizedTask": "reproducibility_assessment",
+        "derivedRetrievalQuery": "((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\"))",
+        "queryTerms": [
+          "assessment",
+          "reproducibility"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "reproducibility_assessment"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\"))"
+          }
+        ],
+        "identifierTerms": [
+          "reproducibility_assessment"
+        ],
+        "pathTerms": [
+          "reproducibility",
+          "assessment"
+        ],
+        "ftsTerms": [
+          "assessment",
+          "reproducibility"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 0,
+          "lexical": 113,
+          "documentation": 6,
+          "tests": 19,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 126,
+        "candidateFilesConsidered": 5,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/services/reproducibility_assessment.py",
+          "backend/app/api/routes/curation.py",
+          "backend/app/schemas/entities/reproducibility_assessment.py",
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/alembic/versions/b4e8c1f6a2d9_add_reproducibility_assessments.py"
+        ],
+        "selectedSymbols": [
+          "append_reproducibility_assessment",
+          "get_latest_reproducibility_assessment",
+          "is_reproducibility_assessment_context_current",
+          "read_latest_reproducibility_assessment",
+          "ReproducibilityAssessmentAppend",
+          "RecordReproducibilityAssessment",
+          "__tablename__",
+          "_TRIGGER_FUNCTION",
+          "assessed_at",
+          "id",
+          "record_id",
+          "record_type",
+          "ReproducibilityAssessmentRead",
+          "assessor_kind",
+          "assessor_user_id",
+          "grade",
+          "normalize_rubric_text",
+          "record_type",
+          "__table_args__",
+          "assessor_kind"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.112,
+          "laneSearch": 15.506,
+          "candidateMerge": 1.862,
+          "graphExpansion": 0.751,
+          "render": 0,
+          "total": 19.041
+        }
+      },
+      {
+        "id": "C",
+        "indexKind": "incremental",
+        "phase": "before",
+        "normalizedTask": "public_assessments.py",
+        "derivedRetrievalQuery": "\"public assessments\" OR \"assessments py\" OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND \"py\") OR ((\"assessment\" OR \"assessments\") AND \"py\")",
+        "queryTerms": [
+          "assessments",
+          "public",
+          "py"
+        ],
+        "queryVariants": [
+          {
+            "kind": "path",
+            "query": "public_assessments.py"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "assessments"
+          },
+          {
+            "kind": "phrase",
+            "query": "public assessments"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessments py"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"public assessments\" OR \"assessments py\" OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND \"py\") OR ((\"assessment\" OR \"assessments\") AND \"py\")"
+          }
+        ],
+        "identifierTerms": [
+          "public_assessments.py"
+        ],
+        "pathTerms": [
+          "public",
+          "assessments"
+        ],
+        "ftsTerms": [
+          "assessments",
+          "public",
+          "py"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 0,
+          "lexical": 676,
+          "documentation": 223,
+          "tests": 194,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 676,
+        "candidateFilesConsidered": 11,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/services/scientific_read/public_assessments.py",
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/app/schemas/reads/scientific_kinetics.py",
+          "backend/app/schemas/reads/scientific_statmech.py",
+          "backend/app/schemas/reads/scientific_thermo.py",
+          "backend/app/schemas/reads/scientific_transport.py"
+        ],
+        "selectedSymbols": [
+          "_attach",
+          "attach_kinetics_assessments",
+          "attach_statmech_assessments",
+          "attach_thermo_assessments",
+          "attach_transport_assessments",
+          "_latest_assessments",
+          "_reproducibility_summary",
+          "PublicAssessmentSummary",
+          "_kinetics_records",
+          "_statmech_records",
+          "_thermo_records",
+          "_transport_records",
+          "__all__",
+          "deterministic_trust",
+          "reproducibility",
+          "RecordReproducibilityAssessment",
+          "assessments",
+          "assessments",
+          "assessments",
+          "assessments"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.05,
+          "laneSearch": 23.248,
+          "candidateMerge": 5.931,
+          "graphExpansion": 0.754,
+          "render": 0,
+          "total": 30.994
+        }
+      },
+      {
+        "id": "D",
+        "indexKind": "incremental",
+        "phase": "before",
+        "normalizedTask": "add a public reference to reproducibility assessment summaries",
+        "derivedRetrievalQuery": "\"add public\" OR \"public reference\" OR \"reference reproducibility\" OR \"reproducibility assessment\" OR \"assessment summaries\" OR (\"add\" AND (\"public\" OR \"publics\")) OR (\"add\" AND (\"reference\" OR \"references\")) OR (\"add\" AND (\"reproducibilities\" OR \"reproducibility\")) OR (\"add\" AND (\"assessment\" OR \"assessments\")) OR (\"add\" AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"public\" OR \"publics\") AND (\"reference\" OR \"references\")) OR ((\"public\" OR \"publics\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reference\" OR \"references\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reference\" OR \"references\") AND (\"assessment\" OR \"assessments\")) OR ((\"reference\" OR \"references\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"assessment\" OR \"assessments\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\"))",
+        "queryTerms": [
+          "a",
+          "add",
+          "assessment",
+          "public",
+          "reference",
+          "reproducibility",
+          "summaries",
+          "to"
+        ],
+        "queryVariants": [
+          {
+            "kind": "path",
+            "query": "add"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "reference"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "path",
+            "query": "summaries"
+          },
+          {
+            "kind": "phrase",
+            "query": "add public"
+          },
+          {
+            "kind": "phrase",
+            "query": "public reference"
+          },
+          {
+            "kind": "phrase",
+            "query": "reference reproducibility"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessment summaries"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"add public\" OR \"public reference\" OR \"reference reproducibility\" OR \"reproducibility assessment\" OR \"assessment summaries\" OR (\"add\" AND (\"public\" OR \"publics\")) OR (\"add\" AND (\"reference\" OR \"references\")) OR (\"add\" AND (\"reproducibilities\" OR \"reproducibility\")) OR (\"add\" AND (\"assessment\" OR \"assessments\")) OR (\"add\" AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"public\" OR \"publics\") AND (\"reference\" OR \"references\")) OR ((\"public\" OR \"publics\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reference\" OR \"references\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reference\" OR \"references\") AND (\"assessment\" OR \"assessments\")) OR ((\"reference\" OR \"references\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"assessment\" OR \"assessments\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\"))"
+          }
+        ],
+        "identifierTerms": [],
+        "pathTerms": [
+          "add",
+          "public",
+          "reference",
+          "reproducibility",
+          "assessment",
+          "summaries"
+        ],
+        "ftsTerms": [
+          "a",
+          "add",
+          "assessment",
+          "public",
+          "reference",
+          "reproducibility",
+          "summaries",
+          "to"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 0,
+          "lexical": 237,
+          "documentation": 93,
+          "tests": 32,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 322,
+        "candidateFilesConsidered": 12,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/services/scientific_read/public_assessments.py",
+          "backend/alembic/versions/b4e8c1f6a2d9_add_reproducibility_assessments.py",
+          "backend/app/db/models/reproducibility_assessment.py"
+        ],
+        "selectedSymbols": [
+          "reproducibility",
+          "PublicAssessmentSummary",
+          "ReproducibilityAssessmentSummary",
+          "_reproducibility_summary",
+          "_ASSESSOR_KIND_VALUES",
+          "_GRADE_VALUES",
+          "_TRIGGER_FUNCTION",
+          "_TRIGGER_NAME",
+          "downgrade",
+          "upgrade",
+          "RecordReproducibilityAssessment",
+          "_latest_assessments",
+          "attach_statmech_assessments",
+          "attach_transport_assessments",
+          "deterministic_trust",
+          "assessed_at",
+          "grade",
+          "rubric",
+          "rubric_version",
+          "state"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.137,
+          "laneSearch": 45.104,
+          "candidateMerge": 3.805,
+          "graphExpansion": 1.025,
+          "render": 0,
+          "total": 50.8
+        }
+      },
+      {
+        "id": "E",
+        "indexKind": "incremental",
+        "phase": "before",
+        "normalizedTask": "find the reproducibility assessment model, public assessment projection, public_ref support, schemas, and migration",
+        "derivedRetrievalQuery": "\"find reproducibility\" OR \"reproducibility assessment\" OR \"assessment model\" OR \"model public\" OR \"public projection\" OR \"projection ref\" OR \"ref support\" OR \"support schemas\" OR \"schemas migration\" OR ((\"find\" OR \"finds\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"find\" OR \"finds\") AND (\"assessment\" OR \"assessments\")) OR ((\"find\" OR \"finds\") AND (\"model\" OR \"models\")) OR ((\"find\" OR \"finds\") AND (\"public\" OR \"publics\")) OR ((\"find\" OR \"finds\") AND (\"projection\" OR \"projections\")) OR ((\"find\" OR \"finds\") AND \"ref\") OR ((\"find\" OR \"finds\") AND (\"support\" OR \"supports\")) OR ((\"find\" OR \"finds\") AND (\"schema\" OR \"schemas\")) OR ((\"find\" OR \"finds\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"model\" OR \"models\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"public\" OR \"publics\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"projection\" OR \"projections\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND \"ref\") OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"support\" OR \"supports\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"schema\" OR \"schemas\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"assessment\" OR \"assessments\") AND (\"model\" OR \"models\")) OR ((\"assessment\" OR \"assessments\") AND (\"public\" OR \"publics\")) OR ((\"assessment\" OR \"assessments\") AND (\"projection\" OR \"projections\")) OR ((\"assessment\" OR \"assessments\") AND \"ref\") OR ((\"assessment\" OR \"assessments\") AND (\"support\" OR \"supports\")) OR ((\"assessment\" OR \"assessments\") AND (\"schema\" OR \"schemas\")) OR ((\"assessment\" OR \"assessments\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"model\" OR \"models\") AND (\"public\" OR \"publics\")) OR ((\"model\" OR \"models\") AND (\"projection\" OR \"projections\")) OR ((\"model\" OR \"models\") AND \"ref\") OR ((\"model\" OR \"models\") AND (\"support\" OR \"supports\")) OR ((\"model\" OR \"models\") AND (\"schema\" OR \"schemas\")) OR ((\"model\" OR \"models\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"public\" OR \"publics\") AND (\"projection\" OR \"projections\")) OR ((\"public\" OR \"publics\") AND \"ref\") OR ((\"public\" OR \"publics\") AND (\"support\" OR \"supports\")) OR ((\"public\" OR \"publics\") AND (\"schema\" OR \"schemas\")) OR ((\"public\" OR \"publics\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"projection\" OR \"projections\") AND \"ref\") OR ((\"projection\" OR \"projections\") AND (\"support\" OR \"supports\")) OR ((\"projection\" OR \"projections\") AND (\"schema\" OR \"schemas\")) OR ((\"projection\" OR \"projections\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR (\"ref\" AND (\"support\" OR \"supports\")) OR (\"ref\" AND (\"schema\" OR \"schemas\")) OR (\"ref\" AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"support\" OR \"supports\") AND (\"schema\" OR \"schemas\")) OR ((\"support\" OR \"supports\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"schema\" OR \"schemas\") AND (\"migrate\" OR \"migration\" OR \"migrations\"))",
+        "queryTerms": [
+          "and",
+          "assessment",
+          "find",
+          "migration",
+          "model",
+          "projection",
+          "public",
+          "ref",
+          "reproducibility",
+          "schemas",
+          "support",
+          "the"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "public_ref"
+          },
+          {
+            "kind": "path",
+            "query": "find"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "path",
+            "query": "model"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "projection"
+          },
+          {
+            "kind": "path",
+            "query": "ref"
+          },
+          {
+            "kind": "path",
+            "query": "support"
+          },
+          {
+            "kind": "phrase",
+            "query": "find reproducibility"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessment model"
+          },
+          {
+            "kind": "phrase",
+            "query": "model public"
+          },
+          {
+            "kind": "phrase",
+            "query": "public projection"
+          },
+          {
+            "kind": "phrase",
+            "query": "projection ref"
+          },
+          {
+            "kind": "phrase",
+            "query": "ref support"
+          },
+          {
+            "kind": "phrase",
+            "query": "support schemas"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"find reproducibility\" OR \"reproducibility assessment\" OR \"assessment model\" OR \"model public\" OR \"public projection\" OR \"projection ref\" OR \"ref support\" OR \"support schemas\" OR \"schemas migration\" OR ((\"find\" OR \"finds\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"find\" OR \"finds\") AND (\"assessment\" OR \"assessments\")) OR ((\"find\" OR \"finds\") AND (\"model\" OR \"models\")) OR ((\"find\" OR \"finds\") AND (\"public\" OR \"publics\")) OR ((\"find\" OR \"finds\") AND (\"projection\" OR \"projections\")) OR ((\"find\" OR \"finds\") AND \"ref\") OR ((\"find\" OR \"finds\") AND (\"support\" OR \"supports\")) OR ((\"find\" OR \"finds\") AND (\"schema\" OR \"schemas\")) OR ((\"find\" OR \"finds\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"model\" OR \"models\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"public\" OR \"publics\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"projection\" OR \"projections\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND \"ref\") OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"support\" OR \"supports\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"schema\" OR \"schemas\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"assessment\" OR \"assessments\") AND (\"model\" OR \"models\")) OR ((\"assessment\" OR \"assessments\") AND (\"public\" OR \"publics\")) OR ((\"assessment\" OR \"assessments\") AND (\"projection\" OR \"projections\")) OR ((\"assessment\" OR \"assessments\") AND \"ref\") OR ((\"assessment\" OR \"assessments\") AND (\"support\" OR \"supports\")) OR ((\"assessment\" OR \"assessments\") AND (\"schema\" OR \"schemas\")) OR ((\"assessment\" OR \"assessments\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"model\" OR \"models\") AND (\"public\" OR \"publics\")) OR ((\"model\" OR \"models\") AND (\"projection\" OR \"projections\")) OR ((\"model\" OR \"models\") AND \"ref\") OR ((\"model\" OR \"models\") AND (\"support\" OR \"supports\")) OR ((\"model\" OR \"models\") AND (\"schema\" OR \"schemas\")) OR ((\"model\" OR \"models\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"public\" OR \"publics\") AND (\"projection\" OR \"projections\")) OR ((\"public\" OR \"publics\") AND \"ref\") OR ((\"public\" OR \"publics\") AND (\"support\" OR \"supports\")) OR ((\"public\" OR \"publics\") AND (\"schema\" OR \"schemas\")) OR ((\"public\" OR \"publics\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"projection\" OR \"projections\") AND \"ref\") OR ((\"projection\" OR \"projections\") AND (\"support\" OR \"supports\")) OR ((\"projection\" OR \"projections\") AND (\"schema\" OR \"schemas\")) OR ((\"projection\" OR \"projections\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR (\"ref\" AND (\"support\" OR \"supports\")) OR (\"ref\" AND (\"schema\" OR \"schemas\")) OR (\"ref\" AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"support\" OR \"supports\") AND (\"schema\" OR \"schemas\")) OR ((\"support\" OR \"supports\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"schema\" OR \"schemas\") AND (\"migrate\" OR \"migration\" OR \"migrations\"))"
+          }
+        ],
+        "identifierTerms": [
+          "public_ref"
+        ],
+        "pathTerms": [
+          "find",
+          "reproducibility",
+          "assessment",
+          "model",
+          "public",
+          "projection",
+          "ref",
+          "support",
+          "schemas",
+          "migration"
+        ],
+        "ftsTerms": [
+          "and",
+          "assessment",
+          "find",
+          "migration",
+          "model",
+          "projection",
+          "public",
+          "ref",
+          "reproducibility",
+          "schemas",
+          "support",
+          "the"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 0,
+          "lexical": 1374,
+          "documentation": 331,
+          "tests": 94,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 1448,
+        "candidateFilesConsidered": 9,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/schemas/entities/reproducibility_assessment.py",
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/app/schemas/reads/scientific_species_calculations.py",
+          "backend/app/db/models/common.py"
+        ],
+        "selectedSymbols": [
+          "PublicAssessmentSummary",
+          "ReproducibilityAssessmentRead",
+          "RecordReproducibilityAssessment",
+          "reproducibility",
+          "ReproducibilityAssessmentAppend",
+          "ReproducibilityAssessmentSummary",
+          "SupportingCalculationRef",
+          "ReproducibilityGrade",
+          "validate_assessor_identity",
+          "assessor_kind",
+          "assessor_user_id",
+          "grade",
+          "assessed_at",
+          "id",
+          "record_id",
+          "record_type",
+          "CalculationProvenanceBlock",
+          "normalize_rubric_text",
+          "record_type",
+          "__table_args__"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.23,
+          "laneSearch": 72.171,
+          "candidateMerge": 18.41,
+          "graphExpansion": 0.782,
+          "render": 0,
+          "total": 94.025
+        }
+      },
+      {
+        "id": "F",
+        "indexKind": "incremental",
+        "phase": "before",
+        "normalizedTask": "add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, openapi, tests, docs, and python client types.",
+        "derivedRetrievalQuery": "\"a\" AND \"across\" AND \"add\" AND \"already\" AND \"an\" AND \"and\" AND \"api\" AND \"appropriate\" AND \"assessment\" AND \"builders\" AND \"client\" AND \"compact\" AND \"determine\" AND \"docs\" AND \"exact\" AND \"for\" AND \"have\" AND \"immutability\" AND \"immutable\" AND \"in\" AND \"kinetics\" AND \"migrations\" AND \"models\" AND \"open\" AND \"openapi\" AND \"projection\" AND \"public\" AND \"python\" AND \"ref\" AND \"reference\" AND \"reproducibility\" AND \"schemas\" AND \"stable\" AND \"statmech\" AND \"summaries\" AND \"supersession\" AND \"surfaced\" AND \"tests\" AND \"the\" AND \"thermo\" AND \"trace\" AND \"transport\" AND \"types\" AND \"whether\"",
+        "queryTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "python",
+          "ref",
+          "reference",
+          "reproducibility",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "public_ref"
+          },
+          {
+            "kind": "identifier",
+            "query": "OpenAPI"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"a\" AND \"across\" AND \"add\" AND \"already\" AND \"an\" AND \"and\" AND \"api\" AND \"appropriate\" AND \"assessment\" AND \"builders\" AND \"client\" AND \"compact\" AND \"determine\" AND \"docs\" AND \"exact\" AND \"for\" AND \"have\" AND \"immutability\" AND \"immutable\" AND \"in\" AND \"kinetics\" AND \"migrations\" AND \"models\" AND \"open\" AND \"openapi\" AND \"projection\" AND \"public\" AND \"python\" AND \"ref\" AND \"reference\" AND \"reproducibility\" AND \"schemas\" AND \"stable\" AND \"statmech\" AND \"summaries\" AND \"supersession\" AND \"surfaced\" AND \"tests\" AND \"the\" AND \"thermo\" AND \"trace\" AND \"transport\" AND \"types\" AND \"whether\""
+          }
+        ],
+        "identifierTerms": [
+          "public_ref",
+          "OpenAPI"
+        ],
+        "pathTerms": [],
+        "ftsTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "python",
+          "ref",
+          "reference",
+          "reproducibility",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "rawHitsPerLane": {
+          "path": 0,
+          "symbol": 0,
+          "lexical": 0,
+          "documentation": 0,
+          "tests": 0,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 0,
+        "candidateFilesConsidered": 0,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [],
+        "selectedSymbols": [],
+        "finalReason": "no_candidates",
+        "latency": {
+          "normalization": 0.141,
+          "laneSearch": 3.146,
+          "candidateMerge": 0.012,
+          "graphExpansion": 0.002,
+          "render": 0,
+          "total": 3.589
+        }
+      },
+      {
+        "id": "G",
+        "indexKind": "incremental",
+        "phase": "before",
+        "normalizedTask": "add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, openapi, tests, docs, and python client types. recordreproducibilityassessment\npublic_assessments.py\nreproducibility_assessment.py",
+        "derivedRetrievalQuery": "\"a\" AND \"across\" AND \"add\" AND \"already\" AND \"an\" AND \"and\" AND \"api\" AND \"appropriate\" AND \"assessment\" AND \"assessments\" AND \"builders\" AND \"client\" AND \"compact\" AND \"determine\" AND \"docs\" AND \"exact\" AND \"for\" AND \"have\" AND \"immutability\" AND \"immutable\" AND \"in\" AND \"kinetics\" AND \"migrations\" AND \"models\" AND \"open\" AND \"openapi\" AND \"projection\" AND \"public\" AND \"py\" AND \"python\" AND \"record\" AND \"recordreproducibility\" AND \"recordreproducibilityassessment\" AND \"ref\" AND \"reference\" AND \"reproducibility\" AND \"reproducibilityassessment\" AND \"schemas\" AND \"stable\" AND \"statmech\" AND \"summaries\" AND \"supersession\" AND \"surfaced\" AND \"tests\" AND \"the\" AND \"thermo\" AND \"trace\" AND \"transport\" AND \"types\" AND \"whether\"",
+        "queryTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "assessments",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "py",
+          "python",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "ref",
+          "reference",
+          "reproducibility",
+          "reproducibilityassessment",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "public_ref"
+          },
+          {
+            "kind": "identifier",
+            "query": "OpenAPI"
+          },
+          {
+            "kind": "identifier",
+            "query": "RecordReproducibilityAssessment"
+          },
+          {
+            "kind": "path",
+            "query": "public_assessments.py"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility_assessment.py"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"a\" AND \"across\" AND \"add\" AND \"already\" AND \"an\" AND \"and\" AND \"api\" AND \"appropriate\" AND \"assessment\" AND \"assessments\" AND \"builders\" AND \"client\" AND \"compact\" AND \"determine\" AND \"docs\" AND \"exact\" AND \"for\" AND \"have\" AND \"immutability\" AND \"immutable\" AND \"in\" AND \"kinetics\" AND \"migrations\" AND \"models\" AND \"open\" AND \"openapi\" AND \"projection\" AND \"public\" AND \"py\" AND \"python\" AND \"record\" AND \"recordreproducibility\" AND \"recordreproducibilityassessment\" AND \"ref\" AND \"reference\" AND \"reproducibility\" AND \"reproducibilityassessment\" AND \"schemas\" AND \"stable\" AND \"statmech\" AND \"summaries\" AND \"supersession\" AND \"surfaced\" AND \"tests\" AND \"the\" AND \"thermo\" AND \"trace\" AND \"transport\" AND \"types\" AND \"whether\""
+          }
+        ],
+        "identifierTerms": [
+          "public_ref",
+          "OpenAPI",
+          "RecordReproducibilityAssessment",
+          "public_assessments.py",
+          "reproducibility_assessment.py"
+        ],
+        "pathTerms": [],
+        "ftsTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "assessments",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "py",
+          "python",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "ref",
+          "reference",
+          "reproducibility",
+          "reproducibilityassessment",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "rawHitsPerLane": {
+          "path": 0,
+          "symbol": 0,
+          "lexical": 0,
+          "documentation": 0,
+          "tests": 0,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 0,
+        "candidateFilesConsidered": 0,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [],
+        "selectedSymbols": [],
+        "finalReason": "no_candidates",
+        "latency": {
+          "normalization": 0.156,
+          "laneSearch": 4.137,
+          "candidateMerge": 0.022,
+          "graphExpansion": 0.004,
+          "render": 0,
+          "total": 4.638
+        }
+      }
+    ],
+    "after": [
+      {
+        "id": "A",
+        "indexKind": "incremental",
+        "phase": "after",
+        "normalizedTask": "recordreproducibilityassessment",
+        "derivedRetrievalQuery": "\"assessment\" AND \"record\" AND \"recordreproducibility\" AND \"recordreproducibilityassessment\" AND \"reproducibility\" AND \"reproducibilityassessment\"",
+        "queryTerms": [
+          "assessment",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "reproducibility",
+          "reproducibilityassessment"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "RecordReproducibilityAssessment"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"assessment\" AND \"record\" AND \"recordreproducibility\" AND \"recordreproducibilityassessment\" AND \"reproducibility\" AND \"reproducibilityassessment\""
+          }
+        ],
+        "identifierTerms": [
+          "RecordReproducibilityAssessment"
+        ],
+        "pathTerms": [],
+        "ftsTerms": [
+          "assessment",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "reproducibility",
+          "reproducibilityassessment"
+        ],
+        "rawHitsPerLane": {
+          "path": 0,
+          "symbol": 1,
+          "lexical": 25,
+          "documentation": 0,
+          "tests": 1,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 25,
+        "candidateFilesConsidered": 2,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/app/services/reproducibility_assessment.py"
+        ],
+        "selectedSymbols": [
+          "RecordReproducibilityAssessment",
+          "assessed_at",
+          "id",
+          "record_id",
+          "record_type",
+          "__table_args__",
+          "__tablename__",
+          "assessor_kind",
+          "assessor_user_id",
+          "context_hash",
+          "context_json",
+          "grade",
+          "missing_json",
+          "passed_json",
+          "rubric_name",
+          "rubric_version",
+          "source_submission_id",
+          "warnings_json",
+          "get_latest_reproducibility_assessment",
+          "append_reproducibility_assessment"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.039,
+          "laneSearch": 1.326,
+          "candidateMerge": 0.081,
+          "graphExpansion": 0.49,
+          "render": 0,
+          "total": 2.114
+        }
+      },
+      {
+        "id": "B",
+        "indexKind": "incremental",
+        "phase": "after",
+        "normalizedTask": "reproducibility_assessment",
+        "derivedRetrievalQuery": "((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\"))",
+        "queryTerms": [
+          "assessment",
+          "reproducibility"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "reproducibility_assessment"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\"))"
+          }
+        ],
+        "identifierTerms": [
+          "reproducibility_assessment"
+        ],
+        "pathTerms": [
+          "reproducibility",
+          "assessment"
+        ],
+        "ftsTerms": [
+          "assessment",
+          "reproducibility"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 1,
+          "lexical": 113,
+          "documentation": 6,
+          "tests": 19,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 126,
+        "candidateFilesConsidered": 5,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/services/reproducibility_assessment.py",
+          "backend/app/api/routes/curation.py",
+          "backend/app/schemas/entities/reproducibility_assessment.py",
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/alembic/versions/b4e8c1f6a2d9_add_reproducibility_assessments.py"
+        ],
+        "selectedSymbols": [
+          "append_reproducibility_assessment",
+          "get_latest_reproducibility_assessment",
+          "is_reproducibility_assessment_context_current",
+          "read_latest_reproducibility_assessment",
+          "ReproducibilityAssessmentAppend",
+          "RecordReproducibilityAssessment",
+          "__tablename__",
+          "_TRIGGER_FUNCTION",
+          "assessed_at",
+          "id",
+          "record_id",
+          "record_type",
+          "ReproducibilityAssessmentRead",
+          "assessor_kind",
+          "assessor_user_id",
+          "grade",
+          "normalize_rubric_text",
+          "record_type",
+          "__table_args__",
+          "assessor_kind"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.051,
+          "laneSearch": 19.536,
+          "candidateMerge": 0.912,
+          "graphExpansion": 0.562,
+          "render": 0,
+          "total": 21.372
+        }
+      },
+      {
+        "id": "C",
+        "indexKind": "incremental",
+        "phase": "after",
+        "normalizedTask": "public_assessments.py",
+        "derivedRetrievalQuery": "\"public assessments\" OR \"assessments py\" OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND \"py\") OR ((\"assessment\" OR \"assessments\") AND \"py\")",
+        "queryTerms": [
+          "assessments",
+          "public",
+          "py"
+        ],
+        "queryVariants": [
+          {
+            "kind": "path",
+            "query": "public_assessments.py"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "assessments"
+          },
+          {
+            "kind": "phrase",
+            "query": "public assessments"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessments py"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"public assessments\" OR \"assessments py\" OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND \"py\") OR ((\"assessment\" OR \"assessments\") AND \"py\")"
+          }
+        ],
+        "identifierTerms": [
+          "public_assessments.py"
+        ],
+        "pathTerms": [
+          "public",
+          "assessments"
+        ],
+        "ftsTerms": [
+          "assessments",
+          "public",
+          "py"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 1,
+          "lexical": 676,
+          "documentation": 223,
+          "tests": 194,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 676,
+        "candidateFilesConsidered": 11,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/services/scientific_read/public_assessments.py",
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/app/schemas/reads/scientific_kinetics.py",
+          "backend/app/schemas/reads/scientific_statmech.py",
+          "backend/app/schemas/reads/scientific_thermo.py",
+          "backend/app/schemas/reads/scientific_transport.py"
+        ],
+        "selectedSymbols": [
+          "__all__",
+          "_attach",
+          "attach_kinetics_assessments",
+          "attach_statmech_assessments",
+          "attach_thermo_assessments",
+          "attach_transport_assessments",
+          "_latest_assessments",
+          "_reproducibility_summary",
+          "PublicAssessmentSummary",
+          "_kinetics_records",
+          "_statmech_records",
+          "_thermo_records",
+          "_transport_records",
+          "deterministic_trust",
+          "reproducibility",
+          "RecordReproducibilityAssessment",
+          "assessments",
+          "assessments",
+          "assessments",
+          "assessments"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.048,
+          "laneSearch": 24.382,
+          "candidateMerge": 4.892,
+          "graphExpansion": 0.686,
+          "render": 0,
+          "total": 30.966
+        }
+      },
+      {
+        "id": "D",
+        "indexKind": "incremental",
+        "phase": "after",
+        "normalizedTask": "add a public reference to reproducibility assessment summaries",
+        "derivedRetrievalQuery": "\"add public\" OR \"public reference\" OR \"reference reproducibility\" OR \"reproducibility assessment\" OR \"assessment summaries\" OR (\"add\" AND (\"public\" OR \"publics\")) OR (\"add\" AND (\"reference\" OR \"references\")) OR (\"add\" AND (\"reproducibilities\" OR \"reproducibility\")) OR (\"add\" AND (\"assessment\" OR \"assessments\")) OR (\"add\" AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"public\" OR \"publics\") AND (\"reference\" OR \"references\")) OR ((\"public\" OR \"publics\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reference\" OR \"references\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reference\" OR \"references\") AND (\"assessment\" OR \"assessments\")) OR ((\"reference\" OR \"references\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"assessment\" OR \"assessments\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\"))",
+        "queryTerms": [
+          "a",
+          "add",
+          "assessment",
+          "public",
+          "reference",
+          "reproducibility",
+          "summaries",
+          "to"
+        ],
+        "queryVariants": [
+          {
+            "kind": "path",
+            "query": "add"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "reference"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "path",
+            "query": "summaries"
+          },
+          {
+            "kind": "phrase",
+            "query": "add public"
+          },
+          {
+            "kind": "phrase",
+            "query": "public reference"
+          },
+          {
+            "kind": "phrase",
+            "query": "reference reproducibility"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessment summaries"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"add public\" OR \"public reference\" OR \"reference reproducibility\" OR \"reproducibility assessment\" OR \"assessment summaries\" OR (\"add\" AND (\"public\" OR \"publics\")) OR (\"add\" AND (\"reference\" OR \"references\")) OR (\"add\" AND (\"reproducibilities\" OR \"reproducibility\")) OR (\"add\" AND (\"assessment\" OR \"assessments\")) OR (\"add\" AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"public\" OR \"publics\") AND (\"reference\" OR \"references\")) OR ((\"public\" OR \"publics\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reference\" OR \"references\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reference\" OR \"references\") AND (\"assessment\" OR \"assessments\")) OR ((\"reference\" OR \"references\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"assessment\" OR \"assessments\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\"))"
+          }
+        ],
+        "identifierTerms": [],
+        "pathTerms": [
+          "add",
+          "public",
+          "reference",
+          "reproducibility",
+          "assessment",
+          "summaries"
+        ],
+        "ftsTerms": [
+          "a",
+          "add",
+          "assessment",
+          "public",
+          "reference",
+          "reproducibility",
+          "summaries",
+          "to"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 0,
+          "lexical": 237,
+          "documentation": 93,
+          "tests": 32,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 322,
+        "candidateFilesConsidered": 12,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/services/scientific_read/public_assessments.py",
+          "backend/alembic/versions/b4e8c1f6a2d9_add_reproducibility_assessments.py",
+          "backend/app/db/models/reproducibility_assessment.py"
+        ],
+        "selectedSymbols": [
+          "reproducibility",
+          "PublicAssessmentSummary",
+          "ReproducibilityAssessmentSummary",
+          "_reproducibility_summary",
+          "_ASSESSOR_KIND_VALUES",
+          "_GRADE_VALUES",
+          "_TRIGGER_FUNCTION",
+          "_TRIGGER_NAME",
+          "downgrade",
+          "upgrade",
+          "RecordReproducibilityAssessment",
+          "_latest_assessments",
+          "attach_statmech_assessments",
+          "attach_transport_assessments",
+          "deterministic_trust",
+          "assessed_at",
+          "grade",
+          "rubric",
+          "rubric_version",
+          "state"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.094,
+          "laneSearch": 46.604,
+          "candidateMerge": 4.3,
+          "graphExpansion": 0.761,
+          "render": 0,
+          "total": 52.402
+        }
+      },
+      {
+        "id": "E",
+        "indexKind": "incremental",
+        "phase": "after",
+        "normalizedTask": "find the reproducibility assessment model, public assessment projection, public_ref support, schemas, and migration",
+        "derivedRetrievalQuery": "\"find reproducibility\" OR \"reproducibility assessment\" OR \"assessment model\" OR \"model public\" OR \"public projection\" OR \"projection ref\" OR \"ref support\" OR \"support schemas\" OR \"schemas migration\" OR ((\"find\" OR \"finds\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"find\" OR \"finds\") AND (\"assessment\" OR \"assessments\")) OR ((\"find\" OR \"finds\") AND (\"model\" OR \"models\")) OR ((\"find\" OR \"finds\") AND (\"public\" OR \"publics\")) OR ((\"find\" OR \"finds\") AND (\"projection\" OR \"projections\")) OR ((\"find\" OR \"finds\") AND \"ref\") OR ((\"find\" OR \"finds\") AND (\"support\" OR \"supports\")) OR ((\"find\" OR \"finds\") AND (\"schema\" OR \"schemas\")) OR ((\"find\" OR \"finds\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"model\" OR \"models\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"public\" OR \"publics\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"projection\" OR \"projections\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND \"ref\") OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"support\" OR \"supports\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"schema\" OR \"schemas\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"assessment\" OR \"assessments\") AND (\"model\" OR \"models\")) OR ((\"assessment\" OR \"assessments\") AND (\"public\" OR \"publics\")) OR ((\"assessment\" OR \"assessments\") AND (\"projection\" OR \"projections\")) OR ((\"assessment\" OR \"assessments\") AND \"ref\") OR ((\"assessment\" OR \"assessments\") AND (\"support\" OR \"supports\")) OR ((\"assessment\" OR \"assessments\") AND (\"schema\" OR \"schemas\")) OR ((\"assessment\" OR \"assessments\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"model\" OR \"models\") AND (\"public\" OR \"publics\")) OR ((\"model\" OR \"models\") AND (\"projection\" OR \"projections\")) OR ((\"model\" OR \"models\") AND \"ref\") OR ((\"model\" OR \"models\") AND (\"support\" OR \"supports\")) OR ((\"model\" OR \"models\") AND (\"schema\" OR \"schemas\")) OR ((\"model\" OR \"models\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"public\" OR \"publics\") AND (\"projection\" OR \"projections\")) OR ((\"public\" OR \"publics\") AND \"ref\") OR ((\"public\" OR \"publics\") AND (\"support\" OR \"supports\")) OR ((\"public\" OR \"publics\") AND (\"schema\" OR \"schemas\")) OR ((\"public\" OR \"publics\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"projection\" OR \"projections\") AND \"ref\") OR ((\"projection\" OR \"projections\") AND (\"support\" OR \"supports\")) OR ((\"projection\" OR \"projections\") AND (\"schema\" OR \"schemas\")) OR ((\"projection\" OR \"projections\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR (\"ref\" AND (\"support\" OR \"supports\")) OR (\"ref\" AND (\"schema\" OR \"schemas\")) OR (\"ref\" AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"support\" OR \"supports\") AND (\"schema\" OR \"schemas\")) OR ((\"support\" OR \"supports\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"schema\" OR \"schemas\") AND (\"migrate\" OR \"migration\" OR \"migrations\"))",
+        "queryTerms": [
+          "and",
+          "assessment",
+          "find",
+          "migration",
+          "model",
+          "projection",
+          "public",
+          "ref",
+          "reproducibility",
+          "schemas",
+          "support",
+          "the"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "public_ref"
+          },
+          {
+            "kind": "path",
+            "query": "find"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "path",
+            "query": "model"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "projection"
+          },
+          {
+            "kind": "path",
+            "query": "ref"
+          },
+          {
+            "kind": "path",
+            "query": "support"
+          },
+          {
+            "kind": "phrase",
+            "query": "find reproducibility"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessment model"
+          },
+          {
+            "kind": "phrase",
+            "query": "model public"
+          },
+          {
+            "kind": "phrase",
+            "query": "public projection"
+          },
+          {
+            "kind": "phrase",
+            "query": "projection ref"
+          },
+          {
+            "kind": "phrase",
+            "query": "ref support"
+          },
+          {
+            "kind": "phrase",
+            "query": "support schemas"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"find reproducibility\" OR \"reproducibility assessment\" OR \"assessment model\" OR \"model public\" OR \"public projection\" OR \"projection ref\" OR \"ref support\" OR \"support schemas\" OR \"schemas migration\" OR ((\"find\" OR \"finds\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"find\" OR \"finds\") AND (\"assessment\" OR \"assessments\")) OR ((\"find\" OR \"finds\") AND (\"model\" OR \"models\")) OR ((\"find\" OR \"finds\") AND (\"public\" OR \"publics\")) OR ((\"find\" OR \"finds\") AND (\"projection\" OR \"projections\")) OR ((\"find\" OR \"finds\") AND \"ref\") OR ((\"find\" OR \"finds\") AND (\"support\" OR \"supports\")) OR ((\"find\" OR \"finds\") AND (\"schema\" OR \"schemas\")) OR ((\"find\" OR \"finds\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"model\" OR \"models\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"public\" OR \"publics\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"projection\" OR \"projections\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND \"ref\") OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"support\" OR \"supports\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"schema\" OR \"schemas\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"assessment\" OR \"assessments\") AND (\"model\" OR \"models\")) OR ((\"assessment\" OR \"assessments\") AND (\"public\" OR \"publics\")) OR ((\"assessment\" OR \"assessments\") AND (\"projection\" OR \"projections\")) OR ((\"assessment\" OR \"assessments\") AND \"ref\") OR ((\"assessment\" OR \"assessments\") AND (\"support\" OR \"supports\")) OR ((\"assessment\" OR \"assessments\") AND (\"schema\" OR \"schemas\")) OR ((\"assessment\" OR \"assessments\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"model\" OR \"models\") AND (\"public\" OR \"publics\")) OR ((\"model\" OR \"models\") AND (\"projection\" OR \"projections\")) OR ((\"model\" OR \"models\") AND \"ref\") OR ((\"model\" OR \"models\") AND (\"support\" OR \"supports\")) OR ((\"model\" OR \"models\") AND (\"schema\" OR \"schemas\")) OR ((\"model\" OR \"models\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"public\" OR \"publics\") AND (\"projection\" OR \"projections\")) OR ((\"public\" OR \"publics\") AND \"ref\") OR ((\"public\" OR \"publics\") AND (\"support\" OR \"supports\")) OR ((\"public\" OR \"publics\") AND (\"schema\" OR \"schemas\")) OR ((\"public\" OR \"publics\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"projection\" OR \"projections\") AND \"ref\") OR ((\"projection\" OR \"projections\") AND (\"support\" OR \"supports\")) OR ((\"projection\" OR \"projections\") AND (\"schema\" OR \"schemas\")) OR ((\"projection\" OR \"projections\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR (\"ref\" AND (\"support\" OR \"supports\")) OR (\"ref\" AND (\"schema\" OR \"schemas\")) OR (\"ref\" AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"support\" OR \"supports\") AND (\"schema\" OR \"schemas\")) OR ((\"support\" OR \"supports\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"schema\" OR \"schemas\") AND (\"migrate\" OR \"migration\" OR \"migrations\"))"
+          }
+        ],
+        "identifierTerms": [
+          "public_ref"
+        ],
+        "pathTerms": [
+          "find",
+          "reproducibility",
+          "assessment",
+          "model",
+          "public",
+          "projection",
+          "ref",
+          "support",
+          "schemas",
+          "migration"
+        ],
+        "ftsTerms": [
+          "and",
+          "assessment",
+          "find",
+          "migration",
+          "model",
+          "projection",
+          "public",
+          "ref",
+          "reproducibility",
+          "schemas",
+          "support",
+          "the"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 1,
+          "lexical": 1374,
+          "documentation": 331,
+          "tests": 94,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 1448,
+        "candidateFilesConsidered": 10,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/db/base.py",
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/app/schemas/entities/reproducibility_assessment.py",
+          "backend/app/schemas/reads/scientific_species_calculations.py",
+          "backend/app/db/models/common.py"
+        ],
+        "selectedSymbols": [
+          "public_ref",
+          "PublicAssessmentSummary",
+          "RecordReproducibilityAssessment",
+          "reproducibility",
+          "ReproducibilityAssessmentAppend",
+          "ReproducibilityAssessmentRead",
+          "ReproducibilityAssessmentSummary",
+          "SupportingCalculationRef",
+          "ReproducibilityGrade",
+          "validate_assessor_identity",
+          "assessor_kind",
+          "assessor_user_id",
+          "grade",
+          "assessed_at",
+          "id",
+          "record_id",
+          "record_type",
+          "CalculationProvenanceBlock",
+          "normalize_rubric_text",
+          "record_type"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.166,
+          "laneSearch": 72.347,
+          "candidateMerge": 16.318,
+          "graphExpansion": 1.276,
+          "render": 0,
+          "total": 91.924
+        }
+      },
+      {
+        "id": "F",
+        "indexKind": "incremental",
+        "phase": "after",
+        "normalizedTask": "add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, openapi, tests, docs, and python client types.",
+        "derivedRetrievalQuery": "\"add stable\" OR \"stable public\" OR \"public reference\" OR \"reference exact\" OR \"exact immutable\" OR \"immutable reproducibility\" OR \"reproducibility assessment\" OR \"assessment surfaced\" OR \"surfaced compact\" OR \"compact summaries\" OR \"summaries across\" OR \"across thermo\" OR \"thermo kinetics\" OR \"kinetics statmech\" OR \"statmech transport\" OR \"transport determine\" OR \"determine whether\" OR \"whether models\" OR \"models already\" OR \"already have\" OR \"have appropriate\" OR \"appropriate ref\" OR \"ref trace\" OR \"trace immutability\" OR \"immutability supersession\" OR \"supersession schemas\" OR \"schemas migrations\" OR \"migrations projection\" OR \"projection builders\" OR \"builders open\" OR \"open api\" OR \"api tests\" OR \"tests docs\" OR \"docs python\" OR \"python client\" OR \"client types\" OR ((\"immutable\" OR \"immutables\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"assessment\" OR \"assessments\") AND (\"surfac\" OR \"surfaced\" OR \"surfaceds\")) OR ((\"statmech\" OR \"statmeches\" OR \"statmechs\") AND (\"transport\" OR \"transports\")) OR ((\"transport\" OR \"transports\") AND (\"decide\" OR \"derive\" OR \"determine\" OR \"determined\" OR \"determines\" OR \"evaluate\" OR \"evaluated\" OR \"resolution\" OR \"resolve\" OR \"resolved\")) OR ((\"trace\" OR \"traces\") AND (\"immutabilities\" OR \"immutability\")) OR ((\"immutabilities\" OR \"immutability\") AND (\"supersession\" OR \"supersessions\")) OR ((\"supersession\" OR \"supersessions\") AND (\"schema\" OR \"schemas\")) OR ((\"schema\" OR \"schemas\") AND (\"migration\" OR \"migrations\")) OR ((\"migration\" OR \"migrations\") AND (\"projection\" OR \"projections\")) OR ((\"projection\" OR \"projections\") AND (\"builder\" OR \"builders\"))",
+        "queryTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "python",
+          "ref",
+          "reference",
+          "reproducibility",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "public_ref"
+          },
+          {
+            "kind": "identifier",
+            "query": "OpenAPI"
+          },
+          {
+            "kind": "path",
+            "query": "add"
+          },
+          {
+            "kind": "path",
+            "query": "stable"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "reference"
+          },
+          {
+            "kind": "path",
+            "query": "exact"
+          },
+          {
+            "kind": "path",
+            "query": "immutable"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "add stable"
+          },
+          {
+            "kind": "phrase",
+            "query": "stable public"
+          },
+          {
+            "kind": "phrase",
+            "query": "public reference"
+          },
+          {
+            "kind": "phrase",
+            "query": "reference exact"
+          },
+          {
+            "kind": "phrase",
+            "query": "exact immutable"
+          },
+          {
+            "kind": "phrase",
+            "query": "immutable reproducibility"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessment surfaced"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"add stable\" OR \"stable public\" OR \"public reference\" OR \"reference exact\" OR \"exact immutable\" OR \"immutable reproducibility\" OR \"reproducibility assessment\" OR \"assessment surfaced\" OR \"surfaced compact\" OR \"compact summaries\" OR \"summaries across\" OR \"across thermo\" OR \"thermo kinetics\" OR \"kinetics statmech\" OR \"statmech transport\" OR \"transport determine\" OR \"determine whether\" OR \"whether models\" OR \"models already\" OR \"already have\" OR \"have appropriate\" OR \"appropriate ref\" OR \"ref trace\" OR \"trace immutability\" OR \"immutability supersession\" OR \"supersession schemas\" OR \"schemas migrations\" OR \"migrations projection\" OR \"projection builders\" OR \"builders open\" OR \"open api\" OR \"api tests\" OR \"tests docs\" OR \"docs python\" OR \"python client\" OR \"client types\" OR ((\"immutable\" OR \"immutables\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"assessment\" OR \"assessments\") AND (\"surfac\" OR \"surfaced\" OR \"surfaceds\")) OR ((\"statmech\" OR \"statmeches\" OR \"statmechs\") AND (\"transport\" OR \"transports\")) OR ((\"transport\" OR \"transports\") AND (\"decide\" OR \"derive\" OR \"determine\" OR \"determined\" OR \"determines\" OR \"evaluate\" OR \"evaluated\" OR \"resolution\" OR \"resolve\" OR \"resolved\")) OR ((\"trace\" OR \"traces\") AND (\"immutabilities\" OR \"immutability\")) OR ((\"immutabilities\" OR \"immutability\") AND (\"supersession\" OR \"supersessions\")) OR ((\"supersession\" OR \"supersessions\") AND (\"schema\" OR \"schemas\")) OR ((\"schema\" OR \"schemas\") AND (\"migration\" OR \"migrations\")) OR ((\"migration\" OR \"migrations\") AND (\"projection\" OR \"projections\")) OR ((\"projection\" OR \"projections\") AND (\"builder\" OR \"builders\"))"
+          }
+        ],
+        "identifierTerms": [
+          "public_ref",
+          "OpenAPI"
+        ],
+        "pathTerms": [
+          "add",
+          "stable",
+          "public",
+          "reference",
+          "exact",
+          "immutable",
+          "reproducibility",
+          "assessment",
+          "surfaced",
+          "compact",
+          "summaries",
+          "across",
+          "thermo",
+          "kinetics",
+          "statmech",
+          "transport",
+          "determine",
+          "whether",
+          "models",
+          "already",
+          "have",
+          "appropriate",
+          "ref",
+          "trace",
+          "immutability",
+          "supersession",
+          "schemas",
+          "migrations",
+          "projection",
+          "builders",
+          "open",
+          "api",
+          "tests",
+          "docs",
+          "python",
+          "client",
+          "types"
+        ],
+        "ftsTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "python",
+          "ref",
+          "reference",
+          "reproducibility",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 2,
+          "lexical": 199,
+          "documentation": 60,
+          "tests": 35,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 284,
+        "candidateFilesConsidered": 37,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/db/base.py",
+          "clients/python/tests/test_builder_summary.py",
+          "clients/python/src/tckdb_client/builders/uploads.py",
+          "backend/app/api/public_openapi.py",
+          "clients/python/tests/test_computed_reaction_transport_builder.py",
+          "clients/python/src/tckdb_client/builders/__init__.py",
+          "backend/app/db/models/__init__.py",
+          "backend/app/api/routes/scientific/species_subresources.py",
+          "clients/python/src/tckdb_client/scientific_types.py",
+          "clients/python/adapters/chemkin/tckdb_chemkin/uploader.py",
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/tests/services/test_public_refs.py",
+          "clients/python/src/tckdb_client/__init__.py",
+          "backend/app/services/reproducibility_assessment.py",
+          "backend/alembic/versions/d861dfd60891_create_intial_schema.py",
+          "clients/python/tests/test_computed_species_upload_transport.py",
+          "clients/python/src/tckdb_client/builders/transport.py",
+          "backend/app/services/public_refs.py"
+        ],
+        "selectedSymbols": [
+          "public_ref",
+          "REACTION_REQUIRED_KEYS",
+          "SPECIES_REQUIRED_KEYS",
+          "emission_diagnostics",
+          "project_hosted_openapi",
+          "test_transport_alongside_thermo_and_statmech",
+          "__all__",
+          "__all__",
+          "species_statmech",
+          "species_transport",
+          "__all__",
+          "upload_payloads",
+          "ReproducibilityAssessmentSummary",
+          "TestColumnExists",
+          "__all__",
+          "_RECORD_MODELS",
+          "_add_public_ref_columns_and_indexes",
+          "test_transport_alongside_thermo_and_statmech",
+          "_normalise_transport_source_calculations",
+          "PREFIXES"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.419,
+          "laneSearch": 205.425,
+          "candidateMerge": 8.356,
+          "graphExpansion": 1.216,
+          "render": 0,
+          "total": 216.519
+        }
+      },
+      {
+        "id": "G",
+        "indexKind": "incremental",
+        "phase": "after",
+        "normalizedTask": "add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, openapi, tests, docs, and python client types. recordreproducibilityassessment\npublic_assessments.py\nreproducibility_assessment.py",
+        "derivedRetrievalQuery": "\"add stable\" OR \"stable public\" OR \"public reference\" OR \"reference exact\" OR \"exact immutable\" OR \"immutable reproducibility\" OR \"reproducibility assessment\" OR \"assessment surfaced\" OR \"surfaced compact\" OR \"compact summaries\" OR \"summaries across\" OR \"across thermo\" OR \"thermo kinetics\" OR \"kinetics statmech\" OR \"statmech transport\" OR \"transport determine\" OR \"determine whether\" OR \"whether models\" OR \"models already\" OR \"already have\" OR \"have appropriate\" OR \"appropriate ref\" OR \"ref trace\" OR \"trace immutability\" OR \"immutability supersession\" OR \"supersession schemas\" OR \"schemas migrations\" OR \"migrations projection\" OR \"projection builders\" OR \"builders open\" OR \"open api\" OR \"api tests\" OR \"tests docs\" OR \"docs python\" OR \"python client\" OR \"client types\" OR \"types record\" OR \"record assessments\" OR \"assessments py\" OR ((\"immutable\" OR \"immutables\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"assessment\" OR \"assessments\") AND (\"surfac\" OR \"surfaced\" OR \"surfaceds\")) OR ((\"statmech\" OR \"statmeches\" OR \"statmechs\") AND (\"transport\" OR \"transports\")) OR ((\"transport\" OR \"transports\") AND (\"decide\" OR \"derive\" OR \"determine\" OR \"determined\" OR \"determines\" OR \"evaluate\" OR \"evaluated\" OR \"resolution\" OR \"resolve\" OR \"resolved\")) OR ((\"trace\" OR \"traces\") AND (\"immutabilities\" OR \"immutability\")) OR ((\"immutabilities\" OR \"immutability\") AND (\"supersession\" OR \"supersessions\")) OR ((\"supersession\" OR \"supersessions\") AND (\"schema\" OR \"schemas\")) OR ((\"schema\" OR \"schemas\") AND (\"migration\" OR \"migrations\")) OR ((\"migration\" OR \"migrations\") AND (\"projection\" OR \"projections\")) OR ((\"projection\" OR \"projections\") AND (\"builder\" OR \"builders\")) OR ((\"record\" OR \"records\") AND (\"assessment\" OR \"assessments\"))",
+        "queryTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "assessments",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "py",
+          "python",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "ref",
+          "reference",
+          "reproducibility",
+          "reproducibilityassessment",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "public_ref"
+          },
+          {
+            "kind": "identifier",
+            "query": "OpenAPI"
+          },
+          {
+            "kind": "identifier",
+            "query": "RecordReproducibilityAssessment"
+          },
+          {
+            "kind": "path",
+            "query": "public_assessments.py"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility_assessment.py"
+          },
+          {
+            "kind": "path",
+            "query": "add"
+          },
+          {
+            "kind": "path",
+            "query": "stable"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "reference"
+          },
+          {
+            "kind": "path",
+            "query": "exact"
+          },
+          {
+            "kind": "path",
+            "query": "immutable"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "add stable"
+          },
+          {
+            "kind": "phrase",
+            "query": "stable public"
+          },
+          {
+            "kind": "phrase",
+            "query": "public reference"
+          },
+          {
+            "kind": "phrase",
+            "query": "reference exact"
+          },
+          {
+            "kind": "phrase",
+            "query": "exact immutable"
+          },
+          {
+            "kind": "phrase",
+            "query": "immutable reproducibility"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessment surfaced"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"add stable\" OR \"stable public\" OR \"public reference\" OR \"reference exact\" OR \"exact immutable\" OR \"immutable reproducibility\" OR \"reproducibility assessment\" OR \"assessment surfaced\" OR \"surfaced compact\" OR \"compact summaries\" OR \"summaries across\" OR \"across thermo\" OR \"thermo kinetics\" OR \"kinetics statmech\" OR \"statmech transport\" OR \"transport determine\" OR \"determine whether\" OR \"whether models\" OR \"models already\" OR \"already have\" OR \"have appropriate\" OR \"appropriate ref\" OR \"ref trace\" OR \"trace immutability\" OR \"immutability supersession\" OR \"supersession schemas\" OR \"schemas migrations\" OR \"migrations projection\" OR \"projection builders\" OR \"builders open\" OR \"open api\" OR \"api tests\" OR \"tests docs\" OR \"docs python\" OR \"python client\" OR \"client types\" OR \"types record\" OR \"record assessments\" OR \"assessments py\" OR ((\"immutable\" OR \"immutables\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"assessment\" OR \"assessments\") AND (\"surfac\" OR \"surfaced\" OR \"surfaceds\")) OR ((\"statmech\" OR \"statmeches\" OR \"statmechs\") AND (\"transport\" OR \"transports\")) OR ((\"transport\" OR \"transports\") AND (\"decide\" OR \"derive\" OR \"determine\" OR \"determined\" OR \"determines\" OR \"evaluate\" OR \"evaluated\" OR \"resolution\" OR \"resolve\" OR \"resolved\")) OR ((\"trace\" OR \"traces\") AND (\"immutabilities\" OR \"immutability\")) OR ((\"immutabilities\" OR \"immutability\") AND (\"supersession\" OR \"supersessions\")) OR ((\"supersession\" OR \"supersessions\") AND (\"schema\" OR \"schemas\")) OR ((\"schema\" OR \"schemas\") AND (\"migration\" OR \"migrations\")) OR ((\"migration\" OR \"migrations\") AND (\"projection\" OR \"projections\")) OR ((\"projection\" OR \"projections\") AND (\"builder\" OR \"builders\")) OR ((\"record\" OR \"records\") AND (\"assessment\" OR \"assessments\"))"
+          }
+        ],
+        "identifierTerms": [
+          "public_ref",
+          "OpenAPI",
+          "RecordReproducibilityAssessment",
+          "public_assessments.py",
+          "reproducibility_assessment.py"
+        ],
+        "pathTerms": [
+          "add",
+          "stable",
+          "public",
+          "reference",
+          "exact",
+          "immutable",
+          "reproducibility",
+          "assessment",
+          "surfaced",
+          "compact",
+          "summaries",
+          "across",
+          "thermo",
+          "kinetics",
+          "statmech",
+          "transport",
+          "determine",
+          "whether",
+          "models",
+          "already",
+          "have",
+          "appropriate",
+          "ref",
+          "trace",
+          "immutability",
+          "supersession",
+          "schemas",
+          "migrations",
+          "projection",
+          "builders",
+          "open",
+          "api",
+          "tests",
+          "docs",
+          "python",
+          "client",
+          "types",
+          "record",
+          "assessments"
+        ],
+        "ftsTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "assessments",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "py",
+          "python",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "ref",
+          "reference",
+          "reproducibility",
+          "reproducibilityassessment",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 4,
+          "lexical": 220,
+          "documentation": 67,
+          "tests": 37,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 305,
+        "candidateFilesConsidered": 32,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/db/base.py",
+          "backend/app/db/models/reproducibility_assessment.py",
+          "clients/python/tests/test_builder_summary.py",
+          "backend/app/db/models/__init__.py",
+          "backend/app/services/reproducibility_assessment.py",
+          "clients/python/src/tckdb_client/scientific_types.py",
+          "backend/app/api/routes/scientific/species_subresources.py",
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/services/scientific_read/public_assessments.py",
+          "clients/python/src/tckdb_client/builders/uploads.py",
+          "backend/app/schemas/reads/scientific_kinetics.py",
+          "backend/app/schemas/reads/scientific_statmech.py",
+          "backend/app/schemas/reads/scientific_thermo.py"
+        ],
+        "selectedSymbols": [
+          "public_ref",
+          "RecordReproducibilityAssessment",
+          "REACTION_REQUIRED_KEYS",
+          "SPECIES_REQUIRED_KEYS",
+          "__all__",
+          "_RECORD_MODELS",
+          "assessments",
+          "assessments",
+          "assessments",
+          "assessments",
+          "species_statmech",
+          "species_transport",
+          "PublicAssessmentSummary",
+          "ReproducibilityAssessmentSummary",
+          "__all__",
+          "emission_diagnostics",
+          "__all__",
+          "assessments",
+          "assessments",
+          "assessments"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.217,
+          "laneSearch": 209.371,
+          "candidateMerge": 9.398,
+          "graphExpansion": 1.404,
+          "render": 0,
+          "total": 221.422
+        }
+      }
+    ]
+  },
+  "cleanFull": {
+    "after": [
+      {
+        "id": "A",
+        "indexKind": "full",
+        "phase": "after",
+        "normalizedTask": "recordreproducibilityassessment",
+        "derivedRetrievalQuery": "\"assessment\" AND \"record\" AND \"recordreproducibility\" AND \"recordreproducibilityassessment\" AND \"reproducibility\" AND \"reproducibilityassessment\"",
+        "queryTerms": [
+          "assessment",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "reproducibility",
+          "reproducibilityassessment"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "RecordReproducibilityAssessment"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"assessment\" AND \"record\" AND \"recordreproducibility\" AND \"recordreproducibilityassessment\" AND \"reproducibility\" AND \"reproducibilityassessment\""
+          }
+        ],
+        "identifierTerms": [
+          "RecordReproducibilityAssessment"
+        ],
+        "pathTerms": [],
+        "ftsTerms": [
+          "assessment",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "reproducibility",
+          "reproducibilityassessment"
+        ],
+        "rawHitsPerLane": {
+          "path": 0,
+          "symbol": 1,
+          "lexical": 25,
+          "documentation": 0,
+          "tests": 1,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 25,
+        "candidateFilesConsidered": 2,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/app/services/reproducibility_assessment.py"
+        ],
+        "selectedSymbols": [
+          "RecordReproducibilityAssessment",
+          "assessed_at",
+          "id",
+          "record_id",
+          "record_type",
+          "__table_args__",
+          "__tablename__",
+          "assessor_kind",
+          "assessor_user_id",
+          "context_hash",
+          "context_json",
+          "grade",
+          "missing_json",
+          "passed_json",
+          "rubric_name",
+          "rubric_version",
+          "source_submission_id",
+          "warnings_json",
+          "get_latest_reproducibility_assessment",
+          "append_reproducibility_assessment"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.058,
+          "laneSearch": 0.795,
+          "candidateMerge": 0.065,
+          "graphExpansion": 0.424,
+          "render": 0,
+          "total": 1.703
+        }
+      },
+      {
+        "id": "B",
+        "indexKind": "full",
+        "phase": "after",
+        "normalizedTask": "reproducibility_assessment",
+        "derivedRetrievalQuery": "((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\"))",
+        "queryTerms": [
+          "assessment",
+          "reproducibility"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "reproducibility_assessment"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\"))"
+          }
+        ],
+        "identifierTerms": [
+          "reproducibility_assessment"
+        ],
+        "pathTerms": [
+          "reproducibility",
+          "assessment"
+        ],
+        "ftsTerms": [
+          "assessment",
+          "reproducibility"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 1,
+          "lexical": 113,
+          "documentation": 6,
+          "tests": 19,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 126,
+        "candidateFilesConsidered": 5,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/services/reproducibility_assessment.py",
+          "backend/app/api/routes/curation.py",
+          "backend/app/schemas/entities/reproducibility_assessment.py",
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/alembic/versions/b4e8c1f6a2d9_add_reproducibility_assessments.py"
+        ],
+        "selectedSymbols": [
+          "append_reproducibility_assessment",
+          "get_latest_reproducibility_assessment",
+          "is_reproducibility_assessment_context_current",
+          "read_latest_reproducibility_assessment",
+          "ReproducibilityAssessmentAppend",
+          "RecordReproducibilityAssessment",
+          "__tablename__",
+          "_TRIGGER_FUNCTION",
+          "assessed_at",
+          "id",
+          "record_id",
+          "record_type",
+          "ReproducibilityAssessmentRead",
+          "assessor_kind",
+          "assessor_user_id",
+          "grade",
+          "normalize_rubric_text",
+          "record_type",
+          "__table_args__",
+          "assessor_kind"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.063,
+          "laneSearch": 15.88,
+          "candidateMerge": 1.105,
+          "graphExpansion": 0.757,
+          "render": 0,
+          "total": 18.17
+        }
+      },
+      {
+        "id": "C",
+        "indexKind": "full",
+        "phase": "after",
+        "normalizedTask": "public_assessments.py",
+        "derivedRetrievalQuery": "\"public assessments\" OR \"assessments py\" OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND \"py\") OR ((\"assessment\" OR \"assessments\") AND \"py\")",
+        "queryTerms": [
+          "assessments",
+          "public",
+          "py"
+        ],
+        "queryVariants": [
+          {
+            "kind": "path",
+            "query": "public_assessments.py"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "assessments"
+          },
+          {
+            "kind": "phrase",
+            "query": "public assessments"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessments py"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"public assessments\" OR \"assessments py\" OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND \"py\") OR ((\"assessment\" OR \"assessments\") AND \"py\")"
+          }
+        ],
+        "identifierTerms": [
+          "public_assessments.py"
+        ],
+        "pathTerms": [
+          "public",
+          "assessments"
+        ],
+        "ftsTerms": [
+          "assessments",
+          "public",
+          "py"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 1,
+          "lexical": 676,
+          "documentation": 223,
+          "tests": 194,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 676,
+        "candidateFilesConsidered": 11,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/services/scientific_read/public_assessments.py",
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/app/schemas/reads/scientific_kinetics.py",
+          "backend/app/schemas/reads/scientific_statmech.py",
+          "backend/app/schemas/reads/scientific_thermo.py",
+          "backend/app/schemas/reads/scientific_transport.py"
+        ],
+        "selectedSymbols": [
+          "__all__",
+          "_attach",
+          "attach_kinetics_assessments",
+          "attach_statmech_assessments",
+          "attach_thermo_assessments",
+          "attach_transport_assessments",
+          "_latest_assessments",
+          "_reproducibility_summary",
+          "PublicAssessmentSummary",
+          "_kinetics_records",
+          "_statmech_records",
+          "_thermo_records",
+          "_transport_records",
+          "deterministic_trust",
+          "reproducibility",
+          "RecordReproducibilityAssessment",
+          "assessments",
+          "assessments",
+          "assessments",
+          "assessments"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.051,
+          "laneSearch": 20.605,
+          "candidateMerge": 5.195,
+          "graphExpansion": 1.141,
+          "render": 0,
+          "total": 28.28
+        }
+      },
+      {
+        "id": "D",
+        "indexKind": "full",
+        "phase": "after",
+        "normalizedTask": "add a public reference to reproducibility assessment summaries",
+        "derivedRetrievalQuery": "\"add public\" OR \"public reference\" OR \"reference reproducibility\" OR \"reproducibility assessment\" OR \"assessment summaries\" OR (\"add\" AND (\"public\" OR \"publics\")) OR (\"add\" AND (\"reference\" OR \"references\")) OR (\"add\" AND (\"reproducibilities\" OR \"reproducibility\")) OR (\"add\" AND (\"assessment\" OR \"assessments\")) OR (\"add\" AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"public\" OR \"publics\") AND (\"reference\" OR \"references\")) OR ((\"public\" OR \"publics\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reference\" OR \"references\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reference\" OR \"references\") AND (\"assessment\" OR \"assessments\")) OR ((\"reference\" OR \"references\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"assessment\" OR \"assessments\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\"))",
+        "queryTerms": [
+          "a",
+          "add",
+          "assessment",
+          "public",
+          "reference",
+          "reproducibility",
+          "summaries",
+          "to"
+        ],
+        "queryVariants": [
+          {
+            "kind": "path",
+            "query": "add"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "reference"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "path",
+            "query": "summaries"
+          },
+          {
+            "kind": "phrase",
+            "query": "add public"
+          },
+          {
+            "kind": "phrase",
+            "query": "public reference"
+          },
+          {
+            "kind": "phrase",
+            "query": "reference reproducibility"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessment summaries"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"add public\" OR \"public reference\" OR \"reference reproducibility\" OR \"reproducibility assessment\" OR \"assessment summaries\" OR (\"add\" AND (\"public\" OR \"publics\")) OR (\"add\" AND (\"reference\" OR \"references\")) OR (\"add\" AND (\"reproducibilities\" OR \"reproducibility\")) OR (\"add\" AND (\"assessment\" OR \"assessments\")) OR (\"add\" AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"public\" OR \"publics\") AND (\"reference\" OR \"references\")) OR ((\"public\" OR \"publics\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"public\" OR \"publics\") AND (\"assessment\" OR \"assessments\")) OR ((\"public\" OR \"publics\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reference\" OR \"references\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reference\" OR \"references\") AND (\"assessment\" OR \"assessments\")) OR ((\"reference\" OR \"references\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\")) OR ((\"assessment\" OR \"assessments\") AND (\"summari\" OR \"summarie\" OR \"summaries\" OR \"summary\"))"
+          }
+        ],
+        "identifierTerms": [],
+        "pathTerms": [
+          "add",
+          "public",
+          "reference",
+          "reproducibility",
+          "assessment",
+          "summaries"
+        ],
+        "ftsTerms": [
+          "a",
+          "add",
+          "assessment",
+          "public",
+          "reference",
+          "reproducibility",
+          "summaries",
+          "to"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 0,
+          "lexical": 237,
+          "documentation": 93,
+          "tests": 32,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 322,
+        "candidateFilesConsidered": 12,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/services/scientific_read/public_assessments.py",
+          "backend/alembic/versions/b4e8c1f6a2d9_add_reproducibility_assessments.py",
+          "backend/app/db/models/reproducibility_assessment.py"
+        ],
+        "selectedSymbols": [
+          "reproducibility",
+          "PublicAssessmentSummary",
+          "ReproducibilityAssessmentSummary",
+          "_reproducibility_summary",
+          "_ASSESSOR_KIND_VALUES",
+          "_GRADE_VALUES",
+          "_TRIGGER_FUNCTION",
+          "_TRIGGER_NAME",
+          "downgrade",
+          "upgrade",
+          "RecordReproducibilityAssessment",
+          "_latest_assessments",
+          "attach_statmech_assessments",
+          "attach_transport_assessments",
+          "deterministic_trust",
+          "assessed_at",
+          "grade",
+          "rubric",
+          "rubric_version",
+          "state"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.16,
+          "laneSearch": 45.23,
+          "candidateMerge": 3.225,
+          "graphExpansion": 0.7,
+          "render": 0,
+          "total": 49.984
+        }
+      },
+      {
+        "id": "E",
+        "indexKind": "full",
+        "phase": "after",
+        "normalizedTask": "find the reproducibility assessment model, public assessment projection, public_ref support, schemas, and migration",
+        "derivedRetrievalQuery": "\"find reproducibility\" OR \"reproducibility assessment\" OR \"assessment model\" OR \"model public\" OR \"public projection\" OR \"projection ref\" OR \"ref support\" OR \"support schemas\" OR \"schemas migration\" OR ((\"find\" OR \"finds\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"find\" OR \"finds\") AND (\"assessment\" OR \"assessments\")) OR ((\"find\" OR \"finds\") AND (\"model\" OR \"models\")) OR ((\"find\" OR \"finds\") AND (\"public\" OR \"publics\")) OR ((\"find\" OR \"finds\") AND (\"projection\" OR \"projections\")) OR ((\"find\" OR \"finds\") AND \"ref\") OR ((\"find\" OR \"finds\") AND (\"support\" OR \"supports\")) OR ((\"find\" OR \"finds\") AND (\"schema\" OR \"schemas\")) OR ((\"find\" OR \"finds\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"model\" OR \"models\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"public\" OR \"publics\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"projection\" OR \"projections\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND \"ref\") OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"support\" OR \"supports\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"schema\" OR \"schemas\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"assessment\" OR \"assessments\") AND (\"model\" OR \"models\")) OR ((\"assessment\" OR \"assessments\") AND (\"public\" OR \"publics\")) OR ((\"assessment\" OR \"assessments\") AND (\"projection\" OR \"projections\")) OR ((\"assessment\" OR \"assessments\") AND \"ref\") OR ((\"assessment\" OR \"assessments\") AND (\"support\" OR \"supports\")) OR ((\"assessment\" OR \"assessments\") AND (\"schema\" OR \"schemas\")) OR ((\"assessment\" OR \"assessments\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"model\" OR \"models\") AND (\"public\" OR \"publics\")) OR ((\"model\" OR \"models\") AND (\"projection\" OR \"projections\")) OR ((\"model\" OR \"models\") AND \"ref\") OR ((\"model\" OR \"models\") AND (\"support\" OR \"supports\")) OR ((\"model\" OR \"models\") AND (\"schema\" OR \"schemas\")) OR ((\"model\" OR \"models\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"public\" OR \"publics\") AND (\"projection\" OR \"projections\")) OR ((\"public\" OR \"publics\") AND \"ref\") OR ((\"public\" OR \"publics\") AND (\"support\" OR \"supports\")) OR ((\"public\" OR \"publics\") AND (\"schema\" OR \"schemas\")) OR ((\"public\" OR \"publics\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"projection\" OR \"projections\") AND \"ref\") OR ((\"projection\" OR \"projections\") AND (\"support\" OR \"supports\")) OR ((\"projection\" OR \"projections\") AND (\"schema\" OR \"schemas\")) OR ((\"projection\" OR \"projections\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR (\"ref\" AND (\"support\" OR \"supports\")) OR (\"ref\" AND (\"schema\" OR \"schemas\")) OR (\"ref\" AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"support\" OR \"supports\") AND (\"schema\" OR \"schemas\")) OR ((\"support\" OR \"supports\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"schema\" OR \"schemas\") AND (\"migrate\" OR \"migration\" OR \"migrations\"))",
+        "queryTerms": [
+          "and",
+          "assessment",
+          "find",
+          "migration",
+          "model",
+          "projection",
+          "public",
+          "ref",
+          "reproducibility",
+          "schemas",
+          "support",
+          "the"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "public_ref"
+          },
+          {
+            "kind": "path",
+            "query": "find"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "path",
+            "query": "model"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "projection"
+          },
+          {
+            "kind": "path",
+            "query": "ref"
+          },
+          {
+            "kind": "path",
+            "query": "support"
+          },
+          {
+            "kind": "phrase",
+            "query": "find reproducibility"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessment model"
+          },
+          {
+            "kind": "phrase",
+            "query": "model public"
+          },
+          {
+            "kind": "phrase",
+            "query": "public projection"
+          },
+          {
+            "kind": "phrase",
+            "query": "projection ref"
+          },
+          {
+            "kind": "phrase",
+            "query": "ref support"
+          },
+          {
+            "kind": "phrase",
+            "query": "support schemas"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"find reproducibility\" OR \"reproducibility assessment\" OR \"assessment model\" OR \"model public\" OR \"public projection\" OR \"projection ref\" OR \"ref support\" OR \"support schemas\" OR \"schemas migration\" OR ((\"find\" OR \"finds\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"find\" OR \"finds\") AND (\"assessment\" OR \"assessments\")) OR ((\"find\" OR \"finds\") AND (\"model\" OR \"models\")) OR ((\"find\" OR \"finds\") AND (\"public\" OR \"publics\")) OR ((\"find\" OR \"finds\") AND (\"projection\" OR \"projections\")) OR ((\"find\" OR \"finds\") AND \"ref\") OR ((\"find\" OR \"finds\") AND (\"support\" OR \"supports\")) OR ((\"find\" OR \"finds\") AND (\"schema\" OR \"schemas\")) OR ((\"find\" OR \"finds\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"model\" OR \"models\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"public\" OR \"publics\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"projection\" OR \"projections\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND \"ref\") OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"support\" OR \"supports\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"schema\" OR \"schemas\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"assessment\" OR \"assessments\") AND (\"model\" OR \"models\")) OR ((\"assessment\" OR \"assessments\") AND (\"public\" OR \"publics\")) OR ((\"assessment\" OR \"assessments\") AND (\"projection\" OR \"projections\")) OR ((\"assessment\" OR \"assessments\") AND \"ref\") OR ((\"assessment\" OR \"assessments\") AND (\"support\" OR \"supports\")) OR ((\"assessment\" OR \"assessments\") AND (\"schema\" OR \"schemas\")) OR ((\"assessment\" OR \"assessments\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"model\" OR \"models\") AND (\"public\" OR \"publics\")) OR ((\"model\" OR \"models\") AND (\"projection\" OR \"projections\")) OR ((\"model\" OR \"models\") AND \"ref\") OR ((\"model\" OR \"models\") AND (\"support\" OR \"supports\")) OR ((\"model\" OR \"models\") AND (\"schema\" OR \"schemas\")) OR ((\"model\" OR \"models\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"public\" OR \"publics\") AND (\"projection\" OR \"projections\")) OR ((\"public\" OR \"publics\") AND \"ref\") OR ((\"public\" OR \"publics\") AND (\"support\" OR \"supports\")) OR ((\"public\" OR \"publics\") AND (\"schema\" OR \"schemas\")) OR ((\"public\" OR \"publics\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"projection\" OR \"projections\") AND \"ref\") OR ((\"projection\" OR \"projections\") AND (\"support\" OR \"supports\")) OR ((\"projection\" OR \"projections\") AND (\"schema\" OR \"schemas\")) OR ((\"projection\" OR \"projections\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR (\"ref\" AND (\"support\" OR \"supports\")) OR (\"ref\" AND (\"schema\" OR \"schemas\")) OR (\"ref\" AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"support\" OR \"supports\") AND (\"schema\" OR \"schemas\")) OR ((\"support\" OR \"supports\") AND (\"migrate\" OR \"migration\" OR \"migrations\")) OR ((\"schema\" OR \"schemas\") AND (\"migrate\" OR \"migration\" OR \"migrations\"))"
+          }
+        ],
+        "identifierTerms": [
+          "public_ref"
+        ],
+        "pathTerms": [
+          "find",
+          "reproducibility",
+          "assessment",
+          "model",
+          "public",
+          "projection",
+          "ref",
+          "support",
+          "schemas",
+          "migration"
+        ],
+        "ftsTerms": [
+          "and",
+          "assessment",
+          "find",
+          "migration",
+          "model",
+          "projection",
+          "public",
+          "ref",
+          "reproducibility",
+          "schemas",
+          "support",
+          "the"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 1,
+          "lexical": 1374,
+          "documentation": 331,
+          "tests": 94,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 1448,
+        "candidateFilesConsidered": 10,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/db/base.py",
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/db/models/reproducibility_assessment.py",
+          "backend/app/schemas/entities/reproducibility_assessment.py",
+          "backend/app/schemas/reads/scientific_species_calculations.py",
+          "backend/app/db/models/common.py"
+        ],
+        "selectedSymbols": [
+          "public_ref",
+          "PublicAssessmentSummary",
+          "RecordReproducibilityAssessment",
+          "reproducibility",
+          "ReproducibilityAssessmentAppend",
+          "ReproducibilityAssessmentRead",
+          "ReproducibilityAssessmentSummary",
+          "SupportingCalculationRef",
+          "ReproducibilityGrade",
+          "validate_assessor_identity",
+          "assessor_kind",
+          "assessor_user_id",
+          "grade",
+          "assessed_at",
+          "id",
+          "record_id",
+          "record_type",
+          "CalculationProvenanceBlock",
+          "normalize_rubric_text",
+          "record_type"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.113,
+          "laneSearch": 69.535,
+          "candidateMerge": 16.837,
+          "graphExpansion": 0.916,
+          "render": 0,
+          "total": 89.857
+        }
+      },
+      {
+        "id": "F",
+        "indexKind": "full",
+        "phase": "after",
+        "normalizedTask": "add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, openapi, tests, docs, and python client types.",
+        "derivedRetrievalQuery": "\"add stable\" OR \"stable public\" OR \"public reference\" OR \"reference exact\" OR \"exact immutable\" OR \"immutable reproducibility\" OR \"reproducibility assessment\" OR \"assessment surfaced\" OR \"surfaced compact\" OR \"compact summaries\" OR \"summaries across\" OR \"across thermo\" OR \"thermo kinetics\" OR \"kinetics statmech\" OR \"statmech transport\" OR \"transport determine\" OR \"determine whether\" OR \"whether models\" OR \"models already\" OR \"already have\" OR \"have appropriate\" OR \"appropriate ref\" OR \"ref trace\" OR \"trace immutability\" OR \"immutability supersession\" OR \"supersession schemas\" OR \"schemas migrations\" OR \"migrations projection\" OR \"projection builders\" OR \"builders open\" OR \"open api\" OR \"api tests\" OR \"tests docs\" OR \"docs python\" OR \"python client\" OR \"client types\" OR ((\"immutable\" OR \"immutables\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"assessment\" OR \"assessments\") AND (\"surfac\" OR \"surfaced\" OR \"surfaceds\")) OR ((\"statmech\" OR \"statmeches\" OR \"statmechs\") AND (\"transport\" OR \"transports\")) OR ((\"transport\" OR \"transports\") AND (\"decide\" OR \"derive\" OR \"determine\" OR \"determined\" OR \"determines\" OR \"evaluate\" OR \"evaluated\" OR \"resolution\" OR \"resolve\" OR \"resolved\")) OR ((\"trace\" OR \"traces\") AND (\"immutabilities\" OR \"immutability\")) OR ((\"immutabilities\" OR \"immutability\") AND (\"supersession\" OR \"supersessions\")) OR ((\"supersession\" OR \"supersessions\") AND (\"schema\" OR \"schemas\")) OR ((\"schema\" OR \"schemas\") AND (\"migration\" OR \"migrations\")) OR ((\"migration\" OR \"migrations\") AND (\"projection\" OR \"projections\")) OR ((\"projection\" OR \"projections\") AND (\"builder\" OR \"builders\"))",
+        "queryTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "python",
+          "ref",
+          "reference",
+          "reproducibility",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "public_ref"
+          },
+          {
+            "kind": "identifier",
+            "query": "OpenAPI"
+          },
+          {
+            "kind": "path",
+            "query": "add"
+          },
+          {
+            "kind": "path",
+            "query": "stable"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "reference"
+          },
+          {
+            "kind": "path",
+            "query": "exact"
+          },
+          {
+            "kind": "path",
+            "query": "immutable"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "add stable"
+          },
+          {
+            "kind": "phrase",
+            "query": "stable public"
+          },
+          {
+            "kind": "phrase",
+            "query": "public reference"
+          },
+          {
+            "kind": "phrase",
+            "query": "reference exact"
+          },
+          {
+            "kind": "phrase",
+            "query": "exact immutable"
+          },
+          {
+            "kind": "phrase",
+            "query": "immutable reproducibility"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessment surfaced"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"add stable\" OR \"stable public\" OR \"public reference\" OR \"reference exact\" OR \"exact immutable\" OR \"immutable reproducibility\" OR \"reproducibility assessment\" OR \"assessment surfaced\" OR \"surfaced compact\" OR \"compact summaries\" OR \"summaries across\" OR \"across thermo\" OR \"thermo kinetics\" OR \"kinetics statmech\" OR \"statmech transport\" OR \"transport determine\" OR \"determine whether\" OR \"whether models\" OR \"models already\" OR \"already have\" OR \"have appropriate\" OR \"appropriate ref\" OR \"ref trace\" OR \"trace immutability\" OR \"immutability supersession\" OR \"supersession schemas\" OR \"schemas migrations\" OR \"migrations projection\" OR \"projection builders\" OR \"builders open\" OR \"open api\" OR \"api tests\" OR \"tests docs\" OR \"docs python\" OR \"python client\" OR \"client types\" OR ((\"immutable\" OR \"immutables\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"assessment\" OR \"assessments\") AND (\"surfac\" OR \"surfaced\" OR \"surfaceds\")) OR ((\"statmech\" OR \"statmeches\" OR \"statmechs\") AND (\"transport\" OR \"transports\")) OR ((\"transport\" OR \"transports\") AND (\"decide\" OR \"derive\" OR \"determine\" OR \"determined\" OR \"determines\" OR \"evaluate\" OR \"evaluated\" OR \"resolution\" OR \"resolve\" OR \"resolved\")) OR ((\"trace\" OR \"traces\") AND (\"immutabilities\" OR \"immutability\")) OR ((\"immutabilities\" OR \"immutability\") AND (\"supersession\" OR \"supersessions\")) OR ((\"supersession\" OR \"supersessions\") AND (\"schema\" OR \"schemas\")) OR ((\"schema\" OR \"schemas\") AND (\"migration\" OR \"migrations\")) OR ((\"migration\" OR \"migrations\") AND (\"projection\" OR \"projections\")) OR ((\"projection\" OR \"projections\") AND (\"builder\" OR \"builders\"))"
+          }
+        ],
+        "identifierTerms": [
+          "public_ref",
+          "OpenAPI"
+        ],
+        "pathTerms": [
+          "add",
+          "stable",
+          "public",
+          "reference",
+          "exact",
+          "immutable",
+          "reproducibility",
+          "assessment",
+          "surfaced",
+          "compact",
+          "summaries",
+          "across",
+          "thermo",
+          "kinetics",
+          "statmech",
+          "transport",
+          "determine",
+          "whether",
+          "models",
+          "already",
+          "have",
+          "appropriate",
+          "ref",
+          "trace",
+          "immutability",
+          "supersession",
+          "schemas",
+          "migrations",
+          "projection",
+          "builders",
+          "open",
+          "api",
+          "tests",
+          "docs",
+          "python",
+          "client",
+          "types"
+        ],
+        "ftsTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "python",
+          "ref",
+          "reference",
+          "reproducibility",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 2,
+          "lexical": 199,
+          "documentation": 60,
+          "tests": 35,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 284,
+        "candidateFilesConsidered": 37,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/db/base.py",
+          "clients/python/tests/test_builder_summary.py",
+          "clients/python/src/tckdb_client/builders/uploads.py",
+          "backend/app/api/public_openapi.py",
+          "clients/python/tests/test_computed_reaction_transport_builder.py",
+          "clients/python/src/tckdb_client/builders/__init__.py",
+          "backend/app/db/models/__init__.py",
+          "backend/app/api/routes/scientific/species_subresources.py",
+          "clients/python/src/tckdb_client/scientific_types.py",
+          "clients/python/adapters/chemkin/tckdb_chemkin/uploader.py",
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/tests/services/test_public_refs.py",
+          "clients/python/src/tckdb_client/__init__.py",
+          "backend/app/services/reproducibility_assessment.py",
+          "backend/alembic/versions/d861dfd60891_create_intial_schema.py",
+          "clients/python/tests/test_computed_species_upload_transport.py",
+          "clients/python/src/tckdb_client/builders/transport.py",
+          "backend/app/services/public_refs.py"
+        ],
+        "selectedSymbols": [
+          "public_ref",
+          "REACTION_REQUIRED_KEYS",
+          "SPECIES_REQUIRED_KEYS",
+          "emission_diagnostics",
+          "project_hosted_openapi",
+          "test_transport_alongside_thermo_and_statmech",
+          "__all__",
+          "__all__",
+          "species_statmech",
+          "species_transport",
+          "__all__",
+          "upload_payloads",
+          "ReproducibilityAssessmentSummary",
+          "TestColumnExists",
+          "__all__",
+          "_RECORD_MODELS",
+          "_add_public_ref_columns_and_indexes",
+          "test_transport_alongside_thermo_and_statmech",
+          "_normalise_transport_source_calculations",
+          "PREFIXES"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.19,
+          "laneSearch": 199.391,
+          "candidateMerge": 8.359,
+          "graphExpansion": 1.094,
+          "render": 0,
+          "total": 209.934
+        }
+      },
+      {
+        "id": "G",
+        "indexKind": "full",
+        "phase": "after",
+        "normalizedTask": "add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, openapi, tests, docs, and python client types. recordreproducibilityassessment\npublic_assessments.py\nreproducibility_assessment.py",
+        "derivedRetrievalQuery": "\"add stable\" OR \"stable public\" OR \"public reference\" OR \"reference exact\" OR \"exact immutable\" OR \"immutable reproducibility\" OR \"reproducibility assessment\" OR \"assessment surfaced\" OR \"surfaced compact\" OR \"compact summaries\" OR \"summaries across\" OR \"across thermo\" OR \"thermo kinetics\" OR \"kinetics statmech\" OR \"statmech transport\" OR \"transport determine\" OR \"determine whether\" OR \"whether models\" OR \"models already\" OR \"already have\" OR \"have appropriate\" OR \"appropriate ref\" OR \"ref trace\" OR \"trace immutability\" OR \"immutability supersession\" OR \"supersession schemas\" OR \"schemas migrations\" OR \"migrations projection\" OR \"projection builders\" OR \"builders open\" OR \"open api\" OR \"api tests\" OR \"tests docs\" OR \"docs python\" OR \"python client\" OR \"client types\" OR \"types record\" OR \"record assessments\" OR \"assessments py\" OR ((\"immutable\" OR \"immutables\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"assessment\" OR \"assessments\") AND (\"surfac\" OR \"surfaced\" OR \"surfaceds\")) OR ((\"statmech\" OR \"statmeches\" OR \"statmechs\") AND (\"transport\" OR \"transports\")) OR ((\"transport\" OR \"transports\") AND (\"decide\" OR \"derive\" OR \"determine\" OR \"determined\" OR \"determines\" OR \"evaluate\" OR \"evaluated\" OR \"resolution\" OR \"resolve\" OR \"resolved\")) OR ((\"trace\" OR \"traces\") AND (\"immutabilities\" OR \"immutability\")) OR ((\"immutabilities\" OR \"immutability\") AND (\"supersession\" OR \"supersessions\")) OR ((\"supersession\" OR \"supersessions\") AND (\"schema\" OR \"schemas\")) OR ((\"schema\" OR \"schemas\") AND (\"migration\" OR \"migrations\")) OR ((\"migration\" OR \"migrations\") AND (\"projection\" OR \"projections\")) OR ((\"projection\" OR \"projections\") AND (\"builder\" OR \"builders\")) OR ((\"record\" OR \"records\") AND (\"assessment\" OR \"assessments\"))",
+        "queryTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "assessments",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "py",
+          "python",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "ref",
+          "reference",
+          "reproducibility",
+          "reproducibilityassessment",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "queryVariants": [
+          {
+            "kind": "identifier",
+            "query": "public_ref"
+          },
+          {
+            "kind": "identifier",
+            "query": "OpenAPI"
+          },
+          {
+            "kind": "identifier",
+            "query": "RecordReproducibilityAssessment"
+          },
+          {
+            "kind": "path",
+            "query": "public_assessments.py"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility_assessment.py"
+          },
+          {
+            "kind": "path",
+            "query": "add"
+          },
+          {
+            "kind": "path",
+            "query": "stable"
+          },
+          {
+            "kind": "path",
+            "query": "public"
+          },
+          {
+            "kind": "path",
+            "query": "reference"
+          },
+          {
+            "kind": "path",
+            "query": "exact"
+          },
+          {
+            "kind": "path",
+            "query": "immutable"
+          },
+          {
+            "kind": "path",
+            "query": "reproducibility"
+          },
+          {
+            "kind": "path",
+            "query": "assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "add stable"
+          },
+          {
+            "kind": "phrase",
+            "query": "stable public"
+          },
+          {
+            "kind": "phrase",
+            "query": "public reference"
+          },
+          {
+            "kind": "phrase",
+            "query": "reference exact"
+          },
+          {
+            "kind": "phrase",
+            "query": "exact immutable"
+          },
+          {
+            "kind": "phrase",
+            "query": "immutable reproducibility"
+          },
+          {
+            "kind": "phrase",
+            "query": "reproducibility assessment"
+          },
+          {
+            "kind": "phrase",
+            "query": "assessment surfaced"
+          },
+          {
+            "kind": "semantic_terms",
+            "query": "\"add stable\" OR \"stable public\" OR \"public reference\" OR \"reference exact\" OR \"exact immutable\" OR \"immutable reproducibility\" OR \"reproducibility assessment\" OR \"assessment surfaced\" OR \"surfaced compact\" OR \"compact summaries\" OR \"summaries across\" OR \"across thermo\" OR \"thermo kinetics\" OR \"kinetics statmech\" OR \"statmech transport\" OR \"transport determine\" OR \"determine whether\" OR \"whether models\" OR \"models already\" OR \"already have\" OR \"have appropriate\" OR \"appropriate ref\" OR \"ref trace\" OR \"trace immutability\" OR \"immutability supersession\" OR \"supersession schemas\" OR \"schemas migrations\" OR \"migrations projection\" OR \"projection builders\" OR \"builders open\" OR \"open api\" OR \"api tests\" OR \"tests docs\" OR \"docs python\" OR \"python client\" OR \"client types\" OR \"types record\" OR \"record assessments\" OR \"assessments py\" OR ((\"immutable\" OR \"immutables\") AND (\"reproducibilities\" OR \"reproducibility\")) OR ((\"reproducibilities\" OR \"reproducibility\") AND (\"assessment\" OR \"assessments\")) OR ((\"assessment\" OR \"assessments\") AND (\"surfac\" OR \"surfaced\" OR \"surfaceds\")) OR ((\"statmech\" OR \"statmeches\" OR \"statmechs\") AND (\"transport\" OR \"transports\")) OR ((\"transport\" OR \"transports\") AND (\"decide\" OR \"derive\" OR \"determine\" OR \"determined\" OR \"determines\" OR \"evaluate\" OR \"evaluated\" OR \"resolution\" OR \"resolve\" OR \"resolved\")) OR ((\"trace\" OR \"traces\") AND (\"immutabilities\" OR \"immutability\")) OR ((\"immutabilities\" OR \"immutability\") AND (\"supersession\" OR \"supersessions\")) OR ((\"supersession\" OR \"supersessions\") AND (\"schema\" OR \"schemas\")) OR ((\"schema\" OR \"schemas\") AND (\"migration\" OR \"migrations\")) OR ((\"migration\" OR \"migrations\") AND (\"projection\" OR \"projections\")) OR ((\"projection\" OR \"projections\") AND (\"builder\" OR \"builders\")) OR ((\"record\" OR \"records\") AND (\"assessment\" OR \"assessments\"))"
+          }
+        ],
+        "identifierTerms": [
+          "public_ref",
+          "OpenAPI",
+          "RecordReproducibilityAssessment",
+          "public_assessments.py",
+          "reproducibility_assessment.py"
+        ],
+        "pathTerms": [
+          "add",
+          "stable",
+          "public",
+          "reference",
+          "exact",
+          "immutable",
+          "reproducibility",
+          "assessment",
+          "surfaced",
+          "compact",
+          "summaries",
+          "across",
+          "thermo",
+          "kinetics",
+          "statmech",
+          "transport",
+          "determine",
+          "whether",
+          "models",
+          "already",
+          "have",
+          "appropriate",
+          "ref",
+          "trace",
+          "immutability",
+          "supersession",
+          "schemas",
+          "migrations",
+          "projection",
+          "builders",
+          "open",
+          "api",
+          "tests",
+          "docs",
+          "python",
+          "client",
+          "types",
+          "record",
+          "assessments"
+        ],
+        "ftsTerms": [
+          "a",
+          "across",
+          "add",
+          "already",
+          "an",
+          "and",
+          "api",
+          "appropriate",
+          "assessment",
+          "assessments",
+          "builders",
+          "client",
+          "compact",
+          "determine",
+          "docs",
+          "exact",
+          "for",
+          "have",
+          "immutability",
+          "immutable",
+          "in",
+          "kinetics",
+          "migrations",
+          "models",
+          "open",
+          "openapi",
+          "projection",
+          "public",
+          "py",
+          "python",
+          "record",
+          "recordreproducibility",
+          "recordreproducibilityassessment",
+          "ref",
+          "reference",
+          "reproducibility",
+          "reproducibilityassessment",
+          "schemas",
+          "stable",
+          "statmech",
+          "summaries",
+          "supersession",
+          "surfaced",
+          "tests",
+          "the",
+          "thermo",
+          "trace",
+          "transport",
+          "types",
+          "whether"
+        ],
+        "rawHitsPerLane": {
+          "path": 96,
+          "symbol": 4,
+          "lexical": 220,
+          "documentation": 67,
+          "tests": 37,
+          "graph": 0
+        },
+        "hitsRejectedPerLane": {
+          "threshold": 0,
+          "scope": 0
+        },
+        "candidateUnionSize": 305,
+        "candidateFilesConsidered": 32,
+        "graphExpansions": 0,
+        "thresholds": {
+          "normal": "score evidence required; intent candidate pool then maxResults=20",
+          "relaxed": null
+        },
+        "fallbacks": {
+          "attempted": false,
+          "reason": null
+        },
+        "selectedFiles": [
+          "backend/app/db/base.py",
+          "backend/app/db/models/reproducibility_assessment.py",
+          "clients/python/tests/test_builder_summary.py",
+          "backend/app/db/models/__init__.py",
+          "backend/app/services/reproducibility_assessment.py",
+          "clients/python/src/tckdb_client/scientific_types.py",
+          "backend/app/api/routes/scientific/species_subresources.py",
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/services/scientific_read/public_assessments.py",
+          "clients/python/src/tckdb_client/builders/uploads.py",
+          "backend/app/schemas/reads/scientific_kinetics.py",
+          "backend/app/schemas/reads/scientific_statmech.py",
+          "backend/app/schemas/reads/scientific_thermo.py"
+        ],
+        "selectedSymbols": [
+          "public_ref",
+          "RecordReproducibilityAssessment",
+          "REACTION_REQUIRED_KEYS",
+          "SPECIES_REQUIRED_KEYS",
+          "__all__",
+          "_RECORD_MODELS",
+          "assessments",
+          "assessments",
+          "assessments",
+          "assessments",
+          "species_statmech",
+          "species_transport",
+          "PublicAssessmentSummary",
+          "ReproducibilityAssessmentSummary",
+          "__all__",
+          "emission_diagnostics",
+          "__all__",
+          "assessments",
+          "assessments",
+          "assessments"
+        ],
+        "finalReason": null,
+        "latency": {
+          "normalization": 0.206,
+          "laneSearch": 200.126,
+          "candidateMerge": 9.258,
+          "graphExpansion": 1.158,
+          "render": 0,
+          "total": 211.628
+        }
+      }
+    ]
+  }
+}

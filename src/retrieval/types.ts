@@ -15,6 +15,8 @@ export interface SearchSymbolsOptions {
   enableTestAwareDownweighting?: boolean;
   enableTechnicalQueryBoosts?: boolean;
   enablePathSignalBoosts?: boolean;
+  /** Internal comparison switch; product retrieval keeps this enabled by default. */
+  enableExactIdentifierLane?: boolean;
 }
 
 export enum SymbolSearchMatchField {
@@ -35,6 +37,49 @@ export interface RetrievalPathSignalDiagnostics {
   readonly pathSignalsMatched: readonly string[];
   readonly candidateFilesConsidered: number;
   readonly weakPathCoverage: boolean;
+  readonly normalizedQuery: string;
+  readonly queryVariants: readonly RetrievalQueryVariant[];
+  readonly identifierTerms: readonly string[];
+  readonly pathTerms: readonly string[];
+  readonly ftsTerms: readonly string[];
+  readonly laneResults: RetrievalLaneResults;
+  readonly preFilterCandidates: number;
+  readonly rejectedByThreshold: number;
+  readonly rejectedByScope: number;
+  readonly graphExpansions: number;
+  readonly fallbackAttempted: boolean;
+  readonly fallbackReason?: string;
+  readonly finalReason?: string;
+  readonly timingsMs: RetrievalTimingDiagnostics;
+}
+
+export type RetrievalQueryVariantKind =
+  | "identifier"
+  | "path"
+  | "phrase"
+  | "semantic_terms"
+  | "fallback";
+
+export interface RetrievalQueryVariant {
+  readonly kind: RetrievalQueryVariantKind;
+  readonly query: string;
+}
+
+export interface RetrievalLaneResults {
+  readonly path: number;
+  readonly symbol: number;
+  readonly lexical: number;
+  readonly documentation: number;
+  readonly tests: number;
+  readonly graph: number;
+}
+
+export interface RetrievalTimingDiagnostics {
+  readonly normalization: number;
+  readonly laneSearch: number;
+  readonly candidateMerge: number;
+  readonly graphExpansion: number;
+  readonly total: number;
 }
 
 export enum SymbolSearchMatchType {

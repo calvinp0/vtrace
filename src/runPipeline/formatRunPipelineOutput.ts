@@ -277,6 +277,19 @@ export function formatRunPipelineOrchestrationOutput(
         pathSignalsMatched: [...context.retrievalDiagnostics.pathSignalsMatched],
         candidateFilesConsidered: context.retrievalDiagnostics.candidateFilesConsidered,
         weakPathCoverage: context.retrievalDiagnostics.weakPathCoverage,
+        search: {
+          ...structuredClone(context.retrievalDiagnostics.search),
+          // Product orchestration output is deterministic across repeated calls;
+          // measured phase timings remain available on the internal route result
+          // and in benchmark diagnostics, not in this stable response projection.
+          timingsMs: {
+            normalization: 0,
+            laneSearch: 0,
+            candidateMerge: 0,
+            graphExpansion: 0,
+            total: 0,
+          },
+        },
       },
       impact: {
         included: impact.included,

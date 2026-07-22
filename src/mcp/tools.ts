@@ -1531,6 +1531,63 @@ const RUN_PIPELINE_DIAGNOSTICS_SCHEMA = objectProperty(
     weakPathCoverage: booleanProperty(
       "True when at least two path-like terms were considered but fewer than half were matched in any candidate file path.",
     ),
+    search: objectProperty(
+      "Source-content-free retrieval details available for successful and empty searches.",
+      {
+        normalizedQuery: stringProperty("Normalized query sent to routed retrieval."),
+        pathSignalsConsidered: arrayProperty("Path-like terms considered.", stringProperty("Path-like term.")),
+        pathSignalsMatched: arrayProperty("Path-like terms matched in candidate files.", stringProperty("Matched path-like term.")),
+        candidateFilesConsidered: integerProperty("Distinct lexical candidate files."),
+        weakPathCoverage: booleanProperty("Whether fewer than half of multiple path terms matched."),
+        queryVariants: arrayProperty("Bounded query variants considered by retrieval.", objectProperty(
+          "One deterministic query variant.",
+          {
+            kind: stringProperty("Variant kind: identifier, path, phrase, semantic_terms, or fallback."),
+            query: stringProperty("Variant expression or term."),
+          },
+          ["kind", "query"],
+        )),
+        identifierTerms: arrayProperty("Exact identifier-like terms detected in the task.", stringProperty("Identifier term.")),
+        pathTerms: arrayProperty("Path terms considered by the path lane.", stringProperty("Path term.")),
+        ftsTerms: arrayProperty("Normalized terms used to construct FTS admission.", stringProperty("FTS term.")),
+        laneResults: objectProperty(
+          "Raw or scored hit counts by retrieval lane.",
+          {
+            path: integerProperty("Path-lane rows."),
+            symbol: integerProperty("Symbol-field matches."),
+            lexical: integerProperty("Primary plus fallback lexical rows."),
+            documentation: integerProperty("Docstring matches."),
+            tests: integerProperty("Test-file or test-symbol matches."),
+            graph: integerProperty("Graph-seeded additions."),
+          },
+          ["path", "symbol", "lexical", "documentation", "tests", "graph"],
+        ),
+        preFilterCandidates: integerProperty("Candidate union size before score filtering."),
+        rejectedByThreshold: integerProperty("Candidates rejected because they produced no score evidence."),
+        rejectedByScope: integerProperty("Candidates rejected by explicit scope filters."),
+        graphExpansions: integerProperty("Candidates added by graph expansion."),
+        fallbackAttempted: booleanProperty("Whether bounded lexical fallback ran."),
+        fallbackReason: stringProperty("Reason fallback ran, when present."),
+        finalReason: stringProperty("Search-level empty reason, when present."),
+        timingsMs: objectProperty(
+          "Retrieval-only phase timings in milliseconds.",
+          {
+            normalization: numberProperty("Query normalization and variant construction time."),
+            laneSearch: numberProperty("Retrieval lane query time."),
+            candidateMerge: numberProperty("Candidate merge, scoring, and truncation time."),
+            graphExpansion: numberProperty("Graph reranking/expansion time."),
+            total: numberProperty("Total routed retrieval time."),
+          },
+          ["normalization", "laneSearch", "candidateMerge", "graphExpansion", "total"],
+        ),
+      },
+      [
+        "normalizedQuery", "pathSignalsConsidered", "pathSignalsMatched", "candidateFilesConsidered",
+        "weakPathCoverage", "queryVariants", "identifierTerms", "pathTerms", "ftsTerms",
+        "laneResults", "preFilterCandidates", "rejectedByThreshold", "rejectedByScope",
+        "graphExpansions", "fallbackAttempted", "timingsMs",
+      ],
+    ),
   },
   [
     "initialReason",
@@ -1544,6 +1601,7 @@ const RUN_PIPELINE_DIAGNOSTICS_SCHEMA = objectProperty(
     "pathSignalsMatched",
     "candidateFilesConsidered",
     "weakPathCoverage",
+    "search",
   ],
 );
 

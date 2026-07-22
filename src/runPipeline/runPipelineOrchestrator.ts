@@ -56,7 +56,11 @@ import type {
   SessionContextResult,
 } from "../observations/types";
 import { normalizeSearchQuery } from "../retrieval/searchSymbolsShared";
-import type { GraphSearchResult, SymbolSearchResult } from "../retrieval/types";
+import type {
+  GraphSearchResult,
+  RetrievalPathSignalDiagnostics,
+  SymbolSearchResult,
+} from "../retrieval/types";
 import type { SymbolKind } from "../domain/types";
 import { createCharacterBudget } from "../capsule/budget";
 import { createSourceBackedCapsuleBuilder } from "../capsule/buildCapsule";
@@ -154,6 +158,8 @@ export interface OrchestrationRetrievalDiagnostics {
   readonly pathSignalsMatched: readonly string[];
   readonly candidateFilesConsidered: number;
   readonly weakPathCoverage: boolean;
+  /** Detailed, source-content-free search diagnostics; populated on success and failure. */
+  readonly search: RetrievalPathSignalDiagnostics;
 }
 
 export interface OrchestrationContextSection {
@@ -706,6 +712,7 @@ function runReliableContextRetrieval(
         pathSignalsMatched: overridden.pathSignalDiagnostics.pathSignalsMatched,
         candidateFilesConsidered: overridden.pathSignalDiagnostics.candidateFilesConsidered,
         weakPathCoverage: overridden.pathSignalDiagnostics.weakPathCoverage,
+        search: overridden.pathSignalDiagnostics,
       },
     };
   }
@@ -740,6 +747,7 @@ function runReliableContextRetrieval(
         pathSignalsMatched: overridden.pathSignalDiagnostics.pathSignalsMatched,
         candidateFilesConsidered: overridden.pathSignalDiagnostics.candidateFilesConsidered,
         weakPathCoverage: overridden.pathSignalDiagnostics.weakPathCoverage,
+        search: overridden.pathSignalDiagnostics,
       },
     };
   }
@@ -762,6 +770,7 @@ function runReliableContextRetrieval(
       pathSignalsMatched: overridden.pathSignalDiagnostics.pathSignalsMatched,
       candidateFilesConsidered: overridden.pathSignalDiagnostics.candidateFilesConsidered,
       weakPathCoverage: overridden.pathSignalDiagnostics.weakPathCoverage,
+      search: overridden.pathSignalDiagnostics,
     },
   };
 }
