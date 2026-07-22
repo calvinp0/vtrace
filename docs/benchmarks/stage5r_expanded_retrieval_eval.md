@@ -13,7 +13,7 @@ alone — including targets named only by a diagnostic literal in the bug report
 - **20 Django fixtures.** Real SWE-bench Django issues, each indexed and queried
   with its issue prose under `--intent debug`.
 - **Expected labels are eval-only.** Each fixture carries an expected edit file and
-  symbol used *purely to score the eval*; they are never passed into production
+  symbol used _purely to score the eval_; they are never passed into production
   retrieval.
 - **No token or cost claim.** This eval measures retrieval quality, not agent
   execution — it makes no statement about tokens, cost, or patch correctness.
@@ -55,7 +55,7 @@ models.E015  →  django/db/models/base.py::_check_ordering
 ```
 
 This recovered `django__django-11820` and `django__django-12858` (both
-`missing → top-1 pivot`). The rule is general — keyed on the *shape* of a literal,
+`missing → top-1 pivot`). The rule is general — keyed on the _shape_ of a literal,
 not on any framework — and qualified codes are matched precisely (`models.E015`
 does not collide with `admin.E015`).
 

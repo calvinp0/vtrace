@@ -24,12 +24,12 @@ vtrace indexes a repository into a **graph**: files, classes, functions, and met
 are nodes; `imports`, `calls`, `references`, and `contains` are edges. On top of that
 graph it builds **Capsule v2** — given only a task description, an intent, and a token
 budget, it assembles a compact "edit-context capsule": the likely edit target(s) as
-*pivots*, related context as *support*, and an explicit per-item evidence trail for
+_pivots_, related context as _support_, and an explicit per-item evidence trail for
 why each file was chosen (and why misleading candidates were suppressed).
 
 **Stage 5R measures retrieval quality only.** For each benchmark instance it asks one
-deterministic question: *does the capsule point at the file the gold patch actually
-changed?* It runs no Claude, no Docker, no agent, and makes no API calls. The gold
+deterministic question: _does the capsule point at the file the gold patch actually
+changed?_ It runs no Claude, no Docker, no agent, and makes no API calls. The gold
 `expected_files` / `expected_symbols` labels are used **only** to score the capsule —
 they are never fed into retrieval, which receives only `(task, intent, budget)`.
 
@@ -88,21 +88,21 @@ instance carry essentially all of the cross-repo misses.
 
 ## 3. Improvement timeline
 
-Each row is the cross-repo headline *after* the change landed (deterministic Stage 5R).
+Each row is the cross-repo headline _after_ the change landed (deterministic Stage 5R).
 The 16→30 expansion is the only step that lowered the numbers — by design, because it
 tripled the set with harder, more diverse repos. Every subsequent change recovered
 ground or was neutral-and-safe; none regressed Django.
 
-| # | Change | cross-repo top-1 | top-3 | pivot | missing | Note |
-| --- | --- | --- | --- | --- | --- | --- |
-| 0 | Baseline cross-repo (16) | 62.5% | 87.5% | 81.3% | 6.3% | original small set |
-| 1 | Expanded cross-repo (30) | 53.3% | 66.7% | 63.3% | 23.3% | harder/larger set; exposes real gaps |
-| 2 | Fixture abbreviation / task-truncation fix | — | — | — | — | recovered requests-5414 (thin-prose no_context) |
-| 3 | Non-source / doc-data pivot demotion | 56.7% | 70.0% | 66.7% | 20.0% | stops doc-data files being wrong pivots |
-| 4 | Title-symbol anchoring | 60.0% | 73.3% | 70.0% | 16.7% | recovered sympy-16766; Django 90→95 top-3 |
-| 5 | Generic lexical-decoy suppression | 60.0% | 73.3% | 70.0% | 16.7% | neutral on cross-repo; no regression |
-| 6 | Literal / option / acronym anchoring | 60.0% | 76.7% | 73.3% | 13.3% | recovered astropy-14369 (CDS anchor) |
-| 7 | Bounded graph-neighbour expansion | 60.0% | 76.7% | 73.3% | 13.3% | safe/additive-only; neutral on this set |
+| #   | Change                                     | cross-repo top-1 | top-3 | pivot | missing | Note                                            |
+| --- | ------------------------------------------ | ---------------- | ----- | ----- | ------- | ----------------------------------------------- |
+| 0   | Baseline cross-repo (16)                   | 62.5%            | 87.5% | 81.3% | 6.3%    | original small set                              |
+| 1   | Expanded cross-repo (30)                   | 53.3%            | 66.7% | 63.3% | 23.3%   | harder/larger set; exposes real gaps            |
+| 2   | Fixture abbreviation / task-truncation fix | —                | —     | —     | —       | recovered requests-5414 (thin-prose no_context) |
+| 3   | Non-source / doc-data pivot demotion       | 56.7%            | 70.0% | 66.7% | 20.0%   | stops doc-data files being wrong pivots         |
+| 4   | Title-symbol anchoring                     | 60.0%            | 73.3% | 70.0% | 16.7%   | recovered sympy-16766; Django 90→95 top-3       |
+| 5   | Generic lexical-decoy suppression          | 60.0%            | 73.3% | 70.0% | 16.7%   | neutral on cross-repo; no regression            |
+| 6   | Literal / option / acronym anchoring       | 60.0%            | 76.7% | 73.3% | 13.3%   | recovered astropy-14369 (CDS anchor)            |
+| 7   | Bounded graph-neighbour expansion          | 60.0%            | 76.7% | 73.3% | 13.3%   | safe/additive-only; neutral on this set         |
 
 Steps 2–3 are grouped in the post-nonsource audit; their combined effect lifted the raw
 30-instance numbers from row 1 to row 3. Steps 4–7 each have a dedicated audit refresh.
@@ -112,7 +112,7 @@ Steps 2–3 are grouped in the post-nonsource audit; their combined effect lifte
 ## 4. What worked
 
 - **Title-symbol anchoring** (step 4): seeds the class/type/symbol named in the problem
-  *title* into the pool. Recovered **sympy-16766** (`missing → top-1 pivot`,
+  _title_ into the pool. Recovered **sympy-16766** (`missing → top-1 pivot`,
   `PythonCodePrinter` now beats the body decoy `lambdify`) and, on the Django set,
   lifted **django-13112** (`hit_discarded → top-1 pivot` via `ForeignKey`), pushing
   Django top-3 from 90% to 95% with no regression.
@@ -126,12 +126,12 @@ Steps 2–3 are grouped in the post-nonsource audit; their combined effect lifte
   matches removed the regression while keeping the win.
 - **Task-truncation fix** (step 2): recovered **requests-5414**, which had previously
   collapsed to `no_context` on thin/abbreviated task prose; it is now a top-1 pivot.
-- **Non-source / doc-data demotion** (step 3): made **pylint-8898** *honest*. Before, the
+- **Non-source / doc-data demotion** (step 3): made **pylint-8898** _honest_. Before, the
   capsule confidently named a shipped example file (`doc/data/messages/**/bad.py`) as the
   #1 pivot; after, those are demoted to support and the capsule returns `no_context` —
   the correct outcome, since the real gold transformer files were never in the pool.
 - **Generic lexical-decoy suppression** (step 5): down-weights an infrastructure module
-  whose *name* matches a task keyword (`deprecation.py`, a `*Dict*` helper) when it lacks
+  whose _name_ matches a task keyword (`deprecation.py`, a `*Dict*` helper) when it lacks
   direct evidence. It fires safely (visible in diagnostics, e.g. matplotlib-24970) and is
   guarded so a high-in-degree real dependency is never suppressed — it produced **no
   regression** on either set.
@@ -152,12 +152,12 @@ Steps 2–3 are grouped in the post-nonsource audit; their combined effect lifte
 Seven of 30 cross-repo instances miss top-3. Per the latest
 (`…_post_literal_anchor_audit.md`) audit they fall into four buckets:
 
-| bucket | count | instances | shape |
-| --- | --- | --- | --- |
-| candidate-generation gaps | 3 | matplotlib-24970, sphinx-9230, pylint-8898 | gold file never enters the pool (protected infra, a `dict` decoy, or a 3-file multi-target none of which were retrieved) |
-| ranking near-misses | 2 | requests-1724, astropy-14598 | gold file *is* present but one or two slots past top-3 / the support budget |
-| wrong-subsystem / hard-semantic | 1 | sphinx-7910 | lexically-obvious sibling package (`ext/autodoc`) chosen; gold is the parallel `ext/napoleon` hook |
-| actionability gate | 1 | matplotlib-25960 | gold symbol is surfaced but the gate classifies it "no actionable edit target" → `no_context` |
+| bucket                          | count | instances                                  | shape                                                                                                                    |
+| ------------------------------- | ----- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| candidate-generation gaps       | 3     | matplotlib-24970, sphinx-9230, pylint-8898 | gold file never enters the pool (protected infra, a `dict` decoy, or a 3-file multi-target none of which were retrieved) |
+| ranking near-misses             | 2     | requests-1724, astropy-14598               | gold file _is_ present but one or two slots past top-3 / the support budget                                              |
+| wrong-subsystem / hard-semantic | 1     | sphinx-7910                                | lexically-obvious sibling package (`ext/autodoc`) chosen; gold is the parallel `ext/napoleon` hook                       |
+| actionability gate              | 1     | matplotlib-25960                           | gold symbol is surfaced but the gate classifies it "no actionable edit target" → `no_context`                            |
 
 These are individually hard and no longer share a single cheap fix: the candidate-gen
 gaps need new generation (not more suppression, which has been exhausted as a lever),
@@ -170,7 +170,7 @@ off any single miss without gating it against both baselines.
 ## 6. Product interpretation
 
 The point of this work is **not** that vtrace makes the context smaller — it is that
-vtrace makes the context *better*. A Capsule v2 capsule is a structured, evidence-backed
+vtrace makes the context _better_. A Capsule v2 capsule is a structured, evidence-backed
 answer to "what should the agent look at to fix this?", not a blob of nearby text:
 
 - **Likely edit target** — the pivot(s), ranked by direct evidence, not raw lexical overlap.
@@ -178,7 +178,7 @@ answer to "what should the agent look at to fix this?", not a blob of nearby tex
 - **Traps / diagnostics** — body-literal and error-code matches that pin the exact symbol.
 - **Suppressed misleading pivots** — generic infra decoys and doc-data examples are
   recorded as down-ranked, not silently kept, so a wrong-but-plausible target can't anchor.
-- **Explicit selection evidence** — every item carries *why* it was chosen ("title mentions
+- **Explicit selection evidence** — every item carries _why_ it was chosen ("title mentions
   `X`", "near high-confidence seed via import edge", "task literal appears in body"), which
   is what makes the capsule auditable and the misses diagnosable.
 
@@ -212,7 +212,7 @@ To keep this honest:
 ## 8. Follow-up: targeted live validation on recovered cases
 
 Next-step #4 (below) has now been run as a **targeted** live-agent sanity check —
-not a benchmark. Three instances that recent retrieval/input fixes *recovered* in
+not a benchmark. Three instances that recent retrieval/input fixes _recovered_ in
 the deterministic cross-repo set were run live with **Capsule v2 force-inject**
 (`--protocol vtrace-indexed --capsule-engine v2 --capsule-intent debug
 --capsule-budget 8000 --context-policy force-inject`), then evaluated with the
@@ -224,11 +224,11 @@ Headline: **2 / 3 resolved under Docker**, and in **all 3** the agent edited the
 exact file/symbol Capsule v2 surfaced as the **lead pivot** — so retrieval steered
 the agent correctly on every case, including the one that did not pass.
 
-| Instance | Stage 5R (deterministic) | Live lead pivot | Docker `resolved` | Interpretation |
-| --- | --- | --- | --- | --- |
-| requests-5414 | top-1 pivot | `requests/models.py::prepare_url` | **false** | retrieval correct; agent made too broad a patch (unconditional IDNA encoding instead of the minimal `startswith((u'*', u'.'))` guard), regressing `PASS_TO_PASS` |
-| sympy-16766 | top-1 pivot | `sympy/printing/pycode.py::PythonCodePrinter` | **true** | title-symbol anchoring translated to live success (`_print_Indexed` added to the right class) |
-| astropy-14369 | top-3, rank 2 | `astropy/units/format/cds.py::CDS` | **true** | literal/`CDS` anchoring translated to live success (gold grammar fix + cached parser-table regeneration) |
+| Instance      | Stage 5R (deterministic) | Live lead pivot                               | Docker `resolved` | Interpretation                                                                                                                                                   |
+| ------------- | ------------------------ | --------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| requests-5414 | top-1 pivot              | `requests/models.py::prepare_url`             | **false**         | retrieval correct; agent made too broad a patch (unconditional IDNA encoding instead of the minimal `startswith((u'*', u'.'))` guard), regressing `PASS_TO_PASS` |
+| sympy-16766   | top-1 pivot              | `sympy/printing/pycode.py::PythonCodePrinter` | **true**          | title-symbol anchoring translated to live success (`_print_Indexed` added to the right class)                                                                    |
+| astropy-14369 | top-3, rank 2            | `astropy/units/format/cds.py::CDS`            | **true**          | literal/`CDS` anchoring translated to live success (gold grammar fix + cached parser-table regeneration)                                                         |
 
 > **Live vs deterministic are different query constructions.** The Stage 5R
 > column is the deterministic cross-repo-30 ranking; the live lead pivot is the
@@ -267,8 +267,8 @@ and are **not** tracked by default.
    errors surface only at runtime under `bun test`). Add a separate tsconfig or extend the
    include in a dedicated task — it is not a drive-by change, as it may surface latent
    issues in the benchmark code.
-4. **Run a small live-agent validation on the recovered cases.** ✅ *Done for
-   sympy-16766, astropy-14369, requests-5414 — see §8.* It confirmed the recoveries
+4. **Run a small live-agent validation on the recovered cases.** ✅ _Done for
+   sympy-16766, astropy-14369, requests-5414 — see §8._ It confirmed the recoveries
    reach the agent end-to-end (all three edited the lead pivot; 2/3 resolved),
    separating "retrieval found it" from "the agent used it". django-13112 remains
    to be validated live.

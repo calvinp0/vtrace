@@ -21,11 +21,11 @@ The Stage 5 retrieval evals show Capsule v2 recovers the correct edit target at 
 high rate (Django top-3 90%, cross-repo top-3 87.5%; see
 [`capsule_v2_stage5_state.md`](./capsule_v2_stage5_state.md)). But the latest live
 smoke exposed a **context-to-action gap**: the capsule can surface a hidden,
-non-traceback pivot, *flag* it as the likely root cause, and the agent still
+non-traceback pivot, _flag_ it as the likely root cause, and the agent still
 edits only the traceback-named file.
 
-The product hypothesis is that vtrace differentiates itself not by *providing*
-context but by *enforcing context use*:
+The product hypothesis is that vtrace differentiates itself not by _providing_
+context but by _enforcing context use_:
 
 ```
 retrieval → pivot inspection → edit plan → patch
@@ -47,12 +47,12 @@ Run: `results/runs/eval-locgap-multipivot-sphinx-7462/`.
 The capsule surfaced **two pivots** and explicitly flagged the second as hidden
 (`_vtrace_instructions.snapshot.md`, hidden-candidate block at line 163):
 
-| # | pivot | role_reason (abbrev.) | source-anchored? |
-|---|-------|------------------------|------------------|
-| 1 | `sphinx/domains/python.py::_parse_annotation` | "source line anchor in the issue points at this symbol — explicit edit site" | **yes** (traceback / issue line) |
-| 2 | `sphinx/pycode/ast.py::unparse` | "actionable function — exercised by a failing test; symbol-name match; 9 dependents" | **no** (inference-surfaced) |
+| #   | pivot                                         | role_reason (abbrev.)                                                                | source-anchored?                 |
+| --- | --------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------- |
+| 1   | `sphinx/domains/python.py::_parse_annotation` | "source line anchor in the issue points at this symbol — explicit edit site"         | **yes** (traceback / issue line) |
+| 2   | `sphinx/pycode/ast.py::unparse`               | "actionable function — exercised by a failing test; symbol-name match; 9 dependents" | **no** (inference-surfaced)      |
 
-The injected snapshot rendered the full multi-pivot preamble *and* the
+The injected snapshot rendered the full multi-pivot preamble _and_ the
 hidden-candidate block under pivot #2:
 
 ```
@@ -75,7 +75,7 @@ resolved:                   false
 
 So: vtrace surfaced the hidden pivot, flagged it, and the agent **edited only the
 traceback-named file** — exactly the failure mode the soft guidance was meant to
-prevent. The harness recorded the *lead*-pivot compliance (`buildAgentCompliance`
+prevent. The harness recorded the _lead_-pivot compliance (`buildAgentCompliance`
 at `run_stage5_vexp_swe_bench_smoke.ts:1036`) and the final edited file's role
 (`finalEditedFileRole` in `src/capsule/finalEditDiagnostics.ts:111`), but **no
 existing signal records what happened to pivot #2** — the one that mattered.
@@ -99,7 +99,7 @@ pivot the capsule surfaced:
 
 Rules baked into the injected instruction:
 
-1. **One row per pivot.** The agent must account for *every* pivot, including
+1. **One row per pivot.** The agent must account for _every_ pivot, including
    hidden / non-traceback ones — not just the one it intends to edit.
 2. **Inspect, don't pre-judge.** `inspected?` means the agent actually opened the
    pivot's file/symbol (a `Read`/`view` on the path). It is not allowed to mark a
@@ -108,14 +108,14 @@ Rules baked into the injected instruction:
    but only with a concrete reason tied to what the agent saw in the source
    ("only formats the AST string, does not build the xref target"), never a bare
    "not relevant".
-4. **No instruction to edit everything.** The agent is forced to *inspect and
-   account for* each pivot, not to edit each one. Editing the smallest correct
+4. **No instruction to edit everything.** The agent is forced to _inspect and
+   account for_ each pivot, not to edit each one. Editing the smallest correct
    set remains the goal.
 
 The checklist is emitted as text in the agent's response (the only channel
 available without a new tool). The harness then **independently verifies** it
 against the ordered tool-call log and the final patch — the checklist is the
-agent's *claim*; the tool-call log is the *evidence*. Divergence between the two
+agent's _claim_; the tool-call log is the _evidence_. Divergence between the two
 is itself a recorded signal.
 
 ### Enforcement model (the one real fork)
@@ -130,7 +130,7 @@ There are two viable enforcement strengths. This spec recommends the first as th
   single-shot harness exactly. Success = the hidden pivot is no longer silently
   ignored: it is inspected and either edited or ruled out with a grounded reason.
 - **(B) Iterative re-prompt loop (future).** If post-hoc verification finds an
-  *ignored* pivot, re-invoke the agent with a targeted follow-up
+  _ignored_ pivot, re-invoke the agent with a targeted follow-up
   ("`sphinx/pycode/ast.py::unparse` was surfaced and never inspected — inspect it
   and update your patch or justify skipping it"). This is a true loop but
   requires the harness to support a **second agent invocation with carried-over
@@ -189,14 +189,14 @@ tables).
   contents → `inspected`.
 - **Search-only does not.** A grep/search that merely surfaces the path or symbol
   (as the search target or in its output) is `discovered`, never `inspected` —
-  search reveals a file *exists*; inspection means the agent *read inside it*.
+  search reveals a file _exists_; inspection means the agent _read inside it_.
   Because of this, `discovered` is an observation flag, not a terminal status: a
   pivot seen only in search is still `ignored`.
 - **Edited-without-reading is tracked separately.** Editing is taken from the
   final patch (authoritative). A pivot the patch touched **without** a prior
   read/open is `edited_without_inspection`; with a prior read it is `edited`.
 - **Ruling out requires inspection first.** `ruled_out` is set only when the
-  agent both inspected the pivot *and* explicitly dismissed it (a checklist
+  agent both inspected the pivot _and_ explicitly dismissed it (a checklist
   rule-out claim) — you cannot grounded-ly dismiss a file you never opened.
 
 ```ts
@@ -211,10 +211,10 @@ export interface PivotInspectionRecord {
   path: string;
   symbol: string;
   role: "pivot" | "support";
-  hidden: boolean;            // non-source-anchored pivot (the skip-prone kind)
-  discovered: boolean;        // appeared in search output/target; NOT engagement
-  inspected: boolean;         // direct read/open of the pivot path
-  edited: boolean;            // final patch touched the pivot path
+  hidden: boolean; // non-source-anchored pivot (the skip-prone kind)
+  discovered: boolean; // appeared in search output/target; NOT engagement
+  inspected: boolean; // direct read/open of the pivot path
+  edited: boolean; // final patch touched the pivot path
   edited_without_inspection: boolean;
   ruled_out: boolean;
   status: PivotInspectionStatus;
@@ -222,8 +222,8 @@ export interface PivotInspectionRecord {
 
 export function classifyPivotInspection(
   pivots: readonly PivotForInspection[],
-  toolCalls: readonly InspectionToolCall[],   // {tool, target?, output?}
-  editedFiles: readonly string[],             // from editedFilesFromPatch(patch)
+  toolCalls: readonly InspectionToolCall[], // {tool, target?, output?}
+  editedFiles: readonly string[], // from editedFilesFromPatch(patch)
   ruledOut?: readonly PivotRuleOut[],
 ): PivotInspectionRecord[];
 ```
@@ -249,7 +249,7 @@ exported helpers do the adaptation:
   reports `toolLogOrdered`.
 
 Because current live records lack an ordered tool log, `inspected` / `discovered`
-are *false-by-absence* (recorded as such via `toolLogOrdered`), while `edited` /
+are _false-by-absence_ (recorded as such via `toolLogOrdered`), while `edited` /
 `ignored` come from the patch and are authoritative. On the real
 `eval-locgap-multipivot-sphinx-7462` artifacts this yields exactly the target
 statement: `sphinx/pycode/ast.py::unparse` → hidden, inspected:no, edited:no,
@@ -280,13 +280,13 @@ sphinx-7462 statement below.
 **Planned (prompt lever, when the checklist is injected).** Per vtrace row,
 additionally record:
 
-| field | meaning |
-|-------|---------|
-| `pivotInspection` | array of `PivotInspectionRecord` (one per surfaced pivot) |
-| `hiddenPivotCount` | how many surfaced pivots were non-source-anchored |
-| `hiddenPivotsInspected` | of those, how many reached `inspected` or `edited` |
-| `hiddenPivotsIgnored` | of those, how many ended `ignored` (the headline gap metric) |
-| `checklistEmitted` | bool — did the agent's response contain a parseable checklist table? |
+| field                       | meaning                                                                    |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `pivotInspection`           | array of `PivotInspectionRecord` (one per surfaced pivot)                  |
+| `hiddenPivotCount`          | how many surfaced pivots were non-source-anchored                          |
+| `hiddenPivotsInspected`     | of those, how many reached `inspected` or `edited`                         |
+| `hiddenPivotsIgnored`       | of those, how many ended `ignored` (the headline gap metric)               |
+| `checklistEmitted`          | bool — did the agent's response contain a parseable checklist table?       |
 | `checklistVsToolsAgreement` | rows where the agent's claimed `inspected?` matches the tool-call evidence |
 
 Also persist the **agent's emitted checklist text** verbatim (alongside the
@@ -307,7 +307,7 @@ or ruled out with a grounded reason), regardless of Docker resolution.
   or inflate small/local tasks. Mitigation: gate strictly on multi-pivot capsules
   (single-pivot stays quiet), and measure token delta vs. the existing
   force-inject run.
-- **Checklist theater.** The agent may emit a plausible checklist *without*
+- **Checklist theater.** The agent may emit a plausible checklist _without_
   actually inspecting (mark `inspected? = yes` for a pivot it never opened). This
   is exactly why verification is tool-call-based, not text-based:
   `checklistVsToolsAgreement` surfaces fabrication.
@@ -338,7 +338,7 @@ or ruled out with a grounded reason), regardless of Docker resolution.
 3. ✅ **Wire-up:** `extractCapsulePivots` / `extractOrderedToolCalls` /
    `buildPivotInspection` in `run_stage5_capsule_v2_validation_report.ts`, called
    from `loadPair`, rendered as the `## Pivot inspection` section.
-5. ✅ **Tests:** the 8 required cases for `classifyPivotInspection` in
+4. ✅ **Tests:** the 8 required cases for `classifyPivotInspection` in
    `finalEditDiagnostics.test.ts`, plus wiring/sphinx-7462 tests in the report's
    test file (mocked, no external deps).
 
@@ -347,7 +347,7 @@ or ruled out with a grounded reason), regardless of Docker resolution.
 1. **Prompt:** in `buildVtraceContextMarkdown`, when the capsule is multi-pivot,
    append the checklist requirement + seed the pivot rows from
    `vtraceCapsulePivots`. (Benchmark-only first.)
-4. **Parser:** a small, lenient markdown-table parser to recover the agent's
+2. **Parser:** a small, lenient markdown-table parser to recover the agent's
    emitted checklist from its response text, feeding `classifyPivotInspection`'s
    `ruledOut` argument (best-effort; absence ⇒ `checklistEmitted: false`).
 
@@ -365,7 +365,7 @@ Compare two conditions against the identical baseline already on record:
   run; the evidence in §2).
 - **C2 — force-inject + mandatory pivot-inspection step:** same flags
   (`--context-policy force-inject --capsule-engine v2 --capsule-intent debug
-  --capsule-budget 8000`), with the checklist instruction injected.
+--capsule-budget 8000`), with the checklist instruction injected.
 
 Read out, for C2:
 
@@ -409,7 +409,7 @@ row-level parsing as a TODO rather than a gate. Full write-up:
 
 - **Not a retrieval change.** No claim about scoring, candidate generation, or
   ranking; those are untouched. Pivot quality is held fixed — only what the agent
-  *does with* the pivots changes.
+  _does with_ the pivots changes.
 - **Not a benchmark result.** This is a design spec plus a one-case validation
   plan. It claims nothing about aggregate resolution rates.
 - **Not a guaranteed fix.** Forcing inspection makes the hidden pivot impossible

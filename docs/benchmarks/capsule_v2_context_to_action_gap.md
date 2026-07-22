@@ -5,7 +5,7 @@ changed to write this note. It records a single, specific finding from the
 localization-gap live work so the next person does not re-derive it.
 
 > **Follow-up (resolved on this case).** The gap below predicted that the agent
-> loop must *enforce* pivot inspection, not merely *suggest* it. That enforcement
+> loop must _enforce_ pivot inspection, not merely _suggest_ it. That enforcement
 > was then built (compact, benchmark-only `PIVOT_CHECK`) and measured live: on
 > `sphinx-7462` the hidden pivot moved from **discovered-only / ignored** to
 > **inspected**. See [PIVOT_CHECK live result](#follow-up--pivot_check-enforcement-resolved-on-this-case)
@@ -57,7 +57,7 @@ Capsule v2's job — find and flag the right files, including the non-obvious on
 being done here. The remaining lever is the **agent loop**, not the context render.
 Prompt-side wording was the cheap thing to try; it was tried, and on this run it was
 not enough. Further improvement on the context-to-action gap likely requires the
-agent loop to *enforce* pivot inspection rather than merely *suggest* it. Candidate
+agent loop to _enforce_ pivot inspection rather than merely _suggest_ it. Candidate
 mechanisms (none implemented; out of scope here):
 
 - **Force an explicit inspect/rule-out step for every pivot** before any edit is
@@ -70,7 +70,7 @@ mechanisms (none implemented; out of scope here):
 
 These are agent-orchestration changes (loop, tools, gates), not retrieval or
 rendering changes. The distinction is the point: better context did not convert,
-so the next experiment should be on how the agent is made to *use* the context.
+so the next experiment should be on how the agent is made to _use_ the context.
 
 ## Non-claims
 
@@ -127,7 +127,7 @@ a hidden-pivot note when any pivot is non-source-anchored. (Commit `13c7a25`.)
 
 ## Telemetry fixed the measurement gap
 
-The conversion could only be *seen* because ordered tool-call telemetry was made
+The conversion could only be _seen_ because ordered tool-call telemetry was made
 to work first. Before commit `6dfbc1b`, the external `vexp-swe-bench` adapter
 carried the old instructions patch but not the newer stream patch, so
 `_agent_stream.jsonl` / `_tool_calls.json` were never materialized and the hidden

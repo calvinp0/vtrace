@@ -94,7 +94,7 @@ some of force-inject's savings for fewer speculative injections.
 
 ## 5. Context-to-action conversion (PIVOT_CHECK)
 
-Retrieval surfacing a pivot is not the same as the agent *using* it. On
+Retrieval surfacing a pivot is not the same as the agent _using_ it. On
 `sphinx-7462` Capsule v2 surfaced the hidden, non-traceback pivot
 `sphinx/pycode/ast.py::unparse`, but render-only guidance did not convert it —
 the agent only Grep-discovered the file and edited the traceback-named file. After
@@ -114,8 +114,8 @@ text is a prompt lever, not the source of truth.** Reports keep four signals
 separate — prompt injected, checklist emitted, ordered tool-call evidence, final
 patch files. Full write-up:
 [`capsule_v2_context_to_action_gap.md`](./capsule_v2_context_to_action_gap.md)
-(see the "Follow-up — PIVOT_CHECK enforcement" section). This is the first
-*measured* context-to-action conversion; it is **not** a Docker-resolution claim —
+(see the "Follow-up — `PIVOT_CHECK` enforcement" section). This is the first
+_measured_ context-to-action conversion; it is **not** a Docker-resolution claim —
 resolution is reported separately.
 
 ## 6. Key features added
@@ -141,7 +141,7 @@ The retrieval and patch-planning quality above rests on these additions:
   in the query for recall. Diagnostic: `deanchored_exception_tokens`.
 - **Edit-risk directives** (`guarded_shared_state_mutation`,
   `chained_lookup_alias_traversal`, `traversal_state_machine_invariant`) —
-  deterministic, generic warnings that fire on the *shape* of the pivot source
+  deterministic, generic warnings that fire on the _shape_ of the pivot source
   plus task prose, never on a framework, file, symbol, or instance id.
 - **Index fingerprinting / auto reindex** — detects a stale index (content-hashed
   parser/indexer/schema fingerprints) and reindexes before retrieval.
@@ -193,8 +193,7 @@ The retrieval and patch-planning quality above rests on these additions:
 - **No repo-specific tuning.** No instance ids or per-repo rules anywhere in
   retrieval; all heuristics fire on shape/prose only.
 - **PIVOT_CHECK conversion is context-use, not resolution.** Section 5 measures
-  whether the agent *inspected* a surfaced pivot, on one `sphinx-7462` smoke. It is
+  whether the agent _inspected_ a surfaced pivot, on one `sphinx-7462` smoke. It is
   not a claim that PIVOT_CHECK improves Docker resolution, guarantees correct
   edits, or generalizes beyond this case; checklist emission is not required for
   compliance.
-```

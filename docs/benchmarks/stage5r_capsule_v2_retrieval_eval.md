@@ -13,7 +13,7 @@ Django issues?
 - **5 Django fixtures.** A handful of real SWE-bench Django issues, each indexed
   and queried with its issue prose under `--intent debug`.
 - **Expected labels are eval-only.** Each fixture carries an expected edit file
-  and symbol used *purely to score the eval*. They are never passed into
+  and symbol used _purely to score the eval_. They are never passed into
   production retrieval — the capsule recovers the target from the index, and the
   labels only grade what it recovered.
 

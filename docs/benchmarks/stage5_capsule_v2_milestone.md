@@ -95,7 +95,7 @@ The retrieval and patch-planning quality above rests on these additions:
   reindexes before retrieval, so runs never query stale or leftover state.
 
 All three edit-risk directives are deterministic and generic: they fire on the
-*shape* of the pivot source plus task prose, never on a framework, file, symbol,
+_shape_ of the pivot source plus task prose, never on a framework, file, symbol,
 or instance id.
 
 ---
