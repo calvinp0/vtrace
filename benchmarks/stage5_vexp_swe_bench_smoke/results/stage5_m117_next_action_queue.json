@@ -1,0 +1,27 @@
+{
+  "milestone": "M117",
+  "decision": "A",
+  "verdict": "PASS",
+  "recommendation": "freeze replay-only E1-v2",
+  "prospective_validation_required": true,
+  "actions": [
+    {
+      "rank": 1,
+      "action": "freeze_replay-only_E1-v2",
+      "mode": "offline_replay_only",
+      "evidence": "Must-fire timing 2/2; operational false positives 0."
+    },
+    {
+      "rank": 2,
+      "action": "wait_for_future_naturally_occurring_runs",
+      "mode": "prospective_validation",
+      "evidence": "M105-M108 have all been inspected; no untouched holdout remains."
+    },
+    {
+      "rank": 3,
+      "action": "preserve_v4_c7d_default_off_policy",
+      "mode": "no_runtime_change",
+      "evidence": "Offline overlap V4=2, C7_D=2; M117 does not enable either detector."
+    }
+  ]
+}

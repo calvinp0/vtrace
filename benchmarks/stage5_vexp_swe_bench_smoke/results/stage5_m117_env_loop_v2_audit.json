@@ -1,0 +1,466 @@
+{
+  "milestone": "M117",
+  "date": "2026-07-22",
+  "kind": "offline retrospective strategy-aware environment-loop classifier redesign",
+  "evaluation_constraint": {
+    "untouched_holdout_available": false,
+    "framing": "retrospective replay and cross-milestone stability",
+    "leave_one_milestone_out": [
+      {
+        "design_milestones": [
+          "M106",
+          "M107",
+          "M108"
+        ],
+        "inspect_milestone": "M105",
+        "rule_version": "e1-v2",
+        "rule_identical": true,
+        "inspection": {
+          "cases": 14,
+          "fires": 6,
+          "fire_rate": 0.429,
+          "premature_fires": 0,
+          "post_recovery_fires": 0,
+          "productive_transition_fires": 0,
+          "recovery_protected": 4
+        },
+        "limitation": "Retrospective leave-one-milestone-out inspection; not an untouched or prospective holdout."
+      },
+      {
+        "design_milestones": [
+          "M105",
+          "M107",
+          "M108"
+        ],
+        "inspect_milestone": "M106",
+        "rule_version": "e1-v2",
+        "rule_identical": true,
+        "inspection": {
+          "cases": 10,
+          "fires": 4,
+          "fire_rate": 0.4,
+          "premature_fires": 0,
+          "post_recovery_fires": 0,
+          "productive_transition_fires": 0,
+          "recovery_protected": 4
+        },
+        "limitation": "Retrospective leave-one-milestone-out inspection; not an untouched or prospective holdout."
+      },
+      {
+        "design_milestones": [
+          "M105",
+          "M106",
+          "M108"
+        ],
+        "inspect_milestone": "M107",
+        "rule_version": "e1-v2",
+        "rule_identical": true,
+        "inspection": {
+          "cases": 26,
+          "fires": 8,
+          "fire_rate": 0.308,
+          "premature_fires": 0,
+          "post_recovery_fires": 0,
+          "productive_transition_fires": 0,
+          "recovery_protected": 5
+        },
+        "limitation": "Retrospective leave-one-milestone-out inspection; not an untouched or prospective holdout."
+      },
+      {
+        "design_milestones": [
+          "M105",
+          "M106",
+          "M107"
+        ],
+        "inspect_milestone": "M108",
+        "rule_version": "e1-v2",
+        "rule_identical": true,
+        "inspection": {
+          "cases": 47,
+          "fires": 12,
+          "fire_rate": 0.255,
+          "premature_fires": 0,
+          "post_recovery_fires": 0,
+          "productive_transition_fires": 0,
+          "recovery_protected": 16
+        },
+        "limitation": "Retrospective leave-one-milestone-out inspection; not an untouched or prospective holdout."
+      }
+    ],
+    "prospective_validation_required": true
+  },
+  "frozen_config": {
+    "diagnosticVersion": "e1-v2",
+    "equivalentStrategyRootThreshold": 2,
+    "relatedNoTransitionThreshold": 3,
+    "protectRecoveryPermanently": true,
+    "deferCandidateBeforeStandaloneOracle": true
+  },
+  "artifact_coverage": {
+    "expected": 97,
+    "replayed": 97,
+    "missing": 0
+  },
+  "summary": {
+    "cases_replayed": 97,
+    "total_fires": 30,
+    "fires_by_milestone": {
+      "M105": 6,
+      "M106": 4,
+      "M107": 8,
+      "M108": 12
+    },
+    "resolved_fires": 10,
+    "unresolved_fires": 20,
+    "first_fire_turn": {
+      "min": 3,
+      "median": 6,
+      "p90": 12,
+      "max": 30
+    },
+    "must_fire_controls_detected": "2/2",
+    "must_fire_control_timing": [
+      {
+        "instance_id": "django__django-16263",
+        "would_fire": true,
+        "first_fire_turn": 30,
+        "state": "LOOP",
+        "recovery_turn": null,
+        "timing_status": "within_analyst_window"
+      },
+      {
+        "instance_id": "pylint-dev__pylint-4551",
+        "would_fire": true,
+        "first_fire_turn": 10,
+        "state": "LOOP",
+        "recovery_turn": 26,
+        "timing_status": "within_analyst_window"
+      }
+    ],
+    "single_attempt_false_fires": 0,
+    "post_recovery_fires": 0,
+    "productive_transition_fires": 0,
+    "fires_immediately_before_strong_oracle": 0,
+    "operational_false_positive_count": 0,
+    "recovery_protected_count": 29,
+    "same_strategy_loop_count": 11,
+    "dependency_install_loop_count": 11,
+    "repo_test_environment_loop_count": 10,
+    "ambiguous_count": 23,
+    "V4_overlap": 2,
+    "C7_D_overlap": 2,
+    "E1_only_coverage": 26,
+    "V4_timing_vs_E1": {
+      "earlier": 1,
+      "equal": 0,
+      "later": 1
+    },
+    "C7_D_timing_vs_E1": {
+      "earlier": 1,
+      "equal": 0,
+      "later": 1
+    },
+    "milestone_fire_rate_range": 0.174,
+    "milestone_stable": true,
+    "cost_distribution": {
+      "fire": {
+        "count": 30,
+        "mean": 0.717,
+        "min": 0.370545,
+        "median": 0.5579955000000001,
+        "p90": 1.0456985,
+        "max": 3.00762
+      },
+      "no_fire": {
+        "count": 67,
+        "mean": 0.525,
+        "min": 0.18856050000000002,
+        "median": 0.45944149999999995,
+        "p90": 0.8499125000000001,
+        "max": 1.8829155
+      }
+    },
+    "tool_call_distribution": {
+      "fire": {
+        "count": 30,
+        "mean": 13.267,
+        "min": 6,
+        "median": 11,
+        "p90": 21,
+        "max": 38
+      },
+      "no_fire": {
+        "count": 67,
+        "mean": 9.104,
+        "min": 3,
+        "median": 8,
+        "p90": 15,
+        "max": 44
+      }
+    }
+  },
+  "milestone_stability": {
+    "M105": {
+      "cases": 14,
+      "fires": 6,
+      "fire_rate": 0.429,
+      "premature_fires": 0,
+      "post_recovery_fires": 0,
+      "productive_transition_fires": 0,
+      "recovery_protected": 4
+    },
+    "M106": {
+      "cases": 10,
+      "fires": 4,
+      "fire_rate": 0.4,
+      "premature_fires": 0,
+      "post_recovery_fires": 0,
+      "productive_transition_fires": 0,
+      "recovery_protected": 4
+    },
+    "M107": {
+      "cases": 26,
+      "fires": 8,
+      "fire_rate": 0.308,
+      "premature_fires": 0,
+      "post_recovery_fires": 0,
+      "productive_transition_fires": 0,
+      "recovery_protected": 5
+    },
+    "M108": {
+      "cases": 47,
+      "fires": 12,
+      "fire_rate": 0.255,
+      "premature_fires": 0,
+      "post_recovery_fires": 0,
+      "productive_transition_fires": 0,
+      "recovery_protected": 16
+    }
+  },
+  "controls": {
+    "must_fire": [
+      {
+        "instance_id": "django__django-16263",
+        "would_fire": true,
+        "first_fire_turn": 30,
+        "state": "LOOP",
+        "recovery_turn": null,
+        "timing_status": "within_analyst_window"
+      },
+      {
+        "instance_id": "pylint-dev__pylint-4551",
+        "would_fire": true,
+        "first_fire_turn": 10,
+        "state": "LOOP",
+        "recovery_turn": 26,
+        "timing_status": "within_analyst_window"
+      }
+    ],
+    "must_protect_recovery": [
+      {
+        "instance_id": "sphinx-doc__sphinx-9230",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 6,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "sympy__sympy-24562",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 5,
+        "timing_status": "protected_or_not_applicable"
+      }
+    ],
+    "single_attempt": [
+      {
+        "instance_id": "astropy__astropy-14539",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ISOLATED_FAILURE",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "django__django-10880",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ISOLATED_FAILURE",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "django__django-12050",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ISOLATED_FAILURE",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "django__django-13658",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ISOLATED_FAILURE",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "django__django-16877",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ISOLATED_FAILURE",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      }
+    ],
+    "strong_oracle_wins": [
+      {
+        "instance_id": "astropy__astropy-14365",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 9,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "pylint-dev__pylint-8898",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ADAPTATION_ATTEMPT",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "sympy__sympy-24562",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 5,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "django__django-11206",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 8,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "matplotlib__matplotlib-25332",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ADAPTATION_ATTEMPT",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "sphinx-doc__sphinx-7910",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ADAPTATION_ATTEMPT",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      }
+    ],
+    "hard_losses": [
+      {
+        "instance_id": "astropy__astropy-7166",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 3,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "sympy__sympy-15875",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 7,
+        "timing_status": "missed"
+      },
+      {
+        "instance_id": "django__django-12774",
+        "would_fire": true,
+        "first_fire_turn": 9,
+        "state": "LOOP",
+        "recovery_turn": 11,
+        "timing_status": "within_analyst_window"
+      },
+      {
+        "instance_id": "pydata__xarray-6938",
+        "would_fire": true,
+        "first_fire_turn": 8,
+        "state": "LOOP",
+        "recovery_turn": null,
+        "timing_status": "within_analyst_window"
+      },
+      {
+        "instance_id": "django__django-12325",
+        "would_fire": true,
+        "first_fire_turn": 8,
+        "state": "LOOP",
+        "recovery_turn": null,
+        "timing_status": "within_analyst_window"
+      }
+    ]
+  },
+  "e1_v1_summary": {
+    "cases_replayed": 97,
+    "missing_artifacts": 0,
+    "environment_failure_prevalence": 89,
+    "state_distribution": {
+      "AMBIGUOUS": 19,
+      "ENV_FAILURE_LOOP": 26,
+      "ISOLATED_ENV_FAILURE": 12,
+      "NONE": 8,
+      "RECOVERED_AFTER_ENV_FAILURE": 29,
+      "REPEATED_ENV_FAILURE": 3
+    },
+    "repeated_failure_count": 64,
+    "loop_fire_count": 26,
+    "resolved_fires": 11,
+    "unresolved_fires": 15,
+    "first_fire_turn": {
+      "min": 4,
+      "median": 6,
+      "p90": 14,
+      "max": 31
+    },
+    "mean_cost": {
+      "fire": 0.75,
+      "no_fire": 0.524
+    },
+    "mean_tools": {
+      "fire": 13.423,
+      "no_fire": 9.282
+    },
+    "fires_after_successful_recovery": 1,
+    "fires_with_any_later_recovery": 2,
+    "v4_overlap": 0,
+    "c7d_overlap": 2,
+    "e1_unique_beyond_v4_c7d": 24,
+    "v4_timing_vs_e1": {
+      "earlier": 0,
+      "equal": 0,
+      "later": 0
+    },
+    "c7d_timing_vs_e1": {
+      "earlier": 1,
+      "equal": 0,
+      "later": 1
+    },
+    "operational_false_positive_controls": 1,
+    "missed_named_positive_controls": 0
+  },
+  "decision": "A",
+  "verdict": "PASS",
+  "recommendation": "freeze replay-only E1-v2",
+  "detector_boundary": "E1-v2 executes only on ordered commands, outputs, edits, and tool indexes. Resolution/cost are joined after replay; gold is never loaded by the detector.",
+  "no_runtime_effect": true,
+  "no_spend_confirmation": "No live agents, Claude, Codex, Docker, APIs, VEXP, baselines, live V4/C7_D, revision/oracle arms, installs, or environment mutation were run."
+}

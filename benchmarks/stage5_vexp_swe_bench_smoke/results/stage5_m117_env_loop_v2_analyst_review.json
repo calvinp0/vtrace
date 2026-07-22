@@ -1,0 +1,410 @@
+{
+  "milestone": "M117",
+  "schema_version": 1,
+  "detector_boundary": {
+    "machine_inputs": [
+      "ordered tool calls",
+      "commands",
+      "outputs",
+      "edit paths",
+      "tool indexes"
+    ],
+    "excluded_inputs": [
+      "final resolution",
+      "evaluation metadata",
+      "gold files",
+      "gold patches",
+      "analyst timing",
+      "cost"
+    ],
+    "analyst_only": [
+      "earliest justified fire",
+      "latest acceptable fire",
+      "productive semantic transition",
+      "oracle quality",
+      "final-loss relevance"
+    ]
+  },
+  "operational_false_positive_definition": "Fire after successful recovery, during a clearly productive strategy transition, on a single reasonable attempt, or after relevant material progress before the new attempt is evaluated.",
+  "timing_review": [
+    {
+      "instance_id": "django__django-16263",
+      "earliest_justified_loop_turn": 30,
+      "latest_acceptable_fire_turn": 31,
+      "must_not_fire_before_turn": 29,
+      "reason": "The first post-edit asgiref-blocked reproduction is T28; package-install/retry repeats at T29-T30 and import confirmation follows at T31.",
+      "supporting_tool_events": [
+        28,
+        29,
+        30,
+        31
+      ],
+      "recovery_transition": null,
+      "e1_relevance": "must_fire",
+      "observed": {
+        "instance_id": "django__django-16263",
+        "would_fire": true,
+        "first_fire_turn": 30,
+        "state": "LOOP",
+        "recovery_turn": null,
+        "timing_status": "within_analyst_window"
+      }
+    },
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "earliest_justified_loop_turn": 10,
+      "latest_acceptable_fire_turn": 14,
+      "must_not_fire_before_turn": 10,
+      "reason": "T9-T10 repeat the same astroid-backed reproduction at the same missing-dependency boundary; T11-T14 continue the environment chain.",
+      "supporting_tool_events": [
+        9,
+        10,
+        11,
+        12,
+        14
+      ],
+      "recovery_transition": null,
+      "e1_relevance": "must_fire",
+      "observed": {
+        "instance_id": "pylint-dev__pylint-4551",
+        "would_fire": true,
+        "first_fire_turn": 10,
+        "state": "LOOP",
+        "recovery_turn": 26,
+        "timing_status": "within_analyst_window"
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9230",
+      "earliest_justified_loop_turn": null,
+      "latest_acceptable_fire_turn": null,
+      "must_not_fire_before_turn": "end",
+      "reason": "Successful standalone parsing/property checks at T6 and T9 establish recovery before distinct repo-test, install, and import-dependent attempts.",
+      "supporting_tool_events": [
+        6,
+        9,
+        10,
+        11,
+        12
+      ],
+      "recovery_transition": "T6 standalone property check, strengthened at T9",
+      "e1_relevance": "must_protect",
+      "observed": {
+        "instance_id": "sphinx-doc__sphinx-9230",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 6,
+        "timing_status": "protected_or_not_applicable"
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-24562",
+      "earliest_justified_loop_turn": null,
+      "latest_acceptable_fire_turn": null,
+      "must_not_fire_before_turn": 5,
+      "reason": "T2-T4 encounter import/install boundaries; T5 switches to a dependency-free exact-input 1/200 oracle.",
+      "supporting_tool_events": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "recovery_transition": "T5 standalone exact-input behavioral oracle",
+      "e1_relevance": "must_protect",
+      "observed": {
+        "instance_id": "sympy__sympy-24562",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 5,
+        "timing_status": "protected_or_not_applicable"
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-7166",
+      "earliest_justified_loop_turn": null,
+      "latest_acceptable_fire_turn": null,
+      "must_not_fire_before_turn": "end",
+      "reason": "One import-dependent attempt at T2 is followed by a successful dependency-free reproduction at T3; the analyst-rated wrong oracle, not a loop, explains the loss.",
+      "supporting_tool_events": [
+        2,
+        3
+      ],
+      "recovery_transition": "T3 standalone reproduction",
+      "e1_relevance": "not_relevant_wrong_oracle",
+      "observed": {
+        "instance_id": "astropy__astropy-7166",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 3,
+        "timing_status": "protected_or_not_applicable"
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-15875",
+      "earliest_justified_loop_turn": 6,
+      "latest_acceptable_fire_turn": 9,
+      "must_not_fire_before_turn": 6,
+      "reason": "T4 reproduction, T5 install, and T6 import retry begin a sustained environment chain through T10; the later oracle is analyst-rated wrong.",
+      "supporting_tool_events": [
+        4,
+        5,
+        6,
+        8,
+        9,
+        10
+      ],
+      "recovery_transition": null,
+      "e1_relevance": "relevant_to_inefficiency_not_final_loss",
+      "observed": {
+        "instance_id": "sympy__sympy-15875",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 7,
+        "timing_status": "missed"
+      }
+    },
+    {
+      "instance_id": "django__django-12774",
+      "earliest_justified_loop_turn": 9,
+      "latest_acceptable_fire_turn": 10,
+      "must_not_fire_before_turn": 9,
+      "reason": "T8 changes from a local reproduction to focused repository testing; T9-T10 repeat repo-test attempts at the same unavailable environment boundary.",
+      "supporting_tool_events": [
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "recovery_transition": "T11 syntax verification prevents later fire",
+      "e1_relevance": "relevant_to_repo_test_loop_not_final_loss",
+      "observed": {
+        "instance_id": "django__django-12774",
+        "would_fire": true,
+        "first_fire_turn": 9,
+        "state": "LOOP",
+        "recovery_turn": 11,
+        "timing_status": "within_analyst_window"
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-6938",
+      "earliest_justified_loop_turn": 8,
+      "latest_acceptable_fire_turn": 8,
+      "must_not_fire_before_turn": 8,
+      "reason": "T7-T8 are cosmetic interpreter variants of the same issue reproduction and missing-NumPy boundary.",
+      "supporting_tool_events": [
+        7,
+        8
+      ],
+      "recovery_transition": null,
+      "e1_relevance": "relevant_to_loop_not_oracle_quality",
+      "observed": {
+        "instance_id": "pydata__xarray-6938",
+        "would_fire": true,
+        "first_fire_turn": 8,
+        "state": "LOOP",
+        "recovery_turn": null,
+        "timing_status": "within_analyst_window"
+      }
+    },
+    {
+      "instance_id": "django__django-12325",
+      "earliest_justified_loop_turn": 8,
+      "latest_acceptable_fire_turn": 9,
+      "must_not_fire_before_turn": 8,
+      "reason": "T7-T8 repeat the same MTI reproduction through different invocation forms at the unavailable-Django boundary; T9 attempts package recovery.",
+      "supporting_tool_events": [
+        7,
+        8,
+        9
+      ],
+      "recovery_transition": null,
+      "e1_relevance": "possible_loop_but_not_final_loss_explanation",
+      "observed": {
+        "instance_id": "django__django-12325",
+        "would_fire": true,
+        "first_fire_turn": 8,
+        "state": "LOOP",
+        "recovery_turn": null,
+        "timing_status": "within_analyst_window"
+      }
+    }
+  ],
+  "controls": {
+    "must_fire": [
+      {
+        "instance_id": "django__django-16263",
+        "would_fire": true,
+        "first_fire_turn": 30,
+        "state": "LOOP",
+        "recovery_turn": null,
+        "timing_status": "within_analyst_window"
+      },
+      {
+        "instance_id": "pylint-dev__pylint-4551",
+        "would_fire": true,
+        "first_fire_turn": 10,
+        "state": "LOOP",
+        "recovery_turn": 26,
+        "timing_status": "within_analyst_window"
+      }
+    ],
+    "must_protect_recovery": [
+      {
+        "instance_id": "sphinx-doc__sphinx-9230",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 6,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "sympy__sympy-24562",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 5,
+        "timing_status": "protected_or_not_applicable"
+      }
+    ],
+    "single_attempt": [
+      {
+        "instance_id": "astropy__astropy-14539",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ISOLATED_FAILURE",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "django__django-10880",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ISOLATED_FAILURE",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "django__django-12050",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ISOLATED_FAILURE",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "django__django-13658",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ISOLATED_FAILURE",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "django__django-16877",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ISOLATED_FAILURE",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      }
+    ],
+    "strong_oracle_wins": [
+      {
+        "instance_id": "astropy__astropy-14365",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 9,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "pylint-dev__pylint-8898",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ADAPTATION_ATTEMPT",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "sympy__sympy-24562",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 5,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "django__django-11206",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 8,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "matplotlib__matplotlib-25332",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ADAPTATION_ATTEMPT",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "sphinx-doc__sphinx-7910",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "ADAPTATION_ATTEMPT",
+        "recovery_turn": null,
+        "timing_status": "protected_or_not_applicable"
+      }
+    ],
+    "hard_losses": [
+      {
+        "instance_id": "astropy__astropy-7166",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 3,
+        "timing_status": "protected_or_not_applicable"
+      },
+      {
+        "instance_id": "sympy__sympy-15875",
+        "would_fire": false,
+        "first_fire_turn": null,
+        "state": "RECOVERED",
+        "recovery_turn": 7,
+        "timing_status": "missed"
+      },
+      {
+        "instance_id": "django__django-12774",
+        "would_fire": true,
+        "first_fire_turn": 9,
+        "state": "LOOP",
+        "recovery_turn": 11,
+        "timing_status": "within_analyst_window"
+      },
+      {
+        "instance_id": "pydata__xarray-6938",
+        "would_fire": true,
+        "first_fire_turn": 8,
+        "state": "LOOP",
+        "recovery_turn": null,
+        "timing_status": "within_analyst_window"
+      },
+      {
+        "instance_id": "django__django-12325",
+        "would_fire": true,
+        "first_fire_turn": 8,
+        "state": "LOOP",
+        "recovery_turn": null,
+        "timing_status": "within_analyst_window"
+      }
+    ]
+  }
+}

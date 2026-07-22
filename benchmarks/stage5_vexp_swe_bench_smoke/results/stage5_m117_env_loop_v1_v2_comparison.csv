@@ -1,0 +1,98 @@
+instance_id,milestone_source,live_resolved,e1_v1_state,e1_v1_would_fire,e1_v1_first_fire_turn,e1_v2_state,e1_v2_would_fire,e1_v2_first_fire_turn,e1_v2_failure_root,e1_v2_verification_strategy,e1_v2_loop_kind,row_change,recovery_turn,productive_transition_turns,analyst_timing_status
+astropy__astropy-14365,M106,true,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,9,9 | 10 | 13 | 15,protected_or_not_applicable
+astropy__astropy-14369,M105,false,ENV_FAILURE_LOOP,true,6,LOOP,true,4,package_manager_unavailable,dependency_installation,dependency_install,timing_changed,,7,unexpected_fire
+astropy__astropy-14539,M108,true,ISOLATED_ENV_FAILURE,false,,ISOLATED_FAILURE,false,,,,,unchanged,,,protected_or_not_applicable
+astropy__astropy-14598,M107,false,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,8,5 | 8,protected_or_not_applicable
+astropy__astropy-7166,M106,false,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,3,3,protected_or_not_applicable
+django__django-10880,M107,true,ISOLATED_ENV_FAILURE,false,,ISOLATED_FAILURE,false,,,,,unchanged,,,protected_or_not_applicable
+django__django-10973,M108,true,NONE,false,,RECOVERED,false,,,,,unchanged,3,,protected_or_not_applicable
+django__django-11095,M108,true,NONE,false,,RECOVERED,false,,,,,unchanged,2,,protected_or_not_applicable
+django__django-11133,M108,true,ISOLATED_ENV_FAILURE,false,,ISOLATED_FAILURE,false,,,,,unchanged,,,protected_or_not_applicable
+django__django-11206,M108,true,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,8,6 | 7 | 8,protected_or_not_applicable
+django__django-11490,M108,false,AMBIGUOUS,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,7,protected_or_not_applicable
+django__django-11728,M108,true,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,4,4,protected_or_not_applicable
+django__django-11749,M108,true,AMBIGUOUS,false,,LOOP,true,5,package_manager_unavailable,dependency_installation,dependency_install,new_v2_fire,,,unexpected_fire
+django__django-11815,M106,true,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,8,7,protected_or_not_applicable
+django__django-11820,M108,false,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,5,5,protected_or_not_applicable
+django__django-12050,M108,true,ISOLATED_ENV_FAILURE,false,,ISOLATED_FAILURE,false,,,,,unchanged,,,protected_or_not_applicable
+django__django-12273,M107,false,AMBIGUOUS,false,,LOOP,true,3,dependency_unavailable,minimal_issue_reproduction,same_strategy,new_v2_fire,,,unexpected_fire
+django__django-12276,M108,true,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,5,,protected_or_not_applicable
+django__django-12325,M107,false,AMBIGUOUS,false,,LOOP,true,8,dependency_unavailable,minimal_issue_reproduction,same_strategy,new_v2_fire,,,within_analyst_window
+django__django-12774,M107,false,RECOVERED_AFTER_ENV_FAILURE,false,,LOOP,true,9,dependency_unavailable,focused_repo_test,repo_test_environment,new_v2_fire,11,8,within_analyst_window
+django__django-12858,M108,true,AMBIGUOUS,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,5 | 6,protected_or_not_applicable
+django__django-13012,M108,true,RECOVERED_AFTER_ENV_FAILURE,false,,LOOP,true,5,dependency_unavailable,focused_repo_test,repo_test_environment,new_v2_fire,7,4,unexpected_fire
+django__django-13112,M108,true,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,12,12,protected_or_not_applicable
+django__django-13195,M105,false,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,6,,protected_or_not_applicable
+django__django-13363,M108,true,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,4,,protected_or_not_applicable
+django__django-13512,M107,false,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,6,6,protected_or_not_applicable
+django__django-13513,M105,false,RECOVERED_AFTER_ENV_FAILURE,false,,LOOP,true,16,dependency_unavailable,focused_repo_test,repo_test_environment,new_v2_fire,20,15 | 19 | 21,unexpected_fire
+django__django-13551,M108,false,RECOVERED_AFTER_ENV_FAILURE,false,,LOOP,true,3,dependency_unavailable,focused_repo_test,repo_test_environment,new_v2_fire,5,,unexpected_fire
+django__django-13590,M108,true,NONE,false,,RECOVERED,false,,,,,unchanged,6,,protected_or_not_applicable
+django__django-13658,M108,true,ISOLATED_ENV_FAILURE,false,,ISOLATED_FAILURE,false,,,,,unchanged,,,protected_or_not_applicable
+django__django-13810,M105,true,AMBIGUOUS,false,,LOOP,true,3,dependency_unavailable,focused_repo_test,repo_test_environment,new_v2_fire,,,unexpected_fire
+django__django-13820,M108,true,RECOVERED_AFTER_ENV_FAILURE,false,,LOOP,true,6,dependency_unavailable,focused_repo_test,repo_test_environment,new_v2_fire,8,,unexpected_fire
+django__django-14608,M108,true,REPEATED_ENV_FAILURE,false,,ISOLATED_FAILURE,false,,,,,unchanged,,,protected_or_not_applicable
+django__django-14792,M108,false,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,6,5,protected_or_not_applicable
+django__django-15037,M108,true,NONE,false,,RECOVERED,false,,,,,unchanged,5,,protected_or_not_applicable
+django__django-15503,M107,false,RECOVERED_AFTER_ENV_FAILURE,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,4 | 5,protected_or_not_applicable
+django__django-15695,M106,false,RECOVERED_AFTER_ENV_FAILURE,false,,LOOP,true,4,dependency_unavailable,focused_repo_test,repo_test_environment,new_v2_fire,7,6,unexpected_fire
+django__django-15731,M107,true,ISOLATED_ENV_FAILURE,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,4,protected_or_not_applicable
+django__django-16256,M105,false,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,8,,protected_or_not_applicable
+django__django-16263,M107,false,ENV_FAILURE_LOOP,true,31,LOOP,true,30,package_manager_unavailable,dependency_installation,same_strategy,timing_changed,,31,within_analyst_window
+django__django-16333,M108,true,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,4,,protected_or_not_applicable
+django__django-16569,M107,true,AMBIGUOUS,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,3,protected_or_not_applicable
+django__django-16667,M107,false,ISOLATED_ENV_FAILURE,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,3,protected_or_not_applicable
+django__django-16819,M108,true,ENV_FAILURE_LOOP,true,14,LOOP,true,14,package_manager_unavailable,dependency_installation,dependency_install,unchanged,16,12 | 15,unexpected_fire
+django__django-16877,M108,true,ISOLATED_ENV_FAILURE,false,,ISOLATED_FAILURE,false,,,,,unchanged,,,protected_or_not_applicable
+django__django-16938,M105,false,AMBIGUOUS,false,,LOOP,true,5,dependency_unavailable,focused_repo_test,repo_test_environment,new_v2_fire,,4,unexpected_fire
+django__django-17084,M108,true,ISOLATED_ENV_FAILURE,false,,ISOLATED_FAILURE,false,,,,,unchanged,,,protected_or_not_applicable
+matplotlib__matplotlib-22719,M105,true,NONE,false,,NONE,false,,,,,unchanged,,,protected_or_not_applicable
+matplotlib__matplotlib-24627,M107,false,AMBIGUOUS,false,,LOOP,true,8,dependency_unavailable,minimal_issue_reproduction,same_strategy,new_v2_fire,,,unexpected_fire
+matplotlib__matplotlib-24870,M106,false,ENV_FAILURE_LOOP,true,8,ISOLATED_FAILURE,false,,,,,v1_fire_protected_by_v2,,,protected_or_not_applicable
+matplotlib__matplotlib-24970,M106,true,ISOLATED_ENV_FAILURE,false,,ISOLATED_FAILURE,false,,,,,unchanged,,,protected_or_not_applicable
+matplotlib__matplotlib-25332,M108,true,AMBIGUOUS,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,7,protected_or_not_applicable
+matplotlib__matplotlib-25960,M107,false,AMBIGUOUS,false,,RETRY_SAME_STRATEGY,false,,,,,unchanged,,,protected_or_not_applicable
+matplotlib__matplotlib-26466,M107,false,AMBIGUOUS,false,,LOOP,true,7,dependency_unavailable,minimal_issue_reproduction,same_strategy,new_v2_fire,,,unexpected_fire
+mwaskom__seaborn-3187,M105,false,RECOVERED_AFTER_ENV_FAILURE,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,5,protected_or_not_applicable
+pallets__flask-5014,M107,true,AMBIGUOUS,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,6,protected_or_not_applicable
+psf__requests-1142,M108,true,ISOLATED_ENV_FAILURE,false,,ISOLATED_FAILURE,false,,,,,unchanged,,,protected_or_not_applicable
+psf__requests-1724,M105,true,NONE,false,,NONE,false,,,,,unchanged,,,protected_or_not_applicable
+psf__requests-1921,M107,false,ISOLATED_ENV_FAILURE,false,,ISOLATED_FAILURE,false,,,,,unchanged,,,protected_or_not_applicable
+psf__requests-5414,M105,false,ENV_FAILURE_LOOP,true,4,LOOP,true,4,package_manager_unavailable,dependency_installation,same_strategy,unchanged,6,5,unexpected_fire
+pydata__xarray-2905,M108,true,AMBIGUOUS,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,9 | 10,protected_or_not_applicable
+pydata__xarray-3677,M108,true,AMBIGUOUS,false,,RETRY_SAME_STRATEGY,false,,,,,unchanged,,,protected_or_not_applicable
+pydata__xarray-4695,M105,true,ENV_FAILURE_LOOP,true,12,LOOP,true,12,dependency_unavailable,minimal_issue_reproduction,same_strategy,unchanged,,,unexpected_fire
+pydata__xarray-6599,M107,false,ENV_FAILURE_LOOP,true,4,ISOLATED_FAILURE,false,,,,,v1_fire_protected_by_v2,,,protected_or_not_applicable
+pydata__xarray-6938,M106,false,ENV_FAILURE_LOOP,true,8,LOOP,true,8,dependency_unavailable,minimal_issue_reproduction,same_strategy,unchanged,,,within_analyst_window
+pydata__xarray-6992,M106,false,ENV_FAILURE_LOOP,true,6,LOOP,true,4,package_manager_unavailable,dependency_installation,dependency_install,timing_changed,,,unexpected_fire
+pylint-dev__pylint-4551,M106,false,ENV_FAILURE_LOOP,true,14,LOOP,true,10,dependency_unavailable,property_assertion,same_strategy,timing_changed,26,14,within_analyst_window
+pylint-dev__pylint-8898,M107,true,RECOVERED_AFTER_ENV_FAILURE,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,7,protected_or_not_applicable
+pytest-dev__pytest-10051,M107,false,AMBIGUOUS,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,7 | 8,protected_or_not_applicable
+pytest-dev__pytest-5262,M108,true,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,3,3 | 4,protected_or_not_applicable
+pytest-dev__pytest-6197,M107,false,AMBIGUOUS,false,,LOOP,true,10,dependency_unavailable,focused_repo_test,repo_test_environment,new_v2_fire,,,unexpected_fire
+pytest-dev__pytest-7432,M108,true,AMBIGUOUS,false,,LOOP,true,4,test_runner_unavailable,focused_repo_test,repo_test_environment,new_v2_fire,,,unexpected_fire
+scikit-learn__scikit-learn-10844,M108,true,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,5,3 | 4,protected_or_not_applicable
+scikit-learn__scikit-learn-11578,M108,true,AMBIGUOUS,false,,LOOP,true,6,dependency_unavailable,standalone_behavioral_oracle,same_strategy,new_v2_fire,,,unexpected_fire
+sphinx-doc__sphinx-7462,M105,false,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,5,,protected_or_not_applicable
+sphinx-doc__sphinx-7748,M106,false,ENV_FAILURE_LOOP,true,11,RECOVERED,false,,,,,v1_fire_protected_by_v2,8,9 | 11 | 14,protected_or_not_applicable
+sphinx-doc__sphinx-7910,M108,true,REPEATED_ENV_FAILURE,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,6,protected_or_not_applicable
+sphinx-doc__sphinx-9230,M108,true,ENV_FAILURE_LOOP,true,12,RECOVERED,false,,,,,v1_fire_protected_by_v2,6,10 | 12,protected_or_not_applicable
+sphinx-doc__sphinx-9698,M107,true,NONE,false,,NONE,false,,,,,unchanged,,,protected_or_not_applicable
+sphinx-doc__sphinx-9711,M107,false,NONE,false,,RECOVERED,false,,,,,unchanged,4,,protected_or_not_applicable
+sympy__sympy-12419,M107,true,ENV_FAILURE_LOOP,true,6,RETRY_SAME_STRATEGY,false,,,,,v1_fire_protected_by_v2,,,protected_or_not_applicable
+sympy__sympy-12481,M108,true,ENV_FAILURE_LOOP,true,5,ADAPTATION_ATTEMPT,false,,,,,v1_fire_protected_by_v2,,6,protected_or_not_applicable
+sympy__sympy-13372,M105,true,ENV_FAILURE_LOOP,true,5,RETRY_SAME_STRATEGY,false,,,,,v1_fire_protected_by_v2,,,protected_or_not_applicable
+sympy__sympy-13480,M105,true,RECOVERED_AFTER_ENV_FAILURE,false,,RECOVERED,false,,,,,unchanged,3,,protected_or_not_applicable
+sympy__sympy-13974,M108,false,ENV_FAILURE_LOOP,true,5,RETRY_SAME_STRATEGY,false,,,,,v1_fire_protected_by_v2,,,protected_or_not_applicable
+sympy__sympy-15599,M108,false,ENV_FAILURE_LOOP,true,4,LOOP,true,6,package_manager_unavailable,dependency_installation,dependency_install,timing_changed,,,unexpected_fire
+sympy__sympy-15875,M107,false,ENV_FAILURE_LOOP,true,6,RECOVERED,false,,,,,v1_fire_protected_by_v2,7,7 | 8 | 13,missed
+sympy__sympy-16597,M107,false,ENV_FAILURE_LOOP,true,10,LOOP,true,11,dependency_unavailable,dependency_installation,related_no_transition,timing_changed,,,unexpected_fire
+sympy__sympy-16766,M108,false,ENV_FAILURE_LOOP,true,5,LOOP,true,5,package_manager_unavailable,dependency_installation,dependency_install,unchanged,,,unexpected_fire
+sympy__sympy-16792,M108,true,RECOVERED_AFTER_ENV_FAILURE,false,,LOOP,true,12,package_manager_unavailable,dependency_installation,dependency_install,new_v2_fire,,10 | 13,unexpected_fire
+sympy__sympy-18189,M108,true,ENV_FAILURE_LOOP,true,4,RETRY_SAME_STRATEGY,false,,,,,v1_fire_protected_by_v2,,,protected_or_not_applicable
+sympy__sympy-19637,M108,true,ENV_FAILURE_LOOP,true,5,RECOVERED,false,,,,,v1_fire_protected_by_v2,7,7,protected_or_not_applicable
+sympy__sympy-20428,M108,false,REPEATED_ENV_FAILURE,false,,ADAPTATION_ATTEMPT,false,,,,,unchanged,,32,protected_or_not_applicable
+sympy__sympy-20801,M108,true,ENV_FAILURE_LOOP,true,7,LOOP,true,7,package_manager_unavailable,dependency_installation,same_strategy,unchanged,,8,unexpected_fire
+sympy__sympy-23413,M108,false,ENV_FAILURE_LOOP,true,5,LOOP,true,5,package_manager_unavailable,dependency_installation,dependency_install,unchanged,,7,unexpected_fire
+sympy__sympy-24213,M108,true,ENV_FAILURE_LOOP,true,6,ADAPTATION_ATTEMPT,false,,,,,v1_fire_protected_by_v2,,6,protected_or_not_applicable
+sympy__sympy-24562,M107,true,ENV_FAILURE_LOOP,true,4,RECOVERED,false,,,,,v1_fire_protected_by_v2,5,5,protected_or_not_applicable
