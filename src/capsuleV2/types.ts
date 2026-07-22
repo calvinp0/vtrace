@@ -241,6 +241,10 @@ export interface CapsuleV2Diagnostics {
   strategy: IntentStrategy;
   /** Total candidates the role gate ran over (post-retrieval, pre-roles). */
   candidate_count: number;
+  /** Ordered pre-role candidates with reproducible component attribution. */
+  candidate_scores?: CandidateScoreDiagnostic[];
+  /** True only when an empty normal hybrid pool used M121 bounded rescue. */
+  compound_task_rescue_used?: boolean;
   pivot_count: number;
   support_count: number;
   discarded_count: number;
@@ -509,6 +513,17 @@ export interface CapsuleV2Diagnostics {
    * gold patches. Always present on a built capsule (including no_context).
    */
   localization_signals?: LocalizationSignals;
+}
+
+export interface CandidateScoreDiagnostic {
+  rank: number;
+  symbol_id: string;
+  path: string;
+  fq_name: string;
+  symbol: string;
+  sources: string[];
+  evidence: string[];
+  scores: HybridScoreComponents;
 }
 
 /** One file rescued by the file-evidence deep-pool lane (M100). */

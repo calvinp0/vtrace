@@ -1,6 +1,5 @@
 import type { Database } from "bun:sqlite";
 
-import { buildCapsule } from "../capsule/buildCapsule";
 import {
   CapsuleInclusionReasonKind,
   type Capsule,
@@ -11,6 +10,7 @@ import {
 import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
 import type { PreparedCapsuleAssembly } from "../capsuleProfiles/types";
 import { buildCapsuleV2 } from "../capsuleV2/buildCapsuleV2";
+import { buildAuthoritativeProductRetrieval } from "../capsuleV2/authoritativeProductRetrieval";
 import {
   capsuleV2ToManifestItemFields,
   toCapsuleV2ProductResponse,
@@ -63,8 +63,6 @@ import type {
 } from "../retrieval/types";
 import type { SymbolKind } from "../domain/types";
 import { createCharacterBudget } from "../capsule/budget";
-import { createSourceBackedCapsuleBuilder } from "../capsule/buildCapsule";
-import { computeVisibleCapsuleObservationDedupeKey } from "../observations/autoCapture";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import {
   persistCapsuleManifestBestEffort,
@@ -669,7 +667,6 @@ export function runReliableContextRetrieval(
     routedQuery,
     mapPresetToQueryIntent(input.preset),
   );
-  const sourceRunId = getLatestIndexRun(db)?.id ?? null;
   const supportingCandidates = overridden.rerankedResults
     .map(makeSupportingCandidateFromGraphResult);
   const builderInput = {
@@ -682,23 +679,14 @@ export function runReliableContextRetrieval(
     classification: overridden.classification,
     builderInput,
   });
-  const capsuleProfileId = preparedAssembly.selection.profile.id;
-  const capsuleBuilder = createSourceBackedCapsuleBuilder({
-    db,
-    repoRoot,
-    excludeMemoryObservation: ({ observation, query: innerQuery, pivots }) => {
-      return observation.dedupeKey === computeVisibleCapsuleObservationDedupeKey({
-        sourceRunId,
-        routedQuery: {
-          ...overridden,
-          query: innerQuery,
-        },
-        capsuleProfileId,
-        capsule: { pivots: [...pivots] },
-      });
-    },
-  });
-  const primaryCapsule = buildCapsule(capsuleBuilder, preparedAssembly.builderInput);
+  // M123: routed FTS remains the bounded M121 diagnostic/rescue surface, while
+  // the shared Capsule v2 hybrid core is the sole authority for selected files,
+  // pivot/support roles, ordering, and budget-aware rendering.
+  const primaryCapsule = buildAuthoritativeProductRetrieval(db, repoRoot, {
+    query: input.query,
+    preset: input.preset,
+    maxBudgetCharacters: input.maxBudgetCharacters,
+  }).capsule;
   const initialContextItemCount = countUsefulContextItems(primaryCapsule);
   const initialReason = resolveContextSkipReason(input.query, overridden, primaryCapsule);
 
@@ -717,41 +705,6 @@ export function runReliableContextRetrieval(
         finalReason: null,
         initialContextItemCount,
         finalContextItemCount: initialContextItemCount,
-        pathSignalsConsidered: overridden.pathSignalDiagnostics.pathSignalsConsidered,
-        pathSignalsMatched: overridden.pathSignalDiagnostics.pathSignalsMatched,
-        candidateFilesConsidered: overridden.pathSignalDiagnostics.candidateFilesConsidered,
-        weakPathCoverage: overridden.pathSignalDiagnostics.weakPathCoverage,
-        search: overridden.pathSignalDiagnostics,
-      },
-    };
-  }
-
-  if (initialReason === RunPipelineContextSkipReason.AllCandidatesOmitted) {
-    const relaxedCapsule = buildCapsule(capsuleBuilder, {
-      query: preparedAssembly.builderInput.query,
-      rerankedCandidates: preparedAssembly.builderInput.rerankedCandidates,
-      supportingCandidates: preparedAssembly.builderInput.supportingCandidates,
-      maxBudget: preparedAssembly.builderInput.maxBudget,
-    });
-    const finalContextItemCount = countUsefulContextItems(relaxedCapsule);
-    const fallbackRecovered = finalContextItemCount > 0;
-    const finalReason = fallbackRecovered
-      ? null
-      : resolveContextSkipReason(input.query, overridden, relaxedCapsule);
-    return {
-      included: fallbackRecovered,
-      skipReason: finalReason,
-      capsule: relaxedCapsule,
-      routedQuery: overridden,
-      preparedAssembly,
-      retrievalDiagnostics: {
-        fallbackApplied: true,
-        fallbackMode: "relaxed_unprofiled_assembly",
-        fallbackRecovered,
-        initialReason,
-        finalReason,
-        initialContextItemCount,
-        finalContextItemCount,
         pathSignalsConsidered: overridden.pathSignalDiagnostics.pathSignalsConsidered,
         pathSignalsMatched: overridden.pathSignalDiagnostics.pathSignalsMatched,
         candidateFilesConsidered: overridden.pathSignalDiagnostics.candidateFilesConsidered,

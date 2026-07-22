@@ -759,7 +759,7 @@ test("build_capsule delegates to the real capsule pipeline and returns determini
       requestId: "req-capsule",
       toolId: McpToolId.BuildCapsule,
       input: {
-        query: "Session",
+        query: "SessionManager",
         maxBudgetCharacters: 5_000,
       },
     } as const;
@@ -769,7 +769,7 @@ test("build_capsule delegates to the real capsule pipeline and returns determini
 
     assert.deepEqual(second, first);
     assert.equal(first.result.ok, true);
-    assert.equal(first.result.output.query, "Session");
+    assert.equal(first.result.output.query, "SessionManager");
     assert.equal(first.result.output.intent, "explain");
     assert.equal(first.result.output.routingProfile.id, "explain");
     assert.equal(first.result.output.capsuleProfile.id, "explain_stable");
@@ -780,7 +780,11 @@ test("build_capsule delegates to the real capsule pipeline and returns determini
       }),
       true,
     );
-    assert.equal(first.result.output.capsule.supportingItems.length > 0, true);
+    assert.equal(
+      first.result.output.capsule.pivots.length
+        + first.result.output.capsule.supportingItems.length > 0,
+      true,
+    );
   });
 });
 
@@ -2627,7 +2631,7 @@ test("run_pipeline returns explicit retrieval diagnostics for empty candidate an
   });
 });
 
-test("run_pipeline retries once with relaxed assembly when the profile-shaped capsule omits all useful context", async () => {
+test("run_pipeline authoritative selection avoids a divergent relaxed-assembly fallback", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);
     const initialized = await initRepo({ repoPath: repoRoot });
@@ -2652,10 +2656,10 @@ test("run_pipeline retries once with relaxed assembly when the profile-shaped ca
 
       assert.equal(recovered.result.ok, true);
       const retrieval = recovered.result.output.diagnostics.retrieval;
-      assert.equal(retrieval.initialReason, "all_candidates_omitted");
-      assert.equal(retrieval.fallbackApplied, true);
-      assert.equal(retrieval.fallbackMode, "relaxed_unprofiled_assembly");
-      assert.equal(retrieval.fallbackRecovered, true);
+      assert.equal(retrieval.initialReason, null);
+      assert.equal(retrieval.fallbackApplied, false);
+      assert.equal(retrieval.fallbackMode, null);
+      assert.equal(retrieval.fallbackRecovered, false);
       assert.equal(retrieval.finalReason, null);
       assert.equal(recovered.result.output.context.included, true);
       assert.equal(recovered.result.output.context.itemCount > 0, true);

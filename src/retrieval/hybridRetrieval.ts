@@ -100,6 +100,8 @@ export interface HybridRetrievalInput {
    * Falls back to `query` when absent.
    */
   taskText?: string;
+  /** M123 no-candidate fallback: use M121 bounded compound/exact FTS admission. */
+  enableCompoundTaskRescue?: boolean;
 }
 
 // A distinctive task literal that recovered a symbol from its source body.
@@ -190,6 +192,8 @@ function lexicalCandidates(
     query: input.query,
     maxResults: poolSize,
     enableTestAwareDownweighting: true,
+    enableCompoundTaskDecomposition: input.enableCompoundTaskRescue === true,
+    enableExactIdentifierLane: input.enableCompoundTaskRescue === true,
   })) {
     const entry = ensureCandidate(db, raw, result.symbolId);
     if (entry === undefined) {
@@ -448,8 +452,13 @@ function assemble(
   const symbolRaw = new Map<SymbolId, number>();
   const pathRaw = new Map<SymbolId, number>();
   const domainRaw = new Map<SymbolId, number>();
+  const symbolEvidence = input.enableCompoundTaskRescue === true
+    ? dedupeNonEmpty([...(input.symbolSeeds ?? []), ...input.shaped.likelySymbols])
+    : input.shaped.likelySymbols;
   for (const entry of entries) {
-    symbolRaw.set(entry.symbol.id, symbolMatchRaw(entry.symbol.localName, input.shaped.likelySymbols));
+    // Normal ranking preserves the frozen legacy policy. In the bounded M121
+    // rescue only, exact extra seeds also contribute the symbol component.
+    symbolRaw.set(entry.symbol.id, symbolMatchRaw(entry.symbol.localName, symbolEvidence));
     pathRaw.set(entry.symbol.id, pathMatchRaw(entry.symbol.filePath, input.shaped.likelyFiles));
     domainRaw.set(entry.symbol.id, computeDomainRaw(input.query, entry.symbol));
   }

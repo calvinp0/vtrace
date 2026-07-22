@@ -30,6 +30,7 @@ import {
 import {
   classifyLexicalQueryTokens,
   recomputeWithWeakenedLexical,
+  STRONG_DIRECT_LEXICAL,
 } from "../retrieval/hybridScoring";
 import { allocateBudget } from "./budgetAllocator";
 import {
@@ -166,7 +167,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const allocation = allocateBudget(input.maxTokens);
 
   const symbolSeeds = deriveSymbolSeeds(shaped);
-  const retrieval = hybridRetrieve(input.db, {
+  let retrieval = hybridRetrieve(input.db, {
     query: shaped.query,
     shaped,
     // Raw task prose for body-literal extraction: the shaped query may drop a
@@ -176,6 +177,29 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     symbolSeeds,
     maxResults: CANDIDATE_POOL_SIZE,
   });
+  let compoundTaskRescueUsed = false;
+  const normalPoolHasDirectEvidence = retrieval.candidates.some((candidate) =>
+    candidate.scores.symbol > 0
+    || candidate.scores.path > 0
+    || candidate.scores.testToImpl > 0
+    || candidate.scores.bodyLiteral > 0
+    || candidate.scores.lexical >= STRONG_DIRECT_LEXICAL
+  );
+  if (retrieval.candidates.length === 0 || !normalPoolHasDirectEvidence) {
+    const rescued = hybridRetrieve(input.db, {
+      query: input.task,
+      shaped,
+      taskText: input.task,
+      weights,
+      symbolSeeds,
+      maxResults: CANDIDATE_POOL_SIZE,
+      enableCompoundTaskRescue: true,
+    });
+    if (rescued.candidates.length > 0) {
+      retrieval = rescued;
+      compoundTaskRescueUsed = true;
+    }
+  }
   let candidates = retrieval.candidates;
   const bodyLiteralMatches = retrieval.bodyLiteralMatches;
 
@@ -754,6 +778,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       shaped,
       localizationSignals,
       explanations: buildNoContextExplanations(refined, shaped),
+      compoundTaskRescueUsed,
       debugDiagnostics: {
         ...debugDiagnostics,
         ...lineAnchorDiagnostics,
@@ -1133,6 +1158,8 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       intent_confidence: plan.intent_confidence,
       strategy: plan.strategy,
       candidate_count: candidates.length,
+      candidate_scores: candidateScoreDiagnostics(candidates),
+      ...(compoundTaskRescueUsed ? { compound_task_rescue_used: true } : {}),
       pivot_count: pivots.length,
       support_count: support.length,
       discarded_count: discarded.length,
@@ -1174,6 +1201,19 @@ function toCoeditCandidate(item: CapsuleV2Item): CoeditCandidateItem {
     kind: item.kind,
     isNonSourceExample: item.is_non_source_example === true,
   };
+}
+
+function candidateScoreDiagnostics(candidates: readonly HybridCandidate[]) {
+  return candidates.map((candidate, index) => ({
+    rank: index + 1,
+    symbol_id: candidate.symbolId,
+    path: candidate.filePath,
+    fq_name: candidate.fqName,
+    symbol: candidate.localName,
+    sources: [...candidate.sources],
+    evidence: [...candidate.evidence],
+    scores: { ...candidate.scores },
+  }));
 }
 
 // Support ordering tier: implementation helpers (edit sites that only missed the
@@ -1435,6 +1475,7 @@ interface NoContextInput {
   localizationSignals: LocalizationSignals;
   explanations: NoContextExplanation[];
   debugDiagnostics: Partial<CapsuleV2Result["diagnostics"]>;
+  compoundTaskRescueUsed: boolean;
 }
 
 function noContextResult(input: NoContextInput): CapsuleV2Result {
@@ -1451,6 +1492,7 @@ function noContextResult(input: NoContextInput): CapsuleV2Result {
       intent_confidence: input.plan.intent_confidence,
       strategy: input.plan.strategy,
       candidate_count: input.candidateCount,
+      ...(input.compoundTaskRescueUsed ? { compound_task_rescue_used: true } : {}),
       pivot_count: 0,
       support_count: 0,
       discarded_count: input.discarded.length,

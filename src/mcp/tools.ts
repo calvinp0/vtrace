@@ -2,7 +2,6 @@
 import { access } from "node:fs/promises";
 import path from "node:path";
 
-import { buildCapsule, createSourceBackedCapsuleBuilder } from "../capsule/buildCapsule";
 import { createCharacterBudget } from "../capsule/budget";
 import {
   CapsuleBudgetModel,
@@ -14,6 +13,7 @@ import {
 } from "../capsule/types";
 import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
 import { buildCapsuleV2 } from "../capsuleV2/buildCapsuleV2";
+import { buildAuthoritativeProductRetrieval } from "../capsuleV2/authoritativeProductRetrieval";
 import {
   capsuleV2ToManifestItemFields,
   toCapsuleV2ProductResponse,
@@ -116,7 +116,6 @@ import {
   captureSessionContextObservationBestEffort,
   captureSkeletonObservationBestEffort,
   captureVisibleCapsuleObservationBestEffort,
-  computeVisibleCapsuleObservationDedupeKey,
 } from "../observations/autoCapture";
 import { searchMemory } from "../observations/searchMemory";
 import { getObservationStaleness } from "../observations/staleness";
@@ -4090,34 +4089,6 @@ function makePipelineBuilderInput(
   };
 }
 
-function createPipelineCapsuleBuilder(
-  db: ReturnType<typeof openIndexerDatabase>,
-  repoRoot: string,
-  routedQuery: ReturnType<typeof routeQuery>,
-  capsuleProfileId: string,
-  sourceRunId: number | null,
-) {
-  return createSourceBackedCapsuleBuilder({
-    db,
-    repoRoot,
-    excludeMemoryObservation: ({
-      observation,
-      query,
-      pivots,
-    }) => {
-      return observation.dedupeKey === computeVisibleCapsuleObservationDedupeKey({
-        sourceRunId,
-        routedQuery: {
-          ...routedQuery,
-          query,
-        },
-        capsuleProfileId,
-        capsule: { pivots: [...pivots] },
-      });
-    },
-  });
-}
-
 function formatCapsuleItem(item: CapsuleItem) {
   return {
     ...(item.repoAlias === undefined ? {} : { repoAlias: item.repoAlias }),
@@ -4435,30 +4406,35 @@ function runIntentAwareCapsulePipeline(
   const routedQuery = routeQuery(db, input.query!, {
     maxResults: input.maxResults ?? MCP_PIPELINE_DEFAULTS.maxResults,
   });
-  const sourceRunId = getLatestIndexRun(db)?.id ?? null;
   const builderInput = makePipelineBuilderInput(routedQuery, input);
   const preparedAssembly = prepareCapsuleAssembly({
     classification: routedQuery.classification,
     builderInput,
   });
-  const capsuleBuilder = createPipelineCapsuleBuilder(
-    db,
-    repoRoot,
-    routedQuery,
-    preparedAssembly.selection.profile.id,
-    sourceRunId,
-  );
-  const capsule = buildCapsule(
-    capsuleBuilder,
-    preparedAssembly.builderInput,
-  );
+  const capsule = buildAuthoritativeProductRetrieval(db, repoRoot, {
+    query: input.query!,
+    preset: productPresetForQueryIntent(routedQuery.intent),
+    maxBudgetCharacters: input.maxBudgetCharacters ?? MCP_PIPELINE_DEFAULTS.maxBudgetCharacters,
+  }).capsule;
 
   return {
     routedQuery,
     preparedAssembly,
     capsule,
-    capsuleBuilder,
   };
+}
+
+function productPresetForQueryIntent(intent: QueryIntent) {
+  switch (intent) {
+    case QueryIntent.Debug:
+      return RunPipelinePresetIntent.Debug;
+    case QueryIntent.Refactor:
+      return RunPipelinePresetIntent.Refactor;
+    case QueryIntent.Modify:
+      return RunPipelinePresetIntent.Modify;
+    default:
+      return RunPipelinePresetIntent.Explore;
+  }
 }
 
 function countUsefulContextItems(capsule: Capsule): number {
@@ -4743,36 +4719,16 @@ function runReliablePipeline(
     };
   }
 
-  let finalPipeline = primaryPipeline;
-  let fallbackApplied = false;
-  let fallbackRecovered = false;
-  let fallbackMode: RunPipelineFallbackMode | null = null;
-
-  if (initialReason === RUN_PIPELINE_DIAGNOSTIC_REASON.AllCandidatesOmitted) {
-    fallbackApplied = true;
-    fallbackMode = RUN_PIPELINE_FALLBACK_MODE.RelaxedUnprofiledAssembly;
-
-    finalPipeline = {
-      ...primaryPipeline,
-      capsule: buildCapsule(primaryPipeline.capsuleBuilder, {
-        query: primaryPipeline.preparedAssembly.builderInput.query,
-        rerankedCandidates: primaryPipeline.preparedAssembly.builderInput.rerankedCandidates,
-        supportingCandidates: primaryPipeline.preparedAssembly.builderInput.supportingCandidates,
-        maxBudget: primaryPipeline.preparedAssembly.builderInput.maxBudget,
-      }),
-    };
-    fallbackRecovered = countUsefulContextItems(finalPipeline.capsule) > 0;
-  }
-
+  const finalPipeline = primaryPipeline;
   const finalContextItemCount = countUsefulContextItems(finalPipeline.capsule);
 
   return {
     pipeline: finalPipeline,
     diagnostics: {
       initialReason,
-      fallbackApplied,
-      fallbackMode,
-      fallbackRecovered,
+      fallbackApplied: false,
+      fallbackMode: null,
+      fallbackRecovered: false,
       finalReason: finalContextItemCount > 0 ? null : resolveRunPipelineEmptyReason(input.query!, finalPipeline),
       initialContextItemCount,
       finalContextItemCount,
