@@ -154,6 +154,7 @@ import {
   type WorktreeIndexFreshnessResult,
 } from "../indexer/indexMeta";
 import { WorktreeIndexLockError } from "../indexer/worktreeIndexLock";
+import { IndexingFileFailuresError, type IndexProjectResult } from "../indexer/types";
 import {
   assembleProductContext,
   buildUnresolvedProductContext,
@@ -5794,6 +5795,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
     latestRun: NonNullable<RepoLocalState["latestRun"]> | null;
     lock: { status: "released"; staleLockRecovered: boolean };
     performance: import("../indexer/incrementalIndex").IndexPerformanceDiagnostics | null;
+    fileOutcomes: IndexProjectResult["files"];
   }>({
     metadata: {
       toolId: McpToolId.IndexRepo,
@@ -5837,8 +5839,20 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             ["status", "staleLockRecovered"],
           ),
           performance: { type: ["object", "null"], description: "Incremental planning, cache, closure, fallback, and timing diagnostics.", additionalProperties: true },
+          fileOutcomes: arrayProperty("Structured indexed, skipped, and failed file outcomes.", {
+            type: "object",
+            properties: {
+              path: stringProperty("Normalized repo-relative path."),
+              language: stringProperty("Detected source language."),
+              status: stringProperty("Indexed, skipped capability, or failure status."),
+              diagnostics: { type: "array", items: { type: "object", additionalProperties: true } },
+              error: { type: "object", additionalProperties: true },
+            },
+            required: ["path", "language", "status", "diagnostics"],
+            additionalProperties: false,
+          }),
         },
-        ["repoRoot", "latestRunId", "readiness", "indexSummary", "latestRun", "lock", "performance"],
+        ["repoRoot", "latestRunId", "readiness", "indexSummary", "latestRun", "lock", "performance", "fileOutcomes"],
       ),
     },
     async handler({ context, request }) {
@@ -5873,11 +5887,13 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       let state: RepoLocalState | null;
       let staleLockRecovered = false;
       let performance: import("../indexer/incrementalIndex").IndexPerformanceDiagnostics | null = null;
+      let indexResult: IndexProjectResult;
       try {
         if (config === undefined || stateBefore === undefined) {
           const initialized = await initRepo({ repoPath: repoRoot });
           state = initialized.state;
-          performance = initialized.indexResult.performance ?? null;
+          indexResult = initialized.indexResult;
+          performance = indexResult.performance ?? null;
         } else {
           const indexed = await reindexRepoAndRefreshState({
             repoRoot,
@@ -5889,10 +5905,18 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             refreshMode: mode,
           });
           state = indexed.state;
+          indexResult = indexed.indexResult;
           staleLockRecovered = indexed.staleLockRecovered;
           performance = indexed.indexResult.performance ?? null;
         }
       } catch (error) {
+        if (error instanceof IndexingFileFailuresError) {
+          return failure(McpErrorCode.HandlerFailed, error.message, {
+            reason: "file_index_failed",
+            repoRoot,
+            failures: error.failures,
+          });
+        }
         if (error instanceof WorktreeIndexLockError) {
           return failure(McpErrorCode.HandlerFailed, error.message, {
             reason: error.code,
@@ -5917,6 +5941,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           latestRun: state.latestRun ?? null,
           lock: { status: "released", staleLockRecovered },
           performance,
+          fileOutcomes: indexResult.files,
         },
       };
     },

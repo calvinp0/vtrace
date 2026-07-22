@@ -1,5 +1,6 @@
 import { reindexRepoAndRefreshState } from "../../runtime/reindexRepo";
-import { formatIndexResult, formatIndexResultHuman } from "../formatters";
+import { formatIndexResult, formatIndexResultHuman, formatIndexingFileFailures } from "../formatters";
+import { IndexingFileFailuresError } from "../../indexer/types";
 import { selectProgressReporter } from "../progress";
 import type { CliOptions, CommandResult } from "../types";
 import {
@@ -66,6 +67,9 @@ export async function runIndexCommand(
       readinessStatus: result.state?.readiness.status,
     }));
   } catch (error) {
+    if (error instanceof IndexingFileFailuresError) {
+      return failure(formatIndexingFileFailures(error.failures));
+    }
     const message = error instanceof Error ? error.message : String(error);
     return failure(formatUserFacingFailure(
       "Indexing could not finish.",

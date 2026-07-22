@@ -1,0 +1,250 @@
+{
+  "schemaVersion": "stage5.m124.incremental-language-smoke.v1",
+  "fixture": {
+    "files": [
+      "src/app.py",
+      "src/helper.ts",
+      "frontend/eslint.config.js"
+    ],
+    "javascriptPolicy": "recognized_unsupported"
+  },
+  "runs": {
+    "cleanFull": {
+      "mode": "full_rebuild",
+      "filesDiscovered": 3,
+      "filesIndexed": 2,
+      "filesSkippedUnregistered": 1,
+      "filesParsed": 3,
+      "unsupportedFilesCarriedForward": 0,
+      "cacheHits": 0,
+      "cacheMisses": 3,
+      "totalLatencyMs": 28.559411999999995,
+      "previousGraphSnapshotUsedForMutation": false,
+      "fileOutcomes": [
+        {
+          "path": "frontend/eslint.config.js",
+          "language": "javascript",
+          "status": "unregistered_language",
+          "diagnostics": [],
+          "error": {
+            "code": "unregistered_language",
+            "message": "No parser registered for language: javascript",
+            "filePath": "frontend/eslint.config.js",
+            "language": "javascript"
+          }
+        },
+        {
+          "path": "src/app.py",
+          "language": "python",
+          "status": "indexed",
+          "diagnostics": []
+        },
+        {
+          "path": "src/helper.ts",
+          "language": "typescript",
+          "status": "indexed",
+          "diagnostics": []
+        }
+      ]
+    },
+    "initialFull": {
+      "mode": "full_rebuild",
+      "filesDiscovered": 3,
+      "filesIndexed": 2,
+      "filesSkippedUnregistered": 1,
+      "filesParsed": 3,
+      "unsupportedFilesCarriedForward": 0,
+      "cacheHits": 0,
+      "cacheMisses": 3,
+      "totalLatencyMs": 43.425391000000005,
+      "previousGraphSnapshotUsedForMutation": false,
+      "fileOutcomes": [
+        {
+          "path": "frontend/eslint.config.js",
+          "language": "javascript",
+          "status": "unregistered_language",
+          "diagnostics": [],
+          "error": {
+            "code": "unregistered_language",
+            "message": "No parser registered for language: javascript",
+            "filePath": "frontend/eslint.config.js",
+            "language": "javascript"
+          }
+        },
+        {
+          "path": "src/app.py",
+          "language": "python",
+          "status": "indexed",
+          "diagnostics": []
+        },
+        {
+          "path": "src/helper.ts",
+          "language": "typescript",
+          "status": "indexed",
+          "diagnostics": []
+        }
+      ]
+    },
+    "incrementalOneSupportedEdit": {
+      "mode": "incremental",
+      "filesDiscovered": 3,
+      "filesIndexed": 2,
+      "filesSkippedUnregistered": 1,
+      "filesParsed": 1,
+      "unsupportedFilesCarriedForward": 1,
+      "cacheHits": 1,
+      "cacheMisses": 1,
+      "totalLatencyMs": 6.306911999999997,
+      "previousGraphSnapshotUsedForMutation": true,
+      "fileOutcomes": [
+        {
+          "path": "frontend/eslint.config.js",
+          "language": "javascript",
+          "status": "unregistered_language",
+          "diagnostics": [],
+          "error": {
+            "code": "unregistered_language",
+            "message": "No parser registered for language: javascript",
+            "filePath": "frontend/eslint.config.js",
+            "language": "javascript"
+          }
+        },
+        {
+          "path": "src/app.py",
+          "language": "python",
+          "status": "indexed",
+          "diagnostics": []
+        },
+        {
+          "path": "src/helper.ts",
+          "language": "typescript",
+          "status": "indexed",
+          "diagnostics": []
+        }
+      ]
+    },
+    "incrementalNoop": {
+      "mode": "noop",
+      "filesDiscovered": 3,
+      "filesIndexed": 2,
+      "filesSkippedUnregistered": 1,
+      "filesParsed": 0,
+      "unsupportedFilesCarriedForward": 1,
+      "cacheHits": 0,
+      "cacheMisses": 0,
+      "totalLatencyMs": 1.925584999999998,
+      "previousGraphSnapshotUsedForMutation": false,
+      "fileOutcomes": [
+        {
+          "path": "frontend/eslint.config.js",
+          "language": "javascript",
+          "status": "unregistered_language",
+          "diagnostics": [],
+          "error": {
+            "code": "unregistered_language",
+            "message": "No parser registered for language: javascript",
+            "filePath": "frontend/eslint.config.js",
+            "language": "javascript"
+          }
+        },
+        {
+          "path": "src/app.py",
+          "language": "python",
+          "status": "indexed",
+          "diagnostics": []
+        },
+        {
+          "path": "src/helper.ts",
+          "language": "typescript",
+          "status": "indexed",
+          "diagnostics": []
+        }
+      ]
+    },
+    "explicitFullWithPreviousSnapshot": {
+      "mode": "full_rebuild",
+      "filesDiscovered": 3,
+      "filesIndexed": 2,
+      "filesSkippedUnregistered": 1,
+      "filesParsed": 1,
+      "unsupportedFilesCarriedForward": 0,
+      "cacheHits": 2,
+      "cacheMisses": 1,
+      "totalLatencyMs": 4.833724000000004,
+      "previousGraphSnapshotUsedForMutation": false,
+      "fileOutcomes": [
+        {
+          "path": "frontend/eslint.config.js",
+          "language": "javascript",
+          "status": "unregistered_language",
+          "diagnostics": [],
+          "error": {
+            "code": "unregistered_language",
+            "message": "No parser registered for language: javascript",
+            "filePath": "frontend/eslint.config.js",
+            "language": "javascript"
+          }
+        },
+        {
+          "path": "src/app.py",
+          "language": "python",
+          "status": "indexed",
+          "diagnostics": []
+        },
+        {
+          "path": "src/helper.ts",
+          "language": "typescript",
+          "status": "indexed",
+          "diagnostics": []
+        }
+      ]
+    }
+  },
+  "equivalence": {
+    "snapshot": true,
+    "graph": true,
+    "files": true,
+    "symbols": true,
+    "edges": true,
+    "ftsRows": true,
+    "retrievalIndexHash": true,
+    "representativeRetrieval": true
+  },
+  "hashes": {
+    "normalizedGraph": "2e1319d94eded7ed3c20122ec08a3fc0f0b8adc8d4ed181aec66e287870c775d",
+    "retrievalIndex": "6240f1867c40f44102959235b7ba2d1cd9ccfa8daf6e28fbc027592569fb4610"
+  },
+  "representativeRetrieval": [
+    {
+      "symbolId": "4b2b342383ae313aee3d20a252e41fc28c4c8ee9a27abfa706dba684b61a26c1",
+      "filePath": "src/helper.ts",
+      "fqName": "src/helper.ts::helper",
+      "localName": "helper",
+      "kind": "function",
+      "score": 134,
+      "matches": [
+        {
+          "field": "local_name",
+          "matchType": "exact",
+          "scoreContribution": 100
+        },
+        {
+          "field": "fq_name",
+          "matchType": "substring",
+          "scoreContribution": 20
+        },
+        {
+          "field": "signature",
+          "matchType": "substring",
+          "scoreContribution": 10
+        },
+        {
+          "field": "file_path",
+          "matchType": "substring",
+          "scoreContribution": 4
+        }
+      ]
+    }
+  ],
+  "pass": true
+}

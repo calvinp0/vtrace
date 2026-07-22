@@ -686,6 +686,64 @@ test("index_repo delegates to the real indexing service and returns structured r
   });
 });
 
+test("index_repo preserves structured unsupported-file diagnostics", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    await mkdir(path.join(repoRoot, "frontend"), { recursive: true });
+    await writeFile(path.join(repoRoot, "frontend", "eslint.config.js"), "export default [];\n");
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-index-unsupported",
+      toolId: McpToolId.IndexRepo,
+      input: { mode: "incremental" },
+    });
+
+    assert.equal(response.result.ok, true);
+    assert.equal(response.result.output.indexSummary.totalSkippedUnregisteredLanguage, 1);
+    assert.deepEqual(
+      response.result.output.fileOutcomes.find((file) => file.path === "frontend/eslint.config.js"),
+      {
+        path: "frontend/eslint.config.js",
+        language: "javascript",
+        status: "unregistered_language",
+        diagnostics: [],
+        error: {
+          code: "unregistered_language",
+          message: "No parser registered for language: javascript",
+          filePath: "frontend/eslint.config.js",
+          language: "javascript",
+        },
+      },
+    );
+  });
+});
+
+test("index_repo parser failures retain structured paths and diagnostics", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    await writeFile(path.join(repoRoot, "src", "script.py"), "def broken(:\n");
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+
+    const response = await server.handleRequest({
+      schema: MCP_SERVER_SCHEMA,
+      requestId: "req-index-failure",
+      toolId: McpToolId.IndexRepo,
+      input: { mode: "incremental" },
+    });
+
+    assert.equal(response.result.ok, false);
+    assert.equal(response.result.error.details.reason, "file_index_failed");
+    assert.equal(response.result.error.details.failures[0].path, "src/script.py");
+    assert.equal(response.result.error.details.failures[0].language, "python");
+    assert.equal(response.result.error.details.failures[0].status, "parse_failed");
+    assert.match(response.result.error.details.failures[0].error.message, /Parser failed: SyntaxError:/);
+  });
+});
+
 test("search_symbols delegates to the real retrieval service and returns deterministic candidates", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);

@@ -15,11 +15,11 @@ function file(path: string, contentHash: string): FileRecord {
 }
 
 function snap(path: string, contentHash: string): IndexedFileSnapshot {
-  return { relativePath: path, language: Language.TypeScript, contentHash, contentKind: "working_tree_hash", parserId: "ts", parserVersion: "v1", parserConfigFingerprint: "c1", bindingContextHash: "b1", parseCacheKey: `${path}:${contentHash}`, sizeBytes: contentHash.length };
+  return { relativePath: path, language: Language.TypeScript, contentHash, contentKind: "working_tree_hash", indexOutcome: "indexed", parserCapability: "supported", parserId: "ts", parserVersion: "v1", parserConfigFingerprint: "c1", bindingContextHash: "b1", parseCacheKey: `${path}:${contentHash}`, sizeBytes: contentHash.length };
 }
 
 function snapshot(files: IndexedFileSnapshot[]): IndexedFileSnapshotSet {
-  return { schemaVersion: FILE_SNAPSHOT_SCHEMA_VERSION, files, fileCount: files.length, snapshotHash: computeSnapshotHash(files), graphSchemaVersion: 1, retrievalSchemaVersion: 1, bindingContextHash: "b1", semanticContextHash: "s1" };
+  return { schemaVersion: FILE_SNAPSHOT_SCHEMA_VERSION, files, fileCount: files.length, snapshotHash: computeSnapshotHash(files), graphSchemaVersion: 1, retrievalSchemaVersion: 1, bindingContextHash: "b1", semanticContextHash: "s1", parserRegistryFingerprint: "r1" };
 }
 
 test("planner emits deterministic noop and modified-only incremental plans", () => {

@@ -15,7 +15,7 @@ import {
  * Bump when the SHAPE of index.meta.json changes (fields added/removed/renamed).
  * Distinct from the fingerprints below, which track the indexed CONTENT logic.
  */
-export const INDEX_FORMAT_VERSION = 3 as const;
+export const INDEX_FORMAT_VERSION = 4 as const;
 
 export const INDEX_META_FILENAME = "index.meta.json" as const;
 
@@ -30,7 +30,7 @@ const VTRACE_SOURCE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.u
 const PARSER_SOURCE_DIRS = ["src/parsers"] as const;
 const INDEXER_SOURCE_DIRS = ["src/indexer", "src/db"] as const;
 const SCHEMA_SOURCE_FILES = ["src/db/schema.ts"] as const;
-const CONFIG_SOURCE_FILES = ["src/fs/scanRepo.ts", "src/fs/ignoreRules.ts"] as const;
+const CONFIG_SOURCE_FILES = ["src/fs/scanRepo.ts", "src/fs/ignoreRules.ts", "src/fs/languageDetection.ts"] as const;
 
 /**
  * The vtrace-side descriptor of an index: everything that should match for a

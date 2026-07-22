@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 
 import { listGitStatusEntries } from "../fs/git";
 import { hashFile } from "../fs/hashFile";
-import { isIndexableRepoSourcePath } from "../fs/scanRepo";
+import { isRecognizedRepoSourcePath } from "../fs/scanRepo";
 
 const execFile = promisify(execFileCallback);
 
@@ -117,8 +117,8 @@ export async function computeDirtyFingerprint(repoRoot: string): Promise<string 
   }
 
   const relevant = entries.filter((entry) => (
-    isIndexableRepoSourcePath(entry.path)
-    || (entry.originalPath !== undefined && isIndexableRepoSourcePath(entry.originalPath))
+    isRecognizedRepoSourcePath(entry.path)
+    || (entry.originalPath !== undefined && isRecognizedRepoSourcePath(entry.originalPath))
   ));
   if (relevant.length === 0) {
     return null;

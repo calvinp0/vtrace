@@ -17,6 +17,7 @@ export interface LanguageParser {
 export interface ParserRegistry {
   registerParser(language: Language, parser: LanguageParser): void;
   getParser(language: Language): LanguageParser | undefined;
+  registeredLanguages(): readonly Language[];
   parse(input: ParseFileInput): Promise<ParserResult>;
 }
 
@@ -32,6 +33,10 @@ export function createParserRegistry(
 
     getParser(language: Language): LanguageParser | undefined {
       return parsersByLanguage.get(language);
+    },
+
+    registeredLanguages(): readonly Language[] {
+      return [...parsersByLanguage.keys()].sort();
     },
 
     async parse(input: ParseFileInput): Promise<ParserResult> {

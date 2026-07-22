@@ -108,6 +108,50 @@ test("index command prints phase headers and a human-readable final summary by d
   });
 });
 
+test("index reports unsupported JavaScript as a successful path-rich skip", async () => {
+  await withFixture(async ({ repoRoot, dbPath }) => {
+    await writeFixtureRepo(repoRoot);
+    await mkdir(path.join(repoRoot, "frontend"), { recursive: true });
+    await writeFile(path.join(repoRoot, "frontend", "eslint.config.js"), "export default [];\n");
+
+    const human = await runCli(["index", repoRoot, "--mode", "full"], { dbPath });
+    assert.equal(human.exitCode, 0);
+    assert.match(human.stdout, /3 parsed, 1 skipped, 0 failed/);
+    assert.match(human.stdout, /frontend\/eslint\.config\.js — javascript\/unregistered_language — No parser registered for language: javascript/);
+
+    const json = await runCli(["index", repoRoot, "--mode", "incremental", "--json"], { dbPath });
+    assert.equal(json.exitCode, 0);
+    const output = JSON.parse(json.stdout);
+    assert.deepEqual(output.files.find((file: { path: string }) => file.path === "frontend/eslint.config.js"), {
+      path: "frontend/eslint.config.js",
+      language: "javascript",
+      status: "unregistered_language",
+      diagnostics: [],
+      error: {
+        code: "unregistered_language",
+        message: "No parser registered for language: javascript",
+        filePath: "frontend/eslint.config.js",
+        language: "javascript",
+      },
+    });
+  });
+});
+
+test("index failure summaries retain paths, languages, statuses, and multiple diagnostics", async () => {
+  await withFixture(async ({ repoRoot, dbPath }) => {
+    await mkdir(path.join(repoRoot, "src"), { recursive: true });
+    await writeFile(path.join(repoRoot, "src", "broken.py"), "def broken(:\n");
+    await writeFile(path.join(repoRoot, "src", "broken.pyx"), "cdef int broken(\n");
+
+    const result = await runCli(["index", repoRoot, "--mode", "full"], { dbPath });
+    assert.equal(result.exitCode, 1);
+    assert.match(result.stderr, /Indexing failed/);
+    assert.match(result.stderr, /Failed files: 2/);
+    assert.match(result.stderr, /src\/broken\.py — python\/parse_failed — Parser failed:/);
+    assert.match(result.stderr, /src\/broken\.pyx — cython\/parse_failed — Parser failed:/);
+  });
+});
+
 test("index --quiet runs cleanly and still emits the final human summary on stdout", async () => {
   await withFixture(async ({ repoRoot, dbPath }) => {
     await writeFixtureRepo(repoRoot);

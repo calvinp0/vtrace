@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import type { EdgeRecord, FileRecord, SymbolRecord } from "../domain/types";
-import type { IndexProjectResult } from "../indexer/types";
+import type { IndexedFileSummary, IndexProjectResult } from "../indexer/types";
 import type { Capsule, CapsuleItem } from "../capsule/types";
 import type { CapsuleDiagnostics } from "../capsule/capsuleDiagnostics";
 import type { CapsuleProfileSelectionResult } from "../capsuleProfiles/types";
@@ -160,6 +160,9 @@ export function formatIndexResultHuman(input: IndexHumanSummaryInput): string {
     + indexResult.totalReadFailures
     + indexResult.totalPersistenceFailures;
   const dbDisplayPath = formatRepoRelativePath(repoRoot, dbPath);
+  const skippedFiles = indexResult.files.filter((file) => (
+    file.status === "unregistered_language" || file.status === "unsupported_language"
+  ));
 
   const summaryStatus = filesFailed > 0
     ? `indexed with ${filesFailed} failure${filesFailed === 1 ? "" : "s"}`
@@ -174,6 +177,7 @@ export function formatIndexResultHuman(input: IndexHumanSummaryInput): string {
     ]),
     phaseHeader("Parsing source files", [
       `done: ${formatCount(filesParsed)} parsed, ${formatCount(filesSkipped)} skipped, ${formatCount(filesFailed)} failed`,
+      ...formatFileOutcomeLines(skippedFiles, 20),
     ]),
     phaseHeader("Extracting symbols and relationships", [
       `done: ${formatCount(indexResult.totalSymbols)} symbols, ${formatCount(indexResult.totalRelationships)} relationships`,
@@ -196,6 +200,26 @@ export function formatIndexResultHuman(input: IndexHumanSummaryInput): string {
       ]),
     ]),
   ].join("");
+}
+
+export function formatIndexingFileFailures(failures: readonly IndexedFileSummary[]): string {
+  return [
+    "Indexing failed",
+    "",
+    `Failed files: ${failures.length}`,
+    "",
+    "Failures:",
+    ...formatFileOutcomeLines(failures, 20),
+  ].join("\n");
+}
+
+function formatFileOutcomeLines(files: readonly IndexedFileSummary[], limit: number): string[] {
+  const visible = files.slice(0, limit).map((file) => {
+    const diagnostic = file.error?.message ?? file.diagnostics[0]?.message ?? "no diagnostic available";
+    return `- ${file.path} — ${file.language}/${file.status} — ${diagnostic}`;
+  });
+  const omitted = files.length - visible.length;
+  return omitted > 0 ? [...visible, `- … ${omitted} more omitted`] : visible;
 }
 
 function phaseHeader(label: string, lines: readonly string[]): string {

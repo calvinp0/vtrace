@@ -72,7 +72,7 @@ export async function captureRepoSourceSnapshot(
   };
 }
 
-export function isIndexableRepoSourcePath(filePath: string): boolean {
+export function isRecognizedRepoSourcePath(filePath: string): boolean {
   const normalizedPath = normalizeFilePath(filePath);
   const segments = normalizedPath.split("/");
 

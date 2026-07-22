@@ -31,12 +31,13 @@ import {
   createTypeScriptParser,
   type ParserRegistry,
 } from "../parsers";
-import type {
-  IndexedFileSummary,
-  IndexProjectFileContent,
-  IndexProjectOptions,
-  IndexProjectResult,
-  IndexerFileError,
+import {
+  IndexingFileFailuresError,
+  type IndexedFileSummary,
+  type IndexProjectFileContent,
+  type IndexProjectOptions,
+  type IndexProjectResult,
+  type IndexerFileError,
 } from "./types";
 import {
   FILE_SNAPSHOT_SCHEMA_VERSION,
@@ -115,17 +116,31 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   }
   progress.report({ kind: "phase_end", phase: "read" });
 
+  if (files.length > 0) {
+    throw new IndexingFileFailuresError(files);
+  }
+
   const parserVersion = options.parserVersion ?? "builtin-parser-v1";
   const parserConfigFingerprint = options.parserConfigFingerprint ?? "default-parser-config-v1";
+  const registry = options.createParserRegistry === undefined
+    ? createDefaultParserRegistry(readableFiles)
+    : options.createParserRegistry(readableFiles);
+  const parserRegistryFingerprint = computeParserRegistryFingerprint(registry);
+  const registryIncompatible = options.previousSnapshot !== undefined
+    && options.previousSnapshot.schemaVersion === FILE_SNAPSHOT_SCHEMA_VERSION
+    && options.previousSnapshot.parserRegistryFingerprint !== parserRegistryFingerprint;
   const planningStarted = performance.now();
   let plan = planIncrementalRefresh({
     requestedMode: options.refreshMode ?? "auto",
     currentFiles: scannedFiles,
     previous: options.previousSnapshot,
     compatible: (options.previousSnapshotCompatible ?? true)
-      && (options.previousSnapshot === undefined || options.previousSnapshot.schemaVersion === FILE_SNAPSHOT_SCHEMA_VERSION),
-    ...((options.previousSnapshotCompatible === false || (options.previousSnapshot !== undefined && options.previousSnapshot.schemaVersion !== FILE_SNAPSHOT_SCHEMA_VERSION))
-      ? { incompatibilityReason: options.incompatibilityReason ?? "schema_incompatible" }
+      && (options.previousSnapshot === undefined || (
+        options.previousSnapshot.schemaVersion === FILE_SNAPSHOT_SCHEMA_VERSION
+        && options.previousSnapshot.parserRegistryFingerprint === parserRegistryFingerprint
+      )),
+    ...((options.previousSnapshotCompatible === false || registryIncompatible || (options.previousSnapshot !== undefined && options.previousSnapshot.schemaVersion !== FILE_SNAPSHOT_SCHEMA_VERSION))
+      ? { incompatibilityReason: options.incompatibilityReason ?? (registryIncompatible ? "parser_incompatible" : "schema_incompatible") }
       : {}),
   });
   if (plan.mode === "noop" && options.hasExistingGraph === false) {
@@ -140,26 +155,27 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     // Preserve run-history semantics while leaving the live graph and both
     // retrieval indexes untouched.
     recordIndexRunState(options.db, scannedFiles, symbols);
+    const noopFiles = options.previousSnapshot.files.map(summaryFromSnapshot);
     return {
       totalFilesScanned: scannedFiles.length,
       totalFilesAttemptedForParse: 0,
-      totalFilesSuccessfullyIndexed: scannedFiles.length,
+      totalFilesSuccessfullyIndexed: noopFiles.filter((file) => file.status === "indexed").length,
       totalParseFailures: 0,
-      totalSkippedUnregisteredLanguage: 0,
-      totalSkippedUnsupportedLanguage: 0,
-      totalReadFailures: files.length,
+      totalSkippedUnregisteredLanguage: noopFiles.filter((file) => file.status === "unregistered_language").length,
+      totalSkippedUnsupportedLanguage: noopFiles.filter((file) => file.status === "unsupported_language").length,
+      totalReadFailures: 0,
       totalPersistenceFailures: 0,
       totalSymbols: symbols.length,
       totalRelationships: edges.length,
-      files: scannedFiles.map((file) => ({ path: file.path, language: file.language, status: "indexed", diagnostics: [] })),
+      files: noopFiles,
       snapshot: options.previousSnapshot,
-      performance: makePerformanceDiagnostics(plan, timings, scannedFiles.length, 0, 0, 0, options),
+      performance: makePerformanceDiagnostics(
+        plan, timings, scannedFiles.length, 0, 0, 0, options, 0, 0,
+        noopFiles.filter((file) => file.status === "unregistered_language" || file.status === "unsupported_language").length,
+      ),
     };
   }
 
-  const registry = options.createParserRegistry === undefined
-    ? createDefaultParserRegistry(readableFiles)
-    : options.createParserRegistry(readableFiles);
   let successfulResults: ParseResult[] = [];
   const summariesByPath = new Map<string, IndexedFileSummary>();
   const identity = await resolveWorktreeIdentity(repoRoot);
@@ -167,10 +183,22 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   let parseCacheHits = 0;
   let parseCacheMisses = 0;
   let parsedFiles = 0;
-  let bindingContextHash = options.previousSnapshot?.bindingContextHash ?? "unbound";
+  let unsupportedFilesCarriedForward = 0;
+  let bindingContextHash = plan.mode === "incremental"
+    ? options.previousSnapshot?.bindingContextHash ?? "unbound"
+    : "unbound";
   const graphRowsDeleted = countLiveGraphRows(options.db);
   let graphRowsInserted = 0;
   const previousByPath = new Map(options.previousSnapshot?.files.map((file) => [file.relativePath, file]) ?? []);
+  const fullParseCacheContextCompatible = options.previousSnapshot !== undefined
+    && options.previousSnapshot.files.length === scannedFiles.length
+    && scannedFiles.every((file) => {
+      const previous = previousByPath.get(file.path);
+      return previous !== undefined
+        && previous.contentHash === file.contentHash
+        && previous.language === file.language
+        && previous.sizeBytes === file.sizeBytes;
+    });
   const previousSymbols = listAllSymbols(options.db);
   const parseStarted = performance.now();
 
@@ -182,12 +210,27 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   });
   const initialParsePaths = plan.mode === "incremental"
     ? new Set(plan.modified.map((change) => change.relativePath))
-    : new Set(readableFiles.map((file) => file.file.path));
+    : new Set(readableFiles
+      .filter((file) => !canReuseFullParseCache(
+        file,
+        previousByPath.get(file.file.path),
+        options,
+        parserVersion,
+        parserConfigFingerprint,
+        parserRegistryFingerprint,
+        fullParseCacheContextCompatible,
+      ))
+      .map((file) => file.file.path));
   parseCacheMisses += initialParsePaths.size;
   for (let index = 0; index < readableFiles.length; index += 1) {
     const fileContent = readableFiles[index]!;
     if (!initialParsePaths.has(fileContent.file.path)) {
       const previous = previousByPath.get(fileContent.file.path);
+      if (plan.mode === "incremental" && previous?.indexOutcome === "skipped") {
+        summariesByPath.set(fileContent.file.path, summaryFromSnapshot(previous));
+        unsupportedFilesCarriedForward += 1;
+        continue;
+      }
       const cached = previous === undefined ? undefined : await readParseCacheEntry(cacheRoot, cacheInputFromSnapshot(previous));
       if (cached !== undefined) {
         successfulResults.push(cached);
@@ -236,6 +279,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       parseCacheHits = 0;
       parseCacheMisses = readableFiles.length;
       parsedFiles = 0;
+      unsupportedFilesCarriedForward = 0;
       const fallbackParseStarted = performance.now();
       for (const fileContent of readableFiles) {
         const parsed = await parseFile(registry, fileContent);
@@ -255,10 +299,9 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   bindingContextHash = computeBindingContextHash(successfulResults);
   const semanticContextHash = computeSemanticContextHash(successfulResults);
 
-  if (options.previousSnapshot !== undefined && (
-    files.length > 0 || [...summariesByPath.values()].some((summary) => summary.status !== "indexed")
-  )) {
-    throw new Error("Incremental refresh aborted because at least one current source file could not be parsed or read");
+  const fatalFileFailures = [...summariesByPath.values()].filter(isFatalFileOutcome);
+  if (fatalFileFailures.length > 0) {
+    throw new IndexingFileFailuresError(fatalFileFailures);
   }
 
   for (const result of successfulResults) {
@@ -343,7 +386,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     0,
   );
 
-  const snapshotFiles: IndexedFileSnapshot[] = persistedResults.map((result) => {
+  const indexedSnapshotFiles: IndexedFileSnapshot[] = persistedResults.map((result) => {
     const identity = contentIdentities.get(result.file.path);
     const keyInput = makeCacheKeyInput(result, parserVersion, parserConfigFingerprint, bindingContextHash, identity);
     return {
@@ -352,6 +395,8 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       contentHash: result.file.contentHash,
       contentKind: identity?.contentKind ?? "working_tree_hash",
       ...(identity?.gitBlobSha === undefined ? {} : { gitBlobSha: identity.gitBlobSha }),
+      indexOutcome: "indexed",
+      parserCapability: "supported",
       parserId: parserIdForLanguage(result.file.language),
       parserVersion,
       parserConfigFingerprint,
@@ -359,7 +404,30 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       parseCacheKey: computeParseCacheKey(keyInput),
       sizeBytes: result.file.sizeBytes,
     };
-  }).sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+  });
+  const skippedSnapshotFiles: IndexedFileSnapshot[] = [...summariesByPath.values()]
+    .filter((summary) => summary.status === "unregistered_language" || summary.status === "unsupported_language")
+    .map((summary) => {
+      const scanned = scannedFiles.find((file) => file.path === summary.path)!;
+      const identity = contentIdentities.get(summary.path);
+      return {
+        relativePath: summary.path,
+        language: summary.language,
+        contentHash: scanned.contentHash,
+        contentKind: identity?.contentKind ?? "working_tree_hash",
+        ...(identity?.gitBlobSha === undefined ? {} : { gitBlobSha: identity.gitBlobSha }),
+        indexOutcome: "skipped",
+        parserCapability: summary.status === "unregistered_language" ? "unregistered" : "unsupported",
+        bindingContextHash,
+        sizeBytes: scanned.sizeBytes,
+        diagnostic: {
+          category: summary.status,
+          message: summary.error?.message ?? summary.status,
+        },
+      };
+    });
+  const snapshotFiles = [...indexedSnapshotFiles, ...skippedSnapshotFiles]
+    .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
   const snapshot: IndexedFileSnapshotSet = {
     schemaVersion: FILE_SNAPSHOT_SCHEMA_VERSION,
     files: snapshotFiles,
@@ -369,9 +437,10 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     retrievalSchemaVersion: RETRIEVAL_SCHEMA_VERSION,
     bindingContextHash,
     semanticContextHash,
+    parserRegistryFingerprint,
   };
   timings.total = performance.now() - totalStarted;
-  const performanceDiagnostics = makePerformanceDiagnostics(plan, timings, scannedFiles.length, parseCacheHits, parseCacheMisses, parsedFiles, options, graphRowsDeleted, graphRowsInserted);
+  const performanceDiagnostics = makePerformanceDiagnostics(plan, timings, scannedFiles.length, parseCacheHits, parseCacheMisses, parsedFiles, options, graphRowsDeleted, graphRowsInserted, unsupportedFilesCarriedForward);
   if (options.parserVersion === undefined) {
     performanceDiagnostics.timingsMs = emptyTimings();
     performanceDiagnostics.graphRowsDeleted = 0;
@@ -435,6 +504,27 @@ function cacheInputFromSnapshot(snapshot: IndexedFileSnapshot): ParseCacheKeyInp
   };
 }
 
+function canReuseFullParseCache(
+  current: IndexProjectFileContent,
+  previous: IndexedFileSnapshot | undefined,
+  options: IndexProjectOptions,
+  parserVersion: string,
+  parserConfigFingerprint: string,
+  parserRegistryFingerprint: string,
+  bindingContextCompatible: boolean,
+): boolean {
+  return bindingContextCompatible
+    && previous?.indexOutcome === "indexed"
+    && options.previousSnapshotCompatible !== false
+    && options.previousSnapshot?.schemaVersion === FILE_SNAPSHOT_SCHEMA_VERSION
+    && options.previousSnapshot.parserRegistryFingerprint === parserRegistryFingerprint
+    && previous.contentHash === current.file.contentHash
+    && previous.language === current.file.language
+    && previous.sizeBytes === current.file.sizeBytes
+    && previous.parserVersion === parserVersion
+    && previous.parserConfigFingerprint === parserConfigFingerprint;
+}
+
 async function discoverContentIdentities(
   repoRoot: string,
   files: readonly IndexProjectFileContent["file"][],
@@ -453,6 +543,12 @@ function parserIdForLanguage(language: ParseResult["file"]["language"]): string 
   return `vtrace-${language}`;
 }
 
+function computeParserRegistryFingerprint(registry: ParserRegistry): string {
+  return createHash("sha256")
+    .update(JSON.stringify(registry.registeredLanguages()))
+    .digest("hex");
+}
+
 function makePerformanceDiagnostics(
   plan: ReturnType<typeof planIncrementalRefresh>,
   timings: ReturnType<typeof emptyTimings>,
@@ -463,6 +559,7 @@ function makePerformanceDiagnostics(
   options: IndexProjectOptions,
   graphRowsDeleted = 0,
   graphRowsInserted = 0,
+  unsupportedFilesCarriedForward = 0,
 ): IndexPerformanceDiagnostics {
   return {
     mode: plan.mode,
@@ -484,6 +581,8 @@ function makePerformanceDiagnostics(
     graphRowsInserted,
     timingsMs: timings,
     ...(plan.fullRebuildReason === undefined ? {} : { fallbackReason: plan.fullRebuildReason }),
+    previousGraphSnapshotUsedForMutation: plan.mode === "incremental",
+    unsupportedFilesCarriedForward,
   };
 }
 
@@ -519,7 +618,7 @@ function semanticSymbolKey(symbol: ParseResult["symbols"][number]): string {
   return [symbol.filePath, symbol.fqName, symbol.localName, symbol.kind, symbol.signature, symbol.exported ? "1" : "0"].join("\0");
 }
 
-function createDefaultParserRegistry(
+export function createDefaultParserRegistry(
   files: readonly IndexProjectFileContent[],
 ): ParserRegistry {
   return createParserRegistry([
@@ -577,6 +676,35 @@ function summaryForParserError(
     diagnostics: [],
     error: error.toJSON(),
   };
+}
+
+function summaryFromSnapshot(snapshot: IndexedFileSnapshot): IndexedFileSummary {
+  if (snapshot.indexOutcome === "indexed") {
+    return {
+      path: snapshot.relativePath,
+      language: snapshot.language,
+      status: "indexed",
+      diagnostics: [],
+    };
+  }
+  const status = snapshot.diagnostic?.category
+    ?? (snapshot.parserCapability === "unsupported" ? "unsupported_language" : "unregistered_language");
+  return {
+    path: snapshot.relativePath,
+    language: snapshot.language,
+    status,
+    diagnostics: [],
+    error: {
+      code: status,
+      message: snapshot.diagnostic?.message ?? `No parser registered for language: ${snapshot.language}`,
+      filePath: snapshot.relativePath,
+      language: snapshot.language,
+    },
+  };
+}
+
+function isFatalFileOutcome(summary: IndexedFileSummary): boolean {
+  return summary.status === "read_failed" || summary.status === "parse_failed";
 }
 
 function statusForParserError(error: ParserError): IndexedFileSummary["status"] {

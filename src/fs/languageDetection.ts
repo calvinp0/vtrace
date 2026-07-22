@@ -7,6 +7,12 @@ const JAVASCRIPT_EXTENSIONS = new Set([".js", ".jsx"]);
 const PYTHON_EXTENSIONS = new Set([".py"]);
 const CYTHON_EXTENSIONS = new Set([".pyx", ".pxd", ".pxi"]);
 
+const INDEXABLE_LANGUAGES = new Set<Language>([
+  Language.TypeScript,
+  Language.Python,
+  Language.Cython,
+]);
+
 export function detectLanguage(filePath: string): Language | undefined {
   const extension = path.extname(filePath).toLowerCase();
 
@@ -30,5 +36,18 @@ export function detectLanguage(filePath: string): Language | undefined {
 }
 
 export function isIndexableSourceFile(filePath: string): boolean {
+  const language = detectLanguage(filePath);
+  return language !== undefined && INDEXABLE_LANGUAGES.has(language);
+}
+
+/**
+ * Source-like files are discovered even when VTRACE has no parser capability.
+ * This lets indexing snapshot and diagnose them without claiming support.
+ */
+export function isRecognizedSourceFile(filePath: string): boolean {
   return detectLanguage(filePath) !== undefined;
+}
+
+export function isAdvertisedIndexableLanguage(language: Language): boolean {
+  return INDEXABLE_LANGUAGES.has(language);
 }

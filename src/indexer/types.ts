@@ -60,6 +60,19 @@ export interface IndexerFileError {
   message: string;
 }
 
+export class IndexingFileFailuresError extends Error {
+  readonly failures: readonly IndexedFileSummary[];
+
+  constructor(failures: readonly IndexedFileSummary[]) {
+    const first = failures[0];
+    super(first === undefined
+      ? "Indexing failed for one or more source files"
+      : `Indexing failed for ${failures.length} source file${failures.length === 1 ? "" : "s"}; first failure: ${first.path} (${first.status})${first.error?.message === undefined ? "" : `: ${first.error.message}`}`);
+    this.name = "IndexingFileFailuresError";
+    this.failures = failures;
+  }
+}
+
 export interface IndexProjectResult {
   totalFilesScanned: number;
   totalFilesAttemptedForParse: number;

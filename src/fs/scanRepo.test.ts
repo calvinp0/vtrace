@@ -6,10 +6,10 @@ import { test } from "bun:test";
 
 import { Language } from "../domain/types";
 import { hashFile } from "./hashFile";
-import { detectLanguage } from "./languageDetection";
+import { detectLanguage, isAdvertisedIndexableLanguage, isIndexableSourceFile, isRecognizedSourceFile } from "./languageDetection";
 import { scanRepo } from "./scanRepo";
 
-test("scanner finds only supported source files", async () => {
+test("scanner finds recognized source files including unsupported languages", async () => {
   await withFixture(async (repoRoot) => {
     await writeFixture(repoRoot);
 
@@ -94,6 +94,17 @@ test("language detection maps supported extensions to domain languages", () => {
   assert.equal(detectLanguage("src/interface.pxd"), Language.Cython);
   assert.equal(detectLanguage("src/inline.pxi"), Language.Cython);
   assert.equal(detectLanguage("src/styles.css"), undefined);
+});
+
+test("JavaScript and JSX are recognized without being advertised as indexable", () => {
+  assert.equal(isRecognizedSourceFile("frontend/eslint.config.js"), true);
+  assert.equal(isRecognizedSourceFile("frontend/component.jsx"), true);
+  assert.equal(isIndexableSourceFile("frontend/eslint.config.js"), false);
+  assert.equal(isIndexableSourceFile("frontend/component.jsx"), false);
+  assert.equal(isAdvertisedIndexableLanguage(Language.JavaScript), false);
+  assert.equal(isAdvertisedIndexableLanguage(Language.TypeScript), true);
+  assert.equal(isAdvertisedIndexableLanguage(Language.Python), true);
+  assert.equal(isAdvertisedIndexableLanguage(Language.Cython), true);
 });
 
 async function withFixture(run: (repoRoot: string) => Promise<void>): Promise<void> {

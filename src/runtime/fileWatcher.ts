@@ -2,7 +2,7 @@ import { stat } from "node:fs/promises";
 import path from "node:path";
 
 import { normalizeFilePath, type FileRecord } from "../domain/types";
-import { isIndexableRepoSourcePath, scanRepo } from "../fs/scanRepo";
+import { isRecognizedRepoSourcePath, scanRepo } from "../fs/scanRepo";
 import {
   detectFileThrashingAntiPatterns,
   trimObservedFileChangeEvents,
@@ -230,7 +230,7 @@ export async function detectSinglePathChange(input: {
 }): Promise<SourceFileChange | null> {
   const filePath = normalizeRepoRelativePath(input.repoRoot, input.filePath);
 
-  if (!isIndexableRepoSourcePath(filePath)) {
+  if (!isRecognizedRepoSourcePath(filePath)) {
     return null;
   }
 
@@ -615,7 +615,7 @@ function normalizeRelevantFilePaths(filePaths: readonly string[]): string[] {
   return [...new Set(
     filePaths
       .map((filePath) => normalizeFilePath(filePath))
-      .filter((filePath) => isIndexableRepoSourcePath(filePath)),
+      .filter((filePath) => isRecognizedRepoSourcePath(filePath)),
   )].sort((left, right) => left.localeCompare(right));
 }
 

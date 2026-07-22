@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 import { Language, type FileRecord, type ParseResult } from "../domain/types";
 
-export const FILE_SNAPSHOT_SCHEMA_VERSION = 2 as const;
+export const FILE_SNAPSHOT_SCHEMA_VERSION = 3 as const;
 export const RETRIEVAL_SCHEMA_VERSION = 1 as const;
 // M118 synthetic TypeScript-100 measurements crossed at 20% (0.97x at 20%,
 // 0.96x at 30%, 0.90x at 50%). Python parsing remained strongly dominant
@@ -29,13 +29,19 @@ export interface IndexedFileSnapshot {
   readonly contentHash: string;
   readonly contentKind: "git_blob" | "working_tree_hash";
   readonly gitBlobSha?: string;
-  readonly parserId: string;
-  readonly parserVersion: string;
-  readonly parserConfigFingerprint: string;
+  readonly indexOutcome: "indexed" | "skipped";
+  readonly parserCapability: "supported" | "unregistered" | "unsupported";
+  readonly parserId?: string;
+  readonly parserVersion?: string;
+  readonly parserConfigFingerprint?: string;
   readonly bindingContextHash: string;
-  readonly parseCacheKey: string;
+  readonly parseCacheKey?: string;
   readonly sizeBytes: number;
   readonly executableOrMode?: string;
+  readonly diagnostic?: {
+    readonly category: "unregistered_language" | "unsupported_language";
+    readonly message: string;
+  };
 }
 
 export interface IndexedFileSnapshotSet {
@@ -47,6 +53,7 @@ export interface IndexedFileSnapshotSet {
   readonly retrievalSchemaVersion: number;
   readonly bindingContextHash: string;
   readonly semanticContextHash: string;
+  readonly parserRegistryFingerprint: string;
 }
 
 export interface FileChange {
@@ -105,6 +112,8 @@ export interface IndexPerformanceDiagnostics {
   graphRowsInserted?: number;
   timingsMs: IndexTimings;
   fallbackReason?: FullRebuildReason;
+  previousGraphSnapshotUsedForMutation: boolean;
+  unsupportedFilesCarriedForward: number;
 }
 
 export function planIncrementalRefresh(input: {
@@ -290,7 +299,12 @@ export function isValidSnapshotSet(value: unknown): value is IndexedFileSnapshot
   if (typeof value !== "object" || value === null) return false;
   const snapshot = value as Partial<IndexedFileSnapshotSet>;
   if (snapshot.schemaVersion !== FILE_SNAPSHOT_SCHEMA_VERSION || !Array.isArray(snapshot.files)) return false;
-  if (snapshot.fileCount !== snapshot.files.length || typeof snapshot.snapshotHash !== "string" || typeof snapshot.semanticContextHash !== "string") return false;
+  if (snapshot.fileCount !== snapshot.files.length || typeof snapshot.snapshotHash !== "string" || typeof snapshot.semanticContextHash !== "string" || typeof snapshot.parserRegistryFingerprint !== "string") return false;
+  if (snapshot.files.some((file) => (
+    (file.indexOutcome !== "indexed" && file.indexOutcome !== "skipped")
+    || (file.parserCapability !== "supported" && file.parserCapability !== "unregistered" && file.parserCapability !== "unsupported")
+    || (file.indexOutcome === "indexed" && (typeof file.parserId !== "string" || typeof file.parserVersion !== "string" || typeof file.parserConfigFingerprint !== "string" || typeof file.parseCacheKey !== "string"))
+  ))) return false;
   return computeSnapshotHash(snapshot.files) === snapshot.snapshotHash;
 }
 

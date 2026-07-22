@@ -279,21 +279,18 @@ test("unregistered language files are skipped and reported when no Python parser
   });
 });
 
-test("parser failures do not abort the entire run", async () => {
+test("supported parser failures abort a full rebuild before graph mutation", async () => {
   await withFixture(async (repoRoot) => {
     await writeBasicTypeScriptRepo(repoRoot);
     await writeFile(path.join(repoRoot, "src", "script.py"), "def broken(:\n    return 1\n");
     const db = openIndexerDatabase();
 
     try {
-      const result = await indexProject({ repoRoot, db });
-      const pythonSummary = result.files.find((file) => file.path === "src/script.py");
-
-      assert.equal(result.totalParseFailures, 1);
-      assert.equal(result.totalFilesSuccessfullyIndexed, 2);
-      assert.equal(pythonSummary?.status, "parse_failed");
-      assert.match(pythonSummary?.error?.message ?? "", /^Parser failed: SyntaxError:/);
-      assert.equal(getFileByPath(db, "src/service.ts")?.path, "src/service.ts");
+      await assert.rejects(
+        indexProject({ repoRoot, db }),
+        /src\/script\.py \(parse_failed\): Parser failed: SyntaxError:/,
+      );
+      assert.equal(getFileByPath(db, "src/service.ts"), undefined);
       assert.equal(getFileByPath(db, "src/script.py"), undefined);
     } finally {
       db.close();
@@ -301,7 +298,7 @@ test("parser failures do not abort the entire run", async () => {
   });
 });
 
-test("Cython parser failures do not abort the entire indexing run", async () => {
+test("Cython parser failures remain fatal and path-rich", async () => {
   await withFixture(async (repoRoot) => {
     await mkdir(path.join(repoRoot, "src"), { recursive: true });
     await writeFile(path.join(repoRoot, "src", "service.ts"), "export function ok() { return 1; }\n");
@@ -309,14 +306,11 @@ test("Cython parser failures do not abort the entire indexing run", async () => 
     const db = openIndexerDatabase();
 
     try {
-      const result = await indexProject({ repoRoot, db });
-      const cythonSummary = result.files.find((file) => file.path === "src/broken.pyx");
-
-      assert.equal(result.totalParseFailures, 1);
-      assert.equal(result.totalFilesSuccessfullyIndexed, 1);
-      assert.equal(cythonSummary?.status, "parse_failed");
-      assert.match(cythonSummary?.error?.message ?? "", /^Parser failed: SyntaxError:/);
-      assert.equal(getFileByPath(db, "src/service.ts")?.path, "src/service.ts");
+      await assert.rejects(
+        indexProject({ repoRoot, db }),
+        /src\/broken\.pyx \(parse_failed\): Parser failed: SyntaxError:/,
+      );
+      assert.equal(getFileByPath(db, "src/service.ts"), undefined);
       assert.equal(getFileByPath(db, "src/broken.pyx"), undefined);
     } finally {
       db.close();
@@ -825,6 +819,9 @@ const unsupportedLanguageRegistry: ParserRegistry = {
   getParser(): LanguageParser | undefined {
     return undefined;
   },
+  registeredLanguages() {
+    return [];
+  },
   async parse(input) {
     return {
       ok: false,
@@ -1067,7 +1064,7 @@ test("incremental parse failure preserves the previous valid graph", async () =>
       await writeFile(path.join(repoRoot, "src", "service.py"), "def broken(:\n    return 1\n");
       await assert.rejects(
         indexProject({ repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config", previousSnapshot: first.snapshot }),
-        /aborted.*could not be parsed/i,
+        /src\/service\.py \(parse_failed\): Parser failed: SyntaxError:/,
       );
       assert.equal(normalizedGraphHash(db), before);
     } finally {
