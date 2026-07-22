@@ -1,0 +1,25 @@
+{
+  "milestone": "M116",
+  "decision": "C",
+  "recommendation": "redesign environment-loop detection",
+  "actions": [
+    {
+      "rank": 1,
+      "action": "redesign_environment-loop_detection",
+      "mode": "no_spend_first",
+      "evidence": "26 E1 fires; positives protected; harmful recovery fires 1."
+    },
+    {
+      "rank": 2,
+      "action": "preserve_v4_c7d_default_off_policy",
+      "mode": "archive",
+      "evidence": "E1 overlaps V4=0, C7_D=2; M116 is not a promotion study."
+    },
+    {
+      "rank": 3,
+      "action": "defer_live_effect_study",
+      "mode": "requires_separate_approval_and_preregistration",
+      "evidence": "M116 makes no intervention or live-effect claim."
+    }
+  ]
+}

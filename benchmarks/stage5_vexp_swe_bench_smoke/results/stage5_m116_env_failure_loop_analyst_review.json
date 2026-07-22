@@ -1,0 +1,410 @@
+{
+  "milestone": "M116",
+  "schema_version": 1,
+  "machine_judgment_boundary": {
+    "machine": [
+      "commands",
+      "outputs",
+      "exit statuses",
+      "failure signatures",
+      "edits",
+      "successful commands",
+      "turns",
+      "cost/tool counts"
+    ],
+    "analyst": [
+      "new hypothesis",
+      "materially different oracle",
+      "progress relevance",
+      "useful/premature/late fire"
+    ]
+  },
+  "source_citations": [
+    "stage5_m113_verification_classifications.json",
+    "stage5_m113_verification_oracle_audit.md",
+    "stage5_m111_case_classifications.json"
+  ],
+  "controls": [
+    {
+      "instance_id": "django__django-16263",
+      "control_group": "positive",
+      "expected": "fire",
+      "rationale": "M113 named high-cost repeated environment/tool loop",
+      "observed": {
+        "instance_id": "django__django-16263",
+        "state": "ENV_FAILURE_LOOP",
+        "would_fire": true,
+        "first_fire_turn": 31
+      }
+    },
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "control_group": "positive",
+      "expected": "fire",
+      "rationale": "M113 named high-cost repeated environment/tool loop",
+      "observed": {
+        "instance_id": "pylint-dev__pylint-4551",
+        "state": "ENV_FAILURE_LOOP",
+        "would_fire": true,
+        "first_fire_turn": 14
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-7166",
+      "control_group": "hard_loss",
+      "expected": "review",
+      "rationale": "Required M111/M113 strict-loss audit",
+      "observed": {
+        "instance_id": "astropy__astropy-7166",
+        "state": "RECOVERED_AFTER_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-15875",
+      "control_group": "hard_loss",
+      "expected": "review",
+      "rationale": "Required M111/M113 strict-loss audit",
+      "observed": {
+        "instance_id": "sympy__sympy-15875",
+        "state": "ENV_FAILURE_LOOP",
+        "would_fire": true,
+        "first_fire_turn": 6
+      }
+    },
+    {
+      "instance_id": "django__django-12774",
+      "control_group": "hard_loss",
+      "expected": "review",
+      "rationale": "Required M111/M113 strict-loss audit",
+      "observed": {
+        "instance_id": "django__django-12774",
+        "state": "RECOVERED_AFTER_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-6938",
+      "control_group": "hard_loss",
+      "expected": "review",
+      "rationale": "Required M111/M113 strict-loss audit",
+      "observed": {
+        "instance_id": "pydata__xarray-6938",
+        "state": "ENV_FAILURE_LOOP",
+        "would_fire": true,
+        "first_fire_turn": 8
+      }
+    },
+    {
+      "instance_id": "django__django-12325",
+      "control_group": "hard_loss",
+      "expected": "review",
+      "rationale": "Required M111/M113 strict-loss audit",
+      "observed": {
+        "instance_id": "django__django-12325",
+        "state": "AMBIGUOUS",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-11749",
+      "control_group": "resolved_loop",
+      "expected": "descriptive_not_failure_prediction",
+      "rationale": "Resolved M113 command-loop control",
+      "observed": {
+        "instance_id": "django__django-11749",
+        "state": "AMBIGUOUS",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-13012",
+      "control_group": "resolved_loop",
+      "expected": "descriptive_not_failure_prediction",
+      "rationale": "Resolved M113 command-loop control",
+      "observed": {
+        "instance_id": "django__django-13012",
+        "state": "RECOVERED_AFTER_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-13810",
+      "control_group": "resolved_loop",
+      "expected": "descriptive_not_failure_prediction",
+      "rationale": "Resolved M113 command-loop control",
+      "observed": {
+        "instance_id": "django__django-13810",
+        "state": "AMBIGUOUS",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-13820",
+      "control_group": "resolved_loop",
+      "expected": "descriptive_not_failure_prediction",
+      "rationale": "Resolved M113 command-loop control",
+      "observed": {
+        "instance_id": "django__django-13820",
+        "state": "RECOVERED_AFTER_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-14608",
+      "control_group": "resolved_loop",
+      "expected": "descriptive_not_failure_prediction",
+      "rationale": "Resolved M113 command-loop control",
+      "observed": {
+        "instance_id": "django__django-14608",
+        "state": "REPEATED_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-14365",
+      "control_group": "productive_recovery",
+      "expected": "no_fire_after_recovery",
+      "rationale": "M113 local-oracle transition",
+      "observed": {
+        "instance_id": "astropy__astropy-14365",
+        "state": "RECOVERED_AFTER_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-11133",
+      "control_group": "productive_recovery",
+      "expected": "no_fire_after_recovery",
+      "rationale": "M113 local-oracle transition",
+      "observed": {
+        "instance_id": "django__django-11133",
+        "state": "ISOLATED_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-11206",
+      "control_group": "productive_recovery",
+      "expected": "no_fire_after_recovery",
+      "rationale": "M113 local-oracle transition",
+      "observed": {
+        "instance_id": "django__django-11206",
+        "state": "RECOVERED_AFTER_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-11728",
+      "control_group": "productive_recovery",
+      "expected": "no_fire_after_recovery",
+      "rationale": "M113 local-oracle transition",
+      "observed": {
+        "instance_id": "django__django-11728",
+        "state": "RECOVERED_AFTER_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-11815",
+      "control_group": "productive_recovery",
+      "expected": "no_fire_after_recovery",
+      "rationale": "M113 local-oracle transition",
+      "observed": {
+        "instance_id": "django__django-11815",
+        "state": "RECOVERED_AFTER_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "control_group": "single_attempt",
+      "expected": "no_fire",
+      "rationale": "One environment-failed verification episode; no repeated E1 loop",
+      "observed": {
+        "instance_id": "astropy__astropy-14539",
+        "state": "ISOLATED_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-10880",
+      "control_group": "single_attempt",
+      "expected": "no_fire",
+      "rationale": "One environment-failed verification episode; no repeated E1 loop",
+      "observed": {
+        "instance_id": "django__django-10880",
+        "state": "ISOLATED_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-12050",
+      "control_group": "single_attempt",
+      "expected": "no_fire",
+      "rationale": "One environment-failed verification episode; no repeated E1 loop",
+      "observed": {
+        "instance_id": "django__django-12050",
+        "state": "ISOLATED_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-13658",
+      "control_group": "single_attempt",
+      "expected": "no_fire",
+      "rationale": "One environment-failed verification episode; no repeated E1 loop",
+      "observed": {
+        "instance_id": "django__django-13658",
+        "state": "ISOLATED_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "django__django-16877",
+      "control_group": "single_attempt",
+      "expected": "no_fire",
+      "rationale": "One environment-failed verification episode; no repeated E1 loop",
+      "observed": {
+        "instance_id": "django__django-16877",
+        "state": "ISOLATED_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "astropy__astropy-14365",
+      "control_group": "strong_oracle",
+      "expected": "no_harmful_early_fire",
+      "rationale": "M113 strong-oracle win",
+      "observed": {
+        "instance_id": "astropy__astropy-14365",
+        "state": "RECOVERED_AFTER_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "pylint-dev__pylint-8898",
+      "control_group": "strong_oracle",
+      "expected": "no_harmful_early_fire",
+      "rationale": "M113 strong-oracle win",
+      "observed": {
+        "instance_id": "pylint-dev__pylint-8898",
+        "state": "RECOVERED_AFTER_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-24562",
+      "control_group": "strong_oracle",
+      "expected": "no_harmful_early_fire",
+      "rationale": "M113 strong-oracle win",
+      "observed": {
+        "instance_id": "sympy__sympy-24562",
+        "state": "ENV_FAILURE_LOOP",
+        "would_fire": true,
+        "first_fire_turn": 4
+      }
+    },
+    {
+      "instance_id": "django__django-11206",
+      "control_group": "strong_oracle",
+      "expected": "no_harmful_early_fire",
+      "rationale": "M113 strong-oracle win",
+      "observed": {
+        "instance_id": "django__django-11206",
+        "state": "RECOVERED_AFTER_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25332",
+      "control_group": "strong_oracle",
+      "expected": "no_harmful_early_fire",
+      "rationale": "M113 strong-oracle win",
+      "observed": {
+        "instance_id": "matplotlib__matplotlib-25332",
+        "state": "AMBIGUOUS",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7910",
+      "control_group": "strong_oracle",
+      "expected": "no_harmful_early_fire",
+      "rationale": "M113 strong-oracle win",
+      "observed": {
+        "instance_id": "sphinx-doc__sphinx-7910",
+        "state": "REPEATED_ENV_FAILURE",
+        "would_fire": false,
+        "first_fire_turn": null
+      }
+    }
+  ],
+  "reviewed_cases": [
+    {
+      "instance_id": "django__django-16263",
+      "judgment": "useful_late_fire",
+      "evidence_turns": [
+        28,
+        29,
+        30,
+        31
+      ],
+      "rationale": "Environment recovery attempts repeated without reaching verification; E1 fired at 31 after the high-cost loop was already established."
+    },
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "judgment": "useful_but_late_fire",
+      "evidence_turns": [
+        9,
+        10,
+        11,
+        14
+      ],
+      "rationale": "Repeated astroid-dependent checks and pip recovery made no executable progress; E1 fired at 14."
+    },
+    {
+      "instance_id": "sympy__sympy-24562",
+      "judgment": "premature_before_productive_recovery",
+      "evidence_turns": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "rationale": "E1 fired at 4, then an issue-exact successful local oracle ran at 5; this violates the strong-oracle protection gate."
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9230",
+      "judgment": "false_positive_after_recovery",
+      "evidence_turns": [
+        6,
+        12
+      ],
+      "rationale": "A successful local oracle was already observed at 6, but later failures fired E1 at 12; the episode reset did not persist recovery suppression."
+    }
+  ],
+  "hidden_overrides": []
+}
