@@ -1,0 +1,137 @@
+{
+  "milestone": "M120",
+  "generatedAt": "2026-07-22T16:15:58.756Z",
+  "noAgent": true,
+  "liveAgentRuns": 0,
+  "dockerRuns": 0,
+  "vexpRuns": 0,
+  "summary": {
+    "total": 20,
+    "passed": 20,
+    "failed": 0,
+    "verdict": "PASS",
+    "totalDurationMs": 568.5452340000002
+  },
+  "cases": [
+    {
+      "case": "1_python_direct_caller",
+      "passed": true,
+      "evidence": "3 source-grounded calls",
+      "durationMs": 0.0408339999999896
+    },
+    {
+      "case": "2_python_aliased_import_and_call",
+      "passed": true,
+      "evidence": "imports:run",
+      "durationMs": 0.0413069999999891
+    },
+    {
+      "case": "3_python_relative_import",
+      "passed": true,
+      "evidence": "relative import resolved to canonical target",
+      "durationMs": 0.013981000000001131
+    },
+    {
+      "case": "4_python_package_reexport",
+      "passed": true,
+      "evidence": "src/pkg/__init__.py:1",
+      "durationMs": 0.07940300000001344
+    },
+    {
+      "case": "5_python_inheritance_chain",
+      "passed": true,
+      "evidence": "1 explicit base clauses",
+      "durationMs": 0.024992999999994936
+    },
+    {
+      "case": "6_typescript_import_call",
+      "passed": true,
+      "evidence": "calls and imports remain distinct",
+      "durationMs": 0.020557000000025027
+    },
+    {
+      "case": "7_typescript_reexport",
+      "passed": true,
+      "evidence": "index.ts export syntax reconstructed",
+      "durationMs": 0.014397999999999911
+    },
+    {
+      "case": "8_typescript_extends_implements",
+      "passed": true,
+      "evidence": "explicit implements clause",
+      "durationMs": 0.011223000000001093
+    },
+    {
+      "case": "9_test_to_target",
+      "passed": true,
+      "evidence": "test direct-call path classified",
+      "durationMs": 0.01856699999999023
+    },
+    {
+      "case": "10_documentation_to_symbol",
+      "passed": true,
+      "evidence": "docs/guide.md:2 lexical",
+      "durationMs": 0.018822000000000116
+    },
+    {
+      "case": "11_multiple_paths_deterministic_ranking",
+      "passed": true,
+      "evidence": "2 stable paths",
+      "durationMs": 2.338787999999994
+    },
+    {
+      "case": "12_cycle_safe",
+      "passed": true,
+      "evidence": "3 nodes visited",
+      "durationMs": 0.41265699999999583
+    },
+    {
+      "case": "13_lexical_only_reference",
+      "passed": true,
+      "evidence": "lexical evidence excluded from call truth",
+      "durationMs": 0.04200199999999654
+    },
+    {
+      "case": "14_ambiguous_unresolved_target",
+      "passed": true,
+      "evidence": "unknown target rejected; no target fabricated",
+      "durationMs": 0.04856399999999894
+    },
+    {
+      "case": "15_no_path",
+      "passed": true,
+      "evidence": "explicit reachable=false",
+      "durationMs": 0.21954500000001076
+    },
+    {
+      "case": "16_bounded_truncation",
+      "passed": true,
+      "evidence": "omittedEdges=10;omittedPaths=1",
+      "durationMs": 0.4964609999999823
+    },
+    {
+      "case": "17_linked_worktree_isolation",
+      "passed": true,
+      "evidence": "4 main vs 1 linked",
+      "durationMs": 362.891768
+    },
+    {
+      "case": "18_incremental_full_equivalence",
+      "passed": true,
+      "evidence": "normalized graph and rich impact byte-equivalent",
+      "durationMs": 184.19770200000005
+    },
+    {
+      "case": "19_product_context_impact_integration",
+      "passed": true,
+      "evidence": "1 items;575 tokens",
+      "durationMs": 17.488827000000015
+    },
+    {
+      "case": "20_no_context_stale_index",
+      "passed": true,
+      "evidence": "fails closed without model-visible context",
+      "durationMs": 0.12483500000007552
+    }
+  ]
+}

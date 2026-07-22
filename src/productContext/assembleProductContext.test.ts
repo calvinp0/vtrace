@@ -56,6 +56,18 @@ test("shared product response is role-aware, structural, deduplicated, and hones
     assert.equal(new Set(response.items.map((item) => item.stableId)).size, response.items.length);
     assert.doesNotMatch(response.modelVisibleContext, /FAIL_TO_PASS|PASS_TO_PASS|gold files?/iu);
     assert.match(response.modelVisibleContext, /static structural evidence; they are not dynamic execution flow/);
+
+    const impactItems = response.items.filter((item) => item.roles.includes("impact"));
+    for (const impact of impactItems) {
+      assert.equal(impact.metadata?.contextReference, `[${impact.id}]`);
+      assert.equal(typeof impact.metadata?.evidenceStrength, "string");
+      assert.equal(typeof impact.metadata?.resolutionMethod, "string");
+      assert.equal(typeof impact.metadata?.truncated, "boolean");
+      assert.ok(Number(impact.metadata?.affectedFileCount ?? 0) >= 0);
+      if (!impact.roles.some((role) => role === "pivot" || role === "required" || role === "support")) {
+        assert.match(impact.content ?? "", /^(CALLS|IMPORTS|RE_EXPORTS|REFERENCES|INHERITS|IMPLEMENTS|DECORATES|CONTAINS)\b/u);
+      }
+    }
   } finally {
     db.close();
   }

@@ -1,0 +1,52 @@
+{
+  "target": "src/pkg/base.py::target",
+  "comparisonBoundary": "M119-compatible legacy fields and M120 rich fields from the same indexed synthetic snapshot; old latency is unavailable because M119 exposed no dedicated impact timing seam",
+  "old": {
+    "behavior": "reverse shortest-layer nodes/edges and flat dependent files",
+    "directEdgeCount": 4,
+    "typedEdgeCounts": {
+      "calls": 3,
+      "imports": 1
+    },
+    "sourceGroundedEdgePercent": 0,
+    "resolvedVsLexical": null,
+    "pathCount": 0,
+    "affectedFiles": 2,
+    "entrypoints": 0,
+    "tests": 0,
+    "renderedTokenEstimate": 63,
+    "latencyMs": null,
+    "truncated": false
+  },
+  "new": {
+    "behavior": "typed incoming/outgoing evidence plus bounded strongest static paths",
+    "directEdgeCount": 8,
+    "typedEdgeCounts": {
+      "calls": 3,
+      "documents": 1,
+      "imports": 3,
+      "re_exports": 1
+    },
+    "sourceGroundedEdgePercent": 75,
+    "resolvedVsLexical": {
+      "lexical": 1,
+      "resolved": 7
+    },
+    "pathCount": 3,
+    "affectedFiles": 2,
+    "entrypoints": 0,
+    "tests": 1,
+    "renderedTokenEstimate": 2914,
+    "latencyMs": {
+      "targetResolutionMs": 0.13309300000000235,
+      "directNeighborQueryMs": 1.5185930000000099,
+      "pathTraversalMs": 0.5893190000000175,
+      "renderMs": 0.0003059999999948104,
+      "totalImpactMs": 3.741852999999992
+    },
+    "truncated": false,
+    "omittedPaths": 0,
+    "omittedEdges": 0
+  },
+  "interpretation": "The gain is provenance, semantic separation, and bounded path explanation; extra edge quantity alone is not treated as improvement."
+}

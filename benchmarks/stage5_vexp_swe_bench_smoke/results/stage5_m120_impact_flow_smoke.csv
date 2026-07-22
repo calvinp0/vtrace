@@ -1,0 +1,21 @@
+case,passed,duration_ms,evidence
+1_python_direct_caller,true,0.041,3 source-grounded calls
+2_python_aliased_import_and_call,true,0.041,imports:run
+3_python_relative_import,true,0.014,relative import resolved to canonical target
+4_python_package_reexport,true,0.079,src/pkg/__init__.py:1
+5_python_inheritance_chain,true,0.025,1 explicit base clauses
+6_typescript_import_call,true,0.021,calls and imports remain distinct
+7_typescript_reexport,true,0.014,index.ts export syntax reconstructed
+8_typescript_extends_implements,true,0.011,explicit implements clause
+9_test_to_target,true,0.019,test direct-call path classified
+10_documentation_to_symbol,true,0.019,docs/guide.md:2 lexical
+11_multiple_paths_deterministic_ranking,true,2.339,2 stable paths
+12_cycle_safe,true,0.413,3 nodes visited
+13_lexical_only_reference,true,0.042,lexical evidence excluded from call truth
+14_ambiguous_unresolved_target,true,0.049,unknown target rejected; no target fabricated
+15_no_path,true,0.220,explicit reachable=false
+16_bounded_truncation,true,0.496,omittedEdges=10;omittedPaths=1
+17_linked_worktree_isolation,true,362.892,4 main vs 1 linked
+18_incremental_full_equivalence,true,184.198,normalized graph and rich impact byte-equivalent
+19_product_context_impact_integration,true,17.489,1 items;575 tokens
+20_no_context_stale_index,true,0.125,fails closed without model-visible context

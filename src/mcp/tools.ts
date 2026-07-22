@@ -62,6 +62,7 @@ import {
   type ImpactGraphOutput,
   type ImpactFormat,
 } from "../impact/getImpactGraph";
+import { STATIC_RELATION_KINDS, type StaticRelationKind } from "../impact/staticEvidence";
 import { routeQuery } from "../intent/routeQuery";
 import { normalizeIntentQuery } from "../intent/rules";
 import { QueryIntent } from "../intent/types";
@@ -512,6 +513,67 @@ const IMPACT_EDGE_SCHEMA = objectProperty(
   ["edgeId", "edgeType", "fromSymbolId", "fromFqName", "toSymbolId", "toFqName"],
 );
 
+const STATIC_EVIDENCE_ENDPOINT_SCHEMA = objectProperty(
+  "One source-grounded endpoint of a static relationship.",
+  {
+    nodeId: stringProperty("Stable indexed symbol id when resolved."),
+    path: stringProperty("Repository-relative endpoint path when resolved."),
+    symbol: stringProperty("Fully qualified endpoint symbol when resolved."),
+    kind: stringProperty("Indexed symbol kind when resolved."),
+    lineSpan: objectProperty(
+      "1-based source span. For an edge source this is the exact lexical occurrence when available, otherwise the producing symbol span.",
+      { start: integerProperty("First line."), end: integerProperty("Last line.") },
+      ["start", "end"],
+    ),
+  },
+  [],
+);
+
+const STATIC_RELATION_EVIDENCE_SCHEMA = objectProperty(
+  "Typed static relationship evidence. Categorical strength is deterministic; confidence is null because persisted numeric confidence is not calibrated.",
+  {
+    id: stringProperty("Stable query-evidence id."),
+    edgeId: { type: ["string", "null"], description: "Persisted edge id, or null for query-derived lexical/unresolved evidence." },
+    kind: stringProperty("Semantic relation kind; calls, imports, references, inheritance, and other roles remain distinct."),
+    persistedKind: { type: ["string", "null"], description: "Underlying persisted edge type when present." },
+    source: STATIC_EVIDENCE_ENDPOINT_SCHEMA,
+    target: STATIC_EVIDENCE_ENDPOINT_SCHEMA,
+    direction: stringProperty("Incoming or outgoing relative to the focal symbol."),
+    strength: stringProperty("Deterministic evidence category: exact, resolved, conservative, lexical, or unresolved."),
+    confidence: { type: "null", description: "Always null; no probabilistic confidence is claimed." },
+    evidence: {
+      type: "object",
+      description: "Why and where this relationship was resolved.",
+      properties: {
+        sourceText: stringProperty("Bounded source line when an edge occurrence was grounded."),
+        importAlias: stringProperty("Source alias when recoverable."),
+        referenceName: stringProperty("Name used to ground the target."),
+        resolutionMethod: stringProperty("Deterministic resolver/category name."),
+        locationKind: stringProperty("edge_site, source_symbol_span, or indexed_metadata."),
+      },
+      required: ["resolutionMethod", "locationKind"],
+      additionalProperties: false,
+    },
+    limitations: arrayProperty("Per-edge truthfulness limitations.", stringProperty("Limitation.")),
+  },
+  ["id", "edgeId", "kind", "persistedKind", "source", "target", "direction", "strength", "confidence", "evidence", "limitations"],
+);
+
+const STATIC_IMPACT_PATH_SCHEMA = objectProperty(
+  "A deterministically ranked bounded path through static repository evidence, never a runtime execution trace.",
+  {
+    id: stringProperty("Stable path id."),
+    direction: stringProperty("Semantic path direction."),
+    nodes: arrayProperty("Ordered path symbols.", SYMBOL_RESULT_SCHEMA),
+    edges: arrayProperty("Ordered typed static relations.", STATIC_RELATION_EVIDENCE_SCHEMA),
+    length: integerProperty("Path edge count."),
+    minimumStrength: stringProperty("Weakest evidence category on the path."),
+    truncated: booleanProperty("Whether this individual path was truncated."),
+    limitations: arrayProperty("Path limitations.", stringProperty("Limitation.")),
+  },
+  ["id", "direction", "nodes", "edges", "length", "minimumStrength", "truncated", "limitations"],
+);
+
 const IMPACT_REQUEST_SCHEMA = objectProperty(
   "Resolved get_impact_graph request parameters.",
   {
@@ -575,6 +637,7 @@ const LOGIC_FLOW_STEP_SCHEMA = objectProperty(
     toSymbolId: stringProperty("Destination symbol id for this step."),
     toFqName: stringProperty("Destination fully qualified symbol name for this step."),
     sourceExcerpt: SOURCE_EXCERPT_SCHEMA,
+    relation: STATIC_RELATION_EVIDENCE_SCHEMA,
   },
   ["edgeId", "edgeType", "fromSymbolId", "fromFqName", "toSymbolId", "toFqName"],
 );
@@ -587,6 +650,9 @@ const LOGIC_FLOW_PATH_SCHEMA = objectProperty(
     nodeCount: integerProperty("Number of symbols in the path."),
     nodes: arrayProperty("Ordered symbols on the path.", SYMBOL_RESULT_SCHEMA),
     steps: arrayProperty("Ordered structural steps between symbols on the path.", LOGIC_FLOW_STEP_SCHEMA),
+    minimumStrength: stringProperty("Weakest categorical evidence strength on this path."),
+    crossFileTransitions: integerProperty("Number of file-boundary transitions on this path."),
+    limitations: arrayProperty("Static-path interpretation limitations.", stringProperty("Limitation.")),
   },
   ["pathIndex", "edgeCount", "nodeCount", "nodes", "steps"],
 );
@@ -8554,7 +8620,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
     metadata: {
       toolId: McpToolId.GetImpactGraph,
       displayName: "Get Impact Graph",
-      description: "Return a bounded structural reverse-impact view for one exact indexed symbol FQN.",
+      description: "Return bounded, worktree-specific static impact evidence for one exact indexed symbol FQN: typed incoming/outgoing relations, source grounding, and ranked dependency paths. Evidence is categorical (exact/resolved/conservative/lexical/unresolved), traversal is capped, and no runtime execution is claimed.",
       inputSchema: objectSchema(
         "Bounded structural impact-graph request.",
         {
@@ -8562,6 +8628,14 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           depth: integerProperty("Optional bounded traversal depth. Defaults to 5."),
           cross_repo: booleanProperty("Optional cross-repo traversal flag. The current repo-bound implementation only supports false."),
           format: stringProperty(`Optional output format: ${IMPACT_FORMATS.join(", ")}.`),
+          direction: stringProperty("Optional rich-impact traversal direction: upstream, downstream, or both. Legacy nodes/edges remain reverse-impact compatible."),
+          relations: arrayProperty(`Optional semantic relation filter. Supported values: ${STATIC_RELATION_KINDS.join(", ")}.`, stringProperty("Relation kind.")),
+          max_paths: integerProperty("Optional maximum number of ranked static paths. Defaults to 3."),
+          max_edges: integerProperty("Optional maximum number of direct evidence edges. Defaults to 64."),
+          max_tokens: integerProperty("Optional approximate token cap for rich path evidence. Defaults to 1200."),
+          include_lexical: booleanProperty("Include explicitly lexical evidence. Lexical evidence is never counted as an exact call."),
+          include_unresolved: booleanProperty("Include recognized unresolved evidence when available; targets are never fabricated."),
+          include_evidence: booleanProperty("Include bounded source grounding and resolution methods. Defaults to true."),
         },
         ["symbol_fqn"],
       ),
@@ -8579,6 +8653,15 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           nodes: arrayProperty("Discovered impact nodes including the resolved root node.", IMPACT_NODE_SCHEMA),
           edges: arrayProperty("Shortest-layer outward impact edges retained from indexed structural data.", IMPACT_EDGE_SCHEMA),
           view: IMPACT_VIEW_SCHEMA,
+          directRelations: arrayProperty("Typed incoming and outgoing direct relationships.", STATIC_RELATION_EVIDENCE_SCHEMA),
+          paths: arrayProperty("Bounded strongest static dependency paths.", STATIC_IMPACT_PATH_SCHEMA),
+          affectedFiles: arrayProperty("Static review guidance grouped by affected file.", { type: "object", description: "Affected-file summary.", additionalProperties: true }),
+          entrypoints: arrayProperty("Entrypoint-like exported symbols reached by upstream paths, with evidence and limitations.", { type: "object", description: "Classified entrypoint-like symbol.", additionalProperties: true }),
+          tests: arrayProperty("Test symbols reached by upstream paths, with evidence and limitations.", { type: "object", description: "Classified test symbol.", additionalProperties: true }),
+          richSummary: { type: "object", description: "Separate direct/transitive, incoming/outgoing, relation/strength, and truncation counts.", additionalProperties: true },
+          limits: { type: "object", description: "Applied depth/path/edge/token bounds.", additionalProperties: true },
+          timing: { type: "object", description: "Target-resolution, neighbor-query, path-traversal, render, and total impact timings in milliseconds.", additionalProperties: true },
+          diagnostics: { type: "object", description: "Static-only boundary, traversal counters, and limitations.", additionalProperties: true },
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
         },
         ["requested", "resolvedSymbol", "coverage", "summary", "dependentFiles", "nodes", "edges", "view"],
@@ -8595,6 +8678,14 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       const depth = parseOptionalInteger(McpToolId.GetImpactGraph, input, "depth");
       const crossRepo = parseOptionalBoolean(McpToolId.GetImpactGraph, input, "cross_repo");
       const format = parseOptionalStringField(McpToolId.GetImpactGraph, input, "format");
+      const direction = parseOptionalStringField(McpToolId.GetImpactGraph, input, "direction");
+      const relations = parseOptionalStringArrayField(McpToolId.GetImpactGraph, input, "relations");
+      const maxPaths = parseOptionalInteger(McpToolId.GetImpactGraph, input, "max_paths");
+      const maxEdges = parseOptionalInteger(McpToolId.GetImpactGraph, input, "max_edges");
+      const maxTokens = parseOptionalInteger(McpToolId.GetImpactGraph, input, "max_tokens");
+      const includeLexical = parseOptionalBoolean(McpToolId.GetImpactGraph, input, "include_lexical");
+      const includeUnresolved = parseOptionalBoolean(McpToolId.GetImpactGraph, input, "include_unresolved");
+      const includeEvidence = parseOptionalBoolean(McpToolId.GetImpactGraph, input, "include_evidence");
 
       if (typeof symbolFqn !== "string") {
         return symbolFqn;
@@ -8607,6 +8698,9 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       }
       if (format !== undefined && typeof format !== "string") {
         return format;
+      }
+      for (const parsed of [direction, relations, maxPaths, maxEdges, maxTokens, includeLexical, includeUnresolved, includeEvidence]) {
+        if (parsed !== undefined && !Array.isArray(parsed) && typeof parsed === "object") return parsed;
       }
 
       if (crossRepo === true) {
@@ -8626,6 +8720,18 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           { format: resolvedFormat },
         );
       }
+      if (direction !== undefined && !["upstream", "downstream", "both"].includes(direction)) {
+        return invalidRequest(McpToolId.GetImpactGraph, "MCP tool get_impact_graph requires direction to be upstream, downstream, or both.", { direction });
+      }
+      if (relations !== undefined && relations.some((relation) => !STATIC_RELATION_KINDS.includes(relation as StaticRelationKind))) {
+        return invalidRequest(McpToolId.GetImpactGraph, "MCP tool get_impact_graph received an unsupported relation kind.", { relations });
+      }
+      if ([maxPaths, maxEdges, maxTokens].some((value) => typeof value === "number" && value <= 0)) {
+        return invalidRequest(McpToolId.GetImpactGraph, "MCP tool get_impact_graph bounds must be positive integers.", { max_paths: maxPaths, max_edges: maxEdges, max_tokens: maxTokens });
+      }
+      if ((depth ?? 5) > 8 || (maxPaths ?? 3) > 16 || (maxEdges ?? 64) > 2_000 || (maxTokens ?? 1_200) > 20_000) {
+        return invalidRequest(McpToolId.GetImpactGraph, "MCP tool get_impact_graph exceeds a hard bound (depth<=8, max_paths<=16, max_edges<=2000, max_tokens<=20000).", { depth, max_paths: maxPaths, max_edges: maxEdges, max_tokens: maxTokens });
+      }
 
       return withReadyRepoDb(
         context,
@@ -8636,8 +8742,17 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             symbolFqn,
             depth: depth ?? 5,
             format: resolvedFormat as ImpactFormat,
+            ...(direction === undefined ? {} : { direction: direction as "upstream" | "downstream" | "both" }),
+            ...(relations === undefined ? {} : { relations: relations as StaticRelationKind[] }),
+            ...(typeof maxPaths !== "number" ? {} : { maxPaths }),
+            ...(typeof maxEdges !== "number" ? {} : { maxEdges }),
+            ...(typeof maxTokens !== "number" ? {} : { maxTokens }),
+            ...(typeof includeLexical !== "boolean" ? {} : { includeLexical }),
+            ...(typeof includeUnresolved !== "boolean" ? {} : { includeUnresolved }),
+            ...(typeof includeEvidence !== "boolean" ? {} : { includeEvidence }),
           }, {
             repoRoot: binding.repoRoot,
+            measureTiming: true,
           });
 
           if (!result.ok) {
@@ -8683,6 +8798,11 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           start: stringProperty("Exact fully qualified start symbol name to resolve."),
           end: stringProperty("Exact fully qualified end symbol name to resolve."),
           max_paths: integerProperty("Optional maximum number of shortest structural paths to return. Defaults to 3."),
+          max_depth: integerProperty("Optional maximum path depth. Defaults to 8."),
+          max_edges: integerProperty("Optional maximum number of persisted edges inspected by the bounded graph. Defaults to 2000."),
+          max_tokens: integerProperty("Optional approximate token cap for returned path evidence. Defaults to 20000 for compatibility."),
+          relations: arrayProperty(`Optional semantic relation filter. Supported values: ${STATIC_RELATION_KINDS.join(", ")}.`, stringProperty("Relation kind.")),
+          include_lexical: booleanProperty("Include explicitly lexical relationships. They remain labeled lexical and never become confirmed calls."),
           cross_repo: booleanProperty("Optional cross-repo traversal flag. The current repo-bound implementation only supports false."),
         },
         ["start", "end"],
@@ -8696,6 +8816,9 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           coverage: LOGIC_FLOW_COVERAGE_SCHEMA,
           summary: LOGIC_FLOW_SUMMARY_SCHEMA,
           paths: arrayProperty("Deterministically ordered returned shortest structural paths.", LOGIC_FLOW_PATH_SCHEMA),
+          limits: { type: "object", description: "Applied depth/path/edge/token bounds.", additionalProperties: true },
+          timing: { type: "object", description: "Target-resolution, traversal, render, and total flow timings in milliseconds.", additionalProperties: true },
+          diagnostics: { type: "object", description: "Static-only boundary, traversal counters, omissions, and limitations.", additionalProperties: true },
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
         },
         ["requested", "resolvedStart", "resolvedEnd", "coverage", "summary", "paths"],
@@ -8712,6 +8835,11 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       const end = parseRequiredStringField(McpToolId.SearchLogicFlow, input, "end");
       const maxPaths = parseOptionalInteger(McpToolId.SearchLogicFlow, input, "max_paths");
       const crossRepo = parseOptionalBoolean(McpToolId.SearchLogicFlow, input, "cross_repo");
+      const maxDepth = parseOptionalInteger(McpToolId.SearchLogicFlow, input, "max_depth");
+      const maxEdges = parseOptionalInteger(McpToolId.SearchLogicFlow, input, "max_edges");
+      const maxTokens = parseOptionalInteger(McpToolId.SearchLogicFlow, input, "max_tokens");
+      const relations = parseOptionalStringArrayField(McpToolId.SearchLogicFlow, input, "relations");
+      const includeLexical = parseOptionalBoolean(McpToolId.SearchLogicFlow, input, "include_lexical");
 
       if (typeof start !== "string") {
         return start;
@@ -8725,6 +8853,9 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       if (crossRepo !== undefined && typeof crossRepo !== "boolean") {
         return crossRepo;
       }
+      for (const parsed of [maxDepth, maxEdges, maxTokens, relations, includeLexical]) {
+        if (parsed !== undefined && !Array.isArray(parsed) && typeof parsed === "object") return parsed;
+      }
 
       if ((maxPaths ?? 3) <= 0) {
         return invalidRequest(
@@ -8732,6 +8863,15 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           "MCP tool search_logic_flow requires max_paths to be a positive integer when provided.",
           { field: "max_paths", value: maxPaths },
         );
+      }
+      if ([maxDepth, maxEdges, maxTokens].some((value) => typeof value === "number" && value <= 0)) {
+        return invalidRequest(McpToolId.SearchLogicFlow, "MCP tool search_logic_flow bounds must be positive integers.", { max_depth: maxDepth, max_edges: maxEdges, max_tokens: maxTokens });
+      }
+      if ((maxPaths ?? 3) > 16 || (maxDepth ?? 8) > 12 || (maxEdges ?? 2_000) > 20_000 || (maxTokens ?? 20_000) > 20_000) {
+        return invalidRequest(McpToolId.SearchLogicFlow, "MCP tool search_logic_flow exceeds a hard bound (max_paths<=16, max_depth<=12, max_edges<=20000, max_tokens<=20000).", { max_paths: maxPaths, max_depth: maxDepth, max_edges: maxEdges, max_tokens: maxTokens });
+      }
+      if (relations !== undefined && relations.some((relation) => !STATIC_RELATION_KINDS.includes(relation as StaticRelationKind))) {
+        return invalidRequest(McpToolId.SearchLogicFlow, "MCP tool search_logic_flow received an unsupported relation kind.", { relations });
       }
 
       if (crossRepo === true) {
@@ -8751,8 +8891,14 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             start,
             end,
             maxPaths: maxPaths ?? 3,
+            ...(typeof maxDepth !== "number" ? {} : { maxDepth }),
+            ...(typeof maxEdges !== "number" ? {} : { maxEdges }),
+            ...(typeof maxTokens !== "number" ? {} : { maxTokens }),
+            ...(relations === undefined ? {} : { relations: relations as StaticRelationKind[] }),
+            ...(typeof includeLexical !== "boolean" ? {} : { includeLexical }),
           }, {
             repoRoot: binding.repoRoot,
+            measureTiming: true,
           });
 
           if (!result.ok) {

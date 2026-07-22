@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
 
-import { listEdgesForSymbols } from "../db/repositories/edgesRepository";
+import { listEdgesForSymbol, listEdgesForSymbols } from "../db/repositories/edgesRepository";
 import { getSymbolById, listSymbolsByFqName } from "../db/repositories/symbolsRepository";
 import {
   EdgeType,
@@ -15,6 +15,18 @@ import {
   buildSymbolSourceExcerpt,
   type SourceExcerpt,
 } from "../source/sourceExcerpt";
+import {
+  buildStaticRelationEvidence,
+  classifyEntrypoint,
+  compareEvidenceStrength,
+  findDocumentationEvidence,
+  findImportSyntaxEvidence,
+  isTestSymbol,
+  minimumEvidenceStrength,
+  type StaticEvidenceStrength,
+  type StaticRelationEvidence,
+  type StaticRelationKind,
+} from "./staticEvidence";
 
 export const IMPACT_FORMATS = ["list", "tree", "mermaid"] as const;
 
@@ -24,6 +36,15 @@ export interface GetImpactGraphInput {
   readonly symbolFqn: string;
   readonly depth: number;
   readonly format: ImpactFormat;
+  /** Additive M120 controls. Legacy nodes/edges remain the reverse-impact view. */
+  readonly direction?: "upstream" | "downstream" | "both";
+  readonly relations?: readonly StaticRelationKind[];
+  readonly maxPaths?: number;
+  readonly maxEdges?: number;
+  readonly maxTokens?: number;
+  readonly includeLexical?: boolean;
+  readonly includeUnresolved?: boolean;
+  readonly includeEvidence?: boolean;
 }
 
 /**
@@ -35,6 +56,8 @@ export interface GetImpactGraphOptions {
   readonly repoRoot?: string;
   readonly includeSourceExcerpts?: boolean;
   readonly maxExcerpts?: number;
+  /** Opt-in wall-clock detail; default false preserves deterministic engine payloads. */
+  readonly measureTiming?: boolean;
 }
 
 export const IMPACT_GRAPH_ERROR_CODE = Object.freeze({
@@ -110,6 +133,81 @@ export interface ImpactGraphOutput {
   readonly nodes: readonly ImpactNode[];
   readonly edges: readonly ImpactEdge[];
   readonly view: ImpactView;
+  /** M120 additive evidence model; canonical legacy fields above remain compatible. */
+  readonly directRelations: readonly StaticRelationEvidence[];
+  readonly paths: readonly StaticImpactPath[];
+  readonly affectedFiles: readonly AffectedFileSummary[];
+  readonly entrypoints: readonly ImpactClassifiedSymbol[];
+  readonly tests: readonly ImpactClassifiedSymbol[];
+  readonly richSummary: RichImpactSummary;
+  readonly limits: ImpactLimits;
+  readonly timing: ImpactTiming;
+  readonly diagnostics: ImpactDiagnostics;
+}
+
+export interface StaticImpactPath {
+  readonly id: string;
+  readonly direction: "entrypoint_to_target" | "caller_to_target" | "target_to_dependent" | "target_to_callee" | "import_to_definition" | "test_to_target" | "inheritance_chain";
+  readonly nodes: readonly ImpactSymbolSummary[];
+  readonly edges: readonly StaticRelationEvidence[];
+  readonly length: number;
+  readonly minimumStrength: StaticEvidenceStrength;
+  readonly truncated: boolean;
+  readonly limitations: readonly string[];
+}
+
+export interface AffectedFileSummary {
+  readonly path: string;
+  readonly direct: boolean;
+  readonly minimumDistance: number;
+  readonly relationKinds: readonly StaticRelationKind[];
+  readonly strongestEvidence: StaticEvidenceStrength;
+  readonly reviewGuidance: "high_confidence" | "uncertain";
+}
+
+export interface ImpactClassifiedSymbol extends ImpactSymbolSummary {
+  readonly entrypointKind: "exported_api" | "test";
+  readonly strength: StaticEvidenceStrength;
+  readonly evidence: string;
+  readonly limitations: readonly string[];
+}
+
+export interface RichImpactSummary {
+  readonly directIncoming: number;
+  readonly directOutgoing: number;
+  readonly transitiveIncoming: number;
+  readonly transitiveOutgoing: number;
+  readonly affectedFiles: number;
+  readonly affectedSymbols: number;
+  readonly countsByRelation: Readonly<Record<string, number>>;
+  readonly countsByStrength: Readonly<Record<string, number>>;
+  readonly truncated: boolean;
+  readonly omittedPaths: number;
+  readonly omittedEdges: number;
+}
+
+export interface ImpactLimits {
+  readonly maxDepth: number;
+  readonly maxPaths: number;
+  readonly maxEdges: number;
+  readonly maxTokens: number;
+}
+
+export interface ImpactTiming {
+  readonly targetResolutionMs: number;
+  readonly directNeighborQueryMs: number;
+  readonly pathTraversalMs: number;
+  readonly renderMs: number;
+  readonly totalImpactMs: number;
+}
+
+export interface ImpactDiagnostics {
+  readonly staticEvidenceOnly: true;
+  readonly nodesVisited: number;
+  readonly edgesInspected: number;
+  readonly pathsConsidered: number;
+  readonly pathsReturned: number;
+  readonly limitations: readonly string[];
 }
 
 export interface ImpactGraphError {
@@ -140,6 +238,9 @@ export function getImpactGraph(
   input: GetImpactGraphInput,
   options?: GetImpactGraphOptions,
 ): ImpactGraphResult {
+  const timingEnabled = options?.measureTiming === true;
+  const totalStarted = timingEnabled ? performance.now() : 0;
+  const targetStarted = totalStarted;
   const matches = listSymbolsByFqName(db, input.symbolFqn);
 
   if (matches.length === 0) {
@@ -172,6 +273,7 @@ export function getImpactGraph(
   }
 
   const resolvedSymbol = matches[0]!;
+  const targetResolutionMs = measuredElapsed(targetStarted, timingEnabled);
   const { distanceById, symbolsById } = discoverImpactSymbols(db, resolvedSymbol, input.depth);
   const baseNodes = buildImpactNodes(distanceById, symbolsById);
   const nodes = options?.repoRoot !== undefined && options.includeSourceExcerpts !== false
@@ -197,6 +299,7 @@ export function getImpactGraph(
     inheritedEvidencePresent,
     crossLanguageEvidencePresent,
   );
+  const rich = buildRichImpact(db, resolvedSymbol, input, options, targetResolutionMs, totalStarted);
 
   return {
     ok: true,
@@ -234,8 +337,377 @@ export function getImpactGraph(
           primaryParentEdges,
         ),
       },
+      ...rich,
     },
   };
+}
+
+const DEFAULT_MAX_PATHS = 3;
+const DEFAULT_MAX_EDGES = 64;
+const DEFAULT_MAX_TOKENS = 1_200;
+const MAX_INSPECTED_EDGES = 2_000;
+const HARD_MAX_DEPTH = 8;
+const HARD_MAX_PATHS = 16;
+const HARD_MAX_TOKENS = 20_000;
+
+function buildRichImpact(
+  db: Database,
+  root: SymbolRecord,
+  input: GetImpactGraphInput,
+  options: GetImpactGraphOptions | undefined,
+  targetResolutionMs: number,
+  totalStarted: number,
+): Pick<ImpactGraphOutput, "directRelations" | "paths" | "affectedFiles" | "entrypoints" | "tests" | "richSummary" | "limits" | "timing" | "diagnostics"> {
+  const direction = input.direction ?? "both";
+  const maxDepth = Math.min(HARD_MAX_DEPTH, Math.max(0, input.depth));
+  const maxPaths = Math.min(HARD_MAX_PATHS, Math.max(1, input.maxPaths ?? DEFAULT_MAX_PATHS));
+  const maxEdges = Math.min(MAX_INSPECTED_EDGES, Math.max(1, input.maxEdges ?? DEFAULT_MAX_EDGES));
+  const maxTokens = Math.min(HARD_MAX_TOKENS, Math.max(1, input.maxTokens ?? DEFAULT_MAX_TOKENS));
+  const relationFilter = input.relations === undefined ? null : new Set(input.relations);
+  const timingEnabled = options?.measureTiming === true;
+  const directStarted = timingEnabled ? performance.now() : 0;
+  let edgesInspected = 0;
+  const directCandidates = listEdgesForSymbol(db, root.id);
+  edgesInspected += directCandidates.length;
+  const symbolCache = new Map<string, SymbolRecord>([[root.id, root]]);
+  const symbolFor = (id: string): SymbolRecord | undefined => {
+    const cached = symbolCache.get(id);
+    if (cached !== undefined) return cached;
+    const symbol = getSymbolById(db, id);
+    if (symbol !== undefined) symbolCache.set(id, symbol);
+    return symbol;
+  };
+  const persistedDirectRelations = directCandidates.flatMap((edge): StaticRelationEvidence[] => {
+    const source = symbolFor(edge.srcSymbolId);
+    const target = symbolFor(edge.dstSymbolId);
+    if (source === undefined || target === undefined) return [];
+    const relation = buildStaticRelationEvidence(db, edge, source, target, {
+      direction: edge.dstSymbolId === root.id ? "incoming" : "outgoing",
+      repoRoot: options?.repoRoot,
+      includeSourceEvidence: input.includeEvidence ?? true,
+    });
+    return relationAllowed(relation, relationFilter, input) ? [relation] : [];
+  });
+  const documentationRelations = input.includeLexical === true && options?.repoRoot !== undefined
+    ? findDocumentationEvidence(options.repoRoot, root)
+    : [];
+  const importSyntaxRelations = options?.repoRoot !== undefined && input.includeEvidence !== false
+    ? findImportSyntaxEvidence(db, options.repoRoot, root, [...symbolCache.values()])
+    : [];
+  const allDirectRelations = deduplicateRelations([
+    ...persistedDirectRelations,
+    ...importSyntaxRelations,
+    ...documentationRelations,
+  ]).sort(compareStaticRelations);
+  const directNeighborQueryMs = measuredElapsed(directStarted, timingEnabled);
+
+  const traversalStarted = timingEnabled ? performance.now() : 0;
+  const traversals: TraversedRelation[] = [];
+  let remainingTraversalEdges = maxEdges;
+  if (direction !== "downstream") {
+    const upstream = traverseRelations(db, root, "incoming", maxDepth, relationFilter, input, options, symbolCache, remainingTraversalEdges);
+    traversals.push(...upstream);
+    remainingTraversalEdges = Math.max(0, remainingTraversalEdges - upstream.reduce((sum, item) => sum + item.inspectedEdges, 0));
+  }
+  if (direction !== "upstream" && remainingTraversalEdges > 0) {
+    const downstream = traverseRelations(db, root, "outgoing", maxDepth, relationFilter, input, options, symbolCache, remainingTraversalEdges);
+    traversals.push(...downstream);
+    remainingTraversalEdges = Math.max(0, remainingTraversalEdges - downstream.reduce((sum, item) => sum + item.inspectedEdges, 0));
+  }
+  edgesInspected += traversals.reduce((sum, item) => sum + item.inspectedEdges, 0);
+  const pathCandidates = traversals
+    .filter((item) => item.path.length > 0)
+    .map((item) => toStaticImpactPath(root, item.path, item.symbols, item.direction));
+  const rankedPaths = deduplicatePaths(pathCandidates).sort(compareStaticPaths);
+  const tokenBounded = takePathsWithinTokenBudget(rankedPaths, maxPaths, maxTokens);
+  const paths = tokenBounded.paths;
+  const pathTraversalMs = measuredElapsed(traversalStarted, timingEnabled);
+
+  const directRelations = allDirectRelations.slice(0, maxEdges);
+  const omittedDirectEdges = Math.max(0, allDirectRelations.length - directRelations.length);
+  const affected = summarizeAffectedFiles(traversals, root.filePath);
+  const reachedSymbols = uniqueSymbols(traversals.flatMap((item) => item.symbols.slice(1)));
+  const classified = reachedSymbols.flatMap((symbol): ImpactClassifiedSymbol[] => {
+    const entrypoint = classifyEntrypoint(symbol);
+    if (entrypoint === null) return [];
+    return [{
+      ...toImpactSymbolSummary(symbol),
+      entrypointKind: entrypoint.kind,
+      strength: entrypoint.strength,
+      evidence: entrypoint.evidence,
+      limitations: entrypoint.limitations,
+    }];
+  });
+  const entrypoints = classified.filter((entry) => entry.entrypointKind !== "test").sort(compareImpactSymbols);
+  const tests = classified.filter((entry) => entry.entrypointKind === "test").sort(compareImpactSymbols);
+  const renderStarted = timingEnabled ? performance.now() : 0;
+  const renderMs = measuredElapsed(renderStarted, timingEnabled);
+  const omittedPaths = Math.max(0, rankedPaths.length - paths.length);
+  const truncated = omittedDirectEdges > 0 || omittedPaths > 0 || traversals.some((item) => item.truncated);
+  const directIncoming = directRelations.filter((relation) => relation.direction === "incoming").length;
+  const directOutgoing = directRelations.filter((relation) => relation.direction === "outgoing").length;
+  const transitiveIncoming = traversals.filter((item) => item.direction === "incoming" && item.distance > 1).length;
+  const transitiveOutgoing = traversals.filter((item) => item.direction === "outgoing" && item.distance > 1).length;
+
+  return {
+    directRelations,
+    paths,
+    affectedFiles: affected,
+    entrypoints,
+    tests,
+    richSummary: {
+      directIncoming,
+      directOutgoing,
+      transitiveIncoming,
+      transitiveOutgoing,
+      affectedFiles: affected.length,
+      affectedSymbols: reachedSymbols.length,
+      countsByRelation: countBy(directRelations.map((relation) => relation.kind)),
+      countsByStrength: countBy(directRelations.map((relation) => relation.strength)),
+      truncated,
+      omittedPaths,
+      omittedEdges: omittedDirectEdges + traversals.reduce((sum, item) => sum + item.omittedEdges, 0),
+    },
+    limits: { maxDepth, maxPaths, maxEdges, maxTokens },
+    timing: {
+      targetResolutionMs,
+      directNeighborQueryMs,
+      pathTraversalMs,
+      renderMs,
+      totalImpactMs: measuredElapsed(totalStarted, timingEnabled),
+    },
+    diagnostics: {
+      staticEvidenceOnly: true,
+      nodesVisited: reachedSymbols.length + 1,
+      edgesInspected,
+      pathsConsidered: rankedPaths.length,
+      pathsReturned: paths.length,
+      limitations: [
+        "Static repository evidence only; paths are not runtime execution traces.",
+        "Dynamic dispatch, monkey patching, reflection, and dependency injection are not resolved.",
+        "Edge-site lines are returned only when the target name occurs in the fresh bounded source-symbol excerpt.",
+        "Unresolved parser candidates are skipped by the current persisted graph and cannot be reconstructed by this query.",
+      ],
+    },
+  };
+}
+
+interface TraversedRelation {
+  relation: StaticRelationEvidence;
+  direction: "incoming" | "outgoing";
+  distance: number;
+  path: readonly StaticRelationEvidence[];
+  symbols: readonly SymbolRecord[];
+  inspectedEdges: number;
+  omittedEdges: number;
+  truncated: boolean;
+}
+
+function traverseRelations(
+  db: Database,
+  root: SymbolRecord,
+  direction: "incoming" | "outgoing",
+  maxDepth: number,
+  relationFilter: ReadonlySet<StaticRelationKind> | null,
+  input: GetImpactGraphInput,
+  options: GetImpactGraphOptions | undefined,
+  symbolCache: Map<string, SymbolRecord>,
+  maxInspectedEdges: number,
+): TraversedRelation[] {
+  const results: TraversedRelation[] = [];
+  const visited = new Set<string>([root.id]);
+  let frontier: Array<{ symbol: SymbolRecord; path: StaticRelationEvidence[]; symbols: SymbolRecord[] }> = [{ symbol: root, path: [], symbols: [root] }];
+  let inspected = 0;
+  let omitted = 0;
+
+  for (let distance = 1; distance <= maxDepth && frontier.length > 0; distance += 1) {
+    const next: typeof frontier = [];
+    for (const state of frontier.sort((a, b) => compareSymbolRecords(a.symbol, b.symbol))) {
+      const incident = listEdgesForSymbol(db, state.symbol.id);
+      for (const edge of incident) {
+        if (inspected >= Math.min(maxInspectedEdges, MAX_INSPECTED_EDGES)) { omitted += incident.length; break; }
+        inspected += 1;
+        if (direction === "incoming" && edge.dstSymbolId !== state.symbol.id) continue;
+        if (direction === "outgoing" && edge.srcSymbolId !== state.symbol.id) continue;
+        const nextId = direction === "incoming" ? edge.srcSymbolId : edge.dstSymbolId;
+        if (visited.has(nextId) || nextId === state.symbol.id) continue;
+        let nextSymbol = symbolCache.get(nextId);
+        if (nextSymbol === undefined) {
+          nextSymbol = getSymbolById(db, nextId);
+          if (nextSymbol !== undefined) symbolCache.set(nextId, nextSymbol);
+        }
+        if (nextSymbol === undefined) continue;
+        const source = direction === "incoming" ? nextSymbol : state.symbol;
+        const target = direction === "incoming" ? state.symbol : nextSymbol;
+        const relation = buildStaticRelationEvidence(db, edge, source, target, {
+          direction,
+          repoRoot: options?.repoRoot,
+          includeSourceEvidence: input.includeEvidence ?? true,
+        });
+        if (!relationAllowed(relation, relationFilter, input)) continue;
+        visited.add(nextId);
+        const path = [...state.path, relation];
+        const symbols = [...state.symbols, nextSymbol];
+        const item: TraversedRelation = {
+          relation,
+          direction,
+          distance,
+          path,
+          symbols,
+          inspectedEdges: 0,
+          omittedEdges: 0,
+          truncated: false,
+        };
+        results.push(item);
+        next.push({ symbol: nextSymbol, path, symbols });
+      }
+      if (inspected >= Math.min(maxInspectedEdges, MAX_INSPECTED_EDGES)) break;
+    }
+    frontier = next;
+    if (inspected >= Math.min(maxInspectedEdges, MAX_INSPECTED_EDGES)) break;
+  }
+  if (results.length > 0) {
+    results[0] = { ...results[0]!, inspectedEdges: inspected, omittedEdges: omitted, truncated: omitted > 0 };
+  }
+  return results;
+}
+
+function relationAllowed(
+  relation: StaticRelationEvidence,
+  filter: ReadonlySet<StaticRelationKind> | null,
+  input: GetImpactGraphInput,
+): boolean {
+  if (filter !== null && !filter.has(relation.kind)) return false;
+  if (relation.strength === "lexical" && input.includeLexical !== true) return false;
+  if (relation.strength === "unresolved" && input.includeUnresolved !== true) return false;
+  return true;
+}
+
+function toStaticImpactPath(
+  root: SymbolRecord,
+  edges: readonly StaticRelationEvidence[],
+  symbols: readonly SymbolRecord[],
+  traversalDirection: "incoming" | "outgoing",
+): StaticImpactPath {
+  const orderedSymbols = traversalDirection === "incoming" ? [...symbols].reverse() : [...symbols];
+  const orderedEdges = traversalDirection === "incoming" ? [...edges].reverse() : [...edges];
+  const first = orderedEdges[0];
+  const sourceSymbol = traversalDirection === "incoming" ? symbols.at(-1)! : root;
+  const entrypoint = classifyEntrypoint(sourceSymbol);
+  let direction: StaticImpactPath["direction"];
+  if (traversalDirection === "outgoing") direction = "target_to_callee";
+  else if (entrypoint?.kind === "test") direction = "test_to_target";
+  else if (entrypoint !== null) direction = "entrypoint_to_target";
+  else if (orderedEdges.every((edge) => edge.kind === "inherits" || edge.kind === "implements")) direction = "inheritance_chain";
+  else if (first?.kind === "imports" || first?.kind === "re_exports") direction = "import_to_definition";
+  else direction = "caller_to_target";
+  return {
+    id: hashPath(orderedEdges.map((edge) => edge.id)),
+    direction,
+    nodes: orderedSymbols.map(toImpactSymbolSummary),
+    edges: orderedEdges,
+    length: orderedEdges.length,
+    minimumStrength: minimumEvidenceStrength(orderedEdges.map((edge) => edge.strength)),
+    truncated: false,
+    limitations: ["Bounded static repository path; it does not prove runtime execution."],
+  };
+}
+
+function compareStaticRelations(left: StaticRelationEvidence, right: StaticRelationEvidence): number {
+  return (left.direction === right.direction ? 0 : left.direction === "incoming" ? -1 : 1)
+    || compareEvidenceStrength(left.strength, right.strength)
+    || left.kind.localeCompare(right.kind)
+    || (left.source.path ?? "").localeCompare(right.source.path ?? "")
+    || (left.source.symbol ?? "").localeCompare(right.source.symbol ?? "")
+    || left.id.localeCompare(right.id);
+}
+
+function compareStaticPaths(left: StaticImpactPath, right: StaticImpactPath): number {
+  return compareEvidenceStrength(left.minimumStrength, right.minimumStrength)
+    || left.length - right.length
+    || crossFileTransitions(left) - crossFileTransitions(right)
+    || pathKey(left).localeCompare(pathKey(right));
+}
+
+function crossFileTransitions(path: StaticImpactPath): number {
+  let count = 0;
+  for (let index = 1; index < path.nodes.length; index += 1) {
+    if (path.nodes[index - 1]!.filePath !== path.nodes[index]!.filePath) count += 1;
+  }
+  return count;
+}
+
+function pathKey(path: StaticImpactPath): string {
+  return path.nodes.map((node) => `${node.filePath}::${node.fqName}`).join("\0");
+}
+
+function deduplicatePaths(paths: readonly StaticImpactPath[]): StaticImpactPath[] {
+  return [...new Map(paths.map((path) => [path.id, path])).values()];
+}
+
+function deduplicateRelations(relations: readonly StaticRelationEvidence[]): StaticRelationEvidence[] {
+  return [...new Map(relations.map((relation) => [relation.id, relation])).values()];
+}
+
+function takePathsWithinTokenBudget(
+  paths: readonly StaticImpactPath[],
+  maxPaths: number,
+  maxTokens: number,
+): { paths: StaticImpactPath[] } {
+  const selected: StaticImpactPath[] = [];
+  let used = 0;
+  for (const path of paths) {
+    if (selected.length >= maxPaths) break;
+    const cost = Math.ceil(JSON.stringify(path).length / 4);
+    if (used + cost > maxTokens) break;
+    selected.push(path);
+    used += cost;
+  }
+  return { paths: selected };
+}
+
+function summarizeAffectedFiles(
+  traversals: readonly TraversedRelation[],
+  rootPath: string,
+): AffectedFileSummary[] {
+  const byPath = new Map<string, TraversedRelation[]>();
+  for (const item of traversals) {
+    if (item.direction !== "incoming") continue;
+    const symbol = item.symbols.at(-1);
+    if (symbol === undefined || symbol.filePath === rootPath) continue;
+    const values = byPath.get(symbol.filePath) ?? [];
+    values.push(item);
+    byPath.set(symbol.filePath, values);
+  }
+  return [...byPath.entries()].map(([filePath, items]) => {
+    const strengths = items.map((item) => item.relation.strength).sort(compareEvidenceStrength);
+    return {
+      path: filePath,
+      direct: items.some((item) => item.distance === 1),
+      minimumDistance: Math.min(...items.map((item) => item.distance)),
+      relationKinds: [...new Set(items.map((item) => item.relation.kind))].sort(),
+      strongestEvidence: strengths[0] ?? "unresolved",
+      reviewGuidance: (strengths[0] === "exact" || strengths[0] === "resolved" ? "high_confidence" : "uncertain") as AffectedFileSummary["reviewGuidance"],
+    };
+  }).sort((left, right) => Number(right.direct) - Number(left.direct) || left.minimumDistance - right.minimumDistance || left.path.localeCompare(right.path));
+}
+
+function uniqueSymbols(symbols: readonly SymbolRecord[]): SymbolRecord[] {
+  return [...new Map(symbols.map((symbol) => [symbol.id, symbol])).values()].sort(compareSymbolRecords);
+}
+
+function countBy(values: readonly string[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const value of values) counts[value] = (counts[value] ?? 0) + 1;
+  return Object.fromEntries(Object.entries(counts).sort(([left], [right]) => left.localeCompare(right)));
+}
+
+function hashPath(edgeIds: readonly string[]): string {
+  return `path_${edgeIds.join("_").slice(0, 96)}`;
+}
+
+function measuredElapsed(start: number, enabled: boolean): number {
+  return enabled ? Math.max(0, performance.now() - start) : 0;
 }
 
 function discoverImpactSymbols(

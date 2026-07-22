@@ -16,11 +16,24 @@ import {
   buildSymbolSourceExcerpt,
   type SourceExcerpt,
 } from "../source/sourceExcerpt";
+import {
+  buildStaticRelationEvidence,
+  compareEvidenceStrength,
+  minimumEvidenceStrength,
+  type StaticEvidenceStrength,
+  type StaticRelationEvidence,
+  type StaticRelationKind,
+} from "../impact/staticEvidence";
 
 export interface SearchLogicFlowInput {
   readonly start: string;
   readonly end: string;
   readonly maxPaths: number;
+  readonly maxDepth?: number;
+  readonly maxEdges?: number;
+  readonly maxTokens?: number;
+  readonly relations?: readonly StaticRelationKind[];
+  readonly includeLexical?: boolean;
 }
 
 /**
@@ -33,6 +46,8 @@ export interface SearchLogicFlowOptions {
   readonly repoRoot?: string;
   readonly includeSourceExcerpts?: boolean;
   readonly maxExcerptsPerPath?: number;
+  /** Opt-in wall-clock detail; default false preserves deterministic engine payloads. */
+  readonly measureTiming?: boolean;
 }
 
 export const LOGIC_FLOW_ERROR_CODE = Object.freeze({
@@ -68,6 +83,8 @@ export interface LogicFlowStep {
    * on the pure structural (no-repoRoot) path.
    */
   readonly sourceExcerpt?: SourceExcerpt | null;
+  /** M120 typed, source-grounded interpretation of the persisted edge. */
+  readonly relation?: StaticRelationEvidence;
 }
 
 export interface LogicFlowPath {
@@ -76,6 +93,9 @@ export interface LogicFlowPath {
   readonly nodeCount: number;
   readonly nodes: readonly LogicFlowSymbolSummary[];
   readonly steps: readonly LogicFlowStep[];
+  readonly minimumStrength?: StaticEvidenceStrength;
+  readonly crossFileTransitions?: number;
+  readonly limitations?: readonly string[];
 }
 
 export interface LogicFlowCoverage {
@@ -116,6 +136,28 @@ export interface LogicFlowOutput {
   readonly coverage: LogicFlowCoverage;
   readonly summary: LogicFlowSummary;
   readonly paths: readonly LogicFlowPath[];
+  readonly limits: {
+    readonly maxDepth: number;
+    readonly maxPaths: number;
+    readonly maxEdges: number;
+    readonly maxTokens: number;
+  };
+  readonly timing: {
+    readonly targetResolutionMs: number;
+    readonly pathTraversalMs: number;
+    readonly renderMs: number;
+    readonly totalFlowMs: number;
+  };
+  readonly diagnostics: {
+    readonly staticEvidenceOnly: true;
+    readonly nodesVisited: number;
+    readonly edgesInspected: number;
+    readonly pathsConsidered: number;
+    readonly pathsReturned: number;
+    readonly omittedPaths: number;
+    readonly omittedEdges: number;
+    readonly limitations: readonly string[];
+  };
 }
 
 export interface LogicFlowError {
@@ -145,6 +187,9 @@ export function searchLogicFlow(
   input: SearchLogicFlowInput,
   options?: SearchLogicFlowOptions,
 ): LogicFlowResult {
+  const timingEnabled = options?.measureTiming === true;
+  const totalStarted = timingEnabled ? performance.now() : 0;
+  const targetStarted = totalStarted;
   const resolvedStart = resolveExactSymbol(db, input.start, "start");
 
   if (!resolvedStart.ok) {
@@ -157,23 +202,33 @@ export function searchLogicFlow(
     return resolvedEnd;
   }
 
+  const targetResolutionMs = flowElapsed(targetStarted, timingEnabled);
+  const maxDepth = Math.min(12, Math.max(0, input.maxDepth ?? 8));
+  const maxPaths = Math.min(16, Math.max(1, input.maxPaths));
+  const maxEdges = Math.min(20_000, Math.max(1, input.maxEdges ?? 2_000));
+  const maxTokens = Math.min(20_000, Math.max(1, input.maxTokens ?? 20_000));
+  const traversalStarted = timingEnabled ? performance.now() : 0;
+
   const symbolsById = new Map(
     listAllSymbols(db).map((symbol) => [symbol.id, symbol] as const),
   );
-  const graph = buildGraph(listAllEdges(db), symbolsById);
+  const allEdges = listAllEdges(db);
+  const filteredEdges = filterFlowEdges(db, allEdges, symbolsById, input, options);
+  const boundedEdges = filteredEdges.slice(0, maxEdges);
+  const graph = buildGraph(boundedEdges, symbolsById);
   const callFlowEvidenceAvailable = graph.graphEdgeTypes.has(EdgeType.Calls);
-  const distanceFromStart = computeForwardDistances(resolvedStart.symbol.id, graph.outgoingBySymbolId);
+  const distanceFromStart = computeForwardDistances(resolvedStart.symbol.id, graph.outgoingBySymbolId, maxDepth);
   const shortestPathEdgeCount = distanceFromStart.get(resolvedEnd.symbol.id) ?? null;
 
   let returnedPaths: LogicFlowPath[] = [];
   let truncated = false;
 
   if (shortestPathEdgeCount !== null) {
-    const distanceToEnd = computeReverseDistances(resolvedEnd.symbol.id, graph.incomingBySymbolId);
+    const distanceToEnd = computeReverseDistances(resolvedEnd.symbol.id, graph.incomingBySymbolId, maxDepth);
     const enumeratedStepPaths = enumerateShortestStepPaths(
       resolvedStart.symbol.id,
       resolvedEnd.symbol.id,
-      input.maxPaths + 1,
+      maxPaths + 1,
       shortestPathEdgeCount,
       distanceFromStart,
       distanceToEnd,
@@ -181,10 +236,11 @@ export function searchLogicFlow(
       symbolsById,
     );
 
-    truncated = enumeratedStepPaths.length > input.maxPaths;
+    truncated = enumeratedStepPaths.length > maxPaths;
     returnedPaths = enumeratedStepPaths
-      .slice(0, input.maxPaths)
-      .map((steps, index) => toLogicFlowPath(index + 1, resolvedStart.symbol, steps, symbolsById));
+      .slice(0, maxPaths)
+      .map((steps, index) => toLogicFlowPath(index + 1, resolvedStart.symbol, steps, symbolsById, db, input, options))
+      .sort(compareLogicFlowPaths);
   }
 
   if (options?.repoRoot !== undefined && options.includeSourceExcerpts !== false) {
@@ -196,6 +252,18 @@ export function searchLogicFlow(
     );
   }
 
+  const tokenBoundedPaths: LogicFlowPath[] = [];
+  let tokenEstimate = 0;
+  for (const path of returnedPaths) {
+    const cost = Math.ceil(JSON.stringify(path).length / 4);
+    if (tokenEstimate + cost > maxTokens) { truncated = true; break; }
+    tokenBoundedPaths.push(path);
+    tokenEstimate += cost;
+  }
+  const pathsConsidered = returnedPaths.length;
+  returnedPaths = tokenBoundedPaths;
+  const pathTraversalMs = flowElapsed(traversalStarted, timingEnabled);
+
   const observedEdgeTypes = collectObservedEdgeTypes(returnedPaths);
   const callFlowEvidenceUsed = observedEdgeTypes.includes(EdgeType.Calls);
   const crossLanguageEvidenceUsed = hasCrossLanguagePythonCythonStep(returnedPaths);
@@ -206,7 +274,7 @@ export function searchLogicFlow(
       requested: {
         start: resolvedStart.symbol.fqName,
         end: resolvedEnd.symbol.fqName,
-        maxPaths: input.maxPaths,
+        maxPaths,
         crossRepo: false,
       },
       resolvedStart: toLogicFlowSymbolSummary(resolvedStart.symbol),
@@ -238,8 +306,51 @@ export function searchLogicFlow(
         truncated,
       },
       paths: returnedPaths,
+      limits: { maxDepth, maxPaths, maxEdges, maxTokens },
+      timing: {
+        targetResolutionMs,
+        pathTraversalMs,
+        renderMs: 0,
+        totalFlowMs: flowElapsed(totalStarted, timingEnabled),
+      },
+      diagnostics: {
+        staticEvidenceOnly: true,
+        nodesVisited: distanceFromStart.size,
+        edgesInspected: Math.min(filteredEdges.length, maxEdges),
+        pathsConsidered,
+        pathsReturned: returnedPaths.length,
+        omittedPaths: Math.max(0, pathsConsidered - returnedPaths.length),
+        omittedEdges: Math.max(0, filteredEdges.length - boundedEdges.length),
+        limitations: [
+          "Static repository evidence only; returned paths are not runtime execution traces.",
+          "Dynamic dispatch, reflection, monkey patching, and dependency injection are not resolved.",
+          "Exact edge-site lines are available only when the target name occurs in a fresh bounded source-symbol excerpt.",
+        ],
+      },
     },
   };
+}
+
+function filterFlowEdges(
+  db: Database,
+  edges: readonly EdgeRecord[],
+  symbolsById: ReadonlyMap<string, SymbolRecord>,
+  input: SearchLogicFlowInput,
+  options: SearchLogicFlowOptions | undefined,
+): EdgeRecord[] {
+  const allowed = input.relations === undefined ? null : new Set(input.relations);
+  return edges.filter((edge) => {
+    const source = symbolsById.get(edge.srcSymbolId);
+    const target = symbolsById.get(edge.dstSymbolId);
+    if (source === undefined || target === undefined) return false;
+    const relation = buildStaticRelationEvidence(db, edge, source, target, {
+      direction: "outgoing",
+      repoRoot: options?.repoRoot,
+      includeSourceEvidence: false,
+    });
+    if (allowed !== null && !allowed.has(relation.kind)) return false;
+    return input.includeLexical === true || relation.strength !== "lexical";
+  });
 }
 
 function resolveExactSymbol(
@@ -354,21 +465,24 @@ function buildGraph(
 function computeForwardDistances(
   startSymbolId: string,
   outgoingBySymbolId: ReadonlyMap<string, readonly EdgeRecord[]>,
+  maxDepth: number,
 ): ReadonlyMap<string, number> {
-  return computeDistances(startSymbolId, outgoingBySymbolId, (edge) => edge.dstSymbolId);
+  return computeDistances(startSymbolId, outgoingBySymbolId, (edge) => edge.dstSymbolId, maxDepth);
 }
 
 function computeReverseDistances(
   endSymbolId: string,
   incomingBySymbolId: ReadonlyMap<string, readonly EdgeRecord[]>,
+  maxDepth: number,
 ): ReadonlyMap<string, number> {
-  return computeDistances(endSymbolId, incomingBySymbolId, (edge) => edge.srcSymbolId);
+  return computeDistances(endSymbolId, incomingBySymbolId, (edge) => edge.srcSymbolId, maxDepth);
 }
 
 function computeDistances(
   rootSymbolId: string,
   adjacencyBySymbolId: ReadonlyMap<string, readonly EdgeRecord[]>,
   getNextSymbolId: (edge: EdgeRecord) => string,
+  maxDepth: number,
 ): ReadonlyMap<string, number> {
   const distances = new Map<string, number>([[rootSymbolId, 0]]);
   const queue = [rootSymbolId];
@@ -376,6 +490,8 @@ function computeDistances(
   for (let index = 0; index < queue.length; index += 1) {
     const currentSymbolId = queue[index]!;
     const currentDistance = distances.get(currentSymbolId)!;
+
+    if (currentDistance >= maxDepth) continue;
 
     for (const edge of adjacencyBySymbolId.get(currentSymbolId) ?? []) {
       const nextSymbolId = getNextSymbolId(edge);
@@ -470,6 +586,9 @@ function toLogicFlowPath(
   startSymbol: SymbolRecord,
   steps: readonly EdgeRecord[],
   symbolsById: ReadonlyMap<string, SymbolRecord>,
+  db: Database,
+  input: SearchLogicFlowInput,
+  options: SearchLogicFlowOptions | undefined,
 ): LogicFlowPath {
   const nodes = [toLogicFlowSymbolSummary(startSymbol)];
 
@@ -477,20 +596,56 @@ function toLogicFlowPath(
     nodes.push(toLogicFlowSymbolSummary(symbolsById.get(step.dstSymbolId)!));
   }
 
+  const relations = steps.map((step) => buildStaticRelationEvidence(
+    db,
+    step,
+    symbolsById.get(step.srcSymbolId)!,
+    symbolsById.get(step.dstSymbolId)!,
+    { direction: "outgoing", repoRoot: options?.repoRoot, includeSourceEvidence: true },
+  ));
+  const crossFileTransitions = relations.filter((relation) => relation.source.path !== relation.target.path).length;
   return {
     pathIndex,
     edgeCount: steps.length,
     nodeCount: nodes.length,
     nodes,
-    steps: steps.map((step) => ({
+    steps: steps.map((step, index) => ({
       edgeId: step.id,
       edgeType: step.edgeType,
       fromSymbolId: step.srcSymbolId,
       fromFqName: symbolsById.get(step.srcSymbolId)!.fqName,
       toSymbolId: step.dstSymbolId,
       toFqName: symbolsById.get(step.dstSymbolId)!.fqName,
+      relation: relations[index],
     })),
+    minimumStrength: minimumEvidenceStrength(relations.map((relation) => relation.strength)),
+    crossFileTransitions,
+    limitations: ["Bounded static structural path; it does not prove runtime execution."],
   };
+}
+
+function compareLogicFlowPaths(left: LogicFlowPath, right: LogicFlowPath): number {
+  return compareEvidenceStrength(left.minimumStrength ?? "unresolved", right.minimumStrength ?? "unresolved")
+    || left.edgeCount - right.edgeCount
+    || (left.crossFileTransitions ?? 0) - (right.crossFileTransitions ?? 0)
+    || left.nodes.map((node) => `${node.filePath}::${node.fqName}`).join("\0")
+      .localeCompare(right.nodes.map((node) => `${node.filePath}::${node.fqName}`).join("\0"))
+    || left.steps.map((step) => flowEdgeRank(step.edgeType)).join("")
+      .localeCompare(right.steps.map((step) => flowEdgeRank(step.edgeType)).join(""))
+    || left.steps.map((step) => step.edgeId).join("\0").localeCompare(right.steps.map((step) => step.edgeId).join("\0"));
+}
+
+function flowEdgeRank(edgeType: EdgeType): number {
+  switch (edgeType) {
+    case EdgeType.Calls: return 0;
+    case EdgeType.Imports: return 1;
+    case EdgeType.Contains: return 2;
+    case EdgeType.References: return 3;
+  }
+}
+
+function flowElapsed(start: number, enabled: boolean): number {
+  return enabled ? Math.max(0, performance.now() - start) : 0;
 }
 
 /**

@@ -9,7 +9,7 @@ import { CapsuleIntent } from "../capsuleV2/types";
 import { estimateTokens, roundPercent } from "../capsuleV2/tokens";
 import { listSymbolsByFqName } from "../db/repositories/symbolsRepository";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
-import { EdgeType, SymbolKind, type SymbolRecord } from "../domain/types";
+import { SymbolKind, type SymbolRecord } from "../domain/types";
 import { getImpactGraph } from "../impact/getImpactGraph";
 import { readIndexMeta, inspectWorktreeIndexFreshness } from "../indexer/indexMeta";
 import { resolveWorktreeIdentity } from "../indexer/worktreeIdentity";
@@ -230,7 +230,7 @@ export async function assembleProductContext(
 
   const impactStarted = now();
   if (product.pivots.length > 0) {
-    addImpactEvidence(input.db, product.pivots, drafts, () => roleOrder++);
+    addImpactEvidence(input.db, input.repoRoot, product.pivots, drafts, () => roleOrder++);
   }
   const impactMs = elapsed(impactStarted, now());
 
@@ -242,6 +242,7 @@ export async function assembleProductContext(
 
   const deduped = deduplicateDrafts(input.task, identity.worktree.worktreeId, drafts);
   const items = assignDisplayIds(deduped.items);
+  attachStableContextReferences(items);
   const renderStarted = now();
   const modelVisibleContext = renderModelVisibleContext(input.task, identity.worktree.worktreeId, product.intent, product.actualMode, items);
   const renderMs = elapsed(renderStarted, now());
@@ -401,23 +402,39 @@ function addActionabilityTargets(hints: readonly { kind: string; sourceFile: str
   }
 }
 
-function addImpactEvidence(db: Database, pivots: readonly CapsuleV2ProductItem[], drafts: DraftItem[], nextOrder: () => number): void {
+function addImpactEvidence(db: Database, repoRoot: string, pivots: readonly CapsuleV2ProductItem[], drafts: DraftItem[], nextOrder: () => number): void {
   let added = 0;
   let impactCharacters = 0;
   for (const pivot of pivots.slice(0, MAX_IMPACT_PIVOTS)) {
-    const result = getImpactGraph(db, { symbolFqn: pivot.fqName, depth: 1, format: "list" });
+    const result = getImpactGraph(db, {
+      symbolFqn: pivot.fqName,
+      depth: 2,
+      format: "list",
+      direction: "both",
+      maxPaths: 2,
+      maxEdges: MAX_IMPACT_EDGES_PER_PIVOT,
+      maxTokens: 600,
+      includeEvidence: true,
+    }, { repoRoot, maxExcerpts: 0 });
     if (!result.ok) continue;
-    const edges = result.output.edges.slice(0, MAX_IMPACT_EDGES_PER_PIVOT);
-    for (const edge of edges) {
+    const relations = result.output.directRelations
+      .filter((relation) => relation.direction === "incoming")
+      .slice(0, MAX_IMPACT_EDGES_PER_PIVOT);
+    for (const relationEvidence of relations) {
       if (added >= MAX_IMPACT_ITEMS) return;
-      const dependentId = edge.fromSymbolId === result.output.resolvedSymbol.symbolId
-        ? edge.toSymbolId
-        : edge.fromSymbolId;
+      const dependentId = relationEvidence.source.nodeId;
       const node = result.output.nodes.find((candidate) => candidate.symbolId === dependentId);
       if (!node || node.distance === 0) continue;
       const symbol = listSymbolsByFqName(db, node.fqName)[0];
-      const relation = edge.edgeType === EdgeType.Calls ? "direct caller" : edge.edgeType === EdgeType.Imports ? "direct importer" : "direct dependant";
-      const content = `${edge.edgeType}: ${node.fqName}`;
+      const relation = relationEvidence.kind === "calls"
+        ? "direct caller"
+        : relationEvidence.kind === "imports" || relationEvidence.kind === "re_exports"
+          ? "direct importer"
+          : relationEvidence.kind === "inherits" || relationEvidence.kind === "implements"
+            ? "direct subtype"
+            : "direct dependant";
+      const sourceLine = relationEvidence.source.lineSpan?.start;
+      const content = `${relationEvidence.kind.toUpperCase()} ${node.fqName}${sourceLine === undefined ? "" : ` at ${node.filePath}:${sourceLine}`} [${relationEvidence.strength}]`;
       if (impactCharacters + content.length > MAX_TOTAL_IMPACT_CHARS) return;
       drafts.push({
         identity: `${node.filePath}::${node.fqName}`,
@@ -429,11 +446,59 @@ function addImpactEvidence(db: Database, pivots: readonly CapsuleV2ProductItem[]
         ...(symbol ? { lineSpan: { start: symbol.startLine, end: symbol.endLine } } : {}),
         selectionReasons: [`${relation} of ${pivot.fqName}`],
         content,
-        metadata: { edgeType: edge.edgeType, traversalDepth: node.distance, evidenceAvailability: "indexed_symbol_span" },
+        metadata: {
+          edgeType: relationEvidence.persistedKind,
+          relationKind: relationEvidence.kind,
+          direction: relationEvidence.direction,
+          evidenceStrength: relationEvidence.strength,
+          resolutionMethod: relationEvidence.evidence.resolutionMethod,
+          evidenceLocationKind: relationEvidence.evidence.locationKind,
+          traversalDepth: node.distance,
+          pivotFqName: pivot.fqName,
+          directRelationCounts: {
+            incoming: result.output.richSummary.directIncoming,
+            outgoing: result.output.richSummary.directOutgoing,
+            byRelation: result.output.richSummary.countsByRelation,
+            byStrength: result.output.richSummary.countsByStrength,
+          },
+          affectedFileCount: result.output.richSummary.affectedFiles,
+          strongestPaths: result.output.paths.slice(0, 2).map((path) => ({
+            id: path.id,
+            direction: path.direction,
+            length: path.length,
+            minimumStrength: path.minimumStrength,
+            nodes: path.nodes.map((pathNode) => pathNode.fqName),
+          })),
+          testLinks: result.output.tests.map((test) => test.fqName),
+          entrypointLinks: result.output.entrypoints.map((entrypoint) => entrypoint.fqName),
+          truncated: result.output.richSummary.truncated,
+          omittedPaths: result.output.richSummary.omittedPaths,
+          omittedEdges: result.output.richSummary.omittedEdges,
+          limitations: relationEvidence.limitations,
+        },
       });
       added += 1;
       impactCharacters += content.length;
     }
+  }
+}
+
+function attachStableContextReferences(items: ProductContextItem[]): void {
+  const idByFqName = new Map<string, string>();
+  for (const item of items) {
+    const fqName = typeof item.metadata?.fqName === "string" ? item.metadata.fqName : undefined;
+    if (fqName !== undefined) idByFqName.set(fqName, item.id);
+  }
+  for (const item of items) {
+    if (!item.roles.includes("impact")) continue;
+    const pivotFqName = typeof item.metadata?.pivotFqName === "string" ? item.metadata.pivotFqName : undefined;
+    const pivotContextId = pivotFqName === undefined ? undefined : idByFqName.get(pivotFqName);
+    item.metadata = {
+      ...(item.metadata ?? {}),
+      ...(pivotContextId === undefined ? {} : { pivotContextId, pivotContextReference: `[${pivotContextId}]` }),
+      contextId: item.id,
+      contextReference: `[${item.id}]`,
+    };
   }
 }
 
