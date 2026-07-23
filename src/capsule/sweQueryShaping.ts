@@ -44,6 +44,14 @@ export interface ShapedSweQuery {
    * targets. Surfaced for diagnostics, not used by retrieval.
    */
   filteredRunnerFiles: string[];
+  /** Component-aware repository path clues embedded in otherwise broad prose. */
+  pathClues?: EmbeddedPathClue[];
+}
+
+export interface EmbeddedPathClue {
+  raw: string;
+  normalized: string;
+  kind: "path" | "filename";
 }
 
 export interface ShapeSweQueryOptions {
@@ -73,6 +81,8 @@ const FILE_LIKE = new RegExp(
   "g",
 );
 const REPO_PATH_LIKE = /\b[a-z][\w-]*(?:\/[\w.-]+){2,}\b/g;
+const EMBEDDED_PATH_LIKE = /(?:^|[\s("'`])((?:\.\/)?(?:\.[A-Za-z0-9_-]+|[A-Za-z0-9_-]+)(?:\/[A-Za-z0-9_.-]+)+(?:\/)?)/gmu;
+const CONFIG_FILE_LIKE = /(?:^|[\s("'`])([A-Za-z0-9_.-]+\.(?:ya?ml|toml))\b/gimu;
 const DEF_CLASS = /\b(?:def|class|function|func|fn)\s+([A-Za-z_]\w*)/g;
 const BACKTICK_IDENT = /`([A-Za-z_][\w.]*(?:\(\))?)`/g;
 // Bare call mentions in prose, e.g. "get_combinator_sql()" or "json_script(".
@@ -150,6 +160,7 @@ export function shapeSweQuery(
   // otherwise match REPO_PATH_LIKE and masquerade as edit targets. Strip them
   // before path extraction. Symbol extraction keeps the full prose.
   const prosePaths = stripUrls(prose);
+  const pathClues = extractEmbeddedPathClues(prosePaths);
 
   const rawFiles = dedupeNonEmpty(
     [
@@ -167,6 +178,8 @@ export function shapeSweQuery(
   const fileParts = partition(rawFiles, isRunnerScriptNoise);
   const likelyFiles = capped(fileParts.kept, config.maxFiles);
   const filteredRunnerFiles = fileParts.filtered;
+  const additivePathClues = pathClues.filter((clue) =>
+    !likelyFiles.some((file) => normalizePathClue(file) === clue.normalized));
 
   const rawSymbols = dedupeNonEmpty([
     ...testParts.flatMap((part) => part.symbols),
@@ -198,7 +211,37 @@ export function shapeSweQuery(
     identifiers,
     filteredGenericSymbols,
     filteredRunnerFiles,
+    ...(additivePathClues.length === 0 ? {} : { pathClues: additivePathClues }),
   };
+}
+
+export function extractEmbeddedPathClues(text: string): EmbeddedPathClue[] {
+  const withoutUrls = stripUrls(text);
+  const clues: EmbeddedPathClue[] = [];
+  for (const match of withoutUrls.matchAll(new RegExp(EMBEDDED_PATH_LIKE.source, EMBEDDED_PATH_LIKE.flags))) {
+    const raw = match[1] ?? "";
+    const normalized = normalizePathClue(raw);
+    if (normalized.includes("/")) clues.push({ raw, normalized, kind: "path" });
+  }
+  for (const match of withoutUrls.matchAll(new RegExp(CONFIG_FILE_LIKE.source, CONFIG_FILE_LIKE.flags))) {
+    const raw = match[1] ?? "";
+    clues.push({ raw, normalized: normalizePathClue(raw), kind: "filename" });
+  }
+  return dedupeClues(clues);
+}
+
+function normalizePathClue(value: string): string {
+  return value.replace(/\\/g, "/").replace(/^\.\//u, "").replace(/\/+$/u, "").toLowerCase();
+}
+
+function dedupeClues(clues: readonly EmbeddedPathClue[]): EmbeddedPathClue[] {
+  const seen = new Set<string>();
+  return clues.filter((clue) => {
+    const key = `${clue.kind}:${clue.normalized}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 interface TestNodeParts {

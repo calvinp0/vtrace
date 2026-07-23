@@ -12,6 +12,34 @@ export function initializeSchema(db: Database): void {
       size_bytes INTEGER NOT NULL CHECK (size_bytes >= 0)
     );
 
+    CREATE TABLE IF NOT EXISTS document_chunks (
+      id TEXT PRIMARY KEY,
+      file_id TEXT NOT NULL,
+      kind TEXT NOT NULL CHECK (kind IN ('yaml', 'toml')),
+      content_hash TEXT NOT NULL,
+      document_index_version INTEGER NOT NULL CHECK (document_index_version >= 1),
+      start_line INTEGER NOT NULL CHECK (start_line >= 1),
+      end_line INTEGER NOT NULL CHECK (end_line >= start_line),
+      key_path TEXT NOT NULL DEFAULT '',
+      text TEXT NOT NULL,
+      truncated INTEGER NOT NULL CHECK (truncated IN (0, 1)),
+      FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_document_chunks_file_line
+      ON document_chunks(file_id, start_line, end_line, id);
+
+    CREATE VIRTUAL TABLE IF NOT EXISTS document_search_fts USING fts5(
+      chunk_id UNINDEXED,
+      file_id UNINDEXED,
+      file_path_raw UNINDEXED,
+      kind,
+      key_path,
+      text,
+      file_path,
+      tokenize = 'unicode61'
+    );
+
     CREATE TABLE IF NOT EXISTS index_runs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       previous_run_id INTEGER,

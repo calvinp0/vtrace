@@ -38,6 +38,7 @@ test("scanner does not scan ignored directories", async () => {
 
     assert.equal(paths.some((filePath) => filePath.includes("node_modules/")), false);
     assert.equal(paths.some((filePath) => filePath.includes(".git/")), false);
+    assert.equal(paths.some((filePath) => filePath.includes(".codex/")), false);
     assert.equal(paths.some((filePath) => filePath.includes("dist/")), false);
     assert.equal(paths.some((filePath) => filePath.includes("build/")), false);
   });
@@ -121,6 +122,7 @@ async function writeFixture(repoRoot: string): Promise<void> {
   await mkdir(path.join(repoRoot, "src"), { recursive: true });
   await mkdir(path.join(repoRoot, "node_modules", "pkg"), { recursive: true });
   await mkdir(path.join(repoRoot, ".git", "hooks"), { recursive: true });
+  await mkdir(path.join(repoRoot, ".codex"), { recursive: true });
   await mkdir(path.join(repoRoot, "dist"), { recursive: true });
   await mkdir(path.join(repoRoot, "build"), { recursive: true });
 
@@ -135,6 +137,7 @@ async function writeFixture(repoRoot: string): Promise<void> {
   await writeFile(path.join(repoRoot, "src", "README.md"), "# ignored\n");
   await writeFile(path.join(repoRoot, "node_modules", "pkg", "index.ts"), "export const pkg = 1;\n");
   await writeFile(path.join(repoRoot, ".git", "hooks", "pre-commit.js"), "console.log('ignored');\n");
+  await writeFile(path.join(repoRoot, ".codex", "config.toml"), "model = 'ignored'\n");
   await writeFile(path.join(repoRoot, "dist", "bundle.js"), "console.log('ignored');\n");
   await writeFile(path.join(repoRoot, "build", "generated.ts"), "export const ignored = 1;\n");
 }

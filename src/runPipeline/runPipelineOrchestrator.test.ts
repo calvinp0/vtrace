@@ -565,7 +565,7 @@ test("runtime provenance identifies the source-backed executable and current imp
     assert.match(output.runtime.executablePath, /\/bin\/vtrace$/);
     assert.equal(output.runtime.capsuleImplementation, "hybrid");
     assert.equal(output.runtime.retrievalImplementation, "product-retrieval-v2");
-    assert.equal(output.runtime.indexSchemaVersion, 4);
+    assert.equal(output.runtime.indexSchemaVersion, 5);
     assert.ok(output.runtime.commit === null || /^[0-9a-f]{40}$/.test(output.runtime.commit));
   });
 });

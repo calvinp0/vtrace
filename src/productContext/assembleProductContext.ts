@@ -233,6 +233,7 @@ export async function assembleProductContext(
     const roles: ProductContextRole[] = ["support"];
     if (support.contentMode !== "full") roles.push("skeleton");
     if (isDocumentationPath(support.path)) roles.push("documentation");
+    if (support.documentKind !== undefined) roles.push("configuration");
     drafts.push(sourceDraft(input.db, support, roles, roleOrder++));
   }
   if (product.pivots.length > 0) {
@@ -352,7 +353,11 @@ function sourceDraft(db: Database, item: CapsuleV2ProductItem, roles: ProductCon
   let contentMode: ProductContextContentMode;
   let content: string | undefined;
   let fallback: string;
-  if (item.contentMode === "full" && item.source) {
+  if (item.contentMode === "document_excerpt" && item.source) {
+    contentMode = "document_excerpt";
+    content = item.source;
+    fallback = "document_excerpt";
+  } else if (item.contentMode === "full" && item.source) {
     contentMode = "focused_source";
     content = item.source;
     fallback = "focused_source";
@@ -376,7 +381,16 @@ function sourceDraft(db: Database, item: CapsuleV2ProductItem, roles: ProductCon
     symbol: item.symbol,
     roles,
     contentMode,
-    ...(symbol ? { lineSpan: { start: symbol.startLine, end: symbol.endLine } } : {}),
+    ...(symbol
+      ? { lineSpan: { start: symbol.startLine, end: symbol.endLine } }
+      : item.lineSpans?.[0] === undefined
+        ? {}
+        : {
+            lineSpan: {
+              start: Math.min(...item.lineSpans.map((span) => span.start)),
+              end: Math.max(...item.lineSpans.map((span) => span.end)),
+            },
+          }),
     selectionReasons: unique([item.roleReason, ...item.evidence].filter(Boolean)),
     ...(content === undefined ? {} : { content }),
     metadata: {
@@ -390,6 +404,14 @@ function sourceDraft(db: Database, item: CapsuleV2ProductItem, roles: ProductCon
       requiredTargetSources: roles.includes("required")
         ? classifyRequiredTargetSources(item, roleOrder)
         : [],
+      ...(item.documentKind === undefined
+        ? {}
+        : {
+            documentKind: item.documentKind,
+            evidenceSemantics: ["configuration", "lexical"],
+            lineSpans: item.lineSpans ?? [],
+            pathClueMatches: item.pathClueMatches ?? [],
+          }),
     },
   };
 }

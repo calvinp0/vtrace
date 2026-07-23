@@ -59,6 +59,9 @@ export interface CapsuleV2ProductItem {
   estimatedTokens: number;
   /** True when the item is a docs/examples/fixture file (support at most). */
   isNonSourceExample: boolean;
+  documentKind?: "yaml" | "toml";
+  lineSpans?: Array<{ start: number; end: number }>;
+  pathClueMatches?: CapsuleV2Item["path_clue_matches"];
 }
 
 /** Token-budget accounting for the assembled capsule. */
@@ -273,6 +276,9 @@ function projectItem(item: CapsuleV2Item): CapsuleV2ProductItem {
     evidence: Array.isArray(item.evidence) ? [...item.evidence] : [],
     estimatedTokens: item.estimated_tokens,
     isNonSourceExample: item.is_non_source_example === true,
+    ...(item.document_kind === undefined ? {} : { documentKind: item.document_kind }),
+    ...(item.line_spans === undefined ? {} : { lineSpans: item.line_spans.map((span) => ({ ...span })) }),
+    ...(item.path_clue_matches === undefined ? {} : { pathClueMatches: item.path_clue_matches.map((match) => ({ ...match })) }),
   };
 }
 

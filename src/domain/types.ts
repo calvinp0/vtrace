@@ -5,6 +5,8 @@ export enum Language {
   JavaScript = "javascript",
   Python = "python",
   Cython = "cython",
+  Yaml = "yaml",
+  Toml = "toml",
   Go = "go",
   Rust = "rust",
 }

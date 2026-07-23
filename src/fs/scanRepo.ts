@@ -10,6 +10,7 @@ import {
 } from "../domain/types";
 import { hashFile } from "./hashFile";
 import { detectLanguage } from "./languageDetection";
+import { isSafeDocumentPath } from "../documents/documentPolicy";
 import {
   isPathIgnored,
   loadIgnoreRulesForDirectory,
@@ -19,6 +20,7 @@ import {
 const IGNORED_DIRECTORIES = new Set([
   ".git",
   ".vtrace",
+  ".codex",
   "node_modules",
   "dist",
   "build",
@@ -119,6 +121,9 @@ async function scanDirectory(
     if (language === undefined) {
       continue;
     }
+    if (!isSafeDocumentPath(relativePath, language)) {
+      continue;
+    }
 
     const absolutePath = path.join(directory, entry.name);
     const [fileStat, contentHash] = await Promise.all([
@@ -193,7 +198,8 @@ async function updateSourceSnapshotFingerprint(
 
     const absolutePath = path.join(directory, entry.name);
 
-    if (detectLanguage(relativePath) === undefined) {
+    const language = detectLanguage(relativePath);
+    if (language === undefined || !isSafeDocumentPath(relativePath, language)) {
       continue;
     }
 

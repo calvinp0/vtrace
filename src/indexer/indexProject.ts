@@ -19,6 +19,7 @@ import { createIndexRun } from "../db/repositories/indexRunsRepository";
 import { insertSymbolRunStates } from "../db/repositories/symbolRunStatesRepository";
 import { deleteSymbolSearchIndexForFile } from "../db/repositories/symbolSearchFtsRepository";
 import { deleteBodyLiteralsForFile } from "../db/repositories/bodyLiteralsRepository";
+import { replaceDocumentChunksForFile } from "../db/repositories/documentsRepository";
 import { persistParseResult } from "../db/persistParseResult";
 import { listAllSymbols } from "../db/repositories/symbolsRepository";
 import { buildSymbolBodyLiterals } from "./extractBodyLiterals";
@@ -60,6 +61,13 @@ import {
 } from "./parseCache";
 import { resolveWorktreeIdentity } from "./worktreeIdentity";
 import { GraphValidationError, validateGraph } from "./normalizedGraph";
+import { buildDocumentChunks } from "../documents/documentChunks";
+import {
+  DOCUMENT_INDEX_VERSION,
+  documentKindForLanguage,
+  isDocumentLanguage,
+  isSafeDocumentContent,
+} from "../documents/documentPolicy";
 
 export async function indexProject(options: IndexProjectOptions): Promise<IndexProjectResult> {
   const totalStarted = performance.now();
@@ -240,7 +248,9 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       }
       parseCacheMisses += 1;
     }
-    const parsed = await parseFile(registry, fileContent);
+    const parsed = isDocumentLanguage(fileContent.file.language)
+      ? { ok: true as const, result: emptyDocumentParseResult(fileContent) }
+      : await parseFile(registry, fileContent);
     parsedFiles += 1;
 
     if (!parsed.ok) {
@@ -282,7 +292,9 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       unsupportedFilesCarriedForward = 0;
       const fallbackParseStarted = performance.now();
       for (const fileContent of readableFiles) {
-        const parsed = await parseFile(registry, fileContent);
+        const parsed = isDocumentLanguage(fileContent.file.language)
+          ? { ok: true as const, result: emptyDocumentParseResult(fileContent) }
+          : await parseFile(registry, fileContent);
         parsedFiles += 1;
         if (!parsed.ok) summariesByPath.set(fileContent.file.path, summaryForParserError(fileContent, parsed.error));
         else {
@@ -330,6 +342,8 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     const invalidationStarted = performance.now();
     options.db.run("DELETE FROM symbol_search_fts");
     options.db.run("DELETE FROM symbol_body_literals_fts");
+    options.db.run("DELETE FROM document_search_fts");
+    options.db.run("DELETE FROM document_chunks");
     options.db.run("DELETE FROM edges");
     options.db.run("DELETE FROM symbols");
     options.db.run("DELETE FROM files");
@@ -340,6 +354,23 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       const fileLocalResult = { ...parseResult, edges: parseResult.edges.filter((edge) => !isDeferredEdgeType(edge.edgeType)) };
       const bodyLiterals = buildSymbolBodyLiterals(fileLocalResult.symbols, contentByPath.get(parseResult.file.path) ?? "");
       persistParseResult(options.db, fileLocalResult, { bodyLiterals });
+      const documentKind = documentKindForLanguage(parseResult.file.language);
+      if (documentKind !== undefined) {
+        const content = contentByPath.get(parseResult.file.path) ?? "";
+        replaceDocumentChunksForFile(
+          options.db,
+          parseResult.file.id,
+          isSafeDocumentContent(content, parseResult.file.sizeBytes)
+            ? buildDocumentChunks({
+                fileId: parseResult.file.id,
+                path: parseResult.file.path,
+                kind: documentKind,
+                contentHash: parseResult.file.contentHash,
+                content,
+              })
+            : [],
+        );
+      }
       persistedResults.push(parseResult);
       progress.report({ kind: "phase_progress", phase: "persist", index: index + 1, total: successfulResults.length, item: parseResult.file.path });
     }
@@ -403,6 +434,12 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       bindingContextHash,
       parseCacheKey: computeParseCacheKey(keyInput),
       sizeBytes: result.file.sizeBytes,
+      ...(documentKindForLanguage(result.file.language) === undefined
+        ? {}
+        : {
+            documentKind: documentKindForLanguage(result.file.language),
+            documentIndexVersion: DOCUMENT_INDEX_VERSION,
+          }),
     };
   });
   const skippedSnapshotFiles: IndexedFileSnapshot[] = [...summariesByPath.values()]
@@ -541,6 +578,15 @@ async function discoverContentIdentities(
 
 function parserIdForLanguage(language: ParseResult["file"]["language"]): string {
   return `vtrace-${language}`;
+}
+
+function emptyDocumentParseResult(fileContent: IndexProjectFileContent): ParseResult {
+  return {
+    file: fileContent.file,
+    symbols: [],
+    edges: [],
+    diagnostics: [],
+  };
 }
 
 function computeParserRegistryFingerprint(registry: ParserRegistry): string {

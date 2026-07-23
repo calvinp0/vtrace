@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "stage5.m128.next-action-queue.v1",
+  "m129": "resolve M128 performance gate before cross-repository work",
+  "deferred": [
+    "Markdown document FTS",
+    "JSON manifest policy",
+    "notebook parsing",
+    "JavaScript/JSX parser",
+    "tokenizer-exact accounting"
+  ]
+}

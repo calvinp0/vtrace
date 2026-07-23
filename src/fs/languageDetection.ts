@@ -6,6 +6,8 @@ const TYPESCRIPT_EXTENSIONS = new Set([".ts", ".tsx"]);
 const JAVASCRIPT_EXTENSIONS = new Set([".js", ".jsx"]);
 const PYTHON_EXTENSIONS = new Set([".py"]);
 const CYTHON_EXTENSIONS = new Set([".pyx", ".pxd", ".pxi"]);
+const YAML_EXTENSIONS = new Set([".yml", ".yaml"]);
+const TOML_EXTENSIONS = new Set([".toml"]);
 
 const INDEXABLE_LANGUAGES = new Set<Language>([
   Language.TypeScript,
@@ -30,6 +32,12 @@ export function detectLanguage(filePath: string): Language | undefined {
 
   if (CYTHON_EXTENSIONS.has(extension)) {
     return Language.Cython;
+  }
+  if (YAML_EXTENSIONS.has(extension)) {
+    return Language.Yaml;
+  }
+  if (TOML_EXTENSIONS.has(extension)) {
+    return Language.Toml;
   }
 
   return undefined;

@@ -9,6 +9,7 @@ export const PRODUCT_CONTEXT_ROLES = [
   "memory",
   "rule",
   "documentation",
+  "configuration",
 ] as const;
 
 export type ProductContextRole = (typeof PRODUCT_CONTEXT_ROLES)[number];
@@ -19,7 +20,8 @@ export type ProductContextContentMode =
   | "excerpt"
   | "skeleton"
   | "signature"
-  | "summary";
+  | "summary"
+  | "document_excerpt";
 
 export interface ProductContextItem {
   id: string;

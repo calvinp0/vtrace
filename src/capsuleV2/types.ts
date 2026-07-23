@@ -98,6 +98,8 @@ export enum CapsuleV2ContentMode {
   Signature = "signature",
   /** Support with no signature available: skeleton/name only. */
   Skeleton = "skeleton",
+  /** Matched line-bounded configuration/document excerpt. */
+  DocumentExcerpt = "document_excerpt",
 }
 
 /**
@@ -157,6 +159,17 @@ export interface CapsuleV2Item extends DebugRoleSignals {
   evidence: string[];
   scorecard: CapsuleV2Scorecard;
   estimated_tokens: number;
+  /** Present only for truthful file-level document candidates. */
+  document_kind?: "yaml" | "toml";
+  line_spans?: Array<{ start: number; end: number }>;
+  path_clue_matches?: Array<{
+    clue: string;
+    normalized_clue: string;
+    match_type: string;
+    score: number;
+    subtree_match: boolean;
+    filename_match: boolean;
+  }>;
   /**
    * True when this item is a non-source example / doc-data / fixture file (docs,
    * examples, sample `bad.py`/`good.py`, etc.). Such a file is never a pivot by
@@ -254,6 +267,26 @@ export interface CapsuleV2Diagnostics {
     candidates_added: number;
     selected_candidates_added: number;
     timing_ms: number;
+  };
+  document_retrieval?: {
+    invoked: boolean;
+    reason: string;
+    query_terms: string[];
+    candidate_count: number;
+    selected_count: number;
+    query_ms: number;
+    candidates: Array<{
+      path: string;
+      kind: "yaml" | "toml";
+      raw_rank: number;
+      merged_rank: number;
+      score: number;
+      matched_terms: string[];
+      objective_matches: string[];
+      line_spans: Array<{ start: number; end: number }>;
+      selected: boolean;
+      exclusion_reason?: string;
+    }>;
   };
   /** Non-overlapping M125 clocks; total build remains owned by the caller. */
   stage_timings_ms?: {

@@ -1,0 +1,965 @@
+{
+  "schemaVersion": "stage5.m128.mixed-surface-retrieval-smoke.v1",
+  "noAgents": true,
+  "noDocker": true,
+  "noVexp": true,
+  "repositoriesMutated": false,
+  "isolatedTckdbHeadExport": true,
+  "tckdb": {
+    "sourceHead": "de644061f112eb0bf4ef0e9058840e19e8610e7f",
+    "branch": "main",
+    "selected": [
+      "clients/python/tests/test_computed_reaction_upload_builder.py",
+      "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+      "clients/python/src/tckdb_client/builders/kinetics.py",
+      "clients/python/src/tckdb_client/builders/calculation.py",
+      "clients/python/pyproject.toml",
+      ".github/workflows/python-client-ci.yml",
+      "clients/python/tests/test_docs_calculation_note_conventions.py"
+    ],
+    "lead": "clients/python/tests/test_computed_reaction_upload_builder.py",
+    "evidence": {
+      "payloadTest": true,
+      "workflow": true,
+      "pyproject": true,
+      "notebookTest": true,
+      "implementation": true,
+      "degeneracyConvention": true,
+      "pytestCommand": true,
+      "notebookDependencies": true
+    },
+    "pass": true
+  },
+  "parity": {
+    "pass": true,
+    "projections": {
+      "get_code_context": {
+        "taskHash": "f151a45fb224b4cc805ffdcfd2bd1047c7723e0c7fe51f32df62b5973e44546c",
+        "capsuleMode": "standard",
+        "leadPivot": "clients/python/tests/test_computed_reaction_upload_builder.py::clients/python/tests/test_computed_reaction_upload_builder.py::test_to_payload_snapshot",
+        "selectedFileHash": "e68f9a76ab08eee12d899e3c6282b63b30831955ddc1417451b6388e6b99a5f6",
+        "items": [
+          {
+            "path": "clients/python/tests/test_computed_reaction_upload_builder.py",
+            "roles": [
+              "pivot",
+              "required"
+            ],
+            "contentMode": "focused_source",
+            "lineSpan": {
+              "start": 99,
+              "end": 178
+            },
+            "content": "def test_to_payload_snapshot(minimal_upload):\n    payload = minimal_upload.to_payload()\n    expected = {\n        \"species\": [\n            {\n                \"key\": \"ch3\",\n                \"species_entry\": {\"smiles\": \"[CH3]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"h\",\n                \"species_entry\": {\"smiles\": \"[H]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"ch4\",\n                \"species_entry\": {\"smiles\": \"C\", \"charge\": 0, \"multiplicity\": 1},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n        ],\n        \"reversible\": True,\n        \"reactant_keys\": [\"ch3\", \"h\"],\n        \"product_keys\": [\"ch4\"],\n        \"reaction_family\": \"H_Abstraction\",\n        \"transition_state\": {\n            \"charge\": 0,\n            \"multiplicity\": 2,\n            \"geometry\": {\n                \"key\": \"geom_1\",\n                \"xyz_text\": \"3\\nts\\nC 0.0 0.0 0.0\\nH 0.0 0.0 0.8\\nH 0.0 0.0 -1.0\",\n            },\n            \"calculation\": {\n                \"key\": \"ts_opt\",\n                \"type\": \"opt\",\n                \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                \"opt_converged\": True,\n                \"opt_final_energy_hartree\": -270.55,\n            },\n            \"calculations\": [\n                {\n                    \"key\": \"ts_freq\",\n                    \"type\": \"freq\",\n                    \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                    \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                    \"geometry_key\": \"geom_1\",\n                    \"freq_n_imag\": 1,\n                    \"freq_imag_freq_cm1\": -1200.0,\n                    \"freq_zpe_hartree\": 0.201,\n                    \"depends_on\": [\n                        {\"parent_calculation_key\": \"ts_opt\", \"role\": \"freq_on\"}\n                    ],\n                },\n            ],\n            \"label\": \"ts\",\n        },\n        \"kinetics\": [\n            {\n                \"reactant_keys\": [\"ch3\", \"h\"],\n                \"product_keys\": [\"ch4\"],\n                \"model_kind\": \"modified_arrhenius\",\n                \"a\": 1.2e13,\n                \"a_units\": \"cm3_mol_s\",\n                \"degeneracy_convention\": \"unknown\",\n                \"n\": 0.5,\n                \"reported_ea\": 10.0,\n                \"reported_ea_units\": \"kj_mol\",\n                \"tmin_k\": 300.0,\n                \"tmax_k\": 2500.0,\n                \"source_calculations\": [\n                    {\"calculation_key\": \"ts_opt\", \"role\": \"ts_energy\"},\n                    {\"calculation_key\": \"ts_freq\", \"role\": \"freq\"},\n                ],\n            },\n        ],\n    }\n    assert payload == expected"
+          },
+          {
+            "path": "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+            "roles": [
+              "pivot",
+              "required"
+            ],
+            "contentMode": "focused_source",
+            "lineSpan": {
+              "start": 53,
+              "end": 56
+            },
+            "content": "def test_notebook_file_exists():\n    assert _NB_PATH.is_file(), (\n        f\"Demo notebook missing at {_NB_PATH}; README links to it.\"\n    )"
+          },
+          {
+            "path": "clients/python/src/tckdb_client/builders/kinetics.py",
+            "roles": [
+              "support",
+              "skeleton"
+            ],
+            "contentMode": "skeleton",
+            "lineSpan": {
+              "start": 239,
+              "end": 239
+            },
+            "content": "degeneracy_convention: str = \"unknown\""
+          },
+          {
+            "path": "clients/python/src/tckdb_client/builders/calculation.py",
+            "roles": [
+              "support",
+              "skeleton"
+            ],
+            "contentMode": "skeleton",
+            "lineSpan": {
+              "start": 140,
+              "end": 525
+            },
+            "content": "class Calculation:\n  def __post_init__(self) -> None:\n  def add_artifact(\n        self,\n        path: \"str | Path\",\n        kind: str,\n        *,\n        label: str | None = None,\n        sha256: str | None = None,\n        bytes: int | None = None,\n    ) -> Artifact:\n  def opt(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        final_energy_hartree: float | None = None,\n        converged: bool | None = None,\n        n_steps: int | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def freq(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        frequencies_cm1: list[float] | None = None,\n        n_imag: int | None = None,\n        imag_freq_cm1: float | None = None,\n        zpe_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def sp(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        electronic_energy_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def result_block(self) -> tuple[str, dict[str, Any]] | None:\n  def result_fields_flat(self) -> dict[str, Any]:\n  def _modes_payload(self) -> list[dict[str, Any]] | None:\n  def infer_dependency_role(self, parent: \"Calculation\") -> str:\n# One quantum-chemistry calculation in a computed-species upload. Construct via the type-specific factories; the bare constructor is not part of the public contract. Attributes are …"
+          },
+          {
+            "path": "clients/python/pyproject.toml",
+            "roles": [
+              "support",
+              "skeleton",
+              "configuration"
+            ],
+            "contentMode": "document_excerpt",
+            "lineSpan": {
+              "start": 5,
+              "end": 60
+            },
+            "content": "Lines 45-60 [project.optional-dependencies]:\n[project.optional-dependencies]\ntest = [\n    \"pytest>=8\",\n]\n# Optional: pull in the Jupyter stack used to author + execute\n# ``examples/builder_computed_reaction_demo.ipynb``. The executable\n# smoke test ``test_builder_computed_reaction_demo_notebook.py``\n# auto-skips when these aren't installed, so the base ``test`` extra\n# stays slim for CI environments that don't care about the notebook.\nnotebook = [\n    \"jupyter>=1.0\",\n    \"nbformat>=5.10\",\n    \"nbconvert>=7.16\",\n    \"ipykernel>=6\",\n]\n\nLines 5-44 [project]:\n[project]\nname = \"tckdb-client\"\nversion = \"0.28.5\"\ndescription = \"Synchronous Python HTTP client and scientific upload builders for the TCKDB API.\"\nreadme = \"README.md\"\nrequires-python = \">=3.11\"\nlicense = \"MIT\"\nauthors = [{ name = \"TCKDB\" }]\nkeywords = [\n    \"tckdb\",\n    \"thermochemistry\",\n    \"kinetics\",\n    \"transport\",\n    \"statmech\",\n    \"client\",\n    \"http\",\n    \"computational chemistry\",\n]\nclassifiers = [\n    \"Development Status :: 4 - Beta\",\n    \"Intended Audience :: Science/Research\",\n    \"Intended Audience :: Developers\",\n    # License is expressed via the ``license`` table above; the\n    # ``License :: OSI Approved :: MIT License`` classifier is\n    # deprecated in PEP 639 / setuptools 77+ and is intentionally not\n    # listed here.\n    \"Operating System :: OS Independent\",\n    \"Programming Language :: Python :: 3\",\n    \"Programming Language :: Python :: 3 :: Only\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"Topic :: Scientific/Engineering\",\n    \"Topic :: Scientific/Engineering :: Chemistry\",\n    \"Typing :: Typed\",\n]\ndependencies = [\n    \"httpx>=0.27\",\n]"
+          },
+          {
+            "path": ".github/workflows/python-client-ci.yml",
+            "roles": [
+              "support",
+              "skeleton",
+              "configuration"
+            ],
+            "contentMode": "document_excerpt",
+            "lineSpan": {
+              "start": 3,
+              "end": 43
+            },
+            "content": "Lines 19-43 [jobs]:\njobs:\n  test:\n    name: Python client tests\n    runs-on: ubuntu-latest\n    timeout-minutes: 20\n\n    steps:\n      - name: Check out repository\n        uses: actions/checkout@v4\n\n      - name: Set up Python\n        uses: actions/setup-python@v5\n        with:\n          python-version: \"3.11\"\n          cache: pip\n          cache-dependency-path: clients/python/pyproject.toml\n\n      - name: Install Python client and test dependencies\n        working-directory: clients/python\n        run: python -m pip install -e \".[test,notebook]\"\n\n      - name: Run Python client tests\n        working-directory: clients/python\n        run: python -m pytest\n\nLines 3-15 [on]:\non:\n  pull_request:\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  push:\n    branches:\n      - main\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  workflow_dispatch:"
+          },
+          {
+            "path": "clients/python/tests/test_docs_calculation_note_conventions.py",
+            "roles": [
+              "support"
+            ],
+            "contentMode": "focused_source",
+            "lineSpan": {
+              "start": 33,
+              "end": 36
+            },
+            "content": "def test_spec_doc_exists():\n    assert _SPEC.is_file(), (\n        f\"Calculation note conventions spec missing at {_SPEC}.\"\n    )"
+          }
+        ],
+        "modelVisibleContext": "# VTRACE product context\ntask: Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.\nintent: modify\nworktree: f712c04cf5ecee01e92af39b\ncapsule_mode: standard\n\n## [P1] clients/python/tests/test_computed_reaction_upload_builder.py::test_to_payload_snapshot\nroles: pivot, required\nmode: focused_source\nlines: 99-178\nwhy: direct subtree and task-objective evidence\nwhy: lexical match on fq_name, fq_name, fq_name, fq_name, local_name, local_name, fq_name, fq_name, local_name, local_name, query_coverage\nwhy: embedded path clue `clients/python` directory_prefix (+0.90 path)\n\ndef test_to_payload_snapshot(minimal_upload):\n    payload = minimal_upload.to_payload()\n    expected = {\n        \"species\": [\n            {\n                \"key\": \"ch3\",\n                \"species_entry\": {\"smiles\": \"[CH3]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"h\",\n                \"species_entry\": {\"smiles\": \"[H]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"ch4\",\n                \"species_entry\": {\"smiles\": \"C\", \"charge\": 0, \"multiplicity\": 1},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n        ],\n        \"reversible\": True,\n        \"reactant_keys\": [\"ch3\", \"h\"],\n        \"product_keys\": [\"ch4\"],\n        \"reaction_family\": \"H_Abstraction\",\n        \"transition_state\": {\n            \"charge\": 0,\n            \"multiplicity\": 2,\n            \"geometry\": {\n                \"key\": \"geom_1\",\n                \"xyz_text\": \"3\\nts\\nC 0.0 0.0 0.0\\nH 0.0 0.0 0.8\\nH 0.0 0.0 -1.0\",\n            },\n            \"calculation\": {\n                \"key\": \"ts_opt\",\n                \"type\": \"opt\",\n                \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                \"opt_converged\": True,\n                \"opt_final_energy_hartree\": -270.55,\n            },\n            \"calculations\": [\n                {\n                    \"key\": \"ts_freq\",\n                    \"type\": \"freq\",\n                    \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                    \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                    \"geometry_key\": \"geom_1\",\n                    \"freq_n_imag\": 1,\n                    \"freq_imag_freq_cm1\": -1200.0,\n                    \"freq_zpe_hartree\": 0.201,\n                    \"depends_on\": [\n                        {\"parent_calculation_key\": \"ts_opt\", \"role\": \"freq_on\"}\n                    ],\n                },\n            ],\n            \"label\": \"ts\",\n        },\n        \"kinetics\": [\n            {\n                \"reactant_keys\": [\"ch3\", \"h\"],\n                \"product_keys\": [\"ch4\"],\n                \"model_kind\": \"modified_arrhenius\",\n                \"a\": 1.2e13,\n                \"a_units\": \"cm3_mol_s\",\n                \"degeneracy_convention\": \"unknown\",\n                \"n\": 0.5,\n                \"reported_ea\": 10.0,\n                \"reported_ea_units\": \"kj_mol\",\n                \"tmin_k\": 300.0,\n                \"tmax_k\": 2500.0,\n                \"source_calculations\": [\n                    {\"calculation_key\": \"ts_opt\", \"role\": \"ts_energy\"},\n                    {\"calculation_key\": \"ts_freq\", \"role\": \"freq\"},\n                ],\n            },\n        ],\n    }\n    assert payload == expected\n\n## [P2] clients/python/tests/test_builder_computed_reaction_demo_notebook.py::test_notebook_file_exists\nroles: pivot, required\nmode: focused_source\nlines: 53-56\nwhy: direct subtree and task-objective evidence\nwhy: lexical match on fq_name, fq_name, fq_name, fq_name, fq_name, fq_name, local_name, local_name, local_name, local_name, query_coverage\nwhy: embedded path clue `clients/python` directory_prefix (+0.90 path)\n\ndef test_notebook_file_exists():\n    assert _NB_PATH.is_file(), (\n        f\"Demo notebook missing at {_NB_PATH}; README links to it.\"\n    )\n\n## [S1] clients/python/src/tckdb_client/builders/kinetics.py::degeneracy_convention\nroles: support, skeleton\nmode: skeleton\nlines: 239-239\nwhy: symbol-name match; in a likely edit file; lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)\nwhy: 2 indexed symbol(s) depend on this\nwhy: symbol name matches \"degeneracy_convention\"\nwhy: embedded path clue `clients/python` directory_prefix (+0.90 path)\n\ndegeneracy_convention: str = \"unknown\"\n\n## [S2] clients/python/src/tckdb_client/builders/calculation.py::Calculation\nroles: support, skeleton\nmode: skeleton\nlines: 140-525\nwhy: strong target but beyond the pivot budget — pivot: actionable class — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour; 151 dependents\nwhy: 151 indexed symbol(s) depend on this\nwhy: graph references to test_accepts_species_transport\nwhy: graph references to test_artifacts_not_emitted_in_computed_reaction_payload\nwhy: graph references to test_computed_reaction_artifact_plan_errors_without_calculation_keys\nwhy: graph references to test_computed_reaction_artifact_plan_uses_calculation_keys\n\nclass Calculation:\n  def __post_init__(self) -> None:\n  def add_artifact(\n        self,\n        path: \"str | Path\",\n        kind: str,\n        *,\n        label: str | None = None,\n        sha256: str | None = None,\n        bytes: int | None = None,\n    ) -> Artifact:\n  def opt(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        final_energy_hartree: float | None = None,\n        converged: bool | None = None,\n        n_steps: int | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def freq(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        frequencies_cm1: list[float] | None = None,\n        n_imag: int | None = None,\n        imag_freq_cm1: float | None = None,\n        zpe_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def sp(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        electronic_energy_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def result_block(self) -> tuple[str, dict[str, Any]] | None:\n  def result_fields_flat(self) -> dict[str, Any]:\n  def _modes_payload(self) -> list[dict[str, Any]] | None:\n  def infer_dependency_role(self, parent: \"Calculation\") -> str:\n# One quantum-chemistry calculation in a computed-species upload. Construct via the type-specific factories; the bare constructor is not part of the public contract. Attributes are …\n\n## [S3] clients/python/pyproject.toml::pyproject.toml\nroles: support, skeleton, configuration\nmode: document_excerpt\nlines: 5-60\nwhy: TOML configuration matches task objectives\nwhy: document FTS matches: client, clients, computed, dependencies, notebook, pytest, python, reaction, test, tests\nwhy: objective match: dependency_configuration\nwhy: objective match: notebook_dependency\nwhy: objective match: path_scope\nwhy: objective match: test_command\nwhy: path clue `clients/python`: directory_prefix (+0.90)\n\nLines 45-60 [project.optional-dependencies]:\n[project.optional-dependencies]\ntest = [\n    \"pytest>=8\",\n]\n# Optional: pull in the Jupyter stack used to author + execute\n# ``examples/builder_computed_reaction_demo.ipynb``. The executable\n# smoke test ``test_builder_computed_reaction_demo_notebook.py``\n# auto-skips when these aren't installed, so the base ``test`` extra\n# stays slim for CI environments that don't care about the notebook.\nnotebook = [\n    \"jupyter>=1.0\",\n    \"nbformat>=5.10\",\n    \"nbconvert>=7.16\",\n    \"ipykernel>=6\",\n]\n\nLines 5-44 [project]:\n[project]\nname = \"tckdb-client\"\nversion = \"0.28.5\"\ndescription = \"Synchronous Python HTTP client and scientific upload builders for the TCKDB API.\"\nreadme = \"README.md\"\nrequires-python = \">=3.11\"\nlicense = \"MIT\"\nauthors = [{ name = \"TCKDB\" }]\nkeywords = [\n    \"tckdb\",\n    \"thermochemistry\",\n    \"kinetics\",\n    \"transport\",\n    \"statmech\",\n    \"client\",\n    \"http\",\n    \"computational chemistry\",\n]\nclassifiers = [\n    \"Development Status :: 4 - Beta\",\n    \"Intended Audience :: Science/Research\",\n    \"Intended Audience :: Developers\",\n    # License is expressed via the ``license`` table above; the\n    # ``License :: OSI Approved :: MIT License`` classifier is\n    # deprecated in PEP 639 / setuptools 77+ and is intentionally not\n    # listed here.\n    \"Operating System :: OS Independent\",\n    \"Programming Language :: Python :: 3\",\n    \"Programming Language :: Python :: 3 :: Only\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"Topic :: Scientific/Engineering\",\n    \"Topic :: Scientific/Engineering :: Chemistry\",\n    \"Typing :: Typed\",\n]\ndependencies = [\n    \"httpx>=0.27\",\n]\n\n## [S4] .github/workflows/python-client-ci.yml::python-client-ci.yml\nroles: support, skeleton, configuration\nmode: document_excerpt\nlines: 3-43\nwhy: YAML configuration matches task objectives\nwhy: document FTS matches: actions, client, clients, dependencies, notebook, pytest, python, test, tests, workflow\nwhy: objective match: notebook_dependency\nwhy: objective match: path_scope\nwhy: objective match: test_command\nwhy: objective match: workflow\n\nLines 19-43 [jobs]:\njobs:\n  test:\n    name: Python client tests\n    runs-on: ubuntu-latest\n    timeout-minutes: 20\n\n    steps:\n      - name: Check out repository\n        uses: actions/checkout@v4\n\n      - name: Set up Python\n        uses: actions/setup-python@v5\n        with:\n          python-version: \"3.11\"\n          cache: pip\n          cache-dependency-path: clients/python/pyproject.toml\n\n      - name: Install Python client and test dependencies\n        working-directory: clients/python\n        run: python -m pip install -e \".[test,notebook]\"\n\n      - name: Run Python client tests\n        working-directory: clients/python\n        run: python -m pytest\n\nLines 3-15 [on]:\non:\n  pull_request:\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  push:\n    branches:\n      - main\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  workflow_dispatch:\n\n## [S5] clients/python/tests/test_docs_calculation_note_conventions.py::test_spec_doc_exists\nroles: support\nmode: focused_source\nlines: 33-36\nwhy: routed rescue covers unmatched compound clue `conventions client`\nwhy: bounded routed FTS rank covers unmatched clue `conventions client`\nwhy: routed rank score 151\n\ndef test_spec_doc_exists():\n    assert _SPEC.is_file(), (\n        f\"Calculation note conventions spec missing at {_SPEC}.\"\n    )\n\nImpact entries above are bounded static structural evidence; they are not dynamic execution flow."
+      },
+      "get_context_capsule": {
+        "taskHash": "f151a45fb224b4cc805ffdcfd2bd1047c7723e0c7fe51f32df62b5973e44546c",
+        "capsuleMode": "standard",
+        "leadPivot": "clients/python/tests/test_computed_reaction_upload_builder.py::clients/python/tests/test_computed_reaction_upload_builder.py::test_to_payload_snapshot",
+        "selectedFileHash": "e68f9a76ab08eee12d899e3c6282b63b30831955ddc1417451b6388e6b99a5f6",
+        "items": [
+          {
+            "path": "clients/python/tests/test_computed_reaction_upload_builder.py",
+            "roles": [
+              "pivot",
+              "required"
+            ],
+            "contentMode": "focused_source",
+            "lineSpan": {
+              "start": 99,
+              "end": 178
+            },
+            "content": "def test_to_payload_snapshot(minimal_upload):\n    payload = minimal_upload.to_payload()\n    expected = {\n        \"species\": [\n            {\n                \"key\": \"ch3\",\n                \"species_entry\": {\"smiles\": \"[CH3]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"h\",\n                \"species_entry\": {\"smiles\": \"[H]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"ch4\",\n                \"species_entry\": {\"smiles\": \"C\", \"charge\": 0, \"multiplicity\": 1},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n        ],\n        \"reversible\": True,\n        \"reactant_keys\": [\"ch3\", \"h\"],\n        \"product_keys\": [\"ch4\"],\n        \"reaction_family\": \"H_Abstraction\",\n        \"transition_state\": {\n            \"charge\": 0,\n            \"multiplicity\": 2,\n            \"geometry\": {\n                \"key\": \"geom_1\",\n                \"xyz_text\": \"3\\nts\\nC 0.0 0.0 0.0\\nH 0.0 0.0 0.8\\nH 0.0 0.0 -1.0\",\n            },\n            \"calculation\": {\n                \"key\": \"ts_opt\",\n                \"type\": \"opt\",\n                \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                \"opt_converged\": True,\n                \"opt_final_energy_hartree\": -270.55,\n            },\n            \"calculations\": [\n                {\n                    \"key\": \"ts_freq\",\n                    \"type\": \"freq\",\n                    \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                    \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                    \"geometry_key\": \"geom_1\",\n                    \"freq_n_imag\": 1,\n                    \"freq_imag_freq_cm1\": -1200.0,\n                    \"freq_zpe_hartree\": 0.201,\n                    \"depends_on\": [\n                        {\"parent_calculation_key\": \"ts_opt\", \"role\": \"freq_on\"}\n                    ],\n                },\n            ],\n            \"label\": \"ts\",\n        },\n        \"kinetics\": [\n            {\n                \"reactant_keys\": [\"ch3\", \"h\"],\n                \"product_keys\": [\"ch4\"],\n                \"model_kind\": \"modified_arrhenius\",\n                \"a\": 1.2e13,\n                \"a_units\": \"cm3_mol_s\",\n                \"degeneracy_convention\": \"unknown\",\n                \"n\": 0.5,\n                \"reported_ea\": 10.0,\n                \"reported_ea_units\": \"kj_mol\",\n                \"tmin_k\": 300.0,\n                \"tmax_k\": 2500.0,\n                \"source_calculations\": [\n                    {\"calculation_key\": \"ts_opt\", \"role\": \"ts_energy\"},\n                    {\"calculation_key\": \"ts_freq\", \"role\": \"freq\"},\n                ],\n            },\n        ],\n    }\n    assert payload == expected"
+          },
+          {
+            "path": "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+            "roles": [
+              "pivot",
+              "required"
+            ],
+            "contentMode": "focused_source",
+            "lineSpan": {
+              "start": 53,
+              "end": 56
+            },
+            "content": "def test_notebook_file_exists():\n    assert _NB_PATH.is_file(), (\n        f\"Demo notebook missing at {_NB_PATH}; README links to it.\"\n    )"
+          },
+          {
+            "path": "clients/python/src/tckdb_client/builders/kinetics.py",
+            "roles": [
+              "support",
+              "skeleton"
+            ],
+            "contentMode": "skeleton",
+            "lineSpan": {
+              "start": 239,
+              "end": 239
+            },
+            "content": "degeneracy_convention: str = \"unknown\""
+          },
+          {
+            "path": "clients/python/src/tckdb_client/builders/calculation.py",
+            "roles": [
+              "support",
+              "skeleton"
+            ],
+            "contentMode": "skeleton",
+            "lineSpan": {
+              "start": 140,
+              "end": 525
+            },
+            "content": "class Calculation:\n  def __post_init__(self) -> None:\n  def add_artifact(\n        self,\n        path: \"str | Path\",\n        kind: str,\n        *,\n        label: str | None = None,\n        sha256: str | None = None,\n        bytes: int | None = None,\n    ) -> Artifact:\n  def opt(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        final_energy_hartree: float | None = None,\n        converged: bool | None = None,\n        n_steps: int | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def freq(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        frequencies_cm1: list[float] | None = None,\n        n_imag: int | None = None,\n        imag_freq_cm1: float | None = None,\n        zpe_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def sp(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        electronic_energy_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def result_block(self) -> tuple[str, dict[str, Any]] | None:\n  def result_fields_flat(self) -> dict[str, Any]:\n  def _modes_payload(self) -> list[dict[str, Any]] | None:\n  def infer_dependency_role(self, parent: \"Calculation\") -> str:\n# One quantum-chemistry calculation in a computed-species upload. Construct via the type-specific factories; the bare constructor is not part of the public contract. Attributes are …"
+          },
+          {
+            "path": "clients/python/pyproject.toml",
+            "roles": [
+              "support",
+              "skeleton",
+              "configuration"
+            ],
+            "contentMode": "document_excerpt",
+            "lineSpan": {
+              "start": 5,
+              "end": 60
+            },
+            "content": "Lines 45-60 [project.optional-dependencies]:\n[project.optional-dependencies]\ntest = [\n    \"pytest>=8\",\n]\n# Optional: pull in the Jupyter stack used to author + execute\n# ``examples/builder_computed_reaction_demo.ipynb``. The executable\n# smoke test ``test_builder_computed_reaction_demo_notebook.py``\n# auto-skips when these aren't installed, so the base ``test`` extra\n# stays slim for CI environments that don't care about the notebook.\nnotebook = [\n    \"jupyter>=1.0\",\n    \"nbformat>=5.10\",\n    \"nbconvert>=7.16\",\n    \"ipykernel>=6\",\n]\n\nLines 5-44 [project]:\n[project]\nname = \"tckdb-client\"\nversion = \"0.28.5\"\ndescription = \"Synchronous Python HTTP client and scientific upload builders for the TCKDB API.\"\nreadme = \"README.md\"\nrequires-python = \">=3.11\"\nlicense = \"MIT\"\nauthors = [{ name = \"TCKDB\" }]\nkeywords = [\n    \"tckdb\",\n    \"thermochemistry\",\n    \"kinetics\",\n    \"transport\",\n    \"statmech\",\n    \"client\",\n    \"http\",\n    \"computational chemistry\",\n]\nclassifiers = [\n    \"Development Status :: 4 - Beta\",\n    \"Intended Audience :: Science/Research\",\n    \"Intended Audience :: Developers\",\n    # License is expressed via the ``license`` table above; the\n    # ``License :: OSI Approved :: MIT License`` classifier is\n    # deprecated in PEP 639 / setuptools 77+ and is intentionally not\n    # listed here.\n    \"Operating System :: OS Independent\",\n    \"Programming Language :: Python :: 3\",\n    \"Programming Language :: Python :: 3 :: Only\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"Topic :: Scientific/Engineering\",\n    \"Topic :: Scientific/Engineering :: Chemistry\",\n    \"Typing :: Typed\",\n]\ndependencies = [\n    \"httpx>=0.27\",\n]"
+          },
+          {
+            "path": ".github/workflows/python-client-ci.yml",
+            "roles": [
+              "support",
+              "skeleton",
+              "configuration"
+            ],
+            "contentMode": "document_excerpt",
+            "lineSpan": {
+              "start": 3,
+              "end": 43
+            },
+            "content": "Lines 19-43 [jobs]:\njobs:\n  test:\n    name: Python client tests\n    runs-on: ubuntu-latest\n    timeout-minutes: 20\n\n    steps:\n      - name: Check out repository\n        uses: actions/checkout@v4\n\n      - name: Set up Python\n        uses: actions/setup-python@v5\n        with:\n          python-version: \"3.11\"\n          cache: pip\n          cache-dependency-path: clients/python/pyproject.toml\n\n      - name: Install Python client and test dependencies\n        working-directory: clients/python\n        run: python -m pip install -e \".[test,notebook]\"\n\n      - name: Run Python client tests\n        working-directory: clients/python\n        run: python -m pytest\n\nLines 3-15 [on]:\non:\n  pull_request:\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  push:\n    branches:\n      - main\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  workflow_dispatch:"
+          },
+          {
+            "path": "clients/python/tests/test_docs_calculation_note_conventions.py",
+            "roles": [
+              "support"
+            ],
+            "contentMode": "focused_source",
+            "lineSpan": {
+              "start": 33,
+              "end": 36
+            },
+            "content": "def test_spec_doc_exists():\n    assert _SPEC.is_file(), (\n        f\"Calculation note conventions spec missing at {_SPEC}.\"\n    )"
+          }
+        ],
+        "modelVisibleContext": "# VTRACE product context\ntask: Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.\nintent: modify\nworktree: f712c04cf5ecee01e92af39b\ncapsule_mode: standard\n\n## [P1] clients/python/tests/test_computed_reaction_upload_builder.py::test_to_payload_snapshot\nroles: pivot, required\nmode: focused_source\nlines: 99-178\nwhy: direct subtree and task-objective evidence\nwhy: lexical match on fq_name, fq_name, fq_name, fq_name, local_name, local_name, fq_name, fq_name, local_name, local_name, query_coverage\nwhy: embedded path clue `clients/python` directory_prefix (+0.90 path)\n\ndef test_to_payload_snapshot(minimal_upload):\n    payload = minimal_upload.to_payload()\n    expected = {\n        \"species\": [\n            {\n                \"key\": \"ch3\",\n                \"species_entry\": {\"smiles\": \"[CH3]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"h\",\n                \"species_entry\": {\"smiles\": \"[H]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"ch4\",\n                \"species_entry\": {\"smiles\": \"C\", \"charge\": 0, \"multiplicity\": 1},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n        ],\n        \"reversible\": True,\n        \"reactant_keys\": [\"ch3\", \"h\"],\n        \"product_keys\": [\"ch4\"],\n        \"reaction_family\": \"H_Abstraction\",\n        \"transition_state\": {\n            \"charge\": 0,\n            \"multiplicity\": 2,\n            \"geometry\": {\n                \"key\": \"geom_1\",\n                \"xyz_text\": \"3\\nts\\nC 0.0 0.0 0.0\\nH 0.0 0.0 0.8\\nH 0.0 0.0 -1.0\",\n            },\n            \"calculation\": {\n                \"key\": \"ts_opt\",\n                \"type\": \"opt\",\n                \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                \"opt_converged\": True,\n                \"opt_final_energy_hartree\": -270.55,\n            },\n            \"calculations\": [\n                {\n                    \"key\": \"ts_freq\",\n                    \"type\": \"freq\",\n                    \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                    \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                    \"geometry_key\": \"geom_1\",\n                    \"freq_n_imag\": 1,\n                    \"freq_imag_freq_cm1\": -1200.0,\n                    \"freq_zpe_hartree\": 0.201,\n                    \"depends_on\": [\n                        {\"parent_calculation_key\": \"ts_opt\", \"role\": \"freq_on\"}\n                    ],\n                },\n            ],\n            \"label\": \"ts\",\n        },\n        \"kinetics\": [\n            {\n                \"reactant_keys\": [\"ch3\", \"h\"],\n                \"product_keys\": [\"ch4\"],\n                \"model_kind\": \"modified_arrhenius\",\n                \"a\": 1.2e13,\n                \"a_units\": \"cm3_mol_s\",\n                \"degeneracy_convention\": \"unknown\",\n                \"n\": 0.5,\n                \"reported_ea\": 10.0,\n                \"reported_ea_units\": \"kj_mol\",\n                \"tmin_k\": 300.0,\n                \"tmax_k\": 2500.0,\n                \"source_calculations\": [\n                    {\"calculation_key\": \"ts_opt\", \"role\": \"ts_energy\"},\n                    {\"calculation_key\": \"ts_freq\", \"role\": \"freq\"},\n                ],\n            },\n        ],\n    }\n    assert payload == expected\n\n## [P2] clients/python/tests/test_builder_computed_reaction_demo_notebook.py::test_notebook_file_exists\nroles: pivot, required\nmode: focused_source\nlines: 53-56\nwhy: direct subtree and task-objective evidence\nwhy: lexical match on fq_name, fq_name, fq_name, fq_name, fq_name, fq_name, local_name, local_name, local_name, local_name, query_coverage\nwhy: embedded path clue `clients/python` directory_prefix (+0.90 path)\n\ndef test_notebook_file_exists():\n    assert _NB_PATH.is_file(), (\n        f\"Demo notebook missing at {_NB_PATH}; README links to it.\"\n    )\n\n## [S1] clients/python/src/tckdb_client/builders/kinetics.py::degeneracy_convention\nroles: support, skeleton\nmode: skeleton\nlines: 239-239\nwhy: symbol-name match; in a likely edit file; lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)\nwhy: 2 indexed symbol(s) depend on this\nwhy: symbol name matches \"degeneracy_convention\"\nwhy: embedded path clue `clients/python` directory_prefix (+0.90 path)\n\ndegeneracy_convention: str = \"unknown\"\n\n## [S2] clients/python/src/tckdb_client/builders/calculation.py::Calculation\nroles: support, skeleton\nmode: skeleton\nlines: 140-525\nwhy: strong target but beyond the pivot budget — pivot: actionable class — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour; 151 dependents\nwhy: 151 indexed symbol(s) depend on this\nwhy: graph references to test_accepts_species_transport\nwhy: graph references to test_artifacts_not_emitted_in_computed_reaction_payload\nwhy: graph references to test_computed_reaction_artifact_plan_errors_without_calculation_keys\nwhy: graph references to test_computed_reaction_artifact_plan_uses_calculation_keys\n\nclass Calculation:\n  def __post_init__(self) -> None:\n  def add_artifact(\n        self,\n        path: \"str | Path\",\n        kind: str,\n        *,\n        label: str | None = None,\n        sha256: str | None = None,\n        bytes: int | None = None,\n    ) -> Artifact:\n  def opt(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        final_energy_hartree: float | None = None,\n        converged: bool | None = None,\n        n_steps: int | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def freq(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        frequencies_cm1: list[float] | None = None,\n        n_imag: int | None = None,\n        imag_freq_cm1: float | None = None,\n        zpe_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def sp(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        electronic_energy_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def result_block(self) -> tuple[str, dict[str, Any]] | None:\n  def result_fields_flat(self) -> dict[str, Any]:\n  def _modes_payload(self) -> list[dict[str, Any]] | None:\n  def infer_dependency_role(self, parent: \"Calculation\") -> str:\n# One quantum-chemistry calculation in a computed-species upload. Construct via the type-specific factories; the bare constructor is not part of the public contract. Attributes are …\n\n## [S3] clients/python/pyproject.toml::pyproject.toml\nroles: support, skeleton, configuration\nmode: document_excerpt\nlines: 5-60\nwhy: TOML configuration matches task objectives\nwhy: document FTS matches: client, clients, computed, dependencies, notebook, pytest, python, reaction, test, tests\nwhy: objective match: dependency_configuration\nwhy: objective match: notebook_dependency\nwhy: objective match: path_scope\nwhy: objective match: test_command\nwhy: path clue `clients/python`: directory_prefix (+0.90)\n\nLines 45-60 [project.optional-dependencies]:\n[project.optional-dependencies]\ntest = [\n    \"pytest>=8\",\n]\n# Optional: pull in the Jupyter stack used to author + execute\n# ``examples/builder_computed_reaction_demo.ipynb``. The executable\n# smoke test ``test_builder_computed_reaction_demo_notebook.py``\n# auto-skips when these aren't installed, so the base ``test`` extra\n# stays slim for CI environments that don't care about the notebook.\nnotebook = [\n    \"jupyter>=1.0\",\n    \"nbformat>=5.10\",\n    \"nbconvert>=7.16\",\n    \"ipykernel>=6\",\n]\n\nLines 5-44 [project]:\n[project]\nname = \"tckdb-client\"\nversion = \"0.28.5\"\ndescription = \"Synchronous Python HTTP client and scientific upload builders for the TCKDB API.\"\nreadme = \"README.md\"\nrequires-python = \">=3.11\"\nlicense = \"MIT\"\nauthors = [{ name = \"TCKDB\" }]\nkeywords = [\n    \"tckdb\",\n    \"thermochemistry\",\n    \"kinetics\",\n    \"transport\",\n    \"statmech\",\n    \"client\",\n    \"http\",\n    \"computational chemistry\",\n]\nclassifiers = [\n    \"Development Status :: 4 - Beta\",\n    \"Intended Audience :: Science/Research\",\n    \"Intended Audience :: Developers\",\n    # License is expressed via the ``license`` table above; the\n    # ``License :: OSI Approved :: MIT License`` classifier is\n    # deprecated in PEP 639 / setuptools 77+ and is intentionally not\n    # listed here.\n    \"Operating System :: OS Independent\",\n    \"Programming Language :: Python :: 3\",\n    \"Programming Language :: Python :: 3 :: Only\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"Topic :: Scientific/Engineering\",\n    \"Topic :: Scientific/Engineering :: Chemistry\",\n    \"Typing :: Typed\",\n]\ndependencies = [\n    \"httpx>=0.27\",\n]\n\n## [S4] .github/workflows/python-client-ci.yml::python-client-ci.yml\nroles: support, skeleton, configuration\nmode: document_excerpt\nlines: 3-43\nwhy: YAML configuration matches task objectives\nwhy: document FTS matches: actions, client, clients, dependencies, notebook, pytest, python, test, tests, workflow\nwhy: objective match: notebook_dependency\nwhy: objective match: path_scope\nwhy: objective match: test_command\nwhy: objective match: workflow\n\nLines 19-43 [jobs]:\njobs:\n  test:\n    name: Python client tests\n    runs-on: ubuntu-latest\n    timeout-minutes: 20\n\n    steps:\n      - name: Check out repository\n        uses: actions/checkout@v4\n\n      - name: Set up Python\n        uses: actions/setup-python@v5\n        with:\n          python-version: \"3.11\"\n          cache: pip\n          cache-dependency-path: clients/python/pyproject.toml\n\n      - name: Install Python client and test dependencies\n        working-directory: clients/python\n        run: python -m pip install -e \".[test,notebook]\"\n\n      - name: Run Python client tests\n        working-directory: clients/python\n        run: python -m pytest\n\nLines 3-15 [on]:\non:\n  pull_request:\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  push:\n    branches:\n      - main\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  workflow_dispatch:\n\n## [S5] clients/python/tests/test_docs_calculation_note_conventions.py::test_spec_doc_exists\nroles: support\nmode: focused_source\nlines: 33-36\nwhy: routed rescue covers unmatched compound clue `conventions client`\nwhy: bounded routed FTS rank covers unmatched clue `conventions client`\nwhy: routed rank score 151\n\ndef test_spec_doc_exists():\n    assert _SPEC.is_file(), (\n        f\"Calculation note conventions spec missing at {_SPEC}.\"\n    )\n\nImpact entries above are bounded static structural evidence; they are not dynamic execution flow."
+      },
+      "run_pipeline": {
+        "taskHash": "f151a45fb224b4cc805ffdcfd2bd1047c7723e0c7fe51f32df62b5973e44546c",
+        "capsuleMode": "standard",
+        "leadPivot": "clients/python/tests/test_computed_reaction_upload_builder.py::clients/python/tests/test_computed_reaction_upload_builder.py::test_to_payload_snapshot",
+        "selectedFileHash": "e68f9a76ab08eee12d899e3c6282b63b30831955ddc1417451b6388e6b99a5f6",
+        "items": [
+          {
+            "path": "clients/python/tests/test_computed_reaction_upload_builder.py",
+            "roles": [
+              "pivot",
+              "required"
+            ],
+            "contentMode": "focused_source",
+            "lineSpan": {
+              "start": 99,
+              "end": 178
+            },
+            "content": "def test_to_payload_snapshot(minimal_upload):\n    payload = minimal_upload.to_payload()\n    expected = {\n        \"species\": [\n            {\n                \"key\": \"ch3\",\n                \"species_entry\": {\"smiles\": \"[CH3]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"h\",\n                \"species_entry\": {\"smiles\": \"[H]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"ch4\",\n                \"species_entry\": {\"smiles\": \"C\", \"charge\": 0, \"multiplicity\": 1},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n        ],\n        \"reversible\": True,\n        \"reactant_keys\": [\"ch3\", \"h\"],\n        \"product_keys\": [\"ch4\"],\n        \"reaction_family\": \"H_Abstraction\",\n        \"transition_state\": {\n            \"charge\": 0,\n            \"multiplicity\": 2,\n            \"geometry\": {\n                \"key\": \"geom_1\",\n                \"xyz_text\": \"3\\nts\\nC 0.0 0.0 0.0\\nH 0.0 0.0 0.8\\nH 0.0 0.0 -1.0\",\n            },\n            \"calculation\": {\n                \"key\": \"ts_opt\",\n                \"type\": \"opt\",\n                \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                \"opt_converged\": True,\n                \"opt_final_energy_hartree\": -270.55,\n            },\n            \"calculations\": [\n                {\n                    \"key\": \"ts_freq\",\n                    \"type\": \"freq\",\n                    \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                    \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                    \"geometry_key\": \"geom_1\",\n                    \"freq_n_imag\": 1,\n                    \"freq_imag_freq_cm1\": -1200.0,\n                    \"freq_zpe_hartree\": 0.201,\n                    \"depends_on\": [\n                        {\"parent_calculation_key\": \"ts_opt\", \"role\": \"freq_on\"}\n                    ],\n                },\n            ],\n            \"label\": \"ts\",\n        },\n        \"kinetics\": [\n            {\n                \"reactant_keys\": [\"ch3\", \"h\"],\n                \"product_keys\": [\"ch4\"],\n                \"model_kind\": \"modified_arrhenius\",\n                \"a\": 1.2e13,\n                \"a_units\": \"cm3_mol_s\",\n                \"degeneracy_convention\": \"unknown\",\n                \"n\": 0.5,\n                \"reported_ea\": 10.0,\n                \"reported_ea_units\": \"kj_mol\",\n                \"tmin_k\": 300.0,\n                \"tmax_k\": 2500.0,\n                \"source_calculations\": [\n                    {\"calculation_key\": \"ts_opt\", \"role\": \"ts_energy\"},\n                    {\"calculation_key\": \"ts_freq\", \"role\": \"freq\"},\n                ],\n            },\n        ],\n    }\n    assert payload == expected"
+          },
+          {
+            "path": "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+            "roles": [
+              "pivot",
+              "required"
+            ],
+            "contentMode": "focused_source",
+            "lineSpan": {
+              "start": 53,
+              "end": 56
+            },
+            "content": "def test_notebook_file_exists():\n    assert _NB_PATH.is_file(), (\n        f\"Demo notebook missing at {_NB_PATH}; README links to it.\"\n    )"
+          },
+          {
+            "path": "clients/python/src/tckdb_client/builders/kinetics.py",
+            "roles": [
+              "support",
+              "skeleton"
+            ],
+            "contentMode": "skeleton",
+            "lineSpan": {
+              "start": 239,
+              "end": 239
+            },
+            "content": "degeneracy_convention: str = \"unknown\""
+          },
+          {
+            "path": "clients/python/src/tckdb_client/builders/calculation.py",
+            "roles": [
+              "support",
+              "skeleton"
+            ],
+            "contentMode": "skeleton",
+            "lineSpan": {
+              "start": 140,
+              "end": 525
+            },
+            "content": "class Calculation:\n  def __post_init__(self) -> None:\n  def add_artifact(\n        self,\n        path: \"str | Path\",\n        kind: str,\n        *,\n        label: str | None = None,\n        sha256: str | None = None,\n        bytes: int | None = None,\n    ) -> Artifact:\n  def opt(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        final_energy_hartree: float | None = None,\n        converged: bool | None = None,\n        n_steps: int | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def freq(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        frequencies_cm1: list[float] | None = None,\n        n_imag: int | None = None,\n        imag_freq_cm1: float | None = None,\n        zpe_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def sp(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        electronic_energy_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def result_block(self) -> tuple[str, dict[str, Any]] | None:\n  def result_fields_flat(self) -> dict[str, Any]:\n  def _modes_payload(self) -> list[dict[str, Any]] | None:\n  def infer_dependency_role(self, parent: \"Calculation\") -> str:\n# One quantum-chemistry calculation in a computed-species upload. Construct via the type-specific factories; the bare constructor is not part of the public contract. Attributes are …"
+          },
+          {
+            "path": "clients/python/pyproject.toml",
+            "roles": [
+              "support",
+              "skeleton",
+              "configuration"
+            ],
+            "contentMode": "document_excerpt",
+            "lineSpan": {
+              "start": 5,
+              "end": 60
+            },
+            "content": "Lines 45-60 [project.optional-dependencies]:\n[project.optional-dependencies]\ntest = [\n    \"pytest>=8\",\n]\n# Optional: pull in the Jupyter stack used to author + execute\n# ``examples/builder_computed_reaction_demo.ipynb``. The executable\n# smoke test ``test_builder_computed_reaction_demo_notebook.py``\n# auto-skips when these aren't installed, so the base ``test`` extra\n# stays slim for CI environments that don't care about the notebook.\nnotebook = [\n    \"jupyter>=1.0\",\n    \"nbformat>=5.10\",\n    \"nbconvert>=7.16\",\n    \"ipykernel>=6\",\n]\n\nLines 5-44 [project]:\n[project]\nname = \"tckdb-client\"\nversion = \"0.28.5\"\ndescription = \"Synchronous Python HTTP client and scientific upload builders for the TCKDB API.\"\nreadme = \"README.md\"\nrequires-python = \">=3.11\"\nlicense = \"MIT\"\nauthors = [{ name = \"TCKDB\" }]\nkeywords = [\n    \"tckdb\",\n    \"thermochemistry\",\n    \"kinetics\",\n    \"transport\",\n    \"statmech\",\n    \"client\",\n    \"http\",\n    \"computational chemistry\",\n]\nclassifiers = [\n    \"Development Status :: 4 - Beta\",\n    \"Intended Audience :: Science/Research\",\n    \"Intended Audience :: Developers\",\n    # License is expressed via the ``license`` table above; the\n    # ``License :: OSI Approved :: MIT License`` classifier is\n    # deprecated in PEP 639 / setuptools 77+ and is intentionally not\n    # listed here.\n    \"Operating System :: OS Independent\",\n    \"Programming Language :: Python :: 3\",\n    \"Programming Language :: Python :: 3 :: Only\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"Topic :: Scientific/Engineering\",\n    \"Topic :: Scientific/Engineering :: Chemistry\",\n    \"Typing :: Typed\",\n]\ndependencies = [\n    \"httpx>=0.27\",\n]"
+          },
+          {
+            "path": ".github/workflows/python-client-ci.yml",
+            "roles": [
+              "support",
+              "skeleton",
+              "configuration"
+            ],
+            "contentMode": "document_excerpt",
+            "lineSpan": {
+              "start": 3,
+              "end": 43
+            },
+            "content": "Lines 19-43 [jobs]:\njobs:\n  test:\n    name: Python client tests\n    runs-on: ubuntu-latest\n    timeout-minutes: 20\n\n    steps:\n      - name: Check out repository\n        uses: actions/checkout@v4\n\n      - name: Set up Python\n        uses: actions/setup-python@v5\n        with:\n          python-version: \"3.11\"\n          cache: pip\n          cache-dependency-path: clients/python/pyproject.toml\n\n      - name: Install Python client and test dependencies\n        working-directory: clients/python\n        run: python -m pip install -e \".[test,notebook]\"\n\n      - name: Run Python client tests\n        working-directory: clients/python\n        run: python -m pytest\n\nLines 3-15 [on]:\non:\n  pull_request:\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  push:\n    branches:\n      - main\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  workflow_dispatch:"
+          },
+          {
+            "path": "clients/python/tests/test_docs_calculation_note_conventions.py",
+            "roles": [
+              "support"
+            ],
+            "contentMode": "focused_source",
+            "lineSpan": {
+              "start": 33,
+              "end": 36
+            },
+            "content": "def test_spec_doc_exists():\n    assert _SPEC.is_file(), (\n        f\"Calculation note conventions spec missing at {_SPEC}.\"\n    )"
+          }
+        ],
+        "modelVisibleContext": "# VTRACE product context\ntask: Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.\nintent: modify\nworktree: f712c04cf5ecee01e92af39b\ncapsule_mode: standard\n\n## [P1] clients/python/tests/test_computed_reaction_upload_builder.py::test_to_payload_snapshot\nroles: pivot, required\nmode: focused_source\nlines: 99-178\nwhy: direct subtree and task-objective evidence\nwhy: lexical match on fq_name, fq_name, fq_name, fq_name, local_name, local_name, fq_name, fq_name, local_name, local_name, query_coverage\nwhy: embedded path clue `clients/python` directory_prefix (+0.90 path)\n\ndef test_to_payload_snapshot(minimal_upload):\n    payload = minimal_upload.to_payload()\n    expected = {\n        \"species\": [\n            {\n                \"key\": \"ch3\",\n                \"species_entry\": {\"smiles\": \"[CH3]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"h\",\n                \"species_entry\": {\"smiles\": \"[H]\", \"charge\": 0, \"multiplicity\": 2},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n            {\n                \"key\": \"ch4\",\n                \"species_entry\": {\"smiles\": \"C\", \"charge\": 0, \"multiplicity\": 1},\n                \"conformers\": [],\n                \"calculations\": [],\n            },\n        ],\n        \"reversible\": True,\n        \"reactant_keys\": [\"ch3\", \"h\"],\n        \"product_keys\": [\"ch4\"],\n        \"reaction_family\": \"H_Abstraction\",\n        \"transition_state\": {\n            \"charge\": 0,\n            \"multiplicity\": 2,\n            \"geometry\": {\n                \"key\": \"geom_1\",\n                \"xyz_text\": \"3\\nts\\nC 0.0 0.0 0.0\\nH 0.0 0.0 0.8\\nH 0.0 0.0 -1.0\",\n            },\n            \"calculation\": {\n                \"key\": \"ts_opt\",\n                \"type\": \"opt\",\n                \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                \"opt_converged\": True,\n                \"opt_final_energy_hartree\": -270.55,\n            },\n            \"calculations\": [\n                {\n                    \"key\": \"ts_freq\",\n                    \"type\": \"freq\",\n                    \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                    \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                    \"geometry_key\": \"geom_1\",\n                    \"freq_n_imag\": 1,\n                    \"freq_imag_freq_cm1\": -1200.0,\n                    \"freq_zpe_hartree\": 0.201,\n                    \"depends_on\": [\n                        {\"parent_calculation_key\": \"ts_opt\", \"role\": \"freq_on\"}\n                    ],\n                },\n            ],\n            \"label\": \"ts\",\n        },\n        \"kinetics\": [\n            {\n                \"reactant_keys\": [\"ch3\", \"h\"],\n                \"product_keys\": [\"ch4\"],\n                \"model_kind\": \"modified_arrhenius\",\n                \"a\": 1.2e13,\n                \"a_units\": \"cm3_mol_s\",\n                \"degeneracy_convention\": \"unknown\",\n                \"n\": 0.5,\n                \"reported_ea\": 10.0,\n                \"reported_ea_units\": \"kj_mol\",\n                \"tmin_k\": 300.0,\n                \"tmax_k\": 2500.0,\n                \"source_calculations\": [\n                    {\"calculation_key\": \"ts_opt\", \"role\": \"ts_energy\"},\n                    {\"calculation_key\": \"ts_freq\", \"role\": \"freq\"},\n                ],\n            },\n        ],\n    }\n    assert payload == expected\n\n## [P2] clients/python/tests/test_builder_computed_reaction_demo_notebook.py::test_notebook_file_exists\nroles: pivot, required\nmode: focused_source\nlines: 53-56\nwhy: direct subtree and task-objective evidence\nwhy: lexical match on fq_name, fq_name, fq_name, fq_name, fq_name, fq_name, local_name, local_name, local_name, local_name, query_coverage\nwhy: embedded path clue `clients/python` directory_prefix (+0.90 path)\n\ndef test_notebook_file_exists():\n    assert _NB_PATH.is_file(), (\n        f\"Demo notebook missing at {_NB_PATH}; README links to it.\"\n    )\n\n## [S1] clients/python/src/tckdb_client/builders/kinetics.py::degeneracy_convention\nroles: support, skeleton\nmode: skeleton\nlines: 239-239\nwhy: symbol-name match; in a likely edit file; lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)\nwhy: 2 indexed symbol(s) depend on this\nwhy: symbol name matches \"degeneracy_convention\"\nwhy: embedded path clue `clients/python` directory_prefix (+0.90 path)\n\ndegeneracy_convention: str = \"unknown\"\n\n## [S2] clients/python/src/tckdb_client/builders/calculation.py::Calculation\nroles: support, skeleton\nmode: skeleton\nlines: 140-525\nwhy: strong target but beyond the pivot budget — pivot: actionable class — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour; 151 dependents\nwhy: 151 indexed symbol(s) depend on this\nwhy: graph references to test_accepts_species_transport\nwhy: graph references to test_artifacts_not_emitted_in_computed_reaction_payload\nwhy: graph references to test_computed_reaction_artifact_plan_errors_without_calculation_keys\nwhy: graph references to test_computed_reaction_artifact_plan_uses_calculation_keys\n\nclass Calculation:\n  def __post_init__(self) -> None:\n  def add_artifact(\n        self,\n        path: \"str | Path\",\n        kind: str,\n        *,\n        label: str | None = None,\n        sha256: str | None = None,\n        bytes: int | None = None,\n    ) -> Artifact:\n  def opt(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        final_energy_hartree: float | None = None,\n        converged: bool | None = None,\n        n_steps: int | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def freq(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        frequencies_cm1: list[float] | None = None,\n        n_imag: int | None = None,\n        imag_freq_cm1: float | None = None,\n        zpe_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def sp(\n        cls,\n        software_release: SoftwareRelease,\n        level_of_theory: LevelOfTheory,\n        *,\n        input_geometry: Geometry | None = None,\n        output_geometry: Geometry | None = None,\n        electronic_energy_hartree: float | None = None,\n        depends_on: \"Calculation | list[Calculation] | None\" = None,\n        label: str | None = None,\n        note: str | None = None,\n    ) -> \"Calculation\":\n  def result_block(self) -> tuple[str, dict[str, Any]] | None:\n  def result_fields_flat(self) -> dict[str, Any]:\n  def _modes_payload(self) -> list[dict[str, Any]] | None:\n  def infer_dependency_role(self, parent: \"Calculation\") -> str:\n# One quantum-chemistry calculation in a computed-species upload. Construct via the type-specific factories; the bare constructor is not part of the public contract. Attributes are …\n\n## [S3] clients/python/pyproject.toml::pyproject.toml\nroles: support, skeleton, configuration\nmode: document_excerpt\nlines: 5-60\nwhy: TOML configuration matches task objectives\nwhy: document FTS matches: client, clients, computed, dependencies, notebook, pytest, python, reaction, test, tests\nwhy: objective match: dependency_configuration\nwhy: objective match: notebook_dependency\nwhy: objective match: path_scope\nwhy: objective match: test_command\nwhy: path clue `clients/python`: directory_prefix (+0.90)\n\nLines 45-60 [project.optional-dependencies]:\n[project.optional-dependencies]\ntest = [\n    \"pytest>=8\",\n]\n# Optional: pull in the Jupyter stack used to author + execute\n# ``examples/builder_computed_reaction_demo.ipynb``. The executable\n# smoke test ``test_builder_computed_reaction_demo_notebook.py``\n# auto-skips when these aren't installed, so the base ``test`` extra\n# stays slim for CI environments that don't care about the notebook.\nnotebook = [\n    \"jupyter>=1.0\",\n    \"nbformat>=5.10\",\n    \"nbconvert>=7.16\",\n    \"ipykernel>=6\",\n]\n\nLines 5-44 [project]:\n[project]\nname = \"tckdb-client\"\nversion = \"0.28.5\"\ndescription = \"Synchronous Python HTTP client and scientific upload builders for the TCKDB API.\"\nreadme = \"README.md\"\nrequires-python = \">=3.11\"\nlicense = \"MIT\"\nauthors = [{ name = \"TCKDB\" }]\nkeywords = [\n    \"tckdb\",\n    \"thermochemistry\",\n    \"kinetics\",\n    \"transport\",\n    \"statmech\",\n    \"client\",\n    \"http\",\n    \"computational chemistry\",\n]\nclassifiers = [\n    \"Development Status :: 4 - Beta\",\n    \"Intended Audience :: Science/Research\",\n    \"Intended Audience :: Developers\",\n    # License is expressed via the ``license`` table above; the\n    # ``License :: OSI Approved :: MIT License`` classifier is\n    # deprecated in PEP 639 / setuptools 77+ and is intentionally not\n    # listed here.\n    \"Operating System :: OS Independent\",\n    \"Programming Language :: Python :: 3\",\n    \"Programming Language :: Python :: 3 :: Only\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"Topic :: Scientific/Engineering\",\n    \"Topic :: Scientific/Engineering :: Chemistry\",\n    \"Typing :: Typed\",\n]\ndependencies = [\n    \"httpx>=0.27\",\n]\n\n## [S4] .github/workflows/python-client-ci.yml::python-client-ci.yml\nroles: support, skeleton, configuration\nmode: document_excerpt\nlines: 3-43\nwhy: YAML configuration matches task objectives\nwhy: document FTS matches: actions, client, clients, dependencies, notebook, pytest, python, test, tests, workflow\nwhy: objective match: notebook_dependency\nwhy: objective match: path_scope\nwhy: objective match: test_command\nwhy: objective match: workflow\n\nLines 19-43 [jobs]:\njobs:\n  test:\n    name: Python client tests\n    runs-on: ubuntu-latest\n    timeout-minutes: 20\n\n    steps:\n      - name: Check out repository\n        uses: actions/checkout@v4\n\n      - name: Set up Python\n        uses: actions/setup-python@v5\n        with:\n          python-version: \"3.11\"\n          cache: pip\n          cache-dependency-path: clients/python/pyproject.toml\n\n      - name: Install Python client and test dependencies\n        working-directory: clients/python\n        run: python -m pip install -e \".[test,notebook]\"\n\n      - name: Run Python client tests\n        working-directory: clients/python\n        run: python -m pytest\n\nLines 3-15 [on]:\non:\n  pull_request:\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  push:\n    branches:\n      - main\n    paths:\n      - \".github/workflows/python-client-ci.yml\"\n      - \"clients/python/**\"\n  workflow_dispatch:\n\n## [S5] clients/python/tests/test_docs_calculation_note_conventions.py::test_spec_doc_exists\nroles: support\nmode: focused_source\nlines: 33-36\nwhy: routed rescue covers unmatched compound clue `conventions client`\nwhy: bounded routed FTS rank covers unmatched clue `conventions client`\nwhy: routed rank score 151\n\ndef test_spec_doc_exists():\n    assert _SPEC.is_file(), (\n        f\"Calculation note conventions spec missing at {_SPEC}.\"\n    )\n\nImpact entries above are bounded static structural evidence; they are not dynamic execution flow."
+      }
+    }
+  },
+  "aliases": {
+    "default": {
+      "ok": true,
+      "implementation": "hybrid"
+    },
+    "v2": {
+      "ok": true,
+      "implementation": "hybrid"
+    },
+    "v1": {
+      "ok": false,
+      "code": "invalid_request",
+      "error": "unsupported_legacy_capsule_engine"
+    }
+  },
+  "documentIndex": {
+    "documentFiles": 40,
+    "documentChunks": 515,
+    "yamlChunks": 476,
+    "tomlChunks": 39,
+    "requiredRows": {
+      ".github/workflows/python-client-ci.yml": [
+        {
+          "startLine": 1,
+          "endLine": 2,
+          "keyPath": "name",
+          "truncated": false
+        },
+        {
+          "startLine": 3,
+          "endLine": 15,
+          "keyPath": "on",
+          "truncated": false
+        },
+        {
+          "startLine": 16,
+          "endLine": 18,
+          "keyPath": "permissions",
+          "truncated": false
+        },
+        {
+          "startLine": 19,
+          "endLine": 43,
+          "keyPath": "jobs",
+          "truncated": false
+        }
+      ],
+      "clients/python/pyproject.toml": [
+        {
+          "startLine": 1,
+          "endLine": 4,
+          "keyPath": "build-system",
+          "truncated": false
+        },
+        {
+          "startLine": 5,
+          "endLine": 44,
+          "keyPath": "project",
+          "truncated": false
+        },
+        {
+          "startLine": 45,
+          "endLine": 60,
+          "keyPath": "project.optional-dependencies",
+          "truncated": false
+        },
+        {
+          "startLine": 61,
+          "endLine": 63,
+          "keyPath": "project.scripts",
+          "truncated": false
+        },
+        {
+          "startLine": 64,
+          "endLine": 69,
+          "keyPath": "project.urls",
+          "truncated": false
+        },
+        {
+          "startLine": 70,
+          "endLine": 72,
+          "keyPath": "tool.setuptools.packages.find",
+          "truncated": false
+        },
+        {
+          "startLine": 73,
+          "endLine": 75,
+          "keyPath": "tool.setuptools.package-data",
+          "truncated": false
+        },
+        {
+          "startLine": 76,
+          "endLine": 78,
+          "keyPath": "tool.pytest.ini_options",
+          "truncated": false
+        }
+      ]
+    },
+    "fakeSymbols": {
+      "count": 0
+    },
+    "executionEdges": 0
+  },
+  "pathCases": [
+    {
+      "input": "clients/python",
+      "clues": [
+        {
+          "raw": "clients/python",
+          "normalized": "clients/python",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "input": "clients/python changes",
+      "clues": [
+        {
+          "raw": "clients/python",
+          "normalized": "clients/python",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "input": "clients/python/",
+      "clues": [
+        {
+          "raw": "clients/python/",
+          "normalized": "clients/python",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "input": "./clients/python",
+      "clues": [
+        {
+          "raw": "./clients/python",
+          "normalized": "clients/python",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "input": ".github/workflows",
+      "clues": [
+        {
+          "raw": ".github/workflows",
+          "normalized": ".github/workflows",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "input": "python-client-ci.yml",
+      "clues": [
+        {
+          "raw": "python-client-ci.yml",
+          "normalized": "python-client-ci.yml",
+          "kind": "filename"
+        }
+      ]
+    },
+    {
+      "input": "tests/test_computed_reaction_upload_builder.py",
+      "clues": [
+        {
+          "raw": "tests/test_computed_reaction_upload_builder.py",
+          "normalized": "tests/test_computed_reaction_upload_builder.py",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "input": "immutability/supersession",
+      "clues": [
+        {
+          "raw": "immutability/supersession",
+          "normalized": "immutability/supersession",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "input": "immutability / supersession",
+      "clues": []
+    },
+    {
+      "input": "standalone src/file.py",
+      "clues": [
+        {
+          "raw": "src/file.py",
+          "normalized": "src/file.py",
+          "kind": "path"
+        }
+      ]
+    },
+    {
+      "input": "URL https://example.test/a/b",
+      "clues": []
+    },
+    {
+      "input": "Windows C:\\repo\\file.py",
+      "clues": []
+    },
+    {
+      "input": "stack trace src/file.py:12",
+      "clues": [
+        {
+          "raw": "src/file.py",
+          "normalized": "src/file.py",
+          "kind": "path"
+        }
+      ]
+    }
+  ],
+  "equivalence": {
+    "schemaVersion": "stage5.m128.full-incremental-document-equivalence.v1",
+    "operations": [
+      "modify_yaml",
+      "modify_toml",
+      "rename_yaml",
+      "delete_toml"
+    ],
+    "snapshots": true,
+    "documents": true,
+    "graph": true,
+    "hash": "fc7678a20c9216e2e5c9ee186e5a5b40180de7239ef89f25ea2c6d0ad182670d",
+    "pass": true
+  },
+  "frozen": {
+    "cases": 50,
+    "expanded20Cases": 20,
+    "crossRepo30Cases": 30,
+    "selectedFileDifferences": 0,
+    "leadDifferences": 0,
+    "roleDifferences": 0,
+    "renderedContextDifferences": 0,
+    "quality": {
+      "cases": 50,
+      "top1": 39,
+      "top5": 46,
+      "allGoldVisible": 45,
+      "lead": 39,
+      "missing": 4,
+      "wrongPivot": 11,
+      "noCandidates": 0
+    },
+    "changedCases": [],
+    "latency": {
+      "samplesMs": [
+        1115.75,
+        3437.288,
+        6255.325,
+        1906.17,
+        1694.694,
+        1004.208,
+        2064.813,
+        459.469,
+        825.102,
+        1125.427,
+        1202.076,
+        1510.87,
+        1667.84,
+        1748.993,
+        585.115,
+        1623.369,
+        823.354,
+        1734.464,
+        2040.476,
+        2024.991,
+        659.537,
+        1153.241,
+        785.52,
+        1048.036,
+        2474.11,
+        1253.438,
+        961.441,
+        2309.341,
+        448.535,
+        365.136,
+        377.458,
+        333.746,
+        971.988,
+        182.924,
+        998.22,
+        89.661,
+        2039.642,
+        2045.885,
+        963.339,
+        386.958,
+        214.613,
+        27.446,
+        248.913,
+        1425.603,
+        755.501,
+        477.343,
+        436.169,
+        357.688,
+        469.829,
+        1971.804
+      ],
+      "medianMs": 998.22,
+      "p90Ms": 2045.885
+    }
+  },
+  "performance": {
+    "latency": {
+      "samplesMs": [
+        1443.209,
+        1495.415,
+        1252.535,
+        1338.849,
+        1184.644,
+        1276.402,
+        1537.088
+      ],
+      "medianMs": 1338.849,
+      "p90Ms": 1495.415
+    },
+    "hybridProfile": {
+      "timingsMs": {
+        "lexical.symbol_search": 811.7635819999996,
+        "lexical.symbol_path": 239.52739100000326,
+        "structural.test_import_reference": 0.08881399999881978,
+        "lexical.body_literal": 0.09471299999859184,
+        "structural.graph_expansion": 41.900830999999016,
+        "candidate_processing.score_sort_cap": 14.24547000000166,
+        "total": 1107.7330540000003
+      },
+      "counters": {
+        "symbol_search_calls": 6,
+        "symbol_search_rows": 122,
+        "symbols.after_lexical": 100,
+        "symbols.after_symbol_path": 106,
+        "symbols.after_test_expansion": 106,
+        "body_literal_matches": 0,
+        "graph_seed_symbols": 106,
+        "symbols.before_scoring": 130,
+        "candidates.after_cap": 25
+      }
+    },
+    "capsuleProfile": {
+      "timingsMs": {
+        "capsule.role_assignment": 0.12803100000019185,
+        "capsule.pivot_source_loading_and_ranking": 0.27041299999837065,
+        "capsule.pivot_packing": 0.3400450000008277,
+        "structural.coedit_expansion": 0.04612599999745726,
+        "structural.file_evidence_deep_pass": 0.07192800000120769,
+        "capsule.support_packing": 0.36115000000063446
+      },
+      "counters": {}
+    },
+    "document": {
+      "invoked": true,
+      "reason": "document_task_evidence",
+      "query_terms": [
+        "actions",
+        "client",
+        "clients",
+        "command",
+        "computed",
+        "convention",
+        "conventions",
+        "degeneracy",
+        "dependencies",
+        "full",
+        "git",
+        "hub",
+        "notebook",
+        "payload",
+        "pytest",
+        "python",
+        "reaction",
+        "snapshot",
+        "stale",
+        "suite",
+        "test",
+        "tests",
+        "triggered",
+        "workflow"
+      ],
+      "candidate_count": 4,
+      "selected_count": 2,
+      "query_ms": 6.101278999998613,
+      "candidates": [
+        {
+          "path": "clients/python/pyproject.toml",
+          "kind": "toml",
+          "raw_rank": 2,
+          "merged_rank": 1,
+          "score": 2.458333333333333,
+          "matched_terms": [
+            "client",
+            "clients",
+            "computed",
+            "dependencies",
+            "notebook",
+            "pytest",
+            "python",
+            "reaction",
+            "test",
+            "tests"
+          ],
+          "objective_matches": [
+            "dependency_configuration",
+            "notebook_dependency",
+            "path_scope",
+            "test_command"
+          ],
+          "line_spans": [
+            {
+              "start": 45,
+              "end": 60
+            },
+            {
+              "start": 5,
+              "end": 44
+            }
+          ],
+          "selected": true
+        },
+        {
+          "path": ".github/workflows/python-client-ci.yml",
+          "kind": "yaml",
+          "raw_rank": 1,
+          "merged_rank": 2,
+          "score": 1.375,
+          "matched_terms": [
+            "actions",
+            "client",
+            "clients",
+            "dependencies",
+            "notebook",
+            "pytest",
+            "python",
+            "test",
+            "tests",
+            "workflow"
+          ],
+          "objective_matches": [
+            "notebook_dependency",
+            "path_scope",
+            "test_command",
+            "workflow"
+          ],
+          "line_spans": [
+            {
+              "start": 19,
+              "end": 43
+            },
+            {
+              "start": 3,
+              "end": 15
+            }
+          ],
+          "selected": true
+        },
+        {
+          "path": "clients/python/adapters/chemkin/pyproject.toml",
+          "kind": "toml",
+          "raw_rank": 4,
+          "merged_rank": 3,
+          "score": 2.333333333333333,
+          "matched_terms": [
+            "client",
+            "clients",
+            "dependencies",
+            "payload",
+            "pytest",
+            "python",
+            "test"
+          ],
+          "objective_matches": [
+            "dependency_configuration",
+            "path_scope",
+            "test_command"
+          ],
+          "line_spans": [
+            {
+              "start": 16,
+              "end": 18
+            },
+            {
+              "start": 5,
+              "end": 15
+            }
+          ],
+          "selected": false,
+          "exclusion_reason": "support_file_cap_or_budget"
+        },
+        {
+          "path": "backend/pyproject.toml",
+          "kind": "toml",
+          "raw_rank": 11,
+          "merged_rank": 4,
+          "score": 0.95,
+          "matched_terms": [
+            "client",
+            "computed",
+            "dependencies",
+            "full",
+            "hub",
+            "pytest",
+            "python",
+            "reaction",
+            "suite",
+            "test",
+            "tests"
+          ],
+          "objective_matches": [
+            "dependency_configuration",
+            "test_command"
+          ],
+          "line_spans": [
+            {
+              "start": 78,
+              "end": 106
+            },
+            {
+              "start": 149,
+              "end": 195
+            }
+          ],
+          "selected": false,
+          "exclusion_reason": "support_file_cap_or_budget"
+        }
+      ]
+    }
+  },
+  "rows": [
+    {
+      "id": "current_schema_freshness_preflight",
+      "pass": true,
+      "evidence": "head_mismatch -> incremental -> fresh"
+    },
+    {
+      "id": "python_implementation_plus_test",
+      "pass": true,
+      "evidence": "clients/python/tests/test_computed_reaction_upload_builder.py|clients/python/tests/test_builder_computed_reaction_demo_notebook.py|clients/python/src/tckdb_client/builders/kinetics.py|clients/python/src/tckdb_client/builders/calculation.py|clients/python/pyproject.toml|.github/workflows/python-client-ci.yml|clients/python/tests/test_docs_calculation_note_conventions.py"
+    },
+    {
+      "id": "yaml_workflow",
+      "pass": true,
+      "evidence": ".github/workflows/python-client-ci.yml"
+    },
+    {
+      "id": "toml_dependency_configuration",
+      "pass": true,
+      "evidence": "clients/python/pyproject.toml"
+    },
+    {
+      "id": "notebook_python_test",
+      "pass": true,
+      "evidence": "clients/python/tests/test_builder_computed_reaction_demo_notebook.py"
+    },
+    {
+      "id": "embedded_clients_python_path",
+      "pass": true,
+      "evidence": "[{\"raw\":\"clients/python\",\"normalized\":\"clients/python\",\"kind\":\"path\"}]"
+    },
+    {
+      "id": "standalone_path",
+      "pass": true,
+      "evidence": "[{\"raw\":\"src/file.py\",\"normalized\":\"src/file.py\",\"kind\":\"path\"}]"
+    },
+    {
+      "id": "generic_workflow_distractor",
+      "pass": true,
+      "evidence": "clients/python/tests/test_computed_reaction_upload_builder.py"
+    },
+    {
+      "id": "generic_snapshot_distractor",
+      "pass": true,
+      "evidence": "clients/python/tests/test_computed_reaction_upload_builder.py"
+    },
+    {
+      "id": "large_secret_binary_exclusion",
+      "pass": true,
+      "evidence": "covered by documentIndex.test.ts"
+    },
+    {
+      "id": "full_incremental_equivalence",
+      "pass": true,
+      "evidence": "fc7678a20c9216e2e5c9ee186e5a5b40180de7239ef89f25ea2c6d0ad182670d"
+    },
+    {
+      "id": "cross_tool_parity",
+      "pass": true,
+      "evidence": "6d596a57fdcc61f3f907f8e4511773fd1b86de8fbcc7447c1a5f2d4e6a85e6f5"
+    },
+    {
+      "id": "unversioned_capsule_authority",
+      "pass": true,
+      "evidence": "{\"default\":{\"ok\":true,\"implementation\":\"hybrid\"},\"v2\":{\"ok\":true,\"implementation\":\"hybrid\"},\"v1\":{\"ok\":false,\"code\":\"invalid_request\",\"error\":\"unsupported_legacy_capsule_engine\"}}"
+    },
+    {
+      "id": "no_context",
+      "pass": true,
+      "evidence": "existing no-context tests pass"
+    },
+    {
+      "id": "stale_index_fail_closed",
+      "pass": true,
+      "evidence": "fresh control; stale fail-closed covered by MCP tests"
+    },
+    {
+      "id": "exact_tckdb_compound_task",
+      "pass": true,
+      "evidence": "clients/python/tests/test_computed_reaction_upload_builder.py|clients/python/tests/test_builder_computed_reaction_demo_notebook.py|clients/python/src/tckdb_client/builders/kinetics.py|clients/python/src/tckdb_client/builders/calculation.py|clients/python/pyproject.toml|.github/workflows/python-client-ci.yml|clients/python/tests/test_docs_calculation_note_conventions.py"
+    },
+    {
+      "id": "frozen_50_regression",
+      "pass": true,
+      "evidence": "50 cases"
+    },
+    {
+      "id": "performance_bounds",
+      "pass": false,
+      "evidence": "frozen=998.22/2045.885ms exact=1338.849ms"
+    }
+  ],
+  "verdict": "MIXED"
+}

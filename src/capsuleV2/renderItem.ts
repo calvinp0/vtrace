@@ -43,6 +43,11 @@ export function itemBlockText(item: CapsuleV2Item): string {
     case CapsuleV2ContentMode.Skeleton:
       lines.push("  skeleton only");
       break;
+    case CapsuleV2ContentMode.DocumentExcerpt:
+      lines.push("");
+      lines.push(`  ${item.document_kind ?? "document"} excerpt:`);
+      lines.push(indent(item.source ?? "", "  "));
+      break;
   }
 
   return lines.join("\n");

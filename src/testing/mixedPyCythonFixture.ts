@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const MIXED_PY_CYTHON_FIXTURE_FILE_COUNT = 11;
+export const MIXED_PY_CYTHON_FIXTURE_FILE_COUNT = 12;
 export const MIXED_PY_CYTHON_FIXTURE_SYMBOL_COUNT = 13;
 export const MIXED_PY_CYTHON_FIXTURE_EDGE_COUNT = 22;
 export const MIXED_PY_CYTHON_BACKGROUND_FILE_PATH = "src/spectra_lab/analysis/background.py";

@@ -26,6 +26,7 @@ import {
   createHybridRetrievalRequestCache,
   createHybridRetrievalProfile,
   hybridRetrieve,
+  HybridCandidateSource,
   type BodyLiteralMatch,
   type HybridCandidate,
 } from "../retrieval/hybridRetrieval";
@@ -106,6 +107,11 @@ import {
   type PivotRankResult,
 } from "./pivotRankingV2";
 import { estimateTokens, roundPercent } from "./tokens";
+import { matchPathClues, pathObjectiveAffinity } from "../retrieval/pathScopedRelevance";
+import {
+  retrieveIndexedDocuments,
+  type DocumentCandidate,
+} from "../documents/documentRetrieval";
 import {
   CapsuleIntent,
   CapsuleV2ContentMode,
@@ -166,6 +172,11 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // computed so the diagnostic is present on both the inject and no_context paths.
   const localizationSignals = detectLocalizationSignals(input.db, input.task);
   const plan = planIntent(input.intent, input.task, shaped);
+  const documentRetrieval = retrieveIndexedDocuments(
+    input.db,
+    input.task,
+    shaped.pathClues ?? [],
+  );
   const intent = plan.intent;
   const weights = plan.weights;
   const debugRefinement = plan.strategy.role_policy === "debug_refinement";
@@ -220,6 +231,33 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   }
   const hybridRetrievalMs = performance.now() - hybridRetrievalStarted;
   let candidates = retrieval.candidates;
+  if (shaped.pathClues !== undefined) {
+    candidates = candidates.map((candidate) => {
+      const matches = matchPathClues(candidate.filePath, shaped.pathClues ?? []);
+      if (matches.length === 0) return candidate;
+      const pathScore = Math.max(candidate.scores.path, matches[0]!.score);
+      const pathDelta = (pathScore - candidate.scores.path) * weights.path;
+      const objectiveAffinity = pathObjectiveAffinity(candidate.filePath, input.task);
+      return {
+        ...candidate,
+        sources: [...new Set([...candidate.sources, HybridCandidateSource.Path])],
+        evidence: [
+          ...candidate.evidence,
+          ...matches.slice(0, 2).map((match) =>
+            `embedded path clue \`${match.normalizedClue}\` ${match.matchType} (+${match.score.toFixed(2)} path)`),
+        ],
+        scores: {
+          ...candidate.scores,
+          path: pathScore,
+          localEvidence: candidate.scores.localEvidence + pathDelta + objectiveAffinity,
+          final: candidate.scores.final + pathDelta + objectiveAffinity,
+        },
+      };
+    }).sort((left, right) =>
+      right.scores.final - left.scores.final
+      || left.fqName.localeCompare(right.fqName)
+      || left.symbolId.localeCompare(right.symbolId));
+  }
   const bodyLiteralMatches = retrieval.bodyLiteralMatches;
 
   // File-line anchor resolution. When the task prose cites a source anchor
@@ -593,6 +631,37 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     refined = passthroughRoles(assignCandidateRoles(candidates, { maxPivots: allocation.maxPivots }));
   }
   recordCapsuleTiming(capsuleProfile, "capsule.role_assignment", roleAssignmentStarted);
+
+  // A prose-embedded subtree is strong additive scope evidence, not a path-only
+  // query. When at least two actionable candidates inside that subtree also
+  // match distinctive objective words in their paths, preserve those exact
+  // mixed objectives as the bounded pivots and demote outside-scope lexical
+  // homonyms such as generic Workflow/Snapshot helpers.
+  const scopedObjectives = refined
+    .filter((entry) =>
+      entry.candidate.scores.actionability > 0
+      && (entry.candidate.scores.path >= 0.75)
+      && pathObjectiveAffinity(entry.candidate.filePath, input.task) >= 0.3)
+    .sort((left, right) =>
+      pathObjectiveAffinity(right.candidate.filePath, input.task)
+        - pathObjectiveAffinity(left.candidate.filePath, input.task)
+      || right.candidate.scores.final - left.candidate.scores.final
+      || left.candidate.filePath.localeCompare(right.candidate.filePath)
+      || left.candidate.fqName.localeCompare(right.candidate.fqName));
+  const distinctScopedObjectives = scopedObjectives.filter((entry, index, all) =>
+    all.findIndex((candidate) => candidate.candidate.filePath === entry.candidate.filePath) === index);
+  if (distinctScopedObjectives.length >= 2 && shaped.pathClues !== undefined) {
+    const selectedIds = new Set(distinctScopedObjectives.slice(0, allocation.maxPivots).map((entry) => entry.candidate.symbolId));
+    for (const entry of refined) {
+      if (selectedIds.has(entry.candidate.symbolId)) {
+        entry.role = CandidateRole.Pivot;
+        entry.roleReason = "direct subtree and task-objective evidence";
+      } else if (entry.role === CandidateRole.Pivot) {
+        entry.role = CandidateRole.Support;
+        entry.roleReason = "generic lexical match outside the explicit task subtree";
+      }
+    }
+  }
 
   // Non-source example / doc-data down-rank (general, repo-agnostic). A production
   // context provider prefers real source over docs/examples/sample/fixture files,
@@ -1008,6 +1077,81 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   }
   recordCapsuleTiming(capsuleProfile, "capsule.support_packing", supportPackingStarted);
 
+  // Truthful file-document candidates share the authoritative selection. They
+  // replace only the weakest packed support entries and can never become pivots
+  // or graph evidence. This keeps the capsule/item cap fixed.
+  for (const document of documentRetrieval.candidates.slice(0, 2)) {
+    if ([...pivots, ...support].some((item) => item.path === document.path)) continue;
+    const item = composeDocumentItem(document);
+    while (
+      support.length > 0
+      && (support.length >= maxSupportSlots || usedTokens + item.estimated_tokens > input.maxTokens)
+    ) {
+      let removableIndex = -1;
+      for (let index = support.length - 1; index >= 0; index -= 1) {
+        const candidate = support[index]!;
+        if (
+          candidate.document_kind === undefined
+          && matchPathClues(candidate.path, shaped.pathClues ?? []).length === 0
+        ) {
+          removableIndex = index;
+          break;
+        }
+      }
+      if (removableIndex < 0) {
+        for (let index = support.length - 1; index >= 0; index -= 1) {
+          if (support[index]!.document_kind === undefined) {
+            removableIndex = index;
+            break;
+          }
+        }
+      }
+      if (removableIndex < 0) break;
+      const [removed] = support.splice(removableIndex, 1);
+      if (removed === undefined) break;
+      usedTokens -= removed.estimated_tokens;
+    }
+    if (support.length >= maxSupportSlots || usedTokens + item.estimated_tokens > input.maxTokens) continue;
+    support.push(item);
+    usedTokens += item.estimated_tokens;
+  }
+
+  // Preserve one directly scoped notebook-verification surface when the task
+  // explicitly asks for it. This is relevance-qualified (indexed Python symbol,
+  // subtree evidence, notebook path term), and therefore cannot act as a weak
+  // role filler.
+  if (
+    /\bnotebook\b/iu.test(input.task)
+    && ![...pivots, ...support].some((item) => item.path.toLowerCase().includes("notebook"))
+  ) {
+    const notebookEntry = refined
+      .filter((entry) =>
+        entry.candidate.filePath.toLowerCase().includes("notebook")
+        && entry.candidate.scores.path >= 0.75
+        && entry.candidate.scores.actionability > 0)
+      .sort((left, right) =>
+        right.candidate.scores.final - left.candidate.scores.final
+        || left.candidate.filePath.localeCompare(right.candidate.filePath))[0];
+    if (notebookEntry !== undefined) {
+      const item = renderSupport(input.db, input.repoRoot, notebookEntry, input.maxTokens - usedTokens);
+      if (item !== undefined) {
+        if (support.length >= maxSupportSlots) {
+          const removableIndex = support.findIndex((candidate) =>
+            candidate.document_kind === undefined
+            && matchPathClues(candidate.path, shaped.pathClues ?? []).length === 0);
+          if (removableIndex >= 0) {
+            const [removed] = support.splice(removableIndex, 1);
+            if (removed !== undefined) usedTokens -= removed.estimated_tokens;
+          }
+        }
+        if (support.length < maxSupportSlots && usedTokens + item.estimated_tokens <= input.maxTokens) {
+          support.push(item);
+          usedTokens += item.estimated_tokens;
+        }
+      }
+    }
+  }
+
   // Diagnostics: which displaceable winners actually lost their slot to a co-edit
   // candidate. Only a rendered HIGH-confidence (displacing) co-edit can be the
   // cause — spare-only (medium) entries rank behind every winner, so a winner
@@ -1222,6 +1366,36 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...coeditDiagnostics,
       ...fileEvidenceDiagnostics,
       ...genericLexicalDecoyDiagnostics,
+      ...(documentRetrieval.invoked
+        ? {
+            document_retrieval: {
+              invoked: true,
+              reason: documentRetrieval.reason,
+              query_terms: documentRetrieval.queryTerms,
+              candidate_count: documentRetrieval.candidates.length,
+              selected_count: support.filter((item) => item.document_kind !== undefined).length,
+              query_ms: input.includeTimingDiagnostics === true ? documentRetrieval.queryMs : 0,
+              candidates: documentRetrieval.candidates.map((document, index) => {
+                const selected = support.some((item) => item.path === document.path);
+                return {
+                  path: document.path,
+                  kind: document.kind,
+                  raw_rank: document.rawRank,
+                  merged_rank: index + 1,
+                  score: document.score,
+                  matched_terms: document.matchedTerms,
+                  objective_matches: document.objectiveMatches,
+                  line_spans: document.excerpts.map((excerpt) => ({
+                    start: excerpt.startLine,
+                    end: excerpt.endLine,
+                  })),
+                  selected,
+                  ...(selected ? {} : { exclusion_reason: "support_file_cap_or_budget" }),
+                };
+              }),
+            },
+          }
+        : {}),
       ...(editRiskDirectives.length > 0 ? { edit_risk_directives: editRiskDirectives } : {}),
       localization_signals: localizationSignals,
     },
@@ -1434,6 +1608,54 @@ function composeDocItem(doc: DocSection): CapsuleV2Item {
       final: doc.score,
     },
     estimated_tokens: 0,
+  };
+  item.estimated_tokens = estimateTokens(itemBlockText(item));
+  return item;
+}
+
+function composeDocumentItem(document: DocumentCandidate): CapsuleV2Item {
+  const source = document.excerpts.map((excerpt) => (
+    `Lines ${excerpt.startLine}-${excerpt.endLine}${excerpt.keyPath === undefined ? "" : ` [${excerpt.keyPath}]`}:\n${excerpt.text}`
+  )).join("\n\n");
+  const item: CapsuleV2Item = {
+    role: "support",
+    role_reason: `${document.kind.toUpperCase()} configuration matches task objectives`,
+    ...NO_DEBUG_ROLE_SIGNALS,
+    path: document.path,
+    fq_name: `${document.path}#document`,
+    symbol: document.path.split("/").at(-1) ?? document.path,
+    kind: `${document.kind}_document`,
+    content_mode: CapsuleV2ContentMode.DocumentExcerpt,
+    source,
+    evidence: [
+      `document FTS matches: ${document.matchedTerms.join(", ")}`,
+      ...document.objectiveMatches.map((objective) => `objective match: ${objective}`),
+      ...document.pathMatches.map((match) =>
+        `path clue \`${match.normalizedClue}\`: ${match.matchType} (+${match.score.toFixed(2)})`),
+    ],
+    scorecard: {
+      lexical: Math.min(1, document.score),
+      symbol: 0,
+      path: document.pathMatches[0]?.score ?? 0,
+      test_to_impl: 0,
+      body_literal: 0,
+      graph_proximity: 0,
+      centrality: 0,
+      actionability: 0,
+      hub_penalty: 0,
+      final: document.score,
+    },
+    estimated_tokens: 0,
+    document_kind: document.kind,
+    line_spans: document.excerpts.map((excerpt) => ({ start: excerpt.startLine, end: excerpt.endLine })),
+    path_clue_matches: document.pathMatches.map((match) => ({
+      clue: match.clue,
+      normalized_clue: match.normalizedClue,
+      match_type: match.matchType,
+      score: match.score,
+      subtree_match: match.subtreeMatch,
+      filename_match: match.filenameMatch,
+    })),
   };
   item.estimated_tokens = estimateTokens(itemBlockText(item));
   return item;

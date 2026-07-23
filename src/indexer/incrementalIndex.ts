@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 
 import { Language, type FileRecord, type ParseResult } from "../domain/types";
 
-export const FILE_SNAPSHOT_SCHEMA_VERSION = 3 as const;
-export const RETRIEVAL_SCHEMA_VERSION = 1 as const;
+export const FILE_SNAPSHOT_SCHEMA_VERSION = 4 as const;
+export const RETRIEVAL_SCHEMA_VERSION = 2 as const;
 // M118 synthetic TypeScript-100 measurements crossed at 20% (0.97x at 20%,
 // 0.96x at 30%, 0.90x at 50%). Python parsing remained strongly dominant
 // (12.63x for one file of 24), so the measured threshold is language-aware.
@@ -42,6 +42,8 @@ export interface IndexedFileSnapshot {
     readonly category: "unregistered_language" | "unsupported_language";
     readonly message: string;
   };
+  readonly documentKind?: "yaml" | "toml";
+  readonly documentIndexVersion?: number;
 }
 
 export interface IndexedFileSnapshotSet {

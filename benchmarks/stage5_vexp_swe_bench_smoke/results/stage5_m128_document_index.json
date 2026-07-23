@@ -1,0 +1,88 @@
+{
+  "documentFiles": 40,
+  "documentChunks": 515,
+  "yamlChunks": 476,
+  "tomlChunks": 39,
+  "requiredRows": {
+    ".github/workflows/python-client-ci.yml": [
+      {
+        "startLine": 1,
+        "endLine": 2,
+        "keyPath": "name",
+        "truncated": false
+      },
+      {
+        "startLine": 3,
+        "endLine": 15,
+        "keyPath": "on",
+        "truncated": false
+      },
+      {
+        "startLine": 16,
+        "endLine": 18,
+        "keyPath": "permissions",
+        "truncated": false
+      },
+      {
+        "startLine": 19,
+        "endLine": 43,
+        "keyPath": "jobs",
+        "truncated": false
+      }
+    ],
+    "clients/python/pyproject.toml": [
+      {
+        "startLine": 1,
+        "endLine": 4,
+        "keyPath": "build-system",
+        "truncated": false
+      },
+      {
+        "startLine": 5,
+        "endLine": 44,
+        "keyPath": "project",
+        "truncated": false
+      },
+      {
+        "startLine": 45,
+        "endLine": 60,
+        "keyPath": "project.optional-dependencies",
+        "truncated": false
+      },
+      {
+        "startLine": 61,
+        "endLine": 63,
+        "keyPath": "project.scripts",
+        "truncated": false
+      },
+      {
+        "startLine": 64,
+        "endLine": 69,
+        "keyPath": "project.urls",
+        "truncated": false
+      },
+      {
+        "startLine": 70,
+        "endLine": 72,
+        "keyPath": "tool.setuptools.packages.find",
+        "truncated": false
+      },
+      {
+        "startLine": 73,
+        "endLine": 75,
+        "keyPath": "tool.setuptools.package-data",
+        "truncated": false
+      },
+      {
+        "startLine": 76,
+        "endLine": 78,
+        "keyPath": "tool.pytest.ini_options",
+        "truncated": false
+      }
+    ]
+  },
+  "fakeSymbols": {
+    "count": 0
+  },
+  "executionEdges": 0
+}
