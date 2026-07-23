@@ -102,6 +102,26 @@ export interface HybridRetrievalInput {
   taskText?: string;
   /** M123 no-candidate fallback: use M121 bounded compound/exact FTS admission. */
   enableCompoundTaskRescue?: boolean;
+  /** Optional request-local profiler. Omitted on product paths unless explicitly requested. */
+  profile?: HybridRetrievalProfile;
+  requestCache?: HybridRetrievalRequestCache;
+}
+
+export interface HybridRetrievalRequestCache {
+  broadCandidates: Map<string, unknown>;
+}
+
+export function createHybridRetrievalRequestCache(): HybridRetrievalRequestCache {
+  return { broadCandidates: new Map() };
+}
+
+export interface HybridRetrievalProfile {
+  timingsMs: Record<string, number>;
+  counters: Record<string, number>;
+}
+
+export function createHybridRetrievalProfile(): HybridRetrievalProfile {
+  return { timingsMs: {}, counters: {} };
 }
 
 // A distinctive task literal that recovered a symbol from its source body.
@@ -146,6 +166,7 @@ export function hybridRetrieve(
   db: Database,
   input: HybridRetrievalInput,
 ): HybridRetrievalResult {
+  const totalStarted = input.profile === undefined ? 0 : performance.now();
   const maxResults = normalizeMaxResults(input.maxResults ?? DEFAULTS.maxResults);
   if (maxResults === 0) {
     return { candidates: [], bodyLiteralMatches: [] };
@@ -160,19 +181,36 @@ export function hybridRetrieve(
   // candidate surfaced by several generators merges, accumulating every source
   // and evidence line. The first four seed the pool from the query; the last two
   // expand it to neighbours the query alone could never have named.
-  lexicalCandidates(db, input, lexicalPoolSize, raw);
-  symbolPathCandidates(db, input, raw);
-  failingTestCandidates(db, input, raw);
+  timed(input.profile, "lexical.symbol_search", () =>
+    lexicalCandidates(db, input, lexicalPoolSize, raw));
+  count(input.profile, "symbols.after_lexical", raw.size);
+  timed(input.profile, "lexical.symbol_path", () =>
+    symbolPathCandidates(db, input, raw));
+  count(input.profile, "symbols.after_symbol_path", raw.size);
+  timed(input.profile, "structural.test_import_reference", () =>
+    failingTestCandidates(db, input, raw));
+  count(input.profile, "symbols.after_test_expansion", raw.size);
   // Body-literal recovery: a distinctive literal cited in the task (a diagnostic
   // code, a quoted message) found in a symbol's SOURCE BODY — the one signal that
   // reaches a symbol named purely by what it emits, invisible to name/path search.
-  const bodyLiteralMatches = bodyLiteralCandidates(db, input, raw);
+  const bodyLiteralMatches = timed(input.profile, "lexical.body_literal", () =>
+    bodyLiteralCandidates(db, input, raw));
+  count(input.profile, "body_literal_matches", bodyLiteralMatches.length);
   // Graph + same-module expansion run over EVERYTHING the query-side generators
   // surfaced, so they can pull in a target lexical search missed.
   const seeds = [...raw.keys()];
-  graphExpandedCandidates(db, input, seeds, raw);
-
-  return { candidates: assemble(db, raw, input, maxResults), bodyLiteralMatches };
+  count(input.profile, "graph_seed_symbols", seeds.length);
+  timed(input.profile, "structural.graph_expansion", () =>
+    graphExpandedCandidates(db, input, seeds, raw));
+  count(input.profile, "symbols.before_scoring", raw.size);
+  const candidates = timed(input.profile, "candidate_processing.score_sort_cap", () =>
+    assemble(db, raw, input, maxResults));
+  count(input.profile, "candidates.after_cap", candidates.length);
+  if (input.profile !== undefined) {
+    input.profile.timingsMs.total =
+      (input.profile.timingsMs.total ?? 0) + performance.now() - totalStarted;
+  }
+  return { candidates, bodyLiteralMatches };
 }
 
 // --- candidate generators -----------------------------------------------------
@@ -188,13 +226,17 @@ function lexicalCandidates(
   poolSize: number,
   raw: Map<SymbolId, RawCandidate>,
 ): void {
-  for (const result of searchSymbols(db, {
+  const results = searchSymbols(db, {
     query: input.query,
     maxResults: poolSize,
     enableTestAwareDownweighting: true,
     enableCompoundTaskDecomposition: input.enableCompoundTaskRescue === true,
     enableExactIdentifierLane: input.enableCompoundTaskRescue === true,
-  })) {
+    broadCandidateCache: input.requestCache?.broadCandidates,
+  });
+  increment(input.profile, "symbol_search_calls");
+  increment(input.profile, "symbol_search_rows", results.length);
+  for (const result of results) {
     const entry = ensureCandidate(db, raw, result.symbolId);
     if (entry === undefined) {
       continue;
@@ -223,11 +265,15 @@ function symbolPathCandidates(
     ...input.shaped.likelySymbols,
   ]);
   for (const symbolName of symbolQueries) {
-    for (const result of searchSymbols(db, {
+    const results = searchSymbols(db, {
       query: symbolName,
       maxResults: DEFAULTS.symbolPoolSize,
       enableTestAwareDownweighting: true,
-    })) {
+      broadCandidateCache: input.requestCache?.broadCandidates,
+    });
+    increment(input.profile, "symbol_search_calls");
+    increment(input.profile, "symbol_search_rows", results.length);
+    for (const result of results) {
       if (!nameRelated(result.localName, symbolName)) {
         continue;
       }
@@ -241,7 +287,10 @@ function symbolPathCandidates(
   }
 
   for (const file of input.shaped.likelyFiles) {
-    for (const symbol of listSymbolsForFile(db, file)) {
+    const symbols = listSymbolsForFile(db, file);
+    increment(input.profile, "path_symbol_queries");
+    increment(input.profile, "path_symbol_rows", symbols.length);
+    for (const symbol of symbols) {
       const entry = ensureCandidate(db, raw, symbol.id, symbol);
       if (entry === undefined) {
         continue;
@@ -249,6 +298,42 @@ function symbolPathCandidates(
       entry.sources.add(HybridCandidateSource.Path);
       entry.evidence.add(`declared in likely edit file ${file}`);
     }
+  }
+}
+
+function timed<T>(
+  profile: HybridRetrievalProfile | undefined,
+  name: string,
+  operation: () => T,
+): T {
+  if (profile === undefined) {
+    return operation();
+  }
+  const started = performance.now();
+  try {
+    return operation();
+  } finally {
+    profile.timingsMs[name] = (profile.timingsMs[name] ?? 0) + performance.now() - started;
+  }
+}
+
+function increment(
+  profile: HybridRetrievalProfile | undefined,
+  name: string,
+  delta = 1,
+): void {
+  if (profile !== undefined) {
+    profile.counters[name] = (profile.counters[name] ?? 0) + delta;
+  }
+}
+
+function count(
+  profile: HybridRetrievalProfile | undefined,
+  name: string,
+  value: number,
+): void {
+  if (profile !== undefined) {
+    profile.counters[name] = value;
   }
 }
 

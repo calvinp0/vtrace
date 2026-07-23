@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "stage5.m126.tckdb-acceptance.v1",
+  "repository": "<TCKDB_ROOT>",
+  "head": "70ff50381f42551a825d75874ea2d70f6dbe08ec",
+  "task": "Add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. Determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, OpenAPI, tests, docs, and Python client types.",
+  "baselineProjectionEqual": true,
+  "projection": {
+    "selectedFiles": [
+      "backend/app/services/scientific_read/public_assessments.py",
+      "backend/app/schemas/reads/scientific_assessment.py",
+      "backend/app/db/base.py",
+      "backend/app/db/models/thermo.py",
+      "clients/python/src/tckdb_client/scientific_types.py",
+      "backend/app/db/models/reproducibility_assessment.py"
+    ],
+    "leadPivot": "backend/app/services/scientific_read/public_assessments.py",
+    "roles": {
+      "backend/app/services/scientific_read/public_assessments.py": "support",
+      "backend/app/schemas/reads/scientific_assessment.py": "pivot",
+      "backend/app/db/base.py": "support",
+      "backend/app/db/models/thermo.py": "support",
+      "clients/python/src/tckdb_client/scientific_types.py": "support",
+      "backend/app/db/models/reproducibility_assessment.py": "support"
+    },
+    "rescue": {
+      "attempted": true,
+      "trigger": "low_compound_coverage",
+      "missing_clues": [
+        "assessment models",
+        "supersession schemas",
+        "schemas migrations",
+        "migrations projection",
+        "projection builders",
+        "builders openapi",
+        "openapi tests",
+        "tests docs",
+        "docs python"
+      ],
+      "candidates_added": 1,
+      "selected_candidates_added": 1
+    }
+  },
+  "baselineFullResultHash": "5c0d824c269fc97f69e1259f79aecaaf6cb25a4db978982e13e3d26df9055c22",
+  "optimizedFullResultHash": "5c0d824c269fc97f69e1259f79aecaaf6cb25a4db978982e13e3d26df9055c22",
+  "latency": {
+    "samplesMs": [
+      873.226,
+      872.812,
+      869.28,
+      868.87,
+      868.641
+    ],
+    "medianMs": 869.28,
+    "p90Ms": 872.812
+  },
+  "pass": true
+}

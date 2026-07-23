@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "stage5.m126.query-plans.v1",
+  "plans": [
+    {
+      "statement": "cross_file_edges_by_anchor",
+      "before": [
+        "SCAN edges USING sqlite_autoindex_edges_1",
+        "SEARCH src/dst symbols by primary key",
+        "SEARCH src/dst files by primary key"
+      ],
+      "after": [
+        "SEARCH anchor_files USING unique path index",
+        "SEARCH anchor_symbols USING idx_symbols_file_id_start_byte",
+        "SEARCH edges USING idx_edges_src_symbol_id",
+        "UNION ALL",
+        "SEARCH edges USING idx_edges_dst_symbol_id",
+        "USE TEMP B-TREE FOR final ORDER BY edge_id"
+      ],
+      "resultEquivalent": true
+    },
+    {
+      "statement": "count_cross_file_neighbors",
+      "before": [
+        "full edges relation with path OR filter"
+      ],
+      "after": [
+        "two indexed src/dst branches",
+        "COUNT DISTINCT other_path"
+      ],
+      "resultEquivalent": true
+    },
+    {
+      "statement": "broad_symbol_admission",
+      "before": [
+        "SCAN symbols with 152 disjuncts × five lower(field) LIKE predicates",
+        "TEMP B-TREE for order"
+      ],
+      "after": [
+        "single ordered symbols scan",
+        "request-local exact predicate evaluation with per-group memoization",
+        "TEMP B-TREE for order"
+      ],
+      "resultEquivalent": true
+    }
+  ],
+  "indexChanges": [],
+  "schemaVersionChanged": false
+}

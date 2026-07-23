@@ -23,6 +23,8 @@ import {
 import { loadSymbolSource } from "../capsule/loadSymbolSource";
 import { shapeSweQuery, type ShapedSweQuery } from "../capsule/sweQueryShaping";
 import {
+  createHybridRetrievalRequestCache,
+  createHybridRetrievalProfile,
   hybridRetrieve,
   type BodyLiteralMatch,
   type HybridCandidate,
@@ -146,6 +148,9 @@ const CANDIDATE_POOL_SIZE = 25;
 const MAX_PIVOT_EVIDENCE = 6;
 
 export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
+  const capsuleProfile = input.includeTimingDiagnostics === true
+    ? { timingsMs: {} as Record<string, number>, counters: {} as Record<string, number> }
+    : undefined;
   const taskDerivationStarted = performance.now();
   const shaped = shapeSweQuery({
     problemStatement: input.task,
@@ -171,6 +176,10 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const taskDerivationMs = performance.now() - taskDerivationStarted;
 
   const symbolSeeds = deriveSymbolSeeds(shaped);
+  const hybridRequestCache = createHybridRetrievalRequestCache();
+  const hybridProfile = input.includeTimingDiagnostics === true
+    ? createHybridRetrievalProfile()
+    : undefined;
   const hybridRetrievalStarted = performance.now();
   let retrieval = hybridRetrieve(input.db, {
     query: shaped.query,
@@ -181,6 +190,8 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     weights,
     symbolSeeds,
     maxResults: CANDIDATE_POOL_SIZE,
+    ...(hybridProfile === undefined ? {} : { profile: hybridProfile }),
+    requestCache: hybridRequestCache,
   });
   let compoundTaskRescueUsed = false;
   const normalPoolHasDirectEvidence = retrieval.candidates.some((candidate) =>
@@ -199,6 +210,8 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       symbolSeeds,
       maxResults: CANDIDATE_POOL_SIZE,
       enableCompoundTaskRescue: true,
+      ...(hybridProfile === undefined ? {} : { profile: hybridProfile }),
+      requestCache: hybridRequestCache,
     });
     if (rescued.candidates.length > 0) {
       retrieval = rescued;
@@ -553,6 +566,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   let sourceBodyCallFallbackUsed = false;
   let anchoredDispatcherExemptions: Array<{ path: string; symbol: string }> = [];
   let anchoredCapExemption: { path: string; symbol: string; symbolId: string } | undefined;
+  const roleAssignmentStarted = capsuleProfile === undefined ? 0 : performance.now();
   if (debugRefinement) {
     const result = refineDebugRoles(
       input.db,
@@ -578,6 +592,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   } else {
     refined = passthroughRoles(assignCandidateRoles(candidates, { maxPivots: allocation.maxPivots }));
   }
+  recordCapsuleTiming(capsuleProfile, "capsule.role_assignment", roleAssignmentStarted);
 
   // Non-source example / doc-data down-rank (general, repo-agnostic). A production
   // context provider prefers real source over docs/examples/sample/fixture files,
@@ -726,6 +741,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // exactly the noisy-retrieval scenario the Stage 5 Astropy diagnostic flagged.
   const pivotRankingVersion = input.pivotRankingVersion ?? DEFAULT_PIVOT_RANKING_VERSION;
   const pivotRankMeta = new Map<string, PivotRankResult>();
+  const pivotRankingStarted = capsuleProfile === undefined ? 0 : performance.now();
   for (const entry of pivotCandidates) {
     const source = loadFocusedSource(input.db, input.repoRoot, entry.candidate);
     pivotRankMeta.set(
@@ -743,6 +759,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ),
     );
   }
+  recordCapsuleTiming(capsuleProfile, "capsule.pivot_source_loading_and_ranking", pivotRankingStarted);
   const noStrongAnchor =
     anchorSymbolIds.size === 0
     && !sqlRenderingTrigger.active
@@ -806,6 +823,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const discarded: CapsuleV2Discarded[] = [];
   let usedTokens = 0;
 
+  const pivotPackingStarted = capsuleProfile === undefined ? 0 : performance.now();
   pivotCandidates.forEach((entry, index) => {
     // The lead pivot is guaranteed (a capsule must name a target); later pivots
     // that cannot fit even a skeleton drop to the discard list.
@@ -828,6 +846,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     usedTokens += item.estimated_tokens;
     pivots.push(item);
   });
+  recordCapsuleTiming(capsuleProfile, "capsule.pivot_packing", pivotPackingStarted);
 
   // Order support so the most edit-relevant context wins scarce support slots:
   // cap-demoted implementation helpers first, then ordinary local support, and
@@ -860,6 +879,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // generic-infra winners — so a co-edit can reclaim a slot spent on a second
   // symbol of an already-present file but never evict a distinct support file
   // vtrace found on its own evidence.
+  const coeditStarted = capsuleProfile === undefined ? 0 : performance.now();
   const coedit = expandCoeditSupport({
     db: input.db,
     task: input.task,
@@ -872,6 +892,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     ids: { anchorSymbolIds, titleSymbolIds, literalAnchorIds, directEvidenceStrongIds, suppressedDecoyIds },
     repoRoot: input.repoRoot,
   });
+  recordCapsuleTiming(capsuleProfile, "structural.coedit_expansion", coeditStarted);
   const coeditSymbolIds = new Set(coedit.entries.map((e) => e.candidate.symbolId));
 
   let orderedSupport: RefinedRoledCandidate[];
@@ -911,6 +932,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   for (const entry of orderedSupport.slice(0, maxSupportSlots)) {
     baseWinnerFiles.add(entry.candidate.filePath);
   }
+  const fileEvidenceStarted = capsuleProfile === undefined ? 0 : performance.now();
   const fileEvidence = rescueFileEvidenceSupport({
     db: input.db,
     repoRoot: input.repoRoot,
@@ -925,7 +947,9 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     ]),
     baseDistinctFileCount: baseWinnerFiles.size,
     taskAllowsNonSource,
+    requestCache: hybridRequestCache,
   });
+  recordCapsuleTiming(capsuleProfile, "structural.file_evidence_deep_pass", fileEvidenceStarted);
   const fileEvidenceSymbolIds = new Set(fileEvidence.entries.map((e) => e.candidate.symbolId));
   if (fileEvidence.entries.length > 0) {
     const rescueOrder = orderSupportWithCoedit({
@@ -951,6 +975,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   let fileEvidenceBudgetLimitedCount = 0;
   const renderedSupportIds = new Set<string>();
 
+  const supportPackingStarted = capsuleProfile === undefined ? 0 : performance.now();
   for (const entry of orderedSupport) {
     if (support.length >= maxSupportSlots) {
       discarded.push(toDiscarded(entry, `beyond ${allocation.tier} support budget (max ${maxSupportSlots})`));
@@ -981,6 +1006,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     renderedSupportIds.add(entry.candidate.symbolId);
     support.push(item);
   }
+  recordCapsuleTiming(capsuleProfile, "capsule.support_packing", supportPackingStarted);
 
   // Diagnostics: which displaceable winners actually lost their slot to a co-edit
   // candidate. Only a rendered HIGH-confidence (displacing) co-edit can be the
@@ -1171,6 +1197,8 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
           task_derivation: taskDerivationMs,
           hybrid_retrieval: hybridRetrievalMs,
         },
+        ...(hybridProfile === undefined ? {} : { hybrid_profile: hybridProfile }),
+        ...(capsuleProfile === undefined ? {} : { capsule_profile: capsuleProfile }),
       } : {}),
       pivot_count: pivots.length,
       support_count: support.length,
@@ -1199,6 +1227,16 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     },
     ...(actionabilityHints.length > 0 ? { actionability_hints: actionabilityHints } : {}),
   };
+}
+
+function recordCapsuleTiming(
+  profile: { timingsMs: Record<string, number> } | undefined,
+  name: string,
+  started: number,
+): void {
+  if (profile !== undefined) {
+    profile.timingsMs[name] = (profile.timingsMs[name] ?? 0) + performance.now() - started;
+  }
 }
 
 // Project an assembled capsule item onto the minimal view the multi-file co-edit

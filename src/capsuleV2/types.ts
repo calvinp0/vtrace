@@ -260,6 +260,16 @@ export interface CapsuleV2Diagnostics {
     task_derivation: number;
     hybrid_retrieval: number;
   };
+  /** Optional M126 request-local hybrid stage profile; absent from stable projections. */
+  hybrid_profile?: {
+    timingsMs: Record<string, number>;
+    counters: Record<string, number>;
+  };
+  /** Optional M126 post-hybrid stage profile; absent from stable projections. */
+  capsule_profile?: {
+    timingsMs: Record<string, number>;
+    counters: Record<string, number>;
+  };
   pivot_count: number;
   support_count: number;
   discarded_count: number;

@@ -1,0 +1,328 @@
+{
+  "schemaVersion": "stage5.m126.semantic-equivalence.v1",
+  "tckdb": {
+    "fullResultEqual": true,
+    "baselineHash": "5c0d824c269fc97f69e1259f79aecaaf6cb25a4db978982e13e3d26df9055c22",
+    "optimizedHash": "5c0d824c269fc97f69e1259f79aecaaf6cb25a4db978982e13e3d26df9055c22"
+  },
+  "frozen": {
+    "cases": 50,
+    "differences": 0,
+    "directHarnessReplay": {
+      "expanded20PristineHeadVsOptimizedCsvEqual": true,
+      "crossRepo30PristineHeadVsOptimizedCsvEqual": true,
+      "committedBaselineNote": "Fresh pristine-HEAD output differs from the existing committed CSV in one expanded row and two cross-repository rows; those unrelated result files were not modified."
+    },
+    "rows": [
+      {
+        "instanceId": "django__django-10880",
+        "equal": true,
+        "baselineHash": "0ec078ac061479039a58775121f353ae3a192f9cd72c202886f9f5056c968a24",
+        "currentHash": "0ec078ac061479039a58775121f353ae3a192f9cd72c202886f9f5056c968a24"
+      },
+      {
+        "instanceId": "django__django-11095",
+        "equal": true,
+        "baselineHash": "4b3281dee07a6cb737bd451093353457a925c55440ffb59a3321f030552bff9f",
+        "currentHash": "4b3281dee07a6cb737bd451093353457a925c55440ffb59a3321f030552bff9f"
+      },
+      {
+        "instanceId": "django__django-11490",
+        "equal": true,
+        "baselineHash": "d3f126d02e02f935533b8945d6e84bbfef840be1dadcbd3e895dffc043bdf2ae",
+        "currentHash": "d3f126d02e02f935533b8945d6e84bbfef840be1dadcbd3e895dffc043bdf2ae"
+      },
+      {
+        "instanceId": "django__django-11728",
+        "equal": true,
+        "baselineHash": "78fa16b7e305d2ae06d67c0508471771299828ae8d24bbab4077de13c48092b7",
+        "currentHash": "78fa16b7e305d2ae06d67c0508471771299828ae8d24bbab4077de13c48092b7"
+      },
+      {
+        "instanceId": "django__django-11740",
+        "equal": true,
+        "baselineHash": "9e2348acd1406ee6ed94f6e64b0a6f8fbccb524b84523b3240bfe494ba595f4e",
+        "currentHash": "9e2348acd1406ee6ed94f6e64b0a6f8fbccb524b84523b3240bfe494ba595f4e"
+      },
+      {
+        "instanceId": "django__django-10973",
+        "equal": true,
+        "baselineHash": "4cde2a630514b954b8d7a227ed4b5d152cf9f0b26088401ef2ab9b587212f8a7",
+        "currentHash": "4cde2a630514b954b8d7a227ed4b5d152cf9f0b26088401ef2ab9b587212f8a7"
+      },
+      {
+        "instanceId": "django__django-11133",
+        "equal": true,
+        "baselineHash": "5b4d28a7931fc0006d857115ace6e7cec96f2a3916966f20f55ceccbbd0881d3",
+        "currentHash": "5b4d28a7931fc0006d857115ace6e7cec96f2a3916966f20f55ceccbbd0881d3"
+      },
+      {
+        "instanceId": "django__django-11206",
+        "equal": true,
+        "baselineHash": "336017a2c5aa0687e6fa387ab66ee8f6ed98ca3c7339661c7d06b22b812a1562",
+        "currentHash": "336017a2c5aa0687e6fa387ab66ee8f6ed98ca3c7339661c7d06b22b812a1562"
+      },
+      {
+        "instanceId": "django__django-11749",
+        "equal": true,
+        "baselineHash": "e7a6b11fa5bd790fd93ca8e5ced0ab8c61675d3c25233c7eb6ffd40affdcb241",
+        "currentHash": "e7a6b11fa5bd790fd93ca8e5ced0ab8c61675d3c25233c7eb6ffd40affdcb241"
+      },
+      {
+        "instanceId": "django__django-11815",
+        "equal": true,
+        "baselineHash": "942374678a4358a603ace4e50d23d2a1ebc7617546975e604e36017f70d13da9",
+        "currentHash": "942374678a4358a603ace4e50d23d2a1ebc7617546975e604e36017f70d13da9"
+      },
+      {
+        "instanceId": "django__django-11820",
+        "equal": true,
+        "baselineHash": "14a1d9bdbf33b29a08080ee947c02ce16f6c6d958b274d2ae2a016d35734c9a7",
+        "currentHash": "14a1d9bdbf33b29a08080ee947c02ce16f6c6d958b274d2ae2a016d35734c9a7"
+      },
+      {
+        "instanceId": "django__django-12050",
+        "equal": true,
+        "baselineHash": "4aa7eee3cada55a0783ed01fc95ba475f4e85f7c84a76732f98f96cfb3991a9d",
+        "currentHash": "4aa7eee3cada55a0783ed01fc95ba475f4e85f7c84a76732f98f96cfb3991a9d"
+      },
+      {
+        "instanceId": "django__django-12273",
+        "equal": true,
+        "baselineHash": "b209c9a816fda0e163d3f3ba96f621c087e8f00b4cfed38d29dec522a94c0592",
+        "currentHash": "b209c9a816fda0e163d3f3ba96f621c087e8f00b4cfed38d29dec522a94c0592"
+      },
+      {
+        "instanceId": "django__django-12276",
+        "equal": true,
+        "baselineHash": "d33d2026f3d94c0fdb2cb2e9a5befcfdd2a70263257cfbc504b5fe9e9fbeacde",
+        "currentHash": "d33d2026f3d94c0fdb2cb2e9a5befcfdd2a70263257cfbc504b5fe9e9fbeacde"
+      },
+      {
+        "instanceId": "django__django-12325",
+        "equal": true,
+        "baselineHash": "3d338ff04b94fbf9a1853863f0992f4b09a8015b67c9d161e9ab384a6cbc5514",
+        "currentHash": "3d338ff04b94fbf9a1853863f0992f4b09a8015b67c9d161e9ab384a6cbc5514"
+      },
+      {
+        "instanceId": "django__django-12774",
+        "equal": true,
+        "baselineHash": "751450e4ae9ec2a500e70567a14fe80b319f128ee17f4518f7e128816a001a98",
+        "currentHash": "751450e4ae9ec2a500e70567a14fe80b319f128ee17f4518f7e128816a001a98"
+      },
+      {
+        "instanceId": "django__django-12858",
+        "equal": true,
+        "baselineHash": "e2e7dccc6d008f5b596c831488b634fe15cf018110b0065c7c79ca9671407819",
+        "currentHash": "e2e7dccc6d008f5b596c831488b634fe15cf018110b0065c7c79ca9671407819"
+      },
+      {
+        "instanceId": "django__django-13012",
+        "equal": true,
+        "baselineHash": "8284176d1fde151424773cd7580c02803c8e24c075c8134f8757aa7c9ce34a4c",
+        "currentHash": "8284176d1fde151424773cd7580c02803c8e24c075c8134f8757aa7c9ce34a4c"
+      },
+      {
+        "instanceId": "django__django-13112",
+        "equal": true,
+        "baselineHash": "9bbd95048e3c50674b92f3f1d7e8fef4a7edd277404b1ffdd4768a6a60fba4de",
+        "currentHash": "9bbd95048e3c50674b92f3f1d7e8fef4a7edd277404b1ffdd4768a6a60fba4de"
+      },
+      {
+        "instanceId": "django__django-13195",
+        "equal": true,
+        "baselineHash": "7874aca640290938e2a2b85ffd7485a196e46a30602e31de056c20335545d774",
+        "currentHash": "7874aca640290938e2a2b85ffd7485a196e46a30602e31de056c20335545d774"
+      },
+      {
+        "instanceId": "sympy__sympy-12419",
+        "equal": true,
+        "baselineHash": "998385762da88092c2442594c06baf4ae0e05c455437e7a54c1a703515f268a1",
+        "currentHash": "998385762da88092c2442594c06baf4ae0e05c455437e7a54c1a703515f268a1"
+      },
+      {
+        "instanceId": "sympy__sympy-12481",
+        "equal": true,
+        "baselineHash": "5bc63c798af3a5e2f7f3a31e1d5f0bd5aa95b120d9a7a02231af4d9782c58260",
+        "currentHash": "5bc63c798af3a5e2f7f3a31e1d5f0bd5aa95b120d9a7a02231af4d9782c58260"
+      },
+      {
+        "instanceId": "sympy__sympy-13372",
+        "equal": true,
+        "baselineHash": "3a70ff0db4a0ab77a27f1e8fe1621bdb4176d0740a3c41a29cf3d1b5c96ed6ae",
+        "currentHash": "3a70ff0db4a0ab77a27f1e8fe1621bdb4176d0740a3c41a29cf3d1b5c96ed6ae"
+      },
+      {
+        "instanceId": "scikit-learn__scikit-learn-10844",
+        "equal": true,
+        "baselineHash": "ab107a0f9cff4dab0f64af77cebf9c5698346911f31de071450fc96fb903c163",
+        "currentHash": "ab107a0f9cff4dab0f64af77cebf9c5698346911f31de071450fc96fb903c163"
+      },
+      {
+        "instanceId": "scikit-learn__scikit-learn-11578",
+        "equal": true,
+        "baselineHash": "8c234b43b68ef4ec92dd733f527498bfa76d8e4344e48c416c6b2107eff57000",
+        "currentHash": "8c234b43b68ef4ec92dd733f527498bfa76d8e4344e48c416c6b2107eff57000"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-22719",
+        "equal": true,
+        "baselineHash": "d318284ed2fc30afb1c270e2515023dbead018b70e70bc437531aa8990a3b3a4",
+        "currentHash": "d318284ed2fc30afb1c270e2515023dbead018b70e70bc437531aa8990a3b3a4"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-24627",
+        "equal": true,
+        "baselineHash": "a49e19737d984007571fe22e64a627a9a6c5e07982be4574ce3b89abe7dea933",
+        "currentHash": "a49e19737d984007571fe22e64a627a9a6c5e07982be4574ce3b89abe7dea933"
+      },
+      {
+        "instanceId": "astropy__astropy-14365",
+        "equal": true,
+        "baselineHash": "839d0c1edaab0cca0a9ced22bfcc4a22a1406eb76c9ade7a539faa7dd0b3e682",
+        "currentHash": "839d0c1edaab0cca0a9ced22bfcc4a22a1406eb76c9ade7a539faa7dd0b3e682"
+      },
+      {
+        "instanceId": "astropy__astropy-14369",
+        "equal": true,
+        "baselineHash": "ccaa42b7e910b7e281a928e67e9486f99e19b0bffabab6fe37e5ba6eab0b64c2",
+        "currentHash": "ccaa42b7e910b7e281a928e67e9486f99e19b0bffabab6fe37e5ba6eab0b64c2"
+      },
+      {
+        "instanceId": "pytest-dev__pytest-10051",
+        "equal": true,
+        "baselineHash": "37535b9d680ae235dec5b4150ca12645d65fd5d45a2ec91260ac293b5d4cf849",
+        "currentHash": "37535b9d680ae235dec5b4150ca12645d65fd5d45a2ec91260ac293b5d4cf849"
+      },
+      {
+        "instanceId": "pytest-dev__pytest-5262",
+        "equal": true,
+        "baselineHash": "9ec8c3c66af0c509b6dc79f848982cd4d1eae7c1ced795665769ecff9ef6938e",
+        "currentHash": "9ec8c3c66af0c509b6dc79f848982cd4d1eae7c1ced795665769ecff9ef6938e"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7462",
+        "equal": true,
+        "baselineHash": "1ba3280192ee1996d93cacaf94da56f671d6b30fcf3b5ec36db959ab461fce27",
+        "currentHash": "1ba3280192ee1996d93cacaf94da56f671d6b30fcf3b5ec36db959ab461fce27"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7748",
+        "equal": true,
+        "baselineHash": "086e02c5a1083fe7a1153c18d7641e6ce917fb78d985b1a78b8e7108069948e3",
+        "currentHash": "086e02c5a1083fe7a1153c18d7641e6ce917fb78d985b1a78b8e7108069948e3"
+      },
+      {
+        "instanceId": "psf__requests-1142",
+        "equal": true,
+        "baselineHash": "57baea008e11ee66b995679f7b9df470eb6e679824aba1aecf9c3f4d3cd2e57f",
+        "currentHash": "57baea008e11ee66b995679f7b9df470eb6e679824aba1aecf9c3f4d3cd2e57f"
+      },
+      {
+        "instanceId": "psf__requests-1724",
+        "equal": true,
+        "baselineHash": "bf73ddb0ffef79e8987c172fa2a37fa29c326c9444a33c270389bc6e4f741d8d",
+        "currentHash": "bf73ddb0ffef79e8987c172fa2a37fa29c326c9444a33c270389bc6e4f741d8d"
+      },
+      {
+        "instanceId": "pallets__flask-5014",
+        "equal": true,
+        "baselineHash": "5df9681dfe91cc14995d67f89a8f0bfa4ac0a01e45831ce9535a5815c67139fd",
+        "currentHash": "5df9681dfe91cc14995d67f89a8f0bfa4ac0a01e45831ce9535a5815c67139fd"
+      },
+      {
+        "instanceId": "astropy__astropy-14539",
+        "equal": true,
+        "baselineHash": "3c50cc3884f4a5d2f36913a33aee915a287be02ebb40e9c3204d6433d0f506de",
+        "currentHash": "3c50cc3884f4a5d2f36913a33aee915a287be02ebb40e9c3204d6433d0f506de"
+      },
+      {
+        "instanceId": "astropy__astropy-14598",
+        "equal": true,
+        "baselineHash": "035dd9290e7b68816900452d27c56a088f9b639cd212ef41eaacf9895360dcba",
+        "currentHash": "035dd9290e7b68816900452d27c56a088f9b639cd212ef41eaacf9895360dcba"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-24970",
+        "equal": true,
+        "baselineHash": "64eff775e7527f5aefd41ea28798712075a02d72361e4c4c2bbb2a4e68b2f262",
+        "currentHash": "64eff775e7527f5aefd41ea28798712075a02d72361e4c4c2bbb2a4e68b2f262"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-25960",
+        "equal": true,
+        "baselineHash": "0279245f6c478093cf2f4b5958ed8c1215d4832fa9a0d410657446370feb25a6",
+        "currentHash": "0279245f6c478093cf2f4b5958ed8c1215d4832fa9a0d410657446370feb25a6"
+      },
+      {
+        "instanceId": "mwaskom__seaborn-3187",
+        "equal": true,
+        "baselineHash": "2557ce7ad11303d73aad7b0727f1d4d56eef104485a19c698f39037bbe64f08d",
+        "currentHash": "2557ce7ad11303d73aad7b0727f1d4d56eef104485a19c698f39037bbe64f08d"
+      },
+      {
+        "instanceId": "psf__requests-5414",
+        "equal": true,
+        "baselineHash": "72384c948b9bae8f3710ae6a10e807602ea6df49d929dc52cdd39920cf921f54",
+        "currentHash": "72384c948b9bae8f3710ae6a10e807602ea6df49d929dc52cdd39920cf921f54"
+      },
+      {
+        "instanceId": "pydata__xarray-2905",
+        "equal": true,
+        "baselineHash": "579615796fcedd8f1601c5d336f99d4e909a302a34e621d73d21d9b68c7547d7",
+        "currentHash": "579615796fcedd8f1601c5d336f99d4e909a302a34e621d73d21d9b68c7547d7"
+      },
+      {
+        "instanceId": "pydata__xarray-3677",
+        "equal": true,
+        "baselineHash": "c18304f1367f3f50fedca4ffa855f1343f8e9c72f42f68c5090a7972a19a6e7a",
+        "currentHash": "c18304f1367f3f50fedca4ffa855f1343f8e9c72f42f68c5090a7972a19a6e7a"
+      },
+      {
+        "instanceId": "pylint-dev__pylint-8898",
+        "equal": true,
+        "baselineHash": "9b5650c37b5effa2fa6efdb89278d0aa47408fb7b0247bc382b7247478664a92",
+        "currentHash": "9b5650c37b5effa2fa6efdb89278d0aa47408fb7b0247bc382b7247478664a92"
+      },
+      {
+        "instanceId": "pytest-dev__pytest-7432",
+        "equal": true,
+        "baselineHash": "e3a121017c8b61eaefb5ef44d62ff418dcf3c61b47cc596a24c6ee8d37e21dcb",
+        "currentHash": "e3a121017c8b61eaefb5ef44d62ff418dcf3c61b47cc596a24c6ee8d37e21dcb"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7910",
+        "equal": true,
+        "baselineHash": "66fdeac9da22a9f139db06517157d3813b16324ff136ae2422add4023af60bbb",
+        "currentHash": "66fdeac9da22a9f139db06517157d3813b16324ff136ae2422add4023af60bbb"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-9230",
+        "equal": true,
+        "baselineHash": "b58c2dabf06f41999022116210e2cb3f66ee5259178e7f5bb07edc20e71c5a8e",
+        "currentHash": "b58c2dabf06f41999022116210e2cb3f66ee5259178e7f5bb07edc20e71c5a8e"
+      },
+      {
+        "instanceId": "sympy__sympy-15599",
+        "equal": true,
+        "baselineHash": "a8d404182ebc9606de91cb132bedc5daa6db280c1d9149301fc234240b1b10c3",
+        "currentHash": "a8d404182ebc9606de91cb132bedc5daa6db280c1d9149301fc234240b1b10c3"
+      },
+      {
+        "instanceId": "sympy__sympy-16766",
+        "equal": true,
+        "baselineHash": "8365c8f45164d12311eeb13f6a930f587febe20e432297843256229021ba2b60",
+        "currentHash": "8365c8f45164d12311eeb13f6a930f587febe20e432297843256229021ba2b60"
+      }
+    ]
+  },
+  "allowedDifferences": [
+    "timings",
+    "profiling counters",
+    "query plan diagnostics"
+  ],
+  "selectedFileDifferences": 0,
+  "leadDifferences": 0,
+  "roleDifferences": 0,
+  "renderedContextDifferences": 0
+}

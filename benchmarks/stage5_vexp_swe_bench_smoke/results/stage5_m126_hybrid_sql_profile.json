@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "stage5.m126.sql-profile.v1",
+  "privateParametersPersisted": false,
+  "sourceBodiesPersisted": false,
+  "statements": [
+    {
+      "fingerprint": "broad_symbol_admission_scan",
+      "category": "symbol_search",
+      "invocations": 2,
+      "rowsReturned": 106,
+      "totalDurationMs": 481.873964,
+      "baselineTotalDurationMs": 4446.584,
+      "plan": "SCAN symbols; SEARCH files by primary key; TEMP B-TREE for fq_name/id order",
+      "finding": "leading-wildcard legacy predicate forced a scan; M126 retains one scan and evaluates repeated groups once per row"
+    },
+    {
+      "fingerprint": "cross_file_edges_by_anchor",
+      "category": "coedit_graph",
+      "invocations": 4,
+      "totalDurationMs": 15.350865999999996,
+      "baselineTotalDurationMs": 2484.066,
+      "plan": "SEARCH anchor files(path), symbols(file_id), edges(src/dst indexes); TEMP B-TREE only for final edge-id merge order",
+      "finding": "replaced full edges scan through join OR with two indexed directional branches"
+    },
+    {
+      "fingerprint": "symbols_by_ids",
+      "category": "graph_materialization",
+      "invocations": 2,
+      "plan": "SEARCH symbols by primary-key IN batch",
+      "finding": "replaces per-seed/per-neighbor symbol lookups"
+    }
+  ],
+  "statementCountPolicy": "bounded by lanes/frontiers/directories; no candidate-proportional symbol materialization",
+  "rowsReadCounters": {
+    "symbol_search_calls": 2,
+    "symbol_search_rows": 106,
+    "symbols.after_lexical": 100,
+    "symbols.after_symbol_path": 105,
+    "symbols.after_test_expansion": 105,
+    "body_literal_matches": 0,
+    "graph_seed_symbols": 105,
+    "symbols.before_scoring": 129,
+    "candidates.after_cap": 25
+  }
+}

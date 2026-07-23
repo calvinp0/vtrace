@@ -1,0 +1,419 @@
+{
+  "schemaVersion": "stage5.m126.hybrid-profile.v1",
+  "repository": "<TCKDB_ROOT>",
+  "head": "70ff50381f42551a825d75874ea2d70f6dbe08ec",
+  "counts": {
+    "files": 959,
+    "symbols": 23096,
+    "edges": 47780,
+    "indexBytes": 81776640
+  },
+  "baseline": {
+    "hybridOnly": {
+      "samplesMs": [
+        7447.898,
+        7500.234,
+        7528.372,
+        7531.85,
+        7580.136
+      ],
+      "medianMs": 7528.372,
+      "p90Ms": 7580.136,
+      "maximumMs": 7580.136
+    },
+    "hybridStage": {
+      "samplesMs": [
+        4877.676,
+        4936.722,
+        4943.412,
+        4972.578,
+        5000.953
+      ],
+      "medianMs": 4943.412,
+      "p90Ms": 5000.953,
+      "maximumMs": 5000.953
+    },
+    "firstCallStages": {
+      "rootWorktreeResolutionAndFreshness": 17.486,
+      "indexValidation": "included in rootWorktreeResolutionAndFreshness",
+      "indexRefresh": 0,
+      "taskNormalizationAndDerivation": 59.255,
+      "exactIdentifierAndPathExtraction": "included in rescueDecisionAndAuthoritativeTaskDerivation",
+      "routedFtsLaneSearch": 14.641,
+      "routedCandidateMerge": 11.197,
+      "routedGraphReranking": 2.48,
+      "hybridRetrieval": 4740.004,
+      "rescueDecisionAndAuthoritativeFusion": 0.941,
+      "capsuleCandidateSelectionFileLoadingAndRendering": 2517.85,
+      "productFileLoadingSkeletonDocumentationDedupAccounting": 20.893,
+      "impactAttachment": 19.848,
+      "memoryRuleLookup": 0.598,
+      "rendering": 0.084,
+      "productEnrichmentTotal": 59.376,
+      "totalProductCall": 7407.36
+    }
+  },
+  "optimized": {
+    "hybridOnly": {
+      "samplesMs": [
+        873.226,
+        872.812,
+        869.28,
+        868.87,
+        868.641
+      ],
+      "medianMs": 869.28,
+      "p90Ms": 872.812
+    },
+    "hybridStage": {
+      "timingsMs": {
+        "lexical.symbol_search": 481.873964,
+        "lexical.symbol_path": 83.47197900000003,
+        "structural.test_import_reference": 0.18348699999990004,
+        "lexical.body_literal": 0.26873599999998987,
+        "structural.graph_expansion": 27.780881000000022,
+        "candidate_processing.score_sort_cap": 12.684169999999995,
+        "total": 606.34866
+      },
+      "counters": {
+        "symbol_search_calls": 2,
+        "symbol_search_rows": 106,
+        "symbols.after_lexical": 100,
+        "symbols.after_symbol_path": 105,
+        "symbols.after_test_expansion": 105,
+        "body_literal_matches": 0,
+        "graph_seed_symbols": 105,
+        "symbols.before_scoring": 129,
+        "candidates.after_cap": 25
+      }
+    },
+    "postHybrid": {
+      "timingsMs": {
+        "capsule.role_assignment": 0.31409000000007836,
+        "capsule.pivot_source_loading_and_ranking": 0.6137079999999742,
+        "capsule.pivot_packing": 0.40564599999993334,
+        "structural.coedit_expansion": 15.350865999999996,
+        "structural.file_evidence_deep_pass": 0.4674299999999221,
+        "capsule.support_packing": 0.3331789999999728
+      },
+      "counters": {}
+    },
+    "exactWallMs": 839.971
+  },
+  "tasks": {
+    "exact": {
+      "wallMs": 839.971,
+      "stage": {
+        "timingsMs": {
+          "lexical.symbol_search": 481.873964,
+          "lexical.symbol_path": 83.47197900000003,
+          "structural.test_import_reference": 0.18348699999990004,
+          "lexical.body_literal": 0.26873599999998987,
+          "structural.graph_expansion": 27.780881000000022,
+          "candidate_processing.score_sort_cap": 12.684169999999995,
+          "total": 606.34866
+        },
+        "counters": {
+          "symbol_search_calls": 2,
+          "symbol_search_rows": 106,
+          "symbols.after_lexical": 100,
+          "symbols.after_symbol_path": 105,
+          "symbols.after_test_expansion": 105,
+          "body_literal_matches": 0,
+          "graph_seed_symbols": 105,
+          "symbols.before_scoring": 129,
+          "candidates.after_cap": 25
+        }
+      },
+      "capsule": {
+        "timingsMs": {
+          "capsule.role_assignment": 0.31409000000007836,
+          "capsule.pivot_source_loading_and_ranking": 0.6137079999999742,
+          "capsule.pivot_packing": 0.40564599999993334,
+          "structural.coedit_expansion": 15.350865999999996,
+          "structural.file_evidence_deep_pass": 0.4674299999999221,
+          "capsule.support_packing": 0.3331789999999728
+        },
+        "counters": {}
+      },
+      "selectedFiles": [
+        "backend/app/services/scientific_read/public_assessments.py",
+        "backend/app/schemas/reads/scientific_assessment.py",
+        "backend/app/db/base.py",
+        "backend/app/db/models/thermo.py",
+        "clients/python/src/tckdb_client/scientific_types.py"
+      ],
+      "lead": "backend/app/services/scientific_read/public_assessments.py",
+      "renderedTokens": 717
+    },
+    "narrow": {
+      "wallMs": 334.565,
+      "stage": {
+        "timingsMs": {
+          "lexical.symbol_search": 138.55828899999995,
+          "lexical.symbol_path": 24.645367999999962,
+          "structural.test_import_reference": 0.016920000000027358,
+          "lexical.body_literal": 0.039481000000023414,
+          "structural.graph_expansion": 16.473286000000144,
+          "candidate_processing.score_sort_cap": 4.296234999999797,
+          "total": 184.05615000000012
+        },
+        "counters": {
+          "symbol_search_calls": 2,
+          "symbol_search_rows": 106,
+          "symbols.after_lexical": 100,
+          "symbols.after_symbol_path": 100,
+          "symbols.after_test_expansion": 100,
+          "body_literal_matches": 0,
+          "graph_seed_symbols": 100,
+          "symbols.before_scoring": 124,
+          "candidates.after_cap": 25
+        }
+      },
+      "capsule": {
+        "timingsMs": {
+          "capsule.role_assignment": 0.12445900000011534,
+          "capsule.pivot_source_loading_and_ranking": 0.20726599999989048,
+          "capsule.pivot_packing": 0.18269200000008823,
+          "structural.coedit_expansion": 6.434483999999884,
+          "structural.file_evidence_deep_pass": 90.57872399999997,
+          "capsule.support_packing": 0.2511380000000827
+        },
+        "counters": {}
+      },
+      "selectedFiles": [
+        "backend/app/db/models/reproducibility_assessment.py",
+        "backend/app/services/reproducibility_assessment.py",
+        "backend/app/schemas/entities/reproducibility_assessment.py",
+        "backend/app/services/reproducibility_rubric.py"
+      ],
+      "lead": "backend/app/db/models/reproducibility_assessment.py",
+      "renderedTokens": 1461
+    },
+    "medium": {
+      "wallMs": 251.378,
+      "stage": {
+        "timingsMs": {
+          "lexical.symbol_search": 198.553715,
+          "lexical.symbol_path": 0.009411999999883847,
+          "structural.test_import_reference": 0.0035439999999198335,
+          "lexical.body_literal": 0.020870000000059008,
+          "structural.graph_expansion": 17.035486999999875,
+          "candidate_processing.score_sort_cap": 5.219826000000012,
+          "total": 220.86267599999996
+        },
+        "counters": {
+          "symbol_search_calls": 1,
+          "symbol_search_rows": 100,
+          "symbols.after_lexical": 100,
+          "symbols.after_symbol_path": 100,
+          "symbols.after_test_expansion": 100,
+          "body_literal_matches": 0,
+          "graph_seed_symbols": 100,
+          "symbols.before_scoring": 124,
+          "candidates.after_cap": 25
+        }
+      },
+      "capsule": {
+        "timingsMs": {
+          "capsule.role_assignment": 0.07889699999986988,
+          "capsule.pivot_source_loading_and_ranking": 0.16467999999986205,
+          "capsule.pivot_packing": 0.15393500000004678,
+          "structural.coedit_expansion": 3.9278019999999287,
+          "structural.file_evidence_deep_pass": 0.046779000000015,
+          "capsule.support_packing": 0.3172020000001794
+        },
+        "counters": {}
+      },
+      "selectedFiles": [
+        "backend/app/services/reproducibility_assessment.py",
+        "backend/app/db/models/reproducibility_assessment.py",
+        "backend/app/services/scientific_read/public_assessments.py",
+        "backend/alembic/versions/6a9d2e4c7b1f_add_repro_assessment_public_ref.py",
+        "backend/app/services/reproducibility_rubric.py"
+      ],
+      "lead": "backend/app/services/reproducibility_assessment.py",
+      "renderedTokens": 1788
+    },
+    "path": {
+      "wallMs": 883.593,
+      "stage": {
+        "timingsMs": {
+          "lexical.symbol_search": 21.345536999999922,
+          "lexical.symbol_path": 230.29240000000004,
+          "structural.test_import_reference": 0.007063000000016473,
+          "lexical.body_literal": 0.12171399999988353,
+          "structural.graph_expansion": 2.4608100000000377,
+          "candidate_processing.score_sort_cap": 2.326276000000007,
+          "total": 256.5989870000001
+        },
+        "counters": {
+          "symbol_search_calls": 3,
+          "symbol_search_rows": 12,
+          "symbols.after_lexical": 0,
+          "path_symbol_queries": 1,
+          "path_symbol_rows": 12,
+          "symbols.after_symbol_path": 12,
+          "symbols.after_test_expansion": 12,
+          "body_literal_matches": 0,
+          "graph_seed_symbols": 12,
+          "symbols.before_scoring": 36,
+          "candidates.after_cap": 25
+        }
+      },
+      "capsule": {
+        "timingsMs": {
+          "capsule.role_assignment": 0.07155200000033801,
+          "capsule.pivot_source_loading_and_ranking": 0.17430599999988772,
+          "capsule.pivot_packing": 0.16906599999992977,
+          "structural.coedit_expansion": 6.148740999999973,
+          "structural.file_evidence_deep_pass": 123.01594100000011,
+          "capsule.support_packing": 0.25878999999986263
+        },
+        "counters": {}
+      },
+      "selectedFiles": [
+        "backend/app/services/scientific_read/public_assessments.py"
+      ],
+      "lead": "backend/app/services/scientific_read/public_assessments.py",
+      "renderedTokens": 616
+    },
+    "noContext": {
+      "wallMs": 44.485,
+      "selectedFiles": [],
+      "lead": null,
+      "renderedTokens": 0
+    },
+    "tckdbAuthority": {
+      "warm": {
+        "samplesMs": [
+          873.226,
+          872.812,
+          869.28,
+          868.87,
+          868.641
+        ],
+        "medianMs": 869.28,
+        "p90Ms": 872.812
+      },
+      "projection": {
+        "selectedFiles": [
+          "backend/app/services/scientific_read/public_assessments.py",
+          "backend/app/schemas/reads/scientific_assessment.py",
+          "backend/app/db/base.py",
+          "backend/app/db/models/thermo.py",
+          "clients/python/src/tckdb_client/scientific_types.py",
+          "backend/app/db/models/reproducibility_assessment.py"
+        ],
+        "leadPivot": "backend/app/services/scientific_read/public_assessments.py",
+        "roles": {
+          "backend/app/services/scientific_read/public_assessments.py": "support",
+          "backend/app/schemas/reads/scientific_assessment.py": "pivot",
+          "backend/app/db/base.py": "support",
+          "backend/app/db/models/thermo.py": "support",
+          "clients/python/src/tckdb_client/scientific_types.py": "support",
+          "backend/app/db/models/reproducibility_assessment.py": "support"
+        },
+        "rescue": {
+          "attempted": true,
+          "trigger": "low_compound_coverage",
+          "missing_clues": [
+            "assessment models",
+            "supersession schemas",
+            "schemas migrations",
+            "migrations projection",
+            "projection builders",
+            "builders openapi",
+            "openapi tests",
+            "tests docs",
+            "docs python"
+          ],
+          "candidates_added": 1,
+          "selected_candidates_added": 1
+        }
+      },
+      "semanticHash": "b83fdc647bdd24add19a9c652008b73ddafa0223e063d22526e98bf4e0e5b6a2",
+      "baselineProjectionEqual": true
+    }
+  },
+  "frozen": {
+    "baseline": {
+      "medianMs": 2657.61,
+      "p90Ms": 10652.107
+    },
+    "optimized": {
+      "samplesMs": [
+        920.764,
+        2497.96,
+        3942.399,
+        1120.519,
+        1038.444,
+        576.993,
+        1139.202,
+        295.617,
+        450.092,
+        638.149,
+        725.368,
+        924.254,
+        909.313,
+        982.971,
+        355.102,
+        972.283,
+        424.412,
+        906.459,
+        1146.416,
+        1143.673,
+        504.11,
+        832.088,
+        651.148,
+        648.777,
+        1445.532,
+        781.025,
+        614.192,
+        1377.76,
+        260.35,
+        227.012,
+        214.076,
+        214.026,
+        570.143,
+        90.598,
+        569.546,
+        51.335,
+        1067.589,
+        1203.403,
+        554.976,
+        193.208,
+        134.054,
+        15.526,
+        175.777,
+        783.568,
+        463.269,
+        293.768,
+        260.36,
+        240.266,
+        315.148,
+        1454.332
+      ],
+      "medianMs": 614.192,
+      "p90Ms": 1203.403
+    }
+  },
+  "coldWarmProtocol": {
+    "coldNewProcessBaselineMs": 7360.51,
+    "warmFirstTaskMs": 839.971,
+    "warmRepeated": {
+      "samplesMs": [
+        873.226,
+        872.812,
+        869.28,
+        868.87,
+        868.641
+      ],
+      "medianMs": 869.28,
+      "p90Ms": 872.812
+    },
+    "warmDifferentTaskMs": 251.378,
+    "warmSimilarTermsMs": 334.565,
+    "sameTaskCache": "none"
+  }
+}

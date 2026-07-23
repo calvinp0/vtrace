@@ -19,6 +19,11 @@ export interface SearchSymbolsOptions {
   enableCompoundTaskDecomposition?: boolean;
   /** Internal comparison switch; product retrieval keeps this enabled by default. */
   enableExactIdentifierLane?: boolean;
+  /**
+   * Request-local cache for the immutable broad-query admission row set.
+   * Values are internal SearchCandidateRow arrays; never shared across requests.
+   */
+  broadCandidateCache?: Map<string, unknown>;
 }
 
 export enum SymbolSearchMatchField {

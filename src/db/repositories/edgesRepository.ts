@@ -182,21 +182,41 @@ export function listCrossFileEdgeEndpointsForFile(
 ): CrossFileEdgeEndpoint[] {
   const normalized = normalizeFilePath(filePath);
   const rows = db.query(`
-    SELECT
-      CASE WHEN src_files.path = ?1 THEN dst_files.path ELSE src_files.path END AS other_path,
-      edges.edge_type AS edge_type,
-      CASE WHEN src_files.path = ?1 THEN src_symbols.local_name ELSE dst_symbols.local_name END AS anchor_name,
-      CASE WHEN src_files.path = ?1 THEN dst_symbols.id ELSE src_symbols.id END AS other_symbol_id,
-      CASE WHEN src_files.path = ?1 THEN dst_symbols.local_name ELSE src_symbols.local_name END AS other_name,
-      CASE WHEN src_files.path = ?1 THEN dst_symbols.kind ELSE src_symbols.kind END AS other_kind
-    FROM edges
-    INNER JOIN symbols AS src_symbols ON src_symbols.id = edges.src_symbol_id
-    INNER JOIN symbols AS dst_symbols ON dst_symbols.id = edges.dst_symbol_id
-    INNER JOIN files AS src_files ON src_files.id = src_symbols.file_id
-    INNER JOIN files AS dst_files ON dst_files.id = dst_symbols.file_id
-    WHERE (src_files.path = ?1 AND dst_files.path != ?1)
-       OR (dst_files.path = ?1 AND src_files.path != ?1)
-    ORDER BY edges.id ASC
+    SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind
+    FROM (
+      SELECT
+        edges.id AS edge_id,
+        other_files.path AS other_path,
+        edges.edge_type AS edge_type,
+        anchor_symbols.local_name AS anchor_name,
+        other_symbols.id AS other_symbol_id,
+        other_symbols.local_name AS other_name,
+        other_symbols.kind AS other_kind
+      FROM files AS anchor_files
+      INNER JOIN symbols AS anchor_symbols ON anchor_symbols.file_id = anchor_files.id
+      INNER JOIN edges ON edges.src_symbol_id = anchor_symbols.id
+      INNER JOIN symbols AS other_symbols ON other_symbols.id = edges.dst_symbol_id
+      INNER JOIN files AS other_files ON other_files.id = other_symbols.file_id
+      WHERE anchor_files.path = ?1 AND other_files.path != ?1
+
+      UNION ALL
+
+      SELECT
+        edges.id AS edge_id,
+        other_files.path AS other_path,
+        edges.edge_type AS edge_type,
+        anchor_symbols.local_name AS anchor_name,
+        other_symbols.id AS other_symbol_id,
+        other_symbols.local_name AS other_name,
+        other_symbols.kind AS other_kind
+      FROM files AS anchor_files
+      INNER JOIN symbols AS anchor_symbols ON anchor_symbols.file_id = anchor_files.id
+      INNER JOIN edges ON edges.dst_symbol_id = anchor_symbols.id
+      INNER JOIN symbols AS other_symbols ON other_symbols.id = edges.src_symbol_id
+      INNER JOIN files AS other_files ON other_files.id = other_symbols.file_id
+      WHERE anchor_files.path = ?1 AND other_files.path != ?1
+    )
+    ORDER BY edge_id ASC
   `).all(normalized) as CrossFileEdgeRow[];
 
   return rows.map((row) => ({
@@ -218,14 +238,26 @@ export function listCrossFileEdgeEndpointsForFile(
 export function countCrossFileNeighborFiles(db: Database, filePath: FilePath): number {
   const normalized = normalizeFilePath(filePath);
   const row = db.query(`
-    SELECT COUNT(DISTINCT CASE WHEN src_files.path = ?1 THEN dst_files.path ELSE src_files.path END) AS n
-    FROM edges
-    INNER JOIN symbols AS src_symbols ON src_symbols.id = edges.src_symbol_id
-    INNER JOIN symbols AS dst_symbols ON dst_symbols.id = edges.dst_symbol_id
-    INNER JOIN files AS src_files ON src_files.id = src_symbols.file_id
-    INNER JOIN files AS dst_files ON dst_files.id = dst_symbols.file_id
-    WHERE (src_files.path = ?1 AND dst_files.path != ?1)
-       OR (dst_files.path = ?1 AND src_files.path != ?1)
+    SELECT COUNT(DISTINCT other_path) AS n
+    FROM (
+      SELECT other_files.path AS other_path
+      FROM files AS anchor_files
+      INNER JOIN symbols AS anchor_symbols ON anchor_symbols.file_id = anchor_files.id
+      INNER JOIN edges ON edges.src_symbol_id = anchor_symbols.id
+      INNER JOIN symbols AS other_symbols ON other_symbols.id = edges.dst_symbol_id
+      INNER JOIN files AS other_files ON other_files.id = other_symbols.file_id
+      WHERE anchor_files.path = ?1 AND other_files.path != ?1
+
+      UNION ALL
+
+      SELECT other_files.path AS other_path
+      FROM files AS anchor_files
+      INNER JOIN symbols AS anchor_symbols ON anchor_symbols.file_id = anchor_files.id
+      INNER JOIN edges ON edges.dst_symbol_id = anchor_symbols.id
+      INNER JOIN symbols AS other_symbols ON other_symbols.id = edges.src_symbol_id
+      INNER JOIN files AS other_files ON other_files.id = other_symbols.file_id
+      WHERE anchor_files.path = ?1 AND other_files.path != ?1
+    )
   `).get(normalized) as { n: number } | undefined;
   return row?.n ?? 0;
 }

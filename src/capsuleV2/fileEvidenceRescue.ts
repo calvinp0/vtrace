@@ -53,6 +53,7 @@ import { GENERIC_TOKEN_STOPLIST } from "../capsule/sweQueryShaping";
 import { listAllFilePaths } from "../db/repositories/filesRepository";
 import { extractBodyLiterals } from "../indexer/extractBodyLiterals";
 import {
+  type HybridRetrievalRequestCache,
   hybridRetrieve,
   HybridCandidateSource,
   type HybridCandidate,
@@ -233,6 +234,7 @@ export interface FileEvidenceRescueInput {
   /** Distinct files across the pivots + the support winners that will render. */
   readonly baseDistinctFileCount: number;
   readonly taskAllowsNonSource: boolean;
+  readonly requestCache?: HybridRetrievalRequestCache;
 }
 
 /**
@@ -267,6 +269,7 @@ export function rescueFileEvidenceSupport(input: FileEvidenceRescueInput): FileE
     weights: input.weights,
     symbolSeeds: [...input.symbolSeeds],
     maxResults: DEEP_POOL_SIZE,
+    ...(input.requestCache === undefined ? {} : { requestCache: input.requestCache }),
   });
 
   // First (best-ranked) symbol per distinct file, in rank order.

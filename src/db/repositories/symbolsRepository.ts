@@ -203,6 +203,43 @@ export function getSymbolById(
   return row === null ? undefined : symbolRowToRecord(row);
 }
 
+/** Batch equivalent of getSymbolById. Result identity and row conversion match
+ * the single-row lookup; callers retain their own deterministic iteration order. */
+export function getSymbolsByIds(
+  db: Database,
+  symbolIds: readonly string[],
+): Map<string, SymbolRecord> {
+  const ids = [...new Set(symbolIds)];
+  if (ids.length === 0) {
+    return new Map();
+  }
+  const placeholders = ids.map(() => "?").join(", ");
+  const rows = db.query(`
+    SELECT
+      symbols.id,
+      files.path AS file_path,
+      symbols.fq_name,
+      symbols.local_name,
+      symbols.kind,
+      symbols.signature,
+      symbols.start_line,
+      symbols.end_line,
+      symbols.start_byte,
+      symbols.end_byte,
+      symbols.parent_symbol_id,
+      symbols.exported,
+      symbols.docstring,
+      symbols.decorators
+    FROM symbols
+    INNER JOIN files ON files.id = symbols.file_id
+    WHERE symbols.id IN (${placeholders})
+  `).all(...ids) as SymbolRow[];
+  return new Map(rows.map((row) => {
+    const symbol = symbolRowToRecord(row);
+    return [symbol.id, symbol];
+  }));
+}
+
 export function listSymbolsByFqName(
   db: Database,
   fqName: string,

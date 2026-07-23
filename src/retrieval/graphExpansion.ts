@@ -16,7 +16,7 @@ import type { Database } from "bun:sqlite";
 
 import { listEdgesForSymbols } from "../db/repositories/edgesRepository";
 import {
-  getSymbolById,
+  getSymbolsByIds,
   listSymbolsUnderDirectory,
 } from "../db/repositories/symbolsRepository";
 import { EdgeType, type SymbolId, type SymbolRecord } from "../domain/types";
@@ -180,20 +180,22 @@ function addSameModuleNeighbours(
   pending: Map<SymbolId, PendingCandidate>,
   perSeedLimit: number,
 ): void {
-  const seenDirectories = new Set<string>();
+  const seedsById = getSymbolsByIds(db, seeds);
+  const symbolsByDirectory = new Map<string, SymbolRecord[]>();
   for (const seedId of seeds) {
-    const seed = getSymbolById(db, seedId);
+    const seed = seedsById.get(seedId);
     if (seed === undefined) {
       continue;
     }
     const directory = directoryOf(seed.filePath);
-    if (seenDirectories.has(`${seedId}\0${directory}`)) {
-      continue;
+    let siblings = symbolsByDirectory.get(directory);
+    if (siblings === undefined) {
+      siblings = listSymbolsUnderDirectory(db, directory);
+      symbolsByDirectory.set(directory, siblings);
     }
-    seenDirectories.add(`${seedId}\0${directory}`);
 
     let added = 0;
-    for (const sibling of listSymbolsUnderDirectory(db, directory)) {
+    for (const sibling of siblings) {
       if (added >= perSeedLimit) {
         break;
       }
@@ -227,8 +229,9 @@ function materialize(
   maxCandidates: number,
 ): ExpandedCandidate[] {
   const candidates: ExpandedCandidate[] = [];
+  const symbolsById = getSymbolsByIds(db, [...pending.keys()]);
   for (const [symbolId, info] of pending) {
-    const symbol = getSymbolById(db, symbolId);
+    const symbol = symbolsById.get(symbolId);
     if (symbol === undefined) {
       continue;
     }
