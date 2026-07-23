@@ -126,6 +126,8 @@ export interface BuildCapsuleV2Input {
   intent: CapsuleIntent;
   /** Token budget for the assembled capsule. */
   maxTokens: number;
+  /** Offline profiler seam; omitted from deterministic product diagnostics by default. */
+  includeTimingDiagnostics?: boolean;
   /**
    * Pivot ordering version (dev/benchmark lever, not user UX). `v2` (default)
    * applies the conservative multi-evidence / specificity / broad-snippet
@@ -144,6 +146,7 @@ const CANDIDATE_POOL_SIZE = 25;
 const MAX_PIVOT_EVIDENCE = 6;
 
 export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
+  const taskDerivationStarted = performance.now();
   const shaped = shapeSweQuery({
     problemStatement: input.task,
     failToPass: extractFailingTests(input.task),
@@ -165,8 +168,10 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // fixed keys, so it is not directly a Record<string, number>).
   const weightsRecord: Record<string, number> = Object.fromEntries(Object.entries(weights));
   const allocation = allocateBudget(input.maxTokens);
+  const taskDerivationMs = performance.now() - taskDerivationStarted;
 
   const symbolSeeds = deriveSymbolSeeds(shaped);
+  const hybridRetrievalStarted = performance.now();
   let retrieval = hybridRetrieve(input.db, {
     query: shaped.query,
     shaped,
@@ -200,6 +205,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       compoundTaskRescueUsed = true;
     }
   }
+  const hybridRetrievalMs = performance.now() - hybridRetrievalStarted;
   let candidates = retrieval.candidates;
   const bodyLiteralMatches = retrieval.bodyLiteralMatches;
 
@@ -1160,6 +1166,12 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       candidate_count: candidates.length,
       candidate_scores: candidateScoreDiagnostics(candidates),
       ...(compoundTaskRescueUsed ? { compound_task_rescue_used: true } : {}),
+      ...(input.includeTimingDiagnostics === true ? {
+        stage_timings_ms: {
+          task_derivation: taskDerivationMs,
+          hybrid_retrieval: hybridRetrievalMs,
+        },
+      } : {}),
       pivot_count: pivots.length,
       support_count: support.length,
       discarded_count: discarded.length,

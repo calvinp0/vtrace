@@ -10,7 +10,10 @@ import {
 import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
 import type { PreparedCapsuleAssembly } from "../capsuleProfiles/types";
 import { buildCapsuleV2 } from "../capsuleV2/buildCapsuleV2";
-import { buildAuthoritativeProductRetrieval } from "../capsuleV2/authoritativeProductRetrieval";
+import {
+  buildAuthoritativeProductRetrieval,
+  type AuthoritativeProductRetrieval,
+} from "../capsuleV2/authoritativeProductRetrieval";
 import {
   capsuleV2ToManifestItemFields,
   toCapsuleV2ProductResponse,
@@ -21,7 +24,7 @@ import {
   type CapsuleV2DigestRulesSeam,
   type CapsuleV2ProductResponse,
 } from "../capsuleV2/productAdapter";
-import { CapsuleIntent } from "../capsuleV2/types";
+import { CapsuleIntent, type CapsuleV2Result } from "../capsuleV2/types";
 import {
   parseRequestedCapsuleEngine,
   requestWantsCapsuleV2,
@@ -44,7 +47,11 @@ import {
   defaultIntentClassifier,
   type IntentClassifier,
 } from "../intent/classifier";
-import { routeQuery, type RoutedQueryResult } from "../intent/routeQuery";
+import {
+  classifyQueryWithoutRetrieval,
+  routeQuery,
+  type RoutedQueryResult,
+} from "../intent/routeQuery";
 import { normalizeIntentQuery } from "../intent/rules";
 import { QueryIntent } from "../intent/types";
 import { StaleStateStatus } from "../memory/types";
@@ -167,6 +174,8 @@ export interface OrchestrationContextSection {
   readonly routedQuery: RoutedQueryResult;
   readonly preparedAssembly: PreparedCapsuleAssembly;
   readonly retrievalDiagnostics: OrchestrationRetrievalDiagnostics;
+  /** Request-local M123 authority reused by v2/productContext assembly. */
+  readonly authoritativeRetrieval: AuthoritativeProductRetrieval;
 }
 
 export interface OrchestrationImpactFocalSymbol {
@@ -337,7 +346,9 @@ export function runPipelineOrchestrator(
   const query = rawInput.query;
   const maxResults = rawInput.maxResults ?? RUN_PIPELINE_DEFAULTS.maxResults;
   const maxBudgetCharacters =
-    rawInput.maxBudgetCharacters ?? RUN_PIPELINE_DEFAULTS.maxBudgetCharacters;
+    rawInput.maxBudgetCharacters
+    ?? (rawInput.capsuleBudgetTokens === undefined ? undefined : rawInput.capsuleBudgetTokens * 4)
+    ?? RUN_PIPELINE_DEFAULTS.maxBudgetCharacters;
   const intentRequestedRaw = rawInput.intent ?? RunPipelinePresetIntent.Auto;
   const intentRequested = isRunPipelinePresetIntent(intentRequestedRaw)
     ? intentRequestedRaw
@@ -366,6 +377,8 @@ export function runPipelineOrchestrator(
     maxResults,
     maxBudgetCharacters,
     preset: intentDecision.selected,
+    ...(rawInput.capsuleIntent === undefined ? {} : { capsuleIntent: rawInput.capsuleIntent }),
+    requireRoutedContext: shouldRunRoutedStructuralContext(query, normalizedIntent),
   });
   // Persist a deterministic capsule manifest so the emitted manifest id
   // resolves against a real store in check_capsule_staleness / check-capsule.
@@ -402,6 +415,9 @@ export function runPipelineOrchestrator(
   // way the v1 path does (resolvable by check_capsule_staleness).
   const capsuleV2Build = buildCapsuleV2Section(db, repoRoot, query, rawInput, {
     builder: options.capsuleV2Builder ?? buildCapsuleV2,
+    ...(options.capsuleV2Builder === undefined
+      ? { prebuilt: context.authoritativeRetrieval.result }
+      : {}),
     digestEnrichments: {
       impact: deriveImpactDigestSeam(impact),
       memory: deriveMemoryDigestSeam(memory),
@@ -578,6 +594,7 @@ function buildCapsuleV2Section(
   rawInput: RunPipelineOrchestratorInput,
   deps: {
     builder: typeof buildCapsuleV2;
+    prebuilt?: CapsuleV2Result;
     digestEnrichments?: DigestEnrichments;
   },
 ): CapsuleV2SectionResult {
@@ -594,7 +611,7 @@ function buildCapsuleV2Section(
   }
 
   try {
-    const result = deps.builder({
+    const result = deps.prebuilt ?? deps.builder({
       db,
       repoRoot,
       task: query,
@@ -653,14 +670,26 @@ export function runReliableContextRetrieval(
     maxResults: number;
     maxBudgetCharacters: number;
     preset: RunPipelineConcretePreset;
+    capsuleIntent?: CapsuleIntent;
+    /** Flow/impact need ranked endpoint candidates even when rescue is skipped. */
+    requireRoutedContext?: boolean;
     /** Offline diagnostics only; product behavior and ordering are unchanged. */
     includeTimingDiagnostics?: boolean;
   },
 ): OrchestrationContextSection {
-  const routedQuery = routeQuery(db, input.query, {
-    maxResults: input.maxResults,
-    includeTimingDiagnostics: input.includeTimingDiagnostics,
+  const primaryRetrieval = buildAuthoritativeProductRetrieval(db, repoRoot, {
+    query: input.query,
+    preset: input.preset,
+    maxBudgetCharacters: input.maxBudgetCharacters,
+    capsuleIntent: input.capsuleIntent,
   });
+  const routedQuery = primaryRetrieval.routedQuery
+    ?? (input.requireRoutedContext === true
+      ? routeQuery(db, input.query, {
+          maxResults: input.maxResults,
+          includeTimingDiagnostics: input.includeTimingDiagnostics,
+        })
+      : classifyQueryWithoutRetrieval(input.query));
   // Force capsule-profile classification to the preset's mapped QueryIntent so
   // intent presets materially affect which capsule profile is used.
   const overridden = overrideClassificationIntent(
@@ -682,11 +711,7 @@ export function runReliableContextRetrieval(
   // M123: routed FTS remains the bounded M121 diagnostic/rescue surface, while
   // the shared Capsule v2 hybrid core is the sole authority for selected files,
   // pivot/support roles, ordering, and budget-aware rendering.
-  const primaryCapsule = buildAuthoritativeProductRetrieval(db, repoRoot, {
-    query: input.query,
-    preset: input.preset,
-    maxBudgetCharacters: input.maxBudgetCharacters,
-  }).capsule;
+  const primaryCapsule = primaryRetrieval.capsule;
   const initialContextItemCount = countUsefulContextItems(primaryCapsule);
   const initialReason = resolveContextSkipReason(input.query, overridden, primaryCapsule);
 
@@ -697,6 +722,7 @@ export function runReliableContextRetrieval(
       capsule: primaryCapsule,
       routedQuery: overridden,
       preparedAssembly,
+      authoritativeRetrieval: primaryRetrieval,
       retrievalDiagnostics: {
         fallbackApplied: false,
         fallbackMode: null,
@@ -720,6 +746,7 @@ export function runReliableContextRetrieval(
     capsule: primaryCapsule,
     routedQuery: overridden,
     preparedAssembly,
+    authoritativeRetrieval: primaryRetrieval,
     retrievalDiagnostics: {
       fallbackApplied: false,
       fallbackMode: null,
@@ -797,6 +824,17 @@ function countUsefulContextItems(capsule: Capsule): number {
 
 function hasSupportedQueryShape(query: string): boolean {
   return /[A-Za-z0-9_]/u.test(query);
+}
+
+function shouldRunRoutedStructuralContext(
+  query: string,
+  intent: NormalizedIntentDecision,
+): boolean {
+  if (
+    intent.resolvedIntent === NormalizedIntent.Impact
+    || intent.resolvedIntent === NormalizedIntent.Refactor
+  ) return true;
+  return /\b(?:flow|between|compare|dependency|dependencies|dependent|dependents|caller|callers)\b/i.test(query);
 }
 
 function resolveContextSkipReason(

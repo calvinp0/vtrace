@@ -215,7 +215,10 @@ function productView(context: OrchestrationContextSection, latencyMs: number): R
     support: unique(capsule.supportingItems.map((item) => normalize(item.filePath))),
     modes: Object.fromEntries(selected.map((item) => [normalize(item.filePath), item.content.mode === "full" ? "full" : "compressed"])),
     contextTokens: Math.ceil(capsule.budget.usedCharacters / CHARS_PER_TOKEN),
-    noCandidates: context.skipReason === "no_candidates" || routed.rerankedResults.length === 0,
+    // M125 may skip the diagnostic routed lane when the authoritative hybrid
+    // capsule is already sufficient. An empty routed result is therefore not
+    // an authoritative no-candidate outcome.
+    noCandidates: context.skipReason === "no_candidates" || capsule.pivots.length === 0,
     candidateFilesConsidered: context.retrievalDiagnostics.candidateFilesConsidered,
     diagnostics: {
       routeMode: routed.profile.backend,

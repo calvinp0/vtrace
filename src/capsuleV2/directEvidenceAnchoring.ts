@@ -98,6 +98,13 @@ const GENERIC_WORDS: ReadonlySet<string> = new Set([
   "input", "output", "using", "used", "when", "with", "this", "that", "from",
   "have", "does", "case", "code", "call", "calls", "name", "names", "version",
   "python", "setup",
+  // Artifact-category prose is useful to compound retrieval as a clause, but a
+  // bare category is not an exact pointer to one same-named file. Treating
+  // "schemas" or "client" as a file stem can resolve to only one or two files
+  // by accident and inject an unrelated weak candidate ahead of the organic
+  // pool (for example, a request asking to trace all schemas and client types).
+  "schema", "schemas", "migration", "migrations", "projection", "projections",
+  "client", "clients", "doc", "docs", "documentation", "openapi",
 ]);
 
 // Basenames that exist everywhere; an exact match is packaging, not evidence.

@@ -245,6 +245,21 @@ export interface CapsuleV2Diagnostics {
   candidate_scores?: CandidateScoreDiagnostic[];
   /** True only when an empty normal hybrid pool used M121 bounded rescue. */
   compound_task_rescue_used?: boolean;
+  /** M125 bounded routed-FTS rescue, run only after authoritative selection. */
+  routed_rescue?: {
+    attempted: boolean;
+    reason?: "authoritative_context_sufficient";
+    trigger?: "no_candidates" | "missing_exact_identifier" | "missing_path" | "low_compound_coverage";
+    missing_clues: string[];
+    candidates_added: number;
+    selected_candidates_added: number;
+    timing_ms: number;
+  };
+  /** Non-overlapping M125 clocks; total build remains owned by the caller. */
+  stage_timings_ms?: {
+    task_derivation: number;
+    hybrid_retrieval: number;
+  };
   pivot_count: number;
   support_count: number;
   discarded_count: number;

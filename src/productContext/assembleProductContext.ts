@@ -3,9 +3,14 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Database } from "bun:sqlite";
 
-import { buildCapsuleV2 } from "../capsuleV2/buildCapsuleV2";
+import {
+  buildAuthoritativeProductRetrieval,
+  PRODUCT_RETRIEVAL_CHARS_PER_TOKEN,
+  type AuthoritativeProductRetrieval,
+} from "../capsuleV2/authoritativeProductRetrieval";
 import { toCapsuleV2ProductResponse, type CapsuleV2ProductItem } from "../capsuleV2/productAdapter";
 import { CapsuleIntent } from "../capsuleV2/types";
+import { RunPipelinePresetIntent, type RunPipelineConcretePreset } from "../runPipeline/types";
 import { estimateTokens, roundPercent } from "../capsuleV2/tokens";
 import { listSymbolsByFqName } from "../db/repositories/symbolsRepository";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
@@ -55,6 +60,8 @@ export interface AssembleProductContextInput {
   };
   indexRefreshMs?: number;
   now?: () => number;
+  /** Request-local authority from an outer product tool; avoids rebuilding v2. */
+  authoritativeRetrieval?: AuthoritativeProductRetrieval;
 }
 
 export function buildUnresolvedProductContext(input: {
@@ -199,13 +206,17 @@ export async function assembleProductContext(
   // co-edit selection, and task derivation. M119 deliberately does not duplicate
   // or alter any of those policies.
   const capsuleBuildStarted = now();
-  const capsule = buildCapsuleV2({
-    db: input.db,
-    repoRoot: input.repoRoot,
-    task: input.task,
-    intent: input.intent ?? CapsuleIntent.Auto,
-    maxTokens: budgetTokens,
-  });
+  const authoritative = input.authoritativeRetrieval ?? buildAuthoritativeProductRetrieval(
+    input.db,
+    input.repoRoot,
+    {
+      query: input.task,
+      preset: presetForCapsuleIntent(input.intent ?? CapsuleIntent.Auto),
+      maxBudgetCharacters: budgetTokens * PRODUCT_RETRIEVAL_CHARS_PER_TOKEN,
+      capsuleIntent: input.intent ?? CapsuleIntent.Auto,
+    },
+  );
+  const capsule = authoritative.result;
   const product = toCapsuleV2ProductResponse(capsule, { query: input.task });
   const capsuleBuildMs = elapsed(capsuleBuildStarted, now());
   // buildCapsuleV2 currently exposes no internal retrieval clock seam. Report the
@@ -318,6 +329,21 @@ export async function assembleProductContext(
       duplicatePolicy: "one rendered body per path and symbol identity; roles are merged",
     },
   };
+}
+
+function presetForCapsuleIntent(intent: CapsuleIntent): RunPipelineConcretePreset {
+  switch (intent) {
+    case CapsuleIntent.Debug:
+    case CapsuleIntent.TestFailure:
+      return RunPipelinePresetIntent.Debug;
+    case CapsuleIntent.Refactor:
+      return RunPipelinePresetIntent.Refactor;
+    case CapsuleIntent.Explain:
+    case CapsuleIntent.Impact:
+      return RunPipelinePresetIntent.Explore;
+    default:
+      return RunPipelinePresetIntent.Modify;
+  }
 }
 
 function sourceDraft(db: Database, item: CapsuleV2ProductItem, roles: ProductContextRole[], roleOrder: number): DraftItem {

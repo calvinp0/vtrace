@@ -1,0 +1,6 @@
+case,pass,lead_pivot,selected_files,rescue_attempted,rescue_trigger
+hybrid_sufficient,true,app/models/reproducibility_assessment.py,app/models/reproducibility_assessment.py|app/services/public_assessments.py|migrations/add_public_ref.py|app/services/public_refs.py|app/schemas/assessment.py,false,authoritative_context_sufficient
+compound_rescue,true,app/services/public_assessments.py,app/services/public_assessments.py|app/models/reproducibility_assessment.py|app/schemas/assessment.py|app/services/public_refs.py|migrations/add_public_ref.py,true,low_compound_coverage
+exact_identifier_rescue,true,app/models/reproducibility_assessment.py,app/models/reproducibility_assessment.py|app/services/public_refs.py|app/schemas/assessment.py|app/services/public_assessments.py,true,missing_exact_identifier
+standalone_path,true,app/services/public_assessments.py,app/services/public_assessments.py|app/services/public_refs.py,false,authoritative_context_sufficient
+no_context,true,,,true,no_candidates

@@ -7878,6 +7878,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             task: query,
             intent: capsuleV2Intent,
             budgetTokens: capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
+            authoritativeRetrieval: orchestration.context.authoritativeRetrieval,
             ...(sessionId === undefined ? {} : { sessionId }),
           });
 
@@ -8543,12 +8544,24 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         async (binding, db) => {
           const sourceRunId = getLatestIndexRun(db)?.id ?? null;
           const accountingStartedAt = performance.now();
+          const productBudgetTokens = capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS;
+          const authoritativeRetrieval = buildAuthoritativeProductRetrieval(
+            db,
+            binding.repoRoot,
+            {
+              query,
+              preset: RunPipelinePresetIntent.Modify,
+              maxBudgetCharacters: productBudgetTokens * 4,
+              capsuleIntent: capsuleV2Intent,
+            },
+          );
           const productContext = await assembleProductContext({
             db,
             repoRoot: binding.repoRoot,
             task: query,
             intent: capsuleV2Intent,
-            budgetTokens: capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
+            budgetTokens: productBudgetTokens,
+            authoritativeRetrieval,
           });
 
           // Opt-in Capsule v2 path: build the bounded, intent-aware v2 capsule,
@@ -8564,13 +8577,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           let engineFallbackReason: string | null = null;
           if (useCapsuleV2) {
             try {
-              const result = buildCapsuleV2({
-                db,
-                repoRoot: binding.repoRoot,
-                task: query,
-                intent: capsuleV2Intent,
-                maxTokens: capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
-              });
+              const result = authoritativeRetrieval.result;
               const capsuleV2 = toCapsuleV2ProductResponse(result, { query });
               const capsuleManifestId = persistCapsuleV2ManifestBestEffort(
                 db,

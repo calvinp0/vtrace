@@ -130,6 +130,27 @@ export function routeQuery(
   };
 }
 
+/** Classify/profile a query without running lexical or graph retrieval. */
+export function classifyQueryWithoutRetrieval(
+  query: string,
+  options: Pick<RouteQueryOptions, "classifier"> = {},
+): RoutedQueryResult {
+  const classifier = options.classifier ?? defaultIntentClassifier;
+  const classification = classifier.classify(query);
+  return {
+    query,
+    intent: classification.intent,
+    classification,
+    profile: getIntentRoutingProfile(classification.intent),
+    rerankedResults: [],
+    pathSignalDiagnostics: {
+      ...emptyPathSignalDiagnostics(),
+      normalizedQuery: query.trim().toLowerCase(),
+      finalReason: "authoritative_context_sufficient",
+    },
+  };
+}
+
 function emptyPathSignalDiagnostics(): RetrievalPathSignalDiagnostics {
   return {
     pathSignalsConsidered: [],

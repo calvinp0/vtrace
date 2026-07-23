@@ -92,6 +92,7 @@ export async function runRunPipelineCommand(
         task: parsed.query,
         intent: parsed.capsuleIntent ?? CapsuleIntent.Auto,
         budgetTokens: parsed.capsuleBudgetTokens ?? 8_000,
+        authoritativeRetrieval: orchestration.context.authoritativeRetrieval,
         ...(parsed.sessionId === undefined ? {} : { sessionId: parsed.sessionId }),
       });
       // Deterministic, best-effort accounting over the emitted response. Mirrors

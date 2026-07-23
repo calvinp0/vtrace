@@ -1,0 +1,7 @@
+stage,median_ms,p90_ms,maximum_ms
+cold_first_call,7347.984,7347.984,7347.984
+routed_only,27.444,29.375,29.375
+hybrid_only,7528.372,7580.136,7580.136
+combined_m123_recorded,2629.906,10501.043,
+combined_post,7650.591,7676.875,7676.875
+product_enrichment,50.742,55.048,55.048

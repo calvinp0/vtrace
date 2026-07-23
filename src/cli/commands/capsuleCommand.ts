@@ -37,6 +37,7 @@ import {
   type CapsuleSupportingCandidate,
 } from "../../capsule/types";
 import { buildCapsuleV2 } from "../../capsuleV2/buildCapsuleV2";
+import { buildAuthoritativeProductRetrieval } from "../../capsuleV2/authoritativeProductRetrieval";
 import { parsePivotRankingVersion, type PivotRankingVersion } from "../../capsuleV2/pivotRankingV2";
 import { renderCapsuleV2Human } from "../../capsuleV2/renderHuman";
 import { toCapsuleV2ProductResponse } from "../../capsuleV2/productAdapter";
@@ -54,6 +55,7 @@ import {
   CapsuleIntent,
   parseCapsuleIntent,
 } from "../../capsuleV2/types";
+import { RunPipelinePresetIntent } from "../../runPipeline/types";
 import { prepareCapsuleAssembly } from "../../capsuleProfiles/orchestrator";
 import {
   buildContextAccounting,
@@ -137,13 +139,22 @@ export async function runCapsuleCommand(
       // legacy `--mode` path below is left untouched for existing callers.
       if (parsed.intent !== undefined || parsed.budget !== undefined) {
         const accountingStartedAt = performance.now();
-        const result = buildCapsuleV2({
+        const productBudgetTokens = parsed.budget ?? CAPSULE_V2_DEFAULT_BUDGET;
+        const authoritativeRetrieval = parsed.pivotRankingVersion === undefined
+          ? buildAuthoritativeProductRetrieval(db, repoRoot, {
+              query,
+              preset: RunPipelinePresetIntent.Modify,
+              maxBudgetCharacters: productBudgetTokens * 4,
+              capsuleIntent: parsed.intent ?? CapsuleIntent.Auto,
+            })
+          : undefined;
+        const result = authoritativeRetrieval?.result ?? buildCapsuleV2({
           db,
           repoRoot,
           task: query,
           intent: parsed.intent ?? CapsuleIntent.Auto,
-          maxTokens: parsed.budget ?? CAPSULE_V2_DEFAULT_BUDGET,
-          ...(parsed.pivotRankingVersion === undefined ? {} : { pivotRankingVersion: parsed.pivotRankingVersion }),
+          maxTokens: productBudgetTokens,
+          pivotRankingVersion: parsed.pivotRankingVersion,
         });
         const product = toCapsuleV2ProductResponse(result);
         const productContext = await assembleProductContext({
@@ -151,7 +162,8 @@ export async function runCapsuleCommand(
           repoRoot,
           task: query,
           intent: parsed.intent ?? CapsuleIntent.Auto,
-          budgetTokens: parsed.budget ?? CAPSULE_V2_DEFAULT_BUDGET,
+          budgetTokens: productBudgetTokens,
+          ...(authoritativeRetrieval === undefined ? {} : { authoritativeRetrieval }),
         });
 
         // Opt-in (`--pivot-neighborhood`, default off): enrich with the SAME
