@@ -388,7 +388,7 @@ test("repeated runs produce identical formatted output", async () => {
   });
 });
 
-test("default orchestration omits the Capsule v2 section entirely", async () => {
+test.skip("default orchestration omits the Capsule v2 section entirely", async () => {
   await withFixture(({ db, repoRoot }) => {
     const out = runFormatted(db, repoRoot, { query: "modify base function", intent: "modify" });
     // No opt-in => no v2 discriminator and no v2 product block (v1 byte-compatible).
@@ -470,7 +470,7 @@ test("pivot-neighborhood is deterministic across repeated v2 runs", async () => 
   });
 });
 
-test("capsuleEngine=v2 adds the v2 section while preserving the v1 sections", async () => {
+test.skip("capsuleEngine=v2 adds the v2 section while preserving the v1 sections", async () => {
   await withFixture(({ db, repoRoot }) => {
     const out = runFormatted(db, repoRoot, {
       query: "modify base function to accept a label",
@@ -511,9 +511,68 @@ test("capsuleEngine=v2 orchestration is deterministic across repeated runs", asy
   });
 });
 
+test("unversioned capsule and deprecated aliases share one authoritative result", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const base = { query: "modify base function to accept a label", intent: "modify" } as const;
+    const current = runFormatted(db, repoRoot, base);
+    const deprecatedDefault = runFormatted(db, repoRoot, { ...base, capsuleEngine: "default" });
+    const deprecatedV2 = runFormatted(db, repoRoot, { ...base, capsuleEngine: "v2" });
+
+    assert.deepEqual(deprecatedDefault.capsuleResult, current.capsuleResult);
+    assert.deepEqual(deprecatedV2.capsuleResult, current.capsuleResult);
+    assert.deepEqual(deprecatedDefault.context, current.context);
+    assert.deepEqual(deprecatedV2.context, current.context);
+    assert.equal(current.capsule.implementation, "hybrid");
+    assert.equal(current.capsule.retrievalVersion, "product-retrieval-v2");
+    assert.deepEqual(current.capsule.compatibilityWarnings, []);
+    assert.match(deprecatedDefault.capsule.compatibilityWarnings[0]!, /deprecated and ignored/);
+    assert.match(deprecatedV2.capsule.compatibilityWarnings[0]!, /deprecated and ignored/);
+    assert.equal(current.capsuleEngine, undefined);
+    assert.equal(current.contextEngine, undefined);
+  });
+});
+
+test("explicit legacy capsule requests fail before classification or retrieval", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    let classifications = 0;
+    const classifier = {
+      classify() {
+        classifications += 1;
+        throw new Error("classification must not run");
+      },
+    };
+    for (const capsuleEngine of ["v1", "legacy"]) {
+      assert.throws(
+        () => runPipelineOrchestrator(
+          db,
+          repoRoot,
+          { query: "modify base", capsuleEngine },
+          { classifier },
+        ),
+        (error: unknown) =>
+          error instanceof Error
+          && error.name === "CapsuleEngineCompatibilityError"
+          && error.message.includes("Remove capsule_engine=v1"),
+      );
+    }
+    assert.equal(classifications, 0);
+  });
+});
+
+test("runtime provenance identifies the source-backed executable and current implementations", async () => {
+  await withFixture(({ db, repoRoot }) => {
+    const output = runFormatted(db, repoRoot, { query: "modify base", intent: "modify" });
+    assert.match(output.runtime.executablePath, /\/bin\/vtrace$/);
+    assert.equal(output.runtime.capsuleImplementation, "hybrid");
+    assert.equal(output.runtime.retrievalImplementation, "product-retrieval-v2");
+    assert.equal(output.runtime.indexSchemaVersion, 4);
+    assert.ok(output.runtime.commit === null || /^[0-9a-f]{40}$/.test(output.runtime.commit));
+  });
+});
+
 // --- Unified capsule-engine selection (requested / effective / fallback) ---
 
-test("default path records requested=default, effective=v1 with no fallback", async () => {
+test.skip("default path records requested=default, effective=v1 with no fallback", async () => {
   await withFixture(({ db, repoRoot }) => {
     const out = runFormatted(db, repoRoot, { query: "modify base function", intent: "modify" });
     assert.deepEqual((out as Record<string, unknown>).capsuleEngine, {
@@ -528,7 +587,7 @@ test("default path records requested=default, effective=v1 with no fallback", as
   });
 });
 
-test("explicit v1 and legacy stay on v1 but are recorded distinctly", async () => {
+test.skip("explicit v1 and legacy stay on v1 but are recorded distinctly", async () => {
   await withFixture(({ db, repoRoot }) => {
     for (const requested of ["v1", "legacy"] as const) {
       const out = runFormatted(db, repoRoot, {
@@ -553,7 +612,7 @@ test("explicit v1 and legacy stay on v1 but are recorded distinctly", async () =
   });
 });
 
-test("capsuleEngine=v2 records effective=v2 and emits compact inspect-first guidance", async () => {
+test.skip("capsuleEngine=v2 records effective=v2 and emits compact inspect-first guidance", async () => {
   await withFixture(({ db, repoRoot }) => {
     const out = runFormatted(db, repoRoot, {
       query: "base in src/base.ts#L1-L3 returns wrong value",
@@ -586,7 +645,7 @@ test("capsuleEngine=v2 records effective=v2 and emits compact inspect-first guid
   });
 });
 
-test("a genuine v2 build failure falls back to v1 with a fallback reason, preserving v1 sections", async () => {
+test.skip("a genuine v2 build failure falls back to v1 with a fallback reason, preserving v1 sections", async () => {
   await withFixture(({ db, repoRoot }) => {
     const orchestration = runPipelineOrchestrator(
       db,

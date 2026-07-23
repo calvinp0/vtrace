@@ -70,7 +70,7 @@ your query ("fix the N+1 in session creation", plus optional failing test / hint
 ③ PIVOTS        which 1–2 are the real edit target?   src/capsule/assignCandidateRoles.ts:61
    │            everything else becomes "support" or is discarded
    ▼
-④ CAPSULE       render pivots to fit a token budget   src/capsuleV2/buildCapsuleV2.ts:130
+④ CAPSULE       render pivots to fit a token budget   src/capsuleV2/buildCapsule.ts
    │            full source → signature → skeleton, greedily
    ▼
 ⑤ DIGEST        a compact action-map + optional        src/capsuleV2/productAdapter.ts:516
@@ -204,7 +204,7 @@ target" marker rather than pretending it found one.
 
 ## 8. Stage 4 — The capsule (what gets returned)
 
-`buildCapsuleV2` (`src/capsuleV2/buildCapsuleV2.ts:130`) turns the roles into the
+`buildCapsule` (`src/capsuleV2/buildCapsule.ts`) turns the roles into the
 actual returned object, a `CapsuleV2Result`:
 
 - **`pivots[]`** — the edit targets, with `path`, `symbol`, a `roleReason` (why it was
@@ -384,6 +384,6 @@ across the repo. That difference, multiplied over every turn, is the product.
 - Orchestration: `src/runPipeline/runPipelineOrchestrator.ts:316`
 - Retrieval + scoring: `src/retrieval/hybridRetrieval.ts` · `hybridScoring.ts`
 - Pivots: `src/capsule/assignCandidateRoles.ts` · `microTargets.ts`
-- Capsule + digest: `src/capsuleV2/buildCapsuleV2.ts` · `productAdapter.ts` · `digestDecisionContract.ts`
+- Capsule + digest: `src/capsuleV2/buildCapsule.ts` · `productAdapter.ts` · `digestDecisionContract.ts`
 - Indexing: `src/indexer/indexProject.ts` · `src/parsers/` · `src/db/schema.ts`
 - Memory: `src/observations/` · `src/projectRules/`

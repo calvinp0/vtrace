@@ -12,19 +12,12 @@ import {
   buildContextAccounting,
   runPipelineOutputFilePathGroups,
 } from "../../metrics/contextAccounting";
-import { CAPSULE_ENGINE } from "../../capsuleV2/engineSelection";
+import { resolveCapsuleCompatibility } from "../../capsuleV2/engineSelection";
 import { assembleProductContext } from "../../productContext/assembleProductContext";
 
-// Accepted `--capsule-engine` values, normalized lowercase. The orchestrator
-// normalizes the string through the shared selection model; only `v2` engages
-// Capsule v2, while `v1`/`legacy`/`default` keep the v1 path but are recorded
-// distinctly in the emitted `capsuleEngine.requested`.
-const ACCEPTED_CAPSULE_ENGINES: readonly string[] = [
-  CAPSULE_ENGINE.Default,
-  CAPSULE_ENGINE.V1,
-  CAPSULE_ENGINE.V2,
-  CAPSULE_ENGINE.Legacy,
-];
+// Hidden migration aliases. Current help does not advertise this flag;
+// compatibility validation never changes the implementation.
+const ACCEPTED_CAPSULE_ENGINES: readonly string[] = ["default", "v1", "v2", "legacy"];
 import type { CliOptions, CommandResult } from "../types";
 import { failure, resolveOptions, resolveRepoCommandPaths, success } from "./helpers";
 
@@ -52,6 +45,7 @@ export async function runRunPipelineCommand(
   let parsed: ParsedRunPipelineArgs;
   try {
     parsed = parseArgs(args);
+    resolveCapsuleCompatibility(parsed.capsuleEngine);
   } catch (error) {
     return failure(error instanceof Error ? error.message : String(error));
   }
@@ -126,7 +120,7 @@ export async function runRunPipelineCommand(
   }
 }
 
-const USAGE = "Usage: run-pipeline <repo> <query> [--max-results N] [--max-budget-characters N] [--intent <auto|explore|debug|modify|refactor>] [--session-id ID] [--include-memory] [--capsule-engine <default|v1|v2|legacy>] [--capsule-intent <auto|debug|refactor|modify|explain|impact|test-failure>] [--capsule-budget-tokens N]";
+const USAGE = "Usage: run-pipeline <repo> <query> [--max-results N] [--max-budget-characters N] [--intent <auto|explore|debug|modify|refactor>] [--session-id ID] [--include-memory] [--capsule-intent <auto|debug|refactor|modify|explain|impact|test-failure>] [--capsule-budget-tokens N]";
 
 function parseArgs(args: readonly string[]): ParsedRunPipelineArgs {
   const repo = args[0]!;

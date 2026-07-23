@@ -386,7 +386,7 @@ and assembles them into one response:
    path between them.
 5. **Memory** (`runMemorySection`, ~1318) — fold in relevant session/durable memory.
 6. **Rules** (`runRulesSection`, ~1332) — attach any active project rules.
-7. **Capsule v2** (`buildCapsuleV2Section`, ~570) — the bounded, ranked capsule.
+7. **Capsule** (`buildCapsuleSection`) — the bounded, ranked capsule.
 8. **Deferred / V-REF** (`buildDeferredPlaceholders`, ~1459) — publish big payloads by
    reference instead of inlining them.
 
@@ -547,7 +547,7 @@ Two honesty mechanisms:
 
 ## Chapter 8 — Capsule assembly: fitting evidence into a token budget
 
-Roles in hand, `buildCapsuleV2` (`src/capsuleV2/buildCapsuleV2.ts:130`) renders the
+Roles in hand, `buildCapsule` (`src/capsuleV2/buildCapsule.ts`) renders the
 returned object, a `CapsuleV2Result` with `pivots[]`, `support[]`, `discarded[]`, and
 `diagnostics`. Each item carries `path`, `symbol`, a `roleReason`, and an estimated
 token cost.
@@ -778,7 +778,7 @@ duplicate `createSession` call,"* with the failing test attached.
 5. **Pivots** (`assignCandidateRoles.ts:61`): `createSession` clears the bar →
    **pivot**. `handleLogin` (its caller) → **support**. `BaseController` → **discard**
    (reason recorded).
-6. **Capsule** (`buildCapsuleV2.ts:130`, standard tier): within 8k tokens, render
+6. **Capsule** (`buildCapsule.ts`, standard tier): within 8k tokens, render
    `createSession` as **full source** (the edit target) and `handleLogin` as a
    **signature** (laddered down to fit); attach `roleReason`s.
 7. **Digest** (`digestDecisionContract.ts:589`): action-map — *EDIT

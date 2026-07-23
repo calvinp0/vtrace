@@ -8,7 +8,10 @@ For broad coding, debugging, refactor, and repo-understanding tasks, start with 
 
 `run_pipeline` remains available as the stable/internal equivalent. If you already know the exact workflow you need, call the narrower tool directly.
 
-Both `get_code_context` and `run_pipeline` can additionally surface the experimental Capsule v2 section with `capsule_engine: "v2"` (alias `capsuleEngine`; optional `capsule_intent` and `capsule_budget_tokens`). When opted in they add a top-level `contextEngine: "v2"` discriminator, a `capsuleV2` block, and a `capsuleV2ManifestId` while keeping every v1 section. The default omits the flag and is unchanged. Single-repo only.
+All three product context tools use one authoritative, bounded, role-aware
+hybrid Capsule. There is no engine selector in the current schema. Responses
+carry compact `capsule` and `runtime` diagnostics so a stale MCP process can be
+identified by commit and executable path.
 
 Single-repo `get_code_context`, `run_pipeline`, and `get_context_capsule` responses also carry an additive `accounting` block: deterministic, **estimated** (`chars / 4`, not a tokenizer) token + latency figures comparing the emitted context against the naive baseline of reading the full contents of the unique files it touched (`estimatedOutputTokens`, `estimatedNaiveFullFileTokens`, `estimatedTokensSavedVsNaiveFullFile`, `estimatedSavingsPercentVsNaiveFullFile`, `uniqueFilesCounted`, `latencyMs`). Best-effort: omitted on failure or for multi-repo; never affects retrieval.
 
@@ -52,7 +55,7 @@ Rules use template summaries, exact file/FQN/term/tool/intent links, determinist
 
 ## Direct Tool Choices
 
-- `get_context_capsule`: use when you only need the compact context capsule and do not need orchestration, impact, memory, or task-summary sections. Opt into the experimental Capsule v2 engine with `capsule_engine: "v2"` (alias `capsuleEngine`); optional `capsule_intent` (auto|debug|refactor|modify|explain|impact|test-failure) and `capsule_budget_tokens` (default 8000). v2 returns an `engine: "v2"` + `capsuleV2` envelope (intent, budget, pivots/support, bounded discarded + diagnostics); the default omits the flag and is unchanged. Single-repo only.
+- `get_context_capsule`: use when you only need the compact Capsule and do not need the full orchestration sections. Optional `capsule_intent` and `capsule_budget_tokens` tune intent and budget, never the implementation.
 - `get_impact_graph`: use when the user asks what breaks, blast radius, dependents, callers, references, or impact of changing a known symbol.
 - `get_skeleton`: use when the relevant file path is already known and you need structural overview.
 - `search_symbols`: use for exact symbol lookup or when the context result is weak.

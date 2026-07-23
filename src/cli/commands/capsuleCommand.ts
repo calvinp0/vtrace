@@ -1,4 +1,3 @@
-import { buildCapsule, createSourceBackedCapsuleBuilder } from "../../capsule/buildCapsule";
 import { createCharacterBudget } from "../../capsule/budget";
 import {
   buildCapsuleDiagnostics,
@@ -36,7 +35,7 @@ import {
   type CapsuleItem,
   type CapsuleSupportingCandidate,
 } from "../../capsule/types";
-import { buildCapsuleV2 } from "../../capsuleV2/buildCapsuleV2";
+import { buildCapsule as buildProductCapsule } from "../../capsuleV2/buildCapsule";
 import { buildAuthoritativeProductRetrieval } from "../../capsuleV2/authoritativeProductRetrieval";
 import { parsePivotRankingVersion, type PivotRankingVersion } from "../../capsuleV2/pivotRankingV2";
 import { renderCapsuleV2Human } from "../../capsuleV2/renderHuman";
@@ -80,7 +79,7 @@ const CAPSULE_USAGE =
   "Usage: capsule <repo> <query> [--intent <auto|debug|refactor|impact|test-failure>] [--budget <tokens>]"
   + " [--mode <micro|standard|full>] [--max-items <n>] [--max-chars <n>] [--pivot-ranking-version <legacy|v2>] [--pivot-neighborhood] [--json]";
 
-// The Capsule v2 product surface (`--intent`/`--budget`) defaults to an 8,000
+// The product capsule surface defaults to an 8,000
 // token budget — generous enough for a couple of pivots plus a ring of support.
 const CAPSULE_V2_DEFAULT_BUDGET = 8_000;
 
@@ -135,9 +134,10 @@ export async function runCapsuleCommand(
         return failure(`Repo not indexed: ${repoRoot}`);
       }
 
-      // Capsule v2 product surface: selected by `--intent` or `--budget`. The
-      // legacy `--mode` path below is left untouched for existing callers.
-      if (parsed.intent !== undefined || parsed.budget !== undefined) {
+      // One product surface: every CLI capsule call uses the authoritative
+      // hybrid selection and packing path. Historical mode flags are accepted
+      // only as sizing compatibility inputs and never select another builder.
+      {
         const accountingStartedAt = performance.now();
         const productBudgetTokens = parsed.budget ?? CAPSULE_V2_DEFAULT_BUDGET;
         const authoritativeRetrieval = parsed.pivotRankingVersion === undefined
@@ -148,7 +148,7 @@ export async function runCapsuleCommand(
               capsuleIntent: parsed.intent ?? CapsuleIntent.Auto,
             })
           : undefined;
-        const result = authoritativeRetrieval?.result ?? buildCapsuleV2({
+        const result = authoritativeRetrieval?.result ?? buildProductCapsule({
           db,
           repoRoot,
           task: query,
@@ -202,75 +202,6 @@ export async function runCapsuleCommand(
         return success(`${renderProductContextSummary(productContext)}\n\n${renderCapsuleV2Human(result)}`);
       }
 
-      const routedQuery = routeQuery(db, query, { maxResults: limits.maxItems });
-
-      // Micro mode recovers the implementation edit target from the failing
-      // test's symbols (via hybrid graph-expanded retrieval) so the tiny capsule
-      // points at the code to change rather than the test (or nothing). Other
-      // modes keep the routed candidates.
-      const shaped = shapeSweQuery({ problemStatement: query });
-      const recovery: MicroCapsuleRecovery | undefined = mode === CapsuleMode.Micro
-        ? recoverMicroCapsule(db, shaped, { maxTargets: 1, poolSize: Math.max(limits.maxItems * 6, 12) })
-        : undefined;
-
-      // A micro capsule must point at a real target. If role assignment found no
-      // high-confidence pivot, do NOT emit empty/misdirecting context — skip.
-      if (recovery !== undefined && recovery.pivots.length === 0) {
-        return emitMicroSkip(json, recovery);
-      }
-
-      // Micro: pivots are the recovered edit targets; support is the related
-      // context (rendered skeleton-only). Micro is one-pivot / one-support by
-      // policy (Requirement 2) so the tiny capsule names a single decisive edit
-      // site, never two equally-likely targets. Other modes keep the routed
-      // candidates (pivot + structural support).
-      const pivotCandidates: readonly GraphSearchResult[] = recovery !== undefined
-        ? recovery.pivots.map(hybridCandidateToGraphResult)
-        : routedQuery.rerankedResults;
-      const supportingCandidates: readonly CapsuleSupportingCandidate[] = recovery !== undefined
-        ? recovery.support
-          .slice(0, Math.max(0, Math.min(MICRO_MAX_SUPPORT, limits.maxItems - pivotCandidates.length)))
-          .map(hybridCandidateToSupportingCandidate)
-        : pivotCandidates.map(makeSupportingCandidateFromGraphResult);
-
-      const preparedAssembly = prepareCapsuleAssembly({
-        classification: routedQuery.classification,
-        builderInput: {
-          query,
-          rerankedCandidates: pivotCandidates,
-          supportingCandidates,
-          maxBudget: createCharacterBudget(limits.maxChars),
-        },
-      });
-      const capsule = buildCapsule(
-        createSourceBackedCapsuleBuilder({ db, repoRoot }),
-        preparedAssembly.builderInput,
-      );
-
-      const diagnostics = computeDiagnostics(query, mode, capsule, shaped, recovery);
-
-      if (json) {
-        const compact = renderCompactCapsule(capsule, {
-          maxChars: limits.maxChars,
-          reason: diagnostics.retrieval_reason,
-          actionHeader: diagnostics.action_header,
-          searchBudget: diagnostics.search_budget,
-        });
-        // Diagnostics carry the actually-emitted context size.
-        const emitted: CapsuleDiagnostics = {
-          ...diagnostics,
-          context_chars: compact.chars,
-          context_items: compact.items,
-        };
-        return success(formatJson({ diagnostics: emitted, context: compact.text }));
-      }
-
-      return success(formatCapsuleInspection({
-        routedQuery,
-        capsuleProfileSelection: preparedAssembly.selection,
-        capsule,
-        diagnostics,
-      }));
     } finally {
       db.close();
     }
@@ -606,14 +537,14 @@ interface ParsedCapsuleArgs {
   maxItems?: number;
   maxChars?: number;
   json: boolean;
-  /** Capsule v2 intent; presence of `--intent` or `--budget` selects v2. */
+  /** Capsule intent. */
   intent?: CapsuleIntent;
-  /** Capsule v2 token budget. */
+  /** Capsule token budget. */
   budget?: number;
-  /** Capsule v2 pivot-ranking version (dev/benchmark lever). */
+  /** Capsule pivot-ranking version (dev/benchmark lever). */
   pivotRankingVersion?: PivotRankingVersion;
   /**
-   * Capsule v2 only: also emit bounded pivot-neighborhood excerpts (the same ones
+   * Also emit bounded pivot-neighborhood excerpts (the same ones
    * the run_pipeline product path attaches). Default off so existing capsule CLI
    * output is unchanged; the Stage 5 product-v2 injection opts in.
    */

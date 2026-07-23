@@ -340,10 +340,10 @@ test("get_context_capsule schema documents multi_file_coedit / relatedFiles", ()
   );
   assert.ok(tool, "get_context_capsule tool definition not found");
   const schema = tool!.metadata.outputSchema as {
-    properties?: { capsuleV2?: { properties?: Record<string, unknown>; required?: string[] } };
+    properties?: { capsuleResult?: { properties?: Record<string, unknown>; required?: string[] } };
   };
-  const capsuleV2 = schema.properties?.capsuleV2;
-  const hintsSchema = capsuleV2?.properties?.actionabilityHints as
+  const capsule = schema.properties?.capsuleResult;
+  const hintsSchema = capsule?.properties?.actionabilityHints as
     | { items?: { properties?: Record<string, { properties?: Record<string, unknown>; description?: string }> } }
     | undefined;
   const itemProps = hintsSchema?.items?.properties;

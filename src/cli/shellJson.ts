@@ -176,6 +176,7 @@ export function formatProductShellStatusJson(
     indexState: formatIndexState(result),
     agentConfig: formatAgentConfigStatus(result.agentConfig),
     runtime: formatRuntimeStatus(result.runtime),
+    provenance: result.provenance,
   }, collectProductShellWarnings(result), buildProductShellStatusNextSteps(command, result)));
 }
 

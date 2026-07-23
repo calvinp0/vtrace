@@ -533,6 +533,15 @@ export function formatProductShellStatus(
 
   return [
     `${title}\n\n`,
+    formatSection("VTRACE build", [
+      `Package: ${result.provenance.packageVersion}`,
+      `Commit: ${result.provenance.commit ?? "unavailable"}`,
+      `Executable: ${result.provenance.executablePath}`,
+      `Capsule: ${result.provenance.capsuleImplementation}`,
+      `Retrieval: ${result.provenance.retrievalImplementation}`,
+      `Index schema: ${result.provenance.indexSchemaVersion}`,
+      `Manifest: ${result.provenance.manifestVersion}`,
+    ]),
     formatSection("Repo state", repoStateLines),
     formatSection("Index state", indexStateLines),
     ...(mode === "doctor"

@@ -17,7 +17,7 @@ import {
 import { RunPipelinePresetIntent, type RunPipelineConcretePreset } from "../runPipeline/types";
 import { SymbolKind } from "../domain/types";
 import { routeQuery, type RoutedQueryResult } from "../intent/routeQuery";
-import { buildCapsuleV2 } from "./buildCapsuleV2";
+import { buildCapsule } from "./buildCapsule";
 import { estimateTokens, roundPercent } from "./tokens";
 import {
   CapsuleIntent,
@@ -46,7 +46,7 @@ export interface AuthoritativeProductRetrieval {
 /**
  * One authoritative retrieval/role/packing seam for the product tools.
  *
- * Capsule v2 owns the proven hybrid candidate union, score attribution, role
+ * The capsule builder owns the proven hybrid candidate union, score attribution, role
  * refinement, and compressed-cost packing. The adapter only projects that exact
  * selection into the historical Capsule response shape; it never re-ranks or
  * independently selects candidates.
@@ -65,7 +65,7 @@ export function buildAuthoritativeProductRetrieval(
 ): AuthoritativeProductRetrieval {
   const started = performance.now();
   const maxTokens = Math.max(1, Math.floor(input.maxBudgetCharacters / PRODUCT_RETRIEVAL_CHARS_PER_TOKEN));
-  const baseResult = buildCapsuleV2({
+  const baseResult = buildCapsule({
     db,
     repoRoot,
     task: input.query,
@@ -316,7 +316,7 @@ function routedSupportItem(
   };
 }
 
-function capsuleIntentForPreset(preset: RunPipelineConcretePreset): CapsuleIntent {
+export function capsuleIntentForPreset(preset: RunPipelineConcretePreset): CapsuleIntent {
   switch (preset) {
     case RunPipelinePresetIntent.Debug:
       return CapsuleIntent.Debug;

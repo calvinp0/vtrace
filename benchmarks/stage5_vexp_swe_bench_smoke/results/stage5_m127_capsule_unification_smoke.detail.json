@@ -1,0 +1,1011 @@
+{
+  "schemaVersion": "stage5.m127.capsule-unification-smoke.v1",
+  "noAgents": true,
+  "repositoriesMutated": false,
+  "isolatedTckdbHeadArchive": true,
+  "aliases": {
+    "omitted": {
+      "ok": true,
+      "implementation": "hybrid",
+      "warnings": []
+    },
+    "default": {
+      "ok": true,
+      "implementation": "hybrid",
+      "warnings": [
+        "capsule_engine=default is deprecated and ignored; VTRACE always uses the authoritative capsule."
+      ]
+    },
+    "v2": {
+      "ok": true,
+      "implementation": "hybrid",
+      "warnings": [
+        "capsule_engine=v2 is deprecated and ignored; VTRACE always uses the authoritative capsule."
+      ]
+    },
+    "v1": {
+      "ok": false,
+      "code": "invalid_request",
+      "error": "unsupported_legacy_capsule_engine"
+    }
+  },
+  "tools": {
+    "parity": true,
+    "parityHash": "f1e71bf76acb1d6b289651032f1babd6be253869a2726c56f4cd4db61309f6aa",
+    "projections": {
+      "get_code_context": {
+        "taskHash": "f151a45fb224b4cc805ffdcfd2bd1047c7723e0c7fe51f32df62b5973e44546c",
+        "capsuleMode": "standard",
+        "leadPivot": "backend/app/db/models/workflow.py::backend/app/db/models/workflow.py::WorkflowTool",
+        "selectedFileHash": "492f8181359e05a1582cb45bcb246c8f2a6e116f064e0d9cc5df00d1ca7c6535",
+        "roles": [
+          {
+            "path": "backend/app/db/models/workflow.py",
+            "symbol": "WorkflowTool",
+            "roles": [
+              "pivot",
+              "required"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "FetchResult",
+            "roles": [
+              "pivot",
+              "required"
+            ]
+          },
+          {
+            "path": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_reaction_upload.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "clients/python/src/tckdb_client/builders/kinetics.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_reaction_upload.py",
+            "symbol": "ComputedReactionUploadRequest",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "backend/app/schemas/workflows/kinetics_upload.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "clients/python/tests/test_client.py",
+            "symbol": "test_upload_computed_reaction_legacy_payload_still_accepted",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "path": "clients/python/tests/test_docs_calculation_note_conventions.py",
+            "symbol": "test_spec_doc_exists",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "roles": [
+              "required",
+              "support"
+            ]
+          },
+          {
+            "path": "backend/app/services/calculation_resolution.py",
+            "symbol": "resolve_workflow_tool_release_ref",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_nkin_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_solve_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_statmech.py",
+            "symbol": "_make_workflow_tool_release",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_transition_states.py",
+            "symbol": "_make_workflow_tool_release",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "__call__",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "__call__",
+            "roles": [
+              "impact"
+            ]
+          }
+        ],
+        "modelVisibleContextHash": "964e4134daa7e5624eff20d0acfe1cdfb3f8fe8936d0ca801bc142a4cffbe17d"
+      },
+      "get_context_capsule": {
+        "taskHash": "f151a45fb224b4cc805ffdcfd2bd1047c7723e0c7fe51f32df62b5973e44546c",
+        "capsuleMode": "standard",
+        "leadPivot": "backend/app/db/models/workflow.py::backend/app/db/models/workflow.py::WorkflowTool",
+        "selectedFileHash": "492f8181359e05a1582cb45bcb246c8f2a6e116f064e0d9cc5df00d1ca7c6535",
+        "roles": [
+          {
+            "path": "backend/app/db/models/workflow.py",
+            "symbol": "WorkflowTool",
+            "roles": [
+              "pivot",
+              "required"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "FetchResult",
+            "roles": [
+              "pivot",
+              "required"
+            ]
+          },
+          {
+            "path": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_reaction_upload.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "clients/python/src/tckdb_client/builders/kinetics.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_reaction_upload.py",
+            "symbol": "ComputedReactionUploadRequest",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "backend/app/schemas/workflows/kinetics_upload.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "clients/python/tests/test_client.py",
+            "symbol": "test_upload_computed_reaction_legacy_payload_still_accepted",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "path": "clients/python/tests/test_docs_calculation_note_conventions.py",
+            "symbol": "test_spec_doc_exists",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "roles": [
+              "required",
+              "support"
+            ]
+          },
+          {
+            "path": "backend/app/services/calculation_resolution.py",
+            "symbol": "resolve_workflow_tool_release_ref",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_nkin_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_solve_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_statmech.py",
+            "symbol": "_make_workflow_tool_release",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_transition_states.py",
+            "symbol": "_make_workflow_tool_release",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "__call__",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "__call__",
+            "roles": [
+              "impact"
+            ]
+          }
+        ],
+        "modelVisibleContextHash": "964e4134daa7e5624eff20d0acfe1cdfb3f8fe8936d0ca801bc142a4cffbe17d"
+      },
+      "run_pipeline": {
+        "taskHash": "f151a45fb224b4cc805ffdcfd2bd1047c7723e0c7fe51f32df62b5973e44546c",
+        "capsuleMode": "standard",
+        "leadPivot": "backend/app/db/models/workflow.py::backend/app/db/models/workflow.py::WorkflowTool",
+        "selectedFileHash": "492f8181359e05a1582cb45bcb246c8f2a6e116f064e0d9cc5df00d1ca7c6535",
+        "roles": [
+          {
+            "path": "backend/app/db/models/workflow.py",
+            "symbol": "WorkflowTool",
+            "roles": [
+              "pivot",
+              "required"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "FetchResult",
+            "roles": [
+              "pivot",
+              "required"
+            ]
+          },
+          {
+            "path": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_reaction_upload.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "clients/python/src/tckdb_client/builders/kinetics.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_reaction_upload.py",
+            "symbol": "ComputedReactionUploadRequest",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "backend/app/schemas/workflows/kinetics_upload.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "clients/python/tests/test_client.py",
+            "symbol": "test_upload_computed_reaction_legacy_payload_still_accepted",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "path": "clients/python/tests/test_docs_calculation_note_conventions.py",
+            "symbol": "test_spec_doc_exists",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "roles": [
+              "required",
+              "support"
+            ]
+          },
+          {
+            "path": "backend/app/services/calculation_resolution.py",
+            "symbol": "resolve_workflow_tool_release_ref",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_nkin_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_solve_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_statmech.py",
+            "symbol": "_make_workflow_tool_release",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_transition_states.py",
+            "symbol": "_make_workflow_tool_release",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "__call__",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "__call__",
+            "roles": [
+              "impact"
+            ]
+          }
+        ],
+        "modelVisibleContextHash": "964e4134daa7e5624eff20d0acfe1cdfb3f8fe8936d0ca801bc142a4cffbe17d"
+      }
+    },
+    "implementations": {
+      "get_code_context": {
+        "implementation": "hybrid",
+        "retrievalVersion": "product-retrieval-v2",
+        "selectionAuthority": "hybrid",
+        "rescueAttempted": true,
+        "compatibilityWarnings": []
+      },
+      "get_context_capsule": {
+        "implementation": "hybrid",
+        "retrievalVersion": "product-retrieval-v2",
+        "selectionAuthority": "hybrid",
+        "rescueAttempted": true,
+        "compatibilityWarnings": []
+      },
+      "run_pipeline": {
+        "implementation": "hybrid",
+        "retrievalVersion": "product-retrieval-v2",
+        "selectionAuthority": "hybrid",
+        "rescueAttempted": true,
+        "compatibilityWarnings": []
+      }
+    }
+  },
+  "cli": {
+    "capsule": {
+      "exitCode": 0,
+      "implementation": "hybrid"
+    },
+    "runPipeline": {
+      "exitCode": 0,
+      "projection": {
+        "taskHash": "f151a45fb224b4cc805ffdcfd2bd1047c7723e0c7fe51f32df62b5973e44546c",
+        "capsuleMode": "standard",
+        "leadPivot": "backend/app/db/models/workflow.py::backend/app/db/models/workflow.py::WorkflowTool",
+        "selectedFileHash": "492f8181359e05a1582cb45bcb246c8f2a6e116f064e0d9cc5df00d1ca7c6535",
+        "roles": [
+          {
+            "path": "backend/app/db/models/workflow.py",
+            "symbol": "WorkflowTool",
+            "roles": [
+              "pivot",
+              "required"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "FetchResult",
+            "roles": [
+              "pivot",
+              "required"
+            ]
+          },
+          {
+            "path": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_reaction_upload.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "clients/python/src/tckdb_client/builders/kinetics.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_reaction_upload.py",
+            "symbol": "ComputedReactionUploadRequest",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "backend/app/schemas/workflows/kinetics_upload.py",
+            "symbol": "degeneracy_convention",
+            "roles": [
+              "support",
+              "skeleton"
+            ]
+          },
+          {
+            "path": "clients/python/tests/test_client.py",
+            "symbol": "test_upload_computed_reaction_legacy_payload_still_accepted",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "path": "clients/python/tests/test_docs_calculation_note_conventions.py",
+            "symbol": "test_spec_doc_exists",
+            "roles": [
+              "support"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "roles": [
+              "required",
+              "support"
+            ]
+          },
+          {
+            "path": "backend/app/services/calculation_resolution.py",
+            "symbol": "resolve_workflow_tool_release_ref",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_nkin_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_networks.py",
+            "symbol": "test_solve_search_by_workflow_tool_and_version",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_statmech.py",
+            "symbol": "_make_workflow_tool_release",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/tests/api/scientific/test_api_scientific_transition_states.py",
+            "symbol": "_make_workflow_tool_release",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "__call__",
+            "roles": [
+              "impact"
+            ]
+          },
+          {
+            "path": "backend/app/importers/cccbdb/snapshot.py",
+            "symbol": "__call__",
+            "roles": [
+              "impact"
+            ]
+          }
+        ],
+        "modelVisibleContextHash": "964e4134daa7e5624eff20d0acfe1cdfb3f8fe8936d0ca801bc142a4cffbe17d"
+      }
+    }
+  },
+  "exactTckdb": {
+    "task": "Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.",
+    "selectedPaths": [
+      "backend/app/db/models/workflow.py",
+      "backend/app/importers/cccbdb/snapshot.py",
+      "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_reaction_upload.py",
+      "clients/python/src/tckdb_client/builders/kinetics.py",
+      "backend/app/schemas/workflows/kinetics_upload.py",
+      "clients/python/tests/test_client.py",
+      "clients/python/tests/test_docs_calculation_note_conventions.py"
+    ],
+    "leadPivot": "backend/app/db/models/workflow.py::backend/app/db/models/workflow.py::WorkflowTool",
+    "actualMode": "standard",
+    "candidateDiagnostics": {
+      "intentReason": [
+        "intent set explicitly to modify"
+      ],
+      "intentConfidence": "high",
+      "rolePolicy": "sibling_oriented",
+      "candidateCount": 25,
+      "pivotCount": 2,
+      "supportCount": 6,
+      "discardedCount": 27,
+      "tier": "standard",
+      "likelyFiles": [],
+      "likelySymbols": [],
+      "failingTests": [],
+      "editRiskDirectives": []
+    },
+    "rescue": {
+      "implementation": "hybrid",
+      "retrievalVersion": "product-retrieval-v2",
+      "selectionAuthority": "hybrid",
+      "rescueAttempted": true,
+      "compatibilityWarnings": []
+    },
+    "evidence": {
+      "payloadSnapshotOrTest": false,
+      "clientImplementation": true,
+      "workflowConvention": false,
+      "dependencyConfiguration": false,
+      "notebookOrAdditionalTest": false,
+      "degeneracyConventionVisible": true,
+      "fullSuiteCommandVisible": false
+    },
+    "pass": false,
+    "warmLatency": {
+      "samplesMs": [
+        977.317,
+        976.844,
+        959.504,
+        966.211,
+        963.699
+      ],
+      "medianMs": 966.211,
+      "p90Ms": 976.844
+    }
+  },
+  "controls": {
+    "compoundSlash": "covered by src/capsuleV2/longQueryRobustness.test.ts",
+    "standalonePath": "covered by src/capsuleV2/longQueryRobustness.test.ts",
+    "noContext": "covered by src/capsuleV2/buildCapsuleV2.test.ts",
+    "staleIndexFailClosed": "covered by src/mcp/mcp.test.ts"
+  },
+  "frozen": {
+    "cases": 50,
+    "selectedFileDifferences": 0,
+    "leadDifferences": 0,
+    "roleDifferences": 0,
+    "renderedContextDifferences": 0,
+    "latency": {
+      "samplesMs": [
+        883.481,
+        2556.112,
+        4048.116,
+        1142.656,
+        1054.977,
+        594.856,
+        1193.735,
+        301.502,
+        480.721,
+        682.917,
+        752.611,
+        970.748,
+        933.782,
+        1003.98,
+        355.483,
+        1006.551,
+        447.728,
+        964.433,
+        1146.105,
+        1175.926,
+        376.897,
+        783.509,
+        575.446,
+        611.544,
+        1497.796,
+        761.124,
+        589.391,
+        1425.599,
+        268.243,
+        229.428,
+        221.066,
+        196.367,
+        603.497,
+        91.652,
+        595.874,
+        46.771,
+        1114.06,
+        1222.37,
+        560.082,
+        184.12,
+        128.752,
+        13.59,
+        157.423,
+        809.578,
+        497.147,
+        299.412,
+        262.231,
+        215.806,
+        303.645,
+        1400.508
+      ],
+      "medianMs": 595.874,
+      "p90Ms": 1222.37
+    },
+    "baseline": {
+      "medianMs": 614,
+      "p90Ms": 1203
+    },
+    "quality": {
+      "cases": 50,
+      "top1": 39,
+      "top5": 46,
+      "allGoldVisible": 45,
+      "lead": 39,
+      "missing": 4,
+      "wrongPivot": 11,
+      "noCandidates": 0
+    },
+    "rows": [
+      {
+        "instanceId": "django__django-10880",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-11095",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-11490",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-11728",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-11740",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-10973",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-11133",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-11206",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-11749",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-11815",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-11820",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-12050",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-12273",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-12276",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-12325",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-12774",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-12858",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-13012",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-13112",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "django__django-13195",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "sympy__sympy-12419",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "sympy__sympy-12481",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "sympy__sympy-13372",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "scikit-learn__scikit-learn-10844",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "scikit-learn__scikit-learn-11578",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-22719",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-24627",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "astropy__astropy-14365",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "astropy__astropy-14369",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "pytest-dev__pytest-10051",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "pytest-dev__pytest-5262",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7462",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7748",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "psf__requests-1142",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "psf__requests-1724",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "pallets__flask-5014",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "astropy__astropy-14539",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "astropy__astropy-14598",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-24970",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-25960",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "mwaskom__seaborn-3187",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "psf__requests-5414",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "pydata__xarray-2905",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "pydata__xarray-3677",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "pylint-dev__pylint-8898",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "pytest-dev__pytest-7432",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7910",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-9230",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "sympy__sympy-15599",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      },
+      {
+        "instanceId": "sympy__sympy-16766",
+        "equalToM126": true,
+        "neutralBuilderFullResultEqual": true
+      }
+    ]
+  },
+  "runtime": {
+    "packageVersion": "0.1.0",
+    "commit": "fdcda9a479522722c69a06b32d585b058670bc65",
+    "executablePath": "<VTRACE_ROOT>/bin/vtrace",
+    "sourceRoot": "<VTRACE_ROOT>",
+    "capsuleImplementation": "hybrid",
+    "retrievalImplementation": "product-retrieval-v2",
+    "retrievalRankingVersion": "hybrid-shared-core+routed-rescue-v1",
+    "indexSchemaVersion": 4,
+    "manifestVersion": 4
+  },
+  "verdict": "FAIL"
+}

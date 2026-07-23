@@ -201,15 +201,14 @@ Backward-compatible aliases are still accepted:
 
 `get_code_context` does not make itself mandatory before code edits. It is the broad-task entrypoint; exact tools remain better when the caller already has exact inputs.
 
-### Shared product context response (version 2)
+### Shared product context response
 
 The single-repository forms of `get_code_context`, `get_context_capsule`, and
-`run_pipeline` now carry the same additive `productContext` object. Existing v1
-and opt-in-v2 outer fields remain available; `productContext` is the normalized
-model-facing contract and always uses the shared Capsule v2 selection assembly.
-For the same fresh index, task, intent, and budget it has the same task hash,
-lead pivot, selected files, role assignments, worktree/freshness identity, and
-token estimator on all three tools.
+`run_pipeline` use one request-local authoritative Capsule result. The
+`productContext` object is the normalized model-facing contract. For the same
+fresh index, task, intent, and budget it has the same task hash, lead pivot,
+selected files, roles, worktree/freshness identity, and rendered context on all
+three tools.
 
 `productContext.responseVersion` is `2`. Its `items` are deterministically
 ordered and can have multiple roles (`pivot`, `required`, `support`, `skeleton`,
@@ -228,14 +227,10 @@ baseline, and is `null` when a trustworthy baseline cannot be formed. Small
 files may honestly produce a negative estimated reduction when structured
 context costs more than their full text.
 
-`productContext.timing` uses monotonic wall-clock measurements. Freshness,
-capsule build, static impact, memory/rules, rendering, total time, and (when an
-automatic refresh occurred) index refresh are reported separately. The current
-Capsule v2 builder has no internal retrieval timing seam, so retrieval is
-reported as `0` and the encompassing synchronous work is attributed to capsule
-construction rather than double-counted. Impact items are bounded static graph
-evidence, never claims about dynamic execution flow. Memory and rule items are
-included only when existing stores return relevant, fresh/active entries.
+`productContext.timing` uses monotonic wall-clock measurements. Impact items are
+bounded static graph evidence, never claims about dynamic execution flow.
+Memory and rule items are included only when existing stores return relevant,
+fresh/active entries.
 
 Stale and invalid `get_code_context` responses also include an unresolved
 `productContext`, with freshness diagnostics and measured total latency but no
@@ -244,33 +239,27 @@ deferred; those existing outer responses remain unchanged.
 
 ### `run_pipeline`
 
-Internal/stable name for the same default Vtrace repo-context pipeline exposed as `get_code_context`.
+Internal/stable name for the same default Vtrace repo-context pipeline exposed
+as `get_code_context`. It always emits `capsuleResult`, `productContext`,
+`pivotNeighborhood`, `inspectFirst`, and compact `capsule` implementation
+diagnostics from the same selection. `runtime` identifies the package, source
+commit when available, launcher path, retrieval implementation, and index/
+manifest versions.
 
-#### Opt-in Capsule v2 section (experimental)
+Current MCP schemas do not expose a capsule-engine selector. Old callers may
+temporarily send `default` or `v2`; both are deprecated no-op aliases and produce
+a warning. Explicit `v1` or `legacy` is rejected with
+`unsupported_legacy_capsule_engine` before retrieval.
 
-By default `run_pipeline` (and therefore `get_code_context`, which delegates to it) returns the unchanged v1-only orchestration. Callers can additionally request the **Capsule v2** product section — the same bounded, intent-aware, evidence-scored primitive offered by `get_context_capsule` — without losing any v1 section:
-
-- `capsule_engine: "v2"` (or the camelCase alias `capsuleEngine: "v2"`)
-
-Optional v2-only inputs (ignored unless `capsule_engine=v2`):
+Optional capsule inputs:
 
 - `capsule_intent` / `capsuleIntent`: `auto` (default) | `debug` | `refactor` | `modify` | `explain` | `impact` | `test-failure`
-- `capsule_budget_tokens` / `capsuleBudgetTokens`: positive integer token budget (default `8000`)
+- `capsule_budget_tokens` / `capsuleBudgetTokens`: positive token budget
 
-When opted in, the orchestration result is **augmented** (not replaced):
+#### Pivot-neighborhood excerpts
 
-- a top-level `contextEngine: "v2"` discriminator and a `capsuleV2` block (the same shape `get_context_capsule` returns under `capsuleV2`), plus a persisted `capsuleV2ManifestId`.
-- all existing sections — `context`, `impact`, `flow`, `memory`, `rules`, `diagnostics`, and `deferred` refs — are preserved unchanged.
-
-The default (no `capsule_engine`) path is byte-compatible with prior behavior except for the additive `accounting` block (see below); the v2 section is omitted entirely. As with `get_context_capsule`, the v2 section is single-repo only — a multi-repo workspace request with `capsule_engine=v2` is rejected — and persists a deterministic manifest that resolves via `check_capsule_staleness`. Making v2 the default is intentionally deferred.
-
-The CLI mirrors the opt-in: `vtrace run-pipeline <repo> <query> --capsule-engine v2 [--capsule-intent <intent>] [--capsule-budget-tokens N]`.
-
-#### Pivot-neighborhood excerpts (v2 only)
-
-The `impact` and `flow` sections only carry source excerpts when the query resolves two flow endpoints (`flow`) or carries refactor-like intent (`impact`). Normal debug/modify queries trigger neither, so they would otherwise get no inline relationship source even when Capsule v2 already pinned the right pivots. The **`pivotNeighborhood`** section closes that gap.
-
-When `capsule_engine=v2`, the response carries an additive `pivotNeighborhood` array: for the **top 1–2 pivots**, a small set of bounded source excerpts from the pivot's neighborhood, so a debug query gets useful nearby source without an explicit flow/impact trigger. Each entry is:
+The `pivotNeighborhood` array carries a small set of bounded source excerpts
+around the top one or two pivots:
 
 ```ts
 interface PivotNeighborhoodContext {
@@ -290,13 +279,15 @@ interface PivotNeighborhoodContext {
 }
 ```
 
-`reason` names the structural relationship the neighbor was reached through, in priority order: `support` (a Capsule v2 support item in the pivot's file/directory), `caller`/`callee` (calls edges), `importer`/`imported` (imports edges), `reference` (references edges), `sibling` (same parent scope/class), then `fallback_symbol_window` (a same-file neighbor reached through no edge). **The relationship names the edge; the snippet is still the neighbor symbol's own indexed line span (a symbol-window), never an exact call/reference line** — indexed edges carry no call-site location, so we never pretend a window is an exact edge site.
-
-Bounds (defaults): top **2** pivots; max **4** excerpts per pivot; max **12** lines per excerpt (signature-focused neighbors use a tighter 6-line window); 200 chars per line (longer lines trimmed with `…`, `truncated` set). Best-effort: a neighbor whose source cannot be loaded freshly (missing/stale relative to the index) or whose symbol identity does not resolve is recorded under `skipped` rather than failing the run. The section is present only on the `capsule_engine=v2` path and may be an empty array when no pivot symbol identity resolves; the v1 path omits it entirely. Its excerpt files are counted in the `accounting` naive-file baseline. Retrieval, Capsule v2 ranking/scoring, and the `impact`/`flow` sections are unchanged — this is purely additive debug enrichment.
+The relationship names the indexed edge; the snippet remains the neighbor
+symbol's own bounded line span, not a claimed call site. Missing or stale source
+is recorded under `skipped`.
 
 #### Context accounting (estimated, deterministic)
 
-Single-repo `run_pipeline` / `get_code_context` responses (both the default v1 path and the v2 opt-in) carry an additive top-level `accounting` block so a caller can see how compact the emitted context is relative to the naive alternative — reading the full contents of every source file the context touched. The same block is on `get_context_capsule` (v1 and v2). It is **estimated and deterministic, not exact tokenizer truth**: every token figure is `chars / 4` (`method: "chars_div_4"`), the same approximation that sizes Capsule v2.
+Single-repo product responses carry an additive top-level `accounting` block so
+a caller can compare compact output with the full contents of selected files.
+It is estimated and deterministic, not exact tokenizer truth.
 
 Fields:
 
@@ -314,40 +305,11 @@ The baseline reads **only** the unique files the capsule/context already selecte
 
 ### `get_context_capsule`
 
-Return the compact context package directly, without the fuller orchestration role of `run_pipeline`.
-
-Use it when you want:
-
-- the capsule only
-- a smaller manual retrieval flow
-- a compact structural/task package without extra orchestration
-
-#### Opt-in Capsule v2 engine (experimental)
-
-By default `get_context_capsule` builds the **v1** capsule and returns the unchanged v1 output shape. Callers can opt into the **Capsule v2** engine — the bounded, intent-aware, evidence-scored context primitive otherwise used on the CLI/Stage-5 surface — by passing an explicit engine field:
-
-- `capsule_engine: "v2"` (or the camelCase alias `capsuleEngine: "v2"`)
-
-Optional v2-only inputs (ignored unless `capsule_engine=v2`):
-
-- `capsule_intent`: `auto` (default) | `debug` | `refactor` | `modify` | `explain` | `impact` | `test-failure`
-- `capsule_budget_tokens`: positive integer token budget (default `8000`)
-
-When opted in, the response is a v2-native envelope instead of the v1 capsule:
-
-- `engine: "v2"` and a `capsuleV2` block; the v1-only sections (`classification`, `routingProfile`, `capsuleProfile`, `capsule`) are omitted.
-- `capsuleV2` contains: `engine`, `experimental: true`, `intent` (the resolved intent), `actualMode` (sizing tier or `no_context`), `reason` (only on `no_context`), a `budget` summary (`maxTokens` / `estimatedTokens` / `usedPercent`), `pivots` and `support` items (each with `path`, `symbol`, `fqName`, `kind`, `roleReason`, `contentMode`, `source`/`signature` content, `evidence`, `estimatedTokens`, `isNonSourceExample`), a bounded `discarded` list with `discardedTotal`, and a `diagnostics` summary (intent reason/confidence, role policy, counts, tier, likely files/symbols, failing tests, edit-risk directives).
-- Output is bounded: the v2 engine budgets pivot/support content; the product surface additionally caps the discarded list. No unbounded file contents are emitted.
-
-The default (no `capsule_engine`) path is byte-compatible with prior behavior; the v2 engine never affects it.
-
-Notes / current scope:
-
-- Single-repo only: a multi-repo workspace request with `capsule_engine=v2` is rejected (use the default v1 path for multi-repo).
-- Manifest persistence is consistent with the v1 path — a deterministic `capsuleManifestId` is persisted and resolves via `check_capsule_staleness`. Because v2 items carry no DB `symbolId`, the manifest uses each item's `fqName` as the symbol-identity surrogate, so file-level staleness is exact while symbol-level staleness compares against the fqName surrogate (an intended difference from v1).
-- Auto-capture of a `tool_call` observation is deferred for the v2 path (capture is keyed on the v1 capsule structure).
-- Both the v1 and v2 single-repo responses carry the additive, estimated `accounting` block described under `run_pipeline` (deterministic `chars / 4`, not exact tokenizer truth).
-- `get_code_context` remains the default "start here" tool; Capsule v2 is opt-in/experimental.
+Return the authoritative compact Capsule directly. It uses the same hybrid
+selection and packing result as `run_pipeline` and `get_code_context`, including
+the same `productContext.modelVisibleContext`. Use it when the full orchestration
+sections are unnecessary. The current authoritative product path is
+single-repository; cross-repository workspace intelligence remains deferred.
 
 ## Structural Tools
 

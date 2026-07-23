@@ -58,7 +58,7 @@ retrieval  ─────────────────► hybridRetrieve
    │   scoring     hybridScoring.ts::combineFinalScore:162
    │   pivots      microTargets.ts:96 / assignCandidateRoles.ts:61
    ▼
-capsule  ───────────────────► buildCapsuleV2()              src/capsuleV2/buildCapsuleV2.ts:130
+capsule  ───────────────────► buildCapsule()                src/capsuleV2/buildCapsule.ts
    │   budget tiers  budgetAllocator.ts::allocateBudget:49
    ▼
 digest / contract  ─────────► renderCapsuleV2Digest()       src/capsuleV2/productAdapter.ts:516
@@ -213,10 +213,10 @@ required impact reps were **edited 0/24** across a validation set — they are n
 
 ---
 
-## 5. Capsule v2 and Digest Injection
+## 5. Capsule and Digest Injection
 
-**What Capsule v2 contains.** `buildCapsuleV2(input)` —
-`src/capsuleV2/buildCapsuleV2.ts:130` — returns a `CapsuleV2Result`
+**What the Capsule contains.** `buildCapsule(input)` —
+`src/capsuleV2/buildCapsule.ts` — returns the internal structured result
 (`src/capsuleV2/types.ts`) with: `intent`, `actual_mode` (tier), `budget`,
 `pivots[]` and `support[]` (each a `CapsuleV2Item` with path/symbol/roleReason/
 estimatedTokens), `discarded[]`, and `diagnostics`. Each pivot is rendered on a
@@ -301,7 +301,7 @@ the installed local patch — always with `--no-vexp` (baseline agent vs same ag
 VTRACE, never vexp-vs-vtrace).
 
 **Key capsule/digest flags** (parsed in the arg loop ending at `--help`, line 10760):
-`--context-policy force-inject`, `--capsule-engine v2|v1`, `--capsule-intent`
+`--context-policy force-inject`, `--capsule-intent`
 (default `auto`), `--capsule-budget` (default `8000`), `--inject-capsule-digest`,
 `--digest-decision-contract`, `--bounded-digest-decisions`,
 `--compact-digest-injection`, `--pivot-confidence-gate`, `--capture-product-v2-accounting`,
@@ -540,7 +540,7 @@ Read the JSON: are the gold file(s) in `pivots[]`? Is the lead pivot REQUIRED?
 ```bash
 bun "$RUNNER" --mode run-protocol --protocol vtrace-indexed \
   --vexp-swe-bench-dir "$VEXP" --instances "$INSTANCE" \
-  --capsule-engine v2 --capsule-intent auto --capsule-budget 8000 \
+  --capsule-intent auto --capsule-budget 8000 \
   --inject-capsule-digest --digest-decision-contract --bounded-digest-decisions \
   --compact-digest-injection --pivot-confidence-gate \
   --capture-product-v2-accounting --disable-pivot-check \
@@ -618,7 +618,7 @@ issue vs prompt issue vs agent variance vs environment.
 ## 12. Current Product State After M92
 
 **Stable / shipped.** The core VTRACE product surface: repo-local AST indexing,
-hybrid retrieval, Capsule v2 with compact digest injection, section-priority
+hybrid retrieval, Capsule with compact digest injection, section-priority
 truncation, session memory, CLI + MCP. These are unchanged by the M9x guard work.
 
 **Mandatory.** M89 env guard (+ drift check) and M90A shell guard / host-pip firewall

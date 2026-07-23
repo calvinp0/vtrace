@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "stage5.m127.capsule-route-audit.v1",
+  "sourceBaseCommit": "fdcda9a479522722c69a06b32d585b058670bc65",
+  "preChange": {
+    "defaultCause": "parseRequestedCapsuleEngine normalized omission/default to default; requestWantsCapsuleV2 returned false; both MCP get_context_capsule and buildCapsuleV2Section selected/described v1",
+    "currentMainAlsoAffected": true,
+    "staleProcessRequiredToExplainIncident": false,
+    "reportedServingProcessIdentified": false,
+    "configuredExecutable": "<VTRACE_ROOT>/bin/vtrace",
+    "launcherMode": "source-backed Bun launcher",
+    "rebuildRequired": false,
+    "restartRequired": true
+  },
+  "currentRuntime": {
+    "assemblySeam": "buildAuthoritativeProductRetrieval -> buildCapsule -> hybridRetrieve",
+    "capsuleImplementation": "hybrid",
+    "retrievalImplementation": "product-retrieval-v2",
+    "automaticLegacyFallback": false,
+    "advertisedEngineSelector": false,
+    "hiddenAliases": {
+      "default": "deprecated no-op warning",
+      "v2": "deprecated no-op warning",
+      "v1": "unsupported_legacy_capsule_engine before retrieval",
+      "legacy": "unsupported_legacy_capsule_engine before retrieval"
+    },
+    "productRoutes": {
+      "get_code_context": "run_pipeline authoritative request result",
+      "get_context_capsule": "authoritative request result",
+      "run_pipeline": "authoritative request result",
+      "cli_capsule": "authoritative request result",
+      "cli_run_pipeline": "authoritative request result"
+    },
+    "historicalReadersPreserved": [
+      "src/capsuleV2/stage5Artifacts.ts",
+      "historical Stage 5 result readers"
+    ]
+  }
+}

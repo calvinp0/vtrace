@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "stage5.m127.tckdb-client-workflow-acceptance.v1",
+  "repository": "<ISOLATED_TCKDB_HEAD_ARCHIVE>",
+  "sourceRepositoryMutated": false,
+  "indexedFiles": 960,
+  "indexedSymbols": 23119,
+  "parseFailures": 0,
+  "readFailures": 0,
+  "persistenceFailures": 0,
+  "result": "context",
+  "actualMode": "standard",
+  "candidateFilesConsidered": 25,
+  "routedRescueAttempted": true,
+  "candidateStage": {
+    "authoritativeHybridCandidates": 25,
+    "routedRescueCandidatesAdded": 2,
+    "mergedCandidatesConsidered": 25,
+    "capsuleSelectedItems": 8,
+    "discardedCandidatesTotal": 27,
+    "boundedDiscardedExamples": [
+      "clients/python/src/tckdb_client/builders/calculation.py::Calculation",
+      "backend/app/db/models/kinetics.py::degeneracy_convention",
+      "backend/app/schemas/entities/kinetics.py::degeneracy_convention",
+      "backend/app/schemas/entities/workflow.py::WorkflowToolBase"
+    ],
+    "exclusionReason": "beyond standard support budget (max 4)"
+  },
+  "selectedFiles": [
+    "backend/app/db/models/workflow.py",
+    "backend/app/importers/cccbdb/snapshot.py",
+    "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_reaction_upload.py",
+    "clients/python/src/tckdb_client/builders/kinetics.py",
+    "backend/app/schemas/workflows/kinetics_upload.py",
+    "clients/python/tests/test_client.py",
+    "clients/python/tests/test_docs_calculation_note_conventions.py"
+  ],
+  "leadPivot": "backend/app/db/models/workflow.py::WorkflowTool",
+  "evidence": {
+    "degeneracyConventionVisible": true,
+    "clientImplementationVisible": true,
+    "payloadSnapshotOrDirectTestVisible": false,
+    "workflowConventionVisible": false,
+    "dependencyConfigurationVisible": false,
+    "notebookEvidenceVisible": false,
+    "fullSuiteCommandVisible": false
+  },
+  "auditedExpectedPaths": {
+    "payloadSnapshot": "clients/python/tests/test_computed_reaction_upload_builder.py",
+    "clientImplementation": "clients/python/src/tckdb_client/builders/kinetics.py",
+    "directValidationTest": "clients/python/tests/test_reaction_builders_validation.py",
+    "workflow": ".github/workflows/python-client-ci.yml",
+    "dependencies": "clients/python/pyproject.toml",
+    "notebookTest": "clients/python/tests/test_builder_computed_reaction_demo_notebook.py"
+  },
+  "pass": false,
+  "reason": "Engine consolidation removes no_candidates, but the frozen M126 retrieval/role policy leads on unrelated workflow and snapshot symbols and omits four required evidence categories. M127 did not retune retrieval because that was explicitly frozen."
+}

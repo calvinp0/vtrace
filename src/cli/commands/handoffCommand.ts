@@ -1,4 +1,3 @@
-import { buildCapsule, createSourceBackedCapsuleBuilder } from "../../capsule/buildCapsule";
 import { createCharacterBudget } from "../../capsule/budget";
 import {
   CapsuleInclusionReasonKind,
@@ -6,6 +5,7 @@ import {
   type CapsuleSupportingCandidate,
 } from "../../capsule/types";
 import { prepareCapsuleAssembly } from "../../capsuleProfiles/orchestrator";
+import { buildAuthoritativeProductRetrieval } from "../../capsuleV2/authoritativeProductRetrieval";
 import { hasIndexedFiles } from "../../db/repositories/filesRepository";
 import { getLatestIndexRun } from "../../db/repositories/indexRunsRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
@@ -15,6 +15,7 @@ import {
 } from "../../handoff/buildHandoff";
 import { routeQuery } from "../../intent/routeQuery";
 import type { GraphSearchResult } from "../../retrieval/types";
+import { RunPipelinePresetIntent } from "../../runPipeline/types";
 import { formatHandoffPayload } from "../formatters";
 import type { CliOptions, CommandResult } from "../types";
 import {
@@ -77,10 +78,11 @@ export async function runHandoffCommand(
           maxBudget: createCharacterBudget(CAPSULE_COMMAND_DEFAULTS.maxBudgetCharacters),
         },
       });
-      const capsule = buildCapsule(
-        createSourceBackedCapsuleBuilder({ db, repoRoot }),
-        preparedAssembly.builderInput,
-      );
+      const capsule = buildAuthoritativeProductRetrieval(db, repoRoot, {
+        query,
+        preset: RunPipelinePresetIntent.Modify,
+        maxBudgetCharacters: 8_000 * 4,
+      }).capsule;
       const handoffPayload = buildHandoffPayload(deterministicHandoffBuilder, {
         pipeline: {
           routedQuery,

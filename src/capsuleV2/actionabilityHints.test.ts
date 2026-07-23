@@ -319,26 +319,26 @@ test("renderCapsuleV2Human surfaces an Actionability hints section", () => {
   }
 });
 
-// --- (8) MCP get_context_capsule v2 schema documents the hints -----------------
+// --- (8) MCP get_context_capsule schema documents the hints --------------------
 
-test("get_context_capsule output schema documents capsuleV2.actionabilityHints", () => {
+test("get_context_capsule output schema documents capsuleResult.actionabilityHints", () => {
   const tool = RESERVED_MCP_TOOL_DEFINITIONS.find(
     (t) => t.metadata.toolId === McpToolId.GetContextCapsule,
   );
   assert.ok(tool, "get_context_capsule tool definition not found");
   const schema = tool!.metadata.outputSchema as {
     properties?: {
-      capsuleV2?: { properties?: Record<string, unknown>; required?: string[] };
+      capsuleResult?: { properties?: Record<string, unknown>; required?: string[] };
     };
   };
-  const capsuleV2 = schema.properties?.capsuleV2;
-  const hintsSchema = capsuleV2?.properties?.actionabilityHints as
+  const capsule = schema.properties?.capsuleResult;
+  const hintsSchema = capsule?.properties?.actionabilityHints as
     | { items?: { properties?: Record<string, { properties?: Record<string, unknown> }> } }
     | undefined;
   assert.ok(hintsSchema, "schema missing actionabilityHints");
   assert.ok(
-    capsuleV2?.required?.includes("actionabilityHints"),
-    "actionabilityHints not in capsuleV2 required list",
+    capsule?.required?.includes("actionabilityHints"),
+    "actionabilityHints not in capsuleResult required list",
   );
   // The strengthened follow-through obligation is documented on the item schema.
   const itemProps = hintsSchema!.items?.properties;

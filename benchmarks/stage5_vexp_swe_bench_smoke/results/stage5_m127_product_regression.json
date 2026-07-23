@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "stage5.m127.product-regression.v1",
+  "frozenCases": 50,
+  "expanded20Cases": 20,
+  "crossRepo30Cases": 30,
+  "selectedFileDifferences": 0,
+  "leadDifferences": 0,
+  "roleDifferences": 0,
+  "renderedContextDifferences": 0,
+  "quality": {
+    "top1": "39/50",
+    "top5AnyGold": "46/50",
+    "allGoldVisible": "45/50",
+    "leadPivot": "39/50",
+    "missing": 4,
+    "wrongPivot": 11,
+    "noCandidates": 0
+  },
+  "performance": {
+    "frozen50MedianMs": 595.874,
+    "frozen50P90Ms": 1222.37,
+    "m126ReferenceMedianMs": 614,
+    "m126ReferenceP90Ms": 1203,
+    "exactTckdbWarmMedianMs": 966.211,
+    "exactTckdbM126ReferenceMs": 869,
+    "duplicateRetrievalExecution": false,
+    "verdict": "within expected measurement variance for frozen50; exact TCKDB is slower on the different incident query"
+  },
+  "compoundQueryRegression": {
+    "status": "pass",
+    "evidence": [
+      "src/capsuleV2/longQueryRobustness.test.ts",
+      "src/capsuleV2/querySignals.test.ts",
+      "full bun test"
+    ]
+  }
+}

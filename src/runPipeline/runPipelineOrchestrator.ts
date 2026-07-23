@@ -9,7 +9,6 @@ import {
 } from "../capsule/types";
 import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
 import type { PreparedCapsuleAssembly } from "../capsuleProfiles/types";
-import { buildCapsuleV2 } from "../capsuleV2/buildCapsuleV2";
 import {
   buildAuthoritativeProductRetrieval,
   type AuthoritativeProductRetrieval,
@@ -25,13 +24,11 @@ import {
   type CapsuleV2ProductResponse,
 } from "../capsuleV2/productAdapter";
 import { CapsuleIntent, type CapsuleV2Result } from "../capsuleV2/types";
+import { resolveCapsuleCompatibility } from "../capsuleV2/engineSelection";
 import {
-  parseRequestedCapsuleEngine,
-  requestWantsCapsuleV2,
-  v1EngineSelection,
-  v2EngineSelection,
-  type CapsuleEngineSelection,
-} from "../capsuleV2/engineSelection";
+  CAPSULE_IMPLEMENTATION,
+  CAPSULE_SELECTION_AUTHORITY,
+} from "../runtime/provenance";
 import {
   buildPivotNeighborhoods,
   type PivotNeighborhoodContext,
@@ -121,21 +118,13 @@ export interface RunPipelineOrchestratorInput {
   readonly includeMemory?: boolean;
   readonly includeTests?: boolean;
   readonly includeFileContent?: boolean;
-  /**
-   * Opt-in context engine. When set to `v2` (case-insensitive) the orchestration
-   * additionally builds a bounded Capsule v2 product section alongside the
-   * unchanged v1 sections. Any other value (or omission) keeps the v1-only path.
-   */
+  /** Hidden migration alias. It never changes the implementation. */
   readonly capsuleEngine?: string;
-  /** Capsule v2 token budget. Only used when `capsuleEngine=v2`. */
+  /** Product capsule token budget. */
   readonly capsuleBudgetTokens?: number;
-  /** Capsule v2 intent. Only used when `capsuleEngine=v2`. Defaults to auto. */
+  /** Product capsule intent. Defaults to the resolved preset. */
   readonly capsuleIntent?: CapsuleIntent;
 }
-
-// The opt-in discriminator value for the Capsule v2 context engine. The default
-// (unset) path stays byte-identical to the v1-only orchestration.
-export const RUN_PIPELINE_CAPSULE_ENGINE_V2 = "v2";
 
 export const RUN_PIPELINE_DEFAULTS = Object.freeze({
   maxResults: 6,
@@ -145,9 +134,7 @@ export const RUN_PIPELINE_DEFAULTS = Object.freeze({
   impactDepth: 2,
   impactMaxTopDependents: 4,
   flowMaxPaths: 3,
-  // Capsule v2 token budget when the caller opts in without an explicit budget.
-  // Matches the get_context_capsule v2 default so both product paths size the
-  // same first-call context.
+  // Default product capsule token budget shared by all context surfaces.
   capsuleV2BudgetTokens: 8_000,
 });
 
@@ -262,7 +249,7 @@ export interface RunPipelineOrchestration {
   };
   readonly intentDecision: RunPipelineIntentDecision;
   /**
-   * The unified, normalized intent decision shared with Capsule v2. Reconciles
+   * The unified, normalized intent decision shared with the capsule. Reconciles
    * the preset decision, any explicit `capsuleIntent`, and explicit impact
    * phrasing into one model, and is what drives impact-section eligibility.
    */
@@ -280,37 +267,34 @@ export interface RunPipelineOrchestration {
    */
   readonly capsuleManifestId: string | null;
   /**
-   * Bounded Capsule v2 product section, or null on the default v1-only path.
-   * Built through the shared `toCapsuleV2ProductResponse` adapter so the
-   * projection logic is never duplicated. Present only when the caller opts in
-   * with `capsuleEngine=v2`.
+   * Bounded product capsule built from the request-local retrieval authority.
    */
-  readonly capsuleV2: CapsuleV2ProductResponse | null;
+  readonly capsuleV2: CapsuleV2ProductResponse;
   /**
-   * Persisted Capsule v2 manifest id, or null when v2 was not requested or no
-   * manifest could be persisted. Resolves through check_capsule_staleness the
-   * same way the v1 `capsuleManifestId` does.
+   * Persisted product capsule manifest id, or null when none is available.
    */
   readonly capsuleV2ManifestId: string | null;
   /**
-   * Bounded pivot-neighborhood excerpts derived from the Capsule v2 pivots, or
-   * null on the default v1-only path. Gives normal debug/modify queries useful
+   * Bounded pivot-neighborhood excerpts derived from the capsule pivots. Gives
+   * normal debug/modify queries useful
    * nearby relationship source without an explicit flow/impact trigger. Additive
    * and best-effort: never fails the run, may be an empty array when no pivot
    * symbol identity resolves.
    */
-  readonly pivotNeighborhood: PivotNeighborhoodContext[] | null;
+  readonly pivotNeighborhood: PivotNeighborhoodContext[];
   /**
-   * Resolved capsule-engine selection: what the caller requested, which engine
-   * actually produced the context, and (only on a genuine v2 query/render
-   * failure) the fallback reason. Always present so every run records its engine,
-   * ending the split-brain where one surface saw v1 and another v2 with no audit
-   * trail. The default/v1/legacy path reports `effective=v1`, `fallbackReason=null`.
+   * Unversioned implementation diagnostics plus migration warnings.
    */
-  readonly capsuleEngine: CapsuleEngineSelection;
+  readonly capsule: {
+    readonly implementation: typeof CAPSULE_IMPLEMENTATION;
+    readonly retrievalVersion: AuthoritativeProductRetrieval["version"];
+    readonly selectionAuthority: typeof CAPSULE_SELECTION_AUTHORITY;
+    readonly rescueAttempted: boolean;
+    readonly compatibilityWarnings: readonly string[];
+  };
   /**
-   * Compact inspect-first guidance projected from the Capsule v2 pivots, or null
-   * on the v1/default path (and when the v2 result has no actionable pivot). Pure,
+   * Compact inspect-first guidance projected from the capsule pivots, or null
+   * when the result has no actionable pivot. Pure,
    * bounded guidance — changes no retrieval, ranking, or scoring. This is the same
    * shared `buildInspectFirst` projection the Stage 5 injected path consumes.
    */
@@ -333,14 +317,9 @@ export function runPipelineOrchestrator(
   options: {
     classifier?: IntentClassifier;
     deferredStore?: DeferredVexpStore;
-    /**
-     * Test-only seam to drive the Capsule v2 build. Defaults to the real
-     * `buildCapsuleV2`. Lets a test force a genuine v2 query/render failure to
-     * verify the v2 -> v1 fallback without touching workspace/index preparation.
-     */
-    capsuleV2Builder?: typeof buildCapsuleV2;
   } = {},
 ): RunPipelineOrchestration {
+  const capsuleCompatibility = resolveCapsuleCompatibility(rawInput.capsuleEngine);
   const classifier = options.classifier ?? defaultIntentClassifier;
   const deferredStore = options.deferredStore ?? getSharedDeferredVexpStore();
   const query = rawInput.query;
@@ -407,17 +386,13 @@ export function runPipelineOrchestrator(
     context,
   });
 
-  // Opt-in Capsule v2 section. The default (no `capsuleEngine`) path leaves both
-  // fields null and the v1 sections untouched, so existing output is byte
-  // identical. When opted in we build the bounded, intent-aware v2 capsule,
-  // project it through the shared product adapter (with the impact/memory/rules
-  // seams derived above folded into the digest), and persist a manifest the same
-  // way the v1 path does (resolvable by check_capsule_staleness).
-  const capsuleV2Build = buildCapsuleV2Section(db, repoRoot, query, rawInput, {
-    builder: options.capsuleV2Builder ?? buildCapsuleV2,
-    ...(options.capsuleV2Builder === undefined
-      ? { prebuilt: context.authoritativeRetrieval.result }
-      : {}),
+  // Build one product response from the request-local authoritative selection.
+  // Impact, memory, and rule summaries enrich that response without rerunning
+  // retrieval or packing.
+  const capsuleV2Build = buildCapsuleSection(db, repoRoot, query, rawInput, {
+    prebuilt: context.authoritativeRetrieval.result,
+    compatibilityWarnings: capsuleCompatibility.warnings,
+    retrievalVersion: context.authoritativeRetrieval.version,
     digestEnrichments: {
       impact: deriveImpactDigestSeam(impact),
       memory: deriveMemoryDigestSeam(memory),
@@ -464,32 +439,20 @@ export function runPipelineOrchestrator(
     capsuleV2: capsuleV2Build.capsuleV2,
     capsuleV2ManifestId: capsuleV2Build.capsuleV2ManifestId,
     pivotNeighborhood: capsuleV2Build.pivotNeighborhood,
-    capsuleEngine: capsuleV2Build.capsuleEngine,
+    capsule: capsuleV2Build.capsule,
     inspectFirst: capsuleV2Build.inspectFirst,
   };
 }
 
 interface CapsuleV2SectionResult {
-  readonly capsuleV2: CapsuleV2ProductResponse | null;
+  readonly capsuleV2: CapsuleV2ProductResponse;
   readonly capsuleV2ManifestId: string | null;
-  readonly pivotNeighborhood: PivotNeighborhoodContext[] | null;
-  readonly capsuleEngine: CapsuleEngineSelection;
+  readonly pivotNeighborhood: PivotNeighborhoodContext[];
+  readonly capsule: RunPipelineOrchestration["capsule"];
   readonly inspectFirst: InspectFirst | null;
 }
 
-// Build the opt-in Capsule v2 product section and resolve the engine selection.
-// The default/v1/legacy path returns the v2 fields as null and reports
-// `effective=v1`. When the caller opts into v2 the bounded, intent-aware v2
-// capsule is built, projected through the shared product adapter, persisted as a
-// manifest (resolvable by check_capsule_staleness exactly like the
-// get_context_capsule v2 path), enriched with pivot-neighborhood excerpts, and
-// projected into compact inspect-first guidance.
-//
-// Requirement: a genuine v2 query/render failure (the build throwing) falls back
-// to the v1 sections — which have already been assembled above — and records the
-// reason. Workspace/index preparation runs entirely outside this function (the DB
-// is already open and indexed before the orchestrator is called), so such failures
-// are never caught here and never masquerade as a capsule-engine fallback.
+// Project, enrich, and persist the single request-local authoritative selection.
 interface DigestEnrichments {
   readonly impact: CapsuleV2DigestImpactSeam | null;
   readonly memory: CapsuleV2DigestMemorySeam | null;
@@ -587,37 +550,19 @@ export function deriveRulesDigestSeam(
   };
 }
 
-function buildCapsuleV2Section(
+function buildCapsuleSection(
   db: Database,
   repoRoot: string,
   query: string,
   rawInput: RunPipelineOrchestratorInput,
   deps: {
-    builder: typeof buildCapsuleV2;
-    prebuilt?: CapsuleV2Result;
+    prebuilt: CapsuleV2Result;
+    compatibilityWarnings: readonly string[];
+    retrievalVersion: AuthoritativeProductRetrieval["version"];
     digestEnrichments?: DigestEnrichments;
   },
 ): CapsuleV2SectionResult {
-  const requested = parseRequestedCapsuleEngine(rawInput.capsuleEngine);
-  const v1Section = {
-    capsuleV2: null,
-    capsuleV2ManifestId: null,
-    pivotNeighborhood: null,
-    inspectFirst: null,
-  } as const;
-
-  if (!requestWantsCapsuleV2(requested)) {
-    return { ...v1Section, capsuleEngine: v1EngineSelection(requested) };
-  }
-
-  try {
-    const result = deps.prebuilt ?? deps.builder({
-      db,
-      repoRoot,
-      task: query,
-      intent: rawInput.capsuleIntent ?? CapsuleIntent.Auto,
-      maxTokens: rawInput.capsuleBudgetTokens ?? RUN_PIPELINE_DEFAULTS.capsuleV2BudgetTokens,
-    });
+    const result = deps.prebuilt;
     const capsuleV2 = toCapsuleV2ProductResponse(result, {
       query,
       impact: deps.digestEnrichments?.impact ?? null,
@@ -642,18 +587,14 @@ function buildCapsuleV2Section(
       capsuleV2ManifestId,
       pivotNeighborhood,
       inspectFirst,
-      capsuleEngine: v2EngineSelection(requested, inspectFirst !== null),
+      capsule: {
+        implementation: CAPSULE_IMPLEMENTATION,
+        retrievalVersion: deps.retrievalVersion,
+        selectionAuthority: CAPSULE_SELECTION_AUTHORITY,
+        rescueAttempted: result.diagnostics.routed_rescue?.attempted === true,
+        compatibilityWarnings: deps.compatibilityWarnings,
+      },
     };
-  } catch (error) {
-    // Genuine v2 query/render failure: fall back to the already-assembled v1
-    // sections and record why. no_context never reaches here (it is a normal
-    // return value, not a throw), so the no_context policy is unchanged.
-    const reason = error instanceof Error ? error.message : String(error);
-    return {
-      ...v1Section,
-      capsuleEngine: v1EngineSelection(requested, `v2_build_failed: ${reason}`),
-    };
-  }
 }
 
 /**
@@ -712,6 +653,12 @@ export function runReliableContextRetrieval(
   // the shared Capsule v2 hybrid core is the sole authority for selected files,
   // pivot/support roles, ordering, and budget-aware rendering.
   const primaryCapsule = primaryRetrieval.capsule;
+  const authoritativeCandidateFiles = new Set(
+    primaryRetrieval.result.diagnostics.candidate_scores?.map((candidate) => candidate.path) ?? [],
+  ).size;
+  const candidateFilesConsidered = authoritativeCandidateFiles > 0
+    ? authoritativeCandidateFiles
+    : primaryRetrieval.result.diagnostics.candidate_count;
   const initialContextItemCount = countUsefulContextItems(primaryCapsule);
   const initialReason = resolveContextSkipReason(input.query, overridden, primaryCapsule);
 
@@ -733,7 +680,7 @@ export function runReliableContextRetrieval(
         finalContextItemCount: initialContextItemCount,
         pathSignalsConsidered: overridden.pathSignalDiagnostics.pathSignalsConsidered,
         pathSignalsMatched: overridden.pathSignalDiagnostics.pathSignalsMatched,
-        candidateFilesConsidered: overridden.pathSignalDiagnostics.candidateFilesConsidered,
+        candidateFilesConsidered,
         weakPathCoverage: overridden.pathSignalDiagnostics.weakPathCoverage,
         search: overridden.pathSignalDiagnostics,
       },
@@ -757,7 +704,7 @@ export function runReliableContextRetrieval(
       finalContextItemCount: initialContextItemCount,
       pathSignalsConsidered: overridden.pathSignalDiagnostics.pathSignalsConsidered,
       pathSignalsMatched: overridden.pathSignalDiagnostics.pathSignalsMatched,
-      candidateFilesConsidered: overridden.pathSignalDiagnostics.candidateFilesConsidered,
+      candidateFilesConsidered,
       weakPathCoverage: overridden.pathSignalDiagnostics.weakPathCoverage,
       search: overridden.pathSignalDiagnostics,
     },

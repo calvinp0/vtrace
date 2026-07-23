@@ -12,8 +12,10 @@ import {
   type CapsuleSupportingCandidate,
 } from "../capsule/types";
 import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
-import { buildCapsuleV2 } from "../capsuleV2/buildCapsuleV2";
-import { buildAuthoritativeProductRetrieval } from "../capsuleV2/authoritativeProductRetrieval";
+import {
+  buildAuthoritativeProductRetrieval,
+  capsuleIntentForPreset,
+} from "../capsuleV2/authoritativeProductRetrieval";
 import {
   capsuleV2ToManifestItemFields,
   toCapsuleV2ProductResponse,
@@ -21,12 +23,10 @@ import {
 } from "../capsuleV2/productAdapter";
 import { CapsuleIntent, parseCapsuleIntent } from "../capsuleV2/types";
 import {
-  parseRequestedCapsuleEngine,
-  requestWantsCapsuleV2,
-  v1EngineSelection,
-  v2EngineSelection,
-  type CapsuleEngineSelection,
+  CapsuleEngineCompatibilityError,
+  resolveCapsuleCompatibility,
 } from "../capsuleV2/engineSelection";
+import { getRuntimeProvenance } from "../runtime/provenance";
 import { buildInspectFirst, type InspectFirst } from "../runPipeline/inspectFirst";
 import {
   buildContextAccounting,
@@ -87,6 +87,7 @@ import {
   RunPipelineIntentSource,
   RunPipelinePresetIntent,
   RunPipelineSessionSkipReason,
+  type RunPipelineConcretePreset,
 } from "../runPipeline/types";
 import { isRunPipelinePresetIntent } from "../runPipeline/selectIntent";
 import {
@@ -186,12 +187,7 @@ const MCP_PIPELINE_DEFAULTS = Object.freeze({
   maxBudgetCharacters: 2_000,
 });
 
-// Opt-in Capsule v2 on the product surface. `get_context_capsule` stays on the
-// v1 pipeline unless the caller explicitly sets `capsule_engine` (or its camelCase
-// alias `capsuleEngine`) to this value. Default behavior is unchanged.
-const CAPSULE_ENGINE_V2 = "v2";
-
-// Default token budget for an opt-in Capsule v2 build — matches the CLI capsule
+// Default token budget for the authoritative capsule build — matches the CLI capsule
 // command's default (generous enough for a couple of pivots plus a ring of
 // support). Callers can override with `capsule_budget_tokens`.
 const CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS = 8_000;
@@ -3071,6 +3067,11 @@ const INDEX_STATUS_SCHEMA = objectProperty(
     freshness: INDEX_FRESHNESS_SCHEMA,
     watcher: FILE_WATCHER_STATUS_SCHEMA,
     performance: { type: ["object", "null"], description: "Diagnostics from the most recent index operation.", additionalProperties: true },
+    runtime: {
+      type: "object",
+      description: "Runtime/build provenance for stale-process diagnosis.",
+      additionalProperties: true,
+    },
   },
   [
     "repoRoot",
@@ -3087,6 +3088,7 @@ const INDEX_STATUS_SCHEMA = objectProperty(
     "freshness",
     "watcher",
     "performance",
+    "runtime",
   ],
 );
 
@@ -7159,7 +7161,7 @@ const PRODUCT_CONTEXT_RESPONSE_SCHEMA: McpSchemaProperty = {
     resolved: booleanProperty("Whether fresh, usable model-visible context was assembled."),
     task: stringProperty("Normalized task text used by the shared assembler."),
     taskHash: stringProperty("Deterministic hash of the normalized task."),
-    intent: stringProperty("Resolved Capsule v2 intent."),
+    intent: stringProperty("Resolved capsule intent."),
     capsuleMode: stringProperty("Capsule mode shared by all three product paths."),
     leadPivot: { type: ["string", "null"], description: "Repository-relative lead-pivot path, or null." },
     selectedFileHash: stringProperty("Deterministic hash of unique selected source-file identities."),
@@ -7201,7 +7203,7 @@ const PRODUCT_CONTEXT_RESPONSE_SCHEMA: McpSchemaProperty = {
 };
 
 const CAPSULE_V2_PRODUCT_ITEM_SCHEMA = objectProperty(
-  "A Capsule v2 pivot or support item.",
+  "A capsule pivot or support item.",
   {
     role: stringProperty("`pivot` or `support`."),
     path: stringProperty("Repo-relative file path."),
@@ -7232,13 +7234,10 @@ const CAPSULE_V2_PRODUCT_ITEM_SCHEMA = objectProperty(
   ],
 );
 
-// The Capsule v2 product response surfaced under `capsuleV2` when a caller opts
-// into the v2 engine. Bounded and deterministic (see productAdapter.ts).
+// The bounded, deterministic product capsule response.
 const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
-  "Capsule v2 product response (experimental, opt-in). Present only when capsule_engine=v2.",
+  "Authoritative product capsule response.",
   {
-    engine: stringProperty("Always `v2` here."),
-    experimental: booleanProperty("Capsule v2 is opt-in/experimental on the product surface."),
     query: stringProperty("The task/query the capsule was built for (empty string when not supplied)."),
     intent: stringProperty("The resolved intent the capsule was built for."),
     actualMode: stringProperty("Realised sizing tier, or `no_context` when no pivot was found."),
@@ -7356,8 +7355,6 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
     ),
   },
   [
-    "engine",
-    "experimental",
     "query",
     "intent",
     "actualMode",
@@ -7392,9 +7389,9 @@ const PIVOT_NEIGHBORHOOD_EXCERPT_SCHEMA = objectProperty(
 
 const PIVOT_NEIGHBORHOOD_SCHEMA: McpSchemaProperty = {
   type: "array",
-  description: "Bounded nearby relationship source around the top Capsule v2 pivot(s), so normal debug/modify queries get useful inline neighbor source without an explicit flow/impact trigger. Present only when capsule_engine=v2; may be empty when no pivot symbol identity resolved.",
+  description: "Bounded nearby relationship source around the top capsule pivots; may be empty when no pivot symbol identity resolved.",
   items: objectProperty(
-    "The bounded neighborhood of one Capsule v2 pivot.",
+    "The bounded neighborhood of one capsule pivot.",
     {
       pivot: objectProperty(
         "The anchoring pivot.",
@@ -7422,23 +7419,6 @@ const PIVOT_NEIGHBORHOOD_SCHEMA: McpSchemaProperty = {
   ),
 };
 
-// Resolved capsule-engine selection — emitted on every single-repo product
-// response so the requested vs effective engine (and any v2 -> v1 fallback) is
-// auditable, ending the split-brain where one surface saw v1 and another v2.
-const CAPSULE_ENGINE_SELECTION_SCHEMA = objectProperty(
-  "Resolved capsule-engine selection: what the caller requested, which engine actually produced the context, and (only on a genuine v2 build failure) the fallback reason.",
-  {
-    requested: stringProperty("Requested engine: default | v1 | v2 | legacy. Unrecognized/omitted normalizes to default."),
-    effective: stringProperty("Engine that actually produced the context: v1 | v2 | none."),
-    fallbackReason: {
-      type: ["string", "null"],
-      description: "Non-null only when a v2 request fell back to v1 because the v2 build threw. Workspace/index-preparation failures and no_context are never represented here.",
-    },
-    compactInspectFirst: booleanProperty("True when v2 compact inspect-first guidance was produced for this response."),
-  },
-  ["requested", "effective", "fallbackReason", "compactInspectFirst"],
-);
-
 const INSPECT_FIRST_ITEM_SCHEMA = objectProperty(
   "One named inspection target with a short, deterministic explanation.",
   {
@@ -7454,7 +7434,7 @@ const INSPECT_FIRST_ITEM_SCHEMA = objectProperty(
 // Capsule v2 pivots. Same shared projection the Stage 5 injected path consumes.
 const INSPECT_FIRST_SCHEMA: McpSchemaProperty = {
   type: ["object", "null"],
-  description: "Compact inspect-first guidance projected from the Capsule v2 pivots (guidance, not enforcement). Present only when capsule_engine=v2; null when the v2 result has no actionable pivot.",
+  description: "Compact inspect-first guidance projected from capsule pivots; null when there is no actionable pivot.",
   properties: {
     confidence: stringProperty("How specific the lead signal is: high | medium | low."),
     likelyFirst: INSPECT_FIRST_ITEM_SCHEMA,
@@ -7500,11 +7480,9 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           saveObservation: booleanProperty("When true, persist a compact tool-call observation for this pipeline run."),
           observation: stringProperty("Optional durable observation text to save after the pipeline completes."),
           repos: arrayProperty("Optional workspace repo aliases to query. Defaults to all enabled repos when a workspace config is present.", stringProperty("Repo alias.")),
-          capsule_engine: stringProperty("Optional context engine. Set to `v2` to additionally build the experimental, opt-in Capsule v2 product section (bounded, intent-aware, evidence-scored) alongside the unchanged v1 sections. Omit (or any other value) keeps the default v1-only output. Single-repo only."),
-          capsuleEngine: stringProperty("Alias of `capsule_engine` (camelCase)."),
-          capsule_intent: stringProperty("Optional Capsule v2 intent: auto|debug|refactor|modify|explain|impact|test-failure. Only used when capsule_engine=v2. Defaults to auto."),
+          capsule_intent: stringProperty("Optional capsule intent: auto|debug|refactor|modify|explain|impact|test-failure. Defaults to auto."),
           capsuleIntent: stringProperty("Alias of `capsule_intent` (camelCase)."),
-          capsule_budget_tokens: integerProperty("Optional Capsule v2 token budget. Only used when capsule_engine=v2. Defaults to 8000."),
+          capsule_budget_tokens: integerProperty("Optional capsule token budget. Defaults to 8000."),
           capsuleBudgetTokens: integerProperty("Alias of `capsule_budget_tokens` (camelCase)."),
         },
         [],
@@ -7557,15 +7535,39 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
               "sessionId",
             ],
           ),
-          contextEngine: stringProperty("Context engine discriminator. `v2` only when the caller opted into Capsule v2; absent on the default v1-only path."),
-          capsuleEngine: CAPSULE_ENGINE_SELECTION_SCHEMA,
+          capsule: objectProperty(
+            "Authoritative capsule implementation diagnostics.",
+            {
+              implementation: stringProperty("Capsule implementation id."),
+              retrievalVersion: stringProperty("Retrieval implementation id."),
+              selectionAuthority: stringProperty("Selection authority."),
+              rescueAttempted: booleanProperty("Whether bounded routed rescue ran."),
+              compatibilityWarnings: arrayProperty("Deprecated input warnings.", stringProperty("Warning.")),
+            },
+            ["implementation", "retrievalVersion", "selectionAuthority", "rescueAttempted", "compatibilityWarnings"],
+          ),
+          runtime: objectProperty(
+            "Runtime/build provenance for stale-process diagnosis.",
+            {
+              packageVersion: stringProperty("VTRACE package version."),
+              commit: { type: ["string", "null"], description: "Source/build commit when available." },
+              executablePath: stringProperty("Configured checkout launcher path."),
+              sourceRoot: stringProperty("Checkout or package root."),
+              capsuleImplementation: stringProperty("Capsule implementation id."),
+              retrievalImplementation: stringProperty("Retrieval implementation id."),
+              retrievalRankingVersion: stringProperty("Retrieval ranking version."),
+              indexSchemaVersion: integerProperty("Index schema version."),
+              manifestVersion: integerProperty("Manifest format version."),
+            },
+            ["packageVersion", "commit", "executablePath", "sourceRoot", "capsuleImplementation", "retrievalImplementation", "retrievalRankingVersion", "indexSchemaVersion", "manifestVersion"],
+          ),
           inspectFirst: INSPECT_FIRST_SCHEMA,
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
           productContext: PRODUCT_CONTEXT_RESPONSE_SCHEMA,
-          capsuleV2: CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA,
-          capsuleV2ManifestId: {
+          capsuleResult: CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA,
+          authoritativeCapsuleManifestId: {
             type: ["string", "null"],
-            description: "Persisted Capsule v2 manifest id when capsule_engine=v2. Pass to check_capsule_staleness or `vtrace check-capsule`. Absent on the default v1-only path; null when no manifest could be persisted.",
+            description: "Persisted authoritative capsule manifest id. Pass to check_capsule_staleness or `vtrace check-capsule`; null when no manifest could be persisted.",
           },
           pivotNeighborhood: PIVOT_NEIGHBORHOOD_SCHEMA,
           intent: RUN_PIPELINE_INTENT_DECISION_SCHEMA,
@@ -7613,12 +7615,15 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
 
       const query = parseRequiredRunPipelineTask(input);
       const maxResults = parseOptionalInteger(McpToolId.RunPipeline, input, "maxResults");
-      const maxBudgetCharacters = parseOptionalIntegerAlias(
+      const maxTokens = parseOptionalInteger(McpToolId.RunPipeline, input, "max_tokens");
+      const legacyMaxBudgetCharacters = parseOptionalInteger(
         McpToolId.RunPipeline,
         input,
-        "max_tokens",
         "maxBudgetCharacters",
       );
+      const maxBudgetCharacters = typeof maxTokens === "number"
+        ? maxTokens * 4
+        : legacyMaxBudgetCharacters;
       const sessionId = parseOptionalStringField(McpToolId.RunPipeline, input, "sessionId");
       const saveObservation = parseOptionalBoolean(McpToolId.RunPipeline, input, "saveObservation");
       const includeMemory = parseOptionalBoolean(McpToolId.RunPipeline, input, "includeMemory");
@@ -7630,9 +7635,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
       const intentRequested = presetRequested ?? legacyIntentRequested;
       const repos = parseOptionalStringArrayField(McpToolId.RunPipeline, input, "repos");
 
-      // Capsule v2 opt-in. The default (no `capsule_engine`) path stays on the v1
-      // orchestration and is byte-identical to before. Accept both snake_case and
-      // camelCase aliases, mirroring get_context_capsule.
+      // Hidden migration aliases; compatibility validation never changes routing.
       const engineSnake = parseOptionalStringField(McpToolId.RunPipeline, input, "capsule_engine");
       const engineCamel = parseOptionalStringField(McpToolId.RunPipeline, input, "capsuleEngine");
       const capsuleIntentRaw = parseOptionalStringFieldAlias(
@@ -7656,6 +7659,9 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
       }
       if (maxBudgetCharacters !== undefined && typeof maxBudgetCharacters !== "number") {
         return maxBudgetCharacters;
+      }
+      if (maxTokens !== undefined && typeof maxTokens !== "number") {
+        return maxTokens;
       }
       if (sessionId !== undefined && typeof sessionId !== "string") {
         return sessionId;
@@ -7700,9 +7706,19 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
         return capsuleBudgetTokens;
       }
 
-      const useCapsuleV2 = (engineSnake ?? engineCamel)?.toLowerCase() === CAPSULE_ENGINE_V2;
+      let capsuleCompatibility;
+      try {
+        capsuleCompatibility = resolveCapsuleCompatibility(engineSnake ?? engineCamel);
+      } catch (error) {
+        const compatibilityError = error as CapsuleEngineCompatibilityError;
+        return invalidRequest(
+          McpToolId.RunPipeline,
+          compatibilityError.message,
+          { error: compatibilityError.code },
+        );
+      }
 
-      let capsuleV2Intent = CapsuleIntent.Auto;
+      let capsuleV2Intent: CapsuleIntent | undefined;
       if (capsuleIntentRaw !== undefined) {
         const parsedIntent = parseCapsuleIntent(capsuleIntentRaw);
         if (parsedIntent === undefined) {
@@ -7736,32 +7752,12 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
         return selection.result;
       }
 
-      // Capsule v2 is single-repo only in this milestone, matching
-      // get_context_capsule: a multi-repo workspace request with the v2 opt-in is
-      // rejected rather than silently downgraded.
-      if (useCapsuleV2 && hasMultiRepoRequest(selection.selection, repos)) {
+      if (hasMultiRepoRequest(selection.selection, repos)) {
         return invalidRequest(
           McpToolId.RunPipeline,
-          "MCP tool run_pipeline capsule_engine=v2 is single-repo only; omit repos or select exactly one.",
+          "The authoritative capsule is currently single-repo; omit repos or select exactly one.",
           {},
         );
-      }
-
-      if (hasMultiRepoRequest(selection.selection, repos)) {
-        const multi = await runMultiRepoPipelineOrchestration(selection.selection, {
-          query,
-          maxResults,
-          maxBudgetCharacters,
-          intent: intentRequested,
-          sessionId,
-          includeMemory,
-          includeTests,
-          includeFileContent,
-        });
-
-        return multi.ok
-          ? { ok: true, output: multi.output }
-          : multi.result;
       }
 
       return withReadyRepoDb(
@@ -7781,18 +7777,12 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             includeMemory,
             includeTests,
             includeFileContent,
-            // Pass the raw requested engine string through always so the
-            // orchestration records requested=default|v1|v2|legacy faithfully
-            // (not just on the v2 path). The orchestrator normalizes it.
+            // Pass hidden migration aliases to the shared compatibility validator.
             ...((engineSnake ?? engineCamel) === undefined
               ? {}
               : { capsuleEngine: engineSnake ?? engineCamel }),
-            ...(useCapsuleV2
-              ? {
-                capsuleIntent: capsuleV2Intent,
-                ...(capsuleBudgetTokens === undefined ? {} : { capsuleBudgetTokens }),
-              }
-              : {}),
+            ...(capsuleV2Intent === undefined ? {} : { capsuleIntent: capsuleV2Intent }),
+            ...(capsuleBudgetTokens === undefined ? {} : { capsuleBudgetTokens }),
           });
 
           // Auto-capture is a best-effort post-success side effect shared with
@@ -7876,7 +7866,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             db,
             repoRoot: binding.repoRoot,
             task: query,
-            intent: capsuleV2Intent,
+            intent: capsuleV2Intent ?? capsuleIntentForPreset(orchestration.intentDecision.selected),
             budgetTokens: capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
             authoritativeRetrieval: orchestration.context.authoritativeRetrieval,
             ...(sessionId === undefined ? {} : { sessionId }),
@@ -8315,18 +8305,23 @@ const GET_CODE_CONTEXT_TOOL_DEFINITION = Object.freeze({
 // declared above RUN_PIPELINE_TOOL_DEFINITION so both run_pipeline/get_code_context
 // and get_context_capsule can reference the same shared v2 product schema.
 
-// The opt-in Capsule v2 envelope `get_context_capsule` returns instead of the v1
-// shape when `capsule_engine=v2`. Self-contained: it carries the persisted
-// manifest id (consistent with the v1 path) and the full v2 product response.
-interface CapsuleV2ToolOutput {
+// The direct capsule response, projected from the same authoritative result.
+interface CapsuleToolOutput {
   query: string;
   intent: string;
-  engine: typeof CAPSULE_ENGINE_V2;
-  capsuleEngine: CapsuleEngineSelection;
+  capsule: {
+    implementation: "hybrid";
+    retrievalVersion: "product-retrieval-v2";
+    selectionAuthority: "hybrid";
+    rescueAttempted: boolean;
+    compatibilityWarnings: readonly string[];
+  };
+  runtime: ReturnType<typeof getRuntimeProvenance>;
   inspectFirst: InspectFirst | null;
   capsuleManifestId: string | null;
-  capsuleV2: CapsuleV2ProductResponse;
+  capsuleResult: CapsuleV2ProductResponse;
   accounting?: ContextAccounting;
+  productContext?: ProductContextResponse;
 }
 
 const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
@@ -8334,7 +8329,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
   RUN_PIPELINE_TOOL_DEFINITION,
   getRequiredToolDefinition(LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN, McpToolId.IndexRepo),
   getRequiredToolDefinition(LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN, McpToolId.CheckCapsuleStaleness),
-  createEngineDelegateToolDefinition<BuildCapsuleInput, ReturnType<typeof formatContextCapsulePipelineOutput> | CapsuleV2ToolOutput>({
+  createEngineDelegateToolDefinition<BuildCapsuleInput, CapsuleToolOutput>({
     metadata: {
       toolId: McpToolId.GetContextCapsule,
       displayName: "Get Context Capsule",
@@ -8344,13 +8339,12 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         {
           task: stringProperty("Preferred task text. `query` remains a backward-compatible alias."),
           query: stringProperty("User query text."),
+          preset: stringProperty("Product-facing preset: auto|explore|debug|modify|refactor. Defaults to modify on this direct capsule surface."),
           maxResults: integerProperty("Optional reranked candidate count."),
           maxBudgetCharacters: integerProperty("Optional capsule character budget."),
           repos: arrayProperty("Optional workspace repo aliases to query. Defaults to all enabled repos when a workspace config is present.", stringProperty("Repo alias.")),
-          capsule_engine: stringProperty("Optional capsule engine. Set to `v2` to use the experimental, opt-in Capsule v2 engine (bounded, intent-aware, evidence-scored). Omit (or any other value) keeps the default v1 pipeline. Single-repo only."),
-          capsuleEngine: stringProperty("Alias of `capsule_engine` (camelCase)."),
-          capsule_intent: stringProperty("Optional Capsule v2 intent: auto|debug|refactor|modify|explain|impact|test-failure. Only used when capsule_engine=v2. Defaults to auto."),
-          capsule_budget_tokens: integerProperty("Optional Capsule v2 token budget. Only used when capsule_engine=v2. Defaults to 8000."),
+          capsule_intent: stringProperty("Optional capsule intent: auto|debug|refactor|modify|explain|impact|test-failure. Defaults to auto."),
+          capsule_budget_tokens: integerProperty("Optional capsule token budget. Defaults to 8000."),
         },
         [],
       ),
@@ -8383,8 +8377,8 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           ),
           query: stringProperty("Original query text."),
           intent: stringProperty("Selected intent."),
-          engine: stringProperty("Capsule engine for this response. `v2` only when the caller opted into Capsule v2; absent on the default v1 path."),
-          capsuleEngine: CAPSULE_ENGINE_SELECTION_SCHEMA,
+          capsule: RUN_PIPELINE_TOOL_DEFINITION.metadata.outputSchema.properties?.capsule ?? stringProperty("Capsule diagnostics."),
+          runtime: RUN_PIPELINE_TOOL_DEFINITION.metadata.outputSchema.properties?.runtime ?? stringProperty("Runtime provenance."),
           inspectFirst: INSPECT_FIRST_SCHEMA,
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
           productContext: PRODUCT_CONTEXT_RESPONSE_SCHEMA,
@@ -8395,43 +8389,8 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             type: ["string", "null"],
             description: "Persisted capsule manifest id for this capsule. Pass to check_capsule_staleness or `vtrace check-capsule` to evaluate freshness against a later run. Null for multi-repo capsules or when the repo has no index run yet.",
           },
-          capsuleV2: CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA,
-          capsule: objectProperty(
-            "Capsule output.",
-            {
-              query: stringProperty("Original query text."),
-              pivots: arrayProperty("Pivot capsule items.", CAPSULE_ITEM_SCHEMA),
-              supportingItems: arrayProperty("Supporting capsule items.", CAPSULE_ITEM_SCHEMA),
-              memories: arrayProperty("Optional surfaced memories.", CAPSULE_MEMORY_ITEM_SCHEMA),
-              rules: CAPSULE_RULE_SECTION_SCHEMA,
-              budget: CAPSULE_BUDGET_SCHEMA,
-              truncated: booleanProperty("Whether the capsule was truncated."),
-              compressed: booleanProperty("Whether any capsule item was compressed."),
-              profileBudgetUsage: {
-                type: ["object", "null"],
-                description: "Profile-specific budget usage when available.",
-                properties: {
-                  ...(CAPSULE_PROFILE_BUDGET_USAGE_SCHEMA.properties ?? {}),
-                },
-                required: CAPSULE_PROFILE_BUDGET_USAGE_SCHEMA.required ?? [],
-                additionalProperties: false,
-              },
-            },
-            [
-              "query",
-              "pivots",
-              "supportingItems",
-              "budget",
-              "truncated",
-              "compressed",
-              "profileBudgetUsage",
-            ],
-          ),
+          capsuleResult: CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA,
         },
-        // `query` + `intent` are emitted by both the v1 and the opt-in v2 paths;
-        // the v1-only sections (classification/routingProfile/capsuleProfile/
-        // capsule) and the v2-only sections (engine/capsuleV2) are each optional so
-        // one schema describes both shapes. The default v1 response is unchanged.
         ["query", "intent"],
       ),
     },
@@ -8444,12 +8403,17 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
 
       const query = parseRequiredRunPipelineTask(input, McpToolId.GetContextCapsule);
       const maxResults = parseOptionalInteger(McpToolId.GetContextCapsule, input, "maxResults");
-      const maxBudgetCharacters = parseOptionalInteger(
+      const legacyMaxBudgetCharacters = parseOptionalInteger(
         McpToolId.GetContextCapsule,
         input,
         "maxBudgetCharacters",
       );
+      const maxTokens = parseOptionalInteger(McpToolId.GetContextCapsule, input, "max_tokens");
+      const maxBudgetCharacters = typeof maxTokens === "number"
+        ? maxTokens * 4
+        : legacyMaxBudgetCharacters;
       const repos = parseOptionalStringArrayField(McpToolId.GetContextCapsule, input, "repos");
+      const presetRequested = parseOptionalStringField(McpToolId.GetContextCapsule, input, "preset");
 
       if (typeof query !== "string") {
         return query;
@@ -8460,13 +8424,29 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       if (maxBudgetCharacters !== undefined && typeof maxBudgetCharacters !== "number") {
         return maxBudgetCharacters;
       }
+      if (maxTokens !== undefined && typeof maxTokens !== "number") {
+        return maxTokens;
+      }
       if (repos !== undefined && !Array.isArray(repos)) {
         return repos;
       }
+      if (presetRequested !== undefined && typeof presetRequested !== "string") {
+        return presetRequested;
+      }
+      if (presetRequested !== undefined && !isRunPipelinePresetIntent(presetRequested)) {
+        return invalidRequest(
+          McpToolId.GetContextCapsule,
+          `MCP tool get_context_capsule preset must be one of: ${[RunPipelinePresetIntent.Auto, ...RUN_PIPELINE_CONCRETE_PRESETS].join(", ")}.`,
+          { field: "preset", value: presetRequested },
+        );
+      }
+      const capsulePreset = (
+        presetRequested === undefined || presetRequested === RunPipelinePresetIntent.Auto
+          ? RunPipelinePresetIntent.Modify
+          : presetRequested
+      ) as RunPipelineConcretePreset;
 
-      // Capsule v2 opt-in. The default (no `capsule_engine`) path stays on v1 and
-      // is byte-identical to before. Accept both `capsule_engine` and its
-      // camelCase alias `capsuleEngine`.
+      // Hidden migration aliases; compatibility validation never changes routing.
       const engineSnake = parseOptionalStringField(McpToolId.GetContextCapsule, input, "capsule_engine");
       if (engineSnake !== undefined && typeof engineSnake !== "string") {
         return engineSnake;
@@ -8475,11 +8455,18 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       if (engineCamel !== undefined && typeof engineCamel !== "string") {
         return engineCamel;
       }
-      // Normalize through the shared selection model so explicit v1/legacy are
-      // recorded distinctly from an unset default, and v2 is the only value that
-      // engages the Capsule v2 engine.
-      const requestedCapsuleEngine = parseRequestedCapsuleEngine(engineSnake ?? engineCamel);
-      const useCapsuleV2 = requestWantsCapsuleV2(requestedCapsuleEngine);
+      // Validate compatibility before opening the index or running retrieval.
+      let capsuleCompatibility;
+      try {
+        capsuleCompatibility = resolveCapsuleCompatibility(engineSnake ?? engineCamel);
+      } catch (error) {
+        const compatibilityError = error as CapsuleEngineCompatibilityError;
+        return invalidRequest(
+          McpToolId.GetContextCapsule,
+          compatibilityError.message,
+          { error: compatibilityError.code },
+        );
+      }
 
       const capsuleIntentRaw = parseOptionalStringField(McpToolId.GetContextCapsule, input, "capsule_intent");
       if (capsuleIntentRaw !== undefined && typeof capsuleIntentRaw !== "string") {
@@ -8490,7 +8477,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         return capsuleBudgetTokens;
       }
 
-      let capsuleV2Intent = CapsuleIntent.Auto;
+      let capsuleV2Intent: CapsuleIntent | undefined;
       if (capsuleIntentRaw !== undefined) {
         const parsedIntent = parseCapsuleIntent(capsuleIntentRaw);
         if (parsedIntent === undefined) {
@@ -8516,26 +8503,12 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         return selection.result;
       }
 
-      // Capsule v2 is single-repo only in this milestone; a multi-repo workspace
-      // request with the v2 opt-in is rejected rather than silently downgraded.
-      if (useCapsuleV2 && hasMultiRepoRequest(selection.selection, repos)) {
+      if (hasMultiRepoRequest(selection.selection, repos)) {
         return invalidRequest(
           McpToolId.GetContextCapsule,
-          "MCP tool get_context_capsule capsule_engine=v2 is single-repo only; omit repos or select exactly one.",
+          "The authoritative capsule is currently single-repo; omit repos or select exactly one.",
           {},
         );
-      }
-
-      if (hasMultiRepoRequest(selection.selection, repos)) {
-        const multi = await runMultiRepoContextCapsulePipeline(selection.selection, {
-          query,
-          maxResults,
-          maxBudgetCharacters,
-        });
-
-        return multi.ok
-          ? { ok: true, output: multi.output }
-          : multi.result;
       }
 
       return withReadyRepoDb(
@@ -8544,132 +8517,62 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         async (binding, db) => {
           const sourceRunId = getLatestIndexRun(db)?.id ?? null;
           const accountingStartedAt = performance.now();
-          const productBudgetTokens = capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS;
+          const productBudgetTokens = capsuleBudgetTokens
+            ?? maxTokens
+            ?? (legacyMaxBudgetCharacters === undefined
+              ? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS
+              : Math.max(1, Math.floor(legacyMaxBudgetCharacters / 4)));
           const authoritativeRetrieval = buildAuthoritativeProductRetrieval(
             db,
             binding.repoRoot,
             {
               query,
-              preset: RunPipelinePresetIntent.Modify,
+              preset: capsulePreset,
               maxBudgetCharacters: productBudgetTokens * 4,
-              capsuleIntent: capsuleV2Intent,
+              ...(capsuleV2Intent === undefined ? {} : { capsuleIntent: capsuleV2Intent }),
             },
           );
           const productContext = await assembleProductContext({
             db,
             repoRoot: binding.repoRoot,
             task: query,
-            intent: capsuleV2Intent,
+            intent: capsuleV2Intent ?? capsuleIntentForPreset(capsulePreset),
             budgetTokens: productBudgetTokens,
             authoritativeRetrieval,
           });
 
-          // Opt-in Capsule v2 path: build the bounded, intent-aware v2 capsule,
-          // project it to the stable product response, and persist a manifest the
-          // same way the v1 path does (so check_capsule_staleness still resolves).
-          // Auto-capture is intentionally deferred for v2 — the observation capture
-          // is keyed on the v1 capsule structure; see docs/mcp_tools.md.
-          //
-          // A genuine v2 query/render failure falls back to the v1 pipeline below
-          // and records the reason. The DB is already open and indexed at this
-          // point (withReadyRepoDb prepared it), so workspace/index-preparation
-          // failures happen before this try and are never masked as a fallback.
-          let engineFallbackReason: string | null = null;
-          if (useCapsuleV2) {
-            try {
-              const result = authoritativeRetrieval.result;
-              const capsuleV2 = toCapsuleV2ProductResponse(result, { query });
-              const capsuleManifestId = persistCapsuleV2ManifestBestEffort(
-                db,
-                query,
-                capsuleV2ToManifestItemFields(result),
-                sourceRunId,
-              );
-              // Compact inspect-first guidance — the same shared projection the
-              // run_pipeline v2 section and the Stage 5 injected path use. Null
-              // when the v2 result has no actionable pivot (e.g. no_context).
-              const inspectFirst = buildInspectFirst(capsuleV2);
-              const output: CapsuleV2ToolOutput = {
-                query,
-                intent: capsuleV2.intent,
-                engine: CAPSULE_ENGINE_V2,
-                capsuleEngine: v2EngineSelection(requestedCapsuleEngine, inspectFirst !== null),
-                inspectFirst,
-                capsuleManifestId,
-                capsuleV2,
-              };
-              // Deterministic, best-effort accounting over the emitted v2 response.
-              const accounting = await buildContextAccountingBestEffort({
-                repoRoot: binding.repoRoot,
-                emittedValue: output,
-                filePathGroups: [capsuleV2.pivots, capsuleV2.support],
-                latencyMs: performance.now() - accountingStartedAt,
-              });
-              if (accounting !== undefined) {
-                output.accounting = accounting;
-              }
-              output.productContext = productContext;
-              return { ok: true, output };
-            } catch (error) {
-              // Fall through to the v1 pipeline, recording why v2 did not produce
-              // the context. no_context is a normal v2 return value, not a throw,
-              // so it never reaches here and never triggers a fallback.
-              engineFallbackReason = `v2_build_failed: ${error instanceof Error ? error.message : String(error)}`;
-            }
-          }
-
-          const pipeline = runIntentAwareCapsulePipeline(db, binding.repoRoot, {
-            query,
-            maxResults,
-            maxBudgetCharacters,
-          });
-          // Auto-capture is a best-effort post-success side effect for every
-          // visible capsule-building tool. Dedupe key is shared across tools so
-          // repeated calls with the same inputs collapse to a single
-          // observation regardless of which visible tool was used.
-          if (pipeline.capsule.pivots.length + pipeline.capsule.supportingItems.length > 0) {
-            captureVisibleCapsuleObservationBestEffort({
-              db,
-              repoRoot: binding.repoRoot,
-              sourceRunId,
-              routedQuery: pipeline.routedQuery,
-              capsuleProfileId: pipeline.preparedAssembly.selection.profile.id,
-              capsule: pipeline.capsule,
-              toolName: McpToolId.GetContextCapsule,
-            });
-          }
-          // Persist a deterministic capsule manifest so a follow-up
-          // check_capsule_staleness / `vtrace check-capsule` call on the
-          // returned id resolves against a real store instead of "not found".
+          const result = authoritativeRetrieval.result;
+          const capsuleResult = toCapsuleV2ProductResponse(result, { query });
           const capsuleManifestId = persistCapsuleManifestBestEffort(
             db,
-            pipeline.capsule,
+            authoritativeRetrieval.capsule,
             sourceRunId,
           );
-          // Record the engine selection on the v1 path too — `default`/`v1`/
-          // `legacy`, or a v2 request that fell back here with a reason. inspectFirst
-          // is null on v1 (it is a v2-only projection).
-          const v1Output = {
-            ...formatContextCapsulePipelineOutput(pipeline, capsuleManifestId),
-            capsuleEngine: v1EngineSelection(requestedCapsuleEngine, engineFallbackReason),
-            inspectFirst: null,
+          const inspectFirst = buildInspectFirst(capsuleResult);
+          const output: CapsuleToolOutput = {
+            query,
+            intent: capsuleResult.intent,
+            capsule: {
+              implementation: "hybrid",
+              retrievalVersion: authoritativeRetrieval.version,
+              selectionAuthority: "hybrid",
+              rescueAttempted: result.diagnostics.routed_rescue?.attempted === true,
+              compatibilityWarnings: capsuleCompatibility.warnings,
+            },
+            runtime: getRuntimeProvenance(),
+            inspectFirst,
+            capsuleManifestId,
+            capsuleResult,
+            productContext,
           };
-          // Deterministic, best-effort accounting over the emitted v1 capsule.
           const accounting = await buildContextAccountingBestEffort({
             repoRoot: binding.repoRoot,
-            emittedValue: v1Output,
-            filePathGroups: [v1Output.capsule.pivots, v1Output.capsule.supportingItems],
+            emittedValue: output,
+            filePathGroups: [capsuleResult.pivots, capsuleResult.support],
             latencyMs: performance.now() - accountingStartedAt,
           });
-          return {
-            ok: true,
-            output: {
-              ...(accounting === undefined
-              ? v1Output
-              : { ...v1Output, accounting }),
-              productContext,
-            },
-          };
+          if (accounting !== undefined) output.accounting = accounting;
+          return { ok: true, output };
         },
       );
     },
@@ -9129,6 +9032,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           output: {
             workspace: formatWorkspaceMetadata(selection.selection),
             repos: selection.selection.statuses.map(formatWorkspaceRepoStatus),
+            runtime: getRuntimeProvenance(),
           },
         };
       }
@@ -9136,7 +9040,10 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       try {
         return {
           ok: true,
-          output: await inspectIndexStatus(effectiveContext),
+          output: {
+            ...await inspectIndexStatus(effectiveContext),
+            runtime: getRuntimeProvenance(),
+          },
         };
       } catch (error) {
         return repoNotReady(

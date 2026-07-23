@@ -32,6 +32,7 @@ import {
   buildStableMcpLauncher,
   type LauncherCommand,
 } from "./launcher";
+import { getRuntimeProvenance, type RuntimeProvenance } from "./provenance";
 
 export interface ProductShellStatus {
   requestedPath: string;
@@ -57,6 +58,7 @@ export interface ProductShellStatus {
   launcher: LauncherCommand;
   agentConfig: AgentConfigStatus;
   runtime: RuntimeDaemonStatus;
+  provenance: RuntimeProvenance;
   nextSteps: string[];
 }
 
@@ -118,6 +120,7 @@ export async function inspectProductShellStatus(options: {
     launcher,
     agentConfig,
     runtime,
+    provenance: getRuntimeProvenance(),
     nextSteps: buildNextSteps({
       repoRoot,
       selectedAgent: agent.id,

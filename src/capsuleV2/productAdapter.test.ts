@@ -109,11 +109,11 @@ function result(overrides: Partial<CapsuleV2Result> = {}): CapsuleV2Result {
   } as CapsuleV2Result;
 }
 
-test("toCapsuleV2ProductResponse projects the v2 result onto the stable product shape", () => {
+test("toCapsuleV2ProductResponse projects the result onto the stable unversioned product shape", () => {
   const response = toCapsuleV2ProductResponse(result());
 
-  assert.equal(response.engine, "v2");
-  assert.equal(response.experimental, true);
+  assert.equal("experimental" in response, false);
+  assert.equal("engine" in response, false);
   assert.equal(response.intent, "modify");
   assert.equal(response.actualMode, "standard");
   assert.equal(response.reason, null);

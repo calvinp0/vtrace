@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "stage5.m127.runtime-provenance.v1",
+  "packageVersion": "0.1.0",
+  "testedSourceBaseCommit": "fdcda9a479522722c69a06b32d585b058670bc65",
+  "implementationCommit": "the commit containing this artifact; runtime resolves .git/HEAD dynamically",
+  "executablePath": "<VTRACE_ROOT>/bin/vtrace",
+  "sourceRoot": "<VTRACE_ROOT>",
+  "launcher": "Bun source launcher",
+  "capsuleImplementation": "hybrid",
+  "retrievalImplementation": "product-retrieval-v2",
+  "retrievalRankingVersion": "hybrid-shared-core+routed-rescue-v1",
+  "indexSchemaVersion": 4,
+  "manifestVersion": 4,
+  "rebuildRequired": false,
+  "mcpRestartRequired": true,
+  "reportedHistoricalProcess": {
+    "runningAtAuditTime": false,
+    "exactCommitRecoverable": false,
+    "configuredExecutable": "<VTRACE_ROOT>/bin/vtrace",
+    "conclusion": "current source itself explains default-to-v1; staleness is not required"
+  }
+}

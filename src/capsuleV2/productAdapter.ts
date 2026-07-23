@@ -218,15 +218,8 @@ export interface CapsuleV2ProductDiagnostics {
   editRiskDirectives: CapsuleV2ProductEditRisk[];
 }
 
-/**
- * The stable Capsule v2 product response. Self-contained: it carries its own
- * `engine`/`intent` discriminators so a consumer can route on the response alone,
- * independent of any envelope the MCP tool wraps it in.
- */
+/** The stable, unversioned product capsule response. */
 export interface CapsuleV2ProductResponse {
-  engine: "v2";
-  /** Capsule v2 is opt-in/experimental on the product surface. */
-  experimental: true;
   /** The task/query the capsule was built for (empty string when not supplied). */
   query: string;
   /** The resolved intent the capsule was built for. */
@@ -668,8 +661,6 @@ export function toCapsuleV2ProductResponse(
   });
 
   return {
-    engine: "v2",
-    experimental: true,
     query,
     intent: result.intent,
     actualMode: result.actual_mode,
