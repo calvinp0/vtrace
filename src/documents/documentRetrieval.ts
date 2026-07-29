@@ -2,8 +2,16 @@ import type { Database } from "bun:sqlite";
 
 import type { EmbeddedPathClue } from "../capsule/sweQueryShaping";
 import { tokenize } from "../retrieval/hybridScoring";
-import { matchPathClues, type PathClueMatch } from "../retrieval/pathScopedRelevance";
-import { getDocumentChunk } from "../db/repositories/documentsRepository";
+import {
+  createPathRelevanceContext,
+  matchPathCluesWithContext,
+  type PathClueMatch,
+  type PathRelevanceContext,
+} from "../retrieval/pathScopedRelevance";
+import {
+  getDocumentChunks,
+  searchDocumentChunkHits,
+} from "../db/repositories/documentsRepository";
 import type { DocumentKind } from "./documentPolicy";
 
 const MAX_FTS_ROWS = 48;
@@ -41,49 +49,106 @@ export interface DocumentRetrievalResult {
   queryMs: number;
 }
 
+export interface DocumentIntegrationProfile {
+  timingsMs: Record<string, number>;
+  counters: Record<string, number>;
+  documentLane?: {
+    attempted: boolean;
+    reason: string;
+    trigger?: string[];
+  };
+}
+
+export interface DocumentRetrievalOptions {
+  pathContext?: PathRelevanceContext;
+  profile?: DocumentIntegrationProfile;
+}
+
 export function retrieveIndexedDocuments(
   db: Database,
   task: string,
   pathClues: readonly EmbeddedPathClue[] = [],
   maxFiles = MAX_FILES,
+  options: DocumentRetrievalOptions = {},
 ): DocumentRetrievalResult {
-  const started = performance.now();
-  if (!hasDocumentEvidence(task, pathClues)) {
+  const started = options.profile === undefined ? 0 : performance.now();
+  const relevanceStarted = options.profile === undefined ? 0 : performance.now();
+  const triggers = documentEvidenceTriggers(task, pathClues);
+  timedSince(options.profile, "document_relevance_detection", relevanceStarted);
+  count(options.profile, "task_objectives", taskObjectiveCount(task, pathClues));
+  if (triggers.length === 0) {
+    if (options.profile !== undefined) {
+      options.profile.documentLane = {
+        attempted: false,
+        reason: "no_supported_document_clue",
+      };
+    }
     return { invoked: false, reason: "no_document_task_evidence", queryTerms: [], candidates: [], queryMs: 0 };
+  }
+  if (options.profile !== undefined) {
+    options.profile.documentLane = {
+      attempted: true,
+      reason: "supported_document_clue",
+      trigger: triggers,
+    };
   }
   const queryTerms = distinctiveTerms(task);
   if (queryTerms.length === 0) {
-    return { invoked: true, reason: "no_searchable_terms", queryTerms, candidates: [], queryMs: performance.now() - started };
+    return {
+      invoked: true,
+      reason: "no_searchable_terms",
+      queryTerms,
+      candidates: [],
+      queryMs: elapsed(options.profile, started),
+    };
   }
   const ftsQuery = queryTerms.map(quoteFts).join(" OR ");
-  let rows: Array<{ chunk_id: string; file_path_raw: string; rank: number }>;
+  const ftsStarted = options.profile === undefined ? 0 : performance.now();
+  let hits: ReturnType<typeof searchDocumentChunkHits>;
   try {
-    rows = db.query(`
-      SELECT chunk_id, file_path_raw, bm25(document_search_fts) AS rank
-      FROM document_search_fts
-      WHERE document_search_fts MATCH ?
-      ORDER BY rank ASC, file_path_raw ASC, chunk_id ASC
-      LIMIT ?
-    `).all(ftsQuery, MAX_FTS_ROWS) as Array<{ chunk_id: string; file_path_raw: string; rank: number }>;
+    hits = searchDocumentChunkHits(db, ftsQuery, MAX_FTS_ROWS);
   } catch {
+    timedSince(options.profile, "document_fts_query", ftsStarted);
     return {
       invoked: true,
       reason: "document_index_unavailable",
       queryTerms,
       candidates: [],
-      queryMs: performance.now() - started,
+      queryMs: elapsed(options.profile, started),
     };
   }
+  timedSince(options.profile, "document_fts_query", ftsStarted);
+  count(options.profile, "document_fts_queries", 1);
+  count(options.profile, "document_fts_variants", 1);
+  count(options.profile, "document_chunk_rows_returned", hits.length);
 
+  const loadingStarted = options.profile === undefined ? 0 : performance.now();
+  const chunks = getDocumentChunks(db, hits.map((hit) => hit.chunkId));
+  timedSince(options.profile, "document_chunk_excerpt_loading", loadingStarted);
+  count(options.profile, "document_chunk_batch_queries", hits.length === 0 ? 0 : 1);
+  count(options.profile, "document_excerpts_loaded", chunks.size);
+  count(
+    options.profile,
+    "document_bytes_loaded",
+    [...chunks.values()].reduce((total, chunk) => total + Buffer.byteLength(chunk.text), 0),
+  );
+
+  const materializationStarted = options.profile === undefined ? 0 : performance.now();
+  const pathContext = options.pathContext
+    ?? createPathRelevanceContext(task, pathClues, options.profile);
+  const taskLower = task.toLowerCase();
   const byPath = new Map<string, DocumentCandidate>();
-  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
-    const row = rows[rowIndex]!;
-    const chunk = getDocumentChunk(db, row.chunk_id);
+  for (let rowIndex = 0; rowIndex < hits.length; rowIndex += 1) {
+    const hit = hits[rowIndex]!;
+    const chunk = chunks.get(hit.chunkId);
     if (chunk === undefined) continue;
     const haystackTokens = new Set(tokenize(`${chunk.path} ${chunk.keyPath ?? ""} ${chunk.text}`));
     const matchedTerms = queryTerms.filter((term) => haystackTokens.has(term));
-    const pathMatches = matchPathClues(chunk.path, pathClues);
-    const objectives = artifactObjectives(chunk.path, chunk.text, task);
+    const pathMatches = matchPathCluesWithContext(chunk.path, pathContext);
+    const objectiveStarted = options.profile === undefined ? 0 : performance.now();
+    const objectives = artifactObjectives(chunk.path, chunk.text, taskLower);
+    timedSince(options.profile, "objective_to_candidate_matching", objectiveStarted);
+    count(options.profile, "candidate_objective_comparisons", 5);
     const lexical = matchedTerms.length / Math.max(1, queryTerms.length);
     const pathScore = pathMatches[0]?.score ?? 0;
     const objectiveScore = Math.min(1, objectives.length * 0.35);
@@ -115,19 +180,25 @@ export function retrieveIndexedDocuments(
     }
     byPath.set(chunk.path, existing);
   }
+  timedSince(options.profile, "document_candidate_materialization", materializationStarted);
+  count(options.profile, "document_candidates_materialized", byPath.size);
   const ranked = [...byPath.values()]
     .filter((candidate) => candidate.matchedTerms.length >= 1 && (candidate.score >= 0.35 || candidate.pathMatches.length > 0))
     .sort((left, right) =>
       right.score - left.score
       || left.rawRank - right.rawRank
       || left.path.localeCompare(right.path));
+  count(options.profile, "candidate_sorts", 1);
   const candidates = diversifyArtifacts(ranked, Math.max(0, maxFiles));
+  count(options.profile, "document_candidates_surviving_cap", candidates.length);
+  count(options.profile, "document_files_eligible", byPath.size);
+  timedSince(options.profile, "m128_integration_total", started);
   return {
     invoked: true,
     reason: candidates.length === 0 ? "no_relevant_document_candidates" : "document_task_evidence",
     queryTerms,
     candidates,
-    queryMs: performance.now() - started,
+    queryMs: elapsed(options.profile, started),
   };
 }
 
@@ -147,9 +218,31 @@ function diversifyArtifacts(ranked: readonly DocumentCandidate[], maxFiles: numb
   return selected;
 }
 
-function hasDocumentEvidence(task: string, pathClues: readonly EmbeddedPathClue[]): boolean {
-  return /\b(?:ya?ml|toml|pyproject|workflow|github actions|ci|dependencies|pytest|configuration)\b/iu.test(task)
-    || pathClues.some((clue) => /\.(?:ya?ml|toml)$/u.test(clue.normalized) || clue.normalized.includes(".github/workflows"));
+function documentEvidenceTriggers(task: string, pathClues: readonly EmbeddedPathClue[]): string[] {
+  const triggers: string[] = [];
+  if (/\b(?:ya?ml)\b/iu.test(task)) triggers.push("yaml_objective");
+  if (/\btoml\b/iu.test(task)) triggers.push("toml_objective");
+  if (/\bpyproject\b/iu.test(task)) triggers.push("project_configuration_objective");
+  if (/\b(?:workflow|github actions|ci)\b/iu.test(task)) triggers.push("workflow_objective");
+  if (/\b(?:dependencies|pytest|configuration)\b/iu.test(task)) triggers.push("project_configuration_objective");
+  if (pathClues.some((clue) => /\.(?:ya?ml|toml)$/u.test(clue.normalized))) {
+    triggers.push("explicit_document_filename");
+  }
+  if (pathClues.some((clue) => clue.normalized.includes(".github/workflows"))) {
+    triggers.push("matching_document_path");
+  }
+  return unique(triggers);
+}
+
+function taskObjectiveCount(task: string, pathClues: readonly EmbeddedPathClue[]): number {
+  const objectives = [
+    /\b(?:workflow|github actions|ci|ya?ml)\b/iu.test(task),
+    /\b(?:toml|pyproject|dependencies|configuration)\b/iu.test(task),
+    /\b(?:pytest|full-suite|test command)\b/iu.test(task),
+    /\bnotebook\b/iu.test(task),
+    pathClues.length > 0,
+  ];
+  return objectives.filter(Boolean).length;
 }
 
 function distinctiveTerms(task: string): string[] {
@@ -158,9 +251,8 @@ function distinctiveTerms(task: string): string[] {
     .slice(0, 24);
 }
 
-function artifactObjectives(filePath: string, text: string, task: string): string[] {
+function artifactObjectives(filePath: string, text: string, taskLower: string): string[] {
   const value = `${filePath}\n${text}`.toLowerCase();
-  const taskLower = task.toLowerCase();
   const objectives: string[] = [];
   if (/(^|\/)\.github\/workflows\/|\.ya?ml$/u.test(filePath) && /workflow|github actions|ci/u.test(taskLower)) objectives.push("workflow");
   if (/pyproject\.toml$/u.test(filePath) && /dependenc|pytest|pyproject|notebook|test/u.test(taskLower)) objectives.push("dependency_configuration");
@@ -186,4 +278,28 @@ function strongestPathMatches(matches: readonly PathClueMatch[]): PathClueMatch[
     if (old === undefined || old.score < match.score) byKey.set(key, match);
   }
   return [...byKey.values()].sort((a, b) => b.score - a.score || a.normalizedClue.localeCompare(b.normalizedClue));
+}
+
+function timedSince(
+  profile: DocumentIntegrationProfile | undefined,
+  name: string,
+  started: number,
+): void {
+  if (profile !== undefined) {
+    profile.timingsMs[name] = (profile.timingsMs[name] ?? 0) + performance.now() - started;
+  }
+}
+
+function count(
+  profile: DocumentIntegrationProfile | undefined,
+  name: string,
+  delta: number,
+): void {
+  if (profile !== undefined) {
+    profile.counters[name] = (profile.counters[name] ?? 0) + delta;
+  }
+}
+
+function elapsed(profile: DocumentIntegrationProfile | undefined, started: number): number {
+  return profile === undefined ? 0 : performance.now() - started;
 }

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "stage5.m129.document-sql-profile.v1",
+  "statementsPerInvokedRequest": {
+    "documentFts": 1,
+    "documentChunkBatch": 1,
+    "priorDocumentChunkLookups": 48
+  },
+  "rowsReturned": 48,
+  "counts": {
+    "files": 1008,
+    "symbols": 23121,
+    "documentFiles": 44,
+    "documentChunks": 527,
+    "documentFtsRows": 527
+  },
+  "noNPlusOne": true
+}

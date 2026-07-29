@@ -20,28 +20,74 @@ export interface PathClueMatch {
   filenameMatch: boolean;
 }
 
+export interface PathRelevanceProfile {
+  counters: Record<string, number>;
+}
+
+interface PreparedPathClue {
+  clue: EmbeddedPathClue;
+  normalized: string;
+  components: string[];
+}
+
+interface PreparedFilePath {
+  normalized: string;
+  components: string[];
+  basename: string;
+}
+
+export interface PathRelevanceContext {
+  taskTokens: ReadonlySet<string>;
+  clues: readonly PreparedPathClue[];
+  files: Map<string, PreparedFilePath>;
+  affinities: Map<string, number>;
+  profile?: PathRelevanceProfile;
+}
+
+export function createPathRelevanceContext(
+  task: string,
+  clues: readonly EmbeddedPathClue[],
+  profile?: PathRelevanceProfile,
+): PathRelevanceContext {
+  return {
+    taskTokens: new Set(tokenize(task)),
+    clues: clues.map((clue) => {
+      const normalized = normalize(clue.normalized);
+      return { clue, normalized, components: components(normalized) };
+    }),
+    files: new Map(),
+    affinities: new Map(),
+    ...(profile === undefined ? {} : { profile }),
+  };
+}
+
 export function matchPathClues(filePath: string, clues: readonly EmbeddedPathClue[]): PathClueMatch[] {
-  const normalizedPath = normalize(filePath);
-  const fileComponents = components(normalizedPath);
-  const basename = path.posix.basename(normalizedPath);
+  return matchPathCluesWithContext(filePath, createPathRelevanceContext("", clues));
+}
+
+export function matchPathCluesWithContext(
+  filePath: string,
+  context: PathRelevanceContext,
+): PathClueMatch[] {
+  const prepared = preparedFilePath(filePath, context);
   const matches: PathClueMatch[] = [];
-  for (const clue of clues) {
-    const normalizedClue = normalize(clue.normalized);
-    const clueComponents = components(normalizedClue);
+  for (const preparedClue of context.clues) {
+    increment(context.profile, "path_clue_comparisons");
+    const { clue, normalized: normalizedClue, components: clueComponents } = preparedClue;
     let matchType: PathClueMatchType | undefined;
     let score = 0;
-    if (normalizedPath === normalizedClue) {
+    if (prepared.normalized === normalizedClue) {
       matchType = "exact_path"; score = 1;
-    } else if (!normalizedClue.includes("/") && basename === normalizedClue) {
+    } else if (!normalizedClue.includes("/") && prepared.basename === normalizedClue) {
       matchType = "exact_filename"; score = 0.95;
-    } else if (normalizedPath.startsWith(`${normalizedClue}/`)) {
+    } else if (prepared.normalized.startsWith(`${normalizedClue}/`)) {
       matchType = "directory_prefix"; score = 0.9;
-    } else if (containsSequence(fileComponents, clueComponents)) {
+    } else if (containsSequence(prepared.components, clueComponents, context.profile)) {
       matchType = "component_sequence"; score = 0.75;
     } else if (
       clueComponents.length === 1
       && clueComponents[0]!.length >= 5
-      && basename.split(/[._-]+/u).includes(clueComponents[0]!)
+      && prepared.basename.split(/[._-]+/u).includes(clueComponents[0]!)
     ) {
       matchType = "weak_basename"; score = 0.25;
     }
@@ -60,18 +106,29 @@ export function matchPathClues(filePath: string, clues: readonly EmbeddedPathClu
 }
 
 export function pathObjectiveAffinity(filePath: string, task: string): number {
-  const taskTokens = new Set(tokenize(task));
+  return pathObjectiveAffinityWithContext(filePath, createPathRelevanceContext(task, []));
+}
+
+export function pathObjectiveAffinityWithContext(
+  filePath: string,
+  context: PathRelevanceContext,
+): number {
+  const cached = context.affinities.get(filePath);
+  if (cached !== undefined) return cached;
   const pathTokens = new Set(tokenize(filePath.replace(/[/.\\-]+/gu, " ")));
   let distinctive = 0;
   for (const token of pathTokens) {
     if (
       token.length >= 4
-      && taskTokens.has(token)
+      && context.taskTokens.has(token)
       && !GENERIC_TOKEN_STOPLIST.has(token)
       && !["python", "client", "tests", "test"].includes(token)
     ) distinctive += 1;
   }
-  return Math.min(0.5, distinctive * 0.15);
+  const affinity = Math.min(0.5, distinctive * 0.15);
+  context.affinities.set(filePath, affinity);
+  increment(context.profile, "path_objective_affinities_computed");
+  return affinity;
 }
 
 function normalize(value: string): string {
@@ -82,10 +139,42 @@ function components(value: string): string[] {
   return value.split("/").filter(Boolean);
 }
 
-function containsSequence(haystack: readonly string[], needle: readonly string[]): boolean {
+function preparedFilePath(filePath: string, context: PathRelevanceContext): PreparedFilePath {
+  const cached = context.files.get(filePath);
+  if (cached !== undefined) return cached;
+  const normalized = normalize(filePath);
+  const prepared = {
+    normalized,
+    components: components(normalized),
+    basename: path.posix.basename(normalized),
+  };
+  context.files.set(filePath, prepared);
+  increment(context.profile, "files_path_scored");
+  return prepared;
+}
+
+function containsSequence(
+  haystack: readonly string[],
+  needle: readonly string[],
+  profile?: PathRelevanceProfile,
+): boolean {
   if (needle.length === 0 || needle.length > haystack.length) return false;
   for (let start = 0; start <= haystack.length - needle.length; start += 1) {
-    if (needle.every((component, offset) => haystack[start + offset] === component)) return true;
+    let matches = true;
+    for (let offset = 0; offset < needle.length; offset += 1) {
+      increment(profile, "path_component_comparisons");
+      if (haystack[start + offset] !== needle[offset]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) return true;
   }
   return false;
+}
+
+function increment(profile: PathRelevanceProfile | undefined, name: string): void {
+  if (profile !== undefined) {
+    profile.counters[name] = (profile.counters[name] ?? 0) + 1;
+  }
 }

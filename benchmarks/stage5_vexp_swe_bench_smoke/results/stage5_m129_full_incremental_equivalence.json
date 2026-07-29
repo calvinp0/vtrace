@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "stage5.m129.full-incremental-equivalence.v1",
+  "changes": [
+    "YAML modification",
+    "TOML modification",
+    "workflow rename",
+    "TOML deletion",
+    "ordinary source edit",
+    "no-op refresh"
+  ],
+  "timings": {
+    "fullDocumentIndexBuildMs": 41.873,
+    "incrementalYamlEditMs": 4.22,
+    "incrementalTomlEditMs": 4.479,
+    "documentNoopRefreshMs": 2.529
+  },
+  "indexingSanity": [
+    {
+      "label": "full_document_index_build",
+      "mode": "full_rebuild",
+      "documentsScanned": 2,
+      "documentsReindexed": 2,
+      "chunksWritten": 4,
+      "ftsRowsWritten": 4,
+      "chunksPresent": 4,
+      "ftsRowsPresent": 4,
+      "parseCacheHits": 0,
+      "parseCacheMisses": 3,
+      "durationMs": 40.328
+    },
+    {
+      "label": "incremental_yaml_edit",
+      "mode": "incremental",
+      "documentsScanned": 2,
+      "documentsReindexed": 1,
+      "chunksWritten": 2,
+      "ftsRowsWritten": 2,
+      "chunksPresent": 4,
+      "ftsRowsPresent": 4,
+      "parseCacheHits": 2,
+      "parseCacheMisses": 1,
+      "durationMs": 4.204
+    },
+    {
+      "label": "incremental_toml_edit",
+      "mode": "incremental",
+      "documentsScanned": 2,
+      "documentsReindexed": 1,
+      "chunksWritten": 2,
+      "ftsRowsWritten": 2,
+      "chunksPresent": 4,
+      "ftsRowsPresent": 4,
+      "parseCacheHits": 2,
+      "parseCacheMisses": 1,
+      "durationMs": 4.466
+    },
+    {
+      "label": "document_noop_refresh",
+      "mode": "noop",
+      "documentsScanned": 1,
+      "documentsReindexed": 0,
+      "chunksWritten": 0,
+      "ftsRowsWritten": 0,
+      "chunksPresent": 2,
+      "ftsRowsPresent": 2,
+      "parseCacheHits": 0,
+      "parseCacheMisses": 0,
+      "durationMs": 2.052
+    }
+  ],
+  "documentRows": 2,
+  "documentFtsRows": 2,
+  "fileSnapshotsEqual": true,
+  "documentRowsEqual": true,
+  "symbolsEqual": true,
+  "edgesEqual": true,
+  "graphEqual": true,
+  "graphHash": "d301d5903e4da55a115cd6e2dcd9b7a2be6dffdf6625350dc0b35f0931bba293",
+  "retrievalHash": "dee3b8c6bd7cd247a35ac4a5a0a707789521001f1d54c191ac2a02fd237849b7",
+  "retrievalEqual": true,
+  "selectedFilesEqual": true,
+  "renderedContextEqual": true,
+  "finalHash": "1945af97feb32b9efa36ba1bd89b375ca4a45351ddaa5b3b0e6f00019dbfc3f4",
+  "fullHash": "1945af97feb32b9efa36ba1bd89b375ca4a45351ddaa5b3b0e6f00019dbfc3f4",
+  "pass": true,
+  "worktreeIsolation": "covered by src/indexer/worktreeIdentity.test.ts"
+}

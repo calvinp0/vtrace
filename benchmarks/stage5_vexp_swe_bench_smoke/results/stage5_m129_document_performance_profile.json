@@ -1,0 +1,1161 @@
+{
+  "schemaVersion": "stage5.m129.document-performance-profile.v1",
+  "commits": {
+    "m127": "b882909717de190c3bb0ad3601c2857917bd629f",
+    "m128": "81055338670f7d33edf75bf82952e93dc4d8b95a",
+    "m129": "81055338670f7d33edf75bf82952e93dc4d8b95a+m129-working-tree"
+  },
+  "historical": {
+    "m127FrozenMedianMs": 595.874,
+    "m127FrozenP90Ms": 1222.37,
+    "m128FrozenMedianMs": 998.22,
+    "m128FrozenP90Ms": 2045.885,
+    "m128ExactMedianMs": 1338.849,
+    "pristineIdenticalProtocolM127ExactMedianMs": 859.258,
+    "pristineIdenticalProtocolM128ExactMedianMs": 874.094
+  },
+  "method": {
+    "cold": "first retrieval after opening the database in the measurement process",
+    "warmDifferent": "unrelated retrieval first, then measured task; no result memoization",
+    "warmSame": "same task first, then measured task; SQLite/process warmth only",
+    "repetitionsExact": 7,
+    "frozenCases": 50
+  },
+  "exact": {
+    "warm": {
+      "samplesMs": [
+        1261.986,
+        906.378,
+        931.732,
+        925.152,
+        892.22,
+        889.608,
+        902.186
+      ],
+      "medianMs": 906.378,
+      "p90Ms": 1261.986
+    },
+    "integrationMedianMs": 4.099,
+    "stageTimingsMs": {
+      "task_derivation": 121.0153620000001,
+      "hybrid_retrieval": 638.5389949999999
+    },
+    "hybridProfile": {
+      "timingsMs": {
+        "lexical.symbol_search": 459.5189989999999,
+        "lexical.symbol_path": 146.0017170000001,
+        "structural.test_import_reference": 0.0763199999992139,
+        "lexical.body_literal": 0.07120200000008481,
+        "structural.graph_expansion": 21.422816999999668,
+        "candidate_processing.score_sort_cap": 11.346135000000686,
+        "total": 638.5163259999999
+      },
+      "counters": {
+        "symbol_search_calls": 6,
+        "symbol_search_rows": 122,
+        "symbols.after_lexical": 100,
+        "symbols.after_symbol_path": 106,
+        "symbols.after_test_expansion": 106,
+        "body_literal_matches": 0,
+        "graph_seed_symbols": 106,
+        "symbols.before_scoring": 130,
+        "candidates.after_cap": 25
+      }
+    },
+    "documentProfile": {
+      "timingsMs": {
+        "path_clue_extraction": 0.022820000000137952,
+        "objective_decomposition": 0.03579199999967386,
+        "document_relevance_detection": 0.012912999999571184,
+        "document_fts_query": 1.8095239999993282,
+        "document_chunk_excerpt_loading": 0.24372799999946437,
+        "objective_to_candidate_matching": 0.156050999998115,
+        "document_candidate_materialization": 1.68641099999968,
+        "m128_integration_total": 4.099079999999049,
+        "path_candidate_retrieval_scoring": 0.15926800000033836,
+        "mixed_surface_coverage_selection": 0.026142000000618282,
+        "document_rendering": 0.08267700000033074,
+        "document_accounting_deduplication": 0.10248200000023644
+      },
+      "counters": {
+        "path_clues": 1,
+        "task_objectives": 5,
+        "document_fts_queries": 1,
+        "document_fts_variants": 1,
+        "document_chunk_rows_returned": 48,
+        "document_chunk_batch_queries": 1,
+        "document_excerpts_loaded": 48,
+        "document_bytes_loaded": 34083,
+        "files_path_scored": 45,
+        "path_clue_comparisons": 75,
+        "path_component_comparisons": 172,
+        "candidate_objective_comparisons": 240,
+        "document_candidates_materialized": 29,
+        "candidate_sorts": 3,
+        "document_candidates_surviving_cap": 4,
+        "document_files_eligible": 29,
+        "path_objective_affinities_computed": 10,
+        "candidate_array_copies": 1,
+        "coverage_candidates_considered": 25,
+        "document_items_rendered": 2,
+        "selected_document_count": 2
+      },
+      "documentLane": {
+        "attempted": true,
+        "reason": "supported_document_clue",
+        "trigger": [
+          "project_configuration_objective",
+          "workflow_objective"
+        ]
+      }
+    },
+    "counters": {
+      "path_clues": 1,
+      "task_objectives": 5,
+      "document_fts_queries": 1,
+      "document_fts_variants": 1,
+      "document_chunk_rows_returned": 48,
+      "document_chunk_batch_queries": 1,
+      "document_excerpts_loaded": 48,
+      "document_bytes_loaded": 34083,
+      "files_path_scored": 45,
+      "path_clue_comparisons": 75,
+      "path_component_comparisons": 172,
+      "candidate_objective_comparisons": 240,
+      "document_candidates_materialized": 29,
+      "candidate_sorts": 3,
+      "document_candidates_surviving_cap": 4,
+      "document_files_eligible": 29,
+      "path_objective_affinities_computed": 10,
+      "candidate_array_copies": 1,
+      "coverage_candidates_considered": 25,
+      "document_items_rendered": 2,
+      "selected_document_count": 2
+    },
+    "documentDiagnostics": {
+      "invoked": true,
+      "reason": "document_task_evidence",
+      "query_terms": [
+        "actions",
+        "client",
+        "clients",
+        "command",
+        "computed",
+        "convention",
+        "conventions",
+        "degeneracy",
+        "dependencies",
+        "full",
+        "git",
+        "hub",
+        "notebook",
+        "payload",
+        "pytest",
+        "python",
+        "reaction",
+        "snapshot",
+        "stale",
+        "suite",
+        "test",
+        "tests",
+        "triggered",
+        "workflow"
+      ],
+      "candidate_count": 4,
+      "selected_count": 2,
+      "query_ms": 3.8625840000004246,
+      "candidates": [
+        {
+          "path": "clients/python/pyproject.toml",
+          "kind": "toml",
+          "raw_rank": 2,
+          "merged_rank": 1,
+          "score": 2.458333333333333,
+          "matched_terms": [
+            "client",
+            "clients",
+            "computed",
+            "dependencies",
+            "notebook",
+            "pytest",
+            "python",
+            "reaction",
+            "test",
+            "tests"
+          ],
+          "objective_matches": [
+            "dependency_configuration",
+            "notebook_dependency",
+            "path_scope",
+            "test_command"
+          ],
+          "line_spans": [
+            {
+              "start": 45,
+              "end": 60
+            },
+            {
+              "start": 5,
+              "end": 44
+            }
+          ],
+          "selected": true
+        },
+        {
+          "path": ".github/workflows/python-client-ci.yml",
+          "kind": "yaml",
+          "raw_rank": 1,
+          "merged_rank": 2,
+          "score": 1.375,
+          "matched_terms": [
+            "actions",
+            "client",
+            "clients",
+            "dependencies",
+            "notebook",
+            "pytest",
+            "python",
+            "test",
+            "tests",
+            "workflow"
+          ],
+          "objective_matches": [
+            "notebook_dependency",
+            "path_scope",
+            "test_command",
+            "workflow"
+          ],
+          "line_spans": [
+            {
+              "start": 19,
+              "end": 43
+            },
+            {
+              "start": 3,
+              "end": 15
+            }
+          ],
+          "selected": true
+        },
+        {
+          "path": "clients/python/adapters/chemkin/pyproject.toml",
+          "kind": "toml",
+          "raw_rank": 4,
+          "merged_rank": 3,
+          "score": 2.333333333333333,
+          "matched_terms": [
+            "client",
+            "clients",
+            "dependencies",
+            "payload",
+            "pytest",
+            "python",
+            "test"
+          ],
+          "objective_matches": [
+            "dependency_configuration",
+            "path_scope",
+            "test_command"
+          ],
+          "line_spans": [
+            {
+              "start": 16,
+              "end": 18
+            },
+            {
+              "start": 5,
+              "end": 15
+            }
+          ],
+          "selected": false,
+          "exclusion_reason": "support_file_cap_or_budget"
+        },
+        {
+          "path": "backend/pyproject.toml",
+          "kind": "toml",
+          "raw_rank": 11,
+          "merged_rank": 4,
+          "score": 0.95,
+          "matched_terms": [
+            "client",
+            "computed",
+            "dependencies",
+            "full",
+            "hub",
+            "pytest",
+            "python",
+            "reaction",
+            "suite",
+            "test",
+            "tests"
+          ],
+          "objective_matches": [
+            "dependency_configuration",
+            "test_command"
+          ],
+          "line_spans": [
+            {
+              "start": 78,
+              "end": 106
+            },
+            {
+              "start": 149,
+              "end": 195
+            }
+          ],
+          "selected": false,
+          "exclusion_reason": "support_file_cap_or_budget"
+        }
+      ]
+    },
+    "selectedFiles": [
+      "clients/python/tests/test_computed_reaction_upload_builder.py",
+      "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+      "clients/python/src/tckdb_client/builders/kinetics.py",
+      "clients/python/src/tckdb_client/builders/calculation.py",
+      "clients/python/pyproject.toml",
+      ".github/workflows/python-client-ci.yml"
+    ],
+    "leadPivot": "clients/python/tests/test_computed_reaction_upload_builder.py",
+    "semantic": {
+      "selectedFiles": [
+        "clients/python/tests/test_computed_reaction_upload_builder.py",
+        "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+        "clients/python/src/tckdb_client/builders/kinetics.py",
+        "clients/python/src/tckdb_client/builders/calculation.py",
+        "clients/python/pyproject.toml",
+        ".github/workflows/python-client-ci.yml"
+      ],
+      "leadPivot": "clients/python/tests/test_computed_reaction_upload_builder.py",
+      "roles": [
+        {
+          "path": "clients/python/tests/test_computed_reaction_upload_builder.py",
+          "role": "pivot"
+        },
+        {
+          "path": "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+          "role": "pivot"
+        },
+        {
+          "path": "clients/python/src/tckdb_client/builders/kinetics.py",
+          "role": "support"
+        },
+        {
+          "path": "clients/python/src/tckdb_client/builders/calculation.py",
+          "role": "support"
+        },
+        {
+          "path": "clients/python/pyproject.toml",
+          "role": "support"
+        },
+        {
+          "path": ".github/workflows/python-client-ci.yml",
+          "role": "support"
+        }
+      ],
+      "contentModes": [
+        {
+          "path": "clients/python/tests/test_computed_reaction_upload_builder.py",
+          "contentMode": "full"
+        },
+        {
+          "path": "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+          "contentMode": "full"
+        },
+        {
+          "path": "clients/python/src/tckdb_client/builders/kinetics.py",
+          "contentMode": "signature"
+        },
+        {
+          "path": "clients/python/src/tckdb_client/builders/calculation.py",
+          "contentMode": "signature"
+        },
+        {
+          "path": "clients/python/pyproject.toml",
+          "contentMode": "document_excerpt"
+        },
+        {
+          "path": ".github/workflows/python-client-ci.yml",
+          "contentMode": "document_excerpt"
+        }
+      ],
+      "renderedContext": "● pivot clients/python/tests/test_computed_reaction_upload_builder.py::test_to_payload_snapshot\n  reason:\n  - direct subtree and task-objective evidence\n  - lexical match on fq_name, fq_name, fq_name, fq_name, local_name, local_name, fq_name, fq_name, local_name, local_name, query_coverage\n  - embedded path clue `clients/python` directory_prefix (+0.90 path)\n\n  source:\n  def test_to_payload_snapshot(minimal_upload):\n      payload = minimal_upload.to_payload()\n      expected = {\n          \"species\": [\n              {\n                  \"key\": \"ch3\",\n                  \"species_entry\": {\"smiles\": \"[CH3]\", \"charge\": 0, \"multiplicity\": 2},\n                  \"conformers\": [],\n                  \"calculations\": [],\n              },\n              {\n                  \"key\": \"h\",\n                  \"species_entry\": {\"smiles\": \"[H]\", \"charge\": 0, \"multiplicity\": 2},\n                  \"conformers\": [],\n                  \"calculations\": [],\n              },\n              {\n                  \"key\": \"ch4\",\n                  \"species_entry\": {\"smiles\": \"C\", \"charge\": 0, \"multiplicity\": 1},\n                  \"conformers\": [],\n                  \"calculations\": [],\n              },\n          ],\n          \"reversible\": True,\n          \"reactant_keys\": [\"ch3\", \"h\"],\n          \"product_keys\": [\"ch4\"],\n          \"reaction_family\": \"H_Abstraction\",\n          \"transition_state\": {\n              \"charge\": 0,\n              \"multiplicity\": 2,\n              \"geometry\": {\n                  \"key\": \"geom_1\",\n                  \"xyz_text\": \"3\\nts\\nC 0.0 0.0 0.0\\nH 0.0 0.0 0.8\\nH 0.0 0.0 -1.0\",\n              },\n              \"calculation\": {\n                  \"key\": \"ts_opt\",\n                  \"type\": \"opt\",\n                  \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                  \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                  \"opt_converged\": True,\n                  \"opt_final_energy_hartree\": -270.55,\n              },\n              \"calculations\": [\n                  {\n                      \"key\": \"ts_freq\",\n                      \"type\": \"freq\",\n                      \"software_release\": {\"name\": \"Gaussian\", \"version\": \"16\"},\n                      \"level_of_theory\": {\"method\": \"wb97xd\", \"basis\": \"def2tzvp\"},\n                      \"geometry_key\": \"geom_1\",\n                      \"freq_n_imag\": 1,\n                      \"freq_imag_freq_cm1\": -1200.0,\n                      \"freq_zpe_hartree\": 0.201,\n                      \"depends_on\": [\n                          {\"parent_calculation_key\": \"ts_opt\", \"role\": \"freq_on\"}\n                      ],\n                  },\n              ],\n              \"label\": \"ts\",\n          },\n          \"kinetics\": [\n              {\n                  \"reactant_keys\": [\"ch3\", \"h\"],\n                  \"product_keys\": [\"ch4\"],\n                  \"model_kind\": \"modified_arrhenius\",\n                  \"a\": 1.2e13,\n                  \"a_units\": \"cm3_mol_s\",\n                  \"degeneracy_convention\": \"unknown\",\n                  \"n\": 0.5,\n                  \"reported_ea\": 10.0,\n                  \"reported_ea_units\": \"kj_mol\",\n                  \"tmin_k\": 300.0,\n                  \"tmax_k\": 2500.0,\n                  \"source_calculations\": [\n                      {\"calculation_key\": \"ts_opt\", \"role\": \"ts_energy\"},\n                      {\"calculation_key\": \"ts_freq\", \"role\": \"freq\"},\n                  ],\n              },\n          ],\n      }\n      assert payload == expected\n\n● pivot clients/python/tests/test_builder_computed_reaction_demo_notebook.py::test_notebook_file_exists\n  reason:\n  - direct subtree and task-objective evidence\n  - lexical match on fq_name, fq_name, fq_name, fq_name, fq_name, fq_name, local_name, local_name, local_name, local_name, query_coverage\n  - embedded path clue `clients/python` directory_prefix (+0.90 path)\n\n  source:\n  def test_notebook_file_exists():\n      assert _NB_PATH.is_file(), (\n          f\"Demo notebook missing at {_NB_PATH}; README links to it.\"\n      )\n\n○ support clients/python/src/tckdb_client/builders/kinetics.py::degeneracy_convention\n\n  signature:\n  degeneracy_convention: str = \"unknown\"\n\n○ support clients/python/src/tckdb_client/builders/calculation.py::Calculation\n\n  signature:\n  class Calculation:\n\n○ support clients/python/pyproject.toml::pyproject.toml\n\n  toml excerpt:\n  Lines 45-60 [project.optional-dependencies]:\n  [project.optional-dependencies]\n  test = [\n      \"pytest>=8\",\n  ]\n  # Optional: pull in the Jupyter stack used to author + execute\n  # ``examples/builder_computed_reaction_demo.ipynb``. The executable\n  # smoke test ``test_builder_computed_reaction_demo_notebook.py``\n  # auto-skips when these aren't installed, so the base ``test`` extra\n  # stays slim for CI environments that don't care about the notebook.\n  notebook = [\n      \"jupyter>=1.0\",\n      \"nbformat>=5.10\",\n      \"nbconvert>=7.16\",\n      \"ipykernel>=6\",\n  ]\n\n  Lines 5-44 [project]:\n  [project]\n  name = \"tckdb-client\"\n  version = \"0.28.5\"\n  description = \"Synchronous Python HTTP client and scientific upload builders for the TCKDB API.\"\n  readme = \"README.md\"\n  requires-python = \">=3.11\"\n  license = \"MIT\"\n  authors = [{ name = \"TCKDB\" }]\n  keywords = [\n      \"tckdb\",\n      \"thermochemistry\",\n      \"kinetics\",\n      \"transport\",\n      \"statmech\",\n      \"client\",\n      \"http\",\n      \"computational chemistry\",\n  ]\n  classifiers = [\n      \"Development Status :: 4 - Beta\",\n      \"Intended Audience :: Science/Research\",\n      \"Intended Audience :: Developers\",\n      # License is expressed via the ``license`` table above; the\n      # ``License :: OSI Approved :: MIT License`` classifier is\n      # deprecated in PEP 639 / setuptools 77+ and is intentionally not\n      # listed here.\n      \"Operating System :: OS Independent\",\n      \"Programming Language :: Python :: 3\",\n      \"Programming Language :: Python :: 3 :: Only\",\n      \"Programming Language :: Python :: 3.11\",\n      \"Programming Language :: Python :: 3.12\",\n      \"Programming Language :: Python :: 3.13\",\n      \"Topic :: Scientific/Engineering\",\n      \"Topic :: Scientific/Engineering :: Chemistry\",\n      \"Typing :: Typed\",\n  ]\n  dependencies = [\n      \"httpx>=0.27\",\n  ]\n\n○ support .github/workflows/python-client-ci.yml::python-client-ci.yml\n\n  yaml excerpt:\n  Lines 19-43 [jobs]:\n  jobs:\n    test:\n      name: Python client tests\n      runs-on: ubuntu-latest\n      timeout-minutes: 20\n\n      steps:\n        - name: Check out repository\n          uses: actions/checkout@v4\n\n        - name: Set up Python\n          uses: actions/setup-python@v5\n          with:\n            python-version: \"3.11\"\n            cache: pip\n            cache-dependency-path: clients/python/pyproject.toml\n\n        - name: Install Python client and test dependencies\n          working-directory: clients/python\n          run: python -m pip install -e \".[test,notebook]\"\n\n        - name: Run Python client tests\n          working-directory: clients/python\n          run: python -m pytest\n\n  Lines 3-15 [on]:\n  on:\n    pull_request:\n      paths:\n        - \".github/workflows/python-client-ci.yml\"\n        - \"clients/python/**\"\n    push:\n      branches:\n        - main\n      paths:\n        - \".github/workflows/python-client-ci.yml\"\n        - \"clients/python/**\"\n    workflow_dispatch:",
+      "digest": "# Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.\n● pivot clients/python/tests/test_computed_reaction_upload_builder.py::test_to_payload_snapshot  [full ~865t]\n    why: direct subtree and task-objective evidence\n● pivot clients/python/tests/test_builder_computed_reaction_demo_notebook.py::test_notebook_file_exists  [full ~132t]\n    why: direct subtree and task-objective evidence\n○ skel clients/python/src/tckdb_client/builders/kinetics.py::Kinetics.degeneracy_convention  [signature ~35t]\n    why: symbol-name match; in a likely edit file; lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)\n○ skel clients/python/src/tckdb_client/builders/calculation.py::Calculation  [signature ~29t]\n    why: strong target but beyond the pivot budget — pivot: actionable class — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour; 151 dependents\n○ skel clients/python/pyproject.toml#document  [document_excerpt ~482t]\n    why: document FTS matches: client, clients, computed, dependencies, notebook, pytest, python, reaction, test, tests\n○ skel .github/workflows/python-client-ci.yml#document  [document_excerpt ~272t]\n    why: document FTS matches: actions, client, clients, dependencies, notebook, pytest, python, test, tests, workflow\nbudget: 1815/6000t (30.25%)",
+      "tokenAccounting": {
+        "max_tokens": 6000,
+        "estimated_tokens": 1815,
+        "used_percent": 30.25
+      },
+      "hashes": {
+        "selectedFilesHash": "00e51e76781afe9f0e168daae821b635f8114b157faa47068ad6a378b2d6a3fe",
+        "leadPivot": "clients/python/tests/test_computed_reaction_upload_builder.py",
+        "rolesHash": "f15f65919b66d7b513513670d30fc981191f24a804d2a71b2891cf5f152de642",
+        "contentModesHash": "6510917945c7ce2b897666967964f9516c35c7fc6fb24ffe50333afbc9edcc41",
+        "renderedContextHash": "26dfbb67baf0a487d36a2e14a4155f140ee1f56f12beadb70e07d982d3d924ca",
+        "digestHash": "90727b0aadb7c7db0dda31bdadd1a17786a62f59e59bd90df11e887e807d25a8",
+        "tokenAccountingHash": "e835fdbfd17d463f2cb00e7244d2a2eec11057e97cec8ceedeae4c970d2a0fa9"
+      }
+    }
+  },
+  "controls": {
+    "pythonOnly": {
+      "latencyMs": 606.942,
+      "attempted": false,
+      "reason": "no_supported_document_clue",
+      "triggers": [],
+      "pathClues": 0,
+      "integrationMs": 0.056,
+      "documentCandidates": 0,
+      "selectedDocuments": 0
+    },
+    "documentOnly": {
+      "latencyMs": 349.077,
+      "attempted": true,
+      "reason": "supported_document_clue",
+      "triggers": [
+        "project_configuration_objective",
+        "workflow_objective"
+      ],
+      "pathClues": 0,
+      "integrationMs": 2.363,
+      "documentCandidates": 4,
+      "selectedDocuments": 2
+    },
+    "exactDocument": {
+      "latencyMs": 240.031,
+      "attempted": true,
+      "reason": "supported_document_clue",
+      "triggers": [
+        "explicit_document_filename",
+        "workflow_objective",
+        "yaml_objective"
+      ],
+      "pathClues": 1,
+      "integrationMs": 3.608,
+      "documentCandidates": 4,
+      "selectedDocuments": 0
+    },
+    "path": {
+      "latencyMs": 221.861,
+      "attempted": false,
+      "reason": "no_supported_document_clue",
+      "triggers": [],
+      "pathClues": 1,
+      "integrationMs": 0.218,
+      "documentCandidates": 0,
+      "selectedDocuments": 0
+    },
+    "noContext": {
+      "latencyMs": 293.088,
+      "attempted": false,
+      "reason": "no_supported_document_clue",
+      "triggers": [],
+      "pathClues": 0,
+      "integrationMs": 0.026,
+      "documentCandidates": 0,
+      "selectedDocuments": 0
+    }
+  },
+  "frozen": {
+    "cases": 50,
+    "cold": {
+      "samplesMs": [
+        889.575,
+        2506.508,
+        4118.512,
+        1119.956,
+        1025.322,
+        574.059,
+        1167.298,
+        285.403,
+        446.889,
+        665.451,
+        716.953,
+        906.148,
+        939.105,
+        1004.119,
+        342.294,
+        970.7,
+        456.477,
+        889.679,
+        1117.07,
+        1156.997,
+        368.76,
+        740.705,
+        540.461,
+        580.447,
+        1543.957,
+        720.999,
+        548.587,
+        1401.738,
+        262.037,
+        220.175,
+        220.629,
+        195.817,
+        580.225,
+        90.019,
+        559.1,
+        47.388,
+        1076.985,
+        1157.854,
+        569.96,
+        183.864,
+        135.038,
+        15.843,
+        156.808,
+        787.99,
+        480.859,
+        291.473,
+        267.809,
+        233.526,
+        294.203,
+        1323.429
+      ],
+      "medianMs": 574.059,
+      "p90Ms": 1167.298
+    },
+    "warmDifferent": {
+      "samplesMs": [
+        898.656,
+        2543.499,
+        4007.21,
+        1149.304,
+        1061.53,
+        593.38,
+        1173.442,
+        300.934,
+        461.047,
+        688.971,
+        752.96,
+        925.207,
+        940.415,
+        999.403,
+        354.366,
+        1025.877,
+        425.815,
+        907.692,
+        1141.67,
+        1149.804,
+        366.22,
+        774.86,
+        563.928,
+        604.593,
+        1537.193,
+        757.269,
+        581.322,
+        1408.651,
+        273.325,
+        221.907,
+        215.43,
+        195.074,
+        579.57,
+        87.227,
+        565.816,
+        47.692,
+        1099.522,
+        1170.902,
+        578.081,
+        190.527,
+        133.537,
+        15.693,
+        158.592,
+        780.081,
+        480.994,
+        302.537,
+        261.921,
+        219.049,
+        305.775,
+        1376.928
+      ],
+      "medianMs": 581.322,
+      "p90Ms": 1173.442
+    },
+    "warmSame": {
+      "samplesMs": [
+        881.141,
+        2568.262,
+        4074.175,
+        1135.364,
+        1055.714,
+        612.84,
+        1167.035,
+        295.242,
+        472.877,
+        679.545,
+        743.904,
+        939.653,
+        912.841,
+        986.124,
+        360.565,
+        1061.673,
+        425.542,
+        920.592,
+        1123.954,
+        1167.321,
+        371.674,
+        761.146,
+        567.464,
+        640.173,
+        1483.805,
+        738.814,
+        581.316,
+        1404.416,
+        272.486,
+        232.564,
+        214.042,
+        199.072,
+        593.223,
+        86.9,
+        573.922,
+        46.833,
+        1124.377,
+        1187.544,
+        553.246,
+        183.891,
+        124.058,
+        13.813,
+        153.527,
+        778.142,
+        493.394,
+        292.003,
+        262.657,
+        213.552,
+        299.866,
+        1416.231
+      ],
+      "medianMs": 593.223,
+      "p90Ms": 1187.544
+    },
+    "semanticRows": [
+      {
+        "instanceId": "django__django-10880",
+        "selectedFilesHash": "cb028698bb4d8cfebc5e4018845fda2b12c189ff8e5971dd787d4074e754778a",
+        "leadPivot": "django/db/models/aggregates.py",
+        "rolesHash": "9d759f4ba0dfbfeab7ac908b63b6496f940a9781357038dcf5771419b35a4637",
+        "contentModesHash": "29215fe90275b19f499199a3f00ced49dcff652f6b32e3f7f2ede48b6abb1dbf",
+        "renderedContextHash": "f2aeecf5bf83c61ad1c805626c28513247da93c8b791517c07f0bad4dca8ed14",
+        "digestHash": "f0e683eda3d653054b320348f73ec68806283555e37c17349460eaefc8b3946d",
+        "tokenAccountingHash": "e792661c53724b3193a27619b4b280eaba931776a0ff85353e1a65e84389c2b8"
+      },
+      {
+        "instanceId": "django__django-11095",
+        "selectedFilesHash": "847aaa7c2e98c48d4c2c7a2db0a4edaaa11e070f0b601bf15ea1000acffb7f5c",
+        "leadPivot": "django/contrib/admin/options.py",
+        "rolesHash": "2b37dfbf2e4faea711e037cf594249537558dccf58c5dc03d94df3e3ac0283b5",
+        "contentModesHash": "f948f11a4a24146c4876652781036e033d36a6b53a9264642fdf80069e1f3f95",
+        "renderedContextHash": "fc3e2cb45f8acb779700672ddb519324f12c76de7bbae909995478c4e8fc835f",
+        "digestHash": "f3cdfe1bf92907abf0432f29ec774adc364bb01c15a08d1094203c9d257d5eb8",
+        "tokenAccountingHash": "14dd8563a3efe4917f8485e4ab6f4708a8689cd5923e58a23f9da6b6fd76f833"
+      },
+      {
+        "instanceId": "django__django-11490",
+        "selectedFilesHash": "3a0117966d831851d667d6083d124302640492c8ddb0615db0332dd331fed1f7",
+        "leadPivot": "django/db/models/sql/compiler.py",
+        "rolesHash": "844cec2cb1ab910547e4c4ad9db7f4cee7971ec80565c791ecd7eebc72ebab60",
+        "contentModesHash": "143d7ea480657c95b471fdf377390cce1129fb2383ec03bd0d4d7dfd50cfefc5",
+        "renderedContextHash": "e05c86b7ec907e29da093dc7fb3de68ca4661b90d046b4636eba9b7a7291d60e",
+        "digestHash": "95b5070ce1f6c106795ff95076f6fd2037827917a1d6a6d9aa608b280be838dd",
+        "tokenAccountingHash": "edb79bc4c75667ee7e57e52c6b5096c2ed5aa67023c727b5c573252345a3ccae"
+      },
+      {
+        "instanceId": "django__django-11728",
+        "selectedFilesHash": "47a61c708b7ef7283e615a64bb4a9d44069174353a312f91e37a7ace3e07f678",
+        "leadPivot": "django/contrib/admindocs/utils.py",
+        "rolesHash": "a924013c6597de36535a2d5d7430ea98add7ea64580cd93d2497d7cf51cf83ab",
+        "contentModesHash": "4929cb7bbfa368a44bf7e61b0102c1f52613bb7a3cba6fd17abc9bca9aa3e44c",
+        "renderedContextHash": "62b9b544b61ab48c51d9f01881e7326978a66ed1404f7c0abc7d6f77e6d1fc1e",
+        "digestHash": "f7796686d5ed3c43a4685ce4955c0583eb48323e0b1db0cb33be3dad71e998e4",
+        "tokenAccountingHash": "a744eaa9d758a0a04bdd322d75776848a31b105cf6cd9eb06eb2fc875d352766"
+      },
+      {
+        "instanceId": "django__django-11740",
+        "selectedFilesHash": "6829fdc2f29f03f2b7244a7cd9385bdc735d7124aa7fa97df6281d272e185d18",
+        "leadPivot": "django/db/migrations/autodetector.py",
+        "rolesHash": "f82a79d71208ac38f1ab610d1e9bb788db5af024e885aa6221e2e4ab68c7a298",
+        "contentModesHash": "8d2358884213559c1e38ca055f9aad5a349cf4c1e2f5bf07f3d4a127c4ef5756",
+        "renderedContextHash": "9d9f0754f5aee23a32b56a30ddb9bcbdbc851ff6b8d221702b1c2aad38626265",
+        "digestHash": "bcd2fe09063894918b60f1167044715b8d4499c787466ff63b49d5002474c29c",
+        "tokenAccountingHash": "2c944e1cddd97cc21e0943e3913eeb5763bcfc7e39283c6649260fc6f1ec882a"
+      },
+      {
+        "instanceId": "django__django-10973",
+        "selectedFilesHash": "a69830952ffc4ae5cbd5c778e2fc3f6473d06cc0ad85d494da85efd16e69cdd7",
+        "leadPivot": "db/backends/postgresql/client.py",
+        "rolesHash": "90a4690b643f79444511eafbe500acda8f18d3cbca424a02f7f4c018abb1afa0",
+        "contentModesHash": "d786e145981371474117040c3bf8aba8d25a1542136a7691c3f5e4c6318edf90",
+        "renderedContextHash": "5444af2be6d9e2728cce181dd8bbb4b70b33b7e54c4905391277742a43853afb",
+        "digestHash": "ef7f62d05509b23d116edb52b3c889971c8393a8fb4449c50afa0a99a44d330e",
+        "tokenAccountingHash": "b2498b60273a7004d0e62d5dfe5a8de4eb0a6960b5d825286609c6f354c00892"
+      },
+      {
+        "instanceId": "django__django-11133",
+        "selectedFilesHash": "ea5a219459bcf658eb2f8d6d9efbfc579be172224a6542924fb980d6a177730b",
+        "leadPivot": "http/response.py",
+        "rolesHash": "35edf01a5e28fda15ecb24bdeb025a160f014c0dda77bfaa548c7a6446fc2322",
+        "contentModesHash": "7647fbfabb094eec047fd100434ffc56d83061b45f01b72d123a7755722a98b0",
+        "renderedContextHash": "0bed27a9fb5c7dbc1f971ca5ebd6d80ce823f006d6f0affb5b3ed599921cd8bc",
+        "digestHash": "919955acfbea3e1e859a9408a005269b8824b5865e9795e891ca761e121a617a",
+        "tokenAccountingHash": "03f508d45334a1c0ab5e83d1d99c83379ebdb0a8e5dce49338eacfe5e7e51e89"
+      },
+      {
+        "instanceId": "django__django-11206",
+        "selectedFilesHash": "fc96fea004ce0cc82bb50d7825270983c7f88cb9711dac07f1cf499d436f1253",
+        "leadPivot": "utils/numberformat.py",
+        "rolesHash": "49f8ae461dd8461bc8c837a59d4adb738d683f9b21024ebe9753b4fe414c0b09",
+        "contentModesHash": "2e9cab054ba36848a7c46c8e69609ff89fc951b0c1f932d8b11d093b13d1c44a",
+        "renderedContextHash": "0ebb7ee79baa10ac6a7614d6d51ddc168024d236d70257f3332473271070ed4d",
+        "digestHash": "9614d478c7969bfac317b4ed4d02bf7a2915f2a25c44c6dbaf7ad1c084f1ed9d",
+        "tokenAccountingHash": "ad78467aacfad3e026d2bf1b50c20d226fa233185b0e3c7470c8832a86197aaa"
+      },
+      {
+        "instanceId": "django__django-11749",
+        "selectedFilesHash": "60a0553fa6e7bcb7c538eab39cd7887ecf73fcddc416df5fb55c483fd731f6cc",
+        "leadPivot": "core/management/__init__.py",
+        "rolesHash": "15fc039e684fa0df1464b429bb84d6b3955f5e47d46d72f52b3b264cf75f61e6",
+        "contentModesHash": "4383a5059069f7262a61fb92b8513666529246d2af62ae05bb71ae0c043fec9a",
+        "renderedContextHash": "573104fa03fb3de72dc93ccdbcb085b38ddaca1ed947aa098e2a6f33df8f797c",
+        "digestHash": "146020e91cef2db4a7f78f21d6e1ecb41e10267e01363c50a2ddafbe8c8bfcfd",
+        "tokenAccountingHash": "90d3234bec2109ab333bfca98d0345b9f6e252a41b44f5e95eb3c01554a60e4d"
+      },
+      {
+        "instanceId": "django__django-11815",
+        "selectedFilesHash": "20fb944330100baf8ddd19113b0bdd4f0135e470ff2b9cc6eff9dcefec7d2f85",
+        "leadPivot": "db/migrations/serializer.py",
+        "rolesHash": "065f69186c39517a741c75058af8936d0a7502fc0c3827d6d9313f1623ac7ee7",
+        "contentModesHash": "fd4dd21340f88aec3e04af41c96c42b77ea341076f9906862c508abbe36ce903",
+        "renderedContextHash": "9b36cea8a37daaaf01b378c6a343d6bb093fd386ed87235f35359627d9e3071b",
+        "digestHash": "89bceca7ac372f608e3253af71d8f8fb6f3960066f447eb361978ebb33ca7661",
+        "tokenAccountingHash": "94b653da45ed7808b20646facd7695e45b7c8eb5e775b6cb659d99ca689eabab"
+      },
+      {
+        "instanceId": "django__django-11820",
+        "selectedFilesHash": "9860a38d934d42620955f7a052fa67cd81c9220f65cd5f23d18915cfa07bdf71",
+        "leadPivot": "db/models/base.py",
+        "rolesHash": "6d4b96a4e8979db2e96073c6d446253d1955e516fa8061fd5d350fe102ad1e5a",
+        "contentModesHash": "7442625276b6e07559e81acd2b5908e570fa78cf3c1726ef615956463daa66bc",
+        "renderedContextHash": "4a9d26165053a67cdcc707ff72e745614d3d7f6d3b278c2fee4b7f415321f29c",
+        "digestHash": "4faa082c81d4f5cdf9d00746f11e45ef47887435a2d42735476fa3112cf74d36",
+        "tokenAccountingHash": "8274ebd7040919f1423f555dcf61494f142883c4d9d3d760a92f1ba1c53bae77"
+      },
+      {
+        "instanceId": "django__django-12050",
+        "selectedFilesHash": "ded89d5f8c0a23c9ac828913af14b52790edc49e9bc1fb71266289d99dc1157b",
+        "leadPivot": "db/models/sql/query.py",
+        "rolesHash": "21e5a61fc4310c39915f84674a5bb60c816d11aea4fb83185621ff11fcf9a895",
+        "contentModesHash": "12eeca4ca44b21fca8d84625cd9c71171c365f91896bc93ab297fee38e16124d",
+        "renderedContextHash": "09697183b750c0cdc88bd18e1934a4dff44d8ffea9637459583eaaf1f1d9b64b",
+        "digestHash": "f3a13c416dab6d2f47d56b9fdb66472992a578e50d77db497eeb06e5815a0b56",
+        "tokenAccountingHash": "dd4c713f8cf254ed9c353e01a92bd8e27ec8ddb33d23c2ce8a049fcb7e9a3fa6"
+      },
+      {
+        "instanceId": "django__django-12273",
+        "selectedFilesHash": "3afefc28bdb2624df27b21d4673c4d4ec379c5d528fc9a06dd78942fb71d7840",
+        "leadPivot": "forms/models.py",
+        "rolesHash": "e2df548c8d4b5b03da48c59b5984dddede49feffa5fac0d9ef802a0dec85dd7e",
+        "contentModesHash": "e11cea70882643a850e3ff708ac9423b2936103b3c186781870c5ddd3a4a0ebe",
+        "renderedContextHash": "edc9f13d1749378ae0fdb94e5be913ec480bc53deee26383f672ea09eb95c444",
+        "digestHash": "197c1adbe1419ca852a3dd9f4df13de0177e37f4af88d9069c4ac15c93e97c88",
+        "tokenAccountingHash": "aebe8d7e73e514b725a301ff03ecf7828c8dd966373ab4c9ef813f6445bdecc9"
+      },
+      {
+        "instanceId": "django__django-12276",
+        "selectedFilesHash": "7b50c7318feb0dfb55a4edec75d974314f7671f7e758c2c36b81cc6c7b0609b3",
+        "leadPivot": "forms/widgets.py",
+        "rolesHash": "bedbc390a02f9ec1b0ac9a3438d161452be9ff0e2f3f2ee3da36655278896173",
+        "contentModesHash": "63d94473edc1c56ba4d0634e5da008897db0e9d4003dcf403aa2b497a51a7504",
+        "renderedContextHash": "84ed6e7b64fcf5cbc5483fc8cc4fdf0f134ec514f88b31dadb1bcc400cb1ff0a",
+        "digestHash": "658e9d6d235f1eeb9369d71b4dfd6b000f741bb63c23e60c17ee16683739103c",
+        "tokenAccountingHash": "078e4a247715697bc356ee8a2fb5f95994767eb4fa000ec7b112b1d173a7654f"
+      },
+      {
+        "instanceId": "django__django-12325",
+        "selectedFilesHash": "59fcdda8aa508fcbe60473380ce4f632f69e94b31bf2838a9d1ce593e3bf1eec",
+        "leadPivot": "db/models/sql/query.py",
+        "rolesHash": "71c0ecb4b2a65eacc31ceb39aee99f2c4054e22eb13ce8f73951eaa70b0042c9",
+        "contentModesHash": "d6b6d01a393eab9dadb3a3f82a4b3080793e457ee5a3fbba757ecd3174eb8e12",
+        "renderedContextHash": "823277895e00c1bfbc8e1e017abc356862f812210a49be9b80466cbb60bf03ee",
+        "digestHash": "59798e48c6657e0c211986955477be41f4cbf15dca20eda86e747ecb87563d63",
+        "tokenAccountingHash": "51491a60b3501114f1267b4b5088ba19799e834144400a7d9cc801995ad90247"
+      },
+      {
+        "instanceId": "django__django-12774",
+        "selectedFilesHash": "256abea2dee4a7319fa6222d9997d5bab77545737eda818773052502c77d4427",
+        "leadPivot": "db/models/query.py",
+        "rolesHash": "637b58cd3d1b0fa60978c005e66d92f5fe7d91cd9905bd9d24e40b134686f6e0",
+        "contentModesHash": "6c02931e2290b18276a3f2962959d7529a8f0e60707994a29262ff778fc51af0",
+        "renderedContextHash": "726ee573804cc20d2e3b9bd5f870f9dcca1c441b6d735c9c475ce20cd45be785",
+        "digestHash": "86fbb3fb7bccf38ca944b7ed047874f5209fc9093f26375cb0ecc7c750c982d1",
+        "tokenAccountingHash": "fb5d38b9a3f3bc4d0e765f6d03324d9af59194a9a40f169754c40faecccf5c59"
+      },
+      {
+        "instanceId": "django__django-12858",
+        "selectedFilesHash": "6e812976e15be8492bd2223a54483845c2013b87906ffbb9245d0f12c45ca0f0",
+        "leadPivot": "db/models/base.py",
+        "rolesHash": "9a33c7664fc7dda8f287ced4f987f6062ad742117e7af6b70f82786e81769679",
+        "contentModesHash": "7c5853a102c68fdee44ad4da5370b8ce87339ff75452c3e9b643d847aac49531",
+        "renderedContextHash": "6a0f295af1801670dd54ff6576f818c399ed8005a73de7fa04e31371826d98a5",
+        "digestHash": "71ad1b06fb82291066950f6030755a38578bbcd1550a3866c3051f2a2619db85",
+        "tokenAccountingHash": "96e163d973ee4aa621b4aaa2b01cf0f95f3438bf45eef46fd5314a4b7e74d7af"
+      },
+      {
+        "instanceId": "django__django-13012",
+        "selectedFilesHash": "6167376ba01f23fce93e8bc22a4e9474a30c858ad4e570fdc7761f7477487e60",
+        "leadPivot": "db/models/expressions.py",
+        "rolesHash": "2ea4d9655e772cc8761f6a0ffa169cb82be00cd8778face8524883a5bf092381",
+        "contentModesHash": "d44a49c34ddb63f070d093523dd19d6f220ef59bb0baa28197d38ba810f1d655",
+        "renderedContextHash": "c30b0336f1615cc299b6dcd05a6ac6af0f4a42ccbc6ceb715bf9fab6f5d7b106",
+        "digestHash": "fa9cd4a7f273891135776e69ce19826c69f4746df33707d942e05ac91f53ace6",
+        "tokenAccountingHash": "5cebafec93461e90d05aa1fbac0ac72f27651ec06de82f0707c64699c19fe32e"
+      },
+      {
+        "instanceId": "django__django-13112",
+        "selectedFilesHash": "f7360f39d9b331036e2c6a8c5c6119d23b05b40ff8b6fb9bdcb910fc8ca440b4",
+        "leadPivot": "db/models/fields/related.py",
+        "rolesHash": "2c3f681c0e17fc435a10fa90f00e47d37732a4719bad6f68c75fd2e35a2568bb",
+        "contentModesHash": "0aa89a010b4892a5391f05b93b49eaeaaec54ce8d6fc0d51b432b17b36b6d577",
+        "renderedContextHash": "c002875f967870d95d020f2b82fb12a3407975f90b35e55c53590fdcc7b943ec",
+        "digestHash": "a672688b631f4e2d084dafbc9dc6708d8d056f15633e74f33a123bd80c1e7f58",
+        "tokenAccountingHash": "c0efd34c59e488de81a2b3d352698871948350224f26b1db791e42e8004012cf"
+      },
+      {
+        "instanceId": "django__django-13195",
+        "selectedFilesHash": "738bac0bdfad0e82b8dfe6780d80a93c25a07e63cbe5f00d9e1f8006c277e271",
+        "leadPivot": "http/response.py",
+        "rolesHash": "eb882c9ced98224a6cd53b290aa18ce1611e62b70963eaef33b92d8b14dbca15",
+        "contentModesHash": "3c2457510ec53785f581d42e2f33407415138d497967ec2425cb74b0c2f5d2e3",
+        "renderedContextHash": "6e0ceaa3fd18a84c7fa381befc8748dde83228d50dbf8d79a74e2a00cff92547",
+        "digestHash": "9a7b2ebb30925ae85528a278bbf368205ee04c9c822657f9ae322a0744bde126",
+        "tokenAccountingHash": "b2480653bc51ce1ba0d2bdef9647de861f3dc9a0730b36e3f9031a6039c1738a"
+      },
+      {
+        "instanceId": "sympy__sympy-12419",
+        "selectedFilesHash": "0793bba9dac6d149facc07a8432f2aa5da30e700998000af3ff4f06f9adcf498",
+        "leadPivot": "sympy/physics/quantum/identitysearch.py",
+        "rolesHash": "837ec5cbd90218422f88545ecaa811efdb3a69952b4937864e80cfc1bb81fc5d",
+        "contentModesHash": "ddaea38094933e921926e198603bda5aa69aa38543f7ee7ae142f7846f6245dd",
+        "renderedContextHash": "583d0df5a843a8a8fb06b14d003ed7af816c802685e02873800d48fe9b13758b",
+        "digestHash": "d1d859fc2a9fe7a08cc73d9d2069b6abd970c9959a5b44a75668a37f934211b3",
+        "tokenAccountingHash": "dbe4388253813682e3d43db65daee6b647335e5279e00d8cca0de3c303d940f1"
+      },
+      {
+        "instanceId": "sympy__sympy-12481",
+        "selectedFilesHash": "85d1b6eb1a8971b1eb02d6708101e2ad4759c60bdbdcef072ebfaf3e1f27543d",
+        "leadPivot": "sympy/combinatorics/permutations.py",
+        "rolesHash": "7e8d0a8119da384684ce34186b30f4534a740de6e56f9833d889a9cc06ebc2f6",
+        "contentModesHash": "76d30b0a6b11e49f9cc5b1ff6ebafd9f7c9e9620b335010561b0461862b87b64",
+        "renderedContextHash": "fd05d3eb4899576387e65214eaa362fda94c4121db172876594b6590c03db93a",
+        "digestHash": "cc60f1e3880cc4ef7edac04ba18e323aac014ac3c9d0d7b26ce90e8463764135",
+        "tokenAccountingHash": "9cbf00d798f1774f73d822246cffa923e8eb9ce62f4ccaa9be066a82c55b0bd4"
+      },
+      {
+        "instanceId": "sympy__sympy-13372",
+        "selectedFilesHash": "9b029267f0f7927af57011ced860c3bcb8dc275309ce8af7e8f42d2b3c1bc2c6",
+        "leadPivot": "sympy/core/evalf.py",
+        "rolesHash": "7ad2e2fe1b83da8b6604aa53099a2c412a5d55ab02f78c1da83c1eaeab029001",
+        "contentModesHash": "97f293f03c9ea7f6e391bf29ffe31a243af5e7e278f5e65ecc831617bde16bbb",
+        "renderedContextHash": "1df4b00f33bc3707ec907002bc579a044a6256156b06f85f2814a4f403643c55",
+        "digestHash": "e97c6ada7dbac7718187775c2a843260d8a3e7e63b57d29ce17b96254843819f",
+        "tokenAccountingHash": "b27c7f3e79c92d919fe93b1196cbe107d1d3008541094be392ad258ac48be187"
+      },
+      {
+        "instanceId": "scikit-learn__scikit-learn-10844",
+        "selectedFilesHash": "97e42c3ff682517431096e41b21430f6b442d36a40906e8fb49719bed236856d",
+        "leadPivot": "sklearn/metrics/cluster/supervised.py",
+        "rolesHash": "197f2c047c735e33cf40aec219086d5b5330900330f6d48bc10240764a3b13b4",
+        "contentModesHash": "d02b9e2dee820793fd434c32eb92dcca67fcf55a0892003975384cdc8cd9e1a1",
+        "renderedContextHash": "076c006c82242a5caeaa159be37e8044da16ed20be42d57dbc56567e5c41e082",
+        "digestHash": "8d2101a9b512f36f27562ebb116030fb41f058a1e394a5608fa81d0ee1bd779c",
+        "tokenAccountingHash": "432109e711e081400f670a7dc05822771fc02b2d256c41af2f8fdfc6732bb0c9"
+      },
+      {
+        "instanceId": "scikit-learn__scikit-learn-11578",
+        "selectedFilesHash": "596e09472cbf22fa2ce5dfaddfcf8d978a6b9e5e647362b10c4c35d886b792d1",
+        "leadPivot": "sklearn/linear_model/logistic.py",
+        "rolesHash": "29439a49a647443fd1caab22ecb8eaa9508ef418d9a74abb0bc54ae8352afcf2",
+        "contentModesHash": "20fa28d219d635c6b57011fc51ea8a477a30ab58d1eea0f4568b25a7d1f0fd97",
+        "renderedContextHash": "ef0972e6f73e79228d639711cf2de90fe147c95f287838fce6a8302f2b26c84c",
+        "digestHash": "19217365a101b8874299769fb0cb76f86ca15b8512f232c2cddb728a9815c1f6",
+        "tokenAccountingHash": "54ca0ad103cb06a884772e4cf5d13c7249be2d1878c13e386628c26b8977e568"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-22719",
+        "selectedFilesHash": "bb504362f494922d9833cbd51a7c3c43d96baf015d0dcd574fe2d9c3a0005bfd",
+        "leadPivot": "lib/matplotlib/units.py",
+        "rolesHash": "5a613e6fe6a30f7d505d2f6708ffc6fdac04d3f050dfcab4bcc727243ea1e408",
+        "contentModesHash": "89261fed7bf84efc41270e0b782661e96cc9f4b2455e816bf7b98a2cd8d627ff",
+        "renderedContextHash": "a99b4c7a36e87526025988bb868a8624394e8408ccec8cc56aecdda76acbdea3",
+        "digestHash": "9589e5240f642f26edfbd792921ba900788495a66249b6639b496146914d26ad",
+        "tokenAccountingHash": "c5990fcddc5ac831910070e5ccb6f6e0fe806f7f3426685a91cbe42ec5967e1b"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-24627",
+        "selectedFilesHash": "bddab674e8d773b567f6f5fa8961479d2d521b21b25a75cb42fe73179ef4ed19",
+        "leadPivot": "lib/matplotlib/axes/_base.py",
+        "rolesHash": "728116d61465a3cc1c53e93a32b6b881185b505c6246bd4150e0680a6df60798",
+        "contentModesHash": "2c435e91301ec2183a1c5fc42ea5ee15f7fba9c793f975ef079dcb781fb4a523",
+        "renderedContextHash": "54b6062e84c740c93647612c538d34d6d6c3f75d98c3eb881a27f8682eeec01e",
+        "digestHash": "8d813b5a2fa4cc188f7d333986e45a350951c81937a7b089a27ba1b2aab287a1",
+        "tokenAccountingHash": "145174a3d6a69e1e4de4bad450ef35a6783b46f5f1938c07c807952fefbe0f1b"
+      },
+      {
+        "instanceId": "astropy__astropy-14365",
+        "selectedFilesHash": "e2f037bf5c38a704f83c802744e57f0f15f560dfb4c11e9b6ac741989ce03c5a",
+        "leadPivot": "astropy/io/ascii/qdp.py",
+        "rolesHash": "649bc5ed5703137b987de6c911b4076622b4fb375f679de833eadd3d59bba3c0",
+        "contentModesHash": "b23d9bf84148a0250aed16f7f6ec26b339e2b77852340bed05b44fc73e6d310e",
+        "renderedContextHash": "002a624d364800340c7987a46fad6e80fba1c7763d5dcca03404a703ceda05f8",
+        "digestHash": "c66a91907d7db51a5dac0034dab46310824f4c71f9aecd361a0d194656f33dca",
+        "tokenAccountingHash": "206cc2c14261eb0de564390911344b8d1904823a611f6c10e7aa21e8b44500b1"
+      },
+      {
+        "instanceId": "astropy__astropy-14369",
+        "selectedFilesHash": "84512448146b8e3045b4e05f8ca92e0ec59000f5e2b836b838bc6eefc61cd1d4",
+        "leadPivot": "astropy/io/ascii/cds.py",
+        "rolesHash": "cda067b43d68733fab8b17205609a7950c6d4b4d68625ad5fcd1ac349c48dae3",
+        "contentModesHash": "036112385d0fd82b7e9208368ea64fab9d33b2ae28def1cd621a581706a48d66",
+        "renderedContextHash": "a821a373a267a7793cfd253acd87a960ee207f034063f1ee9c9da362cb62206b",
+        "digestHash": "0cc0017fa7cdb6cfd4373f036586428a1bc3f12673de12c6fd15d99a28ef008e",
+        "tokenAccountingHash": "85d24ce7ca885aec8138ce3129e9d6fe38c014fe6d96a0d466a1c6ddd33712ed"
+      },
+      {
+        "instanceId": "pytest-dev__pytest-10051",
+        "selectedFilesHash": "2eeb89f1360106b2b5ef87d9cb5c590cd3e1134625347a97382c6a14d57ee704",
+        "leadPivot": "src/_pytest/logging.py",
+        "rolesHash": "77665014e0f6e765e091420a58be5775b14d7345938197a4fbd6e7372d182294",
+        "contentModesHash": "adbc554caf9a5a863b125f814f7a69f33d0d502fe6cd53dc1865d93af3a126ce",
+        "renderedContextHash": "47f03002ad89a95efd25380374745dd01c8d9af01166c9dd3eea0032d04d72a7",
+        "digestHash": "fb4812d1e9a6e9ad706791c6682b81ecfb97a5c17a16f3774613b3dde7a637e1",
+        "tokenAccountingHash": "b3db2087bf858180ceecdf4d925a9e9887e89beb9a9b8acecf4a93c17f4b3ce4"
+      },
+      {
+        "instanceId": "pytest-dev__pytest-5262",
+        "selectedFilesHash": "32c39e38945b55b47beb7b99ef453c639b40a97b39b7ce2fe4fcb7a00ed543ae",
+        "leadPivot": "src/_pytest/capture.py",
+        "rolesHash": "e4817ed1cf8d8c747f7f40977cd61f9b65af3744e7b48a49776ee1aa9937ea1b",
+        "contentModesHash": "36b39fefe2110690f7e7e0ab35f79aaad98018d73a6e7fb68dab4fd5951595fe",
+        "renderedContextHash": "25e476055c2e728a21a3361de4273dac335c2cbea84f68be6a9f8f930b124b05",
+        "digestHash": "e1a65e5ce37f9c1084a2f732935d1950b19688a9bda8a3fa3adf85aee581a121",
+        "tokenAccountingHash": "4be4106fe9e93f3bd9ccb0d0464fb9dfb38b4f1e9e986eb0cba1b89f837aeef9"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7462",
+        "selectedFilesHash": "dfa5ecfc3f7fc624fc6078b48bd5175f425ef710904273f537af3f1fab767ee5",
+        "leadPivot": "sphinx/domains/python.py",
+        "rolesHash": "08d243e017bdbbb240eaa94b2c867b6317db698b2c165da42f59eb303b7ed9b9",
+        "contentModesHash": "4bf96415d03aa6d276dcff38ad26fa8f90d89d629a5e9930fedc23b497dbffcc",
+        "renderedContextHash": "8323f5cd61514541a3054285fafabdd6a97468bc78acd63e06f515d324a71276",
+        "digestHash": "861f97f62c335095fb78e4d56ac9e21db02331fca7e28ee8ef9602df0692a302",
+        "tokenAccountingHash": "681ed09d046d43a29951595be2c2a902a5fc2fff1fc3f6f273719310fddbbe60"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7748",
+        "selectedFilesHash": "8964b0245c1cc6d0cc6cc0ff7874dc9245793ddb41864da8351072ec652b49d0",
+        "leadPivot": "sphinx/ext/autodoc/__init__.py",
+        "rolesHash": "9f5e46c2cccced55266b352f78c262e1b7eb808251882b053f0f7a29c6047ea7",
+        "contentModesHash": "00c8111c29f696535936399cc7ca593ce15e4e5720339d59a7b802125cb4967e",
+        "renderedContextHash": "4685d9e5c137e3d502f0f52827200c0fc11e6a71d5175f42f7781b6907806bf8",
+        "digestHash": "6cbc7bb0685bf4a8286b52d91efc1cd3258adfc7c7a4c5cd33c0d3625e8b98f8",
+        "tokenAccountingHash": "f4a1c5caf96bd1368e67577719c110f05cfb1ec7a9c7ed7ba75a945411bc8cc4"
+      },
+      {
+        "instanceId": "psf__requests-1142",
+        "selectedFilesHash": "a031f5c9149e52c38d4dd5f8b84986736aefbdaa3f7677d45f803cacc1f70e0b",
+        "leadPivot": "requests/models.py",
+        "rolesHash": "f1dd2346f7013374bd05c57bda9ff250ad7bad198ec66ea271444368bcee90f1",
+        "contentModesHash": "f35077872d8162a884d72b741ee0af169b1686ad25e293659c4f36da2780dddc",
+        "renderedContextHash": "fd712e74f3ac145488ce51c7554baf1dc3aa800c4de708ff7a5a3c5924ca2c3a",
+        "digestHash": "70dcfe7e74439162657b10b98c939bd0a636b09520494c8af78c3d96536279d7",
+        "tokenAccountingHash": "a059412723564791b56986e1e6d71ed732ffb2b2a670f6177556ff0eefdd1018"
+      },
+      {
+        "instanceId": "psf__requests-1724",
+        "selectedFilesHash": "345c9eb03c872dfdafe973a7e7544e603f003bfe840ad3820c190caeac5ad1c5",
+        "leadPivot": "requests/api.py",
+        "rolesHash": "5c1f5d497392b51c3ec093139b946017b5ca17a222de913fe042fe521fd9abfd",
+        "contentModesHash": "d7b88f3e9cdac2e5c6761c8dc64fa0b50cd724023cb6927bc3e50dd38bacf238",
+        "renderedContextHash": "f2ed78b04f4a14d7c113bae70f7655b2e87f877bd934695bff37397cd487c4ec",
+        "digestHash": "38c6e64dcea0fd440318fce70ed58224e51d97b41504c96eeea95760f3cbc639",
+        "tokenAccountingHash": "3d10a89e22e9182b110acf7cf94410ab76339a0701e52803430eac24a287172c"
+      },
+      {
+        "instanceId": "pallets__flask-5014",
+        "selectedFilesHash": "b562c949d7dee7d1683906347e2f501fdceecd5979d30beca068c26e298a916c",
+        "leadPivot": "src/flask/blueprints.py",
+        "rolesHash": "4687aa8008f179cd551d80a4b30ff427aa4aa54aaf1556918d81bc5cb48d1eb9",
+        "contentModesHash": "bd4bc96ffbf492ca22cd9a6d94ea642bb54309a8c755b394cd059c0ba02a0497",
+        "renderedContextHash": "10658fcd277cb0067ea35e84c001c6f47ecaa369eea72eeaf394ae2da70fc082",
+        "digestHash": "9f57b4a41f1ac9bb0cc1712b66d96776cb629344f45ef223abbb225b2899af0a",
+        "tokenAccountingHash": "0f8cc2f7083d705edf4a2d06d4eae2ee0c1f6d663c0dec51ce04444f30079aab"
+      },
+      {
+        "instanceId": "astropy__astropy-14539",
+        "selectedFilesHash": "df77a42b9a7a8584765733712fa9af35347255d0d4dfd939c263afc76b67c8c4",
+        "leadPivot": "astropy/io/fits/diff.py",
+        "rolesHash": "91a3ad39e5d8fb542170e68b854e501b82fda20458e6e57ae649cb05bd301f7f",
+        "contentModesHash": "d52f207c4d1fcbe6b54ed86fd4cb57b3d0e9e1813570d35ce55b3536f44adc54",
+        "renderedContextHash": "703858a6c7a05d12335817eb538487f8c2af40b206a806d1cfa8883bc7289741",
+        "digestHash": "a81821eb6ed7783004923245991ccc149c06857e6412819a492154b77df7f85c",
+        "tokenAccountingHash": "69cf089ccb9578aed341eccd394d32e4a17862a5aaab45c9a815b87f892010c1"
+      },
+      {
+        "instanceId": "astropy__astropy-14598",
+        "selectedFilesHash": "ce61bf5c017b5a37d03094a15962b128813ec0cc1bebf65e6ff7adb57dcb0508",
+        "leadPivot": "astropy/io/fits/diff.py",
+        "rolesHash": "ebf0425cafa2a7dcea957d27b08664794a7c0bbcf1f9f73cd66bb96cc7f1da0e",
+        "contentModesHash": "5e5b1e6d3e807a1d1b306d3416b5b847efb167ec592be9b34da8e4e6077f1f1c",
+        "renderedContextHash": "846c3ce4b46f03b1f418d00a3db80e1fbfa668446505b2a344f0b2c21d5732c5",
+        "digestHash": "221ca5c965fa4707af7f93fe4188885bc11aa4643efa17bd2b005aee6f03937d",
+        "tokenAccountingHash": "ad41891563afba10fe4b80686d67e1631067df33046d10ad565a83ea6757da2b"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-24970",
+        "selectedFilesHash": "b2764f2efbfd21cb3094f93518072cbc9388fdb49d22839963396dee73a151b8",
+        "leadPivot": "lib/matplotlib/_api/deprecation.py",
+        "rolesHash": "aeee388e0bf5d891c785733b78309c98c5e07a165467a7d33c23fab6d2dd1340",
+        "contentModesHash": "356e8813c5d3dcf47954709d71e18a987ac0b856d6764fd38a1a23e2327dd8db",
+        "renderedContextHash": "1b781368ae4ff521c3d83a0192d880ca1c20479d8bcb5813dade40c9fc2eef67",
+        "digestHash": "ea527fd76964fa0041be45b84e01cfed8f72f5ed6ca31bed5dcde32d6cf35dc1",
+        "tokenAccountingHash": "61ac71a3b0ea1e5a3554137b076a62edf4a51af2d043ea32407e502c6686a94e"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-25960",
+        "selectedFilesHash": "4d89751d91b412ae66e02ede92881186ebc33ac49111994e8578e1451f32fd44",
+        "leadPivot": "lib/matplotlib/figure.py",
+        "rolesHash": "a0e0765dc896f7b901a8219ac285d24dee4396f31b9a26bd398b47e5762a53d9",
+        "contentModesHash": "ddf3f20553df534d169caaef45d3238084fcb551f88d8a344d175a1efccb37c1",
+        "renderedContextHash": "a2bc6ae94ae03833755501cd2eeba4860705472028fa2e70e3ee5658c5dceb10",
+        "digestHash": "15aafd75bf73c1b185dd821ab793858117081bca448d87da12ecfc04b02c139b",
+        "tokenAccountingHash": "3d10a89e22e9182b110acf7cf94410ab76339a0701e52803430eac24a287172c"
+      },
+      {
+        "instanceId": "mwaskom__seaborn-3187",
+        "selectedFilesHash": "96c5160f2722d199ae4b1412c84fa53e315b7c488872ce2b5e2589ddec9e8f2d",
+        "leadPivot": "seaborn/utils.py",
+        "rolesHash": "888c65d1dedcdec60a3c05fb02835133a7b45a327fd562ef781e46627438e5fd",
+        "contentModesHash": "be1cf9e0a4bc3c1051a61abfec8f8ac54c491033dd174a4ac3b35b0d58689f26",
+        "renderedContextHash": "31d8c49ae0c0c0989128483f08b5b390e981bfda6a26957d421669833f971874",
+        "digestHash": "5d420a3dc1c8cf6cbb24efd128ed51ed9f85e82897656b7832cb0e102382b389",
+        "tokenAccountingHash": "07742a57874507fb4ee9f4253a576146ed4e8e090a8f61bb26282a33cd11606a"
+      },
+      {
+        "instanceId": "psf__requests-5414",
+        "selectedFilesHash": "5e82af05078efd72682dc433825c199dd596bc133b6bc5d4c7b6bdf521f74b01",
+        "leadPivot": "requests/models.py",
+        "rolesHash": "ba0fe3994e25261a73432bdfec746c138f424e1b59c52cc0c96ff844c76c1df3",
+        "contentModesHash": "f9a24dbae7434e9cfda11ac118cd9c305c12f37d3c30e5579193916ce00f7de2",
+        "renderedContextHash": "b224d34fcbb731bcbc29efe8f21772930ae9896ce03de98e89d055c02aa73e2a",
+        "digestHash": "71f5b9adced3c75b5e987cfa19852e9a7cfae414479881b6a403a97e5179d12d",
+        "tokenAccountingHash": "b63af8648820178933b1620686b31a7caa26d63cb00b0ade98dc30bc02dfc2cb"
+      },
+      {
+        "instanceId": "pydata__xarray-2905",
+        "selectedFilesHash": "695c35fb5d051803e89208ec343c4eb1ad8d02fa85ea99289da0f4eafd1d23cb",
+        "leadPivot": "xarray/core/variable.py",
+        "rolesHash": "f7f8da40efffa9e6b14fcc5744413a585cbe1183dd7984efc5b285c1252e4828",
+        "contentModesHash": "ac739c38e811e84d4acf81642cc90866156c1c49cd92b1b72f11113966df6446",
+        "renderedContextHash": "56bcf6152e67c266f34c2e0ef4f5890037bcf9ed892e264b4349d4c0790d2d63",
+        "digestHash": "42b90a7926640203798e66acc791011f3e63ec4b74e505b656fb02638e36eba8",
+        "tokenAccountingHash": "84db611c4111c899869ed1200338119f45d3e347340a6e33d08a32a9e8d7ee1f"
+      },
+      {
+        "instanceId": "pydata__xarray-3677",
+        "selectedFilesHash": "1cee4e4d7ac0a5a9175860a45689a5a31fe9ee69c8d6023079c9118a5402c8f6",
+        "leadPivot": "xarray/core/dataset.py",
+        "rolesHash": "6cc4e379debd7b167018252606202fd4988868a2915583ef7b20fcef98460107",
+        "contentModesHash": "c9075bab3307c2a04aeacaef1cfb3a9c8c9267b09682d137033b3574228997ea",
+        "renderedContextHash": "5877aa962c625729812c76a131a189bdbff8cf25b153aef7d718fd9b1b6b497d",
+        "digestHash": "bd1a877903b6c8da214fd54676a6614abea5c6275ff5d5f194738900076471a9",
+        "tokenAccountingHash": "114fc06098697e2ee35b3782b3f4e2fc5ae75f4f0f10a28e28bb9b46ce103d51"
+      },
+      {
+        "instanceId": "pylint-dev__pylint-8898",
+        "selectedFilesHash": "f852f43059093b6c3fe417232c6d87ffdb64fa684601739932b930c13abab45b",
+        "leadPivot": "pylint/config/config_initialization.py",
+        "rolesHash": "1388a8e9ceb1e5a1eef06ed51347b1cabf7fe575d36d5cba79ea8d8ceaabf8a3",
+        "contentModesHash": "6aef4f300fe6adfeb960fa1cb2b38f58266252913c8e77eaa26940af2531cc7f",
+        "renderedContextHash": "f0815a7f8d551c8d62a9ec0f4284ae817f97384462da38540ac9f709465785dc",
+        "digestHash": "cae4f078bd190fc959685f87dd5efc6aa9ea60051d4bba36510ac67ab63954f9",
+        "tokenAccountingHash": "0ef7f3ab70c66685f93dbaaa88e598c90d5a217b276c40de135993e897c92bd3"
+      },
+      {
+        "instanceId": "pytest-dev__pytest-7432",
+        "selectedFilesHash": "89274c54e4e2d128af6ea7d558e86a62a8d6abb3ec6bc4ced1524cdfb9f46480",
+        "leadPivot": "src/_pytest/skipping.py",
+        "rolesHash": "2234d2b207c90f9b57eb4276d3ccc82016a3586e9a6527b63e3f423a5bf9bb00",
+        "contentModesHash": "251e4bf88b5fe83d04453f3de16cd87d633d537f0d427e93fc940c6efb77f46f",
+        "renderedContextHash": "4eba45ed8569b77a3f80f0f2aa87ea8fb778d015ab6fa88b67d9dfa7dae3540d",
+        "digestHash": "e601ba0a31b5d50c1311b50207ac647ac4d83e9886e11ceec69f8f571bafdc82",
+        "tokenAccountingHash": "4b551615c9bfa0a897f4c4d6169ea170ff042675d3788112f31ab8d665b22387"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7910",
+        "selectedFilesHash": "5a3cbd6d017e67678b34f435de6bac49b29c2007bf75d5c8a0085d1d3e25def4",
+        "leadPivot": "sphinx/ext/autodoc/__init__.py",
+        "rolesHash": "f47c71346057043b2d98aa520b447067be974d5b8fc982c147eaaebc567108d5",
+        "contentModesHash": "3777cdf1abd845b9576f17b4e8713149e97b731b9c1ed7cb63bb27a2c7d22c50",
+        "renderedContextHash": "04461613b637d5051a0a0c98f50a397c32757b9b1e4fa4c49be11b971187bbb1",
+        "digestHash": "49a560224e98df8c404392884a4fcabb94582dfdf01bf0cd62cd7b5eb218986e",
+        "tokenAccountingHash": "32f24a1b46aed5928e6c3b056c10570979f5be3c9c6aa7be90cec765a2303910"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-9230",
+        "selectedFilesHash": "38b6e517bf5b3556b15e7e02d5b6c9ae4c00d5b9c1ab6000eb1766c7c09fe3e4",
+        "leadPivot": "sphinx/pycode/ast.py",
+        "rolesHash": "20e3127e82315dc2acaf4b8884c9c69fb122117e30d9371ad07c27b8327a276c",
+        "contentModesHash": "2f702f53c4ea9064867386c85151cb2bec742bed5b0595a50d887c2c2203c294",
+        "renderedContextHash": "277fa2ce87f4b07fd42f03d0a7a8a87b8ec6c217c8d1b17643500c7b9264a282",
+        "digestHash": "13ad23de25ddb1dabae2d29e1f0b3252908213fed7a77fc1b13fc3b1cf40c170",
+        "tokenAccountingHash": "a27a778216d14ffb06168a96e55ef59d193026625628cdeb99f7805d51751140"
+      },
+      {
+        "instanceId": "sympy__sympy-15599",
+        "selectedFilesHash": "586467b74db21024970a5e90189fc70106ed790641c6735fe0d23b5628e0de3d",
+        "leadPivot": "sympy/core/mod.py",
+        "rolesHash": "0e3932da7820f4f13480e153607a9422a4bb924286bdd9950948f915531f1f82",
+        "contentModesHash": "2b21f233c82702c9afab6ca04f78e0cc2074febd2cec30ea348ce78741e85427",
+        "renderedContextHash": "c78ab0f2f296b1887e5397c44a47e749fba3ed19975710957b7a431795dec15a",
+        "digestHash": "15a9b6599124877daee30a6fde6d2dbb71d7830be639c8384459d45891d0b9fc",
+        "tokenAccountingHash": "f7f847b79fd1d3b8fbb07fc261c0cfe2244dc9b88d88960762209be04fe346b6"
+      },
+      {
+        "instanceId": "sympy__sympy-16766",
+        "selectedFilesHash": "cb19f24e20e8c84fd6c2c04c4b162723469d87530319dcb39d7d6c0c96b6fe77",
+        "leadPivot": "sympy/printing/pycode.py",
+        "rolesHash": "b96d6af9c24868abda8138d6008215be8b8bd0a9e909c616040c0027d235836f",
+        "contentModesHash": "da5e5d80cfb9c414a513a2714becaf83aca760e6eae6257566f9ecc9fb20d163",
+        "renderedContextHash": "9506996e887d17d7857cd82e748ce2f8c3106bd5c491615f0a46df89eb2a6a4f",
+        "digestHash": "396ce6185e8123c0bd634e0a72b25012ef5e3011d05e2c7605f14704b70248e8",
+        "tokenAccountingHash": "d58282b9e0bc4ae512eef018eca8d13a5d971f51dc01b186afbf0d52a6af1534"
+      }
+    ]
+  },
+  "rootCause": {
+    "dominant": "benchmark_measurement_mismatch",
+    "evidence": [
+      "M127 warmed every frozen database with two untimed capsule builds before the timed authoritative call.",
+      "M128 timed the first authoritative call immediately after opening each database.",
+      "Pristine identical-protocol exact-task medians were approximately 859 ms (M127) and 874 ms (M128).",
+      "M129 M128-integration median was 4.099 ms while total exact warm median was 906.378 ms."
+    ],
+    "secondary": [
+      {
+        "category": "duplicate_metadata_loading",
+        "before": "one joined chunk lookup per FTS hit (up to 48)",
+        "after": "one bounded batch lookup"
+      },
+      {
+        "category": "repeated_path_and_objective_work",
+        "before": "candidate paths, task tokens, and comparator affinities recomputed",
+        "after": "request-local normalized path/task/affinity maps"
+      }
+    ],
+    "rejected": [
+      "unconditional document-lane invocation",
+      "full indexed-file path scan",
+      "document FTS dominance",
+      "M126 request-cache bypass",
+      "second database connection"
+    ]
+  },
+  "verdict": "PASS"
+}

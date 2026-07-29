@@ -107,10 +107,15 @@ import {
   type PivotRankResult,
 } from "./pivotRankingV2";
 import { estimateTokens, roundPercent } from "./tokens";
-import { matchPathClues, pathObjectiveAffinity } from "../retrieval/pathScopedRelevance";
+import {
+  createPathRelevanceContext,
+  matchPathCluesWithContext,
+  pathObjectiveAffinityWithContext,
+} from "../retrieval/pathScopedRelevance";
 import {
   retrieveIndexedDocuments,
   type DocumentCandidate,
+  type DocumentIntegrationProfile,
 } from "../documents/documentRetrieval";
 import {
   CapsuleIntent,
@@ -157,10 +162,16 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const capsuleProfile = input.includeTimingDiagnostics === true
     ? { timingsMs: {} as Record<string, number>, counters: {} as Record<string, number> }
     : undefined;
+  const documentProfile: DocumentIntegrationProfile | undefined =
+    input.includeTimingDiagnostics === true
+      ? { timingsMs: {}, counters: {} }
+      : undefined;
   const taskDerivationStarted = performance.now();
   const shaped = shapeSweQuery({
     problemStatement: input.task,
     failToPass: extractFailingTests(input.task),
+  }, {
+    ...(documentProfile === undefined ? {} : { performanceProfile: documentProfile }),
   });
   // Intent planner: detect intent + select the strategy (generators, role policy,
   // budget). The strategy's `role_policy` is the real lever — `debug_refinement`
@@ -172,10 +183,19 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // computed so the diagnostic is present on both the inject and no_context paths.
   const localizationSignals = detectLocalizationSignals(input.db, input.task);
   const plan = planIntent(input.intent, input.task, shaped);
+  const objectiveDecompositionStarted = documentProfile === undefined ? 0 : performance.now();
+  const pathContext = createPathRelevanceContext(
+    input.task,
+    shaped.pathClues ?? [],
+    documentProfile,
+  );
+  recordDocumentTiming(documentProfile, "objective_decomposition", objectiveDecompositionStarted);
   const documentRetrieval = retrieveIndexedDocuments(
     input.db,
     input.task,
     shaped.pathClues ?? [],
+    undefined,
+    { pathContext, ...(documentProfile === undefined ? {} : { profile: documentProfile }) },
   );
   const intent = plan.intent;
   const weights = plan.weights;
@@ -232,12 +252,13 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const hybridRetrievalMs = performance.now() - hybridRetrievalStarted;
   let candidates = retrieval.candidates;
   if (shaped.pathClues !== undefined) {
+    const pathScoringStarted = documentProfile === undefined ? 0 : performance.now();
     candidates = candidates.map((candidate) => {
-      const matches = matchPathClues(candidate.filePath, shaped.pathClues ?? []);
+      const matches = matchPathCluesWithContext(candidate.filePath, pathContext);
       if (matches.length === 0) return candidate;
       const pathScore = Math.max(candidate.scores.path, matches[0]!.score);
       const pathDelta = (pathScore - candidate.scores.path) * weights.path;
-      const objectiveAffinity = pathObjectiveAffinity(candidate.filePath, input.task);
+      const objectiveAffinity = pathObjectiveAffinityWithContext(candidate.filePath, pathContext);
       return {
         ...candidate,
         sources: [...new Set([...candidate.sources, HybridCandidateSource.Path])],
@@ -257,6 +278,9 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       right.scores.final - left.scores.final
       || left.fqName.localeCompare(right.fqName)
       || left.symbolId.localeCompare(right.symbolId));
+    recordDocumentTiming(documentProfile, "path_candidate_retrieval_scoring", pathScoringStarted);
+    incrementDocumentCounter(documentProfile, "candidate_sorts", 1);
+    incrementDocumentCounter(documentProfile, "candidate_array_copies", 1);
   }
   const bodyLiteralMatches = retrieval.bodyLiteralMatches;
 
@@ -637,17 +661,23 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // match distinctive objective words in their paths, preserve those exact
   // mixed objectives as the bounded pivots and demote outside-scope lexical
   // homonyms such as generic Workflow/Snapshot helpers.
-  const scopedObjectives = refined
-    .filter((entry) =>
-      entry.candidate.scores.actionability > 0
-      && (entry.candidate.scores.path >= 0.75)
-      && pathObjectiveAffinity(entry.candidate.filePath, input.task) >= 0.3)
-    .sort((left, right) =>
-      pathObjectiveAffinity(right.candidate.filePath, input.task)
-        - pathObjectiveAffinity(left.candidate.filePath, input.task)
-      || right.candidate.scores.final - left.candidate.scores.final
-      || left.candidate.filePath.localeCompare(right.candidate.filePath)
-      || left.candidate.fqName.localeCompare(right.candidate.fqName));
+  const coverageStarted = documentProfile === undefined ? 0 : performance.now();
+  const scopedObjectives = shaped.pathClues === undefined
+    ? []
+    : refined
+      .filter((entry) => {
+        incrementDocumentCounter(documentProfile, "coverage_candidates_considered", 1);
+        return entry.candidate.scores.actionability > 0
+          && (entry.candidate.scores.path >= 0.75)
+          && pathObjectiveAffinityWithContext(entry.candidate.filePath, pathContext) >= 0.3;
+      })
+      .sort((left, right) =>
+        pathObjectiveAffinityWithContext(right.candidate.filePath, pathContext)
+          - pathObjectiveAffinityWithContext(left.candidate.filePath, pathContext)
+        || right.candidate.scores.final - left.candidate.scores.final
+        || left.candidate.filePath.localeCompare(right.candidate.filePath)
+        || left.candidate.fqName.localeCompare(right.candidate.fqName));
+  if (scopedObjectives.length > 1) incrementDocumentCounter(documentProfile, "candidate_sorts", 1);
   const distinctScopedObjectives = scopedObjectives.filter((entry, index, all) =>
     all.findIndex((candidate) => candidate.candidate.filePath === entry.candidate.filePath) === index);
   if (distinctScopedObjectives.length >= 2 && shaped.pathClues !== undefined) {
@@ -662,6 +692,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       }
     }
   }
+  recordDocumentTiming(documentProfile, "mixed_surface_coverage_selection", coverageStarted);
 
   // Non-source example / doc-data down-rank (general, repo-agnostic). A production
   // context provider prefers real source over docs/examples/sample/fixture files,
@@ -871,6 +902,9 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       localizationSignals,
       explanations: buildNoContextExplanations(refined, shaped),
       compoundTaskRescueUsed,
+      ...(documentProfile === undefined
+        ? {}
+        : { documentIntegrationProfile: finalizeDocumentProfile(documentProfile) }),
       debugDiagnostics: {
         ...debugDiagnostics,
         ...lineAnchorDiagnostics,
@@ -1080,9 +1114,13 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // Truthful file-document candidates share the authoritative selection. They
   // replace only the weakest packed support entries and can never become pivots
   // or graph evidence. This keeps the capsule/item cap fixed.
+  const documentAccountingStarted = documentProfile === undefined ? 0 : performance.now();
   for (const document of documentRetrieval.candidates.slice(0, 2)) {
     if ([...pivots, ...support].some((item) => item.path === document.path)) continue;
+    const documentRenderingStarted = documentProfile === undefined ? 0 : performance.now();
     const item = composeDocumentItem(document);
+    recordDocumentTiming(documentProfile, "document_rendering", documentRenderingStarted);
+    incrementDocumentCounter(documentProfile, "document_items_rendered", 1);
     while (
       support.length > 0
       && (support.length >= maxSupportSlots || usedTokens + item.estimated_tokens > input.maxTokens)
@@ -1092,7 +1130,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         const candidate = support[index]!;
         if (
           candidate.document_kind === undefined
-          && matchPathClues(candidate.path, shaped.pathClues ?? []).length === 0
+          && matchPathCluesWithContext(candidate.path, pathContext).length === 0
         ) {
           removableIndex = index;
           break;
@@ -1115,6 +1153,12 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     support.push(item);
     usedTokens += item.estimated_tokens;
   }
+  recordDocumentTiming(documentProfile, "document_accounting_deduplication", documentAccountingStarted);
+  incrementDocumentCounter(
+    documentProfile,
+    "selected_document_count",
+    support.filter((item) => item.document_kind !== undefined).length,
+  );
 
   // Preserve one directly scoped notebook-verification surface when the task
   // explicitly asks for it. This is relevance-qualified (indexed Python symbol,
@@ -1138,7 +1182,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         if (support.length >= maxSupportSlots) {
           const removableIndex = support.findIndex((candidate) =>
             candidate.document_kind === undefined
-            && matchPathClues(candidate.path, shaped.pathClues ?? []).length === 0);
+            && matchPathCluesWithContext(candidate.path, pathContext).length === 0);
           if (removableIndex >= 0) {
             const [removed] = support.splice(removableIndex, 1);
             if (removed !== undefined) usedTokens -= removed.estimated_tokens;
@@ -1343,6 +1387,11 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         },
         ...(hybridProfile === undefined ? {} : { hybrid_profile: hybridProfile }),
         ...(capsuleProfile === undefined ? {} : { capsule_profile: capsuleProfile }),
+        ...(documentProfile === undefined
+          ? {}
+          : {
+              document_integration_profile: finalizeDocumentProfile(documentProfile),
+            }),
       } : {}),
       pivot_count: pivots.length,
       support_count: support.length,
@@ -1411,6 +1460,47 @@ function recordCapsuleTiming(
   if (profile !== undefined) {
     profile.timingsMs[name] = (profile.timingsMs[name] ?? 0) + performance.now() - started;
   }
+}
+
+function recordDocumentTiming(
+  profile: DocumentIntegrationProfile | undefined,
+  name: string,
+  started: number,
+): void {
+  if (profile !== undefined) {
+    profile.timingsMs[name] = (profile.timingsMs[name] ?? 0) + performance.now() - started;
+  }
+}
+
+function incrementDocumentCounter(
+  profile: DocumentIntegrationProfile | undefined,
+  name: string,
+  delta: number,
+): void {
+  if (profile !== undefined) {
+    profile.counters[name] = (profile.counters[name] ?? 0) + delta;
+  }
+}
+
+function finalizeDocumentProfile(
+  profile: DocumentIntegrationProfile,
+): DocumentIntegrationProfile {
+  const topLevelStages = [
+    "path_clue_extraction",
+    "objective_decomposition",
+    "document_relevance_detection",
+    "document_fts_query",
+    "document_chunk_excerpt_loading",
+    "document_candidate_materialization",
+    "path_candidate_retrieval_scoring",
+    "mixed_surface_coverage_selection",
+    "document_accounting_deduplication",
+  ];
+  profile.timingsMs.m128_integration_total = topLevelStages.reduce(
+    (total, stage) => total + (profile.timingsMs[stage] ?? 0),
+    0,
+  );
+  return profile;
 }
 
 // Project an assembled capsule item onto the minimal view the multi-file co-edit
@@ -1748,6 +1838,7 @@ interface NoContextInput {
   explanations: NoContextExplanation[];
   debugDiagnostics: Partial<CapsuleV2Result["diagnostics"]>;
   compoundTaskRescueUsed: boolean;
+  documentIntegrationProfile?: DocumentIntegrationProfile;
 }
 
 function noContextResult(input: NoContextInput): CapsuleV2Result {
@@ -1776,6 +1867,9 @@ function noContextResult(input: NoContextInput): CapsuleV2Result {
       ...filteredSignalDiagnostics(input.shaped),
       ...lexicalScoringDiagnostics(input.shaped.query),
       ...input.debugDiagnostics,
+      ...(input.documentIntegrationProfile === undefined
+        ? {}
+        : { document_integration_profile: input.documentIntegrationProfile }),
       localization_signals: input.localizationSignals,
       ...(input.explanations.length > 0 ? { no_context_explanations: input.explanations } : {}),
     },

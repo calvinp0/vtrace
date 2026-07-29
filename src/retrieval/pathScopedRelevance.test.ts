@@ -1,7 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
 import { extractEmbeddedPathClues, shapeSweQuery } from "../capsule/sweQueryShaping";
-import { matchPathClues } from "./pathScopedRelevance";
+import {
+  createPathRelevanceContext,
+  matchPathClues,
+  matchPathCluesWithContext,
+  pathObjectiveAffinityWithContext,
+} from "./pathScopedRelevance";
 
 describe("M128 embedded path clues", () => {
   test("retains component-aware subtree, directory, and filename clues in prose", () => {
@@ -29,5 +34,23 @@ describe("M128 embedded path clues", () => {
     expect(extractEmbeddedPathClues("see https://example.test/clients/python/file.py")).toEqual([]);
     expect(extractEmbeddedPathClues("C:\\repo\\clients\\python")).toEqual([]);
     expect(extractEmbeddedPathClues("Traceback at src/file.py:12")[0]?.normalized).toBe("src/file.py");
+  });
+
+  test("reuses normalized candidate paths and task-objective tokens request-locally", () => {
+    const profile = { counters: {} as Record<string, number> };
+    const clues = extractEmbeddedPathClues("clients/python changes and python-client-ci.yml");
+    const context = createPathRelevanceContext(
+      "Update the clients/python workflow snapshot",
+      clues,
+      profile,
+    );
+    expect(matchPathCluesWithContext("clients/python/tests/test_client.py", context)).not.toEqual([]);
+    expect(matchPathCluesWithContext("clients/python/tests/test_client.py", context)).not.toEqual([]);
+    expect(pathObjectiveAffinityWithContext("clients/python/tests/test_client.py", context)).toBe(
+      pathObjectiveAffinityWithContext("clients/python/tests/test_client.py", context),
+    );
+    expect(profile.counters.files_path_scored).toBe(1);
+    expect(profile.counters.path_objective_affinities_computed).toBe(1);
+    expect(profile.counters.path_clue_comparisons).toBe(clues.length * 2);
   });
 });

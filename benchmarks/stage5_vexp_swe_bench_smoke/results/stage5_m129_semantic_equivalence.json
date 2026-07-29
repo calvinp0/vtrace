@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "stage5.m129.semantic-equivalence.v1",
+  "baselineCommit": "81055338670f7d33edf75bf82952e93dc4d8b95a",
+  "currentCommit": "81055338670f7d33edf75bf82952e93dc4d8b95a+m129-working-tree",
+  "cases": 50,
+  "selectedFileDifferences": 0,
+  "leadDifferences": 0,
+  "roleDifferences": 0,
+  "contentModeDifferences": 0,
+  "renderedContextDifferences": 0,
+  "tokenAccountingDifferences": 0,
+  "exactEqual": true,
+  "changedCases": [],
+  "baselineCombinedHash": "c7391169ed6a12abc972875851a66649ea835ee0a7eb1d726d148caaf308d46d",
+  "currentCombinedHash": "c7391169ed6a12abc972875851a66649ea835ee0a7eb1d726d148caaf308d46d",
+  "combinedHash": "c866a23155b09e48549d2acabc542533de6b9ccb092659a0e89de68eeb236e44",
+  "normalizedTimingFieldsExcluded": true,
+  "retrievalEval": {
+    "currentWorkspaceComparedWithPristineM128": "byte-identical",
+    "suites": [
+      20,
+      30
+    ],
+    "committedCsvBaselineDifferences": 3,
+    "committedCsvBaselineNote": "Pre-existing workspace index and committed-baseline drift; not an M129 semantic difference."
+  }
+}

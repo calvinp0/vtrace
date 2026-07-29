@@ -9,7 +9,10 @@ import { listAllEdges } from "../db/repositories/edgesRepository";
 import { listAllSymbols } from "../db/repositories/symbolsRepository";
 import { indexProject } from "../indexer/indexProject";
 import { normalizeGraph } from "../indexer/normalizedGraph";
-import { retrieveIndexedDocuments } from "./documentRetrieval";
+import {
+  retrieveIndexedDocuments,
+  type DocumentIntegrationProfile,
+} from "./documentRetrieval";
 
 const roots: string[] = [];
 afterEach(async () => {
@@ -94,6 +97,49 @@ describe("M128 YAML/TOML document indexing", () => {
       db.close();
     }
   });
+
+  test("gates Python-only work and batch-loads document chunks once", async () => {
+    const root = await fixture();
+    const db = openIndexerDatabase();
+    try {
+      await indexProject({ repoRoot: root, db, refreshMode: "full", parserVersion: "m129", parserConfigFingerprint: "m129" });
+      const skipped = profile();
+      const pythonOnly = retrieveIndexedDocuments(
+        db,
+        "Fix payload serialization in the Python builder.",
+        [],
+        undefined,
+        { profile: skipped },
+      );
+      expect(pythonOnly.invoked).toBe(false);
+      expect(skipped.documentLane).toEqual({
+        attempted: false,
+        reason: "no_supported_document_clue",
+      });
+      expect(skipped.counters.document_fts_queries ?? 0).toBe(0);
+
+      const invoked = profile();
+      const documents = retrieveIndexedDocuments(
+        db,
+        "Find python-client-ci.yml and the pyproject pytest dependencies for clients/python.",
+        extractClues(),
+        undefined,
+        { profile: invoked },
+      );
+      expect(documents.invoked).toBe(true);
+      expect(invoked.documentLane?.attempted).toBe(true);
+      expect(invoked.counters.document_fts_queries).toBe(1);
+      expect(invoked.counters.document_chunk_batch_queries).toBe(1);
+      expect(invoked.counters.document_excerpts_loaded).toBe(invoked.counters.document_chunk_rows_returned);
+      expect(invoked.counters.document_candidates_materialized).toBeGreaterThanOrEqual(2);
+      expect(documents.candidates.map((candidate) => candidate.path)).toContain(
+        ".github/workflows/python-client-ci.yml",
+      );
+      expect(JSON.stringify(invoked)).not.toContain("python -m pytest");
+    } finally {
+      db.close();
+    }
+  });
 });
 
 async function fixture(): Promise<string> {
@@ -121,4 +167,8 @@ function extractClues() {
     { raw: "clients/python", normalized: "clients/python", kind: "path" as const },
     { raw: "pyproject.toml", normalized: "pyproject.toml", kind: "filename" as const },
   ];
+}
+
+function profile(): DocumentIntegrationProfile {
+  return { timingsMs: {}, counters: {} };
 }

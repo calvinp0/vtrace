@@ -288,6 +288,16 @@ export interface CapsuleV2Diagnostics {
       exclusion_reason?: string;
     }>;
   };
+  /** Optional M129 profiler; present only when timing diagnostics are requested. */
+  document_integration_profile?: {
+    timingsMs: Record<string, number>;
+    counters: Record<string, number>;
+    documentLane?: {
+      attempted: boolean;
+      reason: string;
+      trigger?: string[];
+    };
+  };
   /** Non-overlapping M125 clocks; total build remains owned by the caller. */
   stage_timings_ms?: {
     task_derivation: number;

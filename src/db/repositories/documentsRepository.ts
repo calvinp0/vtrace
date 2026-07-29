@@ -50,6 +50,49 @@ export function getDocumentChunk(db: Database, chunkId: string): IndexedDocument
   return row === null ? undefined : rowToChunk(row);
 }
 
+export interface DocumentSearchHit {
+  chunkId: string;
+  filePath: string;
+  rank: number;
+}
+
+export function searchDocumentChunkHits(
+  db: Database,
+  ftsQuery: string,
+  maxRows: number,
+): DocumentSearchHit[] {
+  return db.query(`
+    SELECT chunk_id, file_path_raw, bm25(document_search_fts) AS rank
+    FROM document_search_fts
+    WHERE document_search_fts MATCH ?
+    ORDER BY rank ASC, file_path_raw ASC, chunk_id ASC
+    LIMIT ?
+  `).all(ftsQuery, maxRows).map((value) => {
+    const row = value as Record<string, string | number>;
+    return {
+      chunkId: String(row.chunk_id),
+      filePath: String(row.file_path_raw),
+      rank: Number(row.rank),
+    };
+  });
+}
+
+export function getDocumentChunks(
+  db: Database,
+  chunkIds: readonly string[],
+): Map<string, IndexedDocumentChunk> {
+  if (chunkIds.length === 0) return new Map();
+  const placeholders = chunkIds.map(() => "?").join(", ");
+  const chunks = db.query(`
+    SELECT d.id, d.file_id, f.path, d.kind, d.content_hash, d.document_index_version,
+           d.start_line, d.end_line, d.text, d.key_path, d.truncated
+    FROM document_chunks d JOIN files f ON f.id = d.file_id
+    WHERE d.id IN (${placeholders})
+    ORDER BY d.id
+  `).all(...chunkIds).map(rowToChunk);
+  return new Map(chunks.map((chunk) => [chunk.id, chunk]));
+}
+
 function rowToChunk(value: unknown): IndexedDocumentChunk {
   const row = value as Record<string, string | number>;
   return {

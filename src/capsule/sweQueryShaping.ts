@@ -60,6 +60,10 @@ export interface ShapeSweQueryOptions {
   maxFiles?: number;
   maxSymbols?: number;
   maxIdentifiers?: number;
+  performanceProfile?: {
+    timingsMs: Record<string, number>;
+    counters: Record<string, number>;
+  };
 }
 
 const DEFAULT_OPTIONS = Object.freeze({
@@ -147,7 +151,8 @@ export function shapeSweQuery(
   record: SweIssueRecord,
   options: ShapeSweQueryOptions = {},
 ): ShapedSweQuery {
-  const config = { ...DEFAULT_OPTIONS, ...stripUndefined(options) };
+  const { performanceProfile, ...shapeOptions } = options;
+  const config = { ...DEFAULT_OPTIONS, ...stripUndefined(shapeOptions) };
   const problem = (record.problemStatement ?? "").trim();
   const hints = (record.hintsText ?? "").trim();
   const prose = `${problem}\n${hints}`;
@@ -160,7 +165,14 @@ export function shapeSweQuery(
   // otherwise match REPO_PATH_LIKE and masquerade as edit targets. Strip them
   // before path extraction. Symbol extraction keeps the full prose.
   const prosePaths = stripUrls(prose);
+  const pathClueStarted = performanceProfile === undefined ? 0 : performance.now();
   const pathClues = extractEmbeddedPathClues(prosePaths);
+  if (performanceProfile !== undefined) {
+    performanceProfile.timingsMs.path_clue_extraction =
+      (performanceProfile.timingsMs.path_clue_extraction ?? 0)
+      + performance.now() - pathClueStarted;
+    performanceProfile.counters.path_clues = pathClues.length;
+  }
 
   const rawFiles = dedupeNonEmpty(
     [
