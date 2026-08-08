@@ -11,13 +11,17 @@ import type { SymbolRecord } from "../domain/types";
  * agent can read the relevant relationship inline instead of issuing follow-up
  * Read/Grep calls after the first VTRACE response.
  *
- * Honesty contract: indexed edges carry no call-site line, so excerpts are
- * always derived from a symbol's own indexed line span. We never claim an
- * `edge_site` (an exact call/reference line) we cannot prove. When the whole
- * symbol span fits the line budget we report `symbol_span`; when it is trimmed
- * to a leading window we report `signature` (signature-focused window) or
- * `fallback_symbol_window` (generic head window), never pretending the trimmed
- * window pinpoints the edge site.
+ * Honesty contract: excerpts are always derived from a symbol's own indexed line
+ * span. We never claim an `edge_site` (an exact call/reference line) we cannot
+ * prove. When the whole symbol span fits the line budget we report `symbol_span`;
+ * when it is trimmed to a leading window we report `signature` (signature-focused
+ * window) or `fallback_symbol_window` (generic head window), never pretending the
+ * trimmed window pinpoints the edge site.
+ *
+ * `edge_site` is emitted only when the caller supplies the resolved callee name
+ * (`anchorName`) AND that name occurs as a call inside the symbol's own freshly
+ * loaded span — the occurrence itself is the proof. Without a located occurrence
+ * the excerpt degrades to a head window rather than guessing (M130).
  */
 export interface SourceExcerpt {
   readonly filePath: string;
@@ -60,6 +64,12 @@ export interface BuildSymbolExcerptOptions {
   readonly mode?: SymbolExcerptMode;
   /** Override the emitted line budget. Always clamped to `maxLines`. */
   readonly maxLines?: number;
+  /**
+   * Resolved callee/reference local name. When this name occurs as a call inside
+   * the symbol's own span, the emitted window is centered on that occurrence and
+   * reported as `edge_site`; otherwise the excerpt falls back to a head window.
+   */
+  readonly anchorName?: string;
 }
 
 /**
@@ -126,7 +136,20 @@ export function excerptFromLoadedSymbol(
   }
 
   const fitsBudget = rawLines.length <= budget;
-  const emittedLines = fitsBudget ? rawLines : rawLines.slice(0, budget);
+  // Anchoring only matters when the span must be trimmed: a span that already
+  // fits contains the call site by construction.
+  const anchorOffset = fitsBudget
+    ? null
+    : locateCallSiteOffset(rawLines, options?.anchorName);
+  const windowStartOffset = anchorOffset === null
+    ? 0
+    : Math.min(
+      Math.max(0, anchorOffset - Math.floor((budget - 1) / 2)),
+      Math.max(0, rawLines.length - budget),
+    );
+  const emittedLines = fitsBudget
+    ? rawLines
+    : rawLines.slice(windowStartOffset, windowStartOffset + budget);
 
   let lineTruncated = false;
   const boundedLines = emittedLines.map((line) => {
@@ -141,18 +164,46 @@ export function excerptFromLoadedSymbol(
   const truncated = !fitsBudget || lineTruncated;
   const reason: SourceExcerptReason = fitsBudget
     ? "symbol_span"
-    : mode === "signature"
-      ? "signature"
-      : "fallback_symbol_window";
+    : anchorOffset !== null
+      ? "edge_site"
+      : mode === "signature"
+        ? "signature"
+        : "fallback_symbol_window";
 
   return {
     filePath: symbol.filePath,
-    startLine: symbol.startLine,
-    endLine: symbol.startLine + boundedLines.length - 1,
+    startLine: symbol.startLine + windowStartOffset,
+    endLine: symbol.startLine + windowStartOffset + boundedLines.length - 1,
     text: boundedLines.join("\n"),
     reason,
     truncated,
   };
+}
+
+/**
+ * Index of the first line in the symbol's own span where `anchorName` appears as
+ * a call (`name(`), ignoring attribute access on the left (`obj.name(` still
+ * counts — the resolved edge already told us which symbol that is). Returns null
+ * when no name is supplied or no call occurrence exists, so callers degrade to a
+ * head window instead of asserting an unproven edge site.
+ */
+function locateCallSiteOffset(
+  lines: readonly string[],
+  anchorName: string | undefined,
+): number | null {
+  if (anchorName === undefined || !/^[\p{L}_][\p{L}\p{N}_]*$/u.test(anchorName)) {
+    return null;
+  }
+
+  const pattern = new RegExp(`(?<![\\p{L}\\p{N}_])${anchorName}\\s*\\(`, "u");
+
+  for (let offset = 0; offset < lines.length; offset += 1) {
+    if (pattern.test(lines[offset]!)) {
+      return offset;
+    }
+  }
+
+  return null;
 }
 
 function clampLineBudget(

@@ -122,6 +122,13 @@ export interface LogicFlowSummary {
   readonly maxPaths: number;
   readonly shortestPathEdgeCount: number | null;
   readonly truncated: boolean;
+  /**
+   * True when the bounded traversal stopped expanding before the reachable set
+   * was exhausted. An unreachable result carrying this flag is "not found within
+   * the traversal budget", never "provably not connected" — callers must not
+   * render it as a negative connectivity claim.
+   */
+  readonly traversalLimitReached: boolean;
 }
 
 export interface LogicFlowOutput {
@@ -151,11 +158,15 @@ export interface LogicFlowOutput {
   readonly diagnostics: {
     readonly staticEvidenceOnly: true;
     readonly nodesVisited: number;
+    /** Edges in the filtered graph that were available to the traversal. */
+    readonly edgesAvailable: number;
+    /** Edges actually relaxed by the bounded traversal. */
     readonly edgesInspected: number;
     readonly pathsConsidered: number;
     readonly pathsReturned: number;
     readonly omittedPaths: number;
     readonly omittedEdges: number;
+    readonly traversalLimitReached: boolean;
     readonly limitations: readonly string[];
   };
 }
@@ -182,6 +193,15 @@ const SUPPORTED_EDGE_TYPES = Object.freeze([
   EdgeType.Calls,
 ]);
 
+/**
+ * Edge-relaxation budget for the bounded breadth-first search. This bounds work,
+ * not graph membership: before M130 the same number pre-sliced the repository
+ * edge list, so any repo above the bound lost real edges and answered
+ * "not connected" for relationships it had indexed correctly.
+ */
+export const DEFAULT_TRAVERSAL_EDGE_BUDGET = 20_000;
+export const MAX_TRAVERSAL_EDGE_BUDGET = 200_000;
+
 export function searchLogicFlow(
   db: Database,
   input: SearchLogicFlowInput,
@@ -205,7 +225,7 @@ export function searchLogicFlow(
   const targetResolutionMs = flowElapsed(targetStarted, timingEnabled);
   const maxDepth = Math.min(12, Math.max(0, input.maxDepth ?? 8));
   const maxPaths = Math.min(16, Math.max(1, input.maxPaths));
-  const maxEdges = Math.min(20_000, Math.max(1, input.maxEdges ?? 2_000));
+  const maxEdges = Math.min(MAX_TRAVERSAL_EDGE_BUDGET, Math.max(1, input.maxEdges ?? DEFAULT_TRAVERSAL_EDGE_BUDGET));
   const maxTokens = Math.min(20_000, Math.max(1, input.maxTokens ?? 20_000));
   const traversalStarted = timingEnabled ? performance.now() : 0;
 
@@ -214,17 +234,26 @@ export function searchLogicFlow(
   );
   const allEdges = listAllEdges(db);
   const filteredEdges = filterFlowEdges(db, allEdges, symbolsById, input, options);
-  const boundedEdges = filteredEdges.slice(0, maxEdges);
-  const graph = buildGraph(boundedEdges, symbolsById);
+  // The whole filtered edge set forms the graph. `maxEdges` bounds how many edges
+  // the traversal may relax, never which edges exist: slicing the repository-ordered
+  // edge list before traversal silently deleted real relationships in any repo with
+  // more edges than the bound, and reported the loss as "not connected" (M130).
+  const graph = buildGraph(filteredEdges, symbolsById);
   const callFlowEvidenceAvailable = graph.graphEdgeTypes.has(EdgeType.Calls);
-  const distanceFromStart = computeForwardDistances(resolvedStart.symbol.id, graph.outgoingBySymbolId, maxDepth);
+  const forwardTraversal = computeForwardDistances(resolvedStart.symbol.id, graph.outgoingBySymbolId, maxDepth, maxEdges);
+  const distanceFromStart = forwardTraversal.distances;
   const shortestPathEdgeCount = distanceFromStart.get(resolvedEnd.symbol.id) ?? null;
 
   let returnedPaths: LogicFlowPath[] = [];
   let truncated = false;
+  let traversalLimitReached = forwardTraversal.limitReached;
+  let edgesInspected = forwardTraversal.edgesTraversed;
 
   if (shortestPathEdgeCount !== null) {
-    const distanceToEnd = computeReverseDistances(resolvedEnd.symbol.id, graph.incomingBySymbolId, maxDepth);
+    const reverseTraversal = computeReverseDistances(resolvedEnd.symbol.id, graph.incomingBySymbolId, maxDepth, maxEdges);
+    const distanceToEnd = reverseTraversal.distances;
+    traversalLimitReached = traversalLimitReached || reverseTraversal.limitReached;
+    edgesInspected += reverseTraversal.edgesTraversed;
     const enumeratedStepPaths = enumerateShortestStepPaths(
       resolvedStart.symbol.id,
       resolvedEnd.symbol.id,
@@ -296,6 +325,7 @@ export function searchLogicFlow(
           callFlowEvidenceAvailable,
           callFlowEvidenceUsed,
           crossLanguageEvidenceUsed,
+          traversalLimitReached,
         ),
       },
       summary: {
@@ -304,6 +334,7 @@ export function searchLogicFlow(
         maxPaths: input.maxPaths,
         shortestPathEdgeCount,
         truncated,
+        traversalLimitReached,
       },
       paths: returnedPaths,
       limits: { maxDepth, maxPaths, maxEdges, maxTokens },
@@ -316,15 +347,18 @@ export function searchLogicFlow(
       diagnostics: {
         staticEvidenceOnly: true,
         nodesVisited: distanceFromStart.size,
-        edgesInspected: Math.min(filteredEdges.length, maxEdges),
+        edgesAvailable: filteredEdges.length,
+        edgesInspected,
         pathsConsidered,
         pathsReturned: returnedPaths.length,
         omittedPaths: Math.max(0, pathsConsidered - returnedPaths.length),
-        omittedEdges: Math.max(0, filteredEdges.length - boundedEdges.length),
+        omittedEdges: traversalLimitReached ? Math.max(0, filteredEdges.length - edgesInspected) : 0,
+        traversalLimitReached,
         limitations: [
           "Static repository evidence only; returned paths are not runtime execution traces.",
           "Dynamic dispatch, reflection, monkey patching, and dependency injection are not resolved.",
           "Exact edge-site lines are available only when the target name occurs in a fresh bounded source-symbol excerpt.",
+          "A result with no path means no path was found in the current index within the traversal budget; it is not proof the endpoints are unconnected.",
         ],
       },
     },
@@ -462,38 +496,60 @@ function buildGraph(
   };
 }
 
+interface FlowTraversalResult {
+  readonly distances: ReadonlyMap<string, number>;
+  readonly edgesTraversed: number;
+  readonly limitReached: boolean;
+}
+
 function computeForwardDistances(
   startSymbolId: string,
   outgoingBySymbolId: ReadonlyMap<string, readonly EdgeRecord[]>,
   maxDepth: number,
-): ReadonlyMap<string, number> {
-  return computeDistances(startSymbolId, outgoingBySymbolId, (edge) => edge.dstSymbolId, maxDepth);
+  maxEdges: number,
+): FlowTraversalResult {
+  return computeDistances(startSymbolId, outgoingBySymbolId, (edge) => edge.dstSymbolId, maxDepth, maxEdges);
 }
 
 function computeReverseDistances(
   endSymbolId: string,
   incomingBySymbolId: ReadonlyMap<string, readonly EdgeRecord[]>,
   maxDepth: number,
-): ReadonlyMap<string, number> {
-  return computeDistances(endSymbolId, incomingBySymbolId, (edge) => edge.srcSymbolId, maxDepth);
+  maxEdges: number,
+): FlowTraversalResult {
+  return computeDistances(endSymbolId, incomingBySymbolId, (edge) => edge.srcSymbolId, maxDepth, maxEdges);
 }
 
+/**
+ * Breadth-first distance relaxation bounded by an explicit *traversal* budget.
+ * The budget counts edges actually relaxed, so a bound that bites is reported as
+ * `limitReached` rather than quietly shrinking the graph the search can see.
+ */
 function computeDistances(
   rootSymbolId: string,
   adjacencyBySymbolId: ReadonlyMap<string, readonly EdgeRecord[]>,
   getNextSymbolId: (edge: EdgeRecord) => string,
   maxDepth: number,
-): ReadonlyMap<string, number> {
+  maxEdges: number,
+): FlowTraversalResult {
   const distances = new Map<string, number>([[rootSymbolId, 0]]);
   const queue = [rootSymbolId];
+  let edgesTraversed = 0;
+  let limitReached = false;
 
-  for (let index = 0; index < queue.length; index += 1) {
+  for (let index = 0; index < queue.length && !limitReached; index += 1) {
     const currentSymbolId = queue[index]!;
     const currentDistance = distances.get(currentSymbolId)!;
 
     if (currentDistance >= maxDepth) continue;
 
     for (const edge of adjacencyBySymbolId.get(currentSymbolId) ?? []) {
+      if (edgesTraversed >= maxEdges) {
+        limitReached = true;
+        break;
+      }
+
+      edgesTraversed += 1;
       const nextSymbolId = getNextSymbolId(edge);
 
       if (distances.has(nextSymbolId)) {
@@ -505,7 +561,7 @@ function computeDistances(
     }
   }
 
-  return distances;
+  return { distances, edgesTraversed, limitReached };
 }
 
 function enumerateShortestStepPaths(
@@ -662,15 +718,21 @@ function attachFlowSourceExcerpts(
 ): LogicFlowPath[] {
   const excerptCache = new Map<string, SourceExcerpt | null>();
 
-  const excerptFor = (symbolId: string): SourceExcerpt | null => {
-    const cached = excerptCache.get(symbolId);
+  // Keyed by (edge source, resolved callee name) because the same caller yields a
+  // different anchored window per outgoing edge.
+  const excerptFor = (symbolId: string, anchorName: string | undefined): SourceExcerpt | null => {
+    const cacheKey = `${symbolId}\u0000${anchorName ?? ""}`;
+    const cached = excerptCache.get(cacheKey);
 
     if (cached !== undefined) {
       return cached;
     }
 
-    const excerpt = buildSymbolSourceExcerpt(db, repoRoot, symbolId, { mode: "span" });
-    excerptCache.set(symbolId, excerpt);
+    const excerpt = buildSymbolSourceExcerpt(db, repoRoot, symbolId, {
+      mode: "span",
+      ...(anchorName === undefined ? {} : { anchorName }),
+    });
+    excerptCache.set(cacheKey, excerpt);
     return excerpt;
   };
 
@@ -678,9 +740,22 @@ function attachFlowSourceExcerpts(
     ...path,
     steps: path.steps.map((step, index) => ({
       ...step,
-      sourceExcerpt: index < maxExcerptsPerPath ? excerptFor(step.fromSymbolId) : null,
+      sourceExcerpt: index < maxExcerptsPerPath
+        ? excerptFor(step.fromSymbolId, flowStepAnchorName(step))
+        : null,
     })),
   }));
+}
+
+/**
+ * The name the edge's own resolved relation evidence says was referenced. Used to
+ * anchor the excerpt on the real call site rather than the caller's head window.
+ */
+function flowStepAnchorName(step: LogicFlowStep): string | undefined {
+  const referenceName = step.relation?.evidence.referenceName;
+  return typeof referenceName === "string" && referenceName.length > 0
+    ? referenceName
+    : undefined;
 }
 
 function hasCrossLanguagePythonCythonStep(
@@ -711,6 +786,7 @@ function buildCoverageNotes(
   callFlowEvidenceAvailable: boolean,
   callFlowEvidenceUsed: boolean,
   crossLanguageEvidenceUsed: boolean,
+  traversalLimitReached: boolean,
 ): string[] {
   const notes = [
     "Directed structural path search built from indexed contains, imports, and statically resolved calls edges.",
@@ -745,7 +821,18 @@ function buildCoverageNotes(
   }
 
   if (paths.length === 0) {
-    notes.push(`No indexed structural path was found from ${startSymbol.fqName} to ${endSymbol.fqName}.`);
+    notes.push(
+      `No indexed structural path was found from ${startSymbol.fqName} to ${endSymbol.fqName} in the current index.`,
+    );
+    notes.push(
+      "Static analysis cannot prove two endpoints are unconnected; this states only that the current index contains no such path, and dynamic or unindexed relationships remain possible.",
+    );
+  }
+
+  if (traversalLimitReached) {
+    notes.push(
+      "The bounded traversal stopped before the reachable set was exhausted; raise max_edges or narrow the endpoints before treating any negative result as complete.",
+    );
   }
 
   if (truncated) {

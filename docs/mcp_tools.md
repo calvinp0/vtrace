@@ -187,7 +187,9 @@ Preferred input fields:
 
 - `task`: natural-language task description
 - `preset`: `auto`, `explore`, `debug`, `modify`, or `refactor`
-- `max_tokens`: product-facing budget, mapped to the current character-budgeted capsule engine
+- `max_tokens`: budget for the MODEL-VISIBLE context, in estimated tokens. The complete serialized response is bounded separately; see "Complete-response budgeting" below
+- `detail`: `compact`, `standard` (default), or `debug` — how much diagnostic evidence the response carries
+- `include_item_content`: when true, `productContext.items[]` also carry their own body. Off by default, because every body is already rendered once in `modelVisibleContext`
 - `include_tests`: caller preference; defaults on for debug and off otherwise
 - `include_file_content`: caller preference; `run_pipeline` still returns compact representation metadata rather than raw full-file payloads
 - `observation`: durable observation text to save with the run
@@ -236,6 +238,64 @@ Stale and invalid `get_code_context` responses also include an unresolved
 `productContext`, with freshness diagnostics and measured total latency but no
 fabricated selected-file savings. Multi-repository workspace normalization is
 deferred; those existing outer responses remain unchanged.
+
+### Complete-response budgeting
+
+`max_tokens` bounds the model-visible context. It does not, and never did, bound
+the serialized MCP result — those are two distinct measurements, and both are now
+budgeted.
+
+The complete response must fit `max_tokens + max(1000, 15% of max_tokens)`
+estimated tokens. `responseBudget` reports both figures, the ceiling, the exact
+serialized character length, and what deterministic compaction was applied:
+
+```json
+{
+  "requested_context_tokens": 6000,
+  "estimated_model_visible_tokens": 3316,
+  "estimated_metadata_tokens": 3654,
+  "estimated_total_response_tokens": 6970,
+  "total_response_token_ceiling": 7000,
+  "serialized_response_characters": 27877,
+  "within_envelope": true,
+  "compaction_applied": true,
+  "compacted_fields": ["capsuleResult.pivots[].source", "..."],
+  "diagnostics_detail": "standard"
+}
+```
+
+Token values remain `ceil(characters / 4)` estimates, not tokenizer counts.
+
+The architectural invariant behind the budget is:
+
+```text
+one source-bearing model-visible representation
++ compact structured metadata
++ bounded optional diagnostics
+```
+
+Concretely, `productContext.modelVisibleContext` is the ONLY field carrying
+rendered source. Everything else references it:
+
+- `productContext.items[]` carry identity, roles, content mode, line span,
+  `contentHash` and token estimate — not another copy of the body. Pass
+  `include_item_content: true` to opt back into per-item bodies.
+- `capsuleResult` is a compact manifest. Its `pivots[]`/`support[]` rows have
+  `source` and `signature` set to `null` and point at the rendered context through
+  `contextItemId`.
+- `context` is a compatibility alias carrying `supersededBy: "productContext"`.
+- `pivotNeighborhood[].excerpts[]` carry identity, relation and `textCharacters`;
+  read the source at `path:startLine-endLine`.
+- Large raw retrieval evidence (query variants, lane candidate matrices) is
+  returned as counts. `detail: "debug"` adds bounded samples and still obeys the
+  same hard ceiling.
+
+When a response would exceed its ceiling, compaction runs in a fixed order:
+duplicated bodies, then compatibility representations, then verbose diagnostics,
+then unselected candidate evidence, then neighbourhood and impact/flow evidence.
+The authoritative model-visible context and all freshness, provenance, warning
+and accounting state are never removed. Optional sections dropped by the final
+backstop are named in `compacted_fields` and may be `null`.
 
 ### `run_pipeline`
 
@@ -369,6 +429,33 @@ Coverage is explicit. Each result reports:
 - `callFlowEvidenceAvailable` — whether any statically resolved `calls` edge existed in the indexed graph for the repo. When `false` (for example, a JavaScript-only repo), the result is honest structural containment/import traversal only and does not trace call flow
 - `callFlowEvidenceUsed` — whether a returned path actually traverses a `calls` edge
 
+`max_edges` is a **traversal budget** — the number of edges the bounded search may
+relax. It bounds work, never which edges exist in the graph. When the budget is
+exhausted before the reachable set is, `summary.traversalLimitReached` is `true`
+and `diagnostics` reports `edgesAvailable` against `edgesInspected`.
+
+A result with no path means **no path was found in the current index within the
+traversal budget**. It is never a claim that the endpoints are unconnected: static
+analysis cannot establish that, and dynamic dispatch, reflection and unindexed
+languages all hide real relationships. Through `run_pipeline`/`get_code_context`
+the flow section states the scope of every negative result:
+
+```json
+{
+  "included": false,
+  "skipReason": "no_indexed_path_found",
+  "claimScope": "current_index",
+  "endpointsResolved": true,
+  "verificationRecommended": true
+}
+```
+
+`skipReason` distinguishes `start_endpoint_not_found`, `end_endpoint_not_found`,
+`endpoint_ambiguous`, `index_stale`, `unsupported_language`,
+`no_indexed_path_found`, `traversal_limit_reached`, `not_enough_endpoints`,
+`ambiguous_endpoints` and `unsupported_query_shape`. Each states a fact about the
+search, not about the code.
+
 Each path step may carry an optional bounded `sourceExcerpt` around the edge source (the `from` symbol, where the call/import/reference originates), so you can read the relationship inline instead of issuing a follow-up `Read`. See [Bounded source excerpts](#bounded-source-excerpts) for the field shape and bounds.
 
 Prefer this specialist tool over `run_pipeline` when you already know the exact start and end FQNs.
@@ -390,12 +477,18 @@ interface SourceExcerpt {
 }
 ```
 
+`edge_site` is emitted only when the resolved callee name was actually located as
+a call inside the symbol's own freshly loaded span; the window is then centred on
+that occurrence so a trimmed excerpt still contains the call it describes. When no
+occurrence can be located the excerpt degrades to a head window
+(`fallback_symbol_window`) rather than asserting an unproven edge site.
+
 `reason` is honest about precision:
 
 - `symbol_span` — the symbol's full indexed line span fit the budget and is shown verbatim.
 - `signature` — a signature-focused leading window of a larger symbol (impact dependents).
 - `fallback_symbol_window` — a generic leading window of a larger symbol (flow edge source).
-- `edge_site` — reserved. Indexed edges carry **no** call-site line, so excerpts are derived from a symbol's own span and `edge_site` is never emitted today; the tool never pretends a symbol-window snippet pinpoints an exact call/reference line.
+- `edge_site` — the resolved callee name was located as a call inside the symbol's own span, and the window is centred on that occurrence. The occurrence itself is the proof; without one the excerpt falls back to a head window rather than pretending a symbol-window snippet pinpoints an exact call/reference line.
 
 Bounds (defaults):
 

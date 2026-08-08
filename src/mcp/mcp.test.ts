@@ -1453,6 +1453,61 @@ test("M119 primary product paths share task, selection, roles, estimator, and wo
   });
 });
 
+test("M130 product tools share one source-bearing representation and each stay inside their envelope", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    const initialized = await initRepo({ repoPath: repoRoot });
+    const server = createMcpServer({ context: { repoRoot: initialized.repoRoot } });
+    const input = {
+      task: V2_PIPELINE_QUERY,
+      query: V2_PIPELINE_QUERY,
+      capsule_intent: "modify",
+      max_tokens: 6_000,
+    } as const;
+    const code = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m130-code", toolId: McpToolId.GetCodeContext, input });
+    const capsule = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m130-capsule", toolId: McpToolId.GetContextCapsule, input });
+    const pipeline = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m130-pipeline", toolId: McpToolId.RunPipeline, input });
+    for (const result of [code, capsule, pipeline]) assert.equal(result.result.ok, true);
+
+    const outputs = [code, capsule, pipeline].map((response: any) => response.result.output);
+
+    // One authoritative selection and one authoritative rendered context.
+    for (const output of outputs.slice(1)) {
+      assert.equal(output.productContext.modelVisibleContext, outputs[0].productContext.modelVisibleContext);
+      assert.equal(output.productContext.selectedFileHash, outputs[0].productContext.selectedFileHash);
+      assert.equal(output.productContext.taskHash, outputs[0].productContext.taskHash);
+      assert.equal(output.productContext.leadPivot, outputs[0].productContext.leadPivot);
+      assert.deepEqual(
+        output.productContext.items.map((item: any) => [item.id, item.path, item.roles, item.contentMode]),
+        outputs[0].productContext.items.map((item: any) => [item.id, item.path, item.roles, item.contentMode]),
+      );
+      assert.deepEqual(output.productContext.accounting, outputs[0].productContext.accounting);
+      assert.deepEqual(output.productContext.roleCounts, outputs[0].productContext.roleCounts);
+    }
+
+    // max_tokens bounds the model-visible context, and every tool declares and
+    // respects its own complete-response envelope.
+    for (const output of outputs) {
+      assert.equal(output.responseBudget.requested_context_tokens, 6_000);
+      assert.equal(output.responseBudget.total_response_token_ceiling, 7_000);
+      assert.equal(output.responseBudget.estimated_model_visible_tokens <= 6_000, true);
+      assert.equal(output.responseBudget.within_envelope, true);
+      assert.equal(output.responseBudget.serialized_response_characters, JSON.stringify(output).length);
+    }
+
+    // No wrapper reconstructs a second source-bearing context: the pivot body is
+    // rendered once, and the capsule manifest references it instead of copying it.
+    for (const output of outputs) {
+      for (const item of output.capsuleResult.pivots ?? []) {
+        assert.equal(item.source, null, "capsuleResult must not carry a second copy of the source");
+      }
+      for (const item of output.productContext.items) {
+        assert.equal(item.content, undefined, "items must reference the rendered body, not repeat it");
+      }
+    }
+  });
+});
+
 test("unversioned product tools share one capsule selection and model-visible context", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);
@@ -2262,10 +2317,14 @@ test("get_code_context delegates to the same implementation and output as run_pi
         accounting: undefined,
       },
     });
+    // `responseBudget` measures the emitted bytes, which legitimately differ:
+    // get_code_context overwrites freshness after delegating. Product parity is
+    // asserted over everything else, plus both staying inside their envelope.
     const normalizeFreshnessAndAccounting = (result: typeof getCodeContext.result) => ({
       ...normalizeAccounting(result),
       output: {
         ...normalizeAccounting(result).output,
+        responseBudget: undefined,
         diagnostics: {
           ...normalizeAccounting(result).output.diagnostics,
           indexFreshness: undefined,
@@ -2278,6 +2337,12 @@ test("get_code_context delegates to the same implementation and output as run_pi
     );
     assert.equal(getCodeContext.result.output.diagnostics.indexFreshness.status, "fresh");
     assert.equal(getCodeContext.result.output.diagnostics.indexFreshness.action, "none");
+    assert.equal(getCodeContext.result.output.responseBudget.within_envelope, true);
+    assert.equal(runPipeline.result.output.responseBudget.within_envelope, true);
+    assert.equal(
+      getCodeContext.result.output.responseBudget.requested_context_tokens,
+      runPipeline.result.output.responseBudget.requested_context_tokens,
+    );
   });
 });
 
@@ -3751,6 +3816,7 @@ test("search_logic_flow returns a real bounded structural path view for exact in
       maxPaths: 3,
       shortestPathEdgeCount: 2,
       truncated: false,
+      traversalLimitReached: false,
     });
     assert.deepEqual(
       response.result.output.paths[0]?.nodes.map((node) => node.fqName),

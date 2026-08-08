@@ -1,0 +1,451 @@
+{
+  "schemaVersion": "stage5.m130.flow-and-response-smoke.v1",
+  "noAgents": true,
+  "noDocker": true,
+  "noVexp": true,
+  "noApiCalls": true,
+  "repositoriesMutated": false,
+  "arcSourceReadOnly": true,
+  "tckdbSourceReadOnly": true,
+  "startingCommit": "1678871643c34e184e0fc9f5009a14ed4b7799ee",
+  "rows": [
+    {
+      "id": "arc_direct_calls_edge_persisted",
+      "pass": true,
+      "evidence": "arc/mapping/engine.py::reorder_p_label_map -> arc/mapping/engine.py::map_two_species"
+    },
+    {
+      "id": "arc_flow_included",
+      "pass": true,
+      "evidence": "path length 1"
+    },
+    {
+      "id": "arc_flow_one_edge",
+      "pass": true,
+      "evidence": "1"
+    },
+    {
+      "id": "arc_endpoints_exact",
+      "pass": true,
+      "evidence": "1/1 matches"
+    },
+    {
+      "id": "arc_call_site_in_span",
+      "pass": true,
+      "evidence": "1719-1730"
+    },
+    {
+      "id": "arc_pre_fix_false_negative_reproduced",
+      "pass": true,
+      "evidence": "target edge at position 6891 of 19404; pre-fix slice kept only the first 2000"
+    },
+    {
+      "id": "arc_repo_unmodified",
+      "pass": true,
+      "evidence": "isolated index copy; read-only"
+    },
+    {
+      "id": "negative_reason_no_longer_overclaims",
+      "pass": true,
+      "evidence": "no_indexed_path_found"
+    },
+    {
+      "id": "response_within_envelope",
+      "pass": true,
+      "evidence": "86989 -> 27726 chars (6932/7000 tokens)"
+    },
+    {
+      "id": "response_source_serialized_once",
+      "pass": true,
+      "evidence": "21 -> 0"
+    },
+    {
+      "id": "cross_tool_parity",
+      "pass": true,
+      "evidence": "8 cases, deterministic across repeated builds"
+    },
+    {
+      "id": "frozen_50_semantics_unchanged",
+      "pass": true,
+      "evidence": "50/50 cases, 0 semantic differences"
+    },
+    {
+      "id": "tckdb_acceptance_preserved",
+      "pass": true,
+      "evidence": "lead=clients/python/tests/test_computed_reaction_upload_builder.py; m129-code parity=true"
+    },
+    {
+      "id": "retrieval_eval_byte_identical",
+      "pass": true,
+      "evidence": "stash A/B proof: expanded + cross_repo_30 identical"
+    },
+    {
+      "id": "no_agents_no_docker_no_vexp",
+      "pass": true,
+      "evidence": "static analysis and captured evidence only"
+    }
+  ],
+  "flow": {
+    "schemaVersion": "stage5.m130.arc-flow-acceptance.v1",
+    "repositoryRoot": "/home/calvin/code/ARC",
+    "repositoryHead": "1202705be46edf01c84bfb89e3fa94f76f7ae15e",
+    "repositoryBranch": "arcbench",
+    "repositoryUnmodified": true,
+    "isolatedState": "copy of .vtrace/index.sqlite opened readonly",
+    "task": "How does reorder_p_label_map choose among candidate backbone maps when it calls map_two_species, and why can it not request the candidate consistent with the reactant-side RMG template labelling? I need to understand the data flow from the family template labels through map_two_species candidate selection.",
+    "startFqName": "arc/mapping/engine.py::reorder_p_label_map",
+    "endFqName": "arc/mapping/engine.py::map_two_species",
+    "startMatches": 1,
+    "endMatches": 1,
+    "endpointsUnambiguous": true,
+    "startSymbol": {
+      "id": "f4f8c264680257823e74d73935e4876695a6776065ba133fb0914edd3f2af15b",
+      "filePath": "arc/mapping/engine.py",
+      "startLine": 1702,
+      "endLine": 1732
+    },
+    "endSymbol": {
+      "id": "7beb0565e70f540d67c285293b1660e60ca6a2821e3a41e83d6629a04a7b0ea8",
+      "filePath": "arc/mapping/engine.py",
+      "startLine": 32,
+      "endLine": 137
+    },
+    "edgePersisted": true,
+    "edgesAvailable": 19404,
+    "edgesInspected": 1506,
+    "reachable": true,
+    "shortestPathEdgeCount": 1,
+    "traversalLimitReached": false,
+    "edgeType": "calls",
+    "relationKind": "calls",
+    "relationStrength": "exact",
+    "resolutionMethod": "same_file_or_same_class_call_resolution",
+    "excerptStartLine": 1719,
+    "excerptEndLine": 1730,
+    "excerptReason": "edge_site",
+    "callSiteInExcerpt": true,
+    "preFixSliceSize": 2000,
+    "targetEdgeIndexInRepositoryOrder": 6891,
+    "totalPersistedEdges": 19404,
+    "preFixFalseNegative": true,
+    "pass": true
+  },
+  "responseProfile": {
+    "schemaVersion": "stage5.m130.response-size-equivalence.v1",
+    "fixture": "captured_incident_response",
+    "fixtureCommitted": false,
+    "postFixSectionsSpliced": true,
+    "postFixUncompactedCharacters": 88280,
+    "requestedMaxTokens": 6000,
+    "beforeCharacters": 86989,
+    "afterCharacters": 27726,
+    "beforeEstimatedTokens": 21748,
+    "afterEstimatedTokens": 6932,
+    "modelVisibleTokens": 3316,
+    "metadataTokens": 3616,
+    "ceilingTokens": 7000,
+    "withinEnvelope": true,
+    "compactionApplied": true,
+    "compactedFields": [
+      "accounting",
+      "capsuleResult.actionabilityHints[].evidence",
+      "capsuleResult.digest",
+      "capsuleResult.discarded",
+      "capsuleResult.manifest_only",
+      "capsuleResult.pivots",
+      "capsuleResult.pivots[].evidence",
+      "capsuleResult.pivots[].roleReason",
+      "capsuleResult.pivots[].source",
+      "capsuleResult.support[].evidence"
+    ],
+    "omittedDetailCounts": {
+      "productContextItemBodyCharacters": 8801,
+      "capsuleItemBodyCharacters": 5978,
+      "pivotNeighborhoodExcerptCharacters": 4335,
+      "retrievalSearchEntries": 105,
+      "compaction:productContext.items[].metadata": 69,
+      "productContextItemMetadataKeys": 50,
+      "additionalOmittedDetailKinds": 32
+    },
+    "reductionPercent": 68.13,
+    "performance": {
+      "samples": 40,
+      "uncompactedSerializeMs": 0.167,
+      "compactionMs": 5.177,
+      "compactedSerializeMs": 0.038,
+      "retrievalLatencyImpact": "none; no retrieval, ranking or capsule-packing code path changed",
+      "transportReductionPercent": 68.13
+    },
+    "fields": [
+      {
+        "field": "productContext",
+        "beforeCharacters": 39367,
+        "afterCharacters": 19301
+      },
+      {
+        "field": "capsuleResult",
+        "beforeCharacters": 15604,
+        "afterCharacters": 423
+      },
+      {
+        "field": "diagnostics",
+        "beforeCharacters": 14266,
+        "afterCharacters": 904
+      },
+      {
+        "field": "pivotNeighborhood",
+        "beforeCharacters": 6646,
+        "afterCharacters": 2
+      },
+      {
+        "field": "context",
+        "beforeCharacters": 3680,
+        "afterCharacters": 324
+      },
+      {
+        "field": "deferred",
+        "beforeCharacters": 1520,
+        "afterCharacters": 97
+      },
+      {
+        "field": "flow",
+        "beforeCharacters": 841,
+        "afterCharacters": 1980
+      },
+      {
+        "field": "request",
+        "beforeCharacters": 794,
+        "afterCharacters": 794
+      },
+      {
+        "field": "inspectFirst",
+        "beforeCharacters": 708,
+        "afterCharacters": 350
+      },
+      {
+        "field": "taskSummary",
+        "beforeCharacters": 677,
+        "afterCharacters": 92
+      },
+      {
+        "field": "intent",
+        "beforeCharacters": 555,
+        "afterCharacters": 423
+      },
+      {
+        "field": "memory",
+        "beforeCharacters": 536,
+        "afterCharacters": 314
+      },
+      {
+        "field": "rules",
+        "beforeCharacters": 363,
+        "afterCharacters": 221
+      },
+      {
+        "field": "runtime",
+        "beforeCharacters": 362,
+        "afterCharacters": 362
+      },
+      {
+        "field": "accounting",
+        "beforeCharacters": 317,
+        "afterCharacters": 65
+      },
+      {
+        "field": "impact",
+        "beforeCharacters": 220,
+        "afterCharacters": 220
+      },
+      {
+        "field": "capsule",
+        "beforeCharacters": 150,
+        "afterCharacters": 150
+      },
+      {
+        "field": "authoritativeCapsuleManifestId",
+        "beforeCharacters": 66,
+        "afterCharacters": 66
+      },
+      {
+        "field": "schemaVersion",
+        "beforeCharacters": 22,
+        "afterCharacters": 22
+      },
+      {
+        "field": "savedObservation",
+        "beforeCharacters": 4,
+        "afterCharacters": 4
+      },
+      {
+        "field": "responseBudget",
+        "beforeCharacters": 0,
+        "afterCharacters": 1303
+      }
+    ],
+    "duplicateBodiesBefore": 21,
+    "duplicateBodiesAfter": 0,
+    "modelVisiblePreserved": true,
+    "flowIncluded": true,
+    "gates": {
+      "modelVisibleWithinRequest": true,
+      "totalWithinSevenThousand": true,
+      "totalUnderThirtyTwoThousandCharacters": true
+    },
+    "pass": true,
+    "evidence": "86989 -> 27726 chars (6932/7000 tokens)"
+  },
+  "parity": {
+    "schemaVersion": "stage5.m130.cross-tool-parity.v1",
+    "sharedAuthority": "buildAuthoritativeProductRetrieval",
+    "toolsSharingAuthority": [
+      "get_code_context",
+      "get_context_capsule",
+      "run_pipeline"
+    ],
+    "envelopeMayDiffer": "responseBudget size figures only; get_code_context overwrites freshness after delegating",
+    "wrapperReconstructsSecondContext": false,
+    "cases": 8,
+    "rows": [
+      {
+        "instanceId": "django__django-10880",
+        "selectedFilesHash": "cb028698bb4d8cfebc5e4018845fda2b12c189ff8e5971dd787d4074e754778a",
+        "leadPivot": "django/db/models/aggregates.py",
+        "rolesHash": "9d759f4ba0dfbfeab7ac908b63b6496f940a9781357038dcf5771419b35a4637",
+        "contentModesHash": "29215fe90275b19f499199a3f00ced49dcff652f6b32e3f7f2ede48b6abb1dbf",
+        "renderedContextHash": "f2aeecf5bf83c61ad1c805626c28513247da93c8b791517c07f0bad4dca8ed14",
+        "tokenAccountingHash": "e792661c53724b3193a27619b4b280eaba931776a0ff85353e1a65e84389c2b8",
+        "identical": true
+      },
+      {
+        "instanceId": "django__django-11095",
+        "selectedFilesHash": "847aaa7c2e98c48d4c2c7a2db0a4edaaa11e070f0b601bf15ea1000acffb7f5c",
+        "leadPivot": "django/contrib/admin/options.py",
+        "rolesHash": "2b37dfbf2e4faea711e037cf594249537558dccf58c5dc03d94df3e3ac0283b5",
+        "contentModesHash": "f948f11a4a24146c4876652781036e033d36a6b53a9264642fdf80069e1f3f95",
+        "renderedContextHash": "fc3e2cb45f8acb779700672ddb519324f12c76de7bbae909995478c4e8fc835f",
+        "tokenAccountingHash": "14dd8563a3efe4917f8485e4ab6f4708a8689cd5923e58a23f9da6b6fd76f833",
+        "identical": true
+      },
+      {
+        "instanceId": "django__django-11490",
+        "selectedFilesHash": "3a0117966d831851d667d6083d124302640492c8ddb0615db0332dd331fed1f7",
+        "leadPivot": "django/db/models/sql/compiler.py",
+        "rolesHash": "844cec2cb1ab910547e4c4ad9db7f4cee7971ec80565c791ecd7eebc72ebab60",
+        "contentModesHash": "143d7ea480657c95b471fdf377390cce1129fb2383ec03bd0d4d7dfd50cfefc5",
+        "renderedContextHash": "e05c86b7ec907e29da093dc7fb3de68ca4661b90d046b4636eba9b7a7291d60e",
+        "tokenAccountingHash": "edb79bc4c75667ee7e57e52c6b5096c2ed5aa67023c727b5c573252345a3ccae",
+        "identical": true
+      },
+      {
+        "instanceId": "django__django-11728",
+        "selectedFilesHash": "47a61c708b7ef7283e615a64bb4a9d44069174353a312f91e37a7ace3e07f678",
+        "leadPivot": "django/contrib/admindocs/utils.py",
+        "rolesHash": "a924013c6597de36535a2d5d7430ea98add7ea64580cd93d2497d7cf51cf83ab",
+        "contentModesHash": "4929cb7bbfa368a44bf7e61b0102c1f52613bb7a3cba6fd17abc9bca9aa3e44c",
+        "renderedContextHash": "62b9b544b61ab48c51d9f01881e7326978a66ed1404f7c0abc7d6f77e6d1fc1e",
+        "tokenAccountingHash": "a744eaa9d758a0a04bdd322d75776848a31b105cf6cd9eb06eb2fc875d352766",
+        "identical": true
+      },
+      {
+        "instanceId": "django__django-11740",
+        "selectedFilesHash": "6829fdc2f29f03f2b7244a7cd9385bdc735d7124aa7fa97df6281d272e185d18",
+        "leadPivot": "django/db/migrations/autodetector.py",
+        "rolesHash": "f82a79d71208ac38f1ab610d1e9bb788db5af024e885aa6221e2e4ab68c7a298",
+        "contentModesHash": "8d2358884213559c1e38ca055f9aad5a349cf4c1e2f5bf07f3d4a127c4ef5756",
+        "renderedContextHash": "9d9f0754f5aee23a32b56a30ddb9bcbdbc851ff6b8d221702b1c2aad38626265",
+        "tokenAccountingHash": "2c944e1cddd97cc21e0943e3913eeb5763bcfc7e39283c6649260fc6f1ec882a",
+        "identical": true
+      },
+      {
+        "instanceId": "django__django-10973",
+        "selectedFilesHash": "a69830952ffc4ae5cbd5c778e2fc3f6473d06cc0ad85d494da85efd16e69cdd7",
+        "leadPivot": "db/backends/postgresql/client.py",
+        "rolesHash": "90a4690b643f79444511eafbe500acda8f18d3cbca424a02f7f4c018abb1afa0",
+        "contentModesHash": "d786e145981371474117040c3bf8aba8d25a1542136a7691c3f5e4c6318edf90",
+        "renderedContextHash": "5444af2be6d9e2728cce181dd8bbb4b70b33b7e54c4905391277742a43853afb",
+        "tokenAccountingHash": "b2498b60273a7004d0e62d5dfe5a8de4eb0a6960b5d825286609c6f354c00892",
+        "identical": true
+      },
+      {
+        "instanceId": "django__django-11133",
+        "selectedFilesHash": "ea5a219459bcf658eb2f8d6d9efbfc579be172224a6542924fb980d6a177730b",
+        "leadPivot": "http/response.py",
+        "rolesHash": "35edf01a5e28fda15ecb24bdeb025a160f014c0dda77bfaa548c7a6446fc2322",
+        "contentModesHash": "7647fbfabb094eec047fd100434ffc56d83061b45f01b72d123a7755722a98b0",
+        "renderedContextHash": "0bed27a9fb5c7dbc1f971ca5ebd6d80ce823f006d6f0affb5b3ed599921cd8bc",
+        "tokenAccountingHash": "03f508d45334a1c0ab5e83d1d99c83379ebdb0a8e5dce49338eacfe5e7e51e89",
+        "identical": true
+      },
+      {
+        "instanceId": "django__django-11206",
+        "selectedFilesHash": "fc96fea004ce0cc82bb50d7825270983c7f88cb9711dac07f1cf499d436f1253",
+        "leadPivot": "utils/numberformat.py",
+        "rolesHash": "49f8ae461dd8461bc8c837a59d4adb738d683f9b21024ebe9753b4fe414c0b09",
+        "contentModesHash": "2e9cab054ba36848a7c46c8e69609ff89fc951b0c1f932d8b11d093b13d1c44a",
+        "renderedContextHash": "0ebb7ee79baa10ac6a7614d6d51ddc168024d236d70257f3332473271070ed4d",
+        "tokenAccountingHash": "ad78467aacfad3e026d2bf1b50c20d226fa233185b0e3c7470c8832a86197aaa",
+        "identical": true
+      }
+    ],
+    "mcpLevelParityTest": "src/mcp/mcp.test.ts: M130 product tools share one source-bearing representation",
+    "pass": true,
+    "evidence": "8 cases, deterministic across repeated builds"
+  },
+  "frozen": {
+    "schemaVersion": "stage5.m130.frozen-semantic-equivalence.v1",
+    "baselineCommit": "1678871643c34e184e0fc9f5009a14ed4b7799ee",
+    "cases": 50,
+    "baselineCases": 50,
+    "differences": {
+      "selectedFiles": 0,
+      "lead": 0,
+      "roles": 0,
+      "contentModes": 0,
+      "renderedContext": 0,
+      "digest": 0,
+      "tokenAccounting": 0
+    },
+    "changed": [],
+    "combinedHash": "c7391169ed6a12abc972875851a66649ea835ee0a7eb1d726d148caaf308d46d",
+    "baselineHash": "c7391169ed6a12abc972875851a66649ea835ee0a7eb1d726d148caaf308d46d",
+    "graphEnrichmentChangedSeparately": "flow traversal and excerpt anchoring changed; retrieval selection and packing did not",
+    "pass": true,
+    "evidence": "50/50 cases, 0 semantic differences"
+  },
+  "tckdb": {
+    "schemaVersion": "stage5.m130.tckdb-acceptance.v1",
+    "repositoryRoot": "/home/calvin/code/TCKDB_v2",
+    "repositoryHead": "1ca3e75766e4f5451df50d6cbfc51a2dc2cf704c",
+    "repositoryBranch": "main",
+    "repositoryUnmodified": true,
+    "task": "Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.",
+    "expectedLead": "clients/python/tests/test_computed_reaction_upload_builder.py",
+    "leadPivot": "clients/python/tests/test_computed_reaction_upload_builder.py",
+    "selectedFiles": [
+      "clients/python/tests/test_computed_reaction_upload_builder.py",
+      "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+      "clients/python/src/tckdb_client/builders/kinetics.py",
+      "clients/python/src/tckdb_client/builders/geometry.py",
+      "clients/python/pyproject.toml",
+      ".github/workflows/python-client-ci.yml"
+    ],
+    "requiredFiles": [
+      "clients/python/tests/test_computed_reaction_upload_builder.py",
+      "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+      "clients/python/src/tckdb_client/builders/kinetics.py",
+      "clients/python/src/tckdb_client/builders/calculation.py",
+      "clients/python/pyproject.toml",
+      ".github/workflows/python-client-ci.yml"
+    ],
+    "missingRequiredFiles": [
+      "clients/python/src/tckdb_client/builders/calculation.py"
+    ],
+    "codeBehaviourPreserved": true,
+    "m129RecordedHead": "8f0d84bbf09179c941d4988bab641af69d712d86",
+    "checkoutDrifted": true,
+    "checkoutDriftNote": "TCKDB advanced past the M129-recorded HEAD and clients/python/src/tckdb_client/builders/calculation.py itself changed; at this checkout the sixth slot resolves to a different builder. The M129 code produces the SAME selection on this checkout (codeBehaviourPreserved), so the difference is repository drift, not an M130 regression.",
+    "pass": true
+  },
+  "verdict": "PASS"
+}

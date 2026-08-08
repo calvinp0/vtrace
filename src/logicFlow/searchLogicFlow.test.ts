@@ -135,10 +135,11 @@ test("unreachable symbols return an explicit no-path result", async () => {
       assert.equal(result.summary.pathCount, 0);
       assert.equal(result.summary.shortestPathEdgeCount, null);
       assert.equal(result.summary.truncated, false);
+      assert.equal(result.summary.traversalLimitReached, false);
       assert.deepEqual(result.paths, []);
       assert.equal(
         result.coverage.notes.includes(
-          "No indexed structural path was found from src/beta.ts::beta to src/orphan.ts::orphan.",
+          "No indexed structural path was found from src/beta.ts::beta to src/orphan.ts::orphan in the current index.",
         ),
         true,
       );

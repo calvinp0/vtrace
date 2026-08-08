@@ -72,6 +72,15 @@ export function formatRunPipelineOrchestrationOutput(
   const flowSection = {
     included: flow.included,
     skipReason: flow.skipReason,
+    // A negative flow result is a statement about this index and this search, not
+    // about the code. These three fields keep that boundary explicit in the wire
+    // shape so no consumer can render "not found" as "not connected" (M130).
+    claimScope: flow.claimScope,
+    endpointsResolved: flow.endpointsResolved,
+    verificationRecommended: flow.verificationRecommended,
+    endpointDiagnostic: flow.endpointDiagnostic === null
+      ? null
+      : structuredClone(flow.endpointDiagnostic),
     endpointStrategy: flow.endpointStrategy,
     bothDirectionsReachable: flow.bothDirectionsReachable,
     start: flow.start === null ? null : formatRunPipelineFlowEndpoint(flow.start),
@@ -286,9 +295,13 @@ export function formatRunPipelineOrchestrationOutput(
       flow: {
         included: flow.included,
         skipReason: flow.skipReason,
+        claimScope: flow.claimScope,
+        endpointsResolved: flow.endpointsResolved,
+        verificationRecommended: flow.verificationRecommended,
         endpointStrategy: flow.endpointStrategy,
         bothDirectionsReachable: flow.bothDirectionsReachable,
         reachable: flow.output === null ? null : flow.output.summary.reachable,
+        traversalLimitReached: flow.output === null ? null : flow.output.summary.traversalLimitReached,
         candidatesConsidered: flow.candidatesConsidered,
         matchedCandidates: flow.matchedCandidates,
       },

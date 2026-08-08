@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "stage5.m130.frozen-semantic-equivalence.v1",
+  "baselineCommit": "1678871643c34e184e0fc9f5009a14ed4b7799ee",
+  "cases": 50,
+  "baselineCases": 50,
+  "differences": {
+    "selectedFiles": 0,
+    "lead": 0,
+    "roles": 0,
+    "contentModes": 0,
+    "renderedContext": 0,
+    "digest": 0,
+    "tokenAccounting": 0
+  },
+  "changed": [],
+  "combinedHash": "c7391169ed6a12abc972875851a66649ea835ee0a7eb1d726d148caaf308d46d",
+  "baselineHash": "c7391169ed6a12abc972875851a66649ea835ee0a7eb1d726d148caaf308d46d",
+  "graphEnrichmentChangedSeparately": "flow traversal and excerpt anchoring changed; retrieval selection and packing did not",
+  "pass": true,
+  "evidence": "50/50 cases, 0 semantic differences"
+}

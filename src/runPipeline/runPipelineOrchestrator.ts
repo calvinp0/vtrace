@@ -37,9 +37,12 @@ import { buildInspectFirst, type InspectFirst } from "./inspectFirst";
 import { getImpactGraph, type ImpactGraphOutput } from "../impact/getImpactGraph";
 import { impactGraphToDigestSeam } from "../impact/impactDigestSeam";
 import {
+  LOGIC_FLOW_ERROR_CODE,
   searchLogicFlow,
+  type LogicFlowError,
   type LogicFlowOutput,
 } from "../logicFlow/searchLogicFlow";
+import { detectLanguage } from "../fs/languageDetection";
 import {
   defaultIntentClassifier,
   type IntentClassifier,
@@ -65,7 +68,7 @@ import type {
   RetrievalPathSignalDiagnostics,
   SymbolSearchResult,
 } from "../retrieval/types";
-import type { SymbolKind } from "../domain/types";
+import { Language, type SymbolKind } from "../domain/types";
 import { createCharacterBudget } from "../capsule/budget";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import {
@@ -93,6 +96,7 @@ import {
   RunPipelineContextSkipReason,
   RunPipelineDeferredKind,
   RunPipelineDurableMemorySkipReason,
+  RunPipelineFlowClaimScope,
   RunPipelineFlowEndpointStrategy,
   RunPipelineFlowSkipReason,
   RunPipelineImpactSkipReason,
@@ -203,6 +207,21 @@ export interface OrchestrationFlowSection {
   readonly output: LogicFlowOutput | null;
   readonly candidatesConsidered: number;
   readonly matchedCandidates: number;
+  /**
+   * Scope of a negative result. Always `current_index` when a search actually
+   * ran; null when no search was attempted. Never widens to a semantic claim.
+   */
+  readonly claimScope: RunPipelineFlowClaimScope | null;
+  /** Whether both endpoints resolved to exactly one indexed symbol each. */
+  readonly endpointsResolved: boolean;
+  /** True whenever a negative result should be confirmed by reading the source. */
+  readonly verificationRecommended: boolean;
+  /** Structured detail behind an endpoint-resolution failure, when one occurred. */
+  readonly endpointDiagnostic: {
+    readonly field: "start" | "end";
+    readonly symbolFqn: string;
+    readonly matchingSymbolIds: readonly string[];
+  } | null;
 }
 
 export interface OrchestrationSessionSection {
@@ -1059,7 +1078,85 @@ const EMPTY_FLOW_RESULT = Object.freeze({
   start: null,
   end: null,
   output: null,
+  claimScope: null,
+  endpointsResolved: false,
+  verificationRecommended: true,
+  endpointDiagnostic: null,
 });
+
+/**
+ * Languages this build extracts `calls` edges for. An endpoint outside this set
+ * cannot produce call-flow evidence, so a missing path there is a coverage gap
+ * (`unsupported_language`), not an absence of relationship.
+ */
+const FLOW_CALL_EDGE_LANGUAGES: ReadonlySet<Language> = new Set([
+  Language.Python,
+  Language.TypeScript,
+  Language.Cython,
+]);
+
+function flowEndpointLanguageUnsupported(
+  start: OrchestrationFlowEndpoint,
+  end: OrchestrationFlowEndpoint,
+): boolean {
+  return !FLOW_CALL_EDGE_LANGUAGES.has(detectLanguage(start.filePath))
+    || !FLOW_CALL_EDGE_LANGUAGES.has(detectLanguage(end.filePath));
+}
+
+/**
+ * Translate an engine-level endpoint-resolution failure into a truthful product
+ * reason. These say which endpoint failed and why, instead of collapsing into a
+ * single "not connected" verdict.
+ */
+function flowSkipReasonForEngineError(
+  error: LogicFlowError,
+): { reason: RunPipelineFlowSkipReason; endpointDiagnostic: OrchestrationFlowSection["endpointDiagnostic"] } {
+  const details = error.details as {
+    field?: unknown;
+    symbolFqn?: unknown;
+    matchingSymbolIds?: unknown;
+  };
+  const field = details.field === "end" ? "end" : "start";
+  const endpointDiagnostic = {
+    field,
+    symbolFqn: typeof details.symbolFqn === "string" ? details.symbolFqn : "",
+    matchingSymbolIds: Array.isArray(details.matchingSymbolIds)
+      ? details.matchingSymbolIds.filter((value): value is string => typeof value === "string")
+      : [],
+  } as const;
+
+  switch (error.code) {
+    case LOGIC_FLOW_ERROR_CODE.UnknownStart:
+      return { reason: RunPipelineFlowSkipReason.StartEndpointNotFound, endpointDiagnostic };
+    case LOGIC_FLOW_ERROR_CODE.UnknownEnd:
+      return { reason: RunPipelineFlowSkipReason.EndEndpointNotFound, endpointDiagnostic };
+    case LOGIC_FLOW_ERROR_CODE.AmbiguousStart:
+    case LOGIC_FLOW_ERROR_CODE.AmbiguousEnd:
+      return { reason: RunPipelineFlowSkipReason.EndpointAmbiguous, endpointDiagnostic };
+    default:
+      return { reason: RunPipelineFlowSkipReason.FlowError, endpointDiagnostic: null };
+  }
+}
+
+/**
+ * The reason for a resolved-but-pathless search. Truncated traversal and
+ * unsupported endpoint languages are reported as themselves so the caller can
+ * tell "we ran out of budget" and "we cannot see this language" apart from
+ * "we looked everywhere in this index and found nothing".
+ */
+function flowNegativeReason(
+  output: LogicFlowOutput | null,
+  start: OrchestrationFlowEndpoint,
+  end: OrchestrationFlowEndpoint,
+): RunPipelineFlowSkipReason {
+  if (output !== null && output.summary.traversalLimitReached) {
+    return RunPipelineFlowSkipReason.TraversalLimitReached;
+  }
+  if (flowEndpointLanguageUnsupported(start, end)) {
+    return RunPipelineFlowSkipReason.UnsupportedLanguage;
+  }
+  return RunPipelineFlowSkipReason.NoIndexedPathFound;
+}
 
 function runFlowSection(
   db: Database,
@@ -1148,27 +1245,35 @@ function runFlowSection(
     const start = cue === "forward" ? earlier : later;
     const end = cue === "forward" ? later : earlier;
     const result = probe(start, end);
-    if (!result.ok) {
+    if (result.ok === false) {
+      const mapped = flowSkipReasonForEngineError(result.error);
       return finalize({
         included: false,
-        skipReason: RunPipelineFlowSkipReason.FlowError,
+        skipReason: mapped.reason,
         endpointStrategy: RunPipelineFlowEndpointStrategy.DirectionalCue,
         bothDirectionsReachable: false,
         start,
         end,
         output: null,
+        claimScope: RunPipelineFlowClaimScope.CurrentIndex,
+        endpointsResolved: false,
+        verificationRecommended: true,
+        endpointDiagnostic: mapped.endpointDiagnostic,
       });
     }
+    const reachable = result.output.summary.reachable;
     return finalize({
-      included: result.output.summary.reachable,
-      skipReason: result.output.summary.reachable
-        ? null
-        : RunPipelineFlowSkipReason.EndpointsNotConnected,
+      included: reachable,
+      skipReason: reachable ? null : flowNegativeReason(result.output, start, end),
       endpointStrategy: RunPipelineFlowEndpointStrategy.DirectionalCue,
       bothDirectionsReachable: false,
       start,
       end,
       output: result.output,
+      claimScope: RunPipelineFlowClaimScope.CurrentIndex,
+      endpointsResolved: true,
+      verificationRecommended: !reachable,
+      endpointDiagnostic: null,
     });
   }
 
@@ -1176,15 +1281,20 @@ function runFlowSection(
   const forward = probe(earlier, later);
   const reverse = probe(later, earlier);
 
-  if (!forward.ok && !reverse.ok) {
+  if (forward.ok === false && reverse.ok === false) {
+    const mapped = flowSkipReasonForEngineError(forward.error);
     return finalize({
       included: false,
-      skipReason: RunPipelineFlowSkipReason.FlowError,
+      skipReason: mapped.reason,
       endpointStrategy: RunPipelineFlowEndpointStrategy.BidirectionalProbe,
       bothDirectionsReachable: false,
       start: earlier,
       end: later,
       output: null,
+      claimScope: RunPipelineFlowClaimScope.CurrentIndex,
+      endpointsResolved: false,
+      verificationRecommended: true,
+      endpointDiagnostic: mapped.endpointDiagnostic,
     });
   }
 
@@ -1202,6 +1312,10 @@ function runFlowSection(
       start: earlier,
       end: later,
       output: (forward as { output: LogicFlowOutput }).output,
+      claimScope: RunPipelineFlowClaimScope.CurrentIndex,
+      endpointsResolved: true,
+      verificationRecommended: false,
+      endpointDiagnostic: null,
     });
   }
 
@@ -1214,19 +1328,31 @@ function runFlowSection(
       start: later,
       end: earlier,
       output: (reverse as { output: LogicFlowOutput }).output,
+      claimScope: RunPipelineFlowClaimScope.CurrentIndex,
+      endpointsResolved: true,
+      verificationRecommended: false,
+      endpointDiagnostic: null,
     });
   }
 
-  // Neither direction connects: keep the position-order attempt as evidence.
+  // Neither direction found a path: keep the position-order attempt as evidence.
+  // One direction may have failed endpoint resolution while the other ran; report
+  // the resolution failure, since that is the stronger statement about the search.
   const representative = forward.ok ? forward.output : reverse.ok ? reverse.output : null;
+  const failedProbe = forward.ok === false ? forward : reverse.ok === false ? reverse : null;
+  const mapped = failedProbe === null ? null : flowSkipReasonForEngineError(failedProbe.error);
   return finalize({
     included: false,
-    skipReason: RunPipelineFlowSkipReason.EndpointsNotConnected,
+    skipReason: mapped?.reason ?? flowNegativeReason(representative, earlier, later),
     endpointStrategy: RunPipelineFlowEndpointStrategy.BidirectionalProbe,
     bothDirectionsReachable: false,
     start: earlier,
     end: later,
     output: representative,
+    claimScope: RunPipelineFlowClaimScope.CurrentIndex,
+    endpointsResolved: mapped === null,
+    verificationRecommended: true,
+    endpointDiagnostic: mapped?.endpointDiagnostic ?? null,
   });
 }
 

@@ -83,6 +83,7 @@ import {
   RunPipelineDeferredKind,
   RunPipelineDurableMemorySkipReason,
   RunPipelineEditGoal,
+  RunPipelineFlowSkipReason,
   RunPipelineImpactSkipReason,
   RunPipelineIntentSource,
   RunPipelinePresetIntent,
@@ -100,6 +101,15 @@ import {
 } from "../runPipeline/deferredVexpStore";
 import { resolveDeferredVexpRef } from "../runPipeline/expandDeferredVexpRef";
 import {
+  compactProductResponse,
+  isMcpResponseDetail,
+  McpResponseDetail,
+  remeasureResponseBudget,
+  type ResponseBudgetAccounting,
+} from "./responseEnvelope";
+import {
+  DEFAULT_TRAVERSAL_EDGE_BUDGET,
+  MAX_TRAVERSAL_EDGE_BUDGET,
   searchLogicFlow,
   type LogicFlowOutput,
 } from "../logicFlow/searchLogicFlow";
@@ -474,7 +484,7 @@ const SOURCE_EXCERPT_SCHEMA: McpSchemaProperty = {
     filePath: stringProperty("Normalized repo-relative file path of the excerpt."),
     startLine: integerProperty("1-based first line of the excerpt."),
     endLine: integerProperty("1-based last line of the excerpt."),
-    text: stringProperty("Bounded excerpt text (never a whole file)."),
+    text: stringProperty("Bounded excerpt text (never a whole file). Omitted on the MCP surface; see textCharacters and read path:startLine-endLine."),
     reason: stringProperty("Why this excerpt was chosen: symbol_span (full symbol fit the budget), signature (signature-focused head window), fallback_symbol_window (generic trimmed head window), or edge_site (reserved; exact edge-site lines are not currently available)."),
     truncated: booleanProperty("Whether the excerpt was trimmed by the line or per-line character budget."),
   },
@@ -714,8 +724,9 @@ const LOGIC_FLOW_SUMMARY_SCHEMA = objectProperty(
       description: "Shortest directed structural path length in edges when reachable.",
     },
     truncated: booleanProperty("Whether additional shortest paths were omitted after reaching maxPaths."),
+    traversalLimitReached: booleanProperty("Whether the bounded traversal stopped before exhausting the reachable set. An unreachable result carrying this flag means 'not found within budget', never 'not connected'."),
   },
-  ["reachable", "pathCount", "maxPaths", "shortestPathEdgeCount", "truncated"],
+  ["reachable", "pathCount", "maxPaths", "shortestPathEdgeCount", "truncated", "traversalLimitReached"],
 );
 
 const RUN_PIPELINE_IMPACT_SUMMARY_SCHEMA = objectProperty(
@@ -1632,18 +1643,14 @@ const RUN_PIPELINE_COMPACT_CONTEXT_ITEM_SCHEMA = objectProperty(
     graphScore: numberProperty("Graph score when available."),
     finalScore: numberProperty("Final score when available."),
   },
+  // Only identity, role and representation mode are guaranteed. On the MCP
+  // surface this legacy section is a compatibility alias reduced to references;
+  // productContext.items is the authoritative per-item record (M130).
   [
-    "symbolId",
     "filePath",
     "fqName",
-    "localName",
-    "kind",
     "role",
     "contentMode",
-    "inclusionReasons",
-    "budgetCost",
-    "compressed",
-    "sourceBacked",
   ],
 );
 
@@ -1730,6 +1737,8 @@ const RUN_PIPELINE_CONTEXT_SECTION_SCHEMA = objectProperty(
     },
     pivots: arrayProperty("Compact pivot items.", RUN_PIPELINE_COMPACT_CONTEXT_ITEM_SCHEMA),
     supports: arrayProperty("Compact supporting items.", RUN_PIPELINE_COMPACT_CONTEXT_ITEM_SCHEMA),
+    supersededBy: stringProperty("Field that carries the authoritative form of this section. Always `productContext` on the MCP surface."),
+    note: stringProperty("Why this section is a compatibility alias rather than a second selection representation."),
     itemCount: integerProperty("Total number of context items surfaced (pivots + supports)."),
     compressed: booleanProperty("Whether any context item was compressed to a reduced mode."),
     truncated: booleanProperty("Whether the capsule was truncated by the budget."),
@@ -1870,7 +1879,28 @@ const RUN_PIPELINE_FLOW_SECTION_SCHEMA = objectProperty(
     included: booleanProperty("Whether a reachable directed structural flow was included."),
     skipReason: {
       type: ["string", "null"],
-      description: "Why the flow section was omitted, when applicable.",
+      description: `Why the flow section carries no path, when applicable. One of: ${Object.values(RunPipelineFlowSkipReason).join(", ")}. These describe the search, never the code: VTRACE does not claim two symbols are unconnected.`,
+    },
+    claimScope: {
+      type: ["string", "null"],
+      description: "Scope a negative result is claimed over. Always `current_index` once a search ran; VTRACE never claims semantic disconnection.",
+    },
+    endpointsResolved: booleanProperty(
+      "Whether both endpoints resolved to exactly one indexed symbol each.",
+    ),
+    verificationRecommended: booleanProperty(
+      "Whether the caller should confirm a negative result by reading the source before relying on it.",
+    ),
+    endpointDiagnostic: {
+      type: ["object", "null"],
+      description: "Which endpoint failed to resolve and what it matched, when endpoint resolution failed.",
+      properties: {
+        field: stringProperty("Which endpoint failed: start or end."),
+        symbolFqn: stringProperty("The endpoint name that was resolved."),
+        matchingSymbolIds: arrayProperty("Indexed symbol ids matched, when the name was ambiguous.", stringProperty("Symbol id.")),
+      },
+      required: ["field", "symbolFqn", "matchingSymbolIds"],
+      additionalProperties: false,
     },
     endpointStrategy: {
       type: ["string", "null"],
@@ -1893,8 +1923,9 @@ const RUN_PIPELINE_FLOW_SECTION_SCHEMA = objectProperty(
           description: "Shortest directed structural path length in edges when reachable.",
         },
         truncated: booleanProperty("Whether additional shortest paths were omitted after reaching maxPaths."),
+        traversalLimitReached: booleanProperty("Whether the bounded traversal stopped before exhausting the reachable set."),
       },
-      required: ["reachable", "pathCount", "maxPaths", "shortestPathEdgeCount", "truncated"],
+      required: ["reachable", "pathCount", "maxPaths", "shortestPathEdgeCount", "truncated", "traversalLimitReached"],
       additionalProperties: false,
     },
     paths: {
@@ -1912,6 +1943,10 @@ const RUN_PIPELINE_FLOW_SECTION_SCHEMA = objectProperty(
   [
     "included",
     "skipReason",
+    "claimScope",
+    "endpointsResolved",
+    "verificationRecommended",
+    "endpointDiagnostic",
     "endpointStrategy",
     "bothDirectionsReachable",
     "start",
@@ -2174,8 +2209,14 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
         included: booleanProperty("Whether a reachable structural flow was included."),
         skipReason: {
           type: ["string", "null"],
-          description: "Why the flow section was omitted, when applicable.",
+          description: "Why the flow section carries no path, when applicable.",
         },
+        claimScope: {
+          type: ["string", "null"],
+          description: "Scope a negative result is claimed over; always `current_index` once a search ran.",
+        },
+        endpointsResolved: booleanProperty("Whether both endpoints resolved to exactly one indexed symbol each."),
+        verificationRecommended: booleanProperty("Whether a negative result should be verified against the source."),
         endpointStrategy: {
           type: ["string", "null"],
           description: "How directed endpoints were resolved, when evaluated.",
@@ -2185,15 +2226,23 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
           type: ["boolean", "null"],
           description: "Whether the chosen directed flow was reachable, when a flow was attempted.",
         },
+        traversalLimitReached: {
+          type: ["boolean", "null"],
+          description: "Whether the bounded traversal budget was exhausted before the search completed.",
+        },
         candidatesConsidered: integerProperty("Number of conservative endpoint candidates considered."),
         matchedCandidates: integerProperty("Number of task-mentioned endpoint candidates."),
       },
       [
         "included",
         "skipReason",
+        "claimScope",
+        "endpointsResolved",
+        "verificationRecommended",
         "endpointStrategy",
         "bothDirectionsReachable",
         "reachable",
+        "traversalLimitReached",
         "candidatesConsidered",
         "matchedCandidates",
       ],
@@ -2312,6 +2361,7 @@ const RUN_PIPELINE_DEFERRED_SECTION_SCHEMA = objectProperty(
   {
     items: arrayProperty("Deferred items emitted by this pipeline run.", RUN_PIPELINE_DEFERRED_ITEM_SCHEMA),
     expandable: booleanProperty("Whether at least one deferred item is expandable."),
+    omittedItemCount: integerProperty("Deferred items dropped by response compaction, when any."),
     expansionTool: {
       type: ["string", "null"],
       description: "Expansion tool to use when expandable.",
@@ -7129,6 +7179,7 @@ const CONTEXT_ACCOUNTING_SCHEMA = objectProperty(
     uniqueFilesCounted: integerProperty("Count of unique files actually read for the naive baseline."),
     method: stringProperty("Estimation method. Always `chars_div_4` — an approximation, not a tokenizer."),
     baseline: stringProperty("Explicit wording of the naive comparison baseline."),
+    ref: stringProperty("Field carrying the authoritative accounting, when this block was reduced to a reference."),
     skippedFiles: arrayProperty(
       "Files that could not be counted (missing/unreadable/outside repo), when any.",
       objectProperty(
@@ -7141,15 +7192,48 @@ const CONTEXT_ACCOUNTING_SCHEMA = objectProperty(
       ),
     ),
   },
+  // Only latency is guaranteed. Response compaction may reduce this block to
+  // `{latencyMs, ref}` when productContext.accounting already carries the same
+  // figures and the total-response budget is tight (M130).
+  ["latencyMs"],
+);
+
+// M130 complete-response budgeting. `max_tokens` bounds the model-visible context;
+// this block reports the SECOND, distinct measurement — the whole serialized
+// result — and what deterministic compaction was applied to keep it in the
+// documented envelope.
+const RESPONSE_BUDGET_SCHEMA = objectProperty(
+  "Complete-response budget accounting. Model-visible context and total serialized response are measured separately; both figures are chars/4 estimates, never tokenizer counts.",
+  {
+    envelopeVersion: stringProperty("Response-envelope contract version."),
+    requested_context_tokens: integerProperty("The caller's max_tokens context budget."),
+    estimated_model_visible_tokens: integerProperty("Estimated tokens of productContext.modelVisibleContext — the only source-bearing field."),
+    estimated_metadata_tokens: integerProperty("Estimated tokens of everything else in the response."),
+    estimated_total_response_tokens: integerProperty("Estimated tokens of the complete serialized result."),
+    total_response_token_ceiling: integerProperty("Documented ceiling: requested tokens plus a metadata allowance of max(1000, 15%)."),
+    serialized_response_characters: integerProperty("Exact character length of the complete serialized result."),
+    within_envelope: booleanProperty("Whether the complete response fits the documented ceiling."),
+    compaction_applied: booleanProperty("Whether deterministic compaction ran because the bounded default shape still exceeded the ceiling."),
+    compacted_fields: arrayProperty("Fields reduced to references or counts, in deterministic order.", stringProperty("Field path.")),
+    omitted_detail_counts: { type: "object", description: "What was omitted and how much of it.", additionalProperties: true },
+    expansion_available: { type: "object", description: "Where omitted detail can be obtained instead.", additionalProperties: true },
+    diagnostics_detail: stringProperty("Applied detail level: compact, standard, or debug."),
+    estimate_method: stringProperty("Always `chars_div_4` — an approximation, not a tokenizer."),
+    notes: arrayProperty("Boundary statements about these figures.", stringProperty("Note.")),
+  },
   [
-    "latencyMs",
-    "estimatedOutputTokens",
-    "estimatedNaiveFullFileTokens",
-    "estimatedTokensSavedVsNaiveFullFile",
-    "estimatedSavingsPercentVsNaiveFullFile",
-    "uniqueFilesCounted",
-    "method",
-    "baseline",
+    "envelopeVersion",
+    "requested_context_tokens",
+    "estimated_model_visible_tokens",
+    "estimated_metadata_tokens",
+    "estimated_total_response_tokens",
+    "total_response_token_ceiling",
+    "serialized_response_characters",
+    "within_envelope",
+    "compaction_applied",
+    "compacted_fields",
+    "diagnostics_detail",
+    "estimate_method",
   ],
 );
 
@@ -7187,7 +7271,7 @@ const PRODUCT_CONTEXT_RESPONSE_SCHEMA: McpSchemaProperty = {
           content: stringProperty("Model-visible body when this item owns a unique emitted body."),
           metadata: { type: "object", description: "Role-specific bounded evidence and fallback metadata.", additionalProperties: true },
         },
-        required: ["id", "stableId", "roles", "contentMode", "selectionReasons", "estimatedTokens"],
+        required: ["id", "stableId", "roles", "contentMode", "estimatedTokens"],
         additionalProperties: true,
       },
     },
@@ -7214,23 +7298,23 @@ const CAPSULE_V2_PRODUCT_ITEM_SCHEMA = objectProperty(
     contentMode: stringProperty("`full`, `signature`, or `skeleton`."),
     source: { type: ["string", "null"], description: "Focused source body — present only in `full` content mode." },
     signature: { type: ["string", "null"], description: "Signature / class line when available." },
-    evidence: arrayProperty("Ordered evidence: why this item was selected.", stringProperty("Evidence line.")),
+    evidence: arrayProperty("Ordered evidence: why this item was selected. Empty on the MCP surface: the same lines are productContext.items[].selectionReasons.", stringProperty("Evidence line.")),
     estimatedTokens: integerProperty("Estimated token cost of the rendered block."),
     isNonSourceExample: booleanProperty("True when the item is a docs/examples/fixture file."),
+    contextItemId: {
+      type: ["string", "null"],
+      description: "Reference into productContext.items for this same selection, when resolvable. On the MCP surface `source`/`signature` are always null: the body is rendered once, in productContext.modelVisibleContext.",
+    },
   },
+  // Only identity, role and sizing are guaranteed. Response compaction may reduce
+  // these rows to pure manifest references (M130); the authoritative per-item
+  // record is productContext.items.
   [
     "role",
     "path",
-    "symbol",
     "fqName",
-    "kind",
-    "roleReason",
     "contentMode",
-    "source",
-    "signature",
-    "evidence",
     "estimatedTokens",
-    "isNonSourceExample",
   ],
 );
 
@@ -7269,6 +7353,7 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
       "Honest unavailable-data / bounded-content markers (e.g. no_pivot_recovered, pivot_source_bounded_to_signatures, impact_snippets_unavailable). Never fabricated; empty when nothing notable.",
       stringProperty("A warning marker."),
     ),
+    supersededBy: stringProperty("Field carrying the authoritative per-item record, when response compaction reduced this manifest to counts and budget."),
     digest: stringProperty("Compact, deterministic agent-facing render using role glyphs (● pivot, ○ skel, → impact, ◎ memory, ◇ rule) with per-item why lines and a closing budget line. Carries no latency/clock data."),
     discarded: arrayProperty(
       "Bounded near-miss list (see discardedTotal for the true count).",
@@ -7290,6 +7375,7 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
         intentReason: arrayProperty("Ordered signals behind the intent decision.", stringProperty("Reason line.")),
         intentConfidence: stringProperty("Planner confidence: high/medium/low."),
         rolePolicy: stringProperty("The role-assignment policy the strategy selected."),
+        ref: stringProperty("Field carrying the equivalent diagnostics, when this block was reduced to a reference."),
         candidateCount: integerProperty("Candidates the role gate ran over."),
         pivotCount: integerProperty("Pivot count."),
         supportCount: integerProperty("Support count."),
@@ -7311,20 +7397,9 @@ const CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA = objectProperty(
           ),
         ),
       },
-      [
-        "intentReason",
-        "intentConfidence",
-        "rolePolicy",
-        "candidateCount",
-        "pivotCount",
-        "supportCount",
-        "discardedCount",
-        "tier",
-        "likelyFiles",
-        "likelySymbols",
-        "failingTests",
-        "editRiskDirectives",
-      ],
+      // Nothing is guaranteed: response compaction may reduce this block to
+      // `{ref: "diagnostics.retrieval"}` under a tight total-response budget (M130).
+      [],
     ),
     actionabilityHints: arrayProperty(
       "Bounded, evidence-backed reminders that a selected source file likely has a paired generated/co-edit artifact (e.g. a PLY parser table) the agent must regenerate or update alongside its edit. Advisory only; never derived from retrieval scoring or gold patches.",
@@ -7382,10 +7457,21 @@ const PIVOT_NEIGHBORHOOD_EXCERPT_SCHEMA = objectProperty(
     endLine: integerProperty("1-based last line of the excerpt."),
     text: stringProperty("Bounded excerpt text (never a whole file)."),
     reason: stringProperty("Structural relationship the neighbor was reached through: caller, callee, importer, imported, reference, support, sibling, or fallback_symbol_window (same-file neighbor reached through no edge). The relationship names the edge; the snippet is still a symbol-window, not an exact edge site."),
+    textCharacters: integerProperty("Length of the excerpt this entry refers to, when the text itself was omitted."),
     truncated: booleanProperty("Whether the excerpt was trimmed by the line or per-line character budget."),
   },
-  ["filePath", "symbol", "fqName", "startLine", "endLine", "text", "reason", "truncated"],
+  // `text` is not guaranteed: on the MCP surface this section carries identity and
+  // relation, and the source is read from path:startLine-endLine (M130).
+  ["filePath", "symbol", "fqName", "startLine", "endLine", "reason"],
 );
+
+/**
+ * Mark a section schema as droppable by response compaction: same shape, but the
+ * value may be null when the total-response budget forced it out.
+ */
+function optionalSection(schema: McpSchemaProperty): McpSchemaProperty {
+  return { ...schema, type: ["object", "null"] };
+}
 
 const PIVOT_NEIGHBORHOOD_SCHEMA: McpSchemaProperty = {
   type: "array",
@@ -7451,6 +7537,8 @@ type RunPipelineMcpOutput = ReturnType<typeof formatRunPipelineOrchestrationOutp
     observation: ReturnType<typeof formatObservation>;
     staleness: ReturnType<typeof formatObservationSearchResult>["staleness"];
   } | null;
+  // M130: every context-producing MCP response reports how large it actually is.
+  responseBudget: ResponseBudgetAccounting;
 };
 
 const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipelineInput, RunPipelineMcpOutput>({
@@ -7471,7 +7559,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             "Legacy alias for preset.",
           ),
           maxResults: integerProperty("Optional reranked candidate count."),
-          max_tokens: integerProperty("Product-facing total output budget. Currently mapped to vtrace's character-budgeted capsule engine."),
+          max_tokens: integerProperty("Budget for the MODEL-VISIBLE context, in estimated tokens. The complete serialized response is bounded separately at max_tokens plus a documented metadata allowance; see the responseBudget block."),
           maxBudgetCharacters: integerProperty("Legacy capsule character budget."),
           include_tests: booleanProperty("Product-facing test-inclusion preference. Defaults true for debug preset, false otherwise."),
           include_file_content: booleanProperty("Product-facing file-content preference. The compact run_pipeline result still returns representation metadata, not full files."),
@@ -7482,8 +7570,10 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           repos: arrayProperty("Optional workspace repo aliases to query. Defaults to all enabled repos when a workspace config is present.", stringProperty("Repo alias.")),
           capsule_intent: stringProperty("Optional capsule intent: auto|debug|refactor|modify|explain|impact|test-failure. Defaults to auto."),
           capsuleIntent: stringProperty("Alias of `capsule_intent` (camelCase)."),
-          capsule_budget_tokens: integerProperty("Optional capsule token budget. Defaults to 8000."),
+          capsule_budget_tokens: integerProperty("Optional capsule token budget. Defaults to max_tokens, then 8000."),
           capsuleBudgetTokens: integerProperty("Alias of `capsule_budget_tokens` (camelCase)."),
+          detail: stringProperty("Response detail level: compact | standard | debug. Defaults to standard. Bounds how much diagnostic evidence the response carries; every level obeys the same hard total-response ceiling."),
+          include_item_content: booleanProperty("When true, productContext.items[] also carry their own body. Off by default: every body is already rendered once in productContext.modelVisibleContext."),
         },
         [],
       ),
@@ -7563,6 +7653,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           ),
           inspectFirst: INSPECT_FIRST_SCHEMA,
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
+          responseBudget: RESPONSE_BUDGET_SCHEMA,
           productContext: PRODUCT_CONTEXT_RESPONSE_SCHEMA,
           capsuleResult: CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA,
           authoritativeCapsuleManifestId: {
@@ -7571,12 +7662,15 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           },
           pivotNeighborhood: PIVOT_NEIGHBORHOOD_SCHEMA,
           intent: RUN_PIPELINE_INTENT_DECISION_SCHEMA,
-          taskSummary: RUN_PIPELINE_TASK_SUMMARY_SCHEMA,
-          context: RUN_PIPELINE_CONTEXT_SECTION_SCHEMA,
-          impact: RUN_PIPELINE_IMPACT_SECTION_SCHEMA,
+          // Optional sections. Response compaction may null these out under a tight
+          // total-response budget; `responseBudget.compacted_fields` names any that
+          // were dropped. The authoritative context is never among them (M130).
+          taskSummary: optionalSection(RUN_PIPELINE_TASK_SUMMARY_SCHEMA),
+          context: optionalSection(RUN_PIPELINE_CONTEXT_SECTION_SCHEMA),
+          impact: optionalSection(RUN_PIPELINE_IMPACT_SECTION_SCHEMA),
           flow: RUN_PIPELINE_FLOW_SECTION_SCHEMA,
-          memory: RUN_PIPELINE_MEMORY_SECTION_SCHEMA,
-          rules: RUN_PIPELINE_RULE_SECTION_SCHEMA,
+          memory: optionalSection(RUN_PIPELINE_MEMORY_SECTION_SCHEMA),
+          rules: optionalSection(RUN_PIPELINE_RULE_SECTION_SCHEMA),
           diagnostics: RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA,
           deferred: RUN_PIPELINE_DEFERRED_SECTION_SCHEMA,
           savedObservation: {
@@ -7650,6 +7744,8 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
         "capsule_budget_tokens",
         "capsuleBudgetTokens",
       );
+      const detailRequested = parseOptionalStringField(McpToolId.RunPipeline, input, "detail");
+      const includeItemContent = parseOptionalBoolean(McpToolId.RunPipeline, input, "include_item_content");
 
       if (typeof query !== "string") {
         return query;
@@ -7677,6 +7773,19 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
       }
       if (includeFileContent !== undefined && typeof includeFileContent !== "boolean") {
         return includeFileContent;
+      }
+      if (includeItemContent !== undefined && typeof includeItemContent !== "boolean") {
+        return includeItemContent;
+      }
+      if (detailRequested !== undefined && typeof detailRequested !== "string") {
+        return detailRequested;
+      }
+      if (detailRequested !== undefined && !isMcpResponseDetail(detailRequested)) {
+        return invalidRequest(
+          McpToolId.RunPipeline,
+          `MCP tool run_pipeline detail must be one of: ${Object.values(McpResponseDetail).join(", ")}.`,
+          { field: "detail", value: detailRequested },
+        );
       }
       if (observationText !== undefined && typeof observationText !== "string") {
         return observationText;
@@ -7867,7 +7976,10 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             repoRoot: binding.repoRoot,
             task: query,
             intent: capsuleV2Intent ?? capsuleIntentForPreset(orchestration.intentDecision.selected),
-            budgetTokens: capsuleBudgetTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
+            // max_tokens is the caller's MODEL-VISIBLE context budget; before M130 it
+            // reached the v1 capsule but never the authoritative product context,
+            // which silently defaulted to 8000.
+            budgetTokens: capsuleBudgetTokens ?? maxTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
             authoritativeRetrieval: orchestration.context.authoritativeRetrieval,
             ...(sessionId === undefined ? {} : { sessionId }),
           });
@@ -7896,11 +8008,20 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             latencyMs: performance.now() - accountingStartedAt,
           });
 
+          // The last thing that happens to a context response: bound the complete
+          // serialized result, not just the model-visible context inside it.
           return {
             ok: true,
-            output: accounting === undefined
-              ? assembledOutput
-              : { ...assembledOutput, accounting },
+            output: compactProductResponse(
+              accounting === undefined ? assembledOutput : { ...assembledOutput, accounting },
+              {
+                requestedContextTokens: capsuleBudgetTokens
+                  ?? maxTokens
+                  ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
+                ...(detailRequested === undefined ? {} : { detail: detailRequested }),
+                ...(includeItemContent === undefined ? {} : { includeItemContent }),
+              },
+            ),
           };
         },
       );
@@ -8075,9 +8196,12 @@ async function handleGetCodeContextRequest({
     return result;
   }
 
+  // run_pipeline already applied the bounded shape; this tool only overwrites
+  // freshness/timing afterwards, so re-measure rather than re-compact (which would
+  // under-report what the inner pass removed).
   return {
     ok: true,
-    output: {
+    output: remeasureResponseBudget({
       ...result.output,
       productContext: {
         ...result.output.productContext,
@@ -8107,7 +8231,7 @@ async function handleGetCodeContextRequest({
         ...result.output.diagnostics,
         indexFreshness: check.indexFreshness,
       },
-    },
+    }),
   };
 }
 
@@ -8322,6 +8446,7 @@ interface CapsuleToolOutput {
   capsuleResult: CapsuleV2ProductResponse;
   accounting?: ContextAccounting;
   productContext?: ProductContextResponse;
+  responseBudget?: ResponseBudgetAccounting;
 }
 
 const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
@@ -8344,7 +8469,9 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           maxBudgetCharacters: integerProperty("Optional capsule character budget."),
           repos: arrayProperty("Optional workspace repo aliases to query. Defaults to all enabled repos when a workspace config is present.", stringProperty("Repo alias.")),
           capsule_intent: stringProperty("Optional capsule intent: auto|debug|refactor|modify|explain|impact|test-failure. Defaults to auto."),
-          capsule_budget_tokens: integerProperty("Optional capsule token budget. Defaults to 8000."),
+          capsule_budget_tokens: integerProperty("Optional capsule token budget. Defaults to max_tokens, then 8000."),
+          detail: stringProperty("Response detail level: compact | standard | debug. Defaults to standard. Bounds how much diagnostic evidence the response carries; every level obeys the same hard total-response ceiling."),
+          include_item_content: booleanProperty("When true, productContext.items[] also carry their own body. Off by default: every body is already rendered once in productContext.modelVisibleContext."),
         },
         [],
       ),
@@ -8390,6 +8517,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             description: "Persisted capsule manifest id for this capsule. Pass to check_capsule_staleness or `vtrace check-capsule` to evaluate freshness against a later run. Null for multi-repo capsules or when the repo has no index run yet.",
           },
           capsuleResult: CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA,
+          responseBudget: RESPONSE_BUDGET_SCHEMA,
         },
         ["query", "intent"],
       ),
@@ -8475,6 +8603,21 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       const capsuleBudgetTokens = parseOptionalInteger(McpToolId.GetContextCapsule, input, "capsule_budget_tokens");
       if (capsuleBudgetTokens !== undefined && typeof capsuleBudgetTokens !== "number") {
         return capsuleBudgetTokens;
+      }
+      const detailRequested = parseOptionalStringField(McpToolId.GetContextCapsule, input, "detail");
+      if (detailRequested !== undefined && typeof detailRequested !== "string") {
+        return detailRequested;
+      }
+      if (detailRequested !== undefined && !isMcpResponseDetail(detailRequested)) {
+        return invalidRequest(
+          McpToolId.GetContextCapsule,
+          `MCP tool get_context_capsule detail must be one of: ${Object.values(McpResponseDetail).join(", ")}.`,
+          { field: "detail", value: detailRequested },
+        );
+      }
+      const includeItemContent = parseOptionalBoolean(McpToolId.GetContextCapsule, input, "include_item_content");
+      if (includeItemContent !== undefined && typeof includeItemContent !== "boolean") {
+        return includeItemContent;
       }
 
       let capsuleV2Intent: CapsuleIntent | undefined;
@@ -8572,7 +8715,14 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             latencyMs: performance.now() - accountingStartedAt,
           });
           if (accounting !== undefined) output.accounting = accounting;
-          return { ok: true, output };
+          return {
+            ok: true,
+            output: compactProductResponse(output, {
+              requestedContextTokens: productBudgetTokens,
+              ...(detailRequested === undefined ? {} : { detail: detailRequested }),
+              ...(includeItemContent === undefined ? {} : { includeItemContent }),
+            }),
+          };
         },
       );
     },
@@ -8760,7 +8910,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           end: stringProperty("Exact fully qualified end symbol name to resolve."),
           max_paths: integerProperty("Optional maximum number of shortest structural paths to return. Defaults to 3."),
           max_depth: integerProperty("Optional maximum path depth. Defaults to 8."),
-          max_edges: integerProperty("Optional maximum number of persisted edges inspected by the bounded graph. Defaults to 2000."),
+          max_edges: integerProperty("Optional traversal budget: the maximum number of edges the bounded search may relax. It bounds work, not which edges exist in the graph. Defaults to 20000; summary.traversalLimitReached reports when it bit."),
           max_tokens: integerProperty("Optional approximate token cap for returned path evidence. Defaults to 20000 for compatibility."),
           relations: arrayProperty(`Optional semantic relation filter. Supported values: ${STATIC_RELATION_KINDS.join(", ")}.`, stringProperty("Relation kind.")),
           include_lexical: booleanProperty("Include explicitly lexical relationships. They remain labeled lexical and never become confirmed calls."),
@@ -8828,8 +8978,13 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       if ([maxDepth, maxEdges, maxTokens].some((value) => typeof value === "number" && value <= 0)) {
         return invalidRequest(McpToolId.SearchLogicFlow, "MCP tool search_logic_flow bounds must be positive integers.", { max_depth: maxDepth, max_edges: maxEdges, max_tokens: maxTokens });
       }
-      if ((maxPaths ?? 3) > 16 || (maxDepth ?? 8) > 12 || (maxEdges ?? 2_000) > 20_000 || (maxTokens ?? 20_000) > 20_000) {
-        return invalidRequest(McpToolId.SearchLogicFlow, "MCP tool search_logic_flow exceeds a hard bound (max_paths<=16, max_depth<=12, max_edges<=20000, max_tokens<=20000).", { max_paths: maxPaths, max_depth: maxDepth, max_edges: maxEdges, max_tokens: maxTokens });
+      if (
+        (maxPaths ?? 3) > 16
+        || (maxDepth ?? 8) > 12
+        || (maxEdges ?? DEFAULT_TRAVERSAL_EDGE_BUDGET) > MAX_TRAVERSAL_EDGE_BUDGET
+        || (maxTokens ?? 20_000) > 20_000
+      ) {
+        return invalidRequest(McpToolId.SearchLogicFlow, `MCP tool search_logic_flow exceeds a hard bound (max_paths<=16, max_depth<=12, max_edges<=${MAX_TRAVERSAL_EDGE_BUDGET}, max_tokens<=20000).`, { max_paths: maxPaths, max_depth: maxDepth, max_edges: maxEdges, max_tokens: maxTokens });
       }
       if (relations !== undefined && relations.some((relation) => !STATIC_RELATION_KINDS.includes(relation as StaticRelationKind))) {
         return invalidRequest(McpToolId.SearchLogicFlow, "MCP tool search_logic_flow received an unsupported relation kind.", { relations });

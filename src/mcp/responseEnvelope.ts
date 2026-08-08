@@ -1,0 +1,1444 @@
+// Complete-response budgeting for the context-producing MCP tools.
+//
+// `max_tokens` bounds the MODEL-VISIBLE context. It never bounded the serialized
+// MCP result, and before M130 nothing did: a 6,000-token request returned an
+// 87,146-character payload because the same selected context was serialized four
+// times over (rendered text, per-item bodies, capsule item bodies, neighborhood
+// excerpts) and wrapped in unbounded retrieval telemetry.
+//
+// This module owns the boundary. Two distinct measurements:
+//
+//   model-visible context  — what the agent reads; bounded by `max_tokens`
+//   complete response      — what crosses the wire; bounded by `max_tokens`
+//                            plus a small documented metadata allowance
+//
+// The invariant it enforces:
+//
+//   one source-bearing model-visible representation
+//   + compact structured metadata
+//   + bounded optional diagnostics
+//
+// Everything else becomes a stable reference back into that one representation.
+
+import { createHash } from "node:crypto";
+
+import { estimateTokens } from "../capsuleV2/tokens";
+
+export const MCP_RESPONSE_ENVELOPE_VERSION = "vtrace.mcp_response_envelope/1" as const;
+
+/**
+ * How much explanatory detail a response may carry. The default is `standard`.
+ * `debug` widens diagnostics but is still subject to the same hard total ceiling —
+ * a debug response is more informative, never unbounded.
+ */
+export const McpResponseDetail = Object.freeze({
+  Compact: "compact",
+  Standard: "standard",
+  Debug: "debug",
+});
+
+export type McpResponseDetail =
+  (typeof McpResponseDetail)[keyof typeof McpResponseDetail];
+
+export function isMcpResponseDetail(value: string): value is McpResponseDetail {
+  return (Object.values(McpResponseDetail) as string[]).includes(value);
+}
+
+/**
+ * Metadata allowance above the requested context budget. The complete serialized
+ * response must fit `requested + max(FLOOR, requested * RATIO)` estimated tokens.
+ * A flat floor keeps small requests workable; the ratio keeps large ones honest.
+ */
+export const RESPONSE_METADATA_ALLOWANCE_FLOOR_TOKENS = 1_000;
+export const RESPONSE_METADATA_ALLOWANCE_RATIO = 0.15;
+
+export function responseTokenCeiling(requestedContextTokens: number): number {
+  const requested = Math.max(0, Math.floor(requestedContextTokens));
+  return requested + Math.max(
+    RESPONSE_METADATA_ALLOWANCE_FLOOR_TOKENS,
+    Math.ceil(requested * RESPONSE_METADATA_ALLOWANCE_RATIO),
+  );
+}
+
+export interface ResponseBudgetAccounting {
+  readonly envelopeVersion: typeof MCP_RESPONSE_ENVELOPE_VERSION;
+  readonly requested_context_tokens: number;
+  readonly estimated_model_visible_tokens: number;
+  readonly estimated_metadata_tokens: number;
+  readonly estimated_total_response_tokens: number;
+  readonly total_response_token_ceiling: number;
+  readonly serialized_response_characters: number;
+  readonly within_envelope: boolean;
+  readonly compaction_applied: boolean;
+  readonly compacted_fields: readonly string[];
+  readonly omitted_detail_counts: Readonly<Record<string, number>>;
+  readonly expansion_available: Readonly<Record<string, string>>;
+  readonly diagnostics_detail: McpResponseDetail;
+  readonly estimate_method: "chars_div_4";
+  readonly notes: readonly string[];
+}
+
+export interface CompactProductResponseOptions {
+  /** The caller's context budget. Also the base of the total-response ceiling. */
+  readonly requestedContextTokens: number;
+  readonly detail?: McpResponseDetail;
+  /**
+   * Opt-in restoration of per-item bodies in `productContext.items[].content`.
+   * Off by default: those bodies are already rendered in `modelVisibleContext`.
+   */
+  readonly includeItemContent?: boolean;
+}
+
+type JsonRecord = Record<string, unknown>;
+
+/** Per-item metadata kept by default: identity and decision, never evidence dumps. */
+const ITEM_METADATA_KEEP = Object.freeze([
+  "fqName",
+  "kind",
+  "returnType",
+  "exported",
+  "skeletonFallback",
+  "applicability",
+  "targetKind",
+  "documentKind",
+  "requiredTargetSources",
+  "type",
+  "source",
+  "staleness",
+  "contextId",
+  "contextReference",
+  "pivotContextId",
+  "pivotContextReference",
+  "pivotFqName",
+  "relationKind",
+  "direction",
+  "evidenceStrength",
+  "edgeType",
+  "duplicateBodyOf",
+]);
+
+/** Freshness fields that must survive every compaction step. */
+const INDEX_FRESHNESS_ESSENTIAL = Object.freeze([
+  "status",
+  "reason",
+  "action",
+  "fresh",
+  "latestRunId",
+  "indexRunId",
+  "headCommit",
+  "worktreeId",
+  "repositoryId",
+]);
+
+/** Placeholder left where a repeated copy of the task text was removed. */
+const QUERY_REFERENCE = "@request.task";
+
+/**
+ * Left in place of static per-call honesty boilerplate under tight budgets. The
+ * claims themselves are declared in the tool output schema, which the caller sees
+ * once per session rather than once per response.
+ */
+const ACCOUNTING_CLAIM_REFERENCE = "see tool output schema: estimates are chars/4, not tokenizer counts";
+
+/** `intent` alias fields that repeat a canonical sibling verbatim. */
+const INTENT_LEGACY_ALIASES: ReadonlyArray<readonly [string, string]> = Object.freeze([
+  ["requested", "requestedPreset"],
+  ["selected", "selectedPreset"],
+  ["rationale", "reason"],
+  ["mappedQueryIntent", "selectedIntent"],
+]);
+
+/** The accounting block must not itself become a large payload. */
+const MAX_REPORTED_COMPACTED_FIELDS = 10;
+const MAX_REPORTED_OMITTED_COUNTS = 6;
+const MAX_REPORTED_EXPANSIONS = 1;
+
+/**
+ * `diagnostics.<section>` blocks restate decisions the sections themselves already
+ * publish (`rules.activeCount`, `flow.skipReason`, `memory.*.included`, …). They
+ * are kept in full only at `debug` detail.
+ */
+const DIAGNOSTICS_DUPLICATED_SECTIONS = Object.freeze([
+  "rules",
+  "memory",
+  "flow",
+  "intent",
+  "impact",
+  "budget",
+]);
+
+const MAX_SELECTION_REASONS = 3;
+const MAX_PIVOT_NEIGHBORHOOD_ENTRIES = 3;
+const MAX_NEIGHBOR_RELATIONS_PER_PIVOT = 6;
+const MAX_DEBUG_SAMPLE = 12;
+const MAX_INLINE_DIAGNOSTIC_ENTRIES = 12;
+const MAX_INLINE_DIAGNOSTIC_CHARS = 400;
+const MAX_DEFERRED_SUMMARY_CHARS = 96;
+
+/**
+ * Optional sections removed wholesale, in this order, only when every
+ * duplication-removal step has run and the response is still over the ceiling.
+ * Ordered least-to-most useful to a coding agent. The authoritative context,
+ * freshness, provenance, warnings and accounting are deliberately absent.
+ */
+const LAST_RESORT_OPTIONAL_SECTIONS = Object.freeze([
+  "pivotNeighborhood",
+  "taskSummary",
+  "context",
+  "memory",
+  "rules",
+  "inspectFirst",
+  "impact",
+]);
+
+/**
+ * Rewrite a context-producing MCP tool result into the bounded response shape and
+ * attach its budget accounting. Pure: the input value is never mutated.
+ */
+export function compactProductResponse<T>(
+  output: T,
+  options: CompactProductResponseOptions,
+): T & { responseBudget: ResponseBudgetAccounting } {
+  const detail = options.detail ?? McpResponseDetail.Standard;
+  const draft = structuredClone(output) as unknown as JsonRecord;
+  const compactedFields: string[] = [];
+  const omitted: Record<string, number> = {};
+  const expansion: Record<string, string> = {};
+
+  const modelVisibleContext = readModelVisibleContext(draft);
+
+  // 1. Remove duplicated source bodies from metadata items.
+  compactProductContextItems(draft, {
+    detail,
+    includeItemContent: options.includeItemContent === true,
+    compactedFields,
+    omitted,
+    expansion,
+  });
+
+  // 2. Replace compatibility representations with stable references.
+  compactCapsuleResult(draft, { compactedFields, omitted, expansion });
+  compactLegacyContextSection(draft, { compactedFields, omitted, expansion });
+
+  // 3. Reduce verbose diagnostics to summary counts and warning codes.
+  compactDiagnostics(draft, { detail, compactedFields, omitted });
+
+  // 5. Bound pivot-neighborhood metadata.
+  compactPivotNeighborhood(draft, { detail, compactedFields, omitted });
+
+  // 6. Bound transitive impact/flow explanatory evidence.
+  compactImpactSection(draft, { detail, compactedFields, omitted });
+
+  // 7/8. `productContext.modelVisibleContext`, freshness, provenance, warnings and
+  // accounting are never removed by any step above or the escalation below.
+  const escalation = enforceTotalEnvelope(draft, {
+    detail,
+    ceilingTokens: responseTokenCeiling(options.requestedContextTokens),
+    accountingTokens: () => estimateTokens(serialize(buildAccounting({
+      requestedContextTokens: options.requestedContextTokens,
+      modelVisibleTokens: estimateTokens(modelVisibleContext),
+      detail,
+      compactionApplied: true,
+      compactedFields,
+      omitted,
+      expansion,
+      serializedCharacters: 0,
+    }))),
+    compactedFields,
+    omitted,
+  });
+
+  const accounting = measureResponse(draft, {
+    requestedContextTokens: options.requestedContextTokens,
+    modelVisibleContext,
+    detail,
+    compactionApplied: escalation.applied,
+    compactedFields,
+    omitted,
+    expansion,
+  });
+
+  draft.responseBudget = accounting;
+  return draft as unknown as T & { responseBudget: ResponseBudgetAccounting };
+}
+
+/**
+ * Re-enforce the envelope on an already-compacted response and refresh its
+ * figures, carrying the inner pass's compaction record forward.
+ *
+ * `get_code_context` delegates to `run_pipeline` and then overwrites freshness
+ * and timing on the returned value — which can push a response that fitted back
+ * over the ceiling. Re-running compaction from scratch would under-report what
+ * the inner pass removed (the duplication is already gone), so the record is
+ * carried over and only the escalation ladder runs again.
+ */
+export function remeasureResponseBudget<T extends { responseBudget: ResponseBudgetAccounting }>(
+  output: T,
+): T {
+  const draft = { ...(output as unknown as JsonRecord) };
+  const previous = output.responseBudget;
+  delete draft.responseBudget;
+
+  const compactedFields = [...previous.compacted_fields];
+  const omitted = { ...previous.omitted_detail_counts };
+  const expansion = { ...previous.expansion_available };
+  const modelVisibleContext = readModelVisibleContext(draft);
+  const detail = previous.diagnostics_detail;
+
+  const escalation = enforceTotalEnvelope(draft, {
+    detail,
+    ceilingTokens: responseTokenCeiling(previous.requested_context_tokens),
+    accountingTokens: () => estimateTokens(serialize(buildAccounting({
+      requestedContextTokens: previous.requested_context_tokens,
+      modelVisibleTokens: estimateTokens(modelVisibleContext),
+      detail,
+      compactionApplied: true,
+      compactedFields,
+      omitted,
+      expansion,
+      serializedCharacters: 0,
+    }))),
+    compactedFields,
+    omitted,
+  });
+
+  const accounting = measureResponse(draft, {
+    requestedContextTokens: previous.requested_context_tokens,
+    modelVisibleContext,
+    detail,
+    compactionApplied: previous.compaction_applied || escalation.applied,
+    compactedFields,
+    omitted,
+    expansion,
+  });
+
+  return { ...draft, responseBudget: accounting } as unknown as T;
+}
+
+function readModelVisibleContext(draft: JsonRecord): string {
+  const productContext = asRecord(draft.productContext);
+  const value = productContext?.modelVisibleContext;
+  return typeof value === "string" ? value : "";
+}
+
+/**
+ * `productContext.items` becomes metadata plus a reference into the rendered
+ * context. Every body it carried is already present, verbatim, in
+ * `modelVisibleContext` under the item's own `[id]` heading.
+ */
+function compactProductContextItems(
+  draft: JsonRecord,
+  options: {
+    detail: McpResponseDetail;
+    includeItemContent: boolean;
+    compactedFields: string[];
+    omitted: Record<string, number>;
+    expansion: Record<string, string>;
+  },
+): void {
+  const productContext = asRecord(draft.productContext);
+  const items = productContext === undefined ? undefined : asRecordArray(productContext.items);
+  if (productContext === undefined || items === undefined) {
+    return;
+  }
+
+  let removedBodies = 0;
+  let removedCharacters = 0;
+  let trimmedReasons = 0;
+  let trimmedMetadataKeys = 0;
+
+  productContext.items = items.map((item) => {
+    const next: JsonRecord = { ...item };
+    const content = typeof item.content === "string" ? item.content : undefined;
+
+    if (content !== undefined) {
+      next.contentHash = sha256(content);
+      next.contentCharacters = content.length;
+      if (options.includeItemContent) {
+        next.content = content;
+      } else {
+        delete next.content;
+        removedBodies += 1;
+        removedCharacters += content.length;
+      }
+    }
+
+    const reasons = asStringArray(item.selectionReasons);
+    if (reasons !== undefined && reasons.length > MAX_SELECTION_REASONS) {
+      next.selectionReasons = reasons.slice(0, MAX_SELECTION_REASONS);
+      next.selectionReasonsOmitted = reasons.length - MAX_SELECTION_REASONS;
+      trimmedReasons += reasons.length - MAX_SELECTION_REASONS;
+    }
+
+    const metadata = asRecord(item.metadata);
+    if (metadata !== undefined) {
+      const kept: JsonRecord = {};
+      let dropped = 0;
+      for (const key of Object.keys(metadata)) {
+        if (ITEM_METADATA_KEEP.includes(key)) {
+          kept[key] = metadata[key];
+        } else {
+          dropped += 1;
+        }
+      }
+      if (dropped > 0) {
+        kept.boundedMetadataOmittedKeys = dropped;
+        trimmedMetadataKeys += dropped;
+      }
+      next.metadata = kept;
+    }
+
+    return next;
+  });
+
+  if (removedBodies > 0) {
+    options.compactedFields.push("productContext.items[].content");
+    options.omitted.productContextItemBodies = removedBodies;
+    options.omitted.productContextItemBodyCharacters = removedCharacters;
+    options.expansion["productContext.items[].content"] =
+      "Rendered once in productContext.modelVisibleContext under this item's `## [id]` heading; pass include_item_content=true for per-item bodies.";
+  }
+  if (trimmedReasons > 0) {
+    options.compactedFields.push("productContext.items[].selectionReasons");
+    options.omitted.productContextSelectionReasons = trimmedReasons;
+  }
+  if (trimmedMetadataKeys > 0) {
+    options.compactedFields.push("productContext.items[].metadata");
+    options.omitted.productContextItemMetadataKeys = trimmedMetadataKeys;
+  }
+}
+
+/**
+ * `capsuleResult` becomes the compact manifest it was always meant to be: role,
+ * identity, sizing and the deterministic digest. Its item bodies were a third
+ * serialization of the same selected source.
+ */
+function compactCapsuleResult(
+  draft: JsonRecord,
+  options: {
+    compactedFields: string[];
+    omitted: Record<string, number>;
+    expansion: Record<string, string>;
+  },
+): void {
+  const capsuleResult = asRecord(draft.capsuleResult);
+  if (capsuleResult === undefined) {
+    return;
+  }
+
+  const contextItemIdByIdentity = productContextItemIdIndex(draft);
+  let removedBodies = 0;
+  let removedCharacters = 0;
+
+  for (const group of ["pivots", "support"] as const) {
+    const items = asRecordArray(capsuleResult[group]);
+    if (items === undefined) continue;
+    capsuleResult[group] = items.map((item) => {
+      const next: JsonRecord = { ...item };
+      for (const field of ["source", "signature"] as const) {
+        const value = item[field];
+        if (typeof value === "string" && value.length > 0) {
+          removedBodies += 1;
+          removedCharacters += value.length;
+        }
+        next[field] = null;
+      }
+      const path = typeof item.path === "string" ? item.path : "";
+      const fqName = typeof item.fqName === "string" ? item.fqName : "";
+      next.contextItemId = contextItemIdByIdentity.get(`${path}::${fqName}`) ?? null;
+      // `evidence` restates productContext.items[].selectionReasons verbatim and
+      // is rendered again in `digest`; the manifest keeps only the decisive line.
+      const evidence = asStringArray(item.evidence);
+      if (evidence !== undefined && evidence.length > 0) {
+        next.evidence = [];
+        options.omitted.capsuleItemEvidenceLines =
+          (options.omitted.capsuleItemEvidenceLines ?? 0) + evidence.length;
+      }
+      return next;
+    });
+  }
+
+  if ((options.omitted.capsuleItemEvidenceLines ?? 0) > 0) {
+    options.compactedFields.push("capsuleResult.pivots[].evidence", "capsuleResult.support[].evidence");
+    options.expansion["capsuleResult.pivots[].evidence"] =
+      "Same lines as productContext.items[].selectionReasons and capsuleResult.digest.";
+  }
+
+  const discarded = asRecordArray(capsuleResult.discarded);
+  if (discarded !== undefined && discarded.length > 0) {
+    capsuleResult.discarded = [];
+    options.compactedFields.push("capsuleResult.discarded");
+    options.omitted.capsuleDiscardedCandidates = discarded.length;
+  }
+
+  if (removedBodies > 0) {
+    options.compactedFields.push("capsuleResult.pivots[].source", "capsuleResult.support[].source");
+    options.omitted.capsuleItemBodies = removedBodies;
+    options.omitted.capsuleItemBodyCharacters = removedCharacters;
+    options.expansion["capsuleResult.pivots[].source"] =
+      "Rendered once in productContext.modelVisibleContext; capsuleResult items reference it via contextItemId.";
+  }
+}
+
+/**
+ * The legacy v1 `context` section predates `productContext` and re-describes the
+ * same selection with per-candidate scoring. It stays as a compact alias so
+ * existing readers keep their field, without a second selection representation.
+ */
+function compactLegacyContextSection(
+  draft: JsonRecord,
+  options: {
+    compactedFields: string[];
+    omitted: Record<string, number>;
+    expansion: Record<string, string>;
+  },
+): void {
+  const context = asRecord(draft.context);
+  if (context === undefined) {
+    return;
+  }
+
+  let omittedItems = 0;
+  for (const group of ["pivots", "supports"] as const) {
+    const items = asRecordArray(context[group]);
+    if (items === undefined) continue;
+    omittedItems += items.length;
+    context[group] = items.map((item) => ({
+      filePath: item.filePath ?? null,
+      fqName: item.fqName ?? null,
+      role: item.role ?? null,
+      contentMode: item.contentMode ?? null,
+    }));
+  }
+
+  if (omittedItems > 0) {
+    context.supersededBy = "productContext";
+    context.note =
+      "Compatibility alias. Authoritative selection, roles, content modes and rendered context live in productContext.";
+    options.compactedFields.push("context.pivots", "context.supports");
+    options.omitted.legacyContextScoredItems = omittedItems;
+    options.expansion["context"] = "Superseded by productContext; use productContext.items for full selection metadata.";
+  }
+}
+
+/**
+ * Retrieval telemetry (query variants, lane candidate matrices, term lists) is
+ * benchmark-grade internal evidence. Normal context calls get counts; `debug`
+ * gets bounded samples; nothing gets the raw matrix.
+ */
+function compactDiagnostics(
+  draft: JsonRecord,
+  options: {
+    detail: McpResponseDetail;
+    compactedFields: string[];
+    omitted: Record<string, number>;
+  },
+): void {
+  const diagnostics = asRecord(draft.diagnostics);
+  if (diagnostics === undefined) {
+    return;
+  }
+
+  if (options.detail === McpResponseDetail.Compact) {
+    const retrieval = asRecord(diagnostics.retrieval);
+    if (retrieval !== undefined) {
+      diagnostics.retrieval = {
+        initialReason: retrieval.initialReason ?? null,
+        finalReason: retrieval.finalReason ?? null,
+        fallbackApplied: retrieval.fallbackApplied ?? false,
+        finalContextItemCount: retrieval.finalContextItemCount ?? 0,
+        detail: "omitted_at_compact_detail",
+      };
+      options.compactedFields.push("diagnostics.retrieval");
+    }
+  } else {
+    const retrieval = asRecord(diagnostics.retrieval);
+    const search = retrieval === undefined ? undefined : asRecord(retrieval.search);
+    if (retrieval !== undefined && search !== undefined) {
+      let collapsed = 0;
+      const bounded: JsonRecord = {};
+      for (const key of Object.keys(search)) {
+        const value = search[key];
+        if (!Array.isArray(value)) {
+          bounded[key] = value;
+          continue;
+        }
+        // Only the large candidate/variant matrices are collapsed. Short term
+        // lists are cheap and are the readable part of a retrieval decision.
+        if (value.length <= MAX_INLINE_DIAGNOSTIC_ENTRIES && serialize(value).length <= MAX_INLINE_DIAGNOSTIC_CHARS) {
+          bounded[key] = value;
+          continue;
+        }
+        collapsed += value.length;
+        bounded[`${key}Count`] = value.length;
+        if (options.detail === McpResponseDetail.Debug && value.length > 0) {
+          bounded[`${key}Sample`] = value.slice(0, MAX_DEBUG_SAMPLE);
+        }
+      }
+      retrieval.search = bounded;
+      if (collapsed > 0) {
+        options.compactedFields.push("diagnostics.retrieval.search");
+        options.omitted.retrievalSearchEntries = collapsed;
+      }
+    }
+
+    for (const key of ["pathSignalsConsidered", "pathSignalsMatched"] as const) {
+      const value = retrieval === undefined ? undefined : retrieval[key];
+      if (Array.isArray(value) && value.length > MAX_DEBUG_SAMPLE) {
+        (retrieval as JsonRecord)[key] = value.slice(0, MAX_DEBUG_SAMPLE);
+        options.omitted[key] = value.length - MAX_DEBUG_SAMPLE;
+      }
+    }
+  }
+
+  // Index freshness is reported three times (productContext.freshness.refreshDiagnostics,
+  // diagnostics.freshness, diagnostics.indexFreshness). `indexFreshness` is the
+  // precise one; the others become references to it. Critical stale/missing status
+  // is preserved in every location — only the repeated detail payload is dropped.
+  const productContext = asRecord(draft.productContext);
+  const productFreshness = productContext === undefined ? undefined : asRecord(productContext.freshness);
+  if (
+    productFreshness !== undefined
+    && productFreshness.refreshDiagnostics !== undefined
+    && productFreshness.refreshDiagnostics !== null
+    && diagnostics.indexFreshness !== undefined
+  ) {
+    productFreshness.refreshDiagnostics = { ref: "diagnostics.indexFreshness" };
+    options.compactedFields.push("productContext.freshness.refreshDiagnostics");
+  }
+
+}
+
+/**
+ * Pivot neighborhood keeps identity and relation, not text. Its excerpts were a
+ * fourth serialization of source already selected or reachable by path+lines.
+ */
+function compactPivotNeighborhood(
+  draft: JsonRecord,
+  options: {
+    detail: McpResponseDetail;
+    compactedFields: string[];
+    omitted: Record<string, number>;
+  },
+): void {
+  const neighborhoods = asRecordArray(draft.pivotNeighborhood);
+  if (neighborhoods === undefined || neighborhoods.length === 0) {
+    return;
+  }
+
+  if (options.detail === McpResponseDetail.Compact) {
+    draft.pivotNeighborhood = [];
+    options.compactedFields.push("pivotNeighborhood");
+    options.omitted.pivotNeighborhoods = neighborhoods.length;
+    return;
+  }
+
+  let removedExcerpts = 0;
+  let removedCharacters = 0;
+  const bounded = neighborhoods.slice(0, MAX_PIVOT_NEIGHBORHOOD_ENTRIES).map((entry) => {
+    const excerpts = asRecordArray(entry.excerpts) ?? [];
+    const kept = excerpts.slice(0, MAX_NEIGHBOR_RELATIONS_PER_PIVOT).map((excerpt) => {
+      const text = typeof excerpt.text === "string" ? excerpt.text : "";
+      if (text.length > 0) {
+        removedExcerpts += 1;
+        removedCharacters += text.length;
+      }
+      return {
+        filePath: excerpt.filePath ?? null,
+        symbol: excerpt.symbol ?? null,
+        fqName: excerpt.fqName ?? null,
+        startLine: excerpt.startLine ?? null,
+        endLine: excerpt.endLine ?? null,
+        reason: excerpt.reason ?? null,
+        textCharacters: text.length,
+      };
+    });
+    removedExcerpts += Math.max(0, excerpts.length - kept.length);
+    return { ...entry, excerpts: kept };
+  });
+
+  draft.pivotNeighborhood = bounded;
+  options.omitted.pivotNeighborhoodEntries = Math.max(0, neighborhoods.length - bounded.length);
+  if (removedExcerpts > 0) {
+    options.compactedFields.push("pivotNeighborhood[].excerpts[].text");
+    options.omitted.pivotNeighborhoodExcerptCharacters = removedCharacters;
+  }
+}
+
+function compactImpactSection(
+  draft: JsonRecord,
+  options: {
+    detail: McpResponseDetail;
+    compactedFields: string[];
+    omitted: Record<string, number>;
+  },
+): void {
+  const impact = asRecord(draft.impact);
+  const dependents = impact === undefined ? undefined : asRecordArray(impact.topDependents);
+  if (impact === undefined || dependents === undefined) {
+    return;
+  }
+  const limit = options.detail === McpResponseDetail.Compact ? 3 : 6;
+  if (dependents.length <= limit) {
+    return;
+  }
+  impact.topDependents = dependents.slice(0, limit);
+  options.compactedFields.push("impact.topDependents");
+  options.omitted.impactDependents = dependents.length - limit;
+}
+
+/**
+ * Deterministic escalation, applied only when the bounded default shape still
+ * exceeds the ceiling. Ordered least-to-most informative loss; the authoritative
+ * model-visible context and all freshness/provenance/warning state are never
+ * touched, so an over-ceiling response degrades to metadata rather than to a
+ * truncated or invalid payload.
+ */
+function enforceTotalEnvelope(
+  draft: JsonRecord,
+  options: {
+    detail: McpResponseDetail;
+    ceilingTokens: number;
+    /** Current measured cost of the accounting block this ladder will be followed by. */
+    accountingTokens: () => number;
+    compactedFields: string[];
+    omitted: Record<string, number>;
+  },
+): { applied: boolean } {
+  const steps: Array<{ field: string; apply: () => number }> = [
+    {
+      field: "pivotNeighborhood",
+      apply: () => {
+        const entries = asRecordArray(draft.pivotNeighborhood);
+        if (entries === undefined || entries.length === 0) return 0;
+        draft.pivotNeighborhood = [];
+        return entries.length;
+      },
+    },
+    {
+      field: "context",
+      apply: () => {
+        const context = asRecord(draft.context);
+        if (context === undefined) return 0;
+        draft.context = {
+          included: context.included ?? false,
+          skipReason: context.skipReason ?? null,
+          itemCount: context.itemCount ?? 0,
+          capsuleRef: context.capsuleRef ?? null,
+          capsuleManifestId: context.capsuleManifestId ?? null,
+          supersededBy: "productContext",
+          note: "Dropped by response compaction; productContext carries the authoritative selection.",
+          pivots: [],
+          supports: [],
+        };
+        return 1;
+      },
+    },
+    {
+      field: "diagnostics.retrieval",
+      apply: () => {
+        const diagnostics = asRecord(draft.diagnostics);
+        const retrieval = diagnostics === undefined ? undefined : asRecord(diagnostics.retrieval);
+        if (diagnostics === undefined || retrieval === undefined) return 0;
+        diagnostics.retrieval = {
+          initialReason: retrieval.initialReason ?? null,
+          finalReason: retrieval.finalReason ?? null,
+          fallbackApplied: retrieval.fallbackApplied ?? false,
+          finalContextItemCount: retrieval.finalContextItemCount ?? 0,
+          detail: "omitted_by_response_compaction",
+        };
+        return 1;
+      },
+    },
+    {
+      field: "productContext.items[].selectionReasons",
+      apply: () => {
+        const productContext = asRecord(draft.productContext);
+        const items = productContext === undefined ? undefined : asRecordArray(productContext.items);
+        if (productContext === undefined || items === undefined) return 0;
+        let dropped = 0;
+        productContext.items = items.map((item) => {
+          const reasons = asStringArray(item.selectionReasons) ?? [];
+          if (reasons.length <= 1) return item;
+          dropped += reasons.length - 1;
+          return { ...item, selectionReasons: reasons.slice(0, 1), selectionReasonsOmitted: reasons.length - 1 };
+        });
+        return dropped;
+      },
+    },
+    {
+      field: "memory",
+      apply: () => {
+        const memory = asRecord(draft.memory);
+        if (memory === undefined) return 0;
+        let dropped = 0;
+        for (const [group, key] of [["session", "recentObservations"], ["durable", "topObservations"]] as const) {
+          const section = asRecord(memory[group]);
+          const entries = section === undefined ? undefined : asRecordArray(section[key]);
+          if (section === undefined || entries === undefined) continue;
+          dropped += entries.length;
+          section[key] = [];
+        }
+        return dropped;
+      },
+    },
+    {
+      // Repeated query text: `request.query` duplicates `request.task`, and
+      // `taskSummary.normalizedQuery` is derivable. The task itself is retained.
+      field: "duplicated_query_text",
+      apply: () => {
+        // `request` echoes the caller's own input verbatim and is a correctness
+        // surface, so it is never rewritten. Only derived restatements are.
+        let dropped = 0;
+        const taskSummary = asRecord(draft.taskSummary);
+        if (taskSummary !== undefined && typeof taskSummary.normalizedQuery === "string") {
+          taskSummary.normalizedQuery = QUERY_REFERENCE;
+          dropped += 1;
+        }
+        if (taskSummary !== undefined && typeof taskSummary.query === "string") {
+          taskSummary.query = QUERY_REFERENCE;
+          dropped += 1;
+        }
+        const capsuleResult = asRecord(draft.capsuleResult);
+        if (capsuleResult !== undefined && typeof capsuleResult.query === "string") {
+          capsuleResult.query = QUERY_REFERENCE;
+          dropped += 1;
+        }
+        return dropped;
+      },
+    },
+    {
+      // The selected/required/support path lists restate items[].path.
+      field: "productContext.diagnostics.selectedFiles",
+      apply: () => {
+        const productContext = asRecord(draft.productContext);
+        const diagnostics = productContext === undefined ? undefined : asRecord(productContext.diagnostics);
+        if (diagnostics === undefined) return 0;
+        let dropped = 0;
+        for (const key of ["selectedFiles", "requiredFiles", "supportFiles"] as const) {
+          const files = asStringArray(diagnostics[key]);
+          if (files === undefined || files.length === 0) continue;
+          dropped += files.length;
+          diagnostics[key] = [];
+          diagnostics[`${key}Count`] = files.length;
+        }
+        return dropped;
+      },
+    },
+    {
+      // Keep status/reason/action/run identity; drop the verbose manifest deltas.
+      field: "diagnostics.indexFreshness",
+      apply: () => {
+        const diagnostics = asRecord(draft.diagnostics);
+        const freshness = diagnostics === undefined ? undefined : asRecord(diagnostics.indexFreshness);
+        if (diagnostics === undefined || freshness === undefined) return 0;
+        const essential: JsonRecord = {};
+        let dropped = 0;
+        for (const key of Object.keys(freshness)) {
+          if (INDEX_FRESHNESS_ESSENTIAL.includes(key)) {
+            essential[key] = freshness[key];
+          } else {
+            dropped += 1;
+          }
+        }
+        // The sibling `freshness` block repeats the same state; keep its scalar
+        // status fields (callers branch on them) and drop only nested detail.
+        const sibling = asRecord(diagnostics.freshness);
+        if (sibling !== undefined) {
+          for (const key of Object.keys(sibling)) {
+            if (typeof sibling[key] === "object" && sibling[key] !== null) {
+              delete sibling[key];
+              dropped += 1;
+            }
+          }
+        }
+        if (dropped === 0) return 0;
+        essential.boundedDetailOmittedKeys = dropped;
+        diagnostics.indexFreshness = essential;
+        return dropped;
+      },
+    },
+    {
+      // Per-section decision mirrors: `diagnostics.impact` restates `impact.skipReason`,
+      // `diagnostics.memory` restates `memory.*.included`, and so on. Kept by default
+      // because they are small and documented; dropped only under a tight budget.
+      field: "diagnostics.<section>",
+      apply: () => {
+        const diagnostics = asRecord(draft.diagnostics);
+        if (diagnostics === undefined) return 0;
+        let dropped = 0;
+        for (const section of DIAGNOSTICS_DUPLICATED_SECTIONS) {
+          if (diagnostics[section] === undefined) continue;
+          delete diagnostics[section];
+          dropped += 1;
+        }
+        if (dropped > 0) {
+          diagnostics.sectionDecisionsOmitted = dropped;
+          diagnostics.sectionDecisionsNote =
+            "Each section publishes its own decision; this mirror was dropped by response compaction.";
+        }
+        return dropped;
+      },
+    },
+    {
+      field: "deferred.notes",
+      apply: () => {
+        const deferred = asRecord(draft.deferred);
+        const notes = deferred === undefined ? undefined : asStringArray(deferred.notes);
+        if (deferred === undefined || notes === undefined || notes.length === 0) return 0;
+        deferred.notes = notes.slice(0, 1);
+        return notes.length - 1;
+      },
+    },
+    {
+      field: "capsuleResult.pivots[].roleReason",
+      apply: () => {
+        const capsuleResult = asRecord(draft.capsuleResult);
+        if (capsuleResult === undefined) return 0;
+        let dropped = 0;
+        for (const group of ["pivots", "support"] as const) {
+          const items = asRecordArray(capsuleResult[group]);
+          if (items === undefined) continue;
+          capsuleResult[group] = items.map((item) => {
+            if (typeof item.roleReason !== "string" || item.roleReason.length === 0) return item;
+            dropped += 1;
+            return { ...item, roleReason: "" };
+          });
+        }
+        return dropped;
+      },
+    },
+    {
+      field: "productContext.items[].metadata",
+      apply: () => {
+        const productContext = asRecord(draft.productContext);
+        const items = productContext === undefined ? undefined : asRecordArray(productContext.items);
+        if (productContext === undefined || items === undefined) return 0;
+        let dropped = 0;
+        productContext.items = items.map((item) => {
+          const metadata = asRecord(item.metadata);
+          if (metadata === undefined) return item;
+          const identity: JsonRecord = {};
+          for (const key of ["fqName", "kind", "applicability", "targetKind"]) {
+            if (metadata[key] !== undefined) identity[key] = metadata[key];
+          }
+          const removed = Object.keys(metadata).length - Object.keys(identity).length;
+          if (removed <= 0) return item;
+          dropped += removed;
+          identity.boundedMetadataOmittedKeys = removed;
+          return { ...item, metadata: identity };
+        });
+        return dropped;
+      },
+    },
+    {
+      field: "flow.paths[].sourceExcerpts",
+      apply: () => {
+        const flow = asRecord(draft.flow);
+        const paths = flow === undefined ? undefined : asRecordArray(flow.paths);
+        if (flow === undefined || paths === undefined) return 0;
+        let dropped = 0;
+        flow.paths = paths.map((path) => {
+          const excerpts = asRecordArray(path.sourceExcerpts) ?? [];
+          if (excerpts.length <= 1) return path;
+          dropped += excerpts.length - 1;
+          return { ...path, sourceExcerpts: excerpts.slice(0, 1) };
+        });
+        return dropped;
+      },
+    },
+    {
+      // `suggestedInput` re-serializes the task for every deferred ref; the hash
+      // is the only field `expand_vexp_ref` actually needs.
+      field: "deferred.items[].suggestedInput",
+      apply: () => {
+        const deferred = asRecord(draft.deferred);
+        const items = deferred === undefined ? undefined : asRecordArray(deferred.items);
+        if (deferred === undefined || items === undefined) return 0;
+        let dropped = 0;
+        deferred.items = items.map((item) => {
+          const suggested = asRecord(item.suggestedInput);
+          if (suggested === undefined || Object.keys(suggested).length === 0) return item;
+          dropped += 1;
+          return { ...item, suggestedInput: { hash: item.hash ?? null } };
+        });
+        return dropped;
+      },
+    },
+    {
+      // `intent` carries each decision twice under legacy and current names.
+      field: "intent",
+      apply: () => {
+        const intent = asRecord(draft.intent);
+        if (intent === undefined) return 0;
+        let dropped = 0;
+        for (const [alias, canonical] of INTENT_LEGACY_ALIASES) {
+          if (intent[alias] !== undefined && intent[alias] === intent[canonical]) {
+            delete intent[alias];
+            dropped += 1;
+          }
+        }
+        return dropped;
+      },
+    },
+    {
+      // The digest is a second *rendering* of the selection that
+      // productContext.items already carries as structured metadata and
+      // modelVisibleContext already carries as text.
+      field: "capsuleResult.digest",
+      apply: () => {
+        const capsuleResult = asRecord(draft.capsuleResult);
+        if (capsuleResult === undefined || typeof capsuleResult.digest !== "string") return 0;
+        if (capsuleResult.digest.length === 0) return 0;
+        capsuleResult.digest = "";
+        return 1;
+      },
+    },
+    {
+      field: "productContext.items[].selectionReasons(all)",
+      apply: () => {
+        const productContext = asRecord(draft.productContext);
+        const items = productContext === undefined ? undefined : asRecordArray(productContext.items);
+        if (productContext === undefined || items === undefined) return 0;
+        let dropped = 0;
+        productContext.items = items.map((item) => {
+          const reasons = asStringArray(item.selectionReasons) ?? [];
+          if (reasons.length === 0) return item;
+          dropped += reasons.length;
+          const previous = typeof item.selectionReasonsOmitted === "number" ? item.selectionReasonsOmitted : 0;
+          const next: JsonRecord = { ...item, selectionReasonsOmitted: previous + reasons.length };
+          delete next.selectionReasons;
+          return next;
+        });
+        return dropped;
+      },
+    },
+    {
+      field: "prose_notes",
+      apply: () => {
+        let dropped = 0;
+        for (const section of ["rules", "deferred"] as const) {
+          const record = asRecord(draft[section]);
+          const notes = record === undefined ? undefined : asStringArray(record.notes);
+          if (record === undefined || notes === undefined || notes.length === 0) continue;
+          dropped += notes.length;
+          record.notes = [];
+        }
+        const capsuleResult = asRecord(draft.capsuleResult);
+        const hints = capsuleResult === undefined ? undefined : asRecordArray(capsuleResult.actionabilityHints);
+        if (capsuleResult !== undefined && hints !== undefined) {
+          capsuleResult.actionabilityHints = hints.map((hint) => {
+            if (hint.patchObligation === undefined) return hint;
+            dropped += 1;
+            const obligation = asRecord(hint.patchObligation);
+            return { ...hint, patchObligation: { kind: obligation?.kind ?? null, text: "" } };
+          });
+        }
+        return dropped;
+      },
+    },
+    {
+      field: "inspectFirst.related",
+      apply: () => {
+        const inspectFirst = asRecord(draft.inspectFirst);
+        const related = inspectFirst === undefined ? undefined : asRecordArray(inspectFirst.related);
+        if (inspectFirst === undefined || related === undefined || related.length <= 1) return 0;
+        inspectFirst.related = related.slice(0, 1);
+        return related.length - 1;
+      },
+    },
+    {
+      // Once the digest is gone, capsuleResult item rows restate
+      // productContext.items row for row. The manifest keeps only what makes it a
+      // manifest: role, identity, and the reference back into the items array.
+      field: "capsuleResult.pivots",
+      apply: () => {
+        const capsuleResult = asRecord(draft.capsuleResult);
+        if (capsuleResult === undefined) return 0;
+        let reduced = 0;
+        for (const group of ["pivots", "support"] as const) {
+          const items = asRecordArray(capsuleResult[group]);
+          if (items === undefined || items.length === 0) continue;
+          reduced += items.length;
+          capsuleResult[group] = items.map((item) => ({
+            role: item.role ?? null,
+            path: item.path ?? null,
+            fqName: item.fqName ?? null,
+            contentMode: item.contentMode ?? null,
+            estimatedTokens: item.estimatedTokens ?? 0,
+            contextItemId: item.contextItemId ?? null,
+          }));
+        }
+        if (capsuleResult.diagnostics !== undefined) {
+          capsuleResult.diagnostics = { ref: "diagnostics.retrieval" };
+          reduced += 1;
+        }
+        return reduced;
+      },
+    },
+    {
+      field: "inspectFirst",
+      apply: () => {
+        const inspectFirst = asRecord(draft.inspectFirst);
+        if (inspectFirst === undefined) return 0;
+        const likelyFirst = asRecord(inspectFirst.likelyFirst);
+        if (likelyFirst === undefined) return 0;
+        let dropped = 0;
+        if (typeof likelyFirst.why === "string" && likelyFirst.why.length > 0) {
+          likelyFirst.why = "";
+          dropped += 1;
+        }
+        if (typeof inspectFirst.avoidFirst === "string" && inspectFirst.avoidFirst.length > 0) {
+          inspectFirst.avoidFirst = "";
+          dropped += 1;
+        }
+        return dropped;
+      },
+    },
+    {
+      field: "capsuleResult.actionabilityHints[].evidence",
+      apply: () => {
+        const capsuleResult = asRecord(draft.capsuleResult);
+        const hints = capsuleResult === undefined ? undefined : asRecordArray(capsuleResult.actionabilityHints);
+        if (capsuleResult === undefined || hints === undefined) return 0;
+        let dropped = 0;
+        capsuleResult.actionabilityHints = hints.map((hint) => {
+          const evidence = asStringArray(hint.evidence) ?? [];
+          if (evidence.length === 0) return hint;
+          dropped += evidence.length;
+          return { ...hint, evidence: [] };
+        });
+        return dropped;
+      },
+    },
+    {
+      // Last metadata tier: items keep identity, role, span, hash and sizing —
+      // the fields §10 requires of a reference row — and nothing else.
+      field: "productContext.items[].metadata(identity)",
+      apply: () => {
+        const productContext = asRecord(draft.productContext);
+        const items = productContext === undefined ? undefined : asRecordArray(productContext.items);
+        if (productContext === undefined || items === undefined) return 0;
+        let dropped = 0;
+        productContext.items = items.map((item) => {
+          const metadata = asRecord(item.metadata);
+          const next = { ...item };
+          if (metadata !== undefined && Object.keys(metadata).length > 1) {
+            dropped += Object.keys(metadata).length - 1;
+            next.metadata = metadata.fqName === undefined ? {} : { fqName: metadata.fqName };
+          }
+          if (next.contentCharacters !== undefined) {
+            delete next.contentCharacters;
+            dropped += 1;
+          }
+          return next;
+        });
+        return dropped;
+      },
+    },
+    {
+      field: "deferred.items[].summary",
+      apply: () => {
+        const deferred = asRecord(draft.deferred);
+        const items = deferred === undefined ? undefined : asRecordArray(deferred.items);
+        if (deferred === undefined || items === undefined) return 0;
+        let dropped = 0;
+        deferred.items = items.map((item) => {
+          if (typeof item.summary !== "string" || item.summary.length <= MAX_DEFERRED_SUMMARY_CHARS) return item;
+          dropped += 1;
+          return { ...item, summary: `${item.summary.slice(0, MAX_DEFERRED_SUMMARY_CHARS)}…` };
+        });
+        return dropped;
+      },
+    },
+    {
+      // Three accounting blocks describe the same call. `productContext.accounting`
+      // is the authoritative one; the outer block keeps its latency and points at it.
+      field: "accounting",
+      apply: () => {
+        const accounting = asRecord(draft.accounting);
+        if (accounting === undefined || accounting.ref !== undefined) return 0;
+        const dropped = Object.keys(accounting).length - 1;
+        if (dropped <= 0) return 0;
+        draft.accounting = {
+          latencyMs: accounting.latencyMs ?? 0,
+          ref: "productContext.accounting",
+        };
+        return dropped;
+      },
+    },
+    {
+      // Identity duplication: metadata.fqName is exactly `path::symbol` for these
+      // rows, and both are already present.
+      field: "productContext.items[].metadata(derivable)",
+      apply: () => {
+        const productContext = asRecord(draft.productContext);
+        const items = productContext === undefined ? undefined : asRecordArray(productContext.items);
+        if (productContext === undefined || items === undefined) return 0;
+        let dropped = 0;
+        productContext.items = items.map((item) => {
+          const metadata = asRecord(item.metadata);
+          const fqName = metadata?.fqName;
+          if (
+            metadata === undefined
+            || Object.keys(metadata).length !== 1
+            || typeof fqName !== "string"
+            || fqName !== `${item.path ?? ""}::${item.symbol ?? ""}`
+          ) {
+            return item;
+          }
+          dropped += 1;
+          const next: JsonRecord = { ...item };
+          delete next.metadata;
+          return next;
+        });
+        return dropped;
+      },
+    },
+    {
+      // Static per-call honesty boilerplate becomes a reference. The claims still
+      // bind — they are stated in the tool's declared output schema — but they stop
+      // being re-serialized on every response once the budget is this tight.
+      field: "static_honesty_boilerplate",
+      apply: () => {
+        const productContext = asRecord(draft.productContext);
+        const accounting = productContext === undefined ? undefined : asRecord(productContext.accounting);
+        let dropped = 0;
+        if (accounting !== undefined) {
+          for (const key of ["baseline", "claimBoundary"] as const) {
+            if (typeof accounting[key] === "string" && accounting[key] !== ACCOUNTING_CLAIM_REFERENCE) {
+              accounting[key] = ACCOUNTING_CLAIM_REFERENCE;
+              dropped += 1;
+            }
+          }
+        }
+        const diagnostics = productContext === undefined ? undefined : asRecord(productContext.diagnostics);
+        const limitations = diagnostics === undefined ? undefined : asStringArray(diagnostics.limitations);
+        if (diagnostics !== undefined && limitations !== undefined && limitations.length > 0) {
+          const previous = typeof diagnostics.limitationsOmitted === "number" ? diagnostics.limitationsOmitted : 0;
+          diagnostics.limitations = [];
+          diagnostics.limitationsOmitted = previous + limitations.length;
+          diagnostics.limitationsRef = ACCOUNTING_CLAIM_REFERENCE;
+          dropped += limitations.length;
+        }
+        return dropped;
+      },
+    },
+    {
+      // Expansion handles, not evidence. The refs stay discoverable through
+      // `expandable`; only their per-item detail goes.
+      field: "deferred.items",
+      apply: () => {
+        const deferred = asRecord(draft.deferred);
+        const items = deferred === undefined ? undefined : asRecordArray(deferred.items);
+        if (deferred === undefined || items === undefined || items.length === 0) return 0;
+        deferred.items = [];
+        deferred.expandable = false;
+        deferred.omittedItemCount = items.length;
+        return items.length;
+      },
+    },
+    {
+      // Last tier for the manifest: counts and budget only. productContext.items
+      // remains the authoritative per-item record, so nothing unique is lost.
+      field: "capsuleResult.manifest_only",
+      apply: () => {
+        const capsuleResult = asRecord(draft.capsuleResult);
+        if (capsuleResult === undefined) return 0;
+        let dropped = 0;
+        for (const group of ["pivots", "support", "actionabilityHints"] as const) {
+          const items = asRecordArray(capsuleResult[group]);
+          if (items === undefined || items.length === 0) continue;
+          dropped += items.length;
+          capsuleResult[group] = [];
+        }
+        if (dropped === 0) return 0;
+        capsuleResult.supersededBy = "productContext.items";
+        return dropped;
+      },
+    },
+    {
+      // Static per-call honesty boilerplate; the two load-bearing lines stay.
+      field: "productContext.diagnostics.limitations",
+      apply: () => {
+        const productContext = asRecord(draft.productContext);
+        const diagnostics = productContext === undefined ? undefined : asRecord(productContext.diagnostics);
+        const limitations = diagnostics === undefined ? undefined : asStringArray(diagnostics.limitations);
+        if (diagnostics === undefined || limitations === undefined || limitations.length <= 2) return 0;
+        diagnostics.limitations = limitations.slice(0, 2);
+        diagnostics.limitationsOmitted = limitations.length - 2;
+        return limitations.length - 2;
+      },
+    },
+  ];
+
+  // The accounting block is appended after this ladder runs, so its cost has to
+  // be accounted for here — measured, not guessed, because it grows with the
+  // number of compaction steps applied. A fixed guess left the ladder stopping
+  // just under the ceiling and the finished response landing just over it.
+  const withinBudget = (): boolean =>
+    estimateTokens(serialize(draft)) + options.accountingTokens() <= options.ceilingTokens;
+
+  let applied = false;
+  for (const step of steps) {
+    if (withinBudget()) {
+      break;
+    }
+    const dropped = step.apply();
+    if (dropped === 0) continue;
+    applied = true;
+    options.compactedFields.push(step.field);
+    options.omitted[`compaction:${step.field}`] = dropped;
+  }
+
+  // Guaranteed backstop. The named steps above remove duplication; this removes
+  // whole OPTIONAL sections, lowest value first, so the envelope holds for any
+  // input rather than only for the shapes the named steps happened to anticipate.
+  // The authoritative model-visible context, freshness, provenance, warnings and
+  // accounting are not in this list and are never removed.
+  for (const section of LAST_RESORT_OPTIONAL_SECTIONS) {
+    if (withinBudget()) {
+      break;
+    }
+    if (draft[section] === undefined || draft[section] === null) continue;
+    const characters = serialize(draft[section]).length;
+    if (characters <= 2) continue;
+    // Arrays empty, objects null. Both are valid values of the declared optional
+    // section; `compacted_fields` and `omitted_detail_counts` say what happened.
+    draft[section] = Array.isArray(draft[section]) ? [] : null;
+    applied = true;
+    options.compactedFields.push(section);
+    options.omitted[`compaction:${section}`] = characters;
+  }
+
+  return { applied };
+}
+
+function measureResponse(
+  draft: JsonRecord,
+  input: {
+    requestedContextTokens: number;
+    modelVisibleContext: string;
+    detail: McpResponseDetail;
+    compactionApplied: boolean;
+    compactedFields: string[];
+    omitted: Record<string, number>;
+    expansion: Record<string, string>;
+  },
+): ResponseBudgetAccounting {
+  const modelVisibleTokens = estimateTokens(input.modelVisibleContext);
+  const build = (serializedCharacters: number): ResponseBudgetAccounting => buildAccounting({
+    ...input,
+    modelVisibleTokens,
+    serializedCharacters,
+  });
+
+  // The accounting block is itself part of the payload, so measuring it is a
+  // small fixpoint: only the digit width of the recorded figures can change.
+  let accounting = build(0);
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const measured = serialize({ ...draft, responseBudget: accounting }).length;
+    if (measured === accounting.serialized_response_characters) {
+      return accounting;
+    }
+    accounting = build(measured);
+  }
+  return accounting;
+}
+
+/** Pure accounting-block construction, shared by the ladder's reserve and the final measurement. */
+function buildAccounting(input: {
+  requestedContextTokens: number;
+  modelVisibleTokens: number;
+  detail: McpResponseDetail;
+  compactionApplied: boolean;
+  compactedFields: readonly string[];
+  omitted: Record<string, number>;
+  expansion: Record<string, string>;
+  serializedCharacters: number;
+}): ResponseBudgetAccounting {
+  const totalTokens = estimateTokens("x".repeat(input.serializedCharacters));
+  return {
+    envelopeVersion: MCP_RESPONSE_ENVELOPE_VERSION,
+    requested_context_tokens: input.requestedContextTokens,
+    estimated_model_visible_tokens: input.modelVisibleTokens,
+    estimated_metadata_tokens: Math.max(0, totalTokens - input.modelVisibleTokens),
+    estimated_total_response_tokens: totalTokens,
+    total_response_token_ceiling: responseTokenCeiling(input.requestedContextTokens),
+    serialized_response_characters: input.serializedCharacters,
+    within_envelope: totalTokens <= responseTokenCeiling(input.requestedContextTokens),
+    compaction_applied: input.compactionApplied,
+    compacted_fields: [...new Set(input.compactedFields)].sort().slice(0, MAX_REPORTED_COMPACTED_FIELDS),
+    omitted_detail_counts: boundedCounts(input.omitted),
+    expansion_available: boundedExpansions(input.expansion),
+    diagnostics_detail: input.detail,
+    estimate_method: "chars_div_4",
+    notes: [
+      "Token figures are chars/4 estimates, not tokenizer counts.",
+      "max_tokens bounds the model-visible context; the total ceiling adds a documented metadata allowance.",
+    ],
+  };
+}
+
+function productContextItemIdIndex(draft: JsonRecord): Map<string, string> {
+  const index = new Map<string, string>();
+  const productContext = asRecord(draft.productContext);
+  const items = productContext === undefined ? undefined : asRecordArray(productContext.items);
+  if (items === undefined) {
+    return index;
+  }
+  for (const item of items) {
+    const metadata = asRecord(item.metadata);
+    const fqName = typeof metadata?.fqName === "string" ? metadata.fqName : "";
+    const path = typeof item.path === "string" ? item.path : "";
+    const id = typeof item.id === "string" ? item.id : undefined;
+    if (id !== undefined) {
+      index.set(`${path}::${fqName}`, id);
+    }
+  }
+  return index;
+}
+
+/** Largest counts first, so the bound keeps the most consequential omissions. */
+function boundedCounts(counts: Record<string, number>): Record<string, number> {
+  const entries = Object.entries(counts)
+    .filter(([, value]) => value > 0)
+    .sort(([leftKey, leftValue], [rightKey, rightValue]) =>
+      rightValue - leftValue || leftKey.localeCompare(rightKey));
+  const kept = entries.slice(0, MAX_REPORTED_OMITTED_COUNTS);
+  const bounded = Object.fromEntries(kept);
+  if (entries.length > kept.length) {
+    bounded.additionalOmittedDetailKinds = entries.length - kept.length;
+  }
+  return bounded;
+}
+
+function boundedExpansions(expansion: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(expansion).sort(([left], [right]) => left.localeCompare(right)).slice(0, MAX_REPORTED_EXPANSIONS),
+  );
+}
+
+export function serialize(value: unknown): string {
+  return JSON.stringify(value) ?? "";
+}
+
+function sha256(value: string): string {
+  return createHash("sha256").update(value).digest("hex").slice(0, 16);
+}
+
+function asRecord(value: unknown): JsonRecord | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? value as JsonRecord
+    : undefined;
+}
+
+function asRecordArray(value: unknown): JsonRecord[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return value.map((entry) => (asRecord(entry) ?? {} as JsonRecord));
+}
+
+function asStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return value.filter((entry): entry is string => typeof entry === "string");
+}

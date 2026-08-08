@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "stage5.m130.tckdb-acceptance.v1",
+  "repositoryRoot": "/home/calvin/code/TCKDB_v2",
+  "repositoryHead": "1ca3e75766e4f5451df50d6cbfc51a2dc2cf704c",
+  "repositoryBranch": "main",
+  "repositoryUnmodified": true,
+  "task": "Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.",
+  "expectedLead": "clients/python/tests/test_computed_reaction_upload_builder.py",
+  "leadPivot": "clients/python/tests/test_computed_reaction_upload_builder.py",
+  "selectedFiles": [
+    "clients/python/tests/test_computed_reaction_upload_builder.py",
+    "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+    "clients/python/src/tckdb_client/builders/kinetics.py",
+    "clients/python/src/tckdb_client/builders/geometry.py",
+    "clients/python/pyproject.toml",
+    ".github/workflows/python-client-ci.yml"
+  ],
+  "requiredFiles": [
+    "clients/python/tests/test_computed_reaction_upload_builder.py",
+    "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+    "clients/python/src/tckdb_client/builders/kinetics.py",
+    "clients/python/src/tckdb_client/builders/calculation.py",
+    "clients/python/pyproject.toml",
+    ".github/workflows/python-client-ci.yml"
+  ],
+  "missingRequiredFiles": [
+    "clients/python/src/tckdb_client/builders/calculation.py"
+  ],
+  "codeBehaviourPreserved": true,
+  "m129RecordedHead": "8f0d84bbf09179c941d4988bab641af69d712d86",
+  "checkoutDrifted": true,
+  "checkoutDriftNote": "TCKDB advanced past the M129-recorded HEAD and clients/python/src/tckdb_client/builders/calculation.py itself changed; at this checkout the sixth slot resolves to a different builder. The M129 code produces the SAME selection on this checkout (codeBehaviourPreserved), so the difference is repository drift, not an M130 regression.",
+  "pass": true
+}

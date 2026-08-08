@@ -77,16 +77,53 @@ export const RunPipelineImpactSkipReason = Object.freeze({
 export type RunPipelineImpactSkipReason =
   (typeof RunPipelineImpactSkipReason)[keyof typeof RunPipelineImpactSkipReason];
 
+/**
+ * Why a flow section carries no path.
+ *
+ * M130 removed `endpoints_not_connected`. Static analysis over one index cannot
+ * prove two symbols are semantically unconnected — dynamic dispatch, reflection,
+ * unindexed languages and stale snapshots all hide real relationships — so the
+ * product no longer makes that claim. Every reason below states a fact about the
+ * *search*, not about the code.
+ */
 export const RunPipelineFlowSkipReason = Object.freeze({
+  /** The query shape never requested a flow between two symbols. */
   UnsupportedQueryShape: "unsupported_query_shape",
+  /** Fewer than two indexed candidate symbols were named in the query. */
   NotEnoughEndpoints: "not_enough_endpoints",
+  /** More than two indexed candidate symbols were named; the pair is undetermined. */
   AmbiguousEndpoints: "ambiguous_endpoints",
-  EndpointsNotConnected: "endpoints_not_connected",
+  /** The start endpoint name matched no indexed symbol. */
+  StartEndpointNotFound: "start_endpoint_not_found",
+  /** The end endpoint name matched no indexed symbol. */
+  EndEndpointNotFound: "end_endpoint_not_found",
+  /** An endpoint name matched several indexed symbols; no arbitrary pick is made. */
+  EndpointAmbiguous: "endpoint_ambiguous",
+  /** The index is not fresh, so absence of a path carries no information. */
+  IndexStale: "index_stale",
+  /** An endpoint lives in a language with no call-edge extraction in this build. */
+  UnsupportedLanguage: "unsupported_language",
+  /** Both endpoints resolved; the current index contains no path between them. */
+  NoIndexedPathFound: "no_indexed_path_found",
+  /** The bounded traversal budget was exhausted before the search completed. */
+  TraversalLimitReached: "traversal_limit_reached",
+  /** The flow engine itself failed. */
   FlowError: "flow_error",
 });
 
 export type RunPipelineFlowSkipReason =
   (typeof RunPipelineFlowSkipReason)[keyof typeof RunPipelineFlowSkipReason];
+
+/**
+ * The scope a negative flow result is claimed over. `current_index` is the only
+ * scope the engine can support: it says "not found here, now", never "not connected".
+ */
+export const RunPipelineFlowClaimScope = Object.freeze({
+  CurrentIndex: "current_index",
+});
+
+export type RunPipelineFlowClaimScope =
+  (typeof RunPipelineFlowClaimScope)[keyof typeof RunPipelineFlowClaimScope];
 
 export const RunPipelineFlowEndpointStrategy = Object.freeze({
   DirectionalCue: "directional_cue",
