@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "stage5.m131.tckdb-acceptance.v1",
+  "repositoryRoot": "/home/calvin/code/TCKDB_v2",
+  "repositoryHead": "72adb24b5e5ea9c472641ea90a7f6a681a004391",
+  "repositoryBranch": "main",
+  "repositoryUnmodified": true,
+  "inPlaceVtraceStateWritten": false,
+  "task": "Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.",
+  "expectedLead": "clients/python/tests/test_computed_reaction_upload_builder.py",
+  "leadPivot": "clients/python/tests/test_computed_reaction_upload_builder.py",
+  "selectedFiles": [
+    "clients/python/tests/test_computed_reaction_upload_builder.py",
+    "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+    "clients/python/src/tckdb_client/builders/kinetics.py",
+    "clients/python/src/tckdb_client/builders/geometry.py",
+    "clients/python/pyproject.toml",
+    ".github/workflows/python-client-ci.yml"
+  ],
+  "evidenceCategories": [
+    {
+      "id": "client_test",
+      "satisfiedBy": [
+        "clients/python/tests/test_computed_reaction_upload_builder.py",
+        "clients/python/tests/test_builder_computed_reaction_demo_notebook.py"
+      ]
+    },
+    {
+      "id": "client_implementation",
+      "satisfiedBy": [
+        "clients/python/src/tckdb_client/builders/kinetics.py",
+        "clients/python/src/tckdb_client/builders/geometry.py"
+      ]
+    },
+    {
+      "id": "dependency_config",
+      "satisfiedBy": [
+        "clients/python/pyproject.toml"
+      ]
+    },
+    {
+      "id": "workflow",
+      "satisfiedBy": [
+        ".github/workflows/python-client-ci.yml"
+      ]
+    },
+    {
+      "id": "notebook_evidence",
+      "satisfiedBy": [
+        "clients/python/tests/test_builder_computed_reaction_demo_notebook.py"
+      ]
+    }
+  ],
+  "missingCategories": [],
+  "codeBehaviourPreserved": true,
+  "acceptancePolicy": "two layers: (1) same-checkout parity against the M130 code, (2) evidence categories present. The M129/M130 literal file list is deliberately not a gate — TCKDB drifts, and a frozen slot list turns that drift into a false regression.",
+  "pass": true
+}

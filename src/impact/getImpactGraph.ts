@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
 
-import { listEdgesForSymbol, listEdgesForSymbols } from "../db/repositories/edgesRepository";
+import { listCallSitesForEdges, listEdgesForSymbol, listEdgesForSymbols } from "../db/repositories/edgesRepository";
 import { getSymbolById, listSymbolsByFqName } from "../db/repositories/symbolsRepository";
 import {
   EdgeType,
@@ -377,6 +377,10 @@ function buildRichImpact(
     if (symbol !== undefined) symbolCache.set(id, symbol);
     return symbol;
   };
+  // One batched lookup for the direct neighbourhood's recorded call sites, so
+  // the headline relations carry exact provenance instead of a body scan. The
+  // transitive traversal below still scans; see the M131 impact audit.
+  const directCallSites = listCallSitesForEdges(db, directCandidates.map((edge) => edge.id));
   const persistedDirectRelations = directCandidates.flatMap((edge): StaticRelationEvidence[] => {
     const source = symbolFor(edge.srcSymbolId);
     const target = symbolFor(edge.dstSymbolId);
@@ -385,6 +389,7 @@ function buildRichImpact(
       direction: edge.dstSymbolId === root.id ? "incoming" : "outgoing",
       repoRoot: options?.repoRoot,
       includeSourceEvidence: input.includeEvidence ?? true,
+      callSites: directCallSites.get(edge.id) ?? [],
     });
     return relationAllowed(relation, relationFilter, input) ? [relation] : [];
   });

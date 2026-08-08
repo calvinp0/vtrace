@@ -4,7 +4,8 @@ import path from "node:path";
 import type { Database } from "bun:sqlite";
 
 import { getFileByPath } from "../db/repositories/filesRepository";
-import { EdgeType, SymbolKind, type EdgeRecord, type SymbolRecord } from "../domain/types";
+import { EdgeType, SymbolKind, type EdgeCallSite, type EdgeRecord, type SymbolRecord } from "../domain/types";
+import { compareCallSites } from "../parsers/edgeCallSites";
 import { buildSymbolSourceExcerpt, type SourceExcerpt } from "../source/sourceExcerpt";
 
 export const STATIC_RELATION_KINDS = [
@@ -62,15 +63,47 @@ export interface StaticRelationEvidence {
     readonly importAlias?: string;
     readonly referenceName?: string;
     readonly resolutionMethod: string;
-    readonly locationKind: "edge_site" | "source_symbol_span" | "indexed_metadata";
+    /**
+     * `edge_site` — an exact call-site span the parser persisted with the edge.
+     * `caller_span_scan` — a located textual occurrence inside the caller's own
+     * span; real, but not proof of WHICH occurrence produced the edge.
+     * `source_symbol_span` — no occurrence located; the span is the symbol's.
+     */
+    readonly locationKind:
+      | "edge_site"
+      | "caller_span_scan"
+      | "source_symbol_span"
+      | "indexed_metadata";
+    /**
+     * Every parser-observed occurrence of this edge, bounded. Present only for
+     * `edge_site` provenance. One edge can stand for several call sites, and
+     * naming one of them as "the" site would be a fabrication.
+     */
+    readonly callSites?: readonly EdgeCallSiteEvidence[];
+    /** Total occurrences recorded, including any beyond the bounded list. */
+    readonly callSiteCount?: number;
   };
   readonly limitations: readonly string[];
 }
+
+export interface EdgeCallSiteEvidence {
+  readonly startLine: number;
+  readonly endLine: number;
+  readonly precision: "span" | "line";
+}
+
+/** How many occurrences are listed inline before the rest become a count. */
+export const MAX_RENDERED_CALL_SITES = 5;
 
 export interface StaticRelationBuildOptions {
   readonly direction: StaticRelationDirection;
   readonly repoRoot?: string;
   readonly includeSourceEvidence?: boolean;
+  /**
+   * Parser-persisted occurrences for this edge. When supplied, provenance is
+   * exact and no body rescanning happens.
+   */
+  readonly callSites?: readonly EdgeCallSite[];
 }
 
 const STRENGTH_ORDER: Readonly<Record<StaticEvidenceStrength, number>> = {
@@ -109,14 +142,45 @@ export function buildStaticRelationEvidence(
   target: SymbolRecord,
   options: StaticRelationBuildOptions,
 ): StaticRelationEvidence {
+  // Occurrences the parser actually recorded, restricted to the caller's own
+  // indexed span. A site outside that span means the index and the file have
+  // diverged, and a stale line must never be rendered as exact provenance.
+  const persistedSites = (options.callSites ?? [])
+    .filter((site) => site.startLine >= source.startLine && site.startLine <= source.endLine)
+    .sort(compareCallSites);
+  const anchorLine = persistedSites[0]?.startLine;
   const excerpt = options.repoRoot !== undefined && options.includeSourceEvidence !== false
-    ? buildSymbolSourceExcerpt(db, options.repoRoot, source.id, { mode: "span" })
+    ? buildSymbolSourceExcerpt(db, options.repoRoot, source.id, {
+      mode: "span",
+      ...(anchorLine === undefined ? {} : { anchorLine }),
+    })
     : null;
   const classification = classifyRelation(edge, source, target, excerpt);
-  const occurrence = findGroundedOccurrence(excerpt, target.localName, classification.kind);
+  const occurrence = persistedSites.length > 0
+    ? persistedOccurrence(persistedSites[0]!, excerpt)
+    : findGroundedOccurrence(excerpt, target.localName, classification.kind);
   const limitations = [...classification.limitations];
+  const locationKind = persistedSites.length > 0
+    ? "edge_site" as const
+    : occurrence === null
+      ? "source_symbol_span" as const
+      : "caller_span_scan" as const;
 
-  if (occurrence === null) {
+  if (locationKind === "edge_site") {
+    limitations.push(
+      "Call-site spans are recorded by the parser at index time; re-index after editing the file before treating the lines as current.",
+    );
+
+    if (persistedSites.length > 1) {
+      limitations.push(
+        `This relation was observed at ${persistedSites.length} call sites; the reported span is the first, and evidence.callSites lists the rest.`,
+      );
+    }
+  } else if (locationKind === "caller_span_scan") {
+    limitations.push(
+      "No call-site span was recorded for this edge, so the reported line is the first matching occurrence inside the caller's own span; it is not proof that this occurrence produced the edge.",
+    );
+  } else {
     limitations.push(
       "The persisted edge has no call-site span; provenance identifies the indexed source-symbol span, not an exact edge occurrence.",
     );
@@ -137,10 +201,35 @@ export function buildStaticRelationEvidence(
       ...(classification.importAlias === undefined ? {} : { importAlias: classification.importAlias }),
       referenceName: target.localName,
       resolutionMethod: classification.resolutionMethod,
-      locationKind: occurrence === null ? "source_symbol_span" : "edge_site",
+      locationKind,
+      ...(persistedSites.length === 0 ? {} : {
+        callSites: persistedSites.slice(0, MAX_RENDERED_CALL_SITES).map((site) => ({
+          startLine: site.startLine,
+          endLine: site.endLine,
+          precision: site.precision,
+        })),
+        callSiteCount: persistedSites.length,
+      }),
     },
     limitations: unique(limitations),
   };
+}
+
+/** Exact provenance from a persisted occurrence, with the excerpt's own text when it covers the line. */
+function persistedOccurrence(
+  site: EdgeCallSite,
+  excerpt: SourceExcerpt | null,
+): { sourceText?: string; lineSpan: { start: number; end: number } } {
+  const lineSpan = { start: site.startLine, end: site.endLine };
+
+  if (excerpt === null || site.startLine < excerpt.startLine || site.startLine > excerpt.endLine) {
+    return { lineSpan };
+  }
+
+  const line = excerpt.text.split("\n")[site.startLine - excerpt.startLine];
+  return line === undefined
+    ? { lineSpan }
+    : { sourceText: line.trim().slice(0, 240), lineSpan };
 }
 
 export function staticRelationKindForEdge(edgeType: EdgeType): StaticRelationKind {

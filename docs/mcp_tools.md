@@ -292,10 +292,30 @@ rendered source. Everything else references it:
 
 When a response would exceed its ceiling, compaction runs in a fixed order:
 duplicated bodies, then compatibility representations, then verbose diagnostics,
-then unselected candidate evidence, then neighbourhood and impact/flow evidence.
-The authoritative model-visible context and all freshness, provenance, warning
-and accounting state are never removed. Optional sections dropped by the final
-backstop are named in `compacted_fields` and may be `null`.
+then unselected candidate evidence, then neighbourhood evidence, then inline
+flow/impact excerpt text, then per-item metadata rows, then long-path flow
+evidence. The authoritative model-visible context and all freshness, provenance,
+warning and accounting state are never removed. Optional sections dropped by the
+final backstop are named in `compacted_fields` and may be `null`.
+
+Three of those tiers exist because a response grows along more dimensions than
+the one incident that motivated the budget:
+
+- `productContext.omittedItemCount` — per-item metadata rows dropped when a
+  large selection outgrows the metadata allowance. The rendered context is never
+  touched, and at least three rows always remain.
+- `flow.paths[].stepEvidenceOmitted` / `sourceExcerptsOmitted` — a long path
+  keeps full evidence for its first hops and identity (edge type and endpoints)
+  for the rest. The path shape, which is the answer, is unchanged.
+- `flow.pathsOmitted` — the last flow tier. The decision, `claimScope`,
+  `skipReason` and `verificationRecommended` are never dropped: a negative or
+  bounded result must not lose the words that make it truthful.
+
+Under an extremely tight budget the accounting block compacts itself — its own
+prose is the last thing worth spending the envelope on — and every load-bearing
+figure survives. If the caller's model-visible context alone exceeds the ceiling,
+no metadata compaction can fix that; `within_envelope` reports `false` rather
+than the response quietly overshooting its documented bound.
 
 ### `run_pipeline`
 
@@ -434,6 +454,28 @@ relax. It bounds work, never which edges exist in the graph. When the budget is
 exhausted before the reachable set is, `summary.traversalLimitReached` is `true`
 and `diagnostics` reports `edgesAvailable` against `edgesInspected`.
 
+The search never materialises the repository graph. It expands one frontier level
+per batched indexed adjacency query, so the cost of an answer tracks the subgraph
+it explores rather than the size of the repository. `diagnostics.traversal`
+reports what that cost was — all structural, no wall-clock values, so identical
+queries produce identical output:
+
+```ts
+{
+  mode: "indexed_frontier_expansion";
+  traversals: number;      // forward only when unreachable; forward + reverse when a path exists
+  nodesExpanded: number;
+  edgesFetched: number;    // adjacency rows the batched queries returned
+  edgesRelaxed: number;    // what the budget counts
+  frontierBatches: number;
+  maxFrontierSize: number;
+  visitedNodes: number;
+  dbQueries: number;
+  budgetLimit: number;
+  budgetExhausted: boolean;
+}
+```
+
 A result with no path means **no path was found in the current index within the
 traversal budget**. It is never a claim that the endpoints are unconnected: static
 analysis cannot establish that, and dynamic dispatch, reflection and unindexed
@@ -472,23 +514,47 @@ interface SourceExcerpt {
   startLine: number;   // 1-based
   endLine: number;     // 1-based
   text: string;        // never a whole file
-  reason: "symbol_span" | "edge_site" | "signature" | "fallback_symbol_window";
+  reason: "symbol_span" | "edge_site" | "call_site_scan" | "signature" | "fallback_symbol_window";
+  textCharacters?: number;   // present when response compaction omitted `text`
   truncated: boolean;
 }
 ```
 
-`edge_site` is emitted only when the resolved callee name was actually located as
-a call inside the symbol's own freshly loaded span; the window is then centred on
-that occurrence so a trimmed excerpt still contains the call it describes. When no
-occurrence can be located the excerpt degrades to a head window
-(`fallback_symbol_window`) rather than asserting an unproven edge site.
-
-`reason` is honest about precision:
+`reason` is honest about precision, and the distinction between the two
+call-site reasons is the point:
 
 - `symbol_span` — the symbol's full indexed line span fit the budget and is shown verbatim.
+- `edge_site` — the window is centred on the **exact call-site line the parser recorded with the edge** at index time. This is provenance, not inference.
+- `call_site_scan` — no call site was recorded for this edge, so the window is centred on the first occurrence of the callee's name located inside the caller's own span. A caller that invokes the same callee three times has three occurrences, and a scan cannot say which one produced the edge. Real evidence; not exact provenance.
 - `signature` — a signature-focused leading window of a larger symbol (impact dependents).
 - `fallback_symbol_window` — a generic leading window of a larger symbol (flow edge source).
-- `edge_site` — the resolved callee name was located as a call inside the symbol's own span, and the window is centred on that occurrence. The occurrence itself is the proof; without one the excerpt falls back to a head window rather than pretending a symbol-window snippet pinpoints an exact call/reference line.
+
+### Edge-site provenance
+
+Edges are identified by (source, target, type), so one edge can stand for several
+occurrences. Every occurrence the parser saw is recorded, and relation evidence
+reports them rather than presenting one site as the whole relationship:
+
+```ts
+relation.evidence = {
+  resolutionMethod: string;
+  locationKind: "edge_site" | "caller_span_scan" | "source_symbol_span" | "indexed_metadata";
+  callSites?: Array<{ startLine: number; endLine: number; precision: "span" | "line" }>;
+  callSiteCount?: number;   // total recorded, including any beyond the bounded list
+}
+```
+
+`callSites` / `callSiteCount` appear only for `edge_site` provenance. The
+representative span is the first recorded occurrence, and `limitations` says so
+whenever there is more than one. `precision` is `span` when the parser knew exact
+lines and columns (Python, TypeScript) and `line` when it knew only the line
+(Cython).
+
+Provenance is recorded at index time by the Python, TypeScript and Cython call
+extractors. An index written before occurrence capture simply has none: those
+edges report `caller_span_scan`, never `edge_site`. Absence means "not recorded",
+never "no occurrence exists" — and after editing a file, re-index before treating
+recorded lines as current.
 
 Bounds (defaults):
 

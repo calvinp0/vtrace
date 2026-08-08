@@ -73,12 +73,38 @@ export interface SymbolRecord {
   decorators?: string[];
 }
 
+/**
+ * Where in the source an edge was actually observed by the parser.
+ *
+ * Edges are identified by (source, target, type), so one edge can stand for
+ * several occurrences — a caller may call the same callee three times. Each
+ * occurrence is recorded, so flow evidence can point at a real call site instead
+ * of rescanning the caller's body for the first name that looks right (M131).
+ *
+ * `precision` says how much of the span the parser could establish: `span` means
+ * exact start/end line and column; `line` means the line is exact and the
+ * columns are not known.
+ */
+export interface EdgeCallSite {
+  startLine: number;
+  startColumn: number;
+  endLine: number;
+  endColumn: number;
+  precision: "span" | "line";
+}
+
 export interface EdgeRecord {
   id: EdgeId;
   srcSymbolId: SymbolId;
   dstSymbolId: SymbolId;
   edgeType: EdgeType;
   confidence: number;
+  /**
+   * Parser-observed occurrences of this edge, ordered by position. Absent on
+   * edges from parsers or indexes that predate occurrence capture — absence
+   * means "not recorded", never "no occurrence exists".
+   */
+  callSites?: readonly EdgeCallSite[];
 }
 
 export interface ParseDiagnostic {

@@ -18,10 +18,12 @@ import type { SymbolRecord } from "../domain/types";
  * window) or `fallback_symbol_window` (generic head window), never pretending the
  * trimmed window pinpoints the edge site.
  *
- * `edge_site` is emitted only when the caller supplies the resolved callee name
- * (`anchorName`) AND that name occurs as a call inside the symbol's own freshly
- * loaded span — the occurrence itself is the proof. Without a located occurrence
- * the excerpt degrades to a head window rather than guessing (M130).
+ * `edge_site` is emitted ONLY when the caller supplies an exact call-site line
+ * the parser persisted with the edge (`anchorLine`). A window centred on a
+ * textual occurrence the caller located by name (`anchorName`) is reported as
+ * `call_site_scan` instead: a caller that invokes the same callee three times
+ * has three occurrences, and a scan cannot say which one produced the edge.
+ * Without either, the excerpt degrades to a head window rather than guessing.
  */
 export interface SourceExcerpt {
   readonly filePath: string;
@@ -35,6 +37,7 @@ export interface SourceExcerpt {
 export type SourceExcerptReason =
   | "symbol_span"
   | "edge_site"
+  | "call_site_scan"
   | "signature"
   | "fallback_symbol_window";
 
@@ -67,9 +70,16 @@ export interface BuildSymbolExcerptOptions {
   /**
    * Resolved callee/reference local name. When this name occurs as a call inside
    * the symbol's own span, the emitted window is centered on that occurrence and
-   * reported as `edge_site`; otherwise the excerpt falls back to a head window.
+   * reported as `call_site_scan`; otherwise the excerpt falls back to a head
+   * window. A scan is evidence, not proof of which occurrence made the edge.
    */
   readonly anchorName?: string;
+  /**
+   * Exact 1-based file line of the call site the parser persisted with the edge.
+   * Takes precedence over `anchorName` and is the only input that earns the
+   * `edge_site` reason.
+   */
+  readonly anchorLine?: number;
 }
 
 /**
@@ -138,9 +148,12 @@ export function excerptFromLoadedSymbol(
   const fitsBudget = rawLines.length <= budget;
   // Anchoring only matters when the span must be trimmed: a span that already
   // fits contains the call site by construction.
+  const persistedOffset = fitsBudget
+    ? null
+    : persistedCallSiteOffset(symbol, rawLines.length, options?.anchorLine);
   const anchorOffset = fitsBudget
     ? null
-    : locateCallSiteOffset(rawLines, options?.anchorName);
+    : persistedOffset ?? locateCallSiteOffset(rawLines, options?.anchorName);
   const windowStartOffset = anchorOffset === null
     ? 0
     : Math.min(
@@ -164,11 +177,13 @@ export function excerptFromLoadedSymbol(
   const truncated = !fitsBudget || lineTruncated;
   const reason: SourceExcerptReason = fitsBudget
     ? "symbol_span"
-    : anchorOffset !== null
+    : persistedOffset !== null
       ? "edge_site"
-      : mode === "signature"
-        ? "signature"
-        : "fallback_symbol_window";
+      : anchorOffset !== null
+        ? "call_site_scan"
+        : mode === "signature"
+          ? "signature"
+          : "fallback_symbol_window";
 
   return {
     filePath: symbol.filePath,
@@ -178,6 +193,27 @@ export function excerptFromLoadedSymbol(
     reason,
     truncated,
   };
+}
+
+/**
+ * Offset of a parser-persisted call-site line within the symbol's own span.
+ *
+ * Returns null when no line was supplied or the line falls outside the span:
+ * a site that does not lie inside the symbol it is attributed to means the
+ * index and the source have diverged, and a stale line must not be presented
+ * as exact provenance.
+ */
+function persistedCallSiteOffset(
+  symbol: SymbolRecord,
+  spanLineCount: number,
+  anchorLine: number | undefined,
+): number | null {
+  if (anchorLine === undefined || !Number.isInteger(anchorLine)) {
+    return null;
+  }
+
+  const offset = anchorLine - symbol.startLine;
+  return offset >= 0 && offset < spanLineCount ? offset : null;
 }
 
 /**

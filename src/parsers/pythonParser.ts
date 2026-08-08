@@ -16,6 +16,7 @@ import {
 } from "../domain/types";
 import { detectLanguage } from "../fs/languageDetection";
 import { getCythonExportIndex, type CrossLanguageExportIndex } from "./cythonExports";
+import { withCallSite } from "./edgeCallSites";
 import { ParserError } from "./errors";
 import type { LanguageParser } from "./LanguageParser";
 import type { ParseFileInput } from "./types";
@@ -84,6 +85,10 @@ interface PythonAstMetadata {
 interface PythonAstCall {
   target: string;
   line: number;
+  /** 0-based column offsets straight from the CPython AST. */
+  col?: number;
+  endLine?: number;
+  endCol?: number;
 }
 
 type PythonReferenceKind =
@@ -234,11 +239,22 @@ def collect_calls(node):
                 if text is None:
                     continue
                 line = getattr(descendant, "lineno", 0) or 0
-                key = (text, line)
+                col = getattr(descendant, "col_offset", 0) or 0
+                end_line = getattr(descendant, "end_lineno", None) or line
+                end_col = getattr(descendant, "end_col_offset", None)
+                if end_col is None:
+                    end_col = col
+                key = (text, line, col)
                 if key in seen:
                     continue
                 seen.add(key)
-                calls.append({"target": text, "line": line})
+                calls.append({
+                    "target": text,
+                    "line": line,
+                    "col": col,
+                    "endLine": end_line,
+                    "endCol": end_col,
+                })
 
     return calls
 
@@ -1187,7 +1203,16 @@ function emitCallEdges(
     }
 
     const edge = makeCallsEdge(source.id, target.id);
-    edgesById.set(edge.id, edge);
+    // One (caller, callee) pair is one edge, but it can have many call sites.
+    // Each occurrence is recorded so flow evidence can name a real site instead
+    // of guessing at the first textual match in the caller's body.
+    edgesById.set(edge.id, withCallSite(edgesById.get(edge.id) ?? edge, {
+      startLine: call.line,
+      startColumn: call.col ?? 0,
+      endLine: Math.max(call.line, call.endLine ?? call.line),
+      endColumn: call.endCol ?? call.col ?? 0,
+      precision: call.col === undefined ? "line" : "span",
+    }));
   }
 }
 

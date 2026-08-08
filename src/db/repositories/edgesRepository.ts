@@ -2,6 +2,7 @@ import type { Database } from "bun:sqlite";
 
 import {
   normalizeFilePath,
+  type EdgeCallSite,
   type EdgeRecord,
   type FilePath,
 } from "../../domain/types";
@@ -15,6 +16,20 @@ interface EdgeRow {
 }
 
 export function deleteEdgesTouchingFileSymbols(db: Database, fileId: string): void {
+  // Sites are deleted explicitly rather than relying on the cascade:
+  // `PRAGMA foreign_keys` is per-connection, so an incremental refresh on a
+  // connection that never ran it would otherwise strand occurrence rows.
+  db.run(
+    `
+      DELETE FROM edge_call_sites
+      WHERE edge_id IN (
+        SELECT id FROM edges
+        WHERE src_symbol_id IN (SELECT id FROM symbols WHERE file_id = ?)
+           OR dst_symbol_id IN (SELECT id FROM symbols WHERE file_id = ?)
+      )
+    `,
+    [fileId, fileId],
+  );
   db.run(
     `
       DELETE FROM edges
@@ -49,7 +64,103 @@ export function insertEdges(
         edge.confidence,
       ],
     );
+
+    for (const [ordinal, site] of (edge.callSites ?? []).entries()) {
+      db.run(
+        `
+          INSERT INTO edge_call_sites (
+            edge_id,
+            ordinal,
+            start_line,
+            start_column,
+            end_line,
+            end_column,
+            precision
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `,
+        [edge.id, ordinal, site.startLine, site.startColumn, site.endLine, site.endColumn, site.precision],
+      );
+    }
   }
+}
+
+/** Probed once per connection: the answer cannot change while it is open. */
+const EDGE_CALL_SITES_PRESENT = new WeakMap<Database, boolean>();
+
+function hasEdgeCallSitesTable(db: Database): boolean {
+  const cached = EDGE_CALL_SITES_PRESENT.get(db);
+
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const row = db.query(
+    "SELECT 1 AS present FROM sqlite_master WHERE type = 'table' AND name = 'edge_call_sites' LIMIT 1",
+  ).get() as { present: number } | null;
+  const present = row !== null;
+  EDGE_CALL_SITES_PRESENT.set(db, present);
+  return present;
+}
+
+interface EdgeCallSiteRow {
+  edge_id: string;
+  start_line: number;
+  start_column: number;
+  end_line: number;
+  end_column: number;
+  precision: string;
+}
+
+/**
+ * Parser-observed occurrences for the given edges, keyed by edge id and ordered
+ * by position. Kept off the edge-row queries on purpose: frontier expansion
+ * fetches thousands of edges and needs none of this, while path rendering needs
+ * it for a handful.
+ */
+export function listCallSitesForEdges(
+  db: Database,
+  edgeIds: readonly string[],
+): Map<string, EdgeCallSite[]> {
+  const uniqueIds = [...new Set(edgeIds)].sort();
+  const sitesByEdgeId = new Map<string, EdgeCallSite[]>();
+
+  // An index written before occurrence capture has no table here, and a
+  // read-only consumer cannot migrate one into existence. Absent provenance is
+  // a supported state — consumers report `caller_span_scan` — so this must
+  // degrade rather than throw.
+  if (uniqueIds.length === 0 || !hasEdgeCallSitesTable(db)) {
+    return sitesByEdgeId;
+  }
+
+  for (const chunk of chunked(uniqueIds, EDGE_ADJACENCY_CHUNK_SIZE)) {
+    const placeholders = chunk.map(() => "?").join(", ");
+    const rows = db.query(`
+      SELECT edge_id, start_line, start_column, end_line, end_column, precision
+      FROM edge_call_sites
+      WHERE edge_id IN (${placeholders})
+      ORDER BY edge_id ASC, ordinal ASC
+    `).all(...chunk) as EdgeCallSiteRow[];
+
+    for (const row of rows) {
+      const site: EdgeCallSite = {
+        startLine: row.start_line,
+        startColumn: row.start_column,
+        endLine: row.end_line,
+        endColumn: row.end_column,
+        precision: row.precision === "line" ? "line" : "span",
+      };
+      const bucket = sitesByEdgeId.get(row.edge_id);
+
+      if (bucket === undefined) {
+        sitesByEdgeId.set(row.edge_id, [site]);
+      } else {
+        bucket.push(site);
+      }
+    }
+  }
+
+  return sitesByEdgeId;
 }
 
 export function listEdgesForFile(
@@ -139,6 +250,104 @@ export function listEdgesForSymbols(
   `).all(...uniqueIds, ...uniqueIds) as EdgeRow[];
 
   return rows.map(edgeRowToRecord);
+}
+
+/**
+ * Largest number of bound parameters used in a single generated `IN (...)`
+ * clause. SQLite's own ceiling is far higher, but a fixed modest chunk keeps
+ * one prepared-statement shape reusable across frontier levels and keeps the
+ * query planner on `idx_edges_src_symbol_id` / `idx_edges_dst_symbol_id`.
+ */
+export const EDGE_ADJACENCY_CHUNK_SIZE = 500;
+
+function chunked<T>(values: readonly T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let index = 0; index < values.length; index += size) {
+    chunks.push(values.slice(index, index + size));
+  }
+  return chunks;
+}
+
+/**
+ * Edges LEAVING any of `symbolIds`, fetched one batch per chunk rather than one
+ * query per node. This is the outgoing half of indexed frontier expansion: the
+ * cost tracks the frontier, not the size of the edge table (M131).
+ */
+export function listOutgoingEdgesForSymbols(
+  db: Database,
+  symbolIds: readonly string[],
+): EdgeRecord[] {
+  return listDirectedEdgesForSymbols(db, symbolIds, "src_symbol_id");
+}
+
+/** Edges ENTERING any of `symbolIds`. The incoming half of frontier expansion. */
+export function listIncomingEdgesForSymbols(
+  db: Database,
+  symbolIds: readonly string[],
+): EdgeRecord[] {
+  return listDirectedEdgesForSymbols(db, symbolIds, "dst_symbol_id");
+}
+
+function listDirectedEdgesForSymbols(
+  db: Database,
+  symbolIds: readonly string[],
+  column: "src_symbol_id" | "dst_symbol_id",
+): EdgeRecord[] {
+  const uniqueIds = [...new Set(symbolIds)].sort();
+
+  if (uniqueIds.length === 0) {
+    return [];
+  }
+
+  const records: EdgeRecord[] = [];
+
+  for (const chunk of chunked(uniqueIds, EDGE_ADJACENCY_CHUNK_SIZE)) {
+    const placeholders = chunk.map(() => "?").join(", ");
+    const rows = db.query(`
+      SELECT
+        id,
+        src_symbol_id,
+        dst_symbol_id,
+        edge_type,
+        confidence
+      FROM edges
+      WHERE ${column} IN (${placeholders})
+      ORDER BY id ASC
+    `).all(...chunk) as EdgeRow[];
+
+    for (const row of rows) {
+      records.push(edgeRowToRecord(row));
+    }
+  }
+
+  return records;
+}
+
+/**
+ * How many edges the index holds. A COUNT so callers can report the size of the
+ * searchable graph without materialising it.
+ */
+export function countEdges(db: Database): number {
+  const row = db.query("SELECT COUNT(*) AS n FROM edges").get() as { n: number } | null;
+  return row === null ? 0 : row.n;
+}
+
+/**
+ * Whether the index holds at least one edge of `edgeType` whose endpoints both
+ * resolve to indexed symbols. Answers "is call-flow evidence available at all"
+ * without loading the graph; `LIMIT 1` stops at the first hit.
+ */
+export function hasResolvableEdgeOfType(db: Database, edgeType: string): boolean {
+  const row = db.query(`
+    SELECT 1 AS present
+    FROM edges
+    INNER JOIN symbols AS src_symbols ON src_symbols.id = edges.src_symbol_id
+    INNER JOIN symbols AS dst_symbols ON dst_symbols.id = edges.dst_symbol_id
+    WHERE edges.edge_type = ?
+    LIMIT 1
+  `).get(edgeType) as { present: number } | null;
+  // `.get()` yields null (not undefined) for an empty result set.
+  return row !== null;
 }
 
 export function listAllEdges(db: Database): EdgeRecord[] {

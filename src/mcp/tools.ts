@@ -486,9 +486,10 @@ const SOURCE_EXCERPT_SCHEMA: McpSchemaProperty = {
     endLine: integerProperty("1-based last line of the excerpt."),
     text: stringProperty("Bounded excerpt text (never a whole file). Omitted on the MCP surface; see textCharacters and read path:startLine-endLine."),
     reason: stringProperty("Why this excerpt was chosen: symbol_span (full symbol fit the budget), signature (signature-focused head window), fallback_symbol_window (generic trimmed head window), or edge_site (reserved; exact edge-site lines are not currently available)."),
+    textCharacters: integerProperty("Length of the excerpt this entry refers to, when response compaction omitted the text itself."),
     truncated: booleanProperty("Whether the excerpt was trimmed by the line or per-line character budget."),
   },
-  required: ["filePath", "startLine", "endLine", "text", "reason", "truncated"],
+  required: ["filePath", "startLine", "endLine", "reason", "truncated"],
   additionalProperties: false,
 };
 
@@ -1869,6 +1870,8 @@ const RUN_PIPELINE_FLOW_PATH_SCHEMA = objectProperty(
       "Bounded inline excerpts around each step's edge source, so the relationship can be read without a follow-up Read. Null/absent step excerpts are dropped.",
       SOURCE_EXCERPT_SCHEMA,
     ),
+    sourceExcerptsOmitted: integerProperty("Step excerpts dropped by response compaction on a long path, when any."),
+    stepEvidenceOmitted: integerProperty("Steps whose relation evidence was dropped by response compaction, when any."),
   },
   ["pathIndex", "edgeCount", "nodeFqNames"],
 );
@@ -1933,6 +1936,7 @@ const RUN_PIPELINE_FLOW_SECTION_SCHEMA = objectProperty(
       description: "Compact ordered shortest paths when a flow was attempted.",
       items: RUN_PIPELINE_FLOW_PATH_SCHEMA,
     },
+    pathsOmitted: integerProperty("Enumerated paths dropped by response compaction, when any. The decision, claim scope and reason are never dropped."),
     flowRef: {
       type: ["string", "null"],
       description: "Stable deferred reference id for the full logic-flow output, when included.",
@@ -7276,6 +7280,7 @@ const PRODUCT_CONTEXT_RESPONSE_SCHEMA: McpSchemaProperty = {
       },
     },
     modelVisibleContext: stringProperty("Final deduplicated text measured by accounting and suitable for model injection."),
+    omittedItemCount: integerProperty("Per-item metadata rows dropped by response compaction, when the selection itself outgrew the metadata allowance. The rendered context is unaffected."),
     diagnostics: { type: "object", description: "Limitations, caps, duplicate-suppression counts, and fallback diagnostics.", additionalProperties: true },
   },
   required: [

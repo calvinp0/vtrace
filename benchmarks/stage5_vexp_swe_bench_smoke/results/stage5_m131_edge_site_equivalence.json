@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "stage5.m131.edge-site-equivalence.v1",
+  "persistedProvenanceSource": "parser call-site spans recorded in edge_call_sites at index time",
+  "fallbackWhenAbsent": "caller_span_scan; never reported as edge_site",
+  "multiSiteCount": 2,
+  "multipleSitesTruthful": true,
+  "scanNotClaimedExact": true,
+  "refreshEquivalent": true,
+  "refreshShapes": [
+    {
+      "locationKind": "edge_site",
+      "lineSpan": {
+        "start": 7,
+        "end": 7
+      },
+      "callSites": [
+        {
+          "startLine": 7,
+          "endLine": 7,
+          "precision": "span"
+        },
+        {
+          "startLine": 8,
+          "endLine": 8,
+          "precision": "span"
+        }
+      ],
+      "callSiteCount": 2,
+      "excerptReason": "symbol_span"
+    },
+    {
+      "locationKind": "edge_site",
+      "lineSpan": {
+        "start": 7,
+        "end": 7
+      },
+      "callSites": [
+        {
+          "startLine": 7,
+          "endLine": 7,
+          "precision": "span"
+        },
+        {
+          "startLine": 8,
+          "endLine": 8,
+          "precision": "span"
+        }
+      ],
+      "callSiteCount": 2,
+      "excerptReason": "symbol_span"
+    },
+    {
+      "locationKind": "edge_site",
+      "lineSpan": {
+        "start": 7,
+        "end": 7
+      },
+      "callSites": [
+        {
+          "startLine": 7,
+          "endLine": 7,
+          "precision": "span"
+        },
+        {
+          "startLine": 8,
+          "endLine": 8,
+          "precision": "span"
+        }
+      ],
+      "callSiteCount": 2,
+      "excerptReason": "symbol_span"
+    }
+  ],
+  "arc": {
+    "locationKind": "edge_site",
+    "lineSpan": {
+      "start": 1724,
+      "end": 1724
+    },
+    "persistedCallSiteCount": 1,
+    "excerpt": {
+      "filePath": "arc/mapping/engine.py",
+      "startLine": 1719,
+      "endLine": 1730,
+      "reason": "edge_site"
+    },
+    "callSiteInExcerpt": true
+  },
+  "pass": true,
+  "evidence": "ARC edge_site at {\"start\":1724,\"end\":1724}; 2 sites on the multi-call fixture"
+}

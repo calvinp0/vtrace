@@ -277,6 +277,8 @@ function main(): number { return helper(1); }
       dstSymbolId: helper.id,
       edgeType: EdgeType.Calls,
       confidence: 1,
+      // `helper(1)` sits on line 3 of the fixture (it opens with a newline).
+      callSites: [{ startLine: 3, startColumn: 33, endLine: 3, endColumn: 42, precision: "span" }],
     },
   ]);
   assert.equal(calls[0]?.id.length, 64);
@@ -328,6 +330,7 @@ class Worker {
       dstSymbolId: helper.id,
       edgeType: EdgeType.Calls,
       confidence: 1,
+      callSites: [{ startLine: 4, startColumn: 16, endLine: 4, endColumn: 29, precision: "span" }],
     },
   ]);
 });

@@ -10,11 +10,13 @@ import {
   buildFQName,
   computeFileId,
   computeSymbolId,
+  type EdgeCallSite,
   type EdgeRecord,
   type ParseDiagnostic,
   type ParseResult,
   type SymbolRecord,
 } from "../domain/types";
+import { withCallSite } from "./edgeCallSites";
 import { ParserError } from "./errors";
 import type { LanguageParser } from "./LanguageParser";
 import type { ParseFileInput } from "./types";
@@ -631,6 +633,17 @@ function makeImportEdge(srcSymbolId: string, dstSymbolId: string): EdgeRecord {
   };
 }
 
+/** Tree-sitter positions are 0-based rows/columns; lines are reported 1-based. */
+function treeSitterCallSite(node: Parser.SyntaxNode): EdgeCallSite {
+  return {
+    startLine: node.startPosition.row + 1,
+    startColumn: node.startPosition.column,
+    endLine: node.endPosition.row + 1,
+    endColumn: node.endPosition.column,
+    precision: "span",
+  };
+}
+
 function makeCallsEdge(srcSymbolId: string, dstSymbolId: string): EdgeRecord {
   return {
     id: hashParts([srcSymbolId, dstSymbolId, EdgeType.Calls]),
@@ -1152,7 +1165,7 @@ function collectScopeEdges(
 
         if (target !== undefined && target.id !== source.id) {
           const edge = makeCallsEdge(source.id, target.id);
-          callEdges.set(edge.id, edge);
+          callEdges.set(edge.id, withCallSite(callEdges.get(edge.id) ?? edge, treeSitterCallSite(node)));
         }
 
         break;

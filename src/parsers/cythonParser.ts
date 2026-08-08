@@ -14,6 +14,7 @@ import {
   type ParseResult,
   type SymbolRecord,
 } from "../domain/types";
+import { withCallSite } from "./edgeCallSites";
 import { parsePython } from "./pythonParser";
 import { ParserError } from "./errors";
 import type { LanguageParser } from "./LanguageParser";
@@ -1652,7 +1653,15 @@ function emitCythonScopeEdges(
 
     if (target !== undefined && target.id !== source.id) {
       const edge = makeCallsEdge(source.id, target.id);
-      callEdges.set(edge.id, edge);
+      // The Cython scanner establishes the line but not the column, so the
+      // occurrence is recorded at `line` precision rather than claiming a span.
+      callEdges.set(edge.id, withCallSite(callEdges.get(edge.id) ?? edge, {
+        startLine: call.line,
+        startColumn: 0,
+        endLine: call.line,
+        endColumn: 0,
+        precision: "line",
+      }));
     }
   }
 

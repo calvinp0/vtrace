@@ -176,6 +176,16 @@ const MAX_INLINE_DIAGNOSTIC_CHARS = 400;
 const MAX_DEFERRED_SUMMARY_CHARS = 96;
 
 /**
+ * Floor on per-item metadata rows kept when the selection itself is what pushes
+ * a response over the ceiling. Below this the response stops being a usable map
+ * of the context it ships, so the last-resort section drops take over instead.
+ */
+const MIN_RETAINED_PRODUCT_ITEMS = 3;
+
+/** Flow hops that keep full relation evidence when a long path must be trimmed. */
+const MAX_DETAILED_FLOW_STEPS = 3;
+
+/**
  * Optional sections removed wholesale, in this order, only when every
  * duplication-removal step has run and the response is still over the ceiling.
  * Ordered least-to-most useful to a coding agent. The authoritative context,
@@ -705,6 +715,13 @@ function enforceTotalEnvelope(
     omitted: Record<string, number>;
   },
 ): { applied: boolean } {
+  // The accounting block is appended after this ladder runs, so its cost has to
+  // be accounted for here — measured, not guessed, because it grows with the
+  // number of compaction steps applied. A fixed guess left the ladder stopping
+  // just under the ceiling and the finished response landing just over it.
+  const withinBudget = (): boolean =>
+    estimateTokens(serialize(draft)) + options.accountingTokens() <= options.ceilingTokens;
+
   const steps: Array<{ field: string; apply: () => number }> = [
     {
       field: "pivotNeighborhood",
@@ -1258,6 +1275,135 @@ function enforceTotalEnvelope(
       },
     },
     {
+      // Inline hop/dependent excerpts are SOURCE serialized outside the one
+      // authoritative representation, and they grow with path length. A
+      // one-hop answer never reaches this tier; a ten-hop one would otherwise
+      // reintroduce the M130 duplication by the back door. Identity and span
+      // survive, so the source stays one Read away.
+      field: "flow.impact.excerptText",
+      apply: () => {
+        let stripped = 0;
+
+        const stripExcerpt = (holder: JsonRecord | undefined): void => {
+          const excerpt = holder === undefined ? undefined : asRecord(holder.sourceExcerpt);
+          if (excerpt === undefined || typeof excerpt.text !== "string") return;
+          excerpt.textCharacters = excerpt.text.length;
+          delete excerpt.text;
+          stripped += 1;
+        };
+
+        for (const flowPath of asRecordArray(asRecord(draft.flow)?.paths) ?? []) {
+          // The product renders paths as `sourceExcerpts`; the raw engine output
+          // renders them as `steps[].sourceExcerpt`. Both carry source text.
+          for (const step of asRecordArray(flowPath.steps) ?? []) {
+            stripExcerpt(step);
+          }
+          for (const excerpt of asRecordArray(flowPath.sourceExcerpts) ?? []) {
+            if (typeof excerpt.text !== "string") continue;
+            excerpt.textCharacters = excerpt.text.length;
+            delete excerpt.text;
+            stripped += 1;
+          }
+        }
+
+        for (const dependent of asRecordArray(asRecord(draft.impact)?.topDependents) ?? []) {
+          stripExcerpt(dependent);
+        }
+
+        return stripped;
+      },
+    },
+    {
+      // Per-item metadata grows with the selection, and at a full context budget
+      // even compact rows can outgrow the metadata allowance. M130 never saw this
+      // because the incident carried four items. Items are ordered by selection
+      // priority, so the retained prefix is the part that matters most, and the
+      // rendered context itself is untouched.
+      field: "productContext.items",
+      apply: () => {
+        const productContext = asRecord(draft.productContext);
+        const items = productContext === undefined ? undefined : asRecordArray(productContext.items);
+        if (productContext === undefined || items === undefined || items.length <= MIN_RETAINED_PRODUCT_ITEMS) {
+          return 0;
+        }
+
+        const original = items.length;
+        let kept = original;
+
+        // Halve until it fits or the floor is reached: bounded iterations, and
+        // every intermediate state is a valid response.
+        while (kept > MIN_RETAINED_PRODUCT_ITEMS) {
+          kept = Math.max(MIN_RETAINED_PRODUCT_ITEMS, Math.floor(kept / 2));
+          productContext.items = items.slice(0, kept);
+          productContext.omittedItemCount = original - kept;
+          if (withinBudget()) break;
+        }
+
+        return original - kept;
+      },
+    },
+    {
+      // Per-step limitations are the same static honesty boilerplate repeated
+      // once per hop. The path's own `limitations` still carries it once.
+      field: "flow.paths[].steps[].relation.limitations",
+      apply: () => {
+        let dropped = 0;
+        for (const flowPath of asRecordArray(asRecord(draft.flow)?.paths) ?? []) {
+          for (const step of asRecordArray(flowPath.steps) ?? []) {
+            const relation = asRecord(step.relation);
+            const limitations = relation === undefined ? undefined : asStringArray(relation.limitations);
+            if (relation === undefined || limitations === undefined || limitations.length === 0) continue;
+            delete relation.limitations;
+            dropped += limitations.length;
+          }
+        }
+        return dropped;
+      },
+    },
+    {
+      // A long path costs per hop. The first hops are the ones a reader acts on,
+      // so later hops keep identity (edge type and endpoints) and lose evidence.
+      // The path shape — which is the answer — is unchanged.
+      field: "flow.paths[].steps[].evidence",
+      apply: () => {
+        let dropped = 0;
+        for (const flowPath of asRecordArray(asRecord(draft.flow)?.paths) ?? []) {
+          const steps = asRecordArray(flowPath.steps);
+          if (steps !== undefined && steps.length > MAX_DETAILED_FLOW_STEPS) {
+            for (const step of steps.slice(MAX_DETAILED_FLOW_STEPS)) {
+              if (step.relation === undefined && step.sourceExcerpt === undefined) continue;
+              delete step.relation;
+              delete step.sourceExcerpt;
+              dropped += 1;
+            }
+            flowPath.stepEvidenceOmitted = steps.length - MAX_DETAILED_FLOW_STEPS;
+          }
+
+          const excerpts = asRecordArray(flowPath.sourceExcerpts);
+          if (excerpts !== undefined && excerpts.length > MAX_DETAILED_FLOW_STEPS) {
+            flowPath.sourceExcerpts = excerpts.slice(0, MAX_DETAILED_FLOW_STEPS);
+            flowPath.sourceExcerptsOmitted = excerpts.length - MAX_DETAILED_FLOW_STEPS;
+            dropped += excerpts.length - MAX_DETAILED_FLOW_STEPS;
+          }
+        }
+        return dropped;
+      },
+    },
+    {
+      // Last tier for flow: the decision, the claim scope and the reason survive;
+      // the enumerated paths do not. A negative or bounded result must never lose
+      // the words that make it truthful, so only `paths` goes.
+      field: "flow.paths",
+      apply: () => {
+        const flow = asRecord(draft.flow);
+        const paths = flow === undefined ? undefined : asRecordArray(flow.paths);
+        if (flow === undefined || paths === undefined || paths.length === 0) return 0;
+        flow.paths = [];
+        flow.pathsOmitted = paths.length;
+        return paths.length;
+      },
+    },
+    {
       // Static per-call honesty boilerplate; the two load-bearing lines stay.
       field: "productContext.diagnostics.limitations",
       apply: () => {
@@ -1271,13 +1417,6 @@ function enforceTotalEnvelope(
       },
     },
   ];
-
-  // The accounting block is appended after this ladder runs, so its cost has to
-  // be accounted for here — measured, not guessed, because it grows with the
-  // number of compaction steps applied. A fixed guess left the ladder stopping
-  // just under the ceiling and the finished response landing just over it.
-  const withinBudget = (): boolean =>
-    estimateTokens(serialize(draft)) + options.accountingTokens() <= options.ceilingTokens;
 
   let applied = false;
   for (const step of steps) {
@@ -1327,23 +1466,31 @@ function measureResponse(
   },
 ): ResponseBudgetAccounting {
   const modelVisibleTokens = estimateTokens(input.modelVisibleContext);
-  const build = (serializedCharacters: number): ResponseBudgetAccounting => buildAccounting({
-    ...input,
-    modelVisibleTokens,
-    serializedCharacters,
-  });
+  const settle = (compactAccounting: boolean): ResponseBudgetAccounting => {
+    const build = (serializedCharacters: number): ResponseBudgetAccounting => buildAccounting({
+      ...input,
+      modelVisibleTokens,
+      serializedCharacters,
+      compactAccounting,
+    });
 
-  // The accounting block is itself part of the payload, so measuring it is a
-  // small fixpoint: only the digit width of the recorded figures can change.
-  let accounting = build(0);
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    const measured = serialize({ ...draft, responseBudget: accounting }).length;
-    if (measured === accounting.serialized_response_characters) {
-      return accounting;
+    // The accounting block is itself part of the payload, so measuring it is a
+    // small fixpoint: only the digit width of the recorded figures can change.
+    let accounting = build(0);
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const measured = serialize({ ...draft, responseBudget: accounting }).length;
+      if (measured === accounting.serialized_response_characters) {
+        return accounting;
+      }
+      accounting = build(measured);
     }
-    accounting = build(measured);
-  }
-  return accounting;
+    return accounting;
+  };
+
+  const full = settle(false);
+  // Spending the last of the envelope on the accounting block's own prose would
+  // be the one compaction that helps nobody.
+  return full.within_envelope ? full : settle(true);
 }
 
 /** Pure accounting-block construction, shared by the ladder's reserve and the final measurement. */
@@ -1356,8 +1503,17 @@ function buildAccounting(input: {
   omitted: Record<string, number>;
   expansion: Record<string, string>;
   serializedCharacters: number;
+  /**
+   * Drop the per-response prose and trim the audit lists. The accounting block
+   * is itself part of the payload — around 300 tokens of a 1000-token metadata
+   * allowance — so under a tight budget its own explanatory text is the last
+   * thing worth spending the envelope on. Every load-bearing figure survives.
+   */
+  compactAccounting?: boolean;
 }): ResponseBudgetAccounting {
   const totalTokens = estimateTokens("x".repeat(input.serializedCharacters));
+  const compact = input.compactAccounting === true;
+  const reportedFields = compact ? 3 : MAX_REPORTED_COMPACTED_FIELDS;
   return {
     envelopeVersion: MCP_RESPONSE_ENVELOPE_VERSION,
     requested_context_tokens: input.requestedContextTokens,
@@ -1368,15 +1524,17 @@ function buildAccounting(input: {
     serialized_response_characters: input.serializedCharacters,
     within_envelope: totalTokens <= responseTokenCeiling(input.requestedContextTokens),
     compaction_applied: input.compactionApplied,
-    compacted_fields: [...new Set(input.compactedFields)].sort().slice(0, MAX_REPORTED_COMPACTED_FIELDS),
-    omitted_detail_counts: boundedCounts(input.omitted),
-    expansion_available: boundedExpansions(input.expansion),
+    compacted_fields: [...new Set(input.compactedFields)].sort().slice(0, reportedFields),
+    omitted_detail_counts: compact ? {} : boundedCounts(input.omitted),
+    expansion_available: compact ? {} : boundedExpansions(input.expansion),
     diagnostics_detail: input.detail,
     estimate_method: "chars_div_4",
-    notes: [
-      "Token figures are chars/4 estimates, not tokenizer counts.",
-      "max_tokens bounds the model-visible context; the total ceiling adds a documented metadata allowance.",
-    ],
+    notes: compact
+      ? ["Accounting detail was itself compacted to fit the response ceiling; see the tool output schema."]
+      : [
+        "Token figures are chars/4 estimates, not tokenizer counts.",
+        "max_tokens bounds the model-visible context; the total ceiling adds a documented metadata allowance.",
+      ],
   };
 }
 

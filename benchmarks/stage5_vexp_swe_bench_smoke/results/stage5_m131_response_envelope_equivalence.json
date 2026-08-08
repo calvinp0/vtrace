@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "stage5.m131.response-envelope-equivalence.v1",
+  "fixture": "captured_incident_response",
+  "fixtureCommitted": false,
+  "requestedMaxTokens": 6000,
+  "m130RecordedCharacters": 27726,
+  "m130RecordedTokens": 6932,
+  "afterCharacters": 27731,
+  "afterEstimatedTokens": 6933,
+  "modelVisibleTokens": 3316,
+  "metadataTokens": 3617,
+  "ceilingTokens": 7000,
+  "withinEnvelope": true,
+  "compactionApplied": true,
+  "compactedFields": [
+    "accounting",
+    "capsuleResult.actionabilityHints[].evidence",
+    "capsuleResult.digest",
+    "capsuleResult.discarded",
+    "capsuleResult.manifest_only",
+    "capsuleResult.pivots",
+    "capsuleResult.pivots[].evidence",
+    "capsuleResult.pivots[].roleReason",
+    "capsuleResult.pivots[].source",
+    "capsuleResult.support[].evidence"
+  ],
+  "notLargerThanM130": false,
+  "duplicateBodiesBefore": 21,
+  "duplicateBodiesAfter": 0,
+  "gates": {
+    "modelVisibleWithinRequest": true,
+    "totalWithinSevenThousandTokens": true,
+    "totalUnderThirtyTwoThousandCharacters": true,
+    "sourceSerializedOnce": true,
+    "flowIncluded": true
+  },
+  "newLadderTiers": [
+    "flow.impact.excerptText",
+    "productContext.items",
+    "flow.paths[].steps[].relation.limitations",
+    "flow.paths[].steps[].evidence",
+    "flow.paths",
+    "compact accounting fallback"
+  ],
+  "pass": true,
+  "evidence": "27731 chars, 6933/7000 tokens"
+}

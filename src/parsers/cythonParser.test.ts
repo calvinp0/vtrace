@@ -420,6 +420,9 @@ test("a top-level Cython function call creates a calls edge", async () => {
       dstSymbolId: helper.id,
       edgeType: EdgeType.Calls,
       confidence: 1,
+      // The Cython scanner knows the line but not the column, so the occurrence
+      // is recorded at `line` precision rather than claiming an exact span.
+      callSites: [{ startLine: 5, startColumn: 0, endLine: 5, endColumn: 0, precision: "line" }],
     },
   ]);
 });

@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "stage5.m131.flow-scalability-smoke.v1",
+  "noAgents": true,
+  "noDocker": true,
+  "noVexp": true,
+  "noApiCalls": true,
+  "repositoriesMutated": false,
+  "arcSourceReadOnly": true,
+  "tckdbSourceReadOnly": true,
+  "startingCommit": "f0dc8b11886908055daa5bd1e4376d6bfaee56c3",
+  "rows": [
+    {
+      "id": "flow_short_path_does_not_load_graph",
+      "pass": true,
+      "evidence": "4 of 18862 edges fetched"
+    },
+    {
+      "id": "flow_arc_path_still_correct",
+      "pass": true,
+      "evidence": "1 edge, calls, arc/mapping/engine.py::reorder_p_label_map -> arc/mapping/engine.py::map_two_species"
+    },
+    {
+      "id": "flow_arc_two_times_faster",
+      "pass": true,
+      "evidence": "82.851ms -> 6.606ms (12.542x)"
+    },
+    {
+      "id": "flow_arc_warm_under_100ms",
+      "pass": true,
+      "evidence": "6.606ms warm median"
+    },
+    {
+      "id": "scaling_work_flat_across_50x_growth",
+      "pass": true,
+      "evidence": "graph 50x, edges fetched 2 -> 2, queries 2 -> 2"
+    },
+    {
+      "id": "large_graph_result_invariant",
+      "pass": true,
+      "evidence": "100000 edges, identical semantic result"
+    },
+    {
+      "id": "edge_order_invariant",
+      "pass": true,
+      "evidence": "5 storage orders, one semantic hash"
+    },
+    {
+      "id": "budget_exhaustion_reports_limit",
+      "pass": true,
+      "evidence": "traversal_limit_reached, not no_indexed_path_found"
+    },
+    {
+      "id": "no_path_reports_no_indexed_path",
+      "pass": true,
+      "evidence": "reachable=false, budgetExhausted=false"
+    },
+    {
+      "id": "determinism_repeated_queries",
+      "pass": true,
+      "evidence": "byte-identical across repeats"
+    },
+    {
+      "id": "adjacency_uses_indexes",
+      "pass": true,
+      "evidence": "src_symbol_id: SEARCH edges USING INDEX idx_edges_src_symbol_id (src_symbol_id=?); dst_symbol_id: SEARCH edges USING INDEX idx_edges_dst_symbol_id (dst_symbol_id=?)"
+    },
+    {
+      "id": "edge_site_uses_persisted_provenance",
+      "pass": true,
+      "evidence": "ARC edge_site at {\"start\":1724,\"end\":1724}; 2 sites on the multi-call fixture"
+    },
+    {
+      "id": "multiple_call_sites_truthful",
+      "pass": true,
+      "evidence": "2 sites reported, representative labelled"
+    },
+    {
+      "id": "full_incremental_noop_equivalent",
+      "pass": true,
+      "evidence": "full = incremental = no-op"
+    },
+    {
+      "id": "response_within_m130_envelope",
+      "pass": true,
+      "evidence": "27731 chars, 6933/7000 tokens"
+    },
+    {
+      "id": "response_source_serialized_once",
+      "pass": true,
+      "evidence": "21 -> 0"
+    },
+    {
+      "id": "impact_traversal_audited",
+      "pass": true,
+      "evidence": "no whole-graph loading; two bounded follow-ups recorded"
+    },
+    {
+      "id": "frozen_50_semantics_unchanged",
+      "pass": true,
+      "evidence": "50/50 cases, 0 semantic differences"
+    },
+    {
+      "id": "tckdb_same_checkout_preserved",
+      "pass": true,
+      "evidence": "lead=clients/python/tests/test_computed_reaction_upload_builder.py; m130-code parity=true"
+    },
+    {
+      "id": "searchLogicFlow_type_checked",
+      "pass": true,
+      "evidence": "no @ts-nocheck in src/logicFlow/searchLogicFlow.ts"
+    },
+    {
+      "id": "repositories_unmodified",
+      "pass": true,
+      "evidence": "isolated index copies; read-only source"
+    },
+    {
+      "id": "no_agents_no_docker_no_vexp",
+      "pass": true,
+      "evidence": "static analysis and local indexing only"
+    }
+  ],
+  "verdict": "PASS"
+}

@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "stage5.m131.flow-baseline.v1",
+  "capturedFromCommit": "f0dc8b11886908055daa5bd1e4376d6bfaee56c3",
+  "implementation": "M130 whole-repository graph materialisation",
+  "repository": {
+    "name": "ARC",
+    "root": "/home/calvin/code/ARC",
+    "branch": "arcbench",
+    "head": "1202705be46edf01c84bfb89e3fa94f76f7ae15e",
+    "readOnly": true,
+    "isolatedIndexCopy": true
+  },
+  "query": {
+    "start": "arc/mapping/engine.py::reorder_p_label_map",
+    "end": "arc/mapping/engine.py::map_two_species",
+    "maxPaths": 3
+  },
+  "protocol": {
+    "process": "single process, single Database handle for warm samples",
+    "warmups": 3,
+    "repetitions": 15,
+    "statistic": "median of measured repetitions; p90 reported where meaningful",
+    "coldDefinition": "fresh Database handle per repetition against the same isolated index file"
+  },
+  "graph": {
+    "totalPersistedEdges": 19404,
+    "totalPersistedSymbols": 8635,
+    "edgesLoadedIntoMemoryPerQuery": 19404,
+    "symbolsLoadedIntoMemoryPerQuery": 8635,
+    "dbQueriesPerQuery": "2 full-table scans (listAllSymbols, listAllEdges) + per-endpoint fq_name lookups"
+  },
+  "wholeGraphLoad": {
+    "listAllSymbolsMedianMs": 20.646,
+    "listAllEdgesMedianMs": 12.018
+  },
+  "warmWithSourceExcerpts": {
+    "warmMedianMs": 82.851,
+    "warmP90Ms": 88.021,
+    "warmMinMs": 77.145,
+    "warmMaxMs": 97.708,
+    "reachable": true,
+    "shortestPathEdgeCount": 1,
+    "edgesAvailable": 19404,
+    "edgesInspected": 1506,
+    "nodesVisited": 684
+  },
+  "warmStructuralOnly": {
+    "warmMedianMs": 85.894,
+    "warmP90Ms": 88.755,
+    "warmMinMs": 76.75,
+    "warmMaxMs": 97.413,
+    "reachable": true,
+    "shortestPathEdgeCount": 1,
+    "edgesAvailable": 19404,
+    "edgesInspected": 1506,
+    "nodesVisited": 684
+  },
+  "cold": {
+    "warmMedianMs": 83.627,
+    "warmP90Ms": 87.326
+  }
+}

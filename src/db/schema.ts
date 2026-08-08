@@ -356,6 +356,25 @@ export function initializeSchema(db: Database): void {
     CREATE INDEX IF NOT EXISTS idx_edges_dst_symbol_id
       ON edges(dst_symbol_id, id);
 
+    -- Parser-observed occurrences of an edge. Purely additive: an index written
+    -- before M131 simply has no rows here, and consumers report provenance as
+    -- unavailable rather than inventing it. The primary key is also the lookup
+    -- index, so no separate index is needed.
+    CREATE TABLE IF NOT EXISTS edge_call_sites (
+      edge_id TEXT NOT NULL,
+      ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+      start_line INTEGER NOT NULL CHECK (start_line >= 1),
+      start_column INTEGER NOT NULL CHECK (start_column >= 0),
+      end_line INTEGER NOT NULL CHECK (end_line >= start_line),
+      end_column INTEGER NOT NULL CHECK (end_column >= 0),
+      precision TEXT NOT NULL CHECK (precision IN ('span', 'line')),
+      PRIMARY KEY (edge_id, ordinal),
+      FOREIGN KEY (edge_id)
+        REFERENCES edges(id)
+        ON DELETE CASCADE
+        DEFERRABLE INITIALLY DEFERRED
+    );
+
     CREATE VIRTUAL TABLE IF NOT EXISTS symbol_search_fts USING fts5(
       symbol_id UNINDEXED,
       file_path_raw UNINDEXED,
