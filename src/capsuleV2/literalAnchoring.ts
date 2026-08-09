@@ -36,6 +36,11 @@ import {
 } from "../retrieval/hybridRetrieval";
 import { searchSymbols } from "../retrieval/searchSymbols";
 import { isLikelyTestCandidate } from "../retrieval/searchSymbolsShared";
+import {
+  NO_PROJECT_NAME_ALIASES,
+  isGenericProjectReference,
+  type ProjectNameAliases,
+} from "./projectNameSignals";
 
 // Synthesized final score for a literal-anchor candidate — the SAME tier as a
 // title-symbol match (an exact high-signal-literal hit is comparable evidence to
@@ -109,21 +114,53 @@ export interface LiteralAnchorResult {
   readonly matches: LiteralAnchorMatch[];
   /** Candidates to merge into the pool (one per match). */
   readonly candidates: HybridCandidate[];
+  /**
+   * Terms dropped because they name this repository and the task showed no
+   * explicit symbol-reference evidence. Diagnostic only; never scored.
+   */
+  readonly suppressedProjectNameTerms: string[];
 }
 
-const EMPTY: LiteralAnchorResult = { used: false, terms: [], matches: [], candidates: [] };
+const EMPTY: LiteralAnchorResult = {
+  used: false,
+  terms: [],
+  matches: [],
+  candidates: [],
+  suppressedProjectNameTerms: [],
+};
 
 export interface LiteralAnchorInput {
   readonly db: Database;
   readonly task: string;
+  /**
+   * Normalised aliases for this repository's own name. A term matching one of
+   * them anchors ONLY when the task explicitly targets it as a symbol. Omitted,
+   * no suppression happens and behaviour is exactly as before M132.
+   */
+  readonly projectNameAliases?: ProjectNameAliases;
 }
 
 // Recover candidates for the high-signal literals named anywhere in the task. Pure
 // with respect to the index: extract anchors, resolve each to indexed production
 // symbols, emit one candidate per resolved symbol.
 export function anchorLiterals(input: LiteralAnchorInput): LiteralAnchorResult {
-  const anchors = extractLiteralAnchors(input.task);
-  if (anchors.length === 0) return EMPTY;
+  const extracted = extractLiteralAnchors(input.task);
+  const aliases = input.projectNameAliases ?? NO_PROJECT_NAME_ALIASES;
+
+  // A term that merely names this repository is context, not a target. Dropped
+  // BEFORE resolution so it never reaches the exact-case-symbol or path-segment
+  // branches — for a repo named ARC, the path-segment branch alone matches every
+  // file under `arc/`.
+  const suppressedProjectNameTerms: string[] = [];
+  const anchors = extracted.filter((anchor) => {
+    if (!isGenericProjectReference({ term: anchor.term, task: input.task, aliases })) return true;
+    suppressedProjectNameTerms.push(anchor.term);
+    return false;
+  });
+
+  if (anchors.length === 0) {
+    return { ...EMPTY, terms: [], suppressedProjectNameTerms };
+  }
 
   const matches: LiteralAnchorMatch[] = [];
   const candidates: HybridCandidate[] = [];
@@ -145,8 +182,16 @@ export function anchorLiterals(input: LiteralAnchorInput): LiteralAnchorResult {
     }
   }
 
-  if (matches.length === 0) return { used: false, terms: anchors.map((a) => a.term), matches: [], candidates: [] };
-  return { used: true, terms: anchors.map((a) => a.term), matches, candidates };
+  if (matches.length === 0) {
+    return {
+      used: false,
+      terms: anchors.map((a) => a.term),
+      matches: [],
+      candidates: [],
+      suppressedProjectNameTerms,
+    };
+  }
+  return { used: true, terms: anchors.map((a) => a.term), matches, candidates, suppressedProjectNameTerms };
 }
 
 // --- anchor extraction --------------------------------------------------------

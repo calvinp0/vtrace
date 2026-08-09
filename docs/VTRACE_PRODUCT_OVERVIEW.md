@@ -39,7 +39,7 @@ You reach the same engine three ways:
 
 The MCP surface is the one agents use in practice. The headline tool is
 **`get_code_context`** (alias of `run_pipeline`); narrower tools —
-`get_context_capsule`, `get_impact_graph`, `get_skeleton`, `search_symbols`,
+`get_context_capsule`, `get_impact_graph`, `get_skeleton`,
 `search_logic_flow`, `search_memory` — answer more specific questions. All 19 tool
 IDs live in `src/mcp/types.ts:11`; definitions in `src/mcp/tools.ts`.
 

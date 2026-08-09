@@ -165,6 +165,11 @@ import {
   type WorktreeIndexFreshnessResult,
 } from "../indexer/indexMeta";
 import { WorktreeIndexLockError } from "../indexer/worktreeIndexLock";
+import {
+  detectIndexWorktreeMismatch,
+  resolveWorktreeRouting,
+  routingSourceFor,
+} from "./worktreeRouting";
 import { IndexingFileFailuresError, type IndexProjectResult } from "../indexer/types";
 import {
   assembleProductContext,
@@ -3668,26 +3673,54 @@ async function pathExists(targetPath: string): Promise<boolean> {
   }
 }
 
+/**
+ * The single repository-root parameter every product tool accepts. One term
+ * (`repo_root`), one meaning: the Git worktree the caller is working in.
+ */
+const REPO_ROOT_PROPERTY = stringProperty(
+  "Optional worktree root to query. Pass the linked worktree you are working in; defaults to the server-bound root, which is reported as routingSource=process_default.",
+);
+
+// Thin wrapper: the routing decision, precedence and diagnostics live in the
+// typed module. This only translates a routing failure into an MCP error result.
 async function resolveRequestedRepoRoot(
   context: McpServerContext,
   toolId: McpToolId,
   requestedRoot?: string,
 ): Promise<string | McpToolExecutionResult<never>> {
-  const candidate = requestedRoot ?? context.repoRoot;
-  if (candidate === null || candidate === undefined) {
-    return invalidRequest(toolId, `MCP tool ${toolId} requires an explicit repo_root because the server has no bound root.`, {
-      reason: "ambiguous_worktree",
-    });
+  const routed = await routeRequestedWorktree(context, toolId, requestedRoot);
+  return routed.ok ? routed.decision.repoRoot : routed.result;
+}
+
+async function routeRequestedWorktree(
+  context: McpServerContext,
+  toolId: McpToolId,
+  requestedRoot?: string,
+): Promise<
+  | { ok: true; decision: import("./worktreeRouting").WorktreeRoutingDecision }
+  | { ok: false; result: McpToolExecutionResult<never> }
+> {
+  const routing = await resolveWorktreeRouting({
+    requestedRoot,
+    clientContextRoot: context.clientContextRoot ?? null,
+    boundRoot: context.repoRoot,
+  });
+
+  if (routing.ok) {
+    return { ok: true, decision: routing.decision };
   }
-  try {
-    return (await detectRepoRoot(candidate)).repoRoot;
-  } catch (error) {
-    return invalidRequest(toolId, `MCP tool ${toolId} could not resolve repo_root.`, {
-      reason: "ambiguous_worktree",
-      repoRoot: candidate,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
+
+  return {
+    ok: false,
+    result: invalidRequest(toolId, routing.message, {
+      reason: routing.reason,
+      action: routing.action,
+      ...(routing.requestedWorktree === undefined
+        ? {}
+        : { requestedWorktree: routing.requestedWorktree }),
+      ...(routing.activeIndex === undefined ? {} : { activeIndex: routing.activeIndex }),
+    }),
+  };
 }
 
 function rebindMcpContext(context: McpServerContext, repoRoot: string): McpServerContext {
@@ -3799,6 +3832,25 @@ async function resolveReadyRepoBinding(
           dbPath,
         },
       ),
+    };
+  }
+
+  // Hard fail-closed rule (M132 §49): an index that records a DIFFERENT worktree
+  // root than the one this request routed to never answers the request. Silently
+  // serving it is how a PR-worktree question gets answered with main's source.
+  const mismatch = detectIndexWorktreeMismatch({
+    routedRoot: repoRoot,
+    indexedWorktreeRoot: (await readIndexMeta(repoRoot))?.manifest?.worktree?.root,
+  });
+  if (mismatch !== undefined) {
+    return {
+      ok: false,
+      result: invalidRequest(toolId, mismatch.message, {
+        reason: mismatch.reason,
+        action: mismatch.action,
+        requestedWorktree: mismatch.requestedWorktree,
+        indexedWorktree: mismatch.activeIndex?.root ?? null,
+      }),
     };
   }
 
@@ -5862,7 +5914,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         "Optional controls for indexing a concrete Git worktree.",
         {
           force: booleanProperty("Accepted for future compatibility; currently re-indexing always runs."),
-          repo_root: stringProperty("Optional absolute or relative worktree root. Defaults to the server-bound root."),
+          repo_root: REPO_ROOT_PROPERTY,
           mode: stringProperty("Refresh mode: auto (default), incremental, or full."),
         },
         [],
@@ -6494,7 +6546,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         {
           manifestId: stringProperty("Persisted capsule manifest id."),
           comparisonRunId: integerProperty("Run id to compare against."),
-          repo_root: stringProperty("Optional concrete worktree root. Defaults to the server-bound root."),
+          repo_root: REPO_ROOT_PROPERTY,
         },
         ["manifestId", "comparisonRunId"],
       ),
@@ -7579,6 +7631,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           capsuleBudgetTokens: integerProperty("Alias of `capsule_budget_tokens` (camelCase)."),
           detail: stringProperty("Response detail level: compact | standard | debug. Defaults to standard. Bounds how much diagnostic evidence the response carries; every level obeys the same hard total-response ceiling."),
           include_item_content: booleanProperty("When true, productContext.items[] also carry their own body. Off by default: every body is already rendered once in productContext.modelVisibleContext."),
+          repo_root: REPO_ROOT_PROPERTY,
         },
         [],
       ),
@@ -7751,6 +7804,10 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
       );
       const detailRequested = parseOptionalStringField(McpToolId.RunPipeline, input, "detail");
       const includeItemContent = parseOptionalBoolean(McpToolId.RunPipeline, input, "include_item_content");
+      const requestedRoot = parseOptionalStringField(McpToolId.RunPipeline, input, "repo_root");
+      if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
+        return requestedRoot;
+      }
 
       if (typeof query !== "string") {
         return query;
@@ -7989,9 +8046,23 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             ...(sessionId === undefined ? {} : { sessionId }),
           });
 
+          // One compact provenance stamp per response: which worktree answered and
+          // why it was chosen. Request-level, never repeated per selected item.
+          const routedProductContext = {
+            ...productContext,
+            repository: {
+              ...productContext.repository,
+              routingSource: routingSourceFor({
+                requestedRoot,
+                clientContextRoot: context.clientContextRoot ?? null,
+                boundRoot: context.repoRoot,
+              }),
+            },
+          };
+
           const assembledOutput = {
             ...output,
-            productContext,
+            productContext: routedProductContext,
             diagnostics: {
               ...output.diagnostics,
               freshness,
@@ -8029,6 +8100,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             ),
           };
         },
+        requestedRoot,
       );
     },
   });
@@ -8420,7 +8492,7 @@ const GET_CODE_CONTEXT_TOOL_DEFINITION = Object.freeze({
       "Code-context request with optional explicit worktree selection and opt-in refresh.",
       {
         ...(RUN_PIPELINE_TOOL_DEFINITION.metadata.inputSchema.properties ?? {}),
-        repo_root: stringProperty("Optional concrete worktree root. Defaults to the server-bound root."),
+        repo_root: REPO_ROOT_PROPERTY,
         auto_refresh: stringProperty("Refresh policy: `never` (default) or `if_stale`."),
       },
       RUN_PIPELINE_TOOL_DEFINITION.metadata.inputSchema.required,
@@ -8477,6 +8549,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           capsule_budget_tokens: integerProperty("Optional capsule token budget. Defaults to max_tokens, then 8000."),
           detail: stringProperty("Response detail level: compact | standard | debug. Defaults to standard. Bounds how much diagnostic evidence the response carries; every level obeys the same hard total-response ceiling."),
           include_item_content: booleanProperty("When true, productContext.items[] also carry their own body. Off by default: every body is already rendered once in productContext.modelVisibleContext."),
+          repo_root: REPO_ROOT_PROPERTY,
         },
         [],
       ),
@@ -8621,6 +8694,10 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         );
       }
       const includeItemContent = parseOptionalBoolean(McpToolId.GetContextCapsule, input, "include_item_content");
+      const requestedRoot = parseOptionalStringField(McpToolId.GetContextCapsule, input, "repo_root");
+      if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
+        return requestedRoot;
+      }
       if (includeItemContent !== undefined && typeof includeItemContent !== "boolean") {
         return includeItemContent;
       }
@@ -8729,6 +8806,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             }),
           };
         },
+        requestedRoot,
       );
     },
   }),
@@ -8752,6 +8830,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           include_lexical: booleanProperty("Include explicitly lexical evidence. Lexical evidence is never counted as an exact call."),
           include_unresolved: booleanProperty("Include recognized unresolved evidence when available; targets are never fabricated."),
           include_evidence: booleanProperty("Include bounded source grounding and resolution methods. Defaults to true."),
+          repo_root: REPO_ROOT_PROPERTY,
         },
         ["symbol_fqn"],
       ),
@@ -8802,7 +8881,11 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       const includeLexical = parseOptionalBoolean(McpToolId.GetImpactGraph, input, "include_lexical");
       const includeUnresolved = parseOptionalBoolean(McpToolId.GetImpactGraph, input, "include_unresolved");
       const includeEvidence = parseOptionalBoolean(McpToolId.GetImpactGraph, input, "include_evidence");
+      const requestedRoot = parseOptionalStringField(McpToolId.GetImpactGraph, input, "repo_root");
 
+      if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
+        return requestedRoot;
+      }
       if (typeof symbolFqn !== "string") {
         return symbolFqn;
       }
@@ -8900,6 +8983,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               : { ...result.output, accounting },
           };
         },
+        requestedRoot,
       );
     },
   }),
@@ -8920,6 +9004,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           relations: arrayProperty(`Optional semantic relation filter. Supported values: ${STATIC_RELATION_KINDS.join(", ")}.`, stringProperty("Relation kind.")),
           include_lexical: booleanProperty("Include explicitly lexical relationships. They remain labeled lexical and never become confirmed calls."),
           cross_repo: booleanProperty("Optional cross-repo traversal flag. The current repo-bound implementation only supports false."),
+          repo_root: REPO_ROOT_PROPERTY,
         },
         ["start", "end"],
       ),
@@ -8956,7 +9041,11 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       const maxTokens = parseOptionalInteger(McpToolId.SearchLogicFlow, input, "max_tokens");
       const relations = parseOptionalStringArrayField(McpToolId.SearchLogicFlow, input, "relations");
       const includeLexical = parseOptionalBoolean(McpToolId.SearchLogicFlow, input, "include_lexical");
+      const requestedRoot = parseOptionalStringField(McpToolId.SearchLogicFlow, input, "repo_root");
 
+      if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
+        return requestedRoot;
+      }
       if (typeof start !== "string") {
         return start;
       }
@@ -9051,6 +9140,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               : { ...result.output, accounting },
           };
         },
+        requestedRoot,
       );
     },
   }),
@@ -9067,6 +9157,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             stringProperty("Repo-relative file path."),
           ),
           detail: stringProperty("Optional skeleton detail level: minimal, standard, or detailed."),
+          repo_root: REPO_ROOT_PROPERTY,
         },
         ["files"],
       ),
@@ -9089,12 +9180,16 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
 
       const files = parseRequiredStringArrayField(McpToolId.GetSkeleton, input, "files");
       const detail = parseOptionalSkeletonDetail(McpToolId.GetSkeleton, input);
+      const requestedRoot = parseOptionalStringField(McpToolId.GetSkeleton, input, "repo_root");
 
       if (!Array.isArray(files)) {
         return files;
       }
       if (detail !== undefined && typeof detail !== "string") {
         return detail;
+      }
+      if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
+        return requestedRoot;
       }
 
       return withReadyRepoDb(
@@ -9134,6 +9229,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               : { ...output, accounting },
           };
         },
+        requestedRoot,
       );
     },
   }),
@@ -9146,7 +9242,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         "Index-status request.",
         {
           repos: arrayProperty("Optional workspace repo aliases to inspect. Defaults to all enabled repos when a workspace config is present.", stringProperty("Repo alias.")),
-          repo_root: stringProperty("Optional concrete worktree root. Defaults to the server-bound root."),
+          repo_root: REPO_ROOT_PROPERTY,
         },
         [],
       ),

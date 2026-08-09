@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "stage5.m132.arc-flow-regression.v1",
+  "worktreeRoot": "/home/calvin/code/ARC",
+  "worktreeBranch": "arcbench",
+  "worktreeHead": "1202705be46edf01c84bfb89e3fa94f76f7ae15e",
+  "startFqName": "arc/mapping/engine.py::reorder_p_label_map",
+  "endFqName": "arc/mapping/engine.py::map_two_species",
+  "endpointsUnambiguous": true,
+  "included": true,
+  "shortestPathEdgeCount": 1,
+  "edgeType": "calls",
+  "locationKind": "edge_site",
+  "callSiteLineSpan": {
+    "start": 1724,
+    "end": 1724
+  },
+  "edgesFetched": 11,
+  "edgesAvailable": 19404,
+  "warmMedianMs": 2.803,
+  "correct": true,
+  "frontierBounded": true
+}

@@ -58,7 +58,6 @@ Rules use template summaries, exact file/FQN/term/tool/intent links, determinist
 - `get_context_capsule`: use when you only need the compact Capsule and do not need the full orchestration sections. Optional `capsule_intent` and `capsule_budget_tokens` tune intent and budget, never the implementation.
 - `get_impact_graph`: use when the user asks what breaks, blast radius, dependents, callers, references, or impact of changing a known symbol.
 - `get_skeleton`: use when the relevant file path is already known and you need structural overview.
-- `search_symbols`: use for exact symbol lookup or when the context result is weak.
 - `search_logic_flow`: use when you know both exact endpoint FQNs and need a conservative static path between them over `contains`, `imports`, and statically resolved `calls` edges. Check `coverage.callFlowEvidenceAvailable`/`callFlowEvidenceUsed` to see whether call-flow edges contributed (false for repos with no extracted call edges, e.g. JavaScript-only).
 - `index_status`: use when you need readiness, freshness, and index health.
 - `workspace_setup`: use when MCP needs to inspect or apply repo setup instead of using the shell CLI.

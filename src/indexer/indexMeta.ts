@@ -32,6 +32,7 @@ const INDEXER_SOURCE_DIRS = ["src/indexer", "src/db"] as const;
 const SCHEMA_SOURCE_FILES = ["src/db/schema.ts"] as const;
 const CONFIG_SOURCE_FILES = [
   "src/fs/scanRepo.ts",
+  "src/fs/worktreeExclusions.ts",
   "src/fs/ignoreRules.ts",
   "src/fs/languageDetection.ts",
   "src/documents/documentPolicy.ts",

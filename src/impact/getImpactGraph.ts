@@ -1,7 +1,7 @@
 import type { Database } from "bun:sqlite";
 
 import { listCallSitesForEdges, listEdgesForSymbol, listEdgesForSymbols } from "../db/repositories/edgesRepository";
-import { getSymbolById, listSymbolsByFqName } from "../db/repositories/symbolsRepository";
+import { getSymbolById, getSymbolsByIds, listSymbolsByFqName } from "../db/repositories/symbolsRepository";
 import {
   EdgeType,
   Language,
@@ -729,23 +729,36 @@ function discoverImpactSymbols(
 
   for (let distance = 0; distance < maxDepth && frontier.length > 0; distance += 1) {
     const frontierSet = new Set(frontier);
-    const nextSymbolsById = new Map<string, SymbolRecord>();
+    // Collect the whole frontier's dependent ids first, then hydrate them in ONE
+    // query. The per-edge lookup this replaces issued a query per dependent, so
+    // its cost tracked the frontier's edge count rather than the level count.
+    // Insertion order is preserved for determinism, but the returned nodes are
+    // sorted below regardless, so hydration order cannot affect the result.
+    const dependentIds: string[] = [];
+    const seenDependentIds = new Set<string>();
 
     for (const edge of listEdgesForSymbols(db, frontier)) {
       if (!frontierSet.has(edge.dstSymbolId) || edge.srcSymbolId === edge.dstSymbolId) {
         continue;
       }
 
-      if (distanceById.has(edge.srcSymbolId)) {
+      if (distanceById.has(edge.srcSymbolId) || seenDependentIds.has(edge.srcSymbolId)) {
         continue;
       }
 
-      const dependentSymbol = getSymbolById(db, edge.srcSymbolId);
+      seenDependentIds.add(edge.srcSymbolId);
+      dependentIds.push(edge.srcSymbolId);
+    }
 
+    const hydrated = getSymbolsByIds(db, dependentIds);
+    const nextSymbolsById = new Map<string, SymbolRecord>();
+
+    for (const dependentId of dependentIds) {
+      const dependentSymbol = hydrated.get(dependentId);
+      // A dangling edge target is skipped exactly as the single-row lookup did.
       if (dependentSymbol === undefined) {
         continue;
       }
-
       nextSymbolsById.set(dependentSymbol.id, dependentSymbol);
     }
 

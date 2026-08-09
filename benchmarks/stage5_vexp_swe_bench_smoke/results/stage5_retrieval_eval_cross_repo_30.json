@@ -1,7 +1,7 @@
 {
   "generatedFrom": {
     "fixture": "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.cross_repo.30.json",
-    "resultsDir": "benchmarks/stage5_vexp_swe_bench_smoke/results",
+    "resultsDir": "/tmp/tmp.RYDbtbjUTB",
     "builder": "buildCapsuleV2 (in-process, --json equivalent)"
   },
   "rows": [
@@ -1441,8 +1441,8 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 1433,
-      "used_percent": 17.91,
+      "estimated_tokens": 1458,
+      "used_percent": 18.22,
       "expected_files": [
         "sphinx/domains/python.py",
         "sphinx/pycode/ast.py"
@@ -1454,12 +1454,12 @@
       "top_1_pivot_symbol": "_parse_annotation",
       "top_3_files": [
         "sphinx/domains/python.py",
-        "sphinx/pycode/ast.py",
-        "sphinx/util/inspect.py"
+        "sphinx/domains/cpp.py",
+        "sphinx/pycode/ast.py"
       ],
       "expected_file_best_rank": 1,
       "expected_file_role": "pivot",
-      "expected_symbol_best_rank": 3,
+      "expected_symbol_best_rank": 4,
       "expected_symbol_role": "support",
       "contains_expected_file_top1": true,
       "contains_expected_file_top3": true,
@@ -1467,7 +1467,7 @@
       "contains_expected_symbol_anywhere": true,
       "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 3,
+      "discarded_count": 24,
       "result": "hit_top1_pivot",
       "miss_category": "none",
       "failure_reason": null,
@@ -1489,11 +1489,14 @@
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
       "graph_neighbor_matches": [
+        "sphinx/domains/c.py::describe_signature -[contains]-> sphinx/domains/c.py::ASTType",
+        "sphinx/domains/c.py::describe_signature -[contains]-> sphinx/domains/c.py::ASTSizeofType",
+        "sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTTypeId",
+        "sphinx/domains/python.py::_parse_annotation -[calls]-> sphinx/domains/python.py::_parse_arglist",
         "sphinx/pycode/ast.py::unparse -[calls]-> sphinx/ext/autodoc/type_comment.py::update_annotations_using_type_comments",
         "sphinx/domains/python.py::_parse_annotation -[calls]-> sphinx/domains/python.py::handle_signature",
-        "sphinx/pycode/ast.py::unparse -[calls]-> sphinx/ext/autodoc/type_comment.py::not_suppressed",
-        "sphinx/pycode/ast.py::unparse -[references]-> sphinx/pycode/ast.py::OPERATORS",
-        "sphinx/pycode/ast.py::unparse -[calls]-> sphinx/ext/autodoc/type_comment.py::signature_from_ast"
+        "sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTSizeofType",
+        "sphinx/domains/cpp.py::describe_signature -[contains]-> sphinx/domains/cpp.py::ASTTemplateParamType"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
@@ -1501,50 +1504,60 @@
           {
             "path": "sphinx/domains/python.py",
             "symbol": "_parse_annotation",
-            "role_reason": "actionable function — in a likely edit file; strong lexical match"
+            "role_reason": "actionable function — in a likely edit file; strong lexical match; issue-domain relevance"
           },
           {
             "path": "sphinx/domains/python.py",
             "symbol": "_parse_arglist",
-            "role_reason": "actionable function — in a likely edit file; strong lexical match"
+            "role_reason": "actionable function — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour"
           }
         ],
         "top_support": [
+          {
+            "path": "sphinx/domains/cpp.py",
+            "symbol": "ASTType",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour; 7 dependents (not a pivot: high-degree framework root — support at most)"
+          },
           {
             "path": "sphinx/pycode/ast.py",
             "symbol": "unparse",
             "role_reason": "strong target beyond the pivot budget — actionable function — symbol-name match; strong lexical match"
           },
           {
-            "path": "sphinx/util/inspect.py",
-            "symbol": "signature_from_str",
+            "path": "sphinx/domains/c.py",
+            "symbol": "ASTType",
+            "role_reason": "lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))"
+          },
+          {
+            "path": "sphinx/util/cfamily.py",
+            "symbol": "StringifyTransform",
             "role_reason": "likely co-edit sibling of a high-confidence anchor"
-          },
-          {
-            "path": "sphinx/ext/autodoc/type_comment.py",
-            "symbol": "update_annotations_using_type_comments",
-            "role_reason": "near high-confidence seed `unparse` (sphinx/pycode/ast.py) via calls edge"
-          },
-          {
-            "path": "sphinx/domains/python.py",
-            "symbol": "handle_signature",
-            "role_reason": "near high-confidence seed `_parse_annotation` (sphinx/domains/python.py) via calls edge"
           }
         ],
         "top_discarded": [
           {
-            "path": "sphinx/ext/autodoc/type_comment.py",
-            "symbol": "not_suppressed",
+            "path": "sphinx/domains/c.py",
+            "symbol": "ASTSizeofType",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "sphinx/pycode/ast.py",
-            "symbol": "OPERATORS",
+            "path": "sphinx/domains/cpp.py",
+            "symbol": "ASTTypeId",
             "discard_reason": "beyond standard support budget (max 4)"
           },
           {
-            "path": "sphinx/ext/autodoc/type_comment.py",
-            "symbol": "signature_from_ast",
+            "path": "sphinx/__init__.py",
+            "symbol": "package_dir",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sphinx/domains/c.py",
+            "symbol": "describe_signature",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "sphinx/domains/cpp.py",
+            "symbol": "describe_signature",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -1806,32 +1819,33 @@
       "intent": "debug",
       "actual_mode": "standard",
       "budget_tokens": 8000,
-      "estimated_tokens": 1085,
-      "used_percent": 13.56,
+      "estimated_tokens": 853,
+      "used_percent": 10.66,
       "expected_files": [
         "requests/sessions.py"
       ],
       "expected_symbols": [
         "request"
       ],
-      "top_1_pivot_file": "requests/sessions.py",
-      "top_1_pivot_symbol": "request",
+      "top_1_pivot_file": "requests/api.py",
+      "top_1_pivot_symbol": "get",
       "top_3_files": [
+        "requests/api.py",
         "requests/sessions.py",
         "requests/cookies.py"
       ],
-      "expected_file_best_rank": 1,
-      "expected_file_role": "pivot",
-      "expected_symbol_best_rank": 1,
+      "expected_file_best_rank": 2,
+      "expected_file_role": "support",
+      "expected_symbol_best_rank": 2,
       "expected_symbol_role": "pivot",
-      "contains_expected_file_top1": true,
+      "contains_expected_file_top1": false,
       "contains_expected_file_top3": true,
       "contains_expected_file_anywhere": true,
       "contains_expected_symbol_anywhere": true,
-      "pivot_count": 1,
+      "pivot_count": 2,
       "support_count": 4,
-      "discarded_count": 1,
-      "result": "hit_top1_pivot",
+      "discarded_count": 23,
+      "result": "hit_top3",
       "miss_category": "none",
       "failure_reason": null,
       "filtered_generic_symbols": [],
@@ -1852,20 +1866,34 @@
       "literal_anchor_matches": [],
       "graph_neighbor_matches": [
         "requests/sessions.py::request -[calls]-> requests/sessions.py::delete",
-        "requests/sessions.py::request -[calls]-> requests/sessions.py::head",
-        "requests/sessions.py::request -[calls]-> requests/sessions.py::options",
-        "requests/sessions.py::request -[calls]-> requests/sessions.py::prepare_request"
+        "requests/packages/urllib3/connectionpool.py::urlopen -[calls]-> requests/packages/urllib3/connectionpool.py::_put_conn",
+        "requests/packages/urllib3/connectionpool.py::urlopen -[calls]-> requests/packages/urllib3/response.py::from_httplib",
+        "requests/packages/urllib3/connectionpool.py::urlopen -[references]-> requests/packages/urllib3/packages/ssl_match_hostname/__init__.py::CertificateError",
+        "requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[references]-> requests/packages/urllib3/request.py::RequestMethods",
+        "requests/packages/urllib3/connectionpool.py::urlopen -[calls]-> requests/packages/urllib3/connectionpool.py::_get_conn",
+        "requests/packages/urllib3/connectionpool.py::HTTPConnectionPool -[contains]-> requests/packages/urllib3/connectionpool.py::_get_timeout",
+        "requests/sessions.py::request -[calls]-> requests/sessions.py::head"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {
         "top_pivots": [
           {
-            "path": "requests/sessions.py",
+            "path": "requests/api.py",
+            "symbol": "get",
+            "role_reason": "actionable function — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour; 20 dependents"
+          },
+          {
+            "path": "requests/api.py",
             "symbol": "request",
-            "role_reason": "actionable method — symbol-name match; strong lexical match"
+            "role_reason": "actionable function — in a likely edit file; strong lexical match; issue-domain relevance; 7 dependents"
           }
         ],
         "top_support": [
+          {
+            "path": "requests/sessions.py",
+            "symbol": "request",
+            "role_reason": "strong target beyond the pivot budget — actionable method — symbol-name match; in a likely edit file; strong lexical match; issue-domain relevance; 8 dependents"
+          },
           {
             "path": "requests/cookies.py",
             "symbol": "RequestsCookieJar",
@@ -1874,23 +1902,38 @@
           {
             "path": "requests/sessions.py",
             "symbol": "delete",
-            "role_reason": "near high-confidence seed `request` (requests/sessions.py) via calls edge"
+            "role_reason": "strong target beyond the pivot budget — actionable method — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour"
           },
           {
             "path": "requests/sessions.py",
             "symbol": "head",
-            "role_reason": "near high-confidence seed `request` (requests/sessions.py) via calls edge"
-          },
-          {
-            "path": "requests/sessions.py",
-            "symbol": "options",
-            "role_reason": "near high-confidence seed `request` (requests/sessions.py) via calls edge"
+            "role_reason": "strong target beyond the pivot budget — actionable method — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour"
           }
         ],
         "top_discarded": [
           {
-            "path": "requests/sessions.py",
-            "symbol": "prepare_request",
+            "path": "requests/packages/urllib3/util.py",
+            "symbol": "Timeout",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/packages/urllib3/response.py",
+            "symbol": "from_httplib",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/packages/urllib3/exceptions.py",
+            "symbol": "DecodeError",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/packages/urllib3/exceptions.py",
+            "symbol": "HTTPError",
+            "discard_reason": "beyond standard support budget (max 4)"
+          },
+          {
+            "path": "requests/packages/urllib3/connectionpool.py",
+            "symbol": "HTTPConnectionPool",
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
@@ -3738,16 +3781,16 @@
     "instances_evaluated": 30,
     "workspace_error_count": 0,
     "no_context_count": 0,
-    "top_1_file_accuracy": 0.7333,
+    "top_1_file_accuracy": 0.7,
     "top_3_file_recall": 0.8333,
-    "expected_file_as_pivot_rate": 0.8,
-    "expected_file_as_support_rate": 0.0667,
+    "expected_file_as_pivot_rate": 0.7667,
+    "expected_file_as_support_rate": 0.1,
     "expected_file_missing_rate": 0.1,
     "expected_file_discarded_rate": 0.0333,
     "expected_symbol_hit_rate": 0.5667,
     "expected_symbol_as_pivot_rate": 0.2667,
-    "mean_capsule_tokens": 2156.2,
-    "mean_pivot_count": 2.1,
+    "mean_capsule_tokens": 2149.3,
+    "mean_pivot_count": 2.1333,
     "mean_support_count": 3.8333,
     "miss_taxonomy": {
       "none": 25,
@@ -3772,16 +3815,16 @@
       "instances_evaluated": 30,
       "workspace_error_count": 0,
       "no_context_count": 0,
-      "top_1_file_accuracy": 0.7333,
+      "top_1_file_accuracy": 0.7,
       "top_3_file_recall": 0.8333,
-      "expected_file_as_pivot_rate": 0.8,
-      "expected_file_as_support_rate": 0.0667,
+      "expected_file_as_pivot_rate": 0.7667,
+      "expected_file_as_support_rate": 0.1,
       "expected_file_missing_rate": 0.1,
       "expected_file_discarded_rate": 0.0333,
       "expected_symbol_hit_rate": 0.5667,
       "expected_symbol_as_pivot_rate": 0.2667,
-      "mean_capsule_tokens": 2156.2,
-      "mean_pivot_count": 2.1,
+      "mean_capsule_tokens": 2149.3,
+      "mean_pivot_count": 2.1333,
       "mean_support_count": 3.8333,
       "miss_taxonomy": {
         "none": 25,
@@ -3918,7 +3961,7 @@
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 0.5,
       "expected_symbol_as_pivot_rate": 0.25,
-      "mean_capsule_tokens": 2744.5,
+      "mean_capsule_tokens": 2750.75,
       "mean_pivot_count": 2,
       "mean_support_count": 4,
       "miss_taxonomy": {
@@ -3944,16 +3987,16 @@
       "instances_evaluated": 3,
       "workspace_error_count": 0,
       "no_context_count": 0,
-      "top_1_file_accuracy": 1,
+      "top_1_file_accuracy": 0.6667,
       "top_3_file_recall": 1,
-      "expected_file_as_pivot_rate": 1,
-      "expected_file_as_support_rate": 0,
+      "expected_file_as_pivot_rate": 0.6667,
+      "expected_file_as_support_rate": 0.3333,
       "expected_file_missing_rate": 0,
       "expected_file_discarded_rate": 0,
       "expected_symbol_hit_rate": 1,
       "expected_symbol_as_pivot_rate": 1,
-      "mean_capsule_tokens": 940.3333,
-      "mean_pivot_count": 1.6667,
+      "mean_capsule_tokens": 863,
+      "mean_pivot_count": 2,
       "mean_support_count": 4,
       "miss_taxonomy": {
         "none": 3,

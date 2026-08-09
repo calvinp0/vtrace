@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "stage5.m132.worktree-refresh-isolation.v1",
+  "worktreeA": {
+    "root": "wt-a",
+    "fingerprintBefore": "25eccfd998b0fb2b",
+    "fingerprintAfterBRefresh": "25eccfd998b0fb2b"
+  },
+  "worktreeB": {
+    "root": "wt-b",
+    "fingerprintBefore": "3b5a3794332caafa",
+    "fingerprintAfterRefresh": "ff4bead2adf95c89"
+  },
+  "aUntouchedByBRefresh": true,
+  "bActuallyRefreshed": true,
+  "sameCanonicalRepository": true,
+  "note": "Each worktree owns its own index under its own root, so a refresh of one cannot reach the other. `auto_refresh: if_stale` always targets the ROUTED worktree; the MCP-level assertion lives in src/mcp/worktreeRouting.test.ts.",
+  "pass": true
+}

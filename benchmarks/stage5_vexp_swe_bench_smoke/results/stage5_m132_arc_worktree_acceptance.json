@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "stage5.m132.arc-worktree-acceptance.v1",
+  "repository": {
+    "root": "/home/calvin/code/ARC",
+    "branch": "arcbench",
+    "head": "1202705be46edf01c84bfb89e3fa94f76f7ae15e",
+    "readOnly": true,
+    "isolatedIndexBuiltInTempDir": true,
+    "inPlaceVtraceStateWrittenByM132": false
+  },
+  "registeredWorktrees": 37,
+  "nestedWorktreesDiscovered": 5,
+  "nestedWorktreesExcluded": 5,
+  "excludedRelativePaths": [
+    ".claude/worktrees/agent-adf00908e1590c564",
+    ".claude/worktrees/agent-af3ab1214a47def28",
+    ".claude/worktrees/docker_ux_fix",
+    ".claude/worktrees/pyscf-adapter-test",
+    "feature_docker_ux"
+  ],
+  "discoveredViaGit": true,
+  "beforeFileCount": 615,
+  "afterFileCount": 324,
+  "excludedFileCount": 291,
+  "beforeSymbolCount": 15188,
+  "afterSymbolCount": 8635,
+  "beforeEdgeCount": 18862,
+  "afterEdgeCount": 19404,
+  "beforeDocumentCount": 615,
+  "afterDocumentCount": 324,
+  "beforeIndexMs": 25662.678,
+  "afterIndexMs": 19274.171,
+  "duplicateGeometryPathsBefore": 2,
+  "duplicateGeometryPathsAfter": 1,
+  "geometryPathsBefore": [
+    "arc/species/vectors.py",
+    "feature_docker_ux/arc/species/vectors.py"
+  ],
+  "geometryPathsAfter": [
+    "arc/species/vectors.py"
+  ],
+  "geometryQuery": "How does ARC handle linear segments and dummy atoms in Z-matrices?",
+  "geometrySelectedFiles": [
+    "arc/job/adapters/ts/linear.py",
+    "arc/job/adapters/ts/linear.py",
+    "arc/job/adapters/ts/linear_utils/addition.py",
+    "arc/job/adapters/ts/linear_utils/math_zmat.py",
+    "arc/job/adapters/ts/linear_utils/postprocess.py",
+    "arc/job/adapters/ts/linear_utils/math_zmat.py"
+  ],
+  "geometryLeadPivot": "arc/job/adapters/ts/linear.py",
+  "excludedPathsInResults": 0,
+  "repositoryUnmodified": true,
+  "isolatedIndexPath": "/tmp/vtrace-m132-arc-3MwT9m/clean.sqlite"
+}

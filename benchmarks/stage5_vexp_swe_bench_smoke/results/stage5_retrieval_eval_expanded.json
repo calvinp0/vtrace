@@ -1,7 +1,7 @@
 {
   "generatedFrom": {
     "fixture": "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.django.expanded.json",
-    "resultsDir": "benchmarks/stage5_vexp_swe_bench_smoke/results",
+    "resultsDir": "/tmp/tmp.RYDbtbjUTB",
     "builder": "buildCapsuleV2 (in-process, --json equivalent)"
   },
   "rows": [
@@ -540,14 +540,14 @@
       "literal_anchor_terms": [],
       "literal_anchor_matches": [],
       "graph_neighbor_matches": [
-        "django/db/migrations/migration.py::Migration -[contains]-> django/db/migrations/migration.py::__hash__",
-        "django/db/migrations/migration.py::Migration -[contains]-> django/db/migrations/migration.py::operations",
         "django/db/migrations/autodetector.py::_detect_changes -[calls]-> django/db/migrations/autodetector.py::generate_altered_unique_together",
-        "django/db/migrations/migration.py::Migration -[references]-> django/contrib/auth/migrations/0004_alter_user_username_opts.py::Migration",
         "django/db/migrations/autodetector.py::MigrationAutodetector -[contains]-> django/db/migrations/autodetector.py::check_dependency",
         "django/db/migrations/autodetector.py::_detect_changes -[calls]-> django/db/migrations/autodetector.py::generate_renamed_fields",
-        "django/db/migrations/migration.py::Migration -[references]-> django/contrib/auth/migrations/0008_alter_user_username_max_length.py::Migration",
-        "django/db/migrations/autodetector.py::MigrationAutodetector -[contains]-> django/db/migrations/autodetector.py::_generate_removed_field"
+        "django/db/migrations/autodetector.py::MigrationAutodetector -[contains]-> django/db/migrations/autodetector.py::_generate_removed_field",
+        "django/db/migrations/autodetector.py::_detect_changes -[calls]-> django/db/migrations/autodetector.py::generate_added_fields",
+        "django/db/migrations/autodetector.py::MigrationAutodetector -[imports]-> django/core/management/commands/migrate.py::Command",
+        "django/db/migrations/autodetector.py::MigrationAutodetector -[contains]-> django/db/migrations/autodetector.py::_generate_altered_foo_together",
+        "django/db/migrations/autodetector.py::_detect_changes -[calls]-> django/db/migrations/autodetector.py::generate_removed_indexes"
       ],
       "generic_lexical_decoys_suppressed": [],
       "diagnostics": {

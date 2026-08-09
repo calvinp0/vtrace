@@ -145,7 +145,6 @@ Use the specialized tools when the question becomes narrower:
 - `get_context_capsule`: compact task context only
 - `get_impact_graph`: use when the user asks what breaks, blast radius, dependents, callers, references, or impact of changing a known symbol
 - `get_skeleton`: use when the relevant file path is already known and you need structural overview
-- `search_symbols`: use for exact symbol lookup or when the context result is weak
 - `search_logic_flow`: bounded static path between two exact symbol FQNs over `contains`, `imports`, and statically resolved `calls` edges (coverage reports whether call-flow evidence was available; not runtime tracing)
 - `search_memory` / `get_session_context`: continuity
 - `index_status` / `workspace_setup`: health and setup

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "stage5.m132.response-envelope.v1",
+  "maxTokens": 6000,
+  "estimatedTotalTokens": 1844,
+  "serializedCharacters": 7375,
+  "tokenCeiling": 7000,
+  "characterCeiling": 32000,
+  "worktreeDiagnosticsSerializedOnce": true,
+  "pass": true,
+  "evidence": "1844 est. tokens, 7375 chars (<= 7000 / <= 32000)"
+}

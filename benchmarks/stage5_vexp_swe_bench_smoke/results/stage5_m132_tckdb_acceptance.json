@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "stage5.m132.tckdb-acceptance.v1",
+  "repositoryRoot": "/home/calvin/code/TCKDB_v2",
+  "repositoryHead": "9ed823ee1694fd45c4f69e0f28c83d8800c79e9d",
+  "repositoryBranch": "fix/kinetics-deterministic-order",
+  "repositoryUnmodified": true,
+  "inPlaceVtraceStateWrittenByM132": false,
+  "task": "Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.",
+  "expectedLead": "clients/python/tests/test_computed_reaction_upload_builder.py",
+  "leadPivot": "clients/python/tests/test_computed_reaction_upload_builder.py",
+  "selectedFiles": [
+    "clients/python/tests/test_computed_reaction_upload_builder.py",
+    "clients/python/tests/test_builder_computed_reaction_demo_notebook.py",
+    "clients/python/src/tckdb_client/builders/kinetics.py",
+    "clients/python/src/tckdb_client/builders/geometry.py",
+    "clients/python/pyproject.toml",
+    ".github/workflows/python-client-ci.yml"
+  ],
+  "projectNameAliasApplies": false,
+  "projectNameNote": "TCKDB's basename is `TCKDB_v2`, which does not appear as an anchor term in this task, so the M132 repository-name rule is inert here.",
+  "codeBehaviourPreserved": true,
+  "acceptancePolicy": "same-checkout parity against the M131 code, plus the M131 expected lead. A frozen slot list is deliberately not a gate: TCKDB drifts.",
+  "pass": true
+}

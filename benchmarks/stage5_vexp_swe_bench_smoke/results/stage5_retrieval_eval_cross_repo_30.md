@@ -36,16 +36,16 @@ support / discarded are compared against the fixture's `expected_files` and
 | instances_evaluated | 30 |
 | workspace_error_count | 0 |
 | no_context_count | 0 |
-| top_1_file_accuracy | 73.3% |
+| top_1_file_accuracy | 70.0% |
 | top_3_file_recall | 83.3% |
-| expected_file_as_pivot_rate | 80.0% |
-| expected_file_as_support_rate | 6.7% |
+| expected_file_as_pivot_rate | 76.7% |
+| expected_file_as_support_rate | 10.0% |
 | expected_file_discarded_rate | 3.3% |
 | expected_file_missing_rate | 10.0% |
 | expected_symbol_hit_rate | 56.7% |
 | expected_symbol_as_pivot_rate | 26.7% |
-| mean_capsule_tokens | 2156.2 |
-| mean_pivot_count | 2.10 |
+| mean_capsule_tokens | 2149.3 |
+| mean_pivot_count | 2.13 |
 | mean_support_count | 3.83 |
 
 ## Comparison vs prior cross-repo baseline
@@ -54,9 +54,9 @@ Does Capsule v2 retrieval stay stable as cross-repo coverage grows from 16 to 30
 
 | metric | previous 16-instance cross-repo | new 30-instance cross-repo | delta |
 | --- | --- | --- | --- |
-| top-1 file accuracy | 62.5% | 73.3% | +10.8 pp ▲ |
+| top-1 file accuracy | 62.5% | 70.0% | +7.5 pp ▲ |
 | top-3 file recall | 87.5% | 83.3% | -4.2 pp ▼ |
-| expected file as pivot | 81.3% | 80.0% | -1.2 pp ▼ |
+| expected file as pivot | 81.3% | 76.7% | -4.6 pp ▼ |
 | expected file missing | 6.3% | 10.0% | +3.8 pp ▼ |
 
 ## Aggregate metrics — by label source
@@ -70,8 +70,8 @@ All 30 instances share one label source (gold_patch); see the table above.
 | sympy/sympy | 5/5 | 80.0% | 100.0% | 100.0% | 0.0% | 2969.2 | 2.20 | 3.80 |
 | astropy/astropy | 4/4 | 50.0% | 75.0% | 75.0% | 0.0% | 2977.8 | 2.50 | 3.50 |
 | matplotlib/matplotlib | 4/4 | 50.0% | 75.0% | 50.0% | 25.0% | 656.3 | 1.75 | 4.00 |
-| sphinx-doc/sphinx | 4/4 | 50.0% | 50.0% | 50.0% | 50.0% | 2744.5 | 2.00 | 4.00 |
-| psf/requests | 3/3 | 100.0% | 100.0% | 100.0% | 0.0% | 940.3 | 1.67 | 4.00 |
+| sphinx-doc/sphinx | 4/4 | 50.0% | 50.0% | 50.0% | 50.0% | 2750.8 | 2.00 | 4.00 |
+| psf/requests | 3/3 | 66.7% | 100.0% | 66.7% | 0.0% | 863.0 | 2.00 | 4.00 |
 | pytest-dev/pytest | 3/3 | 100.0% | 100.0% | 100.0% | 0.0% | 855.3 | 2.00 | 4.00 |
 | pydata/xarray | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 2124.0 | 3.00 | 3.00 |
 | scikit-learn/scikit-learn | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 3412.0 | 2.00 | 4.00 |
@@ -116,7 +116,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 | sphinx-doc__sphinx-7462 | gold_patch | sphinx/domains/python.py | sphinx/domains/python.py::_parse_annotation | pivot | yes | yes | hit_top1_pivot | none |
 | sphinx-doc__sphinx-7748 | gold_patch | sphinx/ext/autodoc/__init__.py | sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin | pivot | yes | yes | hit_top1_pivot | none |
 | psf__requests-1142 | gold_patch | requests/models.py | requests/models.py::prepare_content_length | pivot | yes | yes | hit_top1_pivot | none |
-| psf__requests-1724 | gold_patch | requests/sessions.py | requests/sessions.py::request | pivot | yes | yes | hit_top1_pivot | none |
+| psf__requests-1724 | gold_patch | requests/sessions.py | requests/api.py::get | support | no | yes | hit_top3 | none |
 | pallets__flask-5014 | gold_patch | src/flask/blueprints.py | src/flask/blueprints.py::Blueprint | pivot | yes | yes | hit_top1_pivot | none |
 | astropy__astropy-14539 | gold_patch | astropy/io/fits/diff.py | astropy/io/fits/diff.py::identical | pivot | yes | yes | hit_top1_pivot | none |
 | astropy__astropy-14598 | gold_patch | astropy/io/fits/card.py | astropy/io/fits/diff.py::FITSDiff | support | no | no | hit_support | present_but_support |

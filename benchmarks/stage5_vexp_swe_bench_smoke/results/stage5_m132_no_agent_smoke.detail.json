@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "stage5.m132.worktree-smoke.v1",
+  "noAgents": true,
+  "noDocker": true,
+  "noVexp": true,
+  "noApiCalls": true,
+  "repositoriesMutated": false,
+  "arcSourceReadOnly": true,
+  "arcInPlaceVtraceStateWrittenByM132": false,
+  "tckdbSourceReadOnly": true,
+  "startingCommit": "238000b0847c7703ceeca49cc12e21bb04ee5314",
+  "rows": [
+    {
+      "id": "nested_worktrees_discovered_via_git",
+      "pass": true,
+      "evidence": "5 nested of 37 registered"
+    },
+    {
+      "id": "nested_worktree_source_excluded",
+      "pass": true,
+      "evidence": "615 -> 324 files (291 excluded)"
+    },
+    {
+      "id": "no_duplicate_symbol_paths",
+      "pass": true,
+      "evidence": "arc/species/vectors.py copies: 2 -> 1"
+    },
+    {
+      "id": "no_excluded_path_in_any_result",
+      "pass": true,
+      "evidence": "0 excluded paths reached retrieval"
+    },
+    {
+      "id": "nested_worktree_symbols_and_edges_absent",
+      "pass": true,
+      "evidence": "symbols 15188 -> 8635, edges 18862 -> 19404"
+    },
+    {
+      "id": "worktree_routing_matrix_complete",
+      "pass": true,
+      "evidence": "15 cases across 5 suites, 0 missing"
+    },
+    {
+      "id": "worktree_refresh_isolated",
+      "pass": true,
+      "evidence": "A fingerprint unchanged by a refresh of B (true)"
+    },
+    {
+      "id": "contaminated_index_cleaned_by_refresh",
+      "pass": true,
+      "evidence": "nested files 1 -> 0, symbols 1 -> 0"
+    },
+    {
+      "id": "project_name_generic_reference_suppressed",
+      "pass": true,
+      "evidence": "project-class files in generic query: 3 -> 0"
+    },
+    {
+      "id": "explicit_symbol_reference_preserved",
+      "pass": true,
+      "evidence": "explicit ARC-class query selects 6 files, lead=arc/main.py"
+    },
+    {
+      "id": "project_name_change_is_scoped",
+      "pass": true,
+      "evidence": "one generator (literal anchoring), gated on the repository basename"
+    },
+    {
+      "id": "impact_hydration_batched",
+      "pass": true,
+      "evidence": "112 -> 73 queries for 40 dependents"
+    },
+    {
+      "id": "arc_flow_still_correct",
+      "pass": true,
+      "evidence": "1 edge(s), calls, arc/mapping/engine.py::reorder_p_label_map -> arc/mapping/engine.py::map_two_species"
+    },
+    {
+      "id": "arc_flow_frontier_bounded",
+      "pass": true,
+      "evidence": "11 of 19404 edges fetched"
+    },
+    {
+      "id": "response_within_m130_envelope",
+      "pass": true,
+      "evidence": "1844 est. tokens, 7375 chars (<= 7000 / <= 32000)"
+    },
+    {
+      "id": "frozen_50_semantics",
+      "pass": true,
+      "evidence": "50/50 cases, 0 semantic differences"
+    },
+    {
+      "id": "tckdb_same_checkout_preserved",
+      "pass": true,
+      "evidence": "lead=clients/python/tests/test_computed_reaction_upload_builder.py; m131-code parity=true"
+    },
+    {
+      "id": "guidance_names_only_exposed_tools",
+      "pass": true,
+      "evidence": "6 referenced, 0 missing from tools/list"
+    },
+    {
+      "id": "new_modules_type_checked",
+      "pass": true,
+      "evidence": "no @ts-nocheck in the M132 modules"
+    },
+    {
+      "id": "repositories_unmodified",
+      "pass": true,
+      "evidence": "isolated index in temp dir; read-only source"
+    },
+    {
+      "id": "no_agents_no_docker_no_vexp",
+      "pass": true,
+      "evidence": "static analysis and local indexing only"
+    }
+  ],
+  "verdict": "PASS"
+}

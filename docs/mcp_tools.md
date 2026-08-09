@@ -422,7 +422,9 @@ Each dependent node may carry an optional bounded `sourceExcerpt` showing why it
 
 Use `get_skeleton` when the relevant file path is already known and you need structural overview.
 
-Use `search_symbols` for exact symbol lookup or when the context result is weak.
+Use `get_code_context` for exact symbol lookup too: naming the symbol resolves it and
+returns its source with surrounding context. (`search_symbols` exists in the registry
+but is a hidden legacy tool — it is absent from `tools/list`, so clients cannot call it.)
 
 ### `search_logic_flow`
 

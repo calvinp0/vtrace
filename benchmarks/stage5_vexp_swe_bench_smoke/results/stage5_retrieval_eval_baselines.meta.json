@@ -1,8 +1,8 @@
 {
-  "purpose": "Freshness record for the committed retrieval no-change-proof baselines. The byte-diff proof (see CLAUDE.md / stage5-eval skill) is only valid when these baselines were generated from code equivalent to HEAD for everything under src/. Check freshness with: git diff --stat <generated_at_commit>..HEAD -- src/  \u2014 any output means the baselines may be stale; fall back to the stash A/B proof, and refresh these baselines (plus this file) in the same commit as any milestone that intentionally changes retrieval/capsule output.",
-  "generated_at_commit": "199769f",
-  "generated_at_date": "2026-07-04",
-  "generated_after_milestone": "M103 (Implement structured task derivation)",
+  "purpose": "Freshness record for the committed retrieval no-change-proof baselines. The byte-diff proof (see CLAUDE.md / stage5-eval skill) is only valid when these baselines were generated from code equivalent to HEAD for everything under src/. Check freshness with: git diff --stat <generated_at_commit>..HEAD -- src/  — any output means the baselines may be stale; fall back to the stash A/B proof, and refresh these baselines (plus this file) in the same commit as any milestone that intentionally changes retrieval/capsule output.",
+  "generated_at_commit": "3d0a66c",
+  "generated_at_date": "2026-08-09",
+  "generated_after_milestone": "M132 (Fix worktree routing and index isolation)",
   "baselines": [
     "stage5_retrieval_eval_expanded.{csv,json,md}",
     "stage5_retrieval_eval_cross_repo_30.{csv,json,md}"
@@ -21,11 +21,12 @@
     },
     "cross_repo_30": {
       "evaluated": 30,
-      "top1": 0.733,
-      "top3": 0.833,
-      "pivot": 0.8,
+      "top1": 0.7,
+      "top3": 0.8333,
+      "pivot": 0.7667,
       "missing": 0.1
     }
   },
-  "history_note": "Previous refresh: 48379f1 / M101 (committed at e5f6e35). M103 changed the DEFAULT task derivation (structured: V0 base + error/test/traceback evidence, byte-identical to M102 V5), so BOTH FIXTURES were regenerated (retrieval_eval.django.expanded.json: 15 auto rows, 5 manual rows preserved via --base-fixture; retrieval_eval.cross_repo.30.json: all 30 rows; task/notes fields only) and both baselines re-run at 199769f. The retrieval ENGINE is unchanged: with the OLD fixtures the evals are byte-identical to the previous baselines (src/ untouched since 48379f1). Deltas are task-text-driven and net-positive \u2014 expanded: django-11815 hit_top3\u2192hit_top1_pivot (top-1 85\u219290%); cross_repo_30: requests-1724 hit_discarded\u2192hit_top1_pivot, pylint-8898 skipped_no_context\u2192hit_discarded, sphinx-7462 + sympy-13372 hit_top3\u2192hit_top1_pivot, matplotlib-22719 hit_top1_pivot\u2192hit_top3 (the known M103 regression-guard case; gold stays top-3)."
+  "attribution_note": "M132 DID NOT CAUSE the deltas in this refresh. The baselines had been stale since 199769f (M103); 108 src/ files changed across M104-M131 without a refresh, so the committed-baseline byte-diff had been meaningless for eight milestones — the same failure mode M99 recorded. M132 proved its own no-change with the stash A/B protocol: both CSVs are BYTE-IDENTICAL with the M132 src changes stashed versus applied. The cross_repo_30 movement recorded here (top1 0.733 -> 0.700, pivot 0.800 -> 0.767) accumulated over M104-M131 and belongs to those milestones, not to this commit. The baselines are refreshed here purely to make the cheap byte-diff proof valid again for M133 onward.",
+  "history_note": "Previous refresh: 199769f / M103. Before that: 48379f1 / M101 (committed at e5f6e35). M103 changed the DEFAULT task derivation (structured: V0 base + error/test/traceback evidence, byte-identical to M102 V5), so BOTH FIXTURES were regenerated and both baselines re-run at 199769f."
 }

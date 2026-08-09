@@ -23,7 +23,8 @@ test("writeVtraceAgentGuidanceBlock creates AGENTS.md when missing", async () =>
     assert.match(agents, /broad repo-understanding, debugging, refactor, and code-context tasks/);
     assert.match(agents, /before manual grep or opening many files/);
     assert.match(agents, /If `get_code_context` reports `stale_index`, `missing_index`, or `repo_not_ready`, call `index_repo` and then retry `get_code_context`\./);
-    assert.match(agents, /search_symbols/);
+    // M132: `search_symbols` is a hidden legacy tool and must not be recommended.
+    assert.doesNotMatch(agents, /search_symbols/);
     assert.match(agents, /get_skeleton/);
     assert.match(agents, /get_impact_graph/);
     assert.match(agents, /get_context_capsule/);

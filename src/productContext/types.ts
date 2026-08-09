@@ -83,6 +83,12 @@ export interface ProductContextResponse {
     detached: boolean;
     indexRunId: number | string | null;
     indexMode: "noop" | "incremental" | "full_rebuild" | null;
+    /**
+     * Which routing source selected this worktree: an explicit `repo_root`, a
+     * client-supplied context root, or the server's bound default. Request-level
+     * only — it is never repeated per selected item.
+     */
+    routingSource?: "explicit_root" | "client_context" | "process_default";
   };
   freshness: {
     status: string;

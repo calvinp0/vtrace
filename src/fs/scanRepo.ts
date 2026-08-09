@@ -16,6 +16,11 @@ import {
   loadIgnoreRulesForDirectory,
   type IgnoreRule,
 } from "./ignoreRules";
+import {
+  isExcludedWorktreeDirectory,
+  resolveWorktreeExclusions,
+  type WorktreeExclusionSet,
+} from "./worktreeExclusions";
 
 const IGNORED_DIRECTORIES = new Set([
   ".git",
@@ -54,19 +59,34 @@ export interface RepoSourceSnapshot {
   fingerprint: string;
 }
 
-export async function scanRepo(repoRoot: string): Promise<FileRecord[]> {
+export interface RepoScanOptions {
+  /**
+   * Precomputed nested-worktree exclusions. Supply this when a caller already
+   * resolved them for the same root in the same operation; omitted, the scan
+   * resolves them itself with a single `git worktree list`.
+   */
+  readonly worktreeExclusions?: WorktreeExclusionSet;
+}
+
+export async function scanRepo(
+  repoRoot: string,
+  options: RepoScanOptions = {},
+): Promise<FileRecord[]> {
   const root = path.resolve(repoRoot);
-  const files = await scanDirectory(root, root, []);
+  const exclusions = options.worktreeExclusions ?? await resolveWorktreeExclusions(root);
+  const files = await scanDirectory(root, root, [], exclusions);
 
   return files.sort((left, right) => left.path.localeCompare(right.path));
 }
 
 export async function captureRepoSourceSnapshot(
   repoRoot: string,
+  options: RepoScanOptions = {},
 ): Promise<RepoSourceSnapshot> {
   const root = path.resolve(repoRoot);
+  const exclusions = options.worktreeExclusions ?? await resolveWorktreeExclusions(root);
   const fingerprint = createHash("sha256");
-  const fileCount = await updateSourceSnapshotFingerprint(root, root, fingerprint, []);
+  const fileCount = await updateSourceSnapshotFingerprint(root, root, fingerprint, [], exclusions);
 
   return {
     fileCount,
@@ -89,6 +109,7 @@ async function scanDirectory(
   root: string,
   directory: string,
   inheritedRules: readonly IgnoreRule[],
+  exclusions: WorktreeExclusionSet,
 ): Promise<FileRecord[]> {
   const entries = await readdir(directory, { withFileTypes: true });
   entries.sort((left, right) => left.name.localeCompare(right.name));
@@ -104,7 +125,13 @@ async function scanDirectory(
         continue;
       }
 
-      files.push(...(await scanDirectory(root, path.join(directory, entry.name), rules)));
+      // A registered linked worktree nested under this root is a duplicate
+      // checkout of this same repository, never a module of it.
+      if (isExcludedWorktreeDirectory(exclusions, relativePath)) {
+        continue;
+      }
+
+      files.push(...(await scanDirectory(root, path.join(directory, entry.name), rules, exclusions)));
       continue;
     }
 
@@ -164,6 +191,7 @@ async function updateSourceSnapshotFingerprint(
   directory: string,
   fingerprint: ReturnType<typeof createHash>,
   inheritedRules: readonly IgnoreRule[],
+  exclusions: WorktreeExclusionSet,
 ): Promise<number> {
   const entries = await readdir(directory, { withFileTypes: true });
   entries.sort((left, right) => left.name.localeCompare(right.name));
@@ -179,11 +207,16 @@ async function updateSourceSnapshotFingerprint(
         continue;
       }
 
+      if (isExcludedWorktreeDirectory(exclusions, relativePath)) {
+        continue;
+      }
+
       fileCount += await updateSourceSnapshotFingerprint(
         root,
         path.join(directory, entry.name),
         fingerprint,
         rules,
+        exclusions,
       );
       continue;
     }

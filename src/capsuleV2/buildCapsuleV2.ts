@@ -76,6 +76,7 @@ import {
 } from "./nonSourceExample";
 import { anchorTitleSymbols, type TitleSymbolResult } from "./titleSymbolAnchoring";
 import { anchorLiterals, type LiteralAnchorResult } from "./literalAnchoring";
+import { resolveProjectNameAliases } from "./projectNameSignals";
 import {
   anchorDirectEvidence,
   boostScoresForDirectEvidence,
@@ -394,7 +395,13 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // seeds them into the pool at the SAME strength tier as title-symbol matches. Like
   // title-symbol, only symbols not already present are injected (a synthesized anchor
   // candidate is thin and must not replace a richer existing one).
-  const literalAnchors: LiteralAnchorResult = anchorLiterals({ db: input.db, task: input.task });
+  const literalAnchors: LiteralAnchorResult = anchorLiterals({
+    db: input.db,
+    task: input.task,
+    // The repository's own name is context, not a symbol pointer, unless the task
+    // explicitly targets it. See projectNameSignals.
+    projectNameAliases: resolveProjectNameAliases(input.repoRoot),
+  });
   if (literalAnchors.candidates.length > 0) {
     const poolIds = new Set(candidates.map((c) => c.symbolId));
     const fresh = literalAnchors.candidates.filter((c) => !poolIds.has(c.symbolId));

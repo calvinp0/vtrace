@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "stage5.m132.worktree-routing-matrix.v1",
+  "cases": [
+    {
+      "id": "A_parent_no_nested",
+      "covered": "src/fs/worktreeExclusions.test.ts"
+    },
+    {
+      "id": "B_parent_one_nested",
+      "covered": "src/fs/worktreeExclusions.test.ts"
+    },
+    {
+      "id": "C_parent_five_nested",
+      "covered": "src/fs/worktreeExclusions.test.ts"
+    },
+    {
+      "id": "D_query_nested_directly",
+      "covered": "src/fs/worktreeExclusions.test.ts"
+    },
+    {
+      "id": "E_server_cwd_a_request_b",
+      "covered": "src/mcp/worktreeRouting.test.ts"
+    },
+    {
+      "id": "F_same_worktree_stale_auto_refresh",
+      "covered": "src/mcp/worktreeRouting.test.ts"
+    },
+    {
+      "id": "G_different_worktree_auto_refresh",
+      "covered": "src/mcp/worktreeRouting.test.ts"
+    },
+    {
+      "id": "H_missing_worktree_index",
+      "covered": "src/mcp/worktreeRouting.test.ts"
+    },
+    {
+      "id": "I_removed_worktree",
+      "covered": "src/mcp/worktreeRouting.test.ts"
+    },
+    {
+      "id": "J_same_repo_same_paths_different_content",
+      "covered": "src/mcp/worktreeRouting.test.ts"
+    },
+    {
+      "id": "K_dirty_worktree_isolation",
+      "covered": "src/mcp/worktreeRouting.test.ts"
+    },
+    {
+      "id": "L_project_name_generic_reference",
+      "covered": "src/capsuleV2/projectNameSignals.test.ts"
+    },
+    {
+      "id": "M_explicit_arc_class_reference",
+      "covered": "src/capsuleV2/projectNameSignals.test.ts"
+    },
+    {
+      "id": "N_search_symbols_guidance_consistency",
+      "covered": "src/runtime/toolGuidanceConsistency.test.ts"
+    },
+    {
+      "id": "O_contaminated_index_refresh_cleanup",
+      "covered": "src/indexer/nestedWorktreeIndexing.test.ts"
+    }
+  ],
+  "suites": [
+    "src/fs/worktreeExclusions.test.ts",
+    "src/mcp/worktreeRouting.test.ts",
+    "src/capsuleV2/projectNameSignals.test.ts",
+    "src/runtime/toolGuidanceConsistency.test.ts",
+    "src/indexer/nestedWorktreeIndexing.test.ts"
+  ],
+  "missingSuites": [],
+  "routingSources": [
+    "explicit_root",
+    "client_context",
+    "process_default"
+  ],
+  "callerContextAvailability": "MCP does not transmit caller cwd. The stdio JSON-RPC surface exchanges protocol version, capabilities and clientInfo on initialize; this server neither declares nor consumes the `roots` client capability, and `roots` would describe client workspace roots rather than a subagent's cwd. process.cwd() is the SERVER's launch directory and is deliberately not a routing candidate. Explicit repo_root is therefore the product contract, with client_context reserved for a runtime that can supply one.",
+  "pass": true,
+  "evidence": "15 cases across 5 suites, 0 missing"
+}

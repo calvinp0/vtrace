@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "stage5.m132.frozen-semantic-equivalence.v1",
+  "baselineCommit": "238000b0847c7703ceeca49cc12e21bb04ee5314",
+  "baselineImplementation": "M131 source on this checkout",
+  "cases": 50,
+  "baselineCases": 50,
+  "differences": {
+    "selectedFiles": 0,
+    "lead": 0,
+    "roles": 0,
+    "contentModes": 0,
+    "renderedContext": 0,
+    "digest": 0,
+    "tokenAccounting": 0
+  },
+  "changed": [],
+  "combinedHash": "99eab9ab635b15c2",
+  "baselineHash": "99eab9ab635b15c2",
+  "projectNameInteraction": {
+    "fixtureCount": 50,
+    "candidates": [],
+    "note": "No frozen task contains an anchor-shaped token equal to its own repository basename, so the repository-name rule cannot fire on this set. 0 differences is the structurally expected result, not a coincidence."
+  },
+  "scopeNote": "M132 changed file enumeration (nested linked worktrees), MCP worktree routing, impact hydration batching, and literal anchoring for the repository's OWN name. Frozen fixtures are per-repository checkouts with no nested worktrees, and their repository basenames do not appear as ALL-CAPS anchors in the tasks, so 0 differences is the expected result.",
+  "pass": true,
+  "evidence": "50/50 cases, 0 semantic differences"
+}

@@ -7,6 +7,7 @@ import path from "node:path";
 import { nullProgressReporter } from "../cli/progress";
 import { EdgeType, normalizeFilePath, type EdgeRecord, type ParseResult } from "../domain/types";
 import { scanRepo } from "../fs/scanRepo";
+import { resolveWorktreeExclusions, summarizeWorktreeExclusions } from "../fs/worktreeExclusions";
 import { listGitBlobShas, listGitStatusEntries } from "../fs/git";
 import { insertEdges } from "../db/repositories/edgesRepository";
 import { listAllEdges } from "../db/repositories/edgesRepository";
@@ -77,7 +78,13 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
 
   const discoveryStarted = performance.now();
   progress.report({ kind: "phase_begin", phase: "scan", label: "Scanning repo" });
-  const scannedFiles = await scanRepo(repoRoot);
+  // Resolve nested linked worktrees ONCE per index run and reuse the set for
+  // every enumeration below: a registered worktree beneath this root is a
+  // duplicate checkout of this repository, not part of it.
+  const worktreeExclusions = options.scanOptions?.worktreeExclusions
+    ?? await resolveWorktreeExclusions(repoRoot);
+  const worktreeExclusionDiagnostics = summarizeWorktreeExclusions(worktreeExclusions);
+  const scannedFiles = await scanRepo(repoRoot, { worktreeExclusions });
   const contentIdentities = await discoverContentIdentities(repoRoot, scannedFiles);
   timings.discovery = performance.now() - discoveryStarted;
   progress.report({
@@ -176,6 +183,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       totalSymbols: symbols.length,
       totalRelationships: edges.length,
       files: noopFiles,
+      worktreeExclusions: worktreeExclusionDiagnostics,
       snapshot: options.previousSnapshot,
       performance: makePerformanceDiagnostics(
         plan, timings, scannedFiles.length, 0, 0, 0, options, 0, 0,
@@ -502,6 +510,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     totalSymbols,
     totalRelationships,
     files: allFiles,
+    worktreeExclusions: worktreeExclusionDiagnostics,
     snapshot,
     performance: performanceDiagnostics,
   };

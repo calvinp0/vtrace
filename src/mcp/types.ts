@@ -112,7 +112,17 @@ export interface McpToolMetadata {
 
 export interface McpServerContext {
   readonly serverId: McpServerId;
+  /**
+   * The root this server process was bound to at launch. It is the LOWEST
+   * precedence routing source — never a substitute for the caller's worktree.
+   */
   readonly repoRoot: string | null;
+  /**
+   * A caller-supplied workspace/project root, when the runtime integration can
+   * provide one. MCP does not transmit caller cwd today (M132 audit §13), so this
+   * is null in practice and exists so routing has a seam when it can.
+   */
+  readonly clientContextRoot?: string | null;
   readonly dbPath: string | null;
   readonly configPath: string | null;
   readonly statePath: string | null;

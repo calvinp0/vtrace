@@ -37,6 +37,14 @@ export interface IndexProjectOptions {
   previousSnapshotCompatible?: boolean;
   incompatibilityReason?: FullRebuildReason;
   validateGraph?: (db: Database, expectedFileCount: number) => void;
+  /**
+   * Enumeration overrides. Supply `worktreeExclusions` when the caller already
+   * resolved the nested-worktree set for this root (saving a `git worktree list`),
+   * or to enumerate under a deliberately different exclusion policy — which is
+   * how the M132 acceptance harness reproduces the pre-exclusion index for a
+   * before/after comparison without re-checking out old source.
+   */
+  scanOptions?: import("../fs/scanRepo").RepoScanOptions;
 }
 
 export type IndexedFileStatus =
@@ -87,4 +95,9 @@ export interface IndexProjectResult {
   files: IndexedFileSummary[];
   snapshot?: IndexedFileSnapshotSet;
   performance?: IndexPerformanceDiagnostics;
+  /**
+   * Nested linked worktrees found beneath this root and skipped. Repo-relative
+   * paths only, so the value is comparable across checkouts and machines.
+   */
+  worktreeExclusions?: import("../fs/worktreeExclusions").WorktreeExclusionDiagnostics;
 }

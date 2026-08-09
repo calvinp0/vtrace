@@ -12,6 +12,12 @@ export const VtraceGuidanceTarget = Object.freeze({
 export type VtraceGuidanceTarget =
   (typeof VtraceGuidanceTarget)[keyof typeof VtraceGuidanceTarget];
 
+/**
+ * Every tool named here MUST be exposed in `tools/list`. `search_symbols` was
+ * named here for a long time while being registered as a hidden legacy tool, so
+ * agents were told to call something they could not see — the M132 incident.
+ * `toolGuidanceConsistency.test.ts` now enforces the containment.
+ */
 export const VTRACE_AGENT_GUIDANCE_BLOCK = [
   VTRACE_GUIDANCE_START,
   "## Vtrace Agent Guidance",
@@ -19,11 +25,17 @@ export const VTRACE_AGENT_GUIDANCE_BLOCK = [
   "- Use `get_code_context` for broad repo-understanding, debugging, refactor, and code-context tasks.",
   "- Use `get_code_context` before manual grep or opening many files.",
   "- If `get_code_context` reports `stale_index`, `missing_index`, or `repo_not_ready`, call `index_repo` and then retry `get_code_context`.",
-  "- Use `search_symbols` for exact symbol lookup.",
+  "- Use `get_code_context` for exact symbol lookup too; it resolves a named symbol and returns its source with surrounding context.",
   "- Use `get_skeleton` when a file path is already known and a structural overview is needed.",
   "- Use `get_impact_graph` for known-symbol blast radius, dependents, callers, or references.",
   "- Use `get_context_capsule` only when lower-level capsule output is specifically needed.",
   "- `run_pipeline` remains available as the stable equivalent of `get_code_context`.",
+  "",
+  "### Git worktrees",
+  "",
+  "- Vtrace queries are scoped to one Git worktree. Pass `repo_root` with the worktree you are working in; without it the server answers from the checkout it was launched in, reported as `routingSource: process_default`.",
+  "- Nested linked worktrees are excluded from their parent's index, so a parent query never returns duplicate copies of the same file.",
+  "- Use `auto_refresh: if_stale` to refresh the requested worktree. It only ever refreshes that worktree; it never repurposes another worktree's index.",
   VTRACE_GUIDANCE_END,
   "",
 ].join("\n");
