@@ -11,6 +11,7 @@
 // instance ids and no file paths — the capsule is recovered from the index alone.
 
 import type { Database } from "bun:sqlite";
+import { getSymbolById } from "../db/repositories/symbolsRepository";
 
 import {
   assignCandidateRoles,
@@ -113,6 +114,7 @@ import {
   matchPathCluesWithContext,
   pathObjectiveAffinityWithContext,
 } from "../retrieval/pathScopedRelevance";
+import { evaluateCandidateContrast } from "../retrieval/querySemantics";
 import {
   retrieveIndexedDocuments,
   type DocumentCandidate,
@@ -158,6 +160,7 @@ const CANDIDATE_POOL_SIZE = 25;
 // Cap on how many evidence lines a pivot carries — enough to justify the edit
 // target without flooding the capsule.
 const MAX_PIVOT_EVIDENCE = 6;
+const roundScore = (value: number): number => Math.round(value * 1e4) / 1e4;
 
 export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const capsuleProfile = input.includeTimingDiagnostics === true
@@ -186,7 +189,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   const plan = planIntent(input.intent, input.task, shaped);
   const objectiveDecompositionStarted = documentProfile === undefined ? 0 : performance.now();
   const pathContext = createPathRelevanceContext(
-    input.task,
+    shaped.derivedIntent?.positiveSearchText ?? input.task,
     shaped.pathClues ?? [],
     documentProfile,
   );
@@ -506,6 +509,38 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       CANDIDATE_POOL_SIZE,
     );
   }
+
+  // Synthetic anchor/backfill candidates bypass hybrid assembly. Apply the same
+  // already-derived semantics to those candidates before role selection. Organic
+  // candidates already carry these fields and are left untouched, preventing a
+  // double penalty.
+  candidates = candidates.map((candidate) => {
+    if (candidate.scores.contrastPenalty !== undefined) return candidate;
+    const symbol = getSymbolById(input.db, candidate.symbolId);
+    if (symbol === undefined || shaped.derivedIntent === undefined) return candidate;
+    const contrast = evaluateCandidateContrast(shaped.derivedIntent, symbol);
+    const positiveObjectiveScore = roundScore(contrast.positiveObjectiveScore);
+    const contrastPenalty = roundScore(contrast.contrastPenalty);
+    if (positiveObjectiveScore === 0 && contrastPenalty === 0) {
+      return { ...candidate, scores: { ...candidate.scores, positiveObjectiveScore: 0, contrastPenalty: 0 } };
+    }
+    return {
+      ...candidate,
+      evidence: [...candidate.evidence,
+        ...(positiveObjectiveScore > 0 ? [`preferred contrast side matched: ${contrast.matchedPositiveTerms.join(", ")} (+${positiveObjectiveScore.toFixed(2)})`] : []),
+        ...(contrastPenalty > 0 ? [`downranked: ${contrast.reason} (-${contrastPenalty.toFixed(2)})`] : []),
+      ].sort(),
+      scores: {
+        ...candidate.scores,
+        positiveObjectiveScore,
+        contrastPenalty,
+        final: roundScore(Math.max(0, candidate.scores.final + positiveObjectiveScore - contrastPenalty)),
+      },
+    };
+  }).sort((left, right) =>
+    right.scores.final - left.scores.final
+    || left.fqName.localeCompare(right.fqName)
+    || left.symbolId.localeCompare(right.symbolId));
 
   // Generic-infrastructure lexical-decoy suppression (general, repo-agnostic). A
   // generic bug-report word ("deprecation", "dict") over-anchors retrieval to an
@@ -1409,6 +1444,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       likely_symbols: shaped.likelySymbols,
       failing_tests: shaped.failingTests,
       ...filteredSignalDiagnostics(shaped),
+      ...querySemanticsDiagnostics(shaped),
       ...lexicalScoringDiagnostics(shaped.query),
       ...bodyLiteralDiagnostics(bodyLiteralMatches),
       ...debugDiagnostics,
@@ -1534,6 +1570,9 @@ function candidateScoreDiagnostics(candidates: readonly HybridCandidate[]) {
     sources: [...candidate.sources],
     evidence: [...candidate.evidence],
     scores: { ...candidate.scores },
+    ...(candidate.identifierConfidence === undefined
+      ? {}
+      : { identifier_confidence: candidate.identifierConfidence }),
   }));
 }
 
@@ -1872,6 +1911,7 @@ function noContextResult(input: NoContextInput): CapsuleV2Result {
       likely_symbols: input.shaped.likelySymbols,
       failing_tests: input.shaped.failingTests,
       ...filteredSignalDiagnostics(input.shaped),
+      ...querySemanticsDiagnostics(input.shaped),
       ...lexicalScoringDiagnostics(input.shaped.query),
       ...input.debugDiagnostics,
       ...(input.documentIntegrationProfile === undefined
@@ -1894,6 +1934,23 @@ function filteredSignalDiagnostics(shaped: ShapedSweQuery): Partial<CapsuleV2Res
     ...(shaped.filteredRunnerFiles.length > 0
       ? { filtered_runner_files: shaped.filteredRunnerFiles }
       : {}),
+  };
+}
+
+function querySemanticsDiagnostics(shaped: ShapedSweQuery): Partial<CapsuleV2Result["diagnostics"]> {
+  const intent = shaped.derivedIntent;
+  if (intent === undefined || (intent.contrastClauses.length === 0 && intent.weakLiteralTokens.length === 0)) {
+    return {};
+  }
+  return {
+    query_semantics: {
+      positive_terms: intent.positiveTerms.slice(0, 16),
+      contrast_terms: intent.contrastTerms.slice(0, 16),
+      contrast_phrases: intent.contrastPhrases.slice(0, 6),
+      explicit_identifiers: intent.explicitIdentifiers.slice(0, 12),
+      comparison_identifiers: intent.comparisonIdentifiers.slice(0, 12),
+      weak_literal_tokens: intent.weakLiteralTokens.slice(0, 12),
+    },
   };
 }
 

@@ -100,6 +100,8 @@ const SCORE_KEYS = [
   "localEvidence",
   "hubPenalty",
   "actionabilityPenalty",
+  "positiveObjectiveScore",
+  "contrastPenalty",
   "final",
 ] as const;
 
@@ -511,6 +513,81 @@ test("generic body words never create a body-literal candidate", () => {
       assert.ok(!symbol.sources.includes(HybridCandidateSource.BodyLiteral));
       assert.equal(symbol.scores.bodyLiteral, 0);
     }
+  } finally {
+    db.close();
+  }
+});
+
+test("contrast changes evidence upstream and exposes a bounded score penalty", () => {
+  const db = openIndexerDatabase();
+  try {
+    persistSymbolFile(db, "pkg/parsers.py", [
+      { localName: "streaming_parser", kind: SymbolKind.Function, docstring: "parse a stream incrementally using three vectors" },
+      { localName: "coordinate_parser", kind: SymbolKind.Function, docstring: "parse raw coordinates and four atom indices" },
+    ]);
+    const task = "find a parser using three vectors rather than raw coordinates and four atom indices";
+    const shaped = shapeSweQuery({ problemStatement: task });
+    const { candidates } = hybridRetrieve(db, { query: shaped.query, shaped, taskText: task, maxResults: 20 });
+    const target = candidates.find((candidate) => candidate.localName === "streaming_parser");
+    const excluded = candidates.find((candidate) => candidate.localName === "coordinate_parser");
+    assert.ok(target);
+    assert.ok(excluded);
+    assert.ok((target.scores.positiveObjectiveScore ?? 0) > 0);
+    assert.equal(target.scores.contrastPenalty, 0);
+    assert.ok((excluded.scores.contrastPenalty ?? 0) > 0);
+    assert.ok(target.scores.final > excluded.scores.final);
+    assert.ok(excluded.evidence.some((line) => line.includes("high-confidence contrast")));
+  } finally {
+    db.close();
+  }
+});
+
+test("ordinary prose short words do not create literal-symbol candidates, explicit context does", () => {
+  const db = openIndexerDatabase();
+  try {
+    persistSymbolFile(db, "pkg/parser.py", [
+      { localName: "parse_stream", kind: SymbolKind.Function, docstring: "parser behavior for a stream" },
+      { localName: "In", kind: SymbolKind.Class, docstring: "synthetic short symbol" },
+      { localName: "As", kind: SymbolKind.Class, docstring: "synthetic short symbol" },
+      { localName: "No", kind: SymbolKind.Class, docstring: "synthetic short symbol" },
+      { localName: "Go", kind: SymbolKind.Class, docstring: "synthetic short symbol" },
+      { localName: "DB", kind: SymbolKind.Class, docstring: "database parser" },
+      { localName: "IO", kind: SymbolKind.Class, docstring: "input output parser" },
+    ]);
+
+    const proseTask = "find parser behavior in this file as the result at the end with no callers";
+    const proseShaped = shapeSweQuery({ problemStatement: proseTask });
+    const prose = hybridRetrieve(db, { query: proseShaped.query, shaped: proseShaped, taskText: proseTask, maxResults: 20 });
+    assert.ok(prose.candidates.some((candidate) => candidate.localName === "parse_stream"));
+    for (const name of ["In", "As", "No"]) {
+      const short = prose.candidates.find((candidate) => candidate.localName === name);
+      // Same-module graph expansion may retain it as weak context, but ordinary
+      // grammar must not activate the high-confidence literal/symbol lane.
+      if (short !== undefined) {
+        assert.ok(!short.sources.includes(HybridCandidateSource.Symbol), `${name} received symbol evidence from prose`);
+        assert.equal(short.scores.symbol, 0);
+        assert.equal(short.identifierConfidence, "ordinary_prose");
+        assert.ok(short.evidence.some((line) => line.includes("literal identifier confidence ordinary_prose")));
+      }
+    }
+
+    const explicitTask = "where is element In defined?";
+    const explicitShaped = shapeSweQuery({ problemStatement: explicitTask });
+    const explicit = hybridRetrieve(db, { query: explicitShaped.query, shaped: explicitShaped, taskText: explicitTask, maxResults: 20 });
+    const inSymbol = explicit.candidates.find((candidate) => candidate.localName === "In");
+    assert.ok(inSymbol);
+    assert.ok(inSymbol.sources.includes(HybridCandidateSource.Symbol));
+    assert.equal(inSymbol.identifierConfidence, "explicit_identifier");
+
+    const contrastTask = "find the parser using DB rather than the one using IO";
+    const contrastShaped = shapeSweQuery({ problemStatement: contrastTask });
+    const contrast = hybridRetrieve(db, { query: contrastShaped.query, shaped: contrastShaped, taskText: contrastTask, maxResults: 20 });
+    const dbSymbol = contrast.candidates.find((candidate) => candidate.localName === "DB");
+    const ioSymbol = contrast.candidates.find((candidate) => candidate.localName === "IO");
+    assert.ok(dbSymbol);
+    assert.ok(ioSymbol);
+    assert.equal(dbSymbol.scores.contrastPenalty, 0);
+    assert.ok((ioSymbol.scores.contrastPenalty ?? 0) > 0);
   } finally {
     db.close();
   }

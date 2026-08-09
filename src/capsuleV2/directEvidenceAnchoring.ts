@@ -668,7 +668,9 @@ export function boostScoresForDirectEvidence(
     path: fileResolved ? Math.max(scores.path, 1) : scores.path,
     symbol: fileResolved ? scores.symbol : Math.max(scores.symbol, 1),
     localEvidence: Math.max(scores.localEvidence, 1),
-    final: Math.max(scores.final, tierFinal),
+    // Preserve an upstream contrast penalty when a later direct-evidence lane
+    // floors the candidate at its confidence tier.
+    final: Math.max(scores.final, tierFinal - (scores.contrastPenalty ?? 0)),
   };
 }
 

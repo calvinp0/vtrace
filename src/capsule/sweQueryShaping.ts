@@ -1,3 +1,5 @@
+import { deriveQueryIntent, type DerivedQueryIntent } from "../retrieval/querySemantics";
+
 // SWE-bench query shaping.
 //
 // A raw SWE-bench issue is mostly prose: a long problem statement plus optional
@@ -46,6 +48,8 @@ export interface ShapedSweQuery {
   filteredRunnerFiles: string[];
   /** Component-aware repository path clues embedded in otherwise broad prose. */
   pathClues?: EmbeddedPathClue[];
+  /** Request-local deterministic polarity and identifier-confidence derivation. */
+  derivedIntent?: DerivedQueryIntent;
 }
 
 export interface EmbeddedPathClue {
@@ -156,6 +160,8 @@ export function shapeSweQuery(
   const problem = (record.problemStatement ?? "").trim();
   const hints = (record.hintsText ?? "").trim();
   const prose = `${problem}\n${hints}`;
+  const derivedIntent = deriveQueryIntent(prose);
+  const positiveProse = derivedIntent.positiveSearchText;
 
   const failingTests = dedupeNonEmpty((record.failToPass ?? []).map((id) => id.trim()));
   const testParts = failingTests.flatMap(parseTestNodeId);
@@ -164,7 +170,7 @@ export function shapeSweQuery(
   // `.../django/django/pull/7920`, google-groups `.../searchin/django-users/...`)
   // otherwise match REPO_PATH_LIKE and masquerade as edit targets. Strip them
   // before path extraction. Symbol extraction keeps the full prose.
-  const prosePaths = stripUrls(prose);
+  const prosePaths = stripUrls(positiveProse);
   const pathClueStarted = performanceProfile === undefined ? 0 : performance.now();
   const pathClues = extractEmbeddedPathClues(prosePaths);
   if (performanceProfile !== undefined) {
@@ -195,9 +201,10 @@ export function shapeSweQuery(
 
   const rawSymbols = dedupeNonEmpty([
     ...testParts.flatMap((part) => part.symbols),
-    ...matchAllCaptured(prose, DEF_CLASS),
-    ...matchAllCaptured(prose, BACKTICK_IDENT).map(stripCallSuffix),
-    ...matchAllCaptured(prose, FUNC_CALL),
+    ...matchAllCaptured(positiveProse, DEF_CLASS),
+    ...matchAllCaptured(positiveProse, BACKTICK_IDENT).map(stripCallSuffix),
+    ...matchAllCaptured(positiveProse, FUNC_CALL),
+    ...derivedIntent.explicitIdentifiers.map(explicitIdentifierSeed).filter((value): value is string => value !== null),
   ]);
   // Drop generic bug-report words before capping so a real symbol is never
   // crowded out of the cap by noise; record the dropped tokens for diagnostics.
@@ -208,21 +215,22 @@ export function shapeSweQuery(
   const identifiers = capped(
     dedupeNonEmpty([
       ...likelySymbols,
-      ...matchAll(prose, CAMEL_CASE),
-      ...matchAll(prose, SNAKE_CASE),
-      ...matchAll(prose, DOTTED_PATH),
+      ...matchAll(positiveProse, CAMEL_CASE),
+      ...matchAll(positiveProse, SNAKE_CASE),
+      ...matchAll(positiveProse, DOTTED_PATH),
     ]),
     config.maxIdentifiers,
   );
 
   return {
-    query: assembleQuery({ record, failingTests, likelyFiles, likelySymbols, problem }, config.maxQueryChars),
+    query: assembleQuery({ record, failingTests, likelyFiles, likelySymbols, problem: derivedIntent.positiveSearchText }, config.maxQueryChars),
     failingTests,
     likelyFiles,
     likelySymbols,
     identifiers,
     filteredGenericSymbols,
     filteredRunnerFiles,
+    derivedIntent,
     ...(additivePathClues.length === 0 ? {} : { pathClues: additivePathClues }),
   };
 }
@@ -361,6 +369,23 @@ export function stripDiffPrefix(value: string): string {
 
 function stripCallSuffix(value: string): string {
   return value.endsWith("()") ? value.slice(0, -2) : value;
+}
+
+function identifierLeaf(value: string): string {
+  return value.split(/::|\./u).at(-1) ?? value;
+}
+
+/**
+ * Promote only identifiers whose syntax makes the leaf an unambiguous lookup
+ * request. Repository FQNs (`path::symbol`) and short contextual symbols need
+ * this bridge. A prose-qualified value such as `app.Model.origin` stays in the
+ * broader identifier/FTS lanes: promoting its generic leaf would search every
+ * unrelated `origin` symbol in the repository.
+ */
+function explicitIdentifierSeed(value: string): string | null {
+  const leaf = identifierLeaf(value);
+  if (value.includes("::") || !value.includes(".") || leaf.length <= 3) return leaf;
+  return null;
 }
 
 function dedupeNonEmpty(values: readonly string[]): string[] {

@@ -117,6 +117,20 @@ test("shaping tolerates an empty record", () => {
     identifiers: [],
     filteredGenericSymbols: [],
     filteredRunnerFiles: [],
+    derivedIntent: {
+      originalTask: "\n",
+      positiveSearchText: "",
+      positiveTerms: [],
+      contrastTerms: [],
+      contrastPhrases: [],
+      normalizedContrastPhrases: [],
+      contrastClauses: [],
+      explicitIdentifiers: [],
+      contrastIdentifiers: [],
+      comparisonIdentifiers: [],
+      identifierSignals: [],
+      weakLiteralTokens: [],
+    },
   });
 });
 
@@ -191,4 +205,12 @@ test("generic tokens stay in the raw query text but are not promoted to symbols"
   // But never a high-confidence symbol.
   assert.ok(!shaped.likelySymbols.some((s) => s.toLowerCase() === "multiple"));
   assert.ok(!shaped.identifiers.some((s) => s.toLowerCase() === "multiple"));
+});
+
+test("a dotted data value does not promote its generic leaf as an exact symbol seed", () => {
+  const shaped = shapeSweQuery({
+    problemStatement: "ImproperlyConfigured for appname.Picking.origin while setting up the parent link.",
+  });
+  assert.ok(!shaped.likelySymbols.includes("origin"));
+  assert.ok(shaped.identifiers.includes("appname.Picking.origin"));
 });

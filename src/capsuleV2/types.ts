@@ -324,6 +324,15 @@ export interface CapsuleV2Diagnostics {
   likely_files: string[];
   likely_symbols: string[];
   failing_tests: string[];
+  /** Compact debug-only view of deterministic task polarity/confidence. */
+  query_semantics?: {
+    positive_terms: string[];
+    contrast_terms: string[];
+    contrast_phrases: string[];
+    explicit_identifiers: string[];
+    comparison_identifiers: string[];
+    weak_literal_tokens: string[];
+  };
   /**
    * Noise dropped from the high-confidence shaped signals. `filtered_generic_symbols`
    * are generic bug-report words (`error`, `multiple`) that matched a symbol regex
@@ -592,6 +601,7 @@ export interface CandidateScoreDiagnostic {
   sources: string[];
   evidence: string[];
   scores: HybridScoreComponents;
+  identifier_confidence?: string;
 }
 
 /** One file rescued by the file-evidence deep-pool lane (M100). */

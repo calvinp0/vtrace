@@ -51,6 +51,12 @@ import type { SymbolSearchMatch } from "./types";
 import { searchBodyLiterals } from "../db/repositories/bodyLiteralsRepository";
 import { extractBodyLiterals, type BodyLiteral } from "../indexer/extractBodyLiterals";
 import { GENERIC_TOKEN_STOPLIST } from "../capsule/sweQueryShaping";
+import {
+  deriveQueryIntent,
+  evaluateCandidateContrast,
+  identifierConfidenceForSymbol,
+  type IdentifierConfidence,
+} from "./querySemantics";
 
 export enum HybridCandidateSource {
   Lexical = "lexical",
@@ -77,6 +83,8 @@ export interface HybridCandidate {
   sources: HybridCandidateSource[];
   evidence: string[];
   matches: SymbolSearchMatch[];
+  /** Contextual confidence of an exact local-name reading of task text. */
+  identifierConfidence?: IdentifierConfidence;
 }
 
 export interface HybridRetrievalInput {
@@ -206,6 +214,14 @@ export function hybridRetrieve(
   const candidates = timed(input.profile, "candidate_processing.score_sort_cap", () =>
     assemble(db, raw, input, maxResults));
   count(input.profile, "candidates.after_cap", candidates.length);
+  count(input.profile, "literal_symbol_candidates", candidates.filter((candidate) =>
+    candidate.sources.includes(HybridCandidateSource.Symbol)).length);
+  count(input.profile, "high_confidence_literal_candidates", candidates.filter((candidate) =>
+    candidate.sources.includes(HybridCandidateSource.Symbol)
+    && candidate.identifierConfidence === "explicit_identifier").length);
+  count(input.profile, "weak_short_token_candidates", candidates.filter((candidate) =>
+    candidate.identifierConfidence === "ordinary_prose"
+    || candidate.identifierConfidence === "weak_short_literal").length);
   if (input.profile !== undefined) {
     input.profile.timingsMs.total =
       (input.profile.timingsMs.total ?? 0) + performance.now() - totalStarted;
@@ -531,6 +547,8 @@ function assemble(
   // whose NAME is matched only by a generic word ("multiple") has its blended
   // lexical score scaled down so the word cannot carry it to a pivot.
   const lexicalQueryTokens = classifyLexicalQueryTokens(input.query);
+  const derivedIntent = input.shaped.derivedIntent
+    ?? deriveQueryIntent(input.taskText ?? input.query);
 
   // Compute the remaining raw signals (symbol/path/domain) that apply to EVERY
   // candidate regardless of which source first surfaced it.
@@ -571,7 +589,11 @@ function assemble(
       normalizeAgainst(centrality.get(entry.symbol.id) ?? 0, maxCentrality),
     );
     const lexicalMatch = analyzeLexicalGenericMatch(lexicalQueryTokens, entry.symbol);
-    const lexical = round(blendLexical(fts, tfidf) * lexicalMatch.factor);
+    const identifierConfidence = identifierConfidenceForSymbol(derivedIntent, entry.symbol.localName);
+    const identifierFactor = identifierConfidence === "ordinary_prose"
+      ? 0.1
+      : identifierConfidence === "weak_short_literal" ? 0.5 : 1;
+    const lexical = round(blendLexical(fts, tfidf) * lexicalMatch.factor * identifierFactor);
     const weights = input.weights ?? HYBRID_SCORE_WEIGHTS;
     const rawFinal = combineFinalScore(
       { lexical, symbol, path, domain, testToImpl, bodyLiteral, graph, centrality: centralityScore },
@@ -614,7 +636,13 @@ function assemble(
 
     const hubPenalty = round(hub.penalty);
     const actionabilityPenalty = round(action.penalty);
-    const final = round(Math.max(0, rawFinal - hub.penalty - action.penalty));
+    const contrast = evaluateCandidateContrast(derivedIntent, entry.symbol);
+    const positiveObjectiveScore = round(contrast.positiveObjectiveScore);
+    const contrastPenalty = round(contrast.contrastPenalty);
+    const final = round(Math.max(
+      0,
+      rawFinal - hub.penalty - action.penalty + positiveObjectiveScore - contrastPenalty,
+    ));
 
     const evidence = [...entry.evidence];
     if (inDegree > 0) {
@@ -635,6 +663,17 @@ function assemble(
         `lexical down-weighted: name matched only by generic token(s) ${lexicalMatch.downweightedTokens.join(", ")}`,
       );
     }
+    if (identifierFactor < 1) {
+      evidence.push(
+        `literal identifier confidence ${identifierConfidence}: short token \`${entry.symbol.localName}\` lacks explicit symbol context`,
+      );
+    }
+    if (positiveObjectiveScore > 0) {
+      evidence.push(`preferred contrast side matched: ${contrast.matchedPositiveTerms.join(", ")} (+${positiveObjectiveScore.toFixed(2)})`);
+    }
+    if (contrastPenalty > 0) {
+      evidence.push(`downranked: ${contrast.reason} (-${contrastPenalty.toFixed(2)})`);
+    }
 
     const scores: HybridScoreComponents = {
       lexical,
@@ -654,6 +693,8 @@ function assemble(
       localEvidence: round(hub.localEvidence),
       hubPenalty,
       actionabilityPenalty,
+      positiveObjectiveScore,
+      contrastPenalty,
       final,
     };
 
@@ -667,6 +708,7 @@ function assemble(
       sources: [...entry.sources].sort(),
       evidence: evidence.sort(),
       matches: entry.matches,
+      identifierConfidence,
     } satisfies HybridCandidate;
   });
 

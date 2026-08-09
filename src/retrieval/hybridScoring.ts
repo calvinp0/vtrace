@@ -92,6 +92,10 @@ export interface HybridScoreComponents {
    * direct evidence. 0 for everything else.
    */
   actionabilityPenalty: number;
+  /** Bounded positive-side affinity added only for a parsed contrast clause. */
+  positiveObjectiveScore?: number;
+  /** Bounded penalty for high-confidence excluded phrase/symbol evidence. */
+  contrastPenalty?: number;
   /**
    * Weighted sum of the components above, minus `hubPenalty` and
    * `actionabilityPenalty`; the ranking key.
@@ -625,7 +629,14 @@ export function recomputeWithWeakenedLexical(
     },
     weights,
   );
-  const final = Math.max(0, rawFinal - hub.penalty - actionabilityPenalty);
+  const final = Math.max(
+    0,
+    rawFinal
+      - hub.penalty
+      - actionabilityPenalty
+      + (scores.positiveObjectiveScore ?? 0)
+      - (scores.contrastPenalty ?? 0),
+  );
 
   return {
     ...scores,
