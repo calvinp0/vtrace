@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "stage5.m133.code-context-envelope.v1",
+  "repository": "/home/calvin/code/ARC",
+  "requestMaxTokens": 3000,
+  "beforeIncident": { "estimatedTotalTokens": 4213, "totalCeiling": 4000, "withinEnvelope": false },
+  "after": {
+    "serializedCharacters": 15966,
+    "estimatedModelVisibleTokens": 2367,
+    "estimatedMetadataTokens": 1625,
+    "estimatedTotalTokens": 3992,
+    "totalCeiling": 4000,
+    "withinEnvelope": true,
+    "resolved": true,
+    "modelVisibleCharacters": 9466
+  },
+  "rootCause": "the deterministic ladder could exhaust after post-construction freshness/timing/accounting metadata and return its measured false state",
+  "fix": "compact redundant product item/diagnostic/accounting metadata, remeasure the actual final payload, then explicitly degrade content only if metadata compaction cannot fit",
+  "successfulFalseEnvelopeAllowed": false,
+  "pass": true
+}

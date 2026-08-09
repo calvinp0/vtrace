@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "stage5.m133.impact-scale-invariance.v1",
+  "graphEdgeCounts": [100, 1000, 10000, 100000],
+  "request": { "max_edges": 10, "max_tokens": 1200 },
+  "assertions": {
+    "serializedCharactersAtMost": 8000,
+    "sizeSpreadCharactersLessThan": 64,
+    "retainedEdgesAtMost": 10,
+    "nodesAtMostEdgesPlusRoot": true,
+    "viewLinesAtMostNodes": true,
+    "omissionCountsTruthful": true
+  },
+  "fanoutCase": { "dependents": 10000, "retainedEdgesAtMost": 10, "endpointOnlyNodes": true },
+  "test": "src/impact/impactResponseEnvelope.test.ts",
+  "pass": true
+}

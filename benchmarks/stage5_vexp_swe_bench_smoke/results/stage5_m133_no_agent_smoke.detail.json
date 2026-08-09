@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "stage5.m133.no-agent-smoke.v1",
+  "functionalCommit": "a004529",
+  "noAgents": true,
+  "noPaidApis": true,
+  "noDocker": true,
+  "noVexp": true,
+  "arcSourceReadOnly": true,
+  "tckdbSourceReadOnly": true,
+  "arcInPlaceVtraceWritten": false,
+  "tckdbInPlaceVtraceWritten": false,
+  "checks": {
+    "impactWholeResponse": true,
+    "arcGroundTruth": true,
+    "scale100k": true,
+    "limitMatrix": true,
+    "duplicateEvidence": true,
+    "codeContextEnvelope": true,
+    "flowRegression": true,
+    "retrievalPairedEquivalence": true,
+    "tckdbAcceptance": true,
+    "typecheck": true,
+    "benchmarkTypecheck": true,
+    "fullTests": true,
+    "diffCheck": true
+  },
+  "verdict": "PASS"
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "stage5.m133.impact-ground-truth.v1",
+  "symbol": "arc/species/vectors.py::get_dihedral",
+  "sourceSearch": {
+    "sameFile": [{ "path": "arc/species/vectors.py", "line": 253 }],
+    "moduleQualifiedTests": [{ "path": "arc/species/vectors_test.py", "lines": [84, 88, 92, 98, 101] }]
+  },
+  "m133DeliveredLines": [253, 84, 88, 92, 98, 101],
+  "sameFileResolution": "same_file_or_same_class_call_resolution",
+  "testResolution": "import_or_module_qualified_call_resolution",
+  "allKnownSitesPreserved": true,
+  "sourceModified": false,
+  "pass": true
+}

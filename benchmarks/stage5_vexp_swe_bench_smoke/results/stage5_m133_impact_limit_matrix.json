@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "stage5.m133.impact-limit-matrix.v1",
+  "cases": [
+    { "maxEdges": 1, "maxTokens": 400, "maxPaths": 1, "maxDepth": 1, "pass": true },
+    { "maxEdges": 3, "maxTokens": 800, "maxPaths": 3, "maxDepth": 3, "pass": true },
+    { "maxEdges": 10, "maxTokens": 1200, "maxPaths": 3, "maxDepth": 5, "pass": true },
+    { "maxEdges": 50, "maxTokens": 3000, "maxPaths": 10, "maxDepth": 5, "pass": true }
+  ],
+  "wholeObjectAssertions": [
+    "retainedEdges <= maxEdges",
+    "modelVisibleEstimatedTokens <= maxTokens",
+    "estimatedTotalTokens <= totalCeiling",
+    "withinEnvelope === true",
+    "paths.length <= maxPaths",
+    "every path edge belongs to the canonical edge set"
+  ],
+  "pass": true
+}

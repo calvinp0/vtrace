@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "stage5.m133.impact-incident-before.v1",
+  "source": "real ARC MCP incident supplied for M133",
+  "request": { "max_edges": 10, "max_tokens": 1200, "max_paths": 3, "max_depth": 5 },
+  "fieldCharacters": {
+    "edges": 743698,
+    "nodes": 418353,
+    "view": 205948,
+    "directRelations": 4018,
+    "paths": null,
+    "diagnostics": null,
+    "accounting": null
+  },
+  "serializedCharacters": 1385362,
+  "estimatedTokens": 346341,
+  "withinEnvelope": false,
+  "rootCause": "max_edges/max_tokens bounded rich direct/path evidence only; the independent reverse traversal hydrated and serialized all legacy nodes, edges and view, and the MCP handler had no post-accounting whole-object guard"
+}
