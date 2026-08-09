@@ -1,6 +1,6 @@
 # M132 — Worktree Routing and Repository-Identity Integrity
 
-**Verdict: PASS.** Starting commit `238000b` (M131), ending commit `3d0a66c`. Branch `main`,
+**Verdict: PASS.** Starting commit `238000b` (M131), ending commit `9260d37`. Branch `main`,
 committed locally, nothing pushed. No live agents, no Docker, no VEXP, no paid APIs.
 Acceptance: 21/21 rows. Verification: 3877 tests (3828 pass, 49 skip) / 0 fail, both typechecks clean,
 `git diff --check` clean.

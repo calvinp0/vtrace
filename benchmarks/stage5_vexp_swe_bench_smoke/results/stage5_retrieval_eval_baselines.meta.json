@@ -1,6 +1,6 @@
 {
   "purpose": "Freshness record for the committed retrieval no-change-proof baselines. The byte-diff proof (see CLAUDE.md / stage5-eval skill) is only valid when these baselines were generated from code equivalent to HEAD for everything under src/. Check freshness with: git diff --stat <generated_at_commit>..HEAD -- src/  — any output means the baselines may be stale; fall back to the stash A/B proof, and refresh these baselines (plus this file) in the same commit as any milestone that intentionally changes retrieval/capsule output.",
-  "generated_at_commit": "3d0a66c",
+  "generated_at_commit": "9260d37",
   "generated_at_date": "2026-08-09",
   "generated_after_milestone": "M132 (Fix worktree routing and index isolation)",
   "baselines": [
