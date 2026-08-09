@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "stage5.m135.quality-summary.v1",
+  "predecessor": "7b29882ec23477ed7bcc738a4073af1d270ece7e",
+  "candidate": "cec130c2b1f62a1fd95b459e56aa7d6c3d223731",
+  "metrics": {
+    "django_expanded": {
+      "cases": 20,
+      "m134": {"top1": 0.9, "top3": 1.0, "pivotVisibility": 1.0, "missingGold": 0.0, "meanCapsuleTokens": 1220.7},
+      "m135": {"top1": 0.9, "top3": 1.0, "pivotVisibility": 1.0, "missingGold": 0.0, "meanCapsuleTokens": 1224.7}
+    },
+    "cross_repo_30": {
+      "cases": 30,
+      "m134": {"top1": 0.7, "top3": 0.8333, "pivotVisibility": 0.7667, "missingGold": 0.1, "meanCapsuleTokens": 2176.8333},
+      "m135": {"top1": 0.7, "top3": 0.8333, "pivotVisibility": 0.7667, "missingGold": 0.1, "meanCapsuleTokens": 2178.1333}
+    },
+    "frozen_50": {
+      "cases": 50,
+      "m134": {"top1": 0.78, "top3": 0.9, "pivotVisibility": 0.86, "missingGold": 0.06},
+      "m135": {"top1": 0.78, "top3": 0.9, "pivotVisibility": 0.86, "missingGold": 0.06},
+      "derivation": "case-weighted union of the authoritative 20-case Django expanded and 30-case cross-repository suites"
+    }
+  },
+  "changedCases": 6,
+  "qualityMetricDifferences": 0,
+  "leadDifferences": 0,
+  "targetedImprovements": ["ARC get_dihedral moved from rank 5/not selected to rank 1/lead pivot", "ARC ordinary-prose In moved from rank 3/support to outside the candidate cap"],
+  "historicalWatch": {
+    "psf__requests-1724": {"changed": false, "lead": "requests/api.py", "goldVisible": true, "status": "not worsened; historical M123 attribution preserved"},
+    "sphinx-doc__sphinx-7462": {"changed": false, "lead": "sphinx/domains/python.py", "goldVisible": true, "selectedFilesUnchanged": true}
+  },
+  "baselinePromotion": {
+    "promoted": true,
+    "framework": "M134 provenance-safe paired evaluation",
+    "djangoSemanticHash": "6e4ad9b60941b8e6cbb2d80581e51195308f7c0a1e3c26f87f154efde1e1a9ca",
+    "crossRepo30SemanticHash": "216356cea5e05aefe8963cd4234a46633f743b0669066a955b059fb0d1dde110",
+    "provenanceIncluded": true
+  },
+  "verdict": "PASS"
+}

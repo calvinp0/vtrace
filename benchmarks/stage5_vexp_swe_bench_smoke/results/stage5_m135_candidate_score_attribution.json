@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "stage5.m135.candidate-score-attribution.v1",
+  "implementationCommit": "cec130c2b1f62a1fd95b459e56aa7d6c3d223731",
+  "scoreComponentsAdded": ["positiveObjectiveScore", "contrastPenalty", "identifier_confidence"],
+  "contrastPenaltyCap": 0.75,
+  "positiveObjectiveBonusCap": 0.24,
+  "arcDihedral": {
+    "get_dihedral": {"positiveObjectiveScore": 0.24, "literalIdentifierScore": 0, "contrastPenalty": 0, "final": 1.9413},
+    "calculate_dihedral_angle": {"positiveObjectiveScore": 0.24, "literalIdentifierScore": 0, "contrastPenalty": 0.28, "contrastReason": "coordinates, indices", "final": 1.8132},
+    "get_normal": {"positiveObjectiveScore": 0.12, "literalIdentifierScore": 1, "contrastPenalty": 0, "final": 1.9},
+    "interpolate_addition": {"candidateCapEntry": false, "selected": false}
+  },
+  "arcShortIdentifier": {
+    "task": "How does lookup work in element.py?",
+    "In": {
+      "m134": {"rank": 3, "lexical": 0.8736, "final": 2.5736, "selected": true},
+      "m135": {"identifierConfidence": "ordinary_prose", "highSignalLiteral": false, "candidateCapEntry": false, "selected": false}
+    }
+  },
+  "candidatePoolCounters": {
+    "dihedral": {"literalSymbolCandidates": 3, "highConfidenceLiteralCandidates": 0, "weakShortTokenCandidates": 0},
+    "ordinaryIn": {"literalSymbolCandidates": 0, "highConfidenceLiteralCandidates": 0, "weakShortTokenCandidates": 5},
+    "explicitIn": {"literalSymbolCandidates": 4, "highConfidenceLiteralCandidates": 1, "weakShortTokenCandidates": 1}
+  },
+  "diagnosticsBounded": true,
+  "normalProductScorecardShapePreserved": true,
+  "verdict": "PASS"
+}

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "stage5.m135.arc-dihedral-before-after.v1",
+  "task": "a function that returns a dihedral angle given three vectors, rather than given coordinates and four atom indices",
+  "repository": {
+    "path": "/home/calvin/code/ARC",
+    "branch": "arcbench",
+    "head": "1202705be46edf01c84bfb89e3fa94f76f7ae15e",
+    "sourceReadOnly": true,
+    "isolatedIndex": "/tmp/vtrace-m135-arc.sqlite"
+  },
+  "predecessor": "7b29882ec23477ed7bcc738a4073af1d270ece7e",
+  "candidate": "cec130c2b1f62a1fd95b459e56aa7d6c3d223731",
+  "derivedIntent": {
+    "positiveTerms": ["returns", "dihedral", "angle", "three", "vectors"],
+    "contrastTerms": ["coordinates", "four", "atom", "indices"],
+    "contrastPhrase": "given coordinates and four atom indices",
+    "explicitIdentifiers": []
+  },
+  "ranking": [
+    {
+      "candidate": "arc/species/vectors.py::get_dihedral",
+      "m134Rank": 5,
+      "m135Rank": 1,
+      "m134Final": 1.5372,
+      "m135PositiveScore": 0.24,
+      "m135LiteralScore": 0,
+      "m135ContrastPenalty": 0,
+      "m135Final": 1.9413,
+      "m134Selected": false,
+      "m135Selected": true,
+      "m135Role": "lead pivot"
+    },
+    {
+      "candidate": "arc/species/vectors.py::calculate_dihedral_angle",
+      "m134Rank": 2,
+      "m135Rank": 3,
+      "m134Final": 1.9265,
+      "m135PositiveScore": 0.24,
+      "m135LiteralScore": 0,
+      "m135ContrastPenalty": 0.28,
+      "m135ContrastReason": "coordinates, indices",
+      "m135Final": 1.8132,
+      "m134Selected": true,
+      "m135Selected": true,
+      "m135Role": "pivot"
+    },
+    {
+      "candidate": "arc/species/vectors.py::get_normal",
+      "m134Rank": 1,
+      "m135Rank": 2,
+      "m134Final": 1.9,
+      "m135PositiveScore": 0.12,
+      "m135LiteralScore": 1,
+      "m135ContrastPenalty": 0,
+      "m135Final": 1.9,
+      "m134Selected": false,
+      "m135Selected": true,
+      "m135Role": "support"
+    },
+    {
+      "candidate": "arc/job/adapters/ts/linear.py::interpolate_addition",
+      "m134Rank": null,
+      "m135Rank": null,
+      "m135PositiveScore": 0,
+      "m135LiteralScore": 0,
+      "m135ContrastPenalty": 0,
+      "m134Selected": false,
+      "m135Selected": false,
+      "note": "The approximate historical incident included this symbol; it is absent from both deterministic candidate caps on the recorded ARC checkout."
+    }
+  ],
+  "controls": [
+    {"task": "find calculate_dihedral_angle", "pivots": ["calculate_dihedral_angle", "calculate_angle"], "calculateRank": 1, "pass": true},
+    {"task": "compare get_dihedral with calculate_dihedral_angle", "pivots": ["calculate_dihedral_angle", "get_dihedral"], "ranks": {"calculate_dihedral_angle": 1, "get_dihedral": 2}, "contrastPenalty": false, "pass": true},
+    {"task": "why doesn't get_dihedral call calculate_dihedral_angle?", "pivots": ["calculate_dihedral_angle", "get_dihedral"], "ranks": {"calculate_dihedral_angle": 1, "get_dihedral": 2}, "contrastPenalty": false, "pass": true}
+  ],
+  "exactSymbolResolutionUnchanged": true,
+  "verdict": "PASS"
+}

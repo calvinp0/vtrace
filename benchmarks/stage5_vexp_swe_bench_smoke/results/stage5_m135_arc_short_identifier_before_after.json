@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "stage5.m135.arc-short-identifier-before-after.v1",
+  "repositoryHead": "1202705be46edf01c84bfb89e3fa94f76f7ae15e",
+  "predecessor": "7b29882ec23477ed7bcc738a4073af1d270ece7e",
+  "implementationCandidate": "cec130c2b1f62a1fd95b459e56aa7d6c3d223731",
+  "incidentQueryKind": "reconstructed from the reported ordinary-prose collision",
+  "incidentQuery": "How does lookup work in element.py?",
+  "candidate": "arc/molecule/element.py::In",
+  "before": {
+    "rank": 3,
+    "selected": true,
+    "role": "support",
+    "sources": ["lexical"],
+    "literalSignal": "ordinary lowercase in contributed to the blended lexical score",
+    "lexicalScore": 0.8736,
+    "finalScore": 2.5736
+  },
+  "after": {
+    "rank": null,
+    "selected": false,
+    "identifierConfidence": "ordinary_prose",
+    "highSignalLiteral": false,
+    "candidateEnteredFinalCap": false,
+    "literalSymbolCandidates": 0,
+    "highConfidenceLiteralCandidates": 0,
+    "weakShortTokenCandidatesInCap": 5,
+    "selectedSymbols": ["Element", "PeriodicSystem", "from_ob_mol", "element_list", "get_element", "valence_electrons"]
+  },
+  "explicitControl": {
+    "task": "where is element In defined?",
+    "rank": 1,
+    "selected": true,
+    "role": "support",
+    "identifierConfidence": "explicit_identifier",
+    "sources": ["lexical", "symbol"],
+    "symbolScore": 1,
+    "finalScore": 2.6306,
+    "pass": true
+  },
+  "lateOnlyFiltering": false,
+  "exactSymbolResolutionUnchanged": true,
+  "explanationNoLongerOverstatesOrdinaryIn": true,
+  "verdict": "PASS"
+}
