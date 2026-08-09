@@ -1664,22 +1664,14 @@ test("impact-graph command returns the deterministic structural graph for an ind
     assert.equal(output.output.accounting.method, "chars_div_4");
     assert.equal(output.output.accounting.uniqueFilesCounted >= 1, true);
     assert.equal(output.output.accounting.estimatedNaiveFullFileTokens > 0, true);
-    // Excerpt parity with the MCP tool: the CLI passes repoRoot, so dependents
-    // carry bounded inline source excerpts. The readUser dependent's excerpt must
-    // name its file, stay within the line ceiling, and never claim an exact
-    // edge-site line (indexed edges carry no call-site location).
+    assert.equal(output.output.responseBudget.withinEnvelope, true);
+    // The CLI and MCP surfaces both remove repeated node source bodies; compact
+    // relation evidence remains the authoritative provenance representation.
     const dependent = output.output.nodes.find(
       (node: { fqName: string }) => node.fqName === "src/service.ts::readUser",
     );
     assert.ok(dependent, "expected the readUser dependent node");
-    assert.ok(dependent.sourceExcerpt, "expected the dependent to carry a source excerpt");
-    assert.equal(dependent.sourceExcerpt.filePath, "src/service.ts");
-    assert.equal(dependent.sourceExcerpt.text.includes("readUser"), true);
-    assert.equal(dependent.sourceExcerpt.text.split("\n").length <= 12, true);
-    assert.equal(
-      ["symbol_span", "signature", "fallback_symbol_window"].includes(dependent.sourceExcerpt.reason),
-      true,
-    );
+    assert.equal(dependent.sourceExcerpt, undefined);
   });
 });
 

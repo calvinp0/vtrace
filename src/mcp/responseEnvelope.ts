@@ -258,7 +258,7 @@ export function compactProductResponse<T>(
     omitted,
   });
 
-  const accounting = measureResponse(draft, {
+  let accounting = measureResponse(draft, {
     requestedContextTokens: options.requestedContextTokens,
     modelVisibleContext,
     detail,
@@ -267,6 +267,36 @@ export function compactProductResponse<T>(
     omitted,
     expansion,
   });
+
+  if (!accounting.within_envelope) {
+    compactMandatoryProductMetadata(draft, compactedFields, omitted);
+    accounting = measureResponse(draft, {
+      requestedContextTokens: options.requestedContextTokens,
+      modelVisibleContext: readModelVisibleContext(draft),
+      detail,
+      compactionApplied: true,
+      compactedFields,
+      omitted,
+      expansion,
+    });
+  }
+
+  if (!accounting.within_envelope) {
+    degradeOversizedProductResponse(draft, compactedFields, omitted);
+    accounting = measureResponse(draft, {
+      requestedContextTokens: options.requestedContextTokens,
+      modelVisibleContext: readModelVisibleContext(draft),
+      detail,
+      compactionApplied: true,
+      compactedFields,
+      omitted,
+      expansion,
+    });
+  }
+
+  if (!accounting.within_envelope) {
+    throw new Error("product_response_envelope_unreachable");
+  }
 
   draft.responseBudget = accounting;
   return draft as unknown as T & { responseBudget: ResponseBudgetAccounting };
@@ -312,7 +342,7 @@ export function remeasureResponseBudget<T extends { responseBudget: ResponseBudg
     omitted,
   });
 
-  const accounting = measureResponse(draft, {
+  let accounting = measureResponse(draft, {
     requestedContextTokens: previous.requested_context_tokens,
     modelVisibleContext,
     detail,
@@ -322,7 +352,106 @@ export function remeasureResponseBudget<T extends { responseBudget: ResponseBudg
     expansion,
   });
 
+  if (!accounting.within_envelope) {
+    compactMandatoryProductMetadata(draft, compactedFields, omitted);
+    accounting = measureResponse(draft, {
+      requestedContextTokens: previous.requested_context_tokens,
+      modelVisibleContext: readModelVisibleContext(draft),
+      detail,
+      compactionApplied: true,
+      compactedFields,
+      omitted,
+      expansion,
+    });
+  }
+
+  if (!accounting.within_envelope) {
+    degradeOversizedProductResponse(draft, compactedFields, omitted);
+    accounting = measureResponse(draft, {
+      requestedContextTokens: previous.requested_context_tokens,
+      modelVisibleContext: readModelVisibleContext(draft),
+      detail,
+      compactionApplied: true,
+      compactedFields,
+      omitted,
+      expansion,
+    });
+  }
+
+  if (!accounting.within_envelope) {
+    throw new Error("product_response_envelope_unreachable");
+  }
+
   return { ...draft, responseBudget: accounting } as unknown as T;
+}
+
+function compactMandatoryProductMetadata(
+  draft: JsonRecord,
+  compactedFields: string[],
+  omitted: Record<string, number>,
+): void {
+  const productContext = asRecord(draft.productContext);
+  if (productContext === undefined) return;
+  const items = asRecordArray(productContext.items) ?? [];
+  if (items.length > 0) {
+    productContext.items = [];
+    omitted.productContextItems = (omitted.productContextItems ?? 0) + items.length;
+    compactedFields.push("productContext.items");
+  }
+  const diagnostics = asRecord(productContext.diagnostics);
+  if (diagnostics !== undefined) {
+    productContext.diagnostics = {
+      responseCompacted: true,
+      duplicateSourceBodies: diagnostics.duplicateSourceBodies ?? 0,
+      omittedItemMetadata: items.length,
+    };
+    compactedFields.push("productContext.diagnostics");
+  }
+  const accounting = asRecord(productContext.accounting);
+  if (accounting !== undefined) {
+    productContext.accounting = {
+      estimatedTokens: accounting.estimatedTokens ?? accounting.modelVisibleEstimatedTokens ?? 0,
+      estimateMethod: accounting.estimateMethod ?? "chars_div_4",
+    };
+    compactedFields.push("productContext.accounting");
+  }
+}
+
+/**
+ * Last-resort structured degradation for a response whose mandatory context or
+ * post-construction metadata still exceeds the complete envelope. A successful
+ * bounded tool must never knowingly ship `within_envelope:false`.
+ */
+function degradeOversizedProductResponse(
+  draft: JsonRecord,
+  compactedFields: string[],
+  omitted: Record<string, number>,
+): void {
+  const productContext = asRecord(draft.productContext);
+  if (productContext === undefined) return;
+  const items = asRecordArray(productContext.items) ?? [];
+  const originalContext = typeof productContext.modelVisibleContext === "string"
+    ? productContext.modelVisibleContext
+    : "";
+  productContext.resolved = false;
+  productContext.items = [];
+  const degradedContext = [
+    "# Bounded response degradation",
+    "The assembled context could not fit the complete response envelope.",
+    "Narrow the request or raise max_tokens; no oversized success payload was delivered.",
+  ].join("\n");
+  productContext.modelVisibleContext = degradedContext;
+  productContext.accounting = {
+    estimatedTokens: estimateTokens(degradedContext),
+    degradedFromEstimatedTokens: estimateTokens(originalContext),
+  };
+  productContext.diagnostics = {
+    resultState: "budget_failure",
+    responseCompacted: true,
+  };
+  omitted.productContextItems = (omitted.productContextItems ?? 0) + items.length;
+  omitted.modelVisibleCharacters = (omitted.modelVisibleCharacters ?? 0) + originalContext.length;
+  compactedFields.push("productContext.bounded_degradation");
 }
 
 function readModelVisibleContext(draft: JsonRecord): string {

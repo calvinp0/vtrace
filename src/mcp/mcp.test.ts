@@ -3888,6 +3888,7 @@ test("get_impact_graph returns a real bounded structural impact view for an exac
         symbol_fqn: "src/session.ts::SessionManager.createSession",
         depth: 2,
         format: "tree",
+        max_tokens: 3_000,
       },
     });
 
@@ -3911,6 +3912,7 @@ test("get_impact_graph returns a real bounded structural impact view for an exac
         [2, "src/controller.ts::SessionController"],
         [2, "src/controller.ts::SessionController.constructor"],
         [2, "src/session.ts::readSession"],
+        [1, "src/session.ts::Session"],
       ],
     );
     assert.deepEqual(response.result.output.dependentFiles, [
@@ -3923,37 +3925,34 @@ test("get_impact_graph returns a real bounded structural impact view for an exac
       "    d2 src/controller.ts::SessionController (class) imports src/session.ts::SessionManager",
       "    d2 src/controller.ts::SessionController.constructor (method) references src/session.ts::SessionManager",
       "    d2 src/session.ts::readSession (function) references src/session.ts::SessionManager",
+      "d1 src/session.ts::Session",
     ]);
-    assert.equal(
-      response.result.output.coverage.notes.includes(
-        "Structural-only reverse impact view built from indexed contains, imports, calls, and references edges.",
-      ),
-      true,
-    );
+    assert.equal(response.result.output.coverage.analysisKind, "structural");
     // The impact view carries the deterministic accounting block. Its naive
     // baseline counts every file the nodes (root + dependents) and their inline
     // excerpts represent — here the two fixture files (src/session.ts +
     // src/controller.ts) the dependents and their source excerpts live in.
-    assertWellFormedAccounting(response.result.output.accounting);
-    assert.equal(response.result.output.accounting.uniqueFilesCounted, 2);
-    assert.equal(response.result.output.accounting.estimatedNaiveFullFileTokens > 0, true);
-    // The dependent files (where the counted excerpts come from) are in the set.
+    assert.equal(response.result.output.accounting.latencyMs >= 0, true);
+    if (response.result.output.accounting.ref === undefined) {
+      assertWellFormedAccounting(response.result.output.accounting);
+      assert.equal(response.result.output.accounting.uniqueFilesCounted, 2);
+      assert.equal(response.result.output.accounting.estimatedNaiveFullFileTokens > 0, true);
+    } else {
+      assert.equal(response.result.output.accounting.ref, "responseBudget");
+    }
+    assert.equal(response.result.output.responseBudget.withinEnvelope, true);
+    assert.equal(
+      response.result.output.responseBudget.serializedCharacters
+        <= response.result.output.responseBudget.totalCeiling * 4,
+      true,
+    );
+    // Source bodies are not repeated in nodes; compact edge-site evidence is
+    // carried by directRelations instead.
     const dependentExcerpts = response.result.output.nodes
       .filter((node) => node.distance > 0)
       .map((node) => node.sourceExcerpt)
       .filter((excerpt): excerpt is NonNullable<typeof excerpt> => excerpt != null);
-    assert.equal(dependentExcerpts.length >= 1, true, "expected at least one dependent excerpt");
-    for (const excerpt of dependentExcerpts) {
-      assert.equal(typeof excerpt.filePath === "string" && excerpt.filePath.length > 0, true);
-      assert.equal(excerpt.text.split("\n").length <= 12, true, "excerpt must respect the line ceiling");
-      // Honesty: indexed edges carry no call-site line, so a dependent excerpt is
-      // always derived from the symbol's own span and must never claim edge_site.
-      assert.equal(
-        ["symbol_span", "signature", "fallback_symbol_window"].includes(excerpt.reason),
-        true,
-        `dependent excerpt reason must never claim an exact edge site: ${excerpt.reason}`,
-      );
-    }
+    assert.deepEqual(dependentExcerpts, []);
     assertOutputConformsToToolSchema(McpToolId.GetImpactGraph, response.result.output);
   });
 });

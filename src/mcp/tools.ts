@@ -62,6 +62,10 @@ import {
   type ImpactGraphOutput,
   type ImpactFormat,
 } from "../impact/getImpactGraph";
+import {
+  compactImpactProductResponse,
+  type ImpactProductResponse,
+} from "../impact/impactResponseEnvelope";
 import { STATIC_RELATION_KINDS, type StaticRelationKind } from "../impact/staticEvidence";
 import { routeQuery } from "../intent/routeQuery";
 import { normalizeIntentQuery } from "../intent/rules";
@@ -8810,11 +8814,11 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       );
     },
   }),
-  createEngineDelegateToolDefinition<GetImpactGraphInput, ImpactGraphOutput>({
+  createEngineDelegateToolDefinition<GetImpactGraphInput, ImpactProductResponse>({
     metadata: {
       toolId: McpToolId.GetImpactGraph,
       displayName: "Get Impact Graph",
-      description: "Return bounded, worktree-specific static impact evidence for one exact indexed symbol FQN: typed incoming/outgoing relations, source grounding, and ranked dependency paths. Evidence is categorical (exact/resolved/conservative/lexical/unresolved), traversal is capped, and no runtime execution is claimed.",
+      description: "Return bounded, worktree-specific static impact evidence for one exact indexed symbol FQN. max_edges bounds the canonical delivered edge set; nodes, paths, directRelations, and view are projections of that set. max_tokens bounds model-facing impact content, with an 800-token minimum metadata allowance for the complete serialized response. depth/max_paths bound retained path evidence and cannot expose additional graph data through compatibility fields.",
       inputSchema: objectSchema(
         "Bounded structural impact-graph request.",
         {
@@ -8824,9 +8828,9 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           format: stringProperty(`Optional output format: ${IMPACT_FORMATS.join(", ")}.`),
           direction: stringProperty("Optional rich-impact traversal direction: upstream, downstream, or both. Legacy nodes/edges remain reverse-impact compatible."),
           relations: arrayProperty(`Optional semantic relation filter. Supported values: ${STATIC_RELATION_KINDS.join(", ")}.`, stringProperty("Relation kind.")),
-          max_paths: integerProperty("Optional maximum number of ranked static paths. Defaults to 3."),
-          max_edges: integerProperty("Optional maximum number of direct evidence edges. Defaults to 64."),
-          max_tokens: integerProperty("Optional approximate token cap for rich path evidence. Defaults to 1200."),
+          max_paths: integerProperty("Maximum number of ranked paths projected from the canonical retained graph. Defaults to 3."),
+          max_edges: integerProperty("Maximum number of unique canonical impact edges delivered across all response projections. Traversal may examine more. Defaults to 64."),
+          max_tokens: integerProperty("Approximate chars/4 budget for model-facing impact content. The complete response adds max(800, 15%) metadata tokens and is checked after all fields are attached. Defaults to 1200."),
           include_lexical: booleanProperty("Include explicitly lexical evidence. Lexical evidence is never counted as an exact call."),
           include_unresolved: booleanProperty("Include recognized unresolved evidence when available; targets are never fabricated."),
           include_evidence: booleanProperty("Include bounded source grounding and resolution methods. Defaults to true."),
@@ -8858,8 +8862,9 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           timing: { type: "object", description: "Target-resolution, neighbor-query, path-traversal, render, and total impact timings in milliseconds.", additionalProperties: true },
           diagnostics: { type: "object", description: "Static-only boundary, traversal counters, and limitations.", additionalProperties: true },
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
+          responseBudget: { type: "object", description: "Final complete-response and canonical-edge accounting; withinEnvelope is always true on success.", additionalProperties: true },
         },
-        ["requested", "resolvedSymbol", "coverage", "summary", "dependentFiles", "nodes", "edges", "view"],
+        ["requested", "resolvedSymbol", "coverage", "summary", "dependentFiles", "nodes", "edges", "view", "responseBudget"],
       ),
     },
     async handler({ context, request }) {
@@ -8976,11 +8981,12 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             latencyMs: performance.now() - accountingStartedAt,
           });
 
+          const outputWithAccounting = accounting === undefined
+            ? result.output
+            : { ...result.output, accounting };
           return {
             ok: true,
-            output: accounting === undefined
-              ? result.output
-              : { ...result.output, accounting },
+            output: compactImpactProductResponse(outputWithAccounting),
           };
         },
         requestedRoot,

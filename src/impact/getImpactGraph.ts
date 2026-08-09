@@ -207,6 +207,12 @@ export interface ImpactDiagnostics {
   readonly edgesInspected: number;
   readonly pathsConsidered: number;
   readonly pathsReturned: number;
+  /** Canonical model-facing graph accounting (distinct from traversal work). */
+  readonly canonicalEdgesRetained: number;
+  readonly canonicalNodesRetained: number;
+  readonly canonicalEdgesOmitted: number;
+  readonly deliveryTruncated: boolean;
+  readonly traversalLimitReached: boolean;
   readonly limitations: readonly string[];
 }
 
@@ -274,8 +280,23 @@ export function getImpactGraph(
 
   const resolvedSymbol = matches[0]!;
   const targetResolutionMs = measuredElapsed(targetStarted, timingEnabled);
-  const { distanceById, symbolsById } = discoverImpactSymbols(db, resolvedSymbol, input.depth);
-  const baseNodes = buildImpactNodes(distanceById, symbolsById);
+  const maxEdges = Math.min(MAX_INSPECTED_EDGES, Math.max(1, input.maxEdges ?? DEFAULT_MAX_EDGES));
+  const discovery = discoverImpactSymbols(db, resolvedSymbol, input.depth, maxEdges);
+  const { distanceById, symbolsById } = discovery;
+  const discoveredEdges = buildImpactEdges(db, distanceById, symbolsById);
+  const edges = discoveredEdges.slice(0, maxEdges);
+  const canonicalNodeIds = new Set<string>([resolvedSymbol.id]);
+  for (const edge of edges) {
+    canonicalNodeIds.add(edge.fromSymbolId);
+    canonicalNodeIds.add(edge.toSymbolId);
+  }
+  const canonicalDistances = new Map(
+    [...distanceById].filter(([symbolId]) => canonicalNodeIds.has(symbolId)),
+  );
+  const canonicalSymbols = new Map(
+    [...symbolsById].filter(([symbolId]) => canonicalNodeIds.has(symbolId)),
+  );
+  const baseNodes = buildImpactNodes(canonicalDistances, canonicalSymbols);
   const nodes = options?.repoRoot !== undefined && options.includeSourceExcerpts !== false
     ? attachImpactSourceExcerpts(
       db,
@@ -284,8 +305,7 @@ export function getImpactGraph(
       options.maxExcerpts ?? SOURCE_EXCERPT_DEFAULTS.maxImpactExcerpts,
     )
     : baseNodes;
-  const edges = buildImpactEdges(db, distanceById, symbolsById);
-  const primaryParentEdges = buildPrimaryParentEdges(edges, symbolsById);
+  const primaryParentEdges = buildPrimaryParentEdges(edges, canonicalSymbols);
   const dependentFiles = collectDependentFiles(nodes);
   const observedEdgeTypes = collectObservedEdgeTypes(edges);
   const memberEvidencePresent = hasMemberResolutionEvidence(edges, symbolsById);
@@ -300,6 +320,8 @@ export function getImpactGraph(
     crossLanguageEvidencePresent,
   );
   const rich = buildRichImpact(db, resolvedSymbol, input, options, targetResolutionMs, totalStarted);
+  const canonicalEdgesOmitted = discovery.omittedDependents
+    + Math.max(0, discoveredEdges.length - edges.length);
 
   return {
     ok: true,
@@ -338,6 +360,19 @@ export function getImpactGraph(
         ),
       },
       ...rich,
+      richSummary: {
+        ...rich.richSummary,
+        truncated: rich.richSummary.truncated || canonicalEdgesOmitted > 0,
+        omittedEdges: rich.richSummary.omittedEdges + canonicalEdgesOmitted,
+      },
+      diagnostics: {
+        ...rich.diagnostics,
+        canonicalEdgesRetained: edges.length,
+        canonicalNodesRetained: nodes.length,
+        canonicalEdgesOmitted,
+        deliveryTruncated: canonicalEdgesOmitted > 0,
+        traversalLimitReached: discovery.limitReached,
+      },
     },
   };
 }
@@ -487,6 +522,11 @@ function buildRichImpact(
       edgesInspected,
       pathsConsidered: rankedPaths.length,
       pathsReturned: paths.length,
+      canonicalEdgesRetained: 0,
+      canonicalNodesRetained: 0,
+      canonicalEdgesOmitted: 0,
+      deliveryTruncated: false,
+      traversalLimitReached: remainingTraversalEdges === 0,
       limitations: [
         "Static repository evidence only; paths are not runtime execution traces.",
         "Dynamic dispatch, monkey patching, reflection, and dependency injection are not resolved.",
@@ -719,13 +759,18 @@ function discoverImpactSymbols(
   db: Database,
   resolvedSymbol: SymbolRecord,
   maxDepth: number,
+  maxRetainedEdges: number,
 ): {
   readonly distanceById: ReadonlyMap<string, number>;
   readonly symbolsById: ReadonlyMap<string, SymbolRecord>;
+  readonly omittedDependents: number;
+  readonly limitReached: boolean;
 } {
   const distanceById = new Map<string, number>([[resolvedSymbol.id, 0]]);
   const symbolsById = new Map<string, SymbolRecord>([[resolvedSymbol.id, resolvedSymbol]]);
   let frontier = [resolvedSymbol.id];
+  let omittedDependents = 0;
+  let limitReached = false;
 
   for (let distance = 0; distance < maxDepth && frontier.length > 0; distance += 1) {
     const frontierSet = new Set(frontier);
@@ -750,10 +795,14 @@ function discoverImpactSymbols(
       dependentIds.push(edge.srcSymbolId);
     }
 
-    const hydrated = getSymbolsByIds(db, dependentIds);
+    const remaining = Math.max(0, maxRetainedEdges - (symbolsById.size - 1));
+    const retainedDependentIds = dependentIds.slice(0, remaining);
+    omittedDependents += Math.max(0, dependentIds.length - retainedDependentIds.length);
+    if (retainedDependentIds.length < dependentIds.length) limitReached = true;
+    const hydrated = getSymbolsByIds(db, retainedDependentIds);
     const nextSymbolsById = new Map<string, SymbolRecord>();
 
-    for (const dependentId of dependentIds) {
+    for (const dependentId of retainedDependentIds) {
       const dependentSymbol = hydrated.get(dependentId);
       // A dangling edge target is skipped exactly as the single-row lookup did.
       if (dependentSymbol === undefined) {
@@ -770,11 +819,17 @@ function discoverImpactSymbols(
     }
 
     frontier = nextFrontier.map((symbol) => symbol.id);
+    if (symbolsById.size - 1 >= maxRetainedEdges) {
+      limitReached = limitReached || frontier.length > 0;
+      break;
+    }
   }
 
   return {
     distanceById,
     symbolsById,
+    omittedDependents,
+    limitReached,
   };
 }
 

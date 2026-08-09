@@ -353,7 +353,8 @@ test("critical freshness and provenance survive every level of compaction", () =
   assert.equal(after.productContext.freshness.status, "stale");
   assert.equal(after.productContext.freshness.reason, "working_tree_changed");
   assert.equal(after.diagnostics.indexFreshness.status, "stale");
-  assert.equal(after.productContext.resolved, true);
+  assert.equal(after.productContext.resolved, false);
+  assert.match(after.productContext.modelVisibleContext, /Bounded response degradation/);
   assert.ok(after.responseBudget.estimated_total_response_tokens > 0);
 });
 

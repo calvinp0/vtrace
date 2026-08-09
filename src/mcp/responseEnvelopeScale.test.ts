@@ -329,21 +329,18 @@ test("a tiny budget still yields a valid, bounded, parseable response", () => {
 
   assert.equal(after.responseBudget.compaction_applied, true);
   assert.equal(typeof JSON.parse(serialize(after)), "object");
-  assert.equal(
-    after.responseBudget.estimated_metadata_tokens < after.responseBudget.estimated_model_visible_tokens,
-    true,
-    "metadata should have been compacted well below the context it describes",
-  );
+  assert.equal(after.responseBudget.within_envelope, true);
+  assert.equal(after.productContext.resolved, false);
 });
 
-test("a model-visible context larger than the ceiling is reported, never silently exceeded", () => {
+test("a model-visible context larger than the ceiling degrades explicitly before return", () => {
   const shaped = shapedResponse({ ...BASELINE, items: 20, sourceLines: 200 });
   const after = compactProductResponse(shaped, { requestedContextTokens: 100 });
 
-  // The one case metadata compaction cannot fix. `within_envelope` says so
-  // instead of the response quietly overshooting the documented bound.
-  assert.equal(after.responseBudget.estimated_model_visible_tokens > 100, true);
-  assert.equal(after.responseBudget.within_envelope, false);
+  assert.equal(after.productContext.resolved, false);
+  assert.match(after.productContext.modelVisibleContext, /Bounded response degradation/);
+  assert.equal(after.responseBudget.estimated_model_visible_tokens <= 100, true);
+  assert.equal(after.responseBudget.within_envelope, true);
   assert.equal(after.responseBudget.total_response_token_ceiling, responseTokenCeiling(100));
 });
 

@@ -4,6 +4,7 @@ import {
   IMPACT_FORMATS,
   getImpactGraph,
 } from "../../impact/getImpactGraph";
+import { compactImpactProductResponse } from "../../impact/impactResponseEnvelope";
 import {
   buildContextAccounting,
   impactGraphOutputFilePathGroups,
@@ -64,9 +65,15 @@ export async function runImpactGraphCommand(
             filePathGroups: impactGraphOutputFilePathGroups(result.output),
             latencyMs: performance.now() - accountingStartedAt,
           });
-          return success(formatJson({ ...result, output: { ...result.output, accounting } }));
+          return success(formatJson({
+            ...result,
+            output: compactImpactProductResponse({ ...result.output, accounting }),
+          }));
         } catch {
-          return success(formatJson(result));
+          return success(formatJson({
+            ...result,
+            output: compactImpactProductResponse(result.output),
+          }));
         }
       }
 

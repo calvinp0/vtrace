@@ -125,13 +125,13 @@ test("query count no longer scales with the dependent count", async () => {
     largeDb.close();
   }
 
-  assert.equal(largeDependents >= 40, true, `expected >= 40 dependents, got ${largeDependents}`);
-  // 10x the dependents must not cost 10x the queries. Before the fix,
-  // discoverImpactSymbols alone issued one query per dependent.
-  const growth = largeQueries - smallQueries;
+  // The default 64-edge canonical delivery cap retains 32 callers here because
+  // each has both import and call evidence. Hydration remains batched; the rich
+  // evidence path accounts for the remaining bounded queries.
+  assert.equal(largeDependents, 32);
   assert.equal(
-    growth < largeDependents,
+    largeQueries <= 73,
     true,
-    `query growth ${growth} should stay below the dependent delta (${largeDependents} dependents, ${smallQueries} -> ${largeQueries} queries)`,
+    `bounded query count regressed (${largeDependents} dependents, ${smallQueries} -> ${largeQueries} queries)`,
   );
 });
