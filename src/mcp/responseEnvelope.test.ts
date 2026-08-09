@@ -8,6 +8,7 @@
 import assert from "node:assert/strict";
 import { test } from "bun:test";
 
+import { estimateTokens } from "../capsuleV2/tokens";
 import {
   McpResponseDetail,
   compactProductResponse,
@@ -275,7 +276,7 @@ test("the selected source body is serialized exactly once", () => {
   assert.equal(bodyOccurrences(after, DOCUMENT_EXCERPT), 1, "document excerpt must appear once");
 });
 
-test("modelVisibleContext is the authoritative representation and is never compacted", () => {
+test("modelVisibleContext is authoritative and remains unchanged when already within budget", () => {
   const before = duplicatedResponse();
   const after = compactProductResponse(before, { requestedContextTokens: 6000 });
 
@@ -328,15 +329,8 @@ test("the envelope holds even when the caller asks for a very small response", (
   for (const requested of [200, 500, 1_000, 2_000]) {
     const after = compactProductResponse(duplicatedResponse(), { requestedContextTokens: requested });
     const budget = after.responseBudget;
-    // The rendered context is fixed by retrieval and is never truncated to fit;
-    // when it alone exceeds the ceiling the response says so rather than lying.
-    if (budget.estimated_model_visible_tokens <= requested) {
-      assert.equal(
-        budget.within_envelope,
-        true,
-        `requested=${requested} produced ${budget.estimated_total_response_tokens} tokens`,
-      );
-    }
+    assert.ok(budget.estimated_model_visible_tokens <= requested);
+    assert.equal(budget.within_envelope, true, `requested=${requested} produced ${budget.estimated_total_response_tokens} tokens`);
     assert.equal(budget.compaction_applied, true);
     assert.ok(budget.compacted_fields.length > 0);
   }
@@ -353,8 +347,11 @@ test("critical freshness and provenance survive every level of compaction", () =
   assert.equal(after.productContext.freshness.status, "stale");
   assert.equal(after.productContext.freshness.reason, "working_tree_changed");
   assert.equal(after.diagnostics.indexFreshness.status, "stale");
-  assert.equal(after.productContext.resolved, false);
-  assert.match(after.productContext.modelVisibleContext, /Bounded response degradation/);
+  assert.equal(after.productContext.resolved, true);
+  assert.equal(after.productContext.resultState, "resolved");
+  assert.equal(after.productContext.retrievalFound, true);
+  assert.ok(after.productContext.items.length > 0);
+  assert.match(after.productContext.modelVisibleContext, /pivot_function/);
   assert.ok(after.responseBudget.estimated_total_response_tokens > 0);
 });
 
@@ -440,4 +437,129 @@ test("the ceiling formula is a documented function of the requested budget", () 
   assert.equal(responseTokenCeiling(20_000), 23_000);
   assert.equal(isMcpResponseDetail("standard"), true);
   assert.equal(isMcpResponseDetail("verbose"), false);
+});
+
+test("a slight model-context overshoot compacts reasons without erasing the lead", () => {
+  const before = duplicatedResponse();
+  const initialTokens = estimateTokens(before.productContext.modelVisibleContext);
+  const requested = Math.floor(initialTokens * 0.9);
+  const after = compactProductResponse(before, { requestedContextTokens: requested });
+
+  assert.equal(after.productContext.resultState, "resolved");
+  assert.equal(after.productContext.retrievalFound, true);
+  assert.match(after.productContext.modelVisibleContext, /pivot_function/);
+  assert.ok(after.productContext.items.length > 0);
+  assert.ok(after.responseBudget.estimated_model_visible_tokens <= requested);
+  assert.ok(after.productContext.delivery.compactionStages.includes("selection_reasons_compacted"));
+});
+
+test("a large overshoot removes weaker support before the answer-bearing pivot", () => {
+  const after = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 500 });
+
+  assert.equal(after.productContext.resultState, "resolved");
+  assert.match(after.productContext.modelVisibleContext, /pkg\/pivot\.py::pivot_function/);
+  assert.ok(after.productContext.delivery.droppedForBudget > 0);
+  assert.ok(after.productContext.delivery.deliveredItems >= 1);
+});
+
+test("a single huge lead is reduced to a minimal truthful representation", () => {
+  const before = duplicatedResponse();
+  before.productContext.items = [before.productContext.items[0]!];
+  before.productContext.modelVisibleContext = [
+    "# VTRACE product context",
+    "task: investigate the failure",
+    "intent: modify",
+    "worktree: fixture",
+    "capsule_mode: standard",
+    "",
+    "## [P1] pkg/pivot.py::pivot_function",
+    "roles: pivot, required",
+    "mode: focused_source",
+    "",
+    PIVOT_BODY.repeat(4),
+  ].join("\n");
+  const after = compactProductResponse(before, { requestedContextTokens: 250 });
+
+  assert.equal(after.productContext.resultState, "resolved");
+  assert.match(after.productContext.modelVisibleContext, /pivot_function/);
+  assert.ok(after.responseBudget.estimated_model_visible_tokens <= 250);
+  assert.ok(after.productContext.delivery.compactionStages.includes("lead_excerpt_shortened"));
+});
+
+test("many small support items cannot displace the strong lead", () => {
+  const before = duplicatedResponse();
+  const lead = before.productContext.items[0]!;
+  const supports = Array.from({ length: 20 }, (_, index) => ({
+    ...before.productContext.items[1]!,
+    id: `S${index + 1}`,
+    stableId: `support-${index}`,
+    path: `pkg/support_${index}.py`,
+    symbol: `support_${index}`,
+    selectionReasons: ["optional graph neighbour"],
+    content: `def support_${index}():\n    return ${index}`,
+  }));
+  before.productContext.items = [lead, ...supports];
+  before.productContext.modelVisibleContext = [
+    before.productContext.modelVisibleContext,
+    ...supports.map((item) => `\n## [${item.id}] ${item.path}::${item.symbol}\nroles: support\nmode: focused_source\n\n${item.content}`),
+  ].join("\n");
+  const after = compactProductResponse(before, { requestedContextTokens: 650 });
+
+  assert.equal(after.productContext.resultState, "resolved");
+  assert.match(after.productContext.modelVisibleContext, /pivot_function/);
+  assert.ok(after.productContext.delivery.supportDropped > 0);
+  assert.ok(after.productContext.delivery.deliveredItems < 21);
+});
+
+test("optional metadata is compacted before answer-bearing model context", () => {
+  const before = duplicatedResponse();
+  const requested = estimateTokens(before.productContext.modelVisibleContext) + 10;
+  before.diagnostics.retrieval.search.queryVariants = Array.from({ length: 2_000 }, (_, index) => `diagnostic-${index}-${"x".repeat(40)}`);
+  const after = compactProductResponse(before, { requestedContextTokens: requested });
+
+  assert.equal(after.productContext.resultState, "resolved");
+  assert.equal(after.productContext.modelVisibleContext, before.productContext.modelVisibleContext);
+  assert.match(after.productContext.modelVisibleContext, /pivot_function/);
+  assert.equal(after.responseBudget.within_envelope, true);
+});
+
+test("retrieval miss, bounded hit, compacted hit, and delivery failure are distinct", () => {
+  const miss = duplicatedResponse();
+  miss.productContext.resolved = false;
+  miss.productContext.items = [];
+  miss.productContext.modelVisibleContext = "";
+  const noResult = compactProductResponse(miss, { requestedContextTokens: 500 });
+  const complete = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 12_000 });
+  const compacted = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 500 });
+  const failed = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 1 });
+
+  assert.deepEqual(
+    [noResult.productContext.resultState, complete.productContext.resultState, compacted.productContext.resultState, failed.productContext.resultState],
+    ["no_result", "resolved", "resolved", "delivery_failure"],
+  );
+  assert.deepEqual(
+    [noResult.productContext.retrievalFound, complete.productContext.retrievalFound, compacted.productContext.retrievalFound, failed.productContext.retrievalFound],
+    [false, true, true, true],
+  );
+  assert.equal(failed.productContext.deliveryFailed, true);
+  assert.equal(failed.productContext.resolved, false);
+});
+
+test("delivery is deterministic and answer-bearing usefulness is monotonic with budget", () => {
+  const budgets = [100, 200, 500, 1_000, 2_000, 6_000];
+  let previousDelivered = 0;
+  let answerSeen = false;
+  for (const budget of budgets) {
+    const first = compactProductResponse(duplicatedResponse(), { requestedContextTokens: budget });
+    const second = compactProductResponse(duplicatedResponse(), { requestedContextTokens: budget });
+    assert.equal(first.productContext.modelVisibleContext, second.productContext.modelVisibleContext);
+    assert.deepEqual(first.productContext.delivery, second.productContext.delivery);
+    if (first.productContext.resultState === "resolved") {
+      assert.ok(first.productContext.delivery.deliveredItems >= previousDelivered);
+      previousDelivered = first.productContext.delivery.deliveredItems;
+      const hasAnswer = first.productContext.modelVisibleContext.includes("pivot_function");
+      assert.ok(!answerSeen || hasAnswer, `answer disappeared at budget ${budget}`);
+      answerSeen ||= hasAnswer;
+    }
+  }
 });

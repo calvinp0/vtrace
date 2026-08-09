@@ -68,6 +68,24 @@ export interface ProductAccounting {
 export interface ProductContextResponse {
   responseVersion: typeof PRODUCT_CONTEXT_RESPONSE_VERSION;
   resolved: boolean;
+  /** Retrieval and delivery are separate: a hit may still fail to fit. */
+  resultState?: "resolved" | "no_result" | "delivery_failure";
+  retrievalFound?: boolean;
+  deliveryFailed?: boolean;
+  topMatchReference?: string;
+  delivery?: {
+    status: "complete" | "compacted" | "failed" | "no_result";
+    selectedItemsBeforeBudget: number;
+    deliveredItems: number;
+    droppedForBudget: number;
+    initialModelTokens: number;
+    finalModelTokens: number;
+    compactionPasses: number;
+    compactionStages: string[];
+    excerptsShortened: number;
+    skeletonizedItems: number;
+    supportDropped: number;
+  };
   task: string;
   taskHash: string;
   intent: string;

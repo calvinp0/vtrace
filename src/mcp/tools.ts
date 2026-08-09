@@ -7302,7 +7302,12 @@ const PRODUCT_CONTEXT_RESPONSE_SCHEMA: McpSchemaProperty = {
   description: "Versioned M119 role-aware product context shared by get_code_context, get_context_capsule, and run_pipeline. It includes repository/freshness identity, deduplicated items, final model-visible text, approximate token accounting, and monotonic latency accounting.",
   properties: {
     responseVersion: integerProperty("Product response contract version; M119 emits 2."),
-    resolved: booleanProperty("Whether fresh, usable model-visible context was assembled."),
+    resolved: booleanProperty("Whether fresh, usable model-visible context was delivered."),
+    resultState: stringProperty("Delivery-aware result: resolved, no_result, or delivery_failure."),
+    retrievalFound: booleanProperty("Whether retrieval selected relevant evidence before budget delivery."),
+    deliveryFailed: booleanProperty("True only when retrieval succeeded but no truthful representation fit."),
+    topMatchReference: stringProperty("Compact top-match identity retained when full delivery fails, when available."),
+    delivery: { type: "object", description: "Selected-versus-delivered counts and deterministic context-compaction stages.", additionalProperties: true },
     task: stringProperty("Normalized task text used by the shared assembler."),
     taskHash: stringProperty("Deterministic hash of the normalized task."),
     intent: stringProperty("Resolved capsule intent."),
@@ -7335,7 +7340,7 @@ const PRODUCT_CONTEXT_RESPONSE_SCHEMA: McpSchemaProperty = {
         additionalProperties: true,
       },
     },
-    modelVisibleContext: stringProperty("Final deduplicated text measured by accounting and suitable for model injection."),
+    modelVisibleContext: stringProperty("Final deduplicated text measured by accounting and suitable for model injection. max_tokens bounds this field; lower-priority support may be compacted to preserve answer-bearing evidence."),
     omittedItemCount: integerProperty("Per-item metadata rows dropped by response compaction, when the selection itself outgrew the metadata allowance. The rendered context is unaffected."),
     diagnostics: { type: "object", description: "Limitations, caps, duplicate-suppression counts, and fallback diagnostics.", additionalProperties: true },
   },
@@ -8491,7 +8496,7 @@ const GET_CODE_CONTEXT_TOOL_DEFINITION = Object.freeze({
     toolId: McpToolId.GetCodeContext,
     displayName: "Get Code Context",
     description:
-      "Vtrace default first-pass repo-context tool for broad coding, debugging, refactor, and code-understanding tasks. It is fail-closed on stale or missing indexes by default. Pass auto_refresh=if_stale only to explicitly refresh the selected repo_root worktree. Precise freshness diagnostics identify HEAD, dirty-tree, schema, configuration, and identity mismatches.",
+      "Vtrace default first-pass repo-context tool for broad coding, debugging, refactor, and code-understanding tasks. max_tokens bounds model-visible context; lower-priority support is compacted before answer-bearing evidence. resultState=no_result means retrieval missed, while delivery_failure means relevant evidence was found but could not fit. It is fail-closed on stale or missing indexes by default. Pass auto_refresh=if_stale only to explicitly refresh the selected repo_root worktree.",
     inputSchema: objectSchema(
       "Code-context request with optional explicit worktree selection and opt-in refresh.",
       {

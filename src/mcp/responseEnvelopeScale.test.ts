@@ -338,7 +338,10 @@ test("a model-visible context larger than the ceiling degrades explicitly before
   const after = compactProductResponse(shaped, { requestedContextTokens: 100 });
 
   assert.equal(after.productContext.resolved, false);
-  assert.match(after.productContext.modelVisibleContext, /Bounded response degradation/);
+  assert.match(after.productContext.modelVisibleContext, /VTRACE delivery failure/);
+  assert.equal(after.productContext.resultState, "delivery_failure");
+  assert.equal(after.productContext.retrievalFound, true);
+  assert.equal(after.productContext.deliveryFailed, true);
   assert.equal(after.responseBudget.estimated_model_visible_tokens <= 100, true);
   assert.equal(after.responseBudget.within_envelope, true);
   assert.equal(after.responseBudget.total_response_token_ceiling, responseTokenCeiling(100));

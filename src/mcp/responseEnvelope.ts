@@ -23,6 +23,7 @@
 import { createHash } from "node:crypto";
 
 import { estimateTokens } from "../capsuleV2/tokens";
+import { applyProgressiveContextBudget } from "../productContext/budgetDelivery";
 
 export const MCP_RESPONSE_ENVELOPE_VERSION = "vtrace.mcp_response_envelope/1" as const;
 
@@ -215,6 +216,13 @@ export function compactProductResponse<T>(
   const omitted: Record<string, number> = {};
   const expansion: Record<string, string> = {};
 
+  const delivery = applyProgressiveContextBudget(draft, options.requestedContextTokens);
+  const deliveryCompacted = delivery?.accounting.status === "compacted"
+    || delivery?.accounting.status === "failed";
+  if (deliveryCompacted) {
+    compactedFields.push("productContext.modelVisibleContext");
+    omitted.productContextItemsDroppedForBudget = delivery?.accounting.droppedForBudget ?? 0;
+  }
   const modelVisibleContext = readModelVisibleContext(draft);
 
   // 1. Remove duplicated source bodies from metadata items.
@@ -239,8 +247,9 @@ export function compactProductResponse<T>(
   // 6. Bound transitive impact/flow explanatory evidence.
   compactImpactSection(draft, { detail, compactedFields, omitted });
 
-  // 7/8. `productContext.modelVisibleContext`, freshness, provenance, warnings and
-  // accounting are never removed by any step above or the escalation below.
+  // 7/8. Progressive product-context packing has already bounded
+  // `modelVisibleContext`; freshness, provenance, warnings and accounting remain
+  // protected while redundant envelope metadata is reduced around it.
   const escalation = enforceTotalEnvelope(draft, {
     detail,
     ceilingTokens: responseTokenCeiling(options.requestedContextTokens),
@@ -262,7 +271,7 @@ export function compactProductResponse<T>(
     requestedContextTokens: options.requestedContextTokens,
     modelVisibleContext,
     detail,
-    compactionApplied: escalation.applied,
+    compactionApplied: deliveryCompacted || escalation.applied,
     compactedFields,
     omitted,
     expansion,
@@ -270,6 +279,19 @@ export function compactProductResponse<T>(
 
   if (!accounting.within_envelope) {
     compactMandatoryProductMetadata(draft, compactedFields, omitted);
+    accounting = measureResponse(draft, {
+      requestedContextTokens: options.requestedContextTokens,
+      modelVisibleContext: readModelVisibleContext(draft),
+      detail,
+      compactionApplied: true,
+      compactedFields,
+      omitted,
+      expansion,
+    });
+  }
+
+  if (!accounting.within_envelope) {
+    compactNonessentialEnvelopeMetadata(draft, compactedFields, omitted);
     accounting = measureResponse(draft, {
       requestedContextTokens: options.requestedContextTokens,
       modelVisibleContext: readModelVisibleContext(draft),
@@ -366,6 +388,19 @@ export function remeasureResponseBudget<T extends { responseBudget: ResponseBudg
   }
 
   if (!accounting.within_envelope) {
+    compactNonessentialEnvelopeMetadata(draft, compactedFields, omitted);
+    accounting = measureResponse(draft, {
+      requestedContextTokens: previous.requested_context_tokens,
+      modelVisibleContext: readModelVisibleContext(draft),
+      detail,
+      compactionApplied: true,
+      compactedFields,
+      omitted,
+      expansion,
+    });
+  }
+
+  if (!accounting.within_envelope) {
     degradeOversizedProductResponse(draft, compactedFields, omitted);
     accounting = measureResponse(draft, {
       requestedContextTokens: previous.requested_context_tokens,
@@ -385,6 +420,81 @@ export function remeasureResponseBudget<T extends { responseBudget: ResponseBudg
   return { ...draft, responseBudget: accounting } as unknown as T;
 }
 
+/**
+ * The final metadata tier keeps the product contract and required orchestration
+ * decisions, but removes optional compatibility manifests that merely repeat
+ * identities already present in productContext/modelVisibleContext.
+ */
+function compactNonessentialEnvelopeMetadata(
+  draft: JsonRecord,
+  compactedFields: string[],
+  omitted: Record<string, number>,
+): void {
+  const optional = [
+    "capsule",
+    "runtime",
+    "inspectFirst",
+    "accounting",
+    "capsuleResult",
+    "authoritativeCapsuleManifestId",
+    "capsuleManifestId",
+    "pivotNeighborhood",
+    "workspace",
+    "retrieval",
+    "classification",
+    "routingProfile",
+    "capsuleProfile",
+  ];
+  let removed = 0;
+  for (const field of optional) {
+    if (draft[field] === undefined) continue;
+    removed += serialize(draft[field]).length;
+    delete draft[field];
+  }
+  if (removed > 0) {
+    omitted.optionalEnvelopeMetadataCharacters = removed;
+    compactedFields.push("optional_envelope_metadata");
+  }
+
+  const product = asRecord(draft.productContext);
+  if (product !== undefined) {
+    if (typeof product.task === "string" && product.task !== QUERY_REFERENCE) {
+      product.task = QUERY_REFERENCE;
+    }
+    product.timing = {};
+    product.roleCounts = {};
+    const repository = asRecord(product.repository);
+    if (repository !== undefined) {
+      product.repository = pickFields(repository, INDEX_FRESHNESS_ESSENTIAL);
+    }
+    const freshness = asRecord(product.freshness);
+    if (freshness !== undefined) {
+      product.freshness = pickFields(freshness, INDEX_FRESHNESS_ESSENTIAL);
+    }
+    compactedFields.push("productContext.optional_metadata");
+  }
+
+  const diagnostics = asRecord(draft.diagnostics);
+  if (diagnostics !== undefined) {
+    const freshness = asRecord(diagnostics.indexFreshness);
+    draft.diagnostics = {
+      responseCompacted: true,
+      ...(freshness === undefined ? {} : {
+        indexFreshness: pickFields(freshness, INDEX_FRESHNESS_ESSENTIAL),
+      }),
+    };
+    compactedFields.push("diagnostics.essential_only");
+  }
+}
+
+function pickFields(record: JsonRecord, fields: readonly string[]): JsonRecord {
+  const selected: JsonRecord = {};
+  for (const field of fields) {
+    if (record[field] !== undefined) selected[field] = record[field];
+  }
+  return selected;
+}
+
 function compactMandatoryProductMetadata(
   draft: JsonRecord,
   compactedFields: string[],
@@ -393,9 +503,23 @@ function compactMandatoryProductMetadata(
   const productContext = asRecord(draft.productContext);
   if (productContext === undefined) return;
   const items = asRecordArray(productContext.items) ?? [];
-  if (items.length > 0) {
-    productContext.items = [];
-    omitted.productContextItems = (omitted.productContextItems ?? 0) + items.length;
+  if (items.length > 1) {
+    const strongest = items[0]!;
+    productContext.items = [{
+      id: strongest.id ?? null,
+      stableId: strongest.stableId ?? null,
+      path: strongest.path ?? null,
+      symbol: strongest.symbol ?? null,
+      roles: strongest.roles ?? [],
+      contentMode: strongest.contentMode ?? null,
+      estimatedTokens: strongest.estimatedTokens ?? 0,
+      metadata: asRecord(strongest.metadata)?.fqName === undefined
+        ? {}
+        : { fqName: asRecord(strongest.metadata)?.fqName },
+      contextReference: typeof strongest.id === "string" ? `[${strongest.id}]` : null,
+    }];
+    productContext.omittedItemCount = items.length - 1;
+    omitted.productContextItems = (omitted.productContextItems ?? 0) + items.length - 1;
     compactedFields.push("productContext.items");
   }
   const diagnostics = asRecord(productContext.diagnostics);
@@ -403,7 +527,7 @@ function compactMandatoryProductMetadata(
     productContext.diagnostics = {
       responseCompacted: true,
       duplicateSourceBodies: diagnostics.duplicateSourceBodies ?? 0,
-      omittedItemMetadata: items.length,
+      omittedItemMetadata: Math.max(0, items.length - 1),
     };
     compactedFields.push("productContext.diagnostics");
   }
@@ -433,12 +557,23 @@ function degradeOversizedProductResponse(
   const originalContext = typeof productContext.modelVisibleContext === "string"
     ? productContext.modelVisibleContext
     : "";
+  const retrievalFound = productContext.retrievalFound === true
+    || productContext.resolved === true
+    || items.length > 0;
   productContext.resolved = false;
+  productContext.retrievalFound = retrievalFound;
+  productContext.deliveryFailed = retrievalFound;
+  productContext.resultState = retrievalFound ? "delivery_failure" : "no_result";
+  if (retrievalFound && productContext.topMatchReference === undefined && typeof productContext.leadPivot === "string") {
+    productContext.topMatchReference = productContext.leadPivot;
+  }
   productContext.items = [];
   const degradedContext = [
-    "# Bounded response degradation",
-    "The assembled context could not fit the complete response envelope.",
-    "Narrow the request or raise max_tokens; no oversized success payload was delivered.",
+    retrievalFound ? "# VTRACE delivery failure" : "# VTRACE no result",
+    retrievalFound
+      ? "Relevant evidence was found, but the minimum deliverable representation could not fit the complete response envelope."
+      : "Retrieval produced no sufficiently relevant evidence.",
+    retrievalFound ? "Increase max_tokens or narrow the request." : "",
   ].join("\n");
   productContext.modelVisibleContext = degradedContext;
   productContext.accounting = {
@@ -446,9 +581,23 @@ function degradeOversizedProductResponse(
     degradedFromEstimatedTokens: estimateTokens(originalContext),
   };
   productContext.diagnostics = {
-    resultState: "budget_failure",
+    resultState: retrievalFound ? "delivery_failure" : "no_result",
+    retrievalFound,
     responseCompacted: true,
   };
+  const delivery = asRecord(productContext.delivery);
+  if (delivery !== undefined) {
+    const selected = typeof delivery.selectedItemsBeforeBudget === "number"
+      ? delivery.selectedItemsBeforeBudget
+      : items.length;
+    productContext.delivery = {
+      ...delivery,
+      status: retrievalFound ? "failed" : "no_result",
+      deliveredItems: 0,
+      droppedForBudget: selected,
+      finalModelTokens: estimateTokens(degradedContext),
+    };
+  }
   omitted.productContextItems = (omitted.productContextItems ?? 0) + items.length;
   omitted.modelVisibleCharacters = (omitted.modelVisibleCharacters ?? 0) + originalContext.length;
   compactedFields.push("productContext.bounded_degradation");
