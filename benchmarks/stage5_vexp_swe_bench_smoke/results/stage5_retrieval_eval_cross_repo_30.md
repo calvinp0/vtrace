@@ -44,7 +44,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | expected_file_missing_rate | 10.0% |
 | expected_symbol_hit_rate | 56.7% |
 | expected_symbol_as_pivot_rate | 26.7% |
-| mean_capsule_tokens | 2149.3 |
+| mean_capsule_tokens | 2176.8 |
 | mean_pivot_count | 2.13 |
 | mean_support_count | 3.83 |
 
@@ -72,7 +72,7 @@ All 30 instances share one label source (gold_patch); see the table above.
 | matplotlib/matplotlib | 4/4 | 50.0% | 75.0% | 50.0% | 25.0% | 656.3 | 1.75 | 4.00 |
 | sphinx-doc/sphinx | 4/4 | 50.0% | 50.0% | 50.0% | 50.0% | 2750.8 | 2.00 | 4.00 |
 | psf/requests | 3/3 | 66.7% | 100.0% | 66.7% | 0.0% | 863.0 | 2.00 | 4.00 |
-| pytest-dev/pytest | 3/3 | 100.0% | 100.0% | 100.0% | 0.0% | 855.3 | 2.00 | 4.00 |
+| pytest-dev/pytest | 3/3 | 100.0% | 100.0% | 100.0% | 0.0% | 1130.7 | 2.00 | 4.00 |
 | pydata/xarray | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 2124.0 | 3.00 | 3.00 |
 | scikit-learn/scikit-learn | 2/2 | 100.0% | 100.0% | 100.0% | 0.0% | 3412.0 | 2.00 | 4.00 |
 | mwaskom/seaborn | 1/1 | 100.0% | 100.0% | 100.0% | 0.0% | 1530.0 | 2.00 | 4.00 |

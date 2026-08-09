@@ -1,7 +1,7 @@
 {
   "generatedFrom": {
-    "fixture": "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.django.expanded.json",
-    "resultsDir": "/tmp/tmp.RYDbtbjUTB",
+    "fixture": "/tmp/m134-authoritative/m134-django.fixture.json",
+    "resultsDir": "benchmarks/stage5_vexp_swe_bench_smoke/results",
     "builder": "buildCapsuleV2 (in-process, --json equivalent)"
   },
   "rows": [
@@ -121,6 +121,119 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "django/db/models/aggregates.py",
+          "django/db/models/sql/query.py",
+          "django/db/models/expressions.py",
+          "django/db/models/query.py",
+          "django/core/paginator.py",
+          "django/db/models/sql/subqueries.py"
+        ],
+        "lead": "django/db/models/aggregates.py",
+        "roles": [
+          {
+            "path": "django/db/models/aggregates.py",
+            "symbol": "Count",
+            "role": "pivot"
+          },
+          {
+            "path": "django/db/models/sql/query.py",
+            "symbol": "count_active_tables",
+            "role": "pivot"
+          },
+          {
+            "path": "django/db/models/expressions.py",
+            "symbol": "Case",
+            "role": "support"
+          },
+          {
+            "path": "django/db/models/query.py",
+            "symbol": "count",
+            "role": "support"
+          },
+          {
+            "path": "django/core/paginator.py",
+            "symbol": "count",
+            "role": "support"
+          },
+          {
+            "path": "django/db/models/sql/subqueries.py",
+            "symbol": "AggregateQuery",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "django/db/models/aggregates.py",
+            "symbol": "Count",
+            "contentMode": "full"
+          },
+          {
+            "path": "django/db/models/sql/query.py",
+            "symbol": "count_active_tables",
+            "contentMode": "full"
+          },
+          {
+            "path": "django/db/models/expressions.py",
+            "symbol": "Case",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/db/models/query.py",
+            "symbol": "count",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/core/paginator.py",
+            "symbol": "count",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/db/models/sql/subqueries.py",
+            "symbol": "AggregateQuery",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot django/db/models/aggregates.py::Count\n  reason:\n  - actionable class — symbol-name match; strong lexical match; issue-domain relevance; 6 dependents\n  - 6 indexed symbol(s) depend on this\n  - lexical match on local_name, fq_name, query_coverage, path_segment_signal\n  - symbol name matches \"COUNT\"\n  - task names class name `Count` (direct evidence, weak)\n\n  source:\n  class Count(Aggregate):\n      function = 'COUNT'\n      name = 'Count'\n      output_field = IntegerField()\n      allow_distinct = True\n\n      def __init__(self, expression, filter=None, **extra):\n          if expression == '*':\n              expression = Star()\n          if isinstance(expression, Star) and filter is not None:\n              raise ValueError('Star cannot be used with filter. Please specify a field.')\n          super().__init__(expression, filter=filter, **extra)\n\n      def convert_value(self, value, expression, connection):\n          return 0 if value is None else value\n\n● pivot django/db/models/sql/query.py::count_active_tables\n  reason:\n  - actionable method — symbol-name match; strong lexical match; issue-domain relevance\n  - 1 indexed symbol(s) depend on this\n  - lexical match on local_name, fq_name, query_coverage, path_segment_signal\n\n  source:\n  def count_active_tables(self):\n          \"\"\"\n          Return the number of tables in this query with a non-zero reference\n          count. After execution, the reference counts are zeroed, so tables\n          added in compiler will not be seen by this method.\n          \"\"\"\n          return len([1 for count in self.alias_refcount.values() if count])\n\n○ support django/db/models/expressions.py::Case\n\n  signature:\n  class Case(Expression):\n\n○ support django/db/models/query.py::count\n\n  signature:\n  def count(self):\n\n○ support django/core/paginator.py::count\n\n  signature:\n  def count(self):\n\n○ support django/db/models/sql/subqueries.py::AggregateQuery\n\n  signature:\n  class AggregateQuery(Query):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 489,
+          "usedPercent": 6.11,
+          "itemTokens": [
+            {
+              "path": "django/db/models/aggregates.py",
+              "symbol": "Count",
+              "tokens": 242
+            },
+            {
+              "path": "django/db/models/sql/query.py",
+              "symbol": "count_active_tables",
+              "tokens": 160
+            },
+            {
+              "path": "django/db/models/expressions.py",
+              "symbol": "Case",
+              "tokens": 22
+            },
+            {
+              "path": "django/db/models/query.py",
+              "symbol": "count",
+              "tokens": 19
+            },
+            {
+              "path": "django/core/paginator.py",
+              "symbol": "count",
+              "tokens": 19
+            },
+            {
+              "path": "django/db/models/sql/subqueries.py",
+              "symbol": "AggregateQuery",
+              "tokens": 27
+            }
+          ]
+        }
       }
     },
     {
@@ -245,6 +358,115 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "django/contrib/admin/options.py",
+          "django/contrib/contenttypes/forms.py"
+        ],
+        "lead": "django/contrib/admin/options.py",
+        "roles": [
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_inline_instances",
+            "role": "pivot"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_formsets_with_inlines",
+            "role": "pivot"
+          },
+          {
+            "path": "django/contrib/contenttypes/forms.py",
+            "symbol": "BaseGenericInlineFormSet",
+            "role": "support"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_inline_formsets",
+            "role": "support"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_model_perms",
+            "role": "support"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "save_model",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_inline_instances",
+            "contentMode": "full"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_formsets_with_inlines",
+            "contentMode": "full"
+          },
+          {
+            "path": "django/contrib/contenttypes/forms.py",
+            "symbol": "BaseGenericInlineFormSet",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_inline_formsets",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "get_model_perms",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/contrib/admin/options.py",
+            "symbol": "save_model",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot django/contrib/admin/options.py::get_inline_instances\n  reason:\n  - existing method recovered from Class.method expansion — more actionable than containing class\n  - 2 indexed symbol(s) depend on this\n  - symbol name matches \"get_inline_instances\"\n\n  source:\n  def get_inline_instances(self, request, obj=None):\n          inline_instances = []\n          for inline_class in self.inlines:\n              inline = inline_class(self.model, self.admin_site)\n              if request:\n                  if not (inline.has_view_or_change_permission(request, obj) or\n                          inline.has_add_permission(request, obj) or\n                          inline.has_delete_permission(request, obj)):\n                      continue\n                  if not inline.has_add_permission(request, obj):\n                      inline.max_num = 0\n              inline_instances.append(inline)\n\n          return inline_instances\n\n● pivot django/contrib/admin/options.py::get_formsets_with_inlines\n  reason:\n  - existing method recovered from Class.method expansion — more actionable than containing class\n  - 3 indexed symbol(s) depend on this\n  - symbol name matches \"get_formsets_with_inlines\"\n\n  source:\n  def get_formsets_with_inlines(self, request, obj=None):\n          \"\"\"\n          Yield formsets and the corresponding inlines.\n          \"\"\"\n          for inline in self.get_inline_instances(request, obj):\n              yield inline.get_formset(request, obj), inline\n\n○ support django/contrib/contenttypes/forms.py::BaseGenericInlineFormSet\n\n  signature:\n  class BaseGenericInlineFormSet(BaseModelFormSet):\n\n○ support django/contrib/admin/options.py::get_inline_formsets\n\n  signature:\n  def get_inline_formsets(self, request, formsets, inline_instances, obj=None):\n\n○ support django/contrib/admin/options.py::get_model_perms\n\n  signature:\n  def get_model_perms(self, request):\n\n○ support django/contrib/admin/options.py::save_model\n\n  signature:\n  def save_model(self, request, obj, form, change):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 500,
+          "usedPercent": 6.25,
+          "itemTokens": [
+            {
+              "path": "django/contrib/admin/options.py",
+              "symbol": "get_inline_instances",
+              "tokens": 232
+            },
+            {
+              "path": "django/contrib/admin/options.py",
+              "symbol": "get_formsets_with_inlines",
+              "tokens": 136
+            },
+            {
+              "path": "django/contrib/contenttypes/forms.py",
+              "symbol": "BaseGenericInlineFormSet",
+              "tokens": 35
+            },
+            {
+              "path": "django/contrib/admin/options.py",
+              "symbol": "get_inline_formsets",
+              "tokens": 39
+            },
+            {
+              "path": "django/contrib/admin/options.py",
+              "symbol": "get_model_perms",
+              "tokens": 28
+            },
+            {
+              "path": "django/contrib/admin/options.py",
+              "symbol": "save_model",
+              "tokens": 30
+            }
+          ]
+        }
       }
     },
     {
@@ -370,6 +592,114 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "django/db/models/sql/compiler.py"
+        ],
+        "lead": "django/db/models/sql/compiler.py",
+        "roles": [
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "get_combinator_sql",
+            "role": "pivot"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "execute_sql",
+            "role": "pivot"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "role": "support"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "role": "support"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "role": "support"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "get_combinator_sql",
+            "contentMode": "full"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "execute_sql",
+            "contentMode": "full"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/db/models/sql/compiler.py",
+            "symbol": "as_sql",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot django/db/models/sql/compiler.py::get_combinator_sql\n  reason:\n  - SQL rendering implementation for combined-query output bug\n  - 2 indexed symbol(s) depend on this\n  - lexical match on local_name, local_name, query_coverage, path_segment_signal\n  - symbol name matches \"get_combinator_sql\"\n\n  source:\n  def get_combinator_sql(self, combinator, all):\n          features = self.connection.features\n          compilers = [\n              query.get_compiler(self.using, self.connection)\n              for query in self.query.combined_queries if not query.is_empty()\n          ]\n          if not features.supports_slicing_ordering_in_compound:\n              for query, compiler in zip(self.query.combined_queries, compilers):\n                  if query.low_mark or query.high_mark:\n                      raise DatabaseError('LIMIT/OFFSET not allowed in subqueries of compound statements.')\n                  if compiler.get_order_by():\n                      raise DatabaseError('ORDER BY not allowed in subqueries of compound statements.')\n          parts = ()\n          for compiler in compilers:\n              try:\n                  # If the columns list is limited, then all combined queries\n                  # must have the same columns list. Set the selects defined on\n                  # the query on all combined queries, if not already set.\n                  if not compiler.query.values_select and self.query.values_select:\n                      compiler.query.set_values((\n                          *self.query.extra_select,\n                          *self.query.values_select,\n                          *self.query.annotation_select,\n                      ))\n                  part_sql, part_args = compiler.as_sql()\n                  if compiler.query.combinator:\n                      # Wrap in a subquery if wrapping in parentheses isn't\n                      # supported.\n                      if not features.supports_parentheses_in_compound:\n                          part_sql = 'SELECT * FROM ({})'.format(part_sql)\n                      # Add parentheses when combining with compound query if not\n                      # already added for all compound queries.\n                      elif not features.supports_slicing_ordering_in_compound:\n                          part_sql = '({})'.format(part_sql)\n                  parts += ((part_sql, part_args),)\n              except EmptyResultSet:\n                  # Omit the empty queryset with UNION and with DIFFERENCE if the\n                  # first queryset is nonempty.\n                  if combinator == 'union' or (combinator == 'difference' and parts):\n                      continue\n                  raise\n          if not parts:\n              raise EmptyResultSet\n          combinator_sql = self.connection.ops.set_operators[combinator]\n          if all and combinator == 'union':\n              combinator_sql += ' ALL'\n          braces = '({})' if features.supports_slicing_ordering_in_compound else '{}'\n          sql_parts, args_parts = zip(*((braces.format(sql), args) for sql, args in parts))\n          result = [' {} '.format(combinator_sql).join(sql_parts)]\n          params = []\n          for part in args_parts:\n              params.extend(part)\n          return result, params\n\n● pivot django/db/models/sql/compiler.py::execute_sql\n  reason:\n  - SQL rendering implementation for combined-query output bug\n  - 5 indexed symbol(s) depend on this\n  - lexical match on docstring, docstring, docstring, local_name, query_coverage, path_segment_signal\n  - symbol name matches \"execute_sql\"\n\n  source:\n  def execute_sql(self, result_type=MULTI, chunked_fetch=False, chunk_size=GET_ITERATOR_CHUNK_SIZE):\n          \"\"\"\n          Run the query against the database and return the result(s). The\n          return value is a single data item if result_type is SINGLE, or an\n          iterator over the results if the result_type is MULTI.\n\n          result_type is either MULTI (use fetchmany() to retrieve all rows),\n          SINGLE (only retrieve a single row), or None. In this last case, the\n          cursor is returned if any query is executed, since it's used by\n          subclasses such as InsertQuery). It's possible, however, that no query\n          is needed, as the filters describe an empty set. In that case, None is\n          returned, to avoid any unnecessary database interaction.\n          \"\"\"\n          result_type = result_type or NO_RESULTS\n          try:\n              sql, params = self.as_sql()\n              if not sql:\n                  raise EmptyResultSet\n          except EmptyResultSet:\n              if result_type == MULTI:\n                  return iter([])\n              else:\n                  return\n          if chunked_fetch:\n              cursor = self.connection.chunked_cursor()\n          else:\n              cursor = self.connection.cursor()\n          try:\n              cursor.execute(sql, params)\n          except Exception:\n              # Might fail for server-side cursors (e.g. connection closed)\n              cursor.close()\n              raise\n\n          if result_type == CURSOR:\n              # Give the caller the cursor to process and close.\n              return cursor\n          if result_type == SINGLE:\n              try:\n                  val = cursor.fetchone()\n                  if val:\n                      return val[0:self.col_count]\n                  return val\n              finally:\n                  # done with the cursor\n                  cursor.close()\n          if result_type == NO_RESULTS:\n              cursor.close()\n              return\n\n          result = cursor_iter(\n              cursor, self.connection.features.empty_fetchmany_value,\n              self.col_count if self.has_extra_select else None,\n              chunk_size,\n          )\n          if not chunked_fetch or not self.connection.features.can_use_chunked_reads:\n              try:\n                  # If we are using non-chunked reads, we return the same data\n                  # structure as normally, but ensure it is all read into memory\n                  # before going any further. Use chunked_fetch if requested,\n                  # unless the database doesn't support it.\n                  return list(result)\n              finally:\n                  # done with the cursor\n                  cursor.close()\n          return result\n\n○ support django/db/models/sql/compiler.py::as_sql\n\n  signature:\n  def as_sql(self, with_limits=True, with_col_aliases=False):\n\n○ support django/db/models/sql/compiler.py::as_sql\n\n  signature:\n  def as_sql(self):\n\n○ support django/db/models/sql/compiler.py::as_sql\n\n  signature:\n  def as_sql(self):\n\n○ support django/db/models/sql/compiler.py::as_sql\n\n  signature:\n  def as_sql(self):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 1685,
+          "usedPercent": 21.06,
+          "itemTokens": [
+            {
+              "path": "django/db/models/sql/compiler.py",
+              "symbol": "get_combinator_sql",
+              "tokens": 817
+            },
+            {
+              "path": "django/db/models/sql/compiler.py",
+              "symbol": "execute_sql",
+              "tokens": 773
+            },
+            {
+              "path": "django/db/models/sql/compiler.py",
+              "symbol": "as_sql",
+              "tokens": 32
+            },
+            {
+              "path": "django/db/models/sql/compiler.py",
+              "symbol": "as_sql",
+              "tokens": 21
+            },
+            {
+              "path": "django/db/models/sql/compiler.py",
+              "symbol": "as_sql",
+              "tokens": 21
+            },
+            {
+              "path": "django/db/models/sql/compiler.py",
+              "symbol": "as_sql",
+              "tokens": 21
+            }
+          ]
+        }
       }
     },
     {
@@ -488,6 +818,116 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "django/contrib/admindocs/utils.py",
+          "django/utils/regex_helper.py",
+          "django/contrib/admindocs/views.py"
+        ],
+        "lead": "django/contrib/admindocs/utils.py",
+        "roles": [
+          {
+            "path": "django/contrib/admindocs/utils.py",
+            "symbol": "replace_named_groups",
+            "role": "pivot"
+          },
+          {
+            "path": "django/utils/regex_helper.py",
+            "symbol": "normalize",
+            "role": "pivot"
+          },
+          {
+            "path": "django/contrib/admindocs/views.py",
+            "symbol": "simplify_regex",
+            "role": "support"
+          },
+          {
+            "path": "django/contrib/admindocs/utils.py",
+            "symbol": "replace_unnamed_groups",
+            "role": "support"
+          },
+          {
+            "path": "django/contrib/admindocs/utils.py",
+            "symbol": "named_group_matcher",
+            "role": "support"
+          },
+          {
+            "path": "django/utils/regex_helper.py",
+            "symbol": "walk_to_end",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "django/contrib/admindocs/utils.py",
+            "symbol": "replace_named_groups",
+            "contentMode": "full"
+          },
+          {
+            "path": "django/utils/regex_helper.py",
+            "symbol": "normalize",
+            "contentMode": "full"
+          },
+          {
+            "path": "django/contrib/admindocs/views.py",
+            "symbol": "simplify_regex",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/contrib/admindocs/utils.py",
+            "symbol": "replace_unnamed_groups",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/contrib/admindocs/utils.py",
+            "symbol": "named_group_matcher",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/utils/regex_helper.py",
+            "symbol": "walk_to_end",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot django/contrib/admindocs/utils.py::replace_named_groups\n  reason:\n  - local implementation helper invoked by the entry point — likely edit site\n  - 1 indexed symbol(s) depend on this\n  - lexical match on local_name, local_name, fq_name, query_coverage, technical_hint, path_segment_signal\n\n  source:\n  def replace_named_groups(pattern):\n      r\"\"\"\n      Find named groups in `pattern` and replace them with the group name. E.g.,\n      1. ^(?P<a>\\w+)/b/(\\w+)$ ==> ^<a>/b/(\\w+)$\n      2. ^(?P<a>\\w+)/b/(?P<c>\\w+)/$ ==> ^<a>/b/<c>/$\n      \"\"\"\n      named_group_indices = [\n          (m.start(0), m.end(0), m.group(1))\n          for m in named_group_matcher.finditer(pattern)\n      ]\n      # Tuples of (named capture group pattern, group name).\n      group_pattern_and_name = []\n      # Loop over the groups and their start and end indices.\n      for start, end, group_name in named_group_indices:\n          # Handle nested parentheses, e.g. '^(?P<a>(x|y))/b'.\n          unmatched_open_brackets, prev_char = 1, None\n          for idx, val in enumerate(pattern[end:]):\n              # If brackets are balanced, the end of the string for the current\n              # named capture group pattern has been reached.\n              if unmatched_open_brackets == 0:\n                  group_pattern_and_name.append((pattern[start:end + idx], group_name))\n                  break\n\n              # Check for unescaped `(` and `)`. They mark the start and end of a\n              # nested group.\n              if val == '(' and prev_char != '\\\\':\n                  unmatched_open_brackets += 1\n              elif val == ')' and prev_char != '\\\\':\n                  unmatched_open_brackets -= 1\n              prev_char = val\n\n      # Replace the string for named capture groups with their group names.\n      for group_pattern, group_name in group_pattern_and_name:\n          pattern = pattern.replace(group_pattern, group_name)\n      return pattern\n\n● pivot django/utils/regex_helper.py::normalize\n  reason:\n  - actionable function — strong lexical match; issue-domain relevance; 7 dependents\n  - 7 indexed symbol(s) depend on this\n  - lexical match on docstring, fq_name, fq_name, query_coverage, technical_hint, path_segment_signal\n\n  source:\n  def normalize(pattern):\n      r\"\"\"\n      Given a reg-exp pattern, normalize it to an iterable of forms that\n      suffice for reverse matching. This does the following:\n\n      (1) For any repeating sections, keeps the minimum number of occurrences\n          permitted (this means zero for optional groups).\n      (2) If an optional group includes parameters, include one occurrence of\n          that group (along with the zero occurrence case from step (1)).\n      (3) Select the first (essentially an arbitrary) element from any character\n          class. Select an arbitrary character for any unordered class (e.g. '.'\n          or '\\w') in the pattern.\n      (4) Ignore look-ahead and look-behind assertions.\n      (5) Raise an error on any disjunctive ('|') constructs.\n\n      Django's URLs for forward resolving are either all positional arguments or\n      all keyword arguments. That is assumed here, as well. Although reverse\n      resolving can be done using positional args when keyword args are\n      specified, the two cannot be mixed in the same reverse() call.\n      \"\"\"\n      # Do a linear scan to work out the special features of this pattern. The\n      # idea is that we scan once here and collect all the information we need to\n      # make future decisions.\n      result = []\n      non_capturing_groups = []\n      consume_next = True\n      pattern_iter = next_char(iter(pattern))\n      num_args = 0\n\n      # A \"while\" loop is used here because later on we need to be able to peek\n      # at the next character and possibly go around without consuming another\n      # one at the top of the loop.\n      try:\n          ch, escaped = next(pattern_iter)\n      except StopIteration:\n          return [('', [])]\n\n      try:\n          while True:\n              if escaped:\n                  result.append(ch)\n              elif ch == '.':\n                  # Replace \"any character\" with an arbitrary representative.\n                  result.append(\".\")\n              elif ch == '|':\n                  # FIXME: One day we'll should do this, but not in 1.0.\n                  raise NotImplementedError('Awaiting Implementation')\n              elif ch == \"^\":\n                  pass\n              elif ch == '$':\n                  break\n              elif ch == ')':\n                  # This can only be the end of a non-capturing group, since all\n                  # other unescaped parentheses are handled by the grouping\n                  # section later (and the full group is handled there).\n                  #\n                  # We regroup everything inside the capturing group so that it\n                  # can be quantified, if necessary.\n                  start = non_capturing_groups.pop()\n                  inner = NonCapture(result[start:])\n                  result = result[:start] + [inner]\n              elif ch == '[':\n                  # Replace ranges with the first character in the range.\n                  ch, escaped = next(pattern_iter)\n                  result.append(ch)\n                  ch, escaped = next(pattern_iter)\n                  while escaped or ch != ']':\n                      ch, escaped = next(pattern_iter)\n              elif ch == '(':\n                  # Some kind of group.\n                  ch, escaped = next(pattern_iter)\n                  if ch != '?' or escaped:\n                      # A positional group\n                      name = \"_%d\" % num_args\n                      num_args += 1\n                      result.append(Group(((\"%%(%s)s\" % name), name)))\n                      walk_to_end(ch, pattern_iter)\n                  else:\n                      ch, escaped = next(pattern_iter)\n                      if ch in '!=<':\n                          # All of these are ignorable. Walk to the end of the\n                          # group.\n                          walk_to_end(ch, pattern_iter)\n                      elif ch == ':':\n                          # Non-capturing group\n                          non_capturing_groups.append(len(result))\n                      elif ch != 'P':\n                          # Anything else, other than a named group, is something\n                          # we cannot reverse.\n                          raise ValueError(\"Non-reversible reg-exp portion: '(?%s'\" % ch)\n                      else:\n                          ch, escaped = next(pattern_iter)\n                          if ch not in ('<', '='):\n                              raise ValueError(\"Non-reversible reg-exp portion: '(?P%s'\" % ch)\n                          # We are in a named capturing group. Extra the name and\n                          # then skip to the end.\n                          if ch == '<':\n                              terminal_char = '>'\n                          # We are in a named backreference.\n                          else:\n                              terminal_char = ')'\n                          name = []\n                          ch, escaped = next(pattern_iter)\n                          while ch != terminal_char:\n                              name.append(ch)\n                              ch, escaped = next(pattern_iter)\n                          param = ''.join(name)\n                          # Named backreferences have already consumed the\n                          # parenthesis.\n                          if terminal_char != ')':\n                              result.append(Group(((\"%%(%s)s\" % param), param)))\n                              walk_to_end(ch, pattern_iter)\n                          else:\n                              result.append(Group(((\"%%(%s)s\" % param), None)))\n              elif ch in \"*?+{\":\n                  # Quantifiers affect the previous item in the result list.\n                  count, ch = get_quantifier(ch, pattern_iter)\n                  if ch:\n                      # We had to look ahead, but it wasn't need to compute the\n                      # quantifier, so use this character next time around the\n                      # main loop.\n                      consume_next = False\n\n                  if count == 0:\n                      if contains(result[-1], Group):\n                          # If we are quantifying a capturing group (or\n                          # something containing such a group) and the minimum is\n                          # zero, we must also handle the case of one occurrence\n                          # being present. All the quantifiers (except {0,0},\n                          # which we conveniently ignore) that have a 0 minimum\n                          # also allow a single occurrence.\n                          result[-1] = Choice([None, result[-1]])\n                      else:\n                          result.pop()\n                  elif count > 1:\n                      result.extend([result[-1]] * (count - 1))\n              else:\n                  # Anything else is a literal.\n                  result.append(ch)\n\n              if consume_next:\n                  ch, escaped = next(pattern_iter)\n              consume_next = True\n      except StopIteration:\n          pass\n      except NotImplementedError:\n          # A case of using the disjunctive form. No results for you!\n          return [('', [])]\n\n      return list(zip(*flatten_result(result)))\n\n○ support django/contrib/admindocs/views.py::simplify_regex\n\n  signature:\n  def simplify_regex(pattern):\n\n○ support django/contrib/admindocs/utils.py::replace_unnamed_groups\n\n  signature:\n  def replace_unnamed_groups(pattern):\n\n○ support django/contrib/admindocs/utils.py::named_group_matcher\n\n  signature:\n  named_group_matcher = re.compile(r'\\(\\?P(<\\w+>)')\n\n○ support django/utils/regex_helper.py::walk_to_end\n\n  signature:\n  def walk_to_end(ch, input_iter):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 2484,
+          "usedPercent": 31.05,
+          "itemTokens": [
+            {
+              "path": "django/contrib/admindocs/utils.py",
+              "symbol": "replace_named_groups",
+              "tokens": 485
+            },
+            {
+              "path": "django/utils/regex_helper.py",
+              "symbol": "normalize",
+              "tokens": 1885
+            },
+            {
+              "path": "django/contrib/admindocs/views.py",
+              "symbol": "simplify_regex",
+              "tokens": 26
+            },
+            {
+              "path": "django/contrib/admindocs/utils.py",
+              "symbol": "replace_unnamed_groups",
+              "tokens": 30
+            },
+            {
+              "path": "django/contrib/admindocs/utils.py",
+              "symbol": "named_group_matcher",
+              "tokens": 33
+            },
+            {
+              "path": "django/utils/regex_helper.py",
+              "symbol": "walk_to_end",
+              "tokens": 25
+            }
+          ]
+        }
       }
     },
     {
@@ -612,6 +1052,115 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "django/db/migrations/autodetector.py",
+          "django/db/models/fields/related_descriptors.py"
+        ],
+        "lead": "django/db/migrations/autodetector.py",
+        "roles": [
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "_get_dependencies_for_foreign_key",
+            "role": "pivot"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "generate_renamed_fields",
+            "role": "pivot"
+          },
+          {
+            "path": "django/db/models/fields/related_descriptors.py",
+            "symbol": "ForeignKeyDeferredAttribute",
+            "role": "support"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "generate_altered_unique_together",
+            "role": "support"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "arrange_for_graph",
+            "role": "support"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "_trim_to_apps",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "_get_dependencies_for_foreign_key",
+            "contentMode": "full"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "generate_renamed_fields",
+            "contentMode": "full"
+          },
+          {
+            "path": "django/db/models/fields/related_descriptors.py",
+            "symbol": "ForeignKeyDeferredAttribute",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "generate_altered_unique_together",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "arrange_for_graph",
+            "contentMode": "signature"
+          },
+          {
+            "path": "django/db/migrations/autodetector.py",
+            "symbol": "_trim_to_apps",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot django/db/migrations/autodetector.py::_get_dependencies_for_foreign_key\n  reason:\n  - local implementation helper whose name matches the issue — likely edit site\n  - 5 indexed symbol(s) depend on this\n  - lexical match on local_name, local_name, signature, fq_name, local_name, fq_name, query_coverage, path_segment_signal\n\n  source:\n  def _get_dependencies_for_foreign_key(self, field):\n          # Account for FKs to swappable models\n          swappable_setting = getattr(field, 'swappable_setting', None)\n          if swappable_setting is not None:\n              dep_app_label = \"__setting__\"\n              dep_object_name = swappable_setting\n          else:\n              dep_app_label = field.remote_field.model._meta.app_label\n              dep_object_name = field.remote_field.model._meta.object_name\n          dependencies = [(dep_app_label, dep_object_name, None, True)]\n          if getattr(field.remote_field, \"through\", None) and not field.remote_field.through._meta.auto_created:\n              dependencies.append((\n                  field.remote_field.through._meta.app_label,\n                  field.remote_field.through._meta.object_name,\n                  None,\n                  True,\n              ))\n          return dependencies\n\n● pivot django/db/migrations/autodetector.py::generate_renamed_fields\n  reason:\n  - local implementation helper invoked by the entry point — likely edit site\n  - 2 indexed symbol(s) depend on this\n  - graph calls from add_operation\n  - graph calls to _detect_changes\n  - graph contains to MigrationAutodetector\n\n  source:\n  def generate_renamed_fields(self):\n          \"\"\"Work out renamed fields.\"\"\"\n          self.renamed_fields = {}\n          for app_label, model_name, field_name in sorted(self.new_field_keys - self.old_field_keys):\n              old_model_name = self.renamed_models.get((app_label, model_name), model_name)\n              old_model_state = self.from_state.models[app_label, old_model_name]\n              field = self.new_apps.get_model(app_label, model_name)._meta.get_field(field_name)\n              # Scan to see if this is actually a rename!\n              field_dec = self.deep_deconstruct(field)\n              for rem_app_label, rem_model_name, rem_field_name in sorted(self.old_field_keys - self.new_field_keys):\n                  if rem_app_label == app_label and rem_model_name == model_name:\n                      old_field = old_model_state.get_field_by_name(rem_field_name)\n                      old_field_dec = self.deep_deconstruct(old_field)\n                      if field.remote_field and field.remote_field.model and 'to' in old_field_dec[2]:\n                          old_rel_to = old_field_dec[2]['to']\n                          if old_rel_to in self.renamed_models_rel:\n                              old_field_dec[2]['to'] = self.renamed_models_rel[old_rel_to]\n                      old_field.set_attributes_from_name(rem_field_name)\n                      old_db_column = old_field.get_attname_column()[1]\n                      if (old_field_dec == field_dec or (\n                              # Was the field renamed and db_column equal to the\n                              # old field's column added?\n                              old_field_dec[0:2] == field_dec[0:2] and\n                              dict(old_field_dec[2], db_column=old_db_column) == field_dec[2])):\n                          if self.questioner.ask_rename(model_name, rem_field_name, field_name, field):\n                              self.add_operation(\n                                  app_label,\n                                  operations.RenameField(\n                                      model_name=model_name,\n                                      old_name=rem_field_name,\n                                      new_name=field_name,\n                                  )\n                              )\n                              self.old_field_keys.remove((rem_app_label, rem_model_name, rem_field_name))\n                              self.old_field_keys.add((app_label, model_name, field_name))\n                              self.renamed_fields[app_label, model_name, field_name] = rem_field_name\n                              break\n\n○ support django/db/models/fields/related_descriptors.py::ForeignKeyDeferredAttribute\n\n  signature:\n  class ForeignKeyDeferredAttribute(DeferredAttribute):\n\n○ support django/db/migrations/autodetector.py::generate_altered_unique_together\n\n  signature:\n  def generate_altered_unique_together(self):\n\n○ support django/db/migrations/autodetector.py::arrange_for_graph\n\n  signature:\n  def arrange_for_graph(self, changes, graph, migration_name=None):\n\n○ support django/db/migrations/autodetector.py::_trim_to_apps\n\n  signature:\n  def _trim_to_apps(self, changes, app_labels):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 1195,
+          "usedPercent": 14.94,
+          "itemTokens": [
+            {
+              "path": "django/db/migrations/autodetector.py",
+              "symbol": "_get_dependencies_for_foreign_key",
+              "tokens": 315
+            },
+            {
+              "path": "django/db/migrations/autodetector.py",
+              "symbol": "generate_renamed_fields",
+              "tokens": 738
+            },
+            {
+              "path": "django/db/models/fields/related_descriptors.py",
+              "symbol": "ForeignKeyDeferredAttribute",
+              "tokens": 39
+            },
+            {
+              "path": "django/db/migrations/autodetector.py",
+              "symbol": "generate_altered_unique_together",
+              "tokens": 35
+            },
+            {
+              "path": "django/db/migrations/autodetector.py",
+              "symbol": "arrange_for_graph",
+              "tokens": 37
+            },
+            {
+              "path": "django/db/migrations/autodetector.py",
+              "symbol": "_trim_to_apps",
+              "tokens": 31
+            }
+          ]
+        }
       }
     },
     {
@@ -737,6 +1286,116 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "db/backends/postgresql/client.py",
+          "contrib/gis/db/backends/postgis/operations.py",
+          "db/backends/postgresql/base.py"
+        ],
+        "lead": "db/backends/postgresql/client.py",
+        "roles": [
+          {
+            "path": "db/backends/postgresql/client.py",
+            "symbol": "_escape_pgpass",
+            "role": "pivot"
+          },
+          {
+            "path": "db/backends/postgresql/client.py",
+            "symbol": "runshell_db",
+            "role": "pivot"
+          },
+          {
+            "path": "db/backends/postgresql/client.py",
+            "symbol": "runshell",
+            "role": "support"
+          },
+          {
+            "path": "contrib/gis/db/backends/postgis/operations.py",
+            "symbol": "postgis_lib_version",
+            "role": "support"
+          },
+          {
+            "path": "db/backends/postgresql/base.py",
+            "symbol": "pg_version",
+            "role": "support"
+          },
+          {
+            "path": "db/backends/postgresql/base.py",
+            "symbol": "psycopg2_version",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "db/backends/postgresql/client.py",
+            "symbol": "_escape_pgpass",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/backends/postgresql/client.py",
+            "symbol": "runshell_db",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/backends/postgresql/client.py",
+            "symbol": "runshell",
+            "contentMode": "signature"
+          },
+          {
+            "path": "contrib/gis/db/backends/postgis/operations.py",
+            "symbol": "postgis_lib_version",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/backends/postgresql/base.py",
+            "symbol": "pg_version",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/backends/postgresql/base.py",
+            "symbol": "psycopg2_version",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot db/backends/postgresql/client.py::_escape_pgpass\n  reason:\n  - actionable function — strong lexical match; issue-domain relevance\n  - 1 indexed symbol(s) depend on this\n  - lexical match on fq_name, fq_name, fq_name, fq_name, query_coverage, path_segment_signal\n\n  source:\n  def _escape_pgpass(txt):\n      \"\"\"\n      Escape a fragment of a PostgreSQL .pgpass file.\n      \"\"\"\n      return txt.replace('\\\\', '\\\\\\\\').replace(':', '\\\\:')\n\n● pivot db/backends/postgresql/client.py::runshell_db\n  reason:\n  - actionable method — strong lexical match; issue-domain relevance\n  - 2 indexed symbol(s) depend on this\n  - lexical match on local_name, fq_name, fq_name, fq_name, query_coverage, path_segment_signal\n\n  source:\n  def runshell_db(cls, conn_params):\n          args = [cls.executable_name]\n\n          host = conn_params.get('host', '')\n          port = conn_params.get('port', '')\n          dbname = conn_params.get('database', '')\n          user = conn_params.get('user', '')\n          passwd = conn_params.get('password', '')\n\n          if user:\n              args += ['-U', user]\n          if host:\n              args += ['-h', host]\n          if port:\n              args += ['-p', str(port)]\n          args += [dbname]\n\n          temp_pgpass = None\n          sigint_handler = signal.getsignal(signal.SIGINT)\n          try:\n              if passwd:\n                  # Create temporary .pgpass file.\n                  temp_pgpass = NamedTemporaryFile(mode='w+')\n                  try:\n                      print(\n                          _escape_pgpass(host) or '*',\n                          str(port) or '*',\n                          _escape_pgpass(dbname) or '*',\n                          _escape_pgpass(user) or '*',\n                          _escape_pgpass(passwd),\n                          file=temp_pgpass,\n                          sep=':',\n                          flush=True,\n                      )\n                      os.environ['PGPASSFILE'] = temp_pgpass.name\n                  except UnicodeEncodeError:\n                      # If the current locale can't encode the data, let the\n                      # user input the password manually.\n                      pass\n              # Allow SIGINT to pass to psql to abort queries.\n              signal.signal(signal.SIGINT, signal.SIG_IGN)\n              subprocess.check_call(args)\n          finally:\n              # Restore the original SIGINT handler.\n              signal.signal(signal.SIGINT, sigint_handler)\n              if temp_pgpass:\n                  temp_pgpass.close()\n                  if 'PGPASSFILE' in os.environ:  # unit tests need cleanup\n                      del os.environ['PGPASSFILE']\n\n○ support db/backends/postgresql/client.py::runshell\n\n  signature:\n  def runshell(self):\n\n○ support contrib/gis/db/backends/postgis/operations.py::postgis_lib_version\n\n  signature:\n  def postgis_lib_version(self):\n\n○ support db/backends/postgresql/base.py::pg_version\n\n  signature:\n  def pg_version(self):\n\n○ support db/backends/postgresql/base.py::psycopg2_version\n\n  signature:\n  def psycopg2_version():",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 773,
+          "usedPercent": 9.66,
+          "itemTokens": [
+            {
+              "path": "db/backends/postgresql/client.py",
+              "symbol": "_escape_pgpass",
+              "tokens": 110
+            },
+            {
+              "path": "db/backends/postgresql/client.py",
+              "symbol": "runshell_db",
+              "tokens": 562
+            },
+            {
+              "path": "db/backends/postgresql/client.py",
+              "symbol": "runshell",
+              "tokens": 22
+            },
+            {
+              "path": "contrib/gis/db/backends/postgis/operations.py",
+              "symbol": "postgis_lib_version",
+              "tokens": 31
+            },
+            {
+              "path": "db/backends/postgresql/base.py",
+              "symbol": "pg_version",
+              "tokens": 23
+            },
+            {
+              "path": "db/backends/postgresql/base.py",
+              "symbol": "psycopg2_version",
+              "tokens": 25
+            }
+          ]
+        }
       }
     },
     {
@@ -861,6 +1520,115 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "http/response.py",
+          "core/checks/database.py"
+        ],
+        "lead": "http/response.py",
+        "roles": [
+          {
+            "path": "http/response.py",
+            "symbol": "HttpResponse",
+            "role": "pivot"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "write",
+            "role": "pivot"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "write",
+            "role": "support"
+          },
+          {
+            "path": "core/checks/database.py",
+            "symbol": "check_database_backends",
+            "role": "support"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "HttpResponseBase",
+            "role": "support"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "writelines",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "http/response.py",
+            "symbol": "HttpResponse",
+            "contentMode": "full"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "write",
+            "contentMode": "full"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "write",
+            "contentMode": "signature"
+          },
+          {
+            "path": "core/checks/database.py",
+            "symbol": "check_database_backends",
+            "contentMode": "signature"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "HttpResponseBase",
+            "contentMode": "signature"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "writelines",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot http/response.py::HttpResponse\n  reason:\n  - actionable class — symbol-name match; strong lexical match\n  - title mentions symbol-like term `HttpResponse`\n\n  source:\n  class HttpResponse(HttpResponseBase):\n      \"\"\"\n      An HTTP response class with a string as content.\n\n      This content that can be read, appended to, or replaced.\n      \"\"\"\n\n      streaming = False\n\n      def __init__(self, content=b'', *args, **kwargs):\n          super().__init__(*args, **kwargs)\n          # Content is a bytestring. See the `content` property methods.\n          self.content = content\n\n      def __repr__(self):\n          return '<%(cls)s status_code=%(status_code)d%(content_type)s>' % {\n              'cls': self.__class__.__name__,\n              'status_code': self.status_code,\n              'content_type': self._content_type_for_repr,\n          }\n\n      def serialize(self):\n          \"\"\"Full HTTP message, including headers, as a bytestring.\"\"\"\n          return self.serialize_headers() + b'\\r\\n\\r\\n' + self.content\n\n      __bytes__ = serialize\n\n      @property\n      def content(self):\n          return b''.join(self._container)\n\n      @content.setter\n      def content(self, value):\n          # Consume iterators upon assignment to allow repeated iteration.\n          if hasattr(value, '__iter__') and not isinstance(value, (bytes, str)):\n              content = b''.join(self.make_bytes(chunk) for chunk in value)\n              if hasattr(value, 'close'):\n                  try:\n                      value.close()\n                  except Exception:\n                      pass\n          else:\n              content = self.make_bytes(value)\n          # Create a list of properly encoded bytestrings to support write().\n          self._container = [content]\n\n      def __iter__(self):\n          return iter(self._container)\n\n      def write(self, content):\n          self._container.append(self.make_bytes(content))\n\n      def tell(self):\n          return len(self.content)\n\n      def getvalue(self):\n          return self.content\n\n      def writable(self):\n          return True\n\n      def writelines(self, lines):\n          for line in lines:\n              self.write(line)\n\n● pivot http/response.py::write\n  reason:\n  - actionable method — strong lexical match; issue-domain relevance\n  - 2 indexed symbol(s) depend on this\n  - lexical match on fq_name, fq_name, local_name, query_coverage, technical_hint, path_segment_signal\n\n  source:\n  def write(self, content):\n          self._container.append(self.make_bytes(content))\n\n○ support http/response.py::write\n\n  signature:\n  def write(self, content):\n\n○ support core/checks/database.py::check_database_backends\n\n  signature:\n  def check_database_backends(*args, **kwargs):\n\n○ support http/response.py::HttpResponseBase\n\n  signature:\n  class HttpResponseBase:\n\n○ support http/response.py::writelines\n\n  signature:\n  def writelines(self, lines):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 725,
+          "usedPercent": 9.06,
+          "itemTokens": [
+            {
+              "path": "http/response.py",
+              "symbol": "HttpResponse",
+              "tokens": 546
+            },
+            {
+              "path": "http/response.py",
+              "symbol": "write",
+              "tokens": 88
+            },
+            {
+              "path": "http/response.py",
+              "symbol": "write",
+              "tokens": 19
+            },
+            {
+              "path": "core/checks/database.py",
+              "symbol": "check_database_backends",
+              "tokens": 30
+            },
+            {
+              "path": "http/response.py",
+              "symbol": "HttpResponseBase",
+              "tokens": 21
+            },
+            {
+              "path": "http/response.py",
+              "symbol": "writelines",
+              "tokens": 21
+            }
+          ]
+        }
       }
     },
     {
@@ -984,6 +1752,119 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "utils/numberformat.py",
+          "utils/formats.py",
+          "utils/dateformat.py",
+          "utils/html.py",
+          "utils/_os.py",
+          "utils/cache.py"
+        ],
+        "lead": "utils/numberformat.py",
+        "roles": [
+          {
+            "path": "utils/numberformat.py",
+            "symbol": "format",
+            "role": "pivot"
+          },
+          {
+            "path": "utils/formats.py",
+            "symbol": "number_format",
+            "role": "pivot"
+          },
+          {
+            "path": "utils/dateformat.py",
+            "symbol": "format",
+            "role": "support"
+          },
+          {
+            "path": "utils/html.py",
+            "symbol": "format_html",
+            "role": "support"
+          },
+          {
+            "path": "utils/_os.py",
+            "symbol": "symlinks_supported",
+            "role": "support"
+          },
+          {
+            "path": "utils/cache.py",
+            "symbol": "patch_response_headers",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "utils/numberformat.py",
+            "symbol": "format",
+            "contentMode": "full"
+          },
+          {
+            "path": "utils/formats.py",
+            "symbol": "number_format",
+            "contentMode": "full"
+          },
+          {
+            "path": "utils/dateformat.py",
+            "symbol": "format",
+            "contentMode": "signature"
+          },
+          {
+            "path": "utils/html.py",
+            "symbol": "format_html",
+            "contentMode": "signature"
+          },
+          {
+            "path": "utils/_os.py",
+            "symbol": "symlinks_supported",
+            "contentMode": "signature"
+          },
+          {
+            "path": "utils/cache.py",
+            "symbol": "patch_response_headers",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot utils/numberformat.py::format\n  reason:\n  - task names this symbol directly — edit target despite delegating to local helpers\n  - lexical match on fq_name, fq_name, local_name, signature, query_coverage, technical_hint, path_segment_signal\n  - task names module path `utils.numberformat.format` → symbol `format` (direct evidence, strong)\n\n  source:\n  def format(number, decimal_sep, decimal_pos=None, grouping=0, thousand_sep='',\n             force_grouping=False, use_l10n=None):\n      \"\"\"\n      Get a number (as a number or string), and return it as a string,\n      using formats defined as arguments:\n\n      * decimal_sep: Decimal separator symbol (for example \".\")\n      * decimal_pos: Number of decimal positions\n      * grouping: Number of digits in every group limited by thousand separator.\n          For non-uniform digit grouping, it can be a sequence with the number\n          of digit group sizes following the format used by the Python locale\n          module in locale.localeconv() LC_NUMERIC grouping (e.g. (3, 2, 0)).\n      * thousand_sep: Thousand separator symbol (for example \",\")\n      \"\"\"\n      use_grouping = (use_l10n or (use_l10n is None and settings.USE_L10N)) and settings.USE_THOUSAND_SEPARATOR\n      use_grouping = use_grouping or force_grouping\n      use_grouping = use_grouping and grouping != 0\n      # Make the common case fast\n      if isinstance(number, int) and not use_grouping and not decimal_pos:\n          return mark_safe(number)\n      # sign\n      sign = ''\n      if isinstance(number, Decimal):\n          # Format values with more than 200 digits (an arbitrary cutoff) using\n          # scientific notation to avoid high memory usage in {:f}'.format().\n          _, digits, exponent = number.as_tuple()\n          if abs(exponent) + len(digits) > 200:\n              number = '{:e}'.format(number)\n              coefficient, exponent = number.split('e')\n              # Format the coefficient.\n              coefficient = format(\n                  coefficient, decimal_sep, decimal_pos, grouping,\n                  thousand_sep, force_grouping, use_l10n,\n              )\n              return '{}e{}'.format(coefficient, exponent)\n          else:\n              str_number = '{:f}'.format(number)\n      else:\n          str_number = str(number)\n      if str_number[0] == '-':\n          sign = '-'\n          str_number = str_number[1:]\n      # decimal part\n      if '.' in str_number:\n          int_part, dec_part = str_number.split('.')\n          if decimal_pos is not None:\n              dec_part = dec_part[:decimal_pos]\n      else:\n          int_part, dec_part = str_number, ''\n      if decimal_pos is not None:\n          dec_part = dec_part + ('0' * (decimal_pos - len(dec_part)))\n      dec_part = dec_part and decimal_sep + dec_part\n      # grouping\n      if use_grouping:\n          try:\n              # if grouping is a sequence\n              intervals = list(grouping)\n          except TypeError:\n              # grouping is a single value\n              intervals = [grouping, 0]\n          active_interval = intervals.pop(0)\n          int_part_gd = ''\n          cnt = 0\n          for digit in int_part[::-1]:\n              if cnt and cnt == active_interval:\n                  if intervals:\n                      active_interval = intervals.pop(0) or active_interval\n                  int_part_gd += thousand_sep[::-1]\n                  cnt = 0\n              int_part_gd += digit\n              cnt += 1\n          int_part = int_part_gd[::-1]\n      return sign + int_part + dec_part\n\n● pivot utils/formats.py::number_format\n  reason:\n  - local implementation helper whose name matches the issue — likely edit site\n  - 2 indexed symbol(s) depend on this\n  - lexical match on fq_name, local_name, signature, query_coverage, technical_hint, path_segment_signal\n  - symbol name matches \"number_format\"\n  - task names top-level symbol `number_format` (direct evidence, weak)\n\n  source:\n  def number_format(value, decimal_pos=None, use_l10n=None, force_grouping=False):\n      \"\"\"\n      Format a numeric value using localization settings.\n\n      If use_l10n is provided and is not None, it forces the value to\n      be localized (or not), overriding the value of settings.USE_L10N.\n      \"\"\"\n      if use_l10n or (use_l10n is None and settings.USE_L10N):\n          lang = get_language()\n      else:\n          lang = None\n      return numberformat.format(\n          value,\n          get_format('DECIMAL_SEPARATOR', lang, use_l10n=use_l10n),\n          decimal_pos,\n          get_format('NUMBER_GROUPING', lang, use_l10n=use_l10n),\n          get_format('THOUSAND_SEPARATOR', lang, use_l10n=use_l10n),\n          force_grouping=force_grouping,\n          use_l10n=use_l10n,\n      )\n\n○ support utils/dateformat.py::format\n\n  signature:\n  def format(value, format_string):\n\n○ support utils/html.py::format_html\n\n  signature:\n  def format_html(format_string, *args, **kwargs):\n\n○ support utils/_os.py::symlinks_supported\n\n  signature:\n  def symlinks_supported():\n\n○ support utils/cache.py::patch_response_headers\n\n  signature:\n  def patch_response_headers(response, cache_timeout=None):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 1280,
+          "usedPercent": 16,
+          "itemTokens": [
+            {
+              "path": "utils/numberformat.py",
+              "symbol": "format",
+              "tokens": 884
+            },
+            {
+              "path": "utils/formats.py",
+              "symbol": "number_format",
+              "tokens": 296
+            },
+            {
+              "path": "utils/dateformat.py",
+              "symbol": "format",
+              "tokens": 22
+            },
+            {
+              "path": "utils/html.py",
+              "symbol": "format_html",
+              "tokens": 26
+            },
+            {
+              "path": "utils/_os.py",
+              "symbol": "symlinks_supported",
+              "tokens": 21
+            },
+            {
+              "path": "utils/cache.py",
+              "symbol": "patch_response_headers",
+              "tokens": 31
+            }
+          ]
+        }
       }
     },
     {
@@ -1111,6 +1992,119 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "core/management/__init__.py",
+          "contrib/gis/management/commands/ogrinspect.py",
+          "core/management/base.py",
+          "core/management/commands/check.py",
+          "template/backends/django.py",
+          "contrib/sites/management.py"
+        ],
+        "lead": "core/management/__init__.py",
+        "roles": [
+          {
+            "path": "core/management/__init__.py",
+            "symbol": "call_command",
+            "role": "pivot"
+          },
+          {
+            "path": "contrib/gis/management/commands/ogrinspect.py",
+            "symbol": "__call__",
+            "role": "pivot"
+          },
+          {
+            "path": "core/management/base.py",
+            "symbol": "add_arguments",
+            "role": "support"
+          },
+          {
+            "path": "core/management/commands/check.py",
+            "symbol": "add_arguments",
+            "role": "support"
+          },
+          {
+            "path": "template/backends/django.py",
+            "symbol": "DjangoTemplates",
+            "role": "support"
+          },
+          {
+            "path": "contrib/sites/management.py",
+            "symbol": "create_default_site",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "core/management/__init__.py",
+            "symbol": "call_command",
+            "contentMode": "full"
+          },
+          {
+            "path": "contrib/gis/management/commands/ogrinspect.py",
+            "symbol": "__call__",
+            "contentMode": "full"
+          },
+          {
+            "path": "core/management/base.py",
+            "symbol": "add_arguments",
+            "contentMode": "signature"
+          },
+          {
+            "path": "core/management/commands/check.py",
+            "symbol": "add_arguments",
+            "contentMode": "signature"
+          },
+          {
+            "path": "template/backends/django.py",
+            "symbol": "DjangoTemplates",
+            "contentMode": "signature"
+          },
+          {
+            "path": "contrib/sites/management.py",
+            "symbol": "create_default_site",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot core/management/__init__.py::call_command\n  reason:\n  - actionable function — symbol-name match; strong lexical match; issue-domain relevance\n  - lexical match on local_name, local_name, docstring, docstring, query_coverage\n  - symbol name matches \"call_command\"\n  - task names top-level symbol `call_command` (direct evidence, weak)\n\n  source:\n  def call_command(command_name, *args, **options):\n      \"\"\"\n      Call the given command, with the given options and args/kwargs.\n\n      This is the primary API you should use for calling specific commands.\n\n      `command_name` may be a string or a command object. Using a string is\n      preferred unless the command object is required for further processing or\n      testing.\n\n      Some examples:\n          call_command('migrate')\n          call_command('shell', plain=True)\n          call_command('sqlmigrate', 'myapp')\n\n          from django.core.management.commands import flush\n          cmd = flush.Command()\n          call_command(cmd, verbosity=0, interactive=False)\n          # Do something with cmd ...\n      \"\"\"\n      if isinstance(command_name, BaseCommand):\n          # Command object passed in.\n          command = command_name\n          command_name = command.__class__.__module__.split('.')[-1]\n      else:\n          # Load the command object by name.\n          try:\n              app_name = get_commands()[command_name]\n          except KeyError:\n              raise CommandError(\"Unknown command: %r\" % command_name)\n\n          if isinstance(app_name, BaseCommand):\n              # If the command is already loaded, use it directly.\n              command = app_name\n          else:\n              command = load_command_class(app_name, command_name)\n\n      # Simulate argument parsing to get the option defaults (see #10080 for details).\n      parser = command.create_parser('', command_name)\n      # Use the `dest` option name from the parser option\n      opt_mapping = {\n          min(s_opt.option_strings).lstrip('-').replace('-', '_'): s_opt.dest\n          for s_opt in parser._actions if s_opt.option_strings\n      }\n      arg_options = {opt_mapping.get(key, key): value for key, value in options.items()}\n      parse_args = [str(a) for a in args]\n\n      def get_actions(parser):\n          # Parser actions and actions from sub-parser choices.\n          for opt in parser._actions:\n              if isinstance(opt, _SubParsersAction):\n                  for sub_opt in opt.choices.values():\n                      yield from get_actions(sub_opt)\n              else:\n                  yield opt\n\n      parser_actions = list(get_actions(parser))\n      # Any required arguments which are passed in via **options must be passed\n      # to parse_args().\n      parse_args += [\n          '{}={}'.format(min(opt.option_strings), arg_options[opt.dest])\n          for opt in parser_actions if opt.required and opt.dest in options\n      ]\n      defaults = parser.parse_args(args=parse_args)\n      defaults = dict(defaults._get_kwargs(), **arg_options)\n      # Raise an error if any unknown options were passed.\n      stealth_options = set(command.base_stealth_options + command.stealth_options)\n      dest_parameters = {action.dest for action in parser_actions}\n      valid_options = (dest_parameters | stealth_options).union(opt_mapping)\n      unknown_options = set(options) - valid_options\n      if unknown_options:\n          raise TypeError(\n              \"Unknown option(s) for %s command: %s. \"\n              \"Valid options are: %s.\" % (\n                  command_name,\n                  ', '.join(sorted(unknown_options)),\n                  ', '.join(sorted(valid_options)),\n              )\n          )\n      # Move positional args out of options to mimic legacy optparse\n      args = defaults.pop('args', ())\n      if 'skip_checks' not in options:\n          defaults['skip_checks'] = True\n\n      return command.execute(*args, **defaults)\n\n● pivot contrib/gis/management/commands/ogrinspect.py::__call__\n  reason:\n  - actionable method — strong lexical match; issue-domain relevance\n  - 1 indexed symbol(s) depend on this\n  - lexical match on local_name, fq_name, query_coverage, path_segment_signal\n\n  source:\n  def __call__(self, parser, namespace, value, option_string=None):\n          try:\n              setattr(namespace, self.dest, int(value))\n          except ValueError:\n              setattr(namespace, self.dest, value)\n\n○ support core/management/base.py::add_arguments\n\n  signature:\n  def add_arguments(self, parser):\n\n○ support core/management/commands/check.py::add_arguments\n\n  signature:\n  def add_arguments(self, parser):\n\n○ support template/backends/django.py::DjangoTemplates\n\n  signature:\n  class DjangoTemplates(BaseEngine):\n\n○ support contrib/sites/management.py::create_default_site\n\n  signature:\n  def create_default_site(app_config, verbosity=2, interactive=True, using=DEFAULT_DB_ALIAS, apps=global_apps, **kwargs):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 1229,
+          "usedPercent": 15.36,
+          "itemTokens": [
+            {
+              "path": "core/management/__init__.py",
+              "symbol": "call_command",
+              "tokens": 978
+            },
+            {
+              "path": "contrib/gis/management/commands/ogrinspect.py",
+              "symbol": "__call__",
+              "tokens": 123
+            },
+            {
+              "path": "core/management/base.py",
+              "symbol": "add_arguments",
+              "tokens": 25
+            },
+            {
+              "path": "core/management/commands/check.py",
+              "symbol": "add_arguments",
+              "tokens": 27
+            },
+            {
+              "path": "template/backends/django.py",
+              "symbol": "DjangoTemplates",
+              "tokens": 27
+            },
+            {
+              "path": "contrib/sites/management.py",
+              "symbol": "create_default_site",
+              "tokens": 49
+            }
+          ]
+        }
       }
     },
     {
@@ -1240,6 +2234,118 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "db/migrations/serializer.py",
+          "db/models/base.py",
+          "core/checks/security/base.py",
+          "db/migrations/operations/fields.py",
+          "db/migrations/operations/models.py"
+        ],
+        "lead": "db/migrations/serializer.py",
+        "roles": [
+          {
+            "path": "db/migrations/serializer.py",
+            "symbol": "EnumSerializer",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "serializable_value",
+            "role": "pivot"
+          },
+          {
+            "path": "core/checks/security/base.py",
+            "symbol": "W002",
+            "role": "support"
+          },
+          {
+            "path": "core/checks/security/base.py",
+            "symbol": "W019",
+            "role": "support"
+          },
+          {
+            "path": "db/migrations/operations/fields.py",
+            "symbol": "model_name_lower",
+            "role": "support"
+          },
+          {
+            "path": "db/migrations/operations/models.py",
+            "symbol": "name_lower",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "db/migrations/serializer.py",
+            "symbol": "EnumSerializer",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "serializable_value",
+            "contentMode": "full"
+          },
+          {
+            "path": "core/checks/security/base.py",
+            "symbol": "W002",
+            "contentMode": "signature"
+          },
+          {
+            "path": "core/checks/security/base.py",
+            "symbol": "W019",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/migrations/operations/fields.py",
+            "symbol": "model_name_lower",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/migrations/operations/models.py",
+            "symbol": "name_lower",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot db/migrations/serializer.py::EnumSerializer\n  reason:\n  - actionable class — strong lexical match; issue-domain relevance\n  - 1 indexed symbol(s) depend on this\n  - lexical match on fq_name, local_name, query_coverage, path_segment_signal\n\n  source:\n  class EnumSerializer(BaseSerializer):\n      def serialize(self):\n          enum_class = self.value.__class__\n          module = enum_class.__module__\n          v_string, v_imports = serializer_factory(self.value.value).serialize()\n          imports = {'import %s' % module, *v_imports}\n          return \"%s.%s(%s)\" % (module, enum_class.__name__, v_string), imports\n\n● pivot db/models/base.py::serializable_value\n  reason:\n  - actionable method — strong lexical match; issue-domain relevance\n  - 1 indexed symbol(s) depend on this\n  - lexical match on docstring, local_name, docstring, docstring, signature, query_coverage\n\n  source:\n  def serializable_value(self, field_name):\n          \"\"\"\n          Return the value of the field name for this instance. If the field is\n          a foreign key, return the id value instead of the object. If there's\n          no Field object with this name on the model, return the model\n          attribute's value.\n\n          Used to serialize a field's value (in the serializer, or form output,\n          for example). Normally, you would just access the attribute directly\n          and not use this method.\n          \"\"\"\n          try:\n              field = self._meta.get_field(field_name)\n          except FieldDoesNotExist:\n              return getattr(self, field_name)\n          return getattr(self, field.attname)\n\n○ support core/checks/security/base.py::W002\n\n  signature:\n  W002 = Warning(\n    \"You do not have \"\n    \"'django.middleware.clickjacking.XFrameOptionsMiddleware' in your \"\n    \"MIDDLEWARE, so your pages will not be served with an \"\n    \"'x-frame-options' header. Unless there is a good reason for your \"\n    \"site to be served in a frame, you should consider enabling this \"\n    \"header to help prevent clickjacking attacks.\",\n    id='security.W002',\n)\n\n○ support core/checks/security/base.py::W019\n\n  signature:\n  W019 = Warning(\n    \"You have \"\n    \"'django.middleware.clickjacking.XFrameOptionsMiddleware' in your \"\n    \"MIDDLEWARE, but X_FRAME_OPTIONS is not set to 'DENY'. \"\n    \"Unless there is a good reason for your site to serve other parts of \"\n    \"itself in a frame, you should change it to 'DENY'.\",\n    id='security.W019',\n)\n\n○ support db/migrations/operations/fields.py::model_name_lower\n\n  signature:\n  def model_name_lower(self):\n\n○ support db/migrations/operations/models.py::name_lower\n\n  signature:\n  def name_lower(self):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 665,
+          "usedPercent": 8.31,
+          "itemTokens": [
+            {
+              "path": "db/migrations/serializer.py",
+              "symbol": "EnumSerializer",
+              "tokens": 157
+            },
+            {
+              "path": "db/models/base.py",
+              "symbol": "serializable_value",
+              "tokens": 248
+            },
+            {
+              "path": "core/checks/security/base.py",
+              "symbol": "W002",
+              "tokens": 113
+            },
+            {
+              "path": "core/checks/security/base.py",
+              "symbol": "W019",
+              "tokens": 96
+            },
+            {
+              "path": "db/migrations/operations/fields.py",
+              "symbol": "model_name_lower",
+              "tokens": 27
+            },
+            {
+              "path": "db/migrations/operations/models.py",
+              "symbol": "name_lower",
+              "tokens": 24
+            }
+          ]
+        }
       }
     },
     {
@@ -1364,6 +2470,119 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "db/models/base.py",
+          "db/models/fields/proxy.py",
+          "db/models/fields/related_lookups.py",
+          "utils/regex_helper.py",
+          "db/models/fields/related.py",
+          "db/models/fields/related_descriptors.py"
+        ],
+        "lead": "db/models/base.py",
+        "roles": [
+          {
+            "path": "db/models/base.py",
+            "symbol": "_check_ordering",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/fields/proxy.py",
+            "symbol": "OrderWrt",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/fields/related_lookups.py",
+            "symbol": "contains_aggregate",
+            "role": "support"
+          },
+          {
+            "path": "utils/regex_helper.py",
+            "symbol": "contains",
+            "role": "support"
+          },
+          {
+            "path": "db/models/fields/related.py",
+            "symbol": "resolve_relation",
+            "role": "support"
+          },
+          {
+            "path": "db/models/fields/related_descriptors.py",
+            "symbol": "__set__",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "db/models/base.py",
+            "symbol": "_check_ordering",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/fields/proxy.py",
+            "symbol": "OrderWrt",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/fields/related_lookups.py",
+            "symbol": "contains_aggregate",
+            "contentMode": "signature"
+          },
+          {
+            "path": "utils/regex_helper.py",
+            "symbol": "contains",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/fields/related.py",
+            "symbol": "resolve_relation",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/fields/related_descriptors.py",
+            "symbol": "__set__",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot db/models/base.py::_check_ordering\n  reason:\n  - task diagnostic literal appears in this symbol's body — explicit edit site\n  - 2 indexed symbol(s) depend on this\n  - task literal `models.E015` appears in symbol body\n\n  source:\n  def _check_ordering(cls):\n          \"\"\"\n          Check \"ordering\" option -- is it a list of strings and do all fields\n          exist?\n          \"\"\"\n          if cls._meta._ordering_clash:\n              return [\n                  checks.Error(\n                      \"'ordering' and 'order_with_respect_to' cannot be used together.\",\n                      obj=cls,\n                      id='models.E021',\n                  ),\n              ]\n\n          if cls._meta.order_with_respect_to or not cls._meta.ordering:\n              return []\n\n          if not isinstance(cls._meta.ordering, (list, tuple)):\n              return [\n                  checks.Error(\n                      \"'ordering' must be a tuple or list (even if you want to order by only one field).\",\n                      obj=cls,\n                      id='models.E014',\n                  )\n              ]\n\n          errors = []\n          fields = cls._meta.ordering\n\n          # Skip expressions and '?' fields.\n          fields = (f for f in fields if isinstance(f, str) and f != '?')\n\n          # Convert \"-field\" to \"field\".\n          fields = ((f[1:] if f.startswith('-') else f) for f in fields)\n\n          # Separate related fields and non-related fields.\n          _fields = []\n          related_fields = []\n          for f in fields:\n              if LOOKUP_SEP in f:\n                  related_fields.append(f)\n              else:\n                  _fields.append(f)\n          fields = _fields\n\n          # Check related fields.\n          for field in related_fields:\n              _cls = cls\n              fld = None\n              for part in field.split(LOOKUP_SEP):\n                  try:\n                      fld = _cls._meta.get_field(part)\n                      if fld.is_relation:\n                          _cls = fld.get_path_info()[-1].to_opts.model\n                  except (FieldDoesNotExist, AttributeError):\n                      if fld is None or fld.get_transform(part) is None:\n                          errors.append(\n                              checks.Error(\n                                  \"'ordering' refers to the nonexistent field, \"\n                                  \"related field, or lookup '%s'.\" % field,\n                                  obj=cls,\n                                  id='models.E015',\n                              )\n                          )\n\n          # Skip ordering on pk. This is always a valid order_by field\n          # but is an alias and therefore won't be found by opts.get_field.\n          fields = {f for f in fields if f != 'pk'}\n\n          # Check for invalid or nonexistent fields in ordering.\n          invalid_fields = []\n\n          # Any field name that is not present in field_names does not exist.\n          # Also, ordering by m2m fields is not allowed.\n          opts = cls._meta\n          valid_fields = set(chain.from_iterable(\n              (f.name, f.attname) if not (f.auto_created and not f.concrete) else (f.field.related_query_name(),)\n              for f in chain(opts.fields, opts.related_objects)\n          ))\n\n          invalid_fields.extend(fields - valid_fields)\n\n          for invalid_field in invalid_fields:\n              errors.append(\n                  checks.Error(\n                      \"'ordering' refers to the nonexistent field, related \"\n                      \"field, or lookup '%s'.\" % invalid_field,\n                      obj=cls,\n                      id='models.E015',\n                  )\n              )\n          return errors\n\n● pivot db/models/fields/proxy.py::OrderWrt\n  reason:\n  - actionable class — strong lexical match; issue-domain relevance\n  - lexical match on fq_name, docstring, docstring, local_name, fq_name, query_coverage, path_segment_signal\n\n  source:\n  class OrderWrt(fields.IntegerField):\n      \"\"\"\n      A proxy for the _order database field that is used when\n      Meta.order_with_respect_to is specified.\n      \"\"\"\n\n      def __init__(self, *args, **kwargs):\n          kwargs['name'] = '_order'\n          kwargs['editable'] = False\n          super().__init__(*args, **kwargs)\n\n○ support db/models/fields/related_lookups.py::contains_aggregate\n\n  signature:\n  contains_aggregate = False\n\n○ support utils/regex_helper.py::contains\n\n  signature:\n  def contains(source, inst):\n\n○ support db/models/fields/related.py::resolve_relation\n\n  signature:\n  def resolve_relation(scope_model, relation):\n\n○ support db/models/fields/related_descriptors.py::__set__\n\n  signature:\n  def __set__(self, instance, value):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 1185,
+          "usedPercent": 14.81,
+          "itemTokens": [
+            {
+              "path": "db/models/base.py",
+              "symbol": "_check_ordering",
+              "tokens": 936
+            },
+            {
+              "path": "db/models/fields/proxy.py",
+              "symbol": "OrderWrt",
+              "tokens": 143
+            },
+            {
+              "path": "db/models/fields/related_lookups.py",
+              "symbol": "contains_aggregate",
+              "tokens": 27
+            },
+            {
+              "path": "utils/regex_helper.py",
+              "symbol": "contains",
+              "tokens": 22
+            },
+            {
+              "path": "db/models/fields/related.py",
+              "symbol": "resolve_relation",
+              "tokens": 29
+            },
+            {
+              "path": "db/models/fields/related_descriptors.py",
+              "symbol": "__set__",
+              "tokens": 28
+            }
+          ]
+        }
       }
     },
     {
@@ -1492,6 +2711,115 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "db/models/sql/query.py",
+          "db/models/query.py"
+        ],
+        "lead": "db/models/sql/query.py",
+        "roles": [
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "resolve_lookup_value",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "solve_lookup_type",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "build_lookup",
+            "role": "support"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "check_query_object_type",
+            "role": "support"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "resolve_expression",
+            "role": "support"
+          },
+          {
+            "path": "db/models/query.py",
+            "symbol": "ValuesListIterable",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "resolve_lookup_value",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "solve_lookup_type",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "build_lookup",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "check_query_object_type",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "resolve_expression",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/query.py",
+            "symbol": "ValuesListIterable",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot db/models/sql/query.py::resolve_lookup_value\n  reason:\n  - existing method recovered from Class.method expansion — more actionable than containing class\n  - 2 indexed symbol(s) depend on this\n  - lexical match on fq_name, local_name, local_name, local_name, fq_name, query_coverage, path_segment_signal\n  - symbol name matches \"resolve_lookup_value\"\n\n  source:\n  def resolve_lookup_value(self, value, can_reuse, allow_joins, simple_col):\n          if hasattr(value, 'resolve_expression'):\n              kwargs = {'reuse': can_reuse, 'allow_joins': allow_joins}\n              if isinstance(value, F):\n                  kwargs['simple_col'] = simple_col\n              value = value.resolve_expression(self, **kwargs)\n          elif isinstance(value, (list, tuple)):\n              # The items of the iterable may be expressions and therefore need\n              # to be resolved independently.\n              resolved_values = []\n              for sub_value in value:\n                  if hasattr(sub_value, 'resolve_expression'):\n                      if isinstance(sub_value, F):\n                          resolved_values.append(sub_value.resolve_expression(\n                              self, reuse=can_reuse, allow_joins=allow_joins,\n                              simple_col=simple_col,\n                          ))\n                      else:\n                          resolved_values.append(sub_value.resolve_expression(\n                              self, reuse=can_reuse, allow_joins=allow_joins,\n                          ))\n                  else:\n                      resolved_values.append(sub_value)\n              value = tuple(resolved_values)\n          return value\n\n● pivot db/models/sql/query.py::solve_lookup_type\n  reason:\n  - existing method recovered from Class.method expansion — more actionable than containing class\n  - 3 indexed symbol(s) depend on this\n  - lexical match on fq_name, local_name, local_name, fq_name, query_coverage, path_segment_signal\n\n  source:\n  def solve_lookup_type(self, lookup):\n          \"\"\"\n          Solve the lookup type from the lookup (e.g.: 'foobar__id__icontains').\n          \"\"\"\n          lookup_splitted = lookup.split(LOOKUP_SEP)\n          if self.annotations:\n              expression, expression_lookups = refs_expression(lookup_splitted, self.annotations)\n              if expression:\n                  return expression_lookups, (), expression\n          _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())\n          field_parts = lookup_splitted[0:len(lookup_splitted) - len(lookup_parts)]\n          if len(lookup_parts) > 1 and not field_parts:\n              raise FieldError(\n                  'Invalid lookup \"%s\" for model %s\".' %\n                  (lookup, self.get_meta().model.__name__)\n              )\n          return lookup_parts, field_parts, False\n\n○ support db/models/sql/query.py::build_lookup\n\n  signature:\n  def build_lookup(self, lookups, lhs, rhs):\n\n○ support db/models/sql/query.py::check_query_object_type\n\n  signature:\n  def check_query_object_type(self, value, opts, field):\n\n○ support db/models/sql/query.py::resolve_expression\n\n  signature:\n  def resolve_expression(self, query, *args, **kwargs):\n\n○ support db/models/query.py::ValuesListIterable\n\n  signature:\n  class ValuesListIterable(BaseIterable):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 831,
+          "usedPercent": 10.39,
+          "itemTokens": [
+            {
+              "path": "db/models/sql/query.py",
+              "symbol": "resolve_lookup_value",
+              "tokens": 422
+            },
+            {
+              "path": "db/models/sql/query.py",
+              "symbol": "solve_lookup_type",
+              "tokens": 293
+            },
+            {
+              "path": "db/models/sql/query.py",
+              "symbol": "build_lookup",
+              "tokens": 27
+            },
+            {
+              "path": "db/models/sql/query.py",
+              "symbol": "check_query_object_type",
+              "tokens": 32
+            },
+            {
+              "path": "db/models/sql/query.py",
+              "symbol": "resolve_expression",
+              "tokens": 31
+            },
+            {
+              "path": "db/models/query.py",
+              "symbol": "ValuesListIterable",
+              "tokens": 26
+            }
+          ]
+        }
       }
     },
     {
@@ -1614,6 +2942,117 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "forms/models.py",
+          "db/models/base.py",
+          "db/models/fields/files.py",
+          "db/models/fields/__init__.py"
+        ],
+        "lead": "forms/models.py",
+        "roles": [
+          {
+            "path": "forms/models.py",
+            "symbol": "save",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "save",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/fields/files.py",
+            "symbol": "save",
+            "role": "support"
+          },
+          {
+            "path": "db/models/fields/__init__.py",
+            "symbol": "_check_primary_key",
+            "role": "support"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "_check_single_primary_key",
+            "role": "support"
+          },
+          {
+            "path": "db/models/fields/files.py",
+            "symbol": "_check_primary_key",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "forms/models.py",
+            "symbol": "save",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "save",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/fields/files.py",
+            "symbol": "save",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/fields/__init__.py",
+            "symbol": "_check_primary_key",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "_check_single_primary_key",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/fields/files.py",
+            "symbol": "_check_primary_key",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot forms/models.py::save\n  reason:\n  - actionable method — symbol-name match; strong lexical match; issue-domain relevance\n  - 1 indexed symbol(s) depend on this\n  - lexical match on local_name, fq_name, query_coverage, path_segment_signal\n\n  source:\n  def save(self, commit=True):\n          \"\"\"\n          Save model instances for every form, adding and changing instances\n          as necessary, and return the list of instances.\n          \"\"\"\n          if not commit:\n              self.saved_forms = []\n\n              def save_m2m():\n                  for form in self.saved_forms:\n                      form.save_m2m()\n              self.save_m2m = save_m2m\n          return self.save_existing_objects(commit) + self.save_new_objects(commit)\n\n● pivot db/models/base.py::save\n  reason:\n  - local implementation helper invoked by the entry point — likely edit site\n  - 1 indexed symbol(s) depend on this\n  - lexical match on local_name, fq_name, query_coverage, path_segment_signal\n\n  source:\n  def save(self, force_insert=False, force_update=False, using=None,\n               update_fields=None):\n          \"\"\"\n          Save the current instance. Override this in a subclass if you want to\n          control the saving process.\n\n          The 'force_insert' and 'force_update' parameters can be used to insist\n          that the \"save\" must be an SQL insert or update (or equivalent for\n          non-SQL backends), respectively. Normally, they should not be set.\n          \"\"\"\n          # Ensure that a model instance without a PK hasn't been assigned to\n          # a ForeignKey or OneToOneField on this model. If the field is\n          # nullable, allowing the save() would result in silent data loss.\n          for field in self._meta.concrete_fields:\n              # If the related field isn't cached, then an instance hasn't\n              # been assigned and there's no need to worry about this check.\n              if field.is_relation and field.is_cached(self):\n                  obj = getattr(self, field.name, None)\n                  if not obj:\n                      continue\n                  # A pk may have been assigned manually to a model instance not\n                  # saved to the database (or auto-generated in a case like\n                  # UUIDField), but we allow the save to proceed and rely on the\n                  # database to raise an IntegrityError if applicable. If\n                  # constraints aren't supported by the database, there's the\n                  # unavoidable risk of data corruption.\n                  if obj.pk is None:\n                      # Remove the object from a related instance cache.\n                      if not field.remote_field.multiple:\n                          field.remote_field.delete_cached_value(obj)\n                      raise ValueError(\n                          \"save() prohibited to prevent data loss due to \"\n                          \"unsaved related object '%s'.\" % field.name\n                      )\n                  elif getattr(self, field.attname) is None:\n                      # Use pk from related object if it has been saved after\n                      # an assignment.\n                      setattr(self, field.attname, obj.pk)\n                  # If the relationship's pk/to_field was changed, clear the\n                  # cached relationship.\n                  if getattr(obj, field.target_field.attname) != getattr(self, field.attname):\n                      field.delete_cached_value(self)\n\n          using = using or router.db_for_write(self.__class__, instance=self)\n          if force_insert and (force_update or update_fields):\n              raise ValueError(\"Cannot force both insert and updating in model saving.\")\n\n          deferred_fields = self.get_deferred_fields()\n          if update_fields is not None:\n              # If update_fields is empty, skip the save. We do also check for\n              # no-op saves later on for inheritance cases. This bailout is\n              # still needed for skipping signal sending.\n              if not update_fields:\n                  return\n\n              update_fields = frozenset(update_fields)\n              field_names = set()\n\n              for field in self._meta.fields:\n                  if not field.primary_key:\n                      field_names.add(field.name)\n\n                      if field.name != field.attname:\n                          field_names.add(field.attname)\n\n              non_model_fields = update_fields.difference(field_names)\n\n              if non_model_fields:\n                  raise ValueError(\"The following fields do not exist in this \"\n                                   \"model or are m2m fields: %s\"\n                                   % ', '.join(non_model_fields))\n\n          # If saving to the same database, and this model is deferred, then\n          # automatically do an \"update_fields\" save on the loaded fields.\n          elif not force_insert and deferred_fields and using == self._state.db:\n              field_names = set()\n              for field in self._meta.concrete_fields:\n                  if not field.primary_key and not hasattr(field, 'through'):\n                      field_names.add(field.attname)\n              loaded_fields = field_names.difference(deferred_fields)\n              if loaded_fields:\n                  update_fields = frozenset(loaded_fields)\n\n          self.save_base(using=using, force_insert=force_insert,\n                         force_update=force_update, update_fields=update_fields)\n\n○ support db/models/fields/files.py::save\n\n  signature:\n  def save(self, name, content, save=True):\n\n○ support db/models/fields/__init__.py::_check_primary_key\n\n  signature:\n  def _check_primary_key(self):\n\n○ support db/models/base.py::_check_single_primary_key\n\n  signature:\n  def _check_single_primary_key(cls):\n\n○ support db/models/fields/files.py::_check_primary_key\n\n  signature:\n  def _check_primary_key(self):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 1484,
+          "usedPercent": 18.55,
+          "itemTokens": [
+            {
+              "path": "forms/models.py",
+              "symbol": "save",
+              "tokens": 188
+            },
+            {
+              "path": "db/models/base.py",
+              "symbol": "save",
+              "tokens": 1192
+            },
+            {
+              "path": "db/models/fields/files.py",
+              "symbol": "save",
+              "tokens": 25
+            },
+            {
+              "path": "db/models/fields/__init__.py",
+              "symbol": "_check_primary_key",
+              "tokens": 26
+            },
+            {
+              "path": "db/models/base.py",
+              "symbol": "_check_single_primary_key",
+              "tokens": 27
+            },
+            {
+              "path": "db/models/fields/files.py",
+              "symbol": "_check_primary_key",
+              "tokens": 26
+            }
+          ]
+        }
       }
     },
     {
@@ -1741,6 +3180,116 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "forms/widgets.py",
+          "core/files/storage.py",
+          "core/files/uploadhandler.py"
+        ],
+        "lead": "forms/widgets.py",
+        "roles": [
+          {
+            "path": "forms/widgets.py",
+            "symbol": "FileInput",
+            "role": "pivot"
+          },
+          {
+            "path": "forms/widgets.py",
+            "symbol": "use_required_attribute",
+            "role": "pivot"
+          },
+          {
+            "path": "forms/widgets.py",
+            "symbol": "value_omitted_from_data",
+            "role": "support"
+          },
+          {
+            "path": "core/files/storage.py",
+            "symbol": "exists",
+            "role": "support"
+          },
+          {
+            "path": "forms/widgets.py",
+            "symbol": "initial_text",
+            "role": "support"
+          },
+          {
+            "path": "core/files/uploadhandler.py",
+            "symbol": "handle_raw_input",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "forms/widgets.py",
+            "symbol": "FileInput",
+            "contentMode": "full"
+          },
+          {
+            "path": "forms/widgets.py",
+            "symbol": "use_required_attribute",
+            "contentMode": "full"
+          },
+          {
+            "path": "forms/widgets.py",
+            "symbol": "value_omitted_from_data",
+            "contentMode": "signature"
+          },
+          {
+            "path": "core/files/storage.py",
+            "symbol": "exists",
+            "contentMode": "signature"
+          },
+          {
+            "path": "forms/widgets.py",
+            "symbol": "initial_text",
+            "contentMode": "signature"
+          },
+          {
+            "path": "core/files/uploadhandler.py",
+            "symbol": "handle_raw_input",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot forms/widgets.py::FileInput\n  reason:\n  - actionable class — symbol-name match; strong lexical match\n  - title mentions symbol-like term `FileInput`\n\n  source:\n  class FileInput(Input):\n      input_type = 'file'\n      needs_multipart_form = True\n      template_name = 'django/forms/widgets/file.html'\n\n      def format_value(self, value):\n          \"\"\"File input never renders a value.\"\"\"\n          return\n\n      def value_from_datadict(self, data, files, name):\n          \"File widgets take data from FILES, not POST\"\n          return files.get(name)\n\n      def value_omitted_from_data(self, data, files, name):\n          return name not in files\n\n● pivot forms/widgets.py::use_required_attribute\n  reason:\n  - local implementation helper whose name matches the issue — likely edit site\n  - 1 indexed symbol(s) depend on this\n  - lexical match on fq_name, fq_name, local_name, local_name, signature, query_coverage, technical_hint\n\n  source:\n  def use_required_attribute(self, initial):\n          return super().use_required_attribute(initial) and not initial\n\n○ support forms/widgets.py::value_omitted_from_data\n\n  signature:\n  def value_omitted_from_data(self, data, files, name):\n\n○ support core/files/storage.py::exists\n\n  signature:\n  def exists(self, name):\n\n○ support forms/widgets.py::initial_text\n\n  signature:\n  initial_text = _('Currently')\n\n○ support core/files/uploadhandler.py::handle_raw_input\n\n  signature:\n  def handle_raw_input(self, input_data, META, content_length, boundary, encoding=None):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 380,
+          "usedPercent": 4.75,
+          "itemTokens": [
+            {
+              "path": "forms/widgets.py",
+              "symbol": "FileInput",
+              "tokens": 164
+            },
+            {
+              "path": "forms/widgets.py",
+              "symbol": "use_required_attribute",
+              "tokens": 103
+            },
+            {
+              "path": "forms/widgets.py",
+              "symbol": "value_omitted_from_data",
+              "tokens": 31
+            },
+            {
+              "path": "core/files/storage.py",
+              "symbol": "exists",
+              "tokens": 20
+            },
+            {
+              "path": "forms/widgets.py",
+              "symbol": "initial_text",
+              "tokens": 22
+            },
+            {
+              "path": "core/files/uploadhandler.py",
+              "symbol": "handle_raw_input",
+              "tokens": 40
+            }
+          ]
+        }
       }
     },
     {
@@ -1866,6 +3415,119 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "db/models/sql/query.py",
+          "db/models/options.py",
+          "template/backends/django.py",
+          "db/models/sql/compiler.py",
+          "db/backends/sqlite3/schema.py",
+          "conf/__init__.py"
+        ],
+        "lead": "db/models/sql/query.py",
+        "roles": [
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "setup_joins",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/options.py",
+            "symbol": "setup_pk",
+            "role": "pivot"
+          },
+          {
+            "path": "template/backends/django.py",
+            "symbol": "origin",
+            "role": "support"
+          },
+          {
+            "path": "db/models/sql/compiler.py",
+            "symbol": "pre_sql_setup",
+            "role": "support"
+          },
+          {
+            "path": "db/backends/sqlite3/schema.py",
+            "symbol": "_is_referenced_by_fk_constraint",
+            "role": "support"
+          },
+          {
+            "path": "conf/__init__.py",
+            "symbol": "_setup",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "setup_joins",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/options.py",
+            "symbol": "setup_pk",
+            "contentMode": "full"
+          },
+          {
+            "path": "template/backends/django.py",
+            "symbol": "origin",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/sql/compiler.py",
+            "symbol": "pre_sql_setup",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/backends/sqlite3/schema.py",
+            "symbol": "_is_referenced_by_fk_constraint",
+            "contentMode": "signature"
+          },
+          {
+            "path": "conf/__init__.py",
+            "symbol": "_setup",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot db/models/sql/query.py::setup_joins\n  reason:\n  - actionable method — strong lexical match; issue-domain relevance; 5 dependents\n  - 5 indexed symbol(s) depend on this\n  - lexical match on docstring, local_name, signature, query_coverage\n\n  source:\n  def setup_joins(self, names, opts, alias, can_reuse=None, allow_many=True,\n                      reuse_with_filtered_relation=False):\n          \"\"\"\n          Compute the necessary table joins for the passage through the fields\n          given in 'names'. 'opts' is the Options class for the current model\n          (which gives the table we are starting from), 'alias' is the alias for\n          the table to start the joining from.\n\n          The 'can_reuse' defines the reverse foreign key joins we can reuse. It\n          can be None in which case all joins are reusable or a set of aliases\n          that can be reused. Note that non-reverse foreign keys are always\n          reusable when using setup_joins().\n\n          The 'reuse_with_filtered_relation' can be used to force 'can_reuse'\n          parameter and force the relation on the given connections.\n\n          If 'allow_many' is False, then any reverse foreign key seen will\n          generate a MultiJoin exception.\n\n          Return the final field involved in the joins, the target field (used\n          for any 'where' constraint), the final 'opts' value, the joins, the\n          field path traveled to generate the joins, and a transform function\n          that takes a field and alias and is equivalent to `field.get_col(alias)`\n          in the simple case but wraps field transforms if they were included in\n          names.\n\n          The target field is the field containing the concrete value. Final\n          field can be something different, for example foreign key pointing to\n          that value. Final field is needed for example in some value\n          conversions (convert 'obj' in fk__id=obj to pk val using the foreign\n          key field for example).\n          \"\"\"\n          joins = [alias]\n          # The transform can't be applied yet, as joins must be trimmed later.\n          # To avoid making every caller of this method look up transforms\n          # directly, compute transforms here and create a partial that converts\n          # fields to the appropriate wrapped version.\n\n          def final_transformer(field, alias):\n              return field.get_col(alias)\n\n          # Try resolving all the names as fields first. If there's an error,\n          # treat trailing names as lookups until a field can be resolved.\n          last_field_exception = None\n          for pivot in range(len(names), 0, -1):\n              try:\n                  path, final_field, targets, rest = self.names_to_path(\n                      names[:pivot], opts, allow_many, fail_on_missing=True,\n                  )\n              except FieldError as exc:\n                  if pivot == 1:\n                      # The first item cannot be a lookup, so it's safe\n                      # to raise the field error here.\n                      raise\n                  else:\n                      last_field_exception = exc\n              else:\n                  # The transforms are the remaining items that couldn't be\n                  # resolved into fields.\n                  transforms = names[pivot:]\n                  break\n          for name in transforms:\n              def transform(field, alias, *, name, previous):\n                  try:\n                      wrapped = previous(field, alias)\n                      return self.try_transform(wrapped, name)\n                  except FieldError:\n                      # FieldError is raised if the transform doesn't exist.\n                      if isinstance(final_field, Field) and last_field_exception:\n                          raise last_field_exception\n                      else:\n                          raise\n              final_transformer = functools.partial(transform, name=name, previous=final_transformer)\n          # Then, add the path to the query's joins. Note that we can't trim\n          # joins at this stage - we will need the information about join type\n          # of the trimmed joins.\n          for join in path:\n              if join.filtered_relation:\n                  filtered_relation = join.filtered_relation.clone()\n                  table_alias = filtered_relation.alias\n              else:\n                  filtered_relation = None\n                  table_alias = None\n              opts = join.to_opts\n              if join.direct:\n                  nullable = self.is_nullable(join.join_field)\n              else:\n                  nullable = True\n              connection = Join(\n                  opts.db_table, alias, table_alias, INNER, join.join_field,\n                  nullable, filtered_relation=filtered_relation,\n              )\n              reuse = can_reuse if join.m2m or reuse_with_filtered_relation else None\n              alias = self.join(\n                  connection, reuse=reuse,\n                  reuse_with_filtered_relation=reuse_with_filtered_relation,\n              )\n              joins.append(alias)\n              if filtered_relation:\n                  filtered_relation.path = joins[:]\n          return JoinInfo(final_field, targets, opts, joins, path, final_transformer)\n\n● pivot db/models/options.py::setup_pk\n  reason:\n  - actionable method — strong lexical match; issue-domain relevance\n  - 3 indexed symbol(s) depend on this\n  - lexical match on local_name, local_name, query_coverage\n\n  source:\n  def setup_pk(self, field):\n          if not self.pk and field.primary_key:\n              self.pk = field\n              field.serialize = False\n\n○ support template/backends/django.py::origin\n\n  signature:\n  def origin(self):\n\n○ support db/models/sql/compiler.py::pre_sql_setup\n\n  signature:\n  def pre_sql_setup(self):\n\n○ support db/backends/sqlite3/schema.py::_is_referenced_by_fk_constraint\n\n  signature:\n  def _is_referenced_by_fk_constraint(self, table_name, column_name=None, ignore_self=False):\n\n○ support conf/__init__.py::_setup\n\n  signature:\n  def _setup(self, name=None):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 1532,
+          "usedPercent": 19.15,
+          "itemTokens": [
+            {
+              "path": "db/models/sql/query.py",
+              "symbol": "setup_joins",
+              "tokens": 1331
+            },
+            {
+              "path": "db/models/options.py",
+              "symbol": "setup_pk",
+              "tokens": 93
+            },
+            {
+              "path": "template/backends/django.py",
+              "symbol": "origin",
+              "tokens": 20
+            },
+            {
+              "path": "db/models/sql/compiler.py",
+              "symbol": "pre_sql_setup",
+              "tokens": 23
+            },
+            {
+              "path": "db/backends/sqlite3/schema.py",
+              "symbol": "_is_referenced_by_fk_constraint",
+              "tokens": 45
+            },
+            {
+              "path": "conf/__init__.py",
+              "symbol": "_setup",
+              "tokens": 20
+            }
+          ]
+        }
       }
     },
     {
@@ -2010,6 +3672,118 @@
             "discard_reason": "beyond standard support budget (max 3)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "db/models/query.py",
+          "apps/config.py",
+          "db/models/sql/query.py",
+          "template/backends/django.py",
+          "db/models/manager.py"
+        ],
+        "lead": "db/models/query.py",
+        "roles": [
+          {
+            "path": "db/models/query.py",
+            "symbol": "in_bulk",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/query.py",
+            "symbol": "_chain",
+            "role": "pivot"
+          },
+          {
+            "path": "apps/config.py",
+            "symbol": "AppConfig",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "Query",
+            "role": "support"
+          },
+          {
+            "path": "template/backends/django.py",
+            "symbol": "DjangoTemplates",
+            "role": "support"
+          },
+          {
+            "path": "db/models/manager.py",
+            "symbol": "Manager",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "db/models/query.py",
+            "symbol": "in_bulk",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/query.py",
+            "symbol": "_chain",
+            "contentMode": "full"
+          },
+          {
+            "path": "apps/config.py",
+            "symbol": "AppConfig",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/sql/query.py",
+            "symbol": "Query",
+            "contentMode": "signature"
+          },
+          {
+            "path": "template/backends/django.py",
+            "symbol": "DjangoTemplates",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/manager.py",
+            "symbol": "Manager",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot db/models/query.py::in_bulk\n  reason:\n  - task diagnostic literal appears in this symbol's body — explicit edit site\n  - 1 indexed symbol(s) depend on this\n  - symbol name matches \"in_bulk\"\n  - task literal `s field_name must be a unique field but` appears in symbol body\n\n  source:\n  def in_bulk(self, id_list=None, *, field_name='pk'):\n          \"\"\"\n          Return a dictionary mapping each of the given IDs to the object with\n          that ID. If `id_list` isn't provided, evaluate the entire QuerySet.\n          \"\"\"\n          assert not self.query.is_sliced, \\\n              \"Cannot use 'limit' or 'offset' with in_bulk\"\n          if field_name != 'pk' and not self.model._meta.get_field(field_name).unique:\n              raise ValueError(\"in_bulk()'s field_name must be a unique field but %r isn't.\" % field_name)\n          if id_list is not None:\n              if not id_list:\n                  return {}\n              filter_key = '{}__in'.format(field_name)\n              batch_size = connections[self.db].features.max_query_params\n              id_list = tuple(id_list)\n              # If the database has a limit on the number of query parameters\n              # (e.g. SQLite), retrieve objects in batches if necessary.\n              if batch_size and batch_size < len(id_list):\n                  qs = ()\n                  for offset in range(0, len(id_list), batch_size):\n                      batch = id_list[offset:offset + batch_size]\n                      qs += tuple(self.filter(**{filter_key: batch}).order_by())\n              else:\n                  qs = self.filter(**{filter_key: id_list}).order_by()\n          else:\n              qs = self._chain()\n          return {getattr(obj, field_name): obj for obj in qs}\n\n● pivot db/models/query.py::_chain\n  reason:\n  - actionable method — in a likely edit file; lexical match; issue-domain relevance; graph/import neighbour; 24 dependents\n  - 24 indexed symbol(s) depend on this\n  - graph calls to in_bulk\n  - graph contains to QuerySet\n\n  source:\n  def _chain(self, **kwargs):\n          \"\"\"\n          Return a copy of the current QuerySet that's ready for another\n          operation.\n          \"\"\"\n          obj = self._clone()\n          if obj._sticky_filter:\n              obj.query.filter_is_sticky = True\n              obj._sticky_filter = False\n          obj.__dict__.update(kwargs)\n          return obj\n\n● pivot apps/config.py::AppConfig\n  reason:\n  - actionable class — symbol-name match; strong lexical match\n  - task mentions high-signal literal `isn` (body literal)\n\n  source:\n  class AppConfig:\n      \"\"\"Class representing a Django application and its configuration.\"\"\"\n\n      def __init__(self, app_name, app_module):\n          # Full Python path to the application e.g. 'django.contrib.admin'.\n          self.name = app_name\n\n          # Root module for the application e.g. <module 'django.contrib.admin'\n          # from 'django/contrib/admin/__init__.py'>.\n          self.module = app_module\n\n          # Reference to the Apps registry that holds this AppConfig. Set by the\n          # registry when it registers the AppConfig instance.\n          self.apps = None\n\n          # The following attributes could be defined at the class level in a\n          # subclass, hence the test-and-set pattern.\n\n          # Last component of the Python path to the application e.g. 'admin'.\n          # This value must be unique across a Django project.\n          if not hasattr(self, 'label'):\n              self.label = app_name.rpartition(\".\")[2]\n\n          # Human-readable name for the application e.g. \"Admin\".\n          if not hasattr(self, 'verbose_name'):\n              self.verbose_name = self.label.title()\n\n          # Filesystem path to the application directory e.g.\n          # '/path/to/django/contrib/admin'.\n          if not hasattr(self, 'path'):\n              self.path = self._path_from_module(app_module)\n\n          # Module containing models e.g. <module 'django.contrib.admin.models'\n          # from 'django/contrib/admin/models.py'>. Set by import_models().\n          # None if the application doesn't have a models module.\n          self.models_module = None\n\n          # Mapping of lowercase model names to model classes. Initially set to\n          # None to prevent accidental access before import_models() runs.\n          self.models = None\n\n      def __repr__(self):\n          return '<%s: %s>' % (self.__class__.__name__, self.label)\n\n      def _path_from_module(self, module):\n          \"\"\"Attempt to determine app's filesystem path from its module.\"\"\"\n          # See #21874 for extended discussion of the behavior of this method in\n          # various cases.\n          # Convert paths to list because Python's _NamespacePath doesn't support\n          # indexing.\n          paths = list(getattr(module, '__path__', []))\n          if len(paths) != 1:\n              filename = getattr(module, '__file__', None)\n              if filename is not None:\n                  paths = [os.path.dirname(filename)]\n              else:\n                  # For unknown reasons, sometimes the list returned by __path__\n                  # contains duplicates that must be removed (#25246).\n                  paths = list(set(paths))\n          if len(paths) > 1:\n              raise ImproperlyConfigured(\n                  \"The app module %r has multiple filesystem locations (%r); \"\n                  \"you must configure this app with an AppConfig subclass \"\n                  \"with a 'path' class attribute.\" % (module, paths))\n          elif not paths:\n              raise ImproperlyConfigured(\n                  \"The app module %r has no filesystem location, \"\n                  \"you must configure this app with an AppConfig subclass \"\n                  \"with a 'path' class attribute.\" % (module,))\n          return paths[0]\n\n      @classmethod\n      def create(cls, entry):\n          \"\"\"\n          Factory that creates an app config from an entry in INSTALLED_APPS.\n          \"\"\"\n          try:\n              # If import_module succeeds, entry is a path to an app module,\n              # which may specify an app config class with default_app_config.\n              # Otherwise, entry is a path to an app config class or an error.\n              module = import_module(entry)\n\n          except ImportError:\n              # Track that importing as an app module failed. If importing as an\n              # app config class fails too, we'll trigger the ImportError again.\n              module = None\n\n              mod_path, _, cls_name = entry.rpartition('.')\n\n              # Raise the original exception when entry cannot be a path to an\n              # app config class.\n              if not mod_path:\n                  raise\n\n          else:\n              try:\n                  # If this works, the app module specifies an app config class.\n                  entry = module.default_app_config\n              except AttributeError:\n                  # Otherwise, it simply uses the default app config class.\n                  return cls(entry, module)\n              else:\n                  mod_path, _, cls_name = entry.rpartition('.')\n\n          # If we're reaching this point, we must attempt to load the app config\n          # class located at <mod_path>.<cls_name>\n          mod = import_module(mod_path)\n          try:\n              cls = getattr(mod, cls_name)\n          except AttributeError:\n              if module is None:\n                  # If importing as an app module failed, check if the module\n                  # contains any valid AppConfigs and show them as choices.\n                  # Otherwise, that error probably contains the most informative\n                  # traceback, so trigger it again.\n                  candidates = sorted(\n                      repr(name) for name, candidate in mod.__dict__.items()\n                      if isinstance(candidate, type) and\n                      issubclass(candidate, AppConfig) and\n                      candidate is not AppConfig\n                  )\n                  if candidates:\n                      raise ImproperlyConfigured(\n                          \"'%s' does not contain a class '%s'. Choices are: %s.\"\n                          % (mod_path, cls_name, ', '.join(candidates))\n                      )\n                  import_module(entry)\n              else:\n                  raise\n\n          # Check for obvious errors. (This check prevents duck typing, but\n          # it could be removed if it became a problem in practice.)\n          if not issubclass(cls, AppConfig):\n              raise ImproperlyConfigured(\n                  \"'%s' isn't a subclass of AppConfig.\" % entry)\n\n          # Obtain app name here rather than in AppClass.__init__ to keep\n          # all error checking for entries in INSTALLED_APPS in one place.\n          try:\n              app_name = cls.name\n          except AttributeError:\n              raise ImproperlyConfigured(\n                  \"'%s' must supply a name attribute.\" % entry)\n\n          # Ensure app_name points to a valid module.\n          try:\n              app_module = import_module(app_name)\n          except ImportError:\n              raise ImproperlyConfigured(\n                  \"Cannot import '%s'. Check that '%s.%s.name' is correct.\" % (\n                      app_name, mod_path, cls_name,\n                  )\n              )\n\n          # Entry is a path to an app config class.\n          return cls(app_name, app_module)\n\n      def get_model(self, model_name, require_ready=True):\n          \"\"\"\n          Return the model with the given case-insensitive model_name.\n\n          Raise LookupError if no model exists with this name.\n          \"\"\"\n          if require_ready:\n              self.apps.check_models_ready()\n          else:\n              self.apps.check_apps_ready()\n          try:\n              return self.models[model_name.lower()]\n          except KeyError:\n              raise LookupError(\n                  \"App '%s' doesn't have a '%s' model.\" % (self.label, model_name))\n\n      def get_models(self, include_auto_created=False, include_swapped=False):\n          \"\"\"\n          Return an iterable of models.\n\n          By default, the following models aren't included:\n\n          - auto-created models for many-to-many relations without\n            an explicit intermediate table,\n          - models that have been swapped out.\n\n          Set the corresponding keyword argument to True to include such models.\n          Keyword arguments aren't documented; they're a private API.\n          \"\"\"\n          self.apps.check_models_ready()\n          for model in self.models.values():\n              if model._meta.auto_created and not include_auto_created:\n                  continue\n              if model._meta.swapped and not include_swapped:\n                  continue\n              yield model\n\n      def import_models(self):\n          # Dictionary of models for this app, primarily maintained in the\n          # 'all_models' attribute of the Apps this AppConfig is attached to.\n          self.models = self.apps.all_models[self.label]\n\n          if module_has_submodule(self.module, MODELS_MODULE_NAME):\n              models_module_name = '%s.%s' % (self.name, MODELS_MODULE_NAME)\n              self.models_module = import_module(models_module_name)\n\n      def ready(self):\n          \"\"\"\n          Override this method in subclasses to run code when Django starts.\n          \"\"\"\n\n○ support db/models/sql/query.py::Query\n\n  signature:\n  class Query(BaseExpression):\n\n○ support template/backends/django.py::DjangoTemplates\n\n  signature:\n  class DjangoTemplates(BaseEngine):\n\n○ support db/models/manager.py::Manager\n\n  signature:\n  class Manager(BaseManager.from_queryset(QuerySet)):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 2932,
+          "usedPercent": 36.65,
+          "itemTokens": [
+            {
+              "path": "db/models/query.py",
+              "symbol": "in_bulk",
+              "tokens": 436
+            },
+            {
+              "path": "db/models/query.py",
+              "symbol": "_chain",
+              "tokens": 160
+            },
+            {
+              "path": "apps/config.py",
+              "symbol": "AppConfig",
+              "tokens": 2261
+            },
+            {
+              "path": "db/models/sql/query.py",
+              "symbol": "Query",
+              "tokens": 21
+            },
+            {
+              "path": "template/backends/django.py",
+              "symbol": "DjangoTemplates",
+              "tokens": 27
+            },
+            {
+              "path": "db/models/manager.py",
+              "symbol": "Manager",
+              "tokens": 27
+            }
+          ]
+        }
       }
     },
     {
@@ -2134,6 +3908,116 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "db/models/base.py",
+          "db/models/lookups.py",
+          "core/management/commands/check.py"
+        ],
+        "lead": "db/models/base.py",
+        "roles": [
+          {
+            "path": "db/models/base.py",
+            "symbol": "_check_ordering",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "apply_bilateral_transforms",
+            "role": "pivot"
+          },
+          {
+            "path": "core/management/commands/check.py",
+            "symbol": "Command",
+            "role": "support"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "get_bilateral_transforms",
+            "role": "support"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "Transform",
+            "role": "support"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "Model",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "db/models/base.py",
+            "symbol": "_check_ordering",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "apply_bilateral_transforms",
+            "contentMode": "full"
+          },
+          {
+            "path": "core/management/commands/check.py",
+            "symbol": "Command",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "get_bilateral_transforms",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/lookups.py",
+            "symbol": "Transform",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/base.py",
+            "symbol": "Model",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot db/models/base.py::_check_ordering\n  reason:\n  - task diagnostic literal appears in this symbol's body — explicit edit site\n  - 2 indexed symbol(s) depend on this\n  - task literal `models.E015` appears in symbol body\n\n  source:\n  def _check_ordering(cls):\n          \"\"\"\n          Check \"ordering\" option -- is it a list of strings and do all fields\n          exist?\n          \"\"\"\n          if cls._meta._ordering_clash:\n              return [\n                  checks.Error(\n                      \"'ordering' and 'order_with_respect_to' cannot be used together.\",\n                      obj=cls,\n                      id='models.E021',\n                  ),\n              ]\n\n          if cls._meta.order_with_respect_to or not cls._meta.ordering:\n              return []\n\n          if not isinstance(cls._meta.ordering, (list, tuple)):\n              return [\n                  checks.Error(\n                      \"'ordering' must be a tuple or list (even if you want to order by only one field).\",\n                      obj=cls,\n                      id='models.E014',\n                  )\n              ]\n\n          errors = []\n          fields = cls._meta.ordering\n\n          # Skip expressions and '?' fields.\n          fields = (f for f in fields if isinstance(f, str) and f != '?')\n\n          # Convert \"-field\" to \"field\".\n          fields = ((f[1:] if f.startswith('-') else f) for f in fields)\n\n          # Separate related fields and non-related fields.\n          _fields = []\n          related_fields = []\n          for f in fields:\n              if LOOKUP_SEP in f:\n                  related_fields.append(f)\n              else:\n                  _fields.append(f)\n          fields = _fields\n\n          # Check related fields.\n          for field in related_fields:\n              _cls = cls\n              fld = None\n              for part in field.split(LOOKUP_SEP):\n                  try:\n                      # pk is an alias that won't be found by opts.get_field.\n                      if part == 'pk':\n                          fld = _cls._meta.pk\n                      else:\n                          fld = _cls._meta.get_field(part)\n                      if fld.is_relation:\n                          _cls = fld.get_path_info()[-1].to_opts.model\n                      else:\n                          _cls = None\n                  except (FieldDoesNotExist, AttributeError):\n                      if fld is None or fld.get_transform(part) is None:\n                          errors.append(\n                              checks.Error(\n                                  \"'ordering' refers to the nonexistent field, \"\n                                  \"related field, or lookup '%s'.\" % field,\n                                  obj=cls,\n                                  id='models.E015',\n                              )\n                          )\n\n          # Skip ordering on pk. This is always a valid order_by field\n          # but is an alias and therefore won't be found by opts.get_field.\n          fields = {f for f in fields if f != 'pk'}\n\n          # Check for invalid or nonexistent fields in ordering.\n          invalid_fields = []\n\n          # Any field name that is not present in field_names does not exist.\n          # Also, ordering by m2m fields is not allowed.\n          opts = cls._meta\n          valid_fields = set(chain.from_iterable(\n              (f.name, f.attname) if not (f.auto_created and not f.concrete) else (f.field.related_query_name(),)\n              for f in chain(opts.fields, opts.related_objects)\n          ))\n\n          invalid_fields.extend(fields - valid_fields)\n\n          for invalid_field in invalid_fields:\n              errors.append(\n                  checks.Error(\n                      \"'ordering' refers to the nonexistent field, related \"\n                      \"field, or lookup '%s'.\" % invalid_field,\n                      obj=cls,\n                      id='models.E015',\n                  )\n              )\n          return errors\n\n● pivot db/models/lookups.py::apply_bilateral_transforms\n  reason:\n  - actionable method — strong lexical match; issue-domain relevance\n  - 3 indexed symbol(s) depend on this\n  - lexical match on fq_name, fq_name, local_name, query_coverage, path_segment_signal\n\n  source:\n  def apply_bilateral_transforms(self, value):\n          for transform in self.bilateral_transforms:\n              value = transform(value)\n          return value\n\n○ support core/management/commands/check.py::Command\n\n  signature:\n  class Command(BaseCommand):\n\n○ support db/models/lookups.py::get_bilateral_transforms\n\n  signature:\n  def get_bilateral_transforms(self):\n\n○ support db/models/lookups.py::Transform\n\n  signature:\n  class Transform(RegisterLookupMixin, Func):\n\n○ support db/models/base.py::Model\n\n  signature:\n  class Model(metaclass=ModelBase):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 1208,
+          "usedPercent": 15.1,
+          "itemTokens": [
+            {
+              "path": "db/models/base.py",
+              "symbol": "_check_ordering",
+              "tokens": 1001
+            },
+            {
+              "path": "db/models/lookups.py",
+              "symbol": "apply_bilateral_transforms",
+              "tokens": 109
+            },
+            {
+              "path": "core/management/commands/check.py",
+              "symbol": "Command",
+              "tokens": 24
+            },
+            {
+              "path": "db/models/lookups.py",
+              "symbol": "get_bilateral_transforms",
+              "tokens": 27
+            },
+            {
+              "path": "db/models/lookups.py",
+              "symbol": "Transform",
+              "tokens": 26
+            },
+            {
+              "path": "db/models/base.py",
+              "symbol": "Model",
+              "tokens": 21
+            }
+          ]
+        }
       }
     },
     {
@@ -2270,6 +4154,116 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "db/models/expressions.py",
+          "contrib/gis/gdal/libgdal.py",
+          "contrib/postgres/aggregates/mixins.py"
+        ],
+        "lead": "db/models/expressions.py",
+        "roles": [
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "ExpressionWrapper",
+            "role": "pivot"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "Expression",
+            "role": "pivot"
+          },
+          {
+            "path": "contrib/gis/gdal/libgdal.py",
+            "symbol": "function",
+            "role": "support"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "get_group_by_cols",
+            "role": "support"
+          },
+          {
+            "path": "contrib/postgres/aggregates/mixins.py",
+            "symbol": "set_source_expressions",
+            "role": "support"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "get_group_by_cols",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "ExpressionWrapper",
+            "contentMode": "full"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "Expression",
+            "contentMode": "full"
+          },
+          {
+            "path": "contrib/gis/gdal/libgdal.py",
+            "symbol": "function",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "get_group_by_cols",
+            "contentMode": "signature"
+          },
+          {
+            "path": "contrib/postgres/aggregates/mixins.py",
+            "symbol": "set_source_expressions",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/models/expressions.py",
+            "symbol": "get_group_by_cols",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot db/models/expressions.py::ExpressionWrapper\n  reason:\n  - actionable class — strong lexical match; issue-domain relevance\n  - lexical match on docstring, local_name, local_name, local_name, docstring, fq_name, query_coverage, path_segment_signal\n  - symbol name matches \"ExpressionWrapper\"\n\n  source:\n  class ExpressionWrapper(Expression):\n      \"\"\"\n      An expression that can wrap another expression so that it can provide\n      extra context to the inner expression, such as the output_field.\n      \"\"\"\n\n      def __init__(self, expression, output_field):\n          super().__init__(output_field=output_field)\n          self.expression = expression\n\n      def set_source_expressions(self, exprs):\n          self.expression = exprs[0]\n\n      def get_source_expressions(self):\n          return [self.expression]\n\n      def as_sql(self, compiler, connection):\n          return self.expression.as_sql(compiler, connection)\n\n      def __repr__(self):\n          return \"{}({})\".format(self.__class__.__name__, self.expression)\n\n● pivot db/models/expressions.py::Expression\n  reason:\n  - actionable class — symbol-name match; strong lexical match; issue-domain relevance; 14 dependents\n  - 14 indexed symbol(s) depend on this\n  - lexical match on docstring, local_name, local_name, docstring, fq_name, query_coverage, path_segment_signal\n  - task names file stem `expressions` (direct evidence, weak)\n\n  source:\n  class Expression(BaseExpression, Combinable):\n      \"\"\"An expression that can be combined with other expressions.\"\"\"\n      pass\n\n○ support contrib/gis/gdal/libgdal.py::function\n\n  signature:\n  def function(name, args, restype):\n\n○ support db/models/expressions.py::get_group_by_cols\n\n  signature:\n  def get_group_by_cols(self, alias=None):\n\n○ support contrib/postgres/aggregates/mixins.py::set_source_expressions\n\n  signature:\n  def set_source_expressions(self, exprs):\n        # Extract the ordering expressions because ORDER BY clause is handled\n        # in a custom way.\n\n○ support db/models/expressions.py::get_group_by_cols\n\n  signature:\n  def get_group_by_cols(self, alias=None):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 526,
+          "usedPercent": 6.58,
+          "itemTokens": [
+            {
+              "path": "db/models/expressions.py",
+              "symbol": "ExpressionWrapper",
+              "tokens": 258
+            },
+            {
+              "path": "db/models/expressions.py",
+              "symbol": "Expression",
+              "tokens": 128
+            },
+            {
+              "path": "contrib/gis/gdal/libgdal.py",
+              "symbol": "function",
+              "tokens": 25
+            },
+            {
+              "path": "db/models/expressions.py",
+              "symbol": "get_group_by_cols",
+              "tokens": 28
+            },
+            {
+              "path": "contrib/postgres/aggregates/mixins.py",
+              "symbol": "set_source_expressions",
+              "tokens": 59
+            },
+            {
+              "path": "db/models/expressions.py",
+              "symbol": "get_group_by_cols",
+              "tokens": 28
+            }
+          ]
+        }
       }
     },
     {
@@ -2399,6 +4393,119 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "db/models/fields/related.py",
+          "contrib/admin/utils.py",
+          "core/management/commands/makemigrations.py",
+          "core/management/commands/migrate.py",
+          "db/migrations/autodetector.py",
+          "db/backends/ddl_references.py"
+        ],
+        "lead": "db/models/fields/related.py",
+        "roles": [
+          {
+            "path": "db/models/fields/related.py",
+            "symbol": "ForeignKey",
+            "role": "pivot"
+          },
+          {
+            "path": "contrib/admin/utils.py",
+            "symbol": "FieldIsAForeignKeyColumnName",
+            "role": "pivot"
+          },
+          {
+            "path": "core/management/commands/makemigrations.py",
+            "symbol": "Command",
+            "role": "support"
+          },
+          {
+            "path": "core/management/commands/migrate.py",
+            "symbol": "Command",
+            "role": "support"
+          },
+          {
+            "path": "db/migrations/autodetector.py",
+            "symbol": "_get_dependencies_for_foreign_key",
+            "role": "support"
+          },
+          {
+            "path": "db/backends/ddl_references.py",
+            "symbol": "ForeignKeyName",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "db/models/fields/related.py",
+            "symbol": "ForeignKey",
+            "contentMode": "full"
+          },
+          {
+            "path": "contrib/admin/utils.py",
+            "symbol": "FieldIsAForeignKeyColumnName",
+            "contentMode": "full"
+          },
+          {
+            "path": "core/management/commands/makemigrations.py",
+            "symbol": "Command",
+            "contentMode": "signature"
+          },
+          {
+            "path": "core/management/commands/migrate.py",
+            "symbol": "Command",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/migrations/autodetector.py",
+            "symbol": "_get_dependencies_for_foreign_key",
+            "contentMode": "signature"
+          },
+          {
+            "path": "db/backends/ddl_references.py",
+            "symbol": "ForeignKeyName",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot db/models/fields/related.py::ForeignKey\n  reason:\n  - actionable class — symbol-name match; strong lexical match\n  - title mentions symbol-like term `ForeignKey`\n\n  source:\n  class ForeignKey(ForeignObject):\n      \"\"\"\n      Provide a many-to-one relation by adding a column to the local model\n      to hold the remote value.\n\n      By default ForeignKey will target the pk of the remote model but this\n      behavior can be changed by using the ``to_field`` argument.\n      \"\"\"\n      descriptor_class = ForeignKeyDeferredAttribute\n      # Field flags\n      many_to_many = False\n      many_to_one = True\n      one_to_many = False\n      one_to_one = False\n\n      rel_class = ManyToOneRel\n\n      empty_strings_allowed = False\n      default_error_messages = {\n          'invalid': _('%(model)s instance with %(field)s %(value)r does not exist.')\n      }\n      description = _(\"Foreign Key (type determined by related field)\")\n\n      def __init__(self, to, on_delete, related_name=None, related_query_name=None,\n                   limit_choices_to=None, parent_link=False, to_field=None,\n                   db_constraint=True, **kwargs):\n          try:\n              to._meta.model_name\n          except AttributeError:\n              assert isinstance(to, str), (\n                  \"%s(%r) is invalid. First parameter to ForeignKey must be \"\n                  \"either a model, a model name, or the string %r\" % (\n                      self.__class__.__name__, to,\n                      RECURSIVE_RELATIONSHIP_CONSTANT,\n                  )\n              )\n          else:\n              # For backwards compatibility purposes, we need to *try* and set\n              # the to_field during FK construction. It won't be guaranteed to\n              # be correct until contribute_to_class is called. Refs #12190.\n              to_field = to_field or (to._meta.pk and to._meta.pk.name)\n          if not callable(on_delete):\n              raise TypeError('on_delete must be callable.')\n\n          kwargs['rel'] = self.rel_class(\n              self, to, to_field,\n              related_name=related_name,\n              related_query_name=related_query_name,\n              limit_choices_to=limit_choices_to,\n              parent_link=parent_link,\n              on_delete=on_delete,\n          )\n          kwargs.setdefault('db_index', True)\n\n          super().__init__(\n              to,\n              on_delete,\n              from_fields=[RECURSIVE_RELATIONSHIP_CONSTANT],\n              to_fields=[to_field],\n              **kwargs,\n          )\n          self.db_constraint = db_constraint\n\n      def check(self, **kwargs):\n          return [\n              *super().check(**kwargs),\n              *self._check_on_delete(),\n              *self._check_unique(),\n          ]\n\n      def _check_on_delete(self):\n          on_delete = getattr(self.remote_field, 'on_delete', None)\n          if on_delete == SET_NULL and not self.null:\n              return [\n                  checks.Error(\n                      'Field specifies on_delete=SET_NULL, but cannot be null.',\n                      hint='Set null=True argument on the field, or change the on_delete rule.',\n                      obj=self,\n                      id='fields.E320',\n                  )\n              ]\n          elif on_delete == SET_DEFAULT and not self.has_default():\n              return [\n                  checks.Error(\n                      'Field specifies on_delete=SET_DEFAULT, but has no default value.',\n                      hint='Set a default value, or change the on_delete rule.',\n                      obj=self,\n                      id='fields.E321',\n                  )\n              ]\n          else:\n              return []\n\n      def _check_unique(self, **kwargs):\n          return [\n              checks.Warning(\n                  'Setting unique=True on a ForeignKey has the same effect as using a OneToOneField.',\n                  hint='ForeignKey(unique=True) is usually better served by a OneToOneField.',\n                  obj=self,\n                  id='fields.W342',\n              )\n          ] if self.unique else []\n\n      def deconstruct(self):\n          name, path, args, kwargs = super().deconstruct()\n          del kwargs['to_fields']\n          del kwargs['from_fields']\n          # Handle the simpler arguments\n          if self.db_index:\n              del kwargs['db_index']\n          else:\n              kwargs['db_index'] = False\n          if self.db_constraint is not True:\n              kwargs['db_constraint'] = self.db_constraint\n          # Rel needs more work.\n          to_meta = getattr(self.remote_field.model, \"_meta\", None)\n          if self.remote_field.field_name and (\n                  not to_meta or (to_meta.pk and self.remote_field.field_name != to_meta.pk.name)):\n              kwargs['to_field'] = self.remote_field.field_name\n          return name, path, args, kwargs\n\n      def to_python(self, value):\n          return self.target_field.to_python(value)\n\n      @property\n      def target_field(self):\n          return self.foreign_related_fields[0]\n\n      def get_reverse_path_info(self, filtered_relation=None):\n          \"\"\"Get path from the related model to this field's model.\"\"\"\n          opts = self.model._meta\n          from_opts = self.remote_field.model._meta\n          return [PathInfo(\n              from_opts=from_opts,\n              to_opts=opts,\n              target_fields=(opts.pk,),\n              join_field=self.remote_field,\n              m2m=not self.unique,\n              direct=False,\n              filtered_relation=filtered_relation,\n          )]\n\n      def validate(self, value, model_instance):\n          if self.remote_field.parent_link:\n              return\n          super().validate(value, model_instance)\n          if value is None:\n              return\n\n          using = router.db_for_read(self.remote_field.model, instance=model_instance)\n          qs = self.remote_field.model._base_manager.using(using).filter(\n              **{self.remote_field.field_name: value}\n          )\n          qs = qs.complex_filter(self.get_limit_choices_to())\n          if not qs.exists():\n              raise exceptions.ValidationError(\n                  self.error_messages['invalid'],\n                  code='invalid',\n                  params={\n                      'model': self.remote_field.model._meta.verbose_name, 'pk': value,\n                      'field': self.remote_field.field_name, 'value': value,\n                  },  # 'pk' is included for backwards compatibility\n              )\n\n      def resolve_related_fields(self):\n          related_fields = super().resolve_related_fields()\n          for from_field, to_field in related_fields:\n              if to_field and to_field.model != self.remote_field.model._meta.concrete_model:\n                  raise exceptions.FieldError(\n                      \"'%s.%s' refers to field '%s' which is not local to model \"\n                      \"'%s'.\" % (\n                          self.model._meta.label,\n                          self.name,\n                          to_field.name,\n                          self.remote_field.model._meta.concrete_model._meta.label,\n                      )\n                  )\n          return related_fields\n\n      def get_attname(self):\n          return '%s_id' % self.name\n\n      def get_attname_column(self):\n          attname = self.get_attname()\n          column = self.db_column or attname\n          return attname, column\n\n      def get_default(self):\n          \"\"\"Return the to_field if the default value is an object.\"\"\"\n          field_default = super().get_default()\n          if isinstance(field_default, self.remote_field.model):\n              return getattr(field_default, self.target_field.attname)\n          return field_default\n\n      def get_db_prep_save(self, value, connection):\n          if value is None or (value == '' and\n                               (not self.target_field.empty_strings_allowed or\n                                connection.features.interprets_empty_strings_as_nulls)):\n              return None\n          else:\n              return self.target_field.get_db_prep_save(value, connection=connection)\n\n      def get_db_prep_value(self, value, connection, prepared=False):\n          return self.target_field.get_db_prep_value(value, connection, prepared)\n\n      def get_prep_value(self, value):\n          return self.target_field.get_prep_value(value)\n\n      def contribute_to_related_class(self, cls, related):\n          super().contribute_to_related_class(cls, related)\n          if self.remote_field.field_name is None:\n              self.remote_field.field_name = cls._meta.pk.name\n\n      def formfield(self, *, using=None, **kwargs):\n          if isinstance(self.remote_field.model, str):\n              raise ValueError(\"Cannot create form field for %r yet, because \"\n                               \"its related model %r has not been loaded yet\" %\n                               (self.name, self.remote_field.model))\n          return super().formfield(**{\n              'form_class': forms.ModelChoiceField,\n              'queryset': self.remote_field.model._default_manager.using(using),\n              'to_field_name': self.remote_field.field_name,\n              **kwargs,\n              'blank': self.blank,\n          })\n\n      def db_check(self, connection):\n          return []\n\n      def db_type(self, connection):\n          return self.target_field.rel_db_type(connection=connection)\n\n      def db_parameters(self, connection):\n          return {\"type\": self.db_type(connection), \"check\": self.db_check(connection)}\n\n      def convert_empty_strings(self, value, expression, connection):\n          if (not value) and isinstance(value, str):\n              return None\n          return value\n\n      def get_db_converters(self, connection):\n          converters = super().get_db_converters(connection)\n          if connection.features.interprets_empty_strings_as_nulls:\n              converters += [self.convert_empty_strings]\n          return converters\n\n      def get_col(self, alias, output_field=None):\n          if output_field is None:\n              output_field = self.target_field\n              while isinstance(output_field, ForeignKey):\n                  output_field = output_field.target_field\n                  if output_field is self:\n                      raise ValueError('Cannot resolve output_field.')\n          return super().get_col(alias, output_field)\n\n● pivot contrib/admin/utils.py::FieldIsAForeignKeyColumnName\n  reason:\n  - actionable class — strong lexical match; issue-domain relevance\n  - 4 indexed symbol(s) depend on this\n  - lexical match on local_name, local_name, local_name, query_coverage\n  - symbol name matches \"ForeignKey\"\n\n  source:\n  class FieldIsAForeignKeyColumnName(Exception):\n      \"\"\"A field is a foreign key attname, i.e. <FK>_id.\"\"\"\n      pass\n\n○ support core/management/commands/makemigrations.py::Command\n\n  signature:\n  class Command(BaseCommand):\n\n○ support core/management/commands/migrate.py::Command\n\n  signature:\n  class Command(BaseCommand):\n\n○ support db/migrations/autodetector.py::_get_dependencies_for_foreign_key\n\n  signature:\n  def _get_dependencies_for_foreign_key(self, field):\n        # Account for FKs to swappable models\n\n○ support db/backends/ddl_references.py::ForeignKeyName\n\n  signature:\n  class ForeignKeyName(TableColumns):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 2843,
+          "usedPercent": 35.54,
+          "itemTokens": [
+            {
+              "path": "db/models/fields/related.py",
+              "symbol": "ForeignKey",
+              "tokens": 2612
+            },
+            {
+              "path": "contrib/admin/utils.py",
+              "symbol": "FieldIsAForeignKeyColumnName",
+              "tokens": 105
+            },
+            {
+              "path": "core/management/commands/makemigrations.py",
+              "symbol": "Command",
+              "tokens": 27
+            },
+            {
+              "path": "core/management/commands/migrate.py",
+              "symbol": "Command",
+              "tokens": 25
+            },
+            {
+              "path": "db/migrations/autodetector.py",
+              "symbol": "_get_dependencies_for_foreign_key",
+              "tokens": 47
+            },
+            {
+              "path": "db/backends/ddl_references.py",
+              "symbol": "ForeignKeyName",
+              "tokens": 27
+            }
+          ]
+        }
       }
     },
     {
@@ -2535,6 +4642,118 @@
             "discard_reason": "beyond standard support budget (max 4)"
           }
         ]
+      },
+      "semantic": {
+        "selectedFiles": [
+          "http/response.py",
+          "contrib/sessions/backends/signed_cookies.py",
+          "contrib/messages/storage/cookie.py",
+          "core/mail/message.py",
+          "contrib/sessions/middleware.py"
+        ],
+        "lead": "http/response.py",
+        "roles": [
+          {
+            "path": "http/response.py",
+            "symbol": "delete_cookie",
+            "role": "pivot"
+          },
+          {
+            "path": "contrib/sessions/backends/signed_cookies.py",
+            "symbol": "delete",
+            "role": "pivot"
+          },
+          {
+            "path": "contrib/messages/storage/cookie.py",
+            "symbol": "MessageEncoder",
+            "role": "support"
+          },
+          {
+            "path": "core/mail/message.py",
+            "symbol": "message",
+            "role": "support"
+          },
+          {
+            "path": "contrib/sessions/middleware.py",
+            "symbol": "process_response",
+            "role": "support"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "__init__",
+            "role": "support"
+          }
+        ],
+        "contentModes": [
+          {
+            "path": "http/response.py",
+            "symbol": "delete_cookie",
+            "contentMode": "full"
+          },
+          {
+            "path": "contrib/sessions/backends/signed_cookies.py",
+            "symbol": "delete",
+            "contentMode": "full"
+          },
+          {
+            "path": "contrib/messages/storage/cookie.py",
+            "symbol": "MessageEncoder",
+            "contentMode": "signature"
+          },
+          {
+            "path": "core/mail/message.py",
+            "symbol": "message",
+            "contentMode": "signature"
+          },
+          {
+            "path": "contrib/sessions/middleware.py",
+            "symbol": "process_response",
+            "contentMode": "signature"
+          },
+          {
+            "path": "http/response.py",
+            "symbol": "__init__",
+            "contentMode": "signature"
+          }
+        ],
+        "modelVisibleContext": "● pivot http/response.py::delete_cookie\n  reason:\n  - actionable method — symbol-name match; strong lexical match; issue-domain relevance\n  - 1 indexed symbol(s) depend on this\n  - lexical match on local_name, local_name, fq_name, fq_name, query_coverage, path_segment_signal\n  - symbol name matches \"delete_cookie\"\n\n  source:\n  def delete_cookie(self, key, path='/', domain=None):\n          # Most browsers ignore the Set-Cookie header if the cookie name starts\n          # with __Host- or __Secure- and the cookie doesn't use the secure flag.\n          secure = key.startswith(('__Secure-', '__Host-'))\n          self.set_cookie(\n              key, max_age=0, path=path, domain=domain, secure=secure,\n              expires='Thu, 01 Jan 1970 00:00:00 GMT',\n          )\n\n● pivot contrib/sessions/backends/signed_cookies.py::delete\n  reason:\n  - actionable method — symbol-name match; strong lexical match; issue-domain relevance\n  - 1 indexed symbol(s) depend on this\n  - lexical match on local_name, fq_name, query_coverage, path_segment_signal\n  - symbol name matches \"delete_cookie\"\n\n  source:\n  def delete(self, session_key=None):\n          \"\"\"\n          To delete, clear the session key and the underlying data structure\n          and set the modified flag so that the cookie is set on the client for\n          the current request.\n          \"\"\"\n          self._session_key = ''\n          self._session_cache = {}\n          self.modified = True\n\n○ support contrib/messages/storage/cookie.py::MessageEncoder\n\n  signature:\n  class MessageEncoder(json.JSONEncoder):\n\n○ support core/mail/message.py::message\n\n  signature:\n  def message(self):\n\n○ support contrib/sessions/middleware.py::process_response\n\n  signature:\n  def process_response(self, request, response):\n\n○ support http/response.py::__init__\n\n  signature:\n  def __init__(self, content=b'', *args, **kwargs):",
+        "tokenAccounting": {
+          "budgetTokens": 8000,
+          "estimatedTokens": 468,
+          "usedPercent": 5.85,
+          "itemTokens": [
+            {
+              "path": "http/response.py",
+              "symbol": "delete_cookie",
+              "tokens": 193
+            },
+            {
+              "path": "contrib/sessions/backends/signed_cookies.py",
+              "symbol": "delete",
+              "tokens": 170
+            },
+            {
+              "path": "contrib/messages/storage/cookie.py",
+              "symbol": "MessageEncoder",
+              "tokens": 29
+            },
+            {
+              "path": "core/mail/message.py",
+              "symbol": "message",
+              "tokens": 19
+            },
+            {
+              "path": "contrib/sessions/middleware.py",
+              "symbol": "process_response",
+              "tokens": 31
+            },
+            {
+              "path": "http/response.py",
+              "symbol": "__init__",
+              "tokens": 26
+            }
+          ]
+        }
       }
     }
   ],
@@ -2674,5 +4893,294 @@
         "unknown": 0
       }
     }
-  ]
+  ],
+  "benchmarkProvenance": {
+    "schemaVersion": "stage5.benchmark-provenance.v1",
+    "artifactState": "authoritative",
+    "authority": "authoritative",
+    "vtrace": {
+      "commit": "7b29882ec23477ed7bcc738a4073af1d270ece7e",
+      "tree": "0f7b6de1634f00515d32afb0338331d2dedd43ba",
+      "sourceFingerprint": "1bd553042554e06b95e43a0d9b7bf328d02ef66fa54aa3da2ca1c736bafb6c91",
+      "dirty": false,
+      "dirtyPaths": []
+    },
+    "runner": {
+      "fingerprint": "738392b317e6e8086d8460714f84cb9ffcede95daccd210b8742edf72a2e7285",
+      "protocolVersion": "stage5.retrieval.protocol.v1",
+      "sourceFiles": [
+        "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_retrieval_eval.ts",
+        "benchmarks/stage5_vexp_swe_bench_smoke/benchmarkProvenance.ts",
+        "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m134_historical_replay.ts",
+        "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m134_prepare_targets.ts",
+        "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m134_paired_comparison.ts"
+      ]
+    },
+    "fixture": {
+      "name": "retrieval_eval.django.expanded.json",
+      "path": "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.django.expanded.json",
+      "hash": "b78a30889bfef6eb4f0f5fe4167b39c04908f9f01370c4db5c82eee7f2e690b0",
+      "caseCount": 20,
+      "taskOrderHash": "b30e64434fb5df98f859f45ba7a93f22f60937a305084f335c6d29870b9266ab",
+      "goldLabelHash": "3f5f0d2391cd3230fdd0ec7b2bc9dfa018595a012c38c80f59113a896636b2f4"
+    },
+    "targetCorpus": {
+      "hash": "dc36ac3be7e52b5e4d9b29df983b9768bebf603b0c31d5676039692ddacc3840",
+      "manifestHash": "76c5c4beab0aa3d26a828a9045f079ad06c8afc994ca5324e7d7399093625c75",
+      "repositories": [
+        {
+          "instanceId": "django__django-10880",
+          "repository": "django/django",
+          "commit": "838e432e3e5519c5383d12018e6c78f8ec7833c1",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "85d60df0da8059fc248adc73706ab13ec6dfba9635d5d5fe042105d037c46fe6",
+          "declaredBaseCommit": "838e432e3e5519c5383d12018e6c78f8ec7833c1",
+          "indexedSourceFingerprint": "2884592bae9806fb007a17a7b5ea2bd247b51dee6201c742b11818ec8305661a",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-11095",
+          "repository": "django/django",
+          "commit": "7d49ad76562e8c0597a0eb66046ab423b12888d8",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "f4d11df9b21d4f47654779596fcd656d447e929ec27e370c5d498120aca187ab",
+          "declaredBaseCommit": "7d49ad76562e8c0597a0eb66046ab423b12888d8",
+          "indexedSourceFingerprint": "c88ec376d2a6052b4e7d1e7b897fc3f7ec6ad5779bf509ed8898f276b6c2f708",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-11490",
+          "repository": "django/django",
+          "commit": "a7038adbd02c916315b16939b835f021c2ee8880",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "95eae1efe501260d9779ff6f31832035a7152025ad1e0594255cb3ce63086aa9",
+          "declaredBaseCommit": "a7038adbd02c916315b16939b835f021c2ee8880",
+          "indexedSourceFingerprint": "cc495f795afa191d0e747cc35bbe2794a7d5066dc0e74359a1030245ef7cabe3",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-11728",
+          "repository": "django/django",
+          "commit": "05457817647368be4b019314fcc655445a5b4c0c",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "4904ebb89d1d5cd899958abe533477fbefb8278528f746222779f5f95f872e26",
+          "declaredBaseCommit": "05457817647368be4b019314fcc655445a5b4c0c",
+          "indexedSourceFingerprint": "eb9a9ea16c65b6e2b48745eb72f509ffedb05b63ea9b97778590707039c441cc",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-11740",
+          "repository": "django/django",
+          "commit": "003bb34b218adb23d1a7e67932a6ba9b3c4dcc81",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "82c830906d7bd19161a6c6bdc85047f908b9dab5d8e6e413f8dbe1841924bd48",
+          "declaredBaseCommit": "003bb34b218adb23d1a7e67932a6ba9b3c4dcc81",
+          "indexedSourceFingerprint": "6685ff48e8e9f573f44371bce19c58cbd6657efce8a2e26e3e19df60ef38248e",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-10973",
+          "repository": "django/django",
+          "commit": "ddb293685235fd09e932805771ae97f72e817181",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "00445dffcd11f0867ec696c16091e925de8dd3ee0ba3db77f54bf1d59348e7d5",
+          "declaredBaseCommit": "ddb293685235fd09e932805771ae97f72e817181",
+          "indexedSourceFingerprint": "1426e8bbb9d88af52f62f09dacb61483ecd24927d9580f810c8d8f1eb7a9944e",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-11133",
+          "repository": "django/django",
+          "commit": "879cc3da6249e920b8d54518a0ae06de835d7373",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "b64dae99dbe9fb71a0b03ee2abb80e41db1a751c6f4f950311a3aa468c416511",
+          "declaredBaseCommit": "879cc3da6249e920b8d54518a0ae06de835d7373",
+          "indexedSourceFingerprint": "baa16f7c2b4a23033143a60f07eafc297a992a492b9ba2d0356bd529b11d9622",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-11206",
+          "repository": "django/django",
+          "commit": "571ab44e8a8936014c22e7eebe4948d9611fd7ce",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "5d8daf01bfc95849df6a7e0c580dddac2c7c7ce5a80d5830be824f9b20548993",
+          "declaredBaseCommit": "571ab44e8a8936014c22e7eebe4948d9611fd7ce",
+          "indexedSourceFingerprint": "92e9f59535be6e87087ca0c78105d56359127a0a27f680576d045abd80f7e1e9",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-11749",
+          "repository": "django/django",
+          "commit": "350123f38c2b6217c38d70bfbd924a9ba3df1289",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "f25bf1db183f82754959bd91a6f9fe51f5c9146c54368364754c40f530710728",
+          "declaredBaseCommit": "350123f38c2b6217c38d70bfbd924a9ba3df1289",
+          "indexedSourceFingerprint": "8dfcdfbea86237ccfb2c439b0b81643041fb81f1bfa667b1ad9c1952e2c44b1c",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-11815",
+          "repository": "django/django",
+          "commit": "e02f67ef2d03d48128e7a118bf75f0418e24e8ac",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "7c22303ae2ce9ebb20e1ab072fcf3a6e7cdb7adb0db7cc6df6930a8961be659a",
+          "declaredBaseCommit": "e02f67ef2d03d48128e7a118bf75f0418e24e8ac",
+          "indexedSourceFingerprint": "db8b6ab626ad480285d91f5bf96833987bc2be2e0b556c2ec803ccae277f27d6",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-11820",
+          "repository": "django/django",
+          "commit": "c2678e49759e5c4c329bff0eeca2886267005d21",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "d92752f18a38f3ece2812cffbe7caa28def2e03a914507ba73768e6c22ad1189",
+          "declaredBaseCommit": "c2678e49759e5c4c329bff0eeca2886267005d21",
+          "indexedSourceFingerprint": "e7223961a5787961bb7d5e0d21ccd09e8257c2e9638cc86f589938931bedb349",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-12050",
+          "repository": "django/django",
+          "commit": "b93a0e34d9b9b99d41103782b7e7aeabf47517e3",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "5be7c31f4a425ee44e18874d5613967111048a9c00b8e8313623e8e91f4a5f7d",
+          "declaredBaseCommit": "b93a0e34d9b9b99d41103782b7e7aeabf47517e3",
+          "indexedSourceFingerprint": "4a285a78233bb815166b3d018a74cba55baac7911cd307a3c3b0d713b1cf784e",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-12273",
+          "repository": "django/django",
+          "commit": "927c903f3cd25c817c21738328b53991c035b415",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "0d8bf8d028dca5d8c96de71a69dc62968081618e9b8adfd5578abad43f4bad9c",
+          "declaredBaseCommit": "927c903f3cd25c817c21738328b53991c035b415",
+          "indexedSourceFingerprint": "2cdb388abd34eb2d2a154c52fddb2d49cea1cbc4b720babbeda7eca4d7ac2df0",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-12276",
+          "repository": "django/django",
+          "commit": "53d8646f799de7f92ab9defe9dc56c6125448102",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "9ffefb713c5d23b548ea01e3d9298802b235f8de2732d0725180ff02e7e0d832",
+          "declaredBaseCommit": "53d8646f799de7f92ab9defe9dc56c6125448102",
+          "indexedSourceFingerprint": "1abe04fe6fbf51aaf2677b69ca1d864c2c00d0a43505d911525de88985c794d7",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-12325",
+          "repository": "django/django",
+          "commit": "29c126bb349526b5f1cd78facbe9f25906f18563",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "00832907532b12813c38c63842c5136b1f1d3f12c09d2d90e780bf50f510cec6",
+          "declaredBaseCommit": "29c126bb349526b5f1cd78facbe9f25906f18563",
+          "indexedSourceFingerprint": "6b6ec0dd736df86fefb4c78a0de8df681ecb657d44db0542715096976add7adb",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-12774",
+          "repository": "django/django",
+          "commit": "67f9d076cfc1858b94f9ed6d1a5ce2327dcc8d0d",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "9679a5a8b02f4fc6995091c3a1ad2b9d0f3c93164dbed1191f5d3c9492ab101f",
+          "declaredBaseCommit": "67f9d076cfc1858b94f9ed6d1a5ce2327dcc8d0d",
+          "indexedSourceFingerprint": "0c29d613782e79262e926d59b6eec54ca818d12ce997bb0b41e5975b16389ed1",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-12858",
+          "repository": "django/django",
+          "commit": "f2051eb8a7febdaaa43bd33bf5a6108c5f428e59",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "06775144386189813792c53d58db1ce844cce5f590ac8eabb54248eea600ecef",
+          "declaredBaseCommit": "f2051eb8a7febdaaa43bd33bf5a6108c5f428e59",
+          "indexedSourceFingerprint": "50681cd627325e1cf3720017229df9c52de7dbbb45d6458582e505bffed0fc17",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-13012",
+          "repository": "django/django",
+          "commit": "22a59c01c00cf9fbefaee0e8e67fab82bbaf1fd2",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "76ce0081d139f3420a71fa7e615dc5797e276b103a35a66be1c68a3bfe4b7275",
+          "declaredBaseCommit": "22a59c01c00cf9fbefaee0e8e67fab82bbaf1fd2",
+          "indexedSourceFingerprint": "032262a346489f548a55febb85aa37801c0d405b564438366d1d9fd3fad728b4",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-13112",
+          "repository": "django/django",
+          "commit": "09914ccf688974e068941f55412b930729bafa06",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "d0d11028eff70be022cf14105f0e69407879b3d4692d4645556045f18af9a184",
+          "declaredBaseCommit": "09914ccf688974e068941f55412b930729bafa06",
+          "indexedSourceFingerprint": "1500be065c87dbe4c782026f1a1160aab43d219106f275d42349eb8d2cb4645c",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        },
+        {
+          "instanceId": "django__django-13195",
+          "repository": "django/django",
+          "commit": "156a2138db20abc89933121e4ff2ee2ce56a173a",
+          "tree": null,
+          "dirty": null,
+          "dirtyFingerprint": null,
+          "worktreeId": "a5134cb7b5bc39c281787b83bd1ae091f3f2574c8358da3d5df7d6f5818aae4d",
+          "declaredBaseCommit": "156a2138db20abc89933121e4ff2ee2ce56a173a",
+          "indexedSourceFingerprint": "1bc533cbd58b3c02c640c94b93d42ec1aa3872b5dac2e279792cd88514c0b315",
+          "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+        }
+      ]
+    },
+    "schemas": {
+      "index": 4,
+      "manifest": 4,
+      "snapshot": 4,
+      "retrieval": 2,
+      "capsuleProductContext": "capsule-v2/product-context-v1"
+    },
+    "semanticHashVersion": "stage5.retrieval.semantic.v1",
+    "resultSemanticHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa",
+    "metricSummaryHash": "aa1e5d7e0d692d75671cc83939b8a8cef20cd96f05ae97a48ad1de79fa69ca58",
+    "complete": true,
+    "collectionMs": 115.706
+  }
 }

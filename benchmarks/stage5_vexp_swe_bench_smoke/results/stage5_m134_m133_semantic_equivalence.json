@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "stage5.m134.m133-semantic-equivalence.v1",
+  "predecessor": "a004529cdc3e8fdf8b2e027d0a1b1d37e0e42a7d",
+  "candidate": "7b29882ec23477ed7bcc738a4073af1d270ece7e",
+  "cases": 50,
+  "differences": {
+    "selectedFiles": 0,
+    "lead": 0,
+    "roles": 0,
+    "contentModes": 0,
+    "modelVisibleContext": 0,
+    "tokenAccounting": 0,
+    "qualityMetrics": 0
+  },
+  "sameTargetCorpus": true,
+  "isolatedIndexes": true,
+  "provenanceValidated": true,
+  "authoritative": true,
+  "verdict": "PASS"
+}

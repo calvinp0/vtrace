@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "stage5.m134.case-attribution.v1",
+  "headline": "cross_repo_30 Top-1 moved from 0.7333 to 0.7000 at M122 -> M123",
+  "transition": {
+    "fromMilestone": "M122",
+    "fromCommit": "1a805273febfc904734cb0798d01850960a15c73",
+    "toMilestone": "M123",
+    "toCommit": "c678624568facf8342fa9912a80f0b2509450b5a",
+    "sameSourceIndependentlyIndexed": true,
+    "changedCaseCount": 2,
+    "top1DeltaCases": -1,
+    "top1Delta": -0.0333,
+    "anyGoldDelta": 0,
+    "leadDeltaCases": 1
+  },
+  "cases": [
+    {
+      "caseId": "psf__requests-1724",
+      "repository": "psf/requests",
+      "targetCommit": "1ba83c47ce7b177efe90d5f51f7760680f72eda0",
+      "task": "Unicode method names cause UnicodeDecodeError for some requests in Python 2.7.2 — The following example works fine; structured evidence names UnicodeDecodeError, test_requests, api.py, and sessions.py.",
+      "taskHash": "13afa89dd9e6d0c4f915d17415723175f238df35085a4da46eeeb62aa433905e",
+      "firstChangedTransition": "M122 -> M123",
+      "oldLead": "requests/sessions.py",
+      "newLead": "requests/api.py",
+      "oldSelectedFiles": ["requests/sessions.py", "requests/cookies.py"],
+      "newSelectedFiles": ["requests/api.py", "requests/sessions.py", "requests/cookies.py"],
+      "oldGoldVisibility": { "visible": true, "rank": 1, "role": "pivot" },
+      "newGoldVisibility": { "visible": true, "rank": 2, "role": "support" },
+      "metricConsequence": "Top-1 -1 case; Top-3 and any-gold unchanged.",
+      "cause": "M123 converged product ranking on authoritative Capsule v2 and reran raw-task compound rescue when the normal pool lacked direct evidence. Exact `get`/`request` API candidates became pivots and the gold sessions request became support.",
+      "causeClass": "ranking",
+      "classification": "intentional tradeoff with an unexpected Top-1 regression"
+    },
+    {
+      "caseId": "sphinx-doc__sphinx-7462",
+      "repository": "sphinx-doc/sphinx",
+      "targetCommit": "b3e26a6c851133b82b50f4b68b53692076574d13",
+      "task": "IndexError: pop from empty list for empty tuple type annotation; structured traceback points to sphinx/domains/python.py::unparse.",
+      "taskHash": "b9e7e3e76c29701fc8c6d4d11abafb8cfaf77f4a02b0389c2caca03558e97882",
+      "firstChangedTransition": "M122 -> M123",
+      "oldLead": "sphinx/domains/python.py",
+      "newLead": "sphinx/domains/python.py",
+      "oldSelectedFiles": ["sphinx/domains/python.py", "sphinx/pycode/ast.py", "sphinx/util/inspect.py", "sphinx/ext/autodoc/type_comment.py"],
+      "newSelectedFiles": ["sphinx/domains/python.py", "sphinx/domains/cpp.py", "sphinx/pycode/ast.py", "sphinx/domains/c.py", "sphinx/util/cfamily.py"],
+      "oldGoldVisibility": { "visible": true, "rank": 1, "role": "pivot" },
+      "newGoldVisibility": { "visible": true, "rank": 1, "role": "pivot" },
+      "metricConsequence": "No Top-1, Top-3, or any-gold change; support composition and rendered context changed.",
+      "cause": "The same M123 shared product-ranking convergence changed support selection around the stable python.py pivot.",
+      "causeClass": "mixed objective selection",
+      "classification": "neutral semantic movement"
+    }
+  ]
+}

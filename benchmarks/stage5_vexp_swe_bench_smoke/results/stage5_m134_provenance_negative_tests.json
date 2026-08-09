@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "stage5.m134.provenance-negative-tests.v1",
+  "functionalCommit": "7b29882",
+  "command": "bun test benchmarks/stage5_vexp_swe_bench_smoke/benchmarkProvenance.test.ts benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_retrieval_eval.test.ts",
+  "tests": [
+    { "scenario": "stored A artifact declared as predecessor B", "expected": "baseline_vtrace_commit_mismatch", "semanticComparisonProceeded": false, "pass": true },
+    { "scenario": "fixture byte mutation at unchanged filename", "expected": "fixture_hash_mismatch", "semanticComparisonProceeded": false, "pass": true },
+    { "scenario": "runner/scorer source mutation", "expected": "runner_fingerprint_mismatch", "semanticComparisonProceeded": false, "pass": true },
+    { "scenario": "target source/corpus mutation", "expected": "target_corpus_mismatch", "semanticComparisonProceeded": false, "pass": true },
+    { "scenario": "dirty predecessor requested as authoritative", "expected": "dirty_baseline_not_authoritative", "semanticComparisonProceeded": false, "pass": true },
+    { "scenario": "semantic algorithm version differs", "expected": "semantic_hash_version_mismatch", "semanticComparisonProceeded": false, "pass": true },
+    { "scenario": "legacy artifact without provenance", "expected": "missing_provenance", "semanticComparisonProceeded": false, "pass": true },
+    { "scenario": "explicit mismatch override", "expected": "non_authoritative exploratory result", "authoritativePassPossible": false, "pass": true }
+  ],
+  "focusedVerification": { "passed": 94, "failed": 0 },
+  "staleBaselineDefectReproduced": true,
+  "staleBaselineDefectRejected": true,
+  "verdict": "PASS"
+}

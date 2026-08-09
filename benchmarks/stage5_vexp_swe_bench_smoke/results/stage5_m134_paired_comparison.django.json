@@ -1,0 +1,608 @@
+{
+  "schemaVersion": "stage5.paired-retrieval-comparison.v1",
+  "declaredPredecessor": "a004529cdc3e8fdf8b2e027d0a1b1d37e0e42a7d",
+  "candidateCommit": "7b29882ec23477ed7bcc738a4073af1d270ece7e",
+  "validity": {
+    "valid": true,
+    "authoritative": true,
+    "reasons": [],
+    "message": "Baseline provenance valid."
+  },
+  "authoritative": true,
+  "differences": {
+    "selectedFiles": 0,
+    "lead": 0,
+    "roles": 0,
+    "contentModes": 0,
+    "modelVisibleContext": 0,
+    "tokenAccounting": 0,
+    "qualityMetrics": 0
+  },
+  "changedCases": [],
+  "predecessorSemanticHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa",
+  "candidateSemanticHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa",
+  "pass": true,
+  "protocol": {
+    "sameFixtureHash": true,
+    "sameTargetCorpus": true,
+    "isolatedIndexes": true,
+    "predecessor": {
+      "schemaVersion": "stage5.benchmark-provenance.v1",
+      "artifactState": "authoritative",
+      "authority": "authoritative",
+      "vtrace": {
+        "commit": "a004529cdc3e8fdf8b2e027d0a1b1d37e0e42a7d",
+        "tree": "5a05916ee533ef9ef3d153579c6e573422e7aee0",
+        "sourceFingerprint": "cafb393f74066f5d6722b8f72846f5b4fd3c39bd342fec70a76c5cd56d64fc45",
+        "dirty": false,
+        "dirtyPaths": []
+      },
+      "runner": {
+        "fingerprint": "738392b317e6e8086d8460714f84cb9ffcede95daccd210b8742edf72a2e7285",
+        "protocolVersion": "stage5.retrieval.protocol.v1",
+        "sourceFiles": [
+          "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_retrieval_eval.ts",
+          "benchmarks/stage5_vexp_swe_bench_smoke/benchmarkProvenance.ts",
+          "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m134_historical_replay.ts",
+          "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m134_prepare_targets.ts",
+          "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m134_paired_comparison.ts"
+        ]
+      },
+      "fixture": {
+        "name": "retrieval_eval.django.expanded.json",
+        "path": "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.django.expanded.json",
+        "hash": "b78a30889bfef6eb4f0f5fe4167b39c04908f9f01370c4db5c82eee7f2e690b0",
+        "caseCount": 20,
+        "taskOrderHash": "b30e64434fb5df98f859f45ba7a93f22f60937a305084f335c6d29870b9266ab",
+        "goldLabelHash": "3f5f0d2391cd3230fdd0ec7b2bc9dfa018595a012c38c80f59113a896636b2f4"
+      },
+      "targetCorpus": {
+        "hash": "dc36ac3be7e52b5e4d9b29df983b9768bebf603b0c31d5676039692ddacc3840",
+        "manifestHash": "76c5c4beab0aa3d26a828a9045f079ad06c8afc994ca5324e7d7399093625c75",
+        "repositories": [
+          {
+            "instanceId": "django__django-10880",
+            "repository": "django/django",
+            "commit": "838e432e3e5519c5383d12018e6c78f8ec7833c1",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "85d60df0da8059fc248adc73706ab13ec6dfba9635d5d5fe042105d037c46fe6",
+            "declaredBaseCommit": "838e432e3e5519c5383d12018e6c78f8ec7833c1",
+            "indexedSourceFingerprint": "2884592bae9806fb007a17a7b5ea2bd247b51dee6201c742b11818ec8305661a",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11095",
+            "repository": "django/django",
+            "commit": "7d49ad76562e8c0597a0eb66046ab423b12888d8",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "f4d11df9b21d4f47654779596fcd656d447e929ec27e370c5d498120aca187ab",
+            "declaredBaseCommit": "7d49ad76562e8c0597a0eb66046ab423b12888d8",
+            "indexedSourceFingerprint": "c88ec376d2a6052b4e7d1e7b897fc3f7ec6ad5779bf509ed8898f276b6c2f708",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11490",
+            "repository": "django/django",
+            "commit": "a7038adbd02c916315b16939b835f021c2ee8880",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "95eae1efe501260d9779ff6f31832035a7152025ad1e0594255cb3ce63086aa9",
+            "declaredBaseCommit": "a7038adbd02c916315b16939b835f021c2ee8880",
+            "indexedSourceFingerprint": "cc495f795afa191d0e747cc35bbe2794a7d5066dc0e74359a1030245ef7cabe3",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11728",
+            "repository": "django/django",
+            "commit": "05457817647368be4b019314fcc655445a5b4c0c",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "4904ebb89d1d5cd899958abe533477fbefb8278528f746222779f5f95f872e26",
+            "declaredBaseCommit": "05457817647368be4b019314fcc655445a5b4c0c",
+            "indexedSourceFingerprint": "eb9a9ea16c65b6e2b48745eb72f509ffedb05b63ea9b97778590707039c441cc",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11740",
+            "repository": "django/django",
+            "commit": "003bb34b218adb23d1a7e67932a6ba9b3c4dcc81",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "82c830906d7bd19161a6c6bdc85047f908b9dab5d8e6e413f8dbe1841924bd48",
+            "declaredBaseCommit": "003bb34b218adb23d1a7e67932a6ba9b3c4dcc81",
+            "indexedSourceFingerprint": "6685ff48e8e9f573f44371bce19c58cbd6657efce8a2e26e3e19df60ef38248e",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-10973",
+            "repository": "django/django",
+            "commit": "ddb293685235fd09e932805771ae97f72e817181",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "00445dffcd11f0867ec696c16091e925de8dd3ee0ba3db77f54bf1d59348e7d5",
+            "declaredBaseCommit": "ddb293685235fd09e932805771ae97f72e817181",
+            "indexedSourceFingerprint": "1426e8bbb9d88af52f62f09dacb61483ecd24927d9580f810c8d8f1eb7a9944e",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11133",
+            "repository": "django/django",
+            "commit": "879cc3da6249e920b8d54518a0ae06de835d7373",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "b64dae99dbe9fb71a0b03ee2abb80e41db1a751c6f4f950311a3aa468c416511",
+            "declaredBaseCommit": "879cc3da6249e920b8d54518a0ae06de835d7373",
+            "indexedSourceFingerprint": "baa16f7c2b4a23033143a60f07eafc297a992a492b9ba2d0356bd529b11d9622",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11206",
+            "repository": "django/django",
+            "commit": "571ab44e8a8936014c22e7eebe4948d9611fd7ce",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "5d8daf01bfc95849df6a7e0c580dddac2c7c7ce5a80d5830be824f9b20548993",
+            "declaredBaseCommit": "571ab44e8a8936014c22e7eebe4948d9611fd7ce",
+            "indexedSourceFingerprint": "92e9f59535be6e87087ca0c78105d56359127a0a27f680576d045abd80f7e1e9",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11749",
+            "repository": "django/django",
+            "commit": "350123f38c2b6217c38d70bfbd924a9ba3df1289",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "f25bf1db183f82754959bd91a6f9fe51f5c9146c54368364754c40f530710728",
+            "declaredBaseCommit": "350123f38c2b6217c38d70bfbd924a9ba3df1289",
+            "indexedSourceFingerprint": "8dfcdfbea86237ccfb2c439b0b81643041fb81f1bfa667b1ad9c1952e2c44b1c",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11815",
+            "repository": "django/django",
+            "commit": "e02f67ef2d03d48128e7a118bf75f0418e24e8ac",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "7c22303ae2ce9ebb20e1ab072fcf3a6e7cdb7adb0db7cc6df6930a8961be659a",
+            "declaredBaseCommit": "e02f67ef2d03d48128e7a118bf75f0418e24e8ac",
+            "indexedSourceFingerprint": "db8b6ab626ad480285d91f5bf96833987bc2be2e0b556c2ec803ccae277f27d6",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11820",
+            "repository": "django/django",
+            "commit": "c2678e49759e5c4c329bff0eeca2886267005d21",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "d92752f18a38f3ece2812cffbe7caa28def2e03a914507ba73768e6c22ad1189",
+            "declaredBaseCommit": "c2678e49759e5c4c329bff0eeca2886267005d21",
+            "indexedSourceFingerprint": "e7223961a5787961bb7d5e0d21ccd09e8257c2e9638cc86f589938931bedb349",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12050",
+            "repository": "django/django",
+            "commit": "b93a0e34d9b9b99d41103782b7e7aeabf47517e3",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "5be7c31f4a425ee44e18874d5613967111048a9c00b8e8313623e8e91f4a5f7d",
+            "declaredBaseCommit": "b93a0e34d9b9b99d41103782b7e7aeabf47517e3",
+            "indexedSourceFingerprint": "4a285a78233bb815166b3d018a74cba55baac7911cd307a3c3b0d713b1cf784e",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12273",
+            "repository": "django/django",
+            "commit": "927c903f3cd25c817c21738328b53991c035b415",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "0d8bf8d028dca5d8c96de71a69dc62968081618e9b8adfd5578abad43f4bad9c",
+            "declaredBaseCommit": "927c903f3cd25c817c21738328b53991c035b415",
+            "indexedSourceFingerprint": "2cdb388abd34eb2d2a154c52fddb2d49cea1cbc4b720babbeda7eca4d7ac2df0",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12276",
+            "repository": "django/django",
+            "commit": "53d8646f799de7f92ab9defe9dc56c6125448102",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "9ffefb713c5d23b548ea01e3d9298802b235f8de2732d0725180ff02e7e0d832",
+            "declaredBaseCommit": "53d8646f799de7f92ab9defe9dc56c6125448102",
+            "indexedSourceFingerprint": "1abe04fe6fbf51aaf2677b69ca1d864c2c00d0a43505d911525de88985c794d7",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12325",
+            "repository": "django/django",
+            "commit": "29c126bb349526b5f1cd78facbe9f25906f18563",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "00832907532b12813c38c63842c5136b1f1d3f12c09d2d90e780bf50f510cec6",
+            "declaredBaseCommit": "29c126bb349526b5f1cd78facbe9f25906f18563",
+            "indexedSourceFingerprint": "6b6ec0dd736df86fefb4c78a0de8df681ecb657d44db0542715096976add7adb",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12774",
+            "repository": "django/django",
+            "commit": "67f9d076cfc1858b94f9ed6d1a5ce2327dcc8d0d",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "9679a5a8b02f4fc6995091c3a1ad2b9d0f3c93164dbed1191f5d3c9492ab101f",
+            "declaredBaseCommit": "67f9d076cfc1858b94f9ed6d1a5ce2327dcc8d0d",
+            "indexedSourceFingerprint": "0c29d613782e79262e926d59b6eec54ca818d12ce997bb0b41e5975b16389ed1",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12858",
+            "repository": "django/django",
+            "commit": "f2051eb8a7febdaaa43bd33bf5a6108c5f428e59",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "06775144386189813792c53d58db1ce844cce5f590ac8eabb54248eea600ecef",
+            "declaredBaseCommit": "f2051eb8a7febdaaa43bd33bf5a6108c5f428e59",
+            "indexedSourceFingerprint": "50681cd627325e1cf3720017229df9c52de7dbbb45d6458582e505bffed0fc17",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-13012",
+            "repository": "django/django",
+            "commit": "22a59c01c00cf9fbefaee0e8e67fab82bbaf1fd2",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "76ce0081d139f3420a71fa7e615dc5797e276b103a35a66be1c68a3bfe4b7275",
+            "declaredBaseCommit": "22a59c01c00cf9fbefaee0e8e67fab82bbaf1fd2",
+            "indexedSourceFingerprint": "032262a346489f548a55febb85aa37801c0d405b564438366d1d9fd3fad728b4",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-13112",
+            "repository": "django/django",
+            "commit": "09914ccf688974e068941f55412b930729bafa06",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "d0d11028eff70be022cf14105f0e69407879b3d4692d4645556045f18af9a184",
+            "declaredBaseCommit": "09914ccf688974e068941f55412b930729bafa06",
+            "indexedSourceFingerprint": "1500be065c87dbe4c782026f1a1160aab43d219106f275d42349eb8d2cb4645c",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-13195",
+            "repository": "django/django",
+            "commit": "156a2138db20abc89933121e4ff2ee2ce56a173a",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "a5134cb7b5bc39c281787b83bd1ae091f3f2574c8358da3d5df7d6f5818aae4d",
+            "declaredBaseCommit": "156a2138db20abc89933121e4ff2ee2ce56a173a",
+            "indexedSourceFingerprint": "1bc533cbd58b3c02c640c94b93d42ec1aa3872b5dac2e279792cd88514c0b315",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          }
+        ]
+      },
+      "schemas": {
+        "index": 4,
+        "manifest": 4,
+        "snapshot": 4,
+        "retrieval": 2,
+        "capsuleProductContext": "capsule-v2/product-context-v1"
+      },
+      "semanticHashVersion": "stage5.retrieval.semantic.v1",
+      "resultSemanticHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa",
+      "metricSummaryHash": "aa1e5d7e0d692d75671cc83939b8a8cef20cd96f05ae97a48ad1de79fa69ca58",
+      "complete": true,
+      "collectionMs": 20785.122
+    },
+    "candidate": {
+      "schemaVersion": "stage5.benchmark-provenance.v1",
+      "artifactState": "authoritative",
+      "authority": "authoritative",
+      "vtrace": {
+        "commit": "7b29882ec23477ed7bcc738a4073af1d270ece7e",
+        "tree": "0f7b6de1634f00515d32afb0338331d2dedd43ba",
+        "sourceFingerprint": "1bd553042554e06b95e43a0d9b7bf328d02ef66fa54aa3da2ca1c736bafb6c91",
+        "dirty": false,
+        "dirtyPaths": []
+      },
+      "runner": {
+        "fingerprint": "738392b317e6e8086d8460714f84cb9ffcede95daccd210b8742edf72a2e7285",
+        "protocolVersion": "stage5.retrieval.protocol.v1",
+        "sourceFiles": [
+          "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_retrieval_eval.ts",
+          "benchmarks/stage5_vexp_swe_bench_smoke/benchmarkProvenance.ts",
+          "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m134_historical_replay.ts",
+          "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m134_prepare_targets.ts",
+          "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m134_paired_comparison.ts"
+        ]
+      },
+      "fixture": {
+        "name": "retrieval_eval.django.expanded.json",
+        "path": "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.django.expanded.json",
+        "hash": "b78a30889bfef6eb4f0f5fe4167b39c04908f9f01370c4db5c82eee7f2e690b0",
+        "caseCount": 20,
+        "taskOrderHash": "b30e64434fb5df98f859f45ba7a93f22f60937a305084f335c6d29870b9266ab",
+        "goldLabelHash": "3f5f0d2391cd3230fdd0ec7b2bc9dfa018595a012c38c80f59113a896636b2f4"
+      },
+      "targetCorpus": {
+        "hash": "dc36ac3be7e52b5e4d9b29df983b9768bebf603b0c31d5676039692ddacc3840",
+        "manifestHash": "76c5c4beab0aa3d26a828a9045f079ad06c8afc994ca5324e7d7399093625c75",
+        "repositories": [
+          {
+            "instanceId": "django__django-10880",
+            "repository": "django/django",
+            "commit": "838e432e3e5519c5383d12018e6c78f8ec7833c1",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "85d60df0da8059fc248adc73706ab13ec6dfba9635d5d5fe042105d037c46fe6",
+            "declaredBaseCommit": "838e432e3e5519c5383d12018e6c78f8ec7833c1",
+            "indexedSourceFingerprint": "2884592bae9806fb007a17a7b5ea2bd247b51dee6201c742b11818ec8305661a",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11095",
+            "repository": "django/django",
+            "commit": "7d49ad76562e8c0597a0eb66046ab423b12888d8",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "f4d11df9b21d4f47654779596fcd656d447e929ec27e370c5d498120aca187ab",
+            "declaredBaseCommit": "7d49ad76562e8c0597a0eb66046ab423b12888d8",
+            "indexedSourceFingerprint": "c88ec376d2a6052b4e7d1e7b897fc3f7ec6ad5779bf509ed8898f276b6c2f708",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11490",
+            "repository": "django/django",
+            "commit": "a7038adbd02c916315b16939b835f021c2ee8880",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "95eae1efe501260d9779ff6f31832035a7152025ad1e0594255cb3ce63086aa9",
+            "declaredBaseCommit": "a7038adbd02c916315b16939b835f021c2ee8880",
+            "indexedSourceFingerprint": "cc495f795afa191d0e747cc35bbe2794a7d5066dc0e74359a1030245ef7cabe3",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11728",
+            "repository": "django/django",
+            "commit": "05457817647368be4b019314fcc655445a5b4c0c",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "4904ebb89d1d5cd899958abe533477fbefb8278528f746222779f5f95f872e26",
+            "declaredBaseCommit": "05457817647368be4b019314fcc655445a5b4c0c",
+            "indexedSourceFingerprint": "eb9a9ea16c65b6e2b48745eb72f509ffedb05b63ea9b97778590707039c441cc",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11740",
+            "repository": "django/django",
+            "commit": "003bb34b218adb23d1a7e67932a6ba9b3c4dcc81",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "82c830906d7bd19161a6c6bdc85047f908b9dab5d8e6e413f8dbe1841924bd48",
+            "declaredBaseCommit": "003bb34b218adb23d1a7e67932a6ba9b3c4dcc81",
+            "indexedSourceFingerprint": "6685ff48e8e9f573f44371bce19c58cbd6657efce8a2e26e3e19df60ef38248e",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-10973",
+            "repository": "django/django",
+            "commit": "ddb293685235fd09e932805771ae97f72e817181",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "00445dffcd11f0867ec696c16091e925de8dd3ee0ba3db77f54bf1d59348e7d5",
+            "declaredBaseCommit": "ddb293685235fd09e932805771ae97f72e817181",
+            "indexedSourceFingerprint": "1426e8bbb9d88af52f62f09dacb61483ecd24927d9580f810c8d8f1eb7a9944e",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11133",
+            "repository": "django/django",
+            "commit": "879cc3da6249e920b8d54518a0ae06de835d7373",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "b64dae99dbe9fb71a0b03ee2abb80e41db1a751c6f4f950311a3aa468c416511",
+            "declaredBaseCommit": "879cc3da6249e920b8d54518a0ae06de835d7373",
+            "indexedSourceFingerprint": "baa16f7c2b4a23033143a60f07eafc297a992a492b9ba2d0356bd529b11d9622",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11206",
+            "repository": "django/django",
+            "commit": "571ab44e8a8936014c22e7eebe4948d9611fd7ce",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "5d8daf01bfc95849df6a7e0c580dddac2c7c7ce5a80d5830be824f9b20548993",
+            "declaredBaseCommit": "571ab44e8a8936014c22e7eebe4948d9611fd7ce",
+            "indexedSourceFingerprint": "92e9f59535be6e87087ca0c78105d56359127a0a27f680576d045abd80f7e1e9",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11749",
+            "repository": "django/django",
+            "commit": "350123f38c2b6217c38d70bfbd924a9ba3df1289",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "f25bf1db183f82754959bd91a6f9fe51f5c9146c54368364754c40f530710728",
+            "declaredBaseCommit": "350123f38c2b6217c38d70bfbd924a9ba3df1289",
+            "indexedSourceFingerprint": "8dfcdfbea86237ccfb2c439b0b81643041fb81f1bfa667b1ad9c1952e2c44b1c",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11815",
+            "repository": "django/django",
+            "commit": "e02f67ef2d03d48128e7a118bf75f0418e24e8ac",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "7c22303ae2ce9ebb20e1ab072fcf3a6e7cdb7adb0db7cc6df6930a8961be659a",
+            "declaredBaseCommit": "e02f67ef2d03d48128e7a118bf75f0418e24e8ac",
+            "indexedSourceFingerprint": "db8b6ab626ad480285d91f5bf96833987bc2be2e0b556c2ec803ccae277f27d6",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-11820",
+            "repository": "django/django",
+            "commit": "c2678e49759e5c4c329bff0eeca2886267005d21",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "d92752f18a38f3ece2812cffbe7caa28def2e03a914507ba73768e6c22ad1189",
+            "declaredBaseCommit": "c2678e49759e5c4c329bff0eeca2886267005d21",
+            "indexedSourceFingerprint": "e7223961a5787961bb7d5e0d21ccd09e8257c2e9638cc86f589938931bedb349",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12050",
+            "repository": "django/django",
+            "commit": "b93a0e34d9b9b99d41103782b7e7aeabf47517e3",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "5be7c31f4a425ee44e18874d5613967111048a9c00b8e8313623e8e91f4a5f7d",
+            "declaredBaseCommit": "b93a0e34d9b9b99d41103782b7e7aeabf47517e3",
+            "indexedSourceFingerprint": "4a285a78233bb815166b3d018a74cba55baac7911cd307a3c3b0d713b1cf784e",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12273",
+            "repository": "django/django",
+            "commit": "927c903f3cd25c817c21738328b53991c035b415",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "0d8bf8d028dca5d8c96de71a69dc62968081618e9b8adfd5578abad43f4bad9c",
+            "declaredBaseCommit": "927c903f3cd25c817c21738328b53991c035b415",
+            "indexedSourceFingerprint": "2cdb388abd34eb2d2a154c52fddb2d49cea1cbc4b720babbeda7eca4d7ac2df0",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12276",
+            "repository": "django/django",
+            "commit": "53d8646f799de7f92ab9defe9dc56c6125448102",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "9ffefb713c5d23b548ea01e3d9298802b235f8de2732d0725180ff02e7e0d832",
+            "declaredBaseCommit": "53d8646f799de7f92ab9defe9dc56c6125448102",
+            "indexedSourceFingerprint": "1abe04fe6fbf51aaf2677b69ca1d864c2c00d0a43505d911525de88985c794d7",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12325",
+            "repository": "django/django",
+            "commit": "29c126bb349526b5f1cd78facbe9f25906f18563",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "00832907532b12813c38c63842c5136b1f1d3f12c09d2d90e780bf50f510cec6",
+            "declaredBaseCommit": "29c126bb349526b5f1cd78facbe9f25906f18563",
+            "indexedSourceFingerprint": "6b6ec0dd736df86fefb4c78a0de8df681ecb657d44db0542715096976add7adb",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12774",
+            "repository": "django/django",
+            "commit": "67f9d076cfc1858b94f9ed6d1a5ce2327dcc8d0d",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "9679a5a8b02f4fc6995091c3a1ad2b9d0f3c93164dbed1191f5d3c9492ab101f",
+            "declaredBaseCommit": "67f9d076cfc1858b94f9ed6d1a5ce2327dcc8d0d",
+            "indexedSourceFingerprint": "0c29d613782e79262e926d59b6eec54ca818d12ce997bb0b41e5975b16389ed1",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-12858",
+            "repository": "django/django",
+            "commit": "f2051eb8a7febdaaa43bd33bf5a6108c5f428e59",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "06775144386189813792c53d58db1ce844cce5f590ac8eabb54248eea600ecef",
+            "declaredBaseCommit": "f2051eb8a7febdaaa43bd33bf5a6108c5f428e59",
+            "indexedSourceFingerprint": "50681cd627325e1cf3720017229df9c52de7dbbb45d6458582e505bffed0fc17",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-13012",
+            "repository": "django/django",
+            "commit": "22a59c01c00cf9fbefaee0e8e67fab82bbaf1fd2",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "76ce0081d139f3420a71fa7e615dc5797e276b103a35a66be1c68a3bfe4b7275",
+            "declaredBaseCommit": "22a59c01c00cf9fbefaee0e8e67fab82bbaf1fd2",
+            "indexedSourceFingerprint": "032262a346489f548a55febb85aa37801c0d405b564438366d1d9fd3fad728b4",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-13112",
+            "repository": "django/django",
+            "commit": "09914ccf688974e068941f55412b930729bafa06",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "d0d11028eff70be022cf14105f0e69407879b3d4692d4645556045f18af9a184",
+            "declaredBaseCommit": "09914ccf688974e068941f55412b930729bafa06",
+            "indexedSourceFingerprint": "1500be065c87dbe4c782026f1a1160aab43d219106f275d42349eb8d2cb4645c",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          },
+          {
+            "instanceId": "django__django-13195",
+            "repository": "django/django",
+            "commit": "156a2138db20abc89933121e4ff2ee2ce56a173a",
+            "tree": null,
+            "dirty": null,
+            "dirtyFingerprint": null,
+            "worktreeId": "a5134cb7b5bc39c281787b83bd1ae091f3f2574c8358da3d5df7d6f5818aae4d",
+            "declaredBaseCommit": "156a2138db20abc89933121e4ff2ee2ce56a173a",
+            "indexedSourceFingerprint": "1bc533cbd58b3c02c640c94b93d42ec1aa3872b5dac2e279792cd88514c0b315",
+            "sourceIdentity": "declared_swebench_base+indexed_snapshot"
+          }
+        ]
+      },
+      "schemas": {
+        "index": 4,
+        "manifest": 4,
+        "snapshot": 4,
+        "retrieval": 2,
+        "capsuleProductContext": "capsule-v2/product-context-v1"
+      },
+      "semanticHashVersion": "stage5.retrieval.semantic.v1",
+      "resultSemanticHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa",
+      "metricSummaryHash": "aa1e5d7e0d692d75671cc83939b8a8cef20cd96f05ae97a48ad1de79fa69ca58",
+      "complete": true,
+      "collectionMs": 206.643
+    }
+  }
+}

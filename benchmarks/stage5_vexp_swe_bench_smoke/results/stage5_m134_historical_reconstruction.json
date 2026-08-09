@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "stage5.m134.historical-reconstruction.v1",
+  "lastTrustworthyBaseline": {
+    "milestone": "M103",
+    "implementationCommit": "199769f3eabe33ce8f7ea59365243206f0aff43a",
+    "baselineHead": "f14aab8dd031d0141b073294fd4150d0e80bc4e7",
+    "reason": "Fixture and baseline were regenerated together after structured task derivation; no later committed golden identified the actual predecessor until M134."
+  },
+  "headlineAttribution": {
+    "transition": "M122 -> M123",
+    "casesChanged": ["psf__requests-1724", "sphinx-doc__sphinx-7462"],
+    "top1Case": "psf__requests-1724",
+    "crossRepoTop1": { "before": 0.7333, "after": 0.7 },
+    "crossRepoAnyGold": { "before": 0.9, "after": 0.9 },
+    "exact": true
+  },
+  "bisection": [
+    { "milestone": "M103", "commit": "199769f3eabe33ce8f7ea59365243206f0aff43a", "twoCaseSemanticHash": "edd47247f56c068d649c2ac2aa97c2ea40f24d98bbeecff21bb4b9f50a7e07f7", "status": "historical_run_success" },
+    { "milestone": "M119", "commit": "6dbd5197b37a918fc56f7c5411668740e58b1d66", "twoCaseSemanticHash": "edd47247f56c068d649c2ac2aa97c2ea40f24d98bbeecff21bb4b9f50a7e07f7", "status": "historical_run_success" },
+    { "milestone": "M120", "commit": "3efc964f1961bfef908298813d90b733b6bf8fb7", "twoCaseSemanticHash": "edd47247f56c068d649c2ac2aa97c2ea40f24d98bbeecff21bb4b9f50a7e07f7", "status": "historical_run_success" },
+    { "milestone": "M121", "commit": "965e561274b41a5bb3c21e7716684a5fc64a3e01", "twoCaseSemanticHash": "edd47247f56c068d649c2ac2aa97c2ea40f24d98bbeecff21bb4b9f50a7e07f7", "status": "historical_run_success" },
+    { "milestone": "M122", "commit": "1a805273febfc904734cb0798d01850960a15c73", "twoCaseSemanticHash": "edd47247f56c068d649c2ac2aa97c2ea40f24d98bbeecff21bb4b9f50a7e07f7", "status": "historical_run_success", "independentIndex": true },
+    { "milestone": "M123", "commit": "c678624568facf8342fa9912a80f0b2509450b5a", "twoCaseSemanticHash": "a8a5c530f6664fa4b9cf21519a9b01f59e88305cf2750b40b428d7ce3046bb34", "status": "historical_run_success", "independentIndex": true }
+  ],
+  "fullFrozen50Replays": [
+    { "milestone": "M123", "commit": "c678624568facf8342fa9912a80f0b2509450b5a", "djangoHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa", "crossRepoHash": "1e5beec2bc4fa8ceb689d7c8dbdea500451ff8b839b032a60ede80b814dc2f3f" },
+    { "milestone": "M124", "commit": "a4b7cf648081d6c57afb2d0adc4302d835f73f69", "djangoHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa", "crossRepoHash": "1e5beec2bc4fa8ceb689d7c8dbdea500451ff8b839b032a60ede80b814dc2f3f" },
+    { "milestone": "M125", "commit": "1272d2b99c303117b9f65f4bf58072f1d8db762a", "djangoHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa", "crossRepoHash": "1e5beec2bc4fa8ceb689d7c8dbdea500451ff8b839b032a60ede80b814dc2f3f" },
+    { "milestone": "M126", "commit": "fdcda9a479522722c69a06b32d585b058670bc65", "djangoHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa", "crossRepoHash": "1e5beec2bc4fa8ceb689d7c8dbdea500451ff8b839b032a60ede80b814dc2f3f" },
+    { "milestone": "M128", "commit": "81055338670f7d33edf75bf82952e93dc4d8b95a", "djangoHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa", "crossRepoHash": "1e5beec2bc4fa8ceb689d7c8dbdea500451ff8b839b032a60ede80b814dc2f3f" },
+    { "milestone": "M129", "commit": "1678871643c34e184e0fc9f5009a14ed4b7799ee", "djangoHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa", "crossRepoHash": "1e5beec2bc4fa8ceb689d7c8dbdea500451ff8b839b032a60ede80b814dc2f3f" },
+    { "milestone": "M133", "commit": "a004529cdc3e8fdf8b2e027d0a1b1d37e0e42a7d", "djangoHash": "ef66680abf06d2271ff10ec960dece74cba9cba0d4ef0017699cd4d58c2f15aa", "crossRepoHash": "1e5beec2bc4fa8ceb689d7c8dbdea500451ff8b839b032a60ede80b814dc2f3f" }
+  ],
+  "deduplicated": [
+    { "milestone": "M127", "basis": "The product diff removes the legacy wrapper but does not alter buildCapsuleV2 semantics; M126 and M128 full semantic hashes match." },
+    { "milestones": ["M130", "M131", "M133"], "basis": "Diff audit shows response/flow/impact-only changes; M129 and M133 full semantic hashes match." },
+    { "milestone": "M132", "basis": "Its tracked same-checkout stash A/B proof and M133 0/50 evidence isolate its intended worktree/project-name changes from the stale golden refresh." }
+  ],
+  "unresolvedExecutionFailures": [],
+  "arcIndexClassification": "worktree_contaminated_index for pre-M132 ARC totals"
+}
