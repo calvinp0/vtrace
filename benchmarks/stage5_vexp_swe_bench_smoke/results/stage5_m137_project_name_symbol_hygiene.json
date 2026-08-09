@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "stage5.m137.project-name-symbol-hygiene.v1",
+  "generic": {
+    "likelySymbols": [],
+    "projectReferences": [
+      "ARC"
+    ]
+  },
+  "base": {
+    "likelySymbols": []
+  },
+  "explicitClass": {
+    "likelySymbols": [
+      "ARC"
+    ],
+    "symbolHypotheses": [
+      {
+        "term": "ARC",
+        "confidence": "explicit_identifier",
+        "source": "declaration_phrase",
+        "eligibleAsSymbol": true,
+        "reason": "explicit trailing symbol-kind phrase"
+      }
+    ]
+  },
+  "pass": true
+}

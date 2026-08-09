@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "stage5.m137.no-agent-smoke.v1",
+  "noAgents": true,
+  "noDocker": true,
+  "noVexp": true,
+  "noPaidApis": true,
+  "noNetwork": true,
+  "arcPass": true,
+  "intentPass": true,
+  "hygienePass": true,
+  "projectNamePass": true,
+  "budgetPass": true,
+  "flowImpact": {
+    "schemaVersion": "stage5.m137.flow-impact-preservation.v1",
+    "flow": {
+      "summary": {
+        "reachable": true,
+        "pathCount": 1,
+        "maxPaths": 3,
+        "shortestPathEdgeCount": 1,
+        "truncated": false,
+        "traversalLimitReached": false
+      },
+      "pathCount": 1,
+      "edgeCount": 1,
+      "firstEdge": {
+        "edgeId": "59890ad359747908aeae279a579458047ef98aa41a6fd41db644832a4154dfc9",
+        "edgeType": "calls",
+        "fromSymbolId": "f4f8c264680257823e74d73935e4876695a6776065ba133fb0914edd3f2af15b",
+        "fromFqName": "arc/mapping/engine.py::reorder_p_label_map",
+        "toSymbolId": "7beb0565e70f540d67c285293b1660e60ca6a2821e3a41e83d6629a04a7b0ea8",
+        "toFqName": "arc/mapping/engine.py::map_two_species",
+        "relation": {
+          "id": "7b519c15166bb22dc105",
+          "edgeId": "59890ad359747908aeae279a579458047ef98aa41a6fd41db644832a4154dfc9",
+          "kind": "calls",
+          "persistedKind": "calls",
+          "source": {
+            "nodeId": "f4f8c264680257823e74d73935e4876695a6776065ba133fb0914edd3f2af15b",
+            "path": "arc/mapping/engine.py",
+            "symbol": "arc/mapping/engine.py::reorder_p_label_map",
+            "kind": "function",
+            "lineSpan": {
+              "start": 1724,
+              "end": 1724
+            }
+          },
+          "target": {
+            "nodeId": "7beb0565e70f540d67c285293b1660e60ca6a2821e3a41e83d6629a04a7b0ea8",
+            "path": "arc/mapping/engine.py",
+            "symbol": "arc/mapping/engine.py::map_two_species",
+            "kind": "function",
+            "lineSpan": {
+              "start": 32,
+              "end": 137
+            }
+          },
+          "direction": "outgoing",
+          "strength": "exact",
+          "confidence": null,
+          "evidence": {
+            "sourceText": "atom_map_1 = map_two_species(template_product, actual_products[arc_mol_num])  # index is template, value is rxn",
+            "referenceName": "map_two_species",
+            "resolutionMethod": "same_file_or_same_class_call_resolution",
+            "locationKind": "edge_site",
+            "callSites": [
+              {
+                "startLine": 1724,
+                "endLine": 1724,
+                "precision": "span"
+              }
+            ],
+            "callSiteCount": 1
+          },
+          "limitations": [
+            "Static call-target resolution does not establish runtime dispatch or execution.",
+            "Call-site spans are recorded by the parser at index time; re-index after editing the file before treating the lines as current."
+          ]
+        },
+        "sourceExcerpt": {
+          "filePath": "arc/mapping/engine.py",
+          "startLine": 1719,
+          "endLine": 1730,
+          "text": "    arc_lengths = [len(spc.mol.atoms) for spc in actual_products]\n    template_lengths = [len(mol.atoms) for mol in template_products]\n    template_to_arc_maps = dict()\n    for templet_i, template_product in enumerate(template_products):\n        arc_mol_num = template_order[templet_i]\n        atom_map_1 = map_two_species(template_product, actual_products[arc_mol_num])  # index is template, value is rxn\n        arc_offset = sum(arc_lengths[:arc_mol_num])\n        template_offset = sum(template_lengths[:templet_i])\n        atom_map_1 = {i + template_offset: v + arc_offset for i, v in enumerate(atom_map_1)}\n        template_to_arc_maps.update(atom_map_1)\n    updated_p_label_map = dict()\n    for label, template_index in p_label_map.items():",
+          "reason": "edge_site",
+          "truncated": true
+        }
+      }
+    },
+    "impact": {
+      "resolvedSymbol": "arc/species/vectors.py::get_dihedral",
+      "resultState": "bounded_truncated",
+      "edgeCount": 3,
+      "callers": [
+        "arc/species/vectors_test.py::TestVectors.test_get_dihedral",
+        "arc/species/vectors.py::calculate_dihedral_angle"
+      ],
+      "withinEnvelope": true,
+      "requestedMaxEdges": 10,
+      "retainedEdges": 3
+    }
+  },
+  "tckdb": {
+    "schemaVersion": "stage5.m137.tckdb-acceptance.v1",
+    "repository": {
+      "root": "/home/calvin/code/TCKDB_v2",
+      "branch": "main",
+      "head": "6d460d53307ab26eb4b0f2fb3fc74e9103c25cc9",
+      "isolatedIndex": "/tmp/vtrace-m137-smoke-crtoTK/tckdb.sqlite",
+      "sourceReadOnly": true
+    },
+    "query": "Which helper builds the computed-reaction upload payload for the Python client?",
+    "lead": "clients/python/src/tckdb_client/builders/uploads.py::_build_reaction_preview_response",
+    "selected": [
+      "clients/python/src/tckdb_client/builders/uploads.py::_build_reaction_preview_response",
+      "clients/python/src/tckdb_client/builders/summary.py::summarise_computed_reaction_upload",
+      "clients/python/src/tckdb_client/builders/uploads.py::_extract_computed_reaction_calc_keys",
+      "clients/python/src/tckdb_client/builders/uploads.py::to_payload",
+      "clients/python/src/tckdb_client/builders/uploads.py::to_payload",
+      "clients/python/examples/builder_computed_reaction_demo.py::build_upload"
+    ],
+    "intent": "capability_lookup",
+    "pass": true
+  },
+  "performance": {
+    "schemaVersion": "stage5.m137.performance.v1",
+    "iterations": 2000,
+    "queryIntentDerivationMsPerRequest": 0.0523,
+    "symbolHypothesisCleanupIncludedInDerivation": true,
+    "definitionCapabilityScoringMsPerCandidate": 0.0093,
+    "totalArcRetrievalMs": 152.0489,
+    "sourceReadsPerCandidate": 0
+  },
+  "verdict": "PASS"
+}

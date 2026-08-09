@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "stage5.m137.quality-summary.v1",
+  "functionalCommit": "68514687df2056d1c3551ea3285503dc6449023f",
+  "arcExactAnswer": {"lead": "arc/species/vectors.py::get_dihedral", "role": "pivot", "directAnswerScore": 0.95, "pass": true},
+  "symbolHygiene": {"m136LikelySymbols": ["in", "ARC"], "m137LikelySymbols": [], "projectReferences": ["ARC"], "pass": true},
+  "aggregate": {
+    "djangoExpanded": {"cases": 20, "top1Before": 0.9, "top1After": 0.9, "top3Before": 1.0, "top3After": 1.0, "pivotBefore": 1.0, "pivotAfter": 1.0, "missingBefore": 0.0, "missingAfter": 0.0},
+    "crossRepo30": {"cases": 30, "top1Before": 0.7, "top1After": 0.7, "top3Before": 0.8333, "top3After": 0.8333, "pivotBefore": 0.7667, "pivotAfter": 0.7667, "missingBefore": 0.1, "missingAfter": 0.1},
+    "frozen50": {"cases": 50, "top1Before": 0.78, "top1After": 0.78, "top3Before": 0.9, "top3After": 0.9, "pivotBefore": 0.86, "pivotAfter": 0.86, "missingBefore": 0.06, "missingAfter": 0.06}
+  },
+  "pairedChangedCases": 1,
+  "pairedUnexpectedCases": 0,
+  "budget3000Pass": true,
+  "flowPass": true,
+  "impactPass": true,
+  "tckdbPass": true,
+  "verdict": "PASS"
+}

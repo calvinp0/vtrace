@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "stage5.m137.changed-case-ledger.v1",
+  "predecessor": "f48f8c11f0cf76805943e98baa4fc3f566400d39",
+  "candidate": "68514687df2056d1c3551ea3285503dc6449023f",
+  "cases": [
+    {
+      "caseId": "django__django-13012",
+      "task": "Constant expressions of an ExpressionWrapper object are incorrectly placed at the GROUP BY clause — I have a function that expects an arbitrary Query expression and constructs a query on a Postgres db; Errors: ProgrammingError",
+      "oldLead": "db/models/expressions.py",
+      "newLead": "db/models/expressions.py",
+      "oldSelectedSet": ["db/models/expressions.py", "contrib/gis/gdal/libgdal.py", "contrib/postgres/aggregates/mixins.py"],
+      "newSelectedSet": ["db/models/expressions.py", "contrib/gis/gdal/libgdal.py", "contrib/postgres/aggregates/mixins.py"],
+      "changedFields": ["modelVisibleContext"],
+      "cause": "symbol_hypothesis_cleanup",
+      "causeDetail": "M136's broad `function <word>` extractor emitted ordinary prose `that`; M137 does not. Selection, roles, content modes, token accounting, lead, and gold visibility are unchanged.",
+      "qualityEffect": "neutral",
+      "oldGoldVisible": true,
+      "newGoldVisible": true
+    }
+  ],
+  "watchCases": {
+    "psf__requests-1724": {"changed": false, "lead": "requests/api.py", "goldVisible": true},
+    "sphinx-doc__sphinx-7462": {"changed": false, "lead": "sphinx/domains/python.py", "goldVisible": true},
+    "m135ChangedCases": {
+      "django__django-11749": "unchanged",
+      "django__django-11820": "unchanged",
+      "django__django-12774": "unchanged",
+      "astropy__astropy-14365": "unchanged",
+      "astropy__astropy-14598": "unchanged",
+      "sympy__sympy-16766": "unchanged"
+    }
+  },
+  "unexpectedCases": [],
+  "verdict": "PASS"
+}

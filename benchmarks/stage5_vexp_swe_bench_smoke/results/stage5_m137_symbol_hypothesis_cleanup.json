@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "stage5.m137.symbol-hypothesis-cleanup.v1",
+  "query": "Is there a function in ARC that returns a dihedral angle given three vectors, rather than given coordinates and four atom indices?",
+  "beforeLikelySymbols": [
+    "in",
+    "ARC"
+  ],
+  "afterLikelySymbols": [],
+  "identifierSignals": [
+    {
+      "term": "ARC",
+      "confidence": "ordinary_prose",
+      "source": "project_reference",
+      "eligibleAsSymbol": false,
+      "reason": "known repository/project reference without explicit symbol context"
+    },
+    {
+      "term": "Is",
+      "confidence": "ordinary_prose",
+      "source": "short_literal",
+      "eligibleAsSymbol": false,
+      "reason": "short ordinary-language token without explicit identifier context"
+    },
+    {
+      "term": "a",
+      "confidence": "ordinary_prose",
+      "source": "short_literal",
+      "eligibleAsSymbol": false,
+      "reason": "short ordinary-language token without explicit identifier context"
+    },
+    {
+      "term": "in",
+      "confidence": "ordinary_prose",
+      "source": "short_literal",
+      "eligibleAsSymbol": false,
+      "reason": "short ordinary-language token without explicit identifier context"
+    }
+  ],
+  "symbolHypotheses": [],
+  "projectReferences": [
+    "ARC"
+  ],
+  "explicitInControl": [
+    {
+      "term": "In",
+      "confidence": "explicit_identifier",
+      "source": "declaration_phrase",
+      "eligibleAsSymbol": true,
+      "reason": "explicit symbol-kind phrase"
+    }
+  ],
+  "proseMetamorphism": {
+    "base": [],
+    "withPreposition": []
+  },
+  "pass": true
+}

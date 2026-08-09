@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "stage5.m137.candidate-score-attribution.v1",
+  "component": "directAnswerScore",
+  "boundedMaximum": 0.95,
+  "definitionEvidence": [
+    "symbol name",
+    "symbol kind",
+    "indexed signature",
+    "indexed docstring",
+    "parameter shape"
+  ],
+  "sourceBodiesReadPerCandidate": 0,
+  "rows": [
+    {
+      "candidate": "get_dihedral",
+      "rank": 1,
+      "lexicalScore": 1,
+      "literalSymbolScore": 0,
+      "positiveObjectiveScore": 0.24,
+      "contrastPenalty": 0,
+      "directAnswerScore": 0.95,
+      "baseScore": 1.6013,
+      "finalScore": 2.7913,
+      "reason": "direct definition matches requested capability: returns, dihedral, angle, three, vectors; parameter shape aligns (+0.95 direct answer)"
+    },
+    {
+      "candidate": "interp_dihedral_deg",
+      "rank": 14,
+      "lexicalScore": 0.4897,
+      "literalSymbolScore": 0,
+      "positiveObjectiveScore": 0.18,
+      "contrastPenalty": 0,
+      "directAnswerScore": 0.572,
+      "baseScore": 0.7956,
+      "finalScore": 1.5476,
+      "reason": "direct definition matches requested capability: returns, dihedral, angle (+0.57 direct answer)"
+    },
+    {
+      "candidate": "get_normal",
+      "rank": null,
+      "lexicalScore": null,
+      "literalSymbolScore": null,
+      "positiveObjectiveScore": null,
+      "contrastPenalty": null,
+      "directAnswerScore": 0,
+      "baseScore": null,
+      "finalScore": null,
+      "reason": null
+    },
+    {
+      "candidate": "calculate_dihedral_angle",
+      "rank": 2,
+      "lexicalScore": 0.8507,
+      "literalSymbolScore": 0,
+      "positiveObjectiveScore": 0.24,
+      "contrastPenalty": 0.28,
+      "directAnswerScore": 0.696,
+      "baseScore": 1.7659,
+      "finalScore": 2.4219,
+      "reason": "direct definition matches requested capability: returns, dihedral, angle, vectors (+0.70 direct answer)"
+    },
+    {
+      "candidate": "interpolate_addition",
+      "rank": null,
+      "lexicalScore": null,
+      "literalSymbolScore": null,
+      "positiveObjectiveScore": null,
+      "contrastPenalty": null,
+      "directAnswerScore": 0,
+      "baseScore": null,
+      "finalScore": null,
+      "reason": null
+    }
+  ]
+}

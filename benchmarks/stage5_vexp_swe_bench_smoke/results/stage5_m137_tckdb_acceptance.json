@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "stage5.m137.tckdb-acceptance.v1",
+  "repository": {
+    "root": "/home/calvin/code/TCKDB_v2",
+    "branch": "main",
+    "head": "6d460d53307ab26eb4b0f2fb3fc74e9103c25cc9",
+    "isolatedIndex": "/tmp/vtrace-m137-smoke-crtoTK/tckdb.sqlite",
+    "sourceReadOnly": true
+  },
+  "query": "Which helper builds the computed-reaction upload payload for the Python client?",
+  "lead": "clients/python/src/tckdb_client/builders/uploads.py::_build_reaction_preview_response",
+  "selected": [
+    "clients/python/src/tckdb_client/builders/uploads.py::_build_reaction_preview_response",
+    "clients/python/src/tckdb_client/builders/summary.py::summarise_computed_reaction_upload",
+    "clients/python/src/tckdb_client/builders/uploads.py::_extract_computed_reaction_calc_keys",
+    "clients/python/src/tckdb_client/builders/uploads.py::to_payload",
+    "clients/python/src/tckdb_client/builders/uploads.py::to_payload",
+    "clients/python/examples/builder_computed_reaction_demo.py::build_upload"
+  ],
+  "intent": "capability_lookup",
+  "pass": true
+}
