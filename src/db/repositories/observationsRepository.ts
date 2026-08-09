@@ -2,18 +2,21 @@ import { createHash } from "node:crypto";
 import type { Database } from "bun:sqlite";
 
 import { normalizeFilePath } from "../../domain/types";
+import { buildObservationSemanticKey } from "../../observations/provenance";
 import { upsertSession } from "./sessionsRepository";
 import { getSymbolById } from "./symbolsRepository";
-import type {
-  Observation,
-  ObservationFQNameLinkRecord,
-  ObservationFileLinkRecord,
-  ObservationKind,
-  ObservationRecord,
-  ObservationSource,
-  ObservationSymbolLinkRecord,
+import {
+  ObservationOrigin,
+  ObservationScope,
+  type Observation,
+  type ObservationFQNameLinkRecord,
+  type ObservationFileLinkRecord,
+  type ObservationKind,
+  type ObservationProvenance,
+  type ObservationRecord,
+  type ObservationSource,
+  type ObservationSymbolLinkRecord,
 } from "../../observations/types";
-
 interface ObservationRow {
   id: string;
   repo_root: string;
@@ -27,6 +30,12 @@ interface ObservationRow {
   body: string;
   source_run_id: number | null;
   dedupe_key: string | null;
+  scope: string | null;
+  origin: string | null;
+  provenance_json: string | null;
+  semantic_key: string | null;
+  result_semantic_hash: string | null;
+  supersedes_observation_id: string | null;
   created_at_ms: number;
 }
 
@@ -64,6 +73,12 @@ export interface PersistObservationInput {
   body?: string;
   sourceRunId?: number;
   dedupeKey?: string;
+  scope?: ObservationScope;
+  origin?: ObservationOrigin;
+  provenance?: ObservationProvenance;
+  semanticKey?: string;
+  resultSemanticHash?: string;
+  supersedesObservationId?: string;
   // Observation identity is content-stable. This timestamp is stored as
   // metadata only and does not make otherwise equivalent observations unique.
   createdAtMs?: number;
@@ -87,10 +102,26 @@ export function persistObservation(
     ...(input.linkedFqNames ?? []),
     ...linkedSymbols.map((link) => link.fqName),
   ]);
+  const scope = input.scope ?? (input.provenance === undefined
+    ? undefined
+    : input.toolName === undefined ? ObservationScope.Repository : ObservationScope.IndexState);
+  const origin = input.origin ?? (input.provenance === undefined
+    ? undefined
+    : input.source === "mcp_auto" ? ObservationOrigin.AutomaticCapture : ObservationOrigin.Manual);
+  const semanticKey = input.semanticKey ?? (scope === undefined || input.provenance === undefined
+    ? undefined
+    : buildObservationSemanticKey({ scope, provenance: input.provenance }));
+  const resultSemanticHash = input.resultSemanticHash
+    ?? input.provenance?.resultSemanticHash
+    ?? undefined;
   // Observation identity is content-stable. createdAtMs is metadata only and
   // does not distinguish otherwise equivalent observations.
   const observationId = computeObservationId({
     ...input,
+    scope,
+    origin,
+    semanticKey,
+    resultSemanticHash,
     body: input.body ?? "",
     linkedFilePaths,
     linkedSymbols,
@@ -140,9 +171,15 @@ export function persistObservation(
           body,
           source_run_id,
           dedupe_key,
+          scope,
+          origin,
+          provenance_json,
+          semantic_key,
+          result_semantic_hash,
+          supersedes_observation_id,
           created_at_ms
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         observationId,
@@ -157,6 +194,12 @@ export function persistObservation(
         input.body ?? "",
         input.sourceRunId ?? null,
         input.dedupeKey ?? null,
+        scope ?? null,
+        origin ?? null,
+        input.provenance === undefined ? null : stableStringify(input.provenance),
+        semanticKey ?? null,
+        resultSemanticHash ?? null,
+        input.supersedesObservationId ?? null,
         createdAtMs,
       ],
     );
@@ -231,6 +274,12 @@ export function getObservationById(
       body,
       source_run_id,
       dedupe_key,
+      scope,
+      origin,
+      provenance_json,
+      semantic_key,
+      result_semantic_hash,
+      supersedes_observation_id,
       created_at_ms
     FROM observations
     WHERE id = ?
@@ -257,6 +306,12 @@ export function getObservationByDedupeKey(
       body,
       source_run_id,
       dedupe_key,
+      scope,
+      origin,
+      provenance_json,
+      semantic_key,
+      result_semantic_hash,
+      supersedes_observation_id,
       created_at_ms
     FROM observations
     WHERE dedupe_key = ?
@@ -280,6 +335,12 @@ export function listObservations(db: Database): Observation[] {
       body,
       source_run_id,
       dedupe_key,
+      scope,
+      origin,
+      provenance_json,
+      semantic_key,
+      result_semantic_hash,
+      supersedes_observation_id,
       created_at_ms
     FROM observations
     ORDER BY created_at_ms DESC, id ASC
@@ -306,6 +367,12 @@ export function listObservationsForSession(
       body,
       source_run_id,
       dedupe_key,
+      scope,
+      origin,
+      provenance_json,
+      semantic_key,
+      result_semantic_hash,
+      supersedes_observation_id,
       created_at_ms
     FROM observations
     WHERE session_id = ?
@@ -533,6 +600,12 @@ function computeObservationId(input: {
   summary: string;
   body: string;
   sourceRunId?: number;
+  scope?: ObservationScope;
+  origin?: ObservationOrigin;
+  provenance?: ObservationProvenance;
+  semanticKey?: string;
+  resultSemanticHash?: string;
+  supersedesObservationId?: string;
   linkedFilePaths: readonly string[];
   linkedSymbols: readonly ObservationSymbolLinkRecord[];
   linkedFqNames: readonly string[];
@@ -558,6 +631,14 @@ function computeObservationId(input: {
   hash.update(input.body);
   hash.update("\0");
   hash.update((input.sourceRunId ?? -1).toString(10));
+  hash.update("\0");
+  hash.update(input.scope ?? "");
+  hash.update("\0");
+  hash.update(input.origin ?? "");
+  hash.update("\0");
+  hash.update(input.semanticKey ?? "");
+  hash.update("\0");
+  hash.update(input.resultSemanticHash ?? "");
 
   for (const filePath of input.linkedFilePaths) {
     hash.update("\0");
@@ -596,6 +677,25 @@ function observationRowToRecord(row: ObservationRow): ObservationRecord {
     body: row.body,
     ...(row.source_run_id === null ? {} : { sourceRunId: row.source_run_id }),
     ...(row.dedupe_key === null ? {} : { dedupeKey: row.dedupe_key }),
+    ...(row.scope === null ? {} : { scope: row.scope as ObservationScope }),
+    ...(row.origin === null ? {} : { origin: row.origin as ObservationOrigin }),
+    ...(row.provenance_json === null ? {} : { provenance: parseProvenance(row.provenance_json) }),
+    ...(row.semantic_key === null ? {} : { semanticKey: row.semantic_key }),
+    ...(row.result_semantic_hash === null ? {} : { resultSemanticHash: row.result_semantic_hash }),
+    ...(row.supersedes_observation_id === null ? {} : { supersedesObservationId: row.supersedes_observation_id }),
     createdAtMs: row.created_at_ms,
   };
+}
+
+function parseProvenance(value: string): ObservationProvenance {
+  return JSON.parse(value) as ObservationProvenance;
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record).sort().map((key) => (
+    `${JSON.stringify(key)}:${stableStringify(record[key])}`
+  )).join(",")}}`;
 }

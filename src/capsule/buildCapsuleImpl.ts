@@ -6,7 +6,7 @@ import {
   CapsuleSupportSelectionPolicyId,
   type CapsuleProfileSelectionResult,
 } from "../capsuleProfiles/types";
-import type { Observation } from "../observations/types";
+import type { CurrentObservationContext, Observation } from "../observations/types";
 import type { GraphSearchResult } from "../retrieval/types";
 import { getIndexedSkeletonFileResult } from "../skeleton/getSkeleton";
 import { canAddCapsuleItem, computeCapsuleBudgetUsage, computeCapsuleItemCost } from "./budget";
@@ -111,6 +111,7 @@ interface CapsuleRuleSelector {
 export interface SourceBackedCapsuleBuilderOptions {
   db: Database;
   repoRoot: string;
+  currentObservationContext?: CurrentObservationContext;
   excludeMemoryObservation?: (input: {
     observation: Observation;
     query: string;
@@ -184,6 +185,7 @@ export function createSourceBackedCapsuleBuilder(
           supportingItems: input.supportingItems,
           budget: input.maxBudget,
           currentCost: input.currentCost,
+          currentContext: options.currentObservationContext,
           excludeObservation: options.excludeMemoryObservation === undefined
             ? undefined
             : (observation) => {

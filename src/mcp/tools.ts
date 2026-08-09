@@ -132,10 +132,14 @@ import {
   captureSkeletonObservationBestEffort,
   captureVisibleCapsuleObservationBestEffort,
 } from "../observations/autoCapture";
-import { searchMemory } from "../observations/searchMemory";
+import { searchMemory, searchMemoryDetailed } from "../observations/searchMemory";
+import { buildObservationProvenance, resolveCurrentObservationContext } from "../observations/provenance";
 import { getObservationStaleness } from "../observations/staleness";
+import { classifyObservationCompatibility } from "../observations/compatibility";
 import {
   ObservationKind,
+  ObservationOrigin,
+  ObservationScope,
   ObservationSource,
   SessionStatus,
   type ObservationSearchResult,
@@ -348,6 +352,7 @@ interface SaveObservationInput {
   readonly linkedSymbolIds?: readonly string[];
   readonly linkedFqNames?: readonly string[];
   readonly toolName?: string;
+  readonly scope?: string;
 }
 
 interface SearchMemoryInput {
@@ -357,12 +362,14 @@ interface SearchMemoryInput {
   readonly linkedFilePaths?: readonly string[];
   readonly linkedSymbolIds?: readonly string[];
   readonly repos?: readonly string[];
+  readonly includeStale?: boolean;
 }
 
 interface GetSessionContextInput {
   readonly sessionId?: string;
   readonly limit?: number;
   readonly query?: string;
+  readonly includeStale?: boolean;
 }
 
 interface WorkspaceSetupInput {
@@ -2711,6 +2718,27 @@ const OBSERVATION_SCHEMA = objectProperty(
       type: ["integer", "null"],
       description: "Source run id captured when the observation was created.",
     },
+    scope: {
+      type: ["string", "null"],
+      description: "Typed observation scope, or null for a legacy record.",
+    },
+    origin: {
+      type: ["string", "null"],
+      description: "Observation origin, or null for a legacy record.",
+    },
+    provenance: {
+      type: ["object", "null"],
+      description: "Detailed stored provenance for historical/debug inspection.",
+      additionalProperties: true,
+    },
+    semanticKey: {
+      type: ["string", "null"],
+      description: "Stable tool/query/context semantic identity.",
+    },
+    resultSemanticHash: {
+      type: ["string", "null"],
+      description: "Stable semantic result hash when structured result evidence exists.",
+    },
     createdAtMs: integerProperty("Observation creation timestamp in milliseconds."),
     linkedFilePaths: arrayProperty("Linked repo-relative file paths.", stringProperty("File path.")),
     linkedSymbols: arrayProperty("Linked persisted symbol identities.", OBSERVATION_SYMBOL_LINK_SCHEMA),
@@ -2728,11 +2756,31 @@ const OBSERVATION_SCHEMA = objectProperty(
     "summary",
     "body",
     "sourceRunId",
+    "scope",
+    "origin",
+    "provenance",
+    "semanticKey",
+    "resultSemanticHash",
     "createdAtMs",
     "linkedFilePaths",
     "linkedSymbols",
     "linkedFqNames",
   ],
+);
+
+const OBSERVATION_COMPATIBILITY_SCHEMA = objectProperty(
+  "Current-request compatibility classification.",
+  {
+    state: stringProperty("Deterministic compatibility state."),
+    currentTruthEligible: booleanProperty("Whether this evidence is safe for current-truth injection."),
+    reasons: arrayProperty("Deterministic compatibility reason codes.", stringProperty("Reason code.")),
+    repoMatch: { type: ["boolean", "null"], description: "Repository identity match when applicable." },
+    worktreeMatch: { type: ["boolean", "null"], description: "Worktree identity match when applicable." },
+    sourceStateMatch: { type: ["boolean", "null"], description: "HEAD and dirty-state match when applicable." },
+    indexMatch: { type: ["boolean", "null"], description: "Index identity/capability match when applicable." },
+    implementationCompatible: { type: ["boolean", "null"], description: "Producing implementation compatibility when applicable." },
+  },
+  ["state", "currentTruthEligible", "reasons", "repoMatch", "worktreeMatch", "sourceStateMatch", "indexMatch", "implementationCompatible"],
 );
 
 const SESSION_SCHEMA = objectProperty(
@@ -2920,10 +2968,11 @@ const OBSERVATION_SEARCH_RESULT_SCHEMA = objectProperty(
       additionalProperties: false,
     },
     staleness: OBSERVATION_STALENESS_SCHEMA,
+    compatibility: OBSERVATION_COMPATIBILITY_SCHEMA,
     score: numberProperty("Final deterministic search score."),
     signals: arrayProperty("Ranking signals.", OBSERVATION_SEARCH_SIGNAL_SCHEMA),
   },
-  ["observation", "staleness", "score", "signals"],
+  ["observation", "staleness", "compatibility", "score", "signals"],
 );
 
 const LAUNCHER_COMMAND_SCHEMA = objectProperty(
@@ -4304,6 +4353,11 @@ function formatObservation(observation: {
   summary: string;
   body: string;
   sourceRunId?: number;
+  scope?: string;
+  origin?: string;
+  provenance?: unknown;
+  semanticKey?: string;
+  resultSemanticHash?: string;
   createdAtMs: number;
   linkedFilePaths: readonly string[];
   linkedSymbols: readonly {
@@ -4329,6 +4383,11 @@ function formatObservation(observation: {
     summary: observation.summary,
     body: observation.body,
     sourceRunId: observation.sourceRunId ?? null,
+    scope: observation.scope ?? null,
+    origin: observation.origin ?? null,
+    provenance: observation.provenance === undefined ? null : structuredClone(observation.provenance),
+    semanticKey: observation.semanticKey ?? null,
+    resultSemanticHash: observation.resultSemanticHash ?? null,
     createdAtMs: observation.createdAtMs,
     linkedFilePaths: structuredClone([...observation.linkedFilePaths]),
     linkedSymbols: observation.linkedSymbols.map((link) => ({
@@ -4500,6 +4559,16 @@ function formatObservationSearchResult(result: ObservationSearchResult, repoAlia
         ...( "filePath" in reason ? { filePath: reason.filePath } : {} ),
         ...( "symbol" in reason ? { symbol: structuredClone(reason.symbol) } : {} ),
       })),
+    },
+    compatibility: result.compatibility ?? {
+      state: "provenance_incomplete",
+      currentTruthEligible: false,
+      reasons: ["legacy_provenance_missing"],
+      repoMatch: null,
+      worktreeMatch: null,
+      sourceStateMatch: null,
+      indexMatch: null,
+      implementationCompatible: null,
     },
     score: result.score,
     signals: result.signals.map((signal) => ({
@@ -5870,6 +5939,7 @@ async function captureExpandVexpRefObservationFromContext(
       return;
     }
 
+    const currentContext = await resolveCurrentObservationContext(resolved.binding.repoRoot);
     captureExpandVexpRefObservationBestEffort({
       db,
       repoRoot: resolved.binding.repoRoot,
@@ -5879,6 +5949,7 @@ async function captureExpandVexpRefObservationFromContext(
       resolved: output.resolved,
       stableId: output.stableId,
       category: output.category,
+      currentContext,
     });
   } finally {
     db.close();
@@ -6670,6 +6741,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           linkedSymbolIds: arrayProperty("Optional linked persisted symbol ids.", stringProperty("Symbol id.")),
           linkedFqNames: arrayProperty("Optional linked fully qualified names.", stringProperty("Fully qualified name.")),
           toolName: stringProperty("Optional originating tool name."),
+          scope: stringProperty("Observation scope: global, repository, worktree, source_state, or index_state."),
         },
         ["kind", "summary"],
       ),
@@ -6696,6 +6768,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       const queryText = parseOptionalStringField(McpToolId.SaveObservation, input, "queryText");
       const intent = parseOptionalStringField(McpToolId.SaveObservation, input, "intent");
       const toolName = parseOptionalStringField(McpToolId.SaveObservation, input, "toolName");
+      const scope = parseOptionalStringField(McpToolId.SaveObservation, input, "scope");
       const linkedFilePaths = parseOptionalStringArrayField(McpToolId.SaveObservation, input, "linkedFilePaths");
       const linkedSymbolIds = parseOptionalStringArrayField(McpToolId.SaveObservation, input, "linkedSymbolIds");
       const linkedFqNames = parseOptionalStringArrayField(McpToolId.SaveObservation, input, "linkedFqNames");
@@ -6721,6 +6794,9 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       if (toolName !== undefined && typeof toolName !== "string") {
         return toolName;
       }
+      if (scope !== undefined && (typeof scope !== "string" || !Object.values(ObservationScope).includes(scope))) {
+        return invalidRequest(McpToolId.SaveObservation, `scope must be one of: ${Object.values(ObservationScope).join(", ")}`);
+      }
       if (linkedFilePaths !== undefined && !Array.isArray(linkedFilePaths)) {
         return linkedFilePaths;
       }
@@ -6736,6 +6812,19 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         McpToolId.SaveObservation,
         async (binding, db) => {
           try {
+            const currentContext = await resolveCurrentObservationContext(binding.repoRoot);
+            const resolvedScope = scope ?? (
+              toolName !== undefined || (linkedFilePaths?.length ?? 0) > 0
+                || (linkedSymbolIds?.length ?? 0) > 0 || (linkedFqNames?.length ?? 0) > 0
+                ? ObservationScope.IndexState
+                : ObservationScope.Repository
+            );
+            const provenance = buildObservationProvenance({
+              context: currentContext,
+              toolName,
+              queryText,
+              semanticOptions: intent === undefined ? {} : { intent },
+            });
             const observation = persistObservation(db, {
               repoRoot: binding.repoRoot,
               sessionId,
@@ -6748,6 +6837,9 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               summary,
               body,
               sourceRunId: getLatestIndexRun(db)?.id,
+              scope: resolvedScope,
+              origin: ObservationOrigin.Manual,
+              provenance,
               linkedFilePaths,
               linkedSymbolIds,
               linkedFqNames,
@@ -6755,6 +6847,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             const formattedSearchResult = formatObservationSearchResult({
               observation,
               staleness: getObservationStaleness(db, observation),
+              compatibility: classifyObservationCompatibility(observation, currentContext),
               score: 0,
               signals: [],
             });
@@ -6783,7 +6876,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
     metadata: {
       toolId: McpToolId.SearchMemory,
       displayName: "Search Memory",
-      description: "Search persisted observation memory using deterministic lexical and structural signals.",
+      description: "Search current-compatible observation memory using deterministic lexical, structural, and provenance signals.",
       inputSchema: objectSchema(
         "Observation memory search input.",
         {
@@ -6793,6 +6886,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           linkedFilePaths: arrayProperty("Optional linked repo-relative file paths.", stringProperty("File path.")),
           linkedSymbolIds: arrayProperty("Optional linked persisted symbol ids.", stringProperty("Symbol id.")),
           repos: arrayProperty("Optional workspace repo aliases to search.", stringProperty("Repo alias.")),
+          includeStale: booleanProperty("Include stale, foreign, and provenance-incomplete historical evidence with labels."),
         },
         ["query"],
       ),
@@ -6802,6 +6896,15 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           query: stringProperty("Original search query."),
           selectedRepos: arrayProperty("Selected repo aliases for a multi-repo memory search.", stringProperty("Repo alias.")),
           results: arrayProperty("Ranked observation results.", OBSERVATION_SEARCH_RESULT_SCHEMA),
+          accounting: {
+            type: "object",
+            description: "Compact freshness filtering accounting.",
+            additionalProperties: true,
+          },
+          conflicts: arrayProperty("Conflicting supposedly-current structured observations.", {
+            type: "object",
+            additionalProperties: true,
+          }),
         },
         ["query", "results"],
       ),
@@ -6819,6 +6922,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       const linkedFilePaths = parseOptionalStringArrayField(McpToolId.SearchMemory, input, "linkedFilePaths");
       const linkedSymbolIds = parseOptionalStringArrayField(McpToolId.SearchMemory, input, "linkedSymbolIds");
       const repos = parseOptionalStringArrayField(McpToolId.SearchMemory, input, "repos");
+      const includeStale = parseOptionalBoolean(McpToolId.SearchMemory, input, "includeStale");
 
       if (typeof query !== "string") {
         return query;
@@ -6838,6 +6942,9 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       if (repos !== undefined && !Array.isArray(repos)) {
         return repos;
       }
+      if (includeStale !== undefined && typeof includeStale !== "boolean") {
+        return includeStale;
+      }
 
       const selection = await resolveWorkspaceRepoSelection(context, McpToolId.SearchMemory, repos);
 
@@ -6847,6 +6954,8 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
 
       if (hasMultiRepoRequest(selection.selection, repos)) {
         const results: Array<ReturnType<typeof formatObservationSearchResult>> = [];
+        const accounting = { matchedCurrent: 0, suppressedStale: 0, suppressedForeign: 0, provenanceIncomplete: 0 };
+        const conflicts: unknown[] = [];
 
         for (const status of selection.selection.statuses) {
           if (status.binding === undefined) {
@@ -6860,15 +6969,19 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               continue;
             }
 
-            results.push(
-              ...searchMemory(db, {
+            const currentContext = await resolveCurrentObservationContext(status.binding.repoRoot);
+            const searched = searchMemoryDetailed(db, {
                 query,
                 maxResults,
                 sessionId,
                 linkedFilePaths,
                 linkedSymbolIds,
-              }).map((result) => formatObservationSearchResult(result, status.repoAlias)),
-            );
+                currentContext,
+                includeStale,
+              });
+            results.push(...searched.results.map((result) => formatObservationSearchResult(result, status.repoAlias)));
+            for (const key of Object.keys(accounting)) accounting[key] += searched.accounting[key];
+            conflicts.push(...searched.conflicts);
           } finally {
             db.close();
           }
@@ -6886,6 +6999,8 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             query,
             selectedRepos: [...selection.selection.selectedAliases],
             results: results.slice(0, maxResults ?? MCP_PIPELINE_DEFAULTS.maxResults),
+            accounting,
+            conflicts,
           },
         };
       }
@@ -6894,13 +7009,17 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         context,
         McpToolId.SearchMemory,
         async (binding, db) => {
-          const results = searchMemory(db, {
+          const currentContext = await resolveCurrentObservationContext(binding.repoRoot);
+          const searched = searchMemoryDetailed(db, {
             query,
             maxResults,
             sessionId,
             linkedFilePaths,
             linkedSymbolIds,
+            currentContext,
+            includeStale,
           });
+          const results = [...searched.results];
 
           captureSearchMemoryObservationBestEffort({
             db,
@@ -6914,6 +7033,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             topObservationIds: results.map((result) => result.observation.id),
             linkedFilePaths,
             linkedSymbolIds,
+            currentContext,
           });
 
           return {
@@ -6921,6 +7041,8 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             output: {
               query,
               results: results.map(formatObservationSearchResult),
+              accounting: searched.accounting,
+              conflicts: searched.conflicts,
             },
           };
         },
@@ -6945,6 +7067,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           sessionId: stringProperty("Optional session id."),
           limit: integerProperty("Maximum observations to return."),
           query: stringProperty("Optional query used to rank observations within the selected session."),
+          includeStale: booleanProperty("Include stale and provenance-incomplete observations with compatibility labels."),
         },
         [],
       ),
@@ -6987,6 +7110,12 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             "Optional query-ranked observations for the requested session or repo scope.",
             OBSERVATION_SCHEMA,
           ),
+          observationCompatibility: {
+            type: "object",
+            description: "Compatibility classification keyed by returned observation id.",
+            additionalProperties: true,
+          },
+          suppressedObservationCount: integerProperty("Matching recent observations suppressed by current-context safety."),
         },
         ["sessionId", "session", "summary", "compressedSummary", "observations"],
       ),
@@ -7001,6 +7130,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       const sessionId = parseOptionalStringField(McpToolId.GetSessionContext, input, "sessionId");
       const limit = parseOptionalInteger(McpToolId.GetSessionContext, input, "limit");
       const query = parseOptionalStringField(McpToolId.GetSessionContext, input, "query");
+      const includeStale = parseOptionalBoolean(McpToolId.GetSessionContext, input, "includeStale");
 
       if (sessionId !== undefined && typeof sessionId !== "string") {
         return sessionId;
@@ -7011,15 +7141,21 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       if (query !== undefined && typeof query !== "string") {
         return query;
       }
+      if (includeStale !== undefined && typeof includeStale !== "boolean") {
+        return includeStale;
+      }
 
       return withReadyRepoDb(
         context,
         McpToolId.GetSessionContext,
         async (binding, db) => {
+          const currentContext = await resolveCurrentObservationContext(binding.repoRoot);
           const contextResult = getSessionContext(db, {
             sessionId,
             limit,
             query,
+            includeStale,
+            currentContext,
           });
           const linkedObservations = [
             ...contextResult.observations,
@@ -7045,6 +7181,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               ...observation.linkedFqNames,
               ...observation.linkedSymbols.map((link) => link.fqName),
             ]),
+            currentContext,
           });
 
           return {
@@ -7061,6 +7198,8 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
                 ? null
                 : formatSessionCompressionSummary(contextResult.compressedSummary),
               observations: contextResult.observations.map(formatObservation),
+              observationCompatibility: contextResult.compatibilityByObservationId ?? {},
+              suppressedObservationCount: contextResult.suppressedObservationCount ?? 0,
               ...(contextResult.rankedObservations === undefined
                 ? {}
                 : {
@@ -7944,6 +8083,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
         context,
         McpToolId.RunPipeline,
         async (binding, db) => {
+          const currentObservationContext = await resolveCurrentObservationContext(binding.repoRoot);
           const preexistingSessionStatus = sessionId === undefined
             ? undefined
             : getSessionById(db, sessionId)?.status;
@@ -7957,6 +8097,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             includeMemory,
             includeTests,
             includeFileContent,
+            currentObservationContext,
             // Pass hidden migration aliases to the shared compatibility validator.
             ...((engineSnake ?? engineCamel) === undefined
               ? {}
@@ -7979,6 +8120,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
               capsule: orchestration.context.capsule,
               toolName: McpToolId.RunPipeline,
               ...(sessionId === undefined ? {} : { sessionId, sessionAgentKind: "mcp" }),
+              currentContext: currentObservationContext,
             });
           }
 
@@ -8011,6 +8153,20 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
                 `top_pivots=${capsule.pivots.slice(0, 3).map((item) => item.fqName).join(", ")}`,
               ].join("\n"),
               sourceRunId: getLatestIndexRun(db)?.id,
+              scope: ObservationScope.IndexState,
+              origin: observationText === undefined
+                ? ObservationOrigin.AutomaticCapture
+                : ObservationOrigin.Manual,
+              provenance: buildObservationProvenance({
+                context: currentObservationContext,
+                toolName: McpToolId.RunPipeline,
+                queryText: orchestration.request.query,
+                semanticOptions: { intent: orchestration.intentDecision.selected },
+                resultValue: {
+                  pivots: capsule.pivots.map((item) => item.symbolId),
+                  supports: capsule.supportingItems.map((item) => item.symbolId),
+                },
+              }),
               linkedFilePaths: linkedItems.map((item) => item.filePath),
               linkedSymbolIds: linkedItems.map((item) => item.symbolId),
               linkedFqNames: linkedItems.map((item) => item.fqName),
@@ -8018,6 +8174,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             const formattedSearchResult = formatObservationSearchResult({
               observation,
               staleness: getObservationStaleness(db, observation),
+              compatibility: classifyObservationCompatibility(observation, currentObservationContext),
               score: 0,
               signals: [],
             });
@@ -8968,14 +9125,6 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             return invalidRequest(McpToolId.GetImpactGraph, result.error.message, result.error.details);
           }
 
-          captureImpactGraphObservationBestEffort({
-            db,
-            repoRoot: binding.repoRoot,
-            sourceRunId: getLatestIndexRun(db)?.id ?? null,
-            output: result.output,
-            toolName: McpToolId.GetImpactGraph,
-          });
-
           // Deterministic, best-effort accounting over the emitted impact view.
           // The naive baseline reads every file the nodes (root + dependents) and
           // any inline dependent excerpts represent.
@@ -8989,9 +9138,22 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           const outputWithAccounting = accounting === undefined
             ? result.output
             : { ...result.output, accounting };
+          const compactedOutput = compactImpactProductResponse(outputWithAccounting);
+          const currentContext = await resolveCurrentObservationContext(binding.repoRoot);
+          // Capture the exact bounded product result delivered to the caller,
+          // never the larger pre-envelope working graph. Before M138 this seam
+          // produced the real ARC 10/7 memory claim while the tool returned 3/3.
+          captureImpactGraphObservationBestEffort({
+            db,
+            repoRoot: binding.repoRoot,
+            sourceRunId: getLatestIndexRun(db)?.id ?? null,
+            output: compactedOutput,
+            toolName: McpToolId.GetImpactGraph,
+            currentContext,
+          });
           return {
             ok: true,
-            output: compactImpactProductResponse(outputWithAccounting),
+            output: compactedOutput,
           };
         },
         requestedRoot,
@@ -9126,12 +9288,14 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             return invalidRequest(McpToolId.SearchLogicFlow, result.error.message, result.error.details);
           }
 
+          const currentContext = await resolveCurrentObservationContext(binding.repoRoot);
           captureLogicFlowObservationBestEffort({
             db,
             repoRoot: binding.repoRoot,
             sourceRunId: getLatestIndexRun(db)?.id ?? null,
             output: result.output,
             toolName: McpToolId.SearchLogicFlow,
+            currentContext,
           });
 
           // Deterministic, best-effort accounting over the emitted flow output.
@@ -9214,6 +9378,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             detail: detail ?? "standard",
           });
 
+          const currentContext = await resolveCurrentObservationContext(binding.repoRoot);
           captureSkeletonObservationBestEffort({
             db,
             repoRoot: binding.repoRoot,
@@ -9221,6 +9386,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             output,
             toolName: McpToolId.GetSkeleton,
             requestedFiles: files,
+            currentContext,
           });
 
           // Deterministic, best-effort accounting over the emitted skeletons. The

@@ -183,6 +183,12 @@ export function initializeSchema(db: Database): void {
       body TEXT NOT NULL,
       source_run_id INTEGER,
       dedupe_key TEXT UNIQUE,
+      scope TEXT CHECK (scope IS NULL OR scope IN ('global', 'repository', 'worktree', 'source_state', 'index_state')),
+      origin TEXT CHECK (origin IS NULL OR origin IN ('manual', 'tool_derived', 'automatic_capture', 'benchmark', 'migration')),
+      provenance_json TEXT,
+      semantic_key TEXT,
+      result_semantic_hash TEXT,
+      supersedes_observation_id TEXT,
       created_at_ms INTEGER NOT NULL CHECK (created_at_ms >= 0),
       FOREIGN KEY (source_run_id)
         REFERENCES index_runs(id)
@@ -395,8 +401,22 @@ export function initializeSchema(db: Database): void {
   `);
 
   ensureColumnExists(db, "symbols", "decorators", "TEXT");
+  ensureObservationProvenanceSchema(db);
   ensureEdgeCheckSupportsCallsReferences(db);
   ensureSessionLifecycleSchema(db);
+}
+
+function ensureObservationProvenanceSchema(db: Database): void {
+  ensureColumnExists(db, "observations", "scope", "TEXT");
+  ensureColumnExists(db, "observations", "origin", "TEXT");
+  ensureColumnExists(db, "observations", "provenance_json", "TEXT");
+  ensureColumnExists(db, "observations", "semantic_key", "TEXT");
+  ensureColumnExists(db, "observations", "result_semantic_hash", "TEXT");
+  ensureColumnExists(db, "observations", "supersedes_observation_id", "TEXT");
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_observations_scope_semantic
+      ON observations(scope, semantic_key, created_at_ms DESC, id ASC)
+  `);
 }
 
 function ensureSessionLifecycleSchema(db: Database): void {

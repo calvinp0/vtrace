@@ -20,6 +20,8 @@ import { readIndexMeta, inspectWorktreeIndexFreshness } from "../indexer/indexMe
 import { resolveWorktreeIdentity } from "../indexer/worktreeIdentity";
 import { StaleStateStatus } from "../memory/types";
 import { searchMemory } from "../observations/searchMemory";
+import { resolveCurrentObservationContext } from "../observations/provenance";
+import type { CurrentObservationContext } from "../observations/types";
 import { selectRelevantProjectRules } from "../projectRules/projectRules";
 import { getIndexedSkeletonFileResult } from "../skeleton/getSkeleton";
 import {
@@ -165,10 +167,11 @@ export async function assembleProductContext(
   const budgetTokens = input.budgetTokens ?? 8_000;
 
   const freshnessStarted = now();
-  const [identity, indexMeta, inspectedFreshness] = await Promise.all([
+  const [identity, indexMeta, inspectedFreshness, observationContext] = await Promise.all([
     resolveWorktreeIdentity(input.repoRoot),
     readIndexMeta(input.repoRoot),
     input.freshnessOverride === undefined ? inspectWorktreeIndexFreshness(input.repoRoot) : Promise.resolve(null),
+    resolveCurrentObservationContext(input.repoRoot),
   ]);
   const freshnessMs = elapsed(freshnessStarted, now());
   const freshness: NonNullable<AssembleProductContextInput["freshnessOverride"]> = input.freshnessOverride ?? {
@@ -248,7 +251,7 @@ export async function assembleProductContext(
 
   const memoryRulesStarted = now();
   if (product.pivots.length > 0) {
-    addMemoryAndRules(input, product, drafts, () => roleOrder++);
+    addMemoryAndRules(input, observationContext, product, drafts, () => roleOrder++);
   }
   const memoryRulesMs = elapsed(memoryRulesStarted, now());
 
@@ -550,13 +553,14 @@ function attachStableContextReferences(items: ProductContextItem[]): void {
   }
 }
 
-function addMemoryAndRules(input: AssembleProductContextInput, product: ReturnType<typeof toCapsuleV2ProductResponse>, drafts: DraftItem[], nextOrder: () => number): void {
+function addMemoryAndRules(input: AssembleProductContextInput, currentContext: CurrentObservationContext, product: ReturnType<typeof toCapsuleV2ProductResponse>, drafts: DraftItem[], nextOrder: () => number): void {
   const linkedFiles = unique([...product.pivots, ...product.support].map((item) => item.path));
   const memories = searchMemory(input.db, {
     query: input.task,
     maxResults: MAX_MEMORY_ITEMS * 2,
     ...(input.sessionId ? { sessionId: input.sessionId } : {}),
     linkedFilePaths: linkedFiles,
+    currentContext,
   }).filter((result) => (
     result.staleness.status === StaleStateStatus.Fresh
     && !(result.observation.source === "mcp_auto" && result.observation.queryText === input.task)

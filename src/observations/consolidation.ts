@@ -10,8 +10,11 @@ import {
 import { getSessionById } from "../db/repositories/sessionsRepository";
 import {
   ObservationKind,
+  ObservationOrigin,
+  ObservationScope,
   ObservationSource,
   type Observation,
+  type ObservationProvenance,
 } from "./types";
 
 export const PASSIVE_CONSOLIDATION_TOOL_NAME = "consolidate_passive_observations";
@@ -56,6 +59,7 @@ export interface PassiveConsolidationGroup {
   readonly queryText: string;
   readonly intent?: string;
   readonly sourceRunId?: number;
+  readonly inheritedProvenance?: ObservationProvenance;
 }
 
 export interface PassiveObservationConsolidationResult {
@@ -123,6 +127,11 @@ export function consolidatePassiveObservationsForSession(
         summary: group.summary,
         body: group.body,
         sourceRunId: group.sourceRunId ?? getLatestIndexRun(db)?.id,
+        ...(group.inheritedProvenance === undefined ? {} : {
+          scope: ObservationScope.Repository,
+          origin: ObservationOrigin.AutomaticCapture,
+          provenance: group.inheritedProvenance,
+        }),
         createdAtMs: input.nowMs,
         dedupeKey: `passive_consolidation:${session.sessionId}:${group.signature}`,
         linkedFilePaths: group.linkedFilePaths,
@@ -242,6 +251,7 @@ function buildConsolidationGroup(
     ...linkedFqNames,
   ].join(" ");
   const sourceRunId = sourceRunIds[0];
+  const inheritedProvenance = commonContextProvenance(sortedObservations);
 
   return {
     signature,
@@ -278,7 +288,33 @@ function buildConsolidationGroup(
     queryText,
     ...(intents.length === 1 ? { intent: intents[0] } : {}),
     ...(sourceRunId === undefined ? {} : { sourceRunId }),
+    ...(inheritedProvenance === undefined ? {} : { inheritedProvenance }),
   };
+}
+
+function commonContextProvenance(
+  observations: readonly Observation[],
+): ObservationProvenance | undefined {
+  const first = observations[0]?.provenance;
+  if (first === undefined) return undefined;
+  const contextKey = provenanceContextKey(first);
+  if (!observations.every((observation) => observation.provenance !== undefined
+    && provenanceContextKey(observation.provenance) === contextKey)) return undefined;
+  return {
+    ...first,
+    tool: null,
+    resultSemanticHash: null,
+    resultSummary: null,
+  };
+}
+
+function provenanceContextKey(provenance: ObservationProvenance): string {
+  return JSON.stringify({
+    schemaVersion: provenance.schemaVersion,
+    repository: provenance.repository,
+    index: provenance.index,
+    implementation: provenance.implementation,
+  });
 }
 
 function formatConsolidatedSummary(input: {

@@ -9,6 +9,7 @@ import { recordReusableSnapshot, selectReusableSnapshot } from "../indexer/share
 import { scanRepo } from "../fs/scanRepo";
 import { GraphValidationError } from "../indexer/normalizedGraph";
 import { detectSymbolAddedThenRemovedAntiPatterns } from "../observations/antiPatterns";
+import { resolveCurrentObservationContext } from "../observations/provenance";
 import {
   DEFAULT_REINDEX_SESSION_COMPRESSION_LIMIT,
   compressInactiveSessions,
@@ -135,7 +136,6 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
         indexResult.performance.fallbackReason = "graph_validation_failed";
       }
     }
-    detectSymbolAddedThenRemovedAntiPatterns(db, { repoRoot: input.repoRoot });
     const latestRun = getLatestIndexRun(db);
 
     if (latestRun !== undefined) {
@@ -165,6 +165,13 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
         }
       }
     }
+
+    detectSymbolAddedThenRemovedAntiPatterns(db, {
+      repoRoot: input.repoRoot,
+      ...(!input.usesDbPathOverride ? {
+        currentContext: await resolveCurrentObservationContext(input.repoRoot),
+      } : {}),
+    });
 
     const sessionCompression = runBoundedSessionCompressionSweep(db, input.repoRoot);
     reportSessionCompressionDiagnostics(input.progress, sessionCompression);

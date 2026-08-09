@@ -10,12 +10,15 @@ import {
 } from "../db/repositories/observationsRepository";
 import { buildSessionSummary } from "./buildSessionSummary";
 import { searchMemory } from "./searchMemory";
-import type { SessionContextResult } from "./types";
+import { classifyObservationCompatibility } from "./compatibility";
+import type { CurrentObservationContext, Observation, SessionContextResult } from "./types";
 
 export interface GetSessionContextInput {
   sessionId?: string;
   limit?: number;
   query?: string;
+  currentContext?: CurrentObservationContext;
+  includeStale?: boolean;
 }
 
 export function getSessionContext(
@@ -26,14 +29,23 @@ export function getSessionContext(
   const session = input.sessionId === undefined
     ? null
     : getSessionById(db, input.sessionId) ?? null;
-  const recentObservations = input.sessionId === undefined
-    ? listObservations(db).slice(0, limit)
-    : listObservationsForSession(db, input.sessionId).slice(0, limit);
+  const allRecentObservations = input.sessionId === undefined
+    ? listObservations(db)
+    : listObservationsForSession(db, input.sessionId);
+  const compatibilityByObservationId: Record<string, ReturnType<typeof classifyObservationCompatibility>> = {};
+  const recentObservations = filterCompatible(
+    allRecentObservations,
+    input.currentContext,
+    input.includeStale === true,
+    compatibilityByObservationId,
+  ).slice(0, limit);
   const rankedObservations = input.query !== undefined && input.query.trim().length > 0
     ? searchMemory(db, {
       query: input.query,
       sessionId: input.sessionId,
       maxResults: limit,
+      currentContext: input.currentContext,
+      includeStale: input.includeStale,
     }).map((result) => result.observation)
     : undefined;
 
@@ -47,8 +59,26 @@ export function getSessionContext(
       ? null
       : buildSessionSummary(db, listObservationsForSession(db, session.sessionId)),
     observations: recentObservations,
+    ...(input.currentContext === undefined ? {} : {
+      compatibilityByObservationId,
+      suppressedObservationCount: allRecentObservations.length - recentObservations.length,
+    }),
     ...(rankedObservations === undefined ? {} : { rankedObservations }),
   };
+}
+
+function filterCompatible(
+  observations: readonly Observation[],
+  currentContext: CurrentObservationContext | undefined,
+  includeStale: boolean,
+  compatibilityByObservationId: Record<string, ReturnType<typeof classifyObservationCompatibility>>,
+): Observation[] {
+  if (currentContext === undefined) return [...observations];
+  return observations.filter((observation) => {
+    const compatibility = classifyObservationCompatibility(observation, currentContext);
+    compatibilityByObservationId[observation.id] = compatibility;
+    return compatibility.currentTruthEligible || includeStale;
+  });
 }
 
 function normalizeLimit(limit: number): number {

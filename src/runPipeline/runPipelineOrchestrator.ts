@@ -112,6 +112,7 @@ import {
   getSharedDeferredVexpStore,
   type DeferredVexpStore,
 } from "./deferredVexpStore";
+import type { CurrentObservationContext } from "../observations/types";
 
 export interface RunPipelineOrchestratorInput {
   readonly query: string;
@@ -128,6 +129,8 @@ export interface RunPipelineOrchestratorInput {
   readonly capsuleBudgetTokens?: number;
   /** Product capsule intent. Defaults to the resolved preset. */
   readonly capsuleIntent?: CapsuleIntent;
+  /** Request-local provenance context. Product callers resolve it once. */
+  readonly currentObservationContext?: CurrentObservationContext;
 }
 
 export const RUN_PIPELINE_DEFAULTS = Object.freeze({
@@ -398,6 +401,7 @@ export function runPipelineOrchestrator(
     sessionId: rawInput.sessionId ?? null,
     intentDecision,
     includeMemory: rawInput.includeMemory,
+    currentObservationContext: rawInput.currentObservationContext,
   });
   const rules = runRulesSection(db, repoRoot, {
     query,
@@ -1404,6 +1408,7 @@ function runMemorySection(
     sessionId: string | null;
     intentDecision: RunPipelineIntentDecision;
     includeMemory: boolean | undefined;
+    currentObservationContext: CurrentObservationContext | undefined;
   },
 ): OrchestrationMemorySection {
   const session = runSessionMemorySection(db, input);
@@ -1448,6 +1453,7 @@ function runSessionMemorySection(
   db: Database,
   input: {
     sessionId: string | null;
+    currentObservationContext: CurrentObservationContext | undefined;
   },
 ): OrchestrationSessionSection {
   if (input.sessionId === null) {
@@ -1463,6 +1469,7 @@ function runSessionMemorySection(
   const context: SessionContextResult = getSessionContext(db, {
     sessionId: input.sessionId,
     limit: RUN_PIPELINE_DEFAULTS.sessionRecentObservationLimit,
+    currentContext: input.currentObservationContext,
   });
   const recent = context.observations;
 
@@ -1491,6 +1498,7 @@ function runDurableMemorySection(
     query: string;
     intentDecision: RunPipelineIntentDecision;
     includeMemory: boolean | undefined;
+    currentObservationContext: CurrentObservationContext | undefined;
   },
 ): OrchestrationDurableMemorySection {
   // Explore intent de-emphasizes durable memory so the output stays compact
@@ -1519,6 +1527,7 @@ function runDurableMemorySection(
   const results = searchMemory(db, {
     query: input.query,
     maxResults: RUN_PIPELINE_DEFAULTS.durableMemoryMaxResults,
+    currentContext: input.currentObservationContext,
   });
 
   if (results.length === 0) {

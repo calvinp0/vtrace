@@ -11,10 +11,14 @@ import { normalizeFilePath } from "../domain/types";
 import { FileChangeType } from "../memory/types";
 import type { ObservedFileChangeEvent } from "../setup/types";
 import {
+  ObservationOrigin,
   ObservationKind,
+  ObservationScope,
   ObservationSource,
+  type CurrentObservationContext,
   type Observation,
 } from "./types";
+import { buildObservationProvenance } from "./provenance";
 
 export const AntiPatternType = Object.freeze({
   FileThrashing: "file_thrashing",
@@ -44,6 +48,7 @@ export interface DetectFileThrashingInput {
   changeThreshold?: number;
   windowMs?: number;
   sourceRunId?: number | null;
+  currentContext?: CurrentObservationContext;
 }
 
 export interface DetectSymbolAddedThenRemovedInput {
@@ -51,6 +56,7 @@ export interface DetectSymbolAddedThenRemovedInput {
   runId?: number;
   sessionId?: string;
   sessionAgentKind?: string;
+  currentContext?: CurrentObservationContext;
 }
 
 export function detectFileThrashingAntiPatterns(
@@ -108,6 +114,11 @@ export function detectFileThrashingAntiPatterns(
           `summary=Possible repeated edits to the same indexed source file in a short window.`,
         ].join("\n"),
         sourceRunId: input.sourceRunId ?? getLatestIndexRun(db)?.id,
+        ...antiPatternProvenance(input.currentContext, {
+          queryText: `${AntiPatternType.FileThrashing} ${filePath}`,
+          semanticOptions: { changeThreshold, windowMs, filePath },
+          resultValue: { changeCount: eventsInWindow.length, filePath },
+        }),
         createdAtMs: lastEventAtMs,
         dedupeKey: [
           "anti",
@@ -181,6 +192,11 @@ export function detectSymbolAddedThenRemovedAntiPatterns(
         `summary=Symbol appeared in one indexed snapshot and disappeared in the next.`,
       ].join("\n"),
       sourceRunId: run.id,
+      ...antiPatternProvenance(input.currentContext, {
+        queryText: `${AntiPatternType.SymbolAddedThenRemoved} ${symbolFqn}`,
+        semanticOptions: { antiPattern: AntiPatternType.SymbolAddedThenRemoved },
+        resultValue: { filePath, symbolFqn, symbolKind: diff.symbolKind },
+      }),
       createdAtMs: run.createdAtMs,
       dedupeKey: [
         "anti",
@@ -196,6 +212,28 @@ export function detectSymbolAddedThenRemovedAntiPatterns(
       linkedFqNames: [symbolFqn],
     });
   });
+}
+
+function antiPatternProvenance(
+  context: CurrentObservationContext | undefined,
+  input: {
+    queryText: string;
+    semanticOptions: Readonly<Record<string, unknown>>;
+    resultValue: unknown;
+  },
+): Record<string, unknown> {
+  if (context === undefined) return {};
+  return {
+    scope: ObservationScope.IndexState,
+    origin: ObservationOrigin.AutomaticCapture,
+    provenance: buildObservationProvenance({
+      context,
+      toolName: ANTI_PATTERN_TOOL_NAME,
+      queryText: input.queryText,
+      semanticOptions: input.semanticOptions,
+      resultValue: input.resultValue,
+    }),
+  };
 }
 
 export function trimObservedFileChangeEvents(

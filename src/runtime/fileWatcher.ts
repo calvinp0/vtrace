@@ -7,6 +7,7 @@ import {
   detectFileThrashingAntiPatterns,
   trimObservedFileChangeEvents,
 } from "../observations/antiPatterns";
+import { resolveCurrentObservationContext } from "../observations/provenance";
 import {
   readRepoLocalState,
   resolveRepoLocalPaths,
@@ -154,7 +155,7 @@ export async function recordObservedFileChanges(
   };
 
   await writeRepoLocalState(statePath, nextState);
-  detectFileThrashingBestEffort({
+  await detectFileThrashingBestEffort({
     repoRoot: input.repoRoot,
     dbPath: nextState.dbPath,
     events: nextEvents,
@@ -166,11 +167,11 @@ export async function recordObservedFileChanges(
   };
 }
 
-function detectFileThrashingBestEffort(input: {
+async function detectFileThrashingBestEffort(input: {
   repoRoot: string;
   dbPath: string;
   events: readonly ObservedFileChangeEvent[];
-}): void {
+}): Promise<void> {
   try {
     const db = openIndexerDatabase(input.dbPath);
 
@@ -178,6 +179,7 @@ function detectFileThrashingBestEffort(input: {
       detectFileThrashingAntiPatterns(db, {
         repoRoot: input.repoRoot,
         events: input.events,
+        currentContext: await resolveCurrentObservationContext(input.repoRoot),
       });
     } finally {
       db.close();

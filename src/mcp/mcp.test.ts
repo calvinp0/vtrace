@@ -25,7 +25,8 @@ import {
   compressInactiveSessions,
 } from "../observations/sessionLifecycle";
 import { consolidatePassiveObservationsForSession } from "../observations/consolidation";
-import { ObservationKind, ObservationSource } from "../observations/types";
+import { buildObservationProvenance, resolveCurrentObservationContext } from "../observations/provenance";
+import { ObservationKind, ObservationOrigin, ObservationScope, ObservationSource } from "../observations/types";
 import {
   createActiveProjectRule,
   generateProjectRuleCandidates,
@@ -2718,6 +2719,7 @@ test("run_pipeline memory can surface relevant consolidated passive summaries", 
     const sourceRunId = listIndexRuns(db).at(-1)?.id;
 
     try {
+      const currentContext = await resolveCurrentObservationContext(repoRoot);
       for (const [index, createdAtMs] of [100, 120, 140].entries()) {
         persistObservation(db, {
           repoRoot,
@@ -2730,6 +2732,15 @@ test("run_pipeline memory can surface relevant consolidated passive summaries", 
           queryText: "rename createSession lifecycle memory",
           intent: "refactor",
           sourceRunId,
+          scope: ObservationScope.IndexState,
+          origin: ObservationOrigin.AutomaticCapture,
+          provenance: buildObservationProvenance({
+            context: currentContext,
+            toolName: "run_pipeline",
+            queryText: "rename createSession lifecycle memory",
+            semanticOptions: { intent: "refactor" },
+            resultValue: { call: index },
+          }),
           createdAtMs,
           linkedFilePaths: ["src/session.ts"],
         });
@@ -4227,7 +4238,8 @@ test("visible structural MCP tools auto-capture compact deterministic tool-call 
         },
       } as const;
 
-      assert.equal((await server.handleRequest(impactRequest)).result.ok, true);
+      const deliveredImpact = await server.handleRequest(impactRequest);
+      assert.equal(deliveredImpact.result.ok, true);
       assert.equal((await server.handleRequest(impactRequest)).result.ok, true);
       assert.equal(countObservations(db), 1);
 
@@ -4247,10 +4259,20 @@ test("visible structural MCP tools auto-capture compact deterministic tool-call 
       assert.equal(impact?.kind, "tool_call");
       assert.equal(impact?.source, "mcp_auto");
       assert.equal(impact?.queryText, "src/session.ts::SessionManager.createSession");
-      assert.equal(impact?.summary.includes("with 4 dependents"), true);
-      assert.deepEqual(impact?.linkedFilePaths, ["src/session.ts", "src/controller.ts"]);
+      assert.equal(impact?.summary.includes(`with ${deliveredImpact.result.output.summary.dependentSymbolCount} dependents`), true);
+      assert.deepEqual(
+        impact?.linkedFilePaths,
+        [...new Set([
+          deliveredImpact.result.output.resolvedSymbol.filePath,
+          ...deliveredImpact.result.output.dependentFiles,
+        ])],
+      );
       assert.equal(impact?.linkedFqNames.includes("src/session.ts::SessionManager.createSession"), true);
       assert.equal(impact?.body.includes("view.lines"), false);
+      assert.equal(impact?.scope, "index_state");
+      assert.equal(impact?.provenance?.resultSummary?.values.dependentCount, deliveredImpact.result.output.summary.dependentSymbolCount);
+      assert.equal(impact?.provenance?.resultSummary?.values.fileCount, deliveredImpact.result.output.summary.dependentFileCount);
+      assert.notEqual(impact?.resultSemanticHash, undefined);
 
       assert.equal(skeleton?.kind, "tool_call");
       assert.equal(skeleton?.summary, "Generated skeletons for 2 indexed files.");

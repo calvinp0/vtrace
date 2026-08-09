@@ -20,6 +20,138 @@ export const ObservationSource = Object.freeze({
 export type ObservationSource =
   (typeof ObservationSource)[keyof typeof ObservationSource];
 
+export const OBSERVATION_PROVENANCE_SCHEMA_VERSION = 1 as const;
+
+export const ObservationScope = Object.freeze({
+  Global: "global",
+  Repository: "repository",
+  Worktree: "worktree",
+  SourceState: "source_state",
+  IndexState: "index_state",
+});
+
+export type ObservationScope =
+  (typeof ObservationScope)[keyof typeof ObservationScope];
+
+export const ObservationOrigin = Object.freeze({
+  Manual: "manual",
+  ToolDerived: "tool_derived",
+  AutomaticCapture: "automatic_capture",
+  Benchmark: "benchmark",
+  Migration: "migration",
+});
+
+export type ObservationOrigin =
+  (typeof ObservationOrigin)[keyof typeof ObservationOrigin];
+
+export interface ObservationRepositoryProvenance {
+  readonly repositoryId: string;
+  readonly worktreeId: string;
+  readonly worktreeRoot: string;
+  readonly headCommit: string | null;
+  readonly branch: string | null;
+  readonly detached: boolean;
+  readonly dirtyFingerprint: string | null;
+}
+
+export interface ObservationIndexProvenance {
+  readonly identity: string;
+  readonly runId: number | string | null;
+  readonly worktreeId: string;
+  readonly headCommit: string | null;
+  readonly dirtyFingerprint: string | null;
+  readonly formatVersion: number;
+  readonly schemaVersion: string;
+  readonly indexerFingerprint: string;
+  readonly parserFingerprint: string;
+  readonly configFingerprint: string;
+}
+
+export interface ObservationImplementationProvenance {
+  readonly commit: string | null;
+  readonly tree: string | null;
+  readonly dirtyFingerprint: string | null;
+  readonly memoryCapabilityFingerprint: string;
+}
+
+export interface ObservationToolProvenance {
+  readonly name: string;
+  readonly normalizedQuery: string | null;
+  readonly semanticOptions: Readonly<Record<string, unknown>>;
+  readonly capabilityFingerprint: string;
+}
+
+export interface TechnicalObservationSummary {
+  readonly kind: string;
+  readonly values: Readonly<Record<string, string | number | boolean | null>>;
+}
+
+export interface ObservationProvenance {
+  readonly schemaVersion: typeof OBSERVATION_PROVENANCE_SCHEMA_VERSION;
+  readonly repository: ObservationRepositoryProvenance;
+  readonly index: ObservationIndexProvenance | null;
+  readonly implementation: ObservationImplementationProvenance;
+  readonly tool: ObservationToolProvenance | null;
+  readonly resultSemanticHash: string | null;
+  readonly resultSummary: TechnicalObservationSummary | null;
+}
+
+export const ObservationCompatibilityState = Object.freeze({
+  Applicable: "applicable",
+  Current: "current",
+  CurrentCompatible: "current_compatible",
+  StaleRepoState: "stale_repo_state",
+  StaleDirtyState: "stale_dirty_state",
+  StaleWorktree: "stale_worktree",
+  StaleIndex: "stale_index",
+  SupersededImplementation: "superseded_implementation",
+  ForeignRepository: "foreign_repository",
+  ForeignContext: "foreign_context",
+  Historical: "historical",
+  ProvenanceIncomplete: "provenance_incomplete",
+});
+
+export type ObservationCompatibilityState =
+  (typeof ObservationCompatibilityState)[keyof typeof ObservationCompatibilityState];
+
+export const ObservationFreshnessReason = Object.freeze({
+  Current: "current",
+  GlobalScope: "global_scope",
+  RepoMismatch: "repo_mismatch",
+  WorktreeMismatch: "worktree_mismatch",
+  HeadMismatch: "head_mismatch",
+  DirtyFingerprintMismatch: "dirty_fingerprint_mismatch",
+  IndexIdentityMismatch: "index_identity_mismatch",
+  IndexCapabilityMismatch: "index_capability_mismatch",
+  ImplementationChangedCompatible: "implementation_changed_compatible",
+  ImplementationSemanticsMismatch: "implementation_semantics_mismatch",
+  ToolSemanticsMismatch: "tool_semantics_mismatch",
+  LegacyProvenanceMissing: "legacy_provenance_missing",
+  UnsupportedProvenanceSchema: "unsupported_provenance_schema",
+  ExplicitHistorical: "explicit_historical",
+});
+
+export type ObservationFreshnessReason =
+  (typeof ObservationFreshnessReason)[keyof typeof ObservationFreshnessReason];
+
+export interface ObservationCompatibility {
+  readonly state: ObservationCompatibilityState;
+  readonly currentTruthEligible: boolean;
+  readonly reasons: readonly ObservationFreshnessReason[];
+  readonly repoMatch: boolean | null;
+  readonly worktreeMatch: boolean | null;
+  readonly sourceStateMatch: boolean | null;
+  readonly indexMatch: boolean | null;
+  readonly implementationCompatible: boolean | null;
+}
+
+export interface CurrentObservationContext {
+  readonly repository: ObservationRepositoryProvenance;
+  readonly index: ObservationIndexProvenance | null;
+  readonly implementation: ObservationImplementationProvenance;
+  readonly toolCapabilityFingerprints: Readonly<Record<string, string>>;
+}
+
 export const SessionStatus = Object.freeze({
   Active: "active",
   Inactive: "inactive",
@@ -65,6 +197,12 @@ export interface ObservationRecord {
   body: string;
   sourceRunId?: number;
   dedupeKey?: string;
+  scope?: ObservationScope;
+  origin?: ObservationOrigin;
+  provenance?: ObservationProvenance;
+  semanticKey?: string;
+  resultSemanticHash?: string;
+  supersedesObservationId?: string;
   // Metadata for recency ordering and display; not part of observation identity.
   createdAtMs: number;
 }
@@ -161,8 +299,28 @@ export interface ObservationSearchSignal {
 export interface ObservationSearchResult {
   observation: Observation;
   staleness: ObservationStaleness;
+  compatibility?: ObservationCompatibility;
   score: number;
   signals: ObservationSearchSignal[];
+}
+
+export interface ObservationSearchAccounting {
+  readonly matchedCurrent: number;
+  readonly suppressedStale: number;
+  readonly suppressedForeign: number;
+  readonly provenanceIncomplete: number;
+}
+
+export interface ObservationConflict {
+  readonly semanticKey: string;
+  readonly observationIds: readonly string[];
+  readonly resultSemanticHashes: readonly string[];
+}
+
+export interface ObservationSearchResponse {
+  readonly results: readonly ObservationSearchResult[];
+  readonly accounting: ObservationSearchAccounting;
+  readonly conflicts: readonly ObservationConflict[];
 }
 
 export interface SessionObservationKindCounts {
@@ -222,6 +380,8 @@ export interface SessionContextResult {
   compressedSummary: SessionCompressionSummary | null;
   observations: Observation[];
   rankedObservations?: Observation[];
+  compatibilityByObservationId?: Readonly<Record<string, ObservationCompatibility>>;
+  suppressedObservationCount?: number;
 }
 
 export interface SessionCompressionSummary {

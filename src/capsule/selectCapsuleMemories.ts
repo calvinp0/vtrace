@@ -3,7 +3,9 @@ import type { Database } from "bun:sqlite";
 import { listObservations } from "../db/repositories/observationsRepository";
 import { StaleStateStatus } from "../memory/types";
 import { getObservationStaleness } from "../observations/staleness";
+import { classifyObservationCompatibility } from "../observations/compatibility";
 import type {
+  CurrentObservationContext,
   Observation,
   ObservationStaleness,
 } from "../observations/types";
@@ -38,6 +40,7 @@ export interface SelectCapsuleMemoriesInput {
   readonly currentCost: number;
   readonly maxCount?: number;
   readonly excludeObservation?: ((observation: Observation) => boolean) | undefined;
+  readonly currentContext?: CurrentObservationContext;
 }
 
 interface RankedObservationCandidate {
@@ -65,6 +68,8 @@ export function selectCapsuleMemories(
   const maxCount = normalizeMaxCount(input.maxCount ?? CAPSULE_MEMORY_MAX_COUNT);
   const rankedCandidates = listObservations(input.db)
     .filter((observation) => input.excludeObservation?.(observation) !== true)
+    .filter((observation) => input.currentContext === undefined
+      || classifyObservationCompatibility(observation, input.currentContext).currentTruthEligible)
     .map((observation) => scoreObservation({
       db: input.db,
       observation,

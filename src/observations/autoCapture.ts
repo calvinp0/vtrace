@@ -8,6 +8,8 @@ import type { RoutedQueryResult } from "../intent/routeQuery";
 import type { LogicFlowOutput } from "../logicFlow/searchLogicFlow";
 import type { GetSkeletonOutput } from "../skeleton/getSkeleton";
 import { ObservationKind, ObservationSource, type Observation } from "./types";
+import { ObservationOrigin, ObservationScope, type CurrentObservationContext, type TechnicalObservationSummary } from "./types";
+import { buildObservationProvenance } from "./provenance";
 
 export interface CaptureVisibleCapsuleObservationInput {
   db: Database;
@@ -19,6 +21,7 @@ export interface CaptureVisibleCapsuleObservationInput {
   toolName: string;
   sessionId?: string;
   sessionAgentKind?: string;
+  currentContext?: CurrentObservationContext;
 }
 
 export function captureVisibleCapsuleObservation(
@@ -56,6 +59,24 @@ export function captureVisibleCapsuleObservation(
     summary: `Built context capsule for query with ${pivotCount} pivots and ${supportCount} supports.`,
     body,
     sourceRunId: input.sourceRunId ?? undefined,
+    ...(input.currentContext === undefined ? {} : {
+      scope: ObservationScope.IndexState,
+      origin: ObservationOrigin.AutomaticCapture,
+      provenance: buildObservationProvenance({
+        context: input.currentContext,
+        toolName: input.toolName,
+        queryText: input.routedQuery.query,
+        semanticOptions: {
+          intent: input.routedQuery.intent,
+          routingProfile: input.routedQuery.profile.id,
+          capsuleProfile: input.capsuleProfileId,
+        },
+        resultValue: {
+          pivots: input.capsule.pivots.map((item) => item.symbolId),
+          supports: input.capsule.supportingItems.map((item) => item.symbolId),
+        },
+      }),
+    }),
     dedupeKey: computeVisibleCapsuleObservationDedupeKey({
       sourceRunId: input.sourceRunId,
       sessionId: input.sessionId,
@@ -84,6 +105,10 @@ export interface CaptureToolCallObservationInput {
   linkedFilePaths?: readonly string[];
   linkedSymbolIds?: readonly string[];
   linkedFqNames?: readonly string[];
+  currentContext?: CurrentObservationContext;
+  semanticOptions?: Readonly<Record<string, unknown>>;
+  resultSummary?: TechnicalObservationSummary;
+  resultValue?: unknown;
 }
 
 export function captureToolCallObservation(
@@ -101,6 +126,18 @@ export function captureToolCallObservation(
     summary: input.summary,
     body: input.bodyLines.join("\n"),
     sourceRunId: input.sourceRunId ?? undefined,
+    ...(input.currentContext === undefined ? {} : {
+      scope: ObservationScope.IndexState,
+      origin: ObservationOrigin.AutomaticCapture,
+      provenance: buildObservationProvenance({
+        context: input.currentContext,
+        toolName: input.toolName,
+        queryText: input.queryText,
+        semanticOptions: input.semanticOptions,
+        resultSummary: input.resultSummary,
+        resultValue: input.resultValue,
+      }),
+    }),
     dedupeKey: computeToolCallObservationDedupeKey({
       toolName: input.toolName,
       sessionId: input.sessionId,
@@ -130,6 +167,7 @@ export function captureImpactGraphObservationBestEffort(input: {
   output: ImpactGraphOutput;
   toolName: string;
   sessionId?: string;
+  currentContext?: CurrentObservationContext;
 }): Observation | undefined {
   const dependentSymbolCount = input.output.summary.dependentSymbolCount;
   const dependentFileCount = input.output.summary.dependentFileCount;
@@ -166,6 +204,28 @@ export function captureImpactGraphObservationBestEffort(input: {
     linkedFilePaths,
     linkedSymbolIds,
     linkedFqNames,
+    currentContext: input.currentContext,
+    semanticOptions: {
+      target: input.output.requested.symbolFqn,
+      depth: input.output.requested.depth,
+      crossRepo: input.output.requested.crossRepo,
+      maxEdges: input.output.limits.maxEdges,
+    },
+    resultSummary: {
+      kind: "impact_graph",
+      values: {
+        target: input.output.requested.symbolFqn,
+        dependentCount: dependentSymbolCount,
+        fileCount: dependentFileCount,
+      },
+    },
+    resultValue: {
+      target: input.output.requested.symbolFqn,
+      dependentSymbolCount,
+      dependentFileCount,
+      dependentFiles: input.output.dependentFiles,
+      edges: input.output.edges.map((edge) => [edge.edgeType, edge.fromSymbolId, edge.toSymbolId]),
+    },
   });
 }
 
@@ -176,6 +236,7 @@ export function captureLogicFlowObservationBestEffort(input: {
   output: LogicFlowOutput;
   toolName: string;
   sessionId?: string;
+  currentContext?: CurrentObservationContext;
 }): Observation | undefined {
   const pathSymbols = input.output.paths.flatMap((path) => path.nodes);
   const linkedFilePaths = [
@@ -223,6 +284,23 @@ export function captureLogicFlowObservationBestEffort(input: {
     linkedFilePaths,
     linkedSymbolIds,
     linkedFqNames,
+    currentContext: input.currentContext,
+    semanticOptions: {
+      start: input.output.requested.start,
+      end: input.output.requested.end,
+      maxPaths: input.output.requested.maxPaths,
+    },
+    resultSummary: {
+      kind: "logic_flow",
+      values: {
+        reachable: input.output.summary.reachable,
+        pathCount: input.output.summary.pathCount,
+      },
+    },
+    resultValue: {
+      reachable: input.output.summary.reachable,
+      paths: input.output.paths.map((path) => path.nodes.map((node) => node.symbolId)),
+    },
   });
 }
 
@@ -234,6 +312,7 @@ export function captureSkeletonObservationBestEffort(input: {
   toolName: string;
   requestedFiles: readonly string[];
   sessionId?: string;
+  currentContext?: CurrentObservationContext;
 }): Observation | undefined {
   const indexedFiles = input.output.files.filter((file) => file.status === "ok");
 
@@ -267,6 +346,13 @@ export function captureSkeletonObservationBestEffort(input: {
       })),
     ],
     linkedFilePaths: indexedFiles.map((file) => file.filePath),
+    currentContext: input.currentContext,
+    semanticOptions: { detail: input.output.detail, files: [...input.requestedFiles].sort() },
+    resultValue: input.output.files.map((file) => ({
+      filePath: file.filePath,
+      status: file.status,
+      declarations: file.declarations.map((declaration) => [declaration.kind, declaration.name]),
+    })),
   });
 }
 
@@ -282,6 +368,7 @@ export function captureSearchMemoryObservationBestEffort(input: {
   topObservationIds: readonly string[];
   linkedFilePaths?: readonly string[];
   linkedSymbolIds?: readonly string[];
+  currentContext?: CurrentObservationContext;
 }): Observation | undefined {
   if (input.resultCount === 0) {
     return undefined;
@@ -311,6 +398,13 @@ export function captureSearchMemoryObservationBestEffort(input: {
     ],
     linkedFilePaths: input.linkedFilePaths,
     linkedSymbolIds: input.linkedSymbolIds,
+    currentContext: input.currentContext,
+    semanticOptions: {
+      sessionId: input.sessionId ?? null,
+      linkedFilePaths: input.linkedFilePaths ?? [],
+      linkedSymbolIds: input.linkedSymbolIds ?? [],
+    },
+    resultValue: { observationIds: input.topObservationIds },
   });
 }
 
@@ -328,6 +422,7 @@ export function captureSessionContextObservationBestEffort(input: {
   linkedFilePaths: readonly string[];
   linkedSymbolIds: readonly string[];
   linkedFqNames: readonly string[];
+  currentContext?: CurrentObservationContext;
 }): Observation | undefined {
   if (input.observationCount === 0) {
     return undefined;
@@ -360,6 +455,9 @@ export function captureSessionContextObservationBestEffort(input: {
     linkedFilePaths: input.linkedFilePaths,
     linkedSymbolIds: input.linkedSymbolIds,
     linkedFqNames: input.linkedFqNames,
+    currentContext: input.currentContext,
+    semanticOptions: { sessionId: input.sessionId ?? null },
+    resultValue: { observationIds: input.observationIds },
   });
 }
 
@@ -373,6 +471,7 @@ export function captureExpandVexpRefObservationBestEffort(input: {
   stableId?: string;
   category?: string;
   reason?: string;
+  currentContext?: CurrentObservationContext;
 }): Observation | undefined {
   if (!input.resolved) {
     return undefined;
@@ -397,6 +496,9 @@ export function captureExpandVexpRefObservationBestEffort(input: {
       input.stableId ?? null,
       input.category ?? null,
     ],
+    currentContext: input.currentContext,
+    semanticOptions: { hash: input.requestedHash },
+    resultValue: { stableId: input.stableId ?? null, category: input.category ?? null },
   });
 }
 

@@ -3,9 +3,15 @@ import type { Database } from "bun:sqlite";
 import { listObservations } from "../db/repositories/observationsRepository";
 import { StaleStateStatus } from "../memory/types";
 import { getObservationStaleness } from "./staleness";
+import { classifyObservationCompatibility } from "./compatibility";
 import {
+  ObservationCompatibilityState,
   ObservationSearchSignalKind,
+  type CurrentObservationContext,
   type Observation,
+  type ObservationCompatibility,
+  type ObservationConflict,
+  type ObservationSearchResponse,
   type ObservationSearchResult,
   type ObservationSearchSignal,
 } from "./types";
@@ -16,6 +22,8 @@ export interface SearchMemoryInput {
   sessionId?: string;
   linkedFilePaths?: readonly string[];
   linkedSymbolIds?: readonly string[];
+  currentContext?: CurrentObservationContext;
+  includeStale?: boolean;
 }
 
 const OBSERVATION_SEARCH_SCORE_WEIGHTS = Object.freeze({
@@ -37,10 +45,17 @@ export function searchMemory(
   db: Database,
   input: SearchMemoryInput,
 ): ObservationSearchResult[] {
+  return [...searchMemoryDetailed(db, input).results];
+}
+
+export function searchMemoryDetailed(
+  db: Database,
+  input: SearchMemoryInput,
+): ObservationSearchResponse {
   const normalizedQuery = normalizeObservationText(input.query);
 
   if (normalizedQuery.length === 0) {
-    return [];
+    return emptyResponse();
   }
 
   const maxResults = normalizeMaxResults(input.maxResults ?? 8);
@@ -48,7 +63,7 @@ export function searchMemory(
   const linkedFilePaths = normalizeLinkedPaths(input.linkedFilePaths ?? []);
   const linkedSymbolIds = new Set(input.linkedSymbolIds ?? []);
 
-  return listObservations(db)
+  const scored = listObservations(db)
     .map((observation) => scoreObservation(
       db,
       observation,
@@ -57,10 +72,41 @@ export function searchMemory(
       input.sessionId,
       linkedFilePaths,
       linkedSymbolIds,
+      input.currentContext,
     ))
     .filter((result): result is ObservationSearchResult => result !== undefined)
-    .sort(compareObservationSearchResults)
-    .slice(0, maxResults);
+    .sort(compareObservationSearchResults);
+  const accounting = {
+    matchedCurrent: 0,
+    suppressedStale: 0,
+    suppressedForeign: 0,
+    provenanceIncomplete: 0,
+  };
+  const eligible: ObservationSearchResult[] = [];
+  for (const result of scored) {
+    const compatibility = result.compatibility;
+    if (compatibility === undefined || compatibility.currentTruthEligible || input.includeStale === true) {
+      eligible.push(result);
+      if (compatibility?.currentTruthEligible === true) accounting.matchedCurrent += 1;
+      continue;
+    }
+    if (compatibility.state === ObservationCompatibilityState.ForeignRepository
+      || compatibility.state === ObservationCompatibilityState.ForeignContext
+      || compatibility.state === ObservationCompatibilityState.StaleWorktree) {
+      accounting.suppressedForeign += 1;
+    } else if (compatibility.state === ObservationCompatibilityState.ProvenanceIncomplete) {
+      accounting.provenanceIncomplete += 1;
+    } else {
+      accounting.suppressedStale += 1;
+    }
+  }
+  const deduped = deduplicateEquivalentResults(eligible);
+  const conflicts = detectObservationConflicts(deduped);
+  return {
+    results: deduped.slice(0, maxResults),
+    accounting,
+    conflicts,
+  };
 }
 
 function scoreObservation(
@@ -71,6 +117,7 @@ function scoreObservation(
   requestedSessionId: string | undefined,
   linkedFilePaths: readonly string[],
   linkedSymbolIds: ReadonlySet<string>,
+  currentContext: CurrentObservationContext | undefined,
 ): ObservationSearchResult | undefined {
   const signals: ObservationSearchSignal[] = [];
 
@@ -170,6 +217,9 @@ function scoreObservation(
   }
 
   const staleness = getObservationStaleness(db, observation);
+  const compatibility = currentContext === undefined
+    ? undefined
+    : classifyObservationCompatibility(observation, currentContext);
 
   if (staleness.status === StaleStateStatus.Stale) {
     signals.push({
@@ -188,6 +238,7 @@ function scoreObservation(
   return {
     observation,
     staleness,
+    ...(compatibility === undefined ? {} : { compatibility }),
     score,
     signals: signals.sort(compareSignals),
   };
@@ -307,8 +358,80 @@ function compareObservationSearchResults(
   left: ObservationSearchResult,
   right: ObservationSearchResult,
 ): number {
-  return right.score - left.score
+  return compatibilityPriority(right.compatibility) - compatibilityPriority(left.compatibility)
+    || right.score - left.score
     || right.observation.createdAtMs - left.observation.createdAtMs
     || left.observation.id.localeCompare(right.observation.id);
 }
 
+function compatibilityPriority(compatibility: ObservationCompatibility | undefined): number {
+  if (compatibility === undefined) return 0;
+  switch (compatibility.state) {
+    case ObservationCompatibilityState.Current:
+      return 4;
+    case ObservationCompatibilityState.CurrentCompatible:
+    case ObservationCompatibilityState.Applicable:
+      return 3;
+    case ObservationCompatibilityState.Historical:
+      return 2;
+    case ObservationCompatibilityState.ProvenanceIncomplete:
+      return 0;
+    default:
+      return 1;
+  }
+}
+
+function deduplicateEquivalentResults(
+  results: readonly ObservationSearchResult[],
+): ObservationSearchResult[] {
+  const seen = new Set<string>();
+  const deduped: ObservationSearchResult[] = [];
+  for (const result of results) {
+    const observation = result.observation;
+    const key = observation.semanticKey !== undefined && observation.resultSemanticHash !== undefined
+      ? `${observation.semanticKey}\0${observation.resultSemanticHash}`
+      : observation.id;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(result);
+  }
+  return deduped;
+}
+
+function detectObservationConflicts(
+  results: readonly ObservationSearchResult[],
+): ObservationConflict[] {
+  const grouped = new Map<string, ObservationSearchResult[]>();
+  for (const result of results) {
+    if (result.compatibility?.currentTruthEligible !== true
+      || result.observation.semanticKey === undefined
+      || result.observation.resultSemanticHash === undefined) continue;
+    const group = grouped.get(result.observation.semanticKey) ?? [];
+    group.push(result);
+    grouped.set(result.observation.semanticKey, group);
+  }
+  const conflicts: ObservationConflict[] = [];
+  for (const [semanticKey, group] of grouped) {
+    const hashes = [...new Set(group.map((item) => item.observation.resultSemanticHash!))].sort();
+    if (hashes.length < 2) continue;
+    conflicts.push({
+      semanticKey,
+      observationIds: group.map((item) => item.observation.id).sort(),
+      resultSemanticHashes: hashes,
+    });
+  }
+  return conflicts.sort((left, right) => left.semanticKey.localeCompare(right.semanticKey));
+}
+
+function emptyResponse(): ObservationSearchResponse {
+  return {
+    results: [],
+    accounting: {
+      matchedCurrent: 0,
+      suppressedStale: 0,
+      suppressedForeign: 0,
+      provenanceIncomplete: 0,
+    },
+    conflicts: [],
+  };
+}

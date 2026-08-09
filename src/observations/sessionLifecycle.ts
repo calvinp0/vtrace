@@ -16,6 +16,8 @@ import {
 } from "../db/repositories/sessionsRepository";
 import {
   ObservationKind,
+  ObservationOrigin,
+  ObservationScope,
   ObservationSource,
   SessionStatus,
   type Observation,
@@ -236,6 +238,11 @@ export function compressSession(
     summary: `Compressed session ${session.sessionId}: ${draft.prunedToolCallObservationCount} repeated tool calls consolidated, ${draft.preservedDurableObservationCount} durable observations preserved.`,
     body: formatSummaryBody(draft),
     sourceRunId: getLatestIndexRun(db)?.id,
+    ...(commonSessionProvenance(observations) === undefined ? {} : {
+      scope: ObservationScope.Repository,
+      origin: ObservationOrigin.AutomaticCapture,
+      provenance: commonSessionProvenance(observations),
+    }),
     createdAtMs: input.nowMs,
     dedupeKey: `session_compression:${session.sessionId}`,
     linkedFilePaths: draft.filePaths,
@@ -260,6 +267,24 @@ export function compressSession(
   });
 
   return persisted;
+}
+
+function commonSessionProvenance(observations: readonly Observation[]) {
+  const first = observations[0]?.provenance;
+  if (first === undefined) return undefined;
+  const key = JSON.stringify({
+    schemaVersion: first.schemaVersion,
+    repository: first.repository,
+    index: first.index,
+    implementation: first.implementation,
+  });
+  if (!observations.every((observation) => observation.provenance !== undefined && JSON.stringify({
+    schemaVersion: observation.provenance.schemaVersion,
+    repository: observation.provenance.repository,
+    index: observation.provenance.index,
+    implementation: observation.provenance.implementation,
+  }) === key)) return undefined;
+  return { ...first, tool: null, resultSemanticHash: null, resultSummary: null };
 }
 
 function buildSessionCompressionSummaryDraft(

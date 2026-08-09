@@ -14,6 +14,7 @@ import {
 } from "../../metrics/contextAccounting";
 import { resolveCapsuleCompatibility } from "../../capsuleV2/engineSelection";
 import { assembleProductContext } from "../../productContext/assembleProductContext";
+import { resolveCurrentObservationContext } from "../../observations/provenance";
 
 // Hidden migration aliases. Current help does not advertise this flag;
 // compatibility validation never changes the implementation.
@@ -68,6 +69,7 @@ export async function runRunPipelineCommand(
         return failure(`Repo not indexed: ${resolvedRepo.repoRoot}`);
       }
       const accountingStartedAt = performance.now();
+      const currentObservationContext = await resolveCurrentObservationContext(resolvedRepo.repoRoot);
       const orchestration = runPipelineOrchestrator(db, resolvedRepo.repoRoot, {
         query: parsed.query,
         ...(parsed.maxResults === undefined ? {} : { maxResults: parsed.maxResults }),
@@ -78,6 +80,7 @@ export async function runRunPipelineCommand(
         ...(parsed.capsuleEngine === undefined ? {} : { capsuleEngine: parsed.capsuleEngine }),
         ...(parsed.capsuleIntent === undefined ? {} : { capsuleIntent: parsed.capsuleIntent }),
         ...(parsed.capsuleBudgetTokens === undefined ? {} : { capsuleBudgetTokens: parsed.capsuleBudgetTokens }),
+        currentObservationContext,
       });
       const formatted = formatRunPipelineOrchestrationOutput(orchestration);
       const productContext = await assembleProductContext({
