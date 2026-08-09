@@ -1,0 +1,51 @@
+{
+  "unchanged": {
+    "state": "current",
+    "currentTruthEligible": true,
+    "reasons": [
+      "current"
+    ],
+    "repoMatch": true,
+    "worktreeMatch": true,
+    "sourceStateMatch": true,
+    "indexMatch": true,
+    "implementationCompatible": true
+  },
+  "changedHead": {
+    "state": "stale_repo_state",
+    "currentTruthEligible": false,
+    "reasons": [
+      "head_mismatch"
+    ],
+    "repoMatch": true,
+    "worktreeMatch": true,
+    "sourceStateMatch": false,
+    "indexMatch": null,
+    "implementationCompatible": null
+  },
+  "changedDirty": {
+    "state": "stale_dirty_state",
+    "currentTruthEligible": false,
+    "reasons": [
+      "dirty_fingerprint_mismatch"
+    ],
+    "repoMatch": true,
+    "worktreeMatch": true,
+    "sourceStateMatch": false,
+    "indexMatch": null,
+    "implementationCompatible": null
+  },
+  "reverted": {
+    "state": "current",
+    "currentTruthEligible": true,
+    "reasons": [
+      "current"
+    ],
+    "repoMatch": true,
+    "worktreeMatch": true,
+    "sourceStateMatch": true,
+    "indexMatch": true,
+    "implementationCompatible": true
+  },
+  "pass": true
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "stage5.m138.tckdb-acceptance.v1",
+  "repository": {
+    "root": "/home/calvin/code/TCKDB_v2",
+    "head": "6d460d53307ab26eb4b0f2fb3fc74e9103c25cc9",
+    "sourceReadOnly": true,
+    "preexistingUntracked": ["paper/"]
+  },
+  "query": "Which helper builds the computed-reaction upload payload for the Python client?",
+  "predecessorCommit": "68514687df2056d1c3551ea3285503dc6449023f",
+  "candidateCommit": "3c4be01ed73d78d73572602810cfdfbbfa943275",
+  "lead": "clients/python/src/tckdb_client/builders/uploads.py::_build_reaction_preview_response",
+  "selected": [
+    {"fqName": "clients/python/src/tckdb_client/builders/uploads.py::_build_reaction_preview_response", "role": "pivot", "contentMode": "full"},
+    {"fqName": "clients/python/src/tckdb_client/builders/summary.py::summarise_computed_reaction_upload", "role": "pivot", "contentMode": "full"},
+    {"fqName": "clients/python/src/tckdb_client/builders/uploads.py::_extract_computed_reaction_calc_keys", "role": "support", "contentMode": "signature"},
+    {"fqName": "clients/python/src/tckdb_client/builders/uploads.py::ComputedSpeciesUpload.to_payload", "role": "support", "contentMode": "signature"},
+    {"fqName": "clients/python/src/tckdb_client/builders/uploads.py::ComputedReactionUpload.to_payload", "role": "support", "contentMode": "signature"},
+    {"fqName": "clients/python/examples/builder_computed_reaction_demo.py::build_upload", "role": "support", "contentMode": "signature"}
+  ],
+  "sameCheckout": true,
+  "selectedFilesEqual": true,
+  "leadEqual": true,
+  "rolesEqual": true,
+  "contentModesEqual": true,
+  "semanticDifferences": 0,
+  "pass": true
+}

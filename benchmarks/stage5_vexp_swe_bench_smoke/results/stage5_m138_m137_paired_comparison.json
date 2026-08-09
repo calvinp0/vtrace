@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "stage5.m138.m137-paired-comparison.v1",
+  "declaredPredecessor": {
+    "commit": "68514687df2056d1c3551ea3285503dc6449023f",
+    "tree": "27f1e342b5619313c5ecfce87f64ccf73dc1e490",
+    "dirty": false
+  },
+  "candidate": {
+    "commit": "3c4be01ed73d78d73572602810cfdfbbfa943275",
+    "tree": "2f3cc82cfecd01dd99336eedf4cbe00b1adf360e",
+    "dirty": false
+  },
+  "protocol": {
+    "framework": "M134 provenance-safe paired comparison",
+    "runnerFingerprint": "738392b317e6e8086d8460714f84cb9ffcede95daccd210b8742edf72a2e7285",
+    "protocolVersion": "stage5.retrieval.protocol.v1",
+    "semanticHashVersion": "stage5.retrieval.semantic.v1",
+    "isolatedIndexes": true,
+    "targetCorpusReuse": "Independent M134/M135 indexes retained locally; source and target-corpus hashes match. Indexing and retrieval semantics are unchanged from M137 to M138. Exact M137 and M138 product evaluators were loaded for this comparison."
+  },
+  "suites": [
+    {
+      "name": "Django expanded",
+      "caseCount": 20,
+      "fixtureHash": "b78a30889bfef6eb4f0f5fe4167b39c04908f9f01370c4db5c82eee7f2e690b0",
+      "targetCorpusHash": "dc36ac3be7e52b5e4d9b29df983b9768bebf603b0c31d5676039692ddacc3840",
+      "predecessorSemanticHash": "3c98ae403e4e96b4b583e41c26595cac359dabab97894ad82fabe67db8db5526",
+      "candidateSemanticHash": "3c98ae403e4e96b4b583e41c26595cac359dabab97894ad82fabe67db8db5526",
+      "differences": {
+        "selectedFiles": 0,
+        "lead": 0,
+        "roles": 0,
+        "contentModes": 0,
+        "modelVisibleContext": 0,
+        "tokenAccounting": 0,
+        "qualityMetrics": 0
+      },
+      "changedCases": [],
+      "authoritative": true,
+      "pass": true
+    },
+    {
+      "name": "cross_repo_30",
+      "caseCount": 30,
+      "fixtureHash": "bd01fe017657cd978f2be34495ad473ed29f94e801e1245c8fa6b787ae96db11",
+      "targetCorpusHash": "efe214041a51e2266550d3fa797185a059e60f1b4c234af0ad441e798aba470b",
+      "predecessorSemanticHash": "216356cea5e05aefe8963cd4234a46633f743b0669066a955b059fb0d1dde110",
+      "candidateSemanticHash": "216356cea5e05aefe8963cd4234a46633f743b0669066a955b059fb0d1dde110",
+      "differences": {
+        "selectedFiles": 0,
+        "lead": 0,
+        "roles": 0,
+        "contentModes": 0,
+        "modelVisibleContext": 0,
+        "tokenAccounting": 0,
+        "qualityMetrics": 0
+      },
+      "changedCases": [],
+      "authoritative": true,
+      "pass": true
+    }
+  ],
+  "frozen50": {
+    "caseCount": 50,
+    "retrievalSelectionDifferences": 0,
+    "semanticDifferences": 0,
+    "pass": true
+  },
+  "pass": true
+}

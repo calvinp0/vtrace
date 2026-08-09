@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "stage5.m138.no-agent-smoke.v1",
+  "noAgents": true,
+  "noDocker": true,
+  "noVexp": true,
+  "noPaidApis": true,
+  "noNetwork": true,
+  "arcMemoryPass": true,
+  "compatibilityPass": true,
+  "exactAnswerPass": true,
+  "flowImpactPass": true,
+  "tckdbPass": true,
+  "verdict": "PASS"
+}

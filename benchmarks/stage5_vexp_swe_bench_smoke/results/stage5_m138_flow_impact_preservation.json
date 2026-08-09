@@ -1,0 +1,32 @@
+{
+  "impact": {
+    "summary": {
+      "dependentSymbolCount": 3,
+      "dependentFileCount": 3,
+      "maxDepth": 5,
+      "maxObservedDistance": 1
+    },
+    "edgeCount": 3,
+    "withinEnvelope": true
+  },
+  "flow": {
+    "reachable": true,
+    "pathCount": 1,
+    "edgeTypes": [
+      "calls"
+    ],
+    "edgeSites": [
+      "edge_site"
+    ]
+  },
+  "pass": true,
+  "exactAnswer": {
+    "query": "a function that returns a dihedral angle given three vectors, rather than given coordinates and four atom indices",
+    "leadPivot": "arc/species/vectors.py::get_dihedral",
+    "retrievalFound": true,
+    "getDihedralVisible": true,
+    "symbolHypotheses": [],
+    "withinEnvelope": true,
+    "pass": true
+  }
+}

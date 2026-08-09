@@ -1,0 +1,21 @@
+{
+  "matchingStaleObservations": 1000,
+  "returnedNormal": 0,
+  "suppressedNormal": 1000,
+  "returnedHistorical": 5,
+  "maxResults": 5,
+  "classification1000Ms": 0.241,
+  "perObservationMicroseconds": 0.241,
+  "searchCurrentModeMs": 10.986,
+  "searchHistoricalModeMs": 10.51,
+  "sessionContextMs": 14.986,
+  "sessionSuppressed": 1000,
+  "provenanceCapture": {
+    "currentContextResolutionMs": 16.503,
+    "buildAndPersist1000Ms": 65.297,
+    "perSaveMs": 0.065
+  },
+  "currentContextResolutionsPerRequest": 1,
+  "gitCallsPerObservation": 0,
+  "pass": true
+}

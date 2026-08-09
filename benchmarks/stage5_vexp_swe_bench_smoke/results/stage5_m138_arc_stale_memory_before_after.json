@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "stage5.m138.arc-stale-memory-before-after.v1",
+  "query": "arc/species/vectors.py::get_dihedral",
+  "realLegacyRows": [
+    {
+      "id": "11eb50079ef5f5b21315452c6de554d51450853c520461bbe572ef7c3c242ecd",
+      "summary": "Computed impact graph for arc/species/vectors.py::get_dihedral with 1327 dependents across 95 files.",
+      "createdAtMs": 1786281675073,
+      "createdAtIso": "2026-08-09T13:21:15.073Z",
+      "sourceRunId": 2,
+      "compatibility": {
+        "state": "provenance_incomplete",
+        "currentTruthEligible": false,
+        "reasons": [
+          "legacy_provenance_missing"
+        ],
+        "repoMatch": null,
+        "worktreeMatch": null,
+        "sourceStateMatch": null,
+        "indexMatch": null,
+        "implementationCompatible": null
+      },
+      "storedProvenance": {
+        "repoRoot": "/home/calvin/code/ARC",
+        "toolName": "get_impact_graph",
+        "queryText": "arc/species/vectors.py::get_dihedral",
+        "sourceRunId": 2
+      },
+      "missingProvenance": [
+        "repositoryId",
+        "worktreeId",
+        "headCommit",
+        "dirtyFingerprint",
+        "indexIdentity",
+        "implementationCommit",
+        "toolCapabilityFingerprint",
+        "resultSemanticHash"
+      ],
+      "contaminatedPreM132Index": false,
+      "contaminatedIndexEvidence": "index.meta vtrace_commit bb65f09 (M132 evidence) and clean M132 worktree manifest; no pre-M132 contamination inferred",
+      "rootCause": "Created immediately after M132 and before M133; exact live process is not stored. Likely older unbounded impact semantics, but provenance cannot prove the process commit."
+    },
+    {
+      "id": "de8a260e6103dba7d639e58df36c2fe0a3367f9a6933e378fcc55f08837c1496",
+      "summary": "Computed impact graph for arc/species/vectors.py::get_dihedral with 10 dependents across 7 files.",
+      "createdAtMs": 1786291909834,
+      "createdAtIso": "2026-08-09T16:11:49.834Z",
+      "sourceRunId": 2,
+      "compatibility": {
+        "state": "provenance_incomplete",
+        "currentTruthEligible": false,
+        "reasons": [
+          "legacy_provenance_missing"
+        ],
+        "repoMatch": null,
+        "worktreeMatch": null,
+        "sourceStateMatch": null,
+        "indexMatch": null,
+        "implementationCompatible": null
+      },
+      "storedProvenance": {
+        "repoRoot": "/home/calvin/code/ARC",
+        "toolName": "get_impact_graph",
+        "queryText": "arc/species/vectors.py::get_dihedral",
+        "sourceRunId": 2
+      },
+      "missingProvenance": [
+        "repositoryId",
+        "worktreeId",
+        "headCommit",
+        "dirtyFingerprint",
+        "indexIdentity",
+        "implementationCommit",
+        "toolCapabilityFingerprint",
+        "resultSemanticHash"
+      ],
+      "contaminatedPreM132Index": false,
+      "contaminatedIndexEvidence": "index.meta vtrace_commit bb65f09 (M132 evidence) and clean M132 worktree manifest; no pre-M132 contamination inferred",
+      "rootCause": "Captured the 10/7 pre-envelope impact working result; the M133 bounded product response for the same request is 3/3. Exact live process commit is not stored."
+    }
+  ],
+  "beforeCurrentTool": {
+    "results": [],
+    "accounting": {
+      "matchedCurrent": 0,
+      "suppressedStale": 0,
+      "suppressedForeign": 0,
+      "provenanceIncomplete": 6
+    },
+    "conflicts": []
+  },
+  "targetedLegacyObservationsSuppressed": 2,
+  "currentTool": {
+    "dependentSymbolCount": 3,
+    "dependentFileCount": 3,
+    "withinEnvelope": true
+  },
+  "afterCurrentTool": {
+    "results": [
+      {
+        "id": "ddc8cb1580f07e0b81923bcd6bfbb063544f0ab207a11e4307d53aa45479b5d5",
+        "summary": "Computed impact graph for arc/species/vectors.py::get_dihedral with 3 dependents across 3 files.",
+        "freshness": {
+          "state": "current",
+          "currentTruthEligible": true,
+          "reasons": [
+            "current"
+          ],
+          "repoMatch": true,
+          "worktreeMatch": true,
+          "sourceStateMatch": true,
+          "indexMatch": true,
+          "implementationCompatible": true
+        }
+      }
+    ],
+    "accounting": {
+      "matchedCurrent": 1,
+      "suppressedStale": 0,
+      "suppressedForeign": 0,
+      "provenanceIncomplete": 6
+    },
+    "conflicts": []
+  },
+  "pass": true
+}

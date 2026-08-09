@@ -1,0 +1,16 @@
+{
+  "conflicts": [
+    {
+      "semanticKey": "6934a7e1671a24672cd377ba915a8c68a00e1845867a33e5d4c5083a2b2f52d9",
+      "observationIds": [
+        "83b154e2d77a4187260daa7b9cc529639d944e717e0b35fd31ec478ee9827dd3",
+        "9803e2fe6016545bb80b461fa14119fa41d899a3a55b64de6d3eb4e58a6f9a70"
+      ],
+      "resultSemanticHashes": [
+        "1c5e8fa7e97b9642cbb9837ceec47a2edb524c1079877b42c6b1deaabc2f44d3",
+        "c2e366e2c54974246858b8fe5ea0ab92ec91a004d899a0d68ba6cfbd696494c3"
+      ]
+    }
+  ],
+  "pass": true
+}

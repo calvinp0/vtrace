@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "stage5.m138.observation-schema.v1",
+  "storageVersion": 1,
+  "additiveColumns": [
+    "scope",
+    "origin",
+    "provenance_json",
+    "semantic_key",
+    "result_semantic_hash",
+    "supersedes_observation_id"
+  ],
+  "provenance": {
+    "repository": [
+      "repositoryId",
+      "worktreeId",
+      "worktreeRoot",
+      "headCommit",
+      "branch",
+      "detached",
+      "dirtyFingerprint"
+    ],
+    "index": [
+      "identity",
+      "runId",
+      "worktreeId",
+      "headCommit",
+      "dirtyFingerprint",
+      "formatVersion",
+      "schemaVersion",
+      "indexerFingerprint",
+      "parserFingerprint",
+      "configFingerprint"
+    ],
+    "implementation": [
+      "commit",
+      "tree",
+      "dirtyFingerprint",
+      "memoryCapabilityFingerprint"
+    ],
+    "tool": [
+      "name",
+      "normalizedQuery",
+      "semanticOptions",
+      "capabilityFingerprint"
+    ],
+    "result": [
+      "resultSemanticHash",
+      "resultSummary"
+    ]
+  },
+  "legacyPolicy": "nullable additive fields; missing scope/provenance => provenance_incomplete; no invented backfill"
+}
