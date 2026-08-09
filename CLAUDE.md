@@ -50,41 +50,22 @@ enforcement; off by default; does NOT replace the canonical patch).
 
 ### Deterministic retrieval no-change proof
 
-Run after any change that *shouldn't* affect retrieval/ranking. **Step 0 — check
-baseline freshness first** (learned in M99: the baselines had been silently stale
-since pre-M95, making the byte-diff meaningless):
+Run the provenance-aware paired predecessor/candidate evaluator after any change
+that should not affect retrieval or ranking. The predecessor implementation must be
+declared explicitly, and each side must generate its own index and temporary state
+against the same immutable target corpus.
 
-```bash
-BASE=$(python3 -c "import json;print(json.load(open('$OUT/stage5_retrieval_eval_baselines.meta.json'))['generated_at_commit'])")
-git diff --stat "$BASE"..HEAD -- src/   # empty ⇒ baselines fresh, diff proof valid
-```
+No milestone may claim deterministic semantic preservation solely by comparing
+against a stored baseline whose provenance does not match the declared predecessor
+implementation. Static goldens are supplementary evidence only. An authoritative
+comparison must bind and validate the VTRACE commit and tree, clean state, fixture
+content, runner/protocol fingerprint, target corpus, and semantic-hash version.
 
-If fresh, diff the CSVs against the committed baselines — byte-identical ⇒ no
-retrieval change:
-
-```bash
-TMP=$(mktemp -d)
-bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_retrieval_eval.ts \
-  --retrieval-fixture benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.django.expanded.json \
-  --report-name stage5_retrieval_eval_expanded --out "$TMP"
-bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_retrieval_eval.ts \
-  --retrieval-fixture benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.cross_repo.30.json \
-  --report-name stage5_retrieval_eval_cross_repo_30 --out "$TMP"
-diff "$TMP/stage5_retrieval_eval_expanded.csv"      "$OUT/stage5_retrieval_eval_expanded.csv"
-diff "$TMP/stage5_retrieval_eval_cross_repo_30.csv" "$OUT/stage5_retrieval_eval_cross_repo_30.csv"
-```
-
-If `src/` moved since the baseline commit (or you are mid-milestone with uncommitted
-src changes), use the **stash A/B proof** instead — always valid, no baseline needed:
-run both evals to `TMP_POST`, `git stash push -- <your modified tracked src files>`,
-run both evals to `TMP_PRE`, `git stash pop`, then diff `TMP_PRE` vs `TMP_POST`
-(byte-identical ⇒ no retrieval change). Untracked new files may stay in place as
-long as nothing at HEAD imports them.
-
-**Refresh duty**: any milestone that *intentionally* changes retrieval/capsule
-output must regenerate both baselines with the canonical report names
-(`--out "$OUT"`) and update `stage5_retrieval_eval_baselines.meta.json`
-(new `generated_at_commit`) in the same commit.
+Dirty runs are exploratory. A provenance mismatch must fail closed; the explicit
+exploratory override is for investigation and can never satisfy a milestone gate.
+When retrieval intentionally changes, regenerate both canonical suites from the
+clean promoted implementation after the paired comparison and commit their
+execution-time provenance with the evidence report.
 
 ### Offline audits (no live agents / no Docker)
 

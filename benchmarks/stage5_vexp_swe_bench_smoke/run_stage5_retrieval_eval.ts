@@ -28,11 +28,17 @@ import path from "node:path";
 
 import { openIndexerDatabase } from "../../src/db/sqlite";
 import { buildCapsuleV2 } from "../../src/capsuleV2/buildCapsuleV2";
+import { itemBlockText } from "../../src/capsuleV2/renderItem";
 import {
   CapsuleIntent,
   parseCapsuleIntent,
   type CapsuleV2Result,
 } from "../../src/capsuleV2/types";
+import {
+  collectBenchmarkProvenance,
+  type ArtifactState,
+  type BenchmarkProvenance,
+} from "./benchmarkProvenance";
 
 // ---------------------------------------------------------------------------
 // Fixture
@@ -247,6 +253,9 @@ export interface SelectedItem {
   /** Role signals used by the miss taxonomy (entry-point vs generic infra). */
   readonly isEntryPoint: boolean;
   readonly isGenericInfrastructure: boolean;
+  readonly contentMode: string;
+  readonly renderedContent: string;
+  readonly estimatedTokens: number;
 }
 
 export interface DiscardedItem {
@@ -310,6 +319,9 @@ export function summarizeCapsule(result: CapsuleV2Result): CapsuleSummary {
       roleReason: item.role_reason,
       isEntryPoint: item.is_entry_point,
       isGenericInfrastructure: item.is_generic_infrastructure,
+      contentMode: item.content_mode,
+      renderedContent: itemBlockText(item),
+      estimatedTokens: item.estimated_tokens,
     });
   return {
     intent: result.intent,
@@ -731,6 +743,22 @@ export interface RetrievalEvalRow {
 
   /** Top-k pivots / support / discarded — makes a miss diagnosable offline. */
   readonly diagnostics: TopKDiagnostics;
+  /** Versioned model-visible semantic contract used by paired comparisons. */
+  readonly semantic?: RetrievalSemanticSnapshot;
+}
+
+export interface RetrievalSemanticSnapshot {
+  readonly selectedFiles: readonly string[];
+  readonly lead: string | null;
+  readonly roles: readonly { path: string; symbol: string; role: "pivot" | "support" }[];
+  readonly contentModes: readonly { path: string; symbol: string; contentMode: string }[];
+  readonly modelVisibleContext: string;
+  readonly tokenAccounting: {
+    readonly budgetTokens: number;
+    readonly estimatedTokens: number;
+    readonly usedPercent: number;
+    readonly itemTokens: readonly { path: string; symbol: string; tokens: number }[];
+  };
 }
 
 export type RowError =
@@ -787,6 +815,19 @@ export function evaluateInstance(
       graph_neighbor_matches: [],
       generic_lexical_decoys_suppressed: [],
       diagnostics: { top_pivots: [], top_support: [], top_discarded: [] },
+      semantic: {
+        selectedFiles: [],
+        lead: null,
+        roles: [],
+        contentModes: [],
+        modelVisibleContext: "",
+        tokenAccounting: {
+          budgetTokens: entry.budget,
+          estimatedTokens: 0,
+          usedPercent: 0,
+          itemTokens: [],
+        },
+      },
     };
   }
 
@@ -809,6 +850,7 @@ export function evaluateInstance(
     expected_files: entry.expected_files,
   };
   const missCategory = classifyMiss(partialRow, summary, entry.task);
+  const selected = [...summary.pivots, ...summary.support];
 
   return {
     instance_id: entry.instance_id,
@@ -851,6 +893,31 @@ export function evaluateInstance(
     graph_neighbor_matches: summary.graphNeighborMatches,
     generic_lexical_decoys_suppressed: summary.genericLexicalDecoysSuppressed,
     diagnostics: topKDiagnostics(summary),
+    semantic: {
+      selectedFiles: rankedFiles(summary),
+      lead: top1Pivot ? normalizeFilePath(top1Pivot.path) : null,
+      roles: selected.map((item) => ({
+        path: normalizeFilePath(item.path),
+        symbol: item.symbol,
+        role: item.role,
+      })),
+      contentModes: selected.map((item) => ({
+        path: normalizeFilePath(item.path),
+        symbol: item.symbol,
+        contentMode: item.contentMode,
+      })),
+      modelVisibleContext: selected.map((item) => item.renderedContent).join("\n\n"),
+      tokenAccounting: {
+        budgetTokens: summary.budgetTokens,
+        estimatedTokens: summary.estimatedTokens,
+        usedPercent: summary.usedPercent,
+        itemTokens: selected.map((item) => ({
+          path: normalizeFilePath(item.path),
+          symbol: item.symbol,
+          tokens: item.estimatedTokens,
+        })),
+      },
+    },
   };
 }
 
@@ -1018,6 +1085,7 @@ export interface RetrievalEvalArtifact {
   readonly byLabelSource: Partial<Record<LabelSource, RetrievalEvalAggregate>>;
   /** Aggregate split by repo (the cross-repo generalization view). */
   readonly byRepo: readonly RepoAggregate[];
+  readonly benchmarkProvenance: BenchmarkProvenance;
 }
 
 // ---------------------------------------------------------------------------
@@ -1559,6 +1627,17 @@ export async function runRetrievalEval(
       rows.push(evaluateInstance(entry, null, toRowError(error)));
     }
   }
+  const aggregateResult = aggregate(rows);
+  const repoRoot = gitRepoRoot();
+  const benchmarkProvenance = await collectBenchmarkProvenance({
+    repoRoot,
+    fixturePath: config.fixtureIdentityPath ?? config.fixture,
+    entries,
+    rows,
+    aggregate: aggregateResult,
+    requestedArtifactState: config.artifactState,
+    vtraceRoot: config.implementationRoot,
+  });
   return {
     generatedFrom: {
       fixture: config.fixture,
@@ -1566,9 +1645,10 @@ export async function runRetrievalEval(
       builder: "buildCapsuleV2 (in-process, --json equivalent)",
     },
     rows,
-    aggregate: aggregate(rows),
+    aggregate: aggregateResult,
     byLabelSource: aggregateByLabelSource(rows),
     byRepo: aggregateByRepo(rows),
+    benchmarkProvenance,
   };
 }
 
@@ -1581,6 +1661,11 @@ export interface RetrievalEvalConfig {
   readonly out: string;
   /** Base name for the {json,csv,md} reports (no extension). */
   readonly reportName: string;
+  readonly artifactState?: ArtifactState;
+  /** Product implementation root; used by isolated paired/historical runners. */
+  readonly implementationRoot?: string;
+  /** Canonical fixture bytes when execution fixtures only rewrite workspace paths. */
+  readonly fixtureIdentityPath?: string;
 }
 
 const DEFAULT_OUT = path.join("benchmarks", "stage5_vexp_swe_bench_smoke", "results");
@@ -1606,6 +1691,7 @@ export function parseArgs(argv: readonly string[]): RetrievalEvalConfig {
   let fixture = DEFAULT_FIXTURE;
   let out = DEFAULT_OUT;
   let reportName = DEFAULT_REPORT_NAME;
+  let artifactState: ArtifactState | undefined;
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
     if (arg === "--retrieval-fixture" || arg === "--fixture") {
@@ -1614,6 +1700,12 @@ export function parseArgs(argv: readonly string[]): RetrievalEvalConfig {
       out = requireValue(argv, (i += 1), arg);
     } else if (arg === "--report-name") {
       reportName = sanitizeReportName(requireValue(argv, (i += 1), arg));
+    } else if (arg === "--artifact-state") {
+      const value = requireValue(argv, (i += 1), arg);
+      if (!["authoritative", "exploratory", "superseded", "historical_unverified"].includes(value)) {
+        throw new Error(`Unsupported --artifact-state "${value}".`);
+      }
+      artifactState = value as ArtifactState;
     } else if (arg === "--mode") {
       // Accept "--mode retrieval-eval" for parity with the live runner invocation.
       const value = requireValue(argv, (i += 1), arg);
@@ -1624,7 +1716,7 @@ export function parseArgs(argv: readonly string[]): RetrievalEvalConfig {
       throw new Error(`Unknown argument: ${arg}`);
     }
   }
-  return { fixture, out, reportName };
+  return { fixture, out, reportName, ...(artifactState === undefined ? {} : { artifactState }) };
 }
 
 function requireValue(argv: readonly string[], index: number, flag: string): string {
@@ -1694,6 +1786,11 @@ function isString(value: unknown): value is string {
 
 function isNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function gitRepoRoot(): string {
+  return Bun.spawnSync(["git", "rev-parse", "--show-toplevel"], { stdout: "pipe", stderr: "pipe" })
+    .stdout.toString().trim() || process.cwd();
 }
 
 // `readdir` re-export kept for optional workspace discovery by callers.

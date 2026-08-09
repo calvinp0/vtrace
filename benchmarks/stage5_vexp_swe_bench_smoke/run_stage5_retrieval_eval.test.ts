@@ -87,6 +87,9 @@ function selected(
     roleReason: signals.roleReason ?? `${role} by score`,
     isEntryPoint: signals.isEntryPoint ?? false,
     isGenericInfrastructure: signals.isGenericInfrastructure ?? false,
+    contentMode: "full",
+    renderedContent: `${role}:${file}:${symbol}`,
+    estimatedTokens: 10,
   };
 }
 
@@ -305,6 +308,7 @@ function artifactOf(rows: RetrievalEvalArtifact["rows"]): RetrievalEvalArtifact 
     aggregate: aggregate(rows),
     byLabelSource: aggregateByLabelSource(rows),
     byRepo: aggregateByRepo(rows),
+    benchmarkProvenance: {} as never,
   };
 }
 
