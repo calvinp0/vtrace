@@ -36,6 +36,7 @@ const SCORECARD_KEYS = [
   "centrality",
   "actionability",
   "hub_penalty",
+  "direct_answer",
   "final",
 ] as const;
 

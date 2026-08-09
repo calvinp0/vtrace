@@ -64,6 +64,8 @@ export interface ShapeSweQueryOptions {
   maxFiles?: number;
   maxSymbols?: number;
   maxIdentifiers?: number;
+  /** Known repository-name aliases, used only to reject project-as-symbol noise. */
+  projectNameAliases?: ReadonlySet<string>;
   performanceProfile?: {
     timingsMs: Record<string, number>;
     counters: Record<string, number>;
@@ -91,10 +93,6 @@ const FILE_LIKE = new RegExp(
 const REPO_PATH_LIKE = /\b[a-z][\w-]*(?:\/[\w.-]+){2,}\b/g;
 const EMBEDDED_PATH_LIKE = /(?:^|[\s("'`])((?:\.\/)?(?:\.[A-Za-z0-9_-]+|[A-Za-z0-9_-]+)(?:\/[A-Za-z0-9_.-]+)+(?:\/)?)/gmu;
 const CONFIG_FILE_LIKE = /(?:^|[\s("'`])([A-Za-z0-9_.-]+\.(?:ya?ml|toml))\b/gimu;
-const DEF_CLASS = /\b(?:def|class|function|func|fn)\s+([A-Za-z_]\w*)/g;
-const BACKTICK_IDENT = /`([A-Za-z_][\w.]*(?:\(\))?)`/g;
-// Bare call mentions in prose, e.g. "get_combinator_sql()" or "json_script(".
-const FUNC_CALL = /\b([A-Za-z_]\w*)\s*\(/g;
 const SNAKE_CASE = /\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b/g;
 const CAMEL_CASE = /\b[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)+\b/g;
 const DOTTED_PATH = /\b[a-z_][\w]*(?:\.[a-z_][\w]*){2,}\b/gi;
@@ -155,12 +153,12 @@ export function shapeSweQuery(
   record: SweIssueRecord,
   options: ShapeSweQueryOptions = {},
 ): ShapedSweQuery {
-  const { performanceProfile, ...shapeOptions } = options;
+  const { performanceProfile, projectNameAliases, ...shapeOptions } = options;
   const config = { ...DEFAULT_OPTIONS, ...stripUndefined(shapeOptions) };
   const problem = (record.problemStatement ?? "").trim();
   const hints = (record.hintsText ?? "").trim();
   const prose = `${problem}\n${hints}`;
-  const derivedIntent = deriveQueryIntent(prose);
+  const derivedIntent = deriveQueryIntent(prose, { projectNameAliases });
   const positiveProse = derivedIntent.positiveSearchText;
 
   const failingTests = dedupeNonEmpty((record.failToPass ?? []).map((id) => id.trim()));
@@ -201,10 +199,9 @@ export function shapeSweQuery(
 
   const rawSymbols = dedupeNonEmpty([
     ...testParts.flatMap((part) => part.symbols),
-    ...matchAllCaptured(positiveProse, DEF_CLASS),
-    ...matchAllCaptured(positiveProse, BACKTICK_IDENT).map(stripCallSuffix),
-    ...matchAllCaptured(positiveProse, FUNC_CALL),
-    ...derivedIntent.explicitIdentifiers.map(explicitIdentifierSeed).filter((value): value is string => value !== null),
+    ...derivedIntent.symbolHypotheses
+      .map((signal) => signal.source === "backtick" ? signal.term : explicitIdentifierSeed(signal.term))
+      .filter((value): value is string => value !== null),
   ]);
   // Drop generic bug-report words before capping so a real symbol is never
   // crowded out of the cap by noise; record the dropped tokens for diagnostics.
@@ -365,10 +362,6 @@ function stripUrls(text: string): string {
 // the same file. Strip a single leading `a/` or `b/` so they normalise together.
 export function stripDiffPrefix(value: string): string {
   return value.replace(/^[ab]\//, "");
-}
-
-function stripCallSuffix(value: string): string {
-  return value.endsWith("()") ? value.slice(0, -2) : value;
 }
 
 function identifierLeaf(value: string): string {

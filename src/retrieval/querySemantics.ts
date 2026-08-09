@@ -6,6 +6,7 @@
 // so polarity/confidence is computed once rather than rediscovered per candidate.
 
 export type ContrastConfidence = "high" | "none";
+export type QueryIntentKind = "capability_lookup" | "general";
 export type IdentifierConfidence =
   | "explicit_identifier"
   | "strong_literal"
@@ -28,11 +29,25 @@ export interface ContrastClause {
 export interface IdentifierSignal {
   readonly term: string;
   readonly confidence: IdentifierConfidence;
+  readonly source: SymbolHypothesisSource;
+  readonly eligibleAsSymbol: boolean;
   readonly reason: string;
 }
 
+export type SymbolHypothesisSource =
+  | "backtick"
+  | "call_syntax"
+  | "comparison"
+  | "declaration_phrase"
+  | "explicit_lookup"
+  | "path_qualified"
+  | "project_reference"
+  | "short_literal";
+
 export interface DerivedQueryIntent {
   readonly originalTask: string;
+  readonly kind: QueryIntentKind;
+  readonly intentReason?: string;
   /** Task prose with high-confidence excluded spans removed. */
   readonly positiveSearchText: string;
   readonly positiveTerms: readonly string[];
@@ -45,7 +60,15 @@ export interface DerivedQueryIntent {
   readonly contrastIdentifiers: readonly string[];
   readonly comparisonIdentifiers: readonly string[];
   readonly identifierSignals: readonly IdentifierSignal[];
+  /** The only task-prose symbols eligible to seed symbol-oriented consumers. */
+  readonly symbolHypotheses: readonly IdentifierSignal[];
+  /** Repository-name mentions retained as context, never silently as symbols. */
+  readonly projectReferences: readonly string[];
   readonly weakLiteralTokens: readonly string[];
+}
+
+export interface DeriveQueryIntentOptions {
+  readonly projectNameAliases?: ReadonlySet<string>;
 }
 
 // Small task-language set. This affects identifier confidence only; tokens stay
@@ -67,16 +90,24 @@ const TERM_STOPWORDS: ReadonlySet<string> = new Set([
 const IDENTIFIER = String.raw`[A-Za-z_][A-Za-z0-9_]*(?:(?:::|\.)[A-Za-z_][A-Za-z0-9_]*)*`;
 const MAX_SCOPE_TOKENS = 12;
 
-export function deriveQueryIntent(task: string): DerivedQueryIntent {
+export function deriveQueryIntent(task: string, options: DeriveQueryIntentOptions = {}): DerivedQueryIntent {
   const contrastClauses = parseContrastClauses(task);
   const comparisonIdentifiers = collectComparisonIdentifiers(task);
   const contrastIdentifiers = unique(contrastClauses.flatMap((clause) => clause.contrastIdentifiers));
-  const explicit = collectExplicitIdentifiers(task, contrastClauses, comparisonIdentifiers);
+  const explicitSignals = collectExplicitIdentifierSignals(task, contrastClauses, comparisonIdentifiers);
+  const projectReferences = collectProjectReferences(task, options.projectNameAliases ?? new Set());
+  const explicit = explicitSignals
+    .filter((signal) => !projectReferences.some((term) => sameIdentifier(term, signal.term)) || hasExplicitProjectSymbolContext(task, signal.term))
+    .map((signal) => signal.term);
   const explicitIdentifiers = explicit.filter((term) =>
     !contrastIdentifiers.some((excluded) => sameIdentifier(term, excluded))
     || comparisonIdentifiers.some((compared) => sameIdentifier(term, compared))
   );
-  const identifierSignals = classifyIdentifierSignals(task, unique([...explicitIdentifiers, ...contrastIdentifiers]));
+  const eligibleExplicitSignals = explicitSignals.filter((signal) =>
+    explicitIdentifiers.some((term) => sameIdentifier(term, signal.term))
+    || contrastIdentifiers.some((term) => sameIdentifier(term, signal.term)));
+  const identifierSignals = classifyIdentifierSignals(task, eligibleExplicitSignals, projectReferences);
+  const symbolHypotheses = identifierSignals.filter((signal) => signal.eligibleAsSymbol);
   const removals = contrastClauses.map((clause) => ({ start: clause.start, end: clause.end }));
   const positiveSearchText = removeSpans(task, removals);
   const positiveTerms = contentTerms(positiveSearchText);
@@ -86,8 +117,12 @@ export function deriveQueryIntent(task: string): DerivedQueryIntent {
     .filter((signal) => signal.confidence === "weak_short_literal" || signal.confidence === "ordinary_prose")
     .map((signal) => signal.term.toLowerCase()));
 
+  const capabilityIntent = detectCapabilityLookup(task, comparisonIdentifiers);
+
   return {
     originalTask: task,
+    kind: capabilityIntent.kind,
+    ...(capabilityIntent.reason === undefined ? {} : { intentReason: capabilityIntent.reason }),
     positiveSearchText,
     positiveTerms,
     contrastTerms,
@@ -98,6 +133,8 @@ export function deriveQueryIntent(task: string): DerivedQueryIntent {
     contrastIdentifiers,
     comparisonIdentifiers,
     identifierSignals,
+    symbolHypotheses,
+    projectReferences,
     weakLiteralTokens,
   };
 }
@@ -193,52 +230,111 @@ function collectComparisonIdentifiers(task: string): string[] {
   return unique(out);
 }
 
-function collectExplicitIdentifiers(
+function collectExplicitIdentifierSignals(
   task: string,
   clauses: readonly ContrastClause[],
   comparisonIdentifiers: readonly string[],
-): string[] {
-  const out = [...comparisonIdentifiers, ...clauses.flatMap((clause) => clause.positiveIdentifiers)];
-  const patterns = [
-    new RegExp(String.raw`[` + "`" + String.raw`"](${IDENTIFIER})[` + "`" + String.raw`"]`, "gu"),
-    /\b(?:class|method|symbol|element|type)\s+([A-Z][A-Za-z0-9_]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)+)\b/gu,
-    /\bfunction\s+(?:named\s+|called\s+)?([A-Z][A-Za-z0-9_]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)+)\b/gu,
-    /\b(?:find|show|locate|explain)\s+([A-Z][A-Za-z0-9_]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)+)\b/gu,
-    /\b([A-Z][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*|[A-Za-z0-9_./-]+::[A-Za-z_][A-Za-z0-9_]*)\b/gu,
+): IdentifierSignal[] {
+  const out: IdentifierSignal[] = [];
+  const add = (term: string, source: SymbolHypothesisSource, reason: string): void => {
+    out.push({ term, confidence: "explicit_identifier", source, eligibleAsSymbol: true, reason });
+  };
+  for (const term of comparisonIdentifiers) add(term, "comparison", "explicit comparison operand");
+  for (const term of clauses.flatMap((clause) => clause.positiveIdentifiers)) {
+    add(term, "explicit_lookup", "identifier on preferred contrast side");
+  }
+  const patterns: ReadonlyArray<readonly [RegExp, SymbolHypothesisSource, string]> = [
+    [new RegExp(String.raw`[` + "`" + String.raw`"](${IDENTIFIER})(?:\(\))?[` + "`" + String.raw`"]`, "gu"), "backtick", "author-marked code identifier"],
+    [/\b(?:class|method|symbol|element|type)\s+([A-Z][A-Za-z0-9_]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)+)\b/gu, "declaration_phrase", "explicit symbol-kind phrase"],
+    [/\b([A-Z][A-Za-z0-9_]*)\s+(?:class|symbol|type)\b/gu, "declaration_phrase", "explicit trailing symbol-kind phrase"],
+    [/\b(?:def|function|func|fn)\s+(?:named\s+|called\s+)?([A-Z][A-Za-z0-9_]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)+)\b/gu, "declaration_phrase", "explicit function declaration/name phrase"],
+    [/\b(?:find|show|locate|explain)\s+([A-Z][A-Za-z0-9_]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)+)\b/gu, "explicit_lookup", "explicit lookup verb with code-shaped identifier"],
+    [/\b([A-Z][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*|[A-Za-z0-9_./-]+::[A-Za-z_][A-Za-z0-9_]*)\b/gu, "path_qualified", "member/path-qualified identifier"],
+    [/\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/gu, "call_syntax", "call syntax"],
   ];
-  for (const pattern of patterns) {
-    for (const match of task.matchAll(pattern)) out.push(match[1]!);
+  for (const [pattern, source, reason] of patterns) {
+    for (const match of task.matchAll(pattern)) add(match[1]!, source, reason);
   }
   // Uppercase two/three-letter code tokens are explicit when they participate in
   // a parsed contrast clause (DB rather than IO), never merely because of case.
   for (const clause of clauses) {
-    out.push(...clause.positiveIdentifiers);
+    for (const term of clause.positiveIdentifiers) add(term, "explicit_lookup", "identifier on preferred contrast side");
   }
-  return unique(out).filter((term) => {
-    const last = leaf(term);
+  return dedupeSignals(out).filter((signal) => {
+    const last = leaf(signal.term);
     const lower = last.toLowerCase();
     return !TERM_STOPWORDS.has(lower) || last !== lower;
   });
 }
 
-function classifyIdentifierSignals(task: string, explicit: readonly string[]): IdentifierSignal[] {
-  const out: IdentifierSignal[] = explicit.map((term) => ({
-    term,
-    confidence: "explicit_identifier",
-    reason: "explicit code/symbol context",
-  }));
-  const explicitLower = new Set(explicit.map((term) => leaf(term).toLowerCase()));
+function classifyIdentifierSignals(
+  task: string,
+  explicit: readonly IdentifierSignal[],
+  projectReferences: readonly string[],
+): IdentifierSignal[] {
+  const out: IdentifierSignal[] = [...explicit];
+  const explicitLower = new Set(explicit.map((signal) => leaf(signal.term).toLowerCase()));
+  for (const term of projectReferences) {
+    if (explicitLower.has(leaf(term).toLowerCase())) continue;
+    out.push({
+      term,
+      confidence: "ordinary_prose",
+      source: "project_reference",
+      eligibleAsSymbol: false,
+      reason: "known repository/project reference without explicit symbol context",
+    });
+  }
   for (const match of task.matchAll(/(?<!['’])\b[A-Za-z][A-Za-z0-9_]{0,2}\b/gu)) {
     const term = match[0];
     const lower = term.toLowerCase();
     if (explicitLower.has(lower)) continue;
     if (term.length <= 2 && ORDINARY_LANGUAGE_IDENTIFIER_WORDS.has(lower)) {
-      out.push({ term, confidence: "ordinary_prose", reason: "short ordinary-language token without explicit identifier context" });
+      out.push({ term, confidence: "ordinary_prose", source: "short_literal", eligibleAsSymbol: false, reason: "short ordinary-language token without explicit identifier context" });
     } else if (term.length <= 2) {
-      out.push({ term, confidence: "weak_short_literal", reason: "short token without explicit identifier context" });
+      out.push({ term, confidence: "weak_short_literal", source: "short_literal", eligibleAsSymbol: false, reason: "short token without explicit identifier context" });
     }
   }
   return dedupeSignals(out);
+}
+
+function collectProjectReferences(task: string, aliases: ReadonlySet<string>): string[] {
+  if (aliases.size === 0) return [];
+  const out: string[] = [];
+  for (const match of task.matchAll(/\b[A-Za-z][A-Za-z0-9_.-]*\b/gu)) {
+    if (aliases.has(match[0].toLowerCase()) && !hasExplicitProjectSymbolContext(task, match[0])) out.push(match[0]);
+  }
+  return unique(out);
+}
+
+function hasExplicitProjectSymbolContext(task: string, term: string): boolean {
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return [
+    new RegExp(`\\b(?:class|symbol|constructor)\\s+${escaped}\\b`, "i"),
+    new RegExp(`\\b${escaped}\\s+(?:class|symbol|constructor|object|instance)\\b`, "i"),
+    new RegExp(`\\b${escaped}(?:\\.[A-Za-z_]|\\s*\\()`),
+    new RegExp(`[\\w./-]+::${escaped}\\b`),
+    new RegExp("[`'\"]" + escaped + "[`'\"]"),
+  ].some((pattern) => pattern.test(task));
+}
+
+function detectCapabilityLookup(
+  task: string,
+  comparisonIdentifiers: readonly string[],
+): { kind: QueryIntentKind; reason?: string } {
+  if (comparisonIdentifiers.length > 0) return { kind: "general" };
+  const patterns: ReadonlyArray<readonly [RegExp, string]> = [
+    [/\b(?:is there|does there exist)\s+(?:already\s+)?(?:a|an|any)\s+(?:function|method|helper)\b/iu, "existence question"],
+    [/\bdoes\s+(?:a|the)\s+(?:function|method|helper)\s+exist\b/iu, "existence question"],
+    [/\bdo\s+we\s+already\s+have\b/iu, "existing-capability question"],
+    [/\b(?:find|where is)\s+(?:the|a)\s+(?:function|method|helper)\s+that\b/iu, "definition lookup phrase"],
+    [/\b(?:which|what)\s+(?:function|method|helper)\b/iu, "capability selection question"],
+    [/\bwhere\s+(?:is|does)\s+(?:the\s+)?(?:function|method|helper)\b/iu, "definition location question"],
+    [/\b(?:a|the)\s+(?:function|method|helper)\s+that\s+(?:returns?|parses?|loads?|computes?|calculates?|normalizes?|converts?|creates?|finds?|gets?|handles?)\b/iu, "capability description"],
+  ];
+  for (const [pattern, reason] of patterns) {
+    if (pattern.test(task)) return { kind: "capability_lookup", reason };
+  }
+  return { kind: "general" };
 }
 
 function boundedRight(task: string, start: number): { text: string; end: number } {
@@ -359,6 +455,110 @@ export interface CandidateContrastEvaluation {
   readonly matchedContrastTerms: readonly string[];
   readonly matchedContrastPhrases: readonly string[];
   readonly reason?: string;
+}
+
+export interface DirectAnswerEvaluation {
+  readonly score: number;
+  readonly matchedTerms: readonly string[];
+  readonly matchedPhrases: readonly string[];
+  readonly parameterShapeMatched: boolean;
+  readonly reason?: string;
+}
+
+const CAPABILITY_META_TERMS: ReadonlySet<string> = new Set([
+  "already", "directly", "exist", "exists", "helper", "method", "please", "project",
+]);
+
+/**
+ * Bounded deterministic definition-local capability evidence. The candidate body
+ * is intentionally absent: name, kind, indexed signature and indexed docstring
+ * are enough to distinguish an answer from a merely related implementation.
+ */
+export function evaluateDirectAnswer(
+  intent: DerivedQueryIntent,
+  candidate: {
+    readonly localName: string;
+    readonly kind: string;
+    readonly signature: string;
+    readonly docstring?: string | null;
+  },
+): DirectAnswerEvaluation {
+  if (intent.kind !== "capability_lookup" || !["function", "method"].includes(candidate.kind)) {
+    return { score: 0, matchedTerms: [], matchedPhrases: [], parameterShapeMatched: false };
+  }
+
+  const queryTerms = intent.positiveTerms
+    .filter((term) => !CAPABILITY_META_TERMS.has(term))
+    .slice(0, 12);
+  const nameTokens = normalizedCapabilityTokens(candidate.localName);
+  const signatureTokens = normalizedCapabilityTokens(candidate.signature);
+  const docTokens = normalizedCapabilityTokens(candidate.docstring ?? "");
+  const definitionTokens = new Set([...nameTokens, ...signatureTokens, ...docTokens]);
+  const matchedTerms = queryTerms.filter((term) => definitionTokens.has(normalizeCapabilityTerm(term)));
+  const nameMatches = queryTerms.filter((term) => nameTokens.includes(normalizeCapabilityTerm(term)));
+  const docMatches = queryTerms.filter((term) => docTokens.includes(normalizeCapabilityTerm(term)));
+
+  const queryPairs = adjacentPairs(queryTerms.map(normalizeCapabilityTerm));
+  const definitionText = [...nameTokens, ...signatureTokens, ...docTokens].join(" ");
+  const matchedPhrases = queryPairs.filter((pair) => definitionText.includes(pair)).slice(0, 3);
+  const parameterShapeMatched = matchesParameterShape(intent.positiveSearchText, candidate.signature);
+  const coverage = queryTerms.length === 0 ? 0 : matchedTerms.length / queryTerms.length;
+  const hasNameConcept = nameMatches.length > 0;
+  const hasDefinitionExplanation = docMatches.length >= 2 || matchedPhrases.length > 0;
+
+  let score = coverage * 0.62
+    + Math.min(0.16, matchedPhrases.length * 0.08)
+    + (hasNameConcept && hasDefinitionExplanation ? 0.12 : 0)
+    + (parameterShapeMatched ? 0.1 : 0);
+  // Incidental prose may mention every query word. Without a matching symbol-name
+  // concept it remains related context, never a primary answer-bearing boost.
+  if (!hasNameConcept) score = Math.min(score, 0.28);
+  // A single generic overlap (e.g. only "vector") is insufficient capability evidence.
+  if (matchedTerms.length < 2) score = 0;
+  score = Math.round(Math.min(0.95, score) * 1e4) / 1e4;
+
+  return {
+    score,
+    matchedTerms: matchedTerms.slice(0, 8),
+    matchedPhrases,
+    parameterShapeMatched,
+    ...(score > 0
+      ? { reason: `direct definition matches requested capability: ${matchedTerms.slice(0, 6).join(", ")}${parameterShapeMatched ? "; parameter shape aligns" : ""}` }
+      : {}),
+  };
+}
+
+function normalizedCapabilityTokens(value: string): string[] {
+  return tokenize(value).map(normalizeCapabilityTerm);
+}
+
+function normalizeCapabilityTerm(term: string): string {
+  if (term.length > 4 && term.endsWith("ies")) return `${term.slice(0, -3)}y`;
+  if (term.length > 4 && term.endsWith("ing")) return term.slice(0, -3);
+  if (term.length > 3 && term.endsWith("s")) return term.slice(0, -1);
+  return term;
+}
+
+function adjacentPairs(terms: readonly string[]): string[] {
+  const pairs: string[] = [];
+  for (let index = 0; index + 1 < terms.length; index += 1) pairs.push(`${terms[index]} ${terms[index + 1]}`);
+  return unique(pairs);
+}
+
+function matchesParameterShape(query: string, signature: string): boolean {
+  const countWords: Readonly<Record<string, number>> = { single: 1, one: 1, two: 2, three: 3, four: 4 };
+  const countMatch = query.toLowerCase().match(/\b(single|one|two|three|four)\s+([a-z][a-z0-9_]*)/u);
+  const paramsMatch = signature.match(/\(([^)]*)\)/u);
+  if (countMatch === null || paramsMatch === null) return false;
+  const requested = countWords[countMatch[1]!] ?? 0;
+  const concept = normalizeCapabilityTerm(countMatch[2]!);
+  const params = paramsMatch[1]!.split(",").map((part) => part.trim().split(/[:=]/u)[0]!.trim()).filter(Boolean);
+  const conceptInitial = concept.at(0) ?? "";
+  const aligned = params.filter((param) => {
+    const tokens = normalizedCapabilityTokens(param);
+    return tokens.includes(concept) || new RegExp(`^${conceptInitial}\\d+$`, "iu").test(param);
+  });
+  return requested > 0 && aligned.length >= requested;
 }
 
 export function identifierConfidenceForSymbol(

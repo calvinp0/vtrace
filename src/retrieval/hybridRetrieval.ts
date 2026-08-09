@@ -54,6 +54,7 @@ import { GENERIC_TOKEN_STOPLIST } from "../capsule/sweQueryShaping";
 import {
   deriveQueryIntent,
   evaluateCandidateContrast,
+  evaluateDirectAnswer,
   identifierConfidenceForSymbol,
   type IdentifierConfidence,
 } from "./querySemantics";
@@ -637,11 +638,13 @@ function assemble(
     const hubPenalty = round(hub.penalty);
     const actionabilityPenalty = round(action.penalty);
     const contrast = evaluateCandidateContrast(derivedIntent, entry.symbol);
+    const directAnswer = evaluateDirectAnswer(derivedIntent, entry.symbol);
     const positiveObjectiveScore = round(contrast.positiveObjectiveScore);
     const contrastPenalty = round(contrast.contrastPenalty);
+    const directAnswerScore = round(directAnswer.score);
     const final = round(Math.max(
       0,
-      rawFinal - hub.penalty - action.penalty + positiveObjectiveScore - contrastPenalty,
+      rawFinal - hub.penalty - action.penalty + positiveObjectiveScore + directAnswerScore - contrastPenalty,
     ));
 
     const evidence = [...entry.evidence];
@@ -674,6 +677,9 @@ function assemble(
     if (contrastPenalty > 0) {
       evidence.push(`downranked: ${contrast.reason} (-${contrastPenalty.toFixed(2)})`);
     }
+    if (directAnswerScore > 0) {
+      evidence.push(`${directAnswer.reason} (+${directAnswerScore.toFixed(2)} direct answer)`);
+    }
 
     const scores: HybridScoreComponents = {
       lexical,
@@ -695,6 +701,7 @@ function assemble(
       actionabilityPenalty,
       positiveObjectiveScore,
       contrastPenalty,
+      directAnswerScore,
       final,
     };
 

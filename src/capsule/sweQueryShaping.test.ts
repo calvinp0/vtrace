@@ -119,6 +119,7 @@ test("shaping tolerates an empty record", () => {
     filteredRunnerFiles: [],
     derivedIntent: {
       originalTask: "\n",
+      kind: "general",
       positiveSearchText: "",
       positiveTerms: [],
       contrastTerms: [],
@@ -129,6 +130,8 @@ test("shaping tolerates an empty record", () => {
       contrastIdentifiers: [],
       comparisonIdentifiers: [],
       identifierSignals: [],
+      symbolHypotheses: [],
+      projectReferences: [],
       weakLiteralTokens: [],
     },
   });
@@ -213,4 +216,49 @@ test("a dotted data value does not promote its generic leaf as an exact symbol s
   });
   assert.ok(!shaped.likelySymbols.includes("origin"));
   assert.ok(shaped.identifiers.includes("appname.Picking.origin"));
+});
+
+test("an author-marked dotted identifier keeps its full explicit symbol clue", () => {
+  const shaped = shapeSweQuery({ problemStatement: "`caplog.get_records()` and `caplog.clear()` should agree" });
+  assert.ok(shaped.likelySymbols.includes("caplog.get_records"));
+  assert.ok(shaped.likelySymbols.includes("caplog.clear"));
+});
+
+test("M137 ordinary grammar does not enter likelySymbols", () => {
+  const base = shapeSweQuery({ problemStatement: "find the parser behavior" });
+  const grammatical = shapeSweQuery({ problemStatement: "find the parser behavior in this file" });
+  assert.deepEqual(grammatical.likelySymbols, base.likelySymbols);
+  assert.ok(!grammatical.likelySymbols.some((term) => term.toLowerCase() === "in"));
+});
+
+test("M137 project context does not become a symbol but explicit project class does", () => {
+  const projectNameAliases = new Set(["arc"]);
+  const generic = shapeSweQuery(
+    { problemStatement: "how is geometry handled in ARC?" },
+    { projectNameAliases },
+  );
+  const baseline = shapeSweQuery({ problemStatement: "how is geometry handled?" }, { projectNameAliases });
+  assert.deepEqual(generic.likelySymbols, baseline.likelySymbols);
+  assert.deepEqual(generic.derivedIntent?.projectReferences, ["ARC"]);
+
+  const explicit = shapeSweQuery(
+    { problemStatement: "how does the ARC class initialize?" },
+    { projectNameAliases },
+  );
+  assert.ok(explicit.likelySymbols.includes("ARC"));
+});
+
+test("M137 explicit short In controls remain eligible likely symbols", () => {
+  for (const task of ["where is element In defined?", "class In", "symbol In", "Element.In", "element.py::In", "`In`"]) {
+    const shaped = shapeSweQuery({ problemStatement: task });
+    assert.ok(shaped.likelySymbols.includes("In"), `${task}: ${JSON.stringify(shaped.likelySymbols)}`);
+  }
+});
+
+test("M137 many weak symbol-like prose words do not create candidate explosion", () => {
+  const task = Array.from({ length: 40 }, () => "In As At No Be ARC This Project").join(" ");
+  const shaped = shapeSweQuery({ problemStatement: task }, { projectNameAliases: new Set(["arc"]) });
+  assert.deepEqual(shaped.likelySymbols, []);
+  assert.ok((shaped.derivedIntent?.identifierSignals.length ?? 0) <= 8);
+  assert.deepEqual(shaped.derivedIntent?.projectReferences, ["ARC"]);
 });

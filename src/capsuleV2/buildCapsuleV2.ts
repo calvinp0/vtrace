@@ -114,7 +114,7 @@ import {
   matchPathCluesWithContext,
   pathObjectiveAffinityWithContext,
 } from "../retrieval/pathScopedRelevance";
-import { evaluateCandidateContrast } from "../retrieval/querySemantics";
+import { evaluateCandidateContrast, evaluateDirectAnswer } from "../retrieval/querySemantics";
 import {
   retrieveIndexedDocuments,
   type DocumentCandidate,
@@ -175,6 +175,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     problemStatement: input.task,
     failToPass: extractFailingTests(input.task),
   }, {
+    projectNameAliases: resolveProjectNameAliases(input.repoRoot),
     ...(documentProfile === undefined ? {} : { performanceProfile: documentProfile }),
   });
   // Intent planner: detect intent + select the strategy (generators, role policy,
@@ -515,26 +516,30 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // candidates already carry these fields and are left untouched, preventing a
   // double penalty.
   candidates = candidates.map((candidate) => {
-    if (candidate.scores.contrastPenalty !== undefined) return candidate;
+    if (candidate.scores.contrastPenalty !== undefined && candidate.scores.directAnswerScore !== undefined) return candidate;
     const symbol = getSymbolById(input.db, candidate.symbolId);
     if (symbol === undefined || shaped.derivedIntent === undefined) return candidate;
     const contrast = evaluateCandidateContrast(shaped.derivedIntent, symbol);
+    const directAnswer = evaluateDirectAnswer(shaped.derivedIntent, symbol);
     const positiveObjectiveScore = roundScore(contrast.positiveObjectiveScore);
     const contrastPenalty = roundScore(contrast.contrastPenalty);
-    if (positiveObjectiveScore === 0 && contrastPenalty === 0) {
-      return { ...candidate, scores: { ...candidate.scores, positiveObjectiveScore: 0, contrastPenalty: 0 } };
+    const directAnswerScore = roundScore(directAnswer.score);
+    if (positiveObjectiveScore === 0 && contrastPenalty === 0 && directAnswerScore === 0) {
+      return { ...candidate, scores: { ...candidate.scores, positiveObjectiveScore: 0, contrastPenalty: 0, directAnswerScore: 0 } };
     }
     return {
       ...candidate,
       evidence: [...candidate.evidence,
         ...(positiveObjectiveScore > 0 ? [`preferred contrast side matched: ${contrast.matchedPositiveTerms.join(", ")} (+${positiveObjectiveScore.toFixed(2)})`] : []),
         ...(contrastPenalty > 0 ? [`downranked: ${contrast.reason} (-${contrastPenalty.toFixed(2)})`] : []),
+        ...(directAnswerScore > 0 ? [`${directAnswer.reason} (+${directAnswerScore.toFixed(2)} direct answer)`] : []),
       ].sort(),
       scores: {
         ...candidate.scores,
         positiveObjectiveScore,
         contrastPenalty,
-        final: roundScore(Math.max(0, candidate.scores.final + positiveObjectiveScore - contrastPenalty)),
+        directAnswerScore,
+        final: roundScore(Math.max(0, candidate.scores.final + positiveObjectiveScore + directAnswerScore - contrastPenalty)),
       },
     };
   }).sort((left, right) =>
@@ -1741,6 +1746,7 @@ function composeDocItem(doc: DocSection): CapsuleV2Item {
       centrality: 0,
       actionability: 0,
       hub_penalty: 0,
+      direct_answer: 0,
       final: doc.score,
     },
     estimated_tokens: 0,
@@ -1779,6 +1785,7 @@ function composeDocumentItem(document: DocumentCandidate): CapsuleV2Item {
       centrality: 0,
       actionability: 0,
       hub_penalty: 0,
+      direct_answer: 0,
       final: document.score,
     },
     estimated_tokens: 0,
@@ -1939,17 +1946,28 @@ function filteredSignalDiagnostics(shaped: ShapedSweQuery): Partial<CapsuleV2Res
 
 function querySemanticsDiagnostics(shaped: ShapedSweQuery): Partial<CapsuleV2Result["diagnostics"]> {
   const intent = shaped.derivedIntent;
-  if (intent === undefined || (intent.contrastClauses.length === 0 && intent.weakLiteralTokens.length === 0)) {
+  if (intent === undefined || (intent.kind === "general"
+    && intent.contrastClauses.length === 0
+    && intent.weakLiteralTokens.length === 0
+    && intent.projectReferences.length === 0)) {
     return {};
   }
   return {
     query_semantics: {
+      intent: intent.kind,
+      ...(intent.intentReason === undefined ? {} : { intent_reason: intent.intentReason }),
       positive_terms: intent.positiveTerms.slice(0, 16),
       contrast_terms: intent.contrastTerms.slice(0, 16),
       contrast_phrases: intent.contrastPhrases.slice(0, 6),
       explicit_identifiers: intent.explicitIdentifiers.slice(0, 12),
       comparison_identifiers: intent.comparisonIdentifiers.slice(0, 12),
       weak_literal_tokens: intent.weakLiteralTokens.slice(0, 12),
+      symbol_hypotheses: intent.symbolHypotheses.slice(0, 12).map((signal) => ({
+        text: signal.term,
+        confidence: signal.confidence,
+        source: signal.source,
+      })),
+      project_references: intent.projectReferences.slice(0, 6),
     },
   };
 }

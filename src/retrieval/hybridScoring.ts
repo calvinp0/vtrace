@@ -96,6 +96,8 @@ export interface HybridScoreComponents {
   positiveObjectiveScore?: number;
   /** Bounded penalty for high-confidence excluded phrase/symbol evidence. */
   contrastPenalty?: number;
+  /** Bounded definition-local match for high-confidence capability lookups. */
+  directAnswerScore?: number;
   /**
    * Weighted sum of the components above, minus `hubPenalty` and
    * `actionabilityPenalty`; the ranking key.
@@ -635,6 +637,7 @@ export function recomputeWithWeakenedLexical(
       - hub.penalty
       - actionabilityPenalty
       + (scores.positiveObjectiveScore ?? 0)
+      + (scores.directAnswerScore ?? 0)
       - (scores.contrastPenalty ?? 0),
   );
 

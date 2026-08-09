@@ -310,6 +310,7 @@ function routedSupportItem(
       centrality: 0,
       actionability: 1,
       hub_penalty: 0,
+      direct_answer: 0,
       final: candidate.finalScore,
     },
     estimated_tokens: estimateTokens(text),

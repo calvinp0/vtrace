@@ -23,6 +23,7 @@ interface SymbolSpec {
   kind: SymbolKind;
   parent?: string;
   docstring?: string;
+  signature?: string;
   /** Source body text — its distinctive literals are indexed for body search. */
   body?: string;
 }
@@ -47,7 +48,7 @@ function persistSymbolFile(
       fqName,
       localName: spec.localName,
       kind: spec.kind,
-      signature: `${spec.kind} ${spec.localName}`,
+      signature: spec.signature ?? `${spec.kind} ${spec.localName}`,
       ...(spec.docstring === undefined ? {} : { docstring: spec.docstring }),
       startLine: index + 1,
       endLine: index + 1,
@@ -102,6 +103,7 @@ const SCORE_KEYS = [
   "actionabilityPenalty",
   "positiveObjectiveScore",
   "contrastPenalty",
+  "directAnswerScore",
   "final",
 ] as const;
 
@@ -588,6 +590,73 @@ test("ordinary prose short words do not create literal-symbol candidates, explic
     assert.ok(ioSymbol);
     assert.equal(dbSymbol.scores.contrastPenalty, 0);
     assert.ok((ioSymbol.scores.contrastPenalty ?? 0) > 0);
+  } finally {
+    db.close();
+  }
+});
+
+test("M137 exact parse-bytes definition outranks file and directory helpers", () => {
+  const db = openIndexerDatabase();
+  try {
+    persistSymbolFile(db, "pkg/parser.py", [
+      { localName: "parse_bytes", kind: SymbolKind.Function, signature: "parse_bytes(data: bytes) -> Result", docstring: "Parse bytes directly and return a Result." },
+      { localName: "parse_file", kind: SymbolKind.Function, signature: "parse_file(path: str) -> Result", docstring: "Read a file and parse its contents." },
+      { localName: "load_and_parse_directory", kind: SymbolKind.Function, signature: "load_and_parse_directory(path: str)", docstring: "Load and parse every file in a directory. Bytes parsing is delegated elsewhere." },
+    ]);
+    const task = "is there already a function that parses bytes directly rather than reading a file?";
+    const shaped = shapeSweQuery({ problemStatement: task });
+    const { candidates } = hybridRetrieve(db, { query: shaped.query, shaped, taskText: task, maxResults: 20 });
+    assert.equal(candidates[0]?.localName, "parse_bytes");
+    assert.ok((candidates[0]?.scores.directAnswerScore ?? 0) > 0);
+    assert.ok(candidates[0]?.evidence.some((line) => line.includes("direct definition matches requested capability")));
+  } finally {
+    db.close();
+  }
+});
+
+test("M137 single-vector capability leads while behavioral and comparison controls remain unpromoted", () => {
+  const db = openIndexerDatabase();
+  try {
+    persistSymbolFile(db, "pkg/vectors.py", [
+      { localName: "normalize_vector", kind: SymbolKind.Function, signature: "normalize_vector(v)", docstring: "Normalize a single vector." },
+      { localName: "normalize_coordinates", kind: SymbolKind.Function, signature: "normalize_coordinates(coords)", docstring: "Normalize a coordinate matrix." },
+      { localName: "interpolate_vectors", kind: SymbolKind.Function, signature: "interpolate_vectors(vectors)", docstring: "Interpolate vectors; inputs may already be normalized." },
+    ]);
+    const capabilityTask = "which helper normalizes a single vector?";
+    const capabilityShaped = shapeSweQuery({ problemStatement: capabilityTask });
+    const capability = hybridRetrieve(db, { query: capabilityShaped.query, shaped: capabilityShaped, taskText: capabilityTask, maxResults: 20 });
+    assert.equal(capability.candidates[0]?.localName, "normalize_vector");
+
+    for (const task of ["how are vectors normalized in this package?", "compare normalize_vector and normalize_coordinates"]) {
+      const shaped = shapeSweQuery({ problemStatement: task });
+      const result = hybridRetrieve(db, { query: shaped.query, shaped, taskText: task, maxResults: 20 });
+      assert.ok(result.candidates.every((candidate) => candidate.scores.directAnswerScore === 0));
+    }
+  } finally {
+    db.close();
+  }
+});
+
+test("M137 capability scoring stays bounded across many similar definitions", () => {
+  const db = openIndexerDatabase();
+  try {
+    const related = Array.from({ length: 120 }, (_, index) => ({
+      localName: `transform_vector_${index}`,
+      kind: SymbolKind.Function,
+      signature: `transform_vector_${index}(v)`,
+      docstring: "Transform a vector used by geometry normalization pipelines.",
+    }));
+    persistSymbolFile(db, "pkg/many_vectors.py", [
+      ...related,
+      { localName: "normalize_vector", kind: SymbolKind.Function, signature: "normalize_vector(v)", docstring: "Normalize a single vector." },
+    ]);
+    const task = "which helper normalizes a single vector?";
+    const shaped = shapeSweQuery({ problemStatement: task });
+    const started = performance.now();
+    const { candidates } = hybridRetrieve(db, { query: shaped.query, shaped, taskText: task, maxResults: 25 });
+    assert.equal(candidates[0]?.localName, "normalize_vector");
+    assert.ok(performance.now() - started < 250, "bounded fixture retrieval should remain sub-250ms");
+    assert.ok(candidates.every((candidate) => (candidate.scores.directAnswerScore ?? 0) <= 0.95));
   } finally {
     db.close();
   }

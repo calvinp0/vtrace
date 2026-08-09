@@ -71,6 +71,8 @@ export interface CapsuleV2Scorecard {
   centrality: number;
   actionability: number;
   hub_penalty: number;
+  /** Definition-local capability match; non-zero only for capability lookup intent. */
+  direct_answer: number;
   final: number;
 }
 
@@ -86,6 +88,7 @@ export function toScorecard(scores: HybridScoreComponents): CapsuleV2Scorecard {
     centrality: scores.centrality,
     actionability: scores.actionability,
     hub_penalty: scores.hubPenalty,
+    direct_answer: scores.directAnswerScore ?? 0,
     final: scores.final,
   };
 }
@@ -326,12 +329,16 @@ export interface CapsuleV2Diagnostics {
   failing_tests: string[];
   /** Compact debug-only view of deterministic task polarity/confidence. */
   query_semantics?: {
+    intent: "capability_lookup" | "general";
+    intent_reason?: string;
     positive_terms: string[];
     contrast_terms: string[];
     contrast_phrases: string[];
     explicit_identifiers: string[];
     comparison_identifiers: string[];
     weak_literal_tokens: string[];
+    symbol_hypotheses: Array<{ text: string; confidence: string; source: string }>;
+    project_references: string[];
   };
   /**
    * Noise dropped from the high-confidence shaped signals. `filtered_generic_symbols`

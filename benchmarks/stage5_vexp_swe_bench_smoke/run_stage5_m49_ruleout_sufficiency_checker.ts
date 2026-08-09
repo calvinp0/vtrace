@@ -49,6 +49,7 @@ const ZERO_SCORECARD: CapsuleV2Scorecard = {
   centrality: 0,
   actionability: 0,
   hub_penalty: 0,
+  direct_answer: 0,
   final: 0,
 };
 

@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   deriveQueryIntent,
   evaluateCandidateContrast,
+  evaluateDirectAnswer,
   parseContrastClauses,
 } from "./querySemantics";
 
@@ -70,6 +71,80 @@ describe("M135 deterministic contrast grammar", () => {
     expect(legacy.contrastPenalty).toBeGreaterThan(0);
     expect(legacy.contrastPenalty).toBeLessThanOrEqual(0.75);
     expect(target.contrastPenalty).toBe(0);
+  });
+});
+
+describe("M137 capability lookup intent and direct answers", () => {
+  test.each([
+    "is there already a function that parses bytes?",
+    "does a helper exist for parsing bytes?",
+    "do we already have a method for parsing bytes?",
+    "find the function that parses bytes",
+    "which helper normalizes a vector?",
+    "what function returns an angle?",
+    "where is the method that parses bytes?",
+    "a function that returns a dihedral angle given three vectors",
+  ])("recognizes high-confidence capability form: %s", (task) => {
+    expect(deriveQueryIntent(task).kind).toBe("capability_lookup");
+  });
+
+  test.each([
+    "how are dihedral angles handled in ARC?",
+    "who calls get_dihedral?",
+    "explain how vector geometry works",
+    "find calculate_dihedral_angle",
+    "compare get_dihedral and calculate_dihedral_angle",
+  ])("leaves non-capability control unchanged: %s", (task) => {
+    expect(deriveQueryIntent(task).kind).toBe("general");
+  });
+
+  test("definition-local evidence favors the exact ARC primitive", () => {
+    const intent = deriveQueryIntent("a function that returns a dihedral angle given three vectors, rather than given coordinates and four atom indices");
+    const exact = evaluateDirectAnswer(intent, {
+      localName: "get_dihedral", kind: "function", signature: "get_dihedral(v1, v2, v3, units='degs', tol=1e-8) -> float",
+      docstring: "Calculate the dihedral angle between three vectors.",
+    });
+    const related = evaluateDirectAnswer(intent, {
+      localName: "get_normal", kind: "function", signature: "get_normal(v1, v2)",
+      docstring: "Return a normal vector used by geometry helpers.",
+    });
+    expect(exact.score).toBeGreaterThan(0.7);
+    expect(exact.parameterShapeMatched).toBe(true);
+    expect(exact.score).toBeGreaterThan(related.score);
+  });
+
+  test("repeated incidental body-like prose cannot game definition-local scoring", () => {
+    const intent = deriveQueryIntent("which helper normalizes a single vector?");
+    const actual = evaluateDirectAnswer(intent, {
+      localName: "normalize_vector", kind: "function", signature: "normalize_vector(v)", docstring: "Normalize one vector.",
+    });
+    const incidental = evaluateDirectAnswer(intent, {
+      localName: "interpolate_values", kind: "function", signature: "interpolate_values(values)",
+      docstring: "Interpolation may consume a normalized vector; vector normalization is performed elsewhere.",
+    });
+    expect(actual.score).toBeGreaterThan(incidental.score);
+    expect(incidental.score).toBeLessThanOrEqual(0.28);
+  });
+});
+
+describe("M137 project-reference symbol hygiene", () => {
+  const aliases = new Set(["arc"]);
+
+  test("generic project reference is metadata, not an eligible symbol", () => {
+    const intent = deriveQueryIntent("How does ARC calculate geometry?", { projectNameAliases: aliases });
+    expect(intent.projectReferences).toEqual(["ARC"]);
+    expect(intent.symbolHypotheses.map((signal) => signal.term)).not.toContain("ARC");
+  });
+
+  test("explicit project-named class remains a strong hypothesis", () => {
+    const intent = deriveQueryIntent("How does the ARC class initialize project state?", { projectNameAliases: aliases });
+    expect(intent.projectReferences).toEqual([]);
+    expect(intent.symbolHypotheses.find((signal) => signal.term === "ARC")?.confidence).toBe("explicit_identifier");
+  });
+
+  test("ordinary adjective before method does not become a symbol hypothesis", () => {
+    const intent = deriveQueryIntent("Unicode method names cause an error");
+    expect(intent.symbolHypotheses.map((signal) => signal.term)).not.toContain("Unicode");
   });
 });
 
