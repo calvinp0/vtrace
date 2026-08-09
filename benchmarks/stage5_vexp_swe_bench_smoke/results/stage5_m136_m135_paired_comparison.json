@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "stage5.m136.m135-paired-comparison.v1",
+  "predecessor": "cec130c2b1f62a1fd95b459e56aa7d6c3d223731",
+  "candidate": "f48f8c11f0cf76805943e98baa4fc3f566400d39",
+  "protocolVersion": "stage5.retrieval.protocol.v1",
+  "cleanDetachedWorktrees": true,
+  "sameRunner": true,
+  "isolatedIndexes": true,
+  "sameTargetCorpus": true,
+  "suites": {
+    "django_expanded": {
+      "cases": 20,
+      "valid": true,
+      "changedCases": 0,
+      "differences": {"selectedFiles": 0, "lead": 0, "roles": 0, "contentModes": 0, "modelVisibleContext": 0, "tokenAccounting": 0, "qualityMetrics": 0}
+    },
+    "cross_repo_30": {
+      "cases": 30,
+      "valid": true,
+      "changedCases": 0,
+      "differences": {"selectedFiles": 0, "lead": 0, "roles": 0, "contentModes": 0, "modelVisibleContext": 0, "tokenAccounting": 0, "qualityMetrics": 0}
+    }
+  },
+  "frozen50ChangedCases": 0,
+  "retrievalSelectionChangedCases": 0,
+  "verdict": "PASS"
+}
