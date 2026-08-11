@@ -196,7 +196,8 @@ function queryBroadCandidates(
       symbols.docstring
     FROM symbols
     INNER JOIN files ON files.id = symbols.file_id
-    ${kind === undefined ? "" : "WHERE symbols.kind = ?"}
+    WHERE ${EXCLUDE_STRUCTURAL_SYMBOLS_SQL}
+    ${kind === undefined ? "" : "AND symbols.kind = ?"}
     ORDER BY symbols.fq_name ASC, symbols.id ASC
   `);
   const candidates = (kind === undefined ? rows.all() : rows.all(kind)) as SearchCandidateRow[];

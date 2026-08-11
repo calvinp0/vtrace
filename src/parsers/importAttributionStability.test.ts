@@ -530,3 +530,57 @@ test("module scope symbols are never returned as retrieval candidates", async ()
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// Long natural-language tasks route through the broad-query candidate path, which
+// builds its own SELECT rather than reusing QUERY_SQL. That path once omitted the
+// structural-symbol predicate, so `<module>` entered the lexical candidate pool and
+// could both be delivered as content and revive an imports_neighborhood
+// contribution naming a module. Short queries never reach it, so this is asserted
+// separately from the single-token cases above.
+test("broad natural-language queries never surface or score module scope symbols", async () => {
+  const { searchSymbolsGraph } = await import("../retrieval/searchSymbolsGraph");
+  const { searchSymbols } = await import("../retrieval/searchSymbols");
+  const { SymbolSearchBackend } = await import("../retrieval/types");
+  const root = await mkdtemp(path.join(os.tmpdir(), "m140-broad-"));
+  const db = openIndexerDatabase();
+
+  try {
+    await writeRepo(root, { ...MODEL, "importer.py": "from model import Thing\n\n\ndef use():\n    return Thing()\n" });
+    await indexProject({ repoRoot: root, db, refreshMode: "full" });
+
+    const task = "the importer module should use the model Thing when building a "
+      + "thing from the stored importer model configuration and importer settings";
+
+    const plain = searchSymbols(db, { query: task, maxResults: 25 });
+    const fts = searchSymbols(db, { query: task, maxResults: 25, backend: SymbolSearchBackend.Fts });
+    const graph = searchSymbolsGraph(db, { query: task, maxResults: 25 });
+
+    for (const [label, results] of [["plain", plain], ["fts", fts], ["graph", graph]] as const) {
+      assert.equal(
+        results.some((result) => result.fqName.endsWith("::<module>")),
+        false,
+        `${label} backend surfaced a module scope symbol for a broad query`,
+      );
+    }
+
+    // A module must not reach a candidate set, so no graph contribution may name one.
+    const moduleIds = new Set(
+      (db.query(`SELECT id FROM symbols WHERE kind = 'module'`).all() as Array<{ id: string }>)
+        .map((row) => row.id),
+    );
+    for (const result of graph) {
+      for (const contribution of result.graphContributions) {
+        for (const relatedId of contribution.relatedSymbolIds ?? []) {
+          assert.equal(
+            moduleIds.has(relatedId),
+            false,
+            `${contribution.signal} on ${result.fqName} scored a module scope symbol`,
+          );
+        }
+      }
+    }
+  } finally {
+    db.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
