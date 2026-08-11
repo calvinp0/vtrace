@@ -20,6 +20,29 @@ export enum SymbolKind {
   ModuleConstant = "module_constant",
   ModuleVariable = "module_variable",
   ModuleAlias = "module_alias",
+  /**
+   * M140: the module/file scope itself. A STRUCTURAL symbol that exists so
+   * module-level imports have a stable owner (see `isStructuralSymbolKind`).
+   * It is never a retrieval candidate and carries no deliverable body.
+   */
+  Module = "module",
+}
+
+/**
+ * Structural symbols exist to give graph relations a stable endpoint. They are
+ * deliberately excluded from retrieval candidate generation, lexical ranking,
+ * direct-answer scoring, content delivery, and token-budget accounting, while
+ * remaining fully visible to graph consumers (expansion, rerank, impact,
+ * upstream rescue).
+ *
+ * WHY (M140): before this, a file's module-level import edges were attributed
+ * to its single top-level symbol and vanished entirely when a second top-level
+ * symbol appeared, so adding an unrelated function silently deleted an
+ * unchanged import edge. A per-module structural owner makes attribution
+ * independent of what else the file happens to define.
+ */
+export function isStructuralSymbolKind(kind: SymbolKind): boolean {
+  return kind === SymbolKind.Module;
 }
 
 export enum EdgeType {

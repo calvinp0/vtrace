@@ -17,6 +17,7 @@ import {
 import { withCallSite } from "./edgeCallSites";
 import { parsePython } from "./pythonParser";
 import { ParserError } from "./errors";
+import { makeModuleSymbolRecord } from "./moduleSymbol";
 import type { LanguageParser } from "./LanguageParser";
 import type { ParseFileInput } from "./types";
 
@@ -111,7 +112,8 @@ interface CythonIncludeImport {
 interface ExtractImportEdgesInput {
   filePath: string;
   imports: readonly CythonImport[];
-  sourceSymbols: readonly SymbolRecord[];
+  /** M140: stable module-scope owner of this file's import edges. */
+  moduleSymbol: SymbolRecord;
   context: CythonParserContext;
 }
 
@@ -1003,10 +1005,11 @@ function parseCythonWithContext(
   const resolutionContext = withKnownFile(context, input.path, input.content);
   const payload = parseCythonItems(input.path, input.content, resolutionContext);
   const { symbols, containsEdges } = buildCythonSymbols(input.path, payload.items);
+  const moduleSymbol = makeModuleSymbolRecord(input.path);
   const importEdges = extractImportEdges({
     filePath: input.path,
     imports: payload.imports,
-    sourceSymbols: symbols,
+    moduleSymbol,
     context: resolutionContext,
   });
   const callReferenceEdges = extractCythonCallAndReferenceEdges({
@@ -1025,7 +1028,7 @@ function parseCythonWithContext(
       contentHash: hashContent(input.content),
       sizeBytes: Buffer.byteLength(input.content),
     },
-    symbols,
+    symbols: [moduleSymbol, ...symbols],
     edges: [...containsEdges, ...importEdges, ...callReferenceEdges],
     diagnostics: [],
   };
@@ -1133,12 +1136,9 @@ function buildCythonSymbols(
 }
 
 function extractImportEdges(input: ExtractImportEdgesInput): EdgeRecord[] {
-  const sourceSymbol = getUnambiguousImportSourceSymbol(input.sourceSymbols);
-
-  if (sourceSymbol === undefined) {
-    return [];
-  }
-
+  // M140: owned by the file's module scope, not by whichever definition
+  // happens to be the only one. See `makeModuleSymbolRecord`.
+  const sourceSymbol = input.moduleSymbol;
   const exportIndexByPath = new Map<string, CythonExportIndex>();
   const edgesById = new Map<string, EdgeRecord>();
 
@@ -1176,14 +1176,6 @@ function extractImportEdges(input: ExtractImportEdgesInput): EdgeRecord[] {
   }
 
   return [...edgesById.values()].sort((left, right) => left.id.localeCompare(right.id));
-}
-
-function getUnambiguousImportSourceSymbol(
-  symbols: readonly SymbolRecord[],
-): SymbolRecord | undefined {
-  const topLevelSymbols = symbols.filter((symbol) => symbol.parentSymbolId === undefined);
-
-  return topLevelSymbols.length === 1 ? topLevelSymbols[0] : undefined;
 }
 
 function resolveImportedTargetPath(
@@ -1383,7 +1375,8 @@ function getCythonExportIndex(
     }
 
     const exportIndex: CythonExportIndex = {
-      moduleSymbol: topLevelSymbols.length === 1 ? topLevelSymbols[0] : undefined,
+      // M140: always present, so the import TARGET is stable too.
+      moduleSymbol: makeModuleSymbolRecord(filePath),
       namedSymbols,
     };
 

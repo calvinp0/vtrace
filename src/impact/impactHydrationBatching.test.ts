@@ -125,10 +125,16 @@ test("query count no longer scales with the dependent count", async () => {
     largeDb.close();
   }
 
-  // The default 64-edge canonical delivery cap retains 32 callers here because
-  // each has both import and call evidence. Hydration remains batched; the rich
-  // evidence path accounts for the remaining bounded queries.
-  assert.equal(largeDependents, 32);
+  // All 40 callers are delivered under the same default 64-edge canonical cap.
+  //
+  // Before M140 this returned 32. Each caller file had exactly one top-level
+  // symbol, so its module-level import edge was attributed to the caller
+  // FUNCTION — giving every caller two edges to `hub` (one import, one call)
+  // that named the identical src/dst pair. Those redundant edges consumed the
+  // 64-edge budget two at a time, so 8 genuine callers were dropped. Imports
+  // are now owned by module scope and module scope is structural, so each
+  // caller spends one slot on its real call evidence and the whole fan-in fits.
+  assert.equal(largeDependents, 40);
   assert.equal(
     largeQueries <= 73,
     true,

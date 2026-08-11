@@ -154,7 +154,14 @@ test("mixed Python/Cython graph reranking is deterministic and uses persisted im
       assert.equal(first[0]?.localName, "diffuse_profile");
       assert.equal(diffuseProfile.graphScore > 0, true);
       assert.equal(hasGraphSignal(diffuseProfile, GraphScoreSignal.OutDegree), true);
-      assert.equal(hasGraphSignal(diffuseProfile, GraphScoreSignal.ImportsNeighborhood), true);
+      // M140: `diffuse_profile` no longer carries an imports-neighbour signal.
+      // Its file's module-level imports belong to the file's MODULE scope; the
+      // function itself imports nothing. Before M140 it inherited them only
+      // because it was the file's single top-level symbol. The importer-side
+      // imports signal now lands on module symbols, which are excluded from
+      // retrieval candidates — see the rerankGraph calibration finding in the
+      // M140 report.
+      assert.equal(hasGraphSignal(diffuseProfile, GraphScoreSignal.ImportsNeighborhood), false);
       assert.equal(hasGraphSignal(diffuseProfile, GraphScoreSignal.ConnectedMatchedCandidates), true);
       assert.equal(diffuseProfile.finalScore > declaredStep.finalScore, true);
     } finally {

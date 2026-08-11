@@ -79,6 +79,19 @@ export interface SearchRankingContexts {
   readonly pathSignalContext?: PathSignalQueryContext;
 }
 
+/**
+ * SQL predicate excluding STRUCTURAL symbols from retrieval candidate
+ * generation (M140).
+ *
+ * A module scope symbol exists so module-level imports have a stable owner. It
+ * has no body to deliver and no identifier a user would search for, but its
+ * `fq_name` and file path would still match path-shaped queries — so without
+ * this it would occupy candidate slots, lexical ranking positions, and delivery
+ * budget that belong to real definitions. It remains fully visible to graph
+ * consumers (expansion, rerank, impact, upstream rescue).
+ */
+export const EXCLUDE_STRUCTURAL_SYMBOLS_SQL = "symbols.kind != 'module'";
+
 export const SYMBOL_SEARCH_SCORE_WEIGHTS = Object.freeze({
   localNameExact: 100,
   localNamePrefix: 60,
@@ -713,7 +726,8 @@ export function queryPathSignalCandidates(
       symbols.docstring
     FROM symbols
     INNER JOIN files ON files.id = symbols.file_id
-    WHERE (${conditions})
+    WHERE ${EXCLUDE_STRUCTURAL_SYMBOLS_SQL}
+      AND (${conditions})
       ${kind === undefined ? "" : "AND symbols.kind = ?"}
     ORDER BY files.path ASC, symbols.fq_name ASC, symbols.id ASC
     LIMIT ?
@@ -824,6 +838,7 @@ export function queryBoundaryCandidates(
     FROM symbols
     INNER JOIN files ON files.id = symbols.file_id
     WHERE symbols.parent_symbol_id IS NULL
+      AND ${EXCLUDE_STRUCTURAL_SYMBOLS_SQL}
       AND (${extensionConditions})
       ${kind === undefined ? "" : "AND symbols.kind = ?"}
     ORDER BY files.path ASC, symbols.fq_name ASC, symbols.id ASC

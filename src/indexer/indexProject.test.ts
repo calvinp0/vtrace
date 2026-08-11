@@ -79,7 +79,7 @@ cpdef int integrate(int value):
       assert.equal(getFileByPath(db, "src/kernel.pyx")?.language, Language.Cython);
       assert.deepEqual(
         listSymbolsForFile(db, "src/kernel.pyx").map((symbol) => [symbol.localName, symbol.kind]),
-        [["integrate", SymbolKind.Function]],
+        [["<module>", SymbolKind.Module], ["integrate", SymbolKind.Function]],
       );
     } finally {
       db.close();
@@ -116,14 +116,22 @@ def use_runtime():
       const serviceEdges = listEdgesForFile(db, "src/pkg/service.pyx");
       const runtimeSymbols = listSymbolsForFile(db, "src/pkg/runtime_target.pyx");
 
+      // M140: the import is owned by service.pyx's module scope, and
+      // `import pkg.runtime_target` targets runtime_target.pyx's module scope.
       assert.deepEqual(
         serviceSymbols.map((symbol) => [symbol.localName, symbol.kind]),
-        [["use_runtime", SymbolKind.Function]],
+        [["<module>", SymbolKind.Module], ["use_runtime", SymbolKind.Function]],
       );
       assert.equal(serviceEdges.length, 1);
       assert.equal(serviceEdges[0]?.edgeType, EdgeType.Imports);
-      assert.equal(serviceEdges[0]?.srcSymbolId, serviceSymbols[0]?.id);
-      assert.equal(serviceEdges[0]?.dstSymbolId, runtimeSymbols[0]?.id);
+      assert.equal(
+        serviceEdges[0]?.srcSymbolId,
+        serviceSymbols.find((symbol) => symbol.kind === SymbolKind.Module)?.id,
+      );
+      assert.equal(
+        serviceEdges[0]?.dstSymbolId,
+        runtimeSymbols.find((symbol) => symbol.kind === SymbolKind.Module)?.id,
+      );
     } finally {
       db.close();
     }
@@ -174,6 +182,7 @@ test("a mixed Python/Cython fixture repo indexes end-to-end and persists expecte
           symbol.kind,
         ]),
         [
+          ["<module>", SymbolKind.Module],
           ["CalibrationRun", SymbolKind.Class],
           ["__init__", SymbolKind.Method],
           ["baseline", SymbolKind.Method],
@@ -184,7 +193,7 @@ test("a mixed Python/Cython fixture repo indexes end-to-end and persists expecte
           symbol.localName,
           symbol.kind,
         ]),
-        [["diffuse_profile", SymbolKind.Function]],
+        [["<module>", SymbolKind.Module], ["diffuse_profile", SymbolKind.Function]],
       );
       assert.equal(listAllSymbols(db).length, MIXED_PY_CYTHON_FIXTURE_SYMBOL_COUNT);
       assert.equal(listAllEdges(db).length, MIXED_PY_CYTHON_FIXTURE_EDGE_COUNT);
@@ -192,19 +201,38 @@ test("a mixed Python/Cython fixture repo indexes end-to-end and persists expecte
       // calls to the same imported/cimported/included targets.
       const kernelImports = kernelEdges.filter((edge) => edge.edgeType === EdgeType.Imports);
       const kernelCalls = kernelEdges.filter((edge) => edge.edgeType === EdgeType.Calls);
-      const kernelTargets = [
+      const kernelCallTargets = [
         backgroundSymbol.id,
         clampWindowSymbol.id,
         declaredStepSymbol.id,
         stencilSmoothSymbol.id,
       ].sort();
+      // M140: the four imports are owned by the kernel's module scope, and the
+      // `include` of stencil_ops.pxi resolves to that file's module scope
+      // rather than to whichever single definition it happened to contain. The
+      // four statically resolved CALLS still belong to `diffuse_profile`.
+      const kernelModuleSymbol = requireSymbol(
+        listSymbolsForFile(db, MIXED_PY_CYTHON_KERNEL_FILE_PATH),
+        "<module>",
+      );
+      const stencilModuleSymbol = requireSymbol(
+        listSymbolsForFile(db, "src/spectra_lab/kernels/stencil_ops.pxi"),
+        "<module>",
+      );
+      const kernelImportTargets = [
+        backgroundSymbol.id,
+        clampWindowSymbol.id,
+        declaredStepSymbol.id,
+        stencilModuleSymbol.id,
+      ].sort();
 
       assert.equal(kernelEdges.length, 8);
-      assert.equal(kernelEdges.every((edge) => edge.srcSymbolId === kernelSymbol.id), true);
+      assert.equal(kernelImports.every((edge) => edge.srcSymbolId === kernelModuleSymbol.id), true);
+      assert.equal(kernelCalls.every((edge) => edge.srcSymbolId === kernelSymbol.id), true);
       assert.equal(kernelImports.length, 4);
       assert.equal(kernelCalls.length, 4);
-      assert.deepEqual(kernelImports.map((edge) => edge.dstSymbolId).sort(), kernelTargets);
-      assert.deepEqual(kernelCalls.map((edge) => edge.dstSymbolId).sort(), kernelTargets);
+      assert.deepEqual(kernelImports.map((edge) => edge.dstSymbolId).sort(), kernelImportTargets);
+      assert.deepEqual(kernelCalls.map((edge) => edge.dstSymbolId).sort(), kernelCallTargets);
       assert.equal(getIndexRunSummary(db, listIndexRuns(db)[0]!.id)?.totalFiles, MIXED_PY_CYTHON_FIXTURE_FILE_COUNT);
       assert.equal(
         getIndexRunSummary(db, listIndexRuns(db)[0]!.id)?.totalSymbols,

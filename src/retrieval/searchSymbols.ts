@@ -8,6 +8,7 @@ import {
   type SymbolSearchResult,
 } from "./types";
 import {
+  EXCLUDE_STRUCTURAL_SYMBOLS_SQL,
   mergeSearchCandidates,
   makeLikePattern,
   normalizeMaxResults,
@@ -35,7 +36,8 @@ const QUERY_SQL = `
     symbols.docstring
   FROM symbols
   INNER JOIN files ON files.id = symbols.file_id
-  WHERE (
+  WHERE ${EXCLUDE_STRUCTURAL_SYMBOLS_SQL}
+  AND (
     lower(symbols.local_name) LIKE ? ESCAPE '\\'
     OR lower(symbols.fq_name) LIKE ? ESCAPE '\\'
     OR lower(symbols.signature) LIKE ? ESCAPE '\\'

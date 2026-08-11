@@ -105,7 +105,8 @@ test("init writes readiness metadata based on persisted indexing state", async (
 
     assert.equal(state.readiness.status, "ready");
     assert.equal(state.latestRunId, 1);
-    assert.equal(state.latestRun?.totalSymbols, 3);
+    // M140: 3 definitions + the file's module scope symbol.
+    assert.equal(state.latestRun?.totalSymbols, 4);
     assert.deepEqual(
       state.readiness.checks.map((check) => [check.id, check.ok]),
       [

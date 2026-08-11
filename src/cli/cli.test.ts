@@ -1528,7 +1528,8 @@ test("init followed by runs succeeds on the same repo", async () => {
     const output = JSON.parse(result.stdout);
     assert.deepEqual(output.runs.map((run: { id: number }) => run.id), [1]);
     assert.equal(output.runs[0].totalFiles, 3);
-    assert.equal(output.runs[0].totalSymbols, 3);
+    // M140: 3 definitions + the file's module scope symbol.
+    assert.equal(output.runs[0].totalSymbols, 4);
   });
 });
 
@@ -2116,7 +2117,7 @@ test("runs command lists persisted runs deterministically", async () => {
           id: 1,
           createdAtMs: output.runs[0].createdAtMs,
           totalFiles: 3,
-          totalSymbols: 3,
+          totalSymbols: 4,
           fileChangeCounts: {
             added: 0,
             removed: 0,
@@ -2135,7 +2136,7 @@ test("runs command lists persisted runs deterministically", async () => {
           previousRunId: 1,
           createdAtMs: output.runs[1].createdAtMs,
           totalFiles: 3,
-          totalSymbols: 3,
+          totalSymbols: 4,
           fileChangeCounts: {
             added: 0,
             removed: 0,
@@ -2146,7 +2147,7 @@ test("runs command lists persisted runs deterministically", async () => {
             added: 0,
             removed: 0,
             modified: 0,
-            unchanged: 3,
+            unchanged: 4,
           },
         },
       ],

@@ -247,8 +247,13 @@ test("a mixed imports + calls path is found when both edge types are available",
 
     try {
       await indexProject({ repoRoot, db });
+      // M140: a module-level import is owned by the importing MODULE, not by
+      // whichever function the file happens to define. Before M140 this fixture
+      // produced `caller --imports--> middle` only because caller.py had
+      // exactly one top-level symbol; the function itself never imported
+      // anything. The import leg of the path now starts at module scope.
       const result = requireLogicFlow(db, {
-        start: "src/pkg/caller.py::caller",
+        start: "src/pkg/caller.py::<module>",
         end: "src/pkg/leaf.py::leaf",
         maxPaths: 3,
       });

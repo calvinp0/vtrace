@@ -18,6 +18,7 @@ import { detectLanguage } from "../fs/languageDetection";
 import { getCythonExportIndex, type CrossLanguageExportIndex } from "./cythonExports";
 import { withCallSite } from "./edgeCallSites";
 import { ParserError } from "./errors";
+import { makeModuleSymbolRecord } from "./moduleSymbol";
 import type { LanguageParser } from "./LanguageParser";
 import type { ParseFileInput } from "./types";
 
@@ -727,10 +728,11 @@ function parsePythonWithContext(
   const resolutionContext = withKnownFile(context, input.path, input.content);
   const root = parsePythonAst(input.path, input.content, resolutionContext);
   const extracted = extractTopLevelSymbols(input.path, input.content, root.items);
+  const moduleSymbol = makeModuleSymbolRecord(input.path);
   const importEdges = extractImportEdges({
     filePath: input.path,
     imports: root.imports,
-    sourceSymbols: extracted.symbols,
+    moduleSymbol,
     context: resolutionContext,
   });
   const callEdges = extractCallEdges({
@@ -760,7 +762,7 @@ function parsePythonWithContext(
       contentHash: hashContent(input.content),
       sizeBytes: Buffer.byteLength(input.content),
     },
-    symbols: extracted.symbols,
+    symbols: [moduleSymbol, ...extracted.symbols],
     edges: [...extracted.edges, ...importEdges, ...callEdges, ...referenceEdges],
     diagnostics: [],
   };
@@ -891,7 +893,8 @@ function moduleAssignmentSymbolKind(kind: PythonModuleAssignmentKind): SymbolKin
 interface ExtractImportEdgesInput {
   filePath: string;
   imports: readonly PythonAstImport[];
-  sourceSymbols: readonly SymbolRecord[];
+  /** M140: stable module-scope owner of this file's import edges. */
+  moduleSymbol: SymbolRecord;
   context: PythonParserContext;
 }
 
@@ -910,12 +913,10 @@ interface PythonExportIndex {
 }
 
 function extractImportEdges(input: ExtractImportEdgesInput): EdgeRecord[] {
-  const sourceSymbol = getUnambiguousImportSourceSymbol(input.sourceSymbols);
-
-  if (sourceSymbol === undefined) {
-    return [];
-  }
-
+  // M140: module-level imports are owned by the file's module scope, never by
+  // whichever definition happens to be the only one. See
+  // `makeModuleSymbolRecord`.
+  const sourceSymbol = input.moduleSymbol;
   const exportIndexByPath = new Map<string, PythonExportIndex>();
   const edgesById = new Map<string, EdgeRecord>();
 
@@ -2413,14 +2414,6 @@ function getCanonicalModuleName(
   return [...moduleSegments, stem].join(".");
 }
 
-function getUnambiguousImportSourceSymbol(
-  symbols: readonly SymbolRecord[],
-): SymbolRecord | undefined {
-  const topLevelSymbols = symbols.filter((symbol) => symbol.parentSymbolId === undefined);
-
-  return topLevelSymbols.length === 1 ? topLevelSymbols[0] : undefined;
-}
-
 function resolveImportedModulePath(
   importerFilePath: string,
   imported: PythonAstImport,
@@ -2637,7 +2630,11 @@ function getPythonExportIndex(
     });
 
     const exportIndex: PythonExportIndex = {
-      moduleSymbol: topLevelSymbols.length === 1 ? topLevelSymbols[0] : undefined,
+      // M140: `import model` targets the module scope itself, which always
+      // exists. Previously this was the file's single top-level symbol, so the
+      // TARGET side of an import edge disappeared just as unstably as the
+      // source side when the imported file gained a second definition.
+      moduleSymbol: makeModuleSymbolRecord(filePath),
       namedSymbols,
       classMembersByClassName,
       basesByClassName,

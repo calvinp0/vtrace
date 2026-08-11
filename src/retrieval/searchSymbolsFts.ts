@@ -14,6 +14,7 @@ import {
   buildFtsSingleTermRecoveryQueryForContext,
   buildFtsSearchText,
   isLikelyTestCandidate,
+  EXCLUDE_STRUCTURAL_SYMBOLS_SQL,
   mergeSearchCandidates,
   normalizeMaxResults,
   normalizeSearchQuery,
@@ -81,6 +82,7 @@ const QUERY_SQL = `
   INNER JOIN symbols ON symbols.id = symbol_search_fts.symbol_id
   INNER JOIN files ON files.id = symbols.file_id
   WHERE symbol_search_fts MATCH ?
+    AND ${EXCLUDE_STRUCTURAL_SYMBOLS_SQL}
 `;
 
 const EXACT_IDENTIFIER_LANE_BONUS = 80;

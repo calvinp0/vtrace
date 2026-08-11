@@ -5,6 +5,7 @@ import { getSymbolById, getSymbolsByIds, listSymbolsByFqName } from "../db/repos
 import {
   EdgeType,
   Language,
+  isStructuralSymbolKind,
   type EdgeRecord,
   type SymbolKind,
   type SymbolRecord,
@@ -632,6 +633,16 @@ function buildRichImpact(
   const directCandidates = listEdgesForSymbol(db, root.id);
   edgesInspected += directCandidates.length;
   const symbolCache = new Map<string, SymbolRecord>([[root.id, root]]);
+  // M140: hydrate the whole direct neighbourhood in ONE query. This path used
+  // to issue a lookup per distinct endpoint, so a high-fan-in symbol cost one
+  // query per neighbour — and module-owned import edges would have doubled that
+  // by adding a second distinct endpoint per importing file.
+  for (const [id, symbol] of getSymbolsByIds(
+    db,
+    directCandidates.flatMap((edge) => [edge.srcSymbolId, edge.dstSymbolId]),
+  )) {
+    if (!symbolCache.has(id)) symbolCache.set(id, symbol);
+  }
   const symbolFor = (id: string): SymbolRecord | undefined => {
     const cached = symbolCache.get(id);
     if (cached !== undefined) return cached;
@@ -647,6 +658,11 @@ function buildRichImpact(
     const source = symbolFor(edge.srcSymbolId);
     const target = symbolFor(edge.dstSymbolId);
     if (source === undefined || target === undefined) return [];
+    // M140: module scope is a structural owner, not a consumer. Its import
+    // edges are real, but delivering a bodyless `<module>` relation beside the
+    // importing file's actual definitions is noise. See the known limitation on
+    // import-only dependency coverage in the M140 report.
+    if (isStructuralSymbolKind(source.kind) || isStructuralSymbolKind(target.kind)) return [];
     const relation = buildStaticRelationEvidence(db, edge, source, target, {
       direction: edge.dstSymbolId === root.id ? "incoming" : "outgoing",
       repoRoot: options?.repoRoot,
@@ -1026,11 +1042,24 @@ function discoverImpactSymbols(
       dependentIds.push(edge.srcSymbolId);
     }
 
+    // M140: hydrate the frontier's dependents BEFORE applying the delivery cap
+    // so structural scope symbols can be dropped first. A module symbol owns
+    // its file's import edges, so every importer file would otherwise deliver a
+    // bodyless `<module>` node beside the real consumer — doubling the node
+    // count against the cap and crowding genuine consumers out of the answer.
+    // Structural symbols are not consumers, so they are neither delivered nor
+    // counted as omitted. This is still ONE batched query, and the cap keeps
+    // bounding delivered dependents exactly as before.
+    const hydrated = getSymbolsByIds(db, dependentIds);
+    const consumerDependentIds = dependentIds.filter((dependentId) => {
+      const symbol = hydrated.get(dependentId);
+      return symbol !== undefined && !isStructuralSymbolKind(symbol.kind);
+    });
+
     const remaining = Math.max(0, maxRetainedEdges - (symbolsById.size - 1));
-    const retainedDependentIds = dependentIds.slice(0, remaining);
-    omittedDependents += Math.max(0, dependentIds.length - retainedDependentIds.length);
-    if (retainedDependentIds.length < dependentIds.length) limitReached = true;
-    const hydrated = getSymbolsByIds(db, retainedDependentIds);
+    const retainedDependentIds = consumerDependentIds.slice(0, remaining);
+    omittedDependents += Math.max(0, consumerDependentIds.length - retainedDependentIds.length);
+    if (retainedDependentIds.length < consumerDependentIds.length) limitReached = true;
     const nextSymbolsById = new Map<string, SymbolRecord>();
 
     for (const dependentId of retainedDependentIds) {

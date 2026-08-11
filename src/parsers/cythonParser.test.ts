@@ -162,6 +162,7 @@ test("Cython fqNames keep the path-based shared model shape", async () => {
   assert.deepEqual(
     result.symbols.map((symbol) => symbol.fqName),
     [
+      "src/pkg/module.pyx::<module>",
       "src/pkg/module.pyx::integrate",
       "src/pkg/module.pyx::solve_system",
       "src/pkg/module.pyx::clamp",
@@ -223,9 +224,9 @@ test("invalid Cython syntax fails through the existing parser failure path", asy
 test("import module is detected conservatively when the repo-local target is clear", async () => {
   const fixture = await loadCythonFixture(IMPORTS_INCLUDES_FIXTURE_URL);
   const result = await parseFixtureFile(fixture, "src/pkg/import_module_source.pyx");
-  const sourceSymbol = findTopLevelFunction(result.symbols, "use_runtime");
+  const sourceSymbol = moduleSymbolOf(result.symbols);
   const targetResult = await parseFixtureFile(fixture, "src/pkg/runtime_target.pyx");
-  const targetSymbol = findTopLevelFunction(targetResult.symbols, "runtime_target");
+  const targetSymbol = moduleSymbolOf(targetResult.symbols);
 
   assert.deepEqual(importEdges(result), [
     {
@@ -241,9 +242,9 @@ test("import module is detected conservatively when the repo-local target is cle
 test("import module as alias is handled conservatively", async () => {
   const fixture = await loadCythonFixture(IMPORTS_INCLUDES_FIXTURE_URL);
   const result = await parseFixtureFile(fixture, "src/pkg/import_module_alias_source.pyx");
-  const sourceSymbol = findTopLevelFunction(result.symbols, "use_runtime_alias");
+  const sourceSymbol = moduleSymbolOf(result.symbols);
   const targetResult = await parseFixtureFile(fixture, "src/pkg/runtime_target.pyx");
-  const targetSymbol = findTopLevelFunction(targetResult.symbols, "runtime_target");
+  const targetSymbol = moduleSymbolOf(targetResult.symbols);
 
   assert.deepEqual(importEdges(result), [
     {
@@ -259,7 +260,7 @@ test("import module as alias is handled conservatively", async () => {
 test("from module import name creates imports edges when target resolution is clear", async () => {
   const fixture = await loadCythonFixture(IMPORTS_INCLUDES_FIXTURE_URL);
   const result = await parseFixtureFile(fixture, "src/pkg/from_import_source.pyx");
-  const sourceSymbol = findTopLevelFunction(result.symbols, "use_named");
+  const sourceSymbol = moduleSymbolOf(result.symbols);
   const targetResult = await parseFixtureFile(fixture, "src/pkg/named_target.pyx");
   const targetSymbol = findTopLevelFunction(targetResult.symbols, "named_target");
 
@@ -277,9 +278,9 @@ test("from module import name creates imports edges when target resolution is cl
 test("cimport module is handled conservatively when the repo-local target is clear", async () => {
   const fixture = await loadCythonFixture(IMPORTS_INCLUDES_FIXTURE_URL);
   const result = await parseFixtureFile(fixture, "src/pkg/cimport_module_source.pyx");
-  const sourceSymbol = findTopLevelFunction(result.symbols, "use_header");
+  const sourceSymbol = moduleSymbolOf(result.symbols);
   const targetResult = await parseFixtureFile(fixture, "src/pkg/header_target.pxd");
-  const targetSymbol = findTopLevelFunction(targetResult.symbols, "declared_target");
+  const targetSymbol = moduleSymbolOf(targetResult.symbols);
 
   assert.deepEqual(importEdges(result), [
     {
@@ -295,7 +296,7 @@ test("cimport module is handled conservatively when the repo-local target is cle
 test("from module cimport name creates imports edges when target resolution is clear", async () => {
   const fixture = await loadCythonFixture(IMPORTS_INCLUDES_FIXTURE_URL);
   const result = await parseFixtureFile(fixture, "src/pkg/from_cimport_source.pyx");
-  const sourceSymbol = findTopLevelFunction(result.symbols, "use_declared");
+  const sourceSymbol = moduleSymbolOf(result.symbols);
   const targetResult = await parseFixtureFile(fixture, "src/pkg/header_target.pxd");
   const targetSymbol = findTopLevelFunction(targetResult.symbols, "declared_target");
 
@@ -313,9 +314,9 @@ test("from module cimport name creates imports edges when target resolution is c
 test("include file relationships are represented deterministically when the target is repo-local", async () => {
   const fixture = await loadCythonFixture(IMPORTS_INCLUDES_FIXTURE_URL);
   const result = await parseFixtureFile(fixture, "src/pkg/include_source.pyx");
-  const sourceSymbol = findTopLevelFunction(result.symbols, "use_include");
+  const sourceSymbol = moduleSymbolOf(result.symbols);
   const targetResult = await parseFixtureFile(fixture, "src/pkg/shared_defs.pxi");
-  const targetSymbol = findTopLevelFunction(targetResult.symbols, "shared_helper");
+  const targetSymbol = moduleSymbolOf(targetResult.symbols);
 
   assert.deepEqual(importEdges(result), [
     {
@@ -357,6 +358,7 @@ test("Cython core symbol extraction includes top-level functions, classes, and m
   assert.deepEqual(
     result.symbols.map((symbol) => [symbol.localName, symbol.kind]),
     [
+      ["<module>", SymbolKind.Module],
       ["integrate", SymbolKind.Function],
       ["solve_system", SymbolKind.Function],
       ["clamp", SymbolKind.Function],
@@ -702,6 +704,13 @@ async function listFixtureFiles(rootPath: string): Promise<string[]> {
 
 function importEdges(result: Awaited<ReturnType<typeof parseCoreFixture>>) {
   return result.edges.filter((edge) => edge.edgeType === EdgeType.Imports);
+}
+
+// M140: module-level imports are owned by the file's module scope symbol.
+function moduleSymbolOf(symbols: readonly SymbolRecord[]): SymbolRecord {
+  const matches = symbols.filter((symbol) => symbol.kind === SymbolKind.Module);
+  assert.equal(matches.length, 1);
+  return matches[0] as SymbolRecord;
 }
 
 function findTopLevelFunction(symbols: readonly SymbolRecord[], localName: string): SymbolRecord {

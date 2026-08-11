@@ -670,7 +670,7 @@ test("index_repo delegates to the real indexing service and returns structured r
         id: 2,
         previousRunId: 1,
         totalFiles: 5,
-        totalSymbols: 11,
+        totalSymbols: 12,
         fileChangeCounts: {
           added: 0,
           modified: 0,
@@ -681,7 +681,7 @@ test("index_repo delegates to the real indexing service and returns structured r
           added: 0,
           modified: 0,
           removed: 0,
-          unchanged: 11,
+          unchanged: 12,
         },
       });
   });

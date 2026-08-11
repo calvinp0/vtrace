@@ -88,6 +88,7 @@ test("Python fqNames keep the path-based shared model shape", async () => {
   assert.deepEqual(
     result.symbols.map((symbol) => symbol.fqName),
     [
+      "src/pkg/mod.py::<module>",
       "src/pkg/mod.py::my_function",
       "src/pkg/mod.py::fetch_user",
       "src/pkg/mod.py::SessionManager",
@@ -149,9 +150,9 @@ test("invalid Python syntax fails through the existing parser failure path", asy
 test("import module is detected conservatively when the repo-local target is clear", async () => {
   const fixture = await loadPythonFixture(IMPORTS_SIMPLE_FIXTURE_URL);
   const result = await parseFixtureFile(fixture, "src/pkg/import_module_source.py");
-  const sourceSymbol = findTopLevelSymbol(result.symbols, "use_target", SymbolKind.Function);
+  const sourceSymbol = moduleSymbolOf(result.symbols);
   const targetResult = await parseFixtureFile(fixture, "src/pkg/target_module.py");
-  const targetSymbol = findTopLevelSymbol(targetResult.symbols, "target_function", SymbolKind.Function);
+  const targetSymbol = moduleSymbolOf(targetResult.symbols);
 
   assert.deepEqual(importEdges(result), [
     {
@@ -167,9 +168,9 @@ test("import module is detected conservatively when the repo-local target is cle
 test("import module as alias is handled conservatively", async () => {
   const fixture = await loadPythonFixture(IMPORTS_SIMPLE_FIXTURE_URL);
   const result = await parseFixtureFile(fixture, "src/pkg/import_module_alias_source.py");
-  const sourceSymbol = findTopLevelSymbol(result.symbols, "use_target_alias", SymbolKind.Function);
+  const sourceSymbol = moduleSymbolOf(result.symbols);
   const targetResult = await parseFixtureFile(fixture, "src/pkg/target_module.py");
-  const targetSymbol = findTopLevelSymbol(targetResult.symbols, "target_function", SymbolKind.Function);
+  const targetSymbol = moduleSymbolOf(targetResult.symbols);
 
   assert.deepEqual(importEdges(result), [
     {
@@ -185,7 +186,7 @@ test("import module as alias is handled conservatively", async () => {
 test("from module import name creates imports edges when target resolution is clear", async () => {
   const fixture = await loadPythonFixture(IMPORTS_SIMPLE_FIXTURE_URL);
   const result = await parseFixtureFile(fixture, "src/pkg/from_import_source.py");
-  const sourceSymbol = findTopLevelSymbol(result.symbols, "use_named", SymbolKind.Function);
+  const sourceSymbol = moduleSymbolOf(result.symbols);
   const targetResult = await parseFixtureFile(fixture, "src/pkg/named_target.py");
   const targetSymbol = findTopLevelSymbol(targetResult.symbols, "named_target", SymbolKind.Function);
 
@@ -203,7 +204,7 @@ test("from module import name creates imports edges when target resolution is cl
 test("package __init__.py is resolved conservatively when the imported name is clear", async () => {
   const fixture = await loadPythonFixture(IMPORTS_SIMPLE_FIXTURE_URL);
   const result = await parseFixtureFile(fixture, "src/pkg/from_package_source.py");
-  const sourceSymbol = findTopLevelSymbol(result.symbols, "use_package_api", SymbolKind.Function);
+  const sourceSymbol = moduleSymbolOf(result.symbols);
   const targetResult = await parseFixtureFile(fixture, "src/pkg/__init__.py");
   const targetSymbol = findTopLevelSymbol(targetResult.symbols, "package_api", SymbolKind.Function);
 
@@ -222,7 +223,7 @@ test("relative imports are resolved conservatively when they are repo-local", as
   const fixture = await loadPythonFixture(IMPORTS_RELATIVE_FIXTURE_URL);
 
   const samePackageResult = await parseFixtureFile(fixture, "src/app/sub/from_same_package_source.py");
-  const samePackageSource = findTopLevelSymbol(samePackageResult.symbols, "use_feature", SymbolKind.Function);
+  const samePackageSource = moduleSymbolOf(samePackageResult.symbols);
   const featureResult = await parseFixtureFile(fixture, "src/app/sub/feature.py");
   const featureSymbol = findTopLevelSymbol(featureResult.symbols, "feature_flag", SymbolKind.Function);
 
@@ -237,7 +238,7 @@ test("relative imports are resolved conservatively when they are repo-local", as
   ]);
 
   const parentPackageResult = await parseFixtureFile(fixture, "src/app/sub/from_parent_package_source.py");
-  const parentPackageSource = findTopLevelSymbol(parentPackageResult.symbols, "use_helper", SymbolKind.Function);
+  const parentPackageSource = moduleSymbolOf(parentPackageResult.symbols);
   const helperResult = await parseFixtureFile(fixture, "src/app/shared/helpers.py");
   const helperSymbol = findTopLevelSymbol(helperResult.symbols, "helper", SymbolKind.Function);
 
@@ -262,8 +263,22 @@ test("third-party imports create no imports edges", async () => {
 test("unresolved Python imports do not crash and do not guess", async () => {
   const fixture = await loadPythonFixture(IMPORTS_SIMPLE_FIXTURE_URL);
   const result = await parseFixtureFile(fixture, "src/pkg/unresolved_source.py");
+  const ambiguousResult = await parseFixtureFile(fixture, "src/pkg/ambiguous_module.py");
 
-  assert.deepEqual(importEdges(result), []);
+  // `from pkg.missing import missing_name` and `from pkg.named_target import
+  // missing_name` stay unresolved and yield nothing. `import
+  // pkg.ambiguous_module` DOES resolve — to exactly one file — and since M140
+  // its edge no longer depends on how many definitions that file happens to
+  // contain (it has two, which alone used to suppress the edge).
+  assert.deepEqual(importEdges(result), [
+    {
+      id: importEdges(result)[0]?.id,
+      srcSymbolId: moduleSymbolOf(result.symbols).id,
+      dstSymbolId: moduleSymbolOf(ambiguousResult.symbols).id,
+      edgeType: EdgeType.Imports,
+      confidence: 1,
+    },
+  ]);
   assert.deepEqual(result.diagnostics, []);
 });
 
@@ -281,6 +296,7 @@ test("existing core Python symbol extraction remains unchanged after adding impo
   assert.deepEqual(
     result.symbols.map((symbol) => [symbol.localName, symbol.kind]),
     [
+      ["<module>", SymbolKind.Module],
       ["my_function", SymbolKind.Function],
       ["fetch_user", SymbolKind.Function],
       ["SessionManager", SymbolKind.Class],
@@ -1217,7 +1233,7 @@ test("ambiguous top-level assignments (tuple unpacking, augmented) are not index
   });
   const names = result.symbols.map((symbol) => symbol.localName).sort();
 
-  assert.deepEqual(names, ["C"]);
+  assert.deepEqual(names, ["<module>", "C"]);
 });
 
 test("function/class indexing still works when module-level symbols are also present", async () => {
@@ -2285,6 +2301,11 @@ function callsEdges(result: Awaited<ReturnType<typeof parseCoreFixture>>) {
 
 function referencesEdges(result: Awaited<ReturnType<typeof parseCoreFixture>>) {
   return result.edges.filter((edge) => edge.edgeType === EdgeType.References);
+}
+
+// M140: a file's module-level imports are owned by its module scope symbol.
+function moduleSymbolOf(symbols: readonly SymbolRecord[]): SymbolRecord {
+  return onlySymbolOfKind(symbols, SymbolKind.Module);
 }
 
 function onlySymbolOfKind(symbols: readonly SymbolRecord[], kind: SymbolKind): SymbolRecord {

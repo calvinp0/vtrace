@@ -16,7 +16,7 @@ import { parseCython } from "./cythonParser";
  * symbols.
  */
 export interface CrossLanguageExportIndex {
-  /** Present only when the module has exactly one unambiguous top-level symbol. */
+  /** The module scope symbol (M140): the stable target of `import module`. */
   readonly moduleSymbol?: SymbolRecord;
   /** Unambiguous top-level symbols keyed by local name. */
   readonly namedSymbols: ReadonlyMap<string, SymbolRecord>;
@@ -52,7 +52,11 @@ export function getCythonExportIndex(
 function buildExportIndex(
   symbols: readonly SymbolRecord[],
 ): CrossLanguageExportIndex {
-  const topLevelSymbols = symbols.filter((symbol) => symbol.parentSymbolId === undefined);
+  // M140: the module scope symbol is the stable import target; it is never a
+  // named export, so it is kept out of the name-keyed index.
+  const allTopLevel = symbols.filter((symbol) => symbol.parentSymbolId === undefined);
+  const moduleSymbol = allTopLevel.find((symbol) => symbol.kind === SymbolKind.Module);
+  const topLevelSymbols = allTopLevel.filter((symbol) => symbol.kind !== SymbolKind.Module);
   const namedSymbols = collectUnambiguousByLocalName(topLevelSymbols);
 
   const classMembersByClassName = new Map<string, ReadonlyMap<string, SymbolRecord>>();
@@ -73,7 +77,7 @@ function buildExportIndex(
   }
 
   return {
-    moduleSymbol: topLevelSymbols.length === 1 ? topLevelSymbols[0] : undefined,
+    ...(moduleSymbol === undefined ? {} : { moduleSymbol }),
     namedSymbols,
     classMembersByClassName,
   };
