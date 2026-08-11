@@ -343,6 +343,32 @@ file; live-run outcome history is separate (`stage5_outcome_ledger.md`).
   committed-baseline diff, every time.
 
 | M139 | (this commit) | MIXED | Impact consumer truthfulness (caller coverage + bounded potential-caller discovery, direction-separated consumer counts, domain-labelled richSummary, reclassified omission accounting) + behavioural-vs-preference contrast semantics | ARCSpecies.copy: exact callers 0 (was unreported), 83 potential discovered / 10 delivered, coverage `incomplete` with 5 reason codes; `canonicalEdgesOmitted` 686 resolved to 686 nodes + 0 edge slots (`node_budget`); ARC serialization query reclassified `preference_exclusion`→`alternative_branches`, adjacency/list penalty removed (was -0.14 live); M135 dihedral `-0.28` preserved | implement bounded upstream graph expansion so serialization orchestration (`from_dict`→`mol_from_xyz`) becomes visible; then M140 index readiness |
+| M140 | c793468 | **INCOMPLETE** (WS-A PASS, WS-B not implemented) | WS-A: stabilize module-level import attribution. Root cause = an ownership model with NO stable owner: `getUnambiguousImportSourceSymbol` attributed a file's ENTIRE import edge set to its single top-level symbol and returned nothing when the file had zero or more than one (`pythonParser.ts:2416`, duplicated verbatim at `cythonParser.ts:1181`), so adding one unrelated function deleted a semantically unchanged edge — and the same rule governed the TARGET side, so `import model` resolved only when `model.py` had exactly one definition. Fix = a per-file structural module symbol (`SymbolKind.Module`, `<module>`, `src/parsers/moduleSymbol.ts`) whose span is pinned to byte 0 (because `computeSymbolId` hashes the span, a body-sized span would re-break the owner id and every edge id hanging off it on any length change) and whose name cannot collide with a real definition. Structural symbols are graph-visible / delivery-invisible (`isStructuralSymbolKind`, `EXCLUDE_STRUCTURAL_SYMBOLS_SQL`). NO schema change: `symbols.kind` has no CHECK constraint, so the `index_status` contradiction is untouched and M141 still owns readiness. | Only **49/257 (19.1%)** of ARC Python files could own an import edge before this; ARC `imports` **283 → 2,281 (8.1×)** while `calls`/`contains`/`references` stayed byte-identical (10,759/5,960/2,618) = the §25 evidence that no other edge kind was retargeted. 125 new product-level tests (`importAttributionStability.test.ts`): 6 import forms × 9 unrelated additions × 2 positions, ordering, alias/relative/re-export, shadow+rebind controls, semantic-change controls, full-vs-incremental and no-op equivalence, determinism; run unchanged against M139 `340fd9c` it gives **28 pass / 97 fail**, so it discriminates. Impact gained two improvements: fan-in delivery **32 → 40 of 40** callers (each caller used to burn two of the 64 edge slots on a redundant import+call pair naming the same src/dst) and impact queries for an 80-caller symbol **88 → 9** (batched the direct-relations prefetch — the guarding test is named for a property it did not previously hold). 3,945 pass / 0 fail; both typechecks clean. | **WS-B not implemented and the mandatory paired benchmark (§61) NOT run** — the 32G tmpfs hit its quota copying Django checkouts; it is runnable on the root fs (675G free). Do the paired benchmark FIRST: it is the only thing that can say whether the 8× import expansion helps / is neutral / regresses, and whether `rerankGraph`'s import-neighbour weight (6, cap 12) is still calibrated now that the importer-side signal lands on excluded module symbols (OPEN FINDING, deliberately not tuned). Then implement upstream rescue: the ARC chain `from_dict –calls→ mol_from_xyz –calls→ perceive_molecule_from_xyz` IS present (§114 does not apply), with calls fan-in 62/3/1 sizing the seed rule and per-seed cap. |
+
+## M140 standing findings
+
+- **Import attribution had no stable owner** (M140): before this, a file's import
+  edges existed only while it had exactly one top-level symbol, so **81% of ARC's
+  Python files carried none**. Any past reading of the import graph as complete —
+  including hub counts, co-edit import evidence, and `rerankGraph`'s
+  imports-neighbour signal — was reading a graph missing ~8× its own content.
+- **Module symbols are structural: graph-visible, delivery-invisible** (M140).
+  They own module-level imports and are excluded from retrieval candidates,
+  lexical ranking, and delivered impact nodes/relations. Do not "fix" a test by
+  making them retrievable; add the exclusion to any NEW candidate query instead.
+- **`rerankGraph` import-neighbour calibration is an OPEN question** (M140): the
+  importer-side signal now lands on module symbols, which retrieval excludes, so a
+  function no longer inherits its file's imports. The target side still accrues
+  them, from ~8× as many importers. Whether weight 6 / cap 12 still fits is
+  unmeasured — it needs the aggregate paired benchmark. Do not retune it to
+  restore historical metrics without separately evidencing a ranking defect.
+- **Import-only dependency has no symbol-level impact representation** (M140):
+  a file that imports a symbol and never calls it no longer appears in impact
+  (before, it did *if* it happened to contain exactly one definition). Import-only
+  dependency is a file-level relation and the impact response is symbol-shaped.
+  Candidate M141 work.
+- **This ledger's first table jumps M133 → M140**; M134–M139 rows were never
+  appended to it, though M139's row and findings exist further down the file.
 
 ## M139 standing findings
 

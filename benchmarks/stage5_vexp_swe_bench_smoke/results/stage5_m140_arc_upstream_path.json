@@ -1,0 +1,63 @@
+{
+  "milestone": "M140",
+  "workstream": "B (groundwork only — bounded upstream rescue was NOT implemented)",
+  "repo": "/home/calvin/code/ARC",
+  "branch": "arcbench",
+  "head": "d5ef3dc5777e6c11c8ce018dada3ce7f91ef666e",
+  "readOnly": true,
+  "indexedFrom": "freshly generated index over the working tree, M140 candidate parser, temporary database",
+  "question": "does the graph contain the orchestration chain the ARC serialization query needs?",
+  "chain": {
+    "verified": true,
+    "edges": [
+      {
+        "from": "arc/species/species.py::ARCSpecies.from_dict",
+        "to": "arc/species/species.py::ARCSpecies.mol_from_xyz",
+        "kind": "calls"
+      },
+      {
+        "from": "arc/species/species.py::ARCSpecies.mol_from_xyz",
+        "to": "arc/species/perceive.py::perceive_molecule_from_xyz",
+        "kind": "calls"
+      }
+    ],
+    "absent": [
+      {
+        "from": "ARCSpecies.mol_from_xyz",
+        "to": "are_coords_compliant_with_graph",
+        "note": "no direct calls edge in the current index"
+      },
+      {
+        "from": "ARCSpecies.from_dict",
+        "to": "are_coords_compliant_with_graph",
+        "note": "no direct calls edge in the current index"
+      }
+    ]
+  },
+  "resolvedSymbols": {
+    "ARCSpecies.from_dict": "arc/species/species.py::ARCSpecies.from_dict (method)",
+    "ARCSpecies.mol_from_xyz": "arc/species/species.py::ARCSpecies.mol_from_xyz (method)",
+    "perceive_molecule_from_xyz": "arc/species/perceive.py::perceive_molecule_from_xyz (function)",
+    "are_coords_compliant_with_graph": "arc/species/species.py::are_coords_compliant_with_graph (function)",
+    "note": "from_dict/as_dict/copy are ambiguous local names across ARC; the species.py methods are the relevant ones"
+  },
+  "fanInProfile": {
+    "note": "drives seed eligibility and per-seed caps (spec 37, 44)",
+    "callsOnly": {
+      "perceive_molecule_from_xyz": 62,
+      "ARCSpecies.mol_from_xyz": 3,
+      "ARCSpecies.from_dict": 1
+    },
+    "allIncomingAnyKind": {
+      "perceive_molecule_from_xyz": 72,
+      "ARCSpecies.mol_from_xyz": 5
+    }
+  },
+  "designImplication": [
+    "The downstream tail perceive_molecule_from_xyz (62 callers) is exactly the high-fan-in seed spec 44 requires be suppressed or strictly top-bounded.",
+    "The two upstream hops are cheap (3 then 1 incoming), so a depth-2 walk bounded per seed recovers from_dict without flooding.",
+    "Spec 114 does NOT apply: the graph is not missing the required path. This remains a candidate-generation problem, as M139 concluded.",
+    "Spec 46's symbol list should not be assumed whole: are_coords_compliant_with_graph has no direct calls edge from either orchestration symbol."
+  ],
+  "status": "NOT IMPLEMENTED IN M140 — recorded as the entry point for the upstream rescue continuation"
+}

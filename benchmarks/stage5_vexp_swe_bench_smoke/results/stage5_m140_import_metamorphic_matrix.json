@@ -1,0 +1,65 @@
+{
+  "milestone": "M140",
+  "artifact": "import attribution metamorphic matrix",
+  "suite": "src/parsers/importAttributionStability.test.ts",
+  "level": "product (real indexer, persisted edges table) — the defect manifested at index level, so parser-only assertions would not have caught it",
+  "totals": { "tests": 125, "passOnCandidate": 125, "failOnCandidate": 0 },
+  "guardValidation": {
+    "method": "ran the M140 suite unchanged against the M139 tree (340fd9c) via git stash",
+    "result": { "pass": 28, "fail": 97 },
+    "interpretation": "the suite genuinely discriminates; it is not vacuously green"
+  },
+  "importForms": [
+    "A: from module import Symbol",
+    "B: import module",
+    "C: import module as alias",
+    "D: from module import Symbol as alias",
+    "E: relative import",
+    "F: package __init__ re-export"
+  ],
+  "unrelatedAdditions": [
+    "function",
+    "class",
+    "constant",
+    "comment",
+    "module-level string",
+    "large function (200 lines)",
+    "nested function",
+    "async function",
+    "decorated function"
+  ],
+  "additionPositions": ["after the import", "between the import and the existing definition"],
+  "matrix": {
+    "combinations": 108,
+    "expected": "edge set identical",
+    "observed": "edge set identical",
+    "result": "PASS"
+  },
+  "controls": [
+    { "case": "definition reordering", "expected": "unchanged", "result": "PASS" },
+    { "case": "import moved below a definition", "expected": "unchanged", "result": "PASS" },
+    { "case": "two imports, unrelated code added", "expected": "no cross-attribution", "result": "PASS" },
+    { "case": "same-named symbols imported under aliases", "expected": "no dedup collapse", "result": "PASS" },
+    { "case": "retarget from a import Thing -> from b import Thing", "expected": "edge CHANGES", "result": "PASS" },
+    { "case": "remove the import", "expected": "edge REMOVED", "result": "PASS" },
+    { "case": "import an additional name", "expected": "exactly one edge ADDED", "result": "PASS" },
+    { "case": "local shadow of the imported name", "expected": "import relation unchanged; no call edge to the shadowed name", "result": "PASS" },
+    { "case": "module-level rebinding", "expected": "import relation unchanged", "result": "PASS" },
+    { "case": "mixed import + call fixture", "expected": "call stays on the function, import on the module", "result": "PASS" }
+  ],
+  "equivalence": [
+    { "case": "incremental refresh after an unrelated edit vs clean full build", "result": "PASS (identical edges)" },
+    { "case": "incremental refresh after a retargeting edit vs clean full build", "result": "PASS (identical edges)" },
+    { "case": "no-op incremental pass", "result": "PASS (unchanged)" },
+    { "case": "repeated full index determinism", "result": "PASS (identical)" }
+  ],
+  "productRetrieval": [
+    { "case": "unrelated edit must not change an import-dependent retrieval result", "result": "PASS" },
+    { "case": "module scope symbols never returned as retrieval candidates", "result": "PASS (6 query shapes across plain-SQL and graph backends)" }
+  ],
+  "cythonPreservation": {
+    "note": "the defective helper was duplicated verbatim in the Cython parser; both were fixed via the shared owner",
+    "cases": ["import module", "import module as alias", "from module import name", "cimport module", "from module cimport name", "include file"],
+    "result": "PASS (src/parsers/cythonParser.test.ts)"
+  }
+}
