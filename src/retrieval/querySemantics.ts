@@ -7,6 +7,21 @@
 
 export type ContrastConfidence = "high" | "none";
 export type QueryIntentKind = "capability_lookup" | "general";
+
+/**
+ * What a contrast construction MEANS, which the cue word alone cannot say.
+ *
+ * "a helper that works on vectors rather than coordinates" asks us to exclude
+ * the coordinate implementation. "when are vectors used rather than
+ * coordinates?" asks us to explain both and the condition that selects between
+ * them. Same cue, opposite retrieval consequence: treating the second as an
+ * exclusion downranks exactly the code the reader needs (M139).
+ */
+export type ContrastKind =
+  /** Prefer the left side, downrank the right. M135 behaviour. */
+  | "preference_exclusion"
+  /** Both sides are required behavioural evidence. No negative penalty. */
+  | "alternative_branches";
 export type IdentifierConfidence =
   | "explicit_identifier"
   | "strong_literal"
@@ -22,6 +37,9 @@ export interface ContrastClause {
   readonly positiveIdentifiers: readonly string[];
   readonly contrastIdentifiers: readonly string[];
   readonly confidence: ContrastConfidence;
+  readonly kind: ContrastKind;
+  /** The behavioural cue that selected `alternative_branches`, when one did. */
+  readonly branchCue?: string;
   readonly start: number;
   readonly end: number;
 }
@@ -55,7 +73,14 @@ export interface DerivedQueryIntent {
   readonly contrastPhrases: readonly string[];
   /** Token-normalized once per request for bounded phrase matching. */
   readonly normalizedContrastPhrases: readonly string[];
+  /** Preference/exclusion clauses only. These alone produce a negative penalty. */
   readonly contrastClauses: readonly ContrastClause[];
+  /** Conditional-alternative clauses. Both sides are positive branch evidence. */
+  readonly branchClauses: readonly ContrastClause[];
+  /** Union of both sides of every branch clause; positive evidence, never negative. */
+  readonly branchTerms: readonly string[];
+  /** What kind of contrast, if any, this request expresses. */
+  readonly contrastKind: ContrastKind | "none";
   readonly explicitIdentifiers: readonly string[];
   readonly contrastIdentifiers: readonly string[];
   readonly comparisonIdentifiers: readonly string[];
@@ -90,8 +115,62 @@ const TERM_STOPWORDS: ReadonlySet<string> = new Set([
 const IDENTIFIER = String.raw`[A-Za-z_][A-Za-z0-9_]*(?:(?:::|\.)[A-Za-z_][A-Za-z0-9_]*)*`;
 const MAX_SCOPE_TOKENS = 12;
 
+/**
+ * Frames that turn a contrast into a question about WHEN each side happens.
+ *
+ * Every rule demands clause structure, not a bare keyword: `when` must be
+ * followed by an auxiliary verb, so "the helper used when parsing, rather than
+ * the one for serializing" stays a preference while "when is the helper used
+ * rather than the parser?" becomes a branch question. Matching on the bare word
+ * would silently disable M135's exclusion behaviour on ordinary requests.
+ */
+const BEHAVIORAL_FRAME_CUES: readonly RegExp[] = [
+  /\bunder\s+wh(?:at|ich)\s+(?:conditions?|circumstances?|cases?)\b/iu,
+  /\bin\s+wh(?:at|ich)\s+(?:conditions?|circumstances?|cases?)\b/iu,
+  /\bwhat\s+determines\b/iu,
+  /\bwhen\s+(?:is|are|was|were|does|do|did|should|will|would|can|has|have)\b/iu,
+  /\bwhy\s+(?:is|are|was|were|does|do|did)\b/iu,
+  /\bdepending\s+on\b/iu,
+  /\bwhether\b/iu,
+];
+
+/**
+ * Interrogative and auxiliary vocabulary belonging to the QUESTION rather than to
+ * either alternative. Filtered out of branch terms only — adding them to the
+ * global stopword set would change M135's contrast matching on other requests.
+ */
+const BRANCH_FRAME_WORDS: ReadonlySet<string> = new Set([
+  "are", "can", "case", "cases", "circumstance", "circumstances", "condition",
+  "conditions", "depending", "determines", "did", "does", "happen", "happens",
+  "has", "have", "is", "it", "its", "should", "then", "under", "was", "we",
+  "were", "what", "when", "whether", "which", "why", "will", "would",
+]);
+
+/**
+ * Whether the clause sits inside a sentence that frames it as a branch question.
+ * Only text preceding the cue is considered: the frame establishes what is being
+ * asked before the alternatives are named.
+ */
+function behavioralFrameFor(task: string, clauseStart: number): string | undefined {
+  const sentenceStart = Math.max(
+    ...[".", "!", "?", ";", "\n"].map((mark) => task.lastIndexOf(mark, Math.max(0, clauseStart - 1))),
+    -1,
+  ) + 1;
+  const frame = task.slice(sentenceStart, clauseStart);
+  for (const cue of BEHAVIORAL_FRAME_CUES) {
+    const match = cue.exec(frame);
+    if (match !== null) return match[0].toLowerCase().replace(/\s+/gu, " ");
+  }
+  return undefined;
+}
+
 export function deriveQueryIntent(task: string, options: DeriveQueryIntentOptions = {}): DerivedQueryIntent {
-  const contrastClauses = parseContrastClauses(task);
+  const allClauses = parseContrastClauses(task);
+  // Only preference/exclusion clauses may remove text, contribute contrast terms,
+  // or suppress an identifier. Branch clauses describe alternatives the reader
+  // needs BOTH of, so they stay entirely on the positive side of the request.
+  const contrastClauses = allClauses.filter((clause) => clause.kind === "preference_exclusion");
+  const branchClauses = allClauses.filter((clause) => clause.kind === "alternative_branches");
   const comparisonIdentifiers = collectComparisonIdentifiers(task);
   const contrastIdentifiers = unique(contrastClauses.flatMap((clause) => clause.contrastIdentifiers));
   const explicitSignals = collectExplicitIdentifierSignals(task, contrastClauses, comparisonIdentifiers);
@@ -129,6 +208,12 @@ export function deriveQueryIntent(task: string, options: DeriveQueryIntentOption
     contrastPhrases,
     normalizedContrastPhrases: contrastPhrases.map(normalizePhrase).filter(Boolean),
     contrastClauses,
+    branchClauses,
+    branchTerms: unique(branchClauses.flatMap((clause) => [...clause.positiveTerms, ...clause.contrastTerms]))
+      .filter((term) => !BRANCH_FRAME_WORDS.has(term)),
+    contrastKind: branchClauses.length > 0
+      ? "alternative_branches"
+      : contrastClauses.length > 0 ? "preference_exclusion" : "none",
     explicitIdentifiers,
     contrastIdentifiers,
     comparisonIdentifiers,
@@ -167,6 +252,7 @@ export function parseContrastClauses(task: string): ContrastClause[] {
     const contrast = cleanPhrase(contrastPhrase);
     const positive = positivePhrase === undefined ? undefined : cleanPhrase(positivePhrase);
     if (contrast.length === 0) return;
+    const branchCue = behavioralFrameFor(task, start);
     clauses.push({
       cue,
       ...(positive === undefined || positive.length === 0 ? {} : { positivePhrase: positive }),
@@ -176,6 +262,8 @@ export function parseContrastClauses(task: string): ContrastClause[] {
       positiveIdentifiers: positive === undefined ? [] : identifiersInPhrase(positive),
       contrastIdentifiers: identifiersInPhrase(contrast),
       confidence: "high",
+      kind: branchCue === undefined ? "preference_exclusion" : "alternative_branches",
+      ...(branchCue === undefined ? {} : { branchCue }),
       start,
       end,
     });
@@ -454,6 +542,8 @@ export interface CandidateContrastEvaluation {
   readonly matchedPositiveTerms: readonly string[];
   readonly matchedContrastTerms: readonly string[];
   readonly matchedContrastPhrases: readonly string[];
+  /** Terms from either side of a conditional alternative. Positive evidence. */
+  readonly matchedBranchTerms: readonly string[];
   readonly reason?: string;
 }
 
@@ -589,8 +679,8 @@ export function evaluateCandidateContrast(
     readonly docstring?: string | null;
   },
 ): CandidateContrastEvaluation {
-  if (intent.contrastClauses.length === 0) {
-    return { positiveObjectiveScore: 0, contrastPenalty: 0, matchedPositiveTerms: [], matchedContrastTerms: [], matchedContrastPhrases: [] };
+  if (intent.contrastClauses.length === 0 && intent.branchClauses.length === 0) {
+    return { positiveObjectiveScore: 0, contrastPenalty: 0, matchedPositiveTerms: [], matchedContrastTerms: [], matchedContrastPhrases: [], matchedBranchTerms: [] };
   }
   const identity = `${candidate.localName} ${candidate.fqName} ${candidate.filePath}`;
   const text = `${identity} ${candidate.signature} ${candidate.docstring ?? ""}`;
@@ -606,7 +696,16 @@ export function evaluateCandidateContrast(
   const exactContrastIdentifier = intent.contrastIdentifiers.some((term) => leaf(term).toLowerCase() === localLower);
   const exactPositiveIdentifier = intent.explicitIdentifiers.some((term) => leaf(term).toLowerCase() === localLower)
     || intent.comparisonIdentifiers.some((term) => leaf(term).toLowerCase() === localLower);
-  const positiveObjectiveScore = Math.min(0.24, matchedPositiveTerms.length * 0.06);
+  // Matching EITHER side of a conditional alternative is evidence for the
+  // answer, and matching both means the candidate spans the decision itself —
+  // exactly the orchestration code a "when does X rather than Y" question wants.
+  const matchedBranchTerms = intent.branchTerms.filter((term) => tokens.has(term)).slice(0, 6);
+  const branchSidesMatched = intent.branchClauses.filter((clause) =>
+    clause.positiveTerms.some((term) => tokens.has(term))
+    && clause.contrastTerms.some((term) => tokens.has(term))).length;
+  const branchScore = Math.min(0.24, matchedBranchTerms.length * 0.06)
+    + (branchSidesMatched > 0 ? 0.12 : 0);
+  const positiveObjectiveScore = Math.min(0.36, Math.min(0.24, matchedPositiveTerms.length * 0.06) + branchScore);
   const rawPenalty = matchedContrastTerms.length * 0.14
     + matchedContrastPhrases.length * 0.18
     + (exactContrastIdentifier ? 0.45 : 0);
@@ -622,9 +721,14 @@ export function evaluateCandidateContrast(
     matchedPositiveTerms,
     matchedContrastTerms,
     matchedContrastPhrases,
+    matchedBranchTerms,
     ...(contrastPenalty > 0
       ? { reason: `high-confidence contrast matched ${[...matchedContrastTerms, ...matchedContrastPhrases].join(", ") || candidate.localName}` }
-      : {}),
+      : branchSidesMatched > 0
+        ? { reason: `connects both conditional branches: ${matchedBranchTerms.join(", ")}` }
+        : matchedBranchTerms.length > 0
+          ? { reason: `matches conditional branch evidence: ${matchedBranchTerms.join(", ")}` }
+          : {}),
   };
 }
 

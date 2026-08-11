@@ -269,6 +269,42 @@ export function listSymbolsByFqName(
   return rows.map(symbolRowToRecord);
 }
 
+/**
+ * Every symbol sharing an unqualified name, regardless of owner. Used by M139
+ * caller-coverage analysis to measure how ambiguous a method name is before any
+ * unresolved call site is attributed to one definition. There is no index on
+ * `local_name`; the scan is deliberate, and it is cheap because a repository's
+ * symbol table is small relative to its source.
+ */
+export function listSymbolsByLocalName(
+  db: Database,
+  localName: string,
+): SymbolRecord[] {
+  const rows = db.query(`
+    SELECT
+      symbols.id,
+      files.path AS file_path,
+      symbols.fq_name,
+      symbols.local_name,
+      symbols.kind,
+      symbols.signature,
+      symbols.start_line,
+      symbols.end_line,
+      symbols.start_byte,
+      symbols.end_byte,
+      symbols.parent_symbol_id,
+      symbols.exported,
+      symbols.docstring,
+      symbols.decorators
+    FROM symbols
+    INNER JOIN files ON files.id = symbols.file_id
+    WHERE symbols.local_name = ?
+    ORDER BY files.path ASC, symbols.fq_name ASC, symbols.start_byte ASC, symbols.id ASC
+  `).all(localName) as SymbolRow[];
+
+  return rows.map(symbolRowToRecord);
+}
+
 function symbolRowToRecord(row: SymbolRow): SymbolRecord {
   return {
     id: row.id,

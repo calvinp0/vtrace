@@ -5,6 +5,7 @@ import type {
   ImpactGraphOutput,
   ImpactNode,
 } from "./getImpactGraph";
+import type { CallerCoverage } from "./callerCoverage";
 import type { StaticRelationEvidence } from "./staticEvidence";
 
 export const IMPACT_RESPONSE_ENVELOPE_VERSION = "vtrace.impact_response_envelope/1" as const;
@@ -40,6 +41,34 @@ type MutableImpactResponse = {
   -readonly [Key in keyof ImpactGraphOutput]: ImpactGraphOutput[Key];
 } & { accounting?: ContextAccounting | { latencyMs: number; ref: string }; responseBudget?: ImpactResponseBudget };
 
+/**
+ * Restate caller coverage for what the response actually carries. The discovered
+ * totals are preserved (an agent still learns how many sites exist); only the
+ * delivered/omitted split moves. Status is clamped away from `complete` because
+ * dropping evidence for budget can never increase certainty.
+ */
+function withDeliveredCallerCounts(
+  coverage: CallerCoverage,
+  deliveredPotentialCallers: number,
+): CallerCoverage {
+  const omitted = Math.max(0, coverage.potentialCallerCount - deliveredPotentialCallers);
+  return {
+    ...coverage,
+    status: coverage.status === "complete" && omitted > 0 ? "incomplete" : coverage.status,
+    deliveredPotentialCallerCount: deliveredPotentialCallers,
+    potentialCallersOmitted: omitted,
+    reasonCodes: omitted > coverage.potentialCallersOmitted
+      ? [...new Set([...coverage.reasonCodes, "callsite_candidates_omitted" as const])].sort()
+      : coverage.reasonCodes,
+    notes: omitted > 0
+      ? [
+        "caller coverage incomplete; additional unresolved call sites omitted for response budget",
+        ...coverage.notes,
+      ]
+      : coverage.notes,
+  };
+}
+
 export function impactResponseTokenCeiling(requestedMaxTokens: number): number {
   const requested = Math.max(1, Math.floor(requestedMaxTokens));
   return requested + Math.max(
@@ -57,6 +86,10 @@ export function compactImpactProductResponse(
   output: ImpactGraphOutput & { readonly accounting?: ContextAccounting },
 ): ImpactProductResponse {
   const draft = structuredClone(output) as MutableImpactResponse;
+  // Responses assembled outside the engine (fixtures, older callers) may predate
+  // the M139 caller-coverage fields. Treat them as absent rather than assuming
+  // them; nothing below may invent a coverage claim that was never measured.
+  if (draft.potentialCallers === undefined) draft.potentialCallers = [];
   const compacted = new Set<string>();
   const requestedMaxEdges = Math.max(1, draft.limits.maxEdges);
   const requestedMaxTokens = Math.max(1, draft.limits.maxTokens);
@@ -129,6 +162,16 @@ export function compactImpactProductResponse(
     draft.coverage = { ...draft.coverage, notes: draft.coverage.notes.slice(0, 2) };
     compacted.add("coverage.notes");
   }
+  // Coverage prose restates what `status` and `reasonCodes` already say
+  // machine-readably. Keep the first line only; the machine-readable state is
+  // never compacted away.
+  if (draft.callerCoverage !== undefined && draft.callerCoverage.notes.length > 1) {
+    draft.callerCoverage = {
+      ...draft.callerCoverage,
+      notes: draft.callerCoverage.notes.slice(0, 1),
+    };
+    compacted.add("callerCoverage.notes");
+  }
   if (draft.accounting !== undefined
     && "estimatedOutputTokens" in draft.accounting
     && draft.accounting.skippedFiles !== undefined
@@ -190,6 +233,27 @@ export function compactImpactProductResponse(
       compacted.add("transitiveCompatibilityEdges");
     }
   }
+  // Potential callers are unproven evidence, so they yield before proven
+  // relations — but only after the low-value transitive support above, and
+  // strictly worst-confidence first. Whatever is dropped stays visible as a
+  // count, and the coverage status can only get less complete, never more:
+  // compaction must not be able to turn "we could not tell" into "there are
+  // none".
+  // Shed the explanation before the evidence: a bare `file:line receiver` still
+  // tells an agent where to look, whereas dropping the site hides it entirely.
+  if (!fits() && draft.potentialCallers.some((caller) => caller.sourceText !== undefined)) {
+    draft.potentialCallers = draft.potentialCallers.map((caller) => ({
+      filePath: caller.filePath,
+      line: caller.line,
+      column: caller.column,
+      receiverExpression: caller.receiverExpression,
+      enclosingSymbol: caller.enclosingSymbol,
+      confidence: caller.confidence,
+      evidenceKind: caller.evidenceKind,
+    }));
+    compacted.add("potentialCallers[].compactProjection");
+  }
+
   if (!fits() && draft.directRelations.length > 0) {
     draft.directRelations = draft.directRelations.map(minimalRelation);
     rebuildCanonicalNodeAndViewProjections(draft, compacted);
@@ -208,6 +272,37 @@ export function compactImpactProductResponse(
   if (!fits() && draft.paths.length > 0) {
     draft.paths = [];
     compacted.add("paths");
+  }
+
+  // When the question is "who consumes this?" and nothing was proven, the
+  // target's own downstream dependencies are the least relevant thing in the
+  // response. Spending the last of the envelope on `copy -> as_dict` while
+  // discarding candidate call sites inverts the priority the caller asked for.
+  if (!fits()
+    && draft.callerCoverage !== undefined
+    && draft.callerCoverage.exactCallerCount === 0
+    && draft.callerCoverage.status !== "complete"
+    && draft.potentialCallers.length > 0
+    && draft.directRelations.some((relation) => relation.direction === "outgoing")) {
+    draft.directRelations = draft.directRelations.filter((relation) => relation.direction !== "outgoing");
+    rebuildCanonicalNodeAndViewProjections(draft, compacted);
+    compacted.add("outgoingRelationsYieldedToCallerEvidence");
+  }
+
+  // Only now, once the proven-relation projections have been reduced as far as
+  // they go, do unproven call sites start to yield — worst confidence first.
+  // Ordering matters: dropping every candidate to protect a verbose rendering of
+  // "the class contains this method" would answer a consumer question with the
+  // one relation that is not a consumer.
+  for (const tier of ["unresolved", "medium", "high"] as const) {
+    if (fits() || draft.potentialCallers.length === 0) break;
+    const retained = draft.potentialCallers.filter((caller) => caller.confidence !== tier);
+    if (retained.length === draft.potentialCallers.length) continue;
+    draft.potentialCallers = retained;
+    if (draft.callerCoverage !== undefined) {
+      draft.callerCoverage = withDeliveredCallerCounts(draft.callerCoverage, retained.length);
+    }
+    compacted.add("potentialCallers");
   }
 
   // The mandatory root and one compact relation are designed to fit even the

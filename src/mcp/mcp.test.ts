@@ -2526,6 +2526,17 @@ test("run_pipeline includes compact impact section for refactor tasks with a cle
       dependentFileCount: 2,
       maxDepth: 2,
       maxObservedDistance: 2,
+      // M139: the legacy count above mixes containment with real consumers, so
+      // the truthful split travels beside it. Here 4 "dependents" resolve to one
+      // structural container and zero proven callers.
+      consumers: {
+        exactCallerCount: 0,
+        exactReferenceCount: 0,
+        potentialCallerCount: 1,
+        structuralContainerCount: 1,
+        outgoingDependencyCount: 1,
+        reverseReachableSymbolCount: 4,
+      },
     });
     assert.equal(impact.topDependents?.length, 4);
     assert.equal(impact.impactRef, "vexp:impact:src/session.ts::SessionManager.createSession");

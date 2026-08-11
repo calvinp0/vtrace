@@ -350,6 +350,33 @@ export function hasResolvableEdgeOfType(db: Database, edgeType: string): boolean
   return row !== null;
 }
 
+/**
+ * Distinct files holding at least one symbol with an edge pointing at
+ * `symbolId`. M139 uses this to narrow the unresolved-call-site search to files
+ * the index already relates to the target's owning class, instead of scanning
+ * the repository. The narrowing is deliberately relation-agnostic (a constructor
+ * `calls` or a type `references` edge is as good a locality signal as an
+ * `imports` edge), and it is lossy by construction: a file that reaches the
+ * class only through a `TYPE_CHECKING`-guarded import has no indexed edge and is
+ * therefore invisible here. Callers must report that as incomplete coverage
+ * rather than as proof of absence.
+ */
+export function listFilePathsWithEdgeToSymbol(
+  db: Database,
+  symbolId: string,
+): string[] {
+  const rows = db.query(`
+    SELECT DISTINCT files.path AS path
+    FROM edges
+    INNER JOIN symbols ON symbols.id = edges.src_symbol_id
+    INNER JOIN files ON files.id = symbols.file_id
+    WHERE edges.dst_symbol_id = ?
+    ORDER BY files.path ASC
+  `).all(symbolId) as Array<{ path: string }>;
+
+  return rows.map((row) => row.path);
+}
+
 export function listAllEdges(db: Database): EdgeRecord[] {
   const rows = db.query(`
     SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence

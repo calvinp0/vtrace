@@ -11,6 +11,12 @@ import {
 } from "../domain/types";
 import { detectLanguage } from "../fs/languageDetection";
 import {
+  analyzeCallerCoverage,
+  type CallerCoverage,
+  type CallerCoverageResult,
+  type PotentialCaller,
+} from "./callerCoverage";
+import {
   SOURCE_EXCERPT_DEFAULTS,
   buildSymbolSourceExcerpt,
   type SourceExcerpt,
@@ -45,6 +51,13 @@ export interface GetImpactGraphInput {
   readonly includeLexical?: boolean;
   readonly includeUnresolved?: boolean;
   readonly includeEvidence?: boolean;
+  /**
+   * Force the M139 unresolved-call-site scan on or off. Default (undefined) is
+   * automatic: it runs only for consumer-facing directions when no exact caller
+   * was proven. See `resolveCallerCoverage`.
+   */
+  readonly includePotentialCallers?: boolean;
+  readonly maxPotentialCallers?: number;
 }
 
 /**
@@ -107,11 +120,61 @@ export interface ImpactCoverage {
   readonly notes: readonly string[];
 }
 
+/**
+ * Which population a count was measured over. Impact numbers were previously
+ * ambiguous — a summary could report 71 while the delivered graph held 3, with
+ * no way to tell whether the traversal, the canonical graph, or the response had
+ * shrunk. Every count now names its domain (M139).
+ */
+export type ImpactRelationDomain =
+  /** The whole reverse-reachable traversal, before any budget. */
+  | "full_graph"
+  /** The bounded canonical graph retained after node/edge budgets. */
+  | "canonical_retained"
+  /** What this response actually carries after envelope compaction. */
+  | "delivered"
+  /** Proven relations only. */
+  | "exact_only"
+  /** Unproven candidate call sites. */
+  | "potential_only";
+
+/**
+ * Directional consumer accounting (M139).
+ *
+ * The legacy `dependentSymbolCount` counts every symbol reverse-reachable from
+ * the target, which mixes three unrelated things: real consumers, the class that
+ * merely CONTAINS the method, and — through that container — every consumer of
+ * the class. For `ARCSpecies.copy` that produced 80 "dependents", none of which
+ * called `copy`. These fields keep the directions apart.
+ */
+export interface ImpactConsumerCounts {
+  /** Proven incoming `calls` relations. The honest answer to "who calls this?". */
+  readonly exactCallerCount: number;
+  /** Proven incoming `references` relations (annotations, inheritance, decorators). */
+  readonly exactReferenceCount: number;
+  /** Unproven call sites that may reach the target. Never proven, never edges. */
+  readonly potentialCallerCount: number;
+  /** Containers of the target (its class/module). Structural, NOT consumers. */
+  readonly structuralContainerCount: number;
+  /** Symbols the target itself depends on. Downstream, NOT consumers. */
+  readonly outgoingDependencyCount: number;
+  /** Legacy reverse-reachable population; retained for compatibility only. */
+  readonly reverseReachableSymbolCount: number;
+}
+
 export interface ImpactSummary {
+  /**
+   * @deprecated Mixes real consumers with structural containment and everything
+   * reachable through it. Read `summary.consumers` instead; this field is kept
+   * so existing consumers of the response do not silently change meaning.
+   */
   readonly dependentSymbolCount: number;
+  /** @deprecated Files of `dependentSymbolCount`; same mixed-direction caveat. */
   readonly dependentFileCount: number;
   readonly maxDepth: number;
   readonly maxObservedDistance: number;
+  /** M139 truthful, direction-separated consumer accounting. */
+  readonly consumers: ImpactConsumerCounts;
 }
 
 export interface ImpactView {
@@ -143,6 +206,17 @@ export interface ImpactGraphOutput {
   readonly limits: ImpactLimits;
   readonly timing: ImpactTiming;
   readonly diagnostics: ImpactDiagnostics;
+  /**
+   * Whether "who consumes this?" was answered completely, and why not when it
+   * was not (M139). An agent must be able to tell "proven to have none" from
+   * "analysis fell short" without reading prose.
+   */
+  readonly callerCoverage: CallerCoverage;
+  /**
+   * Bounded unproven call sites that may reach the target. Deliberately a
+   * separate collection: these are NOT graph edges and are never persisted.
+   */
+  readonly potentialCallers: readonly PotentialCaller[];
 }
 
 export interface StaticImpactPath {
@@ -184,7 +258,26 @@ export interface RichImpactSummary {
   readonly truncated: boolean;
   readonly omittedPaths: number;
   readonly omittedEdges: number;
+  /**
+   * The population each field above was measured over (M139). Without this, a
+   * `transitiveIncoming: 71` sitting beside three delivered edges reads as a
+   * contradiction rather than as two different domains.
+   */
+  readonly fieldDomains: Readonly<Record<string, ImpactRelationDomain>>;
 }
+
+const RICH_SUMMARY_FIELD_DOMAINS: Readonly<Record<string, ImpactRelationDomain>> = Object.freeze({
+  directIncoming: "canonical_retained",
+  directOutgoing: "canonical_retained",
+  transitiveIncoming: "full_graph",
+  transitiveOutgoing: "full_graph",
+  affectedFiles: "full_graph",
+  affectedSymbols: "full_graph",
+  countsByRelation: "canonical_retained",
+  countsByStrength: "canonical_retained",
+  omittedPaths: "full_graph",
+  omittedEdges: "full_graph",
+});
 
 export interface ImpactLimits {
   readonly maxDepth: number;
@@ -210,7 +303,22 @@ export interface ImpactDiagnostics {
   /** Canonical model-facing graph accounting (distinct from traversal work). */
   readonly canonicalEdgesRetained: number;
   readonly canonicalNodesRetained: number;
+  /**
+   * @deprecated Misleadingly named: it is dominated by DEPENDENT SYMBOLS the
+   * discovery walk never hydrated, not by edges dropped once `max_edges` was
+   * reached. Read `canonicalDependentsOmitted` / `canonicalEdgeSlotsOmitted` and
+   * `canonicalOmissionCause` (M139).
+   */
   readonly canonicalEdgesOmitted: number;
+  /**
+   * Dependent symbols discovery declined to hydrate because the retained-node
+   * budget was exhausted. The budget's VALUE comes from `max_edges`, but what it
+   * bounds is nodes — so a large number here does not mean many edges were cut.
+   */
+  readonly canonicalDependentsOmitted: number;
+  /** Edges genuinely dropped because the retained-edge slice was full. */
+  readonly canonicalEdgeSlotsOmitted: number;
+  readonly canonicalOmissionCause: "none" | "node_budget" | "edge_budget" | "mixed";
   readonly deliveryTruncated: boolean;
   readonly traversalLimitReached: boolean;
   readonly limitations: readonly string[];
@@ -320,8 +428,18 @@ export function getImpactGraph(
     crossLanguageEvidencePresent,
   );
   const rich = buildRichImpact(db, resolvedSymbol, input, options, targetResolutionMs, totalStarted);
-  const canonicalEdgesOmitted = discovery.omittedDependents
-    + Math.max(0, discoveredEdges.length - edges.length);
+  const canonicalDependentsOmitted = discovery.omittedDependents;
+  const canonicalEdgeSlotsOmitted = Math.max(0, discoveredEdges.length - edges.length);
+  const canonicalEdgesOmitted = canonicalDependentsOmitted + canonicalEdgeSlotsOmitted;
+  const consumers = countConsumers(rich.directRelations, nodes.length);
+  const coverage = resolveCallerCoverage({
+    db,
+    resolvedSymbol,
+    input,
+    options,
+    exactCallerCount: consumers.exactCallerCount,
+    traversalLimitReached: discovery.limitReached,
+  });
 
   return {
     ok: true,
@@ -346,6 +464,10 @@ export function getImpactGraph(
         dependentFileCount: dependentFiles.length,
         maxDepth: input.depth,
         maxObservedDistance: nodes.at(-1)?.distance ?? 0,
+        consumers: {
+          ...consumers,
+          potentialCallerCount: coverage.coverage.potentialCallerCount,
+        },
       },
       dependentFiles,
       nodes,
@@ -360,6 +482,8 @@ export function getImpactGraph(
         ),
       },
       ...rich,
+      callerCoverage: coverage.coverage,
+      potentialCallers: coverage.potentialCallers,
       richSummary: {
         ...rich.richSummary,
         truncated: rich.richSummary.truncated || canonicalEdgesOmitted > 0,
@@ -370,9 +494,112 @@ export function getImpactGraph(
         canonicalEdgesRetained: edges.length,
         canonicalNodesRetained: nodes.length,
         canonicalEdgesOmitted,
+        canonicalDependentsOmitted,
+        canonicalEdgeSlotsOmitted,
+        canonicalOmissionCause: omissionCause(canonicalDependentsOmitted, canonicalEdgeSlotsOmitted),
         deliveryTruncated: canonicalEdgesOmitted > 0,
         traversalLimitReached: discovery.limitReached,
       },
+    },
+  };
+}
+
+function omissionCause(
+  dependentsOmitted: number,
+  edgeSlotsOmitted: number,
+): ImpactDiagnostics["canonicalOmissionCause"] {
+  if (dependentsOmitted > 0 && edgeSlotsOmitted > 0) return "mixed";
+  if (dependentsOmitted > 0) return "node_budget";
+  if (edgeSlotsOmitted > 0) return "edge_budget";
+  return "none";
+}
+
+/**
+ * Split the direct neighbourhood by what each relation actually means. A
+ * `contains` edge from the owning class is not a consumer, and an outgoing
+ * `calls` edge is a dependency of the target rather than a dependent on it.
+ */
+function countConsumers(
+  directRelations: readonly StaticRelationEvidence[],
+  nodeCount: number,
+): Omit<ImpactConsumerCounts, "potentialCallerCount"> {
+  const incoming = directRelations.filter((relation) => relation.direction === "incoming");
+  return {
+    exactCallerCount: incoming.filter((relation) => relation.kind === "calls").length,
+    exactReferenceCount: incoming.filter((relation) => relation.kind === "references").length,
+    structuralContainerCount: incoming
+      .filter((relation) => relation.kind === "contains" || relation.kind === "defines")
+      .length,
+    outgoingDependencyCount: directRelations.filter((relation) => relation.direction === "outgoing").length,
+    reverseReachableSymbolCount: Math.max(nodeCount - 1, 0),
+  };
+}
+
+/**
+ * Caller-coverage gate (M139). The unresolved-call-site scan reads source, so it
+ * runs only when it can change the answer: the request must be asking about
+ * consumers at all, and the resolved graph must have failed to prove any. A
+ * target with proven callers, or a pure downstream blast-radius query, keeps the
+ * previous cost profile exactly.
+ */
+function resolveCallerCoverage(input: {
+  readonly db: Database;
+  readonly resolvedSymbol: SymbolRecord;
+  readonly input: GetImpactGraphInput;
+  readonly options: GetImpactGraphOptions | undefined;
+  readonly exactCallerCount: number;
+  readonly traversalLimitReached: boolean;
+}): CallerCoverageResult {
+  const direction = input.input.direction ?? "both";
+  const asksAboutConsumers = direction !== "downstream";
+  const repoRoot = input.options?.repoRoot;
+  const requested = input.input.includePotentialCallers;
+
+  const shouldScan = requested === true
+    || (requested !== false
+      && asksAboutConsumers
+      && repoRoot !== undefined
+      && input.exactCallerCount === 0);
+
+  if (!shouldScan || repoRoot === undefined) {
+    return {
+      coverage: {
+        status: input.exactCallerCount > 0 ? "complete" : "unknown",
+        exactCallerCount: input.exactCallerCount,
+        deliveredExactCallerCount: input.exactCallerCount,
+        potentialCallerCount: 0,
+        deliveredPotentialCallerCount: 0,
+        potentialCallersOmitted: 0,
+        competingDefinitionCount: 0,
+        candidateFilesScanned: 0,
+        candidateFilesAvailable: 0,
+        reasonCodes: input.traversalLimitReached ? ["traversal_limit_reached"] : [],
+        notes: [
+          repoRoot === undefined
+            ? "Unresolved call-site analysis needs a repository root; caller coverage was not assessed."
+            : input.exactCallerCount > 0
+              ? "Exact callers were proven; unresolved call-site analysis was not required."
+              : "Unresolved call-site analysis was not requested for this direction.",
+        ],
+      },
+      potentialCallers: [],
+    };
+  }
+
+  const result = analyzeCallerCoverage(input.db, input.resolvedSymbol, input.exactCallerCount, {
+    repoRoot,
+    ...(input.input.maxPotentialCallers === undefined
+      ? {}
+      : { maxPotentialCallers: input.input.maxPotentialCallers }),
+  });
+
+  if (!input.traversalLimitReached) return result;
+  return {
+    ...result,
+    coverage: {
+      ...result.coverage,
+      status: result.coverage.status === "complete" ? "incomplete" : result.coverage.status,
+      reasonCodes: [...new Set([...result.coverage.reasonCodes, "traversal_limit_reached" as const])].sort(),
     },
   };
 }
@@ -507,6 +734,7 @@ function buildRichImpact(
       truncated,
       omittedPaths,
       omittedEdges: omittedDirectEdges + traversals.reduce((sum, item) => sum + item.omittedEdges, 0),
+      fieldDomains: RICH_SUMMARY_FIELD_DOMAINS,
     },
     limits: { maxDepth, maxPaths, maxEdges, maxTokens },
     timing: {
@@ -525,6 +753,9 @@ function buildRichImpact(
       canonicalEdgesRetained: 0,
       canonicalNodesRetained: 0,
       canonicalEdgesOmitted: 0,
+      canonicalDependentsOmitted: 0,
+      canonicalEdgeSlotsOmitted: 0,
+      canonicalOmissionCause: "none",
       deliveryTruncated: false,
       traversalLimitReached: remainingTraversalEdges === 0,
       limitations: [

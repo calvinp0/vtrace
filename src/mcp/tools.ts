@@ -630,15 +630,86 @@ const IMPACT_COVERAGE_SCHEMA = objectProperty(
   ["analysisKind", "resolutionMode", "crossRepo", "supportedEdgeTypes", "observedEdgeTypes", "notes"],
 );
 
+const IMPACT_CONSUMER_COUNTS_SCHEMA = objectProperty(
+  "Direction-separated consumer accounting. Prefer these over dependentSymbolCount.",
+  {
+    exactCallerCount: integerProperty("Proven incoming call relations: the honest answer to 'who calls this?'."),
+    exactReferenceCount: integerProperty("Proven incoming non-call references (annotations, inheritance, decorators)."),
+    potentialCallerCount: integerProperty("Unproven call sites discovered that may reach the target."),
+    structuralContainerCount: integerProperty("Containers of the target (its class/module). Structural, not consumers."),
+    outgoingDependencyCount: integerProperty("Symbols the target itself depends on. Downstream, not consumers."),
+    reverseReachableSymbolCount: integerProperty("Legacy reverse-reachable population, mixing containment with consumers."),
+  },
+  [
+    "exactCallerCount",
+    "exactReferenceCount",
+    "potentialCallerCount",
+    "structuralContainerCount",
+    "outgoingDependencyCount",
+    "reverseReachableSymbolCount",
+  ],
+);
+
 const IMPACT_SUMMARY_SCHEMA = objectProperty(
   "Summary counts for the bounded impact result.",
   {
-    dependentSymbolCount: integerProperty("Number of discovered dependent symbols excluding the root."),
-    dependentFileCount: integerProperty("Number of dependent files touched by discovered symbols."),
+    dependentSymbolCount: integerProperty("Deprecated: reverse-reachable symbols, mixing real consumers with structural containment. Read summary.consumers."),
+    dependentFileCount: integerProperty("Deprecated: files of dependentSymbolCount; same mixed-direction caveat."),
     maxDepth: integerProperty("Maximum depth requested for traversal."),
     maxObservedDistance: integerProperty("Largest shortest-path distance present in the result."),
+    consumers: IMPACT_CONSUMER_COUNTS_SCHEMA,
   },
-  ["dependentSymbolCount", "dependentFileCount", "maxDepth", "maxObservedDistance"],
+  ["dependentSymbolCount", "dependentFileCount", "maxDepth", "maxObservedDistance", "consumers"],
+);
+
+const CALLER_COVERAGE_SCHEMA = objectProperty(
+  "Whether 'who consumes this?' was answered completely, and why not when it was not.",
+  {
+    status: stringProperty("complete | incomplete | unknown. Never read 'no exact callers' as 'no callers' unless complete."),
+    exactCallerCount: integerProperty("Proven callers discovered."),
+    deliveredExactCallerCount: integerProperty("Proven callers carried by this response."),
+    potentialCallerCount: integerProperty("Unproven candidate call sites discovered."),
+    deliveredPotentialCallerCount: integerProperty("Unproven candidate call sites carried by this response."),
+    potentialCallersOmitted: integerProperty("Candidate call sites discovered but not delivered."),
+    competingDefinitionCount: integerProperty("Other indexed definitions sharing this unqualified method name."),
+    candidateFilesScanned: integerProperty("Files actually inspected for unresolved call sites."),
+    candidateFilesAvailable: integerProperty("Files the index related to the owning class."),
+    reasonCodes: arrayProperty(
+      "Deterministic reasons coverage is not complete.",
+      stringProperty("Coverage reason code."),
+    ),
+    notes: arrayProperty("Interpretation notes for the coverage state.", stringProperty("Coverage note.")),
+  },
+  [
+    "status",
+    "exactCallerCount",
+    "deliveredExactCallerCount",
+    "potentialCallerCount",
+    "deliveredPotentialCallerCount",
+    "potentialCallersOmitted",
+    "competingDefinitionCount",
+    "candidateFilesScanned",
+    "candidateFilesAvailable",
+    "reasonCodes",
+    "notes",
+  ],
+);
+
+const POTENTIAL_CALLER_SCHEMA = objectProperty(
+  "An unproven call site that may reach the target. NOT a graph edge and never persisted.",
+  {
+    filePath: stringProperty("Repository-relative file holding the candidate call site."),
+    line: integerProperty("1-based line of the candidate call site."),
+    column: integerProperty("0-based column where the receiver expression starts."),
+    receiverExpression: stringProperty("Literal receiver expression as written, e.g. 'spc_1'."),
+    enclosingSymbol: stringProperty("Fully qualified symbol containing the call site, when known."),
+    confidence: stringProperty("high | medium | unresolved. No level means proven."),
+    evidenceKind: stringProperty("Which local evidence produced this confidence."),
+    enclosingSymbolId: stringProperty("Symbol id of the enclosing symbol; shed first under budget pressure."),
+    reason: stringProperty("Human-readable justification; shed first under budget pressure."),
+    sourceText: stringProperty("Trimmed source line; shed first under budget pressure."),
+  },
+  ["filePath", "line", "column", "receiverExpression", "enclosingSymbol", "confidence", "evidenceKind"],
 );
 
 const IMPACT_VIEW_SCHEMA = objectProperty(
@@ -1825,12 +1896,13 @@ const RUN_PIPELINE_IMPACT_SECTION_SCHEMA = objectProperty(
       type: ["object", "null"],
       description: "Compact structural impact summary when included.",
       properties: {
-        dependentSymbolCount: integerProperty("Number of discovered dependent symbols excluding the root."),
-        dependentFileCount: integerProperty("Number of dependent files touched by discovered symbols."),
+        dependentSymbolCount: integerProperty("Deprecated: reverse-reachable symbols, mixing real consumers with structural containment. Read consumers."),
+        dependentFileCount: integerProperty("Deprecated: files of dependentSymbolCount; same mixed-direction caveat."),
         maxDepth: integerProperty("Maximum depth requested for traversal."),
         maxObservedDistance: integerProperty("Largest shortest-path distance present in the result."),
+        consumers: IMPACT_CONSUMER_COUNTS_SCHEMA,
       },
-      required: ["dependentSymbolCount", "dependentFileCount", "maxDepth", "maxObservedDistance"],
+      required: ["dependentSymbolCount", "dependentFileCount", "maxDepth", "maxObservedDistance", "consumers"],
       additionalProperties: false,
     },
     topDependents: {
@@ -9023,10 +9095,15 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           limits: { type: "object", description: "Applied depth/path/edge/token bounds.", additionalProperties: true },
           timing: { type: "object", description: "Target-resolution, neighbor-query, path-traversal, render, and total impact timings in milliseconds.", additionalProperties: true },
           diagnostics: { type: "object", description: "Static-only boundary, traversal counters, and limitations.", additionalProperties: true },
+          callerCoverage: CALLER_COVERAGE_SCHEMA,
+          potentialCallers: arrayProperty(
+            "Bounded unproven call sites that may reach the target. Separate from edges on purpose: these are not proven relations.",
+            POTENTIAL_CALLER_SCHEMA,
+          ),
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
           responseBudget: { type: "object", description: "Final complete-response and canonical-edge accounting; withinEnvelope is always true on success.", additionalProperties: true },
         },
-        ["requested", "resolvedSymbol", "coverage", "summary", "dependentFiles", "nodes", "edges", "view", "responseBudget"],
+        ["requested", "resolvedSymbol", "coverage", "summary", "dependentFiles", "nodes", "edges", "view", "responseBudget", "callerCoverage", "potentialCallers"],
       ),
     },
     async handler({ context, request }) {
