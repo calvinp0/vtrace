@@ -341,3 +341,55 @@ file; live-run outcome history is separate (`stage5_outcome_ledger.md`).
   baselines with an explicit `attribution_note` assigning the accumulated deltas
   to M104–M131. Run the freshness check in the meta file BEFORE trusting a
   committed-baseline diff, every time.
+
+| M139 | (this commit) | MIXED | Impact consumer truthfulness (caller coverage + bounded potential-caller discovery, direction-separated consumer counts, domain-labelled richSummary, reclassified omission accounting) + behavioural-vs-preference contrast semantics | ARCSpecies.copy: exact callers 0 (was unreported), 83 potential discovered / 10 delivered, coverage `incomplete` with 5 reason codes; `canonicalEdgesOmitted` 686 resolved to 686 nodes + 0 edge slots (`node_budget`); ARC serialization query reclassified `preference_exclusion`→`alternative_branches`, adjacency/list penalty removed (was -0.14 live); M135 dihedral `-0.28` preserved | implement bounded upstream graph expansion so serialization orchestration (`from_dict`→`mol_from_xyz`) becomes visible; then M140 index readiness |
+
+## M139 standing findings
+
+- **A budget named for edges bounded nodes** (M139): `max_edges` is applied to
+  `symbolsById.size` inside `discoverImpactSymbols`, and the resulting shortfall was
+  published as `canonicalEdgesOmitted`. On ARC that read `686` while only `3` edges
+  were delivered and `max_edges` was `80` — three different domains under one name.
+  Delivered-edge count was limited by there being only three `directRelations`, never
+  by the edge budget. Read `canonicalDependentsOmitted` / `canonicalEdgeSlotsOmitted`
+  / `canonicalOmissionCause` instead.
+- **`contains` traversed backwards is not consumption** (M139): reverse-reachability
+  from a method reaches its owning class at distance 1 and then every constructor
+  caller of that class at distance 2. `dependentSymbolCount` was `80` for
+  `ARCSpecies.copy` with **zero** actual callers among them. Direction-blind
+  reachability cannot answer "who calls this?"; use `summary.consumers`.
+- **Unresolved receivers are structurally invisible** (M139): `edge_call_sites` is
+  keyed to `edges.id`, so a call site exists only where an edge already resolved.
+  `spc.copy()` therefore leaves no trace at all. M139 recovers these at query time by
+  narrowing on indexed relations to the OWNING CLASS and re-reading only those files
+  (content-hash validated), with no schema bump — deliberately chosen so the known
+  `index_status` readiness defect (M140) is not compounded.
+- **Type evidence binds to a name, not to an expression rooted at that name**
+  (M139): `spc` being an ARCSpecies says nothing about `spc.mol`; `Thing()` assigned
+  through `.mol` yields a Molecule; and an annotated parameter stops describing its
+  name after a rebinding. All three produced confident WRONG attributions before the
+  bare-identifier + last-write-wins rules were added. Nine ARC classes define `copy`.
+- **Import-edge attribution is fragile — new defect, deferred** (M139): a file with
+  `from model import Thing` and ONE function yields an `imports` edge; adding a
+  second, unrelated function to the same file drops the file to ZERO edges. This
+  silently shrinks any import-derived narrowing. Minimal repro in the M139 report.
+- **Contrast cues do not carry their own meaning** (M139): `rather than` /
+  `instead of` mean "exclude the right side" in a preference request and "explain
+  both sides" in a conditional question. The frame decides, and it must be matched
+  with clause structure (`when` + auxiliary verb), never the bare keyword — a bare
+  `when` match would silently disable M135's exclusion on ordinary requests.
+- **A removed penalty is not the same as visibility** (M139): fixing the adjacency
+  contrast changed the ARC serialization lead but did NOT surface `from_dict` /
+  `mol_from_xyz`. Their indexed docstrings simply do not share vocabulary with the
+  query. The rescue path is structural and already present in the index —
+  `from_dict -> mol_from_xyz -> perceive_molecule_from_xyz`, whose tail IS retrieved
+  — so bounded upstream expansion, not score weights, is the correct next fix.
+- **The committed ARC index was stale again** (M139): it recorded
+  `ARCSpecies.copy` at line 653 against a tree holding it at 691, and the caller
+  scan's freshness gate refused 43 of 70 candidate files. Every M139 acceptance ran
+  on freshly generated indexes. Check ARC index freshness before trusting any
+  measurement taken against it.
+- **Supplied ground truth needs re-validation** (M139): all four prompted
+  `ARCSpecies.copy` call-site line numbers were stale, and `checks/ts.py:206` was
+  `ARCReaction.copy` — a different class. An acceptance demanding all four appear
+  would have demanded a false positive.

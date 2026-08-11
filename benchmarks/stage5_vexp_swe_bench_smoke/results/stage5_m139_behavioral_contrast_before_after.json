@@ -1,0 +1,127 @@
+{
+ "schemaVersion": "stage5.m139.behavioral-contrast-before-after.v1",
+ "corpus": {
+  "repo": "/home/calvin/code/ARC",
+  "branch": "arcbench",
+  "head": "d5ef3dc5777e6c11c8ce018dada3ce7f91ef666e"
+ },
+ "serialization": {
+  "query": "How does a species object get its 2D molecular graph when rebuilt from a serialized dictionary, and under what conditions is connectivity re-derived from Cartesian coordinates rather than taken from the stored adjacency list?",
+  "contrastKind": {
+   "before": "preference_exclusion (implicit)",
+   "after": "alternative_branches"
+  },
+  "negativePenaltyApplied": {
+   "before": true,
+   "after": false
+  },
+  "before": {
+   "lead": "arc/species/species.py::are_coords_compliant_with_graph",
+   "pivots": [
+    "are_coords_compliant_with_graph",
+    "perceive_molecule_from_xyz"
+   ],
+   "support": [
+    "change_dihedrals_and_force_field_it",
+    "reset_connectivity_values",
+    "reset_connectivity_values",
+    "is_subgraph_isomorphic"
+   ],
+   "evidence": [
+    "preferred contrast side matched: species, graph, connectivity, cartesian (+0.24)",
+    "preferred contrast side matched: species, object, molecular, graph (+0.24)",
+    "downranked: high-confidence contrast matched list (-0.14)",
+    "preferred contrast side matched: species, get, connectivity, coordinates (+0.24)",
+    "preferred contrast side matched: graph, connectivity (+0.12)"
+   ]
+  },
+  "after": {
+   "lead": "arc/species/species.py::ARCSpecies",
+   "pivots": [
+    "ARCSpecies",
+    "are_coords_compliant_with_graph"
+   ],
+   "support": [
+    "xyz_to_coords_list",
+    "perceive_molecule_from_xyz",
+    "_add_nth_atom_to_coords",
+    "change_dihedrals_and_force_field_it"
+   ],
+   "evidence": [
+    "preferred contrast side matched: species, object, its, molecular (+0.36)",
+    "preferred contrast side matched: species, graph, connectivity, cartesian (+0.36)",
+    "preferred contrast side matched: species, get, coordinates, list (+0.36)",
+    "preferred contrast side matched: species, object, molecular, graph (+0.36)",
+    "preferred contrast side matched: species, get, its, coordinates (+0.36)"
+   ]
+  },
+  "hardGate_adjacencyListNotNegative": {
+   "beforeEvidence": "downranked: high-confidence contrast matched list (-0.14)",
+   "afterEvidence": null,
+   "pass": true
+  },
+  "orchestrationVisibility": {
+   "expected": [
+    "ARCSpecies.from_dict",
+    "ARCSpecies.mol_from_xyz",
+    "ARCSpecies.as_dict",
+    "ARCSpecies.copy"
+   ],
+   "visibleBefore": [],
+   "visibleAfter": [],
+   "pass": false
+  }
+ },
+ "dihedral": {
+  "query": "a function that returns a dihedral angle given three vectors, rather than given coordinates and four atom indices",
+  "contrastKind": {
+   "before": "preference_exclusion",
+   "after": "preference_exclusion"
+  },
+  "negativePenaltyApplied": {
+   "before": true,
+   "after": true
+  },
+  "before": {
+   "lead": "arc/species/vectors.py::get_dihedral",
+   "pivots": [
+    "get_dihedral",
+    "calculate_dihedral_angle"
+   ],
+   "support": [
+    "calculate_angle",
+    "get_normal",
+    "get_delta_angle",
+    "get_angle"
+   ],
+   "evidence": [
+    "preferred contrast side matched: returns, dihedral, angle, three (+0.24)",
+    "downranked: high-confidence contrast matched coordinates, indices (-0.28)",
+    "preferred contrast side matched: returns, dihedral, angle, vectors (+0.24)",
+    "downranked: high-confidence contrast matched coordinates, indices (-0.28)",
+    "preferred contrast side matched: returns, angle, vectors (+0.18)"
+   ]
+  },
+  "after": {
+   "lead": "arc/species/vectors.py::get_dihedral",
+   "pivots": [
+    "get_dihedral",
+    "calculate_dihedral_angle"
+   ],
+   "support": [
+    "calculate_angle",
+    "get_normal",
+    "get_delta_angle",
+    "get_angle"
+   ],
+   "evidence": [
+    "preferred contrast side matched: returns, dihedral, angle, three (+0.24)",
+    "downranked: high-confidence contrast matched coordinates, indices (-0.28)",
+    "preferred contrast side matched: returns, dihedral, angle, vectors (+0.24)",
+    "downranked: high-confidence contrast matched coordinates, indices (-0.28)",
+    "preferred contrast side matched: returns, angle, vectors (+0.18)"
+   ]
+  },
+  "m135Preserved": true
+ }
+}
