@@ -20,6 +20,13 @@ export interface SearchSymbolsOptions {
   /** Internal comparison switch; product retrieval keeps this enabled by default. */
   enableExactIdentifierLane?: boolean;
   /**
+   * Lowercase task terms allowed to claim an EXACT symbol-name match (M142 §10).
+   * Produced once per request by `exactSymbolEligibleTerms`. Omitted means every
+   * term is eligible, which is the legacy reading kept for callers that search by
+   * a known identifier rather than by prose.
+   */
+  exactNameEligibleTerms?: ReadonlySet<string>;
+  /**
    * Request-local cache for the immutable broad-query admission row set.
    * Values are internal SearchCandidateRow arrays; never shared across requests.
    */

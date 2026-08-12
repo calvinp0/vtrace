@@ -115,7 +115,12 @@ import {
   matchPathCluesWithContext,
   pathObjectiveAffinityWithContext,
 } from "../retrieval/pathScopedRelevance";
-import { evaluateCandidateContrast, evaluateDirectAnswer } from "../retrieval/querySemantics";
+import {
+  deriveQueryIntent,
+  evaluateCandidateContrast,
+  evaluateDirectAnswer,
+  exactSymbolEligibleTerms,
+} from "../retrieval/querySemantics";
 import {
   retrieveIndexedDocuments,
   type DocumentCandidate,
@@ -433,7 +438,15 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // injected. Strong (file-resolved) matches are anchor-grade like title
   // symbols; weak (stem/word) matches stay competitive-only and never join the
   // anchor precedence tiers.
-  const directEvidence: DirectEvidenceResult = anchorDirectEvidence({ db: input.db, task: input.task });
+  const directEvidence: DirectEvidenceResult = anchorDirectEvidence({
+    db: input.db,
+    task: input.task,
+    // The same request grammar the lexical lane uses, so the two producers agree
+    // on which task terms may claim to BE a symbol's name (M142 §16).
+    exactNameEligibleTerms: exactSymbolEligibleTerms(
+      shaped.derivedIntent ?? deriveQueryIntent(input.task),
+    ),
+  });
   const directEvidenceBoosted: Array<{ path: string; symbol: string; tier: string }> = [];
   // WEAK-tier ordering metadata: the boosted/injected final buys budget (a
   // support slot, a free pivot slot) but never the LEAD — pivot ordering ranks

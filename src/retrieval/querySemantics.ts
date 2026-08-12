@@ -112,6 +112,20 @@ const TERM_STOPWORDS: ReadonlySet<string> = new Set([
   "why", "without",
 ]);
 
+/**
+ * Words that hinge a clause rather than name anything. Scoped to ONE cue — the
+ * symbol-kind-noun pattern below, where a plain lowercase word is read as a name
+ * ("the function copy") and these would otherwise be misread ("the helper which
+ * parses…", "the method that returns…"). Deliberately NOT a global stopword
+ * list: symbol intent is decided by the typed grammar, and this only stops one
+ * pattern from capturing the wrong token.
+ */
+const CLAUSE_HINGE_WORDS: ReadonlySet<string> = new Set([
+  "that", "which", "who", "whose", "when", "where", "what", "whom",
+  "it", "they", "this", "these", "those", "a", "an", "the", "to", "for", "of",
+  "in", "on", "with", "and", "or", "is", "are", "was", "were", "be", "been",
+]);
+
 const IDENTIFIER = String.raw`[A-Za-z_][A-Za-z0-9_]*(?:(?:::|\.)[A-Za-z_][A-Za-z0-9_]*)*`;
 const MAX_SCOPE_TOKENS = 12;
 
@@ -238,6 +252,58 @@ export function evaluateOrchestrationIntent(intent: DerivedQueryIntent): Orchest
     return { active: true, reason: `process question ("${frame[0].toLowerCase().replace(/\s+/gu, " ")}")` };
   }
   return { active: false, suppressedBy: "no orchestration/process frame" };
+}
+
+/**
+ * The task terms allowed to claim an EXACT symbol-name reading.
+ *
+ * Retrieval's broad-term lane awards its highest tier when a query word equals a
+ * symbol's `local_name`. That tier asserts something specific — "this word IS
+ * that symbol's name" — and ordinary prose never asserts it. In "…decide which
+ * Gaussian route keywords to emit", `which` is grammar; the tier nonetheless
+ * handed `common.py::which` the strongest lexical score in the pool and made it
+ * a delivered pivot (M142 §19).
+ *
+ * Membership is decided by CONTEXT and SHAPE, never by a vocabulary list:
+ *
+ *   - the derived grammar already marked the term an identifier — backticks,
+ *     call syntax, a declaration phrase, a path qualification, an explicit
+ *     lookup command, a comparison operand
+ *   - or the term is written in ALL CAPS, which is a code-shape cue the grammar
+ *     cannot express (`FITS`, `MRT`, `CDS` are spelled that way because they
+ *     name something). Ordinary sentence capitalization is NOT this cue.
+ *
+ * A repository/project reference is excluded even when it satisfies the casing
+ * rule: `ARC` in "how does ARC decide…" names the project. It returns the moment
+ * the task shows explicit symbol context, which `projectReferences` already
+ * decides.
+ *
+ * An INELIGIBLE term is not suppressed — it keeps every other lexical tier
+ * (prefix, substring, path, docstring, coverage) and every non-lexical signal.
+ * It simply cannot claim to BE the name.
+ */
+export function exactSymbolEligibleTerms(intent: DerivedQueryIntent): ReadonlySet<string> {
+  const suppressed = new Set(intent.projectReferences.map((term) => leaf(term).toLowerCase()));
+  const eligible = new Set<string>();
+  const admit = (term: string): void => {
+    const lower = leaf(term).toLowerCase();
+    if (lower.length === 0 || suppressed.has(lower)) return;
+    eligible.add(lower);
+  };
+
+  for (const signal of intent.identifierSignals) {
+    if (signal.eligibleAsSymbol) admit(signal.term);
+  }
+  for (const term of intent.explicitIdentifiers) admit(term);
+  for (const term of intent.comparisonIdentifiers) admit(term);
+  // An excluded contrast operand still has to be FOUND before it can be
+  // downranked, so it keeps exact-name eligibility.
+  for (const term of intent.contrastIdentifiers) admit(term);
+  for (const match of intent.originalTask.matchAll(/\b[A-Z][A-Z0-9_]+\b/gu)) {
+    admit(match[0]);
+  }
+
+  return eligible;
 }
 
 export function deriveQueryIntent(task: string, options: DeriveQueryIntentOptions = {}): DerivedQueryIntent {
@@ -413,11 +479,23 @@ function collectExplicitIdentifierSignals(
     [/\b([A-Z][A-Za-z0-9_]*)\s+(?:class|symbol|type)\b/gu, "declaration_phrase", "explicit trailing symbol-kind phrase"],
     [/\b(?:def|function|func|fn)\s+(?:named\s+|called\s+)?([A-Z][A-Za-z0-9_]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)+)\b/gu, "declaration_phrase", "explicit function declaration/name phrase"],
     [/\b(?:find|show|locate|explain)\s+([A-Z][A-Za-z0-9_]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)+)\b/gu, "explicit_lookup", "explicit lookup verb with code-shaped identifier"],
+    // "the function copy", "a method called check". The identifier cue is the
+    // preceding symbol-KIND noun, not the word's own shape, so a plain lowercase
+    // name qualifies here and only here. The relative pronoun / determiner that
+    // ordinarily follows such a noun ("the helper which parses…") is a clause
+    // hinge, never the name, and is excluded below.
+    [/\b(?:function|method|class|helper|symbol|def)\s+(?:named\s+|called\s+)?([a-z][a-z0-9]*)\b/gu, "declaration_phrase", "symbol-kind noun naming a plain-word identifier"],
     [/\b([A-Z][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*|[A-Za-z0-9_./-]+::[A-Za-z_][A-Za-z0-9_]*)\b/gu, "path_qualified", "member/path-qualified identifier"],
     [/\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/gu, "call_syntax", "call syntax"],
   ];
   for (const [pattern, source, reason] of patterns) {
-    for (const match of task.matchAll(pattern)) add(match[1]!, source, reason);
+    for (const match of task.matchAll(pattern)) {
+      const term = match[1]!;
+      if (reason.startsWith("symbol-kind noun") && CLAUSE_HINGE_WORDS.has(term.toLowerCase())) {
+        continue;
+      }
+      add(term, source, reason);
+    }
   }
   // Uppercase two/three-letter code tokens are explicit when they participate in
   // a parsed contrast clause (DB rather than IO), never merely because of case.

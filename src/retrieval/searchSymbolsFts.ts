@@ -112,6 +112,7 @@ export function searchSymbolsFtsDetailed(
     options.query,
     options.enableBroadQueryBoosts !== false,
     options.enableCompoundTaskDecomposition === true,
+    options.exactNameEligibleTerms,
   );
   const testContext = resolveTestAwareQueryContext(
     options.query,

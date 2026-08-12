@@ -57,6 +57,7 @@ import {
   evaluateCandidateContrast,
   evaluateDirectAnswer,
   evaluateOrchestrationIntent,
+  exactSymbolEligibleTerms,
   identifierConfidenceForSymbol,
   type DerivedQueryIntent,
   type IdentifierConfidence,
@@ -253,13 +254,21 @@ export function hybridRetrieve(
 
   const raw = new Map<SymbolId, RawCandidate>();
 
+  // The request grammar is derived ONCE, before any generator runs: the lexical
+  // lane needs it to decide which task terms may claim an exact symbol-name
+  // reading (M142 §10), and the scoring pass needs the same value. Deriving it
+  // twice would let the two disagree.
+  const derivedIntent = input.shaped.derivedIntent
+    ?? deriveQueryIntent(input.taskText ?? input.query);
+  const exactNameEligible = exactSymbolEligibleTerms(derivedIntent);
+
   // Retrieval is a UNION of independent candidate generators. Each emits the
   // SAME structured candidate (file/symbol identity + source + evidence) and a
   // candidate surfaced by several generators merges, accumulating every source
   // and evidence line. The first four seed the pool from the query; the last two
   // expand it to neighbours the query alone could never have named.
   timed(input.profile, "lexical.symbol_search", () =>
-    lexicalCandidates(db, input, lexicalPoolSize, raw));
+    lexicalCandidates(db, input, lexicalPoolSize, raw, exactNameEligible));
   count(input.profile, "symbols.after_lexical", raw.size);
   timed(input.profile, "lexical.symbol_path", () =>
     symbolPathCandidates(db, input, raw));
@@ -280,9 +289,6 @@ export function hybridRetrieve(
   timed(input.profile, "structural.graph_expansion", () =>
     graphExpandedCandidates(db, input, seeds, raw));
   count(input.profile, "symbols.before_scoring", raw.size);
-
-  const derivedIntent = input.shaped.derivedIntent
-    ?? deriveQueryIntent(input.taskText ?? input.query);
 
   // Upstream orchestration rescue needs RANKED candidates to choose seeds from,
   // so it runs between two scoring passes. The first pass is only a ranking; the
@@ -360,6 +366,7 @@ function lexicalCandidates(
   input: HybridRetrievalInput,
   poolSize: number,
   raw: Map<SymbolId, RawCandidate>,
+  exactNameEligibleTerms: ReadonlySet<string>,
 ): void {
   const results = searchSymbols(db, {
     query: input.query,
@@ -368,6 +375,10 @@ function lexicalCandidates(
     enableCompoundTaskDecomposition: input.enableCompoundTaskRescue === true,
     enableExactIdentifierLane: input.enableCompoundTaskRescue === true,
     broadCandidateCache: input.requestCache?.broadCandidates,
+    // The prose lane searches the TASK, so its terms are governed by the request
+    // grammar. The per-symbol lane below deliberately does not pass this: its
+    // query IS an identifier the caller already resolved.
+    exactNameEligibleTerms,
   });
   increment(input.profile, "symbol_search_calls");
   increment(input.profile, "symbol_search_rows", results.length);

@@ -30,6 +30,13 @@ interface WeightedFieldMatch {
 interface QueryTermGroup {
   label: string;
   variants: readonly string[];
+  /**
+   * Whether this term may claim the EXACT local-/fq-name tier (M142 §10). False
+   * for ordinary prose: the term keeps every other tier but cannot assert that it
+   * IS a symbol's name. Absent eligibility input leaves every term eligible,
+   * which is the legacy reading.
+   */
+  exactNameEligible: boolean;
 }
 
 export interface BoundaryQueryContext {
@@ -467,6 +474,7 @@ export function resolveBroadQueryContext(
   query: string,
   enableBroadQueryBoosts = true,
   enableCompoundTaskDecomposition = false,
+  exactNameEligibleTerms?: ReadonlySet<string>,
 ): BroadQueryContext | undefined {
   if (!enableBroadQueryBoosts) {
     return undefined;
@@ -506,6 +514,7 @@ export function resolveBroadQueryContext(
   const termGroups = uniqueOrderedTerms.map((term) => ({
     label: term,
     variants: buildBroadTermVariants(term),
+    exactNameEligible: exactNameEligibleTerms === undefined || exactNameEligibleTerms.has(term),
   }));
   const phraseGroups = buildBroadPhraseGroups(uniqueOrderedTerms);
   const admissionDisjuncts = buildBroadAdmissionDisjuncts(
@@ -1159,7 +1168,11 @@ function findBestBroadTermMatch(
 
   for (const field of fields) {
     for (const variant of group.variants) {
-      const match = describeMatch(field.value, variant, field.weights);
+      const match = demoteIneligibleExactName(
+        describeMatch(field.value, variant, field.weights),
+        group,
+        field.weights,
+      );
 
       if (
         match !== undefined
@@ -1171,6 +1184,38 @@ function findBestBroadTermMatch(
   }
 
   return bestMatch;
+}
+
+/**
+ * Fields whose EXACT tier asserts name identity. A path or docstring that equals
+ * a query term says the term OCCURS there, which prose legitimately does; only
+ * the name fields claim the term IS the symbol.
+ */
+const NAME_IDENTITY_FIELDS: ReadonlySet<SymbolSearchMatchField> = new Set([
+  SymbolSearchMatchField.LocalName,
+  SymbolSearchMatchField.FQName,
+]);
+
+/**
+ * M142 §10: an ordinary prose term that happens to equal a symbol's name keeps
+ * the match, at the SUBSTRING tier. It is still a coincidence worth ranking on —
+ * just not the strongest claim in the pool. Reported as a Substring match so the
+ * demotion is visible in the match breakdown rather than silent.
+ */
+function demoteIneligibleExactName(
+  match: SymbolSearchMatch | undefined,
+  group: QueryTermGroup,
+  weights: WeightedFieldMatch,
+): SymbolSearchMatch | undefined {
+  if (
+    match === undefined
+    || group.exactNameEligible
+    || match.matchType !== SymbolSearchMatchType.Exact
+    || !NAME_IDENTITY_FIELDS.has(match.field)
+  ) {
+    return match;
+  }
+  return makeMatch(match.field, SymbolSearchMatchType.Substring, weights.substring);
 }
 
 function makeMatch(
@@ -1335,6 +1380,9 @@ function buildBroadPhraseGroups(orderedTerms: readonly string[]): QueryTermGroup
     groups.push({
       label,
       variants: EXPLICIT_BROAD_PHRASE_VARIANTS.get(label) ?? [label],
+      // A two-word phrase cannot equal an identifier, so the exact tier is
+      // unreachable here and the flag is inert.
+      exactNameEligible: true,
     });
   }
 

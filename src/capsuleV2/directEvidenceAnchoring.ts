@@ -171,6 +171,16 @@ const EMPTY: DirectEvidenceResult = {
 export interface DirectEvidenceInput {
   readonly db: Database;
   readonly task: string;
+  /**
+   * Lowercase task terms the request grammar allows to claim an EXACT symbol-name
+   * reading (M142 §10). Only the bare-word → top-level-symbol resolution consults
+   * it; every file-shaped resolution is corroborated by a file that actually
+   * exists and is unaffected.
+   *
+   * Omitted means "no grammar supplied", which keeps the pre-M142 reading. The
+   * product path always supplies it.
+   */
+  readonly exactNameEligibleTerms?: ReadonlySet<string>;
 }
 
 // Recover candidates for the exact code mentions in the task. Pure with respect
@@ -218,7 +228,7 @@ export function anchorDirectEvidence(input: DirectEvidenceInput): DirectEvidence
     if (candidates.length >= MAX_TOTAL_CANDIDATES) break;
     const isFileMention = mention.type === "dotted_module_path" || mention.type === "explicit_file";
     if (isFileMention && fileMentionCount >= MAX_FILE_MENTIONS) continue;
-    const resolved = resolveMention(mention, index, input.task);
+    const resolved = resolveMention(mention, index, input.task, input.exactNameEligibleTerms);
     if (resolved === "ambiguous") {
       rejectedAmbiguous += 1;
       continue;
@@ -405,6 +415,7 @@ function resolveMention(
   mention: DirectEvidenceMention,
   index: RepoIndexView,
   task: string,
+  exactNameEligibleTerms: ReadonlySet<string> | undefined,
 ): ResolvedMention | "ambiguous" | undefined {
   switch (mention.type) {
     case "dotted_module_path":
@@ -416,7 +427,7 @@ function resolveMention(
     case "mixed_case_identifier":
       return resolveMixedCaseIdentifier(mention, index);
     case "file_stem_word":
-      return resolveFileStemWord(mention, index, task);
+      return resolveFileStemWord(mention, index, task, exactNameEligibleTerms);
   }
 }
 
@@ -524,13 +535,25 @@ function resolveMixedCaseIdentifier(
 }
 
 // Resolve a bare lowercase word as (a) an exact file stem, else (b) an exact
-// TOP-LEVEL function/class name. The top-level requirement is the
-// distinctiveness bar: prose words coincide with method names constantly
-// (`using`, `save`) but rarely with a module's top-level def.
+// TOP-LEVEL function/class name.
+//
+// The top-level requirement was the whole distinctiveness bar: prose words
+// coincide with method names constantly (`using`, `save`) but were assumed to
+// coincide rarely with a module's top-level def. `which` disproved that (M142
+// §19) — "…decide which Gaussian route keywords to emit" resolved the grammatical
+// determiner to `arc/job/adapters/common.py::which` and handed it the synthesized
+// WEAK final of 1.9, which was the strongest score in the pool.
+//
+// Branch (b) asserts "the task NAMES this symbol", and only the request grammar
+// can license that assertion, so it now requires exact-symbol eligibility.
+// Branch (a) asserts something different and independently corroborated — a file
+// with that exact basename exists — and is deliberately left alone, so the M96
+// stem recoveries (`autoreload`, `inspectdb`, `contour`) are untouched.
 function resolveFileStemWord(
   mention: DirectEvidenceMention,
   index: RepoIndexView,
   task: string,
+  exactNameEligibleTerms: ReadonlySet<string> | undefined,
 ): ResolvedMention | "ambiguous" | undefined {
   const files = index.filesWithBasename(`${mention.term}.py`);
   if (files.length > MAX_STEM_FILE_MATCHES) return "ambiguous";
@@ -543,6 +566,12 @@ function resolveFileStemWord(
   }
 
   if (mention.term.length < MIN_WORD_SYMBOL_LENGTH) return undefined;
+  if (
+    exactNameEligibleTerms !== undefined
+    && !exactNameEligibleTerms.has(mention.term.toLowerCase())
+  ) {
+    return undefined;
+  }
   const matches: ResolvedSymbol[] = [];
   let total = 0;
   for (const path of index.filePaths) {
