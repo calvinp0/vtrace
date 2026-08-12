@@ -675,3 +675,44 @@ test("graph expansion never materializes a module scope as a candidate", async (
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// The hybrid path lane admits every symbol declared in a file the query names as
+// a likely edit target. Generated files (PLY tables, migrations) often declare
+// little else, so the module scope was admitted and delivered as support. All
+// hybrid lanes funnel through one admission point, so the rule is asserted there.
+test("the hybrid path lane never admits a module scope from a likely edit file", async () => {
+  const { hybridRetrieve } = await import("../retrieval/hybridRetrieval");
+  const root = await mkdtemp(path.join(os.tmpdir(), "m140-hybrid-"));
+  const db = openIndexerDatabase();
+
+  try {
+    // A generated-table-shaped file: module-level data, no defs worth editing.
+    await writeRepo(root, {
+      ...MODEL,
+      "generated_table.py": "from model import Thing\n\nTABLE = {'a': 1}\nOTHER = 2\n",
+    });
+    await indexProject({ repoRoot: root, db, refreshMode: "full" });
+
+    const shaped = {
+      query: "generated table",
+      failingTests: [],
+      likelyFiles: ["generated_table.py"],
+      likelySymbols: [],
+      identifiers: [],
+      filteredGenericSymbols: [],
+      filteredRunnerFiles: [],
+    };
+
+    const { candidates } = hybridRetrieve(db, { query: shaped.query, shaped });
+
+    assert.equal(candidates.length > 0, true, "fixture produced no hybrid candidates");
+    assert.equal(
+      candidates.some((candidate) => candidate.fqName.endsWith("::<module>")),
+      false,
+      "hybrid path lane admitted a module scope as a candidate",
+    );
+  } finally {
+    db.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});

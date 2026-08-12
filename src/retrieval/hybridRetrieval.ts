@@ -19,6 +19,7 @@
 import type { Database } from "bun:sqlite";
 
 import { getSymbolById, listSymbolsForFile } from "../db/repositories/symbolsRepository";
+import { isStructuralSymbolKind } from "../domain/types";
 import type { SymbolId, SymbolKind, SymbolRecord } from "../domain/types";
 import { expandTestsToImplementation } from "../capsule/testToImplementation";
 import type { ShapedSweQuery } from "../capsule/sweQueryShaping";
@@ -743,6 +744,14 @@ function ensureCandidate(
   }
   const symbol = known ?? getSymbolById(db, symbolId);
   if (symbol === undefined) {
+    return undefined;
+  }
+  // Every hybrid lane funnels through here, including the path lane, which admits
+  // ALL symbols declared in a likely edit file. A <module> is one of those symbols
+  // now, but it is a structural scope: not retrievable, not selectable, not
+  // editable. Rejecting it once at admission keeps each lane from having to
+  // remember the rule.
+  if (isStructuralSymbolKind(symbol.kind)) {
     return undefined;
   }
   const entry: RawCandidate = {
