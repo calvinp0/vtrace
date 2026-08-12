@@ -69,6 +69,18 @@ export interface HybridScoreComponents {
   /** Normalised graph centrality (in-degree within the working set). */
   centrality: number;
   /**
+   * How much of the pool's best LOCAL evidence this candidate carries, in
+   * [0, 1]. The factor the centrality contribution is scaled by (M142 §22), kept
+   * on the scorecard so "why did centrality help this one and not that one?" is
+   * answerable without re-running the pool.
+   */
+  centralityRelevanceShare?: number;
+  /**
+   * The weighted centrality actually folded into `final`, AFTER relevance
+   * gating. `weights.centrality * centrality` is what it would have been.
+   */
+  centralitySupport?: number;
+  /**
    * Edit-target actionability by symbol kind: 1 for function/method/class, 0 for
    * module-level variables/constants/aliases (rarely a micro edit target).
    */
@@ -266,6 +278,66 @@ export function evaluateHub(input: HubEvaluationInput): HubEvaluation {
       : 0;
 
   return { isHub, localEvidence, penalty };
+}
+
+// ----- centrality relevance gate ----------------------------------------------
+//
+// The hub penalty above is an all-or-nothing rule: it fires only when a
+// high-in-degree candidate has NO local evidence at all. Anything that clears
+// that very low bar keeps its full centrality contribution, and on a real
+// repository that is most of the pool. Measured on ARC: `ARCSpecies` (746
+// dependents) took the maximum centrality contribution on EVERY behavioural
+// query, including "Where is which() implemented?", where it carried 21% of the
+// pool's best local evidence and was still delivered.
+//
+// So centrality was creating relevance, not strengthening it (M142 §20).
+//
+// The gate is deliberately not a threshold. A cut-off would need a constant
+// nobody can derive, and it would make centrality behave discontinuously either
+// side of it. Instead the contribution is scaled by the candidate's OWN share of
+// the pool's best local evidence:
+//
+//     centralitySupport = weights.centrality * centrality * relevanceShare
+//
+// A candidate with the pool's strongest local evidence keeps all of it; one with
+// a fifth of it keeps a fifth. Centrality can never create relevance, because it
+// is multiplied BY relevance — and it can still reorder plausible candidates,
+// which is the job it is actually good at. Measured on the same ARC queries:
+// `ARCReaction` on a reaction-mapping question (share 0.86) keeps its support
+// essentially intact, while `ARCSpecies` on the `which()` lookup (share 0.21)
+// loses four fifths of it.
+
+export interface CentralityGateInput {
+  /** Weighted centrality this candidate would have received ungated. */
+  readonly centralityContribution: number;
+  /** This candidate's combined local evidence (from `evaluateHub`). */
+  readonly localEvidence: number;
+  /** The best local evidence anywhere in the candidate pool. */
+  readonly maxLocalEvidence: number;
+}
+
+export interface CentralityGate {
+  readonly relevanceShare: number;
+  readonly support: number;
+}
+
+/**
+ * Scale a candidate's centrality contribution by its query relevance.
+ *
+ * A pool with no local evidence anywhere (`maxLocalEvidence <= 0`) has nothing
+ * to be relevant TO, so centrality supports nothing: the share is 0. That is the
+ * honest reading — it is exactly the case where popularity would otherwise be
+ * the only thing ranking the pool.
+ */
+export function gateCentralityOnRelevance(input: CentralityGateInput): CentralityGate {
+  if (input.maxLocalEvidence <= 0 || input.centralityContribution <= 0) {
+    return { relevanceShare: 0, support: 0 };
+  }
+  const relevanceShare = Math.min(1, Math.max(0, input.localEvidence / input.maxLocalEvidence));
+  return {
+    relevanceShare: roundScore(relevanceShare),
+    support: roundScore(input.centralityContribution * relevanceShare),
+  };
 }
 
 // ----- actionability penalty --------------------------------------------------
@@ -635,13 +707,29 @@ export function recomputeWithWeakenedLexical(
       testToImpl: scores.testToImpl,
       bodyLiteral: scores.bodyLiteral,
       graph: scores.graph,
-      centrality: scores.centrality,
+      // Centrality is added back through the relevance gate below, exactly as
+      // `assemble()` does, so a weakened-lexical recompute cannot smuggle back
+      // the ungated contribution.
+      centrality: 0,
     },
     weights,
   );
+  // Weakening lexical lowers local evidence, which lowers the relevance share.
+  // The pool maximum the original share was taken against is recoverable from
+  // the scorecard (localEvidence / share), so the gate is re-derived rather than
+  // reused stale. Absent a recorded share this candidate had no gated centrality
+  // to begin with.
+  const originalShare = scores.centralityRelevanceShare ?? 0;
+  const impliedMaxLocalEvidence = originalShare > 0 ? scores.localEvidence / originalShare : 0;
+  const gate = gateCentralityOnRelevance({
+    centralityContribution: hub.penalty > 0 ? 0 : centralityContribution,
+    localEvidence: hub.localEvidence,
+    maxLocalEvidence: impliedMaxLocalEvidence,
+  });
   const final = Math.max(
     0,
     rawFinal
+      + gate.support
       - hub.penalty
       - actionabilityPenalty
       + (scores.positiveObjectiveScore ?? 0)
@@ -655,6 +743,8 @@ export function recomputeWithWeakenedLexical(
     localEvidence: roundScore(hub.localEvidence),
     hubPenalty: roundScore(hub.penalty),
     actionabilityPenalty: roundScore(actionabilityPenalty),
+    centralityRelevanceShare: gate.relevanceShare,
+    centralitySupport: gate.support,
     final: roundScore(final),
   };
 }

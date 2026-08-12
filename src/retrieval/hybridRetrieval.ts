@@ -39,6 +39,7 @@ import {
   computeDomainRaw,
   evaluateActionability,
   evaluateHub,
+  gateCentralityOnRelevance,
   HYBRID_SCORE_WEIGHTS,
   normalizeAgainst,
   tokenize,
@@ -783,7 +784,11 @@ function assemble(
   const maxGraph = maxOf(entries, (entry) => entry.graph);
   const maxCentrality = maxMapValue(centrality);
 
-  const candidates = entries.map((entry) => {
+  // Scoring runs in two phases because the centrality gate is POOL-RELATIVE: a
+  // candidate's centrality support is scaled by its share of the best local
+  // evidence in contention, which is not known until every candidate's local
+  // evidence has been computed (M142 §22).
+  const scored = entries.map((entry) => {
     const fts = round(normalizeAgainst(entry.fts, maxFts));
     const tfidf = round(normalizeAgainst(bm25.get(entry.symbol.id) ?? 0, maxTfidf));
     const symbol = round(normalizeAgainst(symbolRaw.get(entry.symbol.id) ?? 0, maxSymbol));
@@ -802,8 +807,10 @@ function assemble(
       : identifierConfidence === "weak_short_literal" ? 0.5 : 1;
     const lexical = round(blendLexical(fts, tfidf) * lexicalMatch.factor * identifierFactor);
     const weights = input.weights ?? HYBRID_SCORE_WEIGHTS;
-    const rawFinal = combineFinalScore(
-      { lexical, symbol, path, domain, testToImpl, bodyLiteral, graph, centrality: centralityScore },
+    // Centrality is deliberately EXCLUDED here and added back in phase two, once
+    // the pool's best local evidence is known and the gate can scale it.
+    const rawFinalWithoutCentrality = combineFinalScore(
+      { lexical, symbol, path, domain, testToImpl, bodyLiteral, graph, centrality: 0 },
       weights,
     );
 
@@ -852,10 +859,10 @@ function assemble(
     // inside `combineFinalScore`) alongside the other bounded, attributable
     // adjustments so the contribution stays separable and inspectable.
     const upstreamRescueScore = round(entry.upstreamRescue);
-    const final = round(Math.max(
+    const finalWithoutCentrality = round(Math.max(
       0,
-      rawFinal - hub.penalty - action.penalty + positiveObjectiveScore + directAnswerScore
-      + upstreamRescueScore - contrastPenalty,
+      rawFinalWithoutCentrality - hub.penalty - action.penalty + positiveObjectiveScore
+      + directAnswerScore + upstreamRescueScore - contrastPenalty,
     ));
 
     const evidence = [...entry.evidence];
@@ -914,20 +921,58 @@ function assemble(
       contrastPenalty,
       directAnswerScore,
       ...(upstreamRescueScore > 0 ? { upstreamRescueScore } : {}),
-      final,
+      // Replaced in phase two.
+      final: finalWithoutCentrality,
     };
 
     return {
-      symbolId: entry.symbol.id,
-      filePath: entry.symbol.filePath,
-      fqName: entry.symbol.fqName,
-      localName: entry.symbol.localName,
-      kind: entry.symbol.kind,
-      scores,
-      sources: [...entry.sources].sort(),
+      candidate: {
+        symbolId: entry.symbol.id,
+        filePath: entry.symbol.filePath,
+        fqName: entry.symbol.fqName,
+        localName: entry.symbol.localName,
+        kind: entry.symbol.kind,
+        scores,
+        sources: [...entry.sources].sort(),
+        evidence,
+        matches: entry.matches,
+        identifierConfidence,
+      } satisfies HybridCandidate,
+      // The hub penalty already stripped this candidate's centrality when it had
+      // no local evidence at all; adding it back would undo that rule.
+      ungatedCentralityContribution: hubPenalty > 0
+        ? 0
+        : (input.weights ?? HYBRID_SCORE_WEIGHTS).centrality * centralityScore,
+    };
+  });
+
+  // Phase two: gate each candidate's centrality on its share of the pool's best
+  // local evidence, then finalise. Centrality is the only component that needs
+  // this, because it is the only one that measures the REPOSITORY rather than
+  // the request.
+  const maxLocalEvidence = Math.max(0, ...scored.map((entry) => entry.candidate.scores.localEvidence));
+  const candidates = scored.map(({ candidate, ungatedCentralityContribution }) => {
+    const gate = gateCentralityOnRelevance({
+      centralityContribution: ungatedCentralityContribution,
+      localEvidence: candidate.scores.localEvidence,
+      maxLocalEvidence,
+    });
+    const evidence = [...candidate.evidence];
+    if (ungatedCentralityContribution > 0 && gate.support < ungatedCentralityContribution) {
+      evidence.push(
+        `centrality support scaled to ${(gate.relevanceShare * 100).toFixed(0)}% of full: `
+        + `task relevance is ${(gate.relevanceShare * 100).toFixed(0)}% of the strongest in this pool`,
+      );
+    }
+    return {
+      ...candidate,
+      scores: {
+        ...candidate.scores,
+        centralityRelevanceShare: gate.relevanceShare,
+        centralitySupport: gate.support,
+        final: round(candidate.scores.final + gate.support),
+      },
       evidence: evidence.sort(),
-      matches: entry.matches,
-      identifierConfidence,
     } satisfies HybridCandidate;
   });
 
