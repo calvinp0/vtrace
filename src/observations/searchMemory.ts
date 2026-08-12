@@ -1,8 +1,13 @@
 import type { Database } from "bun:sqlite";
 
+import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import { listObservations } from "../db/repositories/observationsRepository";
 import { StaleStateStatus } from "../memory/types";
-import { getObservationStaleness } from "./staleness";
+import {
+  createObservationStalenessCache,
+  getObservationStaleness,
+  type ObservationStalenessCache,
+} from "./staleness";
 import { classifyObservationCompatibility } from "./compatibility";
 import {
   ObservationCompatibilityState,
@@ -63,6 +68,11 @@ export function searchMemoryDetailed(
   const linkedFilePaths = normalizeLinkedPaths(input.linkedFilePaths ?? []);
   const linkedSymbolIds = new Set(input.linkedSymbolIds ?? []);
 
+  // Expensive index-run discovery happens once per request, not once per
+  // observation: the comparison head and the per-run diffs behind it are
+  // identical for every observation being scored.
+  const comparisonRunId = getLatestIndexRun(db)?.id ?? null;
+  const stalenessCache = createObservationStalenessCache();
   const scored = listObservations(db)
     .map((observation) => scoreObservation(
       db,
@@ -73,6 +83,8 @@ export function searchMemoryDetailed(
       linkedFilePaths,
       linkedSymbolIds,
       input.currentContext,
+      comparisonRunId,
+      stalenessCache,
     ))
     .filter((result): result is ObservationSearchResult => result !== undefined)
     .sort(compareObservationSearchResults);
@@ -118,6 +130,8 @@ function scoreObservation(
   linkedFilePaths: readonly string[],
   linkedSymbolIds: ReadonlySet<string>,
   currentContext: CurrentObservationContext | undefined,
+  comparisonRunId: number | null,
+  stalenessCache: ObservationStalenessCache,
 ): ObservationSearchResult | undefined {
   const signals: ObservationSearchSignal[] = [];
 
@@ -216,7 +230,17 @@ function scoreObservation(
     });
   }
 
-  const staleness = getObservationStaleness(db, observation);
+  // Every signal above contributes a non-negative score and the only remaining
+  // signal (the stale penalty) subtracts, so an observation with no positive
+  // signal cannot survive the `score <= 0` filter below however stale it is.
+  // Resolving its staleness first would be pure work for a discarded result.
+  const matchedScore = signals.reduce((total, signal) => total + signal.scoreContribution, 0);
+
+  if (matchedScore <= 0) {
+    return undefined;
+  }
+
+  const staleness = getObservationStaleness(db, observation, comparisonRunId, stalenessCache);
   const compatibility = currentContext === undefined
     ? undefined
     : classifyObservationCompatibility(observation, currentContext);

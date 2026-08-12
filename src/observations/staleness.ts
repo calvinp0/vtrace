@@ -19,10 +19,50 @@ import {
   type ObservationStaleness,
 } from "./types";
 
+/**
+ * M141 Workstream C: request-local memo for run-chain diffs.
+ *
+ * Every observation compared against the same index head walks the same chain
+ * of index runs, and each step materializes that run's complete file and symbol
+ * run-state tables twice. Recomputing it per observation made memory-rule
+ * evaluation O(observations x runs x symbols) — the dominant cost of a real ARC
+ * request. The diffs depend only on the run id, never on the observation, so
+ * one memo per request is exact.
+ *
+ * Deliberately request-local and caller-owned: a process-global cache would
+ * outlive the index it describes and break M114/M138 freshness.
+ */
+export interface ObservationStalenessCache {
+  readonly runDiffs: Map<number, IndexedComparisonStep>;
+  readonly chains: Map<string, IndexedComparisonStep[]>;
+}
+
+export function createObservationStalenessCache(): ObservationStalenessCache {
+  return { runDiffs: new Map(), chains: new Map() };
+}
+
+/**
+ * A run's diffs plus lookups keyed the way observation links are matched. A run
+ * carries thousands of symbol diffs and an observation carries dozens of links;
+ * scanning the former per link was the second-largest cost after recomputing
+ * the diffs themselves. The maps preserve exact matching semantics: the file
+ * map keeps the FIRST diff for a path (what `find` returned), and the symbol
+ * map keeps the set of change types seen for an identity (what `some` tested).
+ */
+interface IndexedComparisonStep extends CapsuleStalenessComparisonStep {
+  readonly fileDiffByPath: Map<string, CapsuleStalenessComparisonStep["fileDiffs"][number]>;
+  readonly symbolChangeTypes: Map<string, Set<FileChangeType>>;
+}
+
+function symbolLinkKey(filePath: string, fqName: string, kind: string): string {
+  return `${filePath}\0${fqName}\0${kind}`;
+}
+
 export function getObservationStaleness(
   db: Database,
   observation: Observation,
   comparisonRunId = getLatestIndexRun(db)?.id ?? null,
+  cache?: ObservationStalenessCache,
 ): ObservationStaleness {
   const sourceRunId = observation.sourceRunId ?? null;
 
@@ -42,9 +82,9 @@ export function getObservationStaleness(
 
   const reasonsByKey = new Map<string, ObservationStaleReason>();
 
-  for (const step of listComparisonSteps(db, sourceRunId, comparisonRunId)) {
+  for (const step of listComparisonSteps(db, sourceRunId, comparisonRunId, cache)) {
     for (const filePath of observation.linkedFilePaths) {
-      const fileDiff = step.fileDiffs.find((diff) => diff.filePath === filePath);
+      const fileDiff = step.fileDiffByPath.get(filePath);
 
       if (fileDiff?.changeType === FileChangeType.Removed) {
         setReason(reasonsByKey, {
@@ -64,13 +104,11 @@ export function getObservationStaleness(
     }
 
     for (const link of observation.linkedSymbols) {
-      const matchingSymbolDiffs = step.symbolDiffs.filter((diff) => {
-        return diff.filePath === link.filePath
-          && diff.fqName === link.fqName
-          && diff.symbolKind === link.symbolKind;
-      });
+      const matchingSymbolDiffs = step.symbolChangeTypes.get(
+        symbolLinkKey(link.filePath, link.fqName, link.symbolKind),
+      ) ?? EMPTY_CHANGE_TYPES;
 
-      if (matchingSymbolDiffs.some((diff) => diff.changeType === FileChangeType.Removed)) {
+      if (matchingSymbolDiffs.has(FileChangeType.Removed)) {
         setReason(reasonsByKey, {
           kind: ObservationStaleReasonKind.SymbolRemoved,
           detectedInRunId: step.runId,
@@ -78,7 +116,7 @@ export function getObservationStaleness(
         });
       }
 
-      if (matchingSymbolDiffs.some((diff) => diff.changeType === FileChangeType.Modified)) {
+      if (matchingSymbolDiffs.has(FileChangeType.Modified)) {
         setReason(reasonsByKey, {
           kind: ObservationStaleReasonKind.SymbolModified,
           detectedInRunId: step.runId,
@@ -103,9 +141,16 @@ function listComparisonSteps(
   db: Database,
   sourceRunId: number,
   comparisonRunId: number,
-): CapsuleStalenessComparisonStep[] {
+  cache?: ObservationStalenessCache,
+): IndexedComparisonStep[] {
   if (sourceRunId === comparisonRunId) {
     return [];
+  }
+
+  const chainKey = `${sourceRunId}\0${comparisonRunId}`;
+  const cachedChain = cache?.chains.get(chainKey);
+  if (cachedChain !== undefined) {
+    return cachedChain;
   }
 
   const runIds: number[] = [];
@@ -125,11 +170,40 @@ function listComparisonSteps(
     throw new Error(`Run ${comparisonRunId} is not descended from source run ${sourceRunId}`);
   }
 
-  return runIds.reverse().map((runId) => ({
-    runId,
-    fileDiffs: listFileDiffsForRun(db, runId) ?? [],
-    symbolDiffs: listSymbolDiffsForRun(db, runId) ?? [],
-  }));
+  const steps = runIds.reverse().map((runId) => diffsForRun(db, runId, cache));
+  cache?.chains.set(chainKey, steps);
+  return steps;
+}
+
+const EMPTY_CHANGE_TYPES: ReadonlySet<FileChangeType> = new Set();
+
+function diffsForRun(
+  db: Database,
+  runId: number,
+  cache?: ObservationStalenessCache,
+): IndexedComparisonStep {
+  const cached = cache?.runDiffs.get(runId);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const fileDiffs = listFileDiffsForRun(db, runId) ?? [];
+  const symbolDiffs = listSymbolDiffsForRun(db, runId) ?? [];
+  const fileDiffByPath = new Map<string, (typeof fileDiffs)[number]>();
+  for (const diff of fileDiffs) {
+    if (!fileDiffByPath.has(diff.filePath)) fileDiffByPath.set(diff.filePath, diff);
+  }
+  const symbolChangeTypes = new Map<string, Set<FileChangeType>>();
+  for (const diff of symbolDiffs) {
+    const key = symbolLinkKey(diff.filePath, diff.fqName, diff.symbolKind);
+    const seen = symbolChangeTypes.get(key);
+    if (seen === undefined) symbolChangeTypes.set(key, new Set([diff.changeType]));
+    else seen.add(diff.changeType);
+  }
+
+  const step: IndexedComparisonStep = { runId, fileDiffs, symbolDiffs, fileDiffByPath, symbolChangeTypes };
+  cache?.runDiffs.set(runId, step);
+  return step;
 }
 
 function symbolIdentity(
