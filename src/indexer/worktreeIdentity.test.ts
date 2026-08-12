@@ -11,10 +11,10 @@ import { resolveRepoLocalPaths } from "../setup/repoState";
 import { reindexRepoAndRefreshState } from "../runtime/reindexRepo";
 import {
   INDEX_FORMAT_VERSION,
-  inspectWorktreeIndexFreshness,
   readIndexMeta,
   resolveIndexMetaPath,
 } from "./indexMeta";
+import { inspectWorktreeIndexFreshness } from "./indexReadiness";
 import { withWorktreeIndexLock, WorktreeIndexLockError } from "./worktreeIndexLock";
 import { resolveWorktreeIdentity } from "./worktreeIdentity";
 

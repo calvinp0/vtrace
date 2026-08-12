@@ -168,10 +168,21 @@ import { buildFileWatcherStatus } from "../runtime/fileWatcher";
 import { inspectIndexFreshness } from "../runtime/indexFreshness";
 import { reindexRepoAndRefreshState } from "../runtime/reindexRepo";
 import {
-  inspectWorktreeIndexFreshness,
   readIndexMeta,
   type WorktreeIndexFreshnessResult,
 } from "../indexer/indexMeta";
+import {
+  summarizeIndexOutcomes,
+  type BoundedIndexOutcomes,
+} from "../indexer/indexOutcomeSummary";
+import {
+  evaluateIndexReadiness,
+  inspectWorktreeIndexFreshness,
+  summarizeIndexReadiness,
+  withRuntimeSignals,
+  type IndexReadiness,
+  type IndexReadinessSummary,
+} from "../indexer/indexReadiness";
 import { WorktreeIndexLockError } from "../indexer/worktreeIndexLock";
 import {
   detectIndexWorktreeMismatch,
@@ -417,6 +428,7 @@ interface WorkspaceRepoStatus {
   readonly indexPresent: boolean;
   readonly latestRunId: number | null;
   readonly readiness: RepoLocalState["readiness"] | null;
+  readonly indexReadiness: IndexReadinessSummary;
   readonly freshness: unknown;
   readonly watcher: unknown;
   readonly binding?: ReadyRepoBinding;
@@ -1380,6 +1392,78 @@ const MULTI_REPO_MERGE_SUMMARY_SCHEMA = objectProperty(
   ["strategy", "selectedRepos", "inputItemCount", "outputItemCount", "tieBreakers"],
 );
 
+/**
+ * M141: the authoritative runtime-readiness verdict. Compact by contract — a
+ * readiness report must never become a manifest dump (see the M130/M133
+ * whole-response boundedness lesson).
+ */
+const INDEX_READINESS_SCHEMA = objectProperty(
+  "Authoritative runtime readiness of the stored index, shared by every product tool.",
+  {
+    ready: booleanProperty("True only when source, schema, capability, repository, and worktree checks all pass."),
+    state: stringProperty("ready, source_stale, schema_incompatible, capability_incompatible, repository_mismatch, worktree_mismatch, index_missing, or index_corrupt."),
+    reason: stringProperty("Machine-readable reason code."),
+    recommendedAction: stringProperty("none, incremental_refresh, full_rebuild, unsupported_runtime_upgrade, or inspect_index."),
+    sourceFresh: booleanProperty("Whether the index corresponds to the requested repository/worktree source state."),
+    schemaCompatible: booleanProperty("Whether this runtime can read and interpret the stored index schema."),
+    capabilityCompatible: booleanProperty("Whether the index carries every capability the request declared it needs."),
+    repositoryCompatible: booleanProperty("Whether the index was built for this repository."),
+    worktreeCompatible: booleanProperty("Whether the index was built for this worktree."),
+    missingCapabilities: arrayProperty("Required capabilities absent from the stored index.", stringProperty("Capability id.")),
+  },
+  [
+    "ready",
+    "state",
+    "reason",
+    "recommendedAction",
+    "sourceFresh",
+    "schemaCompatible",
+    "capabilityCompatible",
+    "repositoryCompatible",
+    "worktreeCompatible",
+    "missingCapabilities",
+  ],
+);
+
+/** M141: bounded indexing outcome report. Counts exact, detail capped. */
+const INDEX_OUTCOMES_SCHEMA = objectProperty(
+  "Summary-first indexing outcomes. Counts are exact; per-file detail is bounded.",
+  {
+    counts: objectProperty(
+      "Exact outcome counts across every scanned file.",
+      {
+        filesTotal: integerProperty("Files considered by this index run."),
+        indexed: integerProperty("Files successfully indexed."),
+        skipped: integerProperty("Files skipped by language/capability policy."),
+        failed: integerProperty("Files that failed to read, parse, or persist."),
+        warnings: integerProperty("Indexed files that produced parse diagnostics."),
+        byStatus: { type: "object", description: "Exact count per outcome status.", additionalProperties: true },
+      },
+      ["filesTotal", "indexed", "skipped", "failed", "warnings", "byStatus"],
+    ),
+    changes: {
+      type: ["object", "null"],
+      description: "Added/modified/removed/renamed/unchanged counts from the incremental planner.",
+      additionalProperties: true,
+    },
+    skipReasons: { type: "object", description: "Aggregate counts per skip reason.", additionalProperties: true },
+    detail: objectProperty(
+      "Bounded notable-outcome detail with a truthful omitted count.",
+      {
+        mode: stringProperty("summary or debug."),
+        limit: integerProperty("Maximum notable outcomes this mode delivers."),
+        delivered: integerProperty("Notable outcomes included in this response."),
+        omitted: integerProperty("Notable outcomes withheld by the cap."),
+        outcomes: arrayProperty("Delivered notable outcomes.", { type: "object", additionalProperties: true }),
+        omittedByStatus: { type: "object", description: "Withheld notable outcomes per status.", additionalProperties: true },
+        note: stringProperty("What the response includes and what it summarizes."),
+      },
+      ["mode", "limit", "delivered", "omitted", "outcomes", "omittedByStatus", "note"],
+    ),
+  },
+  ["counts", "changes", "skipReasons", "detail"],
+);
+
 const INDEX_FRESHNESS_SCHEMA = objectProperty(
   "Repo index freshness and optional watcher-observed stale state.",
   {
@@ -1429,8 +1513,15 @@ const INDEX_FRESHNESS_SCHEMA = objectProperty(
       type: ["string", "null"],
       description: "Current git HEAD when available.",
     },
+    readiness: {
+      type: ["object", "null"],
+      description: "Authoritative runtime-readiness verdict this freshness view was reconciled against.",
+      properties: { ...(INDEX_READINESS_SCHEMA.properties ?? {}) },
+      required: INDEX_READINESS_SCHEMA.required ?? [],
+      additionalProperties: false,
+    },
   },
-  ["state", "isStale", "summary", "reasons", "observedFileChanges", "autoReindex", "snapshot", "currentHead", "comparison"],
+  ["state", "isStale", "summary", "reasons", "observedFileChanges", "autoReindex", "snapshot", "currentHead", "comparison", "readiness"],
 );
 
 const FILE_WATCHER_STATUS_SCHEMA = objectProperty(
@@ -3185,6 +3276,7 @@ const WORKSPACE_REPO_STATUS_SCHEMA = objectProperty(
       required: READINESS_SCHEMA.required ?? [],
       additionalProperties: false,
     },
+    indexReadiness: INDEX_READINESS_SCHEMA,
     freshness: INDEX_FRESHNESS_SCHEMA,
     watcher: FILE_WATCHER_STATUS_SCHEMA,
   },
@@ -3202,6 +3294,7 @@ const WORKSPACE_REPO_STATUS_SCHEMA = objectProperty(
     "indexPresent",
     "latestRunId",
     "readiness",
+    "indexReadiness",
     "freshness",
     "watcher",
   ],
@@ -3248,6 +3341,7 @@ const INDEX_STATUS_SCHEMA = objectProperty(
       required: READINESS_SCHEMA.required ?? [],
       additionalProperties: false,
     },
+    indexReadiness: INDEX_READINESS_SCHEMA,
     freshness: INDEX_FRESHNESS_SCHEMA,
     watcher: FILE_WATCHER_STATUS_SCHEMA,
     performance: { type: ["object", "null"], description: "Diagnostics from the most recent index operation.", additionalProperties: true },
@@ -3269,6 +3363,7 @@ const INDEX_STATUS_SCHEMA = objectProperty(
     "indexPresent",
     "latestRunId",
     "readiness",
+    "indexReadiness",
     "freshness",
     "watcher",
     "performance",
@@ -4142,11 +4237,19 @@ async function inspectWorkspaceRepoStatus(
   const latestRunId = state?.latestRunId ?? null;
   const indexPresent = latestRunId !== null && dbPresent;
   const ready = initialized && state?.readiness.status === "ready";
+  const indexReadiness = summarizeIndexReadiness(withRuntimeSignals(
+    await evaluateIndexReadiness(spec.rootPath, { probe: "full" }),
+    {
+      observedSourceChanges: state?.observedFileChanges !== undefined,
+      indexHasNoFiles: !indexPresent,
+    },
+  ));
   const freshness = await inspectIndexFreshness({
     repoRoot: spec.rootPath,
     lastIndexSnapshot: state?.lastIndexSnapshot,
     observedFileChanges: state?.observedFileChanges,
     fileWatcher: state?.fileWatcher,
+    readiness: indexReadiness,
   });
 
   return {
@@ -4163,6 +4266,7 @@ async function inspectWorkspaceRepoStatus(
     indexPresent,
     latestRunId,
     readiness: state?.readiness ?? null,
+    indexReadiness,
     freshness,
     watcher: buildFileWatcherStatus(state),
     ...(ready && config !== undefined && state !== undefined
@@ -4215,6 +4319,7 @@ function formatWorkspaceRepoStatus(status: WorkspaceRepoStatus) {
     indexPresent: status.indexPresent,
     latestRunId: status.latestRunId,
     readiness: status.readiness,
+    indexReadiness: status.indexReadiness,
     freshness: status.freshness,
     watcher: status.watcher,
   };
@@ -5690,6 +5795,7 @@ async function inspectIndexStatus(
   indexPresent: boolean;
   latestRunId: number | null;
   readiness: RepoLocalState["readiness"] | null;
+  indexReadiness: IndexReadinessSummary;
   freshness: unknown;
   watcher: unknown;
   performance: import("../indexer/incrementalIndex").IndexPerformanceDiagnostics | null;
@@ -5710,11 +5816,21 @@ async function inspectIndexStatus(
   const initialized = config?.initialized === true && state?.initialized === true && dbPresent;
   const latestRunId = state?.latestRunId ?? null;
   const indexPresent = latestRunId !== null && dbPresent;
+  // The same evaluation `get_code_context` uses. `index_status` must never
+  // report a usable index that the next product request would refuse.
+  const indexReadiness = summarizeIndexReadiness(withRuntimeSignals(
+    await evaluateIndexReadiness(context.repoRoot, { probe: "full" }),
+    {
+      observedSourceChanges: state?.observedFileChanges !== undefined,
+      indexHasNoFiles: !indexPresent,
+    },
+  ));
   const freshness = await inspectIndexFreshness({
     repoRoot: context.repoRoot,
     lastIndexSnapshot: state?.lastIndexSnapshot,
     observedFileChanges: state?.observedFileChanges,
     fileWatcher: state?.fileWatcher,
+    readiness: indexReadiness,
   });
   const indexMeta = await readIndexMeta(context.repoRoot);
 
@@ -5730,6 +5846,7 @@ async function inspectIndexStatus(
     indexPresent,
     latestRunId,
     readiness: state?.readiness ?? null,
+    indexReadiness,
     freshness,
     watcher: buildFileWatcherStatus(state),
     performance: indexMeta?.manifest?.performance ?? null,
@@ -6050,6 +6167,8 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
     latestRun: NonNullable<RepoLocalState["latestRun"]> | null;
     lock: { status: "released"; staleLockRecovered: boolean };
     performance: import("../indexer/incrementalIndex").IndexPerformanceDiagnostics | null;
+    indexReadiness: IndexReadinessSummary;
+    outcomes: BoundedIndexOutcomes;
     fileOutcomes: IndexProjectResult["files"];
   }>({
     metadata: {
@@ -6063,6 +6182,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           force: booleanProperty("Accepted for future compatibility; currently re-indexing always runs."),
           repo_root: REPO_ROOT_PROPERTY,
           mode: stringProperty("Refresh mode: auto (default), incremental, or full."),
+          detail: stringProperty("Outcome detail: summary (default, bounded) or debug (larger bounded sample)."),
         },
         [],
       ),
@@ -6094,7 +6214,9 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             ["status", "staleLockRecovered"],
           ),
           performance: { type: ["object", "null"], description: "Incremental planning, cache, closure, fallback, and timing diagnostics.", additionalProperties: true },
-          fileOutcomes: arrayProperty("Structured indexed, skipped, and failed file outcomes.", {
+          indexReadiness: INDEX_READINESS_SCHEMA,
+          outcomes: INDEX_OUTCOMES_SCHEMA,
+          fileOutcomes: arrayProperty("Bounded notable file outcomes (failures, warnings, meaningful skips). Ordinary successes are summarized in `outcomes.counts`, never listed. See `outcomes.detail` for exact omitted counts.", {
             type: "object",
             properties: {
               path: stringProperty("Normalized repo-relative path."),
@@ -6107,7 +6229,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             additionalProperties: false,
           }),
         },
-        ["repoRoot", "latestRunId", "readiness", "indexSummary", "latestRun", "lock", "performance", "fileOutcomes"],
+        ["repoRoot", "latestRunId", "readiness", "indexSummary", "latestRun", "lock", "performance", "indexReadiness", "outcomes", "fileOutcomes"],
       ),
     },
     async handler({ context, request }) {
@@ -6127,6 +6249,11 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       if (typeof mode !== "string") return mode;
       if (mode !== "auto" && mode !== "incremental" && mode !== "full") {
         return invalidRequest(McpToolId.IndexRepo, "mode must be `auto`, `incremental`, or `full`.", { field: "mode", value: mode });
+      }
+      const detail = parseOptionalStringField(McpToolId.IndexRepo, input, "detail") ?? "summary";
+      if (typeof detail !== "string") return detail;
+      if (detail !== "summary" && detail !== "debug") {
+        return invalidRequest(McpToolId.IndexRepo, "detail must be `summary` or `debug`.", { field: "detail", value: detail });
       }
       const requestedRoot = parseOptionalStringField(McpToolId.IndexRepo, input, "repo_root");
       if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
@@ -6186,6 +6313,18 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         return repoNotReady(McpToolId.IndexRepo, `Index state was not persisted for ${repoRoot}.`);
       }
 
+      // Post-index status comes from the SAME readiness evaluator every other
+      // surface uses. index_repo must never construct an independent optimistic
+      // success verdict for the index it just wrote.
+      const indexReadiness = summarizeIndexReadiness(withRuntimeSignals(
+        await evaluateIndexReadiness(repoRoot, { probe: "full" }),
+        { indexHasNoFiles: state.latestRunId === null },
+      ));
+      const outcomes = summarizeIndexOutcomes(
+        { files: indexResult.files, performance },
+        { mode: detail === "debug" ? "debug" : "summary" },
+      );
+
       return {
         ok: true,
         output: {
@@ -6196,7 +6335,11 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           latestRun: state.latestRun ?? null,
           lock: { status: "released", staleLockRecovered },
           performance,
-          fileOutcomes: indexResult.files,
+          indexReadiness,
+          outcomes,
+          // Bounded by policy: notable outcomes only. The complete per-file
+          // record stays in the index; the response does not carry it.
+          fileOutcomes: [...outcomes.detail.outcomes],
         },
       };
     },
@@ -8262,6 +8405,10 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             lastIndexSnapshot: binding.state.lastIndexSnapshot,
             observedFileChanges: binding.state.observedFileChanges,
             fileWatcher: binding.state.fileWatcher,
+            readiness: summarizeIndexReadiness(withRuntimeSignals(
+              await evaluateIndexReadiness(binding.repoRoot, { db }),
+              { observedSourceChanges: binding.state.observedFileChanges !== undefined },
+            )),
           });
           const nudge = evaluateObservationNudge(db, {
             sessionId,
@@ -8557,7 +8704,10 @@ async function checkIndexForGetCodeContext(
   | { kind: "fresh"; freshness: WorktreeIndexFreshnessResult; indexFreshness: ReturnType<typeof formatIndexFreshnessDiagnostic> }
   | { kind: "stale_response"; freshness: WorktreeIndexFreshnessResult; autoRefreshAllowed: boolean; output: GetCodeContextStaleEnvelope }
 > {
-  let precise = await inspectWorktreeIndexFreshness(repoRoot);
+  // The one authoritative evaluation. `index_status` runs the same call with
+  // the same runtime signals, which is what removes the pre-M141 contradiction.
+  let readiness = await evaluateIndexReadiness(repoRoot);
+  let precise = readiness.freshness;
   const resolved = await resolveReadyRepoBinding(context, McpToolId.GetCodeContext, repoRoot);
 
   if (!resolved.ok) {
@@ -8569,24 +8719,24 @@ async function checkIndexForGetCodeContext(
       output: buildStaleEnvelope({
         reason,
         message: reason === "missing_index" ? MISSING_INDEX_MESSAGE : REPO_NOT_READY_MESSAGE,
-        indexFreshness: formatPreciseIndexFreshnessDiagnostic(precise),
+        indexFreshness: formatPreciseIndexFreshnessDiagnostic(precise, { readiness }),
       }),
     };
   }
   const db = openIndexerDatabase(resolved.binding.dbPath);
   const indexMissing = !hasIndexedFiles(db);
   db.close();
-  if (indexMissing) {
-    precise = { ...precise, status: "missing", reason: "missing_index", action: "call_index_repo" };
-  } else if (precise.reason === "fresh" && resolved.binding.state.observedFileChanges !== undefined) {
-    precise = { ...precise, status: "stale", reason: "working_tree_changed", action: "call_index_repo" };
-  }
+  readiness = withRuntimeSignals(readiness, {
+    indexHasNoFiles: indexMissing,
+    observedSourceChanges: resolved.binding.state.observedFileChanges !== undefined,
+  });
+  precise = readiness.freshness;
 
   if (precise.status === "fresh") {
     return {
       kind: "fresh",
       freshness: precise,
-      indexFreshness: formatPreciseIndexFreshnessDiagnostic(precise),
+      indexFreshness: formatPreciseIndexFreshnessDiagnostic(precise, { readiness }),
     };
   }
   const autoRefreshAllowed = [
@@ -8604,7 +8754,7 @@ async function checkIndexForGetCodeContext(
     output: buildStaleEnvelope({
       reason: precise.reason,
       message: precise.reason === "missing_index" ? MISSING_INDEX_MESSAGE : STALE_INDEX_MESSAGE,
-      indexFreshness: formatPreciseIndexFreshnessDiagnostic(precise),
+      indexFreshness: formatPreciseIndexFreshnessDiagnostic(precise, { readiness }),
     }),
   };
 }
@@ -8618,6 +8768,7 @@ function formatPreciseIndexFreshnessDiagnostic(
     refreshFailed?: boolean;
     failureReason?: string | null;
     performance?: import("../indexer/incrementalIndex").IndexPerformanceDiagnostics | null;
+    readiness?: IndexReadiness;
   } = {},
 ) {
   const latestRunId = freshness.manifest?.index.runId ?? null;
@@ -8625,6 +8776,9 @@ function formatPreciseIndexFreshnessDiagnostic(
     status: freshness.status,
     reason: freshness.reason,
     action: freshness.action,
+    // M141: the decomposed verdict behind status/reason/action, so a caller can
+    // see WHICH dimension refused the index rather than inferring it.
+    readiness: refresh.readiness === undefined ? null : summarizeIndexReadiness(refresh.readiness),
     beforeState: refresh.before?.status ?? freshness.status,
     afterState: freshness.status,
     latestRunId,

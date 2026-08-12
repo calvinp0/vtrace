@@ -14,7 +14,7 @@ import type { ProductContextResponse } from "../../src/productContext/types";
 import { initRepo } from "../../src/setup/initRepo";
 import { createMcpServer } from "../../src/mcp/server";
 import { MCP_SERVER_SCHEMA, McpToolId } from "../../src/mcp/types";
-import { inspectWorktreeIndexFreshness } from "../../src/indexer/indexMeta";
+import { inspectWorktreeIndexFreshness } from "../../src/indexer/indexReadiness";
 
 const DEFAULT_OUT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
 const DETAIL_NAME = "stage5_m119_product_path_smoke.detail.json";

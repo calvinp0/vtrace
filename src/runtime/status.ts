@@ -27,6 +27,12 @@ import {
   inspectIndexFreshness,
   type IndexFreshnessResult,
 } from "./indexFreshness";
+import {
+  evaluateIndexReadiness,
+  summarizeIndexReadiness,
+  withRuntimeSignals,
+  type IndexReadinessSummary,
+} from "../indexer/indexReadiness";
 import { buildFileWatcherStatus } from "./fileWatcher";
 import {
   buildStableMcpLauncher,
@@ -53,6 +59,8 @@ export interface ProductShellStatus {
   readiness: RepoReadiness | null;
   latestRunId: number | null;
   indexPresent: boolean;
+  /** Authoritative runtime-readiness verdict shared with every product tool. */
+  indexReadiness: IndexReadinessSummary;
   indexFreshness: IndexFreshnessResult;
   watcher: ReturnType<typeof buildFileWatcherStatus>;
   launcher: LauncherCommand;
@@ -85,11 +93,16 @@ export async function inspectProductShellStatus(options: {
   const readiness = state?.readiness ?? null;
   const latestRunId = state?.latestRunId ?? null;
   const indexPresent = latestRunId !== null && dbPresent;
+  const indexReadiness = summarizeIndexReadiness(withRuntimeSignals(
+    await evaluateIndexReadiness(repoRoot, { probe: "full" }),
+    { observedSourceChanges: state?.observedFileChanges !== undefined },
+  ));
   const indexFreshness = await inspectIndexFreshness({
     repoRoot,
     lastIndexSnapshot: state?.lastIndexSnapshot,
     observedFileChanges: state?.observedFileChanges,
     fileWatcher: state?.fileWatcher,
+    readiness: indexReadiness,
   });
   const launcher = buildStableMcpLauncher(repoRoot);
   const agentConfig = await agent.getStatus(repoRoot);
@@ -115,6 +128,7 @@ export async function inspectProductShellStatus(options: {
     readiness,
     latestRunId,
     indexPresent,
+    indexReadiness,
     indexFreshness,
     watcher,
     launcher,

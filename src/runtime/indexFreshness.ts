@@ -1,5 +1,6 @@
 import { readGitHead } from "../fs/git";
 import { captureRepoSourceSnapshot } from "../fs/scanRepo";
+import type { IndexReadinessSummary } from "../indexer/indexReadiness";
 import type {
   LastIndexSnapshot,
   ObservedFileChangeState,
@@ -13,7 +14,15 @@ export type IndexFreshnessReasonCode =
   | "current_source_snapshot_unavailable"
   | "indexed_source_file_count_differs"
   | "indexed_source_fingerprint_differs"
-  | "file_changes_detected";
+  | "file_changes_detected"
+  // M141: runtime-compatibility causes. Source freshness alone never made an
+  // index usable, but before M141 only the product tools knew that.
+  | "index_schema_incompatible"
+  | "index_capability_missing"
+  | "index_repository_mismatch"
+  | "index_worktree_mismatch"
+  | "index_missing"
+  | "index_unreadable";
 
 export interface IndexFreshnessReason {
   code: IndexFreshnessReasonCode;
@@ -31,6 +40,12 @@ export interface IndexFreshnessResult {
   whyItMatters?: string;
   recommendedAction?: string;
   observedFileChanges: ObservedFileChangeState | null;
+  /**
+   * The authoritative runtime-readiness verdict, when the caller supplied one.
+   * `isStale` above is reconciled against it: a source-fresh snapshot backed by
+   * an index this runtime cannot read is reported stale, not fresh.
+   */
+  readiness: IndexReadinessSummary | null;
   autoReindex: {
     enabled: boolean;
     state: NonNullable<RepoFileWatcherState["reindexState"]>;
@@ -59,18 +74,27 @@ export async function inspectIndexFreshness(input: {
   lastIndexSnapshot?: LastIndexSnapshot;
   observedFileChanges?: ObservedFileChangeState;
   fileWatcher?: RepoFileWatcherState;
+  /**
+   * M141: the authoritative readiness verdict from `evaluateIndexReadiness`.
+   * Callers that omit it get the pre-M141 source-only view, which is why every
+   * product surface now supplies it.
+   */
+  readiness?: IndexReadinessSummary;
 }): Promise<IndexFreshnessResult> {
   const snapshot = input.lastIndexSnapshot;
   const observedFileChanges = input.observedFileChanges;
   const autoReindex = buildAutoReindexFreshness(input.fileWatcher, observedFileChanges);
+  const readiness = input.readiness ?? null;
 
   if (!hasCompleteSnapshot(snapshot)) {
     return buildUnknownFreshness({
       snapshot,
       observedFileChanges,
       autoReindex,
+      readiness,
       reasons: [
         { code: "last_index_metadata_missing_or_incomplete" },
+        ...readinessReasons(readiness),
         ...observedFreshnessReasons(observedFileChanges),
       ],
     });
@@ -87,8 +111,10 @@ export async function inspectIndexFreshness(input: {
       currentHead,
       observedFileChanges,
       autoReindex,
+      readiness,
       reasons: [
         { code: "current_source_snapshot_unavailable" },
+        ...readinessReasons(readiness),
         ...observedFreshnessReasons(observedFileChanges),
       ],
     });
@@ -97,6 +123,9 @@ export async function inspectIndexFreshness(input: {
   const reasons: IndexFreshnessReason[] = [];
   const fingerprintMatches = currentSourceSnapshot.fingerprint === snapshot.lastIndexedSourceFingerprint;
 
+  // Compatibility causes come first: they are the ones that make an otherwise
+  // source-fresh index unusable, and they are what the product tools act on.
+  reasons.push(...readinessReasons(readiness));
   reasons.push(...observedFreshnessReasons(observedFileChanges));
 
   if (currentSourceSnapshot.fileCount !== snapshot.lastIndexedSourceFileCount) {
@@ -114,6 +143,7 @@ export async function inspectIndexFreshness(input: {
       summary: "The current repo appears consistent with the last indexed snapshot.",
       reasons,
       observedFileChanges: null,
+      readiness,
       autoReindex,
       recommendedAction: "No re-index is recommended right now.",
       snapshot: buildSnapshotView(snapshot),
@@ -128,13 +158,12 @@ export async function inspectIndexFreshness(input: {
   return {
     state: "possibly_stale",
     isStale: true,
-    summary: observedFileChanges === undefined
-      ? "Vtrace detected likely drift since the last indexed snapshot."
-      : "Vtrace observed source file changes since the last indexed snapshot.",
+    summary: summarizeDrift(readiness, observedFileChanges),
     reasons,
     whyItMatters: "Retrieval, skeletons, impact graphs, and pipeline output may reflect older structure in changed areas.",
-    recommendedAction: "Re-index this repo before relying on vtrace for fresh structural guidance.",
+    recommendedAction: describeRecommendedAction(readiness),
     observedFileChanges: observedFileChanges ?? null,
+    readiness,
     autoReindex,
     snapshot: buildSnapshotView(snapshot),
     currentHead: currentHead ?? null,
@@ -145,21 +174,83 @@ export async function inspectIndexFreshness(input: {
   };
 }
 
+/**
+ * Compatibility failures the source-snapshot comparison cannot see. Without
+ * these, `index_status` reported `fresh / no rebuild needed` for an index the
+ * next product request refused outright.
+ */
+function readinessReasons(readiness: IndexReadinessSummary | null): IndexFreshnessReason[] {
+  if (readiness === null || readiness.ready) {
+    return [];
+  }
+  switch (readiness.state) {
+    case "schema_incompatible":
+      return [{ code: "index_schema_incompatible" }];
+    case "capability_incompatible":
+      return [{ code: "index_capability_missing" }];
+    case "repository_mismatch":
+      return [{ code: "index_repository_mismatch" }];
+    case "worktree_mismatch":
+      return [{ code: "index_worktree_mismatch" }];
+    case "index_missing":
+      return [{ code: "index_missing" }];
+    case "index_corrupt":
+      return [{ code: "index_unreadable" }];
+    case "source_stale":
+      // Already expressed by the source-snapshot and watcher reasons, but the
+      // readiness verdict must still force `isStale` when those miss it (for
+      // example a HEAD move with no content change).
+      return [{ code: "indexed_source_fingerprint_differs" }];
+    default:
+      return [];
+  }
+}
+
+function summarizeDrift(
+  readiness: IndexReadinessSummary | null,
+  observedFileChanges: ObservedFileChangeState | undefined,
+): string {
+  if (readiness !== null && !readiness.ready && readiness.state !== "source_stale") {
+    return `Vtrace cannot use the stored index: ${readiness.reason}.`;
+  }
+  return observedFileChanges === undefined
+    ? "Vtrace detected likely drift since the last indexed snapshot."
+    : "Vtrace observed source file changes since the last indexed snapshot.";
+}
+
+function describeRecommendedAction(readiness: IndexReadinessSummary | null): string {
+  switch (readiness?.recommendedAction) {
+    case "full_rebuild":
+      return "Rebuild this repo's index (`index_repo` with mode `full`) before relying on vtrace.";
+    case "unsupported_runtime_upgrade":
+      return "This index was written by a newer vtrace; upgrade the runtime or rebuild the index.";
+    case "inspect_index":
+      return "The stored index belongs to a different repository or worktree; select the correct worktree.";
+    default:
+      return "Re-index this repo before relying on vtrace for fresh structural guidance.";
+  }
+}
+
 function buildUnknownFreshness(input: {
   snapshot?: LastIndexSnapshot;
   currentHead?: string;
   observedFileChanges?: ObservedFileChangeState;
+  readiness?: IndexReadinessSummary | null;
   autoReindex: IndexFreshnessResult["autoReindex"];
   reasons: IndexFreshnessReason[];
 }): IndexFreshnessResult {
+  const readiness = input.readiness ?? null;
   return {
     state: "unknown",
-    isStale: input.observedFileChanges !== undefined,
+    isStale: input.observedFileChanges !== undefined || (readiness !== null && !readiness.ready),
     summary: "Vtrace could not determine whether the current repo matches the last indexed snapshot.",
     reasons: input.reasons,
     whyItMatters: "Vtrace may still work, but freshness could not be verified.",
-    recommendedAction: "Re-index if you want a fresh, explicit trust point.",
+    recommendedAction: readiness !== null && !readiness.ready
+      ? describeRecommendedAction(readiness)
+      : "Re-index if you want a fresh, explicit trust point.",
     observedFileChanges: input.observedFileChanges ?? null,
+    readiness,
     autoReindex: input.autoReindex,
     snapshot: buildSnapshotView(input.snapshot),
     currentHead: input.currentHead ?? null,
