@@ -118,6 +118,13 @@ export interface RescuedUpstreamCandidate {
   /** Bounded score contribution this candidate earns for being orchestration. */
   readonly rescueScore: number;
   readonly seedSymbolIds: readonly SymbolId[];
+  /**
+   * The seeds this candidate reaches, by name. At depth 1 these are exactly the
+   * seeds it CALLS directly, which is what lets a later stage tell a function
+   * that chooses between two delivered alternatives from one that happens to use
+   * a single popular helper.
+   */
+  readonly seedFqNames: readonly string[];
   /** Best (shortest, then strongest) path: candidate -> ... -> seed. */
   readonly path: readonly string[];
   readonly matchedTerms: readonly string[];
@@ -510,6 +517,7 @@ export function rescueUpstreamCandidates(input: {
         relevance: entry.relevance,
         rescueScore,
         seedSymbolIds: [...entry.seedSymbolIds].sort(),
+        seedFqNames: seedNames,
         path: entry.path,
         matchedTerms: entry.matchedTerms,
         // Truthful attribution (§31): says "caller of", never "matched the query

@@ -161,12 +161,51 @@ export interface BodyLiteralMatch {
   readonly symbol: string;
 }
 
+/**
+ * One symbol the M140-B rescue lane reached, paired with the ordinary ranking it
+ * actually earned (M140-C).
+ *
+ * Retrieval returns a CAPPED pool, so "absent from `candidates`" conflates two
+ * very different outcomes: the lane never reached the symbol, or it reached and
+ * scored it and the cap cut it. Selection needs the second case — a weakly
+ * lexical orchestration entry point is by construction far down the ranking — so
+ * the lane's findings are reported alongside the cap rather than through it.
+ *
+ * `ordinaryRank`/`ordinaryScore` are the truthful ranking numbers and are NEVER
+ * adjusted to make selection easier: a downstream selector may give such a
+ * candidate a bounded support slot, but it may not pretend the candidate is a
+ * stronger direct match than it is.
+ */
+export interface OrchestrationPathCandidate {
+  readonly candidate: HybridCandidate;
+  /** 1-based position in the FULL ranked pool, before the output cap. */
+  readonly ordinaryRank: number;
+  readonly ordinaryScore: number;
+  /** True when the ordinary ranking alone already returned it. */
+  readonly withinPool: boolean;
+  /** Incoming exact-`calls` hops from the nearest seed. */
+  readonly depth: number;
+  /** `candidate -> ... -> seed`, all exact `calls` edges. */
+  readonly path: readonly string[];
+  /** Every seed reached; at depth 1, exactly the seeds called directly. */
+  readonly seedFqNames: readonly string[];
+  readonly relevance: number;
+  readonly rescueScore: number;
+  readonly matchedTerms: readonly string[];
+  readonly reason: string;
+}
+
 export interface HybridRetrievalResult {
   candidates: HybridCandidate[];
   /** Body-literal recoveries this run made, for diagnostics. */
   bodyLiteralMatches: BodyLiteralMatch[];
   /** What the upstream orchestration rescue lane did, including "nothing". */
   upstreamRescue: UpstreamRescueDiagnostics;
+  /**
+   * Every rescued symbol with its ordinary rank, including the ones the output
+   * cap excluded. Empty whenever the lane did not activate.
+   */
+  orchestrationPaths: readonly OrchestrationPathCandidate[];
 }
 
 const DEFAULTS = Object.freeze({
@@ -206,6 +245,7 @@ export function hybridRetrieve(
       candidates: [],
       bodyLiteralMatches: [],
       upstreamRescue: inactiveUpstreamRescue("no results requested"),
+      orchestrationPaths: [],
     };
   }
   const lexicalPoolSize = input.lexicalPoolSize
@@ -275,7 +315,37 @@ export function hybridRetrieve(
     input.profile.timingsMs.total =
       (input.profile.timingsMs.total ?? 0) + performance.now() - totalStarted;
   }
-  return { candidates, bodyLiteralMatches, upstreamRescue: upstreamRescue.diagnostics };
+  // Pair each rescued symbol with the rank it earned in the FULL pool. This is a
+  // read of results already computed — no traversal, no DB query, no source read.
+  const rankBySymbolId = new Map(ranked.map((candidate, index) => [candidate.symbolId, index]));
+  const orchestrationPaths: OrchestrationPathCandidate[] = [];
+  for (const rescued of upstreamRescue.candidates) {
+    const index = rankBySymbolId.get(rescued.symbol.id);
+    if (index === undefined) {
+      continue;
+    }
+    const candidate = ranked[index]!;
+    orchestrationPaths.push({
+      candidate,
+      ordinaryRank: index + 1,
+      ordinaryScore: candidate.scores.final,
+      withinPool: index < maxResults,
+      depth: rescued.depth,
+      path: rescued.path,
+      seedFqNames: rescued.seedFqNames,
+      relevance: rescued.relevance,
+      rescueScore: rescued.rescueScore,
+      matchedTerms: rescued.matchedTerms,
+      reason: rescued.reason,
+    });
+  }
+
+  return {
+    candidates,
+    bodyLiteralMatches,
+    upstreamRescue: upstreamRescue.diagnostics,
+    orchestrationPaths,
+  };
 }
 
 // --- candidate generators -----------------------------------------------------

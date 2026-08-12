@@ -45,6 +45,7 @@ import {
   type ClassMethodExpansion,
   type RefinedRoledCandidate,
 } from "./debugRoles";
+import { selectPathCompletion, type PathCompletionResult } from "./pathCompletion";
 import { detectActionabilityHints } from "./actionabilityHints";
 import {
   detectMultiFileCoeditHints,
@@ -1114,6 +1115,86 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     orderedSupport = rescueOrder.ordered;
   }
 
+  // Path-coherent orchestration delivery (M140-C). The M140-B rescue lane already
+  // DISCOVERED the upstream entry point of the chain this request is about; what
+  // it could not do is deliver it, because a rescued candidate is by construction
+  // weakly lexical and lands far down the ordinary ranking. Rather than inflating
+  // its score — which would put two-hop callers above exact direct answers — one
+  // bounded support slot may go to the single candidate that completes an exact
+  // short call path whose every other node is ALREADY selected below. Its ordinary
+  // rank and score are reported unchanged; only the SELECTION changes.
+  const pathCompletionStarted = capsuleProfile === undefined ? 0 : performance.now();
+  const supportWinners = orderedSupport.slice(0, maxSupportSlots);
+  const orchestrationIntentReason =
+    retrieval.upstreamRescue.activationReason ?? retrieval.upstreamRescue.suppressedBy;
+  const pathCompletion = selectPathCompletion({
+    orchestrationPaths: retrieval.orchestrationPaths,
+    // The lane's own gate, reused rather than recomputed: a request that is not
+    // orchestration-shaped never produced a path to complete.
+    orchestrationIntentActive: retrieval.upstreamRescue.activated,
+    ...(orchestrationIntentReason === undefined ? {} : { orchestrationIntentReason }),
+    selectedFqNames: new Set([
+      ...pivots.map((item) => item.fq_name),
+      ...supportWinners.map((entry) => entry.candidate.fqName),
+    ]),
+    supportSlots: maxSupportSlots,
+    hasBranchClause: (shaped.derivedIntent?.branchClauses.length ?? 0) > 0,
+  });
+  let pathCompletionSymbolId: string | undefined;
+  let pathCompletionDisplaced: string | undefined;
+  if (pathCompletion.selection !== undefined) {
+    const selection = pathCompletion.selection;
+    pathCompletionSymbolId = selection.candidate.symbolId;
+    const entry: RefinedRoledCandidate = {
+      candidate: selection.candidate,
+      role: CandidateRole.Support,
+      roleReason: selection.selectionReason,
+      signals: NO_DEBUG_ROLE_SIGNALS,
+    };
+    // Replacement policy (§21/§22): the role converts ONE existing support slot,
+    // it never grows the capsule. It may only take the slot of the weakest winner
+    // that is not itself load-bearing — an author-pointed anchor, a body-literal
+    // diagnostic, or a node of the very path being completed (evicting the
+    // intermediate would defeat the purpose). If nothing is displaceable the role
+    // simply goes unused: a weak support item is worth less than a strong one, but
+    // not less than nothing.
+    const pathNodes = new Set(selection.path);
+    const isProtected = (winner: RefinedRoledCandidate): boolean =>
+      pathNodes.has(winner.candidate.fqName)
+      || winner.candidate.scores.bodyLiteral > 0
+      || anchorSymbolIds.has(winner.candidate.symbolId)
+      || titleSymbolIds.has(winner.candidate.symbolId)
+      || literalAnchorIds.has(winner.candidate.symbolId)
+      || directEvidenceStrongIds.has(winner.candidate.symbolId);
+    if (supportWinners.length < maxSupportSlots) {
+      orderedSupport = [...orderedSupport.slice(0, supportWinners.length), entry, ...orderedSupport.slice(supportWinners.length)];
+    } else {
+      let displaceIndex = -1;
+      for (let index = supportWinners.length - 1; index >= 0; index -= 1) {
+        if (!isProtected(supportWinners[index]!)) {
+          displaceIndex = index;
+          break;
+        }
+      }
+      if (displaceIndex < 0) {
+        pathCompletionSymbolId = undefined;
+      } else {
+        const displaced = orderedSupport[displaceIndex]!;
+        pathCompletionDisplaced = displaced.candidate.fqName;
+        // The displaced entry keeps its place in the ordering behind the winners,
+        // so it is reported as budget-dropped rather than silently vanishing.
+        orderedSupport = [
+          ...orderedSupport.slice(0, displaceIndex),
+          entry,
+          ...orderedSupport.slice(displaceIndex + 1, maxSupportSlots),
+          displaced,
+          ...orderedSupport.slice(maxSupportSlots),
+        ];
+      }
+    }
+  }
+  recordCapsuleTiming(capsuleProfile, "structural.path_completion", pathCompletionStarted);
+
   // Combined token ceiling for co-edit items, so the lane can never inflate the
   // capsule: whatever does not fit under the fraction is discarded (and counted).
   const coeditTokenCeiling = Math.floor(input.maxTokens * COEDIT_BUDGET_FRACTION);
@@ -1151,6 +1232,15 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         continue;
       }
       fileEvidenceTokensUsed += item.estimated_tokens;
+    }
+    if (entry.candidate.symbolId === pathCompletionSymbolId && pathCompletion.selection !== undefined) {
+      // §19/§41: the role and the rank are reported side by side. The item is
+      // here because it completes the path, and it is honest about being a weak
+      // direct match — folding one into the other would lose exactly the
+      // distinction this milestone exists to establish.
+      item.selection_role = "orchestration_support";
+      item.selection_reason = pathCompletion.selection.selectionReason;
+      item.ordinary_rank = pathCompletion.selection.ordinaryRank;
     }
     usedTokens += item.estimated_tokens;
     renderedSupportIds.add(entry.candidate.symbolId);
@@ -1427,6 +1517,12 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       candidate_count: candidates.length,
       candidate_scores: candidateScoreDiagnostics(candidates),
       ...(compoundTaskRescueUsed ? { compound_task_rescue_used: true } : {}),
+      ...pathCompletionDiagnostics(
+        pathCompletion,
+        pathCompletionSymbolId,
+        pathCompletionDisplaced,
+        support,
+      ),
       ...(input.includeTimingDiagnostics === true ? {
         stage_timings_ms: {
           task_derivation: taskDerivationMs,
@@ -1584,6 +1680,77 @@ function candidateScoreDiagnostics(candidates: readonly HybridCandidate[]) {
 // Support ordering tier: implementation helpers (edit sites that only missed the
 // pivot budget) rank above ordinary support, which ranks above generic
 // infrastructure. Lower number = higher priority.
+/**
+ * M140-C accounting. Emitted only when the rescue lane actually produced
+ * something to consider, so an ordinary request's diagnostics are unchanged —
+ * but a request where the role was considered and DECLINED is as auditable as one
+ * where it fired, which is what makes "this should be rare" a checkable claim.
+ */
+function pathCompletionDiagnostics(
+  result: PathCompletionResult,
+  appliedSymbolId: string | undefined,
+  displaced: string | undefined,
+  support: readonly CapsuleV2Item[],
+): Partial<CapsuleV2Result["diagnostics"]> {
+  const diagnostics = result.diagnostics;
+  if (diagnostics.discoveredCandidates === 0 && !diagnostics.eligibleRequest) {
+    return {};
+  }
+  const selection = result.selection;
+  // "Selected" and "delivered" are different outcomes: the slot can still be lost
+  // to the token budget after the role is granted, exactly like any other item.
+  const applied = selection !== undefined
+    && appliedSymbolId !== undefined
+    && support.some((item) => item.selection_role === "orchestration_support");
+  return {
+    path_completion: {
+      eligible_request: diagnostics.eligibleRequest,
+      ...(diagnostics.requestRejectedBy === undefined
+        ? {}
+        : { request_rejected_by: diagnostics.requestRejectedBy }),
+      discovered_candidates: diagnostics.discoveredCandidates,
+      eligible_candidates: diagnostics.eligibleCandidates,
+      selected_count: applied ? 1 : 0,
+      rejected: {
+        no_intent: diagnostics.rejectedNoIntent,
+        already_selected: diagnostics.rejectedAlreadySelected,
+        no_coherent_path: diagnostics.rejectedNoCoherentPath,
+        weak_relevance: diagnostics.rejectedWeakRelevance,
+        structural: diagnostics.rejectedStructural,
+        depth: diagnostics.rejectedDepth,
+        budget: diagnostics.rejectedBudget,
+        slot_taken: diagnostics.rejectedSlotTaken,
+      },
+      evaluation_ms: diagnostics.evaluationMs,
+      ...(selection === undefined ? {} : {
+        selected: {
+          fq_name: selection.candidate.fqName,
+          ordinary_rank: selection.ordinaryRank,
+          ordinary_score: selection.ordinaryScore,
+          depth: selection.depth,
+          path: [...selection.path],
+          coverage_role: selection.coverageRole,
+          selection_reason: selection.selectionReason,
+          ...(displaced === undefined ? {} : { displaced }),
+          applied,
+        },
+      }),
+      candidates: diagnostics.candidates.map((entry) => ({
+        fq_name: entry.fqName,
+        ordinary_rank: entry.ordinaryRank,
+        ordinary_score: entry.ordinaryScore,
+        depth: entry.depth,
+        path: [...entry.path],
+        downstream_selected: entry.downstreamSelected,
+        matched_terms: [...entry.matchedTerms],
+        eligible: entry.eligible,
+        ...(entry.rejectedBy === undefined ? {} : { rejected_by: entry.rejectedBy }),
+        selected: entry.selected,
+      })),
+    },
+  };
+}
+
 function supportTier(entry: RefinedRoledCandidate): number {
   if (entry.signals.is_implementation_helper) {
     return 0;

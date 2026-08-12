@@ -183,6 +183,16 @@ export interface CapsuleV2Item extends DebugRoleSignals {
   /** Why the path was treated as non-source (e.g. "path under doc/data"). */
   non_source_reason?: string;
   /**
+   * Present only on an item selected for a role beyond its ordinary ranking
+   * (M140-C). `orchestration_support` means the item completes an exact short
+   * call path whose other nodes are already delivered; it is deliberately NOT a
+   * claim that the item ranked well. `ordinary_rank` is the rank it genuinely
+   * earned, carried alongside so the two readings stay separable.
+   */
+  selection_role?: "orchestration_support";
+  selection_reason?: string;
+  ordinary_rank?: number;
+  /**
    * Pivot-ranking v2 metadata (debug/report only — NOT rendered into the prompt,
    * so it never affects token accounting). Present on pivots when the v2 ranker
    * scored them. `pivot_rank_score` is the explainable ordering key;
@@ -289,6 +299,54 @@ export interface CapsuleV2Diagnostics {
       line_spans: Array<{ start: number; end: number }>;
       selected: boolean;
       exclusion_reason?: string;
+    }>;
+  };
+  /**
+   * M140-C path-completion accounting. Present whenever the upstream rescue lane
+   * produced anything to consider, so a request where the role was CONSIDERED and
+   * declined is as auditable as one where it fired.
+   */
+  path_completion?: {
+    eligible_request: boolean;
+    request_rejected_by?: string;
+    discovered_candidates: number;
+    eligible_candidates: number;
+    selected_count: number;
+    rejected: {
+      no_intent: number;
+      already_selected: number;
+      no_coherent_path: number;
+      weak_relevance: number;
+      structural: number;
+      depth: number;
+      budget: number;
+      slot_taken: number;
+    };
+    evaluation_ms: number;
+    selected?: {
+      fq_name: string;
+      ordinary_rank: number;
+      ordinary_score: number;
+      depth: number;
+      path: string[];
+      coverage_role: string;
+      selection_reason: string;
+      /** The support entry whose slot it took, when the set was already full. */
+      displaced?: string;
+      /** False when the slot could not be granted after all (nothing displaceable). */
+      applied: boolean;
+    };
+    candidates: Array<{
+      fq_name: string;
+      ordinary_rank: number;
+      ordinary_score: number;
+      depth: number;
+      path: string[];
+      downstream_selected: number;
+      matched_terms: string[];
+      eligible: boolean;
+      rejected_by?: string;
+      selected: boolean;
     }>;
   };
   /** Optional M129 profiler; present only when timing diagnostics are requested. */
