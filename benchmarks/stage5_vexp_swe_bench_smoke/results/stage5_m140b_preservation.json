@@ -1,0 +1,88 @@
+{
+  "centrality": {
+    "schemaVersion": "stage5.m140b.centrality-correction.v1",
+    "structuralSymbols": 273,
+    "sampled": 400,
+    "structuralKeysPresent": 0,
+    "pass": true
+  },
+  "m136": {
+    "mode": "standard",
+    "deliveredGetDihedral": true
+  },
+  "m137": {
+    "schemaVersion": "stage5.m140b.m137-dihedral.v1",
+    "contrastKind": "preference_exclusion",
+    "orchestration": {
+      "active": false,
+      "suppressedBy": "capability lookup (capability description)"
+    },
+    "lead": "arc/species/vectors.py::get_dihedral",
+    "primaryPivotIsGetDihedral": true,
+    "calculateDihedralAnglePenalty": 0.28,
+    "rescueActivated": false,
+    "rescuedCount": 0
+  },
+  "m139": {
+    "schemaVersion": "stage5.m140b.m139-impact.v1",
+    "ok": true,
+    "keys": [
+      "affectedFiles",
+      "callerCoverage",
+      "coverage",
+      "dependentFiles",
+      "diagnostics",
+      "directRelations",
+      "edges",
+      "entrypoints",
+      "limits",
+      "nodes",
+      "paths",
+      "potentialCallers",
+      "requested",
+      "resolvedSymbol",
+      "richSummary",
+      "summary",
+      "tests",
+      "timing",
+      "view"
+    ],
+    "consumers": {
+      "exactCallerCount": 0,
+      "exactReferenceCount": 0,
+      "structuralContainerCount": 1,
+      "outgoingDependencyCount": 2,
+      "reverseReachableSymbolCount": 80,
+      "potentialCallerCount": 0
+    },
+    "exactAndPotentialSeparate": true,
+    "potentialCallers": 0,
+    "callerCoverage": {
+      "status": "unknown",
+      "exactCallerCount": 0,
+      "deliveredExactCallerCount": 0,
+      "potentialCallerCount": 0,
+      "deliveredPotentialCallerCount": 0,
+      "potentialCallersOmitted": 0,
+      "competingDefinitionCount": 0,
+      "candidateFilesScanned": 0,
+      "candidateFilesAvailable": 0,
+      "reasonCodes": [
+        "traversal_limit_reached"
+      ],
+      "notes": [
+        "Unresolved call-site analysis needs a repository root; caller coverage was not assessed."
+      ]
+    }
+  },
+  "m131": {
+    "schemaVersion": "stage5.m140b.m131-flow.v1",
+    "ok": true,
+    "pathCount": 1,
+    "edgeCount": 1,
+    "observedEdgeTypes": [
+      "calls"
+    ],
+    "found": true
+  }
+}

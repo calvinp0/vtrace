@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "stage5.m140.multi-suite-paired-comparison.v1",
+  "predecessor": {
+    "label": "m140a6",
+    "commit": "6a6e922a3c48d9a4e67dae00021592a81a261245",
+    "tree": "327749dc8491938f32d0881bcf727a45078d3349"
+  },
+  "candidate": {
+    "label": "m140b",
+    "commit": "7093e2d6388ef4028b4cd60fb98387ab4524975e",
+    "tree": "a41efcb5f5183f9e80825a7272051790358f7d07"
+  },
+  "provenanceValid": true,
+  "suites": [
+    {
+      "name": "django_expanded",
+      "caseCount": 20,
+      "fixtureHash": "b78a30889bfef6eb4f0f5fe4167b39c04908f9f01370c4db5c82eee7f2e690b0",
+      "sameFixtureHash": true,
+      "sameTargetCorpusHash": true,
+      "isolatedIndexes": true,
+      "provenanceValid": true,
+      "authoritative": true,
+      "semanticallyEqual": true,
+      "predecessorSemanticHash": "95afce8360ff20fcdb5597ecd22b2e856db80f056df4b6f40ab360f4596bb09c",
+      "candidateSemanticHash": "95afce8360ff20fcdb5597ecd22b2e856db80f056df4b6f40ab360f4596bb09c",
+      "differences": {
+        "selectedFiles": 0,
+        "lead": 0,
+        "roles": 0,
+        "contentModes": 0,
+        "modelVisibleContext": 0,
+        "tokenAccounting": 0,
+        "qualityMetrics": 0
+      },
+      "changedCases": [],
+      "quality": {
+        "predecessor": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 18,
+          "top3GoldFile": 20,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 14,
+          "missingGold": 0,
+          "meanPivotCount": 2.05,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1225.05
+        },
+        "candidate": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 18,
+          "top3GoldFile": 20,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 14,
+          "missingGold": 0,
+          "meanPivotCount": 2.05,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1225.05
+        }
+      }
+    },
+    {
+      "name": "cross_repo_30",
+      "caseCount": 30,
+      "fixtureHash": "bd01fe017657cd978f2be34495ad473ed29f94e801e1245c8fa6b787ae96db11",
+      "sameFixtureHash": true,
+      "sameTargetCorpusHash": true,
+      "isolatedIndexes": true,
+      "provenanceValid": true,
+      "authoritative": true,
+      "semanticallyEqual": true,
+      "predecessorSemanticHash": "b4b3bb10677f4c81f6e14bf96c2a35cf1a28fc5e8036d411d05ccc4e8763d5e4",
+      "candidateSemanticHash": "b4b3bb10677f4c81f6e14bf96c2a35cf1a28fc5e8036d411d05ccc4e8763d5e4",
+      "differences": {
+        "selectedFiles": 0,
+        "lead": 0,
+        "roles": 0,
+        "contentModes": 0,
+        "modelVisibleContext": 0,
+        "tokenAccounting": 0,
+        "qualityMetrics": 0
+      },
+      "changedCases": [],
+      "quality": {
+        "predecessor": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 21,
+          "top3GoldFile": 24,
+          "goldFileAnywhere": 27,
+          "goldSymbolAnywhere": 17,
+          "missingGold": 3,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2194.033
+        },
+        "candidate": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 21,
+          "top3GoldFile": 24,
+          "goldFileAnywhere": 27,
+          "goldSymbolAnywhere": 17,
+          "missingGold": 3,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2194.033
+        }
+      }
+    }
+  ],
+  "frozen50": {
+    "caseCount": 50,
+    "changedCaseCount": 0,
+    "quality": {
+      "predecessor": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 39,
+        "top3GoldFile": 44,
+        "goldFileAnywhere": 47,
+        "goldSymbolAnywhere": 31,
+        "missingGold": 3,
+        "meanPivotCount": 2.1,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1806.44
+      },
+      "candidate": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 39,
+        "top3GoldFile": 44,
+        "goldFileAnywhere": 47,
+        "goldSymbolAnywhere": 31,
+        "missingGold": 3,
+        "meanPivotCount": 2.1,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1806.44
+      }
+    }
+  }
+}

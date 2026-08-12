@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "stage5.m140b.module-node-backstop.v1",
+  "queriesChecked": 4,
+  "rescuedCandidatesChecked": 2,
+  "structuralLeaks": [],
+  "pass": true
+}

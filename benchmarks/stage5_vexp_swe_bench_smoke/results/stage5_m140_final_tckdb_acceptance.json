@@ -1,0 +1,181 @@
+{
+  "schemaVersion": "stage5.m140b.tckdb-acceptance.v1",
+  "tckdb": {
+    "root": "/home/calvin/code/TCKDB_v2",
+    "branch": "main",
+    "head": "b91f69e9f78aa5ddc5f3d5eae7021ebe88741717",
+    "sourceReadOnly": true,
+    "indexOpenedReadOnly": true,
+    "sameCheckoutBothSides": true
+  },
+  "predecessor": {
+    "root": "/home/calvin/bench/vtrace-m140/impl/m140a6",
+    "commit": "6a6e922a3c48d9a4e67dae00021592a81a261245"
+  },
+  "candidate": {
+    "root": "/home/calvin/bench/vtrace-m140/impl/m140b",
+    "commit": "7093e2d6388ef4028b4cd60fb98387ab4524975e"
+  },
+  "caseCount": 4,
+  "changedCaseCount": 0,
+  "unattributed": 0,
+  "cases": [
+    {
+      "task": "add a bond order validation to the species schema",
+      "shape": "modify",
+      "leadChanged": false,
+      "selectionChanged": false,
+      "predecessor": {
+        "mode": "standard",
+        "lead": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::ComputedSpeciesUploadRequest.validate_unique_calculation_keys_global",
+        "pivots": [
+          "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::ComputedSpeciesUploadRequest.validate_unique_calculation_keys_global",
+          "backend/app/schemas/reads/scientific_species_calculations.py::ValidationBlock"
+        ],
+        "selected": [
+          "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::ComputedSpeciesUploadRequest.validate_unique_calculation_keys_global",
+          "backend/app/schemas/reads/scientific_species_calculations.py::ValidationBlock",
+          "schemas/python/tckdb-schemas/tckdb_schemas/fragments/identity.py::SpeciesEntryIdentityValidatorMixin",
+          "backend/app/schemas/reads/scientific_species_calculations.py::SpeciesCalculationsSearchRecord.validation",
+          "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::StatmechSourceCalcInBundle",
+          "schemas/python/tckdb-schemas/tckdb_schemas/energy_correction.py::EnergyCorrectionSchemeRef.validate_unique_bond_params"
+        ]
+      },
+      "candidate": {
+        "mode": "standard",
+        "lead": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::ComputedSpeciesUploadRequest.validate_unique_calculation_keys_global",
+        "pivots": [
+          "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::ComputedSpeciesUploadRequest.validate_unique_calculation_keys_global",
+          "backend/app/schemas/reads/scientific_species_calculations.py::ValidationBlock"
+        ],
+        "selected": [
+          "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::ComputedSpeciesUploadRequest.validate_unique_calculation_keys_global",
+          "backend/app/schemas/reads/scientific_species_calculations.py::ValidationBlock",
+          "schemas/python/tckdb-schemas/tckdb_schemas/fragments/identity.py::SpeciesEntryIdentityValidatorMixin",
+          "backend/app/schemas/reads/scientific_species_calculations.py::SpeciesCalculationsSearchRecord.validation",
+          "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::StatmechSourceCalcInBundle",
+          "schemas/python/tckdb-schemas/tckdb_schemas/energy_correction.py::EnergyCorrectionSchemeRef.validate_unique_bond_params"
+        ]
+      },
+      "cause": "none"
+    },
+    {
+      "task": "How does a species record get validated when it is inserted?",
+      "shape": "orchestration",
+      "leadChanged": false,
+      "selectionChanged": false,
+      "predecessor": {
+        "mode": "standard",
+        "lead": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::CalculationInBundle.validate_result_matches_type",
+        "pivots": [
+          "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::CalculationInBundle.validate_result_matches_type",
+          "backend/app/workflows/computed_species.py::persist_computed_species_upload"
+        ],
+        "selected": [
+          "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::CalculationInBundle.validate_result_matches_type",
+          "backend/app/workflows/computed_species.py::persist_computed_species_upload",
+          "clients/python/src/tckdb_client/builders/species.py::Species",
+          "clients/python/src/tckdb_client/builders/species.py::Species._validated",
+          "backend/app/schemas/reads/scientific_species_calculations.py::SpeciesCalculationsSearchRequest",
+          "backend/app/services/scientific_read/species_calculations_search.py::search_species_calculations"
+        ]
+      },
+      "candidate": {
+        "mode": "standard",
+        "lead": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::CalculationInBundle.validate_result_matches_type",
+        "pivots": [
+          "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::CalculationInBundle.validate_result_matches_type",
+          "backend/app/workflows/computed_species.py::persist_computed_species_upload"
+        ],
+        "selected": [
+          "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::CalculationInBundle.validate_result_matches_type",
+          "backend/app/workflows/computed_species.py::persist_computed_species_upload",
+          "clients/python/src/tckdb_client/builders/species.py::Species",
+          "clients/python/src/tckdb_client/builders/species.py::Species._validated",
+          "backend/app/schemas/reads/scientific_species_calculations.py::SpeciesCalculationsSearchRequest",
+          "backend/app/services/scientific_read/species_calculations_search.py::search_species_calculations"
+        ]
+      },
+      "cause": "none"
+    },
+    {
+      "task": "How is a connection to the database established and torn down?",
+      "shape": "orchestration",
+      "leadChanged": false,
+      "selectionChanged": false,
+      "predecessor": {
+        "mode": "standard",
+        "lead": "backend/scripts/configure_database_roles.py::_connect",
+        "pivots": [
+          "backend/scripts/configure_database_roles.py::_connect",
+          "backend/scripts/configure_database_roles.py::RoleConfigurationError"
+        ],
+        "selected": [
+          "backend/scripts/configure_database_roles.py::_connect",
+          "backend/scripts/configure_database_roles.py::RoleConfigurationError",
+          "backend/app/services/trust/models.py::EvidenceOutcome",
+          "backend/app/workers/upload_worker.py::_process_one_cycle",
+          "backend/app/api/routes/bundles.py::dry_run_bundle",
+          "backend/app/services/trust/models.py::EvidenceCheckKind"
+        ]
+      },
+      "candidate": {
+        "mode": "standard",
+        "lead": "backend/scripts/configure_database_roles.py::_connect",
+        "pivots": [
+          "backend/scripts/configure_database_roles.py::_connect",
+          "backend/scripts/configure_database_roles.py::RoleConfigurationError"
+        ],
+        "selected": [
+          "backend/scripts/configure_database_roles.py::_connect",
+          "backend/scripts/configure_database_roles.py::RoleConfigurationError",
+          "backend/app/services/trust/models.py::EvidenceOutcome",
+          "backend/app/workers/upload_worker.py::_process_one_cycle",
+          "backend/app/api/routes/bundles.py::dry_run_bundle",
+          "backend/app/services/trust/models.py::EvidenceCheckKind"
+        ]
+      },
+      "cause": "none"
+    },
+    {
+      "task": "find get_session",
+      "shape": "explicit_lookup",
+      "leadChanged": false,
+      "selectionChanged": false,
+      "predecessor": {
+        "mode": "standard",
+        "lead": "backend/app/services/idempotency.py::find_existing_record",
+        "pivots": [
+          "backend/app/services/idempotency.py::find_existing_record",
+          "backend/app/api/deps.py::require_session_user"
+        ],
+        "selected": [
+          "backend/app/services/idempotency.py::find_existing_record",
+          "backend/app/api/deps.py::require_session_user",
+          "backend/app/workflows/kinetics.py::_find_sp_for_species",
+          "backend/app/services/scientific_read/reactions.py::_find_matching_reaction_entry_ids",
+          "backend/app/db/models/user_session.py::UserSession",
+          "resolve_session"
+        ]
+      },
+      "candidate": {
+        "mode": "standard",
+        "lead": "backend/app/services/idempotency.py::find_existing_record",
+        "pivots": [
+          "backend/app/services/idempotency.py::find_existing_record",
+          "backend/app/api/deps.py::require_session_user"
+        ],
+        "selected": [
+          "backend/app/services/idempotency.py::find_existing_record",
+          "backend/app/api/deps.py::require_session_user",
+          "backend/app/workflows/kinetics.py::_find_sp_for_species",
+          "backend/app/services/scientific_read/reactions.py::_find_matching_reaction_entry_ids",
+          "backend/app/db/models/user_session.py::UserSession",
+          "resolve_session"
+        ]
+      },
+      "cause": "none"
+    }
+  ],
+  "pass": true
+}

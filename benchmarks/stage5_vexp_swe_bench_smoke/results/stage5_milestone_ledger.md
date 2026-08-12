@@ -391,6 +391,7 @@ file; live-run outcome history is separate (`stage5_outcome_ledger.md`).
   committed evidence files from those milestones. Check `git status` after running
   them and restore, or a preservation run will quietly rewrite history.
 
+| M140-B | 7093e2d | **MIXED** (WS-B implemented + benchmarked; ARC entry-point acceptance not met) | Workstream B: a bounded upstream orchestration rescue lane (`src/retrieval/upstreamRescue.ts`). Retrieval finds symbols that LOOK like the query; for a "how does X happen?" question the implementation shares the question's vocabulary but the function that DECIDES to call it shares none, so it was never a candidate. New generator: from <=3 strong, query-matching, non-test, function/method seeds (rank <=5, score >=0.75x top), walk INCOMING **exact `calls` edges only** to depth <=2, admitting <=3 callers per node and <=8 per request. Admission is gated on the caller independently matching the ORIGINAL query on its indexed definition (>=2 distinct query terms as an absolute floor, >=0.25 of the best BM25 among that node's callers as a relative one) — calling the seed makes a symbol reachable, never relevant. **Zero source reads**; one batched capped edge query + one batched hydration per level. Activation is decided ONCE from the already-derived intent (a parsed conditional-alternative clause, or a process frame `how does/is`, `what happens/triggers/orchestrates`), suppressed for capability lookups and start-anchored imperative symbol lookups; `who calls X` is deliberately excluded because caller ENUMERATION is impact's job. Rescued symbols are ordinary candidates — same scoring, selection, budget, rendering, no side channel — carrying truthful attribution ("rescued upstream caller (incoming call depth 2) of …; independently matches …") plus the call path. New bounded score component `upstreamRescueScore`, cap 0.95, calibrated against the family it joins (`positiveObjectiveScore` 0.36, `contrastPenalty` 0.75, `directAnswerScore` 0.95), added alongside the other attributable adjustments rather than inside `combineFinalScore`. New DB helpers: `listIncomingEdgesOfTypeForSymbols` (per-target `ROW_NUMBER()` cap applied INSIDE SQLite) and `countIncomingEdgesOfTypeForSymbols` (true fan-in without materialising it). | **Fresh ARC index (`arcbench` d5ef3dc, 324 files / 8,986 symbols / 21,618 edges, imports 2,281) reproduced the remembered 62/3/1 call fan-ins exactly.** A6 failure reproduced: BOTH upstream hops **absent from the candidate pool**, not merely under-ranked. After: `ARCSpecies.mol_from_xyz` **absent -> rank 6 -> DELIVERED**, displacing an unrelated conformer helper; `ARCSpecies.from_dict` rescued and scored (0.975) but rank 93/132 and **not delivered**. The 62-caller seed contributed **3** candidates; of 8 rescued, exactly **1** reached delivered context. **A6 -> final paired benchmark: provenanceValid, 0/50 changed cases, per-suite semantic hashes byte-identical** (Frozen 50 Top-1 39, Top-3 44, gold-anywhere 47, missing 3, mean tokens 1806.44 — all unchanged) because the frozen suites are bug-report tasks the gate never fires on; measured activation 3/8 (37.5%) on a mixed ARC set, 0/5 on capability/explicit/bug-report shapes. Cost 4.4 ms / 6 DB queries / <1% of retrieval; non-activating requests do zero incoming-edge work. 1000-caller fixture: 1,002 -> 3 admitted, DB queries constant vs the 50-caller variant. TCKDB `main` b91f69e 0/4 changed. Module-node backstop 0 leaks; centrality correction intact; M136/M137/M139/M131 preserved. 4,101 pass / 0 fail; both typechecks clean. | **M140 overall MIXED per §99**: §37 met (intermediate orchestration delivered — the direct proof the lane traversed the path), §36 not (entry point recovered as a candidate but not delivered). Do NOT close the gap by raising the rescue weight: a rescued candidate has ~no base score by construction, so reaching delivery from depth 2 would need ~1.0, i.e. two-hop callers routinely outranking exact direct answers — the §70 defect pattern. Next: **M141 — index readiness and indexing-path hygiene** (`index_status` source-fresh vs runtime-ready disagreement, shared readiness evaluator, `index_repo` response bloat, `memoryRulesMs` profiling, and the preservation-smoke result-path hazard). |
 
 ## M140 standing findings
 
@@ -466,3 +467,51 @@ file; live-run outcome history is separate (`stage5_outcome_ledger.md`).
   `ARCSpecies.copy` call-site line numbers were stale, and `checks/ts.py:206` was
   `ARCReaction.copy` — a different class. An acceptance demanding all four appear
   would have demanded a false positive.
+
+## M140-B standing findings
+
+- **A rescued candidate cannot be scored into delivery from depth 2** (M140-B):
+  being missed by lexical search is the PREMISE of a rescue, so the rescue
+  component is essentially the candidate's whole score. A depth-1 caller topping
+  the rescued pool reaches delivery (ARC `mol_from_xyz`: 0 -> 1.821, rank 6); a
+  depth-2 caller at 0.55 relative relevance reaches 0.975 against a ~1.78
+  delivery threshold. Closing that needs ~1.0 from one bounded component, which
+  would put two-hop callers above exact direct answers. Treat "recovered into the
+  candidate set" and "delivered" as different outcomes and report both.
+- **Per-pool relevance normalisation is not comparable across seeds** (M140-B):
+  BM25 normalised within one seed's callers ties the best caller of EVERY seed at
+  1.0 however weak it really is, so a weakly-related seed's favourite caller
+  displaced the genuine orchestration entry point on the global cap. Rescued
+  candidates are re-scored against the query as ONE pool before the global cap —
+  the union is exactly the set in contention. The spec's own pipeline separates
+  expansion/dedupe from scoring for this reason.
+- **A DB-side fan-in cap is a safety ceiling, not a relevance filter** (M140-B):
+  the retained prefix is ordered by edge id, which is uncorrelated with
+  relevance. Measured: at 1,000 callers a 400 cap discarded BOTH relevant ones.
+  Set such caps well above realistic fan-in and report `limitReached`, or a
+  truncated walk reads as a complete one.
+- **`visited` cannot serve as both "not admissible" and "already expanded"**
+  (M140-B): one set for both silently dropped cross-seed corroboration — an
+  orchestrator reached from a second seed was discarded as "seen" instead of
+  recorded as reached twice. Keep the admission block-list and the
+  re-expansion/cycle set separate.
+- **A local-name match across classes fabricates visibility** (M140-B):
+  `arc/species/species.py` defines BOTH `TSGuess.from_dict` and
+  `ARCSpecies.from_dict`, so a name-suffix check reported the absent symbol as
+  present at rank 15. Resolve every visibility claim by exact fully-qualified
+  name. (Same shape as M139's stale-ground-truth finding.)
+- **A synthetic fixture smaller than the lexical pool cannot test a rescue lane**
+  (M140-B): the pool holds 100 candidates, so in a ten-symbol repository every
+  symbol is already retrieved and there is by definition nothing left to recover
+  — and a symbol needs query terms to clear the relevance floor, which is exactly
+  what makes it lexically findable at that scale. Structural contract (depth,
+  cycles, dedupe, caps) is tested against the lane directly; genuine end-to-end
+  recovery needs a real index.
+- **`buildCapsuleV2` has no retrieval-feature toggle** (M140-B): re-running it to
+  capture a "before" delivery records the AFTER state under a before-state name.
+  Capture delivered before-states from an artifact written by the predecessor
+  commit, not by re-running the current one.
+- **`getImpactGraph` and `searchLogicFlow` return `{ ok, output }`** (M140-B):
+  reading fields off the top level yields nulls that look exactly like a
+  regression. Two M140-B preservation checks "failed" this way before the
+  wrapper was unwrapped.

@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "stage5.m140b.activation-summary.v1",
+  "requests": 8,
+  "activatedCount": 3,
+  "activationRate": 37.5,
+  "meanSeedsWhenActive": 3,
+  "meanRescuedWhenActive": 2.67,
+  "maxRescued": 8,
+  "rows": [
+    {
+      "shape": "orchestration",
+      "query": "How does a species object get its 2D molecular graph when rebuilt from",
+      "activated": true,
+      "reason": "conditional-branch question (\"under what conditions\")",
+      "seeds": 3,
+      "rescued": 8,
+      "rescueMs": 2.8367,
+      "totalRetrievalMs": 407.34,
+      "rescueShareOfRetrieval": 0.7
+    },
+    {
+      "shape": "orchestration",
+      "query": "How is a species rebuilt and its conformers generated?",
+      "activated": true,
+      "reason": "process question (\"how is\")",
+      "seeds": 3,
+      "rescued": 0,
+      "rescueMs": 0.3547,
+      "totalRetrievalMs": 124.38,
+      "rescueShareOfRetrieval": 0.3
+    },
+    {
+      "shape": "orchestration",
+      "query": "How does ARC handle linear segments and dummy atoms in Z-matrices?",
+      "activated": true,
+      "reason": "process question (\"how does\")",
+      "seeds": 3,
+      "rescued": 0,
+      "rescueMs": 0.792,
+      "totalRetrievalMs": 147.9,
+      "rescueShareOfRetrieval": 0.5
+    },
+    {
+      "shape": "capability_lookup",
+      "query": "a function that returns a dihedral angle given three vectors, rather t",
+      "activated": false,
+      "reason": "capability lookup (capability description)",
+      "seeds": 0,
+      "rescued": 0,
+      "rescueMs": 0,
+      "totalRetrievalMs": 171.15,
+      "rescueShareOfRetrieval": 0
+    },
+    {
+      "shape": "explicit_lookup",
+      "query": "find get_dihedral",
+      "activated": false,
+      "reason": "explicit symbol lookup command",
+      "seeds": 0,
+      "rescued": 0,
+      "rescueMs": 0,
+      "totalRetrievalMs": 121.07,
+      "rescueShareOfRetrieval": 0
+    },
+    {
+      "shape": "explicit_lookup",
+      "query": "where is ARCSpecies.copy?",
+      "activated": false,
+      "reason": "explicit symbol lookup command",
+      "seeds": 0,
+      "rescued": 0,
+      "rescueMs": 0,
+      "totalRetrievalMs": 92.59,
+      "rescueShareOfRetrieval": 0
+    },
+    {
+      "shape": "bug_report",
+      "query": "Count with a Case expression and distinct=True emits a missing space",
+      "activated": false,
+      "reason": "no orchestration/process frame",
+      "seeds": 0,
+      "rescued": 0,
+      "rescueMs": 0,
+      "totalRetrievalMs": 170.77,
+      "rescueShareOfRetrieval": 0
+    },
+    {
+      "shape": "bug_report",
+      "query": "TypeError raised when the scheduler restarts a job",
+      "activated": false,
+      "reason": "no orchestration/process frame",
+      "seeds": 0,
+      "rescued": 0,
+      "rescueMs": 0,
+      "totalRetrievalMs": 190.55,
+      "rescueShareOfRetrieval": 0
+    }
+  ]
+}

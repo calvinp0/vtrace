@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "stage5.m140b.acceptance.v1",
+  "verdict": "MIXED",
+  "vtraceHead": "7093e2d6388ef4028b4cd60fb98387ab4524975e",
+  "arcIndex": "/home/calvin/bench/vtrace-m140/m140b/arc-fresh.sqlite",
+  "rows": [
+    {
+      "id": "arc_chain_indexed",
+      "pass": true,
+      "evidence": "all four chain symbols resolve in the fresh index"
+    },
+    {
+      "id": "arc_contrast_still_alternative_branches",
+      "pass": true,
+      "evidence": "contrastKind=alternative_branches, contrastTerms=[]"
+    },
+    {
+      "id": "arc_orchestration_intent_active",
+      "pass": true,
+      "evidence": "conditional-branch question (\"under what conditions\")"
+    },
+    {
+      "id": "arc_intermediate_visible",
+      "pass": true,
+      "evidence": "mol_from_xyz rank absent -> 6, delivered=true"
+    },
+    {
+      "id": "arc_entry_point_rescued_by_lane",
+      "pass": true,
+      "evidence": "from_dict rescued=true, uncapped rank 93/132, final=0.9749"
+    },
+    {
+      "id": "arc_entry_point_delivered",
+      "pass": false,
+      "evidence": "from_dict delivered=false (§36 wants it prominent; a bounded rescue score cannot close the gap to the lexical top)"
+    },
+    {
+      "id": "arc_downstream_retained",
+      "pass": true,
+      "evidence": "perceive delivered=true, branch logic delivered=true"
+    },
+    {
+      "id": "arc_high_fanin_bounded",
+      "pass": true,
+      "evidence": "are_coords_compliant_with_graph: 4 total -> 1 admitted; xyz_to_coords_list: 8 total -> 3 admitted; perceive_molecule_from_xyz: 62 total -> 3 admitted"
+    },
+    {
+      "id": "arc_no_unrelated_delivered_caller",
+      "pass": true,
+      "evidence": "rescued+delivered: arc/species/species.py::ARCSpecies.mol_from_xyz"
+    },
+    {
+      "id": "module_nodes_never_delivered",
+      "pass": true,
+      "evidence": "0 leak(s) across 4 queries"
+    },
+    {
+      "id": "centrality_excludes_structural_sources",
+      "pass": true,
+      "evidence": "273 structural symbols, 0 in the metric"
+    },
+    {
+      "id": "m136_budget_delivery_preserved",
+      "pass": true,
+      "evidence": "mode=standard, get_dihedral delivered=true"
+    },
+    {
+      "id": "m137_dihedral_preserved",
+      "pass": true,
+      "evidence": "lead=arc/species/vectors.py::get_dihedral, calculate_dihedral_angle penalty=0.28"
+    },
+    {
+      "id": "m137_preference_contrast_preserved",
+      "pass": true,
+      "evidence": "contrastKind=preference_exclusion; rescue activated=false"
+    },
+    {
+      "id": "m139_impact_truthful",
+      "pass": true,
+      "evidence": "exact=0, potential=0, reverseReachable=80"
+    },
+    {
+      "id": "m131_flow_preserved",
+      "pass": true,
+      "evidence": "1 path(s), 1 edge, types=[\"calls\"]"
+    },
+    {
+      "id": "rescue_does_not_fire_broadly",
+      "pass": true,
+      "evidence": "3/8 activated (37.5%)"
+    },
+    {
+      "id": "rescue_overhead_bounded",
+      "pass": true,
+      "evidence": "5.8776ms, 6 db queries"
+    },
+    {
+      "id": "no_agents_no_docker_no_vexp",
+      "pass": true,
+      "evidence": "static indexing and in-process retrieval only"
+    }
+  ]
+}
