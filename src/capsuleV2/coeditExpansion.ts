@@ -104,7 +104,7 @@ import {
   createFileImportScanner,
   type FileImportRelation,
 } from "../parsers/pythonFileImports";
-import { SymbolKind } from "../domain/types";
+import { SymbolKind, isStructuralSymbolKind } from "../domain/types";
 import {
   HybridCandidateSource,
   type HybridCandidate,
@@ -495,7 +495,12 @@ export function expandCoeditSupport(input: CoeditExpansionInput): CoeditExpansio
       const pairPath = `${dirOf(anchorPath)}${dirOf(anchorPath) === "" ? "" : "/"}${stemOf(anchorPath)}${suffix}.py`;
       if (guaranteedFiles.has(pairPath) || proposedFiles.has(pairPath)) continue;
       if (input.poolFilePaths.has(pairPath)) continue;
-      const symbols = listSymbolsForFile(input.db, pairPath);
+      // The injected entry stands in for the whole generated file, so it must be
+      // a symbol the reader can actually be shown. A <module> scope now sorts
+      // first here (its span is pinned to byte 0) and generated tables declare
+      // little else, so taking symbols[0] blindly delivered `::<module>`.
+      const symbols = listSymbolsForFile(input.db, pairPath)
+        .filter((symbol) => !isStructuralSymbolKind(symbol.kind));
       if (symbols.length === 0) continue;
       const first = symbols[0]!;
       proposedFiles.add(pairPath);

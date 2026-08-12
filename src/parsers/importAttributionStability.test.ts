@@ -716,3 +716,45 @@ test("the hybrid path lane never admits a module scope from a likely edit file",
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// A capsule-level backstop. The rule "a <module> is never delivered" was broken
+// independently by four different producers — the broad lexical query, graph
+// expansion, the hybrid path lane, and the co-edit generated-artifact pair — so
+// asserting it at each producer cannot be trusted to stay complete. This asserts
+// the property where it actually matters: on the built capsule.
+test("a built capsule never delivers a module scope as content", async () => {
+  const { buildCapsuleV2 } = await import("../capsuleV2/buildCapsuleV2");
+  const { CapsuleIntent } = await import("../capsuleV2/types");
+  const root = await mkdtemp(path.join(os.tmpdir(), "m140-capsule-"));
+  const db = openIndexerDatabase();
+
+  try {
+    // Shaped after astropy-14369: a source file with its generated PLY pair,
+    // which is what pulled `::<module>` into the delivered support set.
+    await writeRepo(root, {
+      "units/format/cds.py": "from model import Thing\n\n\nclass CdsFormat:\n    def parse(self, text):\n        return Thing()\n",
+      "units/format/cds_lextab.py": "_lextokens = {'UNIT': 1}\n_lexstateinfo = {'INITIAL': 'inclusive'}\n",
+      "units/format/cds_parsetab.py": "_tabversion = '3.10'\n_lr_signature = 'abc'\n",
+      "model.py": "class Thing:\n    def run(self):\n        return 1\n",
+    });
+    await indexProject({ repoRoot: root, db, refreshMode: "full" });
+
+    const capsule = buildCapsuleV2({
+      db,
+      repoRoot: root,
+      task: "fix the CDS unit format parser in units/format/cds.py so it parses units correctly",
+      intent: CapsuleIntent.Modify,
+      maxTokens: 6_000,
+    }) as { items?: Array<{ fqName?: string; symbol?: string; path?: string }> };
+
+    const delivered = JSON.stringify(capsule);
+    assert.equal(
+      delivered.includes("::<module>"),
+      false,
+      "a module scope reached delivered capsule content",
+    );
+  } finally {
+    db.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
