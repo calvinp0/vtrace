@@ -15,8 +15,14 @@ import { initRepo } from "../../src/setup/initRepo";
 import { createMcpServer } from "../../src/mcp/server";
 import { MCP_SERVER_SCHEMA, McpToolId } from "../../src/mcp/types";
 import { inspectWorktreeIndexFreshness } from "../../src/indexer/indexReadiness";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
-const DEFAULT_OUT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: no tracked default. Callers pass an explicit directory; the CLI resolves
+// one through the shared contract (untracked unless --out/--evidence says otherwise).
+const RUNNER_NAME = "m119_product_path_smoke";
 const DETAIL_NAME = "stage5_m119_product_path_smoke.detail.json";
 const CSV_NAME = "stage5_m119_product_path_smoke.csv";
 const FRESH_FIXTURE = { status: "fresh", reason: "fixture_index", action: "none" } as const;
@@ -53,7 +59,7 @@ interface SmokeRow {
   capsuleMode: string;
 }
 
-export async function runM119ProductPathSmoke(outDir = DEFAULT_OUT): Promise<{ rows: SmokeRow[]; parity: unknown }> {
+export async function runM119ProductPathSmoke(outDir: string): Promise<{ rows: SmokeRow[]; parity: unknown }> {
   const rows: SmokeRow[] = [];
 
   // Python-heavy, multi-file, impact, and Markdown/documentation evidence.
@@ -331,7 +337,12 @@ function renderCsv(rows: SmokeRow[]): string {
 
 if (import.meta.main) {
   const outFlag = process.argv.indexOf("--out");
-  const out = outFlag >= 0 && process.argv[outFlag + 1] ? path.resolve(process.argv[outFlag + 1]!) : DEFAULT_OUT;
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m119_product_path_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  const out = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+  void outFlag;
   const result = await runM119ProductPathSmoke(out);
   process.stdout.write(`${JSON.stringify({ cases: result.rows.length, parity: (result.parity as any).passed, out }, null, 2)}\n`);
 }

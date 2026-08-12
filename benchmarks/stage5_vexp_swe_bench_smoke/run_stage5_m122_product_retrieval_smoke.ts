@@ -10,9 +10,20 @@ import { indexProject } from "../../src/indexer/indexProject";
 import { buildUnresolvedProductContext } from "../../src/productContext/assembleProductContext";
 import { runReliableContextRetrieval } from "../../src/runPipeline/runPipelineOrchestrator";
 import { RunPipelinePresetIntent } from "../../src/runPipeline/types";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const FIXTURE = fileURLToPath(new URL("../../fixtures/m121_compound_retrieval_repo", import.meta.url));
-const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m122_product_retrieval_smoke";
+if (process.argv.includes("--help")) {
+  console.log(`run_stage5_m122_product_retrieval_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+  process.exit(0);
+}
+const RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
 const cases = [
   ["exact_identifier", "RecordReproducibilityAssessment"],
   ["filename", "public_assessments.py"],

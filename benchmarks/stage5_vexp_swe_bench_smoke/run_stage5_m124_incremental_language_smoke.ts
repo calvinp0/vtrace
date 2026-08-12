@@ -8,10 +8,27 @@ import { indexProject } from "../../src/indexer/indexProject";
 import { normalizeGraph, normalizedGraphHash } from "../../src/indexer/normalizedGraph";
 import { searchSymbols } from "../../src/retrieval/searchSymbols";
 import { SymbolSearchBackend } from "../../src/retrieval/types";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
-const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m124_incremental_language_smoke";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m124_incremental_language_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 
 async function main(): Promise<void> {
+  await resolveResults();
   const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-m124-smoke-"));
   const incrementalDb = openIndexerDatabase();
   const fullDb = openIndexerDatabase();

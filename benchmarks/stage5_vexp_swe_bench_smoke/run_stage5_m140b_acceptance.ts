@@ -24,10 +24,26 @@ import { computeInDegreeCentrality } from "../../src/retrieval/graphExpansion";
 import { hybridRetrieve, HybridCandidateSource } from "../../src/retrieval/hybridRetrieval";
 import { deriveQueryIntent, evaluateOrchestrationIntent } from "../../src/retrieval/querySemantics";
 import { ARC_SERIALIZATION_QUERY, projectCapsule } from "./run_stage5_m140b_arc_probe";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const ARC_ROOT = path.resolve(process.env.M140B_ARC_ROOT ?? "/home/calvin/code/ARC");
 const DEFAULT_INDEX = "/home/calvin/bench/vtrace-m140/m140b/arc-fresh.sqlite";
-const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m140b_acceptance";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m140b_acceptance.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 
 const CHAIN = {
   entry: "arc/species/species.py::ARCSpecies.from_dict",
@@ -372,6 +388,7 @@ function activationSummary(db: Database) {
 }
 
 async function main(): Promise<void> {
+  await resolveResults();
   const indexPath = argument("--index") ?? DEFAULT_INDEX;
   const outDir = argument("--out") ?? RESULTS;
   if (!existsSync(indexPath)) {

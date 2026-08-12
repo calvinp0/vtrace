@@ -15,9 +15,25 @@ import { MCP_SERVER_SCHEMA, McpToolId } from "../../src/mcp/types";
 import { extractEmbeddedPathClues } from "../../src/capsule/sweQueryShaping";
 import { RunPipelinePresetIntent } from "../../src/runPipeline/types";
 import { loadRetrievalFixture } from "./run_stage5_retrieval_eval";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
-const RESULTS = path.join(ROOT, "results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m128_mixed_surface_retrieval_smoke";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m128_mixed_surface_retrieval_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 const TCKDB_ROOT = process.env.M128_TCKDB_ROOT;
 const TASK = "Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.";
 const REQUIRED = [
@@ -30,6 +46,7 @@ const REQUIRED = [
 const QUALITY = { cases: 50, top1: 39, top5: 46, allGoldVisible: 45, lead: 39, missing: 4, wrongPivot: 11, noCandidates: 0 };
 
 async function main(): Promise<void> {
+  await resolveResults();
   if (!TCKDB_ROOT) throw new Error("M128_TCKDB_ROOT must point at an isolated, current-schema TCKDB HEAD export");
   const dbPath = path.join(TCKDB_ROOT, ".vtrace", "index.sqlite");
   const server = createMcpServer({ context: { repoRoot: TCKDB_ROOT, dbPath, initialized: true } });

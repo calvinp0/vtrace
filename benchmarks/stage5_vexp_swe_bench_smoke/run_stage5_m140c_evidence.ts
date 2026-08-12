@@ -16,8 +16,24 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
-const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m140c_evidence";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m140c_evidence.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 
 interface QualitySummary {
   readonly cases: number;
@@ -103,6 +119,7 @@ function classify(change: Record<string, unknown>) {
 }
 
 async function main(): Promise<void> {
+  await resolveResults();
   const pairedPath = argument("--paired");
   const threeStatePath = argument("--three-state") ?? path.join(RESULTS, "stage5_m140_final_three_state_quality.json");
   const outDir = argument("--out") ?? RESULTS;

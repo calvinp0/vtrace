@@ -12,6 +12,10 @@ import { indexProject } from "../../src/indexer/indexProject";
 import { runReliableContextRetrieval, type OrchestrationContextSection } from "../../src/runPipeline/runPipelineOrchestrator";
 import { RunPipelinePresetIntent, type RunPipelineConcretePreset } from "../../src/runPipeline/types";
 import { loadRetrievalFixture, type RetrievalEvalFixtureEntry } from "./run_stage5_retrieval_eval";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 export const PRODUCT_RETRIEVAL_BASELINE = "product-retrieval-v1";
 export const PRODUCT_RETRIEVAL_IMPLEMENTATION = "routeQuery/searchSymbolsFtsDetailed/rerankGraph/buildCapsule";
@@ -21,7 +25,19 @@ export const CHARS_PER_TOKEN = 4;
 export const MAX_QUERY_VARIANTS = 32;
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
-const RESULTS = path.join(ROOT, "results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m122_product_retrieval_eval";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m122_product_retrieval_eval.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 const FIXTURES = [
   path.join(ROOT, "retrieval_eval.django.expanded.json"),
   path.join(ROOT, "retrieval_eval.cross_repo.30.json"),
@@ -455,6 +471,7 @@ function routeMode(query: string, pathTerms: readonly string[]): string {
 }
 
 async function main(): Promise<void> {
+  await resolveResults();
   const tckdbArg = process.argv.indexOf("--tckdb");
   const tckdbRoot = tckdbArg >= 0 ? process.argv[tckdbArg + 1] : undefined;
   if (process.argv.includes("--tckdb-only")) {

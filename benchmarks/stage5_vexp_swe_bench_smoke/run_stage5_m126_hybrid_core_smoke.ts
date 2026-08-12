@@ -10,9 +10,25 @@ import { CapsuleIntent, parseCapsuleIntent } from "../../src/capsuleV2/types";
 import { openIndexerDatabase } from "../../src/db/sqlite";
 import { RunPipelinePresetIntent } from "../../src/runPipeline/types";
 import { loadRetrievalFixture } from "./run_stage5_retrieval_eval";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
-const RESULTS = path.join(ROOT, "results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m126_hybrid_core_smoke";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m126_hybrid_core_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 const TCKDB_ROOT = process.env.M126_TCKDB_ROOT
   ?? path.resolve(import.meta.dir, "../../../TCKDB_v2");
 const EXACT_TASK = "Add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. Determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, OpenAPI, tests, docs, and Python client types.";
@@ -25,6 +41,7 @@ const TASKS = {
 } as const;
 
 async function main(): Promise<void> {
+  await resolveResults();
   const dbPath = argument("--tckdb-db");
   if (dbPath === undefined) throw new Error("--tckdb-db is required (isolated read-only index)");
   const baseline = await Bun.file(path.join(RESULTS, "stage5_M125_product_v2_regression.json")).json();

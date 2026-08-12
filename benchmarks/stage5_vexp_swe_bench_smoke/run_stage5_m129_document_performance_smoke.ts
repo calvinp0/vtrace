@@ -17,9 +17,25 @@ import { normalizeGraph } from "../../src/indexer/normalizedGraph";
 import { retrieveIndexedDocuments } from "../../src/documents/documentRetrieval";
 import { RunPipelinePresetIntent } from "../../src/runPipeline/types";
 import { loadRetrievalFixture } from "./run_stage5_retrieval_eval";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
-const RESULTS = path.join(ROOT, "results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m129_document_performance_smoke";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m129_document_performance_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 const WORKSPACE_ROOT = path.resolve(process.env.M129_WORKSPACE_ROOT ?? ".");
 const TCKDB_ROOT = path.resolve(process.env.M129_TCKDB_ROOT ?? "/home/calvin/code/TCKDB_v2");
 const TASK = "Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.";
@@ -64,6 +80,7 @@ interface SemanticSnapshot {
 }
 
 async function main(): Promise<void> {
+  await resolveResults();
   const snapshotOut = argument("--snapshot-out");
   if (snapshotOut !== undefined) {
     const snapshot = await buildSemanticSnapshot();

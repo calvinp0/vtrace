@@ -7,10 +7,27 @@ import { CapsuleIntent } from "../../src/capsuleV2/types";
 import { seedCustomFixture } from "../../src/capsuleV2/__fixtures__/capsuleV2Fixture";
 import { SymbolKind } from "../../src/domain/types";
 import { RunPipelinePresetIntent } from "../../src/runPipeline/types";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
-const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m123_product_ranking_smoke";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m123_product_ranking_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 
 async function main(): Promise<void> {
+  await resolveResults();
   const fixture = seedCustomFixture([
     { relPath: "app/models/reproducibility_assessment.py", specs: [{ localName: "RecordReproducibilityAssessment", kind: SymbolKind.Class, body: "class RecordReproducibilityAssessment:\n    public_ref: str\n    immutable = True" }] },
     { relPath: "app/services/public_assessments.py", specs: [{ localName: "compact_public_assessment", kind: SymbolKind.Function, body: "def compact_public_assessment(model):\n    return {'public_ref': model.public_ref}" }] },

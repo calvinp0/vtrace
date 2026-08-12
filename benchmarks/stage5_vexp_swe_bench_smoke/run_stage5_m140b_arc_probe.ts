@@ -27,10 +27,26 @@ import { EdgeType, isStructuralSymbolKind, type SymbolRecord } from "../../src/d
 import { indexProject } from "../../src/indexer/indexProject";
 import { deriveQueryIntent } from "../../src/retrieval/querySemantics";
 import { CapsuleIntent, type CapsuleV2Result } from "../../src/capsuleV2/types";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const ARC_ROOT = path.resolve(process.env.M140B_ARC_ROOT ?? "/home/calvin/code/ARC");
 const DEFAULT_INDEX = "/home/calvin/bench/vtrace-m140/m140b/arc-fresh.sqlite";
-const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m140b_arc_probe";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m140b_arc_probe.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 
 /** The exact §35 behavioural query. Never paraphrase it. */
 export const ARC_SERIALIZATION_QUERY =
@@ -286,6 +302,7 @@ export function reproduceArcQuery(db: Database, label: string) {
 }
 
 async function main(): Promise<void> {
+  await resolveResults();
   const indexPath = argument("--index") ?? DEFAULT_INDEX;
   const outDir = argument("--out") ?? RESULTS;
   const label = argument("--label") ?? "a6_before";

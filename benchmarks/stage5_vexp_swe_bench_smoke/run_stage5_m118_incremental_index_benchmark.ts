@@ -11,9 +11,20 @@ import { reindexRepoAndRefreshState } from "../../src/runtime/reindexRepo";
 import { initRepo } from "../../src/setup/initRepo";
 import { resolveRepoLocalPaths } from "../../src/setup/repoState";
 import { searchSymbols } from "../../src/retrieval/searchSymbols";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const execFile = promisify(execFileCallback);
-const resultsRoot = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m118_incremental_index_benchmark";
+if (process.argv.includes("--help")) {
+  console.log(`run_stage5_m118_incremental_index_benchmark.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+  process.exit(0);
+}
+const resultsRoot = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
 
 interface Measurement {
   repository: string;

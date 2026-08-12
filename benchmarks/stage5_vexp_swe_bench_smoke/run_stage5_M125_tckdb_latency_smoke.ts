@@ -32,9 +32,25 @@ import {
   loadRetrievalFixture,
   type RetrievalEvalFixtureEntry,
 } from "./run_stage5_retrieval_eval";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
-const RESULTS = path.join(ROOT, "results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m125_tckdb_latency_smoke";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_M125_tckdb_latency_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 const EXACT_TASK = "Add a stable public reference for the exact immutable reproducibility assessment surfaced in compact assessment summaries across thermo, kinetics, statmech, and transport. Determine whether assessment models already have an appropriate public_ref; trace immutability/supersession, schemas, migrations, projection builders, OpenAPI, tests, docs, and Python client types.";
 const NORMALIZED_TCKDB_ROOT = "<TCKDB_ROOT>";
 const TCKDB_HEAD = "70ff50381f42551a825d75874ea2d70f6dbe08ec";
@@ -52,6 +68,7 @@ interface Args {
 }
 
 async function main(): Promise<void> {
+  await resolveResults();
   const args = parseArgs(process.argv.slice(2));
   const fixtureSmoke = runSyntheticSmoke();
   const tckdb = await runTckdb(args);

@@ -14,9 +14,25 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 import { loadHistoricalModules } from "./run_stage5_m134_historical_replay";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const TCKDB_ROOT = path.resolve(process.env.M140B_TCKDB_ROOT ?? "/home/calvin/code/TCKDB_v2");
-const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m140b_tckdb_acceptance";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m140b_tckdb_acceptance.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 
 /**
  * Deliberately mixed shapes: an ordinary modify task (must not activate the
@@ -76,6 +92,7 @@ async function evaluate(root: string): Promise<Projection[]> {
 }
 
 async function main(): Promise<void> {
+  await resolveResults();
   const predecessorRoot = path.resolve(argument("--predecessor-root") ?? "");
   const candidateRoot = path.resolve(argument("--candidate-root") ?? "");
   const outDir = argument("--out") ?? RESULTS;

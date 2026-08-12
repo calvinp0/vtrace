@@ -8,9 +8,25 @@ import { openIndexerDatabase } from "../../src/db/sqlite";
 import { routeQuery } from "../../src/intent/routeQuery";
 import { loadRetrievalFixture, type RetrievalEvalFixtureEntry } from "./run_stage5_retrieval_eval";
 import { aggregate, type ComparisonRow } from "./run_stage5_m122_product_retrieval_eval";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
-const RESULTS = path.join(ROOT, "results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m123_product_ranking_eval";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m123_product_ranking_eval.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 const M122 = path.join(RESULTS, "stage5_m122_product_retrieval_evaluation.json");
 const FIXTURES = [
   path.join(ROOT, "retrieval_eval.django.expanded.json"),
@@ -22,6 +38,7 @@ type LossStage = "not_generated" | "generated_below_candidate_cap" | "demoted_by
   | "lost_during_role_assignment" | "selected_but_not_visible" | "not_lost";
 
 async function main(): Promise<void> {
+  await resolveResults();
   const m122 = JSON.parse(await readFile(M122, "utf8")) as { rows: ComparisonRow[]; metrics: unknown };
   const oldById = new Map(m122.rows.map((row) => [row.instance_id, row]));
   const entries: RetrievalEvalFixtureEntry[] = [];

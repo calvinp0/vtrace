@@ -16,9 +16,25 @@ import { MCP_SERVER_SCHEMA, McpToolId } from "../../src/mcp/types";
 import { getRuntimeProvenance } from "../../src/runtime/provenance";
 import { RunPipelinePresetIntent } from "../../src/runPipeline/types";
 import { loadRetrievalFixture } from "./run_stage5_retrieval_eval";
+import {
+  prepareRunnerOutput,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
-const RESULTS = path.join(ROOT, "results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m127_capsule_unification_smoke";
+let RESULTS = "";
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m127_capsule_unification_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  RESULTS = (await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME })).dir;
+}
+
 const EXACT_TASK = "Fix the stale Python-client computed-reaction payload snapshot for degeneracy_convention and add a dedicated GitHub Actions pytest workflow triggered by clients/python changes. Identify existing workflow conventions, client test dependencies, full-suite command, notebook requirements, and relevant tests.";
 const TCKDB_ROOT = process.env.M127_TCKDB_ROOT;
 const BASELINE_METRICS = {
@@ -27,6 +43,7 @@ const BASELINE_METRICS = {
 };
 
 async function main(): Promise<void> {
+  await resolveResults();
   if (!TCKDB_ROOT) throw new Error("M127_TCKDB_ROOT is required and must name an isolated indexed TCKDB HEAD archive");
   const dbPath = path.join(TCKDB_ROOT, ".vtrace", "index.sqlite");
   const runtime = getRuntimeProvenance();
