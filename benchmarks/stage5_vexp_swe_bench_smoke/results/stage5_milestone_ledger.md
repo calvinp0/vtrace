@@ -344,6 +344,53 @@ file; live-run outcome history is separate (`stage5_outcome_ledger.md`).
 
 | M139 | (this commit) | MIXED | Impact consumer truthfulness (caller coverage + bounded potential-caller discovery, direction-separated consumer counts, domain-labelled richSummary, reclassified omission accounting) + behavioural-vs-preference contrast semantics | ARCSpecies.copy: exact callers 0 (was unreported), 83 potential discovered / 10 delivered, coverage `incomplete` with 5 reason codes; `canonicalEdgesOmitted` 686 resolved to 686 nodes + 0 edge slots (`node_budget`); ARC serialization query reclassified `preference_exclusion`→`alternative_branches`, adjacency/list penalty removed (was -0.14 live); M135 dihedral `-0.28` preserved | implement bounded upstream graph expansion so serialization orchestration (`from_dict`→`mol_from_xyz`) becomes visible; then M140 index readiness |
 | M140 | c793468 | **INCOMPLETE** (WS-A PASS, WS-B not implemented) | WS-A: stabilize module-level import attribution. Root cause = an ownership model with NO stable owner: `getUnambiguousImportSourceSymbol` attributed a file's ENTIRE import edge set to its single top-level symbol and returned nothing when the file had zero or more than one (`pythonParser.ts:2416`, duplicated verbatim at `cythonParser.ts:1181`), so adding one unrelated function deleted a semantically unchanged edge — and the same rule governed the TARGET side, so `import model` resolved only when `model.py` had exactly one definition. Fix = a per-file structural module symbol (`SymbolKind.Module`, `<module>`, `src/parsers/moduleSymbol.ts`) whose span is pinned to byte 0 (because `computeSymbolId` hashes the span, a body-sized span would re-break the owner id and every edge id hanging off it on any length change) and whose name cannot collide with a real definition. Structural symbols are graph-visible / delivery-invisible (`isStructuralSymbolKind`, `EXCLUDE_STRUCTURAL_SYMBOLS_SQL`). NO schema change: `symbols.kind` has no CHECK constraint, so the `index_status` contradiction is untouched and M141 still owns readiness. | Only **49/257 (19.1%)** of ARC Python files could own an import edge before this; ARC `imports` **283 → 2,281 (8.1×)** while `calls`/`contains`/`references` stayed byte-identical (10,759/5,960/2,618) = the §25 evidence that no other edge kind was retargeted. 125 new product-level tests (`importAttributionStability.test.ts`): 6 import forms × 9 unrelated additions × 2 positions, ordering, alias/relative/re-export, shadow+rebind controls, semantic-change controls, full-vs-incremental and no-op equivalence, determinism; run unchanged against M139 `340fd9c` it gives **28 pass / 97 fail**, so it discriminates. Impact gained two improvements: fan-in delivery **32 → 40 of 40** callers (each caller used to burn two of the 64 edge slots on a redundant import+call pair naming the same src/dst) and impact queries for an 80-caller symbol **88 → 9** (batched the direct-relations prefetch — the guarding test is named for a property it did not previously hold). 3,945 pass / 0 fail; both typechecks clean. | **WS-B not implemented and the mandatory paired benchmark (§61) NOT run** — the 32G tmpfs hit its quota copying Django checkouts; it is runnable on the root fs (675G free). Do the paired benchmark FIRST: it is the only thing that can say whether the 8× import expansion helps / is neutral / regresses, and whether `rerankGraph`'s import-neighbour weight (6, cap 12) is still calibrated now that the importer-side signal lands on excluded module symbols (OPEN FINDING, deliberately not tuned). Then implement upstream rescue: the ARC chain `from_dict –calls→ mol_from_xyz –calls→ perceive_molecule_from_xyz` IS present (§114 does not apply), with calls fan-in 62/3/1 sizing the seed rule and per-seed cap. |
+| M140 (continuation) | 6a6e922 | **INCOMPLETE** (WS-A PASS after correction; mandatory paired benchmark RUN and attributed; WS-B still not implemented) | Ran the §61 gate that M140-A could not: provenance-safe M139 `340fd9c` → M140-A paired comparison over Django expanded (20) + cross_repo_30 (30), each side loading its declared implementation against its own independently prepared index, on a root-filesystem workspace instead of the 32G tmpfs that killed the first attempt. Attribution then exposed four defects in the INHERITED WS-A commit and each was corrected on evidence with a discriminating test: (A2 `828af6e`) `queryBroadCandidates` rebuilt its SELECT by hand and omitted `EXCLUDE_STRUCTURAL_SYMBOLS_SQL`, so long natural-language tasks — the only ones that route there — admitted `<module>` as a lexical candidate; (A3 `f351716`) `computeInDegreeCentrality` is edge-source blind, so truthful import fan-in inflated a count rendered to the model as "N indexed symbol(s) depend on this" and used to order pivots; (A4 `c995d17`) graph expansion materialised module scopes as deliverable candidates; (A5 `9afecd7` / A6 `6a6e922`) hybrid path admission and the co-edit generated-artifact lane each took a module scope as a file's representative, because its span is pinned to byte 0 so it sorts first. | **Frozen 50, M139 replay → A1 → A6: Top-1 39 → 37 → 39; Top-3 45 → 44 → 44; gold-anywhere 47 flat; missing-gold 3 flat; changed cases 34 → 24, 0 unexplained.** `imports_neighborhood` is structurally DEAD (12 candidates/score 78 at M139 → absent), because every import edge's source is now a `module` that can never be a lexical candidate — the OPPOSITE of the anticipated §21 domination, so `importsNeighbor 6`/`importsNeighborMax 12` were NOT retuned. Target-side fan-in reaches ranking only via `in_degree`, +11.5% edges but +2.4% score because `inDegreeMax 6` saturates after 3 edges. The real popularity bias was the dependents count: 20/23 pivot symbols gained dependents and 0 lost any (max +29) before A3; after it, 0 gained / 5 lost. Module-node delivery went 7 role entries across 6 of the frozen 50 at the inherited A1 → **0 at A6**. WS-A suite 125 → 130 tests, still 28 pass/97 fail against M139. 4,075 pass / 0 fail; both typechecks clean. M136 PASS, M137 PASS (`get_dihedral` lead); M138 FAIL is PRE-EXISTING — it reproduces identically on `340fd9c`. | **WS-B remains unimplemented, so M140 stays INCOMPLETE.** Do WS-B next against the CORRECTED A6 graph, then the A6→final and M139→final comparisons. Confirm the ARC `from_dict → mol_from_xyz → perceive_molecule_from_xyz` chain and its 62/3/1 call fan-ins against a FRESH ARC index before sizing the seed rule (the committed ARC index has been stale twice). Not run: ARCSpecies.copy impact (§66–§69), TCKDB acceptance (§76–§77), standalone M132, per-stage performance (§61). |
+
+## M140 continuation standing findings
+
+- **An invariant enforced by copy-pasted SQL will be broken by the next query
+  site** (M140): `EXCLUDE_STRUCTURAL_SYMBOLS_SQL` was correct at three symbol-query
+  sites and absent from the fourth, which had been rewritten by hand for
+  performance. The same rule was then broken independently by graph expansion,
+  hybrid path admission, and the co-edit representative picker — four producers,
+  one rule. The suite now carries a capsule-level backstop asserting no delivered
+  capsule content names a module scope, because per-producer assertions cannot be
+  trusted to stay complete.
+- **A unit suite of short queries cannot test a long-query code path** (M140): the
+  125-test WS-A suite asserted module invisibility with single tokens
+  (`"module"`, `"Thing"`), and every one of them missed the broad-query path that
+  real SWE-bench tasks take. The aggregate benchmark found it immediately. This is
+  the concrete argument for §61 being a gate rather than a formality.
+- **`<module>` sorts first in any file's symbol list** (M140): its span is pinned
+  to byte 0 for identity stability (§4), so every `listSymbolsForFile(...)[0]`
+  "representative symbol for this file" idiom silently changed meaning. Two lanes
+  used that idiom.
+- **Correcting a graph can make a metric quieter, not louder** (M140): the
+  anticipated risk was that truthful import fan-in would let `rerankGraph`'s
+  import weight dominate. What happened instead is that the signal stopped firing
+  altogether — the corrected edges all originate at a node that is excluded from
+  candidacy by design. Dead configuration, not domination. Measure before tuning.
+- **"Dependents" silently became a popularity metric** (M140): `in_degree`
+  centrality is edge-source blind, so an import-only, file-level dependency began
+  counting toward a number presented as dependent SYMBOLS and used to order
+  pivots. It inflated monotonically (20/23 up, 0 down). This is the same class of
+  mixed-domain accounting M139 corrected in impact; the fix keeps every import
+  edge in the graph and filters only this metric.
+- **One benchmark regression was truthful and was kept** (M140): sympy-12419's
+  gold `matexpr.py::ZeroMatrix` lost exactly one dependent, 25 → 24, and fell from
+  pivot to support. That dependent was `matpow.py::MatPow` falsely owning its
+  file's import because it was the file's only top-level symbol. The historical
+  top-3 benefited from invalid attribution; it was reported, not restored (§22).
+- **The M138 memory smoke fails on M139 too** (M140): `ARC current=4/4;
+  suppressed=0` reproduces on the declared predecessor `340fd9c`, so it is
+  environment/state drift in real historical memory, not an M140 regression.
+  Attribute a failing preservation smoke by running it on the predecessor before
+  claiming it.
+- **Stage 5 preservation smokes write into the tracked `results/` tree regardless
+  of `--out`** (M140): running M131/M136/M137/M138 acceptance overwrote 31
+  committed evidence files from those milestones. Check `git status` after running
+  them and restore, or a preservation run will quietly rewrite history.
+
 
 ## M140 standing findings
 

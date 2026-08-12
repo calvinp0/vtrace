@@ -1,0 +1,1090 @@
+{
+  "schemaVersion": "stage5.m140.changed-case-ledger.v1",
+  "changedCaseCount": 24,
+  "leadChanges": 1,
+  "quality": {
+    "IMPROVEMENT": 0,
+    "NEUTRAL": 23,
+    "REGRESSION": 1
+  },
+  "unexplained": 0,
+  "subreasonCounts": {
+    "target_fanin_added": 15,
+    "candidate_score_changed": 8,
+    "secondary_effect": 9,
+    "source_signal_removed": 3
+  },
+  "cases": [
+    {
+      "suite": "django_expanded",
+      "instanceId": "django__django-11095",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "django/contrib/admin/options.py",
+      "newLead": "django/contrib/admin/options.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "django/contrib/admin/options.py",
+        "django/contrib/contenttypes/forms.py"
+      ],
+      "newSelectedFiles": [
+        "django/contrib/admin/options.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 500,
+      "newEstimatedTokens": 493,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added",
+        "candidate_score_changed"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 58,
+        "inDegreeEdgesAfter": 69,
+        "inDegreeScoreBefore": 64,
+        "inDegreeScoreAfter": 74,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "django_expanded",
+      "instanceId": "django__django-10973",
+      "changedFields": [
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "db/backends/postgresql/client.py",
+      "newLead": "db/backends/postgresql/client.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "db/backends/postgresql/client.py",
+        "contrib/gis/db/backends/postgis/operations.py",
+        "db/backends/postgresql/base.py"
+      ],
+      "newSelectedFiles": [
+        "db/backends/postgresql/client.py",
+        "contrib/gis/db/backends/postgis/operations.py",
+        "db/backends/postgresql/base.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 773,
+      "newEstimatedTokens": 773,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added",
+        "candidate_score_changed"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 44,
+        "inDegreeEdgesAfter": 48,
+        "inDegreeScoreBefore": 84,
+        "inDegreeScoreAfter": 88,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "django_expanded",
+      "instanceId": "django__django-11206",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "utils/numberformat.py",
+      "newLead": "utils/numberformat.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "utils/numberformat.py",
+        "utils/formats.py",
+        "utils/dateformat.py"
+      ],
+      "newSelectedFiles": [
+        "utils/numberformat.py",
+        "utils/formats.py",
+        "utils/html.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 1280,
+      "newEstimatedTokens": 1279,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "secondary_effect"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 21,
+        "inDegreeEdgesAfter": 21,
+        "inDegreeScoreBefore": 42,
+        "inDegreeScoreAfter": 42,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "django_expanded",
+      "instanceId": "django__django-12325",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "db/models/sql/query.py",
+      "newLead": "db/models/sql/query.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "db/models/sql/query.py",
+        "db/models/options.py",
+        "template/backends/django.py"
+      ],
+      "newSelectedFiles": [
+        "db/models/sql/query.py",
+        "db/models/options.py",
+        "template/backends/django.py"
+      ],
+      "oldGoldRank": 2,
+      "newGoldRank": 2,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 1532,
+      "newEstimatedTokens": 1532,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "secondary_effect"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 29,
+        "inDegreeEdgesAfter": 29,
+        "inDegreeScoreBefore": 58,
+        "inDegreeScoreAfter": 58,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "django_expanded",
+      "instanceId": "django__django-13195",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "http/response.py",
+      "newLead": "http/response.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "http/response.py",
+        "contrib/sessions/backends/signed_cookies.py",
+        "contrib/messages/storage/cookie.py"
+      ],
+      "newSelectedFiles": [
+        "http/response.py",
+        "contrib/sessions/backends/signed_cookies.py",
+        "contrib/messages/storage/cookie.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 468,
+      "newEstimatedTokens": 483,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "secondary_effect"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 43,
+        "inDegreeEdgesAfter": 43,
+        "inDegreeScoreBefore": 74,
+        "inDegreeScoreAfter": 74,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "sympy__sympy-12419",
+      "changedFields": [
+        "selectedFiles",
+        "lead",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting",
+        "qualityMetrics"
+      ],
+      "oldLead": "sympy/physics/quantum/identitysearch.py",
+      "newLead": "sympy/matrices/matrices.py",
+      "leadChanged": true,
+      "oldSelectedFiles": [
+        "sympy/physics/quantum/identitysearch.py",
+        "sympy/matrices/expressions/matexpr.py",
+        "sympy/assumptions/handlers/matrices.py"
+      ],
+      "newSelectedFiles": [
+        "sympy/matrices/matrices.py",
+        "sympy/physics/quantum/identitysearch.py",
+        "sympy/assumptions/handlers/matrices.py"
+      ],
+      "oldGoldRank": 2,
+      "newGoldRank": 4,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 1513,
+      "newEstimatedTokens": 1424,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added",
+        "candidate_score_changed"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 214,
+        "inDegreeEdgesAfter": 268,
+        "inDegreeScoreBefore": 88,
+        "inDegreeScoreAfter": 92,
+        "moduleNodesDelivered": false
+      },
+      "quality": "REGRESSION",
+      "qualityBasis": "gold file lost top-3"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "sympy__sympy-12481",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "sympy/combinatorics/permutations.py",
+      "newLead": "sympy/combinatorics/permutations.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "sympy/combinatorics/permutations.py",
+        "sympy/combinatorics/perm_groups.py",
+        "sympy/polys/constructor.py"
+      ],
+      "newSelectedFiles": [
+        "sympy/combinatorics/permutations.py",
+        "sympy/combinatorics/perm_groups.py",
+        "sympy/polys/constructor.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 2120,
+      "newEstimatedTokens": 2103,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "source_signal_removed",
+        "target_fanin_added"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 12,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 325,
+        "inDegreeEdgesAfter": 406,
+        "inDegreeScoreBefore": 130,
+        "inDegreeScoreAfter": 130,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "sympy__sympy-13372",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "sympy/core/evalf.py",
+      "newLead": "sympy/core/evalf.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "sympy/core/evalf.py",
+        "sympy/core/compatibility.py"
+      ],
+      "newSelectedFiles": [
+        "sympy/core/evalf.py",
+        "sympy/core/compatibility.py",
+        "sympy/core/expr.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 1708,
+      "newEstimatedTokens": 1717,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "secondary_effect"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 0,
+        "inDegreeEdgesAfter": 0,
+        "inDegreeScoreBefore": 0,
+        "inDegreeScoreAfter": 0,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "sklearn/metrics/cluster/supervised.py",
+      "newLead": "sklearn/metrics/cluster/supervised.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "sklearn/metrics/cluster/supervised.py",
+        "sklearn/exceptions.py",
+        "sklearn/metrics/regression.py"
+      ],
+      "newSelectedFiles": [
+        "sklearn/metrics/cluster/supervised.py",
+        "sklearn/exceptions.py",
+        "sklearn/utils/validation.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 1447,
+      "newEstimatedTokens": 1828,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "source_signal_removed",
+        "target_fanin_added",
+        "candidate_score_changed"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 42,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 720,
+        "inDegreeEdgesAfter": 1023,
+        "inDegreeScoreBefore": 124,
+        "inDegreeScoreAfter": 132,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "scikit-learn__scikit-learn-11578",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "sklearn/linear_model/logistic.py",
+      "newLead": "sklearn/linear_model/logistic.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "sklearn/linear_model/logistic.py",
+        "sklearn/linear_model/base.py",
+        "sklearn/multioutput.py"
+      ],
+      "newSelectedFiles": [
+        "sklearn/linear_model/logistic.py",
+        "sklearn/multioutput.py",
+        "sklearn/linear_model/base.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 5377,
+      "newEstimatedTokens": 5377,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 504,
+        "inDegreeEdgesAfter": 708,
+        "inDegreeScoreBefore": 140,
+        "inDegreeScoreAfter": 140,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "astropy__astropy-14365",
+      "changedFields": [
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "astropy/io/ascii/qdp.py",
+      "newLead": "astropy/io/ascii/qdp.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "newSelectedFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 2133,
+      "newEstimatedTokens": 2146,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added",
+        "candidate_score_changed"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 539,
+        "inDegreeEdgesAfter": 577,
+        "inDegreeScoreBefore": 98,
+        "inDegreeScoreAfter": 108,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "pytest-dev__pytest-10051",
+      "changedFields": [
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "src/_pytest/logging.py",
+      "newLead": "src/_pytest/logging.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "src/_pytest/logging.py",
+        "src/_pytest/recwarn.py",
+        "src/_pytest/pytester.py"
+      ],
+      "newSelectedFiles": [
+        "src/_pytest/logging.py",
+        "src/_pytest/recwarn.py",
+        "src/_pytest/pytester.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 564,
+      "newEstimatedTokens": 564,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 180,
+        "inDegreeEdgesAfter": 216,
+        "inDegreeScoreBefore": 72,
+        "inDegreeScoreAfter": 72,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting",
+        "qualityMetrics"
+      ],
+      "oldLead": "sphinx/domains/python.py",
+      "newLead": "sphinx/domains/python.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/domains/cpp.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "newSelectedFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/domains/__init__.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 1458,
+      "newEstimatedTokens": 1723,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "secondary_effect"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 0,
+        "inDegreeEdgesAfter": 0,
+        "inDegreeScoreBefore": 0,
+        "inDegreeScoreAfter": 0,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "changedFields": [
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "sphinx/ext/autodoc/__init__.py",
+      "newLead": "sphinx/ext/autodoc/__init__.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "sphinx/ext/autodoc/__init__.py",
+        "sphinx/ext/napoleon/docstring.py"
+      ],
+      "newSelectedFiles": [
+        "sphinx/ext/autodoc/__init__.py",
+        "sphinx/ext/napoleon/docstring.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 1217,
+      "newEstimatedTokens": 1217,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 98,
+        "inDegreeEdgesAfter": 105,
+        "inDegreeScoreBefore": 110,
+        "inDegreeScoreAfter": 110,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "psf__requests-1142",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "requests/models.py",
+      "newLead": "requests/models.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "requests/models.py",
+        "requests/cookies.py",
+        "requests/api.py"
+      ],
+      "newSelectedFiles": [
+        "requests/models.py",
+        "requests/cookies.py",
+        "requests/api.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 631,
+      "newEstimatedTokens": 557,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added",
+        "candidate_score_changed"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 56,
+        "inDegreeEdgesAfter": 72,
+        "inDegreeScoreBefore": 84,
+        "inDegreeScoreAfter": 98,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "astropy__astropy-14598",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "astropy/io/fits/diff.py",
+      "newLead": "astropy/io/fits/diff.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "astropy/io/fits/diff.py",
+        "astropy/io/fits/fitsrec.py",
+        "astropy/units/format/fits.py"
+      ],
+      "newSelectedFiles": [
+        "astropy/io/fits/diff.py",
+        "astropy/io/fits/fitsrec.py",
+        "astropy/units/format/fits.py"
+      ],
+      "oldGoldRank": 5,
+      "newGoldRank": 5,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 4085,
+      "newEstimatedTokens": 4077,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 548,
+        "inDegreeEdgesAfter": 563,
+        "inDegreeScoreBefore": 120,
+        "inDegreeScoreAfter": 120,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "psf__requests-5414",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "requests/models.py",
+      "newLead": "requests/models.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "requests/models.py",
+        "requests/exceptions.py",
+        "requests/adapters.py"
+      ],
+      "newSelectedFiles": [
+        "requests/models.py",
+        "requests/exceptions.py",
+        "requests/adapters.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 1105,
+      "newEstimatedTokens": 1099,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "secondary_effect"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 0,
+        "inDegreeEdgesAfter": 0,
+        "inDegreeScoreBefore": 0,
+        "inDegreeScoreAfter": 0,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "pydata__xarray-2905",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "xarray/core/variable.py",
+      "newLead": "xarray/core/variable.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "xarray/core/variable.py",
+        "xarray/backends/lru_cache.py",
+        "xarray/backends/netCDF4_.py"
+      ],
+      "newSelectedFiles": [
+        "xarray/core/variable.py",
+        "xarray/backends/lru_cache.py",
+        "xarray/backends/netCDF4_.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 764,
+      "newEstimatedTokens": 760,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added",
+        "candidate_score_changed"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 1300,
+        "inDegreeEdgesAfter": 1376,
+        "inDegreeScoreBefore": 98,
+        "inDegreeScoreAfter": 100,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "pydata__xarray-3677",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "xarray/core/dataset.py",
+      "newLead": "xarray/core/dataset.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/merge.py",
+        "versioneer.py"
+      ],
+      "newSelectedFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/merge.py",
+        "versioneer.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 3484,
+      "newEstimatedTokens": 3484,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "secondary_effect"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 0,
+        "inDegreeEdgesAfter": 0,
+        "inDegreeScoreBefore": 0,
+        "inDegreeScoreAfter": 0,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "pylint-dev__pylint-8898",
+      "changedFields": [
+        "modelVisibleContext"
+      ],
+      "oldLead": "pylint/config/config_initialization.py",
+      "newLead": "pylint/config/config_initialization.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "pylint/config/config_initialization.py",
+        "pylint/__init__.py",
+        "pylint/config/__init__.py"
+      ],
+      "newSelectedFiles": [
+        "pylint/config/config_initialization.py",
+        "pylint/__init__.py",
+        "pylint/config/__init__.py"
+      ],
+      "oldGoldRank": null,
+      "newGoldRank": null,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 722,
+      "newEstimatedTokens": 722,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "secondary_effect"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 0,
+        "inDegreeEdgesAfter": 0,
+        "inDegreeScoreBefore": 0,
+        "inDegreeScoreAfter": 0,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "pytest-dev__pytest-7432",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "src/_pytest/skipping.py",
+      "newLead": "src/_pytest/skipping.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "src/_pytest/skipping.py",
+        "src/_pytest/outcomes.py",
+        "src/_pytest/reports.py"
+      ],
+      "newSelectedFiles": [
+        "src/_pytest/skipping.py",
+        "src/_pytest/outcomes.py",
+        "src/_pytest/reports.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 1612,
+      "newEstimatedTokens": 1617,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 51,
+        "inDegreeEdgesAfter": 59,
+        "inDegreeScoreBefore": 46,
+        "inDegreeScoreAfter": 46,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "sphinx-doc__sphinx-9230",
+      "changedFields": [
+        "selectedFiles",
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "sphinx/pycode/ast.py",
+      "newLead": "sphinx/pycode/ast.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "sphinx/pycode/ast.py",
+        "sphinx/util/__init__.py",
+        "sphinx/deprecation.py"
+      ],
+      "newSelectedFiles": [
+        "sphinx/pycode/ast.py",
+        "sphinx/util/__init__.py",
+        "sphinx/util/jsdump.py"
+      ],
+      "oldGoldRank": null,
+      "newGoldRank": null,
+      "oldGoldVisible": false,
+      "newGoldVisible": false,
+      "oldEstimatedTokens": 701,
+      "newEstimatedTokens": 702,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "target_fanin_added",
+        "candidate_score_changed"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 68,
+        "inDegreeEdgesAfter": 72,
+        "inDegreeScoreBefore": 74,
+        "inDegreeScoreAfter": 76,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "sympy__sympy-15599",
+      "changedFields": [
+        "roles",
+        "contentModes",
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "oldLead": "sympy/core/mod.py",
+      "newLead": "sympy/core/mod.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "sympy/core/mod.py",
+        "sympy/polys/agca/modules.py",
+        "sympy/polys/domains/finitefield.py"
+      ],
+      "newSelectedFiles": [
+        "sympy/core/mod.py",
+        "sympy/polys/agca/modules.py",
+        "sympy/polys/domains/finitefield.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 2851,
+      "newEstimatedTokens": 2852,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "secondary_effect"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 0,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 0,
+        "inDegreeEdgesAfter": 0,
+        "inDegreeScoreBefore": 0,
+        "inDegreeScoreAfter": 0,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    },
+    {
+      "suite": "cross_repo_30",
+      "instanceId": "sympy__sympy-16766",
+      "changedFields": [
+        "modelVisibleContext"
+      ],
+      "oldLead": "sympy/printing/pycode.py",
+      "newLead": "sympy/printing/pycode.py",
+      "leadChanged": false,
+      "oldSelectedFiles": [
+        "sympy/printing/pycode.py",
+        "sympy/utilities/lambdify.py",
+        "sympy/plotting/experimental_lambdify.py"
+      ],
+      "newSelectedFiles": [
+        "sympy/printing/pycode.py",
+        "sympy/utilities/lambdify.py",
+        "sympy/plotting/experimental_lambdify.py"
+      ],
+      "oldGoldRank": 1,
+      "newGoldRank": 1,
+      "oldGoldVisible": true,
+      "newGoldVisible": true,
+      "oldEstimatedTokens": 6654,
+      "newEstimatedTokens": 6654,
+      "cause": "import_attribution_fix",
+      "subreasons": [
+        "source_signal_removed",
+        "target_fanin_added"
+      ],
+      "causeEvidence": {
+        "importsNeighborhoodScoreBefore": 6,
+        "importsNeighborhoodScoreAfter": 0,
+        "inDegreeEdgesBefore": 633,
+        "inDegreeEdgesAfter": 768,
+        "inDegreeScoreBefore": 116,
+        "inDegreeScoreAfter": 116,
+        "moduleNodesDelivered": false
+      },
+      "quality": "NEUTRAL",
+      "qualityBasis": "gold relevance identical; packing/context churn only"
+    }
+  ]
+}

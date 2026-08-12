@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "stage5.m140a.benchmark-workspace.v1",
+  "reason": "M140's first benchmark attempt exhausted the 32G /tmp tmpfs. This run used the root filesystem instead; no benchmark semantics were changed to relocate it, only --out-root/--vtrace-root paths.",
+  "workspaceRoot": "/home/calvin/bench/vtrace-m140",
+  "filesystem": {
+    "mount": "/",
+    "type": "ext4",
+    "sizeTotal": "1.8T",
+    "freeAtStart": "673G"
+  },
+  "rejected": {
+    "path": "/tmp",
+    "type": "tmpfs",
+    "size": "32G",
+    "freeAtStart": "7.1G"
+  },
+  "implementationWorktrees": {
+    "m139": "/home/calvin/bench/vtrace-m140/impl/m139",
+    "m140a1": "/home/calvin/bench/vtrace-m140/impl/m140a",
+    "m140a2": "/home/calvin/bench/vtrace-m140/impl/m140a2",
+    "m140a3": "/home/calvin/bench/vtrace-m140/impl/m140a3",
+    "m140a4": "/home/calvin/bench/vtrace-m140/impl/m140a4",
+    "m140a5": "/home/calvin/bench/vtrace-m140/impl/m140a5",
+    "m140a6": "/home/calvin/bench/vtrace-m140/impl/m140a6"
+  },
+  "preparedTargetCorpora": {
+    "django_expanded/m139": "/home/calvin/bench/vtrace-m140/targets/django-m139",
+    "django_expanded/m140a": "/home/calvin/bench/vtrace-m140/targets/django-m140a",
+    "cross_repo_30/m139": "/home/calvin/bench/vtrace-m140/targets/cross_repo-m139",
+    "cross_repo_30/m140a": "/home/calvin/bench/vtrace-m140/targets/cross_repo-m140a"
+  },
+  "sharedNodeModules": {
+    "shared": true,
+    "justification": "package.json and bun.lock are byte-identical across 340fd9c, c793468, and HEAD (verified by git object hash), so the dependency closure cannot differ between sides."
+  },
+  "notStaged": "target checkouts, per-case row dumps, and generated indexes remain in the workspace and are never committed"
+}

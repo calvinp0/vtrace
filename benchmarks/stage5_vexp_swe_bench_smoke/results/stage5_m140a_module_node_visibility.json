@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "stage5.m140a.module-node-visibility.v1",
+  "requirement": "M140 §63/§64 — structural module scopes are graph-visible and delivery-invisible",
+  "checkpoints": [
+    {
+      "label": "M140-A1",
+      "roleEntries": 7,
+      "contextCases": 6,
+      "selectedEntries": 0,
+      "cases": [
+        "django__django-11206",
+        "django__django-11815",
+        "astropy__astropy-14369",
+        "psf__requests-5414",
+        "pylint-dev__pylint-8898",
+        "sympy__sympy-15599"
+      ]
+    },
+    {
+      "label": "M140-A2",
+      "roleEntries": 6,
+      "contextCases": 5,
+      "selectedEntries": 0,
+      "cases": [
+        "django__django-11815",
+        "astropy__astropy-14369",
+        "psf__requests-5414",
+        "pylint-dev__pylint-8898",
+        "sympy__sympy-15599"
+      ]
+    },
+    {
+      "label": "M140-A3",
+      "roleEntries": 5,
+      "contextCases": 4,
+      "selectedEntries": 0,
+      "cases": [
+        "django__django-11815",
+        "astropy__astropy-14369",
+        "pylint-dev__pylint-8898",
+        "sympy__sympy-15599"
+      ]
+    },
+    {
+      "label": "M140-A4",
+      "roleEntries": 2,
+      "contextCases": 1,
+      "selectedEntries": 0,
+      "cases": [
+        "astropy__astropy-14369"
+      ]
+    },
+    {
+      "label": "M140-A5",
+      "roleEntries": 2,
+      "contextCases": 1,
+      "selectedEntries": 0,
+      "cases": [
+        "astropy__astropy-14369"
+      ]
+    },
+    {
+      "label": "M140-A6",
+      "roleEntries": 0,
+      "contextCases": 0,
+      "selectedEntries": 0,
+      "cases": []
+    }
+  ]
+}
